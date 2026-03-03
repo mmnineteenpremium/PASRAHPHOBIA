@@ -1,0 +1,24 @@
+{
+  "name": "PASRAHPOBIA",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "$path": "src/ReplicatedStorage"
+    },
+
+    "ServerScriptService": {
+      "$path": "src/ServerScriptService"
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$path": "src/StarterPlayer"
+    },
+
+    "StarterGui": {
+      "$path": "src/StarterGui"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+# Roblox binaries – never commit
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Rojo cache & generated files
+default.project.json.rojo
+*.revent
+*.rgui
+
+# Large assets
+*.mp3
+*.wav
+*.ogg
+*.fbx
+*.obj
+
+# OS-specific junk
+.DS_Store
+Thumbs.db
+openJdk-25/
+**/openJdk-25/
+openJdk-25/
+**/openJdk-25/
