@@ -1,0 +1,158 @@
+PASRAHPHOBIA - IMPLEMENTATION ORDER
+
+
+PHASE 1 — Core Infrastructure
+
+Ini harus dibuat pertama karena semua system bergantung ke sini.
+
+EventBus
+Utilities
+ConfigLoader
+ServiceRegistry
+Bootstrap
+
+Lokasi:
+
+src/shared
+src/server/Core
+
+Tujuan:
+
+System communication
+System registration
+Server startup control
+PHASE 2 — Data Layer
+
+Semua data player harus siap sebelum gameplay.
+
+DataPersistence
+PlayerData
+EconomyData
+InventoryData
+RankData
+
+Lokasi:
+
+src/server/DataPersistence
+
+Digunakan oleh:
+
+ProfileSystem
+EconomySystem
+RankedSystem
+PHASE 3 — Player Systems
+
+Setelah data layer selesai.
+
+ProfileSystem
+PlayerLevel
+PlayerProfile
+ProfileInspect
+
+Lokasi:
+
+src/server/ProfileSystem
+
+Dependency:
+
+ProfileSystem → DataPersistence
+PHASE 4 — Core Gameplay Systems
+
+Ini adalah mekanik gameplay utama.
+
+Urutan implementasi:
+
+SanitySystem
+AggressionSystem
+GhostSystem
+EvidenceSystem
+InvestigationSystem
+
+Dependency flow:
+
+SanitySystem
+   ↓
+AggressionSystem
+   ↓
+GhostSystem
+   ↓
+EvidenceSystem
+   ↓
+InvestigationSystem
+PHASE 5 — Dynamic Gameplay Systems
+
+Setelah gameplay dasar selesai.
+
+GhostModifierSystem
+MapEventSystem
+HorrorDirector
+FearEngine
+MapInteractionSystem
+
+Tujuan:
+
+Replayability
+Dynamic horror behavior
+Environmental events
+PHASE 6 — Match Systems
+
+Sistem yang mengontrol jalannya permainan.
+
+Urutan:
+
+GamePhaseSystem
+ContractSystem
+MatchSystem
+TeleportService
+
+Flow:
+
+Lobby
+↓
+Contract Board
+↓
+MatchQueue
+↓
+MatchInstance
+↓
+Teleport to Map
+PHASE 7 — Lobby Systems
+
+Terakhir karena semua sistem sudah tersedia.
+
+LobbySocialHub
+PartySystem
+PlayerPresence
+Lobby Interaction
+Zones
+Final Implementation Flow
+
+Secara keseluruhan:
+
+Core Infrastructure
+↓
+Data Layer
+↓
+Player Systems
+↓
+Core Gameplay
+↓
+Dynamic Gameplay
+↓
+Match Systems
+↓
+Lobby Systems
+Estimasi Kompleksitas Sistem
+
+Untuk PASRAHPHOBIA:
+
+System	Complexity
+Core Infrastructure	Medium
+Data Persistence	Medium
+Profile System	Medium
+Ghost System	High
+Evidence System	High
+Investigation System	High
+Match System	High
+Lobby System	Medium
+Dynamic Systems	High

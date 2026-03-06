@@ -1,0 +1,236 @@
+PASRAHPHOBIA — SPECTATOR DISTORTION ALGORITHM
+Writing
+
+SPECTATOR DISTORTION ALGORITHM
+
+OVERVIEW
+
+The Spectator Distortion Algorithm determines what dead players see when paranormal activity occurs.
+
+The algorithm prevents spectators from receiving fully accurate information while still allowing rare moments of correct observation.
+
+The system activates whenever a ghost activity event occurs.
+
+Ghost activity events include:
+
+ghost roaming
+ghost interaction
+ghost hunt start
+environmental disturbance
+ghost room change
+
+Each event triggers the distortion algorithm.
+
+DISTORTION PROBABILITY MODEL
+
+The algorithm selects one of three visibility outcomes.
+
+60% Fake Ghost
+
+A false ghost manifestation is generated locally on the spectator client.
+
+This ghost does not exist on the server.
+
+30% Uncertain Event
+
+A ghost-related disturbance occurs without a clear ghost body.
+
+Examples include shadows, footsteps, whispers, or moving objects.
+
+10% Real Ghost
+
+The spectator temporarily sees the real ghost position.
+
+This is the only case where the information may be correct.
+
+DISTORTION SELECTION PROCESS
+
+When a ghost activity event occurs, the system generates a random number between 1 and 100.
+
+1–60 → Fake Ghost
+
+61–90 → Uncertain Event
+
+91–100 → Real Ghost
+
+This ensures the exact probability distribution.
+
+FAKE GHOST SELECTION RULE
+
+Fake ghosts must appear believable.
+
+The algorithm selects a nearby room relative to the observed player.
+
+Rules
+
+The room must be within a defined distance radius.
+
+The room must not be the real ghost room.
+
+The room must contain valid ghost navigation points.
+
+This prevents obvious fake placements.
+
+UNCERTAIN EVENT SELECTION
+
+If the uncertain event branch is selected, the system randomly selects one disturbance.
+
+Possible disturbances
+
+Shadow movement
+Door creak
+Footstep audio
+Object movement
+Light flicker
+Whisper sound
+
+These events create psychological uncertainty.
+
+REAL GHOST VISIBILITY RULE
+
+Real ghost visibility is limited.
+
+Rules
+
+Duration: 2–4 seconds
+
+Visibility ends immediately if the ghost begins a hunt state.
+
+Spectators cannot track the ghost continuously.
+
+This prevents spectator tracking exploits.
+
+COOLDOWN SYSTEM
+
+The distortion algorithm includes a cooldown to prevent spam.
+
+Typical cooldown
+
+5–10 seconds between ghost visibility events.
+
+This ensures the system feels rare and meaningful.
+
+PLAYER PROXIMITY INFLUENCE
+
+The probability system slightly shifts based on player proximity to ghost activity.
+
+If players are near the ghost room:
+
+Fake Ghost probability slightly decreases.
+
+Uncertain events increase.
+
+This creates more believable observations.
+
+Example adjustment
+
+Fake Ghost → 50%
+
+Uncertain Event → 40%
+
+Real Ghost → 10%
+
+ANTI EXPLOIT PROTECTION
+
+The system prevents spectators from triangulating the real ghost.
+
+Protections include
+
+Fake ghost path randomness
+
+Randomized event timing
+
+Limited real ghost duration
+
+Camera follow restrictions
+
+This ensures spectator information cannot become a reliable detection tool.
+
+SYSTEM EXECUTION FLOW
+
+Ghost Activity Event Triggered
+
+↓
+
+Spectator Distortion Algorithm
+
+↓
+
+Random Probability Roll
+
+↓
+
+Branch Selection
+
+Fake Ghost
+Uncertain Event
+Real Ghost
+
+↓
+
+Spectator Render Event
+
+↓
+
+Distortion Cooldown
+
+Distortion Decision Flow
+Ghost Activity Event
+        │
+        ▼
+Random Roll (1–100)
+        │
+ ┌──────┼─────────┐
+ │      │         │
+ ▼      ▼         ▼
+Fake   Uncertain   Real
+60%     30%        10%
+Fake Ghost Placement Logic
+Player Alive Position
+        │
+        ▼
+Nearby Room Search
+        │
+        ▼
+Exclude Real Ghost Room
+        │
+        ▼
+Spawn Fake Ghost
+Distortion Event Cooldown
+Ghost Event Trigger
+      │
+      ▼
+Distortion Render
+      │
+      ▼
+Cooldown (5–10s)
+      │
+      ▼
+Next Possible Event
+Sistem yang Terhubung
+
+Spectator Distortion Algorithm berinteraksi dengan:
+
+GhostSystem
+AggressionSystem
+HorrorDirector
+InvestigationSystem
+
+Contoh:
+
+Jika tim mengikuti fake ghost location, maka:
+
+AggressionSystem ↑
+Ghost becomes more aggressive
+Dampak Gameplay
+
+Algoritma ini menciptakan gameplay:
+
+spectator doubt
+team discussion
+investigation risk
+psychological horror
+
+Pemain hidup harus memutuskan:
+
+Apakah informasi dari orang mati bisa dipercaya?

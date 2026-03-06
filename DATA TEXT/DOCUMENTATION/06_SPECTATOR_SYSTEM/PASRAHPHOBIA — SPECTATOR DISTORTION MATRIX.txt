@@ -1,0 +1,110 @@
+PASRAHPHOBIA — SPECTATOR DISTORTION MATRIX
+1. SPECTATOR SYSTEM CONCEPT
+
+Player mati tidak menjadi penonton biasa.
+
+Mereka melihat dunia paranormal yang terdistorsi.
+
+Ini menciptakan:
+
+misinformation
+psychological gameplay
+team confusion
+2. DISTORTION PROBABILITY
+Fake Ghost = 60%
+Uncertain Event = 30%
+Real Ghost = 10%
+3. FAKE GHOST EVENTS (60%)
+
+Contoh:
+
+ghost muncul di ruangan salah
+
+hunt palsu
+
+footsteps palsu
+
+pintu bergerak tanpa ghost
+
+Tujuan:
+
+menipu spectator
+4. UNCERTAIN EVENTS (30%)
+
+Contoh:
+
+bayangan
+
+suara samar
+
+objek bergerak kecil
+
+Spectator tidak yakin.
+
+5. REAL GHOST (10%)
+
+Spectator melihat ghost asli.
+
+Jika spectator memberi info:
+
+team mungkin benar
+atau mungkin salah
+
+Karena pemain hidup tidak tahu mana yang benar.
+
+6. COMMUNICATION SYSTEM
+
+Spectator berkomunikasi menggunakan:
+
+Roblox Voice Chat
+
+Tidak ada sistem hint otomatis.
+
+7. PSYCHOLOGICAL GAMEPLAY
+
+Contoh situasi:
+
+Spectator:
+"Gue lihat ghost di dapur!"
+
+Player hidup:
+percaya / tidak percaya
+
+Jika salah:
+
+ghost aggression naik
+
+Jika benar:
+
+evidence ditemukan
+8. DEATH NOTICE UI
+
+Saat player mati:
+
+Teks muncul:
+
+Kematian menipumu
+Yang kamu lihat belum tentu benar
+
+5 detik center
+Kemudian pindah ke kiri.
+
+9. WARNING UNTUK PLAYER HIDUP
+
+Saat teammate mati:
+
+UI muncul:
+
+Jangan terlalu percaya orang mati
+Gunakan instingmu
+
+Durasi:
+
+5 detik center
+10. GAME DESIGN PURPOSE
+
+Spectator system dibuat untuk:
+
+meningkatkan tension
+mengurangi meta gaming
+menciptakan drama tim

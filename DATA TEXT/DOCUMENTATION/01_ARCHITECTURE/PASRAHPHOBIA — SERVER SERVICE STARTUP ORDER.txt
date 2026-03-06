@@ -1,0 +1,380 @@
+PASRAHPHOBIA — SERVER SERVICE STARTUP ORDER
+1. PURPOSE
+
+Server Service Startup Order menentukan urutan inisialisasi semua system server saat server Roblox pertama kali berjalan.
+
+Tanpa startup order yang benar dapat terjadi:
+
+dependency error
+
+nil reference
+
+service tidak terdaftar
+
+system berjalan sebelum data siap
+
+Tujuan dokumen ini:
+
+memastikan semua service start secara stabil
+memastikan dependency terpenuhi
+memastikan EventBus aktif sebelum system lain
+2. CORE SERVER BOOT FLOW
+
+Urutan boot server PASRAHPHOBIA:
+
+Bootstrap
+↓
+ServiceRegistry
+↓
+EventBus
+↓
+ConfigLoader
+↓
+DataPersistence
+↓
+ProfileSystem
+↓
+EconomySystem
+↓
+RankedSystem
+↓
+ContractSystem
+↓
+MatchSystem
+↓
+MapInteractionSystem
+↓
+MapEventSystem
+↓
+GhostModifierSystem
+↓
+AggressionSystem
+↓
+SanitySystem
+↓
+GhostSystem
+↓
+EvidenceSystem
+↓
+InvestigationSystem
+↓
+HorrorDirector
+↓
+LobbySocialHub
+3. CORE BOOTSTRAP SYSTEMS
+Bootstrap
+
+Bootstrap adalah entry point server.
+
+Tugas:
+
+load ServiceRegistry
+initialize EventBus
+register services
+start service lifecycle
+ServiceRegistry
+
+ServiceRegistry bertanggung jawab untuk:
+
+register semua system
+resolve dependency
+menyediakan akses antar service
+
+Example:
+
+ServiceRegistry:Register("MatchSystem")
+ServiceRegistry:Register("GhostSystem")
+ServiceRegistry:Register("EconomySystem")
+EventBus
+
+EventBus adalah central communication layer.
+
+Digunakan untuk komunikasi antar system.
+
+Example:
+
+EventBus:Emit("PlayerJoined")
+EventBus:Emit("GhostSpawned")
+EventBus:Emit("EvidenceFound")
+4. DATA SYSTEM INITIALIZATION
+
+Data system harus start lebih awal.
+
+Urutan:
+
+ConfigLoader
+↓
+DataPersistence
+↓
+ProfileSystem
+
+Tujuan:
+
+player data siap sebelum gameplay
+
+economy system bisa membaca inventory
+
+DataPersistence
+
+Modules:
+
+PlayerData
+EconomyData
+InventoryData
+RankData
+
+DataPersistence harus siap sebelum:
+
+ProfileSystem
+EconomySystem
+RankedSystem
+5. PLAYER PROGRESSION SYSTEM
+
+Setelah data aktif:
+
+ProfileSystem
+↓
+EconomySystem
+↓
+RankedSystem
+↓
+ContractSystem
+
+Tujuan:
+
+load player level
+
+load currency
+
+load rank tier
+
+load contract mission
+
+6. MATCH MANAGEMENT SYSTEM
+
+Setelah progression system siap:
+
+MatchSystem
+
+Modules:
+
+MatchQueue
+MatchBuilder
+MatchInstance
+MatchLifecycle
+TeleportService
+
+MatchSystem bertanggung jawab untuk:
+
+match creation
+match state management
+player teleport
+match reward trigger
+7. WORLD INTERACTION SYSTEM
+
+Map system diaktifkan setelah match system.
+
+MapInteractionSystem
+↓
+MapEventSystem
+
+Contoh event:
+
+lamp flicker
+door slam
+object movement
+environment noise
+8. GHOST MECHANIC SYSTEMS
+
+Ghost gameplay membutuhkan beberapa system.
+
+Urutan:
+
+GhostModifierSystem
+↓
+AggressionSystem
+↓
+SanitySystem
+↓
+GhostSystem
+GhostModifierSystem
+
+Menentukan modifier ghost.
+
+Contoh:
+
+fast ghost
+shy ghost
+aggressive ghost
+AggressionSystem
+
+Mengontrol kemarahan ghost.
+
+Dipengaruhi oleh:
+
+player sanity
+player noise
+time in investigation
+SanitySystem
+
+Mengontrol sanity player.
+
+Trigger sanity drop:
+
+ghost apparition
+darkness
+paranormal events
+GhostSystem
+
+GhostSystem hanya boleh aktif setelah:
+
+AggressionSystem
+SanitySystem
+MapInteractionSystem
+
+GhostSystem bertanggung jawab untuk:
+
+ghost spawn
+ghost movement
+ghost hunt
+ghost manifestation
+9. INVESTIGATION SYSTEM
+
+Setelah ghost aktif:
+
+EvidenceSystem
+↓
+InvestigationSystem
+EvidenceSystem
+
+Modules:
+
+EvidenceEngine
+EvidenceSpawner
+EvidenceValidator
+EvidenceSync
+
+Evidence tools:
+
+Kotak Arwah
+Buku Terkutuk
+Bola Arwah
+Gerakan Gaib
+Jejak Energi
+Suhu Membeku
+InvestigationSystem
+
+Modules:
+
+EvidenceTracker
+GhostGuess
+InvestigationState
+
+Tugas:
+
+track evidence
+determine ghost type
+trigger match result
+10. HORROR DIRECTOR
+
+HorrorDirector adalah dynamic horror controller.
+
+Dependency:
+
+GhostSystem
+AggressionSystem
+MapEventSystem
+
+Modules:
+
+DirectorRules
+EventScheduler
+PlayerStateMonitor
+TensionSystem
+
+Tugas:
+
+create tension
+schedule paranormal events
+control horror pacing
+11. LOBBY SYSTEM
+
+Lobby hanya aktif saat player berada di lobby server.
+
+System:
+
+LobbySocialHub
+
+Modules:
+
+PartySystem
+PlayerPresence
+LobbyInteraction
+
+Zones:
+
+Flex Plaza
+Team Finder
+Shop
+Training Room
+Hall of Fame
+12. SERVICE STARTUP VALIDATION
+
+Setelah semua system start, server melakukan validation.
+
+Checklist:
+
+all services registered
+dependencies resolved
+EventBus active
+no nil reference
+
+Jika validation gagal:
+
+server restart
+error log generated
+13. FINAL SERVER START FLOW
+
+Final startup flow PASRAHPHOBIA:
+
+Bootstrap
+ ↓
+ServiceRegistry
+ ↓
+EventBus
+ ↓
+ConfigLoader
+ ↓
+DataPersistence
+ ↓
+ProfileSystem
+ ↓
+EconomySystem
+ ↓
+RankedSystem
+ ↓
+ContractSystem
+ ↓
+MatchSystem
+ ↓
+MapInteractionSystem
+ ↓
+MapEventSystem
+ ↓
+GhostModifierSystem
+ ↓
+AggressionSystem
+ ↓
+SanitySystem
+ ↓
+GhostSystem
+ ↓
+EvidenceSystem
+ ↓
+InvestigationSystem
+ ↓
+HorrorDirector
+ ↓
+LobbySocialHub
+
+Server siap menerima player.

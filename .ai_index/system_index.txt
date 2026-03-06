@@ -1,0 +1,376 @@
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/assign.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/createEnum.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/createEnumGroup.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/createEnumGroup_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/createEnum_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/createEnvironment.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/createSettings.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/createSettings_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/ConnectionState.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/CreatorType.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/DataStoreRequestType.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/EasingDirection.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/EasingStyle.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/FillDirection.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/Font.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/HorizontalAlignment.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/HttpContentType.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/InfoType.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/KeyCode.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/MouseBehavior.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/Platform.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/PlaybackState.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/ScaleType.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/ScrollBarInset.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/ScrollingDirection.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/SizeConstraint.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/SortOrder.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/TextTruncate.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/TextXAlignment.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/TextYAlignment.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/ThumbnailSize.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/ThumbnailType.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/UserInputType.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/VerticalAlignment.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/VerticalScrollBarPosition.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/VirtualInputMode.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Enum/ZIndexBehavior.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/fs.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/fs_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/functions/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/functions/settings/RenderSettings.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/functions/settings/RenderSettings_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/functions/tick.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/functions/tick_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/functions/typeof.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/functions/typeof_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/functions/warn.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/functions/warn_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Habitat.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/init_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Instance.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/InstanceProperty.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/AnalyticsService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/AnalyticsService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/BaseInstance.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/BaseInstance_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/BindableEvent.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/BindableEvent_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/BoolValue.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/BoolValue_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Camera.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Camera_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Configuration.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Configuration_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ContentProvider.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ContentProvider_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ContextActionService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ContextActionService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/CoreGui.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/CoreGui_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/CorePackages.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/CorePackages_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Folder.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Folder_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Frame.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Frame_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Game.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Game_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/GuiButton.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/GuiButton_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/GuiObject.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/GuiObject_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/GuiService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/GuiService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/HttpRbxApiService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/HttpRbxApiService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/HttpService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/HttpService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Humanoid.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Humanoid_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ImageButton.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ImageButton_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ImageLabel.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ImageLabel_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/InsertService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/InsertService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/IntValue.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/IntValue_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/LocalizationService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/LocalizationService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/LocalizationTable.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/LocalizationTable_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/LocalScript.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/LocalScript_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/MarketplaceService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/MarketplaceService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Model.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Model_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ModuleScript.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ModuleScript_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/NotificationService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/NotificationService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/NumberValue.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/NumberValue_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ObjectValue.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ObjectValue_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ParticleEffect.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ParticleEffect_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Player.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Players.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Players_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Player_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ReplicatedFirst.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ReplicatedFirst_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ReplicatedStorage.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ReplicatedStorage_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/RunService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/RunService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ScreenGui.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ScreenGui_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Script.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Script_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ScrollingFrame.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ScrollingFrame_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ServerScriptService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ServerScriptService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ServerStorage.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/ServerStorage_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/StarterCharacterScripts.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/StarterCharacterScripts_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/StarterPlayer.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/StarterPlayerScripts.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/StarterPlayerScripts_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/StarterPlayer_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Stats.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Stats_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/StringValue.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/StringValue_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TestService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TestService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TextButton.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TextButton_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TextLabel.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TextLabel_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TextService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TextService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TweenService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/TweenService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UIGridStyleLayout.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UIGridStyleLayout_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UIListLayout.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UIListLayout_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UIPadding.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UIPadding_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UITextSizeConstraint.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UITextSizeContstraint_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UserInputService.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/UserInputService_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/VirtualInputManager.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/VirtualInputManager_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Workspace.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/instances/Workspace_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Instance_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/json.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/libs/bit32.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/libs/bit32_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/libs/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/libs/math.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/libs/math_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/libs/string.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/libs/string_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Signal.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Signal_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/taskFunctions/delay.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/taskFunctions/delay_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/taskFunctions/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/taskFunctions/spawn.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/taskFunctions/spawn_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/taskFunctions/wait.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/taskFunctions/wait_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/TaskScheduler.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/typeKey.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/Color3.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/Color3_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/Rect.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/Rect_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/UDim.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/UDim2.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/UDim2_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/UDim_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/Vector2.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/Vector2_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/Vector3.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/types/Vector3_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/validateType.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/validateType_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/load_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require/a.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require/b.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require/bar/baz.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require/cacheme.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require/foo.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require_spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/test-project/bar.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/test-project/normal-folder/ack.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/test-project/usurp/foo.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/test-project/usurp/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/Context.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/Expectation.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/init.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/LifecycleHooks.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/Reporters/TeamCityReporter.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/Reporters/TextReporter.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/Reporters/TextReporterQuiet.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestEnum.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestPlan.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestPlanner.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestResults.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestRunner.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestSession.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/test/lemur.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/test/runner.server.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/lemur-entry.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/test-runner.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/api.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/Context.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/Expectation.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/failing/duplicateDescribe.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/failing/duplicateIt.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/failing/error.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/failing/fail.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/failing/planning.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/lifecycleHooks.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/passing/context.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/passing/describeAndContext.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/passing/empty.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/passing/expect.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/passing/focus.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/passing/focusAndSkip.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/passing/nestedContext.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/passing/skip.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planner.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planning/a.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planning/b.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planning/d.spec.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.ai_index/lua_files.txt:/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/specTests.lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.git/hooks/push-to-checkout.sample:if ! git update-index -q --ignore-submodules --refresh
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.git/hooks/push-to-checkout.sample:if ! git diff-files --quiet --ignore-submodules --
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/.git/hooks/push-to-checkout.sample:if ! git diff-index --quiet --cached --ignore-submodules $head --
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/AI_CONTEXT.md:- generate new modules
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/docs/Installation.md:1. In Roblox Studio, select the folder where you keep your third party modules / utilities.
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/docs/Installation.md:### Method 3 - Git Submodule
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/docs/Installation.md:1. Add the Promise repository as a git submodule (ideally within a folder called `submodules`) (tutorial [here](https://gist.github.com/gitaarik/8735255))
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/.git:gitdir: ../../.git/modules/modules/testez
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/.github/workflows/ci.yml:        submodules: true
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/.github/workflows/ci.yml:        submodules: true
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/.github/workflows/release.yml:        submodules: true
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/.github/workflows/release.yml:        submodules: true
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/.github/workflows/release.yml:        submodules: true
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/.gitmodules:[submodule "modules/lemur"]
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/.gitmodules:	path = modules/lemur
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/CONTRIBUTING.md:Make sure to clone the repository with submodules. You can do that to your existing repository with:
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/CONTRIBUTING.md:git submodule update --init
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/DESIGN.md:Testing using this module is broken down into four steps:
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/DESIGN.md:In both the planning and running phases of tests, a stateless module (`TestPlanner` and `TestRunner`) creates a temporary object to hold state about the operation it's trying to perform. These objects (`TestPlanBuilder` and `TestSession`) allow the code to traverse and build trees without passing around extra state between iterations.
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/DESIGN.md:When the modules are done using these builder objects, they call `finalize` on them to receive a `TestPlan` or `TestResults` object. These objects are passed back to the original caller.
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/DESIGN.md:`TestBootStrap` packages up use of the stages of testing into a simpler interface that also automatically locates test modules. When more advanced functionality is desired, it's easy to stop using TestBootstrap and instead call the underlying objects directly.
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/docs/getting-started/debugging-tests.md:For example, you might want to run the tests targeting a specific method or two for a `DateTime` module:
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/docs/getting-started/writing-tests.md:Create `.spec.lua` files (or Roblox objects with the `.spec` suffix) for each module you want to test. These modules should return a function that in turn calls functions from TestEZ.
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/docs/getting-started/writing-tests.md:A simple module and associated TestEZ spec might look like:
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/docs/getting-started/writing-tests.md:Every module is implicitly scoped according to its path, meaning the tree that the above test represents might be:
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/.git:gitdir: ../../../../.git/modules/modules/testez/modules/modules/lemur
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:	Baste, a module system for Lua
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:local moduleResults = {}
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:	return function(modulePath)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:		if type(modulePath) ~= "string" then
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:			error(string.format(message, type(modulePath)), 2)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:		if modulePath:sub(1, 1) == "." then
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:			local relativeModulePath = currentDirectory:push(modulePath)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:			if Path.fromString(modulePath):getExtension() == nil then
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:			-- Have we loaded this module before?
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:					return moduleResults[tostring(path)]
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:				-- Hand-craft an environment for the module we're loading
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:				-- The module won't be able to iterate over globals!
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:						moduleResults[tostring(path)] = result
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:			-- We didn't find any modules.
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:				modulePath,
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:			-- TODO: check `baste_modules` folder (or similar)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/baste.lua:			return require(modulePath)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Habitat.lua:			getmetatable(instance).instance.modulePath = path
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Habitat.lua:	if internalInstance.moduleLoaded then
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Habitat.lua:		return internalInstance.moduleResult
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Habitat.lua:	local chunk = assert(loadstring(instance.Source, "@" .. internalInstance.modulePath))
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Habitat.lua:	internalInstance.moduleLoaded = true
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/lib/Habitat.lua:	internalInstance.moduleResult = result
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/README.md:-- Invoke a method on our Roblox module!
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require_spec.lua:	it("should load modules directly", function()
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require_spec.lua:		local module = root:FindFirstChild("a")
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require_spec.lua:		assert.not_nil(module)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require_spec.lua:		local value = habitat:require(module)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require_spec.lua:		assert.equal(root:FindFirstChild("a"), module)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require_spec.lua:	it("should load modules from within folders", function()
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require_spec.lua:	it("should keep a module cache", function()
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/modules/lemur/spec/require_spec.lua:	it("should fail to find non-existent modules", function()
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/init.lua:	local modules = TestBootstrap:getModules(testRoot)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/init.lua:	local plan = TestPlanner.createPlan(modules)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:local function getPath(module, root)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:	local last = module
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:function TestBootstrap:getModulesImpl(root, modules, current)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:	modules = modules or {}
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:		table.insert(modules, {
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:	local modules = {}
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:	self:getModulesImpl(root, modules)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:		self:getModulesImpl(root, modules, child)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:	return modules
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:	1. Locate test modules
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:	local modules = {}
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:			table.insert(modules, newModule)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:	local plan = TestPlanner.createPlan(modules, testNamePattern, extraEnvironment)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestBootstrap.lua:			("Took %f seconds to locate test modules"):format(afterModules - startTime),
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestPlanner.lua:		- modulesList - list of tables describing test modules {
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestPlanner.lua:function TestPlanner.createPlan(modulesList, testNamePattern, extraEnvironment)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestPlanner.lua:	table.sort(modulesList, function(a, b)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestPlanner.lua:	for _, module in ipairs(modulesList) do
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/src/TestPlanner.lua:		plan:addRoot(module.path, module.method)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/test/lemur.lua:-- If this fails, make sure you've cloned all Git submodules of this repo!
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/test/lemur.lua:local lemur = require("modules.lemur")
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/test/lemur.lua:-- Load all of the modules specified above
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/test/lemur.lua:for _, module in ipairs(LOAD_MODULES) do
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/test/lemur.lua:	local container = habitat:loadFromFs(module[1])
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/test/lemur.lua:	container.Name = module[2]
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/build.rs:    pack_library("../modules/lemur/lib", "lemur");
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/README.md:	* Are Git submodules contained in `modules/`
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/dependencies.rs://! - Git submodules. Dependencies are in `modules/*/src`.
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/dependencies.rs:    GitSubmodules,
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/dependencies.rs:        let modules_path = project_path.join("modules");
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/dependencies.rs:        if modules_path.is_dir() {
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/dependencies.rs:            return Ok(DependencyStyle::GitSubmodules);
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/lemur-entry.lua:-- This module has variables preprended to it by the TestEZ CLI that inform it
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/lemur-entry.lua:-- what modules need to be loaded.
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/lemur-entry.lua:	elseif DEPS.kind == "git-submodules" then
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/lemur-entry.lua:		for _, dep in ipairs(DEPS.modules) do
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/main.rs:        .format_module_path(false)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/targets/lemur.rs:                DependencyStyle::GitSubmodules => {
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/targets/lemur.rs:                        "local DEPS = {{ kind = \"git-submodules\", modules = {{"
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/targets/lemur.rs:                    let modules_path = self.project_path.join("modules");
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/targets/lemur.rs:                    for entry in fs::read_dir(&modules_path)? {
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/targets/lemur.rs:                                    "Skipping module {} as it has no src directory",
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/targets/roblox_cli.rs:            DependencyStyle::GitSubmodules => {
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/targets/roblox_cli.rs:                // TODO: Enumerate modules instead of assuming it can build as a
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/targets/roblox_cli.rs:                let modules_path = self.project_path.join("modules");
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/testez-cli/src/targets/roblox_cli.rs:                tools::rojo_build(&modules_path, &built_deps_path);
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planner.lua:		local modules = TestBootstrap:getModules(testRoot)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planner.lua:		local plan = TestPlanner.createPlan(modules)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planner.lua:		local modules = TestBootstrap:getModules(testRoot)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planner.lua:		local plan = TestPlanner.createPlan(modules)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planner.lua:		local modules = TestBootstrap:getModules(testRoot)
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/modules/testez/tests/planner.lua:		local plan = TestPlanner.createPlan(modules, "test2")
+/mnt/c/Projects/ROBLOX/PASRAHPHOBIA/Packages/_Index/evaera_promise@4.0.0/promise/test.project.json:				"$path": "modules/testez/src"

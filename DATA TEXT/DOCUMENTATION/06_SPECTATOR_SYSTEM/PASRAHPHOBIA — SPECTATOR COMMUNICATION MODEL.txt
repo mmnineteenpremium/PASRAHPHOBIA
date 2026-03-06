@@ -1,0 +1,163 @@
+PASRAHPHOBIA — SPECTATOR COMMUNICATION MODEL
+
+
+
+
+Prinsip Utama
+Spectator = Dead Player
+Camera = Follow Player Alive
+Communication = Voice Chat Roblox
+
+Tidak ada:
+
+ping system
+
+hint button
+
+spectator message
+
+spectator UI clue
+
+Semua informasi hanya lewat mic komunikasi pemain.
+
+Komunikasi Spectator
+
+Spectator berbicara seperti ini:
+
+Contoh situasi:
+
+"Kayaknya ghost di dapur!"
+"Eh tunggu, tadi kayaknya di ruang tamu…"
+"Gue lihat bayangan di lantai dua!"
+
+Masalahnya:
+
+informasi spectator tidak selalu benar.
+
+Karena sistem kamu:
+
+60% Fake Ghost
+30% Uncertain
+10% Real Ghost
+
+Jadi tim hidup harus berpikir:
+
+"Dia bener lihat ghost…
+atau cuma ilusi?"
+
+Ini menciptakan mind game antar player.
+
+Spectator Camera Rules
+
+Spectator tidak bebas roam map.
+
+Camera hanya:
+
+Follow Player Alive
+
+Tujuannya:
+
+tidak bisa scouting map
+
+tidak bisa mencari ghost bebas
+
+tetap ikut tim
+
+Struktur camera:
+
+Dead Player
+     ↓
+Spectator Mode
+     ↓
+Select Alive Player
+     ↓
+Follow Camera
+Spectator View Distortion
+
+Karena spectator adalah roh, maka visualnya tidak stabil.
+
+Distortion effect:
+
+screen noise
+ghost trail
+shadow flicker
+light distortion
+audio whisper
+
+Ini membuat spectator tidak bisa memastikan apa yang dia lihat.
+
+Social Trust System (Natural)
+
+Tanpa UI hint, sistem kamu menciptakan natural trust mechanic.
+
+Contoh:
+
+Player mati bilang:
+
+"Ghost di dapur!"
+
+Tim hidup berpikir:
+
+percaya → cek dapur
+tidak percaya → lanjut cari
+
+Jika salah:
+
+AggressionSystem ↑
+Ghost lebih agresif
+
+Jika benar:
+
+Evidence ditemukan
+Death Message System
+
+Saat pemain mati muncul pesan:
+
+Player Dead
+CENTER (5s)
+
+"Kematian menipumu.
+Yang kamu lihat belum tentu benar."
+
+Setelah itu:
+
+UI pindah ke kiri
+mengecil
+tetap muncul sampai endgame
+Player Alive
+CENTER (5s)
+
+"Jangan terlalu percaya orang mati.
+Gunakan instingmu.
+Jika percaya, lakukanlah."
+
+Tujuan pesan ini:
+
+memberi warning
+
+membangun distrust
+
+memperkuat horror theme
+
+Keputusan Arsitektur (FINAL)
+
+Spectator system menjadi:
+
+Server
+GhostAI
+EvidenceSystem
+AggressionSystem
+
+Client Alive
+RealGhostRenderer
+EvidenceTools
+
+Client Dead
+SpectatorDistortionSystem
+SpectatorCamera
+
+Tidak ada:
+
+HintSystem
+PingSystem
+SpectatorUIHint

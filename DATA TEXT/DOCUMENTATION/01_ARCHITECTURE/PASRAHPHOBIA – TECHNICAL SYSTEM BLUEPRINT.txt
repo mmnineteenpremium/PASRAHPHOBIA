@@ -1,0 +1,428 @@
+PASRAHPHOBIA – TECHNICAL SYSTEM BLUEPRINT
+
+SYSTEM ARCHITECTURE
+
+The game uses a server-authoritative architecture.
+
+Client handles:
+
+UI
+Audio
+Visual effects
+Tool interaction input
+
+Server handles:
+
+Ghost AI
+Evidence validation
+Match state
+Player sanity
+Ranked progression
+Economy rewards
+
+Shared modules contain configuration and data types used by both client and server.
+
+---
+
+SERVER BOOTSTRAP SYSTEM
+
+Server startup sequence:
+
+1 Load configuration
+2 Initialize EventBus
+3 Register services
+4 Load systems
+5 Start systems in dependency order
+
+Bootstrap loads systems in layers:
+
+Core
+Data
+Player Systems
+Gameplay Systems
+Match Systems
+Lobby Systems
+
+---
+
+SERVICE REGISTRY
+
+ServiceRegistry acts as a global access container for server systems.
+
+Example services:
+
+GhostSystem
+EvidenceSystem
+MatchSystem
+SanitySystem
+RankedSystem
+
+Each system registers itself on startup.
+
+Other systems retrieve services from the registry instead of requiring modules directly.
+
+This prevents circular dependencies.
+
+---
+
+EVENT BUS
+
+EventBus provides asynchronous communication between systems.
+
+Example events:
+
+GhostSpawned
+EvidenceDetected
+PlayerSanityChanged
+MatchStarted
+MatchEnded
+
+This reduces tight coupling between modules.
+
+---
+
+DATA PERSISTENCE
+
+Player data is stored using Roblox DataStore.
+
+Data categories:
+
+PlayerData
+EconomyData
+InventoryData
+RankData
+
+PlayerData includes:
+
+Level
+Experience
+TotalGames
+WinrateVisibility
+
+EconomyData includes:
+
+Currency
+CosmeticsOwned
+
+RankData includes:
+
+RankTier
+Stars
+SeasonProgress
+
+---
+
+PLAYER LEVEL SYSTEM
+
+Level Range:
+
+1 – 100
+
+Experience gained from:
+
+Match completion
+Evidence discovery
+Difficulty multiplier
+
+Example formula:
+
+BaseXP = 100
+
+XP = BaseXP + (EvidenceCount × 25) + DifficultyBonus
+
+Level up when accumulated XP reaches threshold.
+
+---
+
+SANITY SYSTEM
+
+Each player has a sanity value.
+
+Range:
+
+0 – 100
+
+Sanity decreases from:
+
+Time spent in darkness
+Ghost proximity
+Paranormal events
+Ghost hunts
+
+Example drain formula:
+
+SanityDrainRate = BaseDrain + FearModifier + EventModifier
+
+Low sanity increases ghost aggression probability.
+
+---
+
+GHOST AI SYSTEM
+
+Ghost behavior is controlled by state machines.
+
+Ghost states:
+
+Idle
+Roaming
+Interaction
+Hunt
+
+State transitions depend on:
+
+Player proximity
+Aggression level
+Sanity averages
+
+Example transition:
+
+If AveragePlayerSanity < 40
+Increase hunt probability.
+
+---
+
+GHOST AGGRESSION SYSTEM
+
+Aggression level determines how hostile the ghost is.
+
+Range:
+
+0 – 100
+
+Aggression increases when:
+
+Players interact with ghost objects
+Players remain near ghost room
+Players have low sanity
+
+Example formula:
+
+Aggression += PlayerProximity × AggressionMultiplier
+
+When aggression exceeds threshold, hunt may start.
+
+---
+
+HUNT SYSTEM
+
+Hunts occur when ghost aggression passes a threshold.
+
+Example:
+
+If Aggression > 70
+HuntChance = 30%
+
+During hunt:
+
+Ghost targets nearest player.
+
+Players must hide or escape.
+
+Hunt duration increases with difficulty.
+
+---
+
+EVIDENCE SYSTEM
+
+Evidence detection depends on:
+
+Ghost type
+Room location
+Modifier effects
+Difficulty
+
+Evidence validation occurs on server.
+
+Example detection process:
+
+Tool interaction triggered
+Server checks room state
+Server validates ghost evidence map
+Evidence returned to client
+
+---
+
+INVESTIGATION SYSTEM
+
+Players record evidence in the journal.
+
+The system compares discovered evidence against ghost evidence tables.
+
+Example:
+
+GhostType = intersection(EvidenceSet)
+
+If one ghost matches remaining evidence combination,
+journal suggests that ghost.
+
+---
+
+GHOST MODIFIER SYSTEM
+
+Ghost modifiers alter ghost behavior.
+
+Examples:
+
+Rage → aggression increases faster
+Dormant → aggression increases slower
+BlinkStep → ghost teleports during hunt
+SanityLeech → sanity drains faster near ghost
+
+Each match randomly assigns modifiers.
+
+---
+
+MAP EVENT SYSTEM
+
+Each match may contain a map event.
+
+Events modify environmental conditions.
+
+Examples:
+
+Thunderstorm
+PowerFailure
+HeavyFog
+
+Event modifiers affect:
+
+Audio
+Lighting
+Sanity drain
+Ghost activity
+
+---
+
+HORROR DIRECTOR
+
+The Horror Director dynamically controls tension.
+
+It monitors:
+
+Player sanity
+Time since last event
+Player grouping
+
+It triggers events such as:
+
+Door slams
+Object movement
+Ghost whispers
+Visual hallucinations
+
+This prevents long periods without activity.
+
+---
+
+MATCH SYSTEM
+
+MatchSystem controls match lifecycle.
+
+Phases:
+
+Lobby
+Preparation
+Investigation
+Hunt
+Extraction
+Results
+
+Players are teleported to maps when match starts.
+
+TeleportService is used for map instances.
+
+---
+
+CONTRACT SYSTEM
+
+Contracts generate missions.
+
+Contracts define:
+
+Map
+Difficulty
+Objectives
+Rewards
+
+Example objective:
+
+Capture ghost photo
+Detect ghost movement
+Survive hunt
+
+Rewards increase with difficulty and objectives completed.
+
+---
+
+RANKED SYSTEM
+
+Ranked uses star progression.
+
+Win → +1 Star
+Loss → −1 Star
+
+Promotion occurs when stars reach threshold.
+
+Example:
+
+Bayi 3 → 3 stars → Bayi 2
+
+Final rank:
+
+Sang Ahli
+
+Uses continuous score instead of divisions.
+
+Example:
+
+Sang Ahli x1
+Sang Ahli x2
+
+Loss at Sang Ahli x1 drops player to Detektive.
+
+---
+
+MATCHMAKING
+
+Matchmaking groups players with similar skill levels.
+
+Factors used:
+
+Player Level
+Rank Tier
+Party size
+
+Difficulty scaling adjusts ghost behavior accordingly.
+
+---
+
+ECONOMY SYSTEM
+
+Players receive rewards from matches.
+
+Rewards depend on:
+
+Difficulty
+Evidence discovered
+Correct ghost identification
+Bonus objectives
+
+Currency used for cosmetics and profile items.
+
+---
+
+FINAL SYSTEM OBJECTIVE
+
+The architecture focuses on:
+
+Replayability
+Dynamic horror
+Scalable multiplayer systems
+Modular server architecture
+
+The system design allows easy addition of:
+
+New ghost types
+New maps
+New events
+New investigation tools

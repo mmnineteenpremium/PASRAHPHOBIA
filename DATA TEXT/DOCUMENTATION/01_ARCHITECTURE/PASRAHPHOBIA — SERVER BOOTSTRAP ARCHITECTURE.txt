@@ -1,0 +1,291 @@
+PASRAHPHOBIA — SERVER BOOTSTRAP ARCHITECTURE
+
+SERVER BOOTSTRAP ARCHITECTURE
+
+OVERVIEW
+
+The Server Bootstrap System initializes all core server systems when a Roblox server instance starts.
+
+Its purpose is to ensure that every system is started in the correct order and all dependencies are available.
+
+Bootstrap acts as the entry point for the entire server runtime.
+
+All server-side systems are registered and initialized through the ServiceRegistry.
+
+This approach prevents circular dependencies and ensures consistent system startup.
+
+---
+
+BOOTSTRAP ENTRY POINT
+
+The server bootstrap begins inside the ServerScriptService.
+
+Bootstrap is responsible for:
+
+Loading core services
+Registering systems
+Initializing systems
+Starting runtime loops
+
+After initialization completes, the server is ready to accept players.
+
+---
+
+BOOTSTRAP STARTUP ORDER
+
+Systems must start in a specific order to ensure dependencies exist.
+
+Startup order:
+
+Core Systems
+Infrastructure Systems
+Gameplay Systems
+Lobby Systems
+Match Systems
+
+---
+
+CORE SYSTEMS
+
+Core systems are responsible for the server foundation.
+
+These systems must start first.
+
+Core Systems:
+
+EventBus
+ConfigLoader
+ServiceRegistry
+
+Responsibilities:
+
+Register systems
+Allow inter-system communication
+Load configuration data
+
+Without these systems the server cannot function.
+
+---
+
+INFRASTRUCTURE SYSTEMS
+
+Infrastructure systems support gameplay but do not directly control it.
+
+Systems include:
+
+DataPersistence
+EconomySystem
+ProfileSystem
+
+Responsibilities:
+
+Player progression
+Currency storage
+Rank storage
+Inventory storage
+
+These systems must start before gameplay begins.
+
+---
+
+GAMEPLAY SYSTEMS
+
+Gameplay systems control the core investigation mechanics.
+
+Systems include:
+
+GhostSystem
+EvidenceSystem
+SanitySystem
+AggressionSystem
+InvestigationSystem
+GhostModifierSystem
+MapInteractionSystem
+MapEventSystem
+HorrorDirector
+
+Responsibilities:
+
+Ghost AI
+Evidence spawning
+Sanity drain
+Environmental horror events
+
+These systems activate when matches begin.
+
+---
+
+LOBBY SYSTEMS
+
+Lobby systems control the Social Hub.
+
+Systems include:
+
+LobbySocialHub
+PartySystem
+ContractSystem
+LeaderboardSystem
+
+Responsibilities:
+
+Lobby interaction
+Party formation
+Contract selection
+Social features
+
+Lobby systems remain active while players are not in matches.
+
+---
+
+MATCH SYSTEMS
+
+Match systems control match creation and lifecycle.
+
+Systems include:
+
+MatchQueue
+MatchBuilder
+MatchInstance
+MatchLifecycle
+TeleportService
+GamePhaseSystem
+
+Responsibilities:
+
+Create match instances
+Assign players to matches
+Teleport players to maps
+Control phase transitions
+
+---
+
+BOOTSTRAP INITIALIZATION FLOW
+
+Server starts
+Bootstrap initializes Core Systems
+Infrastructure Systems load
+Gameplay Systems register
+Lobby Systems activate
+Match Systems activate
+Server ready for players
+
+At this point the server begins accepting players.
+
+---
+
+SYSTEM REGISTRATION
+
+Each system registers itself in the ServiceRegistry.
+
+Example registration process:
+
+Register system
+Declare dependencies
+Initialize system
+Start runtime loop
+
+This ensures that all systems can safely access each other.
+
+---
+
+EVENT BUS COMMUNICATION
+
+Systems communicate using EventBus rather than direct function calls.
+
+Example events:
+
+PlayerJoinedLobby
+MatchCreated
+EvidenceDiscovered
+GhostHuntStarted
+PlayerSanityChanged
+MatchEnded
+
+This decouples systems and improves scalability.
+
+---
+
+SERVER OBJECTIVE
+
+The Server Bootstrap Architecture guarantees that:
+
+All systems start in a predictable order
+Dependencies are resolved safely
+The server remains stable and scalable
+
+This structure allows PASRAHPHOBIA to grow with new systems without rewriting core architecture.
+
+
+
+
+
+
+
+SERVER STARTUP FLOW
+Server Start
+     │
+     ▼
+Bootstrap
+     │
+     ▼
+Core Systems
+(EventBus, ConfigLoader, ServiceRegistry)
+     │
+     ▼
+Infrastructure Systems
+(DataPersistence, Economy, Profile)
+     │
+     ▼
+Gameplay Systems
+(Ghost, Evidence, Sanity, Aggression)
+     │
+     ▼
+Lobby Systems
+(LobbySocialHub, Party, Contracts)
+     │
+     ▼
+Match Systems
+(MatchQueue, MatchLifecycle, TeleportService)
+     │
+     ▼
+Server Ready
+BOOTSTRAP DEPENDENCY GRAPH
+Bootstrap
+   │
+   ▼
+ServiceRegistry
+   │
+   ▼
+EventBus
+   │
+   ▼
+ConfigLoader
+   │
+   ▼
+DataPersistence
+   │
+   ▼
+Economy + Profile
+   │
+   ▼
+Gameplay Systems
+   │
+   ▼
+Lobby Systems
+   │
+   ▼
+Match Systems
+HUBUNGAN DENGAN STRUKTUR FOLDER PROJECT
+
+Bootstrap berada di folder yang sudah ada di project kamu:
+
+src/server/Core
+
+yang sekarang berisi:
+
+Bootstrap
+ServiceRegistry
+
+Bootstrap akan menyalakan seluruh system dari folder:
+
+src/server/*

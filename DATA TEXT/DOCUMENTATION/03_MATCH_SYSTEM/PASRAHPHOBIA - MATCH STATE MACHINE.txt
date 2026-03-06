@@ -1,0 +1,142 @@
+PASRAHPHOBIA - MATCH STATE MACHINE
+
+OVERVIEW
+
+The Match State Machine controls the entire lifecycle of a match from creation to completion.
+
+This system is managed by the MatchLifecycle and GamePhaseSystem.
+
+Each match transitions through a series of states.
+
+States
+
+Waiting
+Preparation
+Investigation
+Hunt
+Extraction
+Results
+Completed
+
+---
+
+STATE: WAITING
+
+The match instance has been created but players have not yet been teleported.
+
+Conditions
+
+Match created
+Players assigned
+
+Transition
+
+PlayersTeleported → Preparation
+
+---
+
+STATE: PREPARATION
+
+Players spawn at the map entrance and prepare for the investigation.
+
+Ghost activity remains minimal.
+
+Duration
+
+30–60 seconds
+
+Transition
+
+TimerExpired → Investigation
+
+---
+
+STATE: INVESTIGATION
+
+Players explore the map and gather evidence.
+
+Active Systems
+
+GhostSystem
+EvidenceSystem
+SanitySystem
+AggressionSystem
+HorrorDirector
+
+Possible transitions
+
+HuntTriggered → Hunt
+ExtractionTriggered → Extraction
+
+---
+
+STATE: HUNT
+
+Ghost enters aggressive pursuit state.
+
+Doors lock
+Lights flicker
+Ghost chases players
+
+Transition
+
+HuntTimerExpired → Investigation
+
+---
+
+STATE: EXTRACTION
+
+Players return to the extraction point and submit their ghost guess.
+
+Transition
+
+PlayersExtracted → Results
+
+---
+
+STATE: RESULTS
+
+The server calculates investigation results.
+
+Systems involved
+
+EconomySystem
+RankedSystem
+ProfileSystem
+
+Transition
+
+ResultsComplete → Completed
+
+---
+
+STATE: COMPLETED
+
+Match instance is destroyed and players return to the lobby.
+
+
+
+
+
+MATCH STATE FLOW
+Waiting
+   │
+   ▼
+Preparation
+   │
+   ▼
+Investigation
+   │
+   ├── Hunt
+   │     │
+   │     ▼
+   │  Investigation
+   │
+   ▼
+Extraction
+   │
+   ▼
+Results
+   │
+   ▼
+Completed

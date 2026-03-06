@@ -1,0 +1,111 @@
+PASRAHPHOBIA — ECONOMY BALANCE SHEET
+1. CURRENCY SYSTEM
+
+Game menggunakan tiga currency.
+
+MM = Coin Biasa
+PP = Premium Coin
+Robux = Roblox Currency
+2. RARITY SYSTEM
+R1 = B-ajah
+R2 = B-Lebih
+R3 = Lumayan
+R4 = Langka
+R5 = Gagah
+3. RARITY ACCESS
+MM → R1–R3
+PP → R1–R5
+Robux → R1–R5
+4. ITEM TYPES
+
+Asset categories:
+
+Equipment
+Item
+Cosmetic
+Skin
+Emote
+Title
+Booster Card
+Kawani
+5. DAILY CHECK-IN SYSTEM
+
+Loop 7 hari.
+
+Day1 = MM 1000
+Day2 = MM 1000
+Day3 = MM 1000
+Day4 = Random Asset
+Day5 = MM 1500
+Day6 = MM 1500
+Day7 = Random Asset
+Day4 Drop Rate
+R1 = 80%
+R2 = 20%
+Day7 Drop Rate
+R1 = 60%
+R2 = 30%
+R3 = 10%
+6. DAILY MISSION
+
+Setiap hari:
+
+3 Mission
+
+Reward:
+
+1 Mission = 1000 MM
+All Mission = 2000 MM bonus
+
+Total maksimal:
+
+5000 MM
+7. MATCH REWARD
+
+Reward berbasis performa.
+
+1% score = 10 MM
+Win Reward
+Score > 50%
+Lose Reward
+Score < 50%
+8. DAILY MM CAP
+
+Max reward per hari:
+
+10.000 MM
+9. ROYAL PASS
+
+Season berlangsung:
+
+30 Hari
+Kelas Dukun
+
+Reward:
+
+Season Asset Set R4
+
+Benefit:
+
+daily reward
+
+seasonal cosmetic
+
+Kelas Detective
+
+Reward:
+
+Season Asset Set R5
+
+Benefit:
+
+premium cosmetic
+
+exclusive items
+
+10. LIFETIME PASS
+
+Benefit:
+
+2x Daily Mission
+2x Max MM

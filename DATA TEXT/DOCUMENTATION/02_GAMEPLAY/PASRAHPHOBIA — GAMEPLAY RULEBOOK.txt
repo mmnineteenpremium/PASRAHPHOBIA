@@ -1,0 +1,252 @@
+PASRAHPHOBIA — GAMEPLAY RULEBOOK
+1. CORE GAMEPLAY LOOP
+
+Core loop pemain:
+
+Join Game
+↓
+Spawn Lobby Social Hub
+↓
+Find Team / Party
+↓
+Matchmaking
+↓
+Teleport to Map
+↓
+Preparation Phase
+↓
+Investigation Phase
+↓
+Ghost Hunt Events
+↓
+Identify Ghost
+↓
+Extraction
+↓
+Reward Calculation
+↓
+Return to Lobby
+2. PLAYER OBJECTIVES
+
+Tujuan utama pemain:
+
+Menemukan ghost room
+
+Mengumpulkan evidence
+
+Mengidentifikasi ghost type
+
+Bertahan hidup dari hunt
+
+Keluar dari map
+
+3. PLAYER STATES
+
+Player dapat berada dalam state berikut:
+
+ALIVE
+DEAD
+SPECTATOR
+EXTRACTED
+ALIVE
+
+Player aktif bermain.
+
+Kemampuan:
+
+menggunakan evidence tools
+
+membuka pintu
+
+berinteraksi dengan map
+
+berkomunikasi voice chat
+
+DEAD
+
+Ketika player mati:
+
+UI notice muncul:
+
+"Kematian menipumu,
+yang kamu lihat belum tentu benar"
+
+Durasi: 5 detik di tengah layar
+Kemudian berpindah ke kiri dan tetap tampil kecil sampai endgame.
+
+SPECTATOR
+
+Player mati menjadi spectator.
+
+Kemampuan:
+
+spectate player hidup
+
+voice chat dengan team
+
+melihat distorsi ghost
+
+Spectator tidak bisa memberi hint pasti.
+
+4. GHOST BEHAVIOR STATES
+
+Ghost memiliki beberapa state AI.
+
+Idle
+Roaming
+Interaction
+Manifestation
+Hunt
+Cooldown
+IDLE
+
+Ghost berada di ghost room.
+
+Aktivitas:
+
+suara kecil
+
+suhu turun
+
+interaksi ringan
+
+ROAMING
+
+Ghost berpindah antar ruangan.
+
+Dipicu oleh:
+
+aggression tinggi
+
+player memicu event
+
+INTERACTION
+
+Ghost berinteraksi dengan lingkungan:
+
+pintu bergerak
+
+lampu mati
+
+objek jatuh
+
+MANIFESTATION
+
+Ghost muncul sesaat.
+
+Efek:
+
+visual apparition
+
+sanity drop
+
+HUNT
+
+Ghost mencoba membunuh player.
+
+Ciri:
+
+lampu mati
+
+pintu terkunci
+
+ghost mengejar player
+
+COOLDOWN
+
+Ghost berhenti sementara setelah hunt.
+
+Durasi:
+
+20–40 detik
+5. EVIDENCE SYSTEM
+
+PASRAHPHOBIA menggunakan evidence lokal Indonesia.
+
+Evidence tools:
+
+Kotak Arwah
+Buku Terkutuk
+Bola Arwah
+Gerakan Gaib
+Jejak Energi
+Suhu Membeku
+Evidence Requirement
+
+Difficulty menentukan jumlah evidence.
+
+Beginner = 4 evidence
+Standard = 3 evidence
+Nightmare = 2 evidence
+Evidence Detection
+
+Evidence muncul jika:
+
+player menggunakan tool benar
+
+berada di ghost room
+
+ghost aktif
+
+6. SANITY SYSTEM
+
+Player memiliki sanity meter.
+
+100% → stabil
+70% → normal
+50% → mulai bahaya
+30% → hunt probability naik
+10% → sangat berbahaya
+Sanity Drop Trigger
+
+Sanity turun jika:
+
+melihat ghost
+
+lampu mati
+
+event paranormal
+
+7. AGGRESSION SYSTEM
+
+Ghost memiliki aggression meter.
+
+Low
+Medium
+High
+Extreme
+
+Dipengaruhi oleh:
+
+sanity player
+
+noise player
+
+waktu investigasi
+
+8. HUNT TRIGGER RULES
+
+Hunt dapat dipicu oleh:
+
+Low sanity
+Ghost anger
+Provocation
+Time escalation
+
+Probability meningkat setiap:
+
+3–5 menit investigasi
+9. MATCH WIN CONDITIONS
+
+Team menang jika:
+
+Correct Ghost Identified
+AND
+Minimal 1 Player Extracted
+10. MATCH LOSE CONDITIONS
+
+Team kalah jika:
+
+All players dead
+OR
+Wrong ghost guess

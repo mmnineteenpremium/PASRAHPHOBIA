@@ -1,0 +1,95 @@
+========================================
+PASRAHPHOBIA — DOCUMENT INDEX
+========================================
+
+This directory contains the full design documentation
+for the PASRAHPHOBIA Roblox game project.
+
+AI agents must read the documents in the following order
+to fully understand the game architecture.
+
+========================================
+READ ORDER
+========================================
+
+1. 00_PROJECT_CORE
+   - Project vision
+   - Core design philosophy
+   - Global system overview
+
+2. 01_ARCHITECTURE
+   - Master System Map
+   - Global System Flow
+   - Technical System Blueprint
+   - Server Bootstrap Architecture
+   - Service Dependency Matrix
+
+3. 02_GAMEPLAY
+   - Gameplay Rulebook
+   - Investigation System
+   - Difficulty Scaling
+
+4. 03_MATCH_SYSTEM
+   - Match Lifecycle
+   - Match State Machine
+   - Match Architecture
+   - Teleport System
+
+5. 04_GHOST_SYSTEM
+   - Ghost AI Behavior
+   - Ghost State Machine
+   - Hunt System
+   - Ghost Modifier System
+
+6. 05_EVIDENCE_SYSTEM
+   - Evidence Engine
+   - Evidence Spawning
+   - Evidence Deduction Algorithm
+
+7. 06_SPECTATOR_SYSTEM
+   - Spectator Distortion System
+   - Spectator Communication Model
+   - Fake / Real Ghost Logic
+
+8. 07_ECONOMY_SYSTEM
+   - Economy Data Structure
+   - Economy Balance
+   - Monetization System
+   - RoyalPass System
+
+9. 08_LOBBY_SYSTEM
+   - Lobby Social Hub
+   - Player Profile System
+   - Flex System
+   - Gift System
+
+10. 09_AI_PIPELINE
+    - AI Development Pipeline
+    - Automated AI Code Generation
+
+11. 10_FINAL_REFERENCE
+    - Final system specifications
+    - Complete project blueprint
+
+========================================
+PROJECT TYPE
+========================================
+
+Multiplayer Horror Investigation Game
+Inspired by Phasmophobia style gameplay
+Built on Roblox platform
+
+========================================
+IMPORTANT NOTES
+========================================
+
+Server authority architecture.
+Evidence system drives investigation loop.
+Spectator players create uncertainty via distortion system.
+
+AI agents must follow architecture constraints
+defined in the documentation.
+
+========================================
+END OF INDEX
+========================================

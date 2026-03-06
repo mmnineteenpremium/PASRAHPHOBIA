@@ -1,0 +1,451 @@
+PASRAHPHOBIA — FINAL LOBBY SYSTEM SPECIFICATION
+
+
+FINAL LOBBY SYSTEM SPECIFICATION
+
+OVERVIEW
+
+The LobbySocialHub is the central social environment of PASRAHPHOBIA.
+
+It is designed to encourage player interaction, cosmetic showcasing, team formation, and system access before entering investigation matches.
+
+Players remain inside a single shared map environment with no internal teleportation between zones.
+
+All lobby interactions occur through physical movement inside the environment.
+
+---
+
+LOBBY DESIGN PRINCIPLE
+
+The lobby acts as a social horror hub where players gather between matches.
+
+Core objectives
+
+Encourage social interaction.
+
+Promote cosmetic visibility.
+
+Provide access to game systems.
+
+Maintain immersive horror atmosphere.
+
+---
+
+LOBBY MAP STRUCTURE
+
+The lobby map consists of a central plaza surrounded by themed buildings.
+
+Central Area
+
+Spawn Plaza
+
+Surrounding Buildings
+
+Team Finder Hall
+Equipment Shop
+Flex Plaza
+Hall of Fame
+Training Room
+
+Each building represents a functional system.
+
+Players walk into the building to access the system.
+
+No teleportation is used within the lobby.
+
+---
+
+SPAWN SYSTEM
+
+All players spawn in the central plaza.
+
+Spawn strategy ensures that players immediately see other players when entering the lobby.
+
+This increases social interaction and cosmetic visibility.
+
+Spawn rules
+
+Central spawn point.
+
+No random spawn positions.
+
+---
+
+TEAM FINDER AREA
+
+Purpose
+
+Allow players to form investigation teams.
+
+Features
+
+Quick Match
+
+Join Team Board
+
+Party Invitation
+
+Party size
+
+Maximum 4 players.
+
+Players can invite others directly from their profile.
+
+---
+
+FLEX PLAZA
+
+Open social area where players can showcase cosmetics.
+
+Players can
+
+Use emotes.
+
+Show equipped skins.
+
+Display titles.
+
+Interact with other players.
+
+Flex visibility increases desire for cosmetic purchases.
+
+---
+
+EQUIPMENT SHOP
+
+The shop building provides access to the ShopSystem.
+
+Items available
+
+Equipment
+
+Cosmetics
+
+Skins
+
+Emotes
+
+Booster Cards
+
+Kawani companions
+
+Shop currencies
+
+MM
+
+PP
+
+Robux
+
+---
+
+HALL OF FAME
+
+Leaderboard display area.
+
+Displays
+
+Top investigators.
+
+Highest ranked players.
+
+Season champions.
+
+Leaderboard updates periodically.
+
+This encourages competitive motivation.
+
+---
+
+TRAINING ROOM
+
+Practice environment for new players.
+
+Players can test investigation tools without danger.
+
+Tools available
+
+Kotak Arwah
+
+Buku Terkutuk
+
+Bola Arwah
+
+Gerakan Gaib
+
+Jejak Energi
+
+Suhu Membeku
+
+Training room simulates ghost interaction events.
+
+---
+
+LOBBY INTERACTION SYSTEM
+
+Environmental interactions exist throughout the lobby.
+
+Examples
+
+Sit on chairs.
+
+Open doors.
+
+Turn on radios.
+
+Inspect objects.
+
+These interactions increase immersion.
+
+---
+
+RANDOM LOBBY GHOST EVENTS
+
+Occasional paranormal events occur inside the lobby.
+
+Examples
+
+Lights flicker.
+
+Ghost shadow passes.
+
+Whispers heard nearby.
+
+These events create memorable moments.
+
+They do not harm players.
+
+---
+
+VOICE CHAT SYSTEM
+
+Roblox proximity voice chat is enabled.
+
+Voice chat operates with a radius.
+
+Players must be physically near each other to speak clearly.
+
+This encourages players to gather in social areas.
+
+---
+
+DYNAMIC POPULATION SYSTEM
+
+If player count in lobby is low, investigator NPCs appear.
+
+NPC investigators simulate player presence.
+
+NPCs walk around the lobby and perform idle behaviors.
+
+NPCs disappear as real players join.
+
+---
+
+LOBBY MUSIC
+
+Ambient horror background audio.
+
+Music should feel mysterious but not stressful.
+
+Goal
+
+Relaxation between matches.
+
+Maintain thematic atmosphere.
+
+---
+
+LOBBY SIZE
+
+Lobby should allow players to explore the full area in approximately 30 to 60 seconds.
+
+Avoid excessive map size.
+
+Large maps reduce player interaction density.
+
+---
+
+PLAYER PROFILE INTERACTION
+
+Players can click another player to open their profile card.
+
+Profile card displays
+
+Player level
+
+Title
+
+Bio
+
+Winrate (optional)
+
+Gallery showcase items
+
+Flex border
+
+Buttons
+
+Add friend
+
+Invite team
+
+Gift item
+
+---
+
+OVERHEAD PLAYER DISPLAY
+
+Above player characters the following information is shown
+
+Level
+
+Total games played
+
+Title
+
+Player name
+
+Winrate is not displayed above the head.
+
+---
+
+PROFILE PRIVACY SYSTEM
+
+Players may toggle winrate visibility.
+
+If disabled
+
+Winrate displays as "-".
+
+---
+
+GALLERY SHOWCASE
+
+Each player may display three cosmetic items.
+
+Gallery items appear inside the profile card.
+
+Purpose
+
+Allow players to showcase rare items.
+
+Encourage cosmetic purchases.
+
+---
+
+GIFT SYSTEM
+
+Players may gift cosmetic items to others.
+
+Gift purchases use Robux.
+
+Gift interaction occurs through the player profile window.
+
+---
+
+SOCIAL MONETIZATION LOOP
+
+Lobby design supports cosmetic monetization.
+
+Player sees another player with a rare item.
+
+↓
+
+Player inspects profile.
+
+↓
+
+Player sees gallery showcase.
+
+↓
+
+Player desires item.
+
+↓
+
+Player purchases cosmetic.
+
+↓
+
+Player flexes item in lobby.
+
+---
+
+LOBBY EXIT FLOW
+
+Players enter investigation through the Matchmaking Hall.
+
+Matchmaking hall contains matchmaking interaction zone.
+
+Once a match is formed
+
+TeleportService moves players to investigation server.
+
+---
+
+LOBBY SYSTEM MODULES
+
+LobbySocialHub
+
+LobbyInteractionSystem
+PlayerPresenceSystem
+PartySystem
+ProfileSystem
+ShopAccessSystem
+MatchmakingZone
+
+These modules control lobby functionality.
+
+
+
+
+
+
+
+
+LOBBY ZONE MAP
+            Hall of Fame
+                 │
+                 │
+Training Room ─ Plaza ─ Equipment Shop
+                 │
+                 │
+           Flex Plaza
+                 │
+                 │
+         Team Finder Hall
+
+Spawn point berada di Plaza tengah.
+
+LOBBY SYSTEM FLOW
+Player Join
+    │
+Load PlayerData
+    │
+Spawn Plaza
+    │
+Explore Lobby
+    │
+ ├─ Flex Plaza
+ ├─ Shop
+ ├─ Training
+ ├─ Hall of Fame
+ └─ Team Finder
+    │
+Join Match
+    │
+Teleport to Map
+Folder Integration
+
+Sesuai dengan project kamu:
+
+src/server/LobbySocialHub
+
+Modules:
+
+Buildings
+Core
+Interaction
+PartySystem
+PlayerPresence
+Zones

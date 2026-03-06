@@ -1,0 +1,3258 @@
+PASRAHPHOBIA – COMPLETE PROJECT PLAN
+
+PROJECT OVERVIEW
+PASRAHPHOBIA is a multiplayer horror investigation game on Roblox where players explore haunted locations, collect evidence, identify ghost types, and survive supernatural events. The game supports solo and cooperative gameplay for up to four players.
+
+Players begin in a Social Hub lobby where they can interact with systems such as shop, training, daily rewards, leaderboard, matchmaking, and player profile flex displays.
+
+---
+
+CORE GAME LOOP
+
+1. Player joins the game
+2. Player spawns in Lobby Social Hub
+3. Player explores lobby buildings (shop, training, leaderboard, etc.)
+4. Player forms party or queues for matchmaking
+5. Match starts
+6. Players investigate haunted map
+7. Collect ghost evidence
+8. Identify ghost type
+9. Survive hunt events
+10. Extract from map
+11. Rewards and statistics displayed
+12. Return to lobby
+
+---
+
+LOBBY SOCIAL HUB
+
+The lobby is a single open map with a central plaza and surrounding buildings. Players walk into buildings to interact with systems. No teleportation between zones.
+
+Lobby Layout
+
+Central Plaza (Spawn Area)
+
+Buildings around the plaza:
+
+Shop Building
+Training Building
+Leaderboard Building
+Daily Reward Building
+Flex Gallery
+Matchmaking Hall
+
+Lobby Systems
+
+Player Presence Tracking
+Party System (max 4 players)
+Lobby Interaction System
+Lobby Ambient Systems
+Profile Inspection System
+
+---
+
+PLAYER PROFILE SYSTEM
+
+Player profiles contain public information and cosmetic display elements.
+
+Profile contains:
+
+Player Level (1–100)
+Title
+Flex Border
+Bio
+3 Gallery Items
+Total Games Played
+
+Information shown above player:
+
+Level
+Title
+Total Games
+
+Detailed profile appears when clicking player.
+
+Winrate visibility can be toggled by player.
+If hidden, it shows "-".
+
+---
+
+GAME MODES / INVESTIGATION DIFFICULTY
+
+Beginner
+Evidence Required: 4
+Ghost Aggression: Low
+Rewards: Low
+
+Standard
+Evidence Required: 3
+Ghost Aggression: Medium
+Rewards: Medium
+
+Nightmare
+Evidence Required: 2
+Ghost Aggression: High
+Rewards: High
+
+Difficulty affects:
+
+Ghost aggression
+Sanity drain
+Evidence availability
+Reward multiplier
+
+---
+
+GAME PHASE SYSTEM
+
+Match lifecycle phases:
+
+Lobby
+Preparation
+Investigation
+Hunt
+Extraction
+Results
+
+Phase Responsibilities
+
+Lobby
+Players prepare for match.
+
+Preparation
+Map loads and ghost spawns.
+
+Investigation
+Players search for evidence.
+
+Hunt
+Ghost enters aggressive hunt mode.
+
+Extraction
+Players exit investigation area.
+
+Results
+Rewards, statistics, XP displayed.
+
+---
+
+GHOST SYSTEM
+
+Total Ghost Types: 12
+
+Each ghost has:
+
+Unique behavior
+Evidence types
+Aggression level
+Hunt patterns
+
+Ghost AI states include:
+
+Idle
+Roaming
+Interaction
+Hunt
+
+Ghost aggression increases based on player actions and sanity levels.
+
+---
+
+EVIDENCE SYSTEM
+
+Players collect ghost evidence using investigation tools.
+
+Evidence Tools
+
+Spirit Box
+Temperature Meter
+EMF Detector
+Ghost Writing Book
+Night Vision Camera
+Motion Sensor
+
+Evidence is stored per match and shared with the team.
+
+Evidence required depends on difficulty level.
+
+---
+
+SANITY SYSTEM
+
+Players have a sanity meter that decreases over time or from paranormal events.
+
+Low sanity increases:
+
+Ghost aggression
+Chance of hunt events
+Fear effects
+
+Sanity can be influenced by environmental factors and ghost interactions.
+
+---
+
+FEAR ENGINE
+
+Controls psychological horror elements including:
+
+Audio disturbances
+Visual hallucinations
+Environmental interactions
+Ghost manifestations
+
+Fear intensity scales with player sanity and ghost aggression.
+
+---
+
+AGGRESSION SYSTEM
+
+Controls ghost hostility levels.
+
+Aggression increases when:
+
+Player sanity is low
+Players provoke ghost
+Evidence interactions occur
+Time passes in investigation phase
+
+High aggression triggers hunt events.
+
+---
+GAME MODES
+
+The game contains two primary modes:
+
+Classic Investigation
+
+Ranked Investigation
+
+Both modes share the same core investigation gameplay but differ in difficulty scaling, rewards, and ranking impact.
+
+CLASSIC INVESTIGATION MODE
+
+Classic mode is designed for casual play and cooperative investigation.
+
+Difficulty Presets
+
+Beginner - 1-3
+
+Standard - 4-7
+
+Nightmare - 8-10
+
+Classic mode does not affect ranking.
+
+Players receive:
+
+Currency
+XP
+RoyalPass progression
+
+RANKED INVESTIGATION MODE
+
+Ranked mode is competitive and dynamically balanced.
+
+Difficulty is calculated using an internal matchmaking algorithm based on:
+
+Player Level
+Player Rank Tier
+
+The system estimates a difficulty value to determine:
+
+Ghost aggression scaling
+Evidence difficulty
+Sanity drain rate
+Hunt probability
+
+Ranked mode uses matchmaking to place players with similar skill levels.
+
+Ranked rewards include:
+
+Rank Points
+Season rewards
+Special cosmetics
+
+RANK DIFFICULTY ESTIMATION ALGORITHM
+
+The system calculates a difficulty score.
+
+DifficultyScore = (PlayerLevelWeight + RankTierWeight)
+
+Example scaling:
+
+Level Influence
+Low level players face lower aggression.
+
+High level players face stronger ghost behavior.
+
+Rank Influence
+Higher ranks increase investigation difficulty.
+
+Difficulty factors adjusted:
+
+Ghost aggression multiplier
+Sanity drain multiplier
+Hunt trigger probability
+Evidence complexity
+
+This system ensures ranked matches remain challenging regardless of player progression.
+
+
+RANKED MATCH DIFFICULTY SCALE
+
+Ranked difficulty uses a scalable system from:
+
+Difficulty Level: 1 – 10
+
+Each rank tier influences the difficulty estimation for the match.
+
+Difficulty Scaling per Rank Group:
+
+Bayi → Difficulty 1
+Balita → Difficulty 1 – 3
+Anak-Anak → Difficulty 2 – 4
+Remaja → Difficulty 4 – 6
+Dewasa → Difficulty 6 – 8
+Profesional → Difficulty 7 – 9
+Detektive → Difficulty 8 – 10
+Sang Ahli → Difficulty 10
+
+The system dynamically adjusts:
+
+Ghost Aggression
+Sanity Drain Speed
+Hunt Probability
+Evidence Difficulty
+
+STAR PROGRESSION SYSTEM
+
+Rank progression uses stars.
+
+Win Condition:
++1 Star
+
+Loss Condition:
+-1 Star
+
+Players advance when reaching the required number of stars for the rank tier.
+
+RANK TIER STRUCTURE
+
+BAYI RANK
+
+Bayi 3
+Requirement: 3 Stars
+
+Bayi 2
+Requirement: 3 Stars
+
+Bayi 1
+Requirement: 3 Stars
+
+BALITA RANK
+
+Balita 3
+Requirement: 3 Stars
+
+Balita 2
+Requirement: 3 Stars
+
+Balita 1
+Requirement: 3 Stars
+
+ANAK-ANAK RANK
+
+Anak-Anak 3
+Requirement: 3 Stars
+
+Anak-Anak 2
+Requirement: 3 Stars
+
+Anak-Anak 1
+Requirement: 3 Stars
+
+REMAJA RANK
+
+Remaja 4
+Requirement: 4 Stars
+
+Remaja 3
+Requirement: 4 Stars
+
+Remaja 2
+Requirement: 4 Stars
+
+Remaja 1
+Requirement: 4 Stars
+
+DEWASA RANK
+
+Dewasa 5
+Requirement: 5 Stars
+
+Dewasa 4
+Requirement: 5 Stars
+
+Dewasa 3
+Requirement: 5 Stars
+
+Dewasa 2
+Requirement: 5 Stars
+
+Dewasa 1
+Requirement: 5 Stars
+
+PROFESIONAL RANK
+
+Profesional 5
+Requirement: 5 Stars
+
+Profesional 4
+Requirement: 5 Stars
+
+Profesional 3
+Requirement: 5 Stars
+
+Profesional 2
+Requirement: 5 Stars
+
+Profesional 1
+Requirement: 5 Stars
+
+DETEKTIVE RANK
+
+Detektive 5
+Requirement: 5 Stars
+
+Detektive 4
+Requirement: 5 Stars
+
+Detektive 3
+Requirement: 5 Stars
+
+Detektive 2
+Requirement: 5 Stars
+
+Detektive 1
+Requirement: 5 Stars
+
+SANG AHLI RANK
+
+Final Rank Tier
+
+Sang Ahli
+
+Progression System:
+50 Stars total
+
+This represents the highest mastery level in ranked play.
+
+RANK PROGRESSION FLOW
+
+Example:
+
+Player starts at:
+
+Bayi 3
+
+After gaining 3 stars:
+
+Promoted to Bayi 2
+
+Then:
+
+Bayi 1 → Balita 3 → Balita 2 → Balita 1 → Anak-Anak 3 → ...
+
+This continues until:
+
+Detektive 1 → Sang Ahli
+
+RANKED MATCH REWARDS
+
+Winning ranked matches grants:
+
+Star Progress
+Rank Advancement
+Rank Reputation
+
+Season rewards include:
+
+Exclusive Titles
+Profile Borders
+Flex Gallery Items
+Special Rank Cosmetics
+
+RANK DISPLAY IN LOBBY
+
+Player rank is visible in the lobby profile.
+
+Display elements include:
+
+Rank Tier Badge
+Stars Progress
+Season Border
+
+Players may showcase rank cosmetics in the Flex Gallery.
+
+
+
+MATCH SYSTEM
+
+Handles match creation and lifecycle.
+
+Responsibilities:
+
+Classic -
+Map selection
+Difficulty selection
+Player team creation
+Match start and end
+Phase transitions
+
+Ranked -
+Map Random
+Scalable level
+Player team creation
+Match start and end
+Phase transitions
+
+Solo play
+Party play (max 4 players)
+
+---
+
+ECONOMY SYSTEM
+
+Players earn in-game currency from matches.
+
+Rewards depend on:
+
+Evidence collected
+Correct ghost identification
+Survival
+Difficulty level
+
+Currency can be used for:
+
+Cosmetics
+Profile items
+Flex gallery items
+Borders
+Titles
+
+---
+
+ROYALPASS SYSTEM
+
+Seasonal progression system.
+
+Players gain RoyalPass XP from:
+
+Matches
+Daily login
+Special objectives
+
+Rewards include:
+
+Exclusive cosmetics
+Titles
+Profile borders
+Gallery items
+
+---
+
+DAILY CHECK-IN SYSTEM
+
+30-day login reward system.
+
+Players receive daily rewards for logging in.
+
+Rewards include:
+
+Currency
+Cosmetics
+Profile items
+RoyalPass XP
+
+---
+
+LEADERBOARD SYSTEM
+
+Displays top players based on:
+
+Total investigations
+Ranked score
+Experience level
+
+Leaderboard visible inside lobby building.
+
+---
+
+TRAINING SYSTEM
+
+Players can test investigation tools inside the training building.
+
+Training includes:
+
+Tool practice
+Evidence simulation
+Ghost interaction tutorials
+
+---
+
+MAP SYSTEM
+
+Maps represent haunted locations.
+
+Initial maps include:
+
+Abandoned Palace
+Empty Building
+Haunted House
+Studio MM Nineteen
+
+Each map contains:
+
+Ghost spawn zones
+Evidence interaction areas
+Environmental horror triggers
+
+Maps support both solo and multiplayer matches.
+
+---
+
+MULTIPLAYER SUPPORT
+
+Max players per match: 4
+
+Multiplayer features:
+
+Team evidence sharing
+Cooperative ghost investigation
+Shared objective system
+
+Server authority ensures gameplay integrity.
+
+---
+
+MATCH REWARD FLOW
+
+Investigation completed
+Ghost identified
+Players extract
+Results phase triggered
+Rewards calculated
+Players returned to lobby
+
+---
+
+PROJECT STRUCTURE GOAL
+
+The architecture separates systems into:
+
+Server Systems
+Client Systems
+Shared Systems
+Map Assets
+
+This modular design allows the game to expand with new maps, ghosts, and systems without restructuring the codebase.
+
+---
+
+FINAL DEVELOPMENT OBJECTIVE
+
+Deliver a scalable Roblox horror investigation game with:
+
+Immersive lobby hub
+Cooperative ghost investigation gameplay
+Dynamic horror systems
+Progression and cosmetic systems
+Long-term replayability
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PASRAHPHOBIA – RANK PROGRESSION TREE
+
+Rank progression uses Stars until the final tier.
+
+Win  → +1 Star
+Lose → -1 Star
+
+If stars reach maximum → Promotion
+If stars reach 0 → Demotion
+
+---
+
+RANK TIER TREE
+
+Bayi
+├─ Bayi 3 (0 → 3 Stars)
+├─ Bayi 2 (0 → 3 Stars)
+└─ Bayi 1 (0 → 3 Stars)
+
+Balita
+├─ Balita 3 (0 → 3 Stars)
+├─ Balita 2 (0 → 3 Stars)
+└─ Balita 1 (0 → 3 Stars)
+
+Anak-Anak
+├─ Anak-Anak 3 (0 → 3 Stars)
+├─ Anak-Anak 2 (0 → 3 Stars)
+└─ Anak-Anak 1 (0 → 3 Stars)
+
+Remaja
+├─ Remaja 4 (0 → 4 Stars)
+├─ Remaja 3 (0 → 4 Stars)
+├─ Remaja 2 (0 → 4 Stars)
+└─ Remaja 1 (0 → 4 Stars)
+
+Dewasa
+├─ Dewasa 5 (0 → 5 Stars)
+├─ Dewasa 4 (0 → 5 Stars)
+├─ Dewasa 3 (0 → 5 Stars)
+├─ Dewasa 2 (0 → 5 Stars)
+└─ Dewasa 1 (0 → 5 Stars)
+
+Profesional
+├─ Profesional 5 (0 → 5 Stars)
+├─ Profesional 4 (0 → 5 Stars)
+├─ Profesional 3 (0 → 5 Stars)
+├─ Profesional 2 (0 → 5 Stars)
+└─ Profesional 1 (0 → 5 Stars)
+
+Detektive
+├─ Detektive 5 (0 → 5 Stars)
+├─ Detektive 4 (0 → 5 Stars)
+├─ Detektive 3 (0 → 5 Stars)
+├─ Detektive 2 (0 → 5 Stars)
+└─ Detektive 1 (0 → 5 Stars)
+
+Sang Ahli
+└─ Victory Counter Rank
+
+---
+
+SANG AHLI SYSTEM
+
+Sang Ahli does not use stars.
+
+Instead it uses a **Victory Counter**.
+
+Rank format:
+
+Sang Ahli x0
+Sang Ahli x1
+Sang Ahli x2
+Sang Ahli x3
+Sang Ahli x4
+...
+
+---
+
+WIN / LOSS RULES
+
+Promotion Rule
+
+Detektive 1 (5 Stars) → Win → Sang Ahli x1
+
+---
+
+Sang Ahli Victory
+
+Example:
+
+Sang Ahli x1 → Win → Sang Ahli x2
+Sang Ahli x2 → Win → Sang Ahli x3
+
+---
+
+Sang Ahli Loss
+
+Loss reduces the counter.
+
+Example:
+
+Sang Ahli x3 → Lose → Sang Ahli x2
+Sang Ahli x2 → Lose → Sang Ahli x1
+Sang Ahli x1 → Lose → Sang Ahli x0
+
+---
+
+DEMOTION RULE
+
+If a player loses while at:
+
+Sang Ahli x0
+
+The player is demoted to:
+
+Detektive 4
+
+---
+
+DEMOTION RECOVERY
+
+Example recovery path:
+
+Detektive 4 → Win → Detektive 5
+Detektive 5 → Win → Sang Ahli x1
+
+---
+
+PROGRESSION FLOW
+
+Example player journey:
+
+Bayi 3
+↓
+Bayi 2
+↓
+Bayi 1
+↓
+Balita 3
+↓
+Balita 2
+↓
+Balita 1
+↓
+Anak-Anak 3
+↓
+Anak-Anak 2
+↓
+Anak-Anak 1
+↓
+Remaja 4
+↓
+Remaja 3
+↓
+Remaja 2
+↓
+Remaja 1
+↓
+Dewasa 5
+↓
+Dewasa 4
+↓
+Dewasa 3
+↓
+Dewasa 2
+↓
+Dewasa 1
+↓
+Profesional 5
+↓
+Profesional 4
+↓
+Profesional 3
+↓
+Profesional 2
+↓
+Profesional 1
+↓
+Detektive 5
+↓
+Detektive 4
+↓
+Detektive 3
+↓
+Detektive 2
+↓
+Detektive 1
+↓
+Sang Ahli x1
+↓
+Sang Ahli x2
+↓
+Sang Ahli x3
+↓
+Sang Ahli x4
+↓
+Sang Ahli x5
+↓
+...
+
+Loss example:
+
+Sang Ahli x1
+↓ Lose
+Sang Ahli x0
+↓ Lose
+Detektive 4
+
+---
+
+LEADERBOARD DISPLAY
+
+Top ranked players are displayed using Sang Ahli counter.
+
+Example leaderboard:
+
+1. PlayerA — Sang Ahli x248
+2. PlayerB — Sang Ahli x190
+3. PlayerC — Sang Ahli x163
+
+The counter represents total ranked victories after reaching the master tier.
+
+
+
+
+
+
+PASRAHPHOBIA – RANKED DIFFICULTY ENGINE
+
+The Ranked Difficulty Engine dynamically determines the difficulty of a match based on player skill level.
+
+Difficulty is calculated using:
+
+Player Level
+Player Rank Tier
+Team Average Rank
+
+The result produces a value called:
+
+Match Difficulty Score
+
+Difficulty Range
+
+1 – 10
+
+---
+
+DIFFICULTY FORMULA
+
+DifficultyScore =
+(LevelWeight × PlayerLevelFactor)
++
+(RankWeight × RankTierFactor)
+
+Example weights:
+
+LevelWeight = 0.4
+RankWeight = 0.6
+
+Rank has stronger influence than level.
+
+---
+
+LEVEL FACTOR
+
+Player Level Range
+
+1 → 100
+
+LevelFactor is normalized:
+
+LevelFactor = PlayerLevel / 100
+
+Example:
+
+Level 10 → 0.10
+Level 50 → 0.50
+Level 100 → 1.00
+
+---
+
+RANK FACTOR
+
+Each rank group has a base difficulty value.
+
+Bayi → 1
+Balita → 2
+Anak-Anak → 3
+Remaja → 5
+Dewasa → 7
+Profesional → 8
+Detektive → 9
+Sang Ahli → 10
+
+RankFactor = RankDifficulty / 10
+
+Example:
+
+Bayi → 0.1
+Balita → 0.2
+Anak-Anak → 0.3
+Remaja → 0.5
+Dewasa → 0.7
+Profesional → 0.8
+Detektive → 0.9
+Sang Ahli → 1.0
+
+---
+
+TEAM DIFFICULTY CALCULATION
+
+For multiplayer matches, difficulty is based on team average.
+
+TeamDifficulty =
+Average(PlayerDifficultyScore)
+
+Example team:
+
+Player A → 0.72
+Player B → 0.65
+Player C → 0.80
+Player D → 0.74
+
+TeamDifficulty = 0.7275
+
+Converted to difficulty scale:
+
+DifficultyLevel = round(TeamDifficulty × 10)
+
+Example result:
+
+DifficultyLevel = 7
+
+---
+
+GAMEPLAY EFFECTS
+
+The difficulty level influences several game systems.
+
+Ghost Aggression
+
+Higher difficulty increases:
+
+Ghost roaming frequency
+Ghost hunt trigger speed
+Ghost reaction to players
+
+---
+
+SANITY DRAIN
+
+Sanity drain multiplier increases with difficulty.
+
+Example:
+
+Difficulty 1 → 0.7× drain
+Difficulty 5 → 1.0× drain
+Difficulty 10 → 1.5× drain
+
+---
+
+HUNT PROBABILITY
+
+Chance of ghost entering hunt phase increases.
+
+Example:
+
+Difficulty 2 → 10% chance
+Difficulty 5 → 25% chance
+Difficulty 10 → 45% chance
+
+---
+
+EVIDENCE DIFFICULTY
+
+Higher ranks reduce evidence clarity.
+
+Examples:
+
+Temperature fluctuations become slower
+Spirit Box responses become rarer
+Ghost writing triggers less frequently
+
+---
+
+RANKED MATCH FLOW
+
+1. Matchmaking forms team
+2. System calculates TeamDifficulty
+3. Map is randomly selected
+4. Ghost difficulty parameters are generated
+5. Match begins
+
+---
+
+BALANCING OBJECTIVE
+
+The Ranked Difficulty Engine ensures:
+
+High rank players face harder investigations
+Low rank players receive more forgiving gameplay
+Teams with mixed skill levels remain balanced
+
+The system keeps Ranked matches challenging and fair regardless of player progression.
+
+
+
+
+
+
+PASRAHPHOBIA – RANKED MATCHMAKING SYSTEM
+
+Ranked matchmaking is responsible for creating balanced teams and fair investigations.
+
+The system evaluates:
+
+Player Rank Tier
+Player Level
+Party Size
+
+The goal is to form teams with similar overall skill levels.
+
+---
+
+MATCHMAKING PARAMETERS
+
+Each player entering ranked queue has the following values:
+
+Rank Tier Score
+Player Level Score
+Matchmaking Score
+
+---
+
+RANK SCORE
+
+Each rank group has a base score.
+
+Bayi → 100
+Balita → 200
+Anak-Anak → 300
+Remaja → 450
+Dewasa → 600
+Profesional → 750
+Detektive → 900
+Sang Ahli → 1000+
+
+Within each rank stage the score increases.
+
+Example:
+
+Bayi 3 → 100
+Bayi 2 → 120
+Bayi 1 → 140
+
+Balita 3 → 200
+Balita 2 → 220
+Balita 1 → 240
+
+This allows matchmaking to differentiate players within the same tier.
+
+---
+
+LEVEL SCORE
+
+Level contributes additional matchmaking weight.
+
+LevelScore = PlayerLevel × 2
+
+Example:
+
+Level 10 → 20
+Level 50 → 100
+Level 100 → 200
+
+---
+
+MATCHMAKING SCORE
+
+Final matchmaking score:
+
+MatchScore = RankScore + LevelScore
+
+Example player:
+
+Rank: Dewasa 3 → 640
+Level: 60 → 120
+
+MatchScore = 760
+
+---
+
+TEAM MATCHMAKING
+
+Ranked matches allow up to:
+
+4 players per team
+
+The system attempts to build teams with similar average MatchScore.
+
+Example:
+
+Team A average score → 760
+Team B average score → 742
+
+This is considered balanced.
+
+---
+
+MATCHMAKING RANGE
+
+The acceptable score range expands over time.
+
+Initial search range:
+
+±50 MatchScore
+
+After 20 seconds:
+
+±100 MatchScore
+
+After 40 seconds:
+
+±150 MatchScore
+
+This prevents long matchmaking queues.
+
+---
+
+PARTY MATCHMAKING
+
+Players can queue as a party.
+
+Party rules:
+
+Party size: 2–4 players
+
+MatchScore for a party is calculated using:
+
+PartyAverageScore
+
+Example party:
+
+Player A → 720
+Player B → 740
+Player C → 710
+
+PartyAverageScore → 723
+
+The matchmaking system finds other players with similar values.
+
+---
+
+MAP SELECTION
+
+In ranked mode:
+
+Maps are randomly selected.
+
+Each map has its own difficulty weight.
+
+Example:
+
+Abandoned Palace → 1.1 difficulty multiplier
+Haunted House → 1.0 multiplier
+Empty Building → 0.9 multiplier
+
+This value modifies the Difficulty Engine.
+
+---
+
+ANTI-SMURF PROTECTION
+
+The system detects suspicious skill mismatch.
+
+Example:
+
+Low level player
+High win rate
+Rapid rank increase
+
+Such players receive increased difficulty scaling to prevent smurf abuse.
+
+---
+
+QUEUE FLOW
+
+Ranked Matchmaking Process
+
+1. Player enters ranked queue
+2. Player matchmaking score is calculated
+3. System searches for players with similar scores
+4. Team is formed
+5. Map is randomly selected
+6. Difficulty Engine calculates match difficulty
+7. Investigation begins
+
+---
+
+MATCH RESULT PROCESS
+
+After the match:
+
+Stars are updated.
+
+Win → +1 Star
+Lose → -1 Star
+
+If promotion threshold is reached → Rank increases.
+
+If star reaches 0 → Rank demotion occurs.
+
+Special rule:
+
+Sang Ahli uses victory counter instead of stars.
+
+---
+
+SYSTEM OBJECTIVE
+
+The Ranked Matchmaking System ensures:
+
+Balanced teams
+Fair difficulty scaling
+Reasonable queue times
+Competitive ranked progression
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PASRAHPHOBIA – GHOST BEHAVIOR ENGINE
+
+The Ghost Behavior Engine controls how ghosts behave during investigations.
+
+The system determines:
+
+Ghost movement
+Ghost interaction with environment
+Ghost evidence generation
+Ghost hunt behavior
+Ghost reaction to players
+
+The behavior dynamically changes based on:
+
+Ghost Type
+Player Sanity
+Aggression Level
+Match Difficulty
+
+---
+
+GHOST AI STATES
+
+Each ghost operates using a state-based AI system.
+
+Ghost States
+
+Idle
+Roaming
+Interaction
+Manifestation
+Hunt
+
+---
+
+IDLE STATE
+
+The ghost remains inactive in its favorite room.
+
+Behavior:
+
+Minimal activity
+Rare environmental interaction
+Low evidence generation
+
+Idle state typically occurs at the beginning of investigations.
+
+---
+
+ROAMING STATE
+
+The ghost moves around the map.
+
+Behavior:
+
+Moves between nearby rooms
+Triggers environmental events
+May appear briefly to players
+
+Roaming increases as:
+
+Time passes
+Aggression increases
+
+---
+
+INTERACTION STATE
+
+The ghost interacts with objects in the environment.
+
+Possible interactions:
+
+Doors opening or closing
+Lights flickering
+Objects moving
+Sound disturbances
+
+These interactions help players detect evidence.
+
+---
+
+MANIFESTATION STATE
+
+The ghost appears visually for a short time.
+
+Possible manifestations:
+
+Shadow figure
+Full apparition
+Partial silhouette
+
+Manifestations increase player fear and reduce sanity.
+
+---
+
+HUNT STATE
+
+The ghost becomes fully aggressive and attempts to kill players.
+
+Hunt triggers when aggression reaches threshold.
+
+During hunt:
+
+Lights flicker
+Doors lock
+Ghost actively searches for players
+
+Players must hide or escape.
+
+---
+
+GHOST AGGRESSION SYSTEM
+
+Aggression determines how active and dangerous the ghost is.
+
+Aggression increases when:
+
+Player sanity is low
+Players provoke ghost
+Evidence interactions occur
+Time passes
+
+Aggression values influence:
+
+Roaming frequency
+Manifestation rate
+Hunt probability
+
+---
+
+SANITY INTERACTION
+
+Player sanity directly affects ghost behavior.
+
+High Sanity
+
+Ghost is less active.
+
+Medium Sanity
+
+Ghost interactions increase.
+
+Low Sanity
+
+Ghost hunts become more frequent.
+
+---
+
+EVIDENCE GENERATION
+
+Ghosts generate investigation evidence through behavior.
+
+Examples:
+
+Spirit Box responses
+Temperature drops
+EMF spikes
+Ghost writing events
+Motion detection
+
+Evidence generation frequency depends on:
+
+Ghost Type
+Difficulty Level
+Aggression Level
+
+---
+
+GHOST TYPE VARIATION
+
+There are 12 ghost types in the game.
+
+Each ghost type modifies behavior patterns.
+
+Example traits:
+
+Aggressive Ghost
+
+Higher hunt frequency
+
+Passive Ghost
+
+More environmental interactions
+
+Deceptive Ghost
+
+Rare evidence but frequent manifestations
+
+Fast Ghost
+
+Moves faster during hunts
+
+Each ghost type has unique investigation challenges.
+
+---
+
+DIFFICULTY INFLUENCE
+
+Match difficulty modifies ghost behavior.
+
+Low Difficulty
+
+Slow aggression growth
+Frequent evidence
+
+High Difficulty
+
+Fast aggression growth
+Rare evidence
+More hunts
+
+Difficulty ranges from:
+
+1 → 10
+
+---
+
+FEAR ENGINE INTEGRATION
+
+Ghost behavior interacts with the Fear Engine.
+
+Fear events include:
+
+Sudden noises
+Visual hallucinations
+Environmental disturbances
+
+Fear intensity scales with:
+
+Ghost proximity
+Sanity level
+Aggression level
+
+---
+
+MATCH BEHAVIOR FLOW
+
+Investigation begins.
+
+Ghost starts in Idle state.
+
+As time passes:
+
+Idle → Roaming → Interaction
+
+If aggression rises:
+
+Manifestations occur.
+
+If aggression threshold is reached:
+
+Hunt state begins.
+
+After hunt ends:
+
+Ghost returns to roaming state.
+
+---
+
+SYSTEM OBJECTIVE
+
+The Ghost Behavior Engine creates dynamic and unpredictable horror gameplay.
+
+The system ensures:
+
+Each match feels different
+Players must actively investigate
+Ghost behavior evolves over time
+High difficulty matches become increasingly dangerous
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PASRAHPHOBIA – PARANORMAL EVENT ENGINE
+
+The Paranormal Event Engine controls random supernatural events during investigations.
+
+These events create tension, unpredictability, and environmental storytelling.
+
+Events can occur even when the ghost is not actively hunting.
+
+The system is influenced by:
+
+Ghost Aggression
+Player Sanity
+Match Difficulty
+Player Location
+
+---
+
+EVENT CATEGORIES
+
+Paranormal events are divided into several categories.
+
+Environmental Events
+Ghost Manifestation Events
+Fear Events
+Hunt Warning Events
+
+Each category creates different gameplay effects.
+
+---
+
+ENVIRONMENTAL EVENTS
+
+Environmental events affect the physical environment of the map.
+
+Examples:
+
+Lights flicker
+Doors slam shut
+Objects fall or move
+Windows shake
+Electronic interference
+
+These events indicate ghost activity but do not directly harm players.
+
+Environmental events help players locate the ghost.
+
+---
+
+GHOST MANIFESTATION EVENTS
+
+The ghost briefly appears to players.
+
+Manifestations may include:
+
+Shadow figures
+Full body apparition
+Partial silhouettes
+Ghost walking across hallway
+
+These events reduce player sanity and increase fear.
+
+---
+
+FEAR EVENTS
+
+Fear events are psychological disturbances.
+
+Examples:
+
+Footsteps in empty rooms
+Whispers near the player
+Sudden loud noises
+Hallucination shadows
+Objects moving when no one is nearby
+
+Fear events mainly affect player immersion and sanity.
+
+---
+
+HUNT WARNING EVENTS
+
+Before a hunt begins, warning events may occur.
+
+Examples:
+
+Lights turning red
+Heavy footsteps
+Doors locking briefly
+Ghost breathing sounds
+
+These events warn players that the ghost is becoming aggressive.
+
+---
+
+EVENT TRIGGER SYSTEM
+
+Events are triggered based on internal conditions.
+
+Trigger factors include:
+
+Ghost Aggression Level
+Player Sanity Average
+Time spent in investigation
+Difficulty Level
+
+Example trigger logic:
+
+Low Aggression → Rare events
+Medium Aggression → Frequent environmental events
+High Aggression → Manifestations and hunt warnings
+
+---
+
+PLAYER PROXIMITY SYSTEM
+
+Events can trigger based on player proximity to the ghost.
+
+Close to ghost room
+
+Higher chance of manifestation events.
+
+Far from ghost room
+
+Higher chance of environmental disturbances.
+
+---
+
+EVENT FREQUENCY SCALING
+
+Event frequency scales with match difficulty.
+
+Difficulty 1–3
+
+Events occur occasionally.
+
+Difficulty 4–7
+
+Events occur regularly.
+
+Difficulty 8–10
+
+Events occur frequently and unpredictably.
+
+---
+
+MULTIPLAYER EVENT DISTRIBUTION
+
+Events can affect:
+
+Single player
+Nearby players
+Entire team
+
+Example:
+
+One player hears whispering while others do not.
+
+This increases psychological tension.
+
+---
+
+EVENT COOLDOWN SYSTEM
+
+Each event type has cooldown timers.
+
+This prevents events from occurring too frequently.
+
+Example:
+
+Environmental event cooldown → 20 seconds
+
+Manifestation cooldown → 45 seconds
+
+Hunt warning cooldown → depends on aggression level.
+
+---
+
+EVENT PRIORITY SYSTEM
+
+Certain events override others.
+
+Example priority:
+
+Hunt Event
+Manifestation Event
+Environmental Event
+Fear Event
+
+If a hunt begins, all other events pause.
+
+---
+
+SYSTEM OBJECTIVE
+
+The Paranormal Event Engine ensures every match feels different.
+
+Players cannot fully predict ghost behavior.
+
+Events build tension gradually before hunts occur.
+
+The system creates a constantly evolving horror atmosphere.
+
+
+
+
+
+
+PASRAHPHOBIA – GHOST PERSONALITY ENGINE
+
+The Ghost Personality Engine adds behavioral variation to ghosts.
+
+Even when two matches contain the same ghost type, their behavior may feel different due to personality traits.
+
+This system ensures long-term replayability and unpredictability.
+
+The system is designed to support future updates and additional personality traits.
+
+---
+
+SYSTEM STRUCTURE
+
+Ghost behavior is determined by three layers:
+
+Ghost Type
+Ghost Personality
+Match Difficulty
+
+Example structure:
+
+Ghost Behavior =
+GhostType + PersonalityModifiers + DifficultyModifiers
+
+---
+
+PERSONALITY TRAITS
+
+Each ghost can receive one or more personality traits.
+
+Traits modify ghost behavior patterns.
+
+Example traits:
+
+Aggressive
+Shy
+Territorial
+Curious
+Deceptive
+Noisy
+Silent
+Stalker
+
+Traits are randomly assigned at the start of each match.
+
+---
+
+AGGRESSIVE PERSONALITY
+
+Behavior:
+
+Higher hunt probability
+Shorter hunt cooldown
+Faster aggression growth
+
+Evidence generation may be slightly reduced.
+
+---
+
+SHY PERSONALITY
+
+Behavior:
+
+Ghost avoids player proximity
+Less visual manifestations
+More subtle environmental events
+
+Evidence appears more slowly.
+
+---
+
+TERRITORIAL PERSONALITY
+
+Behavior:
+
+Ghost strongly protects its favorite room.
+
+Manifestations occur more often near ghost room.
+
+Roaming distance is reduced.
+
+---
+
+CURIOUS PERSONALITY
+
+Behavior:
+
+Ghost frequently follows player movement.
+
+Higher roaming frequency.
+
+More interactions in rooms where players are present.
+
+---
+
+DECEPTIVE PERSONALITY
+
+Behavior:
+
+Creates misleading evidence patterns.
+
+False EMF spikes
+Temperature changes without ghost presence
+
+Players must investigate more carefully.
+
+---
+
+NOISY PERSONALITY
+
+Behavior:
+
+Frequent environmental disturbances.
+
+Doors slam often
+Objects move frequently
+Sound events occur regularly
+
+However, hunts may be slightly less frequent.
+
+---
+
+SILENT PERSONALITY
+
+Behavior:
+
+Very few environmental hints.
+
+Minimal sounds
+Minimal object interactions
+
+Ghost becomes harder to track.
+
+---
+
+STALKER PERSONALITY
+
+Behavior:
+
+Ghost secretly follows a specific player.
+
+Higher manifestation frequency near that player.
+
+Hunts may target the stalked player first.
+
+---
+
+PERSONALITY ASSIGNMENT
+
+At the start of each match:
+
+1 or 2 personality traits are randomly assigned.
+
+Example combinations:
+
+Aggressive + Territorial
+Shy + Silent
+Curious + Noisy
+Deceptive + Stalker
+
+This creates hundreds of possible ghost behavior variations.
+
+---
+
+SYSTEM INTEGRATION
+
+Ghost Personality affects multiple systems:
+
+Ghost Behavior Engine
+Paranormal Event Engine
+Evidence System
+Aggression System
+Fear Engine
+
+This ensures personality influences the entire gameplay loop.
+
+---
+
+FUTURE EXPANSION
+
+The system is designed for future updates.
+
+New personalities can be added without modifying core systems.
+
+Possible future traits:
+
+Poltergeist-like behavior
+Light Manipulator
+Shadow Walker
+Door Keeper
+Sound Mimic
+
+This allows PASRAHPHOBIA to grow with new content over time.
+
+---
+
+SYSTEM OBJECTIVE
+
+The Ghost Personality Engine ensures:
+
+Ghosts feel unique in every match.
+Players cannot memorize predictable behavior patterns.
+Investigation remains challenging even after many hours of gameplay.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1. Pocong
+   - Buku Terkutuk
+   - Suhu Membeku
+   - Bola Arwah
+
+2. Kuntilanak
+   - Kotak Arwah
+   - Bola Arwah
+   - Gerakan Gaib
+
+3. Tuyul
+   - Jejak Energi
+   - Gerakan Gaib
+   - Bola Arwah
+
+4. Genderuwo
+   - Kotak Arwah
+   - Jejak Energi
+   - Gerakan Gaib
+
+5. Sundel Bolong
+   - Buku Terkutuk
+   - Kotak Arwah
+   - Bola Arwah
+
+6. Leak
+   - Jejak Energi
+   - Suhu Membeku
+   - Buku Terkutuk
+
+7. Wewe Gombel
+   - Kotak Arwah
+   - Gerakan Gaib
+   - Suhu Membeku
+
+8. Banaspati
+   - Jejak Energi
+   - Bola Arwah
+   - Suhu Membeku
+
+9. Palasik
+   - Buku Terkutuk
+   - Gerakan Gaib
+   - Jejak Energi
+
+10. Jerangkong
+    - Buku Terkutuk
+    - Kotak Arwah
+    - Suhu Membeku
+
+11. Hantu Air
+    - Bola Arwah
+    - Suhu Membeku
+    - Gerakan Gaib
+
+12. Bayangan Hitam
+    - Kotak Arwah
+    - Jejak Energi
+    - Bola Arwah
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+GHOST FAVORITE ROOM SYSTEM
+
+Each ghost has a Favorite Room inside the map.
+
+This room becomes the primary location where paranormal activity occurs.
+
+The Favorite Room influences:
+
+Evidence spawn rate
+Ghost manifestation
+Paranormal events
+Hunt start location
+
+The system ensures investigations feel logical instead of random.
+
+---
+
+ROOM SELECTION
+
+At the start of a match, the system selects one room as the ghost’s Favorite Room.
+
+Selection rules:
+
+Room must be accessible
+Room must not be outside areas
+Room must allow ghost navigation
+
+Example rooms:
+
+Bedroom
+Bathroom
+Kitchen
+Living Room
+Hallway
+Storage Room
+
+---
+
+ACTIVITY ZONE
+
+Each Favorite Room has an Activity Radius.
+
+Zone Structure
+
+Favorite Room (Primary Activity)
+
+Nearby Rooms (Secondary Activity)
+
+Distant Rooms (Rare Activity)
+
+Most ghost events occur in the primary zone.
+
+---
+
+EVIDENCE SPAWN LOGIC
+
+Evidence appears based on room proximity.
+
+Primary Room
+
+Highest evidence probability.
+
+Nearby Rooms
+
+Medium evidence probability.
+
+Far Rooms
+
+Very low evidence probability.
+
+---
+
+ROAMING SYSTEM
+
+Ghosts may temporarily roam to nearby rooms.
+
+Roaming distance depends on:
+
+Ghost Personality
+Aggression Level
+Difficulty
+
+Example behaviors:
+
+Territorial Ghost → Rare roaming
+Curious Ghost → Frequent roaming
+
+After roaming, the ghost often returns to the Favorite Room.
+
+---
+
+HUNT START LOCATION
+
+Hunts usually begin near the Favorite Room.
+
+This makes investigation strategy important.
+
+Players who identify the ghost room early gain advantage.
+
+---
+
+ROOM CHANGE EVENT
+
+In rare cases, the ghost may change its Favorite Room.
+
+Trigger conditions:
+
+Very high aggression
+Long investigation time
+
+Room change creates new investigation challenges.
+
+---
+
+SYSTEM OBJECTIVE
+
+The Ghost Favorite Room System ensures:
+
+Investigations feel structured
+Evidence gathering feels logical
+Players can track ghost activity patterns
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DYNAMIC HORROR AUDIO SYSTEM
+
+The Dynamic Horror Audio System controls all horror-related sounds in the game.
+
+The system dynamically adjusts audio based on:
+
+Ghost proximity
+Player sanity
+Ghost aggression
+Room location
+Paranormal events
+
+This creates a constantly evolving horror atmosphere.
+
+---
+
+AUDIO CATEGORIES
+
+Ambient Sound
+Ghost Sound
+Environmental Sound
+Fear Sound
+Hunt Sound
+
+Each category plays different roles during gameplay.
+
+---
+
+AMBIENT SOUND
+
+Ambient sound builds the atmosphere of the map.
+
+Examples:
+
+Wind noise
+House creaking
+Distant thunder
+Electrical hum
+
+Ambient sound changes based on:
+
+Room type
+Map location
+Match phase
+
+---
+
+GHOST SOUND
+
+Ghost sounds indicate ghost presence.
+
+Examples:
+
+Footsteps
+Breathing sounds
+Whispers
+Ghost crying
+
+Volume increases when the player is close to the ghost.
+
+---
+
+ENVIRONMENTAL SOUND
+
+Triggered by paranormal interactions.
+
+Examples:
+
+Door slam
+Object falling
+Light buzzing
+Window shaking
+
+These sounds often accompany environmental events.
+
+---
+
+FEAR SOUND
+
+Psychological audio effects triggered when player sanity drops.
+
+Examples:
+
+Heartbeats
+Distorted whispers
+Sudden sound spikes
+Background chanting
+
+These sounds create tension without showing the ghost.
+
+---
+
+HUNT SOUND
+
+During hunts, the sound environment changes drastically.
+
+Examples:
+
+Loud ghost footsteps
+Heartbeat audio
+Heavy breathing
+Aggressive music layer
+
+This signals immediate danger.
+
+---
+
+DIRECTIONAL AUDIO
+
+Ghost sounds use directional aud
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MAP INTERACTION HORROR SYSTEM
+
+The Map Interaction Horror System controls how objects in the environment react to paranormal activity.
+
+These interactions create the feeling that the map is haunted and alive.
+
+Objects react to:
+
+Ghost proximity
+Ghost aggression
+Paranormal events
+Player actions
+
+The system triggers environmental horror interactions dynamically.
+
+---
+
+INTERACTION TYPES
+
+Door Interaction
+Light Interaction
+Object Movement
+Electronic Disturbance
+Special Horror Events
+
+Each interaction type produces visual and audio feedback.
+
+---
+
+DOOR INTERACTION
+
+Doors may react to ghost activity.
+
+Examples:
+
+Door slowly opening
+Door slamming shut
+Door locking during hunts
+
+Doors near the ghost room react more frequently.
+
+---
+
+LIGHT INTERACTION
+
+Lights are commonly affected by paranormal energy.
+
+Examples:
+
+Lights flickering
+Lights turning off suddenly
+Lights breaking
+
+Frequent flickering may indicate ghost presence.
+
+---
+
+OBJECT MOVEMENT
+
+Objects in the environment may move when the ghost interacts with them.
+
+Examples:
+
+Chairs sliding
+Objects falling from tables
+Paintings tilting
+
+These interactions help players i
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AI HORROR DIRECTOR SYSTEM
+
+The AI Horror Director controls the pacing and tension of the investigation.
+
+Instead of events occurring randomly, the director adjusts paranormal activity to create a balanced horror experience.
+
+The system monitors player conditions and dynamically adjusts ghost behavior and paranormal events.
+
+---
+
+DIRECTOR VARIABLES
+
+The director constantly tracks several gameplay variables.
+
+Player sanity average
+Ghost aggression level
+Time spent in investigation
+Recent paranormal events
+Player proximity to ghost
+
+These variables determine the current tension level.
+
+---
+
+TENSION LEVELS
+
+The system uses four tension levels.
+
+Calm
+Uneasy
+Threat
+Critical
+
+Each level changes how frequently paranormal events occur.
+
+---
+
+CALM STATE
+
+Early investigation phase.
+
+Characteristics:
+
+Low paranormal activity
+Rare environmental events
+Minimal ghost manifestations
+
+This allows players to explore the map.
+
+---
+
+UNEASY STATE
+
+Ghost activity becomes noticeable.
+
+Examples:
+
+Doors opening
+Lights flickering
+Distant footsteps
+
+Players begin locating the ghost.
+
+---
+
+THREAT STATE
+
+Ghost aggression increases significantly.
+
+Examples:
+
+Frequent manifestations
+Environmental disturbances
+Fear events
+
+Players feel strong tension.
+
+---
+
+CRITICAL STATE
+
+Maximum danger.
+
+Examples:
+
+Ghost hunts
+Multiple paranormal events
+Extreme environmental activity
+
+Players must hide or escape.
+
+---
+
+TENSION TRANSITIONS
+
+The director adjusts tension dynamically.
+
+Example progression:
+
+Calm → Uneasy → Threat → Critical
+
+After a hunt ends, the tension drops temporarily.
+
+Example:
+
+Critical → Uneasy
+
+This creates pacing similar to horror films.
+
+---
+
+PLAYER FEEDBACK LOOP
+
+The director reacts to player behavior.
+
+Examples:
+
+Players staying near ghost room → tension increases faster
+
+Players spreading across map → slower tension growth
+
+Players losing sanity → faster escalation
+
+---
+
+EVENT CONTROL
+
+The director decides when to trigger:
+
+Paranorm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CONTRACT INVESTIGATION SYSTEM
+
+The Contract System generates investigation missions for players.
+
+Each contract defines:
+
+Map location
+Difficulty level
+Primary objective
+Optional objectives
+Reward multiplier
+
+Players accept contracts before starting a match.
+
+Contracts are displayed on the Contract Board inside the Lobby Social Hub.
+
+---
+
+CONTRACT ELEMENTS
+
+Each contract contains the following information.
+
+Location
+Investigation Difficulty
+Primary Objective
+Bonus Objectives
+Reward Value
+
+Example contract:
+
+Location: Haunted House
+Difficulty: Standard
+Primary Objective: Identify the ghost type
+Bonus Objective: Capture ghost manifestation
+Bonus Objective: Survive a hunt
+
+Reward multiplier increases when bonus objectives are completed.
+
+---
+
+PRIMARY OBJECTIVE
+
+The main objective is always:
+
+Identify the ghost type.
+
+Players must gather evidence and submit the correct ghost guess.
+
+Completing the primary objective grants base rewards.
+
+---
+
+BONUS OBJECTIVES
+
+Each contract generates random optional objectives.
+
+Examples:
+
+Capture ghost photo
+Survive a ghost hunt
+Detect ghost movement
+Use Spirit Communication successfully
+Record freezing temperature
+
+Bonus objectives provide extra rewards.
+
+---
+
+CONTRACT DIFFICULTY
+
+Contracts determine investigation difficulty.
+
+Difficulty affects:
+
+Ghost aggression
+Sanity drain
+Evidence clarity
+Reward multiplier
+
+Example:
+
+Easy Contract
+Low aggression
+Lower rewards
+
+Nightmare Contract
+High aggression
+High rewards
+
+---
+
+CONTRACT BOARD
+
+Contracts are shown in the Lobby Social Hub.
+
+Players interact with the Contract Board to select a contract.
+
+The board displays:
+
+Available contracts
+Map location
+Difficulty rating
+Estimated reward
+
+Once a contract is selected, the MatchSystem prepares the investigation.
+
+---
+
+CONTRACT GENERATION
+
+Contracts are generated dynamically by the system.
+
+Variables include:
+
+Map rotation
+Difficulty pool
+Bonus objective pool
+
+This ensures each match feels different.
+
+---
+
+SYSTEM OBJECTIVE
+
+The Contract System gives players a clear mission structure.
+
+It encourages:
+
+Team coordination
+Replayability
+Reward progression
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DYNAMIC GHOST MODIFIER SYSTEM
+
+The Ghost Modifier System introduces random behavioral variations to ghosts.
+
+Each match assigns one or more modifiers to the ghost.
+
+Modifiers change ghost behavior without changing the ghost type.
+
+This ensures that even the same ghost type can behave differently across matches.
+
+---
+
+MODIFIER TYPES
+
+Ghost modifiers are divided into several categories.
+
+Aggression Modifiers
+Evidence Modifiers
+Movement Modifiers
+Psychological Modifiers
+
+Each modifier alters gameplay in a different way.
+
+---
+
+AGGRESSION MODIFIERS
+
+These modifiers affect ghost hostility.
+
+Examples:
+
+Rage
+Ghost aggression increases faster.
+
+Dormant
+Ghost aggression increases slowly.
+
+Unstable
+Ghost aggression fluctuates randomly.
+
+---
+
+EVIDENCE MODIFIERS
+
+These modifiers affect evidence generation.
+
+Examples:
+
+Faint Presence
+Evidence appears less frequently.
+
+Overactive
+Evidence appears more frequently.
+
+Distorted Signals
+Some evidence readings may appear misleading.
+
+---
+
+MOVEMENT MODIFIERS
+
+These modifiers affect ghost roaming patterns.
+
+Examples:
+
+Wanderer
+Ghost roams more frequently.
+
+Territorial
+Ghost rarely leaves its favorite room.
+
+Blink Step
+Ghost teleports short distances during hunts.
+
+---
+
+PSYCHOLOGICAL MODIFIERS
+
+These modifiers affect fear effects.
+
+Examples:
+
+Whispering Presence
+Players hear frequent whispers.
+
+Shadow Stalker
+Ghost manifestations occur behind players.
+
+Sanity Leech
+Player sanity drains faster when near the ghost.
+
+---
+
+MODIFIER ASSIGNMENT
+
+At the start of each match:
+
+1–2 modifiers are randomly assigned.
+
+Example:
+
+Ghost Type: Kuntilanak
+Modifier 1: Shadow Stalker
+Modifier 2: Faint Presence
+
+This combination creates a unique investigation experience.
+
+---
+
+SYSTEM INTEGRATION
+
+Ghost modifiers influence multiple systems.
+
+GhostSystem
+EvidenceSystem
+HorrorDirector
+FearEngine
+SanitySystem
+
+Each system reads modifier effects when calculating behavior.
+
+---
+
+SYSTEM OBJECTIVE
+
+The Ghost Modifier System increases replayability.
+
+Players cannot rely on memorized strategies.
+
+Each investigation requires observation and adaptation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DYNAMIC MAP EVENT SYSTEM
+
+The Dynamic Map Event System introduces environmental conditions that affect investigations.
+
+Each match may start with one map event.
+
+Map events modify the environment, ghost behavior, or player experience.
+
+This ensures that maps feel different in every investigation.
+
+---
+
+EVENT CATEGORIES
+
+Map events are divided into several categories.
+
+Environmental Events
+Power Events
+Weather Events
+Supernatural Events
+
+Each event influences gameplay differently.
+
+---
+
+ENVIRONMENTAL EVENTS
+
+These events change environmental conditions inside the map.
+
+Examples:
+
+Broken Lighting
+Some lights cannot be turned on.
+
+Unstable Electricity
+Lights flicker frequently.
+
+Heavy Fog
+Player vision distance is reduced.
+
+---
+
+POWER EVENTS
+
+These events affect electricity systems.
+
+Examples:
+
+Power Failure
+Entire building loses electricity.
+
+Overloaded Circuits
+Turning on too many lights causes power failure.
+
+Backup Generator
+Power can be restored temporarily.
+
+---
+
+WEATHER EVENTS
+
+Weather events affect the atmosphere outside the building.
+
+Examples:
+
+Thunderstorm
+Frequent thunder and lightning.
+
+Heavy Rain
+Loud rain sounds reduce ghost audio clarity.
+
+Strong Wind
+Doors may slam unexpectedly.
+
+---
+
+SUPERNATURAL EVENTS
+
+Rare paranormal conditions.
+
+Examples:
+
+Cursed Ground
+Sanity drains faster in certain rooms.
+
+Haunted Zone
+Ghost manifestations occur more often.
+
+Spirit Echo
+Players may hear past ghost interactions.
+
+---
+
+EVENT ASSIGNMENT
+
+At match start:
+
+The system randomly assigns one event.
+
+Example:
+
+Map: Abandoned Palace
+Event: Thunderstorm
+
+Map: Haunted House
+Event: Power Failure
+
+Some events are map-specific.
+
+---
+
+SYSTEM INTEGRATION
+
+Map events modify the behavior of other systems.
+
+GhostSystem
+MapInteractionSystem
+HorrorDirector
+SanitySystem
+AudioSystem
+
+Example:
+
+Thunderstorm increases ambient sound volume.
+
+Power Failure increases ghost aggression.
+
+---
+
+SYSTEM OBJECTIVE
+
+The Dynamic Map Event System increases replayability.
+
+Players must adapt their investigation strategy depending on the map conditions.
+
+

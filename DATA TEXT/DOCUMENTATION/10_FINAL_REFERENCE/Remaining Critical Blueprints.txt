@@ -1,0 +1,168 @@
+Remaining Critical Blueprints
+1️⃣ Match Lifecycle Blueprint (Very Important)
+
+This defines exactly how a match runs from start to finish.
+
+Without this, systems like:
+
+GhostSystem
+
+EvidenceSystem
+
+ContractSystem
+
+TeleportService
+
+won’t know when they should activate.
+
+Example flow:
+
+Lobby
+↓
+Contract Selected
+↓
+MatchQueue
+↓
+MatchCreated
+↓
+TeleportPlayers
+↓
+PreparationPhase
+↓
+InvestigationPhase
+↓
+HuntEvents
+↓
+ExtractionPhase
+↓
+Results
+↓
+ReturnToLobby
+
+This blueprint connects:
+
+MatchSystem
+GamePhaseSystem
+ContractSystem
+TeleportService
+2️⃣ Hunt Algorithm Blueprint (Extremely Important)
+
+The hunt system is the heart of a horror investigation game.
+
+This blueprint defines:
+
+when hunts start
+how ghost selects target
+how players survive
+how hunt ends
+
+Example logic:
+
+If Aggression > 70
+AND AverageSanity < 40
+Roll HuntChance
+
+Also defines:
+
+hunt cooldown
+hunt duration
+ghost speed
+line-of-sight detection
+3️⃣ Sanity & Fear Formula Blueprint
+
+Right now we defined sanity conceptually, but not the exact formulas.
+
+This blueprint defines:
+
+sanity drain per second
+sanity drain near ghost
+sanity drain during events
+fear intensity scaling
+
+Example:
+
+SanityDrain =
+BaseDrain
++ DarknessModifier
++ GhostProximityModifier
++ EventModifier
+4️⃣ Ghost Spawn Algorithm
+
+Defines:
+
+how ghost chooses favorite room
+how room activity increases
+when ghost changes room
+
+Uses:
+
+RoomGraph
+RoomSpawnRules
+RoomActivity
+5️⃣ Difficulty Scaling System
+
+This is important for Ranked Mode.
+
+Defines how difficulty 1–10 affects:
+
+ghost aggression
+sanity drain
+hunt frequency
+evidence clarity
+event frequency
+
+Example:
+
+Difficulty 3
+AggressionMultiplier = 0.8
+
+Difficulty 8
+AggressionMultiplier = 1.5
+6️⃣ Economy Reward Algorithm
+
+Defines exactly how rewards are calculated.
+
+Example:
+
+BaseReward
++ EvidenceBonus
++ DifficultyMultiplier
++ ContractBonus
++ SurvivalBonus
+Optional (But Very Powerful)
+
+These are advanced systems that dramatically increase replayability.
+
+Dynamic Ghost Personality Engine
+
+Ghost personalities:
+
+Shy
+Aggressive
+Wanderer
+Stalker
+Trickster
+
+This makes same ghost type behave differently each match.
+
+Audio Horror Engine
+
+Controls:
+
+whispers
+footsteps
+directional ghost sounds
+heartbeat effects
+
+Very important for immersion.
+
+Tension Curve System (Horror Director)
+
+Controls pacing:
+
+calm phase
+rising tension
+peak scare
+cooldown
+
+Prevents matches from feeling boring or chaotic.

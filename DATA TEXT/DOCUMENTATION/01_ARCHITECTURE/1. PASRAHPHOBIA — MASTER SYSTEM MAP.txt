@@ -1,0 +1,361 @@
+PASRAHPOBIA — MASTER SYSTEM MAP
+
+
+MASTER SYSTEM MAP
+
+OVERVIEW
+
+The Master System Map defines how all core systems of PASRAHPHOBIA interact with each other.
+
+This architecture ensures that gameplay systems remain modular and scalable while maintaining synchronized gameplay logic across server and client.
+
+The system is divided into four major layers:
+
+Lobby Layer
+Match Layer
+Gameplay Layer
+Persistence Layer
+
+Each layer contains systems responsible for specific responsibilities.
+
+LOBBY LAYER
+
+The Lobby Layer manages all player interactions before a match begins.
+
+Systems inside the Lobby Layer include:
+
+LobbySocialHub
+PartySystem
+ContractSystem
+ProfileSystem
+ShopSystem
+LeaderboardSystem
+
+LobbySocialHub acts as the central entry point for all player activity.
+
+Players can interact with lobby buildings which trigger these systems.
+
+Lobby Layer responsibilities:
+
+Player presence
+Party creation
+Contract selection
+Profile inspection
+Social interaction
+
+Once players choose a contract and enter matchmaking, control moves to the Match Layer.
+
+MATCH LAYER
+
+The Match Layer manages matchmaking, match creation, and phase transitions.
+
+Systems inside this layer include:
+
+MatchSystem
+MatchQueue
+MatchBuilder
+MatchLifecycle
+TeleportService
+GamePhaseSystem
+
+MatchSystem creates a MatchInstance which stores all data for a match session.
+
+MatchInstance contains:
+
+Players
+Selected map
+Difficulty level
+Ghost type
+Modifiers
+Objectives
+
+Once a match instance is ready, players are teleported to the map.
+
+After teleportation, the Gameplay Layer becomes active.
+
+GAMEPLAY LAYER
+
+The Gameplay Layer contains the core investigation mechanics.
+
+Primary systems include:
+
+GhostSystem
+EvidenceSystem
+SanitySystem
+AggressionSystem
+InvestigationSystem
+HorrorDirector
+MapInteractionSystem
+MapEventSystem
+GhostModifierSystem
+
+Each system controls a specific part of gameplay.
+
+GhostSystem
+
+Controls ghost AI behavior, roaming, and hunt states.
+
+EvidenceSystem
+
+Spawns evidence types and synchronizes evidence discovery between players.
+
+SanitySystem
+
+Tracks player mental stability and affects ghost aggression.
+
+AggressionSystem
+
+Controls ghost hostility and hunt triggers.
+
+InvestigationSystem
+
+Tracks evidence gathered and player ghost guesses.
+
+HorrorDirector
+
+Controls pacing of paranormal events to maintain tension.
+
+MapInteractionSystem
+
+Handles environmental interactions such as doors, lights, and objects.
+
+MapEventSystem
+
+Creates dynamic environmental events like power failures or storms.
+
+GhostModifierSystem
+
+Applies special modifiers to ghosts that alter behavior.
+
+These systems run simultaneously during the Investigation Phase.
+
+HUNT SUBSYSTEM
+
+The Hunt System is controlled primarily by GhostSystem and AggressionSystem.
+
+Additional influences include:
+
+SanitySystem
+DifficultyScaling
+GhostModifiers
+MapEvents
+
+During hunts:
+
+Doors lock
+Lights flicker
+Ghost enters pursuit state
+
+Players must hide or escape until the hunt timer ends.
+
+DIFFICULTY SCALING LAYER
+
+Difficulty affects nearly every gameplay system.
+
+Difficulty values range from 1 to 10.
+
+Difficulty is applied to:
+
+Ghost aggression multiplier
+Sanity drain speed
+Hunt probability
+Ghost movement speed
+Evidence spawn frequency
+Event frequency
+
+Classic Mode
+
+Players select difficulty manually.
+
+Ranked Mode
+
+Difficulty is calculated dynamically based on:
+
+Player level
+Player rank tier
+
+PERSISTENCE LAYER
+
+The Persistence Layer stores long-term player data.
+
+Systems include:
+
+DataPersistence
+PlayerData
+EconomyData
+InventoryData
+RankData
+
+This layer ensures that player progression is saved between sessions.
+
+Stored information includes:
+
+Player level
+Currency
+Owned cosmetics
+Rank tier
+Match statistics
+
+PROFILE AND PROGRESSION SYSTEM
+
+ProfileSystem manages player identity and progression.
+
+Player progression includes:
+
+Player Level (1–100)
+Rank Tier
+Titles
+Flex Gallery
+Profile Border
+
+Experience points are earned through matches.
+
+Level progression unlocks cosmetic rewards and prestige.
+
+ECONOMY SYSTEM
+
+EconomySystem handles rewards and currency.
+
+Players earn currency from:
+
+Correct ghost identification
+Evidence collection
+Difficulty multiplier
+Objective completion
+
+Currency can be used for:
+
+Cosmetics
+Profile items
+Gallery items
+Borders
+Titles
+
+EVENT BUS
+
+All major systems communicate through the EventBus.
+
+EventBus allows systems to remain loosely coupled while reacting to game events.
+
+Example events:
+
+MatchStarted
+EvidenceDiscovered
+GhostHuntStarted
+PlayerSanityChanged
+MatchEnded
+
+Systems subscribe to events rather than calling each other directly.
+
+This improves modularity and scalability.
+
+SYSTEM OBJECTIVE
+
+The Master System Map ensures that all gameplay systems remain coordinated and scalable.
+
+The architecture allows the game to expand with:
+
+New maps
+New ghost types
+New evidence tools
+New modifiers
+New gameplay mechanics
+
+without restructuring the core systems.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MASTER SYSTEM FLOW
+Player Join
+    │
+    ▼
+LobbySocialHub
+    │
+    ├── ProfileSystem
+    ├── ShopSystem
+    ├── ContractSystem
+    ├── PartySystem
+    │
+    ▼
+MatchQueue
+    │
+    ▼
+MatchSystem
+    │
+    ▼
+TeleportService
+    │
+    ▼
+GamePhaseSystem
+    │
+    ▼
+Investigation Phase
+    │
+    ├── GhostSystem
+    ├── EvidenceSystem
+    ├── SanitySystem
+    ├── AggressionSystem
+    ├── HorrorDirector
+    ├── MapInteractionSystem
+    ├── MapEventSystem
+    └── GhostModifierSystem
+    │
+    ▼
+Hunt System
+    │
+    ▼
+Extraction
+    │
+    ▼
+Results
+    │
+    ▼
+EconomySystem
+RankedSystem
+    │
+    ▼
+DataPersistence
+    │
+    ▼
+Return To Lobby
+SYSTEM DEPENDENCY MAP
+LobbySocialHub
+     │
+     ▼
+MatchSystem
+     │
+     ▼
+GamePhaseSystem
+     │
+     ▼
+Investigation Systems
+     │
+     ├── GhostSystem
+     ├── EvidenceSystem
+     ├── SanitySystem
+     ├── AggressionSystem
+     ├── HorrorDirector
+     │
+     ▼
+Hunt System
+     │
+     ▼
+Results
+     │
+     ▼
+Economy + Ranked
+     │
+     ▼
+DataPersistence

@@ -1,24 +1,30 @@
 {
-  "name": "PASRAHPOBIA",
+  "name": "PASRAHPHOBIA",
   "tree": {
     "$className": "DataModel",
 
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "$path": "src/ReplicatedStorage"
+      "Shared": {
+        "$path": "src/shared"
+      }
     },
 
     "ServerScriptService": {
-      "$path": "src/ServerScriptService"
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      }
     },
 
     "StarterPlayer": {
       "$className": "StarterPlayer",
-      "$path": "src/StarterPlayer"
-    },
-
-    "StarterGui": {
-      "$path": "src/StarterGui"
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      }
     }
   }
 }

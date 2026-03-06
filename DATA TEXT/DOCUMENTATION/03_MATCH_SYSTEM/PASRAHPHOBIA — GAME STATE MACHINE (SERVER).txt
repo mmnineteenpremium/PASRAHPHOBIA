@@ -1,0 +1,386 @@
+GAME STATE MACHINE
+
+OVERVIEW
+
+The Game State Machine controls the global gameplay state for each match instance.
+
+It ensures that gameplay systems activate only during appropriate phases and prevents invalid transitions.
+
+Each match instance has its own state machine managed by the MatchLifecycle system.
+
+---
+
+PRIMARY STATES
+
+The game uses the following match states.
+
+Waiting
+
+Players are still joining the match.
+
+Starting
+
+Match is preparing to begin.
+
+Preparation
+
+Players spawn inside the map and prepare equipment.
+
+Investigation
+
+Players search for ghost evidence.
+
+Hunt
+
+Ghost becomes aggressive and hunts players.
+
+Extraction
+
+Players attempt to leave the investigation area.
+
+Results
+
+Rewards are calculated and displayed.
+
+Completed
+
+Match ends and players return to lobby.
+
+---
+
+STATE RESPONSIBILITIES
+
+Waiting
+
+MatchQueue is assembling players.
+
+No ghost activity occurs.
+
+---
+
+Starting
+
+Map server loads.
+
+Ghost instance is created.
+
+Players teleport into the map.
+
+---
+
+Preparation
+
+Players spawn.
+
+Equipment setup occurs.
+
+Ghost remains passive.
+
+Duration is short.
+
+---
+
+Investigation
+
+Main gameplay phase.
+
+Players search for evidence.
+
+Ghost roams and interacts with environment.
+
+Sanity system begins draining.
+
+FearEngine activates.
+
+EvidenceSystem operates normally.
+
+---
+
+Hunt
+
+Triggered by AggressionSystem.
+
+Ghost attempts to kill players.
+
+Doors may lock.
+
+Lights flicker.
+
+Players must hide or escape.
+
+---
+
+Extraction
+
+Triggered when investigation ends or objective complete.
+
+Players return to exit point.
+
+Ghost aggression may remain high.
+
+---
+
+Results
+
+Match ends.
+
+Ghost identity revealed.
+
+Rewards calculated.
+
+Player statistics updated.
+
+---
+
+Completed
+
+MatchInstance shuts down.
+
+Players teleport back to LobbySocialHub.
+
+Match server cleans up.
+
+---
+
+STATE TRANSITION RULES
+
+Transitions must follow valid order.
+
+Waiting
+
+↓
+
+Starting
+
+↓
+
+Preparation
+
+↓
+
+Investigation
+
+↓
+
+Hunt
+
+↓
+
+Extraction
+
+↓
+
+Results
+
+↓
+
+Completed
+
+Invalid transitions are blocked by the state machine.
+
+---
+
+HUNT STATE TRIGGERS
+
+Hunt phase can be triggered by multiple conditions.
+
+Low player sanity.
+
+Ghost aggression threshold reached.
+
+Specific ghost abilities.
+
+HorrorDirector scripted events.
+
+---
+
+STATE TIME CONTROL
+
+Each state may have timers.
+
+Preparation
+
+Short timer before investigation begins.
+
+Investigation
+
+Primary gameplay timer.
+
+Hunt
+
+Short high-danger window.
+
+Extraction
+
+Limited time to escape.
+
+Results
+
+Short reward display duration.
+
+---
+
+SYSTEM ACTIVATION BY STATE
+
+Waiting
+
+Lobby systems active.
+
+Gameplay systems inactive.
+
+---
+
+Preparation
+
+Player systems active.
+
+Ghost passive.
+
+Evidence inactive.
+
+---
+
+Investigation
+
+GhostSystem active.
+
+EvidenceSystem active.
+
+SanitySystem active.
+
+HorrorDirector active.
+
+---
+
+Hunt
+
+Ghost aggression maximum.
+
+Door control active.
+
+Fear effects intensified.
+
+---
+
+Extraction
+
+Players attempt escape.
+
+Ghost may remain aggressive.
+
+---
+
+Results
+
+Reward systems active.
+
+EconomySystem active.
+
+RankedSystem active.
+
+---
+
+Completed
+
+Match instance terminates.
+
+Cleanup occurs.
+
+---
+
+ERROR PROTECTION
+
+The state machine prevents incorrect behavior.
+
+Example protections
+
+Ghost cannot hunt before investigation phase.
+
+Rewards cannot trigger before results phase.
+
+Players cannot rejoin after match completion.
+
+---
+
+STATE MACHINE CONTROL
+
+MatchLifecycle is responsible for state control.
+
+MatchLifecycle
+
+StartMatch
+
+ChangeState
+
+EndMatch
+
+ForceState
+
+State transitions are logged for debugging.
+
+---
+
+FINAL PURPOSE
+
+The Game State Machine ensures stable gameplay flow and synchronizes all gameplay systems during a match.
+
+
+
+
+
+
+GAME STATE FLOW
+Waiting
+   │
+   ▼
+Starting
+   │
+   ▼
+Preparation
+   │
+   ▼
+Investigation
+   │
+   ▼
+Hunt
+   │
+   ▼
+Extraction
+   │
+   ▼
+Results
+   │
+   ▼
+Completed
+SYSTEM ACTIVATION MAP
+STATE           ACTIVE SYSTEMS
+
+Waiting         LobbySystem
+Starting        MatchSystem
+Preparation     PlayerSystems
+Investigation   GhostSystem
+                EvidenceSystem
+                SanitySystem
+                HorrorDirector
+
+Hunt            AggressionSystem
+                GhostSystem
+                FearEngine
+
+Extraction      PlayerSystems
+
+Results         EconomySystem
+                RankedSystem
+
+Completed       DataPersistence
+Folder Integration
+
+Ini sudah cocok dengan folder project kamu:
+
+src/server/GamePhaseSystem
+
+Module utama:
+
+GameStateMachine
+MatchLifecycle
+PhaseControllers

@@ -1,0 +1,433 @@
+GHOST AI BEHAVIOR BLUEPRINT
+
+OVERVIEW
+
+The Ghost AI system controls the behavior of supernatural entities during investigations.
+
+The system is designed to create unpredictable and dynamic encounters.
+
+Each ghost is defined by:
+
+Ghost Type
+Personality Traits
+Evidence Pattern
+Aggression Behavior
+Special Abilities
+Modifiers
+
+Ghost AI operates entirely on the server.
+
+---
+
+GHOST SYSTEM STRUCTURE
+
+GhostSystem is divided into several modules.
+
+GhostAI
+GhostAbilities
+States
+RoomSystem
+
+Each module has a specific responsibility.
+
+GhostAI handles decision logic.
+
+GhostAbilities defines ghost-specific powers.
+
+States control behavior phases.
+
+RoomSystem manages ghost movement between rooms.
+
+---
+
+GHOST AI CORE LOOP
+
+Ghost AI runs a behavior loop during the investigation phase.
+
+Loop interval:
+
+1–2 seconds.
+
+Each cycle evaluates:
+
+Player proximity
+Player sanity
+Ghost aggression
+Time since last event
+Room activity level
+
+The AI then decides its next action.
+
+Possible actions:
+
+Remain idle
+Roam to another room
+Interact with environment
+Manifest briefly
+Start hunt
+
+---
+
+GHOST STATES
+
+Ghost states represent high-level behavior modes.
+
+States include:
+
+Idle
+Roaming
+Interaction
+Manifestation
+Hunt
+
+The ghost transitions between these states based on conditions.
+
+---
+
+STATE: IDLE
+
+The ghost remains in its favorite room.
+
+Behavior:
+
+Minimal activity
+Occasional environmental interaction
+Low aggression growth
+
+Conditions to exit Idle:
+
+Player enters ghost room
+Aggression threshold increases
+Time trigger
+
+---
+
+STATE: ROAMING
+
+The ghost moves between rooms.
+
+Room selection determined by:
+
+RoomSystem graph
+Noise from players
+Recent player activity
+
+Roaming ghosts may trigger small interactions.
+
+Examples:
+
+Door movement
+Object displacement
+Light flicker
+
+---
+
+STATE: INTERACTION
+
+Ghost interacts with objects.
+
+Interaction examples:
+
+Door slam
+Object throw
+Electronic disturbance
+Light flicker
+
+Interaction probability increases when:
+
+Players are near
+Sanity is low
+Aggression is rising
+
+---
+
+STATE: MANIFESTATION
+
+Ghost briefly appears visually.
+
+Manifestation types:
+
+Shadow figure
+Partial apparition
+Full ghost appearance
+
+Manifestations increase psychological tension.
+
+Players may capture ghost photos during manifestation.
+
+---
+
+STATE: HUNT
+
+Hunt is the most aggressive behavior.
+
+Conditions to start hunt:
+
+Aggression threshold reached
+Low player sanity
+Modifier effects
+Map event influence
+
+During hunt:
+
+Ghost targets nearest player.
+
+Players must hide or escape.
+
+Hunt ends after timer expires or players escape detection.
+
+---
+
+ROOM SYSTEM
+
+Ghost movement is controlled by the RoomSystem.
+
+Each map contains a room graph.
+
+Rooms have:
+
+Type
+Size
+Interaction density
+
+Ghost selects rooms using weighted probability.
+
+Example factors:
+
+Distance from ghost room
+Player presence
+Noise level
+
+---
+
+GHOST FAVORITE ROOM
+
+Each ghost has a favorite room.
+
+Evidence appears most frequently in this room.
+
+The ghost may occasionally change favorite room in long matches.
+
+---
+
+GHOST PERSONALITY TRAITS
+
+Each ghost has personality modifiers.
+
+Examples:
+
+Shy
+Ghost avoids players.
+
+Aggressive
+Hunts more frequently.
+
+Territorial
+Rarely leaves ghost room.
+
+Wanderer
+Roams frequently.
+
+Personality traits influence AI decision weights.
+
+---
+
+GHOST ABILITIES
+
+Certain ghost types have unique abilities.
+
+Examples:
+
+Teleport short distance
+Imitate player voice
+Drain sanity faster
+Hide evidence temporarily
+
+Abilities activate under specific conditions.
+
+Example:
+
+Teleport ability triggers during hunts.
+
+---
+
+AGGRESSION SYSTEM
+
+Aggression level determines ghost hostility.
+
+Range:
+
+0 – 100
+
+Aggression increases when:
+
+Players stay near ghost room
+Players interact with cursed objects
+Players have low sanity
+
+Aggression slowly decreases if players leave ghost area.
+
+---
+
+HUNT TRIGGER LOGIC
+
+Example hunt trigger:
+
+If Aggression > 70
+and AverageSanity < 40
+
+HuntChance = BaseChance + ModifierBonus
+
+Example:
+
+BaseChance = 15%
+
+ModifierBonus may increase this chance.
+
+---
+
+TARGET SELECTION
+
+During hunts, ghost selects a target.
+
+Priority rules:
+
+Closest visible player
+Player making noise
+Player with lowest sanity
+
+Target updates dynamically if players move.
+
+---
+
+GHOST MODIFIER INFLUENCE
+
+Modifiers alter AI behavior.
+
+Examples:
+
+Rage
+Aggression increases faster.
+
+BlinkStep
+Ghost teleports during hunts.
+
+Dormant
+Aggression grows slowly.
+
+ShadowStalker
+Ghost manifests behind players.
+
+Modifiers are assigned per match.
+
+---
+
+MAP EVENT INFLUENCE
+
+Map events influence ghost AI.
+
+Examples:
+
+PowerFailure
+Ghost aggression increases.
+
+Thunderstorm
+Ghost manifestation frequency increases.
+
+HeavyFog
+Player visibility decreases during hunt.
+
+---
+
+HORROR DIRECTOR INTEGRATION
+
+The Horror Director monitors match tension.
+
+If tension is too low:
+
+Ghost interactions increase.
+
+If tension is too high:
+
+Activity temporarily decreases.
+
+This ensures pacing remains balanced.
+
+---
+
+AI OBJECTIVE
+
+The Ghost AI system aims to:
+
+Create unpredictable encounters
+Increase psychological tension
+Prevent predictable gameplay
+Encourage team coordination
+
+Each match should feel unique.
+
+The combination of ghost type, modifiers, events, and player behavior ensures replayability.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ghost AI Architecture (Visual Overview)
+Match Start
+     │
+     ▼
+Ghost Spawn
+     │
+     ▼
+Assign Ghost Type
+     │
+     ▼
+Assign Modifiers
+     │
+     ▼
+Assign Favorite Room
+     │
+     ▼
+AI Behavior Loop
+     │
+     ├─ Idle
+     ├─ Roaming
+     ├─ Interaction
+     ├─ Manifestation
+     └─ Hunt
+Integrasi Dengan Sistem Lain
+
+Ghost AI terhubung dengan:
+
+SanitySystem
+AggressionSystem
+EvidenceSystem
+MapEventSystem
+GhostModifierSystem
+HorrorDirector
+Folder Yang Mengimplementasikan Blueprint Ini
+
+Sudah sesuai dengan struktur kamu:
+
+src/server/GhostSystem
+├── GhostAI
+├── GhostAbilities
+├── RoomSystem
+└── States

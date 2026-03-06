@@ -1,0 +1,286 @@
+FINAL SPECTATOR SYSTEM SPECIFICATION
+
+OVERVIEW
+
+The Spectator System activates when a player dies during an investigation match.
+
+Dead players remain inside the match instance and enter Spectator Mode.
+
+Spectators observe the match through the perspective of living teammates while experiencing distorted paranormal perception.
+
+The system ensures spectators remain engaged without revealing reliable ghost information.
+
+---
+
+SPECTATOR ACTIVATION
+
+When a player dies
+
+PlayerAlive becomes false.
+
+↓
+
+Player transitions into Spectator Mode.
+
+↓
+
+SpectatorCamera activates.
+
+↓
+
+SpectatorDistortionSystem begins.
+
+The player remains inside the match until the match ends.
+
+---
+
+SPECTATOR CAMERA RULE
+
+Spectators cannot freely roam the map.
+
+Camera behavior
+
+Follow Alive Player
+
+Spectator may switch between alive teammates.
+
+The camera attaches to the selected living player.
+
+This prevents spectators from scouting the map.
+
+---
+
+CAMERA MODES
+
+Player Follow Mode
+
+Camera tracks a living teammate.
+
+Switch Target Mode
+
+Spectator can change which player to follow.
+
+The system cycles through alive players.
+
+If only one player remains alive
+
+Camera locks to that player.
+
+---
+
+VOICE COMMUNICATION
+
+Spectators communicate using Roblox proximity voice chat.
+
+There is no spectator hint system.
+
+There are no UI messages or spectator markers.
+
+All communication occurs through player voice.
+
+Living players must decide whether to trust the information.
+
+---
+
+SPECTATOR DISTORTION SYSTEM
+
+Spectators perceive ghost events through a distorted paranormal filter.
+
+Each ghost visibility event uses the distortion probability model.
+
+60% Fake Ghost
+
+A ghost illusion appears locally on the spectator client.
+
+This ghost does not exist on the server.
+
+30% Uncertain Event
+
+Ghost presence is implied through partial disturbances.
+
+Examples
+
+Shadow movement
+
+Footstep sound
+
+Object disturbance
+
+10% Real Ghost
+
+Spectator briefly sees the real ghost location.
+
+This event is rare.
+
+---
+
+DISTORTION VISUAL EFFECTS
+
+Spectators see the world through a paranormal distortion filter.
+
+Possible effects
+
+Screen flicker
+
+Chromatic distortion
+
+Ghost trails
+
+Shadow artifacts
+
+Audio whispers
+
+These effects reinforce unreliable perception.
+
+---
+
+DEATH MESSAGE SYSTEM
+
+When a player dies the following message appears.
+
+Player Dead Message
+
+Displayed in the center of the screen for 5 seconds.
+
+"Kematian menipumu.
+Yang kamu lihat belum tentu benar."
+
+After 5 seconds
+
+The message moves to the left side of the screen and becomes smaller.
+
+The message remains visible until the match ends.
+
+---
+
+ALIVE PLAYER MESSAGE
+
+When another player dies
+
+Living players receive a message.
+
+Displayed in the center for 5 seconds.
+
+"Jangan terlalu percaya orang mati.
+Gunakan instingmu.
+Jika percaya, lakukanlah."
+
+This message encourages players to question spectator information.
+
+---
+
+SPECTATOR GAMEPLAY LOOP
+
+Player dies
+
+↓
+
+Enter Spectator Mode
+
+↓
+
+Follow living teammate
+
+↓
+
+Observe ghost activity (distorted)
+
+↓
+
+Communicate through voice chat
+
+↓
+
+Living players decide whether to trust information
+
+↓
+
+Investigation continues
+
+---
+
+ANTI EXPLOIT PROTECTION
+
+Spectators cannot access
+
+Exact ghost location continuously.
+
+Evidence generation data.
+
+Server ghost state.
+
+Distortion prevents reliable ghost tracking.
+
+---
+
+MATCH INTEGRATION
+
+Spectator system integrates with
+
+MatchSystem
+GhostSystem
+AggressionSystem
+SpectatorDistortionSystem
+
+When the match ends
+
+Spectators return to lobby with all players.
+
+---
+
+SYSTEM MODULES
+
+SpectatorSystem
+
+SpectatorCamera
+SpectatorDistortionSystem
+SpectatorTargetSwitch
+DeathMessageUI
+
+These modules operate on the client of dead players.
+
+
+
+
+
+SPECTATOR FLOW
+Player Dies
+    │
+    ▼
+Spectator Mode
+    │
+    ▼
+SpectatorCamera
+    │
+    ▼
+Follow Alive Player
+    │
+    ▼
+SpectatorDistortionSystem
+    │
+    ├── 60% Fake Ghost
+    ├── 30% Uncertain Event
+    └── 10% Real Ghost
+SPECTATOR SOCIAL LOOP
+Spectator sees ghost
+        │
+        ▼
+Speaks via mic
+        │
+        ▼
+Team decides whether to trust
+        │
+        ├─ Correct → Evidence progress
+        └─ Wrong → Ghost aggression increases
+Folder Integration
+
+Sesuai dengan struktur project kamu:
+
+src/client/SpectatorSystem
+
+Modules:
+
+SpectatorCamera
+SpectatorDistortionSystem
+SpectatorTargetSwitch
+DeathMessageUI
