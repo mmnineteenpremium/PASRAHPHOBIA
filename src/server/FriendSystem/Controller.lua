@@ -1,0 +1,89 @@
+local Services = require(script.Parent.Parent.Core.Services)
+
+local Controller = {}
+Controller.__index = Controller
+
+local function resolveEventBus(deps)
+    local eventBus = Services.Get(deps, "EventBus")
+    if type(eventBus) ~= "table" then
+        return nil
+    end
+    if type(eventBus.Subscribe) == "function" then
+        return eventBus
+    end
+    if type(eventBus.Service) == "table" and type(eventBus.Service.Subscribe) == "function" then
+        return eventBus.Service
+    end
+    return nil
+end
+
+function Controller.new(state, service, deps)
+    local self = setmetatable({}, Controller)
+    self._state = state
+    self._service = service
+    self._deps = deps or {}
+    self._eventBus = nil
+    self._subscriptions = {}
+    self._registered = false
+    return self
+end
+
+function Controller:Create()
+    self._eventBus = resolveEventBus(self._deps)
+end
+
+function Controller:Init()
+    -- Subscriptions are registered in Start.
+end
+
+function Controller:Start()
+    self:RegisterEventHandlers()
+end
+
+function Controller:Stop()
+    self:UnregisterEventHandlers()
+end
+
+function Controller:RegisterEventHandlers()
+    if not self._eventBus or self._registered then
+        return
+    end
+
+    self:_subscribe("FriendRequestSend", function(payload)
+        if type(payload) == "table" then
+            self._service:SendFriendRequest(payload.fromPlayer, payload.toPlayer)
+        end
+    end)
+
+    self:_subscribe("FriendRequestAccept", function(payload)
+        if type(payload) == "table" then
+            self._service:AcceptFriendRequest(payload.player, payload.fromUserId)
+        end
+    end)
+
+    self:_subscribe("FriendRequestDecline", function(payload)
+        if type(payload) == "table" then
+            self._service:DeclineFriendRequest(payload.player, payload.fromUserId)
+        end
+    end)
+
+    self._registered = true
+end
+
+function Controller:UnregisterEventHandlers()
+    if not self._eventBus or not self._registered then
+        return
+    end
+    for _, sub in ipairs(self._subscriptions) do
+        self._eventBus:Unsubscribe(sub.eventName, sub.callback)
+    end
+    table.clear(self._subscriptions)
+    self._registered = false
+end
+
+function Controller:_subscribe(eventName, callback)
+    self._eventBus:Subscribe(eventName, callback)
+    table.insert(self._subscriptions, { eventName = eventName, callback = callback })
+end
+
+return Controller
