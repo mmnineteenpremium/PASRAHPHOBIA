@@ -54,12 +54,6 @@ function EvidenceDeductionEngine.new(deps)
 	return self
 end
 
-function EvidenceDeductionEngine.Create(deps)
-	local instance = EvidenceDeductionEngine.new(deps)
-	instance:Create()
-	return instance
-end
-
 function EvidenceDeductionEngine:Create()
 	if self._created then
 		return

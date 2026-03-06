@@ -1,19 +1,21 @@
+local Services = require(script.Parent.Parent.Core.Services)
+
 local Controller = {}
 Controller.__index = Controller
-
-local Services = require(script.Parent.Parent.Core.Services)
 
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
         return nil
     end
+
     if type(eventBus.Subscribe) == "function" then
         return eventBus
     end
     if type(eventBus.Service) == "table" and type(eventBus.Service.Subscribe) == "function" then
         return eventBus.Service
     end
+
     return nil
 end
 
@@ -22,35 +24,59 @@ function Controller.new(state, service, deps)
     self._state = state
     self._service = service
     self._deps = deps or {}
-    self._eventBus = resolveEventBus(self._deps)
+    self._eventBus = nil
     self._subscriptions = {}
-    self._handlersRegistered = false
+    self._registered = false
     return self
 end
 
+function Controller:Create()
+    self._eventBus = resolveEventBus(self._deps)
+end
+
 function Controller:Init()
-    -- Event subscriptions are registered in Start.
+    -- Subscriptions are established in Start.
+end
+
+function Controller:Start()
+    self:RegisterEventHandlers()
+end
+
+function Controller:Stop()
+    self:UnregisterEventHandlers()
 end
 
 function Controller:RegisterEventHandlers()
-    if not self._eventBus or self._handlersRegistered then
+    if not self._eventBus or self._registered then
         return
     end
-    self:_subscribe("RewardGranted", function(data)
-        self:OnRewardGranted(data)
+
+    self:_subscribe("MatchEnded", function(payload)
+        self._service:OnMatchEnded(payload)
     end)
-    self._handlersRegistered = true
+
+    self:_subscribe("ObjectiveCompleted", function(payload)
+        self._service:OnObjectiveCompleted(payload)
+    end)
+
+    self:_subscribe("EvidenceCollected", function(payload)
+        self._service:OnEvidenceCollected(payload)
+    end)
+
+    self._registered = true
 end
 
 function Controller:UnregisterEventHandlers()
-    if not self._eventBus or not self._handlersRegistered then
+    if not self._eventBus or not self._registered then
         return
     end
-    for _, sub in ipairs(self._subscriptions) do
-        self._eventBus:Unsubscribe(sub.eventName, sub.callback)
+
+    for _, subscription in ipairs(self._subscriptions) do
+        self._eventBus:Unsubscribe(subscription.eventName, subscription.callback)
     end
+
     table.clear(self._subscriptions)
-    self._handlersRegistered = false
+    self._registered = false
 end
 
 function Controller:_subscribe(eventName, callback)
@@ -59,18 +85,6 @@ function Controller:_subscribe(eventName, callback)
         eventName = eventName,
         callback = callback,
     })
-end
-
-function Controller:OnRewardGranted(data)
-    local player = data and (data.player or data.userId)
-    if not player then
-        return
-    end
-    local xp = data and (data.xp or data.xpAmount)
-    if type(xp) ~= "number" then
-        return
-    end
-    self._service:GrantXP(player, xp, data)
 end
 
 return Controller

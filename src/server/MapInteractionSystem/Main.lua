@@ -54,12 +54,6 @@ function MapInteractionSystem.new(deps)
 	return self
 end
 
-function MapInteractionSystem.Create(deps)
-	local instance = MapInteractionSystem.new(deps)
-	instance:Create()
-	return instance
-end
-
 function MapInteractionSystem:Create()
 	if self._created then
 		return

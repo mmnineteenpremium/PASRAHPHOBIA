@@ -54,12 +54,6 @@ function InvestigationSystem.new(deps)
     return self
 end
 
-function InvestigationSystem.Create(deps)
-	local instance = InvestigationSystem.new(deps)
-	instance:Create()
-	return instance
-end
-
 function InvestigationSystem:Create()
 	if self._created then
 		return

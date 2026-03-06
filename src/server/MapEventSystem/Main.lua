@@ -54,12 +54,6 @@ function MapEventSystem.new(deps)
 	return self
 end
 
-function MapEventSystem.Create(deps)
-	local instance = MapEventSystem.new(deps)
-	instance:Create()
-	return instance
-end
-
 function MapEventSystem:Create()
 	if self._created then
 		return

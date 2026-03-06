@@ -1,26 +1,11 @@
+local Services = require(script.Parent.Parent.Core.Services)
+
 local Service = {}
 Service.__index = Service
 
-local Services = require(script.Parent.Parent.Core.Services)
-
-local MAX_LEVEL = 100
-local BASE_XP_TABLE = {
-    [1] = 0,
-    [2] = 100,
-    [3] = 250,
-    [4] = 500,
-    [5] = 900,
-}
-
-local function toUserId(playerOrUserId)
-    if type(playerOrUserId) == "number" then
-        return playerOrUserId
-    end
-    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
-        return playerOrUserId.UserId
-    end
-    return nil
-end
+local DEFAULT_MATCH_XP = 200
+local DEFAULT_EVIDENCE_XP = 50
+local DEFAULT_OBJECTIVE_XP = 100
 
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
@@ -36,64 +21,71 @@ local function resolveEventBus(deps)
     return nil
 end
 
-local function resolveProfileService(deps)
-    local profile = Services.Get(deps, "ProfileSystem")
-    if type(profile) ~= "table" then
-        return nil
+local function toUserId(playerOrUserId)
+    if type(playerOrUserId) == "number" then
+        return playerOrUserId
     end
-    if type(profile.GetPlayerProfile) == "function" and type(profile.GetPlayerLevel) == "function" then
-        return profile
-    end
-    if type(profile.Service) == "table"
-        and type(profile.Service.GetPlayerProfile) == "function"
-        and type(profile.Service.GetPlayerLevel) == "function" then
-        return profile.Service
+    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+        return playerOrUserId.UserId
     end
     return nil
 end
 
-local function resolvePersistenceService(deps)
-    local persistence = Services.Get(deps, "DataPersistenceService")
-    if type(persistence) ~= "table" then
+local function safeCall(target, methodName, ...)
+    if type(target) ~= "table" then
         return nil
     end
-    if type(persistence.SaveProfile) == "function" then
-        return persistence
+
+    local fn = target[methodName]
+    if type(fn) ~= "function" then
+        return nil
     end
-    if type(persistence.Service) == "table" and type(persistence.Service.SaveProfile) == "function" then
-        return persistence.Service
+
+    local ok, result = pcall(fn, target, ...)
+    if not ok then
+        return nil
     end
-    return nil
+
+    return result
 end
 
-local function buildXpTable(maxLevel)
-    local xpTable = {}
-    for level = 1, maxLevel do
-        if BASE_XP_TABLE[level] then
-            xpTable[level] = BASE_XP_TABLE[level]
-        else
-            local previous = xpTable[level - 1] or 0
-            local growth = math.floor((level - 1) * (level - 1) * 12 + 100)
-            xpTable[level] = previous + growth
-        end
+local function getLevelThreshold(xpTable, level)
+    local numeric = xpTable[level]
+    if type(numeric) == "number" then
+        return numeric
     end
-    return xpTable
+
+    local named = xpTable[string.format("level%d", level)]
+    if type(named) == "number" then
+        return named
+    end
+
+    return nil
 end
 
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
     self._deps = deps or {}
-    self._eventBus = resolveEventBus(self._deps)
-    self._profile = resolveProfileService(self._deps)
-    self._persistence = resolvePersistenceService(self._deps)
+    self._eventBus = nil
+    self._dependencies = {}
     return self
 end
 
+function Service:Create()
+    self._eventBus = resolveEventBus(self._deps)
+    self._dependencies = {
+        ProfileSystem = Services.Get(self._deps, "ProfileSystem"),
+        EconomySystem = Services.Get(self._deps, "EconomySystem"),
+        MatchSystem = Services.Get(self._deps, "MatchSystem"),
+        ContractObjectiveSystem = Services.Get(self._deps, "ContractObjectiveSystem"),
+    }
+end
+
 function Service:Init()
-    self._state:Set("xpTable", self._state:Get("xpTable") or buildXpTable(MAX_LEVEL))
-    self._state:Set("recentLevelUps", self._state:Get("recentLevelUps") or {})
-    self._state:Set("playerProgress", self._state:Get("playerProgress") or {})
+    self._state:Set("playerXP", self._state:Get("playerXP") or {})
+    self._state:Set("playerLevels", self._state:Get("playerLevels") or {})
+    self._state:Set("xpTable", self._state:Get("xpTable") or {})
 end
 
 function Service:Start()
@@ -110,157 +102,231 @@ function Service:_publish(eventName, payload)
     end
 end
 
-function Service:_progressByUserId()
-    return self._state:Get("playerProgress") or {}
+function Service:_readProfileProgress(player)
+    local profileSystem = self._dependencies.ProfileSystem
+    local profile = safeCall(profileSystem, "GetPlayerProfile", player)
+
+    if type(profile) ~= "table" and type(profileSystem) == "table" and type(profileSystem.Service) == "table" then
+        profile = safeCall(profileSystem.Service, "GetPlayerProfile", player)
+    end
+
+    if type(profile) ~= "table" then
+        return 0, 1
+    end
+
+    local progression = profile.progression or {}
+    local xp = tonumber(profile.playerXP or progression.exp) or 0
+    local level = tonumber(profile.playerLevel or progression.level) or 1
+    return math.max(0, math.floor(xp)), math.max(1, math.floor(level))
 end
 
-function Service:_setProgressByUserId(progressByUserId)
-    self._state:Set("playerProgress", progressByUserId)
-end
+function Service:_syncProfileProgress(player, xp, level)
+    local profileSystem = self._dependencies.ProfileSystem
 
-function Service:_resolveInitialProgress(playerOrUserId, userId)
-    local level = 1
-    local totalXP = 0
-    if self._profile then
-        if type(self._profile.GetPlayerLevel) == "function" then
-            level = self._profile:GetPlayerLevel(playerOrUserId) or level
+    if type(profileSystem) == "table" then
+        if type(profileSystem.SetPlayerProgression) == "function" then
+            safeCall(profileSystem, "SetPlayerProgression", player, xp, level)
+            return
         end
-        if type(self._profile.GetPlayerProfile) == "function" then
-            local profile = self._profile:GetPlayerProfile(playerOrUserId)
-            local progression = profile and profile.progression or {}
-            local xpInLevel = progression.exp or 0
-            local levelStartXP = (self._state:Get("xpTable") or {})[level] or 0
-            totalXP = math.max(levelStartXP + xpInLevel, 0)
+
+        if type(profileSystem.Service) == "table" and type(profileSystem.Service.SetPlayerProgression) == "function" then
+            safeCall(profileSystem.Service, "SetPlayerProgression", player, xp, level)
+            return
+        end
+
+        if type(profileSystem.SetPlayerXP) == "function" then
+            safeCall(profileSystem, "SetPlayerXP", player, xp)
+        elseif type(profileSystem.Service) == "table" and type(profileSystem.Service.SetPlayerXP) == "function" then
+            safeCall(profileSystem.Service, "SetPlayerXP", player, xp)
+        end
+
+        if type(profileSystem.SetPlayerLevel) == "function" then
+            safeCall(profileSystem, "SetPlayerLevel", player, level)
+        elseif type(profileSystem.Service) == "table" and type(profileSystem.Service.SetPlayerLevel) == "function" then
+            safeCall(profileSystem.Service, "SetPlayerLevel", player, level)
+        end
+
+        if type(profileSystem.UpdateProfile) == "function" then
+            safeCall(profileSystem, "UpdateProfile", player, {
+                playerXP = xp,
+                playerLevel = level,
+                progression = {
+                    exp = xp,
+                    level = level,
+                },
+            })
+        elseif type(profileSystem.Service) == "table" and type(profileSystem.Service.UpdateProfile) == "function" then
+            safeCall(profileSystem.Service, "UpdateProfile", player, {
+                playerXP = xp,
+                playerLevel = level,
+                progression = {
+                    exp = xp,
+                    level = level,
+                },
+            })
         end
     end
-    return {
-        userId = userId,
-        level = math.max(math.floor(level), 1),
-        totalXP = math.max(math.floor(totalXP), 0),
-    }
 end
 
-function Service:_ensureProgress(playerOrUserId)
-    local userId = toUserId(playerOrUserId)
+function Service:_ensurePlayerProgress(player)
+    local userId = toUserId(player)
     if not userId then
         return nil
     end
-    local progressByUserId = self:_progressByUserId()
-    if not progressByUserId[userId] then
-        progressByUserId[userId] = self:_resolveInitialProgress(playerOrUserId, userId)
-        self:_setProgressByUserId(progressByUserId)
-    end
-    return progressByUserId[userId]
-end
 
-function Service:_recordLevelUp(userId, fromLevel, toLevel, payload)
-    local recent = self._state:Get("recentLevelUps") or {}
-    recent[userId] = recent[userId] or {}
-    table.insert(recent[userId], {
-        fromLevel = fromLevel,
-        toLevel = toLevel,
-        at = os.time(),
-        payload = payload,
-    })
-    self._state:Set("recentLevelUps", recent)
-end
+    local playerXP = self._state:Get("playerXP") or {}
+    local playerLevels = self._state:Get("playerLevels") or {}
 
-function Service:_syncProgressSnapshot(userId, level, totalXP)
-    if not self._persistence or type(self._persistence.SaveProfile) ~= "function" then
-        return
-    end
-    self._persistence:SaveProfile(userId, {
-        playerLevel = level,
-        playerXP = totalXP,
-    })
-end
-
-function Service:GetLevel(playerOrUserId)
-    local progress = self:_ensureProgress(playerOrUserId)
-    return progress and progress.level or nil
-end
-
-function Service:AddXP(playerOrUserId, amount)
-    local progress = self:_ensureProgress(playerOrUserId)
-    if not progress then
-        return false, "invalid_player"
-    end
-    local xpToAdd = math.max(math.floor(amount or 0), 0)
-    if xpToAdd <= 0 then
-        return true, nil, progress.totalXP
-    end
-    progress.totalXP += xpToAdd
-    return true, nil, progress.totalXP
-end
-
-function Service:CheckLevelUp(playerOrUserId)
-    local progress = self:_ensureProgress(playerOrUserId)
-    if not progress then
-        return false, "invalid_player"
+    if playerXP[userId] == nil or playerLevels[userId] == nil then
+        local initialXP, initialLevel = self:_readProfileProgress(player)
+        if playerXP[userId] == nil then
+            playerXP[userId] = initialXP
+        end
+        if playerLevels[userId] == nil then
+            playerLevels[userId] = initialLevel
+        end
+        self._state:Set("playerXP", playerXP)
+        self._state:Set("playerLevels", playerLevels)
     end
 
+    return userId
+end
+
+function Service:CalculateLevel(playerXP)
+    local xp = math.max(0, math.floor(tonumber(playerXP) or 0))
     local xpTable = self._state:Get("xpTable") or {}
-    local previousLevel = progress.level
-    local nextLevel = previousLevel + 1
+    local level = 1
 
-    while nextLevel <= MAX_LEVEL do
-        local nextThreshold = xpTable[nextLevel]
-        if type(nextThreshold) ~= "number" or progress.totalXP < nextThreshold then
+    for candidateLevel = 2, 200 do
+        local threshold = getLevelThreshold(xpTable, candidateLevel)
+        if type(threshold) ~= "number" then
             break
         end
-        progress.level = nextLevel
-        nextLevel += 1
+
+        if xp >= threshold then
+            level = candidateLevel
+        else
+            break
+        end
     end
 
-    if progress.level > previousLevel then
-        local userId = progress.userId
-        local payload = {
-            player = type(playerOrUserId) == "number" and nil or playerOrUserId,
-            userId = userId,
-            levelBefore = previousLevel,
-            levelAfter = progress.level,
-            totalXP = progress.totalXP,
-        }
-        self:_recordLevelUp(userId, previousLevel, progress.level, payload)
-        self:_publish("LevelUp", payload)
-        self:_syncProgressSnapshot(userId, progress.level, progress.totalXP)
-    end
-
-    return true, nil, progress.level
+    return level
 end
 
-function Service:GrantXP(playerOrUserId, amount, context)
-    local userId = toUserId(playerOrUserId)
+function Service:GetPlayerLevel(player)
+    local userId = self:_ensurePlayerProgress(player)
+    if not userId then
+        return nil
+    end
+
+    local playerLevels = self._state:Get("playerLevels") or {}
+    return playerLevels[userId] or 1
+end
+
+function Service:GrantXP(player, amount)
+    local userId = self:_ensurePlayerProgress(player)
     if not userId then
         return false, "invalid_player"
     end
 
-    local xpAmount = math.max(math.floor(amount or 0), 0)
+    local xpAmount = math.max(0, math.floor(tonumber(amount) or 0))
     if xpAmount <= 0 then
         return true
     end
 
-    local levelBefore = self:GetLevel(playerOrUserId) or 1
-    local ok, addErr, totalXP = self:AddXP(playerOrUserId, xpAmount)
-    if not ok then
-        return false, addErr
-    end
-    local levelOk, levelErr, levelAfter = self:CheckLevelUp(playerOrUserId)
-    if not levelOk then
-        return false, levelErr
-    end
+    local playerXP = self._state:Get("playerXP") or {}
+    local previousXP = playerXP[userId] or 0
+    local totalXP = previousXP + xpAmount
+    playerXP[userId] = totalXP
+    self._state:Set("playerXP", playerXP)
 
     self:_publish("XPGranted", {
-        player = type(playerOrUserId) == "number" and nil or playerOrUserId,
+        player = player,
         userId = userId,
         amount = xpAmount,
+        previousXP = previousXP,
         totalXP = totalXP,
-        levelBefore = levelBefore,
-        levelAfter = levelAfter or levelBefore,
-        context = context,
     })
 
-    return true, nil, levelAfter
+    self:CheckLevelUp(player)
+    return true
+end
+
+function Service:CheckLevelUp(player)
+    local userId = self:_ensurePlayerProgress(player)
+    if not userId then
+        return false, "invalid_player"
+    end
+
+    local playerXP = self._state:Get("playerXP") or {}
+    local playerLevels = self._state:Get("playerLevels") or {}
+
+    local totalXP = playerXP[userId] or 0
+    local previousLevel = playerLevels[userId] or 1
+    local newLevel = self:CalculateLevel(totalXP)
+
+    if newLevel > previousLevel then
+        playerLevels[userId] = newLevel
+        self._state:Set("playerLevels", playerLevels)
+
+        self:_publish("PlayerLevelUp", {
+            player = player,
+            userId = userId,
+            previousLevel = previousLevel,
+            newLevel = newLevel,
+            totalXP = totalXP,
+        })
+    end
+
+    self:_syncProfileProgress(player, totalXP, playerLevels[userId] or previousLevel)
+    return true
+end
+
+function Service:OnMatchEnded(payload)
+    if type(payload) ~= "table" then
+        return
+    end
+
+    local difficultyMultiplier = tonumber(payload.difficultyMultiplier or payload.difficulty) or 1
+    local baseXP = tonumber(payload.xp) or DEFAULT_MATCH_XP
+    local bonusXP = math.max(0, math.floor((difficultyMultiplier - 1) * 50))
+    local totalXP = baseXP + bonusXP
+
+    if payload.player then
+        self:GrantXP(payload.player, totalXP)
+    elseif type(payload.players) == "table" then
+        for _, player in ipairs(payload.players) do
+            self:GrantXP(player, totalXP)
+        end
+    end
+end
+
+function Service:OnObjectiveCompleted(payload)
+    if type(payload) ~= "table" then
+        return
+    end
+
+    local player = payload.player
+    if not player then
+        return
+    end
+
+    local xp = tonumber(payload.xp) or DEFAULT_OBJECTIVE_XP
+    self:GrantXP(player, xp)
+end
+
+function Service:OnEvidenceCollected(payload)
+    if type(payload) ~= "table" then
+        return
+    end
+
+    local player = payload.player
+    if not player then
+        return
+    end
+
+    local xp = tonumber(payload.xp) or DEFAULT_EVIDENCE_XP
+    self:GrantXP(player, xp)
 end
 
 return Service

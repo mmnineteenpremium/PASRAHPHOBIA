@@ -54,12 +54,6 @@ function HorrorDirector.new(deps)
     return self
 end
 
-function HorrorDirector.Create(deps)
-    local instance = HorrorDirector.new(deps)
-    instance:Create()
-    return instance
-end
-
 function HorrorDirector:Create()
     if self._created then
         return

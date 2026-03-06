@@ -54,12 +54,6 @@ function ShopSystem.new(deps)
     return self
 end
 
-function ShopSystem.Create(deps)
-    local instance = ShopSystem.new(deps)
-    instance:Create()
-    return instance
-end
-
 function ShopSystem:Create()
     if self._created then
         return

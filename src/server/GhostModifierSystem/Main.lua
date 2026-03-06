@@ -54,12 +54,6 @@ function GhostModifierSystem.new(deps)
 	return self
 end
 
-function GhostModifierSystem.Create(deps)
-	local instance = GhostModifierSystem.new(deps)
-	instance:Create()
-	return instance
-end
-
 function GhostModifierSystem:Create()
 	if self._created then
 		return

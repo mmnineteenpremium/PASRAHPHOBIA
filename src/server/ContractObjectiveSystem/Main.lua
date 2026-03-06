@@ -54,12 +54,6 @@ function ContractObjectiveSystem.new(deps)
 	return self
 end
 
-function ContractObjectiveSystem.Create(deps)
-	local instance = ContractObjectiveSystem.new(deps)
-	instance:Create()
-	return instance
-end
-
 function ContractObjectiveSystem:Create()
 	if self._created then
 		return

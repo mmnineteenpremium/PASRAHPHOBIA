@@ -54,12 +54,6 @@ function CosmeticSystem.new(deps)
     return self
 end
 
-function CosmeticSystem.Create(deps)
-    local instance = CosmeticSystem.new(deps)
-    instance:Create()
-    return instance
-end
-
 function CosmeticSystem:Create()
     if self._created then
         return
