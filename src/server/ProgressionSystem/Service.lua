@@ -125,7 +125,7 @@ function Service:GrantExperience(playerOrUserId, amount, reason, context)
     local tierBefore = self:_getTierForLevel(levelBefore)
     local tierAfter = self:_getTierForLevel(levelAfter)
 
-    self:_publish("ExperienceGranted", {
+    local xpPayload = {
         player = type(playerOrUserId) == "number" and nil or playerOrUserId,
         userId = userId,
         amount = exp,
@@ -139,7 +139,9 @@ function Service:GrantExperience(playerOrUserId, amount, reason, context)
         tierXpRequiredAfter = tierAfter and tierAfter.xpRequired or nil,
         reason = reason or "progression",
         context = context,
-    })
+    }
+    self:_publish("XPGranted", xpPayload)
+    self:_publish("ExperienceGranted", xpPayload)
 
     if levelAfter > levelBefore then
         self:_publish("LevelUp", {
@@ -171,6 +173,22 @@ function Service:OnPlayerRewardGranted(payload)
 
     local exp = math.max(math.floor(amount / 10), 1)
     self:GrantExperience(playerOrUserId, exp, "player_reward", payload)
+end
+
+function Service:OnCurrencyEarned(payload)
+    local playerOrUserId = payload and (payload.player or payload.userId)
+    local currency = payload and payload.currency
+    local amount = payload and payload.amount or 0
+    local reason = payload and payload.reason
+    local contextSource = payload and payload.context and payload.context.sourceSystem
+    if currency ~= "MM" then
+        return
+    end
+    if reason ~= "contract_reward" and contextSource ~= "ContractRewardSystem" then
+        return
+    end
+    local exp = math.max(math.floor(amount / 10), 1)
+    self:GrantExperience(playerOrUserId, exp, "currency_earned", payload)
 end
 
 return Service

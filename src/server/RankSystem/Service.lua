@@ -165,13 +165,14 @@ function Service:SyncRank(playerOrUserId, level, sourceEvent, context)
 
     local rank = self:_ensureRank(userId)
     local previousTier = rank.tier
+    local previousTierLevel = rank.tierLevel
     local tier = self:_getTierForLevel(resolvedLevel)
     rank.level = resolvedLevel
     rank.tier = tier and tier.name or rank.tier
     rank.tierLevel = tier and (tier.level or rank.tierLevel) or rank.tierLevel
     rank.tierXpRequired = tier and (tier.xpRequired or rank.tierXpRequired) or rank.tierXpRequired
 
-    self:_publish("PlayerRankUpdated", {
+    local rankPayload = {
         player = type(playerOrUserId) == "number" and nil or playerOrUserId,
         userId = userId,
         level = rank.level,
@@ -179,9 +180,19 @@ function Service:SyncRank(playerOrUserId, level, sourceEvent, context)
         tierLevel = rank.tierLevel,
         tierXpRequired = rank.tierXpRequired,
         didRankUp = previousTier ~= rank.tier,
+        didPromote = rank.tierLevel > (previousTierLevel or rank.tierLevel),
+        didDemote = rank.tierLevel < (previousTierLevel or rank.tierLevel),
         sourceEvent = sourceEvent,
         context = context,
-    })
+    }
+    self:_publish("RankUpdated", rankPayload)
+    self:_publish("PlayerRankUpdated", rankPayload)
+
+    if rankPayload.didPromote then
+        self:_publish("RankPromotion", rankPayload)
+    elseif rankPayload.didDemote then
+        self:_publish("RankDemotion", rankPayload)
+    end
 
     local rankPoints = resolveRankPoints(sourceEvent, context)
     if rankPoints > 0 then
@@ -201,6 +212,12 @@ function Service:OnExperienceGranted(payload)
     local playerOrUserId = payload and (payload.player or payload.userId)
     local level = payload and (payload.levelAfter or payload.level)
     self:SyncRank(playerOrUserId, level, "ExperienceGranted", payload)
+end
+
+function Service:OnXPGranted(payload)
+    local playerOrUserId = payload and (payload.player or payload.userId)
+    local level = payload and (payload.levelAfter or payload.level)
+    self:SyncRank(playerOrUserId, level, "XPGranted", payload)
 end
 
 function Service:OnLevelUp(payload)

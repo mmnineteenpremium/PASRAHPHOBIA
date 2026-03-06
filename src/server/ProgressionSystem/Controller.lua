@@ -45,6 +45,9 @@ function Controller:RegisterEventHandlers()
     self:_subscribe("PlayerRewardGranted", function(payload)
         self:OnPlayerRewardGranted(payload)
     end)
+    self:_subscribe("CurrencyEarned", function(payload)
+        self:OnCurrencyEarned(payload)
+    end)
     self:_subscribe("MatchEnded", function(payload)
         self:OnMatchEnded(payload)
     end)
@@ -79,6 +82,10 @@ end
 
 function Controller:OnPlayerRewardGranted(payload)
     self._service:OnPlayerRewardGranted(payload)
+end
+
+function Controller:OnCurrencyEarned(payload)
+    self._service:OnCurrencyEarned(payload)
 end
 
 function Controller:OnMatchEnded(payload)

@@ -26,6 +26,25 @@ local function toUserId(player)
     return nil
 end
 
+local function resolvePersistenceService(deps)
+    local persistence = Services.Get(deps, "DataPersistenceService")
+        or Services.Get(deps, "DataPersistenceSystem")
+        or (deps and deps.DataPersistenceService)
+        or (deps and deps.PersistenceService)
+    if type(persistence) ~= "table" then
+        return nil
+    end
+    if type(persistence.LoadInventory) == "function" and type(persistence.SaveInventory) == "function" then
+        return persistence
+    end
+    if type(persistence.Service) == "table"
+        and type(persistence.Service.LoadInventory) == "function"
+        and type(persistence.Service.SaveInventory) == "function" then
+        return persistence.Service
+    end
+    return nil
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -249,24 +268,6 @@ function Service:StoreItem(player, itemId)
         reason = "store",
     })
     return true
-end
-
-local function resolvePersistenceService(deps)
-    local persistence = Services.Get(deps, "DataPersistenceService")
-        or Services.Get(deps, "DataPersistenceSystem")
-        or (deps and deps.PersistenceService)
-    if type(persistence) ~= "table" then
-        return nil
-    end
-    if type(persistence.LoadInventory) == "function" and type(persistence.SaveInventory) == "function" then
-        return persistence
-    end
-    if type(persistence.Service) == "table"
-        and type(persistence.Service.LoadInventory) == "function"
-        and type(persistence.Service.SaveInventory) == "function" then
-        return persistence.Service
-    end
-    return nil
 end
 
 return Service

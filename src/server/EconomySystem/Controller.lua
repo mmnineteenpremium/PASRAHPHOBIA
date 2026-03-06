@@ -70,6 +70,9 @@ function Controller:RegisterEventHandlers()
         self:_subscribe("MatchEnded", function(payload)
             self:OnMatchEnded(payload)
         end)
+        self:_subscribe("RewardGranted", function(payload)
+            self:OnRewardGranted(payload)
+        end)
         self:_subscribe("MissionCompleted", function(payload)
             self:OnMissionCompleted(payload)
         end)
@@ -101,6 +104,30 @@ function Controller:RegisterEventHandlers()
         })
     end
     self._handlersRegistered = true
+end
+
+function Controller:OnRewardGranted(payload)
+    if not payload or payload.sourceSystem ~= "ContractRewardSystem" then
+        return
+    end
+
+    local player = payload.player or payload.userId
+    local currency = payload.currency or "MM"
+    local amount = payload.amount or 0
+    local ok, _, granted = self._service:AddCurrency(player, currency, amount, payload.reason or "contract_reward")
+    if ok and self._eventBus and (granted or 0) > 0 then
+        local rewardPayload = {
+            player = payload.player,
+            userId = payload.userId,
+            currency = currency,
+            amount = granted,
+            reason = payload.reason or "contract_reward",
+            sourceSystem = "EconomySystem",
+            context = payload,
+        }
+        self._eventBus:Publish("CurrencyEarned", rewardPayload)
+        self._eventBus:Publish("PlayerRewardGranted", rewardPayload)
+    end
 end
 
 function Controller:UnregisterEventHandlers()

@@ -92,6 +92,26 @@ function Service:GetItemPrice(itemId)
     return available[itemId]
 end
 
+function Service:_ownsItem(player, itemId)
+    if not self._inventory or type(self._inventory.GetInventory) ~= "function" then
+        return false
+    end
+    local inventory = self._inventory:GetInventory(player)
+    for _, ownedItemId in ipairs(inventory) do
+        if ownedItemId == itemId then
+            return true
+        end
+    end
+    return false
+end
+
+function Service:_ownsCosmetic(player, cosmeticId)
+    if not self._inventory or type(self._inventory.OwnsCosmetic) ~= "function" then
+        return false
+    end
+    return self._inventory:OwnsCosmetic(player, cosmeticId)
+end
+
 function Service:PurchaseItem(player, itemId)
     local userId = toUserId(player)
     if not userId then
@@ -100,6 +120,9 @@ function Service:PurchaseItem(player, itemId)
     local price = self:GetItemPrice(itemId)
     if not price then
         return false, "missing_item"
+    end
+    if self:_ownsItem(player, itemId) then
+        return false, "already_owned"
     end
     if not self._economy then
         return false, "missing_economy"
@@ -119,7 +142,13 @@ function Service:PurchaseItem(player, itemId)
     purchases[userId] = purchases[userId] or {}
     table.insert(purchases[userId], itemId)
     self._state:Set("purchasesByUserId", purchases)
-    self:_publish("ItemPurchased", { player = player, itemId = itemId, price = price })
+    self:_publish("ItemPurchased", {
+        player = player,
+        userId = userId,
+        itemId = itemId,
+        itemType = "item",
+        price = price,
+    })
     return true
 end
 
@@ -131,6 +160,9 @@ function Service:PurchaseCosmetic(player, cosmeticId)
     local price = self:GetPrice(cosmeticId)
     if not price then
         return false, "missing_cosmetic"
+    end
+    if self:_ownsCosmetic(player, cosmeticId) then
+        return false, "already_owned"
     end
     if not self._economy then
         return false, "missing_economy"
@@ -147,7 +179,20 @@ function Service:PurchaseCosmetic(player, cosmeticId)
     purchases[userId] = purchases[userId] or {}
     table.insert(purchases[userId], cosmeticId)
     self._state:Set("purchasesByUserId", purchases)
-    self:_publish("CosmeticPurchased", { player = player, cosmeticId = cosmeticId, price = price })
+    self:_publish("ItemPurchased", {
+        player = player,
+        userId = userId,
+        itemId = cosmeticId,
+        cosmeticId = cosmeticId,
+        itemType = "cosmetic",
+        price = price,
+    })
+    self:_publish("CosmeticPurchased", {
+        player = player,
+        userId = userId,
+        cosmeticId = cosmeticId,
+        price = price,
+    })
     return true
 end
 

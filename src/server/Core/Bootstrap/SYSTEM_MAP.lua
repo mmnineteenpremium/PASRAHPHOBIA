@@ -38,6 +38,7 @@ return {
 
     Economy = {
 
+        "ContractRewardSystem",
         "EconomySystem",
         "RewardSystem",
         "ProgressionSystem",

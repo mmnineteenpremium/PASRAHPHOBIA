@@ -186,4 +186,13 @@ function LobbyService:HandlePlayerTeleported(payload)
     end
 end
 
+function LobbyService:ApplyCosmetic(player, cosmeticId, category)
+    self:_publish("LobbyCosmeticApplied", {
+        player = player,
+        cosmeticId = cosmeticId,
+        category = category,
+    })
+    return true
+end
+
 return LobbyService

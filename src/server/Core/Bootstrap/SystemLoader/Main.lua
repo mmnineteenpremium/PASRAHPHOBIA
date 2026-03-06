@@ -29,6 +29,7 @@ local SYSTEM_MODULE_NAMES = {
     CosmeticSystem = "CosmeticSystem",
     ShopSystem = "ShopSystem",
     ContractSystem = "ContractSystem",
+    ContractRewardSystem = "ContractRewardSystem",
 }
 
 local function tryRequire(moduleScript)

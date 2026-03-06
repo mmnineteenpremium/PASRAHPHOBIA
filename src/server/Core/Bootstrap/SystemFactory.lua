@@ -1,8 +1,10 @@
-local SystemFactory = {}
-SystemFactory.__index = SystemFactory
+local FactoryModule = {}
+FactoryModule.__index = FactoryModule
+local ServiceRegistry = require(script.Parent.ServiceRegistry)
+local Services = require(script.Parent.Parent.Services)
 
 local function defaultLogger(message)
-    warn(message)
+    print(message)
 end
 
 local function getService(registry, name)
@@ -44,9 +46,9 @@ local function getAllServices(registry)
     return {}
 end
 
-function SystemFactory.new(services, deps)
-    local self = setmetatable({}, SystemFactory)
-    self._services = services
+function FactoryModule.new(services, deps)
+    local self = setmetatable({}, FactoryModule)
+    self._services = services or Services.GetRegistry(deps) or ServiceRegistry.new()
     self._deps = deps or {}
     self._constructorsByName = {}
     self._createdByName = {}
@@ -56,7 +58,7 @@ function SystemFactory.new(services, deps)
     return self
 end
 
-function SystemFactory:RegisterSystem(name, constructor)
+function FactoryModule:RegisterSystem(name, constructor)
     if type(name) ~= "string" or name == "" then
         return false
     end
@@ -71,7 +73,7 @@ function SystemFactory:RegisterSystem(name, constructor)
     return true
 end
 
-function SystemFactory:Register(name, instance)
+function FactoryModule:Register(name, instance)
     if type(name) ~= "string" or name == "" or type(instance) ~= "table" then
         return false, "invalid_registration"
     end
@@ -86,7 +88,7 @@ function SystemFactory:Register(name, instance)
     return true
 end
 
-function SystemFactory:Create(systemName, deps)
+function FactoryModule:Create(systemName, deps)
     if type(systemName) ~= "string" or systemName == "" then
         return false, "invalid_system_name"
     end
@@ -123,7 +125,7 @@ function SystemFactory:Create(systemName, deps)
     return true, system
 end
 
-function SystemFactory:_buildDeps()
+function FactoryModule:_buildDeps()
     local out = {}
     for key, value in pairs(self._deps or {}) do
         out[key] = value
@@ -138,7 +140,7 @@ function SystemFactory:_buildDeps()
     return out
 end
 
-function SystemFactory:CreateSystems(startupOrder)
+function FactoryModule:CreateSystems(startupOrder)
     for _, name in ipairs(startupOrder or {}) do
         if self._createdByName[name] ~= true then
             local constructor = self._constructorsByName[name]
@@ -153,7 +155,7 @@ function SystemFactory:CreateSystems(startupOrder)
     return true
 end
 
-function SystemFactory:InitSystems(startupOrder)
+function FactoryModule:InitSystems(startupOrder)
     for _, name in ipairs(startupOrder or {}) do
         if self._initializedByName[name] ~= true then
             local system = getService(self._services, name)
@@ -172,7 +174,7 @@ function SystemFactory:InitSystems(startupOrder)
     return true
 end
 
-function SystemFactory:StartSystems(startupOrder)
+function FactoryModule:StartSystems(startupOrder)
     for _, name in ipairs(startupOrder or {}) do
         if self._startedByName[name] ~= true then
             local system = getService(self._services, name)
@@ -191,7 +193,7 @@ function SystemFactory:StartSystems(startupOrder)
     return true
 end
 
-function SystemFactory:StopSystems(startupOrder)
+function FactoryModule:StopSystems(startupOrder)
     local order = startupOrder or {}
     for i = #order, 1, -1 do
         local name = order[i]
@@ -212,7 +214,7 @@ function SystemFactory:StopSystems(startupOrder)
     return true
 end
 
-function SystemFactory:RestartSystem(name, startupOrder)
+function FactoryModule:RestartSystem(name, startupOrder)
     if type(name) ~= "string" or name == "" then
         return false, "invalid_system_name"
     end
@@ -270,4 +272,4 @@ function SystemFactory:RestartSystem(name, startupOrder)
     return true
 end
 
-return SystemFactory
+return FactoryModule
