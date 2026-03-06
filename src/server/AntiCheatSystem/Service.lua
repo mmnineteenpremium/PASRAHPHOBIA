@@ -1,3 +1,5 @@
+local Services = require(script.Parent.Parent.Core.Services)
+
 local Service = {}
 Service.__index = Service
 
@@ -68,14 +70,27 @@ function Service.new(state, deps)
 	self._state = state
 	self._deps = deps or {}
 	self._config = mergeConfig(DEFAULT_CONFIG, self._deps.AntiCheatConfig)
-	self._eventBus = resolveEventBus(self._deps)
+	self._eventBus = nil
 	self._kickFn = self._deps.KickPlayer
+	self._dependencies = {}
 	return self
+end
+
+function Service:Create()
+	self._eventBus = resolveEventBus(self._deps)
+	self._dependencies = {
+		MatchSystem = Services.Get(self._deps, "MatchSystem"),
+		ProfileSystem = Services.Get(self._deps, "ProfileSystem"),
+		DataPersistenceService = Services.Get(self._deps, "DataPersistenceService"),
+		LobbySocialHub = Services.Get(self._deps, "LobbySocialHub"),
+	}
 end
 
 function Service:Init()
 	self._state:Set("players", {})
 	self._state:Set("violations", {})
+	self._state:Set("playerViolations", self._state:Get("playerViolations") or {})
+	self._state:Set("flaggedPlayers", self._state:Get("flaggedPlayers") or {})
 end
 
 function Service:Start()
@@ -149,6 +164,7 @@ function Service:_recordViolation(player, violationType, severity, details)
 	violations[userId] = violations[userId] or {}
 	table.insert(violations[userId], record)
 	self:_setViolations(violations)
+	self._state:Set("playerViolations", violations)
 
 	self:_publish("PlayerViolationDetected", {
 		player = player,
@@ -158,11 +174,33 @@ function Service:_recordViolation(player, violationType, severity, details)
 		score = entry.violationScore,
 		details = details,
 	})
+	self:_publish("AntiCheatViolationDetected", {
+		player = player,
+		userId = userId,
+		violationType = violationType,
+		severity = scoreAdd,
+		score = entry.violationScore,
+		details = details,
+	})
 
 	if entry.violationScore >= self._config.ViolationKickScore then
+		local flagged = self._state:Get("flaggedPlayers") or {}
+		flagged[userId] = true
+		self._state:Set("flaggedPlayers", flagged)
+		self:_publish("PlayerFlagged", {
+			player = player,
+			userId = userId,
+			score = entry.violationScore,
+			violationType = violationType,
+		})
 		if type(self._kickFn) == "function" then
 			self._kickFn(player, "AntiCheat violation: " .. tostring(violationType))
 		end
+		self:_publish("PlayerKicked", {
+			player = player,
+			userId = userId,
+			reason = "AntiCheat violation: " .. tostring(violationType),
+		})
 	end
 
 	return record
@@ -177,6 +215,26 @@ function Service:ValidateRemoteCall(player, remoteName, payload, context)
 			context = context,
 		})
 		return false, "invalid_remote_call"
+	end
+
+	if type(payload) ~= "table" and payload ~= nil then
+		self:_recordViolation(player, "malformed_remote_payload", 1, {
+			remoteName = remoteName,
+		})
+		return false, "malformed_remote_payload"
+	end
+
+	return true
+end
+
+function Service:ValidateInteraction(player, payload)
+	if type(payload) ~= "table" then
+		self:_recordViolation(player, "invalid_interaction_request", 1, payload)
+		return false, "invalid_interaction_request"
+	end
+	if payload.allowedState == false then
+		self:_recordViolation(player, "tool_usage_outside_allowed_state", 2, payload)
+		return false, "tool_usage_outside_allowed_state"
 	end
 	return true
 end

@@ -1,3 +1,5 @@
+local Services = require(script.Parent.Parent.Core.Services)
+
 local Service = {}
 Service.__index = Service
 
@@ -40,14 +42,28 @@ function Service.new(state, deps)
 	local self = setmetatable({}, Service)
 	self._state = state
 	self._deps = deps or {}
-	self._eventBus = resolveEventBus(self._deps)
+	self._eventBus = nil
+	self._dependencies = {}
+	self._batchSize = (self._deps.TelemetryConfig and self._deps.TelemetryConfig.BatchSize) or 25
 	return self
+end
+
+function Service:Create()
+	self._eventBus = resolveEventBus(self._deps)
+	self._dependencies = {
+		MatchSystem = Services.Get(self._deps, "MatchSystem"),
+		ProfileSystem = Services.Get(self._deps, "ProfileSystem"),
+		DataPersistenceService = Services.Get(self._deps, "DataPersistenceService"),
+		LobbySocialHub = Services.Get(self._deps, "LobbySocialHub"),
+	}
 end
 
 function Service:Init()
 	self._state:Set("matchMetrics", {})
 	self._state:Set("playerMetrics", {})
 	self._state:Set("timeline", {})
+	self._state:Set("eventBuffer", self._state:Get("eventBuffer") or {})
+	self._state:Set("telemetryCounters", self._state:Get("telemetryCounters") or {})
 end
 
 function Service:Start()
@@ -120,6 +136,10 @@ function Service:_getOrCreatePlayer(userId)
 end
 
 function Service:RecordEvent(eventName, payload)
+	local counters = self._state:Get("telemetryCounters") or {}
+	counters[eventName] = (counters[eventName] or 0) + 1
+	self._state:Set("telemetryCounters", counters)
+
 	local timeline = self:_timeline()
 	table.insert(timeline, {
 		eventName = eventName,
@@ -128,11 +148,43 @@ function Service:RecordEvent(eventName, payload)
 	})
 	self:_setTimeline(timeline)
 
+	local buffer = self._state:Get("eventBuffer") or {}
+	table.insert(buffer, {
+		eventName = eventName,
+		payload = deepCopy(payload),
+		at = os.time(),
+	})
+	self._state:Set("eventBuffer", buffer)
+
 	self:_publish("TelemetryEvent", {
 		eventName = eventName,
 		payload = payload,
 		at = os.clock(),
 	})
+	self:_publish("TelemetryEventRecorded", {
+		eventName = eventName,
+		payload = payload,
+		at = os.clock(),
+	})
+
+	if #buffer >= self._batchSize then
+		self:FlushBatch("batch_size_reached")
+	end
+end
+
+function Service:FlushBatch(reason)
+	local buffer = self._state:Get("eventBuffer") or {}
+	if #buffer == 0 then
+		return false
+	end
+	local batch = deepCopy(buffer)
+	self._state:Set("eventBuffer", {})
+	self:_publish("TelemetryBatchSubmitted", {
+		reason = reason or "manual_flush",
+		count = #batch,
+		events = batch,
+	})
+	return true
 end
 
 function Service:OnMatchStarted(payload)
@@ -257,6 +309,7 @@ function Service:OnMatchEnded(payload)
 		survivalRate = match.survivalRate,
 		currencyEarned = match.currencyEarned,
 	})
+	self:FlushBatch("match_ended")
 end
 
 function Service:GetMatchMetrics(matchId)

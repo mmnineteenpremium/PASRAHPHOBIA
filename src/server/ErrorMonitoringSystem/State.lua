@@ -2,10 +2,9 @@ local State = {}
 State.__index = State
 
 local DEFAULT_STATE = {
-	playerViolations = {},
-	flaggedPlayers = {},
-	players = {},
-	violations = {},
+	errorLogs = {},
+	errorCounters = {},
+	systemContext = {},
 }
 
 local function deepCopy(value)
