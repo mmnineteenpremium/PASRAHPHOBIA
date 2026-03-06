@@ -71,6 +71,58 @@ function SystemFactory:RegisterSystem(name, constructor)
     return true
 end
 
+function SystemFactory:Register(name, instance)
+    if type(name) ~= "string" or name == "" or type(instance) ~= "table" then
+        return false, "invalid_registration"
+    end
+    if getService(self._services, name) ~= nil then
+        return false, "already_registered"
+    end
+    local ok = registerService(self._services, name, instance)
+    if not ok then
+        return false, "registry_rejected"
+    end
+    self._createdByName[name] = true
+    return true
+end
+
+function SystemFactory:Create(systemName, deps)
+    if type(systemName) ~= "string" or systemName == "" then
+        return false, "invalid_system_name"
+    end
+    if getService(self._services, systemName) ~= nil then
+        self._createdByName[systemName] = true
+        return true, getService(self._services, systemName)
+    end
+
+    local constructor = self._constructorsByName[systemName]
+    if type(constructor) ~= "function" then
+        return false, "missing_factory"
+    end
+
+    local localDeps = self:_buildDeps()
+    for key, value in pairs(deps or {}) do
+        localDeps[key] = value
+    end
+
+    local ok, system = pcall(constructor, localDeps)
+    if not ok or type(system) ~= "table" then
+        self._log(string.format("[SystemFactory] Failed creating system '%s': %s", systemName, tostring(system)))
+        return false, "factory_failed"
+    end
+    if type(system.Init) ~= "function" or type(system.Start) ~= "function" or type(system.Stop) ~= "function" then
+        self._log(string.format("[SystemFactory] System '%s' missing lifecycle methods (Init/Start/Stop).", systemName))
+    end
+
+    local registered = registerService(self._services, systemName, system)
+    if not registered then
+        return false, "already_registered"
+    end
+    self._createdByName[systemName] = true
+    self._log(string.format("[SystemFactory] Created system '%s'", systemName))
+    return true, system
+end
+
 function SystemFactory:_buildDeps()
     local out = {}
     for key, value in pairs(self._deps or {}) do
@@ -91,14 +143,9 @@ function SystemFactory:CreateSystems(startupOrder)
         if self._createdByName[name] ~= true then
             local constructor = self._constructorsByName[name]
             if constructor then
-                local ok, system = pcall(constructor, self:_buildDeps())
-                if ok and type(system) == "table" then
-                    registerService(self._services, name, system)
-                    self._createdByName[name] = true
-                    self._log(string.format("[SystemFactory] Created system '%s'", name))
-                else
-                    self._log(string.format("[SystemFactory] Failed creating system '%s': %s", name, tostring(system)))
-                    return false, string.format("factory_failed:%s", name)
+                local ok, result = self:Create(name)
+                if not ok then
+                    return false, string.format("%s:%s", tostring(result), name)
                 end
             end
         end

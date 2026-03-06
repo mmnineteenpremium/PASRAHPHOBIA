@@ -4,6 +4,8 @@ local Services = require(script.Parent.Parent.Core.Services)
 
 local REMOTE_FUNCTIONS_FOLDER_NAME = "RemoteFunctions"
 local EVIDENCE_REQUEST_FUNCTION_NAME = "EvidenceRequest"
+local TOOL_REQUEST_COOLDOWN_SECONDS = 0.4
+local MAX_GHOST_SCAN_DISTANCE = 22
 
 local REQUEST_TYPE_TO_TOOL = {
 	emfscan = "JejakEnergi",
@@ -75,6 +77,20 @@ local function resolveMatchSystem(deps)
 	return match
 end
 
+local function resolveSanitySystem(deps)
+	local sanity = Services.Get(deps, "SanitySystem")
+	if type(sanity) ~= "table" then
+		return nil
+	end
+	if type(sanity.GetSanity) == "function" then
+		return sanity
+	end
+	if type(sanity.Service) == "table" and type(sanity.Service.GetSanity) == "function" then
+		return sanity.Service
+	end
+	return nil
+end
+
 local function normalizeToken(value)
 	if type(value) ~= "string" then
 		return nil
@@ -89,7 +105,9 @@ function EvidenceGateway.new(service, deps)
 	self._eventBus = resolveEventBus(self._deps)
 	self._security = resolveSecurityService(self._deps)
 	self._matchSystem = resolveMatchSystem(self._deps)
+	self._sanitySystem = resolveSanitySystem(self._deps)
 	self._requestRemote = nil
+	self._lastRequestAtByUserId = {}
 	return self
 end
 
@@ -141,6 +159,7 @@ function EvidenceGateway:Stop()
 	if self._requestRemote then
 		self._requestRemote.OnServerInvoke = nil
 	end
+	table.clear(self._lastRequestAtByUserId)
 end
 
 function EvidenceGateway:_resolveMatchIdForPlayer(player, requestPayload)
@@ -268,6 +287,19 @@ function EvidenceGateway:HandleRequest(player, request)
 		end
 	end
 
+	local userId = player and player.UserId
+	if userId then
+		local now = os.clock()
+		local last = self._lastRequestAtByUserId[userId] or 0
+		if (now - last) < TOOL_REQUEST_COOLDOWN_SECONDS then
+			return {
+				success = false,
+				reason = "tool_cooldown",
+			}
+		end
+		self._lastRequestAtByUserId[userId] = now
+	end
+
 	local toolType = self:_resolveToolType(request)
 	if not toolType then
 		return {
@@ -281,6 +313,27 @@ function EvidenceGateway:HandleRequest(player, request)
 		return {
 			success = false,
 			reason = "missing_match_id",
+			toolType = toolType,
+		}
+	end
+
+	if self._sanitySystem and type(self._sanitySystem.GetSanity) == "function" then
+		local sanity = self._sanitySystem:GetSanity(player, matchId)
+		if type(sanity) == "number" and sanity <= 0 then
+			return {
+				success = false,
+				reason = "insufficient_sanity",
+				toolType = toolType,
+			}
+		end
+	end
+
+	local distanceToGhost = tonumber(requestPayload.distanceToGhost)
+	local nearGhostRoom = requestPayload.nearGhostRoom == true
+	if (type(distanceToGhost) == "number" and distanceToGhost > MAX_GHOST_SCAN_DISTANCE) and not nearGhostRoom then
+		return {
+			success = false,
+			reason = "ghost_out_of_range",
 			toolType = toolType,
 		}
 	end

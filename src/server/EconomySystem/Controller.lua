@@ -171,7 +171,17 @@ function Controller:OnEvidenceDiscovered(payload)
         return
     end
     -- Lightweight direct reward for evidence confirmations when central RewardSystem does not map this event.
-    self._service:AddCurrency(player, "MM", 25, "evidence_discovered")
+    local ok, _, granted = self._service:AddCurrency(player, "MM", 25, "evidence_discovered")
+    if ok and self._eventBus and (granted or 0) > 0 then
+        self._eventBus:Publish("PlayerRewardGranted", {
+            player = payload and payload.player,
+            userId = payload and payload.userId,
+            currency = "MM",
+            amount = granted,
+            reason = "evidence_discovered",
+            context = payload,
+        })
+    end
 end
 
 return Controller

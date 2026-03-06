@@ -4,6 +4,7 @@ Controller.__index = Controller
 local ServiceRegistry = require(script.Parent.ServiceRegistry)
 local SystemFactory = require(script.Parent.SystemFactory)
 local RemoteFunctionProvisioner = require(script.Parent.RemoteFunctionProvisioner)
+local SystemSupervisor = require(script.Parent.SystemSupervisor)
 
 function Controller.new(state, service, deps)
     local self = setmetatable({}, Controller)
@@ -59,6 +60,14 @@ function Controller:Init()
     RemoteFunctionProvisioner.Ensure(self._deps)
     self._deps.Services = self._registry
     self._deps.ServiceRegistry = self._registry
+    if not self._deps.SystemSupervisor then
+        self._deps.SystemSupervisor = SystemSupervisor.new({
+            Services = self._registry,
+            ServiceRegistry = self._registry,
+            SystemFactories = self._deps.SystemFactories,
+            LogWarning = self._deps.LogWarning,
+        })
+    end
     local factoryDeps = {}
     for key, value in pairs(self._deps) do
         factoryDeps[key] = value

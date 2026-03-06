@@ -42,6 +42,22 @@ local function toUserId(playerOrUserId)
     return nil
 end
 
+local function resolveRankPoints(sourceEvent, context)
+    if sourceEvent == "MatchEnded" then
+        if context and context.survived == true then
+            return 20
+        end
+        return 12
+    end
+    if sourceEvent == "MissionCompleted" then
+        return 15
+    end
+    if sourceEvent == "ContractCompleted" then
+        return 25
+    end
+    return 0
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -166,6 +182,17 @@ function Service:SyncRank(playerOrUserId, level, sourceEvent, context)
         sourceEvent = sourceEvent,
         context = context,
     })
+
+    local rankPoints = resolveRankPoints(sourceEvent, context)
+    if rankPoints > 0 then
+        self:_publish("RankPointsEarned", {
+            player = type(playerOrUserId) == "number" and nil or playerOrUserId,
+            userId = userId,
+            amount = rankPoints,
+            sourceEvent = sourceEvent,
+            context = context,
+        })
+    end
 
     return true, nil, self:GetPlayerRank(userId)
 end

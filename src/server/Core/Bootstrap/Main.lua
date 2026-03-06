@@ -18,20 +18,32 @@ end
 function Bootstrap:Init()
     self.Service:Init()
     self.Controller:Init()
-    self.Controller:BootstrapSystems()
-    self.Controller:InitSystems()
+    local bootOk, bootErr = self.Controller:BootstrapSystems()
+    if not bootOk then
+        warn(string.format("[Bootstrap] BootstrapSystems failed: %s", tostring(bootErr)))
+    end
+    local initOk, initErr = self.Controller:InitSystems()
+    if not initOk then
+        warn(string.format("[Bootstrap] InitSystems failed: %s", tostring(initErr)))
+    end
     self.Services = self._deps.Services or self._deps.ServiceRegistry or self.Services
 end
 
 function Bootstrap:Start()
     self.Controller:RegisterEventHandlers()
-    self.Controller:StartSystems()
+    local ok, err = self.Controller:StartSystems()
+    if not ok then
+        warn(string.format("[Bootstrap] StartSystems failed: %s", tostring(err)))
+    end
     self.Service:Start()
 end
 
 function Bootstrap:Stop()
     self.Controller:UnregisterEventHandlers()
-    self.Controller:StopSystems()
+    local ok, err = self.Controller:StopSystems()
+    if not ok then
+        warn(string.format("[Bootstrap] StopSystems encountered issues: %s", tostring(err)))
+    end
     self.Service:Stop()
 end
 

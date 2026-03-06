@@ -22,8 +22,12 @@ function ServiceRegistry:Get(name)
     return self._services[name]
 end
 
-function ServiceRegistry:Has(name)
+function ServiceRegistry:Exists(name)
     return self._services[name] ~= nil
+end
+
+function ServiceRegistry:Has(name)
+    return self:Exists(name)
 end
 
 function ServiceRegistry:GetAll()
@@ -36,12 +40,7 @@ end
 
 -- Compatibility aliases for older callers.
 function ServiceRegistry:RegisterService(name, service)
-    if self._services[name] == nil then
-        self._services[name] = service
-        return true
-    end
-    self._services[name] = service
-    return true
+    return self:Register(name, service)
 end
 
 function ServiceRegistry:GetService(name)
