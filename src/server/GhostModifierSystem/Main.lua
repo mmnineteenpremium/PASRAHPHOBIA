@@ -2,8 +2,8 @@ local Service = require(script.Parent.Service)
 local Controller = require(script.Parent.Controller)
 local State = require(script.Parent.State)
 
-local InvestigationSystem = {}
-InvestigationSystem.__index = InvestigationSystem
+local GhostModifierSystem = {}
+GhostModifierSystem.__index = GhostModifierSystem
 
 local function getRegistry(deps)
 	if type(deps) ~= "table" then
@@ -44,23 +44,23 @@ local function registerService(registry, name, service)
 	return false
 end
 
-function InvestigationSystem.new(deps)
-    local self = setmetatable({}, InvestigationSystem)
-    self._deps = deps or {}
+function GhostModifierSystem.new(deps)
+	local self = setmetatable({}, GhostModifierSystem)
+	self._deps = deps or {}
 	self._created = false
-    self.State = State.new(self._deps.InvestigationState)
-    self.Service = Service.new(self.State, self._deps)
-    self.Controller = Controller.new(self.State, self.Service, self._deps)
-    return self
+	self.State = State.new(self._deps.GhostModifierState)
+	self.Service = Service.new(self.State, self._deps)
+	self.Controller = Controller.new(self.State, self.Service, self._deps)
+	return self
 end
 
-function InvestigationSystem.Create(deps)
-	local instance = InvestigationSystem.new(deps)
+function GhostModifierSystem.Create(deps)
+	local instance = GhostModifierSystem.new(deps)
 	instance:Create()
 	return instance
 end
 
-function InvestigationSystem:Create()
+function GhostModifierSystem:Create()
 	if self._created then
 		return
 	end
@@ -73,53 +73,49 @@ function InvestigationSystem:Create()
 	end
 
 	local registry = getRegistry(self._deps)
-	if registry and not hasService(registry, "InvestigationSystem") then
-		registerService(registry, "InvestigationSystem", self)
+	if registry and not hasService(registry, "GhostModifierSystem") then
+		registerService(registry, "GhostModifierSystem", self)
 	end
 end
 
-function InvestigationSystem:Init()
+function GhostModifierSystem:Init()
 	self:Create()
-    self.Service:Init()
-    self.Controller:Init()
+	self.Service:Init()
+	self.Controller:Init()
 end
 
-function InvestigationSystem:Start()
+function GhostModifierSystem:Start()
 	if type(self.Controller.Start) == "function" then
 		self.Controller:Start()
 	else
 		self.Controller:RegisterEventHandlers()
 	end
-    self.Service:Start()
+	self.Service:Start()
 end
 
-function InvestigationSystem:Stop()
+function GhostModifierSystem:Stop()
 	if type(self.Controller.Stop) == "function" then
 		self.Controller:Stop()
 	else
 		self.Controller:UnregisterEventHandlers()
 	end
-    self.Service:Stop()
+	self.Service:Stop()
 end
 
-function InvestigationSystem:AddEvidence(evidenceType)
-	return self.Service:AddEvidence(evidenceType)
+function GhostModifierSystem:AssignModifier(ghostId)
+	return self.Service:AssignModifier(ghostId)
 end
 
-function InvestigationSystem:RemoveEvidence(evidenceType)
-	return self.Service:RemoveEvidence(evidenceType)
+function GhostModifierSystem:GetModifier(ghostId)
+	return self.Service:GetModifier(ghostId)
 end
 
-function InvestigationSystem:UpdateGhostCandidates()
-	return self.Service:UpdateGhostCandidates()
+function GhostModifierSystem:ApplyModifierEffects(ghostId)
+	return self.Service:ApplyModifierEffects(ghostId)
 end
 
-function InvestigationSystem:ConfirmGhost(ghostType)
-	return self.Service:ConfirmGhost(ghostType)
+function GhostModifierSystem:RemoveModifier(ghostId)
+	return self.Service:RemoveModifier(ghostId)
 end
 
-function InvestigationSystem:GetInvestigationState()
-	return self.Service:GetInvestigationState()
-end
-
-return InvestigationSystem
+return GhostModifierSystem

@@ -53,14 +53,10 @@ function Controller:RegisterEventHandlers()
 		self._service:OnMatchStarted(payload)
 	end)
 	self:_subscribe("EvidenceCollected", function(payload)
-		if payload and payload.evidenceType then
-			self._service:AddEvidence(payload.evidenceType)
-		end
+		self._service:OnEvidenceCollected(payload)
 	end)
 	self:_subscribe("EvidenceRemoved", function(payload)
-		if payload and payload.evidenceType then
-			self._service:RemoveEvidence(payload.evidenceType)
-		end
+		self._service:OnEvidenceRemoved(payload)
 	end)
 	self:_subscribe("MatchEnded", function(payload)
 		self._service:OnMatchEnded(payload)

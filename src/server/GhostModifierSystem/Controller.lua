@@ -52,15 +52,8 @@ function Controller:RegisterEventHandlers()
 	self:_subscribe("MatchStarted", function(payload)
 		self._service:OnMatchStarted(payload)
 	end)
-	self:_subscribe("EvidenceCollected", function(payload)
-		if payload and payload.evidenceType then
-			self._service:AddEvidence(payload.evidenceType)
-		end
-	end)
-	self:_subscribe("EvidenceRemoved", function(payload)
-		if payload and payload.evidenceType then
-			self._service:RemoveEvidence(payload.evidenceType)
-		end
+	self:_subscribe("GhostSpawned", function(payload)
+		self._service:OnGhostSpawned(payload)
 	end)
 	self:_subscribe("MatchEnded", function(payload)
 		self._service:OnMatchEnded(payload)
