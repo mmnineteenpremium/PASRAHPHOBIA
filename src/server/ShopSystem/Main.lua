@@ -14,6 +14,10 @@ function ShopSystem.new(deps)
     return self
 end
 
+function ShopSystem.Create(deps)
+    return ShopSystem.new(deps)
+end
+
 function ShopSystem:Init()
     self.Service:Init()
     self.Controller:Init()

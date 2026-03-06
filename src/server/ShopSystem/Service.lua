@@ -30,6 +30,21 @@ local function resolveInventoryService(deps)
     return nil
 end
 
+local function resolvePersistenceService(deps)
+    local persistence = Services.Get(deps, "DataPersistenceService")
+        or Services.Get(deps, "DataPersistenceSystem")
+    if type(persistence) ~= "table" then
+        return nil
+    end
+    if type(persistence.SaveInventory) == "function" then
+        return persistence
+    end
+    if type(persistence.Service) == "table" and type(persistence.Service.SaveInventory) == "function" then
+        return persistence.Service
+    end
+    return nil
+end
+
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
@@ -60,12 +75,16 @@ function Service.new(state, deps)
     self._deps = deps or {}
     self._economy = resolveEconomyService(self._deps)
     self._inventory = resolveInventoryService(self._deps)
+    self._persistence = resolvePersistenceService(self._deps)
     self._eventBus = resolveEventBus(self._deps)
+    self._cooldownSeconds = tonumber(self._deps.ShopPurchaseCooldownSeconds) or 0.75
     return self
 end
 
 function Service:Init()
-    self._state:Set("purchasesByUserId", {})
+    self._state:Set("catalog", self._state:Get("catalog") or {})
+    self._state:Set("purchaseHistory", self._state:Get("purchaseHistory") or {})
+    self._state:Set("cooldowns", self._state:Get("cooldowns") or {})
 end
 
 function Service:Start()
@@ -73,7 +92,7 @@ function Service:Start()
 end
 
 function Service:Stop()
-    -- cleanup if required
+    self._state:Clear()
 end
 
 function Service:_publish(eventName, payload)
@@ -82,14 +101,8 @@ function Service:_publish(eventName, payload)
     end
 end
 
-function Service:GetPrice(cosmeticId)
-    local available = self._state:Get("availableCosmetics") or {}
-    return available[cosmeticId]
-end
-
-function Service:GetItemPrice(itemId)
-    local available = self._state:Get("availableItems") or {}
-    return available[itemId]
+function Service:GetCatalog()
+    return self._state:Get("catalog") or {}
 end
 
 function Service:_ownsItem(player, itemId)
@@ -112,88 +125,157 @@ function Service:_ownsCosmetic(player, cosmeticId)
     return self._inventory:OwnsCosmetic(player, cosmeticId)
 end
 
-function Service:PurchaseItem(player, itemId)
+function Service:_getBalance(player, currency)
+    if not self._economy or type(self._economy.GetBalance) ~= "function" then
+        return nil
+    end
+    local wallet = self._economy:GetBalance(player)
+    if type(wallet) ~= "table" then
+        return nil
+    end
+    return wallet[currency]
+end
+
+function Service:_inCooldown(userId)
+    local cooldowns = self._state:Get("cooldowns") or {}
+    local now = os.clock()
+    local lastAt = cooldowns[userId]
+    if type(lastAt) == "number" and (now - lastAt) < self._cooldownSeconds then
+        return true
+    end
+    return false
+end
+
+function Service:_setCooldown(userId)
+    local cooldowns = self._state:Get("cooldowns") or {}
+    cooldowns[userId] = os.clock()
+    self._state:Set("cooldowns", cooldowns)
+end
+
+function Service:ValidatePurchase(player, itemId)
     local userId = toUserId(player)
     if not userId then
         return false, "invalid_player"
     end
-    local price = self:GetItemPrice(itemId)
-    if not price then
+    if type(itemId) ~= "string" or itemId == "" then
+        return false, "invalid_item_id"
+    end
+
+    local itemDef = self:GetCatalog()[itemId]
+    if type(itemDef) ~= "table" then
         return false, "missing_item"
     end
-    if self:_ownsItem(player, itemId) then
+    local price = tonumber(itemDef.price)
+    if not price or price <= 0 then
+        return false, "invalid_price"
+    end
+
+    if self:_inCooldown(userId) then
+        return false, "purchase_cooldown"
+    end
+
+    if itemDef.type == "cosmetic" and self:_ownsCosmetic(player, itemId) then
         return false, "already_owned"
     end
+    if (itemDef.type == "equipment" or itemDef.type == "item") and self:_ownsItem(player, itemId) then
+        return false, "already_owned"
+    end
+
     if not self._economy then
         return false, "missing_economy"
     end
-    local ok, err = self._economy:SpendCurrency(player, "MM", price, "ShopPurchase")
-    if not ok then
+    local balance = self:_getBalance(player, "MM")
+    if type(balance) == "number" and balance < price then
+        return false, "insufficient_funds"
+    end
+
+    return true, nil, itemDef, userId
+end
+
+function Service:_persistInventory(player, userId)
+    if self._inventory and type(self._inventory.GetSnapshotForPersistence) == "function" and self._persistence then
+        local snapshot = self._inventory:GetSnapshotForPersistence(player)
+        self._persistence:SaveInventory(userId, snapshot)
+        return
+    end
+    if self._inventory and type(self._inventory.SavePlayerData) == "function" then
+        self._inventory:SavePlayerData(player)
+    end
+end
+
+function Service:ProcessPurchase(player, itemId)
+    local valid, err, itemDef, userId = self:ValidatePurchase(player, itemId)
+    if not valid then
         return false, err
     end
+
+    local price = math.floor(itemDef.price)
+    local ok, spendErr = self._economy:SpendCurrency(player, "MM", price, "ShopPurchase")
+    if not ok then
+        return false, spendErr
+    end
+
     if not self._inventory then
         return false, "missing_inventory"
     end
-    if type(self._inventory.StoreItem) ~= "function" then
-        return false, "missing_inventory_store"
+
+    if itemDef.type == "cosmetic" then
+        if type(self._inventory.AddCosmeticOwnership) ~= "function" then
+            return false, "missing_inventory_cosmetic_grant"
+        end
+        self._inventory:AddCosmeticOwnership(player, itemId)
+    else
+        if type(self._inventory.StoreItem) ~= "function" then
+            return false, "missing_inventory_item_grant"
+        end
+        self._inventory:StoreItem(player, itemId)
     end
-    self._inventory:StoreItem(player, itemId)
-    local purchases = self._state:Get("purchasesByUserId") or {}
-    purchases[userId] = purchases[userId] or {}
-    table.insert(purchases[userId], itemId)
-    self._state:Set("purchasesByUserId", purchases)
-    self:_publish("ItemPurchased", {
+
+    local history = self._state:Get("purchaseHistory") or {}
+    history[userId] = history[userId] or {}
+    local record = {
+        itemId = itemId,
+        itemType = itemDef.type or "item",
+        price = price,
+        currency = "MM",
+        purchasedAt = os.time(),
+    }
+    table.insert(history[userId], record)
+    self._state:Set("purchaseHistory", history)
+    self:_setCooldown(userId)
+    self:_persistInventory(player, userId)
+
+    local purchasedPayload = {
         player = player,
         userId = userId,
         itemId = itemId,
-        itemType = "item",
+        itemType = itemDef.type or "item",
         price = price,
+        currency = "MM",
+    }
+    self:_publish("ItemPurchased", {
+        player = purchasedPayload.player,
+        userId = purchasedPayload.userId,
+        itemId = purchasedPayload.itemId,
+        itemType = purchasedPayload.itemType,
+        price = purchasedPayload.price,
+        currency = purchasedPayload.currency,
     })
-    return true
+    return true, nil, purchasedPayload
 end
 
-function Service:PurchaseCosmetic(player, cosmeticId)
-    local userId = toUserId(player)
-    if not userId then
-        return false, "invalid_player"
+function Service:OnCurrencyEarned(payload)
+    local player = payload and payload.player
+    local amount = payload and payload.amount
+    if not player or type(amount) ~= "number" then
+        return
     end
-    local price = self:GetPrice(cosmeticId)
-    if not price then
-        return false, "missing_cosmetic"
-    end
-    if self:_ownsCosmetic(player, cosmeticId) then
-        return false, "already_owned"
-    end
-    if not self._economy then
-        return false, "missing_economy"
-    end
-    local ok, err = self._economy:SpendCurrency(player, "MM", price, "ShopPurchase")
-    if not ok then
-        return false, err
-    end
-    if not self._inventory then
-        return false, "missing_inventory"
-    end
-    self._inventory:AddCosmeticOwnership(player, cosmeticId)
-    local purchases = self._state:Get("purchasesByUserId") or {}
-    purchases[userId] = purchases[userId] or {}
-    table.insert(purchases[userId], cosmeticId)
-    self._state:Set("purchasesByUserId", purchases)
-    self:_publish("ItemPurchased", {
-        player = player,
-        userId = userId,
-        itemId = cosmeticId,
-        cosmeticId = cosmeticId,
-        itemType = "cosmetic",
-        price = price,
+    -- Keep lightweight runtime signal for analytics/debugging.
+    self._state:Set("lastCurrencyEarned", {
+        userId = toUserId(player),
+        amount = amount,
+        at = os.time(),
     })
-    self:_publish("CosmeticPurchased", {
-        player = player,
-        userId = userId,
-        cosmeticId = cosmeticId,
-        price = price,
-    })
-    return true
 end
 
 return Service
