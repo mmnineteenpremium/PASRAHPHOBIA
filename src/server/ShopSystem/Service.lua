@@ -1,49 +1,7 @@
-local Service = {}
-Service.__index = Service
 local Services = require(script.Parent.Parent.Core.Services)
 
-local function resolveEconomyService(deps)
-    local economy = Services.Get(deps, "EconomySystem")
-    if type(economy) ~= "table" then
-        return nil
-    end
-    if type(economy.SpendCurrency) == "function" then
-        return economy
-    end
-    if type(economy.Service) == "table" and type(economy.Service.SpendCurrency) == "function" then
-        return economy.Service
-    end
-    return nil
-end
-
-local function resolveInventoryService(deps)
-    local inventory = Services.Get(deps, "InventorySystem")
-    if type(inventory) ~= "table" then
-        return nil
-    end
-    if type(inventory.AddCosmeticOwnership) == "function" then
-        return inventory
-    end
-    if type(inventory.Service) == "table" and type(inventory.Service.AddCosmeticOwnership) == "function" then
-        return inventory.Service
-    end
-    return nil
-end
-
-local function resolvePersistenceService(deps)
-    local persistence = Services.Get(deps, "DataPersistenceService")
-        or Services.Get(deps, "DataPersistenceSystem")
-    if type(persistence) ~= "table" then
-        return nil
-    end
-    if type(persistence.SaveInventory) == "function" then
-        return persistence
-    end
-    if type(persistence.Service) == "table" and type(persistence.Service.SaveInventory) == "function" then
-        return persistence.Service
-    end
-    return nil
-end
+local Service = {}
+Service.__index = Service
 
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
@@ -59,6 +17,65 @@ local function resolveEventBus(deps)
     return nil
 end
 
+local function safeRequire(moduleScript)
+    if not moduleScript then
+        return nil
+    end
+    local ok, result = pcall(require, moduleScript)
+    if ok then
+        return result
+    end
+    return nil
+end
+
+local function getByPath(root, path)
+    local node = root
+    for _, segment in ipairs(path or {}) do
+        if typeof(node) ~= "Instance" then
+            return nil
+        end
+        node = node:FindFirstChild(segment)
+        if not node then
+            return nil
+        end
+    end
+    return node
+end
+
+local function resolveCatalogModule()
+    local pathOptions = {
+        { "shared", "DataTypes", "ShopCatalog", "ModuleScript" },
+        { "Shared", "DataTypes", "ShopCatalog", "ModuleScript" },
+        { "shared", "DataTypes", "ShopCatalog" },
+        { "Shared", "DataTypes", "ShopCatalog" },
+    }
+
+    local cursor = script
+    while cursor do
+        for _, path in ipairs(pathOptions) do
+            local moduleScript = getByPath(cursor, path)
+            if moduleScript then
+                return moduleScript
+            end
+        end
+        cursor = cursor.Parent
+    end
+
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if ok and typeof(replicatedStorage) == "Instance" then
+        for _, path in ipairs(pathOptions) do
+            local moduleScript = getByPath(replicatedStorage, path)
+            if moduleScript then
+                return moduleScript
+            end
+        end
+    end
+
+    return nil
+end
+
 local function toUserId(player)
     if type(player) == "number" then
         return player
@@ -69,26 +86,37 @@ local function toUserId(player)
     return nil
 end
 
+local function nowClock()
+    return os.clock()
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
     self._deps = deps or {}
-    self._economy = resolveEconomyService(self._deps)
-    self._inventory = resolveInventoryService(self._deps)
-    self._persistence = resolvePersistenceService(self._deps)
-    self._eventBus = resolveEventBus(self._deps)
-    self._cooldownSeconds = tonumber(self._deps.ShopPurchaseCooldownSeconds) or 0.75
+    self._eventBus = nil
+    self._dependencies = {}
     return self
 end
 
+function Service:Create()
+    self._eventBus = resolveEventBus(self._deps)
+    self._dependencies = {
+        EconomySystem = Services.Get(self._deps, "EconomySystem"),
+        InventorySystem = Services.Get(self._deps, "InventorySystem"),
+        ProfileSystem = Services.Get(self._deps, "ProfileSystem"),
+        DataPersistenceService = Services.Get(self._deps, "DataPersistenceService"),
+    }
+end
+
 function Service:Init()
-    self._state:Set("catalog", self._state:Get("catalog") or {})
-    self._state:Set("purchaseHistory", self._state:Get("purchaseHistory") or {})
-    self._state:Set("cooldowns", self._state:Get("cooldowns") or {})
+    self._state:Set("shopCatalog", self:LoadShopCatalog())
+    self._state:Set("activeTransactions", {})
+    self._state:Set("purchaseHistory", {})
 end
 
 function Service:Start()
-    -- runtime hooks for shop analytics if needed
+    -- Event-driven service.
 end
 
 function Service:Stop()
@@ -101,55 +129,81 @@ function Service:_publish(eventName, payload)
     end
 end
 
-function Service:GetCatalog()
-    return self._state:Get("catalog") or {}
-end
-
-function Service:_ownsItem(player, itemId)
-    if not self._inventory or type(self._inventory.GetInventory) ~= "function" then
-        return false
+function Service:LoadShopCatalog()
+    local moduleScript = resolveCatalogModule()
+    local loadedCatalog = safeRequire(moduleScript)
+    if type(loadedCatalog) ~= "table" then
+        return {}
     end
-    local inventory = self._inventory:GetInventory(player)
-    for _, ownedItemId in ipairs(inventory) do
-        if ownedItemId == itemId then
-            return true
+
+    local normalized = {}
+    for _, item in pairs(loadedCatalog) do
+        if type(item) == "table" and type(item.id) == "string" and item.id ~= "" then
+            normalized[item.id] = {
+                id = item.id,
+                name = item.name or item.id,
+                price = tonumber(item.price) or 0,
+                category = item.category or "Unknown",
+            }
         end
     end
-    return false
+    return normalized
 end
 
-function Service:_ownsCosmetic(player, cosmeticId)
-    if not self._inventory or type(self._inventory.OwnsCosmetic) ~= "function" then
+function Service:_getCatalogItem(itemId)
+    local catalog = self._state:Get("shopCatalog") or {}
+    return catalog[itemId]
+end
+
+function Service:_getEconomyService()
+    local economy = self._dependencies.EconomySystem
+    if type(economy) == "table" and type(economy.Service) == "table" then
+        return economy.Service
+    end
+    return economy
+end
+
+function Service:_getInventoryService()
+    local inventory = self._dependencies.InventorySystem
+    if type(inventory) == "table" and type(inventory.Service) == "table" then
+        return inventory.Service
+    end
+    return inventory
+end
+
+function Service:_getPersistenceService()
+    local persistence = self._dependencies.DataPersistenceService
+    if type(persistence) == "table" and type(persistence.Service) == "table" then
+        return persistence.Service
+    end
+    return persistence
+end
+
+function Service:_alreadyOwned(player, itemId, category)
+    local inventory = self:_getInventoryService()
+    if type(inventory) ~= "table" then
         return false
     end
-    return self._inventory:OwnsCosmetic(player, cosmeticId)
-end
 
-function Service:_getBalance(player, currency)
-    if not self._economy or type(self._economy.GetBalance) ~= "function" then
-        return nil
+    if type(inventory.HasItem) == "function" then
+        local ok, result = pcall(function()
+            return inventory:HasItem(player, itemId)
+        end)
+        if ok then
+            return result == true
+        end
     end
-    local wallet = self._economy:GetBalance(player)
-    if type(wallet) ~= "table" then
-        return nil
-    end
-    return wallet[currency]
-end
 
-function Service:_inCooldown(userId)
-    local cooldowns = self._state:Get("cooldowns") or {}
-    local now = os.clock()
-    local lastAt = cooldowns[userId]
-    if type(lastAt) == "number" and (now - lastAt) < self._cooldownSeconds then
-        return true
+    if category == "Cosmetic" and type(inventory.OwnsCosmetic) == "function" then
+        local ok, result = pcall(function()
+            return inventory:OwnsCosmetic(player, itemId)
+        end)
+        if ok then
+            return result == true
+        end
     end
+
     return false
-end
-
-function Service:_setCooldown(userId)
-    local cooldowns = self._state:Get("cooldowns") or {}
-    cooldowns[userId] = os.clock()
-    self._state:Set("cooldowns", cooldowns)
 end
 
 function Service:ValidatePurchase(player, itemId)
@@ -161,121 +215,175 @@ function Service:ValidatePurchase(player, itemId)
         return false, "invalid_item_id"
     end
 
-    local itemDef = self:GetCatalog()[itemId]
-    if type(itemDef) ~= "table" then
-        return false, "missing_item"
+    local item = self:_getCatalogItem(itemId)
+    if type(item) ~= "table" then
+        return false, "item_not_found"
     end
-    local price = tonumber(itemDef.price)
-    if not price or price <= 0 then
+    if type(item.price) ~= "number" or item.price <= 0 then
         return false, "invalid_price"
     end
 
-    if self:_inCooldown(userId) then
-        return false, "purchase_cooldown"
+    local activeTransactions = self._state:Get("activeTransactions") or {}
+    if activeTransactions[userId] ~= nil then
+        return false, "transaction_in_progress"
     end
 
-    if itemDef.type == "cosmetic" and self:_ownsCosmetic(player, itemId) then
+    if self:_alreadyOwned(player, itemId, item.category) then
         return false, "already_owned"
     end
-    if (itemDef.type == "equipment" or itemDef.type == "item") and self:_ownsItem(player, itemId) then
-        return false, "already_owned"
+
+    local economy = self:_getEconomyService()
+    if type(economy) ~= "table" then
+        return false, "economy_unavailable"
     end
 
-    if not self._economy then
-        return false, "missing_economy"
-    end
-    local balance = self:_getBalance(player, "MM")
-    if type(balance) == "number" and balance < price then
-        return false, "insufficient_funds"
+    local balance = nil
+    if type(economy.GetBalance) == "function" then
+        local ok, result = pcall(function()
+            return economy:GetBalance(player)
+        end)
+        if ok then
+            if type(result) == "table" then
+                balance = tonumber(result.MM or result.currency or result.balance)
+            else
+                balance = tonumber(result)
+            end
+        end
     end
 
-    return true, nil, itemDef, userId
+    if type(balance) == "number" and balance < item.price then
+        return false, "insufficient_currency"
+    end
+
+    return true, nil, item, userId
 end
 
-function Service:_persistInventory(player, userId)
-    if self._inventory and type(self._inventory.GetSnapshotForPersistence) == "function" and self._persistence then
-        local snapshot = self._inventory:GetSnapshotForPersistence(player)
-        self._persistence:SaveInventory(userId, snapshot)
-        return
+function Service:GrantItem(player, itemId, itemData)
+    local inventory = self:_getInventoryService()
+    if type(inventory) ~= "table" then
+        return false, "inventory_unavailable"
     end
-    if self._inventory and type(self._inventory.SavePlayerData) == "function" then
-        self._inventory:SavePlayerData(player)
+
+    if type(inventory.GrantItem) == "function" then
+        local ok, result = pcall(function()
+            return inventory:GrantItem(player, itemId, itemData)
+        end)
+        if ok and result ~= false then
+            return true
+        end
     end
+
+    if itemData and itemData.category == "Cosmetic" and type(inventory.AddCosmeticOwnership) == "function" then
+        local ok = pcall(function()
+            inventory:AddCosmeticOwnership(player, itemId)
+        end)
+        if ok then
+            return true
+        end
+    end
+
+    if type(inventory.StoreItem) == "function" then
+        local ok = pcall(function()
+            inventory:StoreItem(player, itemId)
+        end)
+        if ok then
+            return true
+        end
+    end
+
+    return false, "grant_item_failed"
 end
 
 function Service:ProcessPurchase(player, itemId)
-    local valid, err, itemDef, userId = self:ValidatePurchase(player, itemId)
-    if not valid then
+    local ok, err, item, userId = self:ValidatePurchase(player, itemId)
+    if not ok then
+        self:_publish("PurchaseFailed", {
+            player = player,
+            userId = userId,
+            itemId = itemId,
+            reason = err,
+        })
         return false, err
     end
 
-    local price = math.floor(itemDef.price)
-    local ok, spendErr = self._economy:SpendCurrency(player, "MM", price, "ShopPurchase")
-    if not ok then
+    local activeTransactions = self._state:Get("activeTransactions") or {}
+    activeTransactions[userId] = {
+        itemId = itemId,
+        startedAt = nowClock(),
+    }
+    self._state:Set("activeTransactions", activeTransactions)
+
+    local economy = self:_getEconomyService()
+    local spent = false
+    local spendErr = "spend_failed"
+
+    if type(economy.SpendCurrency) == "function" then
+        local spendOk, resultA, resultB = pcall(function()
+            return economy:SpendCurrency(player, "MM", item.price, "ShopPurchase")
+        end)
+        if spendOk then
+            if resultA == false then
+                spent = false
+                spendErr = resultB or "insufficient_currency"
+            else
+                spent = true
+            end
+        end
+    end
+
+    if not spent then
+        activeTransactions[userId] = nil
+        self._state:Set("activeTransactions", activeTransactions)
+        self:_publish("PurchaseFailed", {
+            player = player,
+            userId = userId,
+            itemId = itemId,
+            reason = spendErr,
+        })
         return false, spendErr
     end
 
-    if not self._inventory then
-        return false, "missing_inventory"
+    local granted, grantErr = self:GrantItem(player, itemId, item)
+    if not granted then
+        activeTransactions[userId] = nil
+        self._state:Set("activeTransactions", activeTransactions)
+        self:_publish("PurchaseFailed", {
+            player = player,
+            userId = userId,
+            itemId = itemId,
+            reason = grantErr,
+        })
+        return false, grantErr
     end
 
-    if itemDef.type == "cosmetic" then
-        if type(self._inventory.AddCosmeticOwnership) ~= "function" then
-            return false, "missing_inventory_cosmetic_grant"
-        end
-        self._inventory:AddCosmeticOwnership(player, itemId)
-    else
-        if type(self._inventory.StoreItem) ~= "function" then
-            return false, "missing_inventory_item_grant"
-        end
-        self._inventory:StoreItem(player, itemId)
+    local persistence = self:_getPersistenceService()
+    if type(persistence) == "table" and type(persistence.SaveInventory) == "function" then
+        pcall(function()
+            persistence:SaveInventory(userId)
+        end)
     end
 
     local history = self._state:Get("purchaseHistory") or {}
     history[userId] = history[userId] or {}
-    local record = {
+    table.insert(history[userId], {
         itemId = itemId,
-        itemType = itemDef.type or "item",
-        price = price,
-        currency = "MM",
+        price = item.price,
+        category = item.category,
         purchasedAt = os.time(),
-    }
-    table.insert(history[userId], record)
+    })
     self._state:Set("purchaseHistory", history)
-    self:_setCooldown(userId)
-    self:_persistInventory(player, userId)
 
-    local purchasedPayload = {
+    activeTransactions[userId] = nil
+    self._state:Set("activeTransactions", activeTransactions)
+
+    self:_publish("ItemPurchased", {
         player = player,
         userId = userId,
         itemId = itemId,
-        itemType = itemDef.type or "item",
-        price = price,
-        currency = "MM",
-    }
-    self:_publish("ItemPurchased", {
-        player = purchasedPayload.player,
-        userId = purchasedPayload.userId,
-        itemId = purchasedPayload.itemId,
-        itemType = purchasedPayload.itemType,
-        price = purchasedPayload.price,
-        currency = purchasedPayload.currency,
+        price = item.price,
+        category = item.category,
     })
-    return true, nil, purchasedPayload
-end
-
-function Service:OnCurrencyEarned(payload)
-    local player = payload and payload.player
-    local amount = payload and payload.amount
-    if not player or type(amount) ~= "number" then
-        return
-    end
-    -- Keep lightweight runtime signal for analytics/debugging.
-    self._state:Set("lastCurrencyEarned", {
-        userId = toUserId(player),
-        amount = amount,
-        at = os.time(),
-    })
+    return true
 end
 
 return Service

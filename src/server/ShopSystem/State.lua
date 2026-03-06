@@ -1,18 +1,29 @@
 local State = {}
 State.__index = State
 
-function State.new(initial)
+local DEFAULT_STATE = {
+    shopCatalog = {},
+    activeTransactions = {},
+    purchaseHistory = {},
+}
+
+local function deepCopy(value)
+    if type(value) ~= "table" then
+        return value
+    end
+    local out = {}
+    for key, nested in pairs(value) do
+        out[key] = deepCopy(nested)
+    end
+    return out
+end
+
+function State.new(seed)
     local self = setmetatable({}, State)
-    self._data = {
-        catalog = initial and initial.catalog or {
-            ghost_scanner_skin = {
-                price = 1000,
-                type = "cosmetic",
-            },
-        },
-        purchaseHistory = initial and initial.purchaseHistory or {},
-        cooldowns = initial and initial.cooldowns or {},
-    }
+    self._data = deepCopy(DEFAULT_STATE)
+    for key, value in pairs(seed or {}) do
+        self._data[key] = value
+    end
     return self
 end
 
@@ -25,7 +36,7 @@ function State:Set(key, value)
 end
 
 function State:Clear()
-    table.clear(self._data)
+    self._data = deepCopy(DEFAULT_STATE)
 end
 
 return State
