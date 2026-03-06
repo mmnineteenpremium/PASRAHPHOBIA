@@ -1,15 +1,10 @@
 local Controller = {}
 Controller.__index = Controller
 
-local DEFAULT_XP_REWARDS = {
-    MatchCompleted = 30,
-    MatchSurvivedBonus = 20,
-    MissionCompleted = 40,
-    ContractCompleted = 75,
-}
+local Services = require(script.Parent.Parent.Core.Services)
 
 local function resolveEventBus(deps)
-    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+    local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -41,21 +36,8 @@ function Controller:RegisterEventHandlers()
     if not self._eventBus or self._handlersRegistered then
         return
     end
-
-    self:_subscribe("PlayerRewardGranted", function(payload)
-        self:OnPlayerRewardGranted(payload)
-    end)
-    self:_subscribe("CurrencyEarned", function(payload)
-        self:OnCurrencyEarned(payload)
-    end)
-    self:_subscribe("MatchEnded", function(payload)
-        self:OnMatchEnded(payload)
-    end)
-    self:_subscribe("MissionCompleted", function(payload)
-        self:OnMissionCompleted(payload)
-    end)
-    self:_subscribe("ContractCompleted", function(payload)
-        self:OnContractCompleted(payload)
+    self:_subscribe("RewardGranted", function(data)
+        self:OnRewardGranted(data)
     end)
     self._handlersRegistered = true
 end
@@ -64,7 +46,6 @@ function Controller:UnregisterEventHandlers()
     if not self._eventBus or not self._handlersRegistered then
         return
     end
-
     for _, sub in ipairs(self._subscriptions) do
         self._eventBus:Unsubscribe(sub.eventName, sub.callback)
     end
@@ -80,48 +61,16 @@ function Controller:_subscribe(eventName, callback)
     })
 end
 
-function Controller:OnPlayerRewardGranted(payload)
-    self._service:OnPlayerRewardGranted(payload)
-end
-
-function Controller:OnCurrencyEarned(payload)
-    self._service:OnCurrencyEarned(payload)
-end
-
-function Controller:OnMatchEnded(payload)
-    local results = payload and payload.results or {}
-    for _, entry in ipairs(results.playerResults or {}) do
-        local playerOrUserId = entry.player or entry.userId
-        if playerOrUserId then
-            local xp = DEFAULT_XP_REWARDS.MatchCompleted
-            if entry.survived == true then
-                xp += DEFAULT_XP_REWARDS.MatchSurvivedBonus
-            end
-            self._service:GrantExperience(playerOrUserId, xp, "match_completed", payload)
-        end
-    end
-end
-
-function Controller:OnMissionCompleted(payload)
-    local playerOrUserId = payload and (payload.player or payload.userId)
-    if not playerOrUserId then
+function Controller:OnRewardGranted(data)
+    local player = data and (data.player or data.userId)
+    if not player then
         return
     end
-    self._service:GrantExperience(playerOrUserId, DEFAULT_XP_REWARDS.MissionCompleted, "mission_completed", payload)
-end
-
-function Controller:OnContractCompleted(payload)
-    local players = payload and payload.players or {}
-    if #players > 0 then
-        for _, playerOrUserId in ipairs(players) do
-            self._service:GrantExperience(playerOrUserId, DEFAULT_XP_REWARDS.ContractCompleted, "contract_completed", payload)
-        end
+    local xp = data and (data.xp or data.xpAmount)
+    if type(xp) ~= "number" then
         return
     end
-    local playerOrUserId = payload and (payload.player or payload.userId)
-    if playerOrUserId then
-        self._service:GrantExperience(playerOrUserId, DEFAULT_XP_REWARDS.ContractCompleted, "contract_completed", payload)
-    end
+    self._service:GrantXP(player, xp, data)
 end
 
 return Controller

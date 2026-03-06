@@ -14,6 +14,10 @@ function ProgressionSystem.new(deps)
     return self
 end
 
+function ProgressionSystem.Create(deps)
+    return ProgressionSystem.new(deps)
+end
+
 function ProgressionSystem:Init()
     self.Service:Init()
     self.Controller:Init()

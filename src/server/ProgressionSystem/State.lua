@@ -4,8 +4,9 @@ State.__index = State
 function State.new(initial)
     local self = setmetatable({}, State)
     self._data = {
-        expByUserId = initial and initial.expByUserId or {},
-        levelByUserId = initial and initial.levelByUserId or {},
+        xpTable = initial and initial.xpTable or {},
+        recentLevelUps = initial and initial.recentLevelUps or {},
+        playerProgress = initial and initial.playerProgress or {},
     }
     return self
 end
