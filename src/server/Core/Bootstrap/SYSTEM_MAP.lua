@@ -1,57 +1,31 @@
 return {
-
     Core = {
-
-        "DataPersistenceService",
-        "SecuritySystem",
-        "ProfileSystem"
-
-    },
-
-    Gameplay = {
-
+        "ConfigLoader",
+        "DataPersistence",
+        "ProfileSystem",
+        "EconomySystem",
+        "RankedSystem",
+        "ContractSystem",
         "MatchSystem",
+        "MapInteractionSystem",
+        "MapEventSystem",
+        "GhostModifierSystem",
+        "AggressionSystem",
+        "SanitySystem",
         "GhostSystem",
         "EvidenceSystem",
         "InvestigationSystem",
-        "SpectatorSystem"
-
-    },
-
-    AI = {
-
         "HorrorDirector",
-        "GhostDirector",
-        "GhostPersonalitySystem",
-        "FearSystem",
-        "AggressionSystem"
-
+        "LobbySocialHub",
     },
 
-    Player = {
+    Gameplay = {},
 
-        "SanitySystem",
-        "InventorySystem",
-        "CosmeticSystem"
+    AI = {},
 
-    },
+    Player = {},
 
-    Economy = {
+    Economy = {},
 
-        "ContractRewardSystem",
-        "EconomySystem",
-        "RewardSystem",
-        "ProgressionSystem",
-        "RankSystem",
-        "ContractSystem",
-        "ShopSystem"
-
-    },
-
-    Social = {
-
-        "LobbySocialHub"
-
-    }
-
+    Social = {},
 }

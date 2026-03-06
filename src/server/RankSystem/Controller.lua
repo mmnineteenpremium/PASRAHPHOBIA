@@ -1,8 +1,10 @@
 local Controller = {}
 Controller.__index = Controller
 
+local Services = require(script.Parent.Parent.Core.Services)
+
 local function resolveEventBus(deps)
-    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+    local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -27,34 +29,15 @@ function Controller.new(state, service, deps)
 end
 
 function Controller:Init()
-    -- Rank events are bound at runtime.
+    -- Runtime event bindings are registered in Start.
 end
 
 function Controller:RegisterEventHandlers()
     if not self._eventBus or self._handlersRegistered then
         return
     end
-
-    self:_subscribe("ExperienceGranted", function(payload)
-        self._service:OnExperienceGranted(payload)
-    end)
-    self:_subscribe("XPGranted", function(payload)
-        self._service:OnXPGranted(payload)
-    end)
-    self:_subscribe("LevelUp", function(payload)
-        self._service:OnLevelUp(payload)
-    end)
-    self:_subscribe("RankUp", function(payload)
-        self._service:OnRankUp(payload)
-    end)
-    self:_subscribe("MatchEnded", function(payload)
-        self:OnMatchEnded(payload)
-    end)
-    self:_subscribe("MissionCompleted", function(payload)
-        self:OnMissionCompleted(payload)
-    end)
-    self:_subscribe("ContractCompleted", function(payload)
-        self:OnContractCompleted(payload)
+    self:_subscribe("LevelUp", function(data)
+        self:OnLevelUp(data)
     end)
     self._handlersRegistered = true
 end
@@ -78,35 +61,12 @@ function Controller:_subscribe(eventName, callback)
     })
 end
 
-function Controller:OnMatchEnded(payload)
-    local results = payload and payload.results or {}
-    for _, entry in ipairs(results.playerResults or {}) do
-        local playerOrUserId = entry.player or entry.userId
-        if playerOrUserId then
-            self._service:SyncRank(playerOrUserId, nil, "MatchEnded", {
-                survived = entry.survived == true,
-                performancePercent = entry.performancePercent or entry.performance,
-            })
-        end
+function Controller:OnLevelUp(data)
+    local playerOrUserId = data and (data.player or data.userId)
+    if not playerOrUserId then
+        return
     end
-end
-
-function Controller:OnMissionCompleted(payload)
-    local playerOrUserId = payload and (payload.player or payload.userId)
-    if playerOrUserId then
-        self._service:SyncRank(playerOrUserId, nil, "MissionCompleted", payload)
-    end
-end
-
-function Controller:OnContractCompleted(payload)
-    local players = payload and payload.players or {}
-    for _, playerOrUserId in ipairs(players) do
-        self._service:SyncRank(playerOrUserId, nil, "ContractCompleted", payload)
-    end
-    local single = payload and (payload.player or payload.userId)
-    if single and #players == 0 then
-        self._service:SyncRank(single, nil, "ContractCompleted", payload)
-    end
+    self._service:EvaluateRank(playerOrUserId, data.levelAfter or data.level)
 end
 
 return Controller

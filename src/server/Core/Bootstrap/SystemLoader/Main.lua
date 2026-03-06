@@ -3,6 +3,8 @@ SystemLoader.__index = SystemLoader
 
 local SYSTEM_MODULE_NAMES = {
     EventBus = "EventBus",
+    ConfigLoader = "ConfigLoader",
+    DataPersistence = "DataPersistence",
     DataPersistenceService = "DataPersistenceService",
     SecuritySystem = "SecuritySystem",
     ProfileSystem = "ProfileSystem",

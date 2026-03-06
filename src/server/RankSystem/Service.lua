@@ -1,11 +1,20 @@
-local RankTiersResolver = require(script.Parent.Parent.Core.RankTiersResolver)
-local Services = require(script.Parent.Parent.Core.Services)
-
 local Service = {}
 Service.__index = Service
 
+local Services = require(script.Parent.Parent.Core.Services)
+
+local function toUserId(playerOrUserId)
+    if type(playerOrUserId) == "number" then
+        return playerOrUserId
+    end
+    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+        return playerOrUserId.UserId
+    end
+    return nil
+end
+
 local function resolveEventBus(deps)
-    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+    local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -32,30 +41,34 @@ local function resolveProfileService(deps)
     return nil
 end
 
-local function toUserId(playerOrUserId)
-    if type(playerOrUserId) == "number" then
-        return playerOrUserId
+local function resolvePersistenceService(deps)
+    local persistence = Services.Get(deps, "DataPersistenceService")
+    if type(persistence) ~= "table" then
+        return nil
     end
-    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
-        return playerOrUserId.UserId
+    if type(persistence.SaveProfile) == "function" then
+        return persistence
+    end
+    if type(persistence.Service) == "table" and type(persistence.Service.SaveProfile) == "function" then
+        return persistence.Service
     end
     return nil
 end
 
-local function resolveRankPoints(sourceEvent, context)
-    if sourceEvent == "MatchEnded" then
-        if context and context.survived == true then
-            return 20
+local function resolveLobbySocialHubService(deps)
+    local lobby = Services.Get(deps, "LobbySocialHub")
+    if type(lobby) ~= "table" then
+        return nil
+    end
+    if type(lobby.ApplyRank) == "function" or type(lobby.UpdateRankDisplay) == "function" then
+        return lobby
+    end
+    if type(lobby.Service) == "table" then
+        if type(lobby.Service.ApplyRank) == "function" or type(lobby.Service.UpdateRankDisplay) == "function" then
+            return lobby.Service
         end
-        return 12
     end
-    if sourceEvent == "MissionCompleted" then
-        return 15
-    end
-    if sourceEvent == "ContractCompleted" then
-        return 25
-    end
-    return 0
+    return lobby
 end
 
 function Service.new(state, deps)
@@ -64,21 +77,19 @@ function Service.new(state, deps)
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
     self._profile = resolveProfileService(self._deps)
-    self._rankTiers = RankTiersResolver.Resolve(self._deps)
-    self._tierByName = {}
-    for _, tier in ipairs(self._rankTiers) do
-        self._tierByName[tier.name] = tier
-    end
+    self._persistence = resolvePersistenceService(self._deps)
+    self._lobby = resolveLobbySocialHubService(self._deps)
     return self
 end
 
 function Service:Init()
+    self._state:Set("rankTable", self._state:Get("rankTable") or {})
+    self._state:Set("recentRankUpdates", self._state:Get("recentRankUpdates") or {})
     self._state:Set("rankByUserId", self._state:Get("rankByUserId") or {})
 end
 
 function Service:Start()
-    -- Event-driven rank tracking.
-    self:_ensureProfile()
+    -- Event-driven rank service.
 end
 
 function Service:Stop()
@@ -91,27 +102,13 @@ function Service:_publish(eventName, payload)
     end
 end
 
-function Service:_ensureProfile()
-    if self._profile then
-        return
-    end
-    self._profile = resolveProfileService(self._deps)
-end
-
-function Service:_ranks()
-    return self._state:Get("rankByUserId") or {}
-end
-
-function Service:_setRanks(rankByUserId)
-    self._state:Set("rankByUserId", rankByUserId)
-end
-
-function Service:_getTierForLevel(level)
-    local selected = self._rankTiers[1]
-    local target = math.max(math.floor(level or 1), 1)
-    for _, tier in ipairs(self._rankTiers) do
-        if target >= (tier.level or 1) then
-            selected = tier
+function Service:_resolveRankForLevel(level)
+    local rankTable = self._state:Get("rankTable") or {}
+    local targetLevel = math.max(math.floor(level or 1), 1)
+    local selected = rankTable[1] or { level = 1, rank = "Rookie" }
+    for _, entry in ipairs(rankTable) do
+        if targetLevel >= (entry.level or 1) then
+            selected = entry
         else
             break
         end
@@ -119,126 +116,128 @@ function Service:_getTierForLevel(level)
     return selected
 end
 
-function Service:_ensureRank(userId)
-    local ranks = self:_ranks()
-    if not ranks[userId] then
-        local initialTier = self._rankTiers[1] or { level = 1, name = "Rookie", xpRequired = 0 }
-        ranks[userId] = {
-            userId = userId,
-            level = initialTier.level or 1,
-            tier = initialTier.name,
-            tierLevel = initialTier.level or 1,
-            tierXpRequired = initialTier.xpRequired or 0,
-        }
-        self:_setRanks(ranks)
-    end
-    return ranks[userId]
+function Service:_recordRankUpdate(userId, payload)
+    local updates = self._state:Get("recentRankUpdates") or {}
+    updates[userId] = updates[userId] or {}
+    table.insert(updates[userId], payload)
+    self._state:Set("recentRankUpdates", updates)
 end
 
-function Service:GetPlayerRank(playerOrUserId)
+function Service:_syncProfileRank(playerOrUserId, rankName)
+    if not self._profile then
+        return
+    end
+    if type(self._profile.SetPlayerRank) == "function" then
+        self._profile:SetPlayerRank(playerOrUserId, rankName)
+        return
+    end
+    if type(self._profile.UpdateRank) == "function" then
+        self._profile:UpdateRank(playerOrUserId, rankName)
+        return
+    end
+    if type(self._profile.UpdateProfile) == "function" then
+        self._profile:UpdateProfile(playerOrUserId, {
+            profile = {
+                rank = rankName,
+            },
+        })
+    end
+end
+
+function Service:_syncPersistenceRank(userId, rankName, level)
+    if not self._persistence or type(self._persistence.SaveProfile) ~= "function" then
+        return
+    end
+    self._persistence:SaveProfile(userId, {
+        playerRank = rankName,
+        playerLevel = level,
+    })
+end
+
+function Service:_syncLobbyRank(playerOrUserId, rankPayload)
+    if not self._lobby then
+        return
+    end
+    if type(self._lobby.ApplyRank) == "function" then
+        self._lobby:ApplyRank(playerOrUserId, rankPayload.rank, rankPayload.rankLevel)
+        return
+    end
+    if type(self._lobby.UpdateRankDisplay) == "function" then
+        self._lobby:UpdateRankDisplay(playerOrUserId, rankPayload.rank, rankPayload.rankLevel)
+        return
+    end
+    self:_publish("LobbyRankDisplayRequested", rankPayload)
+end
+
+function Service:GetRank(playerOrUserId)
     local userId = toUserId(playerOrUserId)
     if not userId then
         return nil
     end
-    local rank = self:_ensureRank(userId)
-    return {
-        userId = rank.userId,
-        level = rank.level,
-        tier = rank.tier,
-        tierLevel = rank.tierLevel,
-        tierXpRequired = rank.tierXpRequired,
-    }
+    local rankByUserId = self._state:Get("rankByUserId") or {}
+    return rankByUserId[userId]
 end
 
-function Service:SyncRank(playerOrUserId, level, sourceEvent, context)
-    self:_ensureProfile()
+function Service:SetRank(playerOrUserId, rankName, rankLevel, level)
     local userId = toUserId(playerOrUserId)
     if not userId then
         return false, "invalid_player"
     end
 
-    local resolvedLevel = level
-    if not resolvedLevel and self._profile then
-        resolvedLevel = self._profile:GetPlayerLevel(playerOrUserId)
-    end
-    resolvedLevel = math.max(math.floor(resolvedLevel or 1), 1)
+    local rankByUserId = self._state:Get("rankByUserId") or {}
+    local previous = rankByUserId[userId]
+    local previousRank = previous and previous.rank or nil
+    local changed = previousRank ~= rankName
 
-    local rank = self:_ensureRank(userId)
-    local previousTier = rank.tier
-    local previousTierLevel = rank.tierLevel
-    local tier = self:_getTierForLevel(resolvedLevel)
-    rank.level = resolvedLevel
-    rank.tier = tier and tier.name or rank.tier
-    rank.tierLevel = tier and (tier.level or rank.tierLevel) or rank.tierLevel
-    rank.tierXpRequired = tier and (tier.xpRequired or rank.tierXpRequired) or rank.tierXpRequired
+    rankByUserId[userId] = {
+        userId = userId,
+        rank = rankName,
+        rankLevel = rankLevel,
+        level = level,
+    }
+    self._state:Set("rankByUserId", rankByUserId)
 
-    local rankPayload = {
+    local payload = {
         player = type(playerOrUserId) == "number" and nil or playerOrUserId,
         userId = userId,
-        level = rank.level,
-        tier = rank.tier,
-        tierLevel = rank.tierLevel,
-        tierXpRequired = rank.tierXpRequired,
-        didRankUp = previousTier ~= rank.tier,
-        didPromote = rank.tierLevel > (previousTierLevel or rank.tierLevel),
-        didDemote = rank.tierLevel < (previousTierLevel or rank.tierLevel),
-        sourceEvent = sourceEvent,
-        context = context,
+        rank = rankName,
+        rankLevel = rankLevel,
+        level = level,
+        previousRank = previousRank,
+        changed = changed,
     }
-    self:_publish("RankUpdated", rankPayload)
-    self:_publish("PlayerRankUpdated", rankPayload)
 
-    if rankPayload.didPromote then
-        self:_publish("RankPromotion", rankPayload)
-    elseif rankPayload.didDemote then
-        self:_publish("RankDemotion", rankPayload)
-    end
-
-    local rankPoints = resolveRankPoints(sourceEvent, context)
-    if rankPoints > 0 then
-        self:_publish("RankPointsEarned", {
-            player = type(playerOrUserId) == "number" and nil or playerOrUserId,
-            userId = userId,
-            amount = rankPoints,
-            sourceEvent = sourceEvent,
-            context = context,
-        })
-    end
-
-    return true, nil, self:GetPlayerRank(userId)
+    self:_recordRankUpdate(userId, payload)
+    self:_syncProfileRank(playerOrUserId, rankName)
+    self:_syncPersistenceRank(userId, rankName, level)
+    self:_syncLobbyRank(playerOrUserId, payload)
+    self:_publish("RankUpdated", payload)
+    return true, nil, payload
 end
 
-function Service:OnExperienceGranted(payload)
-    local playerOrUserId = payload and (payload.player or payload.userId)
-    local level = payload and (payload.levelAfter or payload.level)
-    self:SyncRank(playerOrUserId, level, "ExperienceGranted", payload)
-end
+function Service:EvaluateRank(playerOrUserId, levelHint)
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return false, "invalid_player"
+    end
 
-function Service:OnXPGranted(payload)
-    local playerOrUserId = payload and (payload.player or payload.userId)
-    local level = payload and (payload.levelAfter or payload.level)
-    self:SyncRank(playerOrUserId, level, "XPGranted", payload)
+    local level = levelHint
+    if level == nil and self._profile and type(self._profile.GetPlayerLevel) == "function" then
+        level = self._profile:GetPlayerLevel(playerOrUserId)
+    end
+    level = math.max(math.floor(level or 1), 1)
+
+    local tier = self:_resolveRankForLevel(level)
+    return self:SetRank(playerOrUserId, tier.rank, tier.level, level)
 end
 
 function Service:OnLevelUp(payload)
     local playerOrUserId = payload and (payload.player or payload.userId)
-    local level = payload and (payload.levelAfter or payload.level)
-    self:SyncRank(playerOrUserId, level, "LevelUp", payload)
-end
-
-function Service:OnRankUp(payload)
-    local playerOrUserId = payload and (payload.player or payload.userId)
     if not playerOrUserId then
         return
     end
-
     local level = payload and (payload.levelAfter or payload.level)
-    if not level then
-        local tierName = payload and payload.tier
-        local tier = tierName and self._tierByName[tierName]
-        level = tier and tier.level or nil
-    end
-    self:SyncRank(playerOrUserId, level, "RankUp", payload)
+    self:EvaluateRank(playerOrUserId, level)
 end
 
 return Service

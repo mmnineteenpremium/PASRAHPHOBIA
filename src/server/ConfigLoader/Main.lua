@@ -2,35 +2,35 @@ local Service = require(script.Parent.Service)
 local Controller = require(script.Parent.Controller)
 local State = require(script.Parent.State)
 
-local RankSystem = {}
-RankSystem.__index = RankSystem
+local ConfigLoaderSystem = {}
+ConfigLoaderSystem.__index = ConfigLoaderSystem
 
-function RankSystem.new(deps)
-    local self = setmetatable({}, RankSystem)
+function ConfigLoaderSystem.new(deps)
+    local self = setmetatable({}, ConfigLoaderSystem)
     self._deps = deps or {}
-    self.State = State.new(self._deps.RankState)
+    self.State = State.new(self._deps.ConfigLoaderState)
     self.Service = Service.new(self.State, self._deps)
     self.Controller = Controller.new(self.State, self.Service, self._deps)
     return self
 end
 
-function RankSystem.Create(deps)
-    return RankSystem.new(deps)
+function ConfigLoaderSystem.Create(deps)
+    return ConfigLoaderSystem.new(deps)
 end
 
-function RankSystem:Init()
+function ConfigLoaderSystem:Init()
     self.Service:Init()
     self.Controller:Init()
 end
 
-function RankSystem:Start()
+function ConfigLoaderSystem:Start()
     self.Controller:RegisterEventHandlers()
     self.Service:Start()
 end
 
-function RankSystem:Stop()
+function ConfigLoaderSystem:Stop()
     self.Controller:UnregisterEventHandlers()
     self.Service:Stop()
 end
 
-return RankSystem
+return ConfigLoaderSystem

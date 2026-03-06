@@ -14,6 +14,10 @@ function RankedSystem.new(deps)
     return self
 end
 
+function RankedSystem.Create(deps)
+    return RankedSystem.new(deps)
+end
+
 function RankedSystem:Init()
     self.Service:Init()
     self.Controller:Init()
