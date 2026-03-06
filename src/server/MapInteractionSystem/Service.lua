@@ -1,23 +1,27 @@
+local Services = require(script.Parent.Parent.Core.Services)
+
 local Service = {}
 Service.__index = Service
 
-local DoorInteraction = require(script.Parent.DoorInteraction)
-local LightInteraction = require(script.Parent.LightInteraction)
-local ObjectMovement = require(script.Parent.ObjectMovement)
-local ElectronicDisturbance = require(script.Parent.ElectronicDisturbance)
-local HorrorEvents = require(script.Parent.HorrorEvents)
-local EventScheduler = require(script.Parent.EventScheduler)
+local DEFAULT_INTERACTION_COOLDOWN = 0.75
 
-local DEFAULT_CONFIG = {
-	UpdateIntervalSeconds = 2.0,
-	MinInteractionCooldownSeconds = 1.0,
-	MinSchedulerIntervalSeconds = 6.0,
-	MaxSchedulerIntervalSeconds = 16.0,
-	BaseSchedulerChance = 0.12,
+local STATE_BY_INTERACTION = {
+	Open = "Open",
+	Close = "Closed",
+	Slam = "Slammed",
+	Knock = "Knocked",
+	TurnOn = "On",
+	TurnOff = "Off",
+	Flicker = "Flickering",
+	Move = "Moved",
+	Throw = "Thrown",
+	Rotate = "Rotated",
+	PlayNoise = "PlayingNoise",
+	StaticDistortion = "Static",
 }
 
 local function resolveEventBus(deps)
-	local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+	local eventBus = Services.Get(deps, "EventBus")
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -30,53 +34,77 @@ local function resolveEventBus(deps)
 	return nil
 end
 
-local function deepCopy(value)
-	if type(value) ~= "table" then
-		return value
+local function listToSet(list)
+	local out = {}
+	for _, value in ipairs(list or {}) do
+		if type(value) == "string" then
+			out[value] = true
+		end
 	end
-	local copy = {}
-	for key, nestedValue in pairs(value) do
-		copy[key] = deepCopy(nestedValue)
+	return out
+end
+
+local function normalizeObjectData(objectData)
+	if type(objectData) ~= "table" then
+		return nil, "invalid_object_data"
 	end
-	return copy
+
+	local objectId = objectData.id or objectData.objectId
+	if type(objectId) ~= "string" or objectId == "" then
+		return nil, "invalid_object_id"
+	end
+
+	local objectType = objectData.type or objectData.objectType
+	if type(objectType) ~= "string" or objectType == "" then
+		return nil, "invalid_object_type"
+	end
+
+	local interactions = objectData.interactions
+	if type(interactions) ~= "table" then
+		return nil, "invalid_interactions"
+	end
+
+	return {
+		id = objectId,
+		type = objectType,
+		position = objectData.position,
+		interactions = interactions,
+		interactionSet = listToSet(interactions),
+	}, nil
 end
 
 function Service.new(state, deps)
 	local self = setmetatable({}, Service)
 	self._state = state
 	self._deps = deps or {}
-	self._eventBus = resolveEventBus(self._deps)
-	self._rng = self._deps.Random or Random.new()
-	self._config = {}
-	for key, value in pairs(DEFAULT_CONFIG) do
-		self._config[key] = value
-	end
-	for key, value in pairs(self._deps.MapInteractionConfig or {}) do
-		self._config[key] = value
-	end
-	self._door = DoorInteraction.new()
-	self._lights = LightInteraction.new()
-	self._objects = ObjectMovement.new()
-	self._electronics = ElectronicDisturbance.new()
-	self._horrorEvents = HorrorEvents.new()
-	self._scheduler = EventScheduler.new(self._rng, self._config)
-	self._loopRunning = false
-	self._loopToken = 0
-	self._loopThread = nil
+	self._eventBus = nil
+	self._dependencies = {}
 	return self
 end
 
+function Service:Create()
+	self._eventBus = resolveEventBus(self._deps)
+	self._dependencies = {
+		GhostSystem = Services.Get(self._deps, "GhostSystem"),
+		EvidenceSystem = Services.Get(self._deps, "EvidenceSystem"),
+		HorrorDirector = Services.Get(self._deps, "HorrorDirector"),
+		MatchSystem = Services.Get(self._deps, "MatchSystem"),
+	}
+end
+
 function Service:Init()
-	self._state:Set("sessions", {})
+	self._state:Set("registeredObjects", {})
+	self._state:Set("objectStates", {})
+	self._state:Set("interactionCooldowns", {})
+	self._state:Set("activeMatchId", nil)
 end
 
 function Service:Start()
-	self:_startLoop()
+	-- Event-driven system.
 end
 
 function Service:Stop()
-	self:_stopLoop()
-	self._state:Set("sessions", {})
+	self._state:Clear()
 end
 
 function Service:_publish(eventName, payload)
@@ -85,225 +113,171 @@ function Service:_publish(eventName, payload)
 	end
 end
 
-function Service:_sessions()
-	return self._state:Get("sessions") or {}
+function Service:_getRegisteredObjects()
+	return self._state:Get("registeredObjects") or {}
 end
 
-function Service:_setSessions(sessions)
-	self._state:Set("sessions", sessions)
+function Service:_getObjectStates()
+	return self._state:Get("objectStates") or {}
 end
 
-function Service:_getOrCreateSession(matchId, payload)
-	local sessions = self:_sessions()
-	local session = sessions[matchId]
-	if session then
-		return session
+function Service:_getCooldowns()
+	return self._state:Get("interactionCooldowns") or {}
+end
+
+function Service:_setObjectStateInternal(objectId, newState)
+	local states = self:_getObjectStates()
+	states[objectId] = newState
+	self._state:Set("objectStates", states)
+end
+
+function Service:RegisterObject(objectData)
+	local normalized, err = normalizeObjectData(objectData)
+	if not normalized then
+		return false, err
 	end
 
-	session = {
-		matchId = matchId,
-		doors = {},
-		lights = {},
-		objects = {},
-		electronics = {},
-		roomIds = payload and payload.roomIds or {},
-		tension = 0,
-		fearLevel = 0,
-		personality = nil,
-		nextScheduledAt = 0,
-		nextInteractionAt = {},
-	}
-	sessions[matchId] = session
-	self:_setSessions(sessions)
-	return session
-end
+	local registeredObjects = self:_getRegisteredObjects()
+	registeredObjects[normalized.id] = normalized
+	self._state:Set("registeredObjects", registeredObjects)
 
-function Service:StartMatch(matchId, payload)
-	if not matchId then
-		return nil, "invalid_arguments"
-	end
-	return self:_getOrCreateSession(matchId, payload)
-end
-
-function Service:EndMatch(matchId)
-	local sessions = self:_sessions()
-	sessions[matchId] = nil
-	self:_setSessions(sessions)
-end
-
-function Service:OpenDoor(matchId, doorId, payload)
-	local session = self:_getOrCreateSession(matchId)
-	local state = self._door:Open(session, doorId, payload)
-	return deepCopy(state)
-end
-
-function Service:SlamDoor(matchId, doorId, payload)
-	local session = self:_getOrCreateSession(matchId)
-	local state, id = self._door:Slam(session, doorId, payload)
-
-	self:_publish("DoorSlammed", {
-		matchId = matchId,
-		doorId = id,
-		roomId = payload and payload.roomId,
-		source = payload and payload.source or "MapInteractionSystem",
-	})
-	return deepCopy(state)
-end
-
-function Service:SetDoorLock(matchId, doorId, isLocked, payload)
-	local session = self:_getOrCreateSession(matchId)
-	local state = self._door:SetLock(session, doorId, isLocked, payload)
-	return deepCopy(state)
-end
-
-function Service:FlickerLights(matchId, roomId, payload)
-	local session = self:_getOrCreateSession(matchId)
-	local state, id = self._lights:Flicker(session, roomId, payload)
-
-	self:_publish("LightsFlickered", {
-		matchId = matchId,
-		roomId = id,
-		mode = state.state,
-		source = payload and payload.source or "MapInteractionSystem",
-	})
-	return deepCopy(state)
-end
-
-function Service:MoveObject(matchId, objectId, mode, payload)
-	local session = self:_getOrCreateSession(matchId)
-	local state, id = self._objects:Move(session, objectId, mode, payload)
-
-	self:_publish("ObjectMoved", {
-		matchId = matchId,
-		objectId = id,
-		mode = state.mode,
-		roomId = state.roomId,
-		source = payload and payload.source or "MapInteractionSystem",
-	})
-	return deepCopy(state)
-end
-
-function Service:DisturbElectronics(matchId, targetId, mode, payload)
-	local session = self:_getOrCreateSession(matchId)
-	local state, id = self._electronics:Disturb(session, targetId, mode, payload)
-
-	self:_publish("ElectronicDisturbance", {
-		matchId = matchId,
-		targetId = id,
-		mode = state.mode,
-		roomId = state.roomId,
-		source = payload and payload.source or "MapInteractionSystem",
-	})
-	return deepCopy(state)
-end
-
-function Service:HandleHorrorEvent(matchId, eventType, payload)
-	local now = payload and payload.now or os.clock()
-	local session = self:_getOrCreateSession(matchId, payload)
-	local interactionType = eventType or "UnknownEvent"
-	local nextAt = session.nextInteractionAt[interactionType] or 0
-	if payload and payload.bypassThrottle ~= true and now < nextAt then
-		return nil, "cooldown"
-	end
-	session.nextInteractionAt[interactionType] = now + self._config.MinInteractionCooldownSeconds
-
-	local resolved = self._horrorEvents:Resolve(eventType, payload)
-	if not resolved then
-		return nil, "unknown_event"
-	end
-	local source = payload and payload.source or "MapInteractionSystem"
-	if resolved.action == "lights" then
-		self:FlickerLights(matchId, resolved.roomId, {
-			state = resolved.state,
-			source = source,
-			now = now,
-		})
-	elseif resolved.action == "door_slam" then
-		self:SlamDoor(matchId, resolved.doorId, {
-			roomId = resolved.roomId,
-			source = source,
-			now = now,
-		})
-	elseif resolved.action == "object_move" then
-		self:MoveObject(matchId, resolved.objectId, resolved.mode, {
-			roomId = resolved.roomId,
-			source = source,
-			now = now,
-		})
-	elseif resolved.action == "electronic" then
-		self:DisturbElectronics(matchId, resolved.targetId, resolved.mode, {
-			roomId = resolved.roomId,
-			source = source,
-			now = now,
-		})
+	local currentStates = self:_getObjectStates()
+	if currentStates[normalized.id] == nil then
+		currentStates[normalized.id] = "Idle"
+		self._state:Set("objectStates", currentStates)
 	end
 
-	self:_publish("HorrorEventTriggered", {
-		matchId = matchId,
-		eventType = eventType,
-		roomId = resolved.roomId,
-		source = source,
-		now = now,
-	})
 	return true
 end
 
-function Service:UpdateTension(matchId, tension, now)
-	local session = self:_getOrCreateSession(matchId, { now = now })
-	if type(tension) == "number" then
-		session.tension = math.clamp(tension, 0, 100)
+function Service:GetObject(objectId)
+	if type(objectId) ~= "string" or objectId == "" then
+		return nil
 	end
+	return self:_getRegisteredObjects()[objectId]
 end
 
-function Service:UpdateFearLevel(matchId, fearLevel, now)
-	local session = self:_getOrCreateSession(matchId, { now = now })
-	if type(fearLevel) == "number" then
-		session.fearLevel = math.clamp(fearLevel, 0, 100)
+function Service:UpdateObjectState(objectId, newState, metadata)
+	local objectData = self:GetObject(objectId)
+	if not objectData then
+		return false, "object_not_found"
 	end
+
+	local states = self:_getObjectStates()
+	local previousState = states[objectId]
+	states[objectId] = newState
+	self._state:Set("objectStates", states)
+
+	self:_publish("MapObjectStateChanged", {
+		matchId = self._state:Get("activeMatchId"),
+		objectId = objectId,
+		objectType = objectData.type,
+		previousState = previousState,
+		newState = newState,
+		metadata = metadata,
+	})
+
+	return true
 end
 
-function Service:UpdateGhostPersonality(matchId, personality, now)
-	local session = self:_getOrCreateSession(matchId, { now = now })
-	session.personality = personality
+function Service:ExecuteInteraction(objectId, interactionType, context)
+	local objectData = self:GetObject(objectId)
+	if not objectData then
+		return false, "object_not_found"
+	end
+	if type(interactionType) ~= "string" or interactionType == "" then
+		return false, "invalid_interaction"
+	end
+	if objectData.interactionSet[interactionType] ~= true then
+		return false, "interaction_not_supported"
+	end
+
+	local nowTime = (type(context) == "table" and context.now) or os.clock()
+	local cooldownKey = string.format("%s:%s", objectId, interactionType)
+	local cooldowns = self:_getCooldowns()
+	local nextAllowedTime = cooldowns[cooldownKey] or 0
+	if nowTime < nextAllowedTime then
+		return false, "interaction_on_cooldown"
+	end
+	cooldowns[cooldownKey] = nowTime + DEFAULT_INTERACTION_COOLDOWN
+	self._state:Set("interactionCooldowns", cooldowns)
+
+	local stateName = STATE_BY_INTERACTION[interactionType] or interactionType
+	self:UpdateObjectState(objectId, stateName, {
+		interactionType = interactionType,
+		source = context and context.source or "MapInteractionSystem",
+	})
+
+	self:_publish("MapObjectInteracted", {
+		matchId = self._state:Get("activeMatchId"),
+		objectId = objectId,
+		objectType = objectData.type,
+		interactionType = interactionType,
+		position = objectData.position,
+		source = context and context.source or "MapInteractionSystem",
+	})
+
+	return true
 end
 
-function Service:_runScheduler(session, now)
-	if not self._scheduler:ShouldTrigger(session, now) then
+function Service:OnMatchStarted(payload)
+	local matchId = payload and payload.matchId
+	if not matchId then
 		return
 	end
 
-	local eventType = self._scheduler:PickEventType(session)
-	self:HandleHorrorEvent(session.matchId, eventType, {
-		source = "MapInteractionScheduler",
-		now = now,
+	self._state:ResetForMatch(matchId)
+
+	local objects = payload.objects or payload.mapObjects or payload.registeredObjects
+	if type(objects) ~= "table" then
+		return
+	end
+
+	for _, objectData in ipairs(objects) do
+		self:RegisterObject(objectData)
+	end
+end
+
+function Service:OnGhostInteraction(payload)
+	local matchId = payload and payload.matchId
+	if self._state:Get("activeMatchId") ~= matchId then
+		return
+	end
+
+	local objectId = payload.objectId or payload.targetId
+	local action = payload.action or payload.interactionType
+	if type(objectId) ~= "string" or type(action) ~= "string" then
+		return
+	end
+	self:ExecuteInteraction(objectId, action, {
+		now = payload.now,
+		source = "GhostSystem",
 	})
 end
 
-function Service:_startLoop()
-	if self._loopRunning then
+function Service:OnDirectorEvent(payload)
+	local matchId = payload and payload.matchId
+	if self._state:Get("activeMatchId") ~= matchId then
 		return
 	end
-	self._loopRunning = true
-	self._loopToken += 1
-	local token = self._loopToken
-	self._loopThread = task.spawn(function()
-		while self._loopRunning and token == self._loopToken do
-			local now = os.clock()
-			for _, session in pairs(self:_sessions()) do
-				self:_runScheduler(session, now)
-			end
-			task.wait(self._config.UpdateIntervalSeconds)
-		end
-	end)
+
+	local objectId = payload.objectId or payload.targetId
+	local action = payload.action or payload.interactionType or payload.eventType
+	if type(objectId) ~= "string" or type(action) ~= "string" then
+		return
+	end
+	self:ExecuteInteraction(objectId, action, {
+		now = payload.now,
+		source = "HorrorDirector",
+	})
 end
 
-function Service:_stopLoop()
-	self._loopRunning = false
-	self._loopToken += 1
-	if self._loopThread then
-		task.cancel(self._loopThread)
-		self._loopThread = nil
+function Service:OnMatchEnded(payload)
+	local matchId = payload and payload.matchId
+	if self._state:Get("activeMatchId") ~= matchId then
+		return
 	end
+	self._state:Clear()
 end
 
 return Service

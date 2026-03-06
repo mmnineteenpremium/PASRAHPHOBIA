@@ -5,52 +5,121 @@ local State = require(script.Parent.State)
 local MapInteractionSystem = {}
 MapInteractionSystem.__index = MapInteractionSystem
 
+local function getRegistry(deps)
+	if type(deps) ~= "table" then
+		return nil
+	end
+	return deps.Services or deps.ServiceRegistry
+end
+
+local function hasService(registry, name)
+	if type(registry) ~= "table" then
+		return false
+	end
+	if type(registry.GetService) == "function" then
+		return registry:GetService(name) ~= nil
+	end
+	if type(registry.Get) == "function" then
+		return registry:Get(name) ~= nil
+	end
+	if type(registry.HasService) == "function" then
+		return registry:HasService(name)
+	end
+	if type(registry.Has) == "function" then
+		return registry:Has(name)
+	end
+	return false
+end
+
+local function registerService(registry, name, service)
+	if type(registry) ~= "table" then
+		return false
+	end
+	if type(registry.RegisterService) == "function" then
+		return registry:RegisterService(name, service)
+	end
+	if type(registry.Register) == "function" then
+		return registry:Register(name, service)
+	end
+	return false
+end
+
 function MapInteractionSystem.new(deps)
 	local self = setmetatable({}, MapInteractionSystem)
 	self._deps = deps or {}
-	self.State = State.new()
+	self._created = false
+	self.State = State.new(self._deps.MapInteractionState)
 	self.Service = Service.new(self.State, self._deps)
 	self.Controller = Controller.new(self.State, self.Service, self._deps)
 	return self
 end
 
+function MapInteractionSystem.Create(deps)
+	local instance = MapInteractionSystem.new(deps)
+	instance:Create()
+	return instance
+end
+
+function MapInteractionSystem:Create()
+	if self._created then
+		return
+	end
+	self._created = true
+	if type(self.Service.Create) == "function" then
+		self.Service:Create()
+	end
+	if type(self.Controller.Create) == "function" then
+		self.Controller:Create()
+	end
+
+	local registry = getRegistry(self._deps)
+	if registry and not hasService(registry, "MapInteractionSystem") then
+		registerService(registry, "MapInteractionSystem", self)
+	end
+end
+
 function MapInteractionSystem:Init()
+	self:Create()
 	self.Service:Init()
 	self.Controller:Init()
 end
 
 function MapInteractionSystem:Start()
-	self.Controller:RegisterEventHandlers()
+	if type(self.Controller.Start) == "function" then
+		self.Controller:Start()
+	else
+		self.Controller:RegisterEventHandlers()
+	end
 	self.Service:Start()
 end
 
 function MapInteractionSystem:Stop()
-	self.Controller:UnregisterEventHandlers()
+	if type(self.Controller.Stop) == "function" then
+		self.Controller:Stop()
+	else
+		self.Controller:UnregisterEventHandlers()
+	end
 	self.Service:Stop()
 end
 
-function MapInteractionSystem:OpenDoor(matchId, doorId, payload)
-	return self.Service:OpenDoor(matchId, doorId, payload)
+function MapInteractionSystem:RegisterObject(objectData)
+	return self.Service:RegisterObject(objectData)
 end
 
-function MapInteractionSystem:SlamDoor(matchId, doorId, payload)
-	return self.Service:SlamDoor(matchId, doorId, payload)
+function MapInteractionSystem:GetObject(objectId)
+	return self.Service:GetObject(objectId)
 end
 
-function MapInteractionSystem:SetDoorLock(matchId, doorId, isLocked, payload)
-	return self.Service:SetDoorLock(matchId, doorId, isLocked, payload)
+function MapInteractionSystem:ExecuteInteraction(objectId, interactionType)
+	return self.Service:ExecuteInteraction(objectId, interactionType, {
+		source = "MapInteractionSystem",
+	})
 end
 
-function MapInteractionSystem:FlickerLights(matchId, roomId, payload)
-	return self.Service:FlickerLights(matchId, roomId, payload)
-end
-
-function MapInteractionSystem:MoveObject(matchId, objectId, mode, payload)
-	return self.Service:MoveObject(matchId, objectId, mode, payload)
-end
-
-function MapInteractionSystem:DisturbElectronics(matchId, targetId, mode, payload)
-	return self.Service:DisturbElectronics(matchId, targetId, mode, payload)
+function MapInteractionSystem:UpdateObjectState(objectId, newState)
+	return self.Service:UpdateObjectState(objectId, newState, {
+		source = "MapInteractionSystem",
+	})
 end
 
 return MapInteractionSystem
