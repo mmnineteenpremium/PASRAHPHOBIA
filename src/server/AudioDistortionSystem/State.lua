@@ -2,11 +2,8 @@ local State = {}
 State.__index = State
 
 local DEFAULT_STATE = {
-    playerFearLevels = {},
-    playerContext = {},
-    thresholdState = {},
-    running = false,
-    loopToken = 0,
+    distortionIntensity = {},
+    activeDistortions = {},
 }
 
 local function deepCopy(value)

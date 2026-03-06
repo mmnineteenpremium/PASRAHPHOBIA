@@ -2,8 +2,8 @@ local Service = require(script.Parent.Service)
 local Controller = require(script.Parent.Controller)
 local State = require(script.Parent.State)
 
-local FearSystem = {}
-FearSystem.__index = FearSystem
+local AudioDistortionSystem = {}
+AudioDistortionSystem.__index = AudioDistortionSystem
 
 local function getRegistry(deps)
     if type(deps) ~= "table" then
@@ -44,17 +44,17 @@ local function registerService(registry, name, service)
     return false
 end
 
-function FearSystem.new(deps)
-    local self = setmetatable({}, FearSystem)
+function AudioDistortionSystem.new(deps)
+    local self = setmetatable({}, AudioDistortionSystem)
     self._deps = deps or {}
     self._created = false
-    self.State = State.new(self._deps.FearState or {})
+    self.State = State.new(self._deps.AudioDistortionState or {})
     self.Service = Service.new(self.State, self._deps)
     self.Controller = Controller.new(self.State, self.Service, self._deps)
     return self
 end
 
-function FearSystem:Create()
+function AudioDistortionSystem:Create()
     if self._created then
         return
     end
@@ -68,18 +68,18 @@ function FearSystem:Create()
     end
 
     local registry = getRegistry(self._deps)
-    if registry and not hasService(registry, "FearSystem") then
-        registerService(registry, "FearSystem", self)
+    if registry and not hasService(registry, "AudioDistortionSystem") then
+        registerService(registry, "AudioDistortionSystem", self)
     end
 end
 
-function FearSystem:Init()
+function AudioDistortionSystem:Init()
     self:Create()
     self.Service:Init()
     self.Controller:Init()
 end
 
-function FearSystem:Start()
+function AudioDistortionSystem:Start()
     if type(self.Controller.Start) == "function" then
         self.Controller:Start()
     else
@@ -88,7 +88,7 @@ function FearSystem:Start()
     self.Service:Start()
 end
 
-function FearSystem:Stop()
+function AudioDistortionSystem:Stop()
     if type(self.Controller.Stop) == "function" then
         self.Controller:Stop()
     else
@@ -97,4 +97,4 @@ function FearSystem:Stop()
     self.Service:Stop()
 end
 
-return FearSystem
+return AudioDistortionSystem

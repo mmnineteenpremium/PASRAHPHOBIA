@@ -49,24 +49,12 @@ function Controller:RegisterEventHandlers()
         return
     end
 
-    self:_subscribe("MatchStarted", function(payload)
-        self._service:OnMatchStarted(payload)
+    self:_subscribe("FearLevelUpdated", function(payload)
+        self._service:OnFearLevelUpdated(payload)
     end)
 
     self:_subscribe("MatchEnded", function(payload)
         self._service:OnMatchEnded(payload)
-    end)
-
-    self:_subscribe("PlayerSanityChanged", function(payload)
-        self._service:OnPlayerSanityChanged(payload)
-    end)
-
-    self:_subscribe("GhostProximityDetected", function(payload)
-        self._service:OnGhostProximityDetected(payload)
-    end)
-
-    self:_subscribe("ParanormalEvent", function(payload)
-        self._service:OnParanormalEvent(payload)
     end)
 
     self._registered = true
@@ -76,8 +64,8 @@ function Controller:UnregisterEventHandlers()
     if not self._eventBus or not self._registered then
         return
     end
-    for _, subscription in ipairs(self._subscriptions) do
-        self._eventBus:Unsubscribe(subscription.eventName, subscription.callback)
+    for _, sub in ipairs(self._subscriptions) do
+        self._eventBus:Unsubscribe(sub.eventName, sub.callback)
     end
     table.clear(self._subscriptions)
     self._registered = false
