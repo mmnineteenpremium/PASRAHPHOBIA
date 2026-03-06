@@ -57,6 +57,14 @@ function Controller:RegisterEventHandlers()
         self._service:OnGhostSpawned(payload)
     end)
 
+    self:_subscribe("PlayerSanityChanged", function(payload)
+        self._service:OnParanormalEvent(payload)
+    end)
+
+    self:_subscribe("HuntTriggered", function(payload)
+        self._service:OnHuntTriggered(payload)
+    end)
+
     self:_subscribe("ParanormalEvent", function(payload)
         self._service:OnParanormalEvent(payload)
     end)

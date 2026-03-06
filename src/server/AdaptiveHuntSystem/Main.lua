@@ -2,8 +2,8 @@ local Service = require(script.Parent.Service)
 local Controller = require(script.Parent.Controller)
 local State = require(script.Parent.State)
 
-local GhostPersonalitySystem = {}
-GhostPersonalitySystem.__index = GhostPersonalitySystem
+local AdaptiveHuntSystem = {}
+AdaptiveHuntSystem.__index = AdaptiveHuntSystem
 
 local function getRegistry(deps)
     if type(deps) ~= "table" then
@@ -44,17 +44,17 @@ local function registerService(registry, name, service)
     return false
 end
 
-function GhostPersonalitySystem.new(deps)
-    local self = setmetatable({}, GhostPersonalitySystem)
+function AdaptiveHuntSystem.new(deps)
+    local self = setmetatable({}, AdaptiveHuntSystem)
     self._deps = deps or {}
     self._created = false
-    self.State = State.new(self._deps.GhostPersonalityState)
+    self.State = State.new(self._deps.AdaptiveHuntState)
     self.Service = Service.new(self.State, self._deps)
     self.Controller = Controller.new(self.State, self.Service, self._deps)
     return self
 end
 
-function GhostPersonalitySystem:Create()
+function AdaptiveHuntSystem:Create()
     if self._created then
         return
     end
@@ -68,18 +68,18 @@ function GhostPersonalitySystem:Create()
     end
 
     local registry = getRegistry(self._deps)
-    if registry and not hasService(registry, "GhostPersonalitySystem") then
-        registerService(registry, "GhostPersonalitySystem", self)
+    if registry and not hasService(registry, "AdaptiveHuntSystem") then
+        registerService(registry, "AdaptiveHuntSystem", self)
     end
 end
 
-function GhostPersonalitySystem:Init()
+function AdaptiveHuntSystem:Init()
     self:Create()
     self.Service:Init()
     self.Controller:Init()
 end
 
-function GhostPersonalitySystem:Start()
+function AdaptiveHuntSystem:Start()
     if type(self.Controller.Start) == "function" then
         self.Controller:Start()
     else
@@ -88,7 +88,7 @@ function GhostPersonalitySystem:Start()
     self.Service:Start()
 end
 
-function GhostPersonalitySystem:Stop()
+function AdaptiveHuntSystem:Stop()
     if type(self.Controller.Stop) == "function" then
         self.Controller:Stop()
     else
@@ -97,4 +97,4 @@ function GhostPersonalitySystem:Stop()
     self.Service:Stop()
 end
 
-return GhostPersonalitySystem
+return AdaptiveHuntSystem
