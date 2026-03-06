@@ -63,6 +63,10 @@ function SystemFactory:RegisterSystem(name, constructor)
     if type(constructor) ~= "function" then
         return false
     end
+    if self._constructorsByName[name] ~= nil then
+        self._log(string.format("[SystemFactory] Duplicate register ignored for '%s'", name))
+        return false
+    end
     self._constructorsByName[name] = constructor
     return true
 end
@@ -91,6 +95,7 @@ function SystemFactory:CreateSystems(startupOrder)
                 if ok and type(system) == "table" then
                     registerService(self._services, name, system)
                     self._createdByName[name] = true
+                    self._log(string.format("[SystemFactory] Created system '%s'", name))
                 else
                     self._log(string.format("[SystemFactory] Failed creating system '%s': %s", name, tostring(system)))
                     return false, string.format("factory_failed:%s", name)

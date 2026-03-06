@@ -6,7 +6,7 @@ local Service = {}
 Service.__index = Service
 
 local function resolveEventBus(deps)
-    local eventBus = deps and deps.EventBus
+    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -218,6 +218,16 @@ function Service:RecordEvidenceDiscovered(player, matchId, evidenceType, payload
         discoverers = self._evidenceTracker:GetDiscoverers(matchState, evidenceType),
         now = payload and payload.now,
     })
+    self:_publish("InvestigationProgressUpdated", {
+        source = "InvestigationSystem",
+        matchId = matchId,
+        player = player,
+        userId = userId,
+        discoveredEvidence = self._evidenceTracker:GetEvidenceList(matchState),
+        possibleGhostTypes = possible,
+        evidenceCount = #self._evidenceTracker:GetEvidenceList(matchState),
+        now = payload and payload.now,
+    })
 
     return true, nil, {
         isNew = isNew,
@@ -258,6 +268,17 @@ function Service:SubmitGhostGuess(player, matchId, guessedGhostType, payload)
             validatedAt = validation.validatedAt,
         })
     end
+
+    self:_publish("InvestigationProgressUpdated", {
+        source = "InvestigationSystem",
+        matchId = matchId,
+        player = player,
+        userId = userId,
+        guessedGhostType = guessedGhostType,
+        ghostGuessCorrect = validOk and validation and validation.correct or false,
+        possibleGhostTypes = matchState.possibleGhostTypes,
+        now = payload and payload.now,
+    })
 
     return true, validErr, validation
 end

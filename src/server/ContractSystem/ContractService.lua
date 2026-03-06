@@ -2,6 +2,7 @@ local ContractGenerator = require(script.Parent.ContractGenerator.Generator)
 local ContractBoard = require(script.Parent.ContractBoard.Board)
 local MissionProgress = require(script.Parent.ContractObjectives.MissionProgress)
 local RewardEngine = require(script.Parent.ContractRewards.RewardEngine)
+local Services = require(script.Parent.Parent.Core.Services)
 
 local ContractService = {}
 ContractService.__index = ContractService
@@ -12,7 +13,7 @@ local DEFAULT_CONFIG = {
 }
 
 local function resolveEventBus(deps)
-    local eventBus = deps.EventBus
+    local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -26,7 +27,7 @@ local function resolveEventBus(deps)
 end
 
 local function resolveEconomyService(deps)
-    local economy = deps.EconomySystem
+    local economy = Services.Get(deps, "EconomySystem")
     if type(economy) ~= "table" then
         return nil
     end
@@ -40,7 +41,7 @@ local function resolveEconomyService(deps)
 end
 
 local function resolveProfileService(deps)
-    local profile = deps.ProfileSystem
+    local profile = Services.Get(deps, "ProfileSystem")
     if type(profile) ~= "table" then
         return nil
     end
@@ -54,7 +55,7 @@ local function resolveProfileService(deps)
 end
 
 local function resolveRankedService(deps)
-    local ranked = deps.RankedSystem
+    local ranked = Services.Get(deps, "RankedSystem")
     if type(ranked) ~= "table" then
         return nil
     end
@@ -442,7 +443,7 @@ function ContractService:EndMatchSession(matchId, payload)
         rewards = {},
     }
 
-    local hasCentralRewardSystem = self._deps and self._deps.RewardSystem ~= nil
+    local hasCentralRewardSystem = Services.Get(self._deps, "RewardSystem") ~= nil
     if session.completed and not hasCentralRewardSystem then
         local granted = self._rewards:Grant(
             session.contract,

@@ -1,10 +1,12 @@
 local Service = {}
 Service.__index = Service
+local Services = require(script.Parent.Parent.Core.Services)
 
 local DEFAULT_CONFIG = {
     AllowedRemotes = {
         EvidenceEvent = true,
         EvidenceRequest = true,
+        GhostInteractionRequest = true,
         LobbyEvent = true,
         MatchEvent = true,
         PurchaseEvent = true,
@@ -28,7 +30,7 @@ local DISALLOWED_ACTIONS = {
 }
 
 local function resolveEventBus(deps)
-    local eventBus = deps and deps.EventBus
+    local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -55,7 +57,7 @@ local function resolvePlayersService(deps)
 end
 
 local function resolveEconomyService(deps)
-    local economy = deps and deps.EconomySystem
+    local economy = Services.Get(deps, "EconomySystem")
     if type(economy) ~= "table" then
         return nil
     end
@@ -69,7 +71,7 @@ local function resolveEconomyService(deps)
 end
 
 local function resolveInventoryService(deps)
-    local inventory = deps and deps.InventorySystem
+    local inventory = Services.Get(deps, "InventorySystem")
     if type(inventory) ~= "table" then
         return nil
     end
@@ -83,7 +85,7 @@ local function resolveInventoryService(deps)
 end
 
 local function resolveMatchService(deps)
-    local match = deps and deps.MatchSystem
+    local match = Services.Get(deps, "MatchSystem")
     if type(match) ~= "table" then
         return nil
     end
@@ -115,6 +117,20 @@ local function mergeConfig(base, override)
         merged[key] = value
     end
     return merged
+end
+
+local function hasClientEvidenceOverride(payload)
+    if type(payload) ~= "table" then
+        return false
+    end
+    if payload.validated ~= nil or payload.result ~= nil or payload.evidenceType ~= nil then
+        return true
+    end
+    local nested = payload.payload
+    if type(nested) == "table" and (nested.validated ~= nil or nested.result ~= nil or nested.evidenceType ~= nil) then
+        return true
+    end
+    return false
 end
 
 function Service.new(state, deps)
@@ -305,6 +321,14 @@ function Service:ValidateRemoteRequest(player, remoteName, payload, context)
             payload = payload,
         })
         return false, "disallowed_action"
+    end
+
+    if remoteName == "EvidenceRequest" and hasClientEvidenceOverride(payload) then
+        self:_markViolation(player, "evidence_forgery_attempt", 3, {
+            remoteName = remoteName,
+            payload = payload,
+        })
+        return false, "evidence_forgery_attempt"
     end
 
     return true

@@ -1,6 +1,17 @@
 local EvidenceTools = {}
 EvidenceTools.__index = EvidenceTools
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local TOOL_REQUEST_TYPES = {
+	JejakEnergi = "EMFScan",
+	KotakArwah = "SpiritBoxQuestion",
+	SuhuMembeku = "TemperatureReading",
+	BukuTerkutuk = "GhostWritingCheck",
+	BolaArwah = "GhostOrbCameraDetection",
+	GerakanGaib = "MotionSensorCheck",
+}
+
 local ToolModules = {
 	JejakEnergi = require(script.Parent.JejakEnergi.Main),
 	KotakArwah = require(script.Parent.KotakArwah.Main),
@@ -14,6 +25,7 @@ function EvidenceTools:Init(context)
 	self._context = context
 	self._remotes = context.Remotes
 	self._evidenceEvent = self._remotes.EvidenceEvent
+	self._evidenceRequest = self._remotes.EvidenceRequest
 	self._connections = {}
 	self._toolStates = {}
 	self._requestCounter = 0
@@ -36,6 +48,7 @@ function EvidenceTools:Start()
 			self:_onEvidenceEvent(payload)
 		end))
 	end
+	self:_ensureEvidenceRequest()
 end
 
 function EvidenceTools:Stop()
@@ -63,8 +76,9 @@ function EvidenceTools:_requestTool(toolType, payload)
 	if not self._toolStates[toolType] then
 		return false, "invalid_tool"
 	end
-	if not self._evidenceEvent or not self._evidenceEvent.FireServer then
-		return false, "missing_remote"
+	self:_ensureEvidenceRequest()
+	if not self._evidenceRequest or not self._evidenceRequest.InvokeServer then
+		return false, "missing_remote_function"
 	end
 	local now = os.clock()
 	if now < (self._toolStates[toolType].cooldownUntil or 0) then
@@ -73,13 +87,37 @@ function EvidenceTools:_requestTool(toolType, payload)
 
 	self._requestCounter += 1
 	self._toolStates[toolType].lastUsedAt = now
-	self._evidenceEvent:FireServer({
-		action = "UseEvidenceTool",
-		requestId = tostring(self._requestCounter),
-		toolType = toolType,
-		payload = payload or {},
-	})
-	return true
+	local okInvoke, response = pcall(function()
+		return self._evidenceRequest:InvokeServer({
+			requestType = TOOL_REQUEST_TYPES[toolType] or "ToolScan",
+			requestId = tostring(self._requestCounter),
+			toolType = toolType,
+			payload = payload or {},
+		})
+	end)
+	if not okInvoke then
+		self._toolStates[toolType].lastReason = "invoke_failed"
+		self._toolStates[toolType].cooldownUntil = os.clock() + 0.25
+		return false, "invoke_failed"
+	end
+	if type(response) == "table" then
+		self._toolStates[toolType].lastFeedback = response
+		self._toolStates[toolType].lastReason = response.reason
+		if response.success == false then
+			self._toolStates[toolType].cooldownUntil = os.clock() + 0.25
+		end
+		return response.success == true, response.reason, response
+	end
+	return false, "invalid_gateway_response"
+end
+
+function EvidenceTools:_ensureEvidenceRequest()
+	if self._evidenceRequest and self._evidenceRequest:IsA("RemoteFunction") then
+		return self._evidenceRequest
+	end
+	local remoteFunctions = ReplicatedStorage:FindFirstChild("RemoteFunctions")
+	self._evidenceRequest = remoteFunctions and remoteFunctions:FindFirstChild("EvidenceRequest") or nil
+	return self._evidenceRequest
 end
 
 function EvidenceTools:UseTool(toolType, payload)

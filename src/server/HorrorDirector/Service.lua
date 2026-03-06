@@ -3,6 +3,7 @@ Service.__index = Service
 
 local TensionSystem = require(script.Parent.TensionSystem.TensionSystem)
 local PlayerStateMonitor = require(script.Parent.PlayerStateMonitor.PlayerStateMonitor)
+local Services = require(script.Parent.Parent.Core.Services)
 
 local DEFAULT_CONFIG = {
 	MaxTension = 100,
@@ -50,7 +51,7 @@ local ENVIRONMENT_EVENTS = {
 }
 
 local function resolveEventBus(deps)
-	local eventBus = deps.EventBus
+	local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -154,7 +155,7 @@ function Service.new(state, deps)
 		max = self._config.MaxTension,
 	})
 	self._stateMonitor = PlayerStateMonitor.new()
-	self._aggression = self._deps.AggressionSystem
+	self._aggression = Services.Get(self._deps, "AggressionSystem")
 	if type(self._aggression) == "table" and type(self._aggression.Service) == "table" then
 		self._aggression = self._aggression.Service
 	end
@@ -436,6 +437,19 @@ function Service:RecordPlayerSanityChanged(matchId, payload)
 		self:_increaseAggression(matchId, 1.0, "director_low_sanity", {
 			sanity = sanity,
 		})
+
+		if self._aggression and type(self._aggression.GetAggressionLevel) == "function" then
+			local info = self._aggression:GetAggressionLevel(matchId)
+			local aggressionValue = type(info) == "table" and info.aggression or 0
+			if aggressionValue >= 55 then
+				self:_publish("GhostFakeEvidenceRequested", {
+					matchId = matchId,
+					reason = "low_sanity_high_aggression",
+					sanity = sanity,
+					aggression = aggressionValue,
+				})
+			end
+		end
 	end
 	return session.tension
 end

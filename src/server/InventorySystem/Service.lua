@@ -1,8 +1,9 @@
 local Service = {}
 Service.__index = Service
+local Services = require(script.Parent.Parent.Core.Services)
 
 local function resolveEventBus(deps)
-    local eventBus = deps and deps.EventBus
+    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -30,7 +31,7 @@ function Service.new(state, deps)
     self._state = state
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
-    self._persistence = self._deps.PersistenceService
+    self._persistence = resolvePersistenceService(self._deps)
     return self
 end
 
@@ -248,6 +249,24 @@ function Service:StoreItem(player, itemId)
         reason = "store",
     })
     return true
+end
+
+local function resolvePersistenceService(deps)
+    local persistence = Services.Get(deps, "DataPersistenceService")
+        or Services.Get(deps, "DataPersistenceSystem")
+        or (deps and deps.PersistenceService)
+    if type(persistence) ~= "table" then
+        return nil
+    end
+    if type(persistence.LoadInventory) == "function" and type(persistence.SaveInventory) == "function" then
+        return persistence
+    end
+    if type(persistence.Service) == "table"
+        and type(persistence.Service.LoadInventory) == "function"
+        and type(persistence.Service.SaveInventory) == "function" then
+        return persistence.Service
+    end
+    return nil
 end
 
 return Service

@@ -2,9 +2,10 @@ local Service = {}
 Service.__index = Service
 
 local RankTiersResolver = require(script.Parent.Parent.Core.RankTiersResolver)
+local Services = require(script.Parent.Parent.Core.Services)
 
 local function resolveEventBus(deps)
-    local eventBus = deps and deps.EventBus
+    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -18,7 +19,7 @@ local function resolveEventBus(deps)
 end
 
 local function resolveProfileService(deps)
-    local profile = deps and deps.ProfileSystem
+    local profile = Services.Get(deps, "ProfileSystem")
     if type(profile) ~= "table" then
         return nil
     end

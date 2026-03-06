@@ -1,8 +1,9 @@
 local Controller = {}
 Controller.__index = Controller
+local GhostInteractionGateway = require(script.Parent.GhostInteractionGateway)
 
 local function resolveEventBus(deps)
-	local eventBus = deps.EventBus
+	local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -23,14 +24,19 @@ function Controller.new(state, service, deps)
 	self._subscriptions = {}
 	self._eventBus = resolveEventBus(self._deps)
 	self._handlersRegistered = false
+	self._gateway = nil
 	return self
 end
 
 function Controller:Init()
 	-- Prepare controller-level wiring here.
+	self._gateway = GhostInteractionGateway.new(self._service, self._deps)
 end
 
 function Controller:RegisterEventHandlers()
+	if self._gateway then
+		self._gateway:Start()
+	end
 	if not self._eventBus then
 		return
 	end
@@ -66,6 +72,9 @@ function Controller:RegisterEventHandlers()
 end
 
 function Controller:UnregisterEventHandlers()
+	if self._gateway then
+		self._gateway:Stop()
+	end
 	if not self._eventBus then
 		return
 	end

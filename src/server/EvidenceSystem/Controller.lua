@@ -1,12 +1,13 @@
 local Controller = {}
 Controller.__index = Controller
 
+local EvidenceGateway = require(script.Parent.EvidenceGateway)
+local Services = require(script.Parent.Parent.Core.Services)
+
 local MIN_TENSION_DELTA_FOR_SPAWN = 1
 local TENSION_SPAWN_COOLDOWN_SECONDS = 2.5
 local TOOL_RESULT_EVENT_NAME = "EvidenceToolResult"
 local EVIDENCE_REMOTE_NAME = "EvidenceEvent"
-local REMOTE_FUNCTIONS_FOLDER_NAME = "RemoteFunctions"
-local EVIDENCE_REQUEST_FUNCTION_NAME = "EvidenceRequest"
 
 local TOOL_ALIASES = {
 	emf = "JejakEnergi",
@@ -22,14 +23,10 @@ local TOOL_ALIASES = {
 	bolaarwah = "BolaArwah",
 	motionsensor = "GerakanGaib",
 	gerakangaib = "GerakanGaib",
-	emfscan = "JejakEnergi",
-	spiritboxquestion = "KotakArwah",
-	temperaturereading = "SuhuMembeku",
-	ghostwritingcheck = "BukuTerkutuk",
 }
 
 local function resolveEventBus(deps)
-    local eventBus = deps.EventBus
+    local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -43,7 +40,7 @@ local function resolveEventBus(deps)
 end
 
 local function resolveSecurityService(deps)
-    local security = deps.SecuritySystem
+    local security = Services.Get(deps, "SecuritySystem")
     if type(security) ~= "table" then
         return nil
     end
@@ -57,7 +54,7 @@ local function resolveSecurityService(deps)
 end
 
 local function resolveMatchSystem(deps)
-    local match = deps.MatchSystem
+    local match = Services.Get(deps, "MatchSystem")
     if type(match) ~= "table" then
         return nil
     end
@@ -83,7 +80,7 @@ function Controller.new(state, service, deps)
     self._matchSystem = resolveMatchSystem(self._deps)
     self._evidenceRemote = nil
     self._remoteConnection = nil
-    self._evidenceRequestFunction = nil
+    self._gateway = nil
     self._handlersRegistered = false
     self._lastTensionSpawnAtByMatch = {}
     return self
@@ -91,7 +88,7 @@ end
 
 function Controller:Init()
     self._evidenceRemote = self:_resolveEvidenceRemote()
-    self._evidenceRequestFunction = self:_resolveEvidenceRequestFunction()
+    self._gateway = EvidenceGateway.new(self._service, self._deps)
 end
 
 function Controller:RegisterEventHandlers()
@@ -150,7 +147,9 @@ function Controller:RegisterEventHandlers()
         end)
     end
     self:_connectEvidenceRemote()
-    self:_connectEvidenceRequestFunction()
+    if self._gateway then
+        self._gateway:Start()
+    end
     self._handlersRegistered = true
 end
 
@@ -167,7 +166,9 @@ function Controller:UnregisterEventHandlers()
     table.clear(self._subscriptions)
     table.clear(self._lastTensionSpawnAtByMatch)
     self:_disconnectEvidenceRemote()
-    self:_disconnectEvidenceRequestFunction()
+    if self._gateway then
+        self._gateway:Stop()
+    end
     self._handlersRegistered = false
 end
 
@@ -199,32 +200,6 @@ function Controller:_resolveEvidenceRemote()
     return nil
 end
 
-function Controller:_resolveEvidenceRequestFunction()
-    local ok, replicatedStorage = pcall(function()
-        return game:GetService("ReplicatedStorage")
-    end)
-    if not ok then
-        return nil
-    end
-
-    local remoteFunctionsFolder = replicatedStorage:FindFirstChild(REMOTE_FUNCTIONS_FOLDER_NAME)
-    if not remoteFunctionsFolder then
-        remoteFunctionsFolder = Instance.new("Folder")
-        remoteFunctionsFolder.Name = REMOTE_FUNCTIONS_FOLDER_NAME
-        remoteFunctionsFolder.Parent = replicatedStorage
-    end
-
-    local requestFunction = remoteFunctionsFolder:FindFirstChild(EVIDENCE_REQUEST_FUNCTION_NAME)
-    if requestFunction and requestFunction:IsA("RemoteFunction") then
-        return requestFunction
-    end
-
-    local created = Instance.new("RemoteFunction")
-    created.Name = EVIDENCE_REQUEST_FUNCTION_NAME
-    created.Parent = remoteFunctionsFolder
-    return created
-end
-
 function Controller:_connectEvidenceRemote()
     if self._remoteConnection then
         return
@@ -241,29 +216,10 @@ function Controller:_connectEvidenceRemote()
     end)
 end
 
-function Controller:_connectEvidenceRequestFunction()
-    if not self._evidenceRequestFunction then
-        self._evidenceRequestFunction = self:_resolveEvidenceRequestFunction()
-    end
-    if not self._evidenceRequestFunction then
-        return
-    end
-
-    self._evidenceRequestFunction.OnServerInvoke = function(player, request)
-        return self:OnEvidenceRequestInvoke(player, request)
-    end
-end
-
 function Controller:_disconnectEvidenceRemote()
     if self._remoteConnection then
         self._remoteConnection:Disconnect()
         self._remoteConnection = nil
-    end
-end
-
-function Controller:_disconnectEvidenceRequestFunction()
-    if self._evidenceRequestFunction then
-        self._evidenceRequestFunction.OnServerInvoke = nil
     end
 end
 
@@ -416,110 +372,6 @@ function Controller:OnEvidenceRemoteRequest(player, request)
     })
 end
 
-function Controller:_normalizeRequestType(request)
-    local requestType = request and (request.requestType or request.action)
-    if type(requestType) ~= "string" then
-        return nil
-    end
-    return requestType:gsub("[%s_%-_]+", ""):lower()
-end
-
-function Controller:_resolveToolTypeFromRequest(request)
-    local requestPayload = type(request.payload) == "table" and request.payload or {}
-    local rawToolType = request.toolType or requestPayload.toolType
-    local canonicalTool = normalizeToolType(rawToolType)
-    if canonicalTool then
-        return canonicalTool
-    end
-    local normalizedRequestType = self:_normalizeRequestType(request)
-    if normalizedRequestType then
-        return TOOL_ALIASES[normalizedRequestType]
-    end
-    return nil
-end
-
-function Controller:_buildEvidenceRequestData(toolType, ok, reason, result)
-    local evidenceData = {
-        toolType = toolType,
-        validated = ok == true,
-        reason = reason,
-    }
-
-    if toolType == "JejakEnergi" then
-        evidenceData.requestType = "EMFScan"
-        evidenceData.emfLevel = ok and 5 or 1
-    elseif toolType == "KotakArwah" then
-        evidenceData.requestType = "SpiritBoxQuestion"
-        evidenceData.ghostResponse = ok == true
-        evidenceData.responseText = ok and "Behind you..." or "..."
-    elseif toolType == "SuhuMembeku" then
-        evidenceData.requestType = "TemperatureReading"
-        evidenceData.temperatureC = ok and -5 or 9
-        evidenceData.freezing = ok == true
-    elseif toolType == "BukuTerkutuk" then
-        evidenceData.requestType = "GhostWritingCheck"
-        evidenceData.writingAppeared = ok == true
-    end
-
-    if type(result) == "table" then
-        evidenceData.result = result
-    end
-    return evidenceData
-end
-
-function Controller:OnEvidenceRequestInvoke(player, request)
-    local validRequest, requestErr = self:_validateRemoteRequest(player, EVIDENCE_REQUEST_FUNCTION_NAME, request)
-    if not validRequest then
-        return {
-            success = false,
-            reason = requestErr,
-        }
-    end
-
-    local requestPayload = type(request.payload) == "table" and request.payload or {}
-    if self._security and type(self._security.ValidateMatchRequest) == "function" then
-        local ok, reason = self._security:ValidateMatchRequest(player, {
-            action = "EvidenceRequest",
-            targetPosition = requestPayload.targetPosition,
-        })
-        if not ok then
-            return {
-                success = false,
-                reason = reason or "match_validation_failed",
-            }
-        end
-    end
-
-    local toolType = self:_resolveToolTypeFromRequest(request)
-    if not toolType then
-        return {
-            success = false,
-            reason = "invalid_request_type",
-        }
-    end
-
-    local matchId = self:_resolveMatchIdForPlayer(player, requestPayload)
-    if not matchId then
-        return {
-            success = false,
-            reason = "missing_match_id",
-            toolType = toolType,
-        }
-    end
-
-    local ok, reason, result = self._service:ProcessToolUse(player, matchId, {
-        toolType = toolType,
-        payload = requestPayload,
-    })
-
-    return {
-        success = ok,
-        reason = reason,
-        matchId = matchId,
-        toolType = toolType,
-        data = self:_buildEvidenceRequestData(toolType, ok, reason, result),
-    }
-end
 
 function Controller:OnMatchStarted(payload)
     local matchId = payload and payload.matchId

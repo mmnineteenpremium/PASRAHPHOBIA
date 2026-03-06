@@ -5,6 +5,7 @@ local EvidenceTracker = require(script.Parent.EvidenceTracker)
 local EvidenceDeduction = require(script.Parent.EvidenceDeduction)
 local EvidenceDataTypes = require(script.Parent.EvidenceDataTypes)
 local EvidenceRandomizer = require(script.Parent.Parent.EvidenceRandomizer)
+local Services = require(script.Parent.Parent.Parent.Core.Services)
 
 local EvidenceService = {}
 EvidenceService.__index = EvidenceService
@@ -19,7 +20,7 @@ local TOOL_TO_EVIDENCE = {
 }
 
 local function resolveEventBus(deps)
-	local eventBus = deps.EventBus
+	local eventBus = Services.Get(deps, "EventBus")
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -33,7 +34,7 @@ local function resolveEventBus(deps)
 end
 
 local function resolveGhostService(deps)
-	local ghostSystem = deps.GhostSystem
+	local ghostSystem = Services.Get(deps, "GhostSystem")
 	if type(ghostSystem) ~= "table" then
 		return nil
 	end
@@ -47,7 +48,7 @@ local function resolveGhostService(deps)
 end
 
 local function resolveEvidenceSync(deps)
-	local evidenceSync = deps.EvidenceSync
+	local evidenceSync = Services.Get(deps, "EvidenceSync")
 	if type(evidenceSync) ~= "table" then
 		return nil
 	end

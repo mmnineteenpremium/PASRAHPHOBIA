@@ -2,12 +2,13 @@ local SpectatorDistortionEngine = require(script.Parent.SpectatorDistortionEngin
 local SpectatorVision = require(script.Parent.SpectatorVision)
 local SpectatorGhostGenerator = require(script.Parent.SpectatorGhostGenerator)
 local SpectatorCommunication = require(script.Parent.SpectatorCommunication)
+local Services = require(script.Parent.Parent.Core.Services)
 
 local SpectatorService = {}
 SpectatorService.__index = SpectatorService
 
 local function resolveEventBus(deps)
-	local eventBus = deps.EventBus
+	local eventBus = Services.Get(deps, "EventBus")
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -21,7 +22,7 @@ local function resolveEventBus(deps)
 end
 
 local function resolveGhostService(deps)
-	local ghostSystem = deps.GhostSystem
+	local ghostSystem = Services.Get(deps, "GhostSystem")
 	if type(ghostSystem) ~= "table" then
 		return nil
 	end

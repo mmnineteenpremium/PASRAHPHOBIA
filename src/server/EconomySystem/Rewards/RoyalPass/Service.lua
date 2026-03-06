@@ -1,5 +1,6 @@
 local Service = {}
 Service.__index = Service
+local Services = require(script.Parent.Parent.Parent.Core.Services)
 
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
@@ -28,8 +29,9 @@ function Service:ApplyPassBonuses(player, reward)
     if reward and reward.context == "DailyMissions" then
         multiplier = multiplier * (self._state:Get("LifetimePass") and 2 or 1)
     end
-    if self._deps.EventBus and reward then
-        self._deps.EventBus:Publish("RewardGranted", { player = player, amount = reward.amount * multiplier, context = "RoyalPass" })
+    local eventBus = Services.Get(self._deps, "EventBus")
+    if eventBus and reward then
+        eventBus:Publish("RewardGranted", { player = player, amount = reward.amount * multiplier, context = "RoyalPass" })
     end
 end
 

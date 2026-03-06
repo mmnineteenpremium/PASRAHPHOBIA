@@ -1,5 +1,6 @@
 local Service = {}
 Service.__index = Service
+local Services = require(script.Parent.Parent.Core.Services)
 
 local DEFAULTS = {
     matchMMBase = 300,
@@ -11,7 +12,7 @@ local DEFAULTS = {
 }
 
 local function resolveEventBus(deps)
-    local eventBus = deps and deps.EventBus
+    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -25,7 +26,7 @@ local function resolveEventBus(deps)
 end
 
 local function resolveEconomyService(deps)
-    local economy = deps and deps.EconomySystem
+    local economy = Services.Get(deps, "EconomySystem")
     if type(economy) ~= "table" then
         return nil
     end
@@ -39,7 +40,7 @@ local function resolveEconomyService(deps)
 end
 
 local function resolveProgressionService(deps)
-    local progression = deps and deps.ProgressionSystem
+    local progression = Services.Get(deps, "ProgressionSystem")
     if type(progression) ~= "table" then
         return nil
     end
@@ -53,7 +54,7 @@ local function resolveProgressionService(deps)
 end
 
 local function resolveInventoryService(deps)
-    local inventory = deps and deps.InventorySystem
+    local inventory = Services.Get(deps, "InventorySystem")
     if type(inventory) ~= "table" then
         return nil
     end
@@ -120,29 +121,14 @@ function Service:_ensureIntegrations()
     if self._economy and self._progression and self._inventory then
         return
     end
-    local services = self._deps and (self._deps.Services or self._deps.ServiceRegistry)
-    if type(services) ~= "table" then
-        return
-    end
-    local getService = services.GetService or services.Get
-    if type(getService) ~= "function" then
-        return
-    end
-
     if not self._economy then
-        self._economy = resolveEconomyService({
-            EconomySystem = getService(services, "EconomySystem"),
-        })
+        self._economy = resolveEconomyService(self._deps)
     end
     if not self._progression then
-        self._progression = resolveProgressionService({
-            ProgressionSystem = getService(services, "ProgressionSystem"),
-        })
+        self._progression = resolveProgressionService(self._deps)
     end
     if not self._inventory then
-        self._inventory = resolveInventoryService({
-            InventorySystem = getService(services, "InventorySystem"),
-        })
+        self._inventory = resolveInventoryService(self._deps)
     end
 end
 

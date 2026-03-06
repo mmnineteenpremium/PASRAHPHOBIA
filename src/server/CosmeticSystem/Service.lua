@@ -1,8 +1,9 @@
 local Service = {}
 Service.__index = Service
+local Services = require(script.Parent.Parent.Core.Services)
 
 local function resolveInventoryService(deps)
-    local inventory = deps and (deps.InventoryService or deps.InventorySystem)
+    local inventory = Services.Get(deps, "InventoryService") or Services.Get(deps, "InventorySystem")
     if type(inventory) ~= "table" then
         return nil
     end
@@ -16,7 +17,7 @@ local function resolveInventoryService(deps)
 end
 
 local function resolveLobbyService(deps)
-    local lobby = deps and deps.LobbySocialHub
+    local lobby = Services.Get(deps, "LobbySocialHub")
     if type(lobby) ~= "table" then
         return nil
     end
@@ -30,7 +31,7 @@ local function resolveLobbyService(deps)
 end
 
 local function resolveEventBus(deps)
-    local eventBus = deps and deps.EventBus
+    local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -67,7 +68,7 @@ function Service.new(state, deps)
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
     self._inventory = resolveInventoryService(self._deps)
-    self._profile = self._deps.ProfileSystem
+    self._profile = Services.Get(self._deps, "ProfileSystem")
     self._lobby = resolveLobbyService(self._deps)
     return self
 end

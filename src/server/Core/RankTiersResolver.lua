@@ -57,10 +57,16 @@ local function resolveFromTree()
     while cursor do
         local shared = cursor:FindFirstChild("shared") or cursor:FindFirstChild("Shared")
         if shared then
-            local rankTiersModule = getByPath(shared, { "DataTypes", "Ranks", "RankTiers" })
-            local rankTiers = safeRequire(rankTiersModule)
-            if type(rankTiers) == "table" then
-                return rankTiers
+            local candidatePaths = {
+                { "DataTypes", "Ranks", "RankTiers" },
+                { "DataTypes", "RankTiers" },
+            }
+            for _, path in ipairs(candidatePaths) do
+                local rankTiersModule = getByPath(shared, path)
+                local rankTiers = safeRequire(rankTiersModule)
+                if type(rankTiers) == "table" then
+                    return rankTiers
+                end
             end
         end
         cursor = cursor.Parent
@@ -80,8 +86,18 @@ local function resolveFromReplicatedStorage()
     if not shared then
         return nil
     end
-    local rankTiersModule = getByPath(shared, { "DataTypes", "Ranks", "RankTiers" })
-    return safeRequire(rankTiersModule)
+    local candidatePaths = {
+        { "DataTypes", "Ranks", "RankTiers" },
+        { "DataTypes", "RankTiers" },
+    }
+    for _, path in ipairs(candidatePaths) do
+        local rankTiersModule = getByPath(shared, path)
+        local rankTiers = safeRequire(rankTiersModule)
+        if type(rankTiers) == "table" then
+            return rankTiers
+        end
+    end
+    return nil
 end
 
 function RankTiersResolver.Resolve(deps)

@@ -1,5 +1,6 @@
 local Service = {}
 Service.__index = Service
+local Services = require(script.Parent.Parent.Parent.Core.Services)
 
 local MISSION_REWARD = 1000
 local ALL_BONUS = 2000
@@ -8,7 +9,7 @@ function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
     self._deps = deps or {}
-    self._eventBus = self._deps.EventBus
+    self._eventBus = Services.Get(self._deps, "EventBus")
     return self
 end
 

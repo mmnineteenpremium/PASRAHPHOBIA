@@ -29,10 +29,12 @@ local REMOTE_NAMES = {
 
 local function resolveRemotes()
 	local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	local remoteFunctionsFolder = ReplicatedStorage:FindFirstChild("RemoteFunctions")
 	local remotes = {}
 	for _, remoteName in ipairs(REMOTE_NAMES) do
 		remotes[remoteName] = remoteFolder and remoteFolder:FindFirstChild(remoteName) or nil
 	end
+	remotes.EvidenceRequest = remoteFunctionsFolder and remoteFunctionsFolder:FindFirstChild("EvidenceRequest") or nil
 	return remotes
 end
 

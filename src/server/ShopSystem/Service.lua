@@ -1,8 +1,9 @@
 local Service = {}
 Service.__index = Service
+local Services = require(script.Parent.Parent.Core.Services)
 
 local function resolveEconomyService(deps)
-    local economy = deps and deps.EconomySystem
+    local economy = Services.Get(deps, "EconomySystem")
     if type(economy) ~= "table" then
         return nil
     end
@@ -16,7 +17,7 @@ local function resolveEconomyService(deps)
 end
 
 local function resolveInventoryService(deps)
-    local inventory = deps and deps.InventorySystem
+    local inventory = Services.Get(deps, "InventorySystem")
     if type(inventory) ~= "table" then
         return nil
     end
@@ -30,7 +31,7 @@ local function resolveInventoryService(deps)
 end
 
 local function resolveEventBus(deps)
-    local eventBus = deps and deps.EventBus
+    local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
         return nil
     end
