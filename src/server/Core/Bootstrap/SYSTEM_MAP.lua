@@ -31,11 +31,37 @@ return {
         "LobbySocialHub",
     },
 
-    Gameplay = {},
+    Gameplay = {
+        "HuntSystem",
+        "HuntPhaseController",
+        "HuntEscapeSystem",
+        "PlayerSurvivalSystem",
+        "PlayerHealthSystem",
+        "HidingSystem",
+        "ClosetHidingMechanic",
+        "GhostChaseSystem",
+        "GhostPathingSystem",
+        "PlayerDeathSystem",
+        "DeathStateSystem",
+        "SpectatorModeSystem",
+        "SpectatorCameraSystem",
+        "MatchResultSystem",
+        "RewardCalculationSystem",
+        "ContractCompletionSystem",
+        "GameplayLoopController",
+    },
 
     AI = {},
 
-    Player = {},
+    Player = {
+        "SystemIntegrationController",
+        "EngineStartupValidator",
+        "DependencyVerificationSystem",
+        "RuntimeIntegritySystem",
+        "SystemDiagnosticsController",
+        "ProductionSafetySystem",
+        "FinalEngineBootstrap",
+    },
 
     Economy = {},
 
