@@ -7,6 +7,9 @@ local GhostRenderer = require(script.Parent.Parent.GhostRenderer.Main)
 local SpectatorSystem = require(script.Parent.Parent.SpectatorSystem.Main)
 local SoundSystem = require(script.Parent.Parent.SoundSystem.Main)
 local UISystem = require(script.Parent.Parent.UI.Main)
+local InvestigationUISystem = require(script.Parent.Parent.InvestigationUISystem.Main)
+local EvidenceBoardSystem = require(script.Parent.Parent.EvidenceBoardSystem.Main)
+local GhostPredictionSystem = require(script.Parent.Parent.GhostPredictionSystem.Main)
 
 local ClientBootstrap = {}
 ClientBootstrap.__index = ClientBootstrap
@@ -17,6 +20,9 @@ local SYSTEMS = {
 	{ name = "SpectatorSystem", module = SpectatorSystem },
 	{ name = "SoundSystem", module = SoundSystem },
 	{ name = "UI", module = UISystem },
+	{ name = "InvestigationUISystem", module = InvestigationUISystem },
+	{ name = "EvidenceBoardSystem", module = EvidenceBoardSystem },
+	{ name = "GhostPredictionSystem", module = GhostPredictionSystem },
 }
 
 local REMOTE_NAMES = {
