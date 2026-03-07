@@ -2,9 +2,11 @@ local State = {}
 State.__index = State
 
 local DEFAULT_STATE = {
-    escapingPlayers = {},
-    extractedPlayers = {},
     activeMatchId = nil,
+    playersAliveByMatchId = {},
+    playersExtractedByMatchId = {},
+    ghostIdentifiedByMatchId = {},
+    extractionCompletedByMatchId = {},
 }
 
 local function deepCopy(value)

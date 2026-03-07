@@ -56,6 +56,12 @@ function Controller:RegisterEventHandlers()
     self:_subscribe("GhostGuessValidated", function(payload)
         self:OnGhostGuessValidated(payload)
     end)
+    self:_subscribe("PlayerDied", function(payload)
+        self:OnPlayerDied(payload)
+    end)
+    self:_subscribe("PlayerExtracted", function(payload)
+        self:OnPlayerExtracted(payload)
+    end)
     self._handlersRegistered = true
 end
 
@@ -161,6 +167,9 @@ function Controller:OnMatchPhaseTransitionRequested(payload)
     if payload.endMatch == true then
         self._service:EndMatch(matchId, {
             reason = payload.reason or "phase_flow_completed",
+            extractionCompleted = payload.extractionCompleted,
+            ghostIdentified = payload.ghostIdentified,
+            results = payload.results,
         })
         return
     end
@@ -195,6 +204,24 @@ function Controller:OnMatchEnded(payload)
         return
     end
     self._service:EndMatch(matchId, payload.results)
+end
+
+function Controller:OnPlayerDied(payload)
+    local matchId = payload and payload.matchId
+    local userId = payload and (payload.userId or (payload.player and payload.player.UserId))
+    if not matchId or not userId then
+        return
+    end
+    self._service:MarkPlayerDeath(matchId, userId, payload.reason, payload)
+end
+
+function Controller:OnPlayerExtracted(payload)
+    local matchId = payload and payload.matchId
+    local userId = payload and (payload.userId or (payload.player and payload.player.UserId))
+    if not matchId or not userId then
+        return
+    end
+    self._service:MarkPlayerExtracted(matchId, userId, payload)
 end
 
 return Controller

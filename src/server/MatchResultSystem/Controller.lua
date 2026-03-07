@@ -5,6 +5,10 @@ local SUBSCRIPTIONS = {
     "MatchStarted",
     "MatchEnded",
     "PlayerDied",
+    "PlayerExtracted",
+    "EvidenceCollected",
+    "GhostGuessValidated",
+    "GhostIdentified",
     "ContractCompletionEvaluated",
 }
 local function resolveEventBus(deps)

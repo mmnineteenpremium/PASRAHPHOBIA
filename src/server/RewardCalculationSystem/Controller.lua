@@ -4,6 +4,7 @@ Controller.__index = Controller
 local SUBSCRIPTIONS = {
     "MatchStarted",
     "MatchCompleted",
+    "MatchEnded",
 }
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")

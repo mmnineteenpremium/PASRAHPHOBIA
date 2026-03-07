@@ -39,6 +39,16 @@ local function getNow(now)
 	return now or os.clock()
 end
 
+local function toUserId(playerOrUserId)
+	if type(playerOrUserId) == "number" then
+		return playerOrUserId
+	end
+	if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+		return playerOrUserId.UserId
+	end
+	return nil
+end
+
 function MatchService.new(state, deps)
 	local self = setmetatable({}, MatchService)
 	self._state = state
@@ -223,6 +233,136 @@ function MatchService:AdvanceMatchPhase(matchId, nextPhase)
 	return match:ToPayload()
 end
 
+function MatchService:_buildOutcomeSummary(match, results)
+	local outcome = results.playerOutcome or {}
+	local playersSurvived = 0
+	local playersDead = 0
+	local playersExtracted = 0
+
+	for userId, playerState in pairs(match.playersByUserId or {}) do
+		local key = tostring(userId)
+		local existing = outcome[key] or {}
+		local alive = playerState.alive ~= false
+		local extracted = playerState.extracted == true
+		outcome[key] = {
+			player = playerState.player,
+			userId = userId,
+			survived = alive,
+			died = not alive,
+			extracted = extracted,
+			deathReason = playerState.deathReason,
+		}
+
+		if alive then
+			playersSurvived += 1
+		else
+			playersDead += 1
+		end
+		if extracted then
+			playersExtracted += 1
+		end
+
+		for keyName, value in pairs(existing) do
+			if outcome[key][keyName] == nil then
+				outcome[key][keyName] = value
+			end
+		end
+	end
+
+	results.playerOutcome = outcome
+	results.playersSurvived = results.playersSurvived or playersSurvived
+	results.playersDead = results.playersDead or playersDead
+	results.playersExtracted = results.playersExtracted or playersExtracted
+	results.matchDuration = results.matchDuration or math.max(0, math.floor((getNow() - (match.startedAt or match.createdAt or getNow()))))
+	return results
+end
+
+function MatchService:MarkPlayerDeath(matchId, userId, reason, payload)
+	local matches = self:_matches()
+	local match = matches[matchId]
+	local numericUserId = toUserId(userId)
+	if not match or not numericUserId then
+		return nil, "missing_match_or_user"
+	end
+
+	local playerState = match.playersByUserId and match.playersByUserId[numericUserId]
+	if not playerState or playerState.alive == false then
+		return match:ToPayload()
+	end
+
+	playerState.alive = false
+	playerState.deathReason = reason or "ghost_attack"
+	playerState.diedAt = getNow(payload and payload.now)
+
+	self:_publish("MatchPlayerDied", {
+		matchId = matchId,
+		userId = numericUserId,
+		player = playerState.player,
+		reason = playerState.deathReason,
+		source = "MatchSystem",
+	})
+
+	local aliveCount = 0
+	for _, state in pairs(match.playersByUserId or {}) do
+		if state.alive ~= false then
+			aliveCount += 1
+		end
+	end
+
+	if aliveCount <= 0 then
+		return self:EndMatch(matchId, {
+			reason = "team_eliminated",
+			teamEliminated = true,
+		})
+	end
+
+	return match:ToPayload()
+end
+
+function MatchService:MarkPlayerExtracted(matchId, userId, payload)
+	local matches = self:_matches()
+	local match = matches[matchId]
+	local numericUserId = toUserId(userId)
+	if not match or not numericUserId then
+		return nil, "missing_match_or_user"
+	end
+
+	local playerState = match.playersByUserId and match.playersByUserId[numericUserId]
+	if not playerState then
+		return match:ToPayload()
+	end
+
+	playerState.extracted = true
+	playerState.extractedAt = getNow(payload and payload.now)
+
+	self:_publish("MatchPlayerExtracted", {
+		matchId = matchId,
+		userId = numericUserId,
+		player = playerState.player,
+		source = "MatchSystem",
+	})
+
+	local aliveCount = 0
+	local aliveExtractedCount = 0
+	for _, state in pairs(match.playersByUserId or {}) do
+		if state.alive ~= false then
+			aliveCount += 1
+			if state.extracted == true then
+				aliveExtractedCount += 1
+			end
+		end
+	end
+
+	if aliveCount > 0 and aliveExtractedCount >= aliveCount then
+		return self:EndMatch(matchId, {
+			reason = "extraction_complete",
+			extractionCompleted = true,
+		})
+	end
+
+	return match:ToPayload()
+end
+
 function MatchService:EndMatch(matchId, results)
 	local matches = self:_matches()
 	local match = matches[matchId]
@@ -230,7 +370,18 @@ function MatchService:EndMatch(matchId, results)
 		return nil, "missing_match"
 	end
 
-	self._lifecycle:Finish(match, results or {}, getNow())
+	local safeResults = results or {}
+	if type(safeResults.results) == "table" then
+		for key, value in pairs(safeResults.results) do
+			if safeResults[key] == nil then
+				safeResults[key] = value
+			end
+		end
+		safeResults.results = nil
+	end
+	safeResults = self:_buildOutcomeSummary(match, safeResults)
+
+	self._lifecycle:Finish(match, safeResults, getNow())
 	local returnedPlayers = self._teleport:ReturnPlayersToLobby(match)
 	for _, player in ipairs(returnedPlayers) do
 		self:_publish("PlayerTeleported", {
@@ -243,6 +394,9 @@ function MatchService:EndMatch(matchId, results)
 	self:_publish("MatchEnded", {
 		matchId = match.matchId,
 		results = match.results or {},
+		players = match.players,
+		mapId = match.mapId,
+		difficulty = match.difficulty,
 	})
 
 	local payload = match:ToPayload()

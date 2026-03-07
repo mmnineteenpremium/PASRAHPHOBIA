@@ -1,18 +1,32 @@
 local Services = require(script.Parent.Parent.Core.Services)
+
 local Service = {}
 Service.__index = Service
+
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
-    if type(eventBus) ~= "table" then return nil end
-    if type(eventBus.Publish) == "function" then return eventBus end
-    if type(eventBus.Service) == "table" and type(eventBus.Service.Publish) == "function" then return eventBus.Service end
+    if type(eventBus) ~= "table" then
+        return nil
+    end
+    if type(eventBus.Publish) == "function" then
+        return eventBus
+    end
+    if type(eventBus.Service) == "table" and type(eventBus.Service.Publish) == "function" then
+        return eventBus.Service
+    end
     return nil
 end
+
 local function toUserId(playerOrUserId)
-    if type(playerOrUserId) == "number" then return playerOrUserId end
-    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then return playerOrUserId.UserId end
+    if type(playerOrUserId) == "number" then
+        return playerOrUserId
+    end
+    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+        return playerOrUserId.UserId
+    end
     return nil
 end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -21,47 +35,209 @@ function Service.new(state, deps)
     self._dependencies = {}
     return self
 end
+
 function Service:Init()
     self._dependencies = {
-        GhostSystem = Services.Get(self._deps, "GhostSystem"),
-        InvestigationSystem = Services.Get(self._deps, "InvestigationSystem"),
         MatchSystem = Services.Get(self._deps, "MatchSystem"),
-        EconomySystem = Services.Get(self._deps, "EconomySystem"),
-        ProfileSystem = Services.Get(self._deps, "ProfileSystem"),
     }
+    self._state:Set("activeMatchId", self._state:Get("activeMatchId"))
+    self._state:Set("playerOutcome", self._state:Get("playerOutcome") or {})
+    self._state:Set("teamEvidenceCount", self._state:Get("teamEvidenceCount") or 0)
+    self._state:Set("ghostType", self._state:Get("ghostType"))
+    self._state:Set("ghostIdentified", self._state:Get("ghostIdentified") or false)
+    self._state:Set("correctGuess", self._state:Get("correctGuess") or false)
+    self._state:Set("contractSuccess", self._state:Get("contractSuccess") or false)
 end
-function Service:Start() end
-function Service:Stop() self._state:Clear() end
+
+function Service:Start()
+end
+
+function Service:Stop()
+    self._state:Clear()
+end
+
 function Service:_publish(eventName, payload)
-    if self._eventBus then self._eventBus:Publish(eventName, payload) end
-end
-function Service:HandleEvent(eventName, payload)
-    if eventName == "MatchStarted" then self._state:Set("activeMatchId", payload and payload.matchId)
-    elseif eventName == "MatchEnded" then self._state:Set("activeMatchId", nil) end
-    if eventName == "MatchStarted" then
-        self._state:Set("playerOutcome", {})
-    elseif eventName == "PlayerDied" then
-        local userId = toUserId(payload and (payload.player or payload.userId))
-        if userId then
-            local outcome = self._state:Get("playerOutcome") or {}
-            outcome[userId] = outcome[userId] or {}
-            outcome[userId].survived = false
-            self._state:Set("playerOutcome", outcome)
-        end
-    elseif eventName == "MatchEnded" then
-        local result = {
-            matchId = payload and payload.matchId or self._state:Get("activeMatchId"),
-            contractSuccess = payload and payload.contractSuccess,
-            ghostIdentified = payload and payload.ghostIdentified,
-            playerOutcome = self._state:Get("playerOutcome") or {},
-        }
-        self._state:Set("lastResult", result)
-        self:_publish("MatchCompleted", result)
-    elseif eventName == "ContractCompletionEvaluated" then
-        local last = self._state:Get("lastResult") or {}
-        last.contractSuccess = payload and payload.contractSuccess
-        last.objectivesCompleted = payload and payload.objectivesCompleted
-        self._state:Set("lastResult", last)
+    if self._eventBus then
+        self._eventBus:Publish(eventName, payload)
     end
 end
+
+function Service:_matchId(payload)
+    return payload and payload.matchId or self._state:Get("activeMatchId")
+end
+
+function Service:_getOutcome()
+    return self._state:Get("playerOutcome") or {}
+end
+
+function Service:_setOutcome(outcome)
+    self._state:Set("playerOutcome", outcome)
+end
+
+function Service:_registerPlayers(players)
+    local outcome = self:_getOutcome()
+    for _, player in ipairs(players or {}) do
+        local userId = toUserId(player)
+        if userId and outcome[userId] == nil then
+            outcome[userId] = {
+                survived = true,
+                extracted = false,
+                evidenceCount = 0,
+                player = player,
+            }
+        end
+    end
+    self:_setOutcome(outcome)
+end
+
+function Service:_markPlayerState(payload, update)
+    local userId = toUserId(payload and (payload.player or payload.userId))
+    if not userId then
+        return
+    end
+
+    local outcome = self:_getOutcome()
+    outcome[userId] = outcome[userId] or {
+        survived = true,
+        extracted = false,
+        evidenceCount = 0,
+        player = payload and payload.player,
+    }
+    for key, value in pairs(update) do
+        outcome[userId][key] = value
+    end
+    if payload and payload.player then
+        outcome[userId].player = payload.player
+    end
+    self:_setOutcome(outcome)
+end
+
+function Service:_countSummary(outcome)
+    local survived = 0
+    local dead = 0
+    local extracted = 0
+    local totalEvidence = 0
+
+    for _, entry in pairs(outcome or {}) do
+        if entry.survived ~= false then
+            survived += 1
+        else
+            dead += 1
+        end
+        if entry.extracted == true then
+            extracted += 1
+        end
+        totalEvidence += tonumber(entry.evidenceCount) or 0
+    end
+
+    return survived, dead, extracted, totalEvidence
+end
+
+function Service:HandleEvent(eventName, payload)
+    if eventName == "MatchStarted" then
+        local matchId = self:_matchId(payload)
+        if type(matchId) ~= "string" then
+            return
+        end
+        self._state:Set("activeMatchId", matchId)
+        self._state:Set("playerOutcome", {})
+        self._state:Set("teamEvidenceCount", 0)
+        self._state:Set("ghostType", nil)
+        self._state:Set("ghostIdentified", false)
+        self._state:Set("correctGuess", false)
+        self._state:Set("contractSuccess", false)
+        self._state:Set("matchStartedAt", os.clock())
+        self:_registerPlayers(payload and payload.players or {})
+        return
+    end
+
+    if eventName == "MatchEnded" then
+        local matchId = self:_matchId(payload)
+        if type(matchId) ~= "string" then
+            return
+        end
+
+        local outcome = self:_getOutcome()
+        local survived, dead, extracted, evidenceTotal = self:_countSummary(outcome)
+        local results = payload and payload.results or {}
+        local matchDuration = tonumber(results.matchDuration)
+            or math.max(0, math.floor(os.clock() - (self._state:Get("matchStartedAt") or os.clock())))
+
+        local result = {
+            matchId = matchId,
+            ghostType = results.ghostType or self._state:Get("ghostType") or "Unknown",
+            correctGuess = (results.correctGuess == true) or (self._state:Get("correctGuess") == true),
+            ghostIdentified = (results.ghostIdentified == true) or (self._state:Get("ghostIdentified") == true),
+            evidenceCollected = tonumber(results.evidenceCollected) or self._state:Get("teamEvidenceCount") or evidenceTotal,
+            playerOutcome = results.playerOutcome or outcome,
+            playersSurvived = tonumber(results.playersSurvived) or survived,
+            playersDead = tonumber(results.playersDead) or dead,
+            playersExtracted = tonumber(results.playersExtracted) or extracted,
+            contractSuccess = (results.contractSuccess == true) or (self._state:Get("contractSuccess") == true),
+            teamSuccess = (results.teamSuccess == true)
+                or (results.contractSuccess == true)
+                or (self._state:Get("contractSuccess") == true)
+                or (results.extractionCompleted == true),
+            extractionCompleted = results.extractionCompleted == true or extracted > 0,
+            matchDuration = matchDuration,
+        }
+
+        self._state:Set("lastResult", result)
+        self:_publish("MatchCompleted", result)
+        return
+    end
+
+    if eventName == "PlayerDied" then
+        self:_markPlayerState(payload, {
+            survived = false,
+            extracted = false,
+            deathReason = payload and payload.reason or "unknown",
+        })
+        return
+    end
+
+    if eventName == "PlayerExtracted" then
+        self:_markPlayerState(payload, {
+            extracted = true,
+        })
+        return
+    end
+
+    if eventName == "EvidenceCollected" then
+        self._state:Set("teamEvidenceCount", (self._state:Get("teamEvidenceCount") or 0) + 1)
+        local userId = toUserId(payload and (payload.player or payload.userId))
+        if userId then
+            local outcome = self:_getOutcome()
+            outcome[userId] = outcome[userId] or {
+                survived = true,
+                extracted = false,
+                evidenceCount = 0,
+                player = payload and payload.player,
+            }
+            outcome[userId].evidenceCount = (outcome[userId].evidenceCount or 0) + 1
+            self:_setOutcome(outcome)
+        end
+        return
+    end
+
+    if eventName == "GhostGuessValidated" then
+        if payload and payload.correct == true then
+            self._state:Set("correctGuess", true)
+            self._state:Set("ghostIdentified", true)
+            self._state:Set("ghostType", payload.actualGhostType or payload.ghostType)
+        end
+        return
+    end
+
+    if eventName == "GhostIdentified" then
+        self._state:Set("ghostIdentified", true)
+        self._state:Set("ghostType", payload and payload.ghostType or self._state:Get("ghostType"))
+        return
+    end
+
+    if eventName == "ContractCompletionEvaluated" then
+        self._state:Set("contractSuccess", payload and payload.contractSuccess == true)
+    end
+end
+
 return Service

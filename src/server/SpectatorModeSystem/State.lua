@@ -3,6 +3,8 @@ State.__index = State
 local DEFAULT_STATE = {
     spectators = {},
     activeMatchId = nil,
+    spectatorMetaByMatchId = {},
+    cameraBoundsByMatchId = {},
 }
 local function deepCopy(value)
     if type(value) ~= "table" then return value end

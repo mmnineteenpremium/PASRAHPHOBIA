@@ -2,11 +2,13 @@ local State = {}
 State.__index = State
 
 local DEFAULT_STATE = {
-    huntActive = false,
-    huntTimer = 0,
-    huntCooldownUntil = 0,
-    huntIntensity = 0,
     activeMatchId = nil,
+    huntActiveByMatchId = {},
+    huntContextByMatchId = {},
+    huntCooldownUntilByMatchId = {},
+    huntPendingByMatchId = {},
+    huntTokenByMatchId = {},
+    lastMetricsByMatchId = {},
 }
 
 local function deepCopy(value)

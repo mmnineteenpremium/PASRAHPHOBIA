@@ -5,7 +5,10 @@ local SUBSCRIPTIONS = {
     "MatchStarted",
     "MatchEnded",
     "SpectatorModeStarted",
+    "SpectatorModeEnded",
     "SpectatorTargetChanged",
+    "SpectatorCameraInput",
+    "PlayerDisconnected",
 }
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")

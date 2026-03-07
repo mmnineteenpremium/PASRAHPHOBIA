@@ -6,10 +6,10 @@ Controller.__index = Controller
 local SUBSCRIPTIONS = {
     "MatchStarted",
     "MatchEnded",
-    "HuntStarted",
-    "HuntEnded",
-    "GhostInteraction",
+    "PlayerDied",
     "PlayerDisconnected",
+    "GhostIdentified",
+    "PlayerEnteredExtractionZone",
 }
 
 local function resolveEventBus(deps)
