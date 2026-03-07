@@ -1,6 +1,12 @@
 return {
     Core = {
         "ConfigLoader",
+        "GameConfigSystem",
+        "GhostDatabaseSystem",
+        "MapConfigSystem",
+        "EvidenceConfigSystem",
+        "DifficultyConfigSystem",
+        "ContractConfigSystem",
         "DataPersistence",
         "ProfileSystem",
         "EconomySystem",
