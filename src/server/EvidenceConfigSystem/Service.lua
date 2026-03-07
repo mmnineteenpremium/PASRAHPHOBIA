@@ -8,6 +8,45 @@ local DEPENDENCY_NAMES = {
     "GhostSystem",
     "InvestigationSystem",
     "EconomySystem",
+    "GhostDatabaseSystem",
+}
+
+local EVIDENCE_ALIASES = {
+    emflevel = "EMFLevel",
+    emf5 = "EMFLevel",
+    jejakenergi = "EMFLevel",
+    spiritboxresponse = "SpiritBoxResponse",
+    spiritbox = "SpiritBoxResponse",
+    kotakarwah = "SpiritBoxResponse",
+    freezingtemperature = "FreezingTemperature",
+    freezingtemp = "FreezingTemperature",
+    suhumembeku = "FreezingTemperature",
+    uvmarks = "UVMarks",
+    dots = "UVMarks",
+    gerakangaib = "UVMarks",
+    ghostwriting = "GhostWriting",
+    writingbook = "GhostWriting",
+    bukuterkutuk = "GhostWriting",
+    ghostorb = "GhostOrb",
+    bolaarwah = "GhostOrb",
+}
+
+local DISPLAY_NAMES = {
+    EMFLevel = "EMF Level",
+    SpiritBoxResponse = "Spirit Box Response",
+    FreezingTemperature = "Freezing Temperature",
+    UVMarks = "UV Marks",
+    GhostWriting = "Ghost Writing",
+    GhostOrb = "Ghost Orb",
+}
+
+local SUPPORTED_EVIDENCE = {
+    EMFLevel = true,
+    SpiritBoxResponse = true,
+    FreezingTemperature = true,
+    UVMarks = true,
+    GhostWriting = true,
+    GhostOrb = true,
 }
 
 local function deepCopy(value)
@@ -48,6 +87,15 @@ local function resolveGameDataModule(moduleName)
     return gameDataFolder:FindFirstChild(moduleName)
 end
 
+local function resolveEvidenceCombinationFolder()
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local configFolder = replicatedStorage:FindFirstChild("Config")
+    if not configFolder then
+        return nil
+    end
+    return configFolder:FindFirstChild("EvidenceCombinations")
+end
+
 local function safeRequire(moduleScript)
     if not moduleScript then
         return nil
@@ -57,6 +105,72 @@ local function safeRequire(moduleScript)
         return result
     end
     return nil
+end
+
+local function normalizeEvidenceType(value)
+    if type(value) ~= "string" then
+        return nil
+    end
+    local token = value:gsub("[%s_%-]+", ""):lower()
+    local canonical = EVIDENCE_ALIASES[token] or value
+    if not SUPPORTED_EVIDENCE[canonical] then
+        return nil
+    end
+    return canonical
+end
+
+local function normalizeEvidenceList(list)
+    local out = {}
+    local seen = {}
+    for _, evidenceType in ipairs(list or {}) do
+        local canonical = normalizeEvidenceType(evidenceType)
+        if canonical and not seen[canonical] then
+            seen[canonical] = true
+            table.insert(out, canonical)
+        end
+    end
+    table.sort(out)
+    return out
+end
+
+local function getStringValue(parent, childName)
+    local node = parent and parent:FindFirstChild(childName)
+    if node and node:IsA("StringValue") then
+        return node.Value
+    end
+    return nil
+end
+
+local function parseEvidenceValues(folder)
+    if not folder or not folder:IsA("Folder") then
+        return {}
+    end
+    local list = {}
+    for _, child in ipairs(folder:GetChildren()) do
+        if child:IsA("StringValue") then
+            table.insert(list, child.Value)
+        end
+    end
+    return normalizeEvidenceList(list)
+end
+
+local function buildDefaultEvidenceDefinitions()
+    local definitions = {}
+    for evidenceType in pairs(SUPPORTED_EVIDENCE) do
+        definitions[evidenceType] = {
+            evidenceName = DISPLAY_NAMES[evidenceType] or evidenceType,
+            evidenceType = evidenceType,
+            description = string.format("Evidence marker for %s.", DISPLAY_NAMES[evidenceType] or evidenceType),
+        }
+    end
+    return definitions
+end
+
+local function normalizeGhostKey(ghostName)
+    if type(ghostName) ~= "string" then
+        return nil
+    end
+    return ghostName:gsub("[%s_%-]+", ""):lower()
 end
 
 function Service.new(state, deps)
@@ -92,21 +206,101 @@ function Service:_publish(eventName, payload)
     end
 end
 
-function Service:Reload()
+function Service:_loadFromReplicatedConfig()
+    local folder = resolveEvidenceCombinationFolder()
+    if not folder then
+        return false, "missing_evidence_combinations_folder"
+    end
+
+    local combinations = {}
+    local keyLookup = {}
+
+    for _, child in ipairs(folder:GetChildren()) do
+        if child:IsA("Folder") then
+            local ghostName = getStringValue(child, "GhostName") or child.Name
+            local evidenceFolder = child:FindFirstChild("EvidenceTypes") or child:FindFirstChild("EvidenceList")
+            local evidenceList = parseEvidenceValues(evidenceFolder)
+            if #evidenceList == 0 then
+                return false, "ghost_missing_evidence_combination:" .. child.Name
+            end
+
+            combinations[ghostName] = evidenceList
+            local normalizedKey = normalizeGhostKey(ghostName)
+            if normalizedKey then
+                keyLookup[normalizedKey] = ghostName
+            end
+        end
+    end
+
+    if next(combinations) == nil then
+        return false, "empty_evidence_combinations"
+    end
+
+    return true, {
+        evidenceDefinitions = buildDefaultEvidenceDefinitions(),
+        evidenceCombinations = combinations,
+        evidenceCombinationLookup = keyLookup,
+        source = "ReplicatedStorage.Config.EvidenceCombinations",
+    }
+end
+
+function Service:_loadFromLegacyModule()
     local moduleScript = resolveGameDataModule("EvidenceConfig")
     local evidenceData = safeRequire(moduleScript)
     if type(evidenceData) ~= "table" then
         return false, "invalid_evidence_config"
     end
 
+    local ghostDatabaseSystem = self._dependencies.GhostDatabaseSystem
+    local combinations = {}
+    local keyLookup = {}
+    if type(ghostDatabaseSystem) == "table" and type(ghostDatabaseSystem.GetGhostDatabase) == "function" then
+        local ghostDatabase = ghostDatabaseSystem:GetGhostDatabase() or {}
+        for ghostKey, definition in pairs(ghostDatabase) do
+            if type(definition) == "table" then
+                local ghostName = definition.ghostName or ghostKey
+                local evidenceList = normalizeEvidenceList(definition.evidenceTypes or {})
+                if #evidenceList > 0 then
+                    combinations[ghostName] = evidenceList
+                    local normalizedKey = normalizeGhostKey(ghostName)
+                    if normalizedKey then
+                        keyLookup[normalizedKey] = ghostName
+                    end
+                end
+            end
+        end
+    end
+
+    return true, {
+        evidenceDefinitions = evidenceData,
+        evidenceCombinations = combinations,
+        evidenceCombinationLookup = keyLookup,
+        source = "Shared.GameData.EvidenceConfig",
+    }
+end
+
+function Service:Reload()
+    local loaded, result = self:_loadFromReplicatedConfig()
+    if not loaded then
+        loaded, result = self:_loadFromLegacyModule()
+    end
+    if not loaded then
+        return false, result
+    end
+
     local version = (self._state:Get("version") or 0) + 1
-    self._state:Set("evidenceDefinitions", deepCopy(evidenceData))
+    self._state:Set("evidenceDefinitions", deepCopy(result.evidenceDefinitions or {}))
+    self._state:Set("evidenceCombinations", deepCopy(result.evidenceCombinations or {}))
+    self._state:Set("evidenceCombinationLookup", deepCopy(result.evidenceCombinationLookup or {}))
+    self._state:Set("source", result.source or "unknown")
     self._state:Set("loaded", true)
     self._state:Set("version", version)
 
     self:_publish("EvidenceConfigLoaded", {
         version = version,
         evidenceCount = self:GetEvidenceCount(),
+        combinationGhostCount = self:GetEvidenceCombinationCount(),
+        source = self._state:Get("source"),
     })
 
     return true, self._state:Get("evidenceDefinitions")
@@ -136,6 +330,38 @@ end
 function Service:GetEvidenceCount()
     local count = 0
     for _ in pairs(self._state:Get("evidenceDefinitions") or {}) do
+        count += 1
+    end
+    return count
+end
+
+function Service:GetEvidenceCombinations()
+    return deepCopy(self._state:Get("evidenceCombinations") or {})
+end
+
+function Service:GetEvidenceCombinationForGhost(ghostType)
+    if type(ghostType) ~= "string" then
+        return nil
+    end
+
+    local combinations = self._state:Get("evidenceCombinations") or {}
+    if type(combinations[ghostType]) == "table" then
+        return deepCopy(combinations[ghostType])
+    end
+
+    local lookup = self._state:Get("evidenceCombinationLookup") or {}
+    local normalized = normalizeGhostKey(ghostType)
+    local resolvedGhostName = normalized and lookup[normalized] or nil
+    if resolvedGhostName and type(combinations[resolvedGhostName]) == "table" then
+        return deepCopy(combinations[resolvedGhostName])
+    end
+
+    return nil
+end
+
+function Service:GetEvidenceCombinationCount()
+    local count = 0
+    for _ in pairs(self._state:Get("evidenceCombinations") or {}) do
         count += 1
     end
     return count

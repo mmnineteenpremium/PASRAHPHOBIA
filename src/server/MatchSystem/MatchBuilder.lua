@@ -55,6 +55,7 @@ function MatchBuilder:Build(payload)
 		mapId = mapId,
 		mapReference = payload and payload.mapReference or nil,
 		difficulty = payload and payload.difficulty or self._config.DefaultDifficulty,
+		difficultyProfile = payload and payload.difficultyProfile or nil,
 		gameMode = payload and payload.gameMode or self._config.DefaultGameMode,
 		ghostSeed = payload and payload.ghostSeed or ghostSeed,
 		createdAt = payload and payload.now or nil,

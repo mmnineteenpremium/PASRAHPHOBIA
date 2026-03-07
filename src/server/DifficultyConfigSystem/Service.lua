@@ -48,6 +48,15 @@ local function resolveGameDataModule(moduleName)
     return gameDataFolder:FindFirstChild(moduleName)
 end
 
+local function resolveDifficultyModesFolder()
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local configFolder = replicatedStorage:FindFirstChild("Config")
+    if not configFolder then
+        return nil
+    end
+    return configFolder:FindFirstChild("DifficultyModes")
+end
+
 local function safeRequire(moduleScript)
     if not moduleScript then
         return nil
@@ -57,6 +66,29 @@ local function safeRequire(moduleScript)
         return result
     end
     return nil
+end
+
+local function getStringValue(parent, childName)
+    local child = parent and parent:FindFirstChild(childName)
+    if child and child:IsA("StringValue") then
+        return child.Value
+    end
+    return nil
+end
+
+local function getNumberValue(parent, childName)
+    local child = parent and parent:FindFirstChild(childName)
+    if child and (child:IsA("IntValue") or child:IsA("NumberValue")) then
+        return tonumber(child.Value)
+    end
+    return nil
+end
+
+local function normalizeName(name)
+    if type(name) ~= "string" then
+        return nil
+    end
+    return name:gsub("[%s_%-]+", ""):lower()
 end
 
 function Service.new(state, deps)
@@ -92,21 +124,85 @@ function Service:_publish(eventName, payload)
     end
 end
 
-function Service:Reload()
+function Service:_loadFromReplicatedConfig()
+    local folder = resolveDifficultyModesFolder()
+    if not folder then
+        return false, "missing_difficulty_modes_folder"
+    end
+
+    local configs = {}
+    local lookup = {}
+
+    for _, child in ipairs(folder:GetChildren()) do
+        if child:IsA("Folder") then
+            local modeName = child.Name
+            local evidenceRequired = getNumberValue(child, "EvidenceRequired")
+            local ghostAggression = getStringValue(child, "GhostAggression") or "Normal"
+            local huntFrequency = getStringValue(child, "HuntFrequency") or "Normal"
+
+            if type(evidenceRequired) ~= "number" then
+                return false, "missing_evidence_required:" .. modeName
+            end
+
+            configs[modeName] = {
+                EvidenceRequired = evidenceRequired,
+                GhostAggression = ghostAggression,
+                HuntFrequency = huntFrequency,
+            }
+            lookup[normalizeName(modeName)] = modeName
+        end
+    end
+
+    if next(configs) == nil then
+        return false, "empty_difficulty_modes"
+    end
+
+    return true, {
+        configs = configs,
+        lookup = lookup,
+        source = "ReplicatedStorage.Config.DifficultyModes",
+    }
+end
+
+function Service:_loadFromLegacyModule()
     local moduleScript = resolveGameDataModule("DifficultyConfig")
     local difficultyData = safeRequire(moduleScript)
     if type(difficultyData) ~= "table" then
         return false, "invalid_difficulty_config"
     end
 
+    local lookup = {}
+    for modeName in pairs(difficultyData) do
+        lookup[normalizeName(modeName)] = modeName
+    end
+
+    return true, {
+        configs = difficultyData,
+        lookup = lookup,
+        source = "Shared.GameData.DifficultyConfig",
+    }
+end
+
+function Service:Reload()
+    local loaded, result = self:_loadFromReplicatedConfig()
+    if not loaded then
+        loaded, result = self:_loadFromLegacyModule()
+    end
+    if not loaded then
+        return false, result
+    end
+
     local version = (self._state:Get("version") or 0) + 1
-    self._state:Set("difficultyConfigs", deepCopy(difficultyData))
+    self._state:Set("difficultyConfigs", deepCopy(result.configs or {}))
+    self._state:Set("difficultyLookup", deepCopy(result.lookup or {}))
+    self._state:Set("source", result.source)
     self._state:Set("loaded", true)
     self._state:Set("version", version)
 
     self:_publish("DifficultyConfigLoaded", {
         version = version,
         difficultyCount = self:GetDifficultyCount(),
+        source = result.source,
     })
 
     return true, self._state:Get("difficultyConfigs")
@@ -117,11 +213,22 @@ function Service:GetDifficultyConfigs()
 end
 
 function Service:GetDifficultyConfig(difficultyName)
-    local config = (self._state:Get("difficultyConfigs") or {})[difficultyName]
-    if type(config) ~= "table" then
+    if type(difficultyName) ~= "string" then
         return nil
     end
-    return deepCopy(config)
+
+    local configs = self._state:Get("difficultyConfigs") or {}
+    if type(configs[difficultyName]) == "table" then
+        return deepCopy(configs[difficultyName])
+    end
+
+    local lookup = self._state:Get("difficultyLookup") or {}
+    local canonicalName = lookup[normalizeName(difficultyName)]
+    if canonicalName and type(configs[canonicalName]) == "table" then
+        return deepCopy(configs[canonicalName])
+    end
+
+    return nil
 end
 
 function Service:GetDifficultyNames()

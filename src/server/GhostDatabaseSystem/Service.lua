@@ -3,11 +3,40 @@ local Services = require(script.Parent.Parent.Core.Services)
 local Service = {}
 Service.__index = Service
 
+local REQUIRED_GHOST_TYPE_COUNT = 12
+
 local DEPENDENCY_NAMES = {
     "MatchSystem",
     "GhostSystem",
     "InvestigationSystem",
     "EconomySystem",
+}
+
+local AGGRESSION_RANGES = {
+    low = { min = 30, max = 60, interaction = 0.38, roaming = 0.52 },
+    normal = { min = 45, max = 75, interaction = 0.5, roaming = 0.4 },
+    high = { min = 60, max = 95, interaction = 0.62, roaming = 0.3 },
+    extreme = { min = 75, max = 100, interaction = 0.7, roaming = 0.22 },
+}
+
+local EVIDENCE_ALIASES = {
+    emflevel = "EMFLevel",
+    emf5 = "EMFLevel",
+    jejakenergi = "EMFLevel",
+    spiritboxresponse = "SpiritBoxResponse",
+    spiritbox = "SpiritBoxResponse",
+    kotakarwah = "SpiritBoxResponse",
+    freezingtemperature = "FreezingTemperature",
+    freezingtemp = "FreezingTemperature",
+    suhumembeku = "FreezingTemperature",
+    uvmarks = "UVMarks",
+    dots = "UVMarks",
+    gerakangaib = "UVMarks",
+    ghostwriting = "GhostWriting",
+    writingbook = "GhostWriting",
+    bukuterkutuk = "GhostWriting",
+    ghostorb = "GhostOrb",
+    bolaarwah = "GhostOrb",
 }
 
 local function deepCopy(value)
@@ -45,6 +74,30 @@ local function normalizeStringList(source)
     return out
 end
 
+local function normalizeEvidenceType(value)
+    if type(value) ~= "string" then
+        return nil
+    end
+    local token = value:gsub("[%s_%-]+", ""):lower()
+    return EVIDENCE_ALIASES[token] or value
+end
+
+local function normalizeEvidenceList(source)
+    local out = {}
+    local seen = {}
+    if type(source) ~= "table" then
+        return out
+    end
+    for _, entry in ipairs(source) do
+        local normalized = normalizeEvidenceType(entry)
+        if type(normalized) == "string" and normalized ~= "" and not seen[normalized] then
+            seen[normalized] = true
+            table.insert(out, normalized)
+        end
+    end
+    return out
+end
+
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
@@ -57,6 +110,15 @@ local function resolveEventBus(deps)
         return eventBus.Service
     end
     return nil
+end
+
+local function resolveGhostTypesConfigFolder()
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local configFolder = replicatedStorage:FindFirstChild("Config")
+    if not configFolder then
+        return nil
+    end
+    return configFolder:FindFirstChild("GhostTypes")
 end
 
 local function resolveGhostsFolder()
@@ -94,22 +156,82 @@ local function buildEvidenceSignature(evidenceList)
     return table.concat(normalized, "|")
 end
 
+local function getStringValue(parent, childName)
+    local child = parent and parent:FindFirstChild(childName)
+    if child and child:IsA("StringValue") then
+        return child.Value
+    end
+    return nil
+end
+
+local function getNumberValue(parent, childName)
+    local child = parent and parent:FindFirstChild(childName)
+    if child and (child:IsA("NumberValue") or child:IsA("IntValue")) then
+        return tonumber(child.Value)
+    end
+    return nil
+end
+
+local function parseEvidenceValues(folder)
+    if not folder or not folder:IsA("Folder") then
+        return {}
+    end
+
+    local evidence = {}
+    for _, child in ipairs(folder:GetChildren()) do
+        if child:IsA("StringValue") then
+            table.insert(evidence, child.Value)
+        end
+    end
+    table.sort(evidence)
+    return normalizeEvidenceList(evidence)
+end
+
+local function normalizeAggressionLevel(level)
+    if type(level) ~= "string" then
+        return "Normal", AGGRESSION_RANGES.normal
+    end
+
+    local lowered = level:lower()
+    local profile = AGGRESSION_RANGES[lowered]
+    if not profile then
+        return "Normal", AGGRESSION_RANGES.normal
+    end
+
+    if lowered == "low" then
+        return "Low", profile
+    end
+    if lowered == "high" then
+        return "High", profile
+    end
+    if lowered == "extreme" then
+        return "Extreme", profile
+    end
+
+    return "Normal", profile
+end
+
 local function normalizeGhostDefinition(raw, fallbackName)
     local definition = {}
     definition.ghostName = type(raw.ghostName) == "string" and raw.ghostName or fallbackName
-    definition.evidenceTypes = normalizeStringList(raw.evidenceTypes)
+    definition.evidenceTypes = normalizeEvidenceList(raw.evidenceTypes)
     definition.behaviorTraits = normalizeStringList(raw.behaviorTraits)
+
     local aggression = raw.aggressionRange
     local minRange, maxRange = 0, 100
     if type(aggression) == "table" then
         minRange = tonumber(aggression.min) or minRange
         maxRange = tonumber(aggression.max) or maxRange
     end
+
     definition.aggressionRange = {
         min = math.max(0, math.min(100, minRange)),
         max = math.max(0, math.min(100, maxRange)),
     }
     definition.huntBehavior = type(raw.huntBehavior) == "string" and raw.huntBehavior or "Unknown"
+    definition.manifestBehavior = type(raw.manifestBehavior) == "string" and raw.manifestBehavior or "Unknown"
+    definition.speedModifier = tonumber(raw.speedModifier) or 1
+    definition.aggressionLevel = type(raw.aggressionLevel) == "string" and raw.aggressionLevel or "Normal"
     definition.interactionFrequency = clamp01(raw.interactionFrequency)
     definition.roamingBehavior = clamp01(raw.roamingBehavior)
     return definition
@@ -148,6 +270,62 @@ function Service:_publish(eventName, payload)
     end
 end
 
+function Service:_loadGhostConfigFolder()
+    local folder = resolveGhostTypesConfigFolder()
+    if not folder then
+        return false, "missing_ghost_config_folder"
+    end
+
+    local ghostDatabase = {}
+    local seenSignatures = {}
+    local ghostCount = 0
+
+    for _, child in ipairs(folder:GetChildren()) do
+        if child:IsA("Folder") then
+            local ghostKey = child.Name
+            local ghostName = getStringValue(child, "GhostName") or ghostKey
+            local evidenceFolder = child:FindFirstChild("EvidenceTypes") or child:FindFirstChild("EvidenceList")
+            local evidenceTypes = parseEvidenceValues(evidenceFolder)
+
+            if #evidenceTypes == 0 then
+                return false, "ghost_missing_evidence:" .. ghostKey
+            end
+
+            local signature = buildEvidenceSignature(evidenceTypes)
+            if seenSignatures[signature] then
+                return false, "duplicate_evidence:" .. ghostKey
+            end
+            seenSignatures[signature] = true
+
+            local aggressionLevel, aggressionProfile = normalizeAggressionLevel(getStringValue(child, "AggressionLevel"))
+
+            ghostDatabase[ghostKey] = {
+                ghostName = ghostName,
+                evidenceTypes = evidenceTypes,
+                behaviorTraits = {},
+                aggressionRange = {
+                    min = aggressionProfile.min,
+                    max = aggressionProfile.max,
+                },
+                huntBehavior = getStringValue(child, "HuntBehavior") or "Unknown",
+                manifestBehavior = getStringValue(child, "ManifestBehavior") or "Unknown",
+                speedModifier = getNumberValue(child, "SpeedModifier") or 1,
+                aggressionLevel = aggressionLevel,
+                interactionFrequency = aggressionProfile.interaction,
+                roamingBehavior = aggressionProfile.roaming,
+            }
+
+            ghostCount += 1
+        end
+    end
+
+    if ghostCount ~= REQUIRED_GHOST_TYPE_COUNT then
+        return false, string.format("invalid_ghost_type_count:%d", ghostCount)
+    end
+
+    return true, ghostDatabase
+end
+
 function Service:_loadGhostModules()
     local folder = resolveGhostsFolder()
     if not folder then
@@ -180,6 +358,10 @@ function Service:_loadGhostModules()
 end
 
 function Service:LoadGhosts()
+    local configFolder = resolveGhostTypesConfigFolder()
+    if configFolder then
+        return self:_loadGhostConfigFolder()
+    end
     return self:_loadGhostModules()
 end
 

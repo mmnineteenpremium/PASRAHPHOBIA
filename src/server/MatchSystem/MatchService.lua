@@ -2,6 +2,7 @@ local MatchQueue = require(script.Parent.MatchQueue)
 local MatchBuilder = require(script.Parent.MatchBuilder)
 local MatchLifecycle = require(script.Parent.MatchLifecycle)
 local MatchTeleport = require(script.Parent.MatchTeleport)
+local Services = require(script.Parent.Parent.Core.Services)
 
 local MatchService = {}
 MatchService.__index = MatchService
@@ -20,6 +21,20 @@ local function resolveEventBus(deps)
 	return nil
 end
 
+local function resolveDifficultyConfigSystem(deps)
+	local difficultySystem = Services.Get(deps, "DifficultyConfigSystem")
+	if type(difficultySystem) ~= "table" then
+		return nil
+	end
+	if type(difficultySystem.GetDifficultyConfig) == "function" then
+		return difficultySystem
+	end
+	if type(difficultySystem.Service) == "table" and type(difficultySystem.Service.GetDifficultyConfig) == "function" then
+		return difficultySystem.Service
+	end
+	return nil
+end
+
 local function getNow(now)
 	return now or os.clock()
 end
@@ -29,12 +44,24 @@ function MatchService.new(state, deps)
 	self._state = state
 	self._deps = deps or {}
 	self._eventBus = resolveEventBus(self._deps)
+	self._difficultyConfigSystem = resolveDifficultyConfigSystem(self._deps)
 
 	self._queue = MatchQueue.new(self._deps.MatchQueueConfig)
 	self._builder = MatchBuilder.new(self._deps, self._deps.MatchBuilderConfig)
 	self._lifecycle = MatchLifecycle.new(self._deps, self._deps.MatchLifecycleConfig)
 	self._teleport = MatchTeleport.new(self._deps, self._deps.MatchTeleportConfig)
 	return self
+end
+
+function MatchService:_resolveDifficultyProfile(difficultyName)
+	if not self._difficultyConfigSystem then
+		return nil
+	end
+	local profile = self._difficultyConfigSystem:GetDifficultyConfig(difficultyName)
+	if profile then
+		return profile
+	end
+	return self._difficultyConfigSystem:GetDifficultyConfig("Easy")
 end
 
 function MatchService:Init()
@@ -119,6 +146,7 @@ end
 
 function MatchService:CreateMatch(payload)
 	local match = self._builder:Build(payload or {})
+	match.difficultyProfile = self:_resolveDifficultyProfile(match.difficulty)
 	local matches = self:_matches()
 	matches[match.matchId] = match
 	self:_setMatches(matches)
@@ -129,6 +157,7 @@ function MatchService:CreateMatch(payload)
 		map = match.mapId,
 		mapId = match.mapId,
 		difficulty = match.difficulty,
+		difficultyProfile = match.difficultyProfile,
 		ghostSeed = match.ghostSeed,
 		gameMode = match.gameMode,
 		partyIds = match.partyIds,
@@ -146,6 +175,7 @@ function MatchService:StartMatch(matchId)
 
 	local now = getNow()
 	self._lifecycle:Begin(match, now)
+	match.difficultyProfile = match.difficultyProfile or self:_resolveDifficultyProfile(match.difficulty)
 
 	local teleportedPlayers = self._teleport:TeleportPlayers(match)
 	for _, player in ipairs(teleportedPlayers) do
@@ -162,9 +192,18 @@ function MatchService:StartMatch(matchId)
 		map = match.mapId,
 		mapId = match.mapId,
 		difficulty = match.difficulty,
+		difficultyProfile = match.difficultyProfile,
 		phase = match.phase,
 		ghostSeed = match.ghostSeed,
 	})
+
+	if match.difficultyProfile then
+		self:_publish("MatchDifficultyResolved", {
+			matchId = match.matchId,
+			difficulty = match.difficulty,
+			difficultyProfile = match.difficultyProfile,
+		})
+	end
 
 	return match:ToPayload()
 end

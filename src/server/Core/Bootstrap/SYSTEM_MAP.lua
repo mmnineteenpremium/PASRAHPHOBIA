@@ -28,6 +28,8 @@ return {
         "EvidenceJournalSystem",
         "GhostDeductionJournal",
         "HorrorDirector",
+        "EscalationTimerSystem",
+        "RandomJumpscareSystem",
         "LobbySocialHub",
     },
 

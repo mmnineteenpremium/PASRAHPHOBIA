@@ -2,11 +2,14 @@ local State = {}
 State.__index = State
 
 local DEFAULT_STATE = {
-    difficultyConfigs = {},
-    difficultyLookup = {},
-    source = nil,
-    loaded = false,
-    version = 0,
+    activeMatchId = nil,
+    running = false,
+    loopToken = 0,
+    stages = {},
+    currentStageIndex = 0,
+    currentStageName = nil,
+    matchStartedAt = 0,
+    nextStageAt = 0,
 }
 
 local function deepCopy(value)
@@ -20,12 +23,9 @@ local function deepCopy(value)
     return out
 end
 
-function State.new(initial)
+function State.new()
     local self = setmetatable({}, State)
     self._data = deepCopy(DEFAULT_STATE)
-    for key, value in pairs(initial or {}) do
-        self._data[key] = value
-    end
     return self
 end
 

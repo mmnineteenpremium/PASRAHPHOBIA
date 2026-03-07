@@ -37,4 +37,12 @@ function EvidenceConfigSystem:GetEvidenceDefinition(evidenceId)
     return self.Service:GetEvidenceDefinition(evidenceId)
 end
 
+function EvidenceConfigSystem:GetEvidenceCombinations()
+    return self.Service:GetEvidenceCombinations()
+end
+
+function EvidenceConfigSystem:GetEvidenceCombinationForGhost(ghostType)
+    return self.Service:GetEvidenceCombinationForGhost(ghostType)
+end
+
 return EvidenceConfigSystem

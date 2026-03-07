@@ -53,7 +53,10 @@ local function normalizeDifficulty(difficulty)
 	return "Normal"
 end
 
-local function resolveEvidenceCap(difficultyMode)
+local function resolveEvidenceCap(difficultyMode, explicitCap)
+	if type(explicitCap) == "number" and explicitCap > 0 then
+		return math.max(1, math.floor(explicitCap + 0.5))
+	end
 	if difficultyMode == "Easy" then
 		return 4
 	end
@@ -85,7 +88,10 @@ function EvidenceEngine:StartMatch(matchId, payload)
 	local favoriteRoomId = payload and payload.favoriteRoomId or nil
 	local difficulty = payload and payload.difficulty or payload and payload.difficultyMode or 5
 	local difficultyMode = normalizeDifficulty(difficulty)
-	local evidenceCap = resolveEvidenceCap(difficultyMode)
+	local evidenceCap = resolveEvidenceCap(
+		difficultyMode,
+		payload and (payload.evidenceCap or (payload.difficultyProfile and payload.difficultyProfile.EvidenceRequired))
+	)
 	local ghostEvidence = self._deduction:GetEvidenceForGhost(ghostType) or {}
 	local validationEvidence = cloneList(ghostEvidence)
 	local supplementalEvidence = {}
@@ -173,7 +179,10 @@ function EvidenceEngine:SetGhostProfile(matchId, profile)
 	local evidencePool = cloneList(ghostEvidence)
 	local validationEvidence = cloneList(ghostEvidence)
 	local supplementalEvidence = {}
-	local evidenceCap = resolveEvidenceCap(resolvedMode)
+	local evidenceCap = resolveEvidenceCap(
+		resolvedMode,
+		profile and (profile.evidenceCap or (profile.difficultyProfile and profile.difficultyProfile.EvidenceRequired))
+	)
 
 	if resolvedMode == "Hard" and #ghostEvidence > 2 then
 		local firstIndex = self._rng:NextInteger(1, #ghostEvidence)

@@ -19,6 +19,9 @@
       },
       "Assets": {
         "$path": "src/ReplicatedStorage/Assets"
+      },
+      "Config": {
+        "$path": "src/ReplicatedStorage/Config"
       }
     },
 

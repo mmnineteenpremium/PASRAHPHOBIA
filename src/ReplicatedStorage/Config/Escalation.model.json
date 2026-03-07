@@ -1,0 +1,180 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "properties": {
+            "Name": "StageName",
+            "Value": "Calm"
+          },
+          "className": "StringValue"
+        },
+        {
+          "properties": {
+            "Name": "DurationSeconds",
+            "Value": 90.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "AggressionBoost",
+            "Value": 0.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "TensionDelta",
+            "Value": 0.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "ForceHunt",
+            "Value": false
+          },
+          "className": "BoolValue"
+        }
+      ],
+      "className": "Folder",
+      "properties": {
+        "Name": "Calm"
+      }
+    },
+    {
+      "children": [
+        {
+          "properties": {
+            "Name": "StageName",
+            "Value": "Tension"
+          },
+          "className": "StringValue"
+        },
+        {
+          "properties": {
+            "Name": "DurationSeconds",
+            "Value": 120.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "AggressionBoost",
+            "Value": 6.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "TensionDelta",
+            "Value": 2.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "ForceHunt",
+            "Value": false
+          },
+          "className": "BoolValue"
+        }
+      ],
+      "className": "Folder",
+      "properties": {
+        "Name": "Tension"
+      }
+    },
+    {
+      "children": [
+        {
+          "properties": {
+            "Name": "StageName",
+            "Value": "Aggressive"
+          },
+          "className": "StringValue"
+        },
+        {
+          "properties": {
+            "Name": "DurationSeconds",
+            "Value": 120.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "AggressionBoost",
+            "Value": 12.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "TensionDelta",
+            "Value": 4.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "ForceHunt",
+            "Value": false
+          },
+          "className": "BoolValue"
+        }
+      ],
+      "className": "Folder",
+      "properties": {
+        "Name": "Aggressive"
+      }
+    },
+    {
+      "children": [
+        {
+          "properties": {
+            "Name": "StageName",
+            "Value": "Hunting"
+          },
+          "className": "StringValue"
+        },
+        {
+          "properties": {
+            "Name": "DurationSeconds",
+            "Value": 999.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "AggressionBoost",
+            "Value": 18.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "TensionDelta",
+            "Value": 6.0
+          },
+          "className": "NumberValue"
+        },
+        {
+          "properties": {
+            "Name": "ForceHunt",
+            "Value": true
+          },
+          "className": "BoolValue"
+        }
+      ],
+      "className": "Folder",
+      "properties": {
+        "Name": "Hunting"
+      }
+    }
+  ],
+  "className": "Folder",
+  "properties": {
+    "Name": "Escalation"
+  }
+}

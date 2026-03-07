@@ -3,6 +3,9 @@ State.__index = State
 
 local DEFAULT_STATE = {
     evidenceDefinitions = {},
+    evidenceCombinations = {},
+    evidenceCombinationLookup = {},
+    source = nil,
     loaded = false,
     version = 0,
 }

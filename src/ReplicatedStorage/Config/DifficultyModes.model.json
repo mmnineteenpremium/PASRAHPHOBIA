@@ -1,0 +1,66 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "properties": {
+            "Name": "EvidenceRequired",
+            "Value": 4
+          },
+          "className": "IntValue"
+        },
+        {
+          "properties": {
+            "Name": "GhostAggression",
+            "Value": "Normal"
+          },
+          "className": "StringValue"
+        },
+        {
+          "properties": {
+            "Name": "HuntFrequency",
+            "Value": "Low"
+          },
+          "className": "StringValue"
+        }
+      ],
+      "className": "Folder",
+      "properties": {
+        "Name": "Easy"
+      }
+    },
+    {
+      "children": [
+        {
+          "properties": {
+            "Name": "EvidenceRequired",
+            "Value": 2
+          },
+          "className": "IntValue"
+        },
+        {
+          "properties": {
+            "Name": "GhostAggression",
+            "Value": "High"
+          },
+          "className": "StringValue"
+        },
+        {
+          "properties": {
+            "Name": "HuntFrequency",
+            "Value": "High"
+          },
+          "className": "StringValue"
+        }
+      ],
+      "className": "Folder",
+      "properties": {
+        "Name": "Hard"
+      }
+    }
+  ],
+  "className": "Folder",
+  "properties": {
+    "Name": "DifficultyModes"
+  }
+}

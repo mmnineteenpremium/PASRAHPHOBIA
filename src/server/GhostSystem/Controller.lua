@@ -68,6 +68,9 @@ function Controller:RegisterEventHandlers()
 	self:_subscribe("EvidenceCollected", function(payload)
 		self:OnEvidenceCollected(payload)
 	end)
+	self:_subscribe("EscalationStageChanged", function(payload)
+		self:OnEscalationStageChanged(payload)
+	end)
 	self._handlersRegistered = true
 end
 
@@ -183,6 +186,36 @@ function Controller:OnEvidenceCollected(payload)
 		playerUsingToolNearGhostRoom = payload.toolNearGhostRoom == true or payload.nearGhostRoom == true,
 		investigationToolUsedNearGhostRoom = payload.toolNearGhostRoom == true,
 	}, payload.dt, payload.now)
+end
+
+function Controller:OnEscalationStageChanged(payload)
+	local matchId = payload and payload.matchId
+	if not matchId then
+		return
+	end
+
+	local stage = payload.currentStage
+	local now = payload and payload.now
+	local aggressionBoost = tonumber(payload and payload.aggressionBoost) or 0
+	local duration = tonumber(payload and payload.stageDuration) or 0
+
+	if stage == "Tension" or stage == "Aggressive" or stage == "Hunting" then
+		self._service:ApplyDirectorEvent(matchId, "TensionHigh", {
+			now = now,
+			duration = math.max(8, math.floor(duration * 0.35)),
+			aggressionBoost = aggressionBoost,
+		})
+	end
+
+	if stage == "Aggressive" then
+		self._service:ApplyDirectorEvent(matchId, "ForceManifest", {
+			now = now,
+			duration = 8,
+		})
+		self._service:TickGhost(matchId, payload.snapshot or {}, payload.dt, now)
+	elseif stage == "Hunting" then
+		self._service:StartHunt(matchId, payload.snapshot, now)
+	end
 end
 
 return Controller
