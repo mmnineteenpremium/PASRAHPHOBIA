@@ -1,0 +1,20 @@
+return {
+    ghostName = "Kuntilanak",
+    evidenceTypes = {
+        "SpiritBox",
+        "WritingBook",
+        "DOTS",
+    },
+    behaviorTraits = {
+        "Lure",
+        "Vocal",
+        "EnvironmentControl",
+    },
+    aggressionRange = {
+        min = 40,
+        max = 80,
+    },
+    huntBehavior = "Stalk",
+    interactionFrequency = 0.65,
+    roamingBehavior = 0.25,
+}

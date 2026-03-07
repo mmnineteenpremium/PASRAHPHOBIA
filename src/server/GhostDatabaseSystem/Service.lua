@@ -21,6 +21,30 @@ local function deepCopy(value)
     return out
 end
 
+local function clamp01(value)
+    local numeric = tonumber(value) or 0
+    if numeric < 0 then
+        return 0
+    end
+    if numeric > 1 then
+        return 1
+    end
+    return numeric
+end
+
+local function normalizeStringList(source)
+    local out = {}
+    if type(source) ~= "table" then
+        return out
+    end
+    for _, entry in ipairs(source) do
+        if type(entry) == "string" and entry ~= "" then
+            table.insert(out, entry)
+        end
+    end
+    return out
+end
+
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
@@ -35,7 +59,7 @@ local function resolveEventBus(deps)
     return nil
 end
 
-local function resolveGameDataModule(moduleName)
+local function resolveGhostsFolder()
     local replicatedStorage = game:GetService("ReplicatedStorage")
     local shared = replicatedStorage:FindFirstChild("Shared") or replicatedStorage:FindFirstChild("shared")
     if not shared then
@@ -45,7 +69,7 @@ local function resolveGameDataModule(moduleName)
     if not gameDataFolder then
         return nil
     end
-    return gameDataFolder:FindFirstChild(moduleName)
+    return gameDataFolder:FindFirstChild("Ghosts")
 end
 
 local function safeRequire(moduleScript)
@@ -57,6 +81,38 @@ local function safeRequire(moduleScript)
         return result
     end
     return nil
+end
+
+local function buildEvidenceSignature(evidenceList)
+    local normalized = {}
+    for _, entry in ipairs(evidenceList) do
+        if type(entry) == "string" and entry ~= "" then
+            table.insert(normalized, entry)
+        end
+    end
+    table.sort(normalized)
+    return table.concat(normalized, "|")
+end
+
+local function normalizeGhostDefinition(raw, fallbackName)
+    local definition = {}
+    definition.ghostName = type(raw.ghostName) == "string" and raw.ghostName or fallbackName
+    definition.evidenceTypes = normalizeStringList(raw.evidenceTypes)
+    definition.behaviorTraits = normalizeStringList(raw.behaviorTraits)
+    local aggression = raw.aggressionRange
+    local minRange, maxRange = 0, 100
+    if type(aggression) == "table" then
+        minRange = tonumber(aggression.min) or minRange
+        maxRange = tonumber(aggression.max) or maxRange
+    end
+    definition.aggressionRange = {
+        min = math.max(0, math.min(100, minRange)),
+        max = math.max(0, math.min(100, maxRange)),
+    }
+    definition.huntBehavior = type(raw.huntBehavior) == "string" and raw.huntBehavior or "Unknown"
+    definition.interactionFrequency = clamp01(raw.interactionFrequency)
+    definition.roamingBehavior = clamp01(raw.roamingBehavior)
+    return definition
 end
 
 function Service.new(state, deps)
@@ -92,15 +148,49 @@ function Service:_publish(eventName, payload)
     end
 end
 
+function Service:_loadGhostModules()
+    local folder = resolveGhostsFolder()
+    if not folder then
+        return false, "missing_ghost_folder"
+    end
+
+    local ghostDatabase = {}
+    local seenSignatures = {}
+
+    for _, moduleScript in ipairs(folder:GetChildren()) do
+        if moduleScript:IsA("ModuleScript") then
+            local rawDefinition = safeRequire(moduleScript)
+            if type(rawDefinition) == "table" then
+                local ghostKey = moduleScript.Name
+                local normalized = normalizeGhostDefinition(rawDefinition, ghostKey)
+                local signature = buildEvidenceSignature(normalized.evidenceTypes)
+                if signature == "" then
+                    return false, "ghost_missing_evidence:" .. ghostKey
+                end
+                if seenSignatures[signature] then
+                    return false, "duplicate_evidence:" .. ghostKey
+                end
+                seenSignatures[signature] = true
+                ghostDatabase[ghostKey] = normalized
+            end
+        end
+    end
+
+    return true, ghostDatabase
+end
+
+function Service:LoadGhosts()
+    return self:_loadGhostModules()
+end
+
 function Service:Reload()
-    local moduleScript = resolveGameDataModule("GhostDatabase")
-    local ghostData = safeRequire(moduleScript)
-    if type(ghostData) ~= "table" then
-        return false, "invalid_ghost_database"
+    local ok, ghostDataOrErr = self:LoadGhosts()
+    if not ok then
+        return false, ghostDataOrErr
     end
 
     local version = (self._state:Get("version") or 0) + 1
-    self._state:Set("ghostDatabase", deepCopy(ghostData))
+    self._state:Set("ghostDatabase", deepCopy(ghostDataOrErr))
     self._state:Set("loaded", true)
     self._state:Set("version", version)
 
