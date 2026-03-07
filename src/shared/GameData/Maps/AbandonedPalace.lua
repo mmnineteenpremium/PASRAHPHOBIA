@@ -1,0 +1,41 @@
+return {
+    mapName = "Abandoned Palace",
+    mapCategory = "Investigation",
+    mapSize = "Large",
+    spawnPoints = {
+        "FrontGate",
+        "ServantEntrance",
+        "GardenGate",
+    },
+    rooms = {
+        "GrandHall",
+        "ThroneRoom",
+        "Ballroom",
+        "Library",
+        "Gallery",
+        "Courtyard",
+        "ServantsQuarters",
+        "Armory",
+        "Chapel",
+        "WestWing",
+    },
+    ghostRoomCandidates = {
+        "ThroneRoom",
+        "Ballroom",
+        "Library",
+        "Chapel",
+    },
+    evidenceSpawnPoints = {
+        "Pedestal",
+        "TapestryWall",
+        "StoneAltar",
+        "Coffer",
+    },
+    interactionObjects = {
+        "Doors",
+        "Torches",
+        "Statues",
+        "Fountain",
+        "Lights",
+    },
+}

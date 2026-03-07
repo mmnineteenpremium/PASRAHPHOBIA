@@ -37,4 +37,8 @@ function MapConfigSystem:GetMapConfig(mapId)
     return self.Service:GetMapConfig(mapId)
 end
 
+function MapConfigSystem:LoadMaps()
+    return self.Service:LoadMaps()
+end
+
 return MapConfigSystem
