@@ -54,7 +54,13 @@ function EvidenceDeductionEngine.new(deps)
 	return self
 end
 
-function EvidenceDeductionEngine:Create()
+
+function EvidenceDeductionEngine.Create(deps)
+    local instance = EvidenceDeductionEngine.new(deps)
+    instance:Initialize()
+    return instance
+end
+function EvidenceDeductionEngine:Initialize()
 	if self._created then
 		return
 	end
@@ -74,7 +80,7 @@ function EvidenceDeductionEngine:Create()
 end
 
 function EvidenceDeductionEngine:Init()
-	self:Create()
+	self:Initialize()
 	self.Service:Init()
 	self.Controller:Init()
 end
@@ -114,3 +120,5 @@ function EvidenceDeductionEngine:ValidateEvidenceSet(evidenceList)
 end
 
 return EvidenceDeductionEngine
+
+

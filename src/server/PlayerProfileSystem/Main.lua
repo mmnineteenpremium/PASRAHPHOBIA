@@ -54,7 +54,13 @@ function PlayerProfileSystem.new(deps)
     return self
 end
 
-function PlayerProfileSystem:Create()
+
+function PlayerProfileSystem.Create(deps)
+    local instance = PlayerProfileSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function PlayerProfileSystem:Initialize()
     if self._created then
         return
     end
@@ -73,7 +79,7 @@ function PlayerProfileSystem:Create()
 end
 
 function PlayerProfileSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -97,3 +103,4 @@ function PlayerProfileSystem:Stop()
 end
 
 return PlayerProfileSystem
+

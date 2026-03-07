@@ -54,7 +54,13 @@ function WatchdogSystem.new(deps)
     return self
 end
 
-function WatchdogSystem:Create()
+
+function WatchdogSystem.Create(deps)
+    local instance = WatchdogSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function WatchdogSystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function WatchdogSystem:Create()
 end
 
 function WatchdogSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function WatchdogSystem:Stop()
 end
 
 return WatchdogSystem
+

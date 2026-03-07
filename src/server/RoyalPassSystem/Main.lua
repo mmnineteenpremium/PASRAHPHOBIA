@@ -54,7 +54,13 @@ function RoyalPassSystem.new(deps)
     return self
 end
 
-function RoyalPassSystem:Create()
+
+function RoyalPassSystem.Create(deps)
+    local instance = RoyalPassSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function RoyalPassSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function RoyalPassSystem:Create()
 end
 
 function RoyalPassSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,4 @@ function RoyalPassSystem:Stop()
 end
 
 return RoyalPassSystem
+

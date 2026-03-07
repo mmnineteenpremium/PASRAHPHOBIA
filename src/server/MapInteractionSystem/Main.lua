@@ -54,7 +54,13 @@ function MapInteractionSystem.new(deps)
 	return self
 end
 
-function MapInteractionSystem:Create()
+
+function MapInteractionSystem.Create(deps)
+    local instance = MapInteractionSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function MapInteractionSystem:Initialize()
 	if self._created then
 		return
 	end
@@ -73,7 +79,7 @@ function MapInteractionSystem:Create()
 end
 
 function MapInteractionSystem:Init()
-	self:Create()
+	self:Initialize()
 	self.Service:Init()
 	self.Controller:Init()
 end
@@ -117,3 +123,5 @@ function MapInteractionSystem:UpdateObjectState(objectId, newState)
 end
 
 return MapInteractionSystem
+
+

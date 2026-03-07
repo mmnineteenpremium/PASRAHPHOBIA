@@ -54,7 +54,13 @@ function SanityEventSystem.new(deps)
     return self
 end
 
-function SanityEventSystem:Create()
+
+function SanityEventSystem.Create(deps)
+    local instance = SanityEventSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function SanityEventSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function SanityEventSystem:Create()
 end
 
 function SanityEventSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,4 @@ function SanityEventSystem:Stop()
 end
 
 return SanityEventSystem
+

@@ -54,7 +54,13 @@ function AudioDistortionSystem.new(deps)
     return self
 end
 
-function AudioDistortionSystem:Create()
+
+function AudioDistortionSystem.Create(deps)
+    local instance = AudioDistortionSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function AudioDistortionSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function AudioDistortionSystem:Create()
 end
 
 function AudioDistortionSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,4 @@ function AudioDistortionSystem:Stop()
 end
 
 return AudioDistortionSystem
+

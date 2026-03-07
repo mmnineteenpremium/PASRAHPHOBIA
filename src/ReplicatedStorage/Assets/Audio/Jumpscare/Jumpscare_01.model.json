@@ -1,0 +1,12 @@
+{
+  "className": "Sound",
+  "properties": {
+    "Name": "Jumpscare_01",
+    "SoundId": "rbxassetid://138186576",
+    "Looped": false,
+    "Volume": 0.95,
+    "RollOffMinDistance": 8,
+    "RollOffMaxDistance": 110,
+    "PlaybackSpeed": 1
+  }
+}

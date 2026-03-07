@@ -1,0 +1,25 @@
+{
+  "className": "ScreenGui",
+  "properties": {
+    "Name": "SpectatorUI",
+    "ResetOnSpawn": false
+  },
+  "children": [
+    {
+      "className": "Frame",
+      "properties": {
+        "Name": "StaticFlickerOverlay",
+        "Visible": false,
+        "BackgroundTransparency": 0.35
+      }
+    },
+    {
+      "className": "Frame",
+      "properties": {
+        "Name": "ColorDesaturationOverlay",
+        "Visible": false,
+        "BackgroundTransparency": 0.5
+      }
+    }
+  ]
+}

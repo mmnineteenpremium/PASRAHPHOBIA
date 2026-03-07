@@ -54,7 +54,13 @@ function ProgressionSystem.new(deps)
     return self
 end
 
-function ProgressionSystem:Create()
+
+function ProgressionSystem.Create(deps)
+    local instance = ProgressionSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function ProgressionSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function ProgressionSystem:Create()
 end
 
 function ProgressionSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -114,3 +120,4 @@ function ProgressionSystem:GetPlayerLevel(player)
 end
 
 return ProgressionSystem
+

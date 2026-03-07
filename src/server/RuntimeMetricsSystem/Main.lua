@@ -54,7 +54,13 @@ function RuntimeMetricsSystem.new(deps)
     return self
 end
 
-function RuntimeMetricsSystem:Create()
+
+function RuntimeMetricsSystem.Create(deps)
+    local instance = RuntimeMetricsSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function RuntimeMetricsSystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function RuntimeMetricsSystem:Create()
 end
 
 function RuntimeMetricsSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function RuntimeMetricsSystem:Stop()
 end
 
 return RuntimeMetricsSystem
+

@@ -54,7 +54,13 @@ function MemoryTrackingSystem.new(deps)
     return self
 end
 
-function MemoryTrackingSystem:Create()
+
+function MemoryTrackingSystem.Create(deps)
+    local instance = MemoryTrackingSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function MemoryTrackingSystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function MemoryTrackingSystem:Create()
 end
 
 function MemoryTrackingSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function MemoryTrackingSystem:Stop()
 end
 
 return MemoryTrackingSystem
+

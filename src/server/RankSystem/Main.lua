@@ -54,7 +54,13 @@ function RankSystem.new(deps)
     return self
 end
 
-function RankSystem:Create()
+
+function RankSystem.Create(deps)
+    local instance = RankSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function RankSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function RankSystem:Create()
 end
 
 function RankSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -118,3 +124,4 @@ function RankSystem:CalculateRank(player, levelHint)
 end
 
 return RankSystem
+

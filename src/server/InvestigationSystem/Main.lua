@@ -54,7 +54,13 @@ function InvestigationSystem.new(deps)
     return self
 end
 
-function InvestigationSystem:Create()
+
+function InvestigationSystem.Create(deps)
+    local instance = InvestigationSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function InvestigationSystem:Initialize()
 	if self._created then
 		return
 	end
@@ -73,7 +79,7 @@ function InvestigationSystem:Create()
 end
 
 function InvestigationSystem:Init()
-	self:Create()
+	self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -117,3 +123,5 @@ function InvestigationSystem:GetInvestigationState()
 end
 
 return InvestigationSystem
+
+

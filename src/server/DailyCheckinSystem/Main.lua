@@ -54,7 +54,13 @@ function DailyCheckinSystem.new(deps)
     return self
 end
 
-function DailyCheckinSystem:Create()
+
+function DailyCheckinSystem.Create(deps)
+    local instance = DailyCheckinSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function DailyCheckinSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function DailyCheckinSystem:Create()
 end
 
 function DailyCheckinSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,4 @@ function DailyCheckinSystem:Stop()
 end
 
 return DailyCheckinSystem
+

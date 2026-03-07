@@ -54,7 +54,13 @@ function ServerHealthSystem.new(deps)
     return self
 end
 
-function ServerHealthSystem:Create()
+
+function ServerHealthSystem.Create(deps)
+    local instance = ServerHealthSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function ServerHealthSystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function ServerHealthSystem:Create()
 end
 
 function ServerHealthSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function ServerHealthSystem:Stop()
 end
 
 return ServerHealthSystem
+

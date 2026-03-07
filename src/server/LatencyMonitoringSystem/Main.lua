@@ -54,7 +54,13 @@ function LatencyMonitoringSystem.new(deps)
     return self
 end
 
-function LatencyMonitoringSystem:Create()
+
+function LatencyMonitoringSystem.Create(deps)
+    local instance = LatencyMonitoringSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function LatencyMonitoringSystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function LatencyMonitoringSystem:Create()
 end
 
 function LatencyMonitoringSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function LatencyMonitoringSystem:Stop()
 end
 
 return LatencyMonitoringSystem
+

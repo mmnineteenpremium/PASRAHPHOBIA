@@ -54,7 +54,13 @@ function LeaderboardSystem.new(deps)
     return self
 end
 
-function LeaderboardSystem:Create()
+
+function LeaderboardSystem.Create(deps)
+    local instance = LeaderboardSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function LeaderboardSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function LeaderboardSystem:Create()
 end
 
 function LeaderboardSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,4 @@ function LeaderboardSystem:Stop()
 end
 
 return LeaderboardSystem
+

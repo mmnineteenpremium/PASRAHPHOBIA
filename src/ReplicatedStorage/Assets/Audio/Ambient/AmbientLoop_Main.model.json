@@ -1,0 +1,12 @@
+{
+  "className": "Sound",
+  "properties": {
+    "Name": "AmbientLoop_Main",
+    "SoundId": "rbxassetid://1837467338",
+    "Looped": true,
+    "Volume": 0.25,
+    "RollOffMinDistance": 12,
+    "RollOffMaxDistance": 140,
+    "PlaybackSpeed": 1
+  }
+}

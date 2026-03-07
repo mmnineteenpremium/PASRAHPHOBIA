@@ -1,0 +1,12 @@
+{
+  "className": "Sound",
+  "properties": {
+    "Name": "EnvironmentalCreak_01",
+    "SoundId": "rbxassetid://9125962736",
+    "Looped": false,
+    "Volume": 0.4,
+    "RollOffMinDistance": 6,
+    "RollOffMaxDistance": 70,
+    "PlaybackSpeed": 1
+  }
+}

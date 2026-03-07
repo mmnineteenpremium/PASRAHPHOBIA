@@ -54,7 +54,13 @@ function SessionRecoverySystem.new(deps)
     return self
 end
 
-function SessionRecoverySystem:Create()
+
+function SessionRecoverySystem.Create(deps)
+    local instance = SessionRecoverySystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function SessionRecoverySystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function SessionRecoverySystem:Create()
 end
 
 function SessionRecoverySystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,5 @@ function SessionRecoverySystem:Stop()
 end
 
 return SessionRecoverySystem
+
+

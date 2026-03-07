@@ -54,7 +54,13 @@ function ShopSystem.new(deps)
     return self
 end
 
-function ShopSystem:Create()
+
+function ShopSystem.Create(deps)
+    local instance = ShopSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function ShopSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function ShopSystem:Create()
 end
 
 function ShopSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -115,3 +121,5 @@ function ShopSystem:GrantItem(player, itemId)
 end
 
 return ShopSystem
+
+

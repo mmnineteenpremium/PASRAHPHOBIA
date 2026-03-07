@@ -54,7 +54,13 @@ function CosmeticSystem.new(deps)
     return self
 end
 
-function CosmeticSystem:Create()
+
+function CosmeticSystem.Create(deps)
+    local instance = CosmeticSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function CosmeticSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function CosmeticSystem:Create()
 end
 
 function CosmeticSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -114,3 +120,5 @@ function CosmeticSystem:ApplyCosmetic(player)
 end
 
 return CosmeticSystem
+
+

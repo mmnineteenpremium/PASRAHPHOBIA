@@ -7,6 +7,8 @@ local UI_MODULES = {
 	"MatchUI",
 	"ProfileUI",
 	"ShopUI",
+	"PASRA_UI",
+	"SpectatorUI",
 }
 
 function UISystem:Init(context)
@@ -21,6 +23,17 @@ function UISystem:Init(context)
 			visible = false,
 		}
 	end
+
+	self._matchResult = {
+		ghostType = "Unknown",
+		correctGuess = false,
+		evidenceCollected = 0,
+		playersSurvived = 0,
+		playersDead = 0,
+		matchDuration = 0,
+		currencyReward = 0,
+		xpReward = 0,
+	}
 end
 
 function UISystem:Start()
@@ -46,6 +59,29 @@ function UISystem:_onServerEvent(remoteName, payload)
 	elseif remoteName == "MatchEvent" then
 		self._uiState.MatchUI.lastEvent = eventName
 		self._uiState.MatchUI.visible = true
+		if eventName == "PlayerKilled" and payload and payload.localPlayerKilled == true then
+			self._uiState.SpectatorUI.lastEvent = eventName
+			self._uiState.SpectatorUI.visible = true
+		elseif eventName == "MatchEnded" then
+			self._uiState.PASRA_UI.lastEvent = eventName
+			self._uiState.PASRA_UI.visible = true
+			self._uiState.SpectatorUI.visible = false
+			self._uiState.MatchUI.visible = false
+			self._matchResult = {
+				ghostType = payload.ghostType or "Unknown",
+				correctGuess = payload.correctGuess == true,
+				evidenceCollected = payload.evidenceCollected or 0,
+				playersSurvived = payload.playersSurvived or 0,
+				playersDead = payload.playersDead or 0,
+				matchDuration = payload.matchDuration or 0,
+				currencyReward = payload.currencyReward or 0,
+				xpReward = payload.xpReward or 0,
+			}
+		elseif eventName == "MatchStarted" then
+			self._uiState.PASRA_UI.visible = false
+			self._uiState.MatchUI.visible = true
+			self._uiState.SpectatorUI.visible = false
+		end
 	elseif remoteName == "PurchaseEvent" then
 		self._uiState.ShopUI.lastEvent = eventName
 		self._uiState.ShopUI.visible = true
@@ -57,6 +93,10 @@ end
 
 function UISystem:GetUIState(moduleName)
 	return self._uiState[moduleName]
+end
+
+function UISystem:GetMatchResult()
+	return self._matchResult
 end
 
 return setmetatable({}, UISystem)

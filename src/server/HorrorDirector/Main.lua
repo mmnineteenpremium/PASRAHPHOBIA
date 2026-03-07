@@ -54,7 +54,13 @@ function HorrorDirector.new(deps)
     return self
 end
 
-function HorrorDirector:Create()
+
+function HorrorDirector.Create(deps)
+    local instance = HorrorDirector.new(deps)
+    instance:Initialize()
+    return instance
+end
+function HorrorDirector:Initialize()
     if self._created then
         return
     end
@@ -73,7 +79,7 @@ function HorrorDirector:Create()
 end
 
 function HorrorDirector:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -125,3 +131,5 @@ function HorrorDirector:AdjustHuntProbability(matchId)
 end
 
 return HorrorDirector
+
+

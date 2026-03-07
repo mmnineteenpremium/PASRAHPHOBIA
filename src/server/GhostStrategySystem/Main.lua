@@ -54,7 +54,13 @@ function GhostStrategySystem.new(deps)
     return self
 end
 
-function GhostStrategySystem:Create()
+
+function GhostStrategySystem.Create(deps)
+    local instance = GhostStrategySystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function GhostStrategySystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function GhostStrategySystem:Create()
 end
 
 function GhostStrategySystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,5 @@ function GhostStrategySystem:Stop()
 end
 
 return GhostStrategySystem
+
+

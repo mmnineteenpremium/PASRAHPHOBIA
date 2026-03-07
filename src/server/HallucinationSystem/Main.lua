@@ -54,7 +54,13 @@ function HallucinationSystem.new(deps)
     return self
 end
 
-function HallucinationSystem:Create()
+
+function HallucinationSystem.Create(deps)
+    local instance = HallucinationSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function HallucinationSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function HallucinationSystem:Create()
 end
 
 function HallucinationSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,4 @@ function HallucinationSystem:Stop()
 end
 
 return HallucinationSystem
+

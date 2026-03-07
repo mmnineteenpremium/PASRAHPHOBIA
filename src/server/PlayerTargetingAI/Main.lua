@@ -54,7 +54,13 @@ function PlayerTargetingAI.new(deps)
     return self
 end
 
-function PlayerTargetingAI:Create()
+
+function PlayerTargetingAI.Create(deps)
+    local instance = PlayerTargetingAI.new(deps)
+    instance:Initialize()
+    return instance
+end
+function PlayerTargetingAI:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function PlayerTargetingAI:Create()
 end
 
 function PlayerTargetingAI:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,5 @@ function PlayerTargetingAI:Stop()
 end
 
 return PlayerTargetingAI
+
+

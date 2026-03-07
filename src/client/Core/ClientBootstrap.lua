@@ -3,8 +3,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ClientServiceRegistry = require(script.Parent.ClientServiceRegistry)
 
 local EvidenceTools = require(script.Parent.Parent.EvidenceTools.Main)
+local GhostAnimationPipeline = require(script.Parent.Parent.GhostAnimationPipeline.Main)
 local GhostRenderer = require(script.Parent.Parent.GhostRenderer.Main)
 local SpectatorSystem = require(script.Parent.Parent.SpectatorSystem.Main)
+local SpectatorEffects = require(script.Parent.Parent.SpectatorEffects.Main)
 local SoundSystem = require(script.Parent.Parent.SoundSystem.Main)
 local UISystem = require(script.Parent.Parent.UI.Main)
 local InvestigationUISystem = require(script.Parent.Parent.InvestigationUISystem.Main)
@@ -16,8 +18,10 @@ ClientBootstrap.__index = ClientBootstrap
 
 local SYSTEMS = {
 	{ name = "EvidenceTools", module = EvidenceTools },
+	{ name = "GhostAnimationPipeline", module = GhostAnimationPipeline },
 	{ name = "GhostRenderer", module = GhostRenderer },
 	{ name = "SpectatorSystem", module = SpectatorSystem },
+	{ name = "SpectatorEffects", module = SpectatorEffects },
 	{ name = "SoundSystem", module = SoundSystem },
 	{ name = "UI", module = UISystem },
 	{ name = "InvestigationUISystem", module = InvestigationUISystem },

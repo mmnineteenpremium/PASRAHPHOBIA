@@ -54,7 +54,13 @@ function PlayerInspectSystem.new(deps)
     return self
 end
 
-function PlayerInspectSystem:Create()
+
+function PlayerInspectSystem.Create(deps)
+    local instance = PlayerInspectSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function PlayerInspectSystem:Initialize()
     if self._created then
         return
     end
@@ -73,7 +79,7 @@ function PlayerInspectSystem:Create()
 end
 
 function PlayerInspectSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -97,3 +103,4 @@ function PlayerInspectSystem:Stop()
 end
 
 return PlayerInspectSystem
+

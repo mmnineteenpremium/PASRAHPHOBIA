@@ -1,0 +1,1193 @@
+{
+  "className": "Model",
+  "properties": {
+    "Name": "LobbySocialHub"
+  },
+  "children": [
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Geometry"
+      },
+      "children": [
+        {
+          "className": "Folder",
+          "properties": {
+            "Name": "Structures"
+          },
+          "children": [
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "MainFloor",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  1600.0,
+                  0.0,
+                  0.0
+                ],
+                "Size": [
+                  170.0,
+                  1.0,
+                  150.0
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "NorthWall",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  1600.0,
+                  14.0,
+                  -75.0
+                ],
+                "Size": [
+                  170.0,
+                  28.0,
+                  2.0
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "SouthWall",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  1600.0,
+                  14.0,
+                  75.0
+                ],
+                "Size": [
+                  170.0,
+                  28.0,
+                  2.0
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "WestWall",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  1515.0,
+                  14.0,
+                  0.0
+                ],
+                "Size": [
+                  2.0,
+                  28.0,
+                  150.0
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "EastWall",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  1685.0,
+                  14.0,
+                  0.0
+                ],
+                "Size": [
+                  2.0,
+                  28.0,
+                  150.0
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Folder",
+          "properties": {
+            "Name": "Decorative"
+          },
+          "children": [
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "DecoCluster_A",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  1580.0,
+                  1.5,
+                  20.0
+                ],
+                "Size": [
+                  8.0,
+                  3.0,
+                  8.0
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "DecoCluster_B",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  1622.0,
+                  1.5,
+                  -18.0
+                ],
+                "Size": [
+                  10.0,
+                  3.0,
+                  10.0
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Lighting"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_A",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1585.0,
+              9.0,
+              -15.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_A",
+                "Brightness": 1.3,
+                "Range": 20.0,
+                "Shadows": false,
+                "Color": [
+                  1.0,
+                  0.93,
+                  0.82
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_B",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1615.0,
+              9.0,
+              15.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_B",
+                "Brightness": 1.1,
+                "Range": 16.0,
+                "Shadows": false,
+                "Color": [
+                  1.0,
+                  0.93,
+                  0.82
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_C",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1600.0,
+              9.0,
+              0.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_C",
+                "Brightness": 1.0,
+                "Range": 14.0,
+                "Shadows": false,
+                "Color": [
+                  1.0,
+                  0.93,
+                  0.82
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "SpawnPoints"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "PlayerSpawn_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1588.0,
+              4.0,
+              -12.0
+            ],
+            "Size": [
+              2.0,
+              1.0,
+              2.0
+            ],
+            "Tags": [
+              "PlayerSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "PlayerSpawn_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1612.0,
+              4.0,
+              -12.0
+            ],
+            "Size": [
+              2.0,
+              1.0,
+              2.0
+            ],
+            "Tags": [
+              "PlayerSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "PlayerSpawn_3",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1588.0,
+              4.0,
+              12.0
+            ],
+            "Size": [
+              2.0,
+              1.0,
+              2.0
+            ],
+            "Tags": [
+              "PlayerSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "PlayerSpawn_4",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1612.0,
+              4.0,
+              12.0
+            ],
+            "Size": [
+              2.0,
+              1.0,
+              2.0
+            ],
+            "Tags": [
+              "PlayerSpawn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "GhostSpawnZones"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_A",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1576.0,
+              6.0,
+              -16.0
+            ],
+            "Size": [
+              34.0,
+              12.0,
+              30.0
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_B",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1624.0,
+              6.0,
+              10.0
+            ],
+            "Size": [
+              30.0,
+              12.0,
+              34.0
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_C",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1600.0,
+              6.0,
+              28.0
+            ],
+            "Size": [
+              36.0,
+              12.0,
+              28.0
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "EvidenceSpawnNodes"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1574.0,
+              2.0,
+              -24.0
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1592.0,
+              2.0,
+              -4.0
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_3",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1610.0,
+              2.0,
+              6.0
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_4",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1624.0,
+              2.0,
+              -18.0
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_5",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1582.0,
+              2.0,
+              22.0
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_6",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1618.0,
+              2.0,
+              24.0
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "InteractionPoints"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_DoorMain",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1598.0,
+              2.0,
+              -72.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_SwitchA",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1618.0,
+              2.0,
+              -12.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_RadioA",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1582.0,
+              2.0,
+              10.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_PropA",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1600.0,
+              2.0,
+              0.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_PropB",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1608.0,
+              2.0,
+              20.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_PropC",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1588.0,
+              2.0,
+              -20.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "SafeZones"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "SafeZone_A",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1572.0,
+              4.0,
+              2.0
+            ],
+            "Size": [
+              18.0,
+              8.0,
+              18.0
+            ],
+            "Tags": [
+              "SafeZone"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "SafeZone_B",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1628.0,
+              4.0,
+              -6.0
+            ],
+            "Size": [
+              18.0,
+              8.0,
+              18.0
+            ],
+            "Tags": [
+              "SafeZone"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "NavigationNodes"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1576.0,
+              2.0,
+              -24.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1576.0,
+              2.0,
+              -8.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_3",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1576.0,
+              2.0,
+              8.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_4",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1576.0,
+              2.0,
+              24.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_5",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1600.0,
+              2.0,
+              -24.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_6",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1600.0,
+              2.0,
+              -8.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_7",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1600.0,
+              2.0,
+              8.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_8",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1600.0,
+              2.0,
+              24.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_9",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1624.0,
+              2.0,
+              -24.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_10",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1624.0,
+              2.0,
+              -8.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_11",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1624.0,
+              2.0,
+              8.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_12",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1624.0,
+              2.0,
+              24.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "SpawnArea"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LobbySpawnAnchor",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1564.0,
+              4.0,
+              0.0
+            ],
+            "Size": [
+              20.0,
+              6.0,
+              20.0
+            ],
+            "Tags": [
+              "PlayerSpawn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "MatchQueueZone"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "MatchQueueTrigger",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1640.0,
+              4.0,
+              -10.0
+            ],
+            "Size": [
+              24.0,
+              8.0,
+              24.0
+            ],
+            "Tags": [
+              "MatchQueue"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "CosmeticPreviewArea"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "PreviewZone",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1605.0,
+              4.0,
+              32.0
+            ],
+            "Size": [
+              22.0,
+              8.0,
+              20.0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "LeaderboardArea"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LeaderboardZone",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1588.0,
+              4.0,
+              -34.0
+            ],
+            "Size": [
+              22.0,
+              8.0,
+              18.0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "SocialArea"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "SocialZone",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              1554.0,
+              4.0,
+              24.0
+            ],
+            "Size": [
+              24.0,
+              8.0,
+              22.0
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

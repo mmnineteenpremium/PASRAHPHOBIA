@@ -15,10 +15,20 @@ function DataPersistence.new(deps)
 end
 
 function DataPersistence.Create(deps)
-    return DataPersistence.new(deps)
+    local instance = DataPersistence.new(deps)
+    instance:Initialize()
+    return instance
+end
+
+function DataPersistence:Initialize()
+    if self._initialized then
+        return
+    end
+    self._initialized = true
 end
 
 function DataPersistence:Init()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -34,3 +44,4 @@ function DataPersistence:Stop()
 end
 
 return DataPersistence
+

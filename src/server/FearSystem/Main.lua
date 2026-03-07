@@ -54,7 +54,13 @@ function FearSystem.new(deps)
     return self
 end
 
-function FearSystem:Create()
+
+function FearSystem.Create(deps)
+    local instance = FearSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function FearSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function FearSystem:Create()
 end
 
 function FearSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,4 @@ function FearSystem:Stop()
 end
 
 return FearSystem
+

@@ -54,7 +54,13 @@ function GhostPersonalitySystem.new(deps)
     return self
 end
 
-function GhostPersonalitySystem:Create()
+
+function GhostPersonalitySystem.Create(deps)
+    local instance = GhostPersonalitySystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function GhostPersonalitySystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function GhostPersonalitySystem:Create()
 end
 
 function GhostPersonalitySystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,5 @@ function GhostPersonalitySystem:Stop()
 end
 
 return GhostPersonalitySystem
+
+

@@ -54,7 +54,13 @@ function TelemetrySystem.new(deps)
 	return self
 end
 
-function TelemetrySystem:Create()
+
+function TelemetrySystem.Create(deps)
+    local instance = TelemetrySystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function TelemetrySystem:Initialize()
 	if self._created then
 		return
 	end
@@ -73,7 +79,7 @@ function TelemetrySystem:Create()
 end
 
 function TelemetrySystem:Init()
-	self:Create()
+	self:Initialize()
 	self.Service:Init()
 	self.Controller:Init()
 end
@@ -101,3 +107,5 @@ function TelemetrySystem:RecordEvent(eventName, payload)
 end
 
 return TelemetrySystem
+
+

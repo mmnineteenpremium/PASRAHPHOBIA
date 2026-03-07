@@ -1,0 +1,16 @@
+{
+  "className": "Animation",
+  "properties": {
+    "Name": "GhostHunt",
+    "AnimationId": "rbxassetid://507767714"
+  },
+  "children": [
+    {
+      "className": "BoolValue",
+      "properties": {
+        "Name": "Looped",
+        "Value": true
+      }
+    }
+  ]
+}

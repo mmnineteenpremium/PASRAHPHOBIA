@@ -54,7 +54,13 @@ function ServerProfilerSystem.new(deps)
     return self
 end
 
-function ServerProfilerSystem:Create()
+
+function ServerProfilerSystem.Create(deps)
+    local instance = ServerProfilerSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function ServerProfilerSystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function ServerProfilerSystem:Create()
 end
 
 function ServerProfilerSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function ServerProfilerSystem:Stop()
 end
 
 return ServerProfilerSystem
+

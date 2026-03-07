@@ -54,7 +54,13 @@ function FriendSystem.new(deps)
     return self
 end
 
-function FriendSystem:Create()
+
+function FriendSystem.Create(deps)
+    local instance = FriendSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function FriendSystem:Initialize()
     if self._created then
         return
     end
@@ -73,7 +79,7 @@ function FriendSystem:Create()
 end
 
 function FriendSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -97,3 +103,4 @@ function FriendSystem:Stop()
 end
 
 return FriendSystem
+

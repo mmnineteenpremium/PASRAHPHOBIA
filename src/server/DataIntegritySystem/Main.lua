@@ -54,7 +54,13 @@ function DataIntegritySystem.new(deps)
     return self
 end
 
-function DataIntegritySystem:Create()
+
+function DataIntegritySystem.Create(deps)
+    local instance = DataIntegritySystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function DataIntegritySystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function DataIntegritySystem:Create()
 end
 
 function DataIntegritySystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function DataIntegritySystem:Stop()
 end
 
 return DataIntegritySystem
+

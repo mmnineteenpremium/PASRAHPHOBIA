@@ -54,7 +54,13 @@ function MatchmakingSystem.new(deps)
     return self
 end
 
-function MatchmakingSystem:Create()
+
+function MatchmakingSystem.Create(deps)
+    local instance = MatchmakingSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function MatchmakingSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function MatchmakingSystem:Create()
 end
 
 function MatchmakingSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,5 @@ function MatchmakingSystem:Stop()
 end
 
 return MatchmakingSystem
+
+

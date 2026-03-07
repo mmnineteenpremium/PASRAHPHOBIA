@@ -54,7 +54,13 @@ function MapEventSystem.new(deps)
 	return self
 end
 
-function MapEventSystem:Create()
+
+function MapEventSystem.Create(deps)
+    local instance = MapEventSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function MapEventSystem:Initialize()
 	if self._created then
 		return
 	end
@@ -73,7 +79,7 @@ function MapEventSystem:Create()
 end
 
 function MapEventSystem:Init()
-	self:Create()
+	self:Initialize()
 	self.Service:Init()
 	self.Controller:Init()
 end
@@ -101,3 +107,5 @@ function MapEventSystem:TriggerEvent(eventData)
 end
 
 return MapEventSystem
+
+

@@ -54,7 +54,13 @@ function BackendStabilitySystem.new(deps)
     return self
 end
 
-function BackendStabilitySystem:Create()
+
+function BackendStabilitySystem.Create(deps)
+    local instance = BackendStabilitySystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function BackendStabilitySystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function BackendStabilitySystem:Create()
 end
 
 function BackendStabilitySystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function BackendStabilitySystem:Stop()
 end
 
 return BackendStabilitySystem
+

@@ -15,10 +15,20 @@ function ContractRewardSystem.new(deps)
 end
 
 function ContractRewardSystem.Create(deps)
-    return ContractRewardSystem.new(deps)
+    local instance = ContractRewardSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+
+function ContractRewardSystem:Initialize()
+    if self._initialized then
+        return
+    end
+    self._initialized = true
 end
 
 function ContractRewardSystem:Init()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -34,3 +44,4 @@ function ContractRewardSystem:Stop()
 end
 
 return ContractRewardSystem
+

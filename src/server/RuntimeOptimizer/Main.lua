@@ -54,7 +54,13 @@ function RuntimeOptimizer.new(deps)
     return self
 end
 
-function RuntimeOptimizer:Create()
+
+function RuntimeOptimizer.Create(deps)
+    local instance = RuntimeOptimizer.new(deps)
+    instance:Initialize()
+    return instance
+end
+function RuntimeOptimizer:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function RuntimeOptimizer:Create()
 end
 
 function RuntimeOptimizer:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function RuntimeOptimizer:Stop()
 end
 
 return RuntimeOptimizer
+

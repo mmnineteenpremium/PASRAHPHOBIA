@@ -54,7 +54,13 @@ function FailSafeSystem.new(deps)
     return self
 end
 
-function FailSafeSystem:Create()
+
+function FailSafeSystem.Create(deps)
+    local instance = FailSafeSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function FailSafeSystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function FailSafeSystem:Create()
 end
 
 function FailSafeSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function FailSafeSystem:Stop()
 end
 
 return FailSafeSystem
+

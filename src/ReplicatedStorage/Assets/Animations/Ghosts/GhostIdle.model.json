@@ -1,0 +1,16 @@
+{
+  "className": "Animation",
+  "properties": {
+    "Name": "GhostIdle",
+    "AnimationId": "rbxassetid://507766388"
+  },
+  "children": [
+    {
+      "className": "BoolValue",
+      "properties": {
+        "Name": "Looped",
+        "Value": true
+      }
+    }
+  ]
+}

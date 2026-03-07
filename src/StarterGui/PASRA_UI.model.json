@@ -1,0 +1,81 @@
+{
+  "className": "ScreenGui",
+  "properties": {
+    "Name": "PASRA_UI",
+    "ResetOnSpawn": false
+  },
+  "children": [
+    {
+      "className": "Frame",
+      "properties": {
+        "Name": "LobbyUI",
+        "Visible": true
+      }
+    },
+    {
+      "className": "Frame",
+      "properties": {
+        "Name": "MatchHUD",
+        "Visible": false
+      }
+    },
+    {
+      "className": "Frame",
+      "properties": {
+        "Name": "EvidenceJournal",
+        "Visible": false
+      }
+    },
+    {
+      "className": "Frame",
+      "properties": {
+        "Name": "GhostToolInterface",
+        "Visible": false
+      }
+    },
+    {
+      "className": "Frame",
+      "properties": {
+        "Name": "DeathScreen",
+        "Visible": false
+      }
+    },
+    {
+      "className": "Frame",
+      "properties": {
+        "Name": "SpectatorMode",
+        "Visible": false
+      }
+    },
+    {
+      "className": "Frame",
+      "properties": {
+        "Name": "MatchResultScreen",
+        "Visible": false
+      },
+      "children": [
+        {
+          "className": "Frame",
+          "properties": {
+            "Name": "RewardSummaryPanel",
+            "Visible": true
+          }
+        },
+        {
+          "className": "TextLabel",
+          "properties": {
+            "Name": "GhostRevealText",
+            "Text": "Ghost Type: Unknown"
+          }
+        },
+        {
+          "className": "TextLabel",
+          "properties": {
+            "Name": "ResultSummaryText",
+            "Text": "Result Pending"
+          }
+        }
+      ]
+    }
+  ]
+}

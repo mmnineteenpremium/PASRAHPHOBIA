@@ -54,7 +54,13 @@ function GhostModifierSystem.new(deps)
 	return self
 end
 
-function GhostModifierSystem:Create()
+
+function GhostModifierSystem.Create(deps)
+    local instance = GhostModifierSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function GhostModifierSystem:Initialize()
 	if self._created then
 		return
 	end
@@ -73,7 +79,7 @@ function GhostModifierSystem:Create()
 end
 
 function GhostModifierSystem:Init()
-	self:Create()
+	self:Initialize()
 	self.Service:Init()
 	self.Controller:Init()
 end
@@ -113,3 +119,5 @@ function GhostModifierSystem:RemoveModifier(ghostId)
 end
 
 return GhostModifierSystem
+
+

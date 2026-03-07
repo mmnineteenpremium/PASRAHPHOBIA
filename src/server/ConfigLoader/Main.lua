@@ -15,10 +15,20 @@ function ConfigLoaderSystem.new(deps)
 end
 
 function ConfigLoaderSystem.Create(deps)
-    return ConfigLoaderSystem.new(deps)
+    local instance = ConfigLoaderSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+
+function ConfigLoaderSystem:Initialize()
+    if self._initialized then
+        return
+    end
+    self._initialized = true
 end
 
 function ConfigLoaderSystem:Init()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -34,3 +44,4 @@ function ConfigLoaderSystem:Stop()
 end
 
 return ConfigLoaderSystem
+

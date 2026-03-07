@@ -54,7 +54,13 @@ function SocialNotificationSystem.new(deps)
     return self
 end
 
-function SocialNotificationSystem:Create()
+
+function SocialNotificationSystem.Create(deps)
+    local instance = SocialNotificationSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function SocialNotificationSystem:Initialize()
     if self._created then
         return
     end
@@ -73,7 +79,7 @@ function SocialNotificationSystem:Create()
 end
 
 function SocialNotificationSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -97,3 +103,4 @@ function SocialNotificationSystem:Stop()
 end
 
 return SocialNotificationSystem
+

@@ -54,7 +54,13 @@ function AntiCheatSystem.new(deps)
 	return self
 end
 
-function AntiCheatSystem:Create()
+
+function AntiCheatSystem.Create(deps)
+    local instance = AntiCheatSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function AntiCheatSystem:Initialize()
 	if self._created then
 		return
 	end
@@ -73,7 +79,7 @@ function AntiCheatSystem:Create()
 end
 
 function AntiCheatSystem:Init()
-	self:Create()
+	self:Initialize()
 	self.Service:Init()
 	self.Controller:Init()
 end
@@ -105,3 +111,5 @@ function AntiCheatSystem:CheckMovement(player, movementPayload)
 end
 
 return AntiCheatSystem
+
+

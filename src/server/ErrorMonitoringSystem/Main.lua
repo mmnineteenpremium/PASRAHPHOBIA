@@ -54,7 +54,13 @@ function ErrorMonitoringSystem.new(deps)
 	return self
 end
 
-function ErrorMonitoringSystem:Create()
+
+function ErrorMonitoringSystem.Create(deps)
+    local instance = ErrorMonitoringSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function ErrorMonitoringSystem:Initialize()
 	if self._created then
 		return
 	end
@@ -74,7 +80,7 @@ function ErrorMonitoringSystem:Create()
 end
 
 function ErrorMonitoringSystem:Init()
-	self:Create()
+	self:Initialize()
 	self.Service:Init()
 	self.Controller:Init()
 end
@@ -98,3 +104,5 @@ function ErrorMonitoringSystem:Stop()
 end
 
 return ErrorMonitoringSystem
+
+

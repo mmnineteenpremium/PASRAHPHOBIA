@@ -1,0 +1,12 @@
+{
+  "className": "Sound",
+  "properties": {
+    "Name": "HuntStart_01",
+    "SoundId": "rbxassetid://1843529608",
+    "Looped": false,
+    "Volume": 0.85,
+    "RollOffMinDistance": 10,
+    "RollOffMaxDistance": 120,
+    "PlaybackSpeed": 1
+  }
+}

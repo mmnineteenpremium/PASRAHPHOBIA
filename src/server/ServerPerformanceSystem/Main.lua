@@ -54,7 +54,13 @@ function ServerPerformanceSystem.new(deps)
     return self
 end
 
-function ServerPerformanceSystem:Create()
+
+function ServerPerformanceSystem.Create(deps)
+    local instance = ServerPerformanceSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function ServerPerformanceSystem:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function ServerPerformanceSystem:Create()
 end
 
 function ServerPerformanceSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function ServerPerformanceSystem:Stop()
 end
 
 return ServerPerformanceSystem
+

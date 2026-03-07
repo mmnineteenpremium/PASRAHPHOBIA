@@ -54,7 +54,13 @@ function EventBusProfiler.new(deps)
     return self
 end
 
-function EventBusProfiler:Create()
+
+function EventBusProfiler.Create(deps)
+    local instance = EventBusProfiler.new(deps)
+    instance:Initialize()
+    return instance
+end
+function EventBusProfiler:Initialize()
     if self._created then
         return
     end
@@ -72,7 +78,7 @@ function EventBusProfiler:Create()
 end
 
 function EventBusProfiler:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -96,3 +102,4 @@ function EventBusProfiler:Stop()
 end
 
 return EventBusProfiler
+

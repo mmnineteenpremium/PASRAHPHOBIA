@@ -1,0 +1,16 @@
+{
+  "className": "Animation",
+  "properties": {
+    "Name": "GhostAttack",
+    "AnimationId": "rbxassetid://507777826"
+  },
+  "children": [
+    {
+      "className": "BoolValue",
+      "properties": {
+        "Name": "Looped",
+        "Value": false
+      }
+    }
+  ]
+}

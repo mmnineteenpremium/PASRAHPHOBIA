@@ -54,7 +54,13 @@ function InstanceScalingSystem.new(deps)
     return self
 end
 
-function InstanceScalingSystem:Create()
+
+function InstanceScalingSystem.Create(deps)
+    local instance = InstanceScalingSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function InstanceScalingSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function InstanceScalingSystem:Create()
 end
 
 function InstanceScalingSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,5 @@ function InstanceScalingSystem:Stop()
 end
 
 return InstanceScalingSystem
+
+

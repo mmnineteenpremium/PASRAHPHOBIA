@@ -54,7 +54,13 @@ function ContractObjectiveSystem.new(deps)
 	return self
 end
 
-function ContractObjectiveSystem:Create()
+function ContractObjectiveSystem.Create(deps)
+    local instance = ContractObjectiveSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+
+function ContractObjectiveSystem:Initialize()
 	if self._created then
 		return
 	end
@@ -73,7 +79,7 @@ function ContractObjectiveSystem:Create()
 end
 
 function ContractObjectiveSystem:Init()
-	self:Create()
+	self:Initialize()
 	self.Service:Init()
 	self.Controller:Init()
 end
@@ -117,3 +123,4 @@ function ContractObjectiveSystem:CheckContractCompletion()
 end
 
 return ContractObjectiveSystem
+

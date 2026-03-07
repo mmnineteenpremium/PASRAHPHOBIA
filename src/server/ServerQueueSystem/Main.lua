@@ -54,7 +54,13 @@ function ServerQueueSystem.new(deps)
     return self
 end
 
-function ServerQueueSystem:Create()
+
+function ServerQueueSystem.Create(deps)
+    local instance = ServerQueueSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function ServerQueueSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function ServerQueueSystem:Create()
 end
 
 function ServerQueueSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,5 @@ function ServerQueueSystem:Stop()
 end
 
 return ServerQueueSystem
+
+

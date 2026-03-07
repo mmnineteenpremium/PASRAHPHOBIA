@@ -1,0 +1,12 @@
+{
+  "className": "Sound",
+  "properties": {
+    "Name": "GhostWhisper_01",
+    "SoundId": "rbxassetid://9125710681",
+    "Looped": false,
+    "Volume": 0.55,
+    "RollOffMinDistance": 8,
+    "RollOffMaxDistance": 90,
+    "PlaybackSpeed": 1
+  }
+}

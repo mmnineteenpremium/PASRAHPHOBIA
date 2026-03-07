@@ -54,7 +54,13 @@ function AdaptiveHuntSystem.new(deps)
     return self
 end
 
-function AdaptiveHuntSystem:Create()
+
+function AdaptiveHuntSystem.Create(deps)
+    local instance = AdaptiveHuntSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function AdaptiveHuntSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function AdaptiveHuntSystem:Create()
 end
 
 function AdaptiveHuntSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,5 @@ function AdaptiveHuntSystem:Stop()
 end
 
 return AdaptiveHuntSystem
+
+

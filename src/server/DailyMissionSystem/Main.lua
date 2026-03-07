@@ -54,7 +54,13 @@ function DailyMissionSystem.new(deps)
     return self
 end
 
-function DailyMissionSystem:Create()
+
+function DailyMissionSystem.Create(deps)
+    local instance = DailyMissionSystem.new(deps)
+    instance:Initialize()
+    return instance
+end
+function DailyMissionSystem:Initialize()
     if self._created then
         return
     end
@@ -74,7 +80,7 @@ function DailyMissionSystem:Create()
 end
 
 function DailyMissionSystem:Init()
-    self:Create()
+    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -98,3 +104,4 @@ function DailyMissionSystem:Stop()
 end
 
 return DailyMissionSystem
+
