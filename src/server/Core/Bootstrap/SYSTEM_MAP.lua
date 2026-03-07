@@ -2,15 +2,25 @@ return {
     Core = {
         "ConfigLoader",
         "GameConfigSystem",
+        "ContentUpdatePipelineSystem",
+        "LiveContentOpsSystem",
         "GhostDatabaseSystem",
         "MapConfigSystem",
+        "EventMapRotationSystem",
         "EvidenceConfigSystem",
         "DifficultyConfigSystem",
         "ContractConfigSystem",
         "DataPersistence",
         "ProfileSystem",
+        "PlatformSupportSystem",
+        "InventorySystem",
+        "ProgressionSystem",
+        "RoyalPassSystem",
         "EconomySystem",
+        "SocialCommerceSystem",
         "RankedSystem",
+        "MatchmakingQualitySystem",
+        "SeasonalEventSystem",
         "ContractSystem",
         "MatchSystem",
         "MapInteractionSystem",
@@ -29,8 +39,10 @@ return {
         "GhostDeductionJournal",
         "HorrorDirector",
         "EscalationTimerSystem",
+        "DynamicInvestigationEventSystem",
         "RandomJumpscareSystem",
         "LobbySocialHub",
+        "GlobalOperationsSystem",
     },
 
     Gameplay = {
@@ -56,6 +68,9 @@ return {
     AI = {},
 
     Player = {
+        "PlayerEngagementSystem",
+        "PlayerReputationSystem",
+        "ModerationOperationsSystem",
         "SystemIntegrationController",
         "EngineStartupValidator",
         "DependencyVerificationSystem",
@@ -65,7 +80,13 @@ return {
         "FinalEngineBootstrap",
     },
 
-    Economy = {},
+    Economy = {
+        "DailyContractSystem",
+        "WeeklyChallengeSystem",
+    },
 
-    Social = {},
+    Social = {
+        "SocialEmoteSystem",
+        "OperationsQASystem",
+    },
 }

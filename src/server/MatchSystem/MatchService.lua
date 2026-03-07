@@ -35,6 +35,20 @@ local function resolveDifficultyConfigSystem(deps)
 	return nil
 end
 
+local function resolveEventMapRotationSystem(deps)
+	local rotationSystem = Services.Get(deps, "EventMapRotationSystem")
+	if type(rotationSystem) ~= "table" then
+		return nil
+	end
+	if type(rotationSystem.GetRandomMap) == "function" then
+		return rotationSystem
+	end
+	if type(rotationSystem.Service) == "table" and type(rotationSystem.Service.GetRandomMap) == "function" then
+		return rotationSystem.Service
+	end
+	return nil
+end
+
 local function getNow(now)
 	return now or os.clock()
 end
@@ -55,6 +69,7 @@ function MatchService.new(state, deps)
 	self._deps = deps or {}
 	self._eventBus = resolveEventBus(self._deps)
 	self._difficultyConfigSystem = resolveDifficultyConfigSystem(self._deps)
+	self._eventMapRotationSystem = resolveEventMapRotationSystem(self._deps)
 
 	self._queue = MatchQueue.new(self._deps.MatchQueueConfig)
 	self._builder = MatchBuilder.new(self._deps, self._deps.MatchBuilderConfig)
@@ -155,7 +170,20 @@ function MatchService:TryCreateMatchFromQueue(payload)
 end
 
 function MatchService:CreateMatch(payload)
-	local match = self._builder:Build(payload or {})
+	local resolvedPayload = payload or {}
+	if resolvedPayload.mapId == nil and self._eventMapRotationSystem then
+		local mapId = self._eventMapRotationSystem:GetRandomMap()
+		if type(mapId) == "string" and mapId ~= "" then
+			local copiedPayload = {}
+			for key, value in pairs(resolvedPayload) do
+				copiedPayload[key] = value
+			end
+			copiedPayload.mapId = mapId
+			resolvedPayload = copiedPayload
+		end
+	end
+
+	local match = self._builder:Build(resolvedPayload)
 	match.difficultyProfile = self:_resolveDifficultyProfile(match.difficulty)
 	local matches = self:_matches()
 	matches[match.matchId] = match

@@ -24,6 +24,12 @@ local DEFAULT_STATE = {
             huntAggressionMultiplier = 1.0,
             manifestationMultiplier = 1.3,
         },
+        Deceptive = {
+            roamingMultiplier = 1.05,
+            interactionMultiplier = 1.3,
+            huntAggressionMultiplier = 1.05,
+            manifestationMultiplier = 1.35,
+        },
         Watcher = {
             roamingMultiplier = 0.9,
             interactionMultiplier = 1.2,
