@@ -30,7 +30,7 @@ local PHASE_EVENT_BY_NAME = {
 }
 
 local function resolveEventBus(deps)
-	local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+	local eventBus = deps.EventBus
 	if type(eventBus) ~= "table" then
 		return nil
 	end

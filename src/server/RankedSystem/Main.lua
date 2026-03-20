@@ -14,21 +14,7 @@ function RankedSystem.new(deps)
     return self
 end
 
-function RankedSystem.Create(deps)
-    local instance = RankedSystem.new(deps)
-    instance:Initialize()
-    return instance
-end
-
-function RankedSystem:Initialize()
-    if self._initialized then
-        return
-    end
-    self._initialized = true
-end
-
 function RankedSystem:Init()
-    self:Initialize()
     self.Service:Init()
     self.Controller:Init()
 end
@@ -44,4 +30,3 @@ function RankedSystem:Stop()
 end
 
 return RankedSystem
-

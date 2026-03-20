@@ -1,35 +1,17 @@
 local State = {}
 State.__index = State
 
-local DEFAULT_STATE = {
-    equippedCosmetics = {},
-    cosmeticSlots = {
-        border = true,
-        title = true,
-        profileDecoration = true,
-        galleryItem = true,
-        equipmentSkin = true,
-    },
-    cosmeticDefinitions = {},
-}
-
-local function deepCopy(value)
-    if type(value) ~= "table" then
-        return value
-    end
-    local out = {}
-    for key, nested in pairs(value) do
-        out[key] = deepCopy(nested)
-    end
-    return out
-end
-
-function State.new(seed)
+function State.new(initial)
     local self = setmetatable({}, State)
-    self._data = deepCopy(DEFAULT_STATE)
-    for key, value in pairs(seed or {}) do
+    self._data = {
+        equippedByUserId = {},
+        categories = initial and initial.categories or {},
+    }
+
+    for key, value in pairs(initial or {}) do
         self._data[key] = value
     end
+
     return self
 end
 
@@ -39,10 +21,6 @@ end
 
 function State:Set(key, value)
     self._data[key] = value
-end
-
-function State:Clear()
-    self._data = deepCopy(DEFAULT_STATE)
 end
 
 return State

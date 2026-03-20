@@ -29,8 +29,4 @@ function MatchSystem:Stop()
     self.Service:Stop()
 end
 
-function MatchSystem:Shutdown()
-    self:Stop()
-end
-
 return MatchSystem

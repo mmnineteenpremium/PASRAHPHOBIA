@@ -29,8 +29,4 @@ function SpectatorSystem:Stop()
     self.Service:Stop()
 end
 
-function SpectatorSystem:Shutdown()
-    self:Stop()
-end
-
 return SpectatorSystem

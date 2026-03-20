@@ -1,10 +1,8 @@
-local Services = require(script.Parent.Parent.Core.Services)
-
 local Controller = {}
 Controller.__index = Controller
 
 local function resolveEventBus(deps)
-    local eventBus = Services.Get(deps, "EventBus")
+    local eventBus = deps and deps.EventBus
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -22,50 +20,33 @@ function Controller.new(state, service, deps)
     self._state = state
     self._service = service
     self._deps = deps or {}
-    self._eventBus = nil
+    self._eventBus = resolveEventBus(self._deps)
     self._subscriptions = {}
-    self._registered = false
     return self
 end
 
-function Controller:Create()
-    self._eventBus = resolveEventBus(self._deps)
-end
-
 function Controller:Init()
-    -- Event subscriptions happen in Start.
-end
-
-function Controller:Start()
-    self:RegisterEventHandlers()
-end
-
-function Controller:Stop()
-    self:UnregisterEventHandlers()
+    -- Shop request handling is event-driven.
 end
 
 function Controller:RegisterEventHandlers()
-    if not self._eventBus or self._registered then
+    if not self._eventBus then
         return
     end
 
-    self:_subscribe("PlayerPurchaseRequest", function(payload)
-        self:OnPlayerPurchaseRequest(payload)
+    self:_subscribe("ShopPurchaseRequested", function(payload)
+        self:OnShopPurchaseRequested(payload)
     end)
-
-    self._registered = true
 end
 
 function Controller:UnregisterEventHandlers()
-    if not self._eventBus or not self._registered then
+    if not self._eventBus then
         return
     end
-
-    for _, subscription in ipairs(self._subscriptions) do
-        self._eventBus:Unsubscribe(subscription.eventName, subscription.callback)
+    for _, sub in ipairs(self._subscriptions) do
+        self._eventBus:Unsubscribe(sub.eventName, sub.callback)
     end
     table.clear(self._subscriptions)
-    self._registered = false
 end
 
 function Controller:_subscribe(eventName, callback)
@@ -76,16 +57,42 @@ function Controller:_subscribe(eventName, callback)
     })
 end
 
-function Controller:OnPlayerPurchaseRequest(payload)
-    if type(payload) ~= "table" then
+function Controller:OnShopPurchaseRequested(payload)
+    local player = payload and payload.player
+    local cosmeticId = payload and payload.cosmeticId
+    local itemId = payload and payload.itemId
+    local itemType = payload and payload.itemType
+    if not player or (not cosmeticId and not itemId) then
         return
     end
-    local player = payload.player
-    local itemId = payload.itemId
-    if not player or type(itemId) ~= "string" or itemId == "" then
+
+    local targetId = cosmeticId or itemId
+    local ok, err
+    if itemType == "item" and itemId then
+        ok, err = self._service:PurchaseItem(player, itemId)
+    else
+        ok, err = self._service:PurchaseCosmetic(player, targetId)
+    end
+
+    if ok then
+        self._eventBus:Publish("ShopPurchaseSucceeded", {
+            player = player,
+            itemId = targetId,
+            cosmeticId = cosmeticId,
+            itemType = itemType or (cosmeticId and "cosmetic" or "item"),
+            source = payload and payload.source,
+        })
         return
     end
-    self._service:ProcessPurchase(player, itemId)
+
+    self._eventBus:Publish("ShopPurchaseFailed", {
+        player = player,
+        itemId = targetId,
+        cosmeticId = cosmeticId,
+        itemType = itemType or (cosmeticId and "cosmetic" or "item"),
+        error = err,
+        source = payload and payload.source,
+    })
 end
 
 return Controller

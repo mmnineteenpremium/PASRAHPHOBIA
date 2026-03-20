@@ -1,10 +1,8 @@
-local Services = require(script.Parent.Parent.Core.Services)
-
 local Controller = {}
 Controller.__index = Controller
 
 local function resolveEventBus(deps)
-	local eventBus = Services.Get(deps, "EventBus")
+	local eventBus = deps.EventBus
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -23,29 +21,16 @@ function Controller.new(state, service, deps)
 	self._service = service
 	self._deps = deps or {}
 	self._subscriptions = {}
-	self._eventBus = nil
-	self._registered = false
-	return self
-end
-
-function Controller:Create()
 	self._eventBus = resolveEventBus(self._deps)
+	return self
 end
 
 function Controller:Init()
 	-- Wiring only.
 end
 
-function Controller:Start()
-	self:RegisterEventHandlers()
-end
-
-function Controller:Stop()
-	self:UnregisterEventHandlers()
-end
-
 function Controller:RegisterEventHandlers()
-	if not self._eventBus or self._registered then
+	if not self._eventBus then
 		return
 	end
 	self:_subscribe("MatchStarted", function(payload)
@@ -66,18 +51,16 @@ function Controller:RegisterEventHandlers()
 	self:_subscribe("MatchEnded", function(payload)
 		self._service:OnMatchEnded(payload)
 	end)
-	self._registered = true
 end
 
 function Controller:UnregisterEventHandlers()
-	if not self._eventBus or not self._registered then
+	if not self._eventBus then
 		return
 	end
 	for _, subscription in ipairs(self._subscriptions) do
 		self._eventBus:Unsubscribe(subscription.eventName, subscription.callback)
 	end
 	table.clear(self._subscriptions)
-	self._registered = false
 end
 
 function Controller:_subscribe(eventName, callback)

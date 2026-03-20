@@ -60,7 +60,17 @@ function Service:HandlePlayerTeleported(payload)
 end
 
 function Service:ApplyCosmetic(player, cosmeticId, category)
-    return self._lobbyService:ApplyCosmetic(player, cosmeticId, category)
+    if type(self._lobbyService.ApplyCosmetic) == "function" then
+        return self._lobbyService:ApplyCosmetic(player, cosmeticId, category)
+    end
+    return false, "apply_cosmetic_unavailable"
+end
+
+function Service:HandleLobbyRequest(player, request)
+    if type(self._lobbyService.QueueFromRoomBrowser) == "function" then
+        return self._lobbyService:QueueFromRoomBrowser(player, request)
+    end
+    return false, "room_browser_handler_missing"
 end
 
 return Service

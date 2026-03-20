@@ -1,10 +1,8 @@
-local FactoryModule = {}
-FactoryModule.__index = FactoryModule
-local ServiceRegistry = require(script.Parent.ServiceRegistry)
-local Services = require(script.Parent.Parent.Services)
+local SystemFactory = {}
+SystemFactory.__index = SystemFactory
 
 local function defaultLogger(message)
-    print(message)
+    warn(message)
 end
 
 local function getService(registry, name)
@@ -46,9 +44,9 @@ local function getAllServices(registry)
     return {}
 end
 
-function FactoryModule.new(services, deps)
-    local self = setmetatable({}, FactoryModule)
-    self._services = services or Services.GetRegistry(deps) or ServiceRegistry.new()
+function SystemFactory.new(services, deps)
+    local self = setmetatable({}, SystemFactory)
+    self._services = services
     self._deps = deps or {}
     self._constructorsByName = {}
     self._createdByName = {}
@@ -58,74 +56,18 @@ function FactoryModule.new(services, deps)
     return self
 end
 
-function FactoryModule:RegisterSystem(name, constructor)
+function SystemFactory:RegisterSystem(name, constructor)
     if type(name) ~= "string" or name == "" then
         return false
     end
     if type(constructor) ~= "function" then
         return false
     end
-    if self._constructorsByName[name] ~= nil then
-        self._log(string.format("[SystemFactory] Duplicate register ignored for '%s'", name))
-        return false
-    end
     self._constructorsByName[name] = constructor
     return true
 end
 
-function FactoryModule:Register(name, instance)
-    if type(name) ~= "string" or name == "" or type(instance) ~= "table" then
-        return false, "invalid_registration"
-    end
-    if getService(self._services, name) ~= nil then
-        return false, "already_registered"
-    end
-    local ok = registerService(self._services, name, instance)
-    if not ok then
-        return false, "registry_rejected"
-    end
-    self._createdByName[name] = true
-    return true
-end
-
-function FactoryModule:Create(systemName, deps)
-    if type(systemName) ~= "string" or systemName == "" then
-        return false, "invalid_system_name"
-    end
-    if getService(self._services, systemName) ~= nil then
-        self._createdByName[systemName] = true
-        return true, getService(self._services, systemName)
-    end
-
-    local constructor = self._constructorsByName[systemName]
-    if type(constructor) ~= "function" then
-        return false, "missing_factory"
-    end
-
-    local localDeps = self:_buildDeps()
-    for key, value in pairs(deps or {}) do
-        localDeps[key] = value
-    end
-
-    local ok, system = pcall(constructor, localDeps)
-    if not ok or type(system) ~= "table" then
-        self._log(string.format("[SystemFactory] Failed creating system '%s': %s", systemName, tostring(system)))
-        return false, "factory_failed"
-    end
-    if type(system.Init) ~= "function" or type(system.Start) ~= "function" or type(system.Stop) ~= "function" then
-        self._log(string.format("[SystemFactory] System '%s' missing lifecycle methods (Init/Start/Stop).", systemName))
-    end
-
-    local registered = registerService(self._services, systemName, system)
-    if not registered then
-        return false, "already_registered"
-    end
-    self._createdByName[systemName] = true
-    self._log(string.format("[SystemFactory] Created system '%s'", systemName))
-    return true, system
-end
-
-function FactoryModule:_buildDeps()
+function SystemFactory:_buildDeps()
     local out = {}
     for key, value in pairs(self._deps or {}) do
         out[key] = value
@@ -140,14 +82,18 @@ function FactoryModule:_buildDeps()
     return out
 end
 
-function FactoryModule:CreateSystems(startupOrder)
+function SystemFactory:CreateSystems(startupOrder)
     for _, name in ipairs(startupOrder or {}) do
         if self._createdByName[name] ~= true then
             local constructor = self._constructorsByName[name]
             if constructor then
-                local ok, result = self:Create(name)
-                if not ok then
-                    return false, string.format("%s:%s", tostring(result), name)
+                local ok, system = pcall(constructor, self:_buildDeps())
+                if ok and type(system) == "table" then
+                    registerService(self._services, name, system)
+                    self._createdByName[name] = true
+                else
+                    self._log(string.format("[SystemFactory] Failed creating system '%s': %s", name, tostring(system)))
+                    return false, string.format("factory_failed:%s", name)
                 end
             end
         end
@@ -155,7 +101,7 @@ function FactoryModule:CreateSystems(startupOrder)
     return true
 end
 
-function FactoryModule:InitSystems(startupOrder)
+function SystemFactory:InitSystems(startupOrder)
     for _, name in ipairs(startupOrder or {}) do
         if self._initializedByName[name] ~= true then
             local system = getService(self._services, name)
@@ -174,7 +120,7 @@ function FactoryModule:InitSystems(startupOrder)
     return true
 end
 
-function FactoryModule:StartSystems(startupOrder)
+function SystemFactory:StartSystems(startupOrder)
     for _, name in ipairs(startupOrder or {}) do
         if self._startedByName[name] ~= true then
             local system = getService(self._services, name)
@@ -193,7 +139,7 @@ function FactoryModule:StartSystems(startupOrder)
     return true
 end
 
-function FactoryModule:StopSystems(startupOrder)
+function SystemFactory:StopSystems(startupOrder)
     local order = startupOrder or {}
     for i = #order, 1, -1 do
         local name = order[i]
@@ -214,7 +160,7 @@ function FactoryModule:StopSystems(startupOrder)
     return true
 end
 
-function FactoryModule:RestartSystem(name, startupOrder)
+function SystemFactory:RestartSystem(name, startupOrder)
     if type(name) ~= "string" or name == "" then
         return false, "invalid_system_name"
     end
@@ -272,4 +218,4 @@ function FactoryModule:RestartSystem(name, startupOrder)
     return true
 end
 
-return FactoryModule
+return SystemFactory

@@ -5,7 +5,7 @@ Suhu
 Buku Terkutuk
 To'un
 Suara
-Pengganggu
+Pengganggu 
 
 Evidence probability system is used.
 Ghost may delay or hide evidence.

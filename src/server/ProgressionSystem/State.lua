@@ -1,40 +1,12 @@
 local State = {}
 State.__index = State
 
-local DEFAULT_STATE = {
-    playerXP = {},
-    playerLevels = {},
-    xpTable = {
-        level1 = 0,
-        level2 = 100,
-        level3 = 250,
-        level4 = 500,
-        level5 = 900,
-    },
-}
-
-local function deepCopy(value)
-    if type(value) ~= "table" then
-        return value
-    end
-
-    local copy = {}
-    for key, nested in pairs(value) do
-        copy[key] = deepCopy(nested)
-    end
-    return copy
-end
-
-function State.new(seed)
+function State.new(initial)
     local self = setmetatable({}, State)
-    self._data = deepCopy(DEFAULT_STATE)
-
-    if type(seed) == "table" then
-        for key, value in pairs(seed) do
-            self._data[key] = value
-        end
-    end
-
+    self._data = {
+        expByUserId = initial and initial.expByUserId or {},
+        levelByUserId = initial and initial.levelByUserId or {},
+    }
     return self
 end
 
@@ -47,7 +19,7 @@ function State:Set(key, value)
 end
 
 function State:Clear()
-    self._data = deepCopy(DEFAULT_STATE)
+    table.clear(self._data)
 end
 
 return State

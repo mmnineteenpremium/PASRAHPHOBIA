@@ -34,7 +34,6 @@ function MatchInstance.new(payload)
 	self.mapId = payload.mapId or "AbandonedPalace"
 	self.mapReference = payload.mapReference
 	self.difficulty = payload.difficulty or "Normal"
-	self.difficultyProfile = payload.difficultyProfile
 	self.ghostSeed = payload.ghostSeed or 0
 	self.gameMode = payload.gameMode or "Standard"
 	self.createdAt = getNow(payload.createdAt)
@@ -84,7 +83,6 @@ function MatchInstance:ToPayload()
 		mapId = self.mapId,
 		mapReference = self.mapReference,
 		difficulty = self.difficulty,
-		difficultyProfile = self.difficultyProfile,
 		ghostSeed = self.ghostSeed,
 		gameMode = self.gameMode,
 		createdAt = self.createdAt,

@@ -11,7 +11,7 @@ local DEFAULT_CONFIG = {
 }
 
 local function resolveEventBus(deps)
-	local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+	local eventBus = deps.EventBus
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -53,8 +53,6 @@ function Service.new(state, deps)
 	self._eventBus = resolveEventBus(self._deps)
 	self._config = mergeConfig(DEFAULT_CONFIG, self._deps.ServerPerformanceConfig)
 	self._running = false
-	self._loopToken = 0
-	self._loopThread = nil
 	return self
 end
 
@@ -74,30 +72,14 @@ function Service:Init()
 end
 
 function Service:Start()
-	if self._running then
-		return
-	end
 	self._running = true
-	self._loopToken += 1
-	local token = self._loopToken
-	self._loopThread = task.spawn(function()
-		while self._running and token == self._loopToken do
-			task.wait(self._config.SampleInterval)
-			if not self._running or token ~= self._loopToken then
-				break
-			end
-			self:Sample("periodic")
-		end
+	task.spawn(function()
+		self:_samplingLoop()
 	end)
 end
 
 function Service:Stop()
 	self._running = false
-	self._loopToken += 1
-	if self._loopThread then
-		task.cancel(self._loopThread)
-		self._loopThread = nil
-	end
 end
 
 function Service:_publish(eventName, payload)
@@ -112,6 +94,16 @@ end
 
 function Service:_setMetrics(metrics)
 	self._state:Set("metrics", metrics)
+end
+
+function Service:_samplingLoop()
+	while self._running do
+		task.wait(self._config.SampleInterval)
+		if not self._running then
+			break
+		end
+		self:Sample("periodic")
+	end
 end
 
 function Service:Sample(reason)

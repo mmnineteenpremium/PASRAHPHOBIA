@@ -1,9 +1,8 @@
 local Controller = {}
 Controller.__index = Controller
-local GhostInteractionGateway = require(script.Parent.GhostInteractionGateway)
 
 local function resolveEventBus(deps)
-	local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+	local eventBus = deps.EventBus
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -24,19 +23,14 @@ function Controller.new(state, service, deps)
 	self._subscriptions = {}
 	self._eventBus = resolveEventBus(self._deps)
 	self._handlersRegistered = false
-	self._gateway = nil
 	return self
 end
 
 function Controller:Init()
 	-- Prepare controller-level wiring here.
-	self._gateway = GhostInteractionGateway.new(self._service, self._deps)
 end
 
 function Controller:RegisterEventHandlers()
-	if self._gateway then
-		self._gateway:Start()
-	end
 	if not self._eventBus then
 		return
 	end
@@ -68,16 +62,10 @@ function Controller:RegisterEventHandlers()
 	self:_subscribe("EvidenceCollected", function(payload)
 		self:OnEvidenceCollected(payload)
 	end)
-	self:_subscribe("EscalationStageChanged", function(payload)
-		self:OnEscalationStageChanged(payload)
-	end)
 	self._handlersRegistered = true
 end
 
 function Controller:UnregisterEventHandlers()
-	if self._gateway then
-		self._gateway:Stop()
-	end
 	if not self._eventBus then
 		return
 	end
@@ -186,36 +174,6 @@ function Controller:OnEvidenceCollected(payload)
 		playerUsingToolNearGhostRoom = payload.toolNearGhostRoom == true or payload.nearGhostRoom == true,
 		investigationToolUsedNearGhostRoom = payload.toolNearGhostRoom == true,
 	}, payload.dt, payload.now)
-end
-
-function Controller:OnEscalationStageChanged(payload)
-	local matchId = payload and payload.matchId
-	if not matchId then
-		return
-	end
-
-	local stage = payload.currentStage
-	local now = payload and payload.now
-	local aggressionBoost = tonumber(payload and payload.aggressionBoost) or 0
-	local duration = tonumber(payload and payload.stageDuration) or 0
-
-	if stage == "Tension" or stage == "Aggressive" or stage == "Hunting" then
-		self._service:ApplyDirectorEvent(matchId, "TensionHigh", {
-			now = now,
-			duration = math.max(8, math.floor(duration * 0.35)),
-			aggressionBoost = aggressionBoost,
-		})
-	end
-
-	if stage == "Aggressive" then
-		self._service:ApplyDirectorEvent(matchId, "ForceManifest", {
-			now = now,
-			duration = 8,
-		})
-		self._service:TickGhost(matchId, payload.snapshot or {}, payload.dt, now)
-	elseif stage == "Hunting" then
-		self._service:StartHunt(matchId, payload.snapshot, now)
-	end
 end
 
 return Controller

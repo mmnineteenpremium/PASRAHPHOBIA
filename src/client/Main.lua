@@ -1,4 +1,4 @@
-local ClientBootstrap = require(script.Core.ClientBootstrap)
+local ClientBootstrap = require(script.Parent.Core.ClientBootstrap)
 
 local ClientMain = {}
 ClientMain.__index = ClientMain

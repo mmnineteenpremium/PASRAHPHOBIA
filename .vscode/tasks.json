@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Rojo: Serve (Studio Live Sync)",
+      "type": "shell",
+      "command": "rojo serve default.project.json --port 34872",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Rojo: Sourcemap (Watch)",
+      "type": "shell",
+      "command": "rojo sourcemap default.project.json --output sourcemap.json --watch --include-non-scripts",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Rojo: Build Place",
+      "type": "shell",
+      "command": "rojo build default.project.json --output PASRAHPHOBIA.rojo.rbxlx",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}

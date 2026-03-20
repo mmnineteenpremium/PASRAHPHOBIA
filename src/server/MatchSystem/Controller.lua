@@ -2,7 +2,7 @@ local Controller = {}
 Controller.__index = Controller
 
 local function resolveEventBus(deps)
-    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+    local eventBus = deps.EventBus
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -53,15 +53,6 @@ function Controller:RegisterEventHandlers()
     self:_subscribe("MatchPhaseTransitionRequested", function(payload)
         self:OnMatchPhaseTransitionRequested(payload)
     end)
-    self:_subscribe("GhostGuessValidated", function(payload)
-        self:OnGhostGuessValidated(payload)
-    end)
-    self:_subscribe("PlayerDied", function(payload)
-        self:OnPlayerDied(payload)
-    end)
-    self:_subscribe("PlayerExtracted", function(payload)
-        self:OnPlayerExtracted(payload)
-    end)
     self._handlersRegistered = true
 end
 
@@ -86,12 +77,6 @@ function Controller:_subscribe(eventName, callback)
         eventName = eventName,
         callback = callback,
     })
-end
-
-function Controller:_publish(eventName, payload)
-    if self._eventBus then
-        self._eventBus:Publish(eventName, payload)
-    end
 end
 
 function Controller:OnContractSelected(payload)
@@ -167,9 +152,6 @@ function Controller:OnMatchPhaseTransitionRequested(payload)
     if payload.endMatch == true then
         self._service:EndMatch(matchId, {
             reason = payload.reason or "phase_flow_completed",
-            extractionCompleted = payload.extractionCompleted,
-            ghostIdentified = payload.ghostIdentified,
-            results = payload.results,
         })
         return
     end
@@ -182,46 +164,12 @@ function Controller:OnMatchPhaseTransitionRequested(payload)
     self._service:AdvanceMatchPhase(matchId, nextPhase)
 end
 
-function Controller:OnGhostGuessValidated(payload)
-    local matchId = payload and payload.matchId
-    if not matchId or payload.correct ~= true or payload.source == "MatchSystem" then
-        return
-    end
-    self:_publish("GhostIdentified", {
-        matchId = matchId,
-        player = payload.player,
-        userId = payload.userId,
-        ghostType = payload.actualGhostType,
-        guessedGhostType = payload.guessedGhostType,
-        source = payload.source or "InvestigationSystem",
-        now = payload.validatedAt or payload.now,
-    })
-end
-
 function Controller:OnMatchEnded(payload)
     local matchId = payload and payload.matchId
     if not matchId then
         return
     end
     self._service:EndMatch(matchId, payload.results)
-end
-
-function Controller:OnPlayerDied(payload)
-    local matchId = payload and payload.matchId
-    local userId = payload and (payload.userId or (payload.player and payload.player.UserId))
-    if not matchId or not userId then
-        return
-    end
-    self._service:MarkPlayerDeath(matchId, userId, payload.reason, payload)
-end
-
-function Controller:OnPlayerExtracted(payload)
-    local matchId = payload and payload.matchId
-    local userId = payload and (payload.userId or (payload.player and payload.player.UserId))
-    if not matchId or not userId then
-        return
-    end
-    self._service:MarkPlayerExtracted(matchId, userId, payload)
 end
 
 return Controller

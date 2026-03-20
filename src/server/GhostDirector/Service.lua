@@ -1,5 +1,4 @@
 local Behaviors = require(script.Parent.Behaviors.init)
-local Services = require(script.Parent.Parent.Core.Services)
 
 local Service = {}
 Service.__index = Service
@@ -10,7 +9,7 @@ local DEFAULT_CONFIG = {
 }
 
 local function resolveEventBus(deps)
-    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+    local eventBus = deps and deps.EventBus
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -24,7 +23,7 @@ local function resolveEventBus(deps)
 end
 
 local function resolveAggressionService(deps)
-    local system = Services.Get(deps, "AggressionSystem")
+    local system = deps and deps.AggressionSystem
     if type(system) ~= "table" then
         return nil
     end
@@ -38,7 +37,7 @@ local function resolveAggressionService(deps)
 end
 
 local function resolveGhostService(deps)
-    local system = Services.Get(deps, "GhostSystem")
+    local system = deps and deps.GhostSystem
     if type(system) ~= "table" then
         return nil
     end

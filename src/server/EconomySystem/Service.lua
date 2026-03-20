@@ -3,7 +3,6 @@ local DailyMissionModule = require(script.Parent.Rewards.DailyMissions.Main)
 local DailyCheckInModule = require(script.Parent.Rewards.DailyCheckIn.Main)
 local RoyalPassModule = require(script.Parent.Rewards.RoyalPass.Main)
 local IntegrationModule = require(script.Parent.Integrations.Main)
-local Services = require(script.Parent.Parent.Core.Services)
 
 local Service = {}
 Service.__index = Service
@@ -24,7 +23,7 @@ local CHECKIN_REWARDS = {
 }
 
 local function resolveEventBus(deps)
-    local eventBus = Services.Get(deps, "EventBus")
+    local eventBus = deps.EventBus
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -63,10 +62,10 @@ function Service.new(state, deps)
     self._rng = self._deps.Random or Random.new()
     self._integrations = IntegrationModule.new({
         EventBus = self._eventBus,
-        MatchSystem = Services.Get(self._deps, "MatchSystem"),
-        ContractSystem = Services.Get(self._deps, "ContractSystem"),
-        ProfileSystem = Services.Get(self._deps, "ProfileSystem"),
-        LobbySocialHub = Services.Get(self._deps, "LobbySocialHub"),
+        MatchSystem = self._deps.MatchSystem,
+        ContractSystem = self._deps.ContractSystem,
+        ProfileSystem = self._deps.ProfileSystem,
+        LobbySocialHub = self._deps.LobbySocialHub,
         IntegrationState = self._deps.IntegrationState,
     })
     self._royalPassDriver = RoyalPassModule.new({

@@ -29,8 +29,4 @@ function LobbySocialHub:Stop()
     self.Service:Stop()
 end
 
-function LobbySocialHub:Shutdown()
-    self:Stop()
-end
-
 return LobbySocialHub

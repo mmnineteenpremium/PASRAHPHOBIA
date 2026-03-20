@@ -1,10 +1,8 @@
-local Services = require(script.Parent.Parent.Core.Services)
-
 local Controller = {}
 Controller.__index = Controller
 
 local function resolveEventBus(deps)
-    local eventBus = Services.Get(deps, "EventBus")
+    local eventBus = deps and deps.EventBus
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -22,72 +20,65 @@ function Controller.new(state, service, deps)
     self._state = state
     self._service = service
     self._deps = deps or {}
-    self._eventBus = nil
+    self._eventBus = resolveEventBus(self._deps)
     self._subscriptions = {}
-    self._registered = false
     return self
 end
 
-function Controller:Create()
-    self._eventBus = resolveEventBus(self._deps)
-end
-
 function Controller:Init()
-    -- Event subscriptions happen in Start.
-end
-
-function Controller:Start()
-    self:RegisterEventHandlers()
-end
-
-function Controller:Stop()
-    self:UnregisterEventHandlers()
+    -- Additional cosmetic hooks can be registered here.
 end
 
 function Controller:RegisterEventHandlers()
-    if not self._eventBus or self._registered then
+    if not self._eventBus then
         return
     end
 
-    self:_subscribe("EquipCosmeticRequest", function(payload)
-        if payload and payload.player and payload.cosmeticId then
-            self._service:EquipCosmetic(payload.player, payload.cosmeticId)
+    local function handlePurchased(payload)
+        local player = payload and payload.player
+        local cosmeticId = payload and payload.cosmeticId
+        if player and cosmeticId then
+            self._service:EquipCosmetic(player, cosmeticId)
         end
-    end)
+    end
+    self._eventBus:Subscribe("CosmeticPurchased", handlePurchased)
+    table.insert(self._subscriptions, { eventName = "CosmeticPurchased", callback = handlePurchased })
 
-    self:_subscribe("UnequipCosmeticRequest", function(payload)
-        if payload and payload.player and payload.cosmeticSlot then
-            self._service:UnequipCosmetic(payload.player, payload.cosmeticSlot)
+    local function handleEquipRequested(payload)
+        local player = payload and payload.player
+        local cosmeticId = payload and payload.cosmeticId
+        if not player or not cosmeticId then
+            return
         end
-    end)
 
-    self:_subscribe("PlayerJoinedLobby", function(payload)
-        if payload and payload.player then
-            self._service:ApplyCosmetic(payload.player)
+        local ok, err = self._service:EquipCosmetic(player, cosmeticId)
+        if ok then
+            self._eventBus:Publish("CosmeticEquipSucceeded", {
+                player = player,
+                cosmeticId = cosmeticId,
+                source = payload and payload.source,
+            })
+            return
         end
-    end)
-
-    self._registered = true
+        self._eventBus:Publish("CosmeticEquipFailed", {
+            player = player,
+            cosmeticId = cosmeticId,
+            error = err,
+            source = payload and payload.source,
+        })
+    end
+    self._eventBus:Subscribe("CosmeticEquipRequested", handleEquipRequested)
+    table.insert(self._subscriptions, { eventName = "CosmeticEquipRequested", callback = handleEquipRequested })
 end
 
 function Controller:UnregisterEventHandlers()
-    if not self._eventBus or not self._registered then
+    if not self._eventBus then
         return
     end
-
-    for _, subscription in ipairs(self._subscriptions) do
-        self._eventBus:Unsubscribe(subscription.eventName, subscription.callback)
+    for _, sub in ipairs(self._subscriptions) do
+        self._eventBus:Unsubscribe(sub.eventName, sub.callback)
     end
     table.clear(self._subscriptions)
-    self._registered = false
-end
-
-function Controller:_subscribe(eventName, callback)
-    self._eventBus:Subscribe(eventName, callback)
-    table.insert(self._subscriptions, {
-        eventName = eventName,
-        callback = callback,
-    })
 end
 
 return Controller

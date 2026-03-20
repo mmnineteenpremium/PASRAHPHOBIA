@@ -1,3 +1,6390 @@
 {
-  "className": "Model"
+  "className": "Model",
+  "properties": {
+    "Name": "StudioMMNineteen"
+  },
+  "children": [
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Geometry"
+      },
+      "children": [
+        {
+          "className": "Folder",
+          "properties": {
+            "Name": "Structures"
+          },
+          "children": [
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Floor_1_Main",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  0.0,
+                  0.0
+                ],
+                "Size": [
+                  90.0,
+                  1.0,
+                  90.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.18,
+                  0.18,
+                  0.2
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Floor_2_Main",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  11.0,
+                  0.0
+                ],
+                "Size": [
+                  90.0,
+                  1.0,
+                  90.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.18,
+                  0.18,
+                  0.2
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "NorthWall",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  12.0,
+                  -45.0
+                ],
+                "Size": [
+                  90.0,
+                  24.0,
+                  2.0
+                ],
+                "Material": "SmoothPlastic",
+                "Color": [
+                  0.23,
+                  0.23,
+                  0.25
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "SouthWall",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  12.0,
+                  45.0
+                ],
+                "Size": [
+                  90.0,
+                  24.0,
+                  2.0
+                ],
+                "Material": "SmoothPlastic",
+                "Color": [
+                  0.23,
+                  0.23,
+                  0.25
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "WestWall",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  355.0,
+                  12.0,
+                  0.0
+                ],
+                "Size": [
+                  2.0,
+                  24.0,
+                  90.0
+                ],
+                "Material": "SmoothPlastic",
+                "Color": [
+                  0.23,
+                  0.23,
+                  0.25
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "EastWall",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  445.0,
+                  12.0,
+                  0.0
+                ],
+                "Size": [
+                  2.0,
+                  24.0,
+                  90.0
+                ],
+                "Material": "SmoothPlastic",
+                "Color": [
+                  0.23,
+                  0.23,
+                  0.25
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "CentralStaircase",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  6.0,
+                  0.0
+                ],
+                "Size": [
+                  8.0,
+                  12.0,
+                  14.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.24,
+                  0.24,
+                  0.27
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "BoundaryReference",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 1.0,
+                "Position": [
+                  400.0,
+                  20.0,
+                  0.0
+                ],
+                "Size": [
+                  90.0,
+                  40.0,
+                  90.0
+                ],
+                "Tags": [
+                  "MapBoundary"
+                ]
+              }
+            },
+            {
+              "className": "Folder",
+              "properties": {
+                "Name": "InteriorWalls"
+              },
+              "children": [
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_FilmStage_North",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      410.0,
+                      5.0,
+                      -17.0
+                    ],
+                    "Size": [
+                      40.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_FilmStage_South",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      410.0,
+                      5.0,
+                      17.0
+                    ],
+                    "Size": [
+                      40.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_FilmStage_West_L",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.5,
+                      5.0,
+                      -9.75
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      15.5
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_FilmStage_West_R",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.5,
+                      5.0,
+                      9.75
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      15.5
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_FilmStage_East",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      429.5,
+                      5.0,
+                      0.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      35.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_RecordingRoom_North",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      375.0,
+                      5.0,
+                      -23.5
+                    ],
+                    "Size": [
+                      24.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_RecordingRoom_South",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      375.0,
+                      5.0,
+                      -6.5
+                    ],
+                    "Size": [
+                      24.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_RecordingRoom_West",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      363.5,
+                      5.0,
+                      -15.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      18.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_RecordingRoom_East_L",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      386.5,
+                      5.0,
+                      -20.5
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      7.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_RecordingRoom_East_R",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      386.5,
+                      5.0,
+                      -9.5
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      7.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_ControlRoom_North",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      375.0,
+                      5.0,
+                      6.5
+                    ],
+                    "Size": [
+                      24.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_ControlRoom_South",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      375.0,
+                      5.0,
+                      23.5
+                    ],
+                    "Size": [
+                      24.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_ControlRoom_West",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      363.5,
+                      5.0,
+                      15.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      18.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_ControlRoom_East_L",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      386.5,
+                      5.0,
+                      9.5
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      7.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_ControlRoom_East_R",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      386.5,
+                      5.0,
+                      20.5
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      7.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayA_North",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      400.0,
+                      5.0,
+                      -49.5
+                    ],
+                    "Size": [
+                      18.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayA_South_L",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      394.5,
+                      5.0,
+                      -20.5
+                    ],
+                    "Size": [
+                      7.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayA_South_R",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      405.5,
+                      5.0,
+                      -20.5
+                    ],
+                    "Size": [
+                      7.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayA_West",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      391.5,
+                      5.0,
+                      -35.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      30.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayA_East",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      408.5,
+                      5.0,
+                      -35.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      30.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_EditingRoom_North",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      380.0,
+                      17.0,
+                      -8.5
+                    ],
+                    "Size": [
+                      22.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_EditingRoom_South",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      380.0,
+                      17.0,
+                      8.5
+                    ],
+                    "Size": [
+                      22.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_EditingRoom_West",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      369.5,
+                      17.0,
+                      0.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      18.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_EditingRoom_East_L",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.5,
+                      17.0,
+                      -5.5
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      7.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_EditingRoom_East_R",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.5,
+                      17.0,
+                      5.5
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      7.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_Office_North",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      420.0,
+                      17.0,
+                      -27.5
+                    ],
+                    "Size": [
+                      20.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_Office_South",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      420.0,
+                      17.0,
+                      -12.5
+                    ],
+                    "Size": [
+                      20.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_Office_West_L",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      410.5,
+                      17.0,
+                      -25.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      6.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_Office_West_R",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      410.5,
+                      17.0,
+                      -15.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      6.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_Office_East",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      429.5,
+                      17.0,
+                      -20.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      16.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_StorageRoom_North",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      420.0,
+                      17.0,
+                      12.5
+                    ],
+                    "Size": [
+                      20.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_StorageRoom_South",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      420.0,
+                      17.0,
+                      27.5
+                    ],
+                    "Size": [
+                      20.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_StorageRoom_West_L",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      410.5,
+                      17.0,
+                      15.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      6.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_StorageRoom_West_R",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      410.5,
+                      17.0,
+                      25.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      6.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_StorageRoom_East",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      429.5,
+                      17.0,
+                      20.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      16.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayB_North_L",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      394.5,
+                      17.0,
+                      20.5
+                    ],
+                    "Size": [
+                      7.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayB_North_R",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      405.5,
+                      17.0,
+                      20.5
+                    ],
+                    "Size": [
+                      7.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayB_South",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      400.0,
+                      17.0,
+                      49.5
+                    ],
+                    "Size": [
+                      18.0,
+                      10.0,
+                      1.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayB_West",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      391.5,
+                      17.0,
+                      35.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      30.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "Wall_HallwayB_East",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      408.5,
+                      17.0,
+                      35.0
+                    ],
+                    "Size": [
+                      1.0,
+                      10.0,
+                      30.0
+                    ],
+                    "Material": "SmoothPlastic",
+                    "Color": [
+                      0.23,
+                      0.23,
+                      0.25
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "className": "Folder",
+              "properties": {
+                "Name": "Staircases"
+              },
+              "children": [
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairStep_1",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.0,
+                      1.0,
+                      -40.0
+                    ],
+                    "Size": [
+                      6.0,
+                      2.0,
+                      3.0
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.25,
+                      0.25,
+                      0.28
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairStep_2",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.0,
+                      3.0,
+                      -37.0
+                    ],
+                    "Size": [
+                      6.0,
+                      2.0,
+                      3.0
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.25,
+                      0.25,
+                      0.28
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairStep_3",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.0,
+                      5.0,
+                      -34.0
+                    ],
+                    "Size": [
+                      6.0,
+                      2.0,
+                      3.0
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.25,
+                      0.25,
+                      0.28
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairStep_4",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.0,
+                      7.0,
+                      -31.0
+                    ],
+                    "Size": [
+                      6.0,
+                      2.0,
+                      3.0
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.25,
+                      0.25,
+                      0.28
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairStep_5",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.0,
+                      9.0,
+                      -28.0
+                    ],
+                    "Size": [
+                      6.0,
+                      2.0,
+                      3.0
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.25,
+                      0.25,
+                      0.28
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairStep_6",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      390.0,
+                      11.0,
+                      -25.0
+                    ],
+                    "Size": [
+                      6.0,
+                      2.0,
+                      3.0
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.25,
+                      0.25,
+                      0.28
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "className": "Folder",
+              "properties": {
+                "Name": "StairwellRails"
+              },
+              "children": [
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairRail_N",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      400.0,
+                      14.0,
+                      -7.0
+                    ],
+                    "Size": [
+                      14.0,
+                      3.0,
+                      0.5
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.18,
+                      0.18,
+                      0.2
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairRail_S",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      400.0,
+                      14.0,
+                      7.0
+                    ],
+                    "Size": [
+                      14.0,
+                      3.0,
+                      0.5
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.18,
+                      0.18,
+                      0.2
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairRail_W",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      393.0,
+                      14.0,
+                      0.0
+                    ],
+                    "Size": [
+                      0.5,
+                      3.0,
+                      14.0
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.18,
+                      0.18,
+                      0.2
+                    ]
+                  }
+                },
+                {
+                  "className": "Part",
+                  "properties": {
+                    "Name": "StairRail_E",
+                    "Anchored": true,
+                    "CanCollide": true,
+                    "Transparency": 0.0,
+                    "Position": [
+                      407.0,
+                      14.0,
+                      0.0
+                    ],
+                    "Size": [
+                      0.5,
+                      3.0,
+                      14.0
+                    ],
+                    "Material": "Concrete",
+                    "Color": [
+                      0.18,
+                      0.18,
+                      0.2
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "className": "Folder",
+          "properties": {
+            "Name": "Decorative"
+          },
+          "children": []
+        },
+        {
+          "className": "Folder",
+          "properties": {
+            "Name": "Facade"
+          },
+          "children": [
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Facade_North_1",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  6.0,
+                  -44.0
+                ],
+                "Size": [
+                  90.0,
+                  12.0,
+                  2.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.55,
+                  0.28,
+                  0.18
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Facade_South_1",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  6.0,
+                  44.0
+                ],
+                "Size": [
+                  90.0,
+                  12.0,
+                  2.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.55,
+                  0.28,
+                  0.18
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Facade_West_1",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  356.0,
+                  6.0,
+                  0.0
+                ],
+                "Size": [
+                  2.0,
+                  12.0,
+                  90.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.55,
+                  0.28,
+                  0.18
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Facade_East_1",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  444.0,
+                  6.0,
+                  0.0
+                ],
+                "Size": [
+                  2.0,
+                  12.0,
+                  90.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.55,
+                  0.28,
+                  0.18
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Facade_North_2",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  18.0,
+                  -44.0
+                ],
+                "Size": [
+                  90.0,
+                  12.0,
+                  2.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.55,
+                  0.28,
+                  0.18
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Facade_South_2",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  18.0,
+                  44.0
+                ],
+                "Size": [
+                  90.0,
+                  12.0,
+                  2.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.55,
+                  0.28,
+                  0.18
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Facade_West_2",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  356.0,
+                  18.0,
+                  0.0
+                ],
+                "Size": [
+                  2.0,
+                  12.0,
+                  90.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.55,
+                  0.28,
+                  0.18
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Facade_East_2",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  444.0,
+                  18.0,
+                  0.0
+                ],
+                "Size": [
+                  2.0,
+                  12.0,
+                  90.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.55,
+                  0.28,
+                  0.18
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Folder",
+          "properties": {
+            "Name": "Windows"
+          },
+          "children": [
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_N_1_0",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  373.0,
+                  6.0,
+                  -44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_S_1_0",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  373.0,
+                  6.0,
+                  44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_N_1_1",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  400.0,
+                  6.0,
+                  -44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_S_1_1",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  400.0,
+                  6.0,
+                  44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_N_1_2",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  427.0,
+                  6.0,
+                  -44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_S_1_2",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  427.0,
+                  6.0,
+                  44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_N_2_0",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  373.0,
+                  18.0,
+                  -44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_S_2_0",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  373.0,
+                  18.0,
+                  44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_N_2_1",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  400.0,
+                  18.0,
+                  -44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_S_2_1",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  400.0,
+                  18.0,
+                  44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_N_2_2",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  427.0,
+                  18.0,
+                  -44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Window_S_2_2",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.12,
+                "Position": [
+                  427.0,
+                  18.0,
+                  44.4
+                ],
+                "Size": [
+                  14.0,
+                  10.0,
+                  0.4
+                ],
+                "Material": "Glass",
+                "Color": [
+                  0.65,
+                  0.8,
+                  0.9
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Folder",
+          "properties": {
+            "Name": "ExteriorProps"
+          },
+          "children": [
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "ConcreteBeam_0",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  380.0,
+                  10.0,
+                  -43.0
+                ],
+                "Size": [
+                  2.0,
+                  12.0,
+                  2.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.3,
+                  0.3,
+                  0.32
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "ConcreteBeam_1",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  10.0,
+                  -43.0
+                ],
+                "Size": [
+                  2.0,
+                  12.0,
+                  2.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.3,
+                  0.3,
+                  0.32
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "ConcreteBeam_2",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  420.0,
+                  10.0,
+                  -43.0
+                ],
+                "Size": [
+                  2.0,
+                  12.0,
+                  2.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.3,
+                  0.3,
+                  0.32
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "BrickScreen_0",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.35,
+                "Position": [
+                  425.0,
+                  6.0,
+                  -10.0
+                ],
+                "Size": [
+                  8.0,
+                  10.0,
+                  1.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.5,
+                  0.26,
+                  0.18
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "BrickScreen_1",
+                "Anchored": true,
+                "CanCollide": false,
+                "Transparency": 0.35,
+                "Position": [
+                  425.0,
+                  6.0,
+                  10.0
+                ],
+                "Size": [
+                  8.0,
+                  10.0,
+                  1.0
+                ],
+                "Material": "Brick",
+                "Color": [
+                  0.5,
+                  0.26,
+                  0.18
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Folder",
+          "properties": {
+            "Name": "GroundProps"
+          },
+          "children": [
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Fence_N",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  2.0,
+                  -49.0
+                ],
+                "Size": [
+                  54.0,
+                  4.0,
+                  0.6
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.25,
+                  0.25,
+                  0.28
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Fence_S",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  400.0,
+                  2.0,
+                  49.0
+                ],
+                "Size": [
+                  54.0,
+                  4.0,
+                  0.6
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.25,
+                  0.25,
+                  0.28
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Fence_W",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  351.0,
+                  2.0,
+                  0.0
+                ],
+                "Size": [
+                  0.6,
+                  4.0,
+                  54.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.25,
+                  0.25,
+                  0.28
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Fence_E",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  449.0,
+                  2.0,
+                  0.0
+                ],
+                "Size": [
+                  0.6,
+                  4.0,
+                  54.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.25,
+                  0.25,
+                  0.28
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Bench_0",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  370.0,
+                  1.5,
+                  57.0
+                ],
+                "Size": [
+                  3.0,
+                  3.0,
+                  3.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.25,
+                  0.25,
+                  0.28
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Fence_1",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  392.5,
+                  1.5,
+                  57.0
+                ],
+                "Size": [
+                  3.0,
+                  3.0,
+                  3.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.25,
+                  0.25,
+                  0.28
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "LampPost_2",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  415.0,
+                  1.5,
+                  57.0
+                ],
+                "Size": [
+                  3.0,
+                  3.0,
+                  3.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.25,
+                  0.25,
+                  0.28
+                ]
+              }
+            },
+            {
+              "className": "Part",
+              "properties": {
+                "Name": "Planter_3",
+                "Anchored": true,
+                "CanCollide": true,
+                "Transparency": 0.0,
+                "Position": [
+                  437.5,
+                  1.5,
+                  57.0
+                ],
+                "Size": [
+                  3.0,
+                  3.0,
+                  3.0
+                ],
+                "Material": "Concrete",
+                "Color": [
+                  0.25,
+                  0.25,
+                  0.28
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Lighting"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_RecordingRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              8.5,
+              -17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_1",
+                "Brightness": 1.0,
+                "Range": 20.0,
+                "Shadows": false,
+                "Color": [
+                  0.95,
+                  0.88,
+                  0.82
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_EditingRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              8.5,
+              -17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_2",
+                "Brightness": 1.0,
+                "Range": 20.0,
+                "Shadows": false,
+                "Color": [
+                  0.95,
+                  0.88,
+                  0.82
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_ControlRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              8.5,
+              17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_3",
+                "Brightness": 1.0,
+                "Range": 20.0,
+                "Shadows": false,
+                "Color": [
+                  0.95,
+                  0.88,
+                  0.82
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_FilmStage",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              8.5,
+              17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_4",
+                "Brightness": 1.0,
+                "Range": 20.0,
+                "Shadows": false,
+                "Color": [
+                  0.95,
+                  0.88,
+                  0.82
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_StorageRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              19.5,
+              -17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_5",
+                "Brightness": 1.0,
+                "Range": 20.0,
+                "Shadows": false,
+                "Color": [
+                  0.95,
+                  0.88,
+                  0.82
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_Office",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              19.5,
+              -17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_6",
+                "Brightness": 1.0,
+                "Range": 20.0,
+                "Shadows": false,
+                "Color": [
+                  0.95,
+                  0.88,
+                  0.82
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_HallwayA",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              19.5,
+              17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_7",
+                "Brightness": 1.0,
+                "Range": 20.0,
+                "Shadows": false,
+                "Color": [
+                  0.95,
+                  0.88,
+                  0.82
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "LightSource_HallwayB",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              19.5,
+              17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Name": "PointLight_8",
+                "Brightness": 1.0,
+                "Range": 20.0,
+                "Shadows": false,
+                "Color": [
+                  0.95,
+                  0.88,
+                  0.82
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "SpawnPoints"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "PlayerSpawn_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              390.0,
+              4.0,
+              -10.0
+            ],
+            "Size": [
+              2.0,
+              1.0,
+              2.0
+            ],
+            "Tags": [
+              "PlayerSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "PlayerSpawn_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              410.0,
+              4.0,
+              -10.0
+            ],
+            "Size": [
+              2.0,
+              1.0,
+              2.0
+            ],
+            "Tags": [
+              "PlayerSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "PlayerSpawn_3",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              390.0,
+              4.0,
+              10.0
+            ],
+            "Size": [
+              2.0,
+              1.0,
+              2.0
+            ],
+            "Tags": [
+              "PlayerSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "PlayerSpawn_4",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              410.0,
+              4.0,
+              10.0
+            ],
+            "Size": [
+              2.0,
+              1.0,
+              2.0
+            ],
+            "Tags": [
+              "PlayerSpawn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "GhostSpawnZones"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              6.0,
+              -17.5
+            ],
+            "Size": [
+              25.125,
+              12.0,
+              25.125
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              6.0,
+              -17.5
+            ],
+            "Size": [
+              25.125,
+              12.0,
+              25.125
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_3",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              6.0,
+              17.5
+            ],
+            "Size": [
+              25.125,
+              12.0,
+              25.125
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_4",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              6.0,
+              17.5
+            ],
+            "Size": [
+              25.125,
+              12.0,
+              25.125
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "EvidenceSpawnNodes"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              377.475,
+              2.0,
+              -22.525
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              424.2,
+              2.0,
+              -22.525
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_3",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              377.475,
+              2.0,
+              24.2
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_4",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              424.2,
+              2.0,
+              12.475
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_5",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              377.475,
+              13.0,
+              -22.525
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_6",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              424.2,
+              13.0,
+              -10.8
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_7",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              377.475,
+              13.0,
+              12.475
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_8",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              424.2,
+              13.0,
+              12.475
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "InteractionPoints"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_RecordingRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              2.0,
+              -17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_EditingRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              2.0,
+              -17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_ControlRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              2.0,
+              17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_FilmStage",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              2.0,
+              17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_StorageRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              13.0,
+              -17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_Office",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              13.0,
+              -17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_HallwayA",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              13.0,
+              17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Interact_HallwayB",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              13.0,
+              17.5
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Tags": [
+              "Interactable"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "SafeZones"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "SafeZone_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              369.4,
+              4.0,
+              16.2
+            ],
+            "Size": [
+              18.0,
+              8.0,
+              18.0
+            ],
+            "Tags": [
+              "SafeZone"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "SafeZone_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              430.6,
+              4.0,
+              -16.2
+            ],
+            "Size": [
+              18.0,
+              8.0,
+              18.0
+            ],
+            "Tags": [
+              "SafeZone"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "NavigationNodes"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              369.0,
+              2.0,
+              -31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              384.5,
+              2.0,
+              -31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_3",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              400.0,
+              2.0,
+              -31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_4",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              415.5,
+              2.0,
+              -31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_5",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              431.0,
+              2.0,
+              -31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_6",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              369.0,
+              2.0,
+              -15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_7",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              384.5,
+              2.0,
+              -15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_8",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              400.0,
+              2.0,
+              -15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_9",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              415.5,
+              2.0,
+              -15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_10",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              431.0,
+              2.0,
+              -15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_11",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              369.0,
+              2.0,
+              0.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_12",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              384.5,
+              2.0,
+              0.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_13",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              400.0,
+              2.0,
+              0.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_14",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              415.5,
+              2.0,
+              0.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_15",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              431.0,
+              2.0,
+              0.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_16",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              369.0,
+              2.0,
+              15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_17",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              384.5,
+              2.0,
+              15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_18",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              400.0,
+              2.0,
+              15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_19",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              415.5,
+              2.0,
+              15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_20",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              431.0,
+              2.0,
+              15.5
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_21",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              369.0,
+              2.0,
+              31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_22",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              384.5,
+              2.0,
+              31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_23",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              400.0,
+              2.0,
+              31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_24",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              415.5,
+              2.0,
+              31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "NavNode_25",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              431.0,
+              2.0,
+              31.0
+            ],
+            "Size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "Tags": [
+              "NavigationNode"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Floors"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Floor_1",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.0,
+              0.0,
+              0.0
+            ],
+            "Size": [
+              90.0,
+              1.0,
+              90.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Floor_2_North",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.0,
+              12.0,
+              -26.0
+            ],
+            "Size": [
+              90.0,
+              1.0,
+              38.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Floor_2_South",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.0,
+              12.0,
+              26.0
+            ],
+            "Size": [
+              90.0,
+              1.0,
+              38.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Floor_2_West",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              374.0,
+              12.0,
+              0.0
+            ],
+            "Size": [
+              38.0,
+              1.0,
+              14.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Floor_2_East",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              426.0,
+              12.0,
+              0.0
+            ],
+            "Size": [
+              38.0,
+              1.0,
+              14.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Rooms"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Room_FilmStage",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 0.2,
+            "Position": [
+              410.0,
+              0.5,
+              0.0
+            ],
+            "Size": [
+              38.0,
+              1.0,
+              33.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Room_RecordingRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 0.2,
+            "Position": [
+              375.0,
+              0.5,
+              -15.0
+            ],
+            "Size": [
+              22.0,
+              1.0,
+              16.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Room_ControlRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 0.2,
+            "Position": [
+              375.0,
+              0.5,
+              15.0
+            ],
+            "Size": [
+              22.0,
+              1.0,
+              16.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Room_HallwayA",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 0.2,
+            "Position": [
+              400.0,
+              0.5,
+              -35.0
+            ],
+            "Size": [
+              16.0,
+              1.0,
+              28.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Room_EditingRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 0.2,
+            "Position": [
+              380.0,
+              12.5,
+              0.0
+            ],
+            "Size": [
+              20.0,
+              1.0,
+              16.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Room_Office",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 0.2,
+            "Position": [
+              420.0,
+              12.5,
+              -20.0
+            ],
+            "Size": [
+              18.0,
+              1.0,
+              14.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Room_StorageRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 0.2,
+            "Position": [
+              420.0,
+              12.5,
+              20.0
+            ],
+            "Size": [
+              18.0,
+              1.0,
+              14.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Room_HallwayB",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 0.2,
+            "Position": [
+              400.0,
+              12.5,
+              35.0
+            ],
+            "Size": [
+              16.0,
+              1.0,
+              28.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.18,
+              0.18,
+              0.2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Doors"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_FilmStage",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              390.25,
+              3.5,
+              0.0
+            ],
+            "Size": [
+              0.5,
+              7.0,
+              4.0
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.28,
+              0.28,
+              0.3
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_RecordingRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              386.75,
+              3.5,
+              -15.0
+            ],
+            "Size": [
+              0.5,
+              7.0,
+              4.0
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.28,
+              0.28,
+              0.3
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_ControlRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              386.75,
+              3.5,
+              15.0
+            ],
+            "Size": [
+              0.5,
+              7.0,
+              4.0
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.28,
+              0.28,
+              0.3
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_HallwayA",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.0,
+              3.5,
+              -20.25
+            ],
+            "Size": [
+              4.0,
+              7.0,
+              0.5
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.28,
+              0.28,
+              0.3
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_EditingRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              390.75,
+              15.5,
+              0.0
+            ],
+            "Size": [
+              0.5,
+              7.0,
+              4.0
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.28,
+              0.28,
+              0.3
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_Office",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              410.25,
+              15.5,
+              -20.0
+            ],
+            "Size": [
+              0.5,
+              7.0,
+              4.0
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.28,
+              0.28,
+              0.3
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_StorageRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              410.25,
+              15.5,
+              20.0
+            ],
+            "Size": [
+              0.5,
+              7.0,
+              4.0
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.28,
+              0.28,
+              0.3
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_HallwayB",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.0,
+              15.5,
+              20.25
+            ],
+            "Size": [
+              4.0,
+              7.0,
+              0.5
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.28,
+              0.28,
+              0.3
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Lights"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Light_FilmStage",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              410.0,
+              9.5,
+              0.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Brightness": 1.6,
+                "Range": 18.0,
+                "Color": [
+                  1.0,
+                  0.95,
+                  0.85
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Light_RecordingRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              375.0,
+              9.5,
+              -15.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Brightness": 1.6,
+                "Range": 18.0,
+                "Color": [
+                  1.0,
+                  0.95,
+                  0.85
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Light_ControlRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              375.0,
+              9.5,
+              15.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Brightness": 1.6,
+                "Range": 18.0,
+                "Color": [
+                  1.0,
+                  0.95,
+                  0.85
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Light_HallwayA",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              400.0,
+              9.5,
+              -35.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Brightness": 1.6,
+                "Range": 18.0,
+                "Color": [
+                  1.0,
+                  0.95,
+                  0.85
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Light_EditingRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              380.0,
+              21.5,
+              0.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Brightness": 1.6,
+                "Range": 18.0,
+                "Color": [
+                  1.0,
+                  0.95,
+                  0.85
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Light_Office",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              420.0,
+              21.5,
+              -20.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Brightness": 1.6,
+                "Range": 18.0,
+                "Color": [
+                  1.0,
+                  0.95,
+                  0.85
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Light_StorageRoom",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              420.0,
+              21.5,
+              20.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Brightness": 1.6,
+                "Range": 18.0,
+                "Color": [
+                  1.0,
+                  0.95,
+                  0.85
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Light_HallwayB",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              400.0,
+              21.5,
+              35.0
+            ],
+            "Size": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "children": [
+            {
+              "className": "PointLight",
+              "properties": {
+                "Brightness": 1.6,
+                "Range": 18.0,
+                "Color": [
+                  1.0,
+                  0.95,
+                  0.85
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Props"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_FilmStage",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              412.0,
+              1.0,
+              2.0
+            ],
+            "Size": [
+              2.0,
+              2.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.2,
+              0.2,
+              0.22
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_RecordingRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              377.0,
+              1.0,
+              -13.0
+            ],
+            "Size": [
+              2.0,
+              2.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.2,
+              0.2,
+              0.22
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_ControlRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              377.0,
+              1.0,
+              17.0
+            ],
+            "Size": [
+              2.0,
+              2.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.2,
+              0.2,
+              0.22
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_HallwayA",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              402.0,
+              1.0,
+              -33.0
+            ],
+            "Size": [
+              2.0,
+              2.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.2,
+              0.2,
+              0.22
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_EditingRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              382.0,
+              13.0,
+              2.0
+            ],
+            "Size": [
+              2.0,
+              2.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.2,
+              0.2,
+              0.22
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Office",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              422.0,
+              13.0,
+              -18.0
+            ],
+            "Size": [
+              2.0,
+              2.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.2,
+              0.2,
+              0.22
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_StorageRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              422.0,
+              13.0,
+              22.0
+            ],
+            "Size": [
+              2.0,
+              2.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.2,
+              0.2,
+              0.22
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_HallwayB",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              402.0,
+              13.0,
+              37.0
+            ],
+            "Size": [
+              2.0,
+              2.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.2,
+              0.2,
+              0.22
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_FilmStage_StageLight",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.5,
+              1.5,
+              8.25
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_FilmStage_CameraRig",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              419.5,
+              1.5,
+              -8.25
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_RecordingRoom_MicStand",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              369.5,
+              1.5,
+              -11.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_RecordingRoom_BoothPanel",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              380.5,
+              1.5,
+              -19.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_ControlRoom_Console",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              369.5,
+              1.5,
+              19.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_ControlRoom_Chair",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              380.5,
+              1.5,
+              11.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_HallwayA_Bench",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              396.0,
+              1.5,
+              -28.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_HallwayA_CoatRack",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              404.0,
+              1.5,
+              -42.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_EditingRoom_Crate",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              375.0,
+              13.5,
+              4.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_EditingRoom_Chair",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              385.0,
+              13.5,
+              -4.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_Office_Desk",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              415.5,
+              13.5,
+              -16.5
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_Office_Chair",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              424.5,
+              13.5,
+              -23.5
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_StorageRoom_Shelf",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              415.5,
+              13.5,
+              23.5
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_StorageRoom_Crate",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              424.5,
+              13.5,
+              16.5
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_HallwayB_Bench",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              396.0,
+              13.5,
+              42.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Prop_Room_HallwayB_CoatRack",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              404.0,
+              13.5,
+              28.0
+            ],
+            "Size": [
+              3.0,
+              3.0,
+              2.0
+            ],
+            "Material": "Plastic",
+            "Color": [
+              0.25,
+              0.22,
+              0.2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "GhostSpawns"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              6.0,
+              -17.5
+            ],
+            "Size": [
+              25.125,
+              12.0,
+              25.125
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              6.0,
+              -17.5
+            ],
+            "Size": [
+              25.125,
+              12.0,
+              25.125
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_3",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              382.5,
+              6.0,
+              17.5
+            ],
+            "Size": [
+              25.125,
+              12.0,
+              25.125
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "GhostSpawnZone_4",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              417.5,
+              6.0,
+              17.5
+            ],
+            "Size": [
+              25.125,
+              12.0,
+              25.125
+            ],
+            "Tags": [
+              "GhostSpawn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "EvidenceSpawns"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_1",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              377.475,
+              2.0,
+              -22.525
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_2",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              424.2,
+              2.0,
+              -22.525
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_3",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              377.475,
+              2.0,
+              24.2
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_4",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              424.2,
+              2.0,
+              12.475
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_5",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              377.475,
+              13.0,
+              -22.525
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_6",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              424.2,
+              13.0,
+              -10.8
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_7",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              377.475,
+              13.0,
+              12.475
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "EvidenceNode_8",
+            "Anchored": true,
+            "CanCollide": false,
+            "Transparency": 1.0,
+            "Position": [
+              424.2,
+              13.0,
+              12.475
+            ],
+            "Size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "Tags": [
+              "EvidenceSpawn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "Roofs"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Roof_FilmStage",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              410.0,
+              10.0,
+              0.0
+            ],
+            "Size": [
+              38.0,
+              1.0,
+              33.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.16,
+              0.16,
+              0.18
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Roof_RecordingRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              375.0,
+              10.0,
+              -15.0
+            ],
+            "Size": [
+              22.0,
+              1.0,
+              16.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.16,
+              0.16,
+              0.18
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Roof_ControlRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              375.0,
+              10.0,
+              15.0
+            ],
+            "Size": [
+              22.0,
+              1.0,
+              16.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.16,
+              0.16,
+              0.18
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Roof_HallwayA",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.0,
+              10.0,
+              -35.0
+            ],
+            "Size": [
+              16.0,
+              1.0,
+              28.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.16,
+              0.16,
+              0.18
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Roof_EditingRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              380.0,
+              22.0,
+              0.0
+            ],
+            "Size": [
+              20.0,
+              1.0,
+              16.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.16,
+              0.16,
+              0.18
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Roof_Office",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              420.0,
+              22.0,
+              -20.0
+            ],
+            "Size": [
+              18.0,
+              1.0,
+              14.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.16,
+              0.16,
+              0.18
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Roof_StorageRoom",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              420.0,
+              22.0,
+              20.0
+            ],
+            "Size": [
+              18.0,
+              1.0,
+              14.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.16,
+              0.16,
+              0.18
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Roof_HallwayB",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.0,
+              22.0,
+              35.0
+            ],
+            "Size": [
+              16.0,
+              1.0,
+              28.0
+            ],
+            "Material": "Concrete",
+            "Color": [
+              0.16,
+              0.16,
+              0.18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "className": "Folder",
+      "properties": {
+        "Name": "DoorFrames"
+      },
+      "children": [
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_FilmStage_FrameL",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              390.25,
+              3.5,
+              -2.2
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_FilmStage_FrameR",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              390.25,
+              3.5,
+              2.2
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_FilmStage_FrameTop",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              390.25,
+              7.0,
+              0.0
+            ],
+            "Size": [
+              1.3,
+              0.4,
+              4.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_RecordingRoom_FrameL",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              386.75,
+              3.5,
+              -17.2
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_RecordingRoom_FrameR",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              386.75,
+              3.5,
+              -12.8
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_RecordingRoom_FrameTop",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              386.75,
+              7.0,
+              -15.0
+            ],
+            "Size": [
+              1.3,
+              0.4,
+              4.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_ControlRoom_FrameL",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              386.75,
+              3.5,
+              12.8
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_ControlRoom_FrameR",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              386.75,
+              3.5,
+              17.2
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_ControlRoom_FrameTop",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              386.75,
+              7.0,
+              15.0
+            ],
+            "Size": [
+              1.3,
+              0.4,
+              4.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_HallwayA_FrameL",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              397.8,
+              3.5,
+              -20.25
+            ],
+            "Size": [
+              0.4,
+              7.8,
+              0.9
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_HallwayA_FrameR",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              402.2,
+              3.5,
+              -20.25
+            ],
+            "Size": [
+              0.4,
+              7.8,
+              0.9
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_HallwayA_FrameTop",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.0,
+              7.0,
+              -20.25
+            ],
+            "Size": [
+              4.8,
+              0.4,
+              0.9
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_EditingRoom_FrameL",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              390.75,
+              15.5,
+              -2.2
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_EditingRoom_FrameR",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              390.75,
+              15.5,
+              2.2
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_EditingRoom_FrameTop",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              390.75,
+              19.0,
+              0.0
+            ],
+            "Size": [
+              1.3,
+              0.4,
+              4.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_Office_FrameL",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              410.25,
+              15.5,
+              -22.2
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_Office_FrameR",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              410.25,
+              15.5,
+              -17.8
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_Office_FrameTop",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              410.25,
+              19.0,
+              -20.0
+            ],
+            "Size": [
+              1.3,
+              0.4,
+              4.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_StorageRoom_FrameL",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              410.25,
+              15.5,
+              17.8
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_StorageRoom_FrameR",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              410.25,
+              15.5,
+              22.2
+            ],
+            "Size": [
+              4.4,
+              7.8,
+              0.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_StorageRoom_FrameTop",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              410.25,
+              19.0,
+              20.0
+            ],
+            "Size": [
+              1.3,
+              0.4,
+              4.4
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_HallwayB_FrameL",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              397.8,
+              15.5,
+              20.25
+            ],
+            "Size": [
+              0.4,
+              7.8,
+              0.9
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_HallwayB_FrameR",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              402.2,
+              15.5,
+              20.25
+            ],
+            "Size": [
+              0.4,
+              7.8,
+              0.9
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        },
+        {
+          "className": "Part",
+          "properties": {
+            "Name": "Door_HallwayB_FrameTop",
+            "Anchored": true,
+            "CanCollide": true,
+            "Transparency": 0.0,
+            "Position": [
+              400.0,
+              19.0,
+              20.25
+            ],
+            "Size": [
+              4.8,
+              0.4,
+              0.9
+            ],
+            "Material": "SmoothPlastic",
+            "Color": [
+              0.24,
+              0.24,
+              0.26
+            ]
+          }
+        }
+      ]
+    }
+  ]
 }

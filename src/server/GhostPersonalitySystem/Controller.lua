@@ -1,10 +1,8 @@
-local Services = require(script.Parent.Parent.Core.Services)
-
 local Controller = {}
 Controller.__index = Controller
 
 local function resolveEventBus(deps)
-    local eventBus = Services.Get(deps, "EventBus")
+    local eventBus = deps and deps.EventBus
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -22,61 +20,55 @@ function Controller.new(state, service, deps)
     self._state = state
     self._service = service
     self._deps = deps or {}
-    self._eventBus = nil
+    self._eventBus = resolveEventBus(self._deps)
     self._subscriptions = {}
-    self._registered = false
+    self._handlersRegistered = false
     return self
 end
 
-function Controller:Create()
-    self._eventBus = resolveEventBus(self._deps)
-end
-
 function Controller:Init()
-    -- Subscriptions are registered in Start.
-end
-
-function Controller:Start()
-    self:RegisterEventHandlers()
-end
-
-function Controller:Stop()
-    self:UnregisterEventHandlers()
+    -- Event-driven wiring only.
 end
 
 function Controller:RegisterEventHandlers()
-    if not self._eventBus or self._registered then
+    if not self._eventBus or self._handlersRegistered then
         return
     end
 
     self:_subscribe("MatchStarted", function(payload)
-        self._service:OnMatchStarted(payload)
+        self:OnMatchStarted(payload)
     end)
-
-    self:_subscribe("GhostSpawned", function(payload)
-        self._service:OnGhostSpawned(payload)
-    end)
-
-    self:_subscribe("ParanormalEvent", function(payload)
-        self._service:OnParanormalEvent(payload)
-    end)
-
     self:_subscribe("MatchEnded", function(payload)
-        self._service:OnMatchEnded(payload)
+        self:OnMatchEnded(payload)
+    end)
+    self:_subscribe("GhostSpawned", function(payload)
+        self:OnGhostSpawned(payload)
+    end)
+    self:_subscribe("DirectorTensionChanged", function(payload)
+        self:OnDirectorTensionChanged(payload)
+    end)
+    self:_subscribe("EvidenceCollected", function(payload)
+        self:OnEvidenceCollected(payload)
+    end)
+    self:_subscribe("HuntStarted", function(payload)
+        self:OnHuntStarted(payload)
+    end)
+    self:_subscribe("HuntEnded", function(payload)
+        self:OnHuntEnded(payload)
     end)
 
-    self._registered = true
+    self._handlersRegistered = true
 end
 
 function Controller:UnregisterEventHandlers()
-    if not self._eventBus or not self._registered then
+    if not self._eventBus or not self._handlersRegistered then
         return
     end
     for _, sub in ipairs(self._subscriptions) do
         self._eventBus:Unsubscribe(sub.eventName, sub.callback)
     end
     table.clear(self._subscriptions)
-    self._registered = false
+    self._handlersRegistered = false
 end
 
 function Controller:_subscribe(eventName, callback)
@@ -85,6 +77,55 @@ function Controller:_subscribe(eventName, callback)
         eventName = eventName,
         callback = callback,
     })
+end
+
+function Controller:OnMatchStarted(payload)
+    local matchId = payload and payload.matchId
+    if matchId then
+        self._service:StartMatch(matchId, payload)
+    end
+end
+
+function Controller:OnMatchEnded(payload)
+    local matchId = payload and payload.matchId
+    if matchId then
+        self._service:EndMatch(matchId)
+    end
+end
+
+function Controller:OnGhostSpawned(payload)
+    local matchId = payload and payload.matchId
+    if matchId then
+        self._service:OnGhostSpawned(matchId, payload)
+    end
+end
+
+function Controller:OnDirectorTensionChanged(payload)
+    local matchId = payload and payload.matchId
+    if matchId then
+        self._service:OnDirectorTensionChanged(matchId, payload)
+    end
+end
+
+function Controller:OnEvidenceCollected(payload)
+    local matchId = payload and payload.matchId
+    if matchId then
+        self._service:OnEvidenceCollected(matchId)
+    end
+end
+
+function Controller:OnHuntStarted(payload)
+    local matchId = payload and payload.matchId
+    if matchId then
+        self._service:OnHuntStarted(matchId)
+    end
+end
+
+function Controller:OnHuntEnded(payload)
+    local matchId = payload and payload.matchId
+    if matchId then
+        self._service:OnHuntEnded(matchId)
+    end
 end
 
 return Controller

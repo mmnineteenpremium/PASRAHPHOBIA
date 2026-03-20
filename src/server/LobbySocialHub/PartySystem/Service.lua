@@ -1,12 +1,11 @@
 local Service = {}
 Service.__index = Service
-local Services = require(script.Parent.Parent.Parent.Core.Services)
 
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
     self._deps = deps or {}
-    self._partySystem = Services.Get(self._deps, "PartySystem")
+    self._partySystem = self._deps.PartySystem
     return self
 end
 

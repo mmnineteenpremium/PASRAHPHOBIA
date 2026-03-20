@@ -1,8 +1,13 @@
 local Controller = {}
 Controller.__index = Controller
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LOBBY_REMOTE_NAME = "LobbyEvent"
+
 local function resolveEventBus(deps)
-    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+    local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus"))
+        or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus"))
+        or (deps and deps.EventBus or nil)
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -22,6 +27,18 @@ local function resolvePlayersService(deps)
     return game:GetService("Players")
 end
 
+local function resolveLobbyRemote()
+    local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+    if not remoteFolder then
+        return nil
+    end
+    local remote = remoteFolder:FindFirstChild(LOBBY_REMOTE_NAME)
+    if remote and remote:IsA("RemoteEvent") then
+        return remote
+    end
+    return nil
+end
+
 function Controller.new(state, service, deps)
     local self = setmetatable({}, Controller)
     self._state = state
@@ -31,6 +48,8 @@ function Controller.new(state, service, deps)
     self._connections = {}
     self._eventBus = resolveEventBus(self._deps)
     self._playersService = resolvePlayersService(self._deps)
+    self._lobbyRemote = nil
+    self._lobbyRemoteConnection = nil
     return self
 end
 
@@ -63,6 +82,14 @@ function Controller:RegisterEventHandlers()
                 player = player,
             })
         end
+    end
+
+    self._lobbyRemote = resolveLobbyRemote()
+    if self._lobbyRemote then
+        self._lobbyRemoteConnection = self._lobbyRemote.OnServerEvent:Connect(function(player, request)
+            self:OnLobbyEventRequest(player, request)
+        end)
+        table.insert(self._connections, self._lobbyRemoteConnection)
     end
 end
 
@@ -110,6 +137,16 @@ end
 
 function Controller:OnPlayerTeleported(payload)
     self._service:HandlePlayerTeleported(payload)
+end
+
+function Controller:OnLobbyEventRequest(player, request)
+    if type(request) ~= "table" then
+        return
+    end
+
+    if type(self._service.HandleLobbyRequest) == "function" then
+        self._service:HandleLobbyRequest(player, request)
+    end
 end
 
 return Controller

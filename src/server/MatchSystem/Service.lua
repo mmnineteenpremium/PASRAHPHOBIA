@@ -51,14 +51,6 @@ function Service:EndMatch(matchId, results)
     return self._matchService:EndMatch(matchId, results)
 end
 
-function Service:MarkPlayerDeath(matchId, userId, reason, payload)
-    return self._matchService:MarkPlayerDeath(matchId, userId, reason, payload)
-end
-
-function Service:MarkPlayerExtracted(matchId, userId, payload)
-    return self._matchService:MarkPlayerExtracted(matchId, userId, payload)
-end
-
 function Service:GetMatch(matchId)
     return self._matchService:GetMatch(matchId)
 end

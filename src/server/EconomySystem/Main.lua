@@ -29,8 +29,4 @@ function EconomySystem:Stop()
     self.Service:Stop()
 end
 
-function EconomySystem:Shutdown()
-    self:Stop()
-end
-
 return EconomySystem

@@ -1,0 +1,196 @@
+You are a senior 3D technical artist, Roblox optimization engineer, and Blender Python (bpy) automation specialist.
+
+You are building a COMPLETE PRODUCTION-READY 3D ASSET PIPELINE
+for a Roblox horror investigation game named "PASRAHPHOBIA".
+
+CRITICAL GLOBAL RULE:
+Each asset (item, prop, module, or ghost) must be generated as a SEPARATE Blender Python script.
+ONE ASSET = ONE SCRIPT.
+Do NOT combine multiple assets in one script.
+
+Each script must be fully copy-paste ready for Blender Scripting workspace.
+
+====================================================
+GLOBAL REQUIREMENTS (APPLY TO ALL ASSETS)
+====================================================
+
+- Clear scene before generating model
+- Use bpy only
+- 1 Blender Unit = 1 Roblox Stud
+- Low poly only
+- No ngons
+- No subdivision modifiers
+- No procedural textures
+- Simple Principled BSDF (base color only)
+- Multiplayer optimized
+- FBX export ready
+- Apply transforms
+- Recalculate normals
+- Auto smooth shading
+- Clean hierarchy
+- Proper naming:
+
+  PASRAH_[CATEGORY]_[NAME]_LOD0
+  PASRAH_[CATEGORY]_[NAME]_LOD1
+
+LOD Rules:
+- LOD0 = detailed version
+- LOD1 = simplified version
+
+Pivot Rules:
+- Tools: grip pivot
+- Doors: hinge side
+- Props: bottom center
+- Ghosts: feet center
+
+Roblox Safety:
+- No gore
+- No exposed organs
+- Stylized horror only
+- Must comply with Roblox community guidelines
+
+====================================================
+GENERATE SEPARATE SCRIPTS FOR:
+====================================================
+
+A) INVESTIGATION EQUIPMENT
+- Flashlight
+- EMF Reader
+- Spirit Box
+- Video Camera
+- Tripod
+- UV Light
+- Journal
+- Thermometer
+- Crucifix
+- Motion Sensor
+
+B) ENVIRONMENT MODULES
+- Horror Wooden Door
+- Window Frame
+- Wall Segment
+- Floor Tile
+- Ceiling Tile
+- Stair Module
+- Basement Door
+- Wardrobe
+- Wooden Table
+- Bed Frame
+- Evidence Board
+- Fuse Box
+
+C) INTERACTION ITEMS
+- Key
+- Lock
+- Candle
+- Ritual Circle
+- Bone Evidence
+- Haunted Doll
+- Music Box
+
+D) ATMOSPHERIC PROPS
+- Broken Chair
+- Cabinet
+- Picture Frame
+- Trash Bag
+- Tree Low Poly
+- Tombstone
+- Fence Segment
+
+E) INDONESIAN GHOST PACK
+1. Pocong
+   - Wrapped white burial cloth
+   - Tied top knot
+   - No visible feet
+   - Stylized cloth folds (low poly)
+
+2. Suster Ngesot
+   - Old nurse outfit
+   - Long black hair
+   - Lower body crawling form (no gore)
+   - Stylized horror face
+
+3. Genderuwo
+   - Large muscular humanoid
+   - Dark skin tone
+   - Messy hair
+   - Slight exaggerated arms
+
+4. Tuyul
+   - Small child-sized humanoid
+   - Bald head
+   - Slightly glowing eyes (material only color effect)
+   - Simplified body structure
+
+5. Kuntilanak
+   - Long white dress
+   - Long straight hair
+   - Floating pose variant
+   - Slightly elongated arms
+
+6. Kuyang
+   - Floating head with simple stylized trailing effect
+   - NO gore elements
+   - Magical aura base mesh instead of organs
+   - Roblox safe stylization
+
+7. Jelangkung
+   - Wooden doll structure
+   - Simple cloth body
+   - Stick arms
+   - Lightweight mesh
+
+8. Wewe Gombel
+   - Tall female humanoid
+   - Long messy hair
+   - Slightly exaggerated torso
+   - Stylized proportions (not disturbing)
+
+====================================================
+STYLE DIRECTION
+====================================================
+
+Visual Style:
+- Semi-realistic low poly
+- Indonesian folklore accurate but Roblox safe
+- Horror but not graphic
+- Optimized for multiplayer
+
+Topology:
+- Clean edge flow
+- Game ready
+- Suitable for animation rigging later
+
+
+====================================================
+OUTPUT FORMAT
+====================================================
+
+For each asset:
+
+1. Print:
+   SCRIPT NAME: [ASSET NAME]
+
+2. Then output ONLY the Blender Python script.
+3. No explanation.
+4. No markdown.
+5. Clean professional structure.
+6. Generate sequentially.
+
+====================================================
+GOAL
+====================================================
+
+Create a COMPLETE AAA-ready Roblox horror asset pack
+for PASRAHPHOBIA with:
+
+- Modular structure
+- Multiplayer optimization
+- Indonesian cultural identity
+- Production quality
+- Roblox compliant performance
+- Ready for monetization system
+- Ready for large map usage
+
+Do NOT skip any asset.
+Generate scripts one by one.

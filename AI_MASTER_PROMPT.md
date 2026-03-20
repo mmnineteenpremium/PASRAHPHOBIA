@@ -1,4 +1,4 @@
-# PASRAHPHOBIA — AI MASTER PROMPT
+# PASRAHPHOBIA ï¿½ AI MASTER PROMPT
 
 This document defines the master prompt for AI agents working on the PASRAHPHOBIA Roblox project.
 
@@ -36,7 +36,6 @@ Controller.lua
 State.lua  
 
 --------------------------------------------------
-
 REPOSITORY STRUCTURE
 
 src/server

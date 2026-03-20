@@ -1,10 +1,12 @@
 local Service = {}
 Service.__index = Service
 
-local Services = require(script.Parent.Parent.Core.Services)
+local RankTiersResolver = require(script.Parent.Parent.Core.RankTiersResolver)
+
+local STARS_PER_FINITE_TIER = 4
 
 local function resolveEventBus(deps)
-    local eventBus = Services.Get(deps, "EventBus")
+    local eventBus = deps.EventBus
     if type(eventBus) ~= "table" then
         return nil
     end
@@ -13,35 +15,6 @@ local function resolveEventBus(deps)
     end
     if type(eventBus.Service) == "table" and type(eventBus.Service.Publish) == "function" then
         return eventBus.Service
-    end
-    return nil
-end
-
-local function resolveProfileService(deps)
-    local profile = Services.Get(deps, "ProfileSystem")
-    if type(profile) ~= "table" then
-        return nil
-    end
-    if type(profile.GetPlayerLevel) == "function" then
-        return profile
-    end
-    if type(profile.Service) == "table" and type(profile.Service.GetPlayerLevel) == "function" then
-        return profile.Service
-    end
-    return nil
-end
-
-local function resolvePersistenceService(deps)
-    local persistence = Services.Get(deps, "DataPersistence")
-        or Services.Get(deps, "DataPersistenceService")
-    if type(persistence) ~= "table" then
-        return nil
-    end
-    if type(persistence.SaveProfile) == "function" then
-        return persistence
-    end
-    if type(persistence.Service) == "table" and type(persistence.Service.SaveProfile) == "function" then
-        return persistence.Service
     end
     return nil
 end
@@ -61,19 +34,26 @@ function Service.new(state, deps)
     self._state = state
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
-    self._profile = resolveProfileService(self._deps)
-    self._persistence = resolvePersistenceService(self._deps)
+    self._rankTiers = RankTiersResolver.Resolve(self._deps)
+    self._tierNames = {}
+    self._tierIndexByName = {}
+    self._tierLevelByName = {}
+    for index, entry in ipairs(self._rankTiers) do
+        self._tierNames[index] = entry.name
+        self._tierIndexByName[entry.name] = index
+        self._tierLevelByName[entry.name] = entry.level or index
+    end
+    self._topTierName = self._tierNames[#self._tierNames] or "Rookie"
+    self._lastFiniteTierIndex = math.max(#self._tierNames - 1, 1)
     return self
 end
 
 function Service:Init()
-    self._state:Set("rankTable", self._state:Get("rankTable") or {})
-    self._state:Set("rankByUserId", self._state:Get("rankByUserId") or {})
-    self._state:Set("recentRankUpdates", self._state:Get("recentRankUpdates") or {})
+    self._state:Set("rankByUserId", {})
 end
 
 function Service:Start()
-    -- Event-driven ranked progression.
+    -- Start runtime tasks or loops here.
 end
 
 function Service:Stop()
@@ -86,10 +66,6 @@ function Service:_publish(eventName, payload)
     end
 end
 
-function Service:_rankTable()
-    return self._state:Get("rankTable") or {}
-end
-
 function Service:_ranks()
     return self._state:Get("rankByUserId") or {}
 end
@@ -98,276 +74,184 @@ function Service:_setRanks(rankByUserId)
     self._state:Set("rankByUserId", rankByUserId)
 end
 
-function Service:_recordUpdate(userId, payload)
-    local recent = self._state:Get("recentRankUpdates") or {}
-    recent[userId] = recent[userId] or {}
-    table.insert(recent[userId], payload)
-    self._state:Set("recentRankUpdates", recent)
-end
-
-function Service:_tierIndexByName(tierName)
-    for i, entry in ipairs(self:_rankTable()) do
-        if entry.tier == tierName then
-            return i
-        end
-    end
-    return 1
-end
-
-function Service:_ensureRank(playerOrUserId)
-    local userId = toUserId(playerOrUserId)
+function Service:_ensureRank(player)
+    local userId = toUserId(player)
     if not userId then
         return nil
     end
-
-    local rankByUserId = self:_ranks()
-    if not rankByUserId[userId] then
-        local first = self:_rankTable()[1] or { tier = "Bayi", divisions = 3 }
-        rankByUserId[userId] = {
-            tier = first.tier,
-            division = math.max(first.divisions or 3, 1),
+    local ranks = self:_ranks()
+    if not ranks[userId] then
+        ranks[userId] = {
+            tier = self._tierNames[1] or "Rookie",
             stars = 0,
-            victories = 0,
+            topTierCount = 0,
+            ahliCount = 0,
         }
-        self:_setRanks(rankByUserId)
+        self:_setRanks(ranks)
     end
-    return rankByUserId[userId]
+    return ranks[userId]
 end
 
-function Service:_serialize(playerOrUserId, rank)
-    local userId = toUserId(playerOrUserId)
+function Service:_getTopTierCount(rank)
+    local legacy = rank and rank.ahliCount or 0
+    local current = rank and rank.topTierCount or 0
+    return math.max(legacy, current)
+end
+
+function Service:_setTopTierCount(rank, value)
+    local normalized = math.max(math.floor(tonumber(value) or 0), 0)
+    rank.topTierCount = normalized
+    -- Backward compatibility for existing readers.
+    rank.ahliCount = normalized
+end
+
+function Service:_tierIndex(tier)
+    return self._tierIndexByName[tier] or 1
+end
+
+function Service:_serializeRank(player, rank)
+    local topTierCount = self:_getTopTierCount(rank)
     return {
-        player = type(playerOrUserId) == "number" and nil or playerOrUserId,
-        userId = userId,
+        player = player,
+        userId = toUserId(player),
         tier = rank.tier,
-        division = rank.division,
+        tierLevel = self._tierLevelByName[rank.tier] or 1,
         stars = rank.stars,
-        victories = rank.victories,
+        topTierCount = topTierCount,
+        ahliCount = topTierCount,
     }
 end
 
-function Service:_starsPerDivision(tierName)
-    local index = self:_tierIndexByName(tierName)
-    local entry = self:_rankTable()[index]
-    return entry and entry.starsPerDivision or 3
+function Service:_emitRankUpdated(player, rank, reason)
+    local payload = self:_serializeRank(player, rank)
+    payload.reason = reason
+    self:_publish("RankUpdated", payload)
 end
 
-function Service:_isTopTier(tierName)
-    local rankTable = self:_rankTable()
-    local last = rankTable[#rankTable]
-    return last and last.tier == tierName
-end
-
-function Service:_promote(rank)
-    local rankTable = self:_rankTable()
-    local tierIndex = self:_tierIndexByName(rank.tier)
-    local tierEntry = rankTable[tierIndex]
-    if not tierEntry then
-        return
+function Service:GetPlayerRank(player)
+    local rank = self:_ensureRank(player)
+    if not rank then
+        return nil
     end
-
-    if tierIndex == #rankTable then
-        return
-    end
-
-    if rank.division > 1 then
-        rank.division -= 1
-        rank.stars = 0
-        return
-    end
-
-    local nextTier = rankTable[tierIndex + 1]
-    rank.tier = nextTier.tier
-    if nextTier.divisions and nextTier.divisions > 0 then
-        rank.division = nextTier.divisions
-        rank.stars = 0
-    else
-        rank.division = 0
-        rank.stars = 0
-    end
-end
-
-function Service:_demote(rank)
-    local rankTable = self:_rankTable()
-    local tierIndex = self:_tierIndexByName(rank.tier)
-    local tierEntry = rankTable[tierIndex]
-    if not tierEntry then
-        return
-    end
-
-    if tierIndex == #rankTable then
-        if rank.victories > 0 then
-            rank.victories -= 1
-            return
-        end
-        local previousTier = rankTable[tierIndex - 1]
-        if previousTier then
-            rank.tier = previousTier.tier
-            rank.division = 1
-            rank.stars = math.max((previousTier.starsPerDivision or 3) - 1, 0)
-            rank.victories = 0
-        end
-        return
-    end
-
-    if rank.stars > 0 then
-        rank.stars -= 1
-        return
-    end
-
-    local maxDivision = tierEntry.divisions or 0
-    if maxDivision > 0 and rank.division < maxDivision then
-        rank.division += 1
-        rank.stars = math.max((tierEntry.starsPerDivision or 3) - 1, 0)
-        return
-    end
-
-    if tierIndex > 1 then
-        local previousTier = rankTable[tierIndex - 1]
-        rank.tier = previousTier.tier
-        rank.division = 1
-        rank.stars = math.max((previousTier.starsPerDivision or 3) - 1, 0)
-    end
-end
-
-function Service:_syncProfile(playerOrUserId, rank)
-    if not self._persistence then
-        return
-    end
-    local userId = toUserId(playerOrUserId)
-    if not userId then
-        return
-    end
-    self._persistence:SaveProfile(userId, {
-        playerRank = rank.tier,
-        division = rank.division,
+    local topTierCount = self:_getTopTierCount(rank)
+    return {
+        tier = rank.tier,
+        tierLevel = self._tierLevelByName[rank.tier] or 1,
         stars = rank.stars,
-        victories = rank.victories,
-    })
+        topTierCount = topTierCount,
+        ahliCount = topTierCount,
+    }
 end
 
-function Service:GetPlayerRank(playerOrUserId)
-    local rank = self:_ensureRank(playerOrUserId)
-    if not rank then
-        return nil
-    end
-    local payload = self:_serialize(playerOrUserId, rank)
-    payload.rank = payload.tier
-    return payload
-end
-
-function Service:AddStar(playerOrUserId)
-    local rank = self:_ensureRank(playerOrUserId)
+function Service:AddStar(player)
+    local rank = self:_ensureRank(player)
     if not rank then
         return nil, "invalid_player"
     end
 
-    if self:_isTopTier(rank.tier) then
-        rank.victories += 1
-        local payload = self:_serialize(playerOrUserId, rank)
-        payload.reason = "win"
-        payload.newStarCount = payload.stars
-        self:_publish("RankStarAdded", payload)
-        self:_publish("RankUpdated", payload)
-        self:_recordUpdate(payload.userId, payload)
-        self:_syncProfile(playerOrUserId, rank)
-        return self:GetPlayerRank(playerOrUserId)
+    if rank.tier == self._topTierName then
+        self:_setTopTierCount(rank, self:_getTopTierCount(rank) + 1)
+        self:_emitRankUpdated(player, rank, "win")
+        return self:GetPlayerRank(player)
     end
 
-    rank.stars += 1
-    local required = self:_starsPerDivision(rank.tier)
-    if rank.stars >= required then
-        local beforeTier = rank.tier
-        local beforeDivision = rank.division
-        self:_promote(rank)
-        self:_publish("RankTierChanged", {
-            player = type(playerOrUserId) == "number" and nil or playerOrUserId,
-            userId = toUserId(playerOrUserId),
-            fromTier = beforeTier,
-            fromDivision = beforeDivision,
-            toTier = rank.tier,
-            toDivision = rank.division,
-            newTier = rank.tier,
-            reason = "promotion",
-        })
+    local tierIndex = self:_tierIndex(rank.tier)
+    local stars = rank.stars or 0
+    stars += 1
+
+    if stars > STARS_PER_FINITE_TIER then
+        if tierIndex < self._lastFiniteTierIndex then
+            rank.tier = self._tierNames[tierIndex + 1] or self._topTierName
+            rank.stars = 1
+        else
+            rank.tier = self._topTierName
+            rank.stars = 0
+            self:_setTopTierCount(rank, 1)
+        end
+    else
+        rank.stars = stars
     end
 
-    local payload = self:_serialize(playerOrUserId, rank)
-    payload.reason = "win"
-    payload.newStarCount = payload.stars
-    self:_publish("RankStarAdded", payload)
-    self:_publish("RankUpdated", payload)
-    self:_recordUpdate(payload.userId, payload)
-    self:_syncProfile(playerOrUserId, rank)
-    return self:GetPlayerRank(playerOrUserId)
+    self:_emitRankUpdated(player, rank, "win")
+    return self:GetPlayerRank(player)
 end
 
-function Service:RemoveStar(playerOrUserId)
-    local rank = self:_ensureRank(playerOrUserId)
+function Service:RemoveStar(player)
+    local rank = self:_ensureRank(player)
     if not rank then
         return nil, "invalid_player"
     end
 
-    local beforeTier = rank.tier
-    local beforeDivision = rank.division
-    self:_demote(rank)
-    if beforeTier ~= rank.tier or beforeDivision ~= rank.division then
-        self:_publish("RankTierChanged", {
-            player = type(playerOrUserId) == "number" and nil or playerOrUserId,
-            userId = toUserId(playerOrUserId),
-            fromTier = beforeTier,
-            fromDivision = beforeDivision,
-            toTier = rank.tier,
-            toDivision = rank.division,
-            newTier = rank.tier,
-            reason = "demotion",
-        })
+    if rank.tier == self._topTierName then
+        local current = self:_getTopTierCount(rank)
+        if current > 0 then
+            self:_setTopTierCount(rank, current - 1)
+        else
+            rank.tier = self._tierNames[self._lastFiniteTierIndex] or self._topTierName
+            rank.stars = STARS_PER_FINITE_TIER
+            self:_setTopTierCount(rank, 0)
+        end
+        self:_emitRankUpdated(player, rank, "lose")
+        return self:GetPlayerRank(player)
     end
 
-    local payload = self:_serialize(playerOrUserId, rank)
-    payload.reason = "loss"
-    payload.newStarCount = payload.stars
-    self:_publish("RankStarRemoved", payload)
-    self:_publish("RankUpdated", payload)
-    self:_recordUpdate(payload.userId, payload)
-    self:_syncProfile(playerOrUserId, rank)
-    return self:GetPlayerRank(playerOrUserId)
+    local tierIndex = self:_tierIndex(rank.tier)
+    local stars = rank.stars or 0
+    if stars > 0 then
+        rank.stars = stars - 1
+    elseif tierIndex > 1 then
+        rank.tier = self._tierNames[tierIndex - 1] or self._tierNames[1] or self._topTierName
+        rank.stars = STARS_PER_FINITE_TIER
+    else
+        rank.stars = 0
+    end
+
+    self:_emitRankUpdated(player, rank, "lose")
+    return self:GetPlayerRank(player)
 end
 
-function Service:CalculateRankDifficulty(playerOrUserId)
-    local rank = self:_ensureRank(playerOrUserId)
+function Service:CalculateRankDifficulty(player)
+    local rank = self:_ensureRank(player)
     if not rank then
         return nil
     end
-    local tierIndex = self:_tierIndexByName(rank.tier)
-    if self:_isTopTier(rank.tier) then
-        return tierIndex + rank.victories
+
+    local base = self._tierLevelByName[rank.tier] or 1
+    if rank.tier == self._topTierName then
+        return base + self:_getTopTierCount(rank)
     end
-    return tierIndex + math.max((3 - (rank.division or 1)), 0)
+    return base
 end
 
 function Service:_collectMatchOutcomes(payload)
-    local out = {}
+    local outcomes = {}
     local results = payload and payload.results or {}
+
     for _, entry in ipairs(results.playerResults or {}) do
-        local playerOrUserId = entry.player or entry.userId
-        if playerOrUserId then
-            local didWin = entry.didWin == true or (entry.performancePercent or 0) > 50
-            out[playerOrUserId] = didWin
+        if entry.player then
+            outcomes[entry.player] = entry.didWin == true or (entry.performancePercent or 0) > 50
         end
     end
-    return out
+
+    for userId, didWin in pairs(results.outcomeByUserId or {}) do
+        outcomes[tonumber(userId) or userId] = didWin == true
+    end
+
+    return outcomes
 end
 
 function Service:ApplyMatchResults(payload)
+    local outcomes = self:_collectMatchOutcomes(payload)
     local updated = {}
-    for playerOrUserId, didWin in pairs(self:_collectMatchOutcomes(payload)) do
+
+    for playerOrUserId, didWin in pairs(outcomes) do
         local rank = nil
         if didWin then
             rank = self:AddStar(playerOrUserId)
         else
             rank = self:RemoveStar(playerOrUserId)
         end
+
         if rank then
             table.insert(updated, {
                 player = playerOrUserId,
@@ -375,6 +259,7 @@ function Service:ApplyMatchResults(payload)
             })
         end
     end
+
     return updated
 end
 

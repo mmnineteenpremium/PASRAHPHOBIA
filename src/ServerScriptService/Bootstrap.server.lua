@@ -4,8 +4,9 @@
 -- PASRAHPHOBIA - Server Bootstrap
 -- =========================================
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- =========================================
 -- API Check
@@ -26,56 +27,86 @@ end
 
 print("[Bootstrap] PASRAHPHOBIA skeleton loaded.")
 
--- =========================================
--- Module Wiring
--- =========================================
+print("[Bootstrap] Map loading skipped - maps load via MatchBuilder")
+print("[Bootstrap] Server ready for lobby operations")
 
-local ServerScriptService = game:GetService("ServerScriptService")
-
-local ModulesFolder = ServerScriptService:WaitForChild("Modules")
-
-local MapLoader = require(ModulesFolder:WaitForChild("MapLoader"))
-local SpawnPointsSetup = require(ServerScriptService:WaitForChild("SpawnPointsSetup"))
-print("SpawnPointsSetup value:", SpawnPointsSetup)
-print("SpawnPointsSetup.Setup:", SpawnPointsSetup and SpawnPointsSetup.Setup)
-
--- =========================================
--- Deterministic Map Load
--- =========================================
-
-local ACTIVE_MAP = "AbandonedPalace"
-
-local function initializeMap()
-	print("[Bootstrap] Initializing map:", ACTIVE_MAP)
-
-	local mapModel = MapLoader.Load(ACTIVE_MAP)
- 
-	assert(mapModel, "Failed to load map: " .. ACTIVE_MAP)
-
-	local playerSpawns, ghostSpawns = SpawnPointsSetup.Setup(mapModel)
-
-	print("[Bootstrap] Player spawns:", #playerSpawns)
-	print("[Bootstrap] Ghost spawns:", #ghostSpawns)
-
-	print("[Bootstrap] Map initialization complete.")
+if _G.__PASRAH_SERVER_BOOT_DONE ~= true then
+	_G.__PASRAH_SERVER_BOOT_DONE = true
+	local serverFolder = ServerScriptService:WaitForChild("Server")
+	local serverBootstrapModule = serverFolder:WaitForChild("ServerBootstrap")
+	local serverBootstrap = require(serverBootstrapModule)
+	if type(serverBootstrap) == "table" and type(serverBootstrap.Start) == "function" then
+		serverBootstrap.Start()
+	end
 end
 
-initializeMap()
+if _G.__PASRAH_LOBBY_BRIDGE_CONNECTED ~= true then
+	_G.__PASRAH_LOBBY_BRIDGE_CONNECTED = true
+	local remoteFolder = ReplicatedStorage:WaitForChild("RemoteEvents")
+	local lobbyEvent = remoteFolder:WaitForChild("LobbyEvent")
+	local serverFolder = ServerScriptService:WaitForChild("Server")
+	local serverBootstrapModule = serverFolder:WaitForChild("ServerBootstrap")
+	local lobbyFolder = serverFolder:FindFirstChild("Lobby")
 
--- =========================================
--- RemoteEvent Wiring
--- =========================================
+	local function ensureRegistry()
+		if _G.SystemRegistry then
+			return _G.SystemRegistry
+		end
 
-local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+		local okBootstrap, serverBootstrap = pcall(require, serverBootstrapModule)
+		if okBootstrap and type(serverBootstrap) == "table" and type(serverBootstrap.Start) == "function" then
+			serverBootstrap.Start()
+		end
 
-local function getRemote(name: string)
-	local remote = RemoteEvents:FindFirstChild(name)
-	assert(remote and remote:IsA("RemoteEvent"), "Missing RemoteEvent: " .. name)
-	return remote
+		return _G.SystemRegistry
+	end
+
+	lobbyEvent.OnServerEvent:Connect(function(player, request)
+		if _G.__PASRAH_LOBBY_FALLBACK_LOADED == true then
+			return
+		end
+
+		local registry = ensureRegistry()
+		local lobbySystem = registry and type(registry.Get) == "function" and registry:Get("LobbySystem") or nil
+		local controller = lobbySystem and lobbySystem.Controller or nil
+
+		-- Primary connection is active: do not duplicate processing.
+		if controller and controller._remoteConnection and controller._remoteConnection.Connected then
+			return
+		end
+
+		-- TODO: REMOVE AFTER VALIDATION
+		print("[ROOM TRACE][BOOT BRIDGE RECEIVED]", request and request.action, "from", player.Name)
+
+		if controller and type(controller.OnLobbyRemoteRequest) == "function" then
+			local ok, err = pcall(function()
+				controller:OnLobbyRemoteRequest(player, request)
+			end)
+			if not ok then
+				-- TODO: REMOVE AFTER VALIDATION
+				warn("[ROOM TRACE][BOOT BRIDGE ERROR]", tostring(err))
+			end
+		else
+			-- TODO: REMOVE AFTER VALIDATION
+			warn("[ROOM TRACE][BOOT BRIDGE] LobbySystem controller unavailable")
+			if lobbyFolder and _G.__PASRAH_LOBBY_FALLBACK_LOADING ~= true then
+				_G.__PASRAH_LOBBY_FALLBACK_LOADING = true
+				local handlerModule = lobbyFolder:FindFirstChild("LobbyEventHandler")
+				if handlerModule then
+					local ok, err = pcall(require, handlerModule)
+					if ok then
+						_G.__PASRAH_LOBBY_FALLBACK_LOADED = true
+						-- TODO: REMOVE AFTER VALIDATION
+						print("[ROOM TRACE][BOOT BRIDGE] Fallback LobbyEventHandler loaded")
+					else
+						-- TODO: REMOVE AFTER VALIDATION
+						warn("[ROOM TRACE][BOOT BRIDGE] Fallback load failed:", tostring(err))
+					end
+				else
+					-- TODO: REMOVE AFTER VALIDATION
+					warn("[ROOM TRACE][BOOT BRIDGE] Fallback module missing")
+				end
+			end
+		end
+	end)
 end
-
-local LobbyEvent = getRemote("LobbyEvent")
-
-LobbyEvent.OnServerEvent:Connect(function(player)
-	print("[LobbyEvent] Fired by:", player.Name)
-end)

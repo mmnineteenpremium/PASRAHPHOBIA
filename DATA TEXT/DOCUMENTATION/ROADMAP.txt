@@ -1,0 +1,269 @@
+ROADMAP LENGKAP PASRAHPHOBIA - PHASE 1 SAMPAI PUBLISH 🗺️
+
+PHASE 1: ARCHITECTURE FOUNDATION ✅ DONE
+Fokus: Membangun fondasi sistem yang kokoh
+Deliverables:
+
+✅ Boot Pipeline - ServerBootstrap + client bootstrap
+✅ SystemRegistry - Deterministic load order, lifecycle management
+✅ EventBus - Central communication layer antar sistem
+✅ Audio Sanitizer - Runtime error handling untuk audio assets
+✅ Dependency Verification - Sistem validasi dependencies
+✅ Boot Diagnostics - Performance profiling & system health check
+
+Outcome: Boot time 64-84ms stable, 0 failed systems
+
+PHASE 2: CORE GAMEPLAY SYSTEMS ✅ DONE
+Fokus: Match pipeline & teleport mechanics
+Deliverables:
+
+✅ MatchQueue - Player queue system
+✅ MatchBuilder - Match instance creation
+✅ MatchLifecycle - Match start/end pipeline
+✅ MatchTeleport - Teleport players ke investigation map
+✅ MatchService - Full queue → match flow integration
+✅ Match Container - Workspace.ActiveMatches structure
+✅ Dev.Match command - Backend testing tools
+
+Outcome: Solo match creation working, teleport verified
+
+PHASE 3: LOBBY INTEGRATION ✅ DONE
+Fokus: Room system & multiplayer lobby
+Deliverables:
+
+✅ Room System - Create/join/leave rooms
+✅ Host Controls - Host can set map, mode, difficulty
+✅ Ready System - Ready countdown before match start
+✅ LobbySystem - Lobby UI + room browser integration
+✅ RoomBrowser UI - Toggle, refresh, room list display
+✅ Queue Integration - Room → Queue → Match pipeline
+
+Outcome: Multiplayer room flow working, UI functional
+
+PHASE 4: GAMEPLAY VALIDATION ✅ DONE
+Fokus: Ghost AI, evidence, hunt mechanics
+Deliverables:
+
+✅ Ghost AI - State machine (Idle → Roaming → Manifestation → Hunting → Cooldown)
+✅ Hunt Trigger - Dual-condition: aggression ≥ threshold AND averageSanity ≤ 40
+✅ Evidence System - Clarity multiplier, difficulty-scaled evidence count
+✅ Evidence Pipeline - Controller subscriptions, tool validation
+✅ Sanity System - Difficulty-based drain, critical guard, hunt double-drain
+✅ Investigation State Machine - Investigation flow phases
+✅ Ghost Initialization - Match-scoped ghost spawning
+
+Outcome: Ghost behaviors verified, evidence triggers working
+
+PHASE 5: META SYSTEMS ✅ DONE
+Fokus: Economy, progression, rewards
+Deliverables:
+
+✅ Economy System - Wallet cap, currency multiplier, earnings pipeline
+✅ Progression System - XP_TABLE (100 levels), AddXP loop, session persistence
+✅ Reward Pipeline - DifficultyMultiplier applied, validation logs
+✅ Spectator Distortion - 10/30/60 split, ghost sighting offset
+✅ Live Ops Pipeline - 6 capture points, EventBus wired, lifecycle stubs
+✅ Rank System - RankTiers loaded, promotion/demotion, floor guard
+
+Outcome: Meta systems operational, reward calculations working
+
+PHASE 6: PERFORMANCE & SECURITY ✅ DONE
+Fokus: Optimization, anti-cheat, stability
+Deliverables:
+
+✅ Performance Profiling - Timing hooks (Ghost/Evidence/Hunt), 100ms warn threshold
+✅ Anti-Cheat Layer - Evidence whitelist, node check, bounds check, server matchId validation
+✅ RemoteEvent Security - Null check, payload guard, rate limit (10 requests/5s)
+✅ Boot Optimization - Boot time 64-84ms stable
+✅ UI Performance - Auto-refresh optimized (0.25s → 1s interval)
+✅ Debug Infrastructure - RoomBrowserDebugger, DevTestCommands, PerformanceDashboard
+
+Outcome: Performance optimized, security layers active, debugging tools ready
+
+PHASE 7: LAUNCH PREPARATION ⏳ NEXT (Estimated: 1-2 weeks)
+Fokus: Playtest, polish, bug fixing
+Deliverables:
+
+⏳ Audio Asset Fix - Replace HTTP 403 audio (rbxassetid://10576163165)
+⏳ Full Game Loop Playtest - Lobby → Match → Investigation → End
+⏳ Multiplayer Testing - 2-4 player sessions
+⏳ UI/UX Polish - Smooth transitions, clear feedback, error messages
+⏳ Balance Tuning - Ghost difficulty, sanity drain rates, evidence clarity
+⏳ Bug Fixing - Address any issues found in playtest
+⏳ Performance Validation - Stress test with multiple concurrent matches
+⏳ Pre-Launch Checklist - Final verification before publish
+
+Tasks:
+
+Asset Cleanup
+
+Fix invalid audio assets
+Verify all UI assets load correctly
+Check map geometry integrity
+
+
+Playtest Protocol
+
+Solo playtest (full loop)
+2-player co-op test
+4-player full match test
+Edge case testing (disconnect, rejoin, timeout)
+
+
+Polish Items
+
+Loading screens
+Transition animations
+Sound effects timing
+UI feedback (button clicks, state changes)
+Error messages user-friendly
+
+
+Balance Pass
+
+Ghost speed/aggression per difficulty
+Sanity drain rates
+Evidence spawn rates
+Hunt duration/cooldown
+Reward calculations
+
+
+Documentation
+
+Player tutorial/guide
+Control scheme
+Gameplay mechanics explanation
+Known issues list
+
+
+
+Outcome: Game ready for closed alpha/beta testing
+
+PHASE 8: PUBLISH ⏳ FUTURE (Estimated: 2-4 weeks after Phase 7)
+Fokus: Release & live operations
+8.1 PRE-LAUNCH (Week 1)
+Deliverables:
+
+⏳ Closed Alpha Test - Invite 10-20 testers
+⏳ Bug Triage - Prioritize critical vs. nice-to-have fixes
+⏳ Analytics Setup - Track player behavior, match completion rates
+⏳ Server Scaling Plan - Prepare for player load
+⏳ Community Setup - Discord server, social media accounts
+⏳ Marketing Materials - Trailer, screenshots, description
+
+Tasks:
+
+Run closed alpha (3-5 days)
+Collect feedback
+Fix critical bugs
+Monitor server performance
+Prepare marketing assets
+
+
+8.2 SOFT LAUNCH (Week 2)
+Deliverables:
+
+⏳ Beta Release - Open to 100-500 players
+⏳ Monitoring Dashboard - Real-time player count, match stats, error rates
+⏳ Hotfix Pipeline - Rapid response to critical issues
+⏳ Player Onboarding - Tutorial system, first-time user experience
+⏳ Community Management - Discord moderation, bug reporting channel
+
+Tasks:
+
+Announce beta launch
+Monitor server health
+Respond to player feedback
+Deploy hotfixes as needed
+Track key metrics (retention, session length, match completion)
+
+
+8.3 OFFICIAL LAUNCH (Week 3-4)
+Deliverables:
+
+⏳ Public Release - Remove player cap
+⏳ Launch Campaign - Social media push, influencer partnerships
+⏳ Live Ops Schedule - Weekly events, seasonal content pipeline
+⏳ Economy Balancing - Adjust based on player behavior data
+⏳ Leaderboards - Global rankings, seasonal resets
+⏳ Content Roadmap - New maps, ghost types, equipment teased
+
+Tasks:
+
+Full public launch
+Monitor concurrent player count
+Scale servers as needed
+Deploy Day 1 patch if critical issues arise
+Begin weekly content updates
+
+
+8.4 POST-LAUNCH LIVE OPS (Ongoing)
+Deliverables:
+
+⏳ Weekly Events - Double XP weekends, special ghost encounters
+⏳ Seasonal Content - New maps every 4-6 weeks
+⏳ New Ghost Types - Expand ghost roster (1-2 per month)
+⏳ Equipment Expansion - New investigation tools
+⏳ Battle Pass / Progression - Seasonal rewards, cosmetics
+⏳ Community Events - Tournament modes, community challenges
+⏳ Bug Fixes & Balance - Ongoing maintenance
+
+Metrics to Track:
+
+Daily Active Users (DAU)
+Average session length
+Match completion rate
+Retention (D1, D7, D30)
+Revenue (if monetized)
+Bug report volume
+Server performance
+
+
+TIMELINE ESTIMATE
+CURRENT: Phase 6 Complete ✅
+
+Phase 7: Launch Prep       ⏳ 1-2 weeks
+Phase 8.1: Pre-Launch      ⏳ 1 week
+Phase 8.2: Soft Launch     ⏳ 1 week
+Phase 8.3: Official Launch ⏳ 1-2 weeks
+Phase 8.4: Live Ops        ⏳ Ongoing
+
+TOTAL TO LAUNCH: 4-6 weeks from now
+
+COMPLETION STATUS
+✅ Phase 1: Architecture Foundation  - 100%
+✅ Phase 2: Core Gameplay Systems    - 100%
+✅ Phase 3: Lobby Integration        - 100%
+✅ Phase 4: Gameplay Validation      - 100%
+✅ Phase 5: Meta Systems             - 100%
+✅ Phase 6: Performance & Security   - 100%
+⏳ Phase 7: Launch Preparation       -   0% (NEXT)
+⏳ Phase 8: Publish & Live Ops       -   0%
+
+OVERALL PROJECT: ~75% COMPLETE
+
+CRITICAL PATH TO LAUNCH
+Must-Have Before Launch:
+
+✅ Boot stable (DONE)
+✅ Match flow working (DONE)
+✅ Multiplayer lobby (DONE)
+✅ Ghost AI functional (DONE)
+✅ Evidence system working (DONE)
+⏳ Audio assets fixed (PHASE 7)
+⏳ Full playtest passed (PHASE 7)
+⏳ No critical bugs (PHASE 7)
+⏳ Server performance validated (PHASE 8.1)
+⏳ Player onboarding smooth (PHASE 8.2)
+
+
+NEXT IMMEDIATE ACTIONS
+Phase 7 Kickoff:
+
+Fix audio asset HTTP 403 error
+Run full game loop solo playtest
+Run 2-player multiplayer test
+Document bugs/issues found
+Polish UI/UX based on playtest
+Create pre-launch checklist
+

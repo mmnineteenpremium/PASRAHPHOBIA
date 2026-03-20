@@ -59,24 +59,6 @@ local PersonalityTraits = {
             increase_aggression = 0.8,
         },
     },
-    Deceptive = {
-        deceptionChance = 0.3,
-        deceptionCooldown = 7,
-        fakeEvidenceChance = 0.5,
-        manifestChanceScale = 1.15,
-        deceptionWeights = {
-            fake_evidence = 2.1,
-            fake_ghost_sound = 1.4,
-            fake_footsteps = 1.3,
-            fake_manifestation = 1.35,
-        },
-        investigationReactionWeights = {
-            hide_evidence = 1.1,
-            fake_evidence = 2.3,
-            move_room = 1.2,
-            increase_aggression = 0.7,
-        },
-    },
     Stalker = {
         huntFrequency = 1.2,
         aggressionGainScale = 1.1,

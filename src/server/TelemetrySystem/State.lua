@@ -1,33 +1,9 @@
 local State = {}
 State.__index = State
 
-local DEFAULT_STATE = {
-	matchMetrics = {},
-	playerMetrics = {},
-	timeline = {},
-	eventBuffer = {},
-	telemetryCounters = {},
-}
-
-local function deepCopy(value)
-	if type(value) ~= "table" then
-		return value
-	end
-	local copy = {}
-	for key, nested in pairs(value) do
-		copy[key] = deepCopy(nested)
-	end
-	return copy
-end
-
-function State.new(seed)
+function State.new()
 	local self = setmetatable({}, State)
-	self._data = deepCopy(DEFAULT_STATE)
-	if type(seed) == "table" then
-		for key, value in pairs(seed) do
-			self._data[key] = value
-		end
-	end
+	self._data = {}
 	return self
 end
 
@@ -40,7 +16,7 @@ function State:Set(key, value)
 end
 
 function State:Clear()
-	self._data = deepCopy(DEFAULT_STATE)
+	table.clear(self._data)
 end
 
 return State

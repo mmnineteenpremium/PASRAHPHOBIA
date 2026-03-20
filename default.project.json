@@ -8,9 +8,6 @@
       "Shared": {
         "$path": "src/shared"
       },
-      "Maps": {
-        "$path": "src/ReplicatedStorage/Maps"
-      },
       "RemoteEvents": {
         "$path": "src/ReplicatedStorage/RemoteEvents"
       },
@@ -22,13 +19,21 @@
       },
       "Config": {
         "$path": "src/ReplicatedStorage/Config"
+      },
+      "Maps": {
+        "$path": "src/ReplicatedStorage/Maps"
       }
     },
 
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "Server": {
-        "$path": "src/server"
+      "$path": "src/ServerScriptService"
+    },
+
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "Maps": {
+        "$path": "src/ServerStorage/Maps"
       }
     },
 
@@ -53,7 +58,7 @@
         "Ambient": [0.04, 0.04, 0.05],
         "OutdoorAmbient": [0.02, 0.02, 0.03],
         "Brightness": 1,
-        "ClockTime": 1,
+        "ClockTime": 18,
         "FogStart": 18,
         "FogEnd": 145,
         "GlobalShadows": true,

@@ -5,7 +5,6 @@ local EvidenceTracker = require(script.Parent.EvidenceTracker)
 local EvidenceDeduction = require(script.Parent.EvidenceDeduction)
 local EvidenceDataTypes = require(script.Parent.EvidenceDataTypes)
 local EvidenceRandomizer = require(script.Parent.Parent.EvidenceRandomizer)
-local Services = require(script.Parent.Parent.Parent.Core.Services)
 
 local EvidenceService = {}
 EvidenceService.__index = EvidenceService
@@ -19,57 +18,8 @@ local TOOL_TO_EVIDENCE = {
 	SuhuMembeku = "SuhuMembeku",
 }
 
-local EVIDENCE_ALIASES = {
-	emflevel = "EMFLevel",
-	emf5 = "EMFLevel",
-	jejakenergi = "EMFLevel",
-	spiritboxresponse = "SpiritBoxResponse",
-	spiritbox = "SpiritBoxResponse",
-	kotakarwah = "SpiritBoxResponse",
-	freezingtemperature = "FreezingTemperature",
-	freezingtemp = "FreezingTemperature",
-	suhumembeku = "FreezingTemperature",
-	uvmarks = "UVMarks",
-	dots = "UVMarks",
-	gerakangaib = "UVMarks",
-	ghostwriting = "GhostWriting",
-	writingbook = "GhostWriting",
-	bukuterkutuk = "GhostWriting",
-	ghostorb = "GhostOrb",
-	bolaarwah = "GhostOrb",
-}
-
-local function normalizeGhostTypeKey(ghostType)
-	if type(ghostType) ~= "string" then
-		return nil
-	end
-	return ghostType:gsub("[%s_%-]+", ""):lower()
-end
-
-local function normalizeEvidenceType(evidenceType)
-	if type(evidenceType) ~= "string" then
-		return nil
-	end
-	local token = evidenceType:gsub("[%s_%-]+", ""):lower()
-	return EVIDENCE_ALIASES[token] or evidenceType
-end
-
-local function normalizeEvidenceList(list)
-	local out = {}
-	local seen = {}
-	for _, evidenceType in ipairs(list or {}) do
-		local canonical = normalizeEvidenceType(evidenceType)
-		if type(canonical) == "string" and canonical ~= "" and not seen[canonical] then
-			seen[canonical] = true
-			table.insert(out, canonical)
-		end
-	end
-	table.sort(out)
-	return out
-end
-
 local function resolveEventBus(deps)
-	local eventBus = Services.Get(deps, "EventBus")
+	local eventBus = deps.EventBus
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -83,7 +33,7 @@ local function resolveEventBus(deps)
 end
 
 local function resolveGhostService(deps)
-	local ghostSystem = Services.Get(deps, "GhostSystem")
+	local ghostSystem = deps.GhostSystem
 	if type(ghostSystem) ~= "table" then
 		return nil
 	end
@@ -96,22 +46,8 @@ local function resolveGhostService(deps)
 	return nil
 end
 
-local function resolveEvidenceConfigSystem(deps)
-	local evidenceConfig = Services.Get(deps, "EvidenceConfigSystem")
-	if type(evidenceConfig) ~= "table" then
-		return nil
-	end
-	if type(evidenceConfig.GetEvidenceCombinations) == "function" then
-		return evidenceConfig
-	end
-	if type(evidenceConfig.Service) == "table" and type(evidenceConfig.Service.GetEvidenceCombinations) == "function" then
-		return evidenceConfig.Service
-	end
-	return nil
-end
-
 local function resolveEvidenceSync(deps)
-	local evidenceSync = Services.Get(deps, "EvidenceSync")
+	local evidenceSync = deps.EvidenceSync
 	if type(evidenceSync) ~= "table" then
 		return nil
 	end
@@ -132,7 +68,6 @@ function EvidenceService.new(state, deps)
 	self._eventBus = resolveEventBus(self._deps)
 	self._ghostService = resolveGhostService(self._deps)
 	self._evidenceSync = resolveEvidenceSync(self._deps)
-	self._evidenceConfigSystem = resolveEvidenceConfigSystem(self._deps)
 
 	self._deduction = EvidenceDeduction.new(self._dataTypes.EvidenceGhostMap)
 	self._tracker = EvidenceTracker.new()
@@ -184,180 +119,6 @@ function EvidenceService:_publish(eventName, payload)
 	if self._eventBus then
 		self._eventBus:Publish(eventName, payload)
 	end
-end
-
-function EvidenceService:_resolveEvidenceCombinations()
-	if not self._evidenceConfigSystem then
-		return {}
-	end
-	local combinations = self._evidenceConfigSystem:GetEvidenceCombinations()
-	if type(combinations) ~= "table" then
-		return {}
-	end
-	return combinations
-end
-
-function EvidenceService:_resolveCombinationForGhost(combinations, ghostType)
-	if type(ghostType) ~= "string" then
-		return nil
-	end
-
-	local direct = combinations[ghostType]
-	if type(direct) == "table" then
-		return normalizeEvidenceList(direct)
-	end
-
-	local normalizedGhostType = normalizeGhostTypeKey(ghostType)
-	if not normalizedGhostType then
-		return nil
-	end
-
-	for candidateGhostType, evidenceList in pairs(combinations) do
-		if normalizeGhostTypeKey(candidateGhostType) == normalizedGhostType and type(evidenceList) == "table" then
-			return normalizeEvidenceList(evidenceList)
-		end
-	end
-
-	return nil
-end
-
-function EvidenceService:_resolveCombinationCandidates(combinations, collectedEvidence)
-	local canonicalCollected = normalizeEvidenceList(collectedEvidence)
-	local collectedSet = {}
-	for _, evidenceType in ipairs(canonicalCollected) do
-		collectedSet[evidenceType] = true
-	end
-
-	local candidateGhosts = {}
-	local exactMatches = {}
-
-	for ghostType, expectedEvidence in pairs(combinations) do
-		local normalizedExpected = normalizeEvidenceList(expectedEvidence)
-		local expectedSet = {}
-		for _, evidenceType in ipairs(normalizedExpected) do
-			expectedSet[evidenceType] = true
-		end
-
-		local possible = true
-		for evidenceType in pairs(collectedSet) do
-			if not expectedSet[evidenceType] then
-				possible = false
-				break
-			end
-		end
-		if possible then
-			table.insert(candidateGhosts, ghostType)
-		end
-
-		local exact = #normalizedExpected == #canonicalCollected
-		if exact then
-			for evidenceType in pairs(collectedSet) do
-				if not expectedSet[evidenceType] then
-					exact = false
-					break
-				end
-			end
-		end
-		if exact then
-			table.insert(exactMatches, ghostType)
-		end
-	end
-
-	table.sort(candidateGhosts)
-	table.sort(exactMatches)
-
-	local resolvedGhostType = nil
-	if #exactMatches == 1 then
-		resolvedGhostType = exactMatches[1]
-	end
-
-	return canonicalCollected, candidateGhosts, resolvedGhostType
-end
-
-function EvidenceService:_publishCombinationResolution(player, matchId, now)
-	local combinations = self:_resolveEvidenceCombinations()
-	if next(combinations) == nil then
-		return
-	end
-
-	local session = self._engine:GetSession(matchId)
-	if not session then
-		return
-	end
-
-	local canonicalCollected, candidateGhosts, resolvedGhostType =
-		self:_resolveCombinationCandidates(combinations, session.collectedEvidence)
-
-	self:_publish("EvidenceCombinationResolved", {
-		player = player,
-		userId = player and player.UserId or nil,
-		matchId = matchId,
-		collectedEvidence = canonicalCollected,
-		possibleGhosts = candidateGhosts,
-		resolvedGhostType = resolvedGhostType,
-		now = now,
-	})
-	self:_publish("GhostCandidatesUpdated", {
-		player = player,
-		userId = player and player.UserId or nil,
-		matchId = matchId,
-		candidates = candidateGhosts,
-		discoveredEvidence = canonicalCollected,
-	})
-end
-
-function EvidenceService:_validateCombinationJournalGuess(matchId, payload)
-	local combinations = self:_resolveEvidenceCombinations()
-	if next(combinations) == nil then
-		return nil
-	end
-
-	local session = self._engine:GetSession(matchId)
-	if not session then
-		return nil
-	end
-
-	local expectedEvidence = self:_resolveCombinationForGhost(combinations, session.ghostType)
-	if type(expectedEvidence) ~= "table" then
-		return nil
-	end
-
-	local guessedGhostType = payload and payload.ghostType or ""
-	local guessedEvidence = normalizeEvidenceList(payload and payload.evidence or {})
-	local guessedEvidenceSet = {}
-	for _, evidenceType in ipairs(guessedEvidence) do
-		guessedEvidenceSet[evidenceType] = true
-	end
-
-	local expectedEvidenceSet = {}
-	for _, evidenceType in ipairs(expectedEvidence) do
-		expectedEvidenceSet[evidenceType] = true
-	end
-
-	local evidenceMatches = #guessedEvidence == #expectedEvidence
-	if evidenceMatches then
-		for evidenceType in pairs(expectedEvidenceSet) do
-			if not guessedEvidenceSet[evidenceType] then
-				evidenceMatches = false
-				break
-			end
-		end
-	end
-
-	local ghostMatches = normalizeGhostTypeKey(guessedGhostType) == normalizeGhostTypeKey(session.ghostType)
-	local identified = ghostMatches and evidenceMatches
-
-	return {
-		matchId = matchId,
-		guessedGhostType = guessedGhostType,
-		actualGhostType = session.ghostType,
-		ghostMatches = ghostMatches,
-		evidenceMatches = evidenceMatches,
-		identified = identified,
-		expectedEvidence = expectedEvidence,
-		guessedEvidence = guessedEvidence,
-		difficultyMode = session.difficultyMode,
-	}
 end
 
 function EvidenceService:_getGhostState(matchId)
@@ -532,10 +293,6 @@ function EvidenceService:CollectEvidence(player, matchId, payload)
 			player = player,
 			matchId = matchId,
 			evidenceType = result.evidenceType,
-			toolType = payload and payload.toolType,
-			playerPosition = payload and payload.playerPosition,
-			ghostProximity = payload and (payload.ghostProximity or payload.distanceToGhost),
-			environmentalConditions = payload and payload.environmentalConditions,
 			now = payload and payload.now,
 		})
 		self:_publish("EvidenceValidated", {
@@ -550,7 +307,6 @@ function EvidenceService:CollectEvidence(player, matchId, payload)
 			matchId = matchId,
 			evidenceType = result.evidenceType,
 		})
-		self:_publishCombinationResolution(player, matchId, payload and payload.now)
 	else
 		self:_publish("EvidenceValidated", {
 			player = player,
@@ -569,12 +325,6 @@ function EvidenceService:ValidateJournalGuess(player, matchId, payload)
 	local ok, reason, result = self._engine:ValidateJournalGuess(matchId, payload or {})
 	if not ok then
 		return false, reason, result
-	end
-
-	local combinationResult = self:_validateCombinationJournalGuess(matchId, payload or {})
-	if combinationResult then
-		result = combinationResult
-		reason = combinationResult.identified and "identified" or "mismatch"
 	end
 
 	self:_publish("EvidenceValidated", {

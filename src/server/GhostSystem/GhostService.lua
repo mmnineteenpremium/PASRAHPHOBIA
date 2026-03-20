@@ -1,53 +1,10 @@
 local GhostAI = require(script.Parent.GhostAI)
-local Services = require(script.Parent.Parent.Core.Services)
 
 local GhostService = {}
 GhostService.__index = GhostService
 
-local DEFAULT_CONFIG = {
-	MinTickIntervalSeconds = 0.2,
-	MaxRuntimeEventsPerTick = 24,
-	EventThrottle = {
-		GhostInteraction = 0.2,
-		GhostDecisionMade = 0.25,
-		GhostStrategyChanged = 0.4,
-		GhostAbilityTriggered = 0.25,
-		GhostAbilityCooldown = 0.4,
-		GhostAbilityCompleted = 0.2,
-		GhostDeceptionTriggered = 0.25,
-		GhostRoamed = 0.25,
-		EvidenceTriggered = 0.2,
-		GhostFakeEvidenceSpawned = 0.2,
-	},
-}
-
-local function mergeConfig(base, override)
-	local out = {}
-	for key, value in pairs(base) do
-		if type(value) == "table" then
-			local nested = {}
-			for nestedKey, nestedValue in pairs(value) do
-				nested[nestedKey] = nestedValue
-			end
-			out[key] = nested
-		else
-			out[key] = value
-		end
-	end
-	for key, value in pairs(override or {}) do
-		if type(value) == "table" and type(out[key]) == "table" then
-			for nestedKey, nestedValue in pairs(value) do
-				out[key][nestedKey] = nestedValue
-			end
-		else
-			out[key] = value
-		end
-	end
-	return out
-end
-
 local function resolveEventBus(deps)
-	local eventBus = Services.Get(deps, "EventBus")
+	local eventBus = deps.EventBus
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -61,7 +18,7 @@ local function resolveEventBus(deps)
 end
 
 local function resolveEvidenceService(deps)
-	local evidenceSystem = Services.Get(deps, "EvidenceSystem")
+	local evidenceSystem = deps.EvidenceSystem
 	if type(evidenceSystem) ~= "table" then
 		return nil
 	end
@@ -78,12 +35,9 @@ function GhostService.new(state, deps)
 	local self = setmetatable({}, GhostService)
 	self._state = state
 	self._deps = deps or {}
-	self._config = mergeConfig(DEFAULT_CONFIG, self._deps.GhostServiceConfig)
 	self._eventBus = resolveEventBus(self._deps)
 	self._evidenceService = resolveEvidenceService(self._deps)
 	self._ai = GhostAI.new(self._deps, self._deps.GhostConfig or {})
-	self._lastTickAtByMatch = {}
-	self._lastPublishedAtByMatch = {}
 	return self
 end
 
@@ -100,8 +54,6 @@ function GhostService:Stop()
 	for matchId in pairs(sessions) do
 		self._ai:RemoveSession(matchId)
 	end
-	table.clear(self._lastTickAtByMatch)
-	table.clear(self._lastPublishedAtByMatch)
 	self._state:Set("sessions", {})
 end
 
@@ -109,30 +61,6 @@ function GhostService:_publish(eventName, payload)
 	if self._eventBus then
 		self._eventBus:Publish(eventName, payload)
 	end
-end
-
-function GhostService:_publishThrottled(matchId, eventName, payload, now)
-	local throttleSeconds = self._config.EventThrottle[eventName]
-	if not throttleSeconds or throttleSeconds <= 0 then
-		self:_publish(eventName, payload)
-		return true
-	end
-
-	local perMatch = self._lastPublishedAtByMatch[matchId]
-	if not perMatch then
-		perMatch = {}
-		self._lastPublishedAtByMatch[matchId] = perMatch
-	end
-
-	local eventTime = now or os.clock()
-	local lastAt = perMatch[eventName] or 0
-	if (eventTime - lastAt) < throttleSeconds then
-		return false
-	end
-
-	perMatch[eventName] = eventTime
-	self:_publish(eventName, payload)
-	return true
 end
 
 function GhostService:SpawnGhost(matchId, payload)
@@ -159,26 +87,19 @@ function GhostService:SpawnGhost(matchId, payload)
 end
 
 function GhostService:TickGhost(matchId, snapshot, dt, now)
-	local currentNow = now or os.clock()
-	local lastTickAt = self._lastTickAtByMatch[matchId] or 0
-	if (currentNow - lastTickAt) < (self._config.MinTickIntervalSeconds or 0) then
-		return nil, "throttled_tick"
-	end
-	self._lastTickAtByMatch[matchId] = currentNow
-
 	local sessionBefore = self._ai:GetSession(matchId)
 	local previousRoomId = sessionBefore and sessionBefore.currentRoomId or nil
 
-	local session, huntEvent, runtimeEvents = self._ai:Tick(matchId, snapshot, dt, currentNow)
+	local session, huntEvent, runtimeEvents = self._ai:Tick(matchId, snapshot, dt, now)
 	if not session then
 		return nil
 	end
 
 	if previousRoomId ~= nil and previousRoomId ~= session.currentRoomId then
-		self:_publishThrottled(matchId, "GhostRoamed", {
+		self:_publish("GhostRoamed", {
 			matchId = matchId,
 			room = session.currentRoomId,
-		}, currentNow)
+		})
 	end
 
 	if huntEvent == "started" then
@@ -187,15 +108,7 @@ function GhostService:TickGhost(matchId, snapshot, dt, now)
 		self:_publish("HuntEnded", { matchId = matchId })
 	end
 
-	local processedEvents = 0
-	local maxRuntimeEvents = self._config.MaxRuntimeEventsPerTick or 0
 	for _, runtimeEvent in ipairs(runtimeEvents or {}) do
-		processedEvents += 1
-		if maxRuntimeEvents > 0 and processedEvents > maxRuntimeEvents then
-			warn(string.format("[GhostService] Dropped runtime events for match '%s' after %d events in one tick", tostring(matchId), maxRuntimeEvents))
-			break
-		end
-
 		if runtimeEvent.type == "state_changed" then
 			self:_publish("GhostStateChanged", {
 				matchId = matchId,
@@ -204,36 +117,36 @@ function GhostService:TickGhost(matchId, snapshot, dt, now)
 			})
 		elseif runtimeEvent.type == "interaction" then
 			local payload = runtimeEvent.payload or {}
-			self:_publishThrottled(matchId, "GhostInteraction", {
+			self:_publish("GhostInteraction", {
 				matchId = matchId,
 				room = payload.roomId or session.currentRoomId,
 				interactionType = payload.interactionType or "Environmental",
 				intensity = payload.intensity or 1,
-				now = currentNow,
-			}, currentNow)
+				now = now,
+			})
 		elseif runtimeEvent.type == "evidence_triggered" then
 			local payload = runtimeEvent.payload or {}
-			self:_publishThrottled(matchId, "EvidenceTriggered", {
+			self:_publish("EvidenceTriggered", {
 				matchId = matchId,
 				evidenceType = payload.evidenceType,
 				room = payload.roomId,
 				chance = payload.chance,
 				isFake = payload.isFake == true,
-			}, currentNow)
+			})
 			if payload.isFake == true then
-				self:_publishThrottled(matchId, "GhostFakeEvidenceSpawned", {
+				self:_publish("GhostFakeEvidenceSpawned", {
 					matchId = matchId,
 					evidenceType = payload.evidenceType,
 					room = payload.roomId,
 					chance = payload.chance,
-				}, currentNow)
+				})
 			elseif self._evidenceService and payload.evidenceType then
 				self._evidenceService:SpawnEvidence(matchId, {
 					source = "ghost_ai",
 					evidenceType = payload.evidenceType,
 					roomId = payload.roomId,
 					activity = payload.chance or 0,
-					now = currentNow,
+					now = now,
 				})
 			end
 		elseif runtimeEvent.type == "personality_selected" then
@@ -242,87 +155,87 @@ function GhostService:TickGhost(matchId, snapshot, dt, now)
 				personalityType = runtimeEvent.personalityType,
 			})
 		elseif runtimeEvent.type == "decision_made" then
-			self:_publishThrottled(matchId, "GhostDecisionMade", {
+			self:_publish("GhostDecisionMade", {
 				matchId = matchId,
 				decision = runtimeEvent.decision,
 				now = runtimeEvent.now,
-			}, currentNow)
+			})
 		elseif runtimeEvent.type == "deception_triggered" then
-			self:_publishThrottled(matchId, "GhostDeceptionTriggered", {
+			self:_publish("GhostDeceptionTriggered", {
 				matchId = matchId,
 				deceptionType = runtimeEvent.deceptionType,
 				reason = runtimeEvent.reason,
 				now = runtimeEvent.now,
-			}, currentNow)
+			})
 			if runtimeEvent.reason == "investigation_reaction" then
-				self:_publishThrottled(matchId, "GhostDecisionMade", {
+				self:_publish("GhostDecisionMade", {
 					matchId = matchId,
 					decision = runtimeEvent.deceptionType,
 					now = runtimeEvent.now,
-				}, currentNow)
+				})
 			end
 			if runtimeEvent.deceptionType == "fake_ghost_sound" then
-				self:_publishThrottled(matchId, "GhostInteraction", {
+				self:_publish("GhostInteraction", {
 					matchId = matchId,
 					room = session.currentRoomId,
 					interactionType = "FakeGhostSound",
 					intensity = 0.75,
 					now = runtimeEvent.now,
-				}, currentNow)
+				})
 			elseif runtimeEvent.deceptionType == "fake_footsteps" then
-				self:_publishThrottled(matchId, "GhostInteraction", {
+				self:_publish("GhostInteraction", {
 					matchId = matchId,
 					room = session.currentRoomId,
 					interactionType = "FakeFootsteps",
 					intensity = 0.7,
 					now = runtimeEvent.now,
-				}, currentNow)
+				})
 			elseif runtimeEvent.deceptionType == "fake_manifestation" then
-				self:_publishThrottled(matchId, "GhostInteraction", {
+				self:_publish("GhostInteraction", {
 					matchId = matchId,
 					room = session.currentRoomId,
 					interactionType = "FakeManifestation",
 					intensity = 0.85,
 					now = runtimeEvent.now,
-				}, currentNow)
+				})
 			end
 		elseif runtimeEvent.type == "strategy_changed" then
-			self:_publishThrottled(matchId, "GhostStrategyChanged", {
+			self:_publish("GhostStrategyChanged", {
 				matchId = matchId,
 				strategyCategory = runtimeEvent.strategyCategory,
 				previousStrategy = runtimeEvent.previousStrategy,
 				currentStrategy = runtimeEvent.currentStrategy,
 				now = runtimeEvent.now,
-			}, currentNow)
+			})
 		elseif runtimeEvent.type == "ability_triggered" then
-			self:_publishThrottled(matchId, "GhostAbilityTriggered", {
+			self:_publish("GhostAbilityTriggered", {
 				matchId = matchId,
 				abilityType = runtimeEvent.abilityType,
 				category = runtimeEvent.category,
 				cooldown = runtimeEvent.cooldown,
 				duration = runtimeEvent.duration,
 				now = runtimeEvent.now,
-			}, currentNow)
+			})
 		elseif runtimeEvent.type == "ability_cooldown" then
-			self:_publishThrottled(matchId, "GhostAbilityCooldown", {
+			self:_publish("GhostAbilityCooldown", {
 				matchId = matchId,
 				abilityType = runtimeEvent.abilityType,
 				cooldownEndsAt = runtimeEvent.cooldownEndsAt,
 				now = runtimeEvent.now,
-			}, currentNow)
+			})
 		elseif runtimeEvent.type == "ability_completed" then
-			self:_publishThrottled(matchId, "GhostAbilityCompleted", {
+			self:_publish("GhostAbilityCompleted", {
 				matchId = matchId,
 				abilityType = runtimeEvent.abilityType,
 				now = runtimeEvent.now,
-			}, currentNow)
+			})
 		elseif runtimeEvent.type == "favorite_room_changed" then
-			self:_publishThrottled(matchId, "GhostDecisionMade", {
+			self:_publish("GhostDecisionMade", {
 				matchId = matchId,
 				decision = "change_favorite_room",
 				previousRoomId = runtimeEvent.previousRoomId,
 				currentRoomId = runtimeEvent.currentRoomId,
-			}, currentNow)
+			})
 		end
 	end
 
@@ -381,8 +294,6 @@ function GhostService:DespawnGhost(matchId)
 	local sessions = self._state:Get("sessions") or {}
 	sessions[matchId] = nil
 	self._state:Set("sessions", sessions)
-	self._lastTickAtByMatch[matchId] = nil
-	self._lastPublishedAtByMatch[matchId] = nil
 end
 
 function GhostService:ApplyDirectorEvent(matchId, eventName, payload)
