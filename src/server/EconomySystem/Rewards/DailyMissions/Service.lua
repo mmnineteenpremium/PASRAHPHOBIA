@@ -1,6 +1,6 @@
 local Service = {}
 Service.__index = Service
-local Services = require(script.Parent.Parent.Parent.Core.Services)
+local Services = require(script.Parent.Parent.Parent.Parent.Core.Services)
 
 local MISSION_REWARD = 1000
 local ALL_BONUS = 2000

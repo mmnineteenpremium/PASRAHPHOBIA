@@ -29,4 +29,8 @@ function EvidenceSystem:Stop()
     self.Service:Stop()
 end
 
+function EvidenceSystem:Shutdown()
+    self:Stop()
+end
+
 return EvidenceSystem

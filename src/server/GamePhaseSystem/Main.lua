@@ -29,4 +29,8 @@ function GamePhaseSystem:Stop()
     self.Service:Stop()
 end
 
+function GamePhaseSystem:Shutdown()
+    self:Stop()
+end
+
 return GamePhaseSystem

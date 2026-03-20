@@ -2,11 +2,11 @@ local Service = require(script.Parent.Service)
 local Controller = require(script.Parent.Controller)
 local State = require(script.Parent.State)
 
-local SpectatorSystem = {}
-SpectatorSystem.__index = SpectatorSystem
+local LobbySystem = {}
+LobbySystem.__index = LobbySystem
 
-function SpectatorSystem.new(deps)
-    local self = setmetatable({}, SpectatorSystem)
+function LobbySystem.new(deps)
+    local self = setmetatable({}, LobbySystem)
     self._deps = deps or {}
     self.State = State.new()
     self.Service = Service.new(self.State, self._deps)
@@ -14,23 +14,23 @@ function SpectatorSystem.new(deps)
     return self
 end
 
-function SpectatorSystem:Init()
+function LobbySystem:Init()
     self.Service:Init()
     self.Controller:Init()
 end
 
-function SpectatorSystem:Start()
+function LobbySystem:Start()
     self.Controller:RegisterEventHandlers()
     self.Service:Start()
 end
 
-function SpectatorSystem:Stop()
+function LobbySystem:Stop()
     self.Controller:UnregisterEventHandlers()
     self.Service:Stop()
 end
 
-function SpectatorSystem:Shutdown()
+function LobbySystem:Shutdown()
     self:Stop()
 end
 
-return SpectatorSystem
+return LobbySystem

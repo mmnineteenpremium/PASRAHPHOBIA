@@ -4,7 +4,7 @@ State.__index = State
 local DEFAULT_STATE = {
     eventCounters = {},
     eventLatency = {},
-    eventCounters = {},
+    eventTotals = {},
 }
 
 local function deepCopy(value)

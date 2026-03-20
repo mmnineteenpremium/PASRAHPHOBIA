@@ -29,6 +29,10 @@ function GhostSystem:Stop()
     self.Service:Stop()
 end
 
+function GhostSystem:Shutdown()
+    self:Stop()
+end
+
 function GhostSystem:SpawnGhost(matchId, payload)
     return self.Service:SpawnGhost(matchId, payload)
 end
