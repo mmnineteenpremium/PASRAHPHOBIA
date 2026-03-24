@@ -69,6 +69,11 @@ function RoomManager:JoinRoom(player, roomId, password)
 	if #room.players == 1 then
 		room.host = player
 	end
+	if room.host == player then
+		room.readyPlayers[player] = true
+	else
+		room.readyPlayers[player] = nil
+	end
 
 	return true
 end
@@ -113,7 +118,11 @@ function RoomManager:SetReady(player, isReady)
 		return false, "room_in_game"
 	end
 
-	room.readyPlayers[player] = isReady and true or nil
+	if room.host == player then
+		room.readyPlayers[player] = true
+	else
+		room.readyPlayers[player] = isReady and true or nil
+	end
 
 	local allReady = #room.players > 0
 	for _, member in ipairs(room.players) do

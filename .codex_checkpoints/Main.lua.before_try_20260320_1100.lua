@@ -3,7 +3,6 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
 
 local UISystem = {}
 UISystem.__index = UISystem
@@ -24,17 +23,7 @@ local REMOTE_NAMES = { "MatchEvent", "LobbyEvent", "EvidenceEvent", "PurchaseEve
 local ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
 local BASIC_GUI_NAMES = { "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
 local MAPS = { "HauntedHouse", "AbandonedPalace", "EmptyBuilding", "StudioMMNineteen" }
-local MATCH_PHASE = {
-	LOBBY = "Lobby",
-	PREPARING = "Preparing",
-	LOADING = "Loading",
-	BRIEFING = "Briefing",
-	INGAME = "InGame",
-	ESCALATION = "Escalation",
-	HUNT = "Hunt",
-	RESULT = "Result",
-	END = "End",
-}
+local DIFFICULTIES = { "Mudah", "Lumayan", "Angker", "Uji Nyali" }
 
 local function logRoomClickConnected(buttonName)
 	return buttonName
@@ -177,56 +166,6 @@ local function connectButtonPress(button, callback)
 	button.Activated:Connect(invoke)
 end
 
-local function makeFloatingButtonDraggable(button)
-	if not button or button:GetAttribute("DragBound") == true then
-		return
-	end
-	button:SetAttribute("DragBound", true)
-
-	local dragging = false
-	local dragStart = nil
-	local startPos = nil
-
-	local function updateDrag(input)
-		if not dragging or not dragStart or not startPos then
-			return
-		end
-		local delta = input.Position - dragStart
-		button.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
-	end
-
-	button.InputBegan:Connect(function(input)
-		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
-			return
-		end
-		dragging = true
-		dragStart = input.Position
-		startPos = button.Position
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end)
-
-	button.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			updateDrag(input)
-		end
-	end)
-
-	UserInputService.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			updateDrag(input)
-		end
-	end)
-end
-
 local function disconnectAll(connections)
 	for _, connection in ipairs(connections) do
 		if connection then
@@ -349,26 +288,12 @@ function UISystem:Init(context)
 	self._roomBrowserSuppressed = false
 	self._roomBrowserInputBound = false
 	self._roomBrowserMissingWidgetsLogged = false
-	self._roomBrowserModeView = "Selected"
 	self._passwordJoinPendingRoomId = nil
 	self._passwordJoinSubmitting = false
 	self._kickNoticeVisible = false
-	self._inviteDropdownOpen = false
-	self._roomModeDropdownOpen = false
-	self._roomMapDropdownOpen = false
-	self._activeInviteId = nil
 	self._uxReady = false
 	self._deviceProfile = createDeviceProfile()
 	self._uiStateManager = { state = "Lobby" }
-	self._matchPhase = MATCH_PHASE.LOBBY
-	self._phaseStartTime = 0
-	self._phaseDuration = nil
-	self._phaseTimerRunning = false
-	self._loadingTransitionRunning = false
-	self._loadingStartTime = 0
-	self._hasPostTeleportLoaded = false
-	self._postTeleportFlowRunning = false
-	self._awaitingPostTeleportFlow = false
 	self._uxWidgets = {
 		match = {},
 		lobby = {},
@@ -414,9 +339,6 @@ function UISystem:Start()
 	self:_refreshRoomBrowserView()
 	self:_startRoomBrowserLoop()
 	self:_bindRoomBrowserToggleInput()
-	self:_bindPostTeleportLoading()
-	self:_startPhaseTimer()
-	self:_setPhase(MATCH_PHASE.LOBBY)
 
 	task.defer(function()
 		local playerGui = self:_getPlayerGui()
@@ -438,6 +360,7 @@ end
 
 function UISystem:_connectLobbyEventRouting()
 	if not self._roomBrowserController then
+		warn("[UI ERROR] RoomBrowserController missing")
 		return
 	end
 	if self._lobbyConnection then
@@ -463,9 +386,6 @@ function UISystem:_onServerEvent(remoteName, payload)
 		self._uiState.JournalUI.lastEvent = eventName
 		self._uiState.JournalUI.visible = true
 	elseif remoteName == "LobbyEvent" then
-		if eventName == "RoomBrowserRoomLeft" or eventName == "LobbyEntered" then
-			self:_setPhase(MATCH_PHASE.LOBBY)
-		end
 		self._uiState.LobbyUI.lastEvent = eventName
 		self._uiState.LobbyUI.visible = true
 		if eventName == "RoomBrowserRoomJoined" then
@@ -494,13 +414,10 @@ function UISystem:_onServerEvent(remoteName, payload)
 				self._roomBrowserWidgets.KickNoticeText.Text = "ANDA TELAH DI KICK"
 				self._roomBrowserWidgets.KickNoticeModal.Visible = true
 			end
-		elseif eventName == "RoomInviteReceived" then
-			self:_showRoomInvitePopup(payload)
 		end
 		self:_handleLobbyUXEvent(eventName, payload or {})
 		self:_refreshRoomBrowserView()
 	elseif remoteName == "MatchEvent" then
-		self:_routeMatchPhaseEvent(eventName, payload or {})
 		self._uiState.MatchUI.lastEvent = eventName
 		self._uiState.MatchUI.visible = true
 		self:_handleMatchUXEvent(eventName, payload or {})
@@ -656,442 +573,6 @@ function UISystem:_applyDeviceSizing()
 		widgets.FloatButton.Position = UDim2.new(1, -(20 + bottomRightInset.X), 0.5, 0)
 		widgets.FloatButton.TextSize = profile.isConsole and 14 or 12
 	end
-	if widgets and widgets.RoomPreviewPlayersList then
-		local layout = widgets.RoomPreviewPlayersList:FindFirstChildOfClass("UIGridLayout")
-		if layout then
-			if profile.isMobile then
-				layout.FillDirectionMaxCells = 1
-				layout.CellSize = UDim2.fromOffset(442, 78)
-			else
-				layout.FillDirectionMaxCells = 2
-				layout.CellSize = UDim2.fromOffset(220, 78)
-			end
-		end
-	end
-end
-
-function UISystem:_runPostTeleportLoadingFlow()
-	if self._postTeleportFlowRunning then
-		return
-	end
-	if self._hasPostTeleportLoaded then
-		return
-	end
-
-	local player = Players.LocalPlayer
-	if not player or player:GetAttribute("InMatch") ~= true then
-		return
-	end
-	if self._matchPhase == MATCH_PHASE.INGAME then
-		self._hasPostTeleportLoaded = true
-		self._awaitingPostTeleportFlow = false
-		return
-	end
-
-	self._postTeleportFlowRunning = true
-	task.spawn(function()
-		self:_setPhase(MATCH_PHASE.LOADING)
-		task.wait(2)
-
-		local currentPlayer = Players.LocalPlayer
-		if not currentPlayer or currentPlayer:GetAttribute("InMatch") ~= true then
-			self._postTeleportFlowRunning = false
-			return
-		end
-
-		self:_setPhase(MATCH_PHASE.BRIEFING)
-		task.wait(3)
-
-		currentPlayer = Players.LocalPlayer
-		if currentPlayer and currentPlayer:GetAttribute("InMatch") == true then
-			self:_setPhase(MATCH_PHASE.INGAME)
-			self._hasPostTeleportLoaded = true
-			self._awaitingPostTeleportFlow = false
-		end
-
-		self._postTeleportFlowRunning = false
-	end)
-end
-
-function UISystem:_bindPostTeleportLoading()
-	local player = Players.LocalPlayer
-	if not player then
-		return
-	end
-
-	table.insert(self._connections, player.CharacterAdded:Connect(function()
-		if self._awaitingPostTeleportFlow or self._hasPostTeleportLoaded ~= true then
-			self:_runPostTeleportLoadingFlow()
-		end
-	end))
-end
-
-function UISystem:_setPhase(newPhase, payload)
-	if self._matchPhase == newPhase then
-		return
-	end
-
-	self._matchPhase = newPhase
-	self._phaseStartTime = tick()
-	self._phaseDuration = payload and payload.duration or nil
-	if newPhase == MATCH_PHASE.LOADING then
-		self._loadingStartTime = tick()
-	end
-	local localPlayer = Players.LocalPlayer
-	if localPlayer then
-		localPlayer:SetAttribute("MatchPhase", newPhase)
-	end
-
-	self:_renderPhase(newPhase, payload)
-end
-
-function UISystem:_ensureLoadingScreen()
-	local playerGui = self:_getPlayerGui()
-	if not playerGui then
-		return nil
-	end
-
-	local existing = playerGui:FindFirstChild("MatchLoadingUI")
-	if existing and existing:IsA("ScreenGui") then
-		return existing
-	end
-
-	local screen = Instance.new("ScreenGui")
-	screen.Name = "MatchLoadingUI"
-	screen.IgnoreGuiInset = true
-	screen.ResetOnSpawn = false
-	screen.DisplayOrder = 500
-	screen.Enabled = false
-
-	local bg = Instance.new("Frame")
-	bg.Name = "Background"
-	bg.Size = UDim2.fromScale(1, 1)
-	bg.BackgroundColor3 = Color3.new(0, 0, 0)
-	bg.BackgroundTransparency = 1
-	bg.BorderSizePixel = 0
-	bg.Parent = screen
-
-	local text = Instance.new("TextLabel")
-	text.Name = "Label"
-	text.Size = UDim2.fromScale(1, 1)
-	text.BackgroundTransparency = 1
-	text.Text = "Entering Investigation..."
-	text.TextColor3 = Color3.new(1, 1, 1)
-	text.Font = Enum.Font.GothamBold
-	text.TextScaled = true
-	text.Parent = bg
-
-	screen.Parent = playerGui
-	return screen
-end
-
-function UISystem:_playLoadingTransition()
-	if self._loadingTransitionRunning then
-		return
-	end
-
-	local screen = self:_ensureLoadingScreen()
-	if not screen then
-		return
-	end
-
-	local bg = screen:FindFirstChild("Background")
-	if not bg or not bg:IsA("Frame") then
-		return
-	end
-
-	self._loadingTransitionRunning = true
-	self._loadingStartTime = tick()
-	screen.Enabled = true
-
-	for i = 0, 1, 0.1 do
-		bg.BackgroundTransparency = 1 - i
-		task.wait(0.03)
-	end
-
-	task.wait(1.5)
-
-	for i = 1, 0, -0.1 do
-		bg.BackgroundTransparency = 1 - i
-		task.wait(0.03)
-	end
-
-	screen.Enabled = false
-	self._loadingTransitionRunning = false
-end
-
-function UISystem:_renderPhase(phase, payload)
-	local playerGui = self:_getPlayerGui()
-	if not playerGui then
-		return
-	end
-
-	local lobbyUI = playerGui:FindFirstChild("LobbyUI")
-	local roomUI = playerGui:FindFirstChild("RoomBrowserUI")
-	local hud = playerGui:FindFirstChild("HorrorHUD")
-	local loadingUI = playerGui:FindFirstChild("MatchLoadingUI")
-	local matchUX = self._uxWidgets and self._uxWidgets.match or nil
-
-	if not lobbyUI then
-		return
-	end
-
-	-- Reset transient overlays before rendering a new phase.
-	if loadingUI and loadingUI:IsA("ScreenGui") and phase ~= MATCH_PHASE.PREPARING and phase ~= MATCH_PHASE.LOADING and phase ~= MATCH_PHASE.INGAME then
-		loadingUI.Enabled = false
-	end
-	if roomUI then
-		local loadingLabel = roomUI:FindFirstChild("LoadingLabel")
-		if loadingLabel and loadingLabel:IsA("TextLabel") then
-			loadingLabel.Visible = false
-		end
-		local objectiveLabel = roomUI:FindFirstChild("ObjectiveLabel")
-		if objectiveLabel and objectiveLabel:IsA("TextLabel") then
-			objectiveLabel.Visible = false
-		end
-		local resultLabel = roomUI:FindFirstChild("ResultLabel")
-		if resultLabel and resultLabel:IsA("TextLabel") then
-			resultLabel.Visible = false
-		end
-	end
-	if hud then
-		local warning = hud:FindFirstChild("Warning")
-		if warning then
-			warning.Visible = false
-		end
-	end
-	if matchUX and matchUX.MessageLabel and phase ~= MATCH_PHASE.PREPARING and phase ~= MATCH_PHASE.LOADING and phase ~= MATCH_PHASE.INGAME then
-		matchUX.MessageLabel.Visible = false
-		matchUX.MessageLabel.Text = ""
-	end
-
-	if not roomUI then
-		return
-	end
-
-	if phase == MATCH_PHASE.LOBBY then
-		lobbyUI.Enabled = true
-		roomUI.Enabled = false
-		if hud then
-			hud.Enabled = false
-			local warning = hud:FindFirstChild("Warning")
-			if warning then
-				warning.Visible = false
-			end
-		end
-		return
-	end
-
-	if phase == MATCH_PHASE.PREPARING then
-		lobbyUI.Enabled = false
-		roomUI.Enabled = true
-		if hud then
-			hud.Enabled = false
-		end
-		if loadingUI and loadingUI:IsA("ScreenGui") then
-			loadingUI.Enabled = true
-			local label = loadingUI:FindFirstChild("Background") and loadingUI.Background:FindFirstChild("Label")
-			if label and label:IsA("TextLabel") then
-				label.Text = "Preparing Investigation..."
-			end
-		end
-		if matchUX and matchUX.MessageLabel then
-			matchUX.MessageLabel.Text = "Preparing Investigation..."
-			matchUX.MessageLabel.Visible = true
-		end
-		return
-	end
-
-	if phase == MATCH_PHASE.LOADING then
-		lobbyUI.Enabled = false
-		roomUI.Enabled = true
-		if hud then
-			hud.Enabled = false
-		end
-		if loadingUI and loadingUI:IsA("ScreenGui") then
-			loadingUI.Enabled = true
-			local label = loadingUI:FindFirstChild("Background") and loadingUI.Background:FindFirstChild("Label")
-			if label and label:IsA("TextLabel") then
-				label.Text = "Masuk ke lokasi..."
-			end
-		end
-		if matchUX and matchUX.MessageLabel then
-			matchUX.MessageLabel.Text = "Masuk ke lokasi..."
-			matchUX.MessageLabel.Visible = true
-		end
-
-		local label = roomUI:FindFirstChild("LoadingLabel")
-		if label and label:IsA("TextLabel") then
-			label.Visible = true
-			label.Text = "Masuk ke lokasi..."
-		end
-		return
-	end
-
-	if phase == MATCH_PHASE.BRIEFING then
-		lobbyUI.Enabled = false
-		roomUI.Enabled = true
-		if hud then
-			hud.Enabled = false
-		end
-
-		local label = roomUI:FindFirstChild("ObjectiveLabel")
-		if label and label:IsA("TextLabel") then
-			label.Visible = true
-			label.Text = "Investigate the location\nFind evidence\nIdentify the ghost"
-		end
-		return
-	end
-
-	if phase == MATCH_PHASE.INGAME then
-		local MIN_LOADING_TIME = 1.5
-		local MAX_LOADING_WAIT = 2
-		local elapsed = tick() - (self._loadingStartTime or 0)
-		local waitTime = math.clamp(MIN_LOADING_TIME - elapsed, 0, MAX_LOADING_WAIT)
-		if waitTime > 0 then
-			task.wait(waitTime)
-		end
-
-		if loadingUI and loadingUI:IsA("ScreenGui") then
-			loadingUI.Enabled = false
-		end
-		if matchUX and matchUX.MessageLabel then
-			matchUX.MessageLabel.Visible = false
-			matchUX.MessageLabel.Text = ""
-		end
-
-		lobbyUI.Enabled = false
-		roomUI.Enabled = false
-
-		if matchUX and matchUX.Gui then
-			matchUX.Gui.Enabled = false
-		end
-		if matchUX and matchUX.Layer then
-			matchUX.Layer.Visible = false
-		end
-		if self._uxReady == true then
-			self:TransitionTo("Investigation", payload)
-		end
-
-		if hud then
-			hud.Enabled = true
-			local objective = hud:FindFirstChild("Objective")
-			if objective and objective:IsA("TextLabel") then
-				objective.Text = "Investigate the location\nFind evidence\nIdentify the ghost"
-			end
-			local warning = hud:FindFirstChild("Warning")
-			if warning then
-				warning.Visible = false
-			end
-		end
-		return
-	end
-
-	if phase == MATCH_PHASE.ESCALATION then
-		if hud then
-			hud.Enabled = true
-			local vignette = hud:FindFirstChild("Vignette")
-			if vignette and vignette:IsA("ImageLabel") then
-				vignette.ImageTransparency = 0.3
-			end
-		end
-		return
-	end
-
-	if phase == MATCH_PHASE.HUNT then
-		if hud then
-			hud.Enabled = true
-			local warning = hud:FindFirstChild("Warning")
-			if warning and warning:IsA("TextLabel") then
-				warning.Visible = true
-				warning.Text = "HUNT"
-			end
-
-			local heartbeat = hud:FindFirstChild("Heartbeat")
-			if heartbeat and heartbeat:IsA("Sound") and not heartbeat.IsPlaying then
-				heartbeat:Play()
-			end
-		end
-		return
-	end
-
-	if phase == MATCH_PHASE.RESULT or phase == MATCH_PHASE.END then
-		if hud then
-			hud.Enabled = false
-			local warning = hud:FindFirstChild("Warning")
-			if warning then
-				warning.Visible = false
-			end
-			local heartbeat = hud:FindFirstChild("Heartbeat")
-			if heartbeat and heartbeat:IsA("Sound") and heartbeat.IsPlaying then
-				heartbeat:Stop()
-			end
-		end
-
-		roomUI.Enabled = true
-		local result = roomUI:FindFirstChild("ResultLabel")
-		if result and result:IsA("TextLabel") then
-			result.Visible = true
-			local failed = payload and payload.missionFailed == true
-			result.Text = failed and "MISSION FAILED" or "MISSION COMPLETE"
-		end
-	end
-end
-
-function UISystem:_routeMatchPhaseEvent(eventName, payload)
-	if eventName == "MatchPreparing" then
-		self._hasPostTeleportLoaded = false
-		self._awaitingPostTeleportFlow = true
-		self:_setPhase(MATCH_PHASE.PREPARING)
-	elseif eventName == "MatchStarted" then
-		self._hasPostTeleportLoaded = false
-		self._awaitingPostTeleportFlow = true
-		self:_runPostTeleportLoadingFlow()
-	elseif eventName == "MatchEnded" then
-		self._hasPostTeleportLoaded = false
-		self._awaitingPostTeleportFlow = false
-		local missionFailed = payload and (
-			payload.success == false
-			or payload.failed == true
-			or payload.missionFailed == true
-			or payload.correctGuess == false
-		)
-		self:_setPhase(MATCH_PHASE.RESULT, { duration = 5, missionFailed = missionFailed == true })
-	elseif eventName == "RoomBrowserRoomLeft" or eventName == "ReturnedToLobby" then
-		self._hasPostTeleportLoaded = false
-		self._awaitingPostTeleportFlow = false
-		self:_setPhase(MATCH_PHASE.LOBBY)
-	end
-end
-
-function UISystem:_startPhaseTimer()
-	if self._phaseTimerRunning then
-		return
-	end
-
-	self._phaseTimerRunning = true
-	task.spawn(function()
-		while self._phaseTimerRunning do
-			task.wait(0.1)
-			if not self._phaseDuration then
-				continue
-			end
-
-			local elapsed = tick() - self._phaseStartTime
-			if elapsed < self._phaseDuration then
-				continue
-			end
-
-			if self._matchPhase == MATCH_PHASE.BRIEFING then
-				self:_setPhase(MATCH_PHASE.INGAME)
-			elseif self._matchPhase == MATCH_PHASE.HUNT then
-				-- Server should end hunt; this only prevents repeated fallback transitions.
-				self._phaseDuration = nil
-			else
-				self._phaseDuration = nil
-			end
-		end
-	end)
 end
 
 function UISystem:_bindRoomBrowserMatchVisibility()
@@ -1446,6 +927,7 @@ function UISystem:_handleMatchUXEvent(eventName, payload)
 		return
 	end
 	if eventName == "MatchStarted" then
+		self:TransitionTo("Preparation", payload)
 		return
 	end
 	if eventName == "PhaseChanged" then
@@ -1493,23 +975,6 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 		else
 			lobby.FeedbackLabel.Text = "Room diperbarui."
 		end
-	elseif eventName == "RoomInviteSendResult" then
-		if payload and payload.ok then
-			local total = tonumber(payload.invitedCount or 0) or 0
-			if payload.broadcast == true then
-				lobby.FeedbackLabel.Text = "Broadcast invite terkirim (" .. tostring(total) .. ")"
-			else
-				lobby.FeedbackLabel.Text = "Invite terkirim."
-			end
-		else
-			lobby.FeedbackLabel.Text = "Invite gagal: " .. tostring(payload and (payload.err or payload.reason) or "-")
-		end
-	elseif eventName == "RoomInviteAccepted" then
-		lobby.FeedbackLabel.Text = tostring(payload and payload.byName or "Player") .. " menerima invite."
-	elseif eventName == "RoomInviteDeclined" then
-		lobby.FeedbackLabel.Text = tostring(payload and payload.byName or "Player") .. " menolak invite."
-	elseif eventName == "RoomInviteExpired" then
-		lobby.FeedbackLabel.Text = "Invite kadaluarsa."
 	elseif eventName == "MatchStarting" or eventName == "RoomMatchStarting" then
 		lobby.FeedbackLabel.Text = "Match akan dimulai..."
 	else
@@ -1520,40 +985,6 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 	if lobby.PlayButton then
 		lobby.PlayButton.Visible = false
 	end
-end
-
-function UISystem:_hideRoomInvitePopup()
-	if self._roomBrowserWidgets and self._roomBrowserWidgets.InvitePopup then
-		self._roomBrowserWidgets.InvitePopup.Visible = false
-	end
-	self._activeInviteId = nil
-end
-
-function UISystem:_showRoomInvitePopup(payload)
-	if type(payload) ~= "table" or not self._roomBrowserWidgets then
-		return
-	end
-	local popup = self._roomBrowserWidgets.InvitePopup
-	local textLabel = self._roomBrowserWidgets.InvitePopupText
-	if not popup or not textLabel then
-		return
-	end
-	local inviteId = tostring(payload.inviteId or "")
-	if inviteId == "" then
-		return
-	end
-	self._activeInviteId = inviteId
-	local inviterName = tostring(payload.fromDisplayName or payload.fromName or "Host")
-	local roomId = tostring(payload.roomId or "?")
-	local modeText = tostring(payload.mode or "Classic")
-	textLabel.Text = string.format("%s mengundang kamu ke Room #%s (%s)", inviterName, roomId, modeText)
-	popup.Visible = true
-	task.delay(5, function()
-		if self._activeInviteId == inviteId then
-			self:RoomBrowserRespondRoomInvite(inviteId, false)
-			self:_hideRoomInvitePopup()
-		end
-	end)
 end
 
 function UISystem:_ensureBasicUIs()
@@ -1571,9 +1002,8 @@ function UISystem:_ensureBasicUIs()
 			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 			gui.Parent = playerGui
 		end
-		local panel = gui:FindFirstChild("MainPanel")
-		if not panel then
-			panel = Instance.new("Frame")
+		if not gui:FindFirstChild("MainPanel") then
+			local panel = Instance.new("Frame")
 			panel.Name = "MainPanel"
 			panel.AnchorPoint = Vector2.new(1, 0)
 			panel.Position = UDim2.new(1, -16, 0, 16)
@@ -1593,97 +1023,6 @@ function UISystem:_ensureBasicUIs()
 			styleLabel(title, guiName, 16)
 			title.Font = Enum.Font.GothamBold
 			title.Parent = panel
-		end
-
-		if guiName == "MainMenuUI" or guiName == "LeaderboardUI" then
-			local closeBtn = panel:FindFirstChild("CloseButton")
-			if not closeBtn then
-				closeBtn = Instance.new("TextButton")
-				closeBtn.Name = "CloseButton"
-				closeBtn.AnchorPoint = Vector2.new(1, 0)
-				closeBtn.Position = UDim2.new(1, -8, 0, 8)
-				closeBtn.Size = UDim2.fromOffset(24, 24)
-				closeBtn.BackgroundColor3 = Color3.fromRGB(68, 36, 36)
-				closeBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
-				closeBtn.Font = Enum.Font.GothamBold
-				closeBtn.TextSize = 14
-				closeBtn.Text = "[X]"
-				closeBtn.Parent = panel
-			end
-			closeBtn.Text = "[X]"
-			local closeCorner = closeBtn:FindFirstChildOfClass("UICorner")
-			if not closeCorner then
-				closeCorner = Instance.new("UICorner")
-				closeCorner.Parent = closeBtn
-			end
-			closeCorner.CornerRadius = UDim.new(1, 0)
-
-			local floatName = guiName == "LeaderboardUI" and "LeaderboardFloatButton" or "MainMenuFloatButton"
-			local fallbackFloatName = guiName == "LeaderboardUI" and "MainMenuFloatButton" or "LeaderboardFloatButton"
-			local floatBtn = gui:FindFirstChild(floatName) or gui:FindFirstChild(fallbackFloatName)
-			if not floatBtn then
-				local defaultFloatPosition = guiName == "LeaderboardUI"
-					and UDim2.new(1, -18, 0.4, 0)
-					or UDim2.new(1, -18, 0.5, 0)
-				floatBtn = Instance.new("TextButton")
-				floatBtn.Name = floatName
-				floatBtn.AnchorPoint = Vector2.new(1, 0.5)
-				floatBtn.Position = defaultFloatPosition
-				floatBtn.Size = UDim2.fromOffset(54, 54)
-				floatBtn.BackgroundColor3 = Color3.fromRGB(44, 55, 74)
-				floatBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
-				floatBtn.Font = Enum.Font.GothamBold
-				floatBtn.TextSize = 12
-				floatBtn.TextWrapped = true
-				floatBtn.Text = guiName == "LeaderboardUI" and "RANK" or "MENU"
-				floatBtn.Visible = false
-				floatBtn.Parent = gui
-
-				local floatCorner = Instance.new("UICorner")
-				floatCorner.CornerRadius = UDim.new(1, 0)
-				floatCorner.Parent = floatBtn
-
-				local floatStroke = Instance.new("UIStroke")
-				floatStroke.Thickness = 2
-				floatStroke.Color = Color3.fromRGB(115, 132, 160)
-				floatStroke.Parent = floatBtn
-			end
-			floatBtn.Name = floatName
-			floatBtn.Text = guiName == "LeaderboardUI" and "RANK" or "MENU"
-
-			local initAttribute = guiName == "LeaderboardUI" and "LeaderboardInitDone" or "MainMenuInitDone"
-			if gui:GetAttribute(initAttribute) ~= true then
-				gui:SetAttribute(initAttribute, true)
-				panel.Visible = false
-				floatBtn.Visible = true
-			end
-
-			local function setWindowVisible(visible)
-				for _, child in ipairs(gui:GetChildren()) do
-					if child:IsA("GuiObject") and child ~= floatBtn then
-						child.Visible = visible
-					end
-				end
-				panel.Visible = visible
-				floatBtn.Visible = not visible
-			end
-
-			floatBtn.Visible = panel.Visible ~= true
-			makeFloatingButtonDraggable(floatBtn)
-
-			if closeBtn:GetAttribute("Bound") ~= true then
-				closeBtn:SetAttribute("Bound", true)
-				connectButtonPress(closeBtn, function()
-					setWindowVisible(false)
-				end)
-			end
-
-			if floatBtn:GetAttribute("Bound") ~= true then
-				floatBtn:SetAttribute("Bound", true)
-				connectButtonPress(floatBtn, function()
-					setWindowVisible(true)
-				end)
-			end
 		end
 	end
 
@@ -1759,57 +1098,20 @@ function UISystem:_ensureRoomBrowserGui()
 	panel.BorderSizePixel = 0
 	panel.Parent = gui
 
-	local panelScale = Instance.new("UIScale")
-	panelScale.Parent = panel
-
-	local function updateRoomBrowserPanelScale()
-		local viewport = Vector2.new(1920, 1080)
-		local camera = Workspace.CurrentCamera
-		if camera and typeof(camera.ViewportSize) == "Vector2" then
-			viewport = camera.ViewportSize
-		end
-		local scaleX = (viewport.X - 24) / 920
-		local scaleY = (viewport.Y - 24) / 560
-		panelScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.55, 1)
-	end
-	updateRoomBrowserPanelScale()
-	if Workspace.CurrentCamera then
-		table.insert(self._connections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateRoomBrowserPanelScale))
-	end
-
 	local panelCorner = Instance.new("UICorner")
 	panelCorner.CornerRadius = UDim.new(0, 12)
 	panelCorner.Parent = panel
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1
-	title.Position = UDim2.fromOffset(0, 8)
-	title.Size = UDim2.new(1, -48, 0, 30)
+	title.Position = UDim2.fromOffset(16, 12)
+	title.Size = UDim2.fromOffset(340, 26)
 	title.Text = "RUANG INVESTIGASI"
-	title.TextXAlignment = Enum.TextXAlignment.Center
-	title.Font = Enum.Font.GothamBlack
-	title.TextSize = 25
-	title.TextColor3 = Color3.fromRGB(210, 68, 68)
-	title.ZIndex = 3
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 20
+	title.TextColor3 = Color3.fromRGB(245, 245, 245)
 	title.Parent = panel
-	local titleStroke = Instance.new("UIStroke")
-	titleStroke.Thickness = 1.4
-	titleStroke.Color = Color3.fromRGB(35, 8, 8)
-	titleStroke.Parent = title
-
-	local titleGlow = Instance.new("TextLabel")
-	titleGlow.Name = "TitleGlow"
-	titleGlow.BackgroundTransparency = 1
-	titleGlow.Position = UDim2.fromOffset(1, 10)
-	titleGlow.Size = title.Size
-	titleGlow.Text = title.Text
-	titleGlow.TextXAlignment = Enum.TextXAlignment.Center
-	titleGlow.Font = title.Font
-	titleGlow.TextSize = 25
-	titleGlow.TextColor3 = Color3.fromRGB(92, 22, 22)
-	titleGlow.TextTransparency = 0.35
-	titleGlow.ZIndex = 2
-	titleGlow.Parent = panel
 
 	local dragBar = Instance.new("Frame")
 	dragBar.Name = "DragBar"
@@ -1849,7 +1151,6 @@ function UISystem:_ensureRoomBrowserGui()
 	floatStroke.Thickness = 2
 	floatStroke.Color = Color3.fromRGB(95, 118, 150)
 	floatStroke.Parent = floatButton
-	makeFloatingButtonDraggable(floatButton)
 
 	local statusLabel = Instance.new("TextLabel")
 	statusLabel.Name = "Status"
@@ -1866,28 +1167,39 @@ function UISystem:_ensureRoomBrowserGui()
 	local classicBtn = Instance.new("TextButton")
 	classicBtn.Name = "ClassicButton"
 	classicBtn.Position = UDim2.fromOffset(16, 72)
-	classicBtn.Size = UDim2.fromOffset(132, 30)
+	classicBtn.Size = UDim2.fromOffset(200, 30)
 	styleButton(classicBtn, "Classic")
 	classicBtn.Parent = panel
 
-	local allModesBtn = Instance.new("TextButton")
-	allModesBtn.Name = "AllModesButton"
-	allModesBtn.Position = UDim2.fromOffset(154, 72)
-	allModesBtn.Size = UDim2.fromOffset(132, 30)
-	styleButton(allModesBtn, "SEMUA MODE")
-	allModesBtn.Parent = panel
-
 	local rankedBtn = Instance.new("TextButton")
 	rankedBtn.Name = "RankedButton"
-	rankedBtn.Position = UDim2.fromOffset(292, 72)
-	rankedBtn.Size = UDim2.fromOffset(132, 30)
+	rankedBtn.Position = UDim2.fromOffset(224, 72)
+	rankedBtn.Size = UDim2.fromOffset(200, 30)
 	styleButton(rankedBtn, "Ranked")
 	rankedBtn.Parent = panel
 
+	local diffWrap = Instance.new("Frame")
+	diffWrap.Name = "DifficultyWrap"
+	diffWrap.BackgroundTransparency = 1
+	diffWrap.Position = UDim2.fromOffset(16, 110)
+	diffWrap.Size = UDim2.fromOffset(408, 32)
+	diffWrap.Parent = panel
+
+	local difficultyButtons = {}
+	for i, difficultyName in ipairs(DIFFICULTIES) do
+		local btn = Instance.new("TextButton")
+		btn.Name = difficultyName
+		btn.Size = UDim2.fromOffset(98, 28)
+		btn.Position = UDim2.fromOffset((i - 1) * 102, 0)
+		styleButton(btn, difficultyName)
+		btn.Parent = diffWrap
+		difficultyButtons[difficultyName] = btn
+	end
+
 	local roomList = Instance.new("ScrollingFrame")
 	roomList.Name = "RoomList"
-	roomList.Position = UDim2.fromOffset(16, 110)
-	roomList.Size = UDim2.fromOffset(392, 250)
+	roomList.Position = UDim2.fromOffset(16, 150)
+	roomList.Size = UDim2.fromOffset(408, 250)
 	roomList.BackgroundColor3 = Color3.fromRGB(26, 32, 42)
 	roomList.BorderSizePixel = 0
 	roomList.ScrollBarThickness = 4
@@ -1910,124 +1222,6 @@ function UISystem:_ensureRoomBrowserGui()
 	roomListPadding.PaddingLeft = UDim.new(0, 6)
 	roomListPadding.PaddingRight = UDim.new(0, 6)
 	roomListPadding.Parent = roomList
-
-	local roomPreviewPanel = Instance.new("Frame")
-	roomPreviewPanel.Name = "RoomPreviewPanel"
-	roomPreviewPanel.Position = UDim2.fromOffset(424, 110)
-	roomPreviewPanel.Size = UDim2.fromOffset(480, 384)
-	roomPreviewPanel.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
-	roomPreviewPanel.BorderSizePixel = 0
-	roomPreviewPanel.Parent = panel
-	local roomPreviewCorner = Instance.new("UICorner")
-	roomPreviewCorner.CornerRadius = UDim.new(0, 10)
-	roomPreviewCorner.Parent = roomPreviewPanel
-	local roomPreviewStroke = Instance.new("UIStroke")
-	roomPreviewStroke.Thickness = 1
-	roomPreviewStroke.Color = Color3.fromRGB(76, 95, 122)
-	roomPreviewStroke.Parent = roomPreviewPanel
-
-	local roomPreviewTitle = Instance.new("TextLabel")
-	roomPreviewTitle.Name = "Title"
-	roomPreviewTitle.BackgroundTransparency = 1
-	roomPreviewTitle.Position = UDim2.fromOffset(12, 10)
-	roomPreviewTitle.Size = UDim2.fromOffset(456, 24)
-	roomPreviewTitle.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewTitle.Font = Enum.Font.GothamBold
-	roomPreviewTitle.TextSize = 15
-	roomPreviewTitle.TextColor3 = Color3.fromRGB(240, 245, 250)
-	roomPreviewTitle.Text = "PREVIEW ROOM"
-	roomPreviewTitle.Parent = roomPreviewPanel
-
-	local roomPreviewInfo = Instance.new("TextLabel")
-	roomPreviewInfo.Name = "Info"
-	roomPreviewInfo.BackgroundTransparency = 1
-	roomPreviewInfo.Position = UDim2.fromOffset(12, 34)
-	roomPreviewInfo.Size = UDim2.fromOffset(456, 18)
-	roomPreviewInfo.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewInfo.Font = Enum.Font.Gotham
-	roomPreviewInfo.TextSize = 11
-	roomPreviewInfo.TextColor3 = Color3.fromRGB(178, 194, 214)
-	roomPreviewInfo.Text = "Klik room di daftar untuk lihat detail."
-	roomPreviewInfo.Parent = roomPreviewPanel
-
-	local roomPreviewMap = Instance.new("Frame")
-	roomPreviewMap.Name = "MapPlaceholder"
-	roomPreviewMap.Position = UDim2.fromOffset(12, 58)
-	roomPreviewMap.Size = UDim2.fromOffset(456, 112)
-	roomPreviewMap.BackgroundColor3 = Color3.fromRGB(18, 24, 32)
-	roomPreviewMap.BorderSizePixel = 0
-	roomPreviewMap.Parent = roomPreviewPanel
-	local roomPreviewMapCorner = Instance.new("UICorner")
-	roomPreviewMapCorner.CornerRadius = UDim.new(0, 8)
-	roomPreviewMapCorner.Parent = roomPreviewMap
-	local roomPreviewMapStroke = Instance.new("UIStroke")
-	roomPreviewMapStroke.Thickness = 1
-	roomPreviewMapStroke.Color = Color3.fromRGB(72, 90, 116)
-	roomPreviewMapStroke.Parent = roomPreviewMap
-
-	local roomPreviewMapTitle = Instance.new("TextLabel")
-	roomPreviewMapTitle.Name = "MapTitle"
-	roomPreviewMapTitle.BackgroundTransparency = 1
-	roomPreviewMapTitle.Position = UDim2.fromOffset(10, 8)
-	roomPreviewMapTitle.Size = UDim2.fromOffset(436, 16)
-	roomPreviewMapTitle.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewMapTitle.Font = Enum.Font.GothamSemibold
-	roomPreviewMapTitle.TextSize = 11
-	roomPreviewMapTitle.TextColor3 = Color3.fromRGB(196, 210, 228)
-	roomPreviewMapTitle.Text = "MAP ROOM"
-	roomPreviewMapTitle.Parent = roomPreviewMap
-
-	local roomPreviewMapLabel = Instance.new("TextLabel")
-	roomPreviewMapLabel.Name = "MapLabel"
-	roomPreviewMapLabel.BackgroundTransparency = 1
-	roomPreviewMapLabel.Position = UDim2.fromOffset(10, 30)
-	roomPreviewMapLabel.Size = UDim2.fromOffset(436, 74)
-	roomPreviewMapLabel.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewMapLabel.TextYAlignment = Enum.TextYAlignment.Top
-	roomPreviewMapLabel.Font = Enum.Font.GothamBold
-	roomPreviewMapLabel.TextSize = 13
-	roomPreviewMapLabel.TextWrapped = true
-	roomPreviewMapLabel.TextColor3 = Color3.fromRGB(236, 242, 250)
-	roomPreviewMapLabel.Text = "MAP PLACEHOLDER: -"
-	roomPreviewMapLabel.Parent = roomPreviewMap
-
-	local roomPreviewPlayersTitle = Instance.new("TextLabel")
-	roomPreviewPlayersTitle.Name = "PlayersTitle"
-	roomPreviewPlayersTitle.BackgroundTransparency = 1
-	roomPreviewPlayersTitle.Position = UDim2.fromOffset(12, 176)
-	roomPreviewPlayersTitle.Size = UDim2.fromOffset(456, 16)
-	roomPreviewPlayersTitle.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewPlayersTitle.Font = Enum.Font.GothamSemibold
-	roomPreviewPlayersTitle.TextSize = 11
-	roomPreviewPlayersTitle.TextColor3 = Color3.fromRGB(198, 214, 232)
-	roomPreviewPlayersTitle.Text = "PLAYER DALAM ROOM"
-	roomPreviewPlayersTitle.Parent = roomPreviewPanel
-
-	local roomPreviewPlayersList = Instance.new("ScrollingFrame")
-	roomPreviewPlayersList.Name = "PlayersList"
-	roomPreviewPlayersList.Position = UDim2.fromOffset(12, 196)
-	roomPreviewPlayersList.Size = UDim2.fromOffset(456, 176)
-	roomPreviewPlayersList.BackgroundColor3 = Color3.fromRGB(19, 25, 34)
-	roomPreviewPlayersList.BorderSizePixel = 0
-	roomPreviewPlayersList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	roomPreviewPlayersList.CanvasSize = UDim2.fromOffset(0, 0)
-	roomPreviewPlayersList.ScrollBarThickness = 4
-	roomPreviewPlayersList.Parent = roomPreviewPanel
-	local roomPreviewPlayersCorner = Instance.new("UICorner")
-	roomPreviewPlayersCorner.CornerRadius = UDim.new(0, 8)
-	roomPreviewPlayersCorner.Parent = roomPreviewPlayersList
-	local roomPreviewPlayersPadding = Instance.new("UIPadding")
-	roomPreviewPlayersPadding.PaddingTop = UDim.new(0, 6)
-	roomPreviewPlayersPadding.PaddingBottom = UDim.new(0, 6)
-	roomPreviewPlayersPadding.PaddingLeft = UDim.new(0, 6)
-	roomPreviewPlayersPadding.PaddingRight = UDim.new(0, 6)
-	roomPreviewPlayersPadding.Parent = roomPreviewPlayersList
-	local roomPreviewPlayersLayout = Instance.new("UIGridLayout")
-	roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(220, 78)
-	roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(8, 8)
-	roomPreviewPlayersLayout.FillDirectionMaxCells = 2
-	roomPreviewPlayersLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	roomPreviewPlayersLayout.Parent = roomPreviewPlayersList
 
 	local joinPwdBox = Instance.new("TextBox")
 	joinPwdBox.Name = "JoinPassword"
@@ -2161,22 +1355,22 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local refreshBtn = Instance.new("TextButton")
 	refreshBtn.Name = "RefreshButton"
-	refreshBtn.Position = UDim2.fromOffset(149, 456)
-	refreshBtn.Size = UDim2.fromOffset(126, 38)
+	refreshBtn.Position = UDim2.fromOffset(224, 408)
+	refreshBtn.Size = UDim2.fromOffset(96, 30)
 	styleButton(refreshBtn, "Refresh")
 	refreshBtn.Parent = panel
 
 	local createRoomBtn = Instance.new("TextButton")
 	createRoomBtn.Name = "CreateRoomButton"
-	createRoomBtn.Position = UDim2.fromOffset(282, 456)
-	createRoomBtn.Size = UDim2.fromOffset(126, 38)
+	createRoomBtn.Position = UDim2.fromOffset(328, 408)
+	createRoomBtn.Size = UDim2.fromOffset(96, 30)
 	styleButton(createRoomBtn, "Buat Room")
 	createRoomBtn.BackgroundColor3 = Color3.fromRGB(50, 90, 140)
 	createRoomBtn.Parent = panel
 
 	local queueBtn = Instance.new("TextButton")
 	queueBtn.Name = "QueueButton"
-	queueBtn.Position = UDim2.fromOffset(16, 506)
+	queueBtn.Position = UDim2.fromOffset(16, 446)
 	queueBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(queueBtn, "JOIN")
 	queueBtn.BackgroundColor3 = Color3.fromRGB(46, 112, 168)
@@ -2184,7 +1378,7 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local quickClassicBtn = Instance.new("TextButton")
 	quickClassicBtn.Name = "QuickJoinClassicButton"
-	quickClassicBtn.Position = UDim2.fromOffset(149, 506)
+	quickClassicBtn.Position = UDim2.fromOffset(149, 446)
 	quickClassicBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(quickClassicBtn, "QUICK CLASSIC")
 	quickClassicBtn.BackgroundColor3 = Color3.fromRGB(70, 120, 84)
@@ -2192,7 +1386,7 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local quickRankedBtn = Instance.new("TextButton")
 	quickRankedBtn.Name = "QuickJoinRankedButton"
-	quickRankedBtn.Position = UDim2.fromOffset(282, 506)
+	quickRankedBtn.Position = UDim2.fromOffset(282, 446)
 	quickRankedBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(quickRankedBtn, "QUICK RANKED")
 	quickRankedBtn.BackgroundColor3 = Color3.fromRGB(108, 78, 132)
@@ -2200,10 +1394,10 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local roomPanel = Instance.new("Frame")
 	roomPanel.Name = "RoomPanel"
-	roomPanel.Position = UDim2.fromOffset(0, 0)
-	roomPanel.Size = UDim2.fromScale(1, 1)
+	roomPanel.Position = UDim2.fromOffset(16, 86)
+	roomPanel.Size = UDim2.fromOffset(888, 458)
 	roomPanel.BackgroundColor3 = Color3.fromRGB(26, 32, 42)
-	roomPanel.BackgroundTransparency = 0
+	roomPanel.BackgroundTransparency = 0.5
 	roomPanel.BorderSizePixel = 0
 	roomPanel.Visible = false
 	roomPanel.Parent = panel
@@ -2274,115 +1468,17 @@ function UISystem:_ensureRoomBrowserGui()
 	playersListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	playersListLayout.Parent = playersList
 
-	local modeSelector = Instance.new("TextButton")
-	modeSelector.Name = "ModeSelector"
-	modeSelector.Position = UDim2.fromOffset(14, 348)
-	modeSelector.Size = UDim2.fromOffset(380, 30)
-	styleButton(modeSelector, "MODE: CLASSIC")
-	modeSelector.Parent = roomPanel
-
-	local modeDropdown = Instance.new("Frame")
-	modeDropdown.Name = "ModeDropdown"
-	modeDropdown.Position = UDim2.fromOffset(14, 382)
-	modeDropdown.Size = UDim2.fromOffset(380, 72)
-	modeDropdown.BackgroundColor3 = Color3.fromRGB(26, 33, 43)
-	modeDropdown.BorderSizePixel = 0
-	modeDropdown.Visible = false
-	modeDropdown.Active = true
-	modeDropdown.ZIndex = 24
-	modeDropdown.Parent = roomPanel
-	local modeDropdownCorner = Instance.new("UICorner")
-	modeDropdownCorner.CornerRadius = UDim.new(0, 8)
-	modeDropdownCorner.Parent = modeDropdown
-	local modeDropdownStroke = Instance.new("UIStroke")
-	modeDropdownStroke.Thickness = 1
-	modeDropdownStroke.Color = Color3.fromRGB(78, 100, 128)
-	modeDropdownStroke.Parent = modeDropdown
-
-	local modeClassicBtn = Instance.new("TextButton")
-	modeClassicBtn.Name = "ClassicOption"
-	modeClassicBtn.Position = UDim2.fromOffset(8, 8)
-	modeClassicBtn.Size = UDim2.fromOffset(364, 26)
-	styleButton(modeClassicBtn, "CLASSIC")
-	modeClassicBtn.ZIndex = 25
-	modeClassicBtn.Parent = modeDropdown
-	local modeClassicCorner = Instance.new("UICorner")
-	modeClassicCorner.CornerRadius = UDim.new(0, 6)
-	modeClassicCorner.Parent = modeClassicBtn
-
-	local modeRankedBtn = Instance.new("TextButton")
-	modeRankedBtn.Name = "RankedOption"
-	modeRankedBtn.Position = UDim2.fromOffset(8, 38)
-	modeRankedBtn.Size = UDim2.fromOffset(364, 26)
-	styleButton(modeRankedBtn, "RANKED")
-	modeRankedBtn.ZIndex = 25
-	modeRankedBtn.Parent = modeDropdown
-	local modeRankedCorner = Instance.new("UICorner")
-	modeRankedCorner.CornerRadius = UDim.new(0, 6)
-	modeRankedCorner.Parent = modeRankedBtn
-
 	local mapSelector = Instance.new("TextButton")
 	mapSelector.Name = "MapSelector"
-	mapSelector.Position = UDim2.fromOffset(14, 422)
+	mapSelector.Position = UDim2.fromOffset(14, 148)
 	mapSelector.Size = UDim2.fromOffset(380, 30)
-	styleButton(mapSelector, "MAP: " .. tostring(MAPS[1]))
+	styleButton(mapSelector, MAPS[1])
 	mapSelector.Parent = roomPanel
-
-	local mapDropdown = Instance.new("Frame")
-	mapDropdown.Name = "MapDropdown"
-	mapDropdown.Position = UDim2.fromOffset(14, 446)
-	mapDropdown.Size = UDim2.fromOffset(380, 112)
-	mapDropdown.BackgroundColor3 = Color3.fromRGB(26, 33, 43)
-	mapDropdown.BorderSizePixel = 0
-	mapDropdown.Visible = false
-	mapDropdown.Active = true
-	mapDropdown.ZIndex = 24
-	mapDropdown.Parent = roomPanel
-	local mapDropdownCorner = Instance.new("UICorner")
-	mapDropdownCorner.CornerRadius = UDim.new(0, 8)
-	mapDropdownCorner.Parent = mapDropdown
-	local mapDropdownStroke = Instance.new("UIStroke")
-	mapDropdownStroke.Thickness = 1
-	mapDropdownStroke.Color = Color3.fromRGB(78, 100, 128)
-	mapDropdownStroke.Parent = mapDropdown
-
-	local mapOptionButtons = {}
-	for idx, mapName in ipairs(MAPS) do
-		local option = Instance.new("TextButton")
-		option.Name = "MapOption_" .. tostring(idx)
-		option.Position = UDim2.fromOffset(8, 8 + (idx - 1) * 26)
-		option.Size = UDim2.fromOffset(364, 22)
-		styleButton(option, mapName)
-		option.TextSize = 12
-		option.ZIndex = 25
-		option.Parent = mapDropdown
-		local optionCorner = Instance.new("UICorner")
-		optionCorner.CornerRadius = UDim.new(0, 6)
-		optionCorner.Parent = option
-		mapOptionButtons[idx] = option
-	end
-
-	local rankedTierLabel = Instance.new("TextLabel")
-	rankedTierLabel.Name = "RankedTierLabel"
-	rankedTierLabel.BackgroundColor3 = Color3.fromRGB(31, 35, 48)
-	rankedTierLabel.BorderSizePixel = 0
-	rankedTierLabel.Position = UDim2.fromOffset(14, 422)
-	rankedTierLabel.Size = UDim2.fromOffset(380, 30)
-	rankedTierLabel.TextXAlignment = Enum.TextXAlignment.Left
-	rankedTierLabel.Font = Enum.Font.GothamSemibold
-	rankedTierLabel.TextSize = 12
-	rankedTierLabel.TextColor3 = Color3.fromRGB(215, 224, 236)
-	rankedTierLabel.Text = "TIER HOST: UNRANKED"
-	rankedTierLabel.Visible = false
-	rankedTierLabel.Parent = roomPanel
-	local rankedTierCorner = Instance.new("UICorner")
-	rankedTierCorner.CornerRadius = UDim.new(0, 6)
-	rankedTierCorner.Parent = rankedTierLabel
 
 	local mapPreview = Instance.new("Frame")
 	mapPreview.Name = "MapPreview"
-	mapPreview.Position = UDim2.fromOffset(14, 72)
-	mapPreview.Size = UDim2.fromOffset(380, 208)
+	mapPreview.Position = UDim2.fromOffset(14, 114)
+	mapPreview.Size = UDim2.fromOffset(380, 30)
 	mapPreview.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
 	mapPreview.BorderSizePixel = 0
 	mapPreview.Parent = roomPanel
@@ -2397,11 +1493,11 @@ function UISystem:_ensureRoomBrowserGui()
 	local mapPreviewTitle = Instance.new("TextLabel")
 	mapPreviewTitle.Name = "Title"
 	mapPreviewTitle.BackgroundTransparency = 1
-	mapPreviewTitle.Position = UDim2.fromOffset(10, 8)
-	mapPreviewTitle.Size = UDim2.new(1, -20, 0, 14)
+	mapPreviewTitle.Position = UDim2.fromOffset(8, 2)
+	mapPreviewTitle.Size = UDim2.new(1, -16, 0, 12)
 	mapPreviewTitle.TextXAlignment = Enum.TextXAlignment.Left
 	mapPreviewTitle.Font = Enum.Font.GothamSemibold
-	mapPreviewTitle.TextSize = 10
+	mapPreviewTitle.TextSize = 9
 	mapPreviewTitle.TextColor3 = Color3.fromRGB(190, 205, 225)
 	mapPreviewTitle.Text = "PREVIEW"
 	mapPreviewTitle.Parent = mapPreview
@@ -2409,42 +1505,14 @@ function UISystem:_ensureRoomBrowserGui()
 	local mapPreviewLabel = Instance.new("TextLabel")
 	mapPreviewLabel.Name = "Label"
 	mapPreviewLabel.BackgroundTransparency = 1
-	mapPreviewLabel.Position = UDim2.fromOffset(10, 26)
-	mapPreviewLabel.Size = UDim2.new(1, -20, 0, 16)
+	mapPreviewLabel.Position = UDim2.fromOffset(8, 12)
+	mapPreviewLabel.Size = UDim2.new(1, -16, 0, 14)
 	mapPreviewLabel.TextXAlignment = Enum.TextXAlignment.Left
-	mapPreviewLabel.TextYAlignment = Enum.TextYAlignment.Top
 	mapPreviewLabel.Font = Enum.Font.GothamBold
-	mapPreviewLabel.TextSize = 12
-	mapPreviewLabel.TextWrapped = true
+	mapPreviewLabel.TextSize = 11
 	mapPreviewLabel.TextColor3 = Color3.fromRGB(235, 240, 245)
 	mapPreviewLabel.Text = "MAP PLACEHOLDER: " .. tostring(MAPS[1])
 	mapPreviewLabel.Parent = mapPreview
-
-	local mapPreviewImage = Instance.new("Frame")
-	mapPreviewImage.Name = "MapImagePlaceholder"
-	mapPreviewImage.AnchorPoint = Vector2.new(0.5, 0)
-	mapPreviewImage.Position = UDim2.new(0.5, 0, 0, 46)
-	mapPreviewImage.Size = UDim2.fromOffset(200, 150)
-	mapPreviewImage.BackgroundColor3 = Color3.fromRGB(15, 20, 28)
-	mapPreviewImage.BorderSizePixel = 0
-	mapPreviewImage.Parent = mapPreview
-	local mapPreviewImageCorner = Instance.new("UICorner")
-	mapPreviewImageCorner.CornerRadius = UDim.new(0, 6)
-	mapPreviewImageCorner.Parent = mapPreviewImage
-	local mapPreviewImageStroke = Instance.new("UIStroke")
-	mapPreviewImageStroke.Thickness = 1
-	mapPreviewImageStroke.Color = Color3.fromRGB(83, 101, 128)
-	mapPreviewImageStroke.Parent = mapPreviewImage
-	local mapPreviewImageLabel = Instance.new("TextLabel")
-	mapPreviewImageLabel.Name = "ImageLabel"
-	mapPreviewImageLabel.BackgroundTransparency = 1
-	mapPreviewImageLabel.Size = UDim2.fromScale(1, 1)
-	mapPreviewImageLabel.Font = Enum.Font.GothamBold
-	mapPreviewImageLabel.TextSize = 12
-	mapPreviewImageLabel.TextColor3 = Color3.fromRGB(210, 220, 236)
-	mapPreviewImageLabel.TextWrapped = true
-	mapPreviewImageLabel.Text = "4:3\nMAP IMAGE"
-	mapPreviewImageLabel.Parent = mapPreviewImage
 
 	local setPwdBox = Instance.new("TextBox")
 	setPwdBox.Name = "SetPasswordBox"
@@ -2474,7 +1542,7 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local readyBtn = Instance.new("TextButton")
 	readyBtn.Name = "ReadyButton"
-	readyBtn.Position = UDim2.fromOffset(14, 264)
+	readyBtn.Position = UDim2.fromOffset(14, 224)
 	readyBtn.Size = UDim2.fromOffset(380, 36)
 	styleButton(readyBtn, "READY")
 	readyBtn.BackgroundColor3 = Color3.fromRGB(40, 120, 60)
@@ -2507,49 +1575,6 @@ function UISystem:_ensureRoomBrowserGui()
 	leaveRoomBtn.TextSize = 12
 	leaveRoomBtn.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
 	leaveRoomBtn.Parent = roomPanel
-
-	local inviteBtn = Instance.new("TextButton")
-	inviteBtn.Name = "InviteButton"
-	inviteBtn.Position = UDim2.fromOffset(454, 446)
-	inviteBtn.Size = UDim2.fromOffset(420, 30)
-	styleButton(inviteBtn, "INVITE PLAYER")
-	inviteBtn.TextSize = 12
-	inviteBtn.BackgroundColor3 = Color3.fromRGB(52, 92, 128)
-	inviteBtn.Visible = false
-	inviteBtn.Parent = roomPanel
-
-	local inviteDropdown = Instance.new("Frame")
-	inviteDropdown.Name = "InviteDropdown"
-	inviteDropdown.Position = UDim2.fromOffset(454, 220)
-	inviteDropdown.Size = UDim2.fromOffset(420, 220)
-	inviteDropdown.BackgroundColor3 = Color3.fromRGB(26, 33, 43)
-	inviteDropdown.BorderSizePixel = 0
-	inviteDropdown.Visible = false
-	inviteDropdown.Active = true
-	inviteDropdown.ZIndex = 24
-	inviteDropdown.Parent = roomPanel
-	local inviteDropdownCorner = Instance.new("UICorner")
-	inviteDropdownCorner.CornerRadius = UDim.new(0, 8)
-	inviteDropdownCorner.Parent = inviteDropdown
-	local inviteDropdownStroke = Instance.new("UIStroke")
-	inviteDropdownStroke.Thickness = 1
-	inviteDropdownStroke.Color = Color3.fromRGB(78, 100, 128)
-	inviteDropdownStroke.Parent = inviteDropdown
-
-	local inviteList = Instance.new("ScrollingFrame")
-	inviteList.Name = "InviteList"
-	inviteList.Size = UDim2.new(1, -8, 1, -8)
-	inviteList.Position = UDim2.fromOffset(4, 4)
-	inviteList.BackgroundTransparency = 1
-	inviteList.BorderSizePixel = 0
-	inviteList.ScrollBarThickness = 4
-	inviteList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	inviteList.CanvasSize = UDim2.fromOffset(0, 0)
-	inviteList.ZIndex = 25
-	inviteList.Parent = inviteDropdown
-	local inviteListLayout = Instance.new("UIListLayout")
-	inviteListLayout.Padding = UDim.new(0, 4)
-	inviteListLayout.Parent = inviteList
 
 	local kickNameBox = Instance.new("TextBox")
 	kickNameBox.Name = "KickNameBox"
@@ -2612,82 +1637,9 @@ function UISystem:_ensureRoomBrowserGui()
 	cancelCountdownBtn.Visible = false
 	cancelCountdownBtn.Parent = countdownOverlay
 
-	local invitePopup = Instance.new("Frame")
-	invitePopup.Name = "InvitePopup"
-	invitePopup.AnchorPoint = Vector2.new(0.5, 0)
-	invitePopup.Position = UDim2.new(0.5, 0, 0, 18)
-	invitePopup.Size = UDim2.fromOffset(408, 66)
-	invitePopup.BackgroundColor3 = Color3.fromRGB(20, 30, 40)
-	invitePopup.BorderSizePixel = 0
-	invitePopup.ZIndex = 12
-	invitePopup.Visible = false
-	invitePopup.Parent = gui
-	local invitePopupScale = Instance.new("UIScale")
-	invitePopupScale.Parent = invitePopup
-	local invitePopupCorner = Instance.new("UICorner")
-	invitePopupCorner.CornerRadius = UDim.new(0, 8)
-	invitePopupCorner.Parent = invitePopup
-	local invitePopupStroke = Instance.new("UIStroke")
-	invitePopupStroke.Thickness = 1
-	invitePopupStroke.Color = Color3.fromRGB(86, 128, 170)
-	invitePopupStroke.Parent = invitePopup
-
-	local invitePopupText = Instance.new("TextLabel")
-	invitePopupText.Name = "Text"
-	invitePopupText.BackgroundTransparency = 1
-	invitePopupText.Position = UDim2.fromOffset(10, 7)
-	invitePopupText.Size = UDim2.fromOffset(286, 50)
-	invitePopupText.TextXAlignment = Enum.TextXAlignment.Left
-	invitePopupText.TextYAlignment = Enum.TextYAlignment.Center
-	invitePopupText.Font = Enum.Font.GothamSemibold
-	invitePopupText.TextSize = 11
-	invitePopupText.TextWrapped = true
-	invitePopupText.TextColor3 = Color3.fromRGB(235, 240, 245)
-	invitePopupText.Text = "Invite"
-	invitePopupText.ZIndex = 13
-	invitePopupText.Parent = invitePopup
-
-	local inviteAcceptBtn = Instance.new("TextButton")
-	inviteAcceptBtn.Name = "AcceptButton"
-	inviteAcceptBtn.Position = UDim2.fromOffset(302, 9)
-	inviteAcceptBtn.Size = UDim2.fromOffset(96, 22)
-	styleButton(inviteAcceptBtn, "TERIMA")
-	inviteAcceptBtn.TextSize = 11
-	inviteAcceptBtn.BackgroundColor3 = Color3.fromRGB(45, 120, 70)
-	inviteAcceptBtn.ZIndex = 13
-	inviteAcceptBtn.Parent = invitePopup
-
-	local inviteDeclineBtn = Instance.new("TextButton")
-	inviteDeclineBtn.Name = "DeclineButton"
-	inviteDeclineBtn.Position = UDim2.fromOffset(302, 35)
-	inviteDeclineBtn.Size = UDim2.fromOffset(96, 22)
-	styleButton(inviteDeclineBtn, "TOLAK")
-	inviteDeclineBtn.TextSize = 11
-	inviteDeclineBtn.BackgroundColor3 = Color3.fromRGB(120, 46, 46)
-	inviteDeclineBtn.ZIndex = 13
-	inviteDeclineBtn.Parent = invitePopup
-
-	local function updateInvitePopupLayout()
-		local topLeftInset, _ = resolveSafeInsets()
-		local viewport = Vector2.new(1920, 1080)
-		local camera = Workspace.CurrentCamera
-		if camera and typeof(camera.ViewportSize) == "Vector2" then
-			viewport = camera.ViewportSize
-		end
-		local scaleX = (viewport.X - 24) / 408
-		local scaleY = (viewport.Y - (topLeftInset.Y + 24)) / 66
-		invitePopupScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.68, 1)
-		invitePopup.Position = UDim2.new(0.5, 0, 0, 10 + topLeftInset.Y)
-	end
-	updateInvitePopupLayout()
-	if Workspace.CurrentCamera then
-		table.insert(self._connections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateInvitePopupLayout))
-	end
-
 	local mapIndex = 1
 	local currentRoomId = nil
 	local selectedRoomId = nil
-	local selectedPreviewRenderKey = nil
 	local pendingPasswordRoomId = nil
 	local dragging = false
 	local dragStart = nil
@@ -2717,194 +1669,22 @@ function UISystem:_ensureRoomBrowserGui()
 		)
 	end
 
-	local function resolveLocalTierText()
-		local localPlayer = Players.LocalPlayer
-		if not localPlayer then
-			return "UNRANKED"
+	local function updateMapPreview()
+		local modeText = "Classic"
+		if self._roomBrowser then
+			local snapshotState = self._roomBrowser:GetState()
+			modeText = (snapshotState and snapshotState.selectedMode) or "Classic"
 		end
-		for _, attrName in ipairs({ "RankTier", "Tier", "RankedTier", "HostTier" }) do
-			local value = localPlayer:GetAttribute(attrName)
-			if value ~= nil and tostring(value) ~= "" then
-				return string.upper(tostring(value))
-			end
-		end
-		return "UNRANKED"
-	end
-
-	local function updateMapPreview(modeText, mapName)
-		modeText = modeText or "Classic"
-		mapName = mapName or MAPS[mapIndex]
 		if modeText == "Ranked" then
 			mapPreview.BackgroundColor3 = Color3.fromRGB(46, 32, 62)
 			mapPreviewStroke.Color = Color3.fromRGB(140, 102, 196)
 			mapPreviewTitle.Text = "RANKED PREVIEW"
-			mapPreviewLabel.Text = "TIER HOST: " .. resolveLocalTierText()
-			mapPreviewImageLabel.Text = "4:3\nRANKED ARENA"
+			mapPreviewLabel.Text = "RANKED PLACEHOLDER: TIER SCENE"
 		else
 			mapPreview.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
 			mapPreviewStroke.Color = Color3.fromRGB(75, 92, 120)
 			mapPreviewTitle.Text = "MAP PREVIEW"
-			mapPreviewLabel.Text = "MAP PLACEHOLDER: " .. tostring(mapName)
-			mapPreviewImageLabel.Text = "4:3\n" .. tostring(mapName)
-		end
-	end
-
-	local function renderRoomSelectionPreview(rooms)
-		if not roomPreviewPanel or not roomPreviewTitle or not roomPreviewInfo or not roomPreviewMapLabel or not roomPreviewPlayersList then
-			return
-		end
-		local selectedRoom = nil
-		if selectedRoomId ~= nil then
-			for _, room in ipairs(rooms or {}) do
-				if tostring(room.roomId) == tostring(selectedRoomId) then
-					selectedRoom = room
-					break
-				end
-			end
-		end
-
-		local nextRenderKey = "none"
-		if selectedRoom then
-			local modeText = tostring(selectedRoom.mode or "Classic")
-			local mapId = tostring(selectedRoom.mapId or "UnknownMap")
-			local roomState = selectedRoom.inGame and "ingame" or (selectedRoom.starting and "starting" or "idle")
-			local players = type(selectedRoom.players) == "table" and selectedRoom.players or {}
-			local playerParts = {}
-			for _, info in ipairs(players) do
-				table.insert(playerParts, string.format("%s:%s:%s", tostring(info.userId), info.isReady and "1" or "0", info.isHost and "1" or "0"))
-			end
-			nextRenderKey = string.format(
-				"%s|%s|%s|%s|%s|%s",
-				tostring(selectedRoom.roomId),
-				tostring(selectedRoom.hostName or "-"),
-				modeText,
-				mapId,
-				roomState,
-				table.concat(playerParts, ",")
-			)
-		end
-		if selectedPreviewRenderKey == nextRenderKey then
-			return
-		end
-		selectedPreviewRenderKey = nextRenderKey
-
-		for _, child in ipairs(roomPreviewPlayersList:GetChildren()) do
-			if child:IsA("Frame") or child:IsA("TextLabel") then
-				child:Destroy()
-			end
-		end
-
-		if not selectedRoom then
-			roomPreviewTitle.Text = "PREVIEW ROOM"
-			roomPreviewInfo.Text = "Klik room di daftar untuk lihat detail."
-			roomPreviewMapLabel.Text = "MAP PLACEHOLDER: -"
-			roomPreviewMap.BackgroundColor3 = Color3.fromRGB(18, 24, 32)
-			roomPreviewMapStroke.Color = Color3.fromRGB(72, 90, 116)
-			local empty = Instance.new("TextLabel")
-			empty.BackgroundTransparency = 1
-			empty.Size = UDim2.new(1, -12, 1, 0)
-			empty.TextXAlignment = Enum.TextXAlignment.Center
-			empty.TextYAlignment = Enum.TextYAlignment.Center
-			empty.Font = Enum.Font.Gotham
-			empty.TextSize = 12
-			empty.TextColor3 = Color3.fromRGB(182, 198, 216)
-			empty.Text = "Belum ada room dipilih."
-			empty.Parent = roomPreviewPlayersList
-			return
-		end
-
-		local modeText = tostring(selectedRoom.mode or "Classic")
-		local mapId = tostring(selectedRoom.mapId or "UnknownMap")
-		local playerCount = selectedRoom.playerCount
-		if playerCount == nil and type(selectedRoom.players) == "table" then
-			playerCount = #selectedRoom.players
-		end
-		playerCount = playerCount or 0
-		local maxPlayers = selectedRoom.maxPlayers or 4
-		local roomState = selectedRoom.inGame and "IN GAME" or (selectedRoom.starting and "COUNTDOWN" or "MENUNGGU")
-
-		roomPreviewTitle.Text = string.format("PREVIEW ROOM #%s", tostring(selectedRoom.roomId or "?"))
-		roomPreviewInfo.Text = string.format(
-			"Host: %s | Mode: %s | Player: %d/%d | Status: %s",
-			tostring(selectedRoom.hostName or "-"),
-			modeText,
-			playerCount,
-			maxPlayers,
-			roomState
-		)
-		roomPreviewMapLabel.Text = "MAP PLACEHOLDER: " .. mapId
-		if modeText == "Ranked" then
-			roomPreviewMap.BackgroundColor3 = Color3.fromRGB(36, 28, 52)
-			roomPreviewMapStroke.Color = Color3.fromRGB(124, 96, 170)
-		else
-			roomPreviewMap.BackgroundColor3 = Color3.fromRGB(18, 24, 32)
-			roomPreviewMapStroke.Color = Color3.fromRGB(72, 90, 116)
-		end
-
-		local players = type(selectedRoom.players) == "table" and selectedRoom.players or {}
-		if #players == 0 then
-			local empty = Instance.new("TextLabel")
-			empty.BackgroundTransparency = 1
-			empty.Size = UDim2.new(1, -12, 1, 0)
-			empty.TextXAlignment = Enum.TextXAlignment.Center
-			empty.TextYAlignment = Enum.TextYAlignment.Center
-			empty.Font = Enum.Font.Gotham
-			empty.TextSize = 12
-			empty.TextColor3 = Color3.fromRGB(182, 198, 216)
-			empty.Text = "Data pemain belum tersedia."
-			empty.Parent = roomPreviewPlayersList
-			return
-		end
-
-		for _, info in ipairs(players) do
-			local card = Instance.new("Frame")
-			card.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
-			card.BorderSizePixel = 0
-			card.Size = UDim2.fromOffset(220, 78)
-			card.Parent = roomPreviewPlayersList
-			local cardCorner = Instance.new("UICorner")
-			cardCorner.CornerRadius = UDim.new(0, 8)
-			cardCorner.Parent = card
-			local cardStroke = Instance.new("UIStroke")
-			cardStroke.Thickness = info.isReady and 2 or 1
-			cardStroke.Color = info.isReady and Color3.fromRGB(82, 179, 108) or Color3.fromRGB(74, 88, 112)
-			cardStroke.Parent = card
-
-			local preview = Instance.new("ViewportFrame")
-			preview.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
-			preview.BorderSizePixel = 0
-			preview.Position = UDim2.fromOffset(6, 6)
-			preview.Size = UDim2.fromOffset(54, 66)
-			preview.Parent = card
-			local previewCorner = Instance.new("UICorner")
-			previewCorner.CornerRadius = UDim.new(0, 6)
-			previewCorner.Parent = preview
-			renderCharacterPreview(preview, info.userId)
-
-			local nameLabel = Instance.new("TextLabel")
-			nameLabel.BackgroundTransparency = 1
-			nameLabel.Position = UDim2.fromOffset(66, 7)
-			nameLabel.Size = UDim2.fromOffset(146, 32)
-			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-			nameLabel.TextYAlignment = Enum.TextYAlignment.Top
-			nameLabel.Font = Enum.Font.GothamBold
-			nameLabel.TextSize = 10
-			nameLabel.TextWrapped = true
-			nameLabel.TextColor3 = Color3.fromRGB(236, 240, 245)
-			local roleTag = info.isHost and "[HOST]" or "[MEMBER]"
-			nameLabel.Text = string.format("%s %s", roleTag, tostring(info.displayName or info.name or "?"))
-			nameLabel.Parent = card
-
-			local stateLabel = Instance.new("TextLabel")
-			stateLabel.BackgroundTransparency = 1
-			stateLabel.Position = UDim2.fromOffset(66, 44)
-			stateLabel.Size = UDim2.fromOffset(146, 20)
-			stateLabel.TextXAlignment = Enum.TextXAlignment.Left
-			stateLabel.Font = Enum.Font.GothamSemibold
-			stateLabel.TextSize = 10
-			stateLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 220, 145) or Color3.fromRGB(255, 195, 120)
-			stateLabel.Text = info.isReady and "READY" or "NOT READY"
-			stateLabel.Parent = card
+			mapPreviewLabel.Text = "MAP PLACEHOLDER: " .. tostring(MAPS[mapIndex])
 		end
 	end
 
@@ -2964,80 +1744,14 @@ function UISystem:_ensureRoomBrowserGui()
 				else
 					statusLabel.Text = string.format("Room #%s dipilih. Klik JOIN untuk masuk.", tostring(selectedRoomId))
 				end
-				renderRoomSelectionPreview(rooms)
 			end)
 			self:_setSelectableStyle(row)
 			row.Parent = roomList
 		end
-		renderRoomSelectionPreview(rooms)
 	end
 	logRoomClickConnected("JoinRoomButton(RoomRowActivated)")
 
-	local function rebuildInviteList()
-		for _, child in ipairs(inviteList:GetChildren()) do
-			if child:IsA("TextButton") then
-				child:Destroy()
-			end
-		end
-		local state = self:GetRoomBrowserState() or {}
-		local currentRoom = state.currentRoom or {}
-		local inRoomByUserId = {}
-		for _, info in ipairs(currentRoom.players or {}) do
-			if info.userId ~= nil then
-				inRoomByUserId[tostring(info.userId)] = true
-			end
-		end
-
-		local inviteAllRow = Instance.new("TextButton")
-		inviteAllRow.Name = "InviteAll"
-		inviteAllRow.Size = UDim2.new(1, -4, 0, 24)
-		inviteAllRow.BackgroundColor3 = Color3.fromRGB(58, 98, 136)
-		inviteAllRow.BorderSizePixel = 0
-		inviteAllRow.Font = Enum.Font.GothamBold
-		inviteAllRow.TextSize = 12
-		inviteAllRow.TextColor3 = Color3.fromRGB(245, 245, 245)
-		inviteAllRow.Text = "INVITE ALL (BROADCAST)"
-		inviteAllRow.ZIndex = 26
-		inviteAllRow.Parent = inviteList
-		local inviteAllCorner = Instance.new("UICorner")
-		inviteAllCorner.CornerRadius = UDim.new(0, 6)
-		inviteAllCorner.Parent = inviteAllRow
-		connectButtonPress(inviteAllRow, function()
-			self:RoomBrowserInviteBroadcastToRoom()
-			statusLabel.Text = "Broadcast invite dikirim."
-		end)
-		self:_setSelectableStyle(inviteAllRow)
-
-		for _, lobbyPlayer in ipairs(state.lobbyPlayers or {}) do
-			local userId = lobbyPlayer.userId
-			if userId ~= nil and not inRoomByUserId[tostring(userId)] then
-				local nameText = tostring(lobbyPlayer.displayName or lobbyPlayer.name or ("User " .. tostring(userId)))
-				local row = Instance.new("TextButton")
-				row.Name = "Invite_" .. tostring(userId)
-				row.Size = UDim2.new(1, -4, 0, 24)
-				row.BackgroundColor3 = Color3.fromRGB(40, 52, 68)
-				row.BorderSizePixel = 0
-				row.Font = Enum.Font.Gotham
-				row.TextSize = 12
-				row.TextColor3 = Color3.fromRGB(230, 235, 245)
-				row.TextXAlignment = Enum.TextXAlignment.Left
-				row.Text = "  " .. nameText
-				row.ZIndex = 26
-				row.Parent = inviteList
-				local rowCorner = Instance.new("UICorner")
-				rowCorner.CornerRadius = UDim.new(0, 6)
-				rowCorner.Parent = row
-				connectButtonPress(row, function()
-					self:RoomBrowserInvitePlayerToRoom(userId)
-					statusLabel.Text = string.format("Invite terkirim ke %s.", nameText)
-				end)
-				self:_setSelectableStyle(row)
-			end
-		end
-	end
-
 	connectButtonPress(classicBtn, function()
-		self._roomBrowserModeView = "Selected"
 		self:RoomBrowserSelectMode("Classic")
 		task.delay(0.1, function()
 			if self._roomBrowser then
@@ -3046,16 +1760,7 @@ function UISystem:_ensureRoomBrowserGui()
 		end)
 	end)
 
-	connectButtonPress(allModesBtn, function()
-		self._roomBrowserModeView = "All"
-		if self._roomBrowser then
-			self._roomBrowser:RequestSnapshot()
-			self._roomBrowser:RequestRoomList()
-		end
-	end)
-
 	connectButtonPress(rankedBtn, function()
-		self._roomBrowserModeView = "Selected"
 		self:RoomBrowserSelectMode("Ranked")
 		task.delay(0.1, function()
 			if self._roomBrowser then
@@ -3063,6 +1768,17 @@ function UISystem:_ensureRoomBrowserGui()
 			end
 		end)
 	end)
+
+	for difficultyName, btn in pairs(difficultyButtons) do
+		connectButtonPress(btn, function()
+			self:RoomBrowserSelectDifficulty(difficultyName)
+			task.delay(0.1, function()
+				if self._roomBrowser then
+					self._roomBrowser:RequestSnapshot()
+				end
+			end)
+		end)
+	end
 
 	connectButtonPress(refreshBtn, function()
 		if self._roomBrowser then
@@ -3202,62 +1918,14 @@ function UISystem:_ensureRoomBrowserGui()
 		self:RoomBrowserJoinRoom(bestRoom.roomId, nil)
 	end)
 
-	connectButtonPress(modeSelector, function()
-		self._inviteDropdownOpen = false
-		inviteDropdown.Visible = false
-		self._roomModeDropdownOpen = not self._roomModeDropdownOpen
-		self._roomMapDropdownOpen = false
-		modeDropdown.Visible = self._roomModeDropdownOpen
-		mapDropdown.Visible = false
-	end)
-
-	connectButtonPress(modeClassicBtn, function()
-		self._roomModeDropdownOpen = false
-		modeDropdown.Visible = false
-		self._roomMapDropdownOpen = false
-		mapDropdown.Visible = false
-		self:RoomBrowserSelectMode("Classic")
-		task.delay(0.08, function()
-			if self._roomBrowser then
-				self._roomBrowser:RequestSnapshot()
-			end
-		end)
-	end)
-
-	connectButtonPress(modeRankedBtn, function()
-		self._roomModeDropdownOpen = false
-		modeDropdown.Visible = false
-		self._roomMapDropdownOpen = false
-		mapDropdown.Visible = false
-		self:RoomBrowserSelectMode("Ranked")
-		task.delay(0.08, function()
-			if self._roomBrowser then
-				self._roomBrowser:RequestSnapshot()
-			end
-		end)
-	end)
-
 	connectButtonPress(mapSelector, function()
-		self._inviteDropdownOpen = false
-		inviteDropdown.Visible = false
-		self._roomMapDropdownOpen = not self._roomMapDropdownOpen
-		self._roomModeDropdownOpen = false
-		modeDropdown.Visible = false
-		mapDropdown.Visible = self._roomMapDropdownOpen
+		mapIndex = (mapIndex % #MAPS) + 1
+		mapSelector.Text = MAPS[mapIndex]
+		if self._roomBrowser then
+			self._roomBrowser:SelectMap(MAPS[mapIndex])
+		end
+		updateMapPreview()
 	end)
-
-	for idx, btn in ipairs(mapOptionButtons) do
-		connectButtonPress(btn, function()
-			mapIndex = idx
-			mapSelector.Text = "MAP: " .. tostring(MAPS[mapIndex])
-			self._roomMapDropdownOpen = false
-			mapDropdown.Visible = false
-			if self._roomBrowser then
-				self._roomBrowser:SelectMap(MAPS[mapIndex])
-			end
-			updateMapPreview("Classic", MAPS[mapIndex])
-		end)
-	end
 
 	connectButtonPress(setPwdBtn, function()
 		self:RoomBrowserSetPassword(setPwdBox.Text)
@@ -3265,46 +1933,17 @@ function UISystem:_ensureRoomBrowserGui()
 
 	connectButtonPress(readyBtn, function()
 		local state = self:GetRoomBrowserState() or {}
-		local room = state.currentRoom
-		if not (room and room.roomId) then
-			return
+		if state.currentRoom and state.currentRoom.roomId then
+			self:RoomBrowserSetReady(not (state.isReady == true))
 		end
-		local players = type(room.players) == "table" and room.players or {}
-		local playerCount = room.playerCount
-		if playerCount == nil then
-			playerCount = #players
-		end
-		playerCount = playerCount or 0
-		local allReadyComputed = state.allReady == true
-		if state.isHost == true and state.allReady == nil and #players > 0 then
-			allReadyComputed = true
-			for _, info in ipairs(players) do
-				if not info.isHost and info.isReady ~= true then
-					allReadyComputed = false
-					break
-				end
-			end
-		end
-
-		if state.isHost == true then
-			if state.matchStarting == true then
-				self:RoomBrowserCancelHostStart()
-				return
-			end
-			if playerCount <= 1 or allReadyComputed == true then
-				local roomMode = room.mode or state.selectedMode
-				self:RoomBrowserHostStart(room.mapId or MAPS[mapIndex], nil, roomMode)
-			end
-			return
-		end
-		self:RoomBrowserSetReady(not (state.isReady == true))
 	end)
 	logRoomClickConnected("ReadyButton")
 
 	connectButtonPress(startBtn, function()
 		local state = self:GetRoomBrowserState() or {}
 		if state.isHost == true then
-			self:RoomBrowserHostStart(MAPS[mapIndex], nil, state.selectedMode)
+			local difficulty = state.selectedMode == "Ranked" and nil or state.selectedDifficulty
+			self:RoomBrowserHostStart(MAPS[mapIndex], difficulty, state.selectedMode)
 		end
 	end)
 	logRoomClickConnected("StartButton")
@@ -3319,34 +1958,6 @@ function UISystem:_ensureRoomBrowserGui()
 
 	connectButtonPress(leaveRoomBtn, function()
 		self:RoomBrowserLeaveRoom()
-	end)
-
-	connectButtonPress(inviteBtn, function()
-		self._roomModeDropdownOpen = false
-		modeDropdown.Visible = false
-		self._roomMapDropdownOpen = false
-		mapDropdown.Visible = false
-		self._inviteDropdownOpen = not self._inviteDropdownOpen
-		inviteDropdown.Visible = self._inviteDropdownOpen
-		if self._inviteDropdownOpen then
-			rebuildInviteList()
-		end
-	end)
-
-	connectButtonPress(inviteAcceptBtn, function()
-		local inviteId = self._activeInviteId
-		if inviteId then
-			self:RoomBrowserRespondRoomInvite(inviteId, true)
-		end
-		self:_hideRoomInvitePopup()
-	end)
-
-	connectButtonPress(inviteDeclineBtn, function()
-		local inviteId = self._activeInviteId
-		if inviteId then
-			self:RoomBrowserRespondRoomInvite(inviteId, false)
-		end
-		self:_hideRoomInvitePopup()
 	end)
 
 	connectButtonPress(kickBtn, function()
@@ -3381,21 +1992,14 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local selectableButtons = {
 		classicBtn,
-		allModesBtn,
 		rankedBtn,
 		refreshBtn,
 		createRoomBtn,
 		queueBtn,
 		quickClassicBtn,
 		quickRankedBtn,
-		modeSelector,
-		modeClassicBtn,
-		modeRankedBtn,
 		mapSelector,
 		setPwdBtn,
-		inviteBtn,
-		inviteAcceptBtn,
-		inviteDeclineBtn,
 		readyBtn,
 		startBtn,
 		cancelStartBtn,
@@ -3406,9 +2010,6 @@ function UISystem:_ensureRoomBrowserGui()
 	}
 	for _, button in ipairs(selectableButtons) do
 		self:_setSelectableStyle(button)
-	end
-	for _, optionButton in ipairs(mapOptionButtons) do
-		self:_setSelectableStyle(optionButton)
 	end
 
 	connectButtonPress(closeBtn, function()
@@ -3459,20 +2060,12 @@ function UISystem:_ensureRoomBrowserGui()
 	self._roomBrowserGui = gui
 	self._roomBrowserFloatGui = floatGui
 	self._roomBrowserWidgets = {
-		RootPanel = panel,
-		HeaderTitle = title,
-		HeaderTitleGlow = titleGlow,
 		Status = statusLabel,
 		ClassicButton = classicBtn,
-		AllModesButton = allModesBtn,
 		RankedButton = rankedBtn,
+		DifficultyButtons = difficultyButtons,
+		DifficultyWrap = diffWrap,
 		RoomList = roomList,
-		RoomPreviewPanel = roomPreviewPanel,
-		RoomPreviewTitle = roomPreviewTitle,
-		RoomPreviewInfo = roomPreviewInfo,
-		RoomPreviewMap = roomPreviewMap,
-		RoomPreviewMapLabel = roomPreviewMapLabel,
-		RoomPreviewPlayersList = roomPreviewPlayersList,
 		JoinPassword = joinPwdBox,
 		RefreshButton = refreshBtn,
 		CreateRoomButton = createRoomBtn,
@@ -3488,21 +2081,12 @@ function UISystem:_ensureRoomBrowserGui()
 		ReadyButton = readyBtn,
 		StartButton = startBtn,
 		CancelStartButton = cancelStartBtn,
-		ModeSelector = modeSelector,
-		ModeDropdown = modeDropdown,
-		MapDropdown = mapDropdown,
-		RankedTierLabel = rankedTierLabel,
 		MapSelector = mapSelector,
 		MapPreview = mapPreview,
 		MapPreviewTitle = mapPreviewTitle,
 		MapPreviewLabel = mapPreviewLabel,
 		SetPasswordBox = setPwdBox,
 		SetPasswordButton = setPwdBtn,
-		InviteButton = inviteBtn,
-		InviteDropdown = inviteDropdown,
-		RebuildInviteList = rebuildInviteList,
-		InvitePopup = invitePopup,
-		InvitePopupText = invitePopupText,
 		CountdownOverlay = countdownOverlay,
 		CountdownLabel = countdownLabel,
 		CancelCountdown = cancelCountdownBtn,
@@ -3512,7 +2096,6 @@ function UISystem:_ensureRoomBrowserGui()
 		KickNoticeText = kickNoticeText,
 		FloatButton = floatButton,
 		RenderRoomList = renderRoomList,
-		UpdateMapPreview = updateMapPreview,
 		SetCurrentRoom = function(roomId)
 			currentRoomId = roomId
 		end,
@@ -3595,18 +2178,8 @@ function UISystem:_refreshRoomBrowserView()
 
 	local state = self:GetRoomBrowserState() or {}
 	local selectedMode = state.selectedMode or "Classic"
+	local selectedDifficulty = state.selectedDifficulty or "Mudah"
 	local rooms = state.rooms or {}
-	local viewMode = self._roomBrowserModeView or "Selected"
-	local roomsForDisplay = rooms
-	if viewMode == "Selected" then
-		roomsForDisplay = {}
-		for _, room in ipairs(rooms) do
-			local modeName = tostring(room.mode or "Classic")
-			if modeName == selectedMode then
-				table.insert(roomsForDisplay, room)
-			end
-		end
-	end
 	local queueInfo = state.queue
 
 	if state.currentRoom and state.currentRoom.roomId then
@@ -3615,11 +2188,10 @@ function UISystem:_refreshRoomBrowserView()
 		self._roomBrowserWidgets.SetCurrentRoom(nil)
 	end
 
-	local statusModeText = selectedMode
-	if viewMode == "All" then
-		statusModeText = "SEMUA MODE"
+	local statusText = string.format("Mode: %s | Difficulty: %s | Room: %d", selectedMode, selectedDifficulty, #rooms)
+	if selectedMode == "Ranked" then
+		statusText = string.format("Mode: %s | Difficulty: AUTO (Level/Tier) | Room: %d", selectedMode, #rooms)
 	end
-	local statusText = string.format("Mode: %s | Room: %d", statusModeText, #roomsForDisplay)
 	local currentRoom = self._roomBrowserWidgets.GetCurrentRoom and self._roomBrowserWidgets.GetCurrentRoom() or nil
 	if currentRoom then
 		statusText = statusText .. " | InRoom: " .. tostring(currentRoom)
@@ -3634,16 +2206,33 @@ function UISystem:_refreshRoomBrowserView()
 	end
 	self._roomBrowserWidgets.Status.Text = statusText
 
-	self:_setButtonSelected(self._roomBrowserWidgets.AllModesButton, viewMode == "All")
-	self:_setButtonSelected(self._roomBrowserWidgets.ClassicButton, viewMode ~= "All" and selectedMode == "Classic")
-	self:_setButtonSelected(self._roomBrowserWidgets.RankedButton, viewMode ~= "All" and selectedMode == "Ranked")
+	self:_setButtonSelected(self._roomBrowserWidgets.ClassicButton, selectedMode == "Classic")
+	self:_setButtonSelected(self._roomBrowserWidgets.RankedButton, selectedMode == "Ranked")
+	for _, btn in pairs(self._roomBrowserWidgets.DifficultyButtons) do
+		btn.Active = selectedMode ~= "Ranked"
+		btn.AutoButtonColor = selectedMode ~= "Ranked"
+	end
+	for difficultyName, btn in pairs(self._roomBrowserWidgets.DifficultyButtons) do
+		self:_setButtonSelected(btn, selectedDifficulty == difficultyName)
+	end
 
-	self._roomBrowserWidgets.RenderRoomList(roomsForDisplay)
+	self._roomBrowserWidgets.RenderRoomList(rooms)
+	if self._roomBrowserWidgets.MapPreview and self._roomBrowserWidgets.MapPreviewTitle and self._roomBrowserWidgets.MapPreviewLabel then
+		if selectedMode == "Ranked" then
+			self._roomBrowserWidgets.MapPreview.BackgroundColor3 = Color3.fromRGB(46, 32, 62)
+			self._roomBrowserWidgets.MapPreviewTitle.Text = "RANKED PREVIEW"
+			self._roomBrowserWidgets.MapPreviewLabel.Text = "RANKED PLACEHOLDER: TIER SCENE"
+		else
+			self._roomBrowserWidgets.MapPreview.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
+			self._roomBrowserWidgets.MapPreviewTitle.Text = "MAP PREVIEW"
+			self._roomBrowserWidgets.MapPreviewLabel.Text = "MAP PLACEHOLDER: " .. tostring(self._roomBrowserWidgets.MapSelector.Text)
+		end
+	end
 
 	local panel = self._roomBrowserWidgets.RoomPanel
 	local roomData = nil
 	if currentRoom then
-		for _, room in ipairs(roomsForDisplay) do
+		for _, room in ipairs(rooms) do
 			if room.roomId == currentRoom then
 				roomData = room
 				break
@@ -3656,103 +2245,39 @@ function UISystem:_refreshRoomBrowserView()
 
 	local showRoomPanel = roomData ~= nil
 	panel.Visible = showRoomPanel
-	if self._roomBrowserWidgets.RootPanel then
-		self._roomBrowserWidgets.RootPanel.BackgroundTransparency = showRoomPanel and 1 or 0.5
-	end
-	if self._roomBrowserWidgets.HeaderTitle then
-		self._roomBrowserWidgets.HeaderTitle.Visible = not showRoomPanel
-	end
-	if self._roomBrowserWidgets.HeaderTitleGlow then
-		self._roomBrowserWidgets.HeaderTitleGlow.Visible = not showRoomPanel
-	end
-	self._roomBrowserWidgets.Status.Visible = not showRoomPanel
 	local canChangeMode = (not showRoomPanel) or (state.isHost == true)
 	self._roomBrowserWidgets.ClassicButton.Visible = canChangeMode
-	self._roomBrowserWidgets.AllModesButton.Visible = canChangeMode
 	self._roomBrowserWidgets.RankedButton.Visible = canChangeMode
+	self._roomBrowserWidgets.DifficultyWrap.Visible = canChangeMode and (selectedMode ~= "Ranked")
 	self._roomBrowserWidgets.RoomList.Visible = not showRoomPanel
-	self._roomBrowserWidgets.RoomPreviewPanel.Visible = not showRoomPanel
 	self._roomBrowserWidgets.JoinPassword.Visible = false
 	self._roomBrowserWidgets.RefreshButton.Visible = not showRoomPanel
 	self._roomBrowserWidgets.CreateRoomButton.Visible = not showRoomPanel
 	self._roomBrowserWidgets.QueueButton.Visible = not showRoomPanel
 	self._roomBrowserWidgets.QuickJoinClassicButton.Visible = not showRoomPanel
 	self._roomBrowserWidgets.QuickJoinRankedButton.Visible = not showRoomPanel
-	self._roomBrowserWidgets.ModeSelector.Visible = false
-	self._roomBrowserWidgets.RankedTierLabel.Visible = false
-	self._roomBrowserWidgets.ModeDropdown.Visible = false
-	self._roomBrowserWidgets.MapDropdown.Visible = false
 	if self._passwordJoinPendingRoomId == nil then
 		self._roomBrowserWidgets.PasswordModal.Visible = false
 	end
 
 	if showRoomPanel then
-		if state.isHost ~= true then
-			self._roomModeDropdownOpen = false
-			self._roomMapDropdownOpen = false
-		end
-		local localUserId = Players.LocalPlayer and Players.LocalPlayer.UserId or nil
-		local localName = Players.LocalPlayer and Players.LocalPlayer.Name or nil
-		local hostCanControl = state.isHost == true
-			or (roomData.hostUserId ~= nil and roomData.hostUserId == localUserId)
-			or (localName ~= nil and tostring(roomData.hostName or "") == tostring(localName))
-		local roomPlayersData = type(roomData.players) == "table" and roomData.players or nil
-		if (not roomPlayersData or #roomPlayersData == 0) and type(state.currentRoom) == "table" and type(state.currentRoom.players) == "table" then
-			roomPlayersData = state.currentRoom.players
-		end
-		if (not roomPlayersData or #roomPlayersData == 0) then
-			for _, listedRoom in ipairs(state.rooms or {}) do
-				if tostring(listedRoom.roomId) == tostring(currentRoom) and type(listedRoom.players) == "table" then
-					roomPlayersData = listedRoom.players
-					break
-				end
-			end
-		end
-		roomPlayersData = roomPlayersData or {}
-
 		self._roomBrowserWidgets.RoomTitle.Text = "RUANG #" .. tostring(roomData.roomId or currentRoom)
-		self._roomBrowserWidgets.RoomHost.Text = "Host: " .. tostring(roomData.hostName or ((roomPlayersData[1] and (roomPlayersData[1].displayName or roomPlayersData[1].name)) or "-"))
-		local roomMode = tostring(roomData.mode or selectedMode or "Classic")
-		local roomMapId = roomData.mapId or MAPS[mapIndex]
-		if roomMode == "Ranked" then
-			self._roomMapDropdownOpen = false
-		end
-		self._roomBrowserWidgets.ModeSelector.Text = "MODE: " .. string.upper(roomMode)
-		self._roomBrowserWidgets.MapSelector.Text = "MAP: " .. tostring(roomMapId)
-		if roomMode == "Ranked" and hostCanControl then
-			local tierText = "UNRANKED"
-			local localPlayer = Players.LocalPlayer
-			if localPlayer then
-				for _, attrName in ipairs({ "RankTier", "Tier", "RankedTier", "HostTier" }) do
-					local value = localPlayer:GetAttribute(attrName)
-					if value ~= nil and tostring(value) ~= "" then
-						tierText = string.upper(tostring(value))
-						break
-					end
-				end
-			end
-			self._roomBrowserWidgets.RankedTierLabel.Text = "TIER HOST: " .. tierText
-			self._roomBrowserWidgets.RankedTierLabel.Visible = true
-		end
+		self._roomBrowserWidgets.RoomHost.Text = "Host: " .. tostring(roomData.hostName or "-")
+		local roomMapId = roomData.mapId or self._roomBrowserWidgets.MapSelector.Text
+		self._roomBrowserWidgets.MapSelector.Text = roomMapId
 		for idx, mapName in ipairs(MAPS) do
 			if mapName == roomMapId then
 				mapIndex = idx
 				break
 			end
 		end
-		self._roomBrowserWidgets.ModeSelector.Visible = hostCanControl
-		self._roomBrowserWidgets.MapSelector.Visible = hostCanControl and roomMode ~= "Ranked"
-		self._roomBrowserWidgets.ModeDropdown.Visible = hostCanControl and self._roomModeDropdownOpen == true
-		self._roomBrowserWidgets.MapDropdown.Visible = hostCanControl and roomMode ~= "Ranked" and self._roomMapDropdownOpen == true
-		if self._roomBrowserWidgets.UpdateMapPreview then
-			self._roomBrowserWidgets.UpdateMapPreview(roomMode, roomMapId)
-		end
 		for _, child in ipairs(self._roomBrowserWidgets.PlayersList:GetChildren()) do
 			if child:IsA("Frame") or child:IsA("TextLabel") then
 				child:Destroy()
 			end
 		end
-		for _, info in ipairs(roomPlayersData) do
+		local localUserId = Players.LocalPlayer and Players.LocalPlayer.UserId or nil
+		for _, info in ipairs(roomData.players or {}) do
 			local card = Instance.new("Frame")
 			card.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
 			card.BorderSizePixel = 0
@@ -3825,7 +2350,7 @@ function UISystem:_refreshRoomBrowserView()
 				end)
 			end
 		end
-		if #roomPlayersData == 0 then
+		if #(roomData.players or {}) == 0 then
 			local emptyLabel = Instance.new("TextLabel")
 			emptyLabel.BackgroundTransparency = 1
 			emptyLabel.Size = UDim2.new(1, -12, 1, 0)
@@ -3838,65 +2363,18 @@ function UISystem:_refreshRoomBrowserView()
 			emptyLabel.Parent = self._roomBrowserWidgets.PlayersList
 		end
 		local isReady = state.isReady == true
+		self._roomBrowserWidgets.ReadyButton.Text = isReady and "BATALKAN SIAP" or "SIAP"
+		self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = isReady and Color3.fromRGB(80, 80, 40) or Color3.fromRGB(40, 120, 60)
 		local playerCount = roomData.playerCount
-		if playerCount == nil then
-			playerCount = #roomPlayersData
+		if playerCount == nil and type(roomData.players) == "table" then
+			playerCount = #roomData.players
 		end
-		local allReadyComputed = state.allReady == true
-		if state.isHost == true and state.allReady == nil and #roomPlayersData > 0 then
-			allReadyComputed = true
-			for _, info in ipairs(roomPlayersData) do
-				if not info.isHost and info.isReady ~= true then
-					allReadyComputed = false
-					break
-				end
-			end
-		end
-
-		if state.isHost == true then
-			if state.matchStarting == true then
-				self._roomBrowserWidgets.ReadyButton.Text = "BATALKAN COUNTDOWN"
-				self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
-				self._roomBrowserWidgets.ReadyButton.Active = true
-				self._roomBrowserWidgets.ReadyButton.AutoButtonColor = true
-			elseif (playerCount or 0) <= 1 then
-				self._roomBrowserWidgets.ReadyButton.Text = "MULAI PERMAINAN"
-				self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = Color3.fromRGB(180, 80, 30)
-				self._roomBrowserWidgets.ReadyButton.Active = true
-				self._roomBrowserWidgets.ReadyButton.AutoButtonColor = true
-			elseif allReadyComputed == true then
-				self._roomBrowserWidgets.ReadyButton.Text = "MULAI PERMAINAN"
-				self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = Color3.fromRGB(180, 80, 30)
-				self._roomBrowserWidgets.ReadyButton.Active = true
-				self._roomBrowserWidgets.ReadyButton.AutoButtonColor = true
-			else
-				self._roomBrowserWidgets.ReadyButton.Text = "BELUM SIAP SEMUA"
-				self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = Color3.fromRGB(82, 82, 82)
-				self._roomBrowserWidgets.ReadyButton.Active = false
-				self._roomBrowserWidgets.ReadyButton.AutoButtonColor = false
-			end
-		else
-			self._roomBrowserWidgets.ReadyButton.Text = isReady and "BATALKAN" or "SIAP"
-			self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = isReady and Color3.fromRGB(80, 80, 40) or Color3.fromRGB(40, 120, 60)
-			self._roomBrowserWidgets.ReadyButton.Active = true
-			self._roomBrowserWidgets.ReadyButton.AutoButtonColor = true
-		end
-
-		self._roomBrowserWidgets.StartButton.Visible = false
-		self._roomBrowserWidgets.CancelStartButton.Visible = false
-		self._roomBrowserWidgets.SetPasswordBox.Visible = false
-		self._roomBrowserWidgets.SetPasswordButton.Visible = false
-		local inviteEnabled = hostCanControl and state.matchStarting ~= true
-		self._roomBrowserWidgets.InviteButton.Visible = inviteEnabled
-		if inviteEnabled then
-			self._roomBrowserWidgets.InviteDropdown.Visible = self._inviteDropdownOpen == true
-			if self._inviteDropdownOpen == true and self._roomBrowserWidgets.RebuildInviteList then
-				self._roomBrowserWidgets.RebuildInviteList()
-			end
-		else
-			self._inviteDropdownOpen = false
-			self._roomBrowserWidgets.InviteDropdown.Visible = false
-		end
+		local canStart = state.isHost == true and state.allReady == true and state.matchStarting ~= true and (playerCount or 0) > 0
+		self._roomBrowserWidgets.StartButton.Visible = canStart
+		self._roomBrowserWidgets.CancelStartButton.Visible = state.isHost == true and state.matchStarting == true
+		self._roomBrowserWidgets.MapSelector.Visible = state.isHost == true and (roomData.mode or selectedMode or "Classic") ~= "Ranked"
+		self._roomBrowserWidgets.SetPasswordBox.Visible = state.isHost == true
+		self._roomBrowserWidgets.SetPasswordButton.Visible = state.isHost == true
 		self._roomBrowserWidgets.KickNameBox.Visible = false
 		self._roomBrowserWidgets.KickButton.Visible = false
 	else
@@ -3904,20 +2382,6 @@ function UISystem:_refreshRoomBrowserView()
 			if child:IsA("Frame") or child:IsA("TextLabel") then
 				child:Destroy()
 			end
-		end
-		self._roomModeDropdownOpen = false
-		self._roomMapDropdownOpen = false
-		self._roomBrowserWidgets.ModeDropdown.Visible = false
-		self._roomBrowserWidgets.MapDropdown.Visible = false
-		self._roomBrowserWidgets.ModeSelector.Visible = false
-		self._roomBrowserWidgets.MapSelector.Visible = false
-		self._roomBrowserWidgets.RankedTierLabel.Visible = false
-		self._inviteDropdownOpen = false
-		if self._roomBrowserWidgets.InviteButton then
-			self._roomBrowserWidgets.InviteButton.Visible = false
-		end
-		if self._roomBrowserWidgets.InviteDropdown then
-			self._roomBrowserWidgets.InviteDropdown.Visible = false
 		end
 		self._roomBrowserWidgets.KickNameBox.Visible = false
 		self._roomBrowserWidgets.KickButton.Visible = false
@@ -3988,7 +2452,6 @@ function UISystem:_renderRoomPlayers(state)
 end
 
 function UISystem:Stop()
-	self._phaseTimerRunning = false
 	self._roomBrowserLoopRunning = false
 	if self._lobbyConnection then
 		self._lobbyConnection:Disconnect()
@@ -4018,6 +2481,12 @@ end
 function UISystem:RoomBrowserSelectMode(modeName)
 	if self._roomBrowser then
 		self._roomBrowser:SelectMode(modeName)
+	end
+end
+
+function UISystem:RoomBrowserSelectDifficulty(difficultyName)
+	if self._roomBrowser then
+		self._roomBrowser:SelectDifficulty(difficultyName)
 	end
 end
 
@@ -4066,24 +2535,6 @@ end
 function UISystem:RoomBrowserLeaveRoom()
 	if self._roomBrowser then
 		self._roomBrowser:LeaveRoom()
-	end
-end
-
-function UISystem:RoomBrowserInvitePlayerToRoom(targetNameOrUserId)
-	if self._roomBrowser then
-		self._roomBrowser:InvitePlayerToRoom(targetNameOrUserId)
-	end
-end
-
-function UISystem:RoomBrowserInviteBroadcastToRoom()
-	if self._roomBrowser then
-		self._roomBrowser:InviteBroadcastToRoom()
-	end
-end
-
-function UISystem:RoomBrowserRespondRoomInvite(inviteId, accept)
-	if self._roomBrowser then
-		self._roomBrowser:RespondRoomInvite(inviteId, accept)
 	end
 end
 

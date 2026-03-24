@@ -4,9 +4,9 @@ This document defines the master prompt for AI agents working on the PASRAHPHOBI
 
 AI agents must read:
 
-AGENTS.md  
-SYSTEM_MAP.md  
-AI_MASTER_PROMPT.md  
+AGENTS.md
+SYSTEM_MAP.md
+AI_MASTER_PROMPT.md
 
 before making any changes.
 

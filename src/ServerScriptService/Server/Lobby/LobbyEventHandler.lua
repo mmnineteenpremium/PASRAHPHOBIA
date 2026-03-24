@@ -942,7 +942,12 @@ LobbyEvent.OnServerEvent:Connect(function(player, request)
 			return
 		end
 
-		room.players[player].ready = request.isReady == true
+		if player == room.host then
+			-- Host is always considered ready to avoid start deadlocks after room ownership changes.
+			room.players[player].ready = true
+		else
+			room.players[player].ready = request.isReady == true
+		end
 		broadcastRoomState(room)
 		broadcastRoomListToAll()
 		return
@@ -951,10 +956,25 @@ LobbyEvent.OnServerEvent:Connect(function(player, request)
 	if action == "HostStart" then
 		local room, roomId = getRoomByPlayer(player)
 		if not room or player ~= room.host then
+			LobbyEvent:FireClient(player, {
+				eventName = "HostStartResult",
+				ok = false,
+				err = "not_host",
+			})
 			return
 		end
 
+		if room.players[player] then
+			room.players[player].ready = true
+		end
+
 		if not isAllReady(room) then
+			LobbyEvent:FireClient(player, {
+				eventName = "HostStartResult",
+				ok = false,
+				err = "not_all_ready",
+			})
+			broadcastRoomState(room)
 			return
 		end
 		local activeCount = 0
@@ -973,6 +993,11 @@ LobbyEvent.OnServerEvent:Connect(function(player, request)
 		room.countdownToken = (room.countdownToken or 0) + 1
 		local token = room.countdownToken
 		local countdown = 5
+		LobbyEvent:FireClient(player, {
+			eventName = "HostStartResult",
+			ok = true,
+			countdownSeconds = countdown,
+		})
 
 		notifyRoom(room, {
 			eventName = "RoomMatchStarting",

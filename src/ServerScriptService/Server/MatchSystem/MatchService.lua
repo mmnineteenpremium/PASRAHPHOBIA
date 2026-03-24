@@ -3,6 +3,7 @@ local MatchBuilder = require(script.Parent.MatchBuilder)
 local MatchLifecycle = require(script.Parent.MatchLifecycle)
 local MatchTeleport = require(script.Parent.MatchTeleport)
 local Services = require(script.Parent.Parent.Core.Services)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local MatchService = {}
 MatchService.__index = MatchService
@@ -233,6 +234,18 @@ local function toUserId(playerOrUserId)
 	return nil
 end
 
+local function resolveMatchRemote()
+	local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	if not remoteFolder then
+		return nil
+	end
+	local remote = remoteFolder:FindFirstChild("MatchEvent")
+	if remote and remote:IsA("RemoteEvent") then
+		return remote
+	end
+	return nil
+end
+
 function MatchService.new(deps)
 	local self = setmetatable({}, MatchService)
 	self._deps = deps or {}
@@ -263,6 +276,7 @@ function MatchService.new(deps)
 	self._builder = MatchBuilder.new(self._deps, self._deps.MatchBuilderConfig)
 	self._lifecycle = MatchLifecycle.new(self._deps, self._deps.MatchLifecycleConfig)
 	self._teleport = MatchTeleport.new(self._deps, self._deps.MatchTeleportConfig)
+	self._matchRemote = resolveMatchRemote()
 	ensureQueueAndDefinitions(self)
 	return self
 end
@@ -447,6 +461,23 @@ end
 function MatchService:_publish(eventName, payload)
 	if self._eventBus then
 		self._eventBus:Publish(eventName, payload)
+	end
+end
+
+function MatchService:_fireMatchEventToPlayers(players, payload)
+	local remote = self._matchRemote
+	if not remote then
+		remote = resolveMatchRemote()
+		self._matchRemote = remote
+	end
+	if not remote or type(payload) ~= "table" then
+		return
+	end
+
+	for _, player in ipairs(players or {}) do
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			remote:FireClient(player, payload)
+		end
 	end
 end
 
@@ -636,8 +667,28 @@ function MatchService:StartMatch(matchId)
 	match.gameMode = match.mode
 	match.difficulty = self:_resolveDifficultyName(match.mode, match.difficulty, match)
 	match.difficultyProfile = match.difficultyProfile or self:_resolveDifficultyProfile(match.mode, match.difficulty, match)
+	local authoritativeMatchId = tostring(match.matchId or matchId)
+
+	for _, player in ipairs(match.players or {}) do
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			player:SetAttribute("InMatch", true)
+			player:SetAttribute("MatchId", authoritativeMatchId)
+		end
+	end
+
+	self:_fireMatchEventToPlayers(match.players, {
+		eventName = "MatchPreparing",
+		countdown = 2,
+	})
+	print("[SERVER MATCH FLOW] Preparing sent")
+	task.wait(1.5)
 
 	local teleportedPlayers = self._teleport:TeleportPlayers(match)
+	self:_fireMatchEventToPlayers(teleportedPlayers, {
+		eventName = "MatchStarted",
+	})
+	print("[SERVER MATCH FLOW] Started sent")
+
 	for _, player in ipairs(teleportedPlayers) do
 		self:_publish("PlayerTeleported", {
 			player = player,
@@ -846,6 +897,10 @@ function MatchService:EndMatch(matchId, results)
 	end
 
 	for _, player in ipairs(lobbyPlayers) do
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			player:SetAttribute("InMatch", false)
+			player:SetAttribute("MatchId", nil)
+		end
 		self:_publish("PlayerTeleported", {
 			player = player,
 			matchId = match.matchId,

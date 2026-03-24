@@ -601,6 +601,10 @@ function Service:BeginHostStart(player)
 		return false, "already_in_game"
 	end
 
+	if room.host == player then
+		room.readyPlayers[player] = true
+	end
+
 	if not self._roomManager:IsAllReady(room.id) then
 		return false, "not_all_ready"
 	end
