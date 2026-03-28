@@ -3,6 +3,7 @@ Folder PATH listing for volume Windows
 Volume serial number is BE9C-5841
 C:.
 │   ,.png
+│   .codex_blob_ids.txt
 │   .codex_tmp_build.rbxlx
 │   .codex_tmp_build_after_fix.rbxlx
 │   .codex_tmp_build_roompanel_fix.rbxlx
@@ -21,6 +22,8 @@ C:.
 │   fdnajfdn
 │   feature.log
 │   FILE_ROLE_MAP.md
+│   FIXED DeathEventBridge.lua
+│   FIXED PlayerCore.server.lua
 │   geometri.rbxm
 │   GHOST_MODEL_IMPORT_GUIDE.md
 │   PASRAHPHOBIA.rbxlx
@@ -34,7 +37,6 @@ C:.
 │   PASRAHPHOBIA_lobby_backup7.rbxl
 │   PASRAHPHOBIA_lobby_backup8.rbxl
 │   PASRAHPHOBIA_lobby_backup9.rbxl
-│   PASRAHPHOBIA_lobby_backup9.rbxl.lock
 │   place.rbxl
 │   producer.log
 │   recovery.log
@@ -58,8 +60,30 @@ C:.
 │   wally.toml
 │
 ├───.ai
-│       ai_analyze.sh
-│       changed_files.txt
+│   │   ai_analyze.sh
+│   │   changed_files.txt
+│   │   LOADING MATCH.mp4
+│   │   Recording 2026-03-20 141656.mp4
+│   │
+│   └───frames_141656
+│           f_001.jpg
+│           f_002.jpg
+│           f_003.jpg
+│           f_004.jpg
+│           f_005.jpg
+│           f_006.jpg
+│           f_007.jpg
+│           f_008.jpg
+│           f_009.jpg
+│           f_010.jpg
+│           f_011.jpg
+│           f_012.jpg
+│           f_013.jpg
+│           f_014.jpg
+│           f_015.jpg
+│           f_016.jpg
+│           f_017.jpg
+│           f_018.jpg
 │
 ├───.ai_features
 │       features.log
@@ -102,6 +126,13 @@ C:.
 │
 ├───.ai_roadmap
 │       roadmap.log
+│
+├───.claude
+│       settings.local.json
+│
+├───.codex_checkpoints
+│       Main.lua.before_try_20260320_1100.lua
+│       RoomBrowserController.lua.before_try_20260320_1100.lua
 │
 ├───.vscode
 │       extensions.json
@@ -189,6 +220,7 @@ C:.
 │               folder_structure.md
 │               PASRAHPHOBIA_AI_SUPER_CONTEXT_V2.md
 │               PASRAHPHOBIA_DOC_INDEX.md
+│               REPORT.md
 │               reports.md
 │               reports_updated_phase7.md
 │
