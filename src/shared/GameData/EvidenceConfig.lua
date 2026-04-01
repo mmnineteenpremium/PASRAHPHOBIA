@@ -1,32 +1,38 @@
 return {
-    SpiritBox = {
-        evidenceName = "Spirit Box",
-        toolId = "KotakArwah",
-        description = "Ghost can respond to radio questions.",
-    },
-    GhostOrb = {
-        evidenceName = "Ghost Orb",
+    MEDOK = {
+        evidenceName = "MEDOK",
         toolId = "JejakEnergi",
-        description = "Floating light anomalies visible near ghost room.",
+        description = "EMF level 5 spike from electromagnetic disturbance.",
+        aliases = { "MEDOK", "JejakEnergi" },
     },
-    FreezingTemp = {
-        evidenceName = "Freezing Temperature",
+    Suhu = {
+        evidenceName = "Suhu",
         toolId = "SuhuMembeku",
-        description = "Ambient room temperature drops below threshold.",
+        description = "Room temperature drops and freezing signs appear.",
+        aliases = { "Suhu", "SuhuMembeku" },
     },
-    WritingBook = {
-        evidenceName = "Writing Book",
+    BukuTerkutuk = {
+        evidenceName = "Buku Terkutuk",
         toolId = "BukuTerkutuk",
         description = "Ghost leaves symbols and writing on cursed pages.",
+        aliases = { "BukuTerkutuk", "Buku Terkutuk" },
     },
-    EMF5 = {
-        evidenceName = "EMF Level 5",
-        toolId = "GerakanGaib",
-        description = "Instrument detects high electromagnetic spikes.",
-    },
-    DOTS = {
-        evidenceName = "DOTS Projector",
+    ["To'un"] = {
+        evidenceName = "To'un",
         toolId = "BolaArwah",
-        description = "Ghost silhouette appears in projected motion grid.",
+        description = "Orb or UV anomaly appears in camera/sensor reading.",
+        aliases = { "To'un", "Toun", "BolaArwah" },
+    },
+    Suara = {
+        evidenceName = "Suara",
+        toolId = "KotakArwah",
+        description = "Ghost responds to vocal prompts via spirit box.",
+        aliases = { "Suara", "KotakArwah" },
+    },
+    Pengganggu = {
+        evidenceName = "Pengganggu",
+        toolId = "GerakanGaib",
+        description = "Motion disturbance detected by movement sensor.",
+        aliases = { "Pengganggu", "GerakanGaib" },
     },
 }

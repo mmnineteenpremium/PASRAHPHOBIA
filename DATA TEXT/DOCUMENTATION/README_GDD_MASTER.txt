@@ -102,7 +102,7 @@ Lobby Systems
 
 Semua system server berada di:
 
-src/server
+src/ServerScriptService/Server
 
 ---
 
@@ -132,7 +132,7 @@ Start
 
 System di-load dari:
 
-src/server/Core/Bootstrap/SystemLoader
+src/ServerScriptService/Server/Core/Bootstrap/SystemLoader
 
 Contoh:
 
@@ -150,7 +150,7 @@ ProfileSystem
 InventorySystem
 EconomySystem
 ProgressionSystem
-RankSystem
+RankedSystem
 
 Persistence:
 
@@ -178,7 +178,7 @@ Tier 3 — Player
 
 ProfileSystem
 ProgressionSystem
-RankSystem
+RankedSystem
 
 Tier 4 — Lobby
 
@@ -216,7 +216,7 @@ MapEventSystem
 
 ## Server
 
-src/server
+src/ServerScriptService/Server
 
 MatchSystem
 GhostSystem
@@ -240,21 +240,21 @@ LobbySocialHub
 
 Core Systems
 
-src/server/MatchSystem  
-src/server/GhostSystem  
-src/server/EvidenceSystem  
-src/server/SpectatorSystem  
-src/server/HorrorDirector  
-src/server/SanitySystem  
-src/server/AggressionSystem  
+src/ServerScriptService/Server/MatchSystem  
+src/ServerScriptService/Server/GhostSystem  
+src/ServerScriptService/Server/EvidenceSystem  
+src/ServerScriptService/Server/SpectatorSystem  
+src/ServerScriptService/Server/HorrorDirector  
+src/ServerScriptService/Server/SanitySystem  
+src/ServerScriptService/Server/AggressionSystem  
 
 Meta Systems
 
-src/server/EconomySystem  
-src/server/InventorySystem  
-src/server/ProfileSystem  
-src/server/DataPersistenceService  
-src/server/LobbySocialHub  
+src/ServerScriptService/Server/EconomySystem  
+src/ServerScriptService/Server/InventorySystem  
+src/ServerScriptService/Server/ProfileSystem  
+src/ServerScriptService/Server/DataPersistenceService  
+src/ServerScriptService/Server/LobbySocialHub  
 
 ---
 
@@ -488,7 +488,7 @@ EconomySystem
 ↓
 ProgressionSystem
 ↓
-RankSystem
+RankedSystem
 
 Reward berasal dari:
 

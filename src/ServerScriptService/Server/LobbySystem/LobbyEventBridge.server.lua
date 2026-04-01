@@ -1,3 +1,0 @@
--- LobbyEventBridge disabled.
--- All LobbyEvent handling is managed by LobbySystem Controller.lua.
--- This file is kept as a placeholder only.

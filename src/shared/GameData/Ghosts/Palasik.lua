@@ -1,9 +1,9 @@
 return {
     ghostName = "Palasik",
     evidenceTypes = {
-        "SpiritBox",
-        "GhostOrb",
-        "DOTS",
+        "To'un",
+        "Pengganggu",
+        "Suara",
     },
     behaviorTraits = {
         "Bloodlust",

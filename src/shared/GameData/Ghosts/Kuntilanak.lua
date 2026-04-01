@@ -1,9 +1,9 @@
 return {
     ghostName = "Kuntilanak",
     evidenceTypes = {
-        "SpiritBox",
-        "WritingBook",
-        "DOTS",
+        "Suara",
+        "To'un",
+        "Pengganggu",
     },
     behaviorTraits = {
         "Lure",

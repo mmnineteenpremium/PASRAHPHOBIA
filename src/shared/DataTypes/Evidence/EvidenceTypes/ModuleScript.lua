@@ -1,11 +1,11 @@
 local EvidenceTypes = {
 
-    BolaArwah = "BolaArwah",
+    MEDOK = "MEDOK",
+    Suhu = "Suhu",
     BukuTerkutuk = "BukuTerkutuk",
-    GerakanGaib = "GerakanGaib",
-    JejakEnergi = "JejakEnergi",
-    KotakArwah = "KotakArwah",
-    SuhuMembeku = "SuhuMembeku"
+    ["To'un"] = "To'un",
+    Suara = "Suara",
+    Pengganggu = "Pengganggu"
 
 }
 

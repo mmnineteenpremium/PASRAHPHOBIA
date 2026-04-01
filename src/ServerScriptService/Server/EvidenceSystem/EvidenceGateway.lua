@@ -8,46 +8,52 @@ local TOOL_REQUEST_COOLDOWN_SECONDS = 0.4
 local MAX_GHOST_SCAN_DISTANCE = 22
 
 local EVIDENCE_NAME_BY_TOOL = {
-	JejakEnergi = "Jejak Energi",
-	KotakArwah = "Kotak Arwah",
-	SuhuMembeku = "Suhu Membeku",
+	JejakEnergi = "MEDOK",
+	KotakArwah = "Suara",
+	SuhuMembeku = "Suhu",
 	BukuTerkutuk = "Buku Terkutuk",
-	BolaArwah = "Bola Arwah",
-	GerakanGaib = "Gerakan Gaib",
+	BolaArwah = "To'un",
+	GerakanGaib = "Pengganggu",
+}
+
+local UTILITY_TOOL_TYPES = {
+	Garam = true,
+	Salib = true,
+	Dupa = true,
 }
 
 local REQUEST_TYPE_TO_TOOL = {
-	emfscan = "JejakEnergi",
-	emfreader = "JejakEnergi",
-	spiritboxquestion = "KotakArwah",
-	spiritbox = "KotakArwah",
-	temperaturereading = "SuhuMembeku",
-	thermometer = "SuhuMembeku",
-	ghostwritingcheck = "BukuTerkutuk",
-	ghostwritingbook = "BukuTerkutuk",
-	ghostorbcameradetection = "BolaArwah",
-	ghostorbcamera = "BolaArwah",
-	motionsensorcheck = "GerakanGaib",
-	motionsensor = "GerakanGaib",
+	jejakenergiscan = "JejakEnergi",
+	kotakarwahquestion = "KotakArwah",
+	suhureading = "SuhuMembeku",
+	bukuterkutukcheck = "BukuTerkutuk",
+	toundetection = "BolaArwah",
+	pengganggucheck = "GerakanGaib",
+	saltplacement = "Garam",
+	crucifixplacement = "Salib",
+	smudgeignite = "Dupa",
 }
 
 local TOOL_ALIASES = {
-	emf = "JejakEnergi",
-	emfreader = "JejakEnergi",
 	jejakenergi = "JejakEnergi",
-	spiritbox = "KotakArwah",
+	medok = "JejakEnergi",
 	kotakarwah = "KotakArwah",
-	thermometer = "SuhuMembeku",
-	thermo = "SuhuMembeku",
+	suara = "KotakArwah",
 	suhumembeku = "SuhuMembeku",
-	writingbook = "BukuTerkutuk",
+	suhu = "SuhuMembeku",
 	bukuterkutuk = "BukuTerkutuk",
-	orbcamera = "BolaArwah",
 	bolaarwah = "BolaArwah",
-	motionsensor = "GerakanGaib",
+	toun = "BolaArwah",
 	gerakangaib = "GerakanGaib",
-	ghostwritingbook = "BukuTerkutuk",
-	ghostorbcamera = "BolaArwah",
+	pengganggu = "GerakanGaib",
+	garam = "Garam",
+	salt = "Garam",
+	saltbag = "Garam",
+	salib = "Salib",
+	crucifix = "Salib",
+	dupa = "Dupa",
+	smudge = "Dupa",
+	smudgestick = "Dupa",
 }
 
 local function resolveEventBus(deps)
@@ -86,21 +92,6 @@ local function resolveMatchSystem(deps)
 	return match
 end
 
-local function resolveEvidenceConfigSystem(deps)
-	local evidenceConfig = Services.Get(deps, "EvidenceConfigSystem")
-	if type(evidenceConfig) ~= "table" then
-		return nil
-	end
-	if type(evidenceConfig.GetEvidenceDefinition) == "function" or type(evidenceConfig.GetEvidenceDefinitions) == "function" then
-		return evidenceConfig
-	end
-	if type(evidenceConfig.Service) == "table" and (type(evidenceConfig.Service.GetEvidenceDefinition) == "function" or type(evidenceConfig.Service.GetEvidenceDefinitions) == "function") then
-		return evidenceConfig.Service
-	end
-	return nil
-end
-
-
 local function resolveSpectatorSystem(deps)
     local spectator = Services.Get(deps, "SpectatorSystem")
     if type(spectator) ~= "table" then
@@ -115,59 +106,6 @@ local function resolveSpectatorSystem(deps)
     return nil
 end
 
-local function resolveSharedEvidenceTypes()
-    local function safeRequire(moduleScript)
-        if not moduleScript then
-            return nil
-        end
-        local ok, result = pcall(require, moduleScript)
-        if ok then
-            return result
-        end
-        return nil
-    end
-
-    local function getByPath(root, path)
-        local node = root
-        for _, segment in ipairs(path) do
-            if typeof(node) ~= "Instance" then
-                return nil
-            end
-            node = node:FindFirstChild(segment)
-            if not node then
-                return nil
-            end
-        end
-        return node
-    end
-
-    local cursor = script
-    while cursor do
-        local shared = cursor:FindFirstChild("shared") or cursor:FindFirstChild("Shared")
-        if shared then
-            local evidenceTypesModule = getByPath(shared, { "DataTypes", "Evidence", "EvidenceTypes", "ModuleScript" })
-            local result = safeRequire(evidenceTypesModule)
-            if result then
-                return result
-            end
-        end
-        cursor = cursor.Parent
-    end
-
-    local ok, replicatedStorage = pcall(function()
-        return game:GetService("ReplicatedStorage")
-    end)
-    if ok and typeof(replicatedStorage) == "Instance" then
-        local shared = replicatedStorage:FindFirstChild("shared") or replicatedStorage:FindFirstChild("Shared")
-        if shared then
-            local evidenceTypesModule = getByPath(shared, { "DataTypes", "Evidence", "EvidenceTypes", "ModuleScript" })
-            return safeRequire(evidenceTypesModule)
-        end
-    end
-    return nil
-end
-
-local EVIDENCE_TYPES = resolveSharedEvidenceTypes() or {}
 local function resolveSanitySystem(deps)
 	local sanity = Services.Get(deps, "SanitySystem")
 	if type(sanity) ~= "table" then
@@ -198,7 +136,6 @@ function EvidenceGateway.new(service, deps)
 	self._matchSystem = resolveMatchSystem(self._deps)
 	self._sanitySystem = resolveSanitySystem(self._deps)
 	self._spectatorSystem = resolveSpectatorSystem(self._deps)
-	self._evidenceConfigSystem = resolveEvidenceConfigSystem(self._deps)
 	self._requestRemote = nil
 	self._lastRequestAtByUserId = {}
 	return self
@@ -283,16 +220,13 @@ end
 
 
 function EvidenceGateway:_isEvidenceTypeAllowed(evidenceType)
-    if type(evidenceType) ~= "string" then
-        return false
-    end
-    for _, value in pairs(EVIDENCE_TYPES) do
-        if value == evidenceType then
-            return true
-        end
-    end
-    return false
+	return type(evidenceType) == "string" and EVIDENCE_NAME_BY_TOOL[evidenceType] ~= nil
 end
+
+function EvidenceGateway:_isSupportedToolType(toolType)
+	return self:_isEvidenceTypeAllowed(toolType) or UTILITY_TOOL_TYPES[toolType] == true
+end
+
 function EvidenceGateway:_resolveToolType(request)
 	local requestPayload = type(request.payload) == "table" and request.payload or {}
 
@@ -309,48 +243,6 @@ function EvidenceGateway:_resolveToolType(request)
 	return nil
 end
 
-function EvidenceGateway:_resolveEvidenceName(toolType, requestPayload)
-	local mapped = EVIDENCE_NAME_BY_TOOL[toolType]
-	if mapped then
-		return mapped
-	end
-	if type(requestPayload) == "table" then
-		local provided = requestPayload.evidenceName
-		if type(provided) == "string" and provided ~= "" then
-			return provided
-		end
-	end
-	return nil
-end
-
-function EvidenceGateway:_isEvidenceNameValid(evidenceName)
-	if type(evidenceName) ~= "string" or evidenceName == "" then
-		return false
-	end
-	if not self._evidenceConfigSystem then
-		return false
-	end
-	if type(self._evidenceConfigSystem.GetEvidenceDefinition) == "function" then
-		if self._evidenceConfigSystem:GetEvidenceDefinition(evidenceName) then
-			return true
-		end
-	end
-	if type(self._evidenceConfigSystem.GetEvidenceDefinitions) == "function" then
-		local definitions = self._evidenceConfigSystem:GetEvidenceDefinitions()
-		if type(definitions) == "table" then
-			if definitions[evidenceName] ~= nil then
-				return true
-			end
-			for _, definition in pairs(definitions) do
-				if type(definition) == "table" and definition.evidenceName == evidenceName then
-					return true
-				end
-			end
-		end
-	end
-	return false
-end
-
 function EvidenceGateway:_buildData(toolType, ok, reason, result)
 	local data = {
 		toolType = toolType,
@@ -359,25 +251,44 @@ function EvidenceGateway:_buildData(toolType, ok, reason, result)
 	}
 
 	if toolType == "JejakEnergi" then
-		data.requestType = "EMFScan"
+		data.requestType = "JejakEnergiScan"
 		data.emfLevel = ok and 5 or 1
 	elseif toolType == "KotakArwah" then
-		data.requestType = "SpiritBoxQuestion"
+		data.requestType = "KotakArwahQuestion"
 		data.ghostResponse = ok == true
 		data.responseText = ok and "Behind you..." or "..."
 	elseif toolType == "SuhuMembeku" then
-		data.requestType = "TemperatureReading"
+		data.requestType = "SuhuReading"
 		data.temperatureC = ok and -5 or 9
 		data.freezing = ok == true
 	elseif toolType == "BukuTerkutuk" then
-		data.requestType = "GhostWritingCheck"
+		data.requestType = "BukuTerkutukCheck"
 		data.writingAppeared = ok == true
 	elseif toolType == "BolaArwah" then
-		data.requestType = "GhostOrbCameraDetection"
+		data.requestType = "TounDetection"
 		data.ghostOrbDetected = ok == true
 	elseif toolType == "GerakanGaib" then
-		data.requestType = "MotionSensorCheck"
+		data.requestType = "PenggangguCheck"
 		data.motionDetected = ok == true
+	elseif toolType == "Garam" then
+		data.requestType = "SaltPlacement"
+		data.utility = true
+		data.tracksDetected = type(result) == "table" and result.tracksDetected == true or false
+		data.placementActive = type(result) == "table" and result.placementActive == true or false
+		data.roomId = type(result) == "table" and result.roomId or nil
+	elseif toolType == "Salib" then
+		data.requestType = "CrucifixPlacement"
+		data.utility = true
+		data.chargesRemaining = type(result) == "table" and result.chargesRemaining or nil
+		data.placementActive = type(result) == "table" and result.placementActive == true or false
+		data.roomId = type(result) == "table" and result.roomId or nil
+	elseif toolType == "Dupa" then
+		data.requestType = "SmudgeIgnite"
+		data.utility = true
+		data.repellentUntil = type(result) == "table" and result.repellentUntil or nil
+		data.sanityRestored = type(result) == "table" and result.sanityRestored or nil
+		data.huntRepelled = type(result) == "table" and result.huntRepelled == true or false
+		data.roomId = type(result) == "table" and result.roomId or nil
 	end
 
 	if type(result) == "table" then
@@ -448,7 +359,8 @@ function EvidenceGateway:HandleRequest(player, request)
 	end
 
 	local toolType = self:_resolveToolType(request)
-	if not toolType or not self:_isEvidenceTypeAllowed(toolType) then
+	local utilityTool = UTILITY_TOOL_TYPES[toolType] == true
+	if not toolType or not self:_isSupportedToolType(toolType) then
 		return {
 			success = false,
 			reason = "invalid_request_type",
@@ -485,7 +397,7 @@ function EvidenceGateway:HandleRequest(player, request)
 
 	local distanceToGhost = tonumber(requestPayload.distanceToGhost)
 	local nearGhostRoom = requestPayload.nearGhostRoom == true
-	if (type(distanceToGhost) == "number" and distanceToGhost > MAX_GHOST_SCAN_DISTANCE) and not nearGhostRoom then
+	if not utilityTool and (type(distanceToGhost) == "number" and distanceToGhost > MAX_GHOST_SCAN_DISTANCE) and not nearGhostRoom then
 		return {
 			success = false,
 			reason = "ghost_out_of_range",
@@ -497,13 +409,6 @@ function EvidenceGateway:HandleRequest(player, request)
 		toolType = toolType,
 		payload = requestPayload,
 	})
-
-	if ok then
-		local evidenceName = self:_resolveEvidenceName(toolType, requestPayload)
-		if evidenceName and self:_isEvidenceNameValid(evidenceName) then
-			self:_publish("EvidenceDetected", evidenceName)
-		end
-	end
 
 	return {
 		success = ok,

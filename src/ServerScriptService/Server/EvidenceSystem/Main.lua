@@ -33,4 +33,12 @@ function EvidenceSystem:Shutdown()
     self:Stop()
 end
 
+function EvidenceSystem:TryConsumeHuntProtection(matchId, payload)
+    return self.Service:TryConsumeHuntProtection(matchId, payload)
+end
+
+function EvidenceSystem:NotifyGhostPresence(matchId, payload)
+    return self.Service:NotifyGhostPresence(matchId, payload)
+end
+
 return EvidenceSystem

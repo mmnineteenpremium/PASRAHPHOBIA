@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 
 local REMOTE_NAME = "FlashlightEvent"
+local FLASHLIGHT_ATTRIBUTE = "FlashlightEnabled"
 local remoteFolder = ReplicatedStorage:WaitForChild("RemoteEvents")
 local flashlightRemote = remoteFolder:WaitForChild(REMOTE_NAME)
 
@@ -161,6 +162,7 @@ end
 
 toggleFlashlight = function()
 	flashlightOn = not flashlightOn
+	player:SetAttribute(FLASHLIGHT_ATTRIBUTE, flashlightOn)
 
 	flashlightRemote:FireServer({
 		action = "Toggle",
@@ -175,6 +177,7 @@ toggleFlashlight = function()
 	end
 end
 
+player:SetAttribute(FLASHLIGHT_ATTRIBUTE, flashlightOn)
 ensureToggleUI()
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)

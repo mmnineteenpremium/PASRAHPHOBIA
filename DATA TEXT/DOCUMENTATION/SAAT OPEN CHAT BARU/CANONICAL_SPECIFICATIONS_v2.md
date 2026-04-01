@@ -14,12 +14,12 @@
 
 | # | Name Indonesian | Name English | Code Reference | Detection Method |
 |---|-----------------|--------------|----------------|------------------|
-| 1 | MEDOK | Electromagnetic Field | EMF_Level5 | EMF Reader shows level 5 spike |
-| 2 | Suhu | Freezing Temperature | Temp_Freezing | Thermometer <5°C, cold breath visible |
-| 3 | Buku Terkutuk | Ghost Writing | GhostWriting | Ghost writes in placed journal |
-| 4 | To'un | Spirit Orb / UV Evidence | SpiritOrb_UV | UV camera reveals orb/fingerprints |
-| 5 | Suara | Spirit Voice | SpiritBox_Response | Ghost responds via Spirit Box |
-| 6 | Pengganggu | Disturbance / Movement | Motion_Detected | Motion sensor triggers on ghost movement |
+| 1 | MEDOK | Electromagnetic Disturbance | MEDOK | Jejak Energi scanner shows strong anomaly |
+| 2 | Suhu | Freezing Signature | Suhu | Thermometer detects ghost-room temperature drop |
+| 3 | Buku Terkutuk | Cursed Writing | BukuTerkutuk | Buku Terkutuk records paranormal writing |
+| 4 | To'un | Orb/Trace Manifestation | To'un | Bola Arwah tool detects visual anomaly |
+| 5 | Suara | Spirit Voice | Suara | Kotak Arwah receives direct ghost response |
+| 6 | Pengganggu | Disturbance Movement | Pengganggu | Gerakan Gaib sensor detects motion interference |
 
 **Evidence Tool Detection Ranges:**
 ```lua
@@ -129,7 +129,7 @@ Robux:
 | # | Name | Type Category | Aggression Base | Evidence Set (3 from 6) | Behavior Notes | Phase 7 Priority |
 |---|------|---------------|-----------------|-------------------------|----------------|------------------|
 | 1 | Pocong | Shrouded Ghost | Low (20-40) | MEDOK, Suhu, Buku Terkutuk | Floating, slow movement | **HIGH** |
-| 2 | Kuntilanak | Banshee | Medium (40-60) | Suara, To'un, Pengganggu | Female spirit, long hair, crying sound | **HIGH** |
+| 2 | Kuntilanak | Wailing Spirit | Medium (40-60) | Suara, To'un, Pengganggu | Female spirit, long hair, crying sound | **HIGH** |
 | 3 | Genderuwo | Shadow Figure | High (60-80) | MEDOK, Pengganggu, Suhu | Aggressive, muscular shadow | **HIGH** |
 | 4 | Tuyul | Imp | Low (20-40) | To'un, Suara, Buku Terkutuk | Small entity, childlike, steals items | MEDIUM |
 | 5 | Leak | Witch Spirit | Medium (50-70) | Suara, MEDOK, Pengganggu | Shapeshifter, can mimic sounds | MEDIUM |
@@ -150,7 +150,7 @@ Robux:
 ```
 Map                  | Roaming Radius | Hunt Detection Range
 ---------------------|----------------|---------------------
-StudioMMNINETEEN     | 20-25 studs    | 22-26 studs
+StudioMMNineteen     | 20-25 studs    | 22-26 studs
 EmptyBuilding        | 25-30 studs    | 28-32 studs
 HauntedHouse         | 25-30 studs    | 30 studs
 AbandonedPalace      | 35-45 studs    | 40 studs
@@ -168,7 +168,7 @@ AbandonedPalace      | 35-45 studs    | 40 studs
 | AbandonedPalace | Investigation | 180×180 | 1 | 32,400 studs² | 18-25 | 5-7 | Large/Hard |
 | HauntedHouse | Investigation | 140×140 | 2 | 39,200 studs² (19,600 per floor) | 12-16 | 4-6 | Medium |
 | EmptyBuilding | Investigation | 100×100 | 2 | 20,000 studs² (10,000 per floor) | 10-14 | 5-7 | Medium-Small |
-| StudioMMNINETEEN | Investigation | 90×90 | 2 | 16,200 studs² (8,100 per floor) | 6-10 | 3-5 | Small/Easy |
+| StudioMMNineteen | Investigation | 90×90 | 2 | 16,200 studs² (8,100 per floor) | 6-10 | 3-5 | Small/Easy |
 
 **Map Size Categories:**
 - Small: 80-100 studs (solo/duo friendly)
@@ -494,7 +494,7 @@ RealGhost = 10% -- Actual correct ghost info
 **Tier 3 — Player Systems:**
 - ProfileSystem
 - ProgressionSystem
-- RankSystem
+- RankedSystem
 
 **Tier 4 — Lobby Systems:**
 - LobbySocialHub
@@ -532,7 +532,7 @@ RealGhost = 10% -- Actual correct ghost info
 
 ## **15. FILE STRUCTURE**
 
-### **Server-Side (src/server/)**
+### **Server-Side (src/ServerScriptService/Server/)**
 
 ```
 Core Systems:
@@ -601,7 +601,7 @@ EconomySystem grants currency (MM/PP)
     ↓
 ProgressionSystem grants XP
     ↓
-RankSystem updates rank stars (if ranked mode)
+RankedSystem updates rank stars (if ranked mode)
     ↓
 DataPersistenceService saves all data
 ```

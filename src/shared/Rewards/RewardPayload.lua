@@ -28,11 +28,11 @@ function RewardPayload.Apply(payload, opts)
     end
 
     local defaults = {
-        cash = 0,
+        mm = 0,
         xp = 0,
         evidenceBonus = 0,
         survivalBonus = 0,
-        difficultyMultiplier = 0,
+        difficultyMultiplier = 1,
         contractBonus = 0,
     }
     for key, value in pairs(defaults) do

@@ -69,16 +69,34 @@ local function normalizeToken(value)
     if type(value) ~= "string" then
         return nil
     end
-    return value:gsub("[%s_%-]+", ""):lower()
+    return value
+        :gsub("[%s_%-]+", "")
+        :gsub("[^%w]", "")
+        :lower()
 end
 
-local EVIDENCE_KEY_TO_TYPE = {}
+local EVIDENCE_ALIAS_TO_EVIDENCE = {}
 if type(EvidenceConfig) == "table" then
     for key, def in pairs(EvidenceConfig) do
         if type(def) == "table" then
             local token = normalizeToken(key)
-            if token and def.toolId then
-                EVIDENCE_KEY_TO_TYPE[token] = def.toolId
+            local canonical = type(def.evidenceType) == "string" and def.evidenceType or key
+            if token and canonical then
+                EVIDENCE_ALIAS_TO_EVIDENCE[token] = canonical
+            end
+            if type(def.evidenceName) == "string" then
+                local namedToken = normalizeToken(def.evidenceName)
+                if namedToken and canonical then
+                    EVIDENCE_ALIAS_TO_EVIDENCE[namedToken] = canonical
+                end
+            end
+            if type(def.aliases) == "table" then
+                for _, alias in ipairs(def.aliases) do
+                    local aliasToken = normalizeToken(alias)
+                    if aliasToken and canonical then
+                        EVIDENCE_ALIAS_TO_EVIDENCE[aliasToken] = canonical
+                    end
+                end
             end
         end
     end
@@ -95,32 +113,50 @@ end
 EvidenceService.__index = EvidenceService
 
 local TOOL_TO_EVIDENCE = {
-	BolaArwah = "BolaArwah",
+	BolaArwah = "To'un",
 	BukuTerkutuk = "BukuTerkutuk",
-	GerakanGaib = "GerakanGaib",
-	JejakEnergi = "JejakEnergi",
-	KotakArwah = "KotakArwah",
-	SuhuMembeku = "SuhuMembeku",
+	GerakanGaib = "Pengganggu",
+	JejakEnergi = "MEDOK",
+	KotakArwah = "Suara",
+	SuhuMembeku = "Suhu",
+}
+
+local UTILITY_TOOL_TYPES = {
+	Dupa = true,
+	Garam = true,
+	Salib = true,
+}
+
+local UTILITY_TOOL_CONFIG = {
+	Dupa = {
+		durationSeconds = 20,
+		repelDistance = 12,
+		sanityRestore = 10,
+	},
+	Garam = {
+		durationSeconds = 180,
+		immediateTriggerDistance = 8,
+		maxPlacements = 6,
+	},
+	Salib = {
+		charges = 3,
+		durationSeconds = 180,
+	},
 }
 
 local EVIDENCE_ALIASES = {
-	emflevel = "JejakEnergi",
-	emf5 = "JejakEnergi",
-	jejakenergi = "JejakEnergi",
-	spiritboxresponse = "KotakArwah",
-	spiritbox = "KotakArwah",
-	kotakarwah = "KotakArwah",
-	freezingtemperature = "SuhuMembeku",
-	freezingtemp = "SuhuMembeku",
-	suhumembeku = "SuhuMembeku",
-	uvmarks = "GerakanGaib",
-	dots = "GerakanGaib",
-	gerakangaib = "GerakanGaib",
-	ghostwriting = "BukuTerkutuk",
-	writingbook = "BukuTerkutuk",
+	medok = "MEDOK",
+	jejakenergi = "MEDOK",
+	suara = "Suara",
+	kotakarwah = "Suara",
+	suhu = "Suhu",
+	suhumembeku = "Suhu",
+	toun = "To'un",
+	bolaarwah = "To'un",
+	pengganggu = "Pengganggu",
+	gerakangaib = "Pengganggu",
+	motionsensor = "Pengganggu",
 	bukuterkutuk = "BukuTerkutuk",
-	ghostorb = "BolaArwah",
-	bolaarwah = "BolaArwah",
 }
 
 local function normalizeGhostTypeKey(ghostType)
@@ -135,7 +171,8 @@ local function normalizeEvidenceType(evidenceType)
 		return nil
 	end
 	local token = evidenceType:gsub("[%s_%-]+", ""):lower()
-	return EVIDENCE_ALIASES[token] or evidenceType
+	token = token:gsub("[^%w]", "")
+	return EVIDENCE_ALIASES[token] or EVIDENCE_ALIAS_TO_EVIDENCE[token] or evidenceType
 end
 
 local function normalizeEvidenceList(list)
@@ -150,6 +187,47 @@ local function normalizeEvidenceList(list)
 	end
 	table.sort(out)
 	return out
+end
+
+local function resolveUserId(player)
+	if type(player) == "number" then
+		return player
+	end
+	if typeof(player) == "Instance" and player:IsA("Player") then
+		return player.UserId
+	end
+	return nil
+end
+
+local function resolveRequestedRoomId(payload, ghostState)
+	local roomId = payload and (payload.roomId or payload.targetRoomId or payload.room)
+	if type(roomId) == "string" and roomId ~= "" then
+		return roomId
+	end
+
+	if payload and payload.nearGhostRoom == true and type(ghostState) == "table" then
+		local ghostRoomId = ghostState.currentRoomId or ghostState.favoriteRoomId
+		if type(ghostRoomId) == "string" and ghostRoomId ~= "" then
+			return ghostRoomId
+		end
+	end
+
+	return nil
+end
+
+local function roomsMatch(roomA, roomB)
+	if type(roomA) ~= "string" or roomA == "" then
+		return false
+	end
+	if type(roomB) ~= "string" or roomB == "" then
+		return false
+	end
+	return tostring(roomA) == tostring(roomB)
+end
+
+local function isWithinDistance(rawDistance, threshold)
+	local distance = tonumber(rawDistance)
+	return distance ~= nil and distance <= threshold
 end
 
 local function resolveEventBus(deps)
@@ -176,6 +254,20 @@ local function resolveGhostService(deps)
 	end
 	if type(ghostSystem.Service) == "table" and type(ghostSystem.Service.GetGhostState) == "function" then
 		return ghostSystem.Service
+	end
+	return nil
+end
+
+local function resolveSanityService(deps)
+	local sanitySystem = Services.Get(deps, "SanitySystem")
+	if type(sanitySystem) ~= "table" then
+		return nil
+	end
+	if type(sanitySystem.RestoreSanity) == "function" then
+		return sanitySystem
+	end
+	if type(sanitySystem.Service) == "table" and type(sanitySystem.Service.RestoreSanity) == "function" then
+		return sanitySystem.Service
 	end
 	return nil
 end
@@ -221,7 +313,7 @@ function EvidenceService:_resolveGhostEvidence(ghostType)
     local seen = {}
     for _, evidenceKey in ipairs(ghostData.evidenceTypes or {}) do
         local token = normalizeToken(evidenceKey)
-        local mapped = token and EVIDENCE_KEY_TO_TYPE[token] or nil
+        local mapped = token and EVIDENCE_ALIAS_TO_EVIDENCE[token] or nil
         if mapped and not seen[mapped] then
             seen[mapped] = true
             table.insert(evidenceList, mapped)
@@ -326,6 +418,7 @@ function EvidenceService.new(state, deps)
 	self._dataTypes = EvidenceDataTypes.Resolve(self._deps)
 	self._eventBus = resolveEventBus(self._deps)
 	self._ghostService = resolveGhostService(self._deps)
+	self._sanityService = resolveSanityService(self._deps)
 	self._evidenceSync = resolveEvidenceSync(self._deps)
 	self._evidenceConfigSystem = resolveEvidenceConfigSystem(self._deps)
 
@@ -350,6 +443,7 @@ function EvidenceService.new(state, deps)
 		Validator = self._validator,
 		Tracker = self._tracker,
 		Deduction = self._deduction,
+		EvidenceTypes = self._dataTypes.EvidenceTypes,
 	})
 
 	return self
@@ -363,6 +457,7 @@ end
 
 function EvidenceService:Init()
 	self._state:Set("evidenceMatches", {})
+	self._state:Set("utilityToolsByMatch", {})
 	self._randomizer:Reset()
 	self._rngByMatchId = {}
 end
@@ -376,6 +471,7 @@ function EvidenceService:Stop()
 	self._randomizer:Reset()
 	self._rngByMatchId = {}
 	self._state:Set("evidenceMatches", {})
+	self._state:Set("utilityToolsByMatch", {})
 end
 
 function EvidenceService:_publish(eventName, payload)
@@ -565,6 +661,374 @@ function EvidenceService:_getGhostState(matchId)
 	return self._ghostService:GetGhostState(matchId)
 end
 
+function EvidenceService:_getUtilityToolsByMatch()
+	local utilityToolsByMatch = self._state:Get("utilityToolsByMatch")
+	if type(utilityToolsByMatch) ~= "table" then
+		utilityToolsByMatch = {}
+		self._state:Set("utilityToolsByMatch", utilityToolsByMatch)
+	end
+	return utilityToolsByMatch
+end
+
+function EvidenceService:_getUtilityState(matchId)
+	local utilityToolsByMatch = self:_getUtilityToolsByMatch()
+	local utilityState = utilityToolsByMatch[matchId]
+	if type(utilityState) ~= "table" then
+		utilityState = {
+			crucifixPlacements = {},
+			saltPlacements = {},
+			smudgeEffects = {},
+		}
+		utilityToolsByMatch[matchId] = utilityState
+		self._state:Set("utilityToolsByMatch", utilityToolsByMatch)
+	end
+	return utilityState
+end
+
+function EvidenceService:_saveUtilityState(matchId, utilityState)
+	local utilityToolsByMatch = self:_getUtilityToolsByMatch()
+	utilityToolsByMatch[matchId] = utilityState
+	self._state:Set("utilityToolsByMatch", utilityToolsByMatch)
+end
+
+function EvidenceService:_clearUtilityState(matchId)
+	local utilityToolsByMatch = self:_getUtilityToolsByMatch()
+	utilityToolsByMatch[matchId] = nil
+	self._state:Set("utilityToolsByMatch", utilityToolsByMatch)
+end
+
+function EvidenceService:_trimExpiredUtilityState(matchId, now)
+	local currentTime = now or os.clock()
+	local utilityState = self:_getUtilityState(matchId)
+
+	local activeSaltPlacements = {}
+	for _, placement in ipairs(utilityState.saltPlacements or {}) do
+		if placement.triggered ~= true and (placement.expiresAt or 0) > currentTime then
+			table.insert(activeSaltPlacements, placement)
+		end
+	end
+
+	local activeCrucifixPlacements = {}
+	for _, placement in ipairs(utilityState.crucifixPlacements or {}) do
+		if (placement.expiresAt or 0) > currentTime and (placement.chargesRemaining or 0) > 0 then
+			table.insert(activeCrucifixPlacements, placement)
+		end
+	end
+
+	local activeSmudgeEffects = {}
+	for _, effect in ipairs(utilityState.smudgeEffects or {}) do
+		if (effect.expiresAt or 0) > currentTime then
+			table.insert(activeSmudgeEffects, effect)
+		end
+	end
+
+	utilityState.saltPlacements = activeSaltPlacements
+	utilityState.crucifixPlacements = activeCrucifixPlacements
+	utilityState.smudgeEffects = activeSmudgeEffects
+	self:_saveUtilityState(matchId, utilityState)
+	return utilityState
+end
+
+function EvidenceService:_resolveGhostRoom(matchId)
+	local ghostState = self:_getGhostState(matchId) or {}
+	return ghostState.currentRoomId or ghostState.favoriteRoomId, ghostState
+end
+
+function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
+	local config = UTILITY_TOOL_CONFIG.Garam
+	local now = requestPayload.now or os.clock()
+	local ghostRoomId, ghostState = self:_resolveGhostRoom(matchId)
+	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
+	local utilityState = self:_trimExpiredUtilityState(matchId, now)
+	local userId = resolveUserId(player)
+
+	local placement = {
+		expiresAt = now + config.durationSeconds,
+		placedAt = now,
+		player = player,
+		roomId = roomId,
+		userId = userId,
+	}
+
+	if #utilityState.saltPlacements >= config.maxPlacements then
+		table.remove(utilityState.saltPlacements, 1)
+	end
+	table.insert(utilityState.saltPlacements, placement)
+
+	local shouldTriggerImmediately = requestPayload.nearGhostRoom == true
+		or isWithinDistance(requestPayload.distanceToGhost, config.immediateTriggerDistance)
+		or (roomId ~= nil and roomsMatch(roomId, ghostRoomId))
+
+	if shouldTriggerImmediately then
+		table.remove(utilityState.saltPlacements, #utilityState.saltPlacements)
+		self:_saveUtilityState(matchId, utilityState)
+		self:_publish("SaltTriggered", {
+			matchId = matchId,
+			now = now,
+			player = player,
+			roomId = roomId or ghostRoomId,
+			source = "salt_placement",
+			toolType = "Garam",
+			userId = userId,
+		})
+		return true, "salt_triggered", {
+			ghostRoomId = ghostRoomId,
+			placementActive = false,
+			roomId = roomId or ghostRoomId,
+			toolType = "Garam",
+			tracksDetected = true,
+		}
+	end
+
+	self:_saveUtilityState(matchId, utilityState)
+	self:_publish("SaltPlaced", {
+		expiresAt = placement.expiresAt,
+		matchId = matchId,
+		now = now,
+		player = player,
+		roomId = roomId,
+		toolType = "Garam",
+		userId = userId,
+	})
+	return true, "salt_placed", {
+		ghostRoomId = ghostRoomId,
+		placementActive = true,
+		roomId = roomId,
+		toolType = "Garam",
+		tracksDetected = false,
+	}
+end
+
+function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
+	local config = UTILITY_TOOL_CONFIG.Salib
+	local now = requestPayload.now or os.clock()
+	local ghostRoomId, ghostState = self:_resolveGhostRoom(matchId)
+	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
+	local utilityState = self:_trimExpiredUtilityState(matchId, now)
+	local userId = resolveUserId(player)
+
+	local placement = {
+		chargesRemaining = config.charges,
+		expiresAt = now + config.durationSeconds,
+		placedAt = now,
+		player = player,
+		roomId = roomId,
+		userId = userId,
+	}
+
+	table.insert(utilityState.crucifixPlacements, placement)
+	self:_saveUtilityState(matchId, utilityState)
+
+	self:_publish("CrucifixPlaced", {
+		chargesRemaining = placement.chargesRemaining,
+		expiresAt = placement.expiresAt,
+		matchId = matchId,
+		now = now,
+		player = player,
+		roomId = roomId,
+		toolType = "Salib",
+		userId = userId,
+	})
+
+	return true, "crucifix_armed", {
+		chargesRemaining = placement.chargesRemaining,
+		expiresAt = placement.expiresAt,
+		ghostRoomId = ghostRoomId,
+		placementActive = true,
+		roomId = roomId,
+		toolType = "Salib",
+	}
+end
+
+function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
+	local config = UTILITY_TOOL_CONFIG.Dupa
+	local now = requestPayload.now or os.clock()
+	local ghostRoomId, ghostState = self:_resolveGhostRoom(matchId)
+	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
+	local utilityState = self:_trimExpiredUtilityState(matchId, now)
+	local userId = resolveUserId(player)
+
+	local effect = {
+		activatedAt = now,
+		expiresAt = now + config.durationSeconds,
+		player = player,
+		roomId = roomId,
+		userId = userId,
+	}
+
+	table.insert(utilityState.smudgeEffects, effect)
+	self:_saveUtilityState(matchId, utilityState)
+
+	local resultingSanity = nil
+	if self._sanityService and type(self._sanityService.RestoreSanity) == "function" then
+		resultingSanity = self._sanityService:RestoreSanity(player, config.sanityRestore, matchId, "smudge_stick")
+	end
+
+	local shouldRepelHunt = requestPayload.nearGhostRoom == true
+		or isWithinDistance(requestPayload.distanceToGhost, config.repelDistance)
+		or (roomId ~= nil and roomsMatch(roomId, ghostRoomId))
+	local huntRepelled = false
+	if ghostState.huntActive == true and shouldRepelHunt and self._ghostService and type(self._ghostService.EndHunt) == "function" then
+		local ok, ended = pcall(function()
+			return self._ghostService:EndHunt(matchId, now)
+		end)
+		huntRepelled = ok and ended ~= false
+	end
+
+	self:_publish("SmudgeActivated", {
+		huntRepelled = huntRepelled,
+		matchId = matchId,
+		now = now,
+		player = player,
+		repellentUntil = effect.expiresAt,
+		roomId = roomId or ghostRoomId,
+		sanityRestored = config.sanityRestore,
+		toolType = "Dupa",
+		userId = userId,
+	})
+
+	if huntRepelled then
+		self:_publish("GhostRepelled", {
+			matchId = matchId,
+			now = now,
+			roomId = roomId or ghostRoomId,
+			toolType = "Dupa",
+			userId = userId,
+		})
+	end
+
+	return true, "smudge_activated", {
+		ghostRoomId = ghostRoomId,
+		huntRepelled = huntRepelled,
+		repellentUntil = effect.expiresAt,
+		resultingSanity = resultingSanity,
+		roomId = roomId or ghostRoomId,
+		sanityRestored = config.sanityRestore,
+		toolType = "Dupa",
+	}
+end
+
+function EvidenceService:_processUtilityToolUse(player, matchId, toolType, requestPayload)
+	if toolType == "Garam" then
+		return self:_handleSaltUse(player, matchId, requestPayload)
+	end
+	if toolType == "Salib" then
+		return self:_handleCrucifixUse(player, matchId, requestPayload)
+	end
+	if toolType == "Dupa" then
+		return self:_handleSmudgeUse(player, matchId, requestPayload)
+	end
+	return false, "invalid_tool_type", nil
+end
+
+function EvidenceService:TryConsumeHuntProtection(matchId, payload)
+	if not matchId then
+		return false, "missing_match_id", nil
+	end
+
+	local now = payload and payload.now or os.clock()
+	local ghostRoomId = payload and payload.roomId
+	if type(ghostRoomId) ~= "string" or ghostRoomId == "" then
+		ghostRoomId = self:_resolveGhostRoom(matchId)
+	end
+
+	local utilityState = self:_trimExpiredUtilityState(matchId, now)
+
+	for _, effect in ipairs(utilityState.smudgeEffects or {}) do
+		if effect.roomId == nil or roomsMatch(effect.roomId, ghostRoomId) then
+			local result = {
+				repellentUntil = effect.expiresAt,
+				roomId = effect.roomId or ghostRoomId,
+				toolType = "Dupa",
+			}
+			self:_publish("HuntBlocked", {
+				matchId = matchId,
+				now = now,
+				reason = "smudge_repellent_active",
+				roomId = result.roomId,
+				toolType = "Dupa",
+			})
+			return true, "smudge_repellent_active", result
+		end
+	end
+
+	for index, placement in ipairs(utilityState.crucifixPlacements or {}) do
+		if placement.roomId == nil or roomsMatch(placement.roomId, ghostRoomId) then
+			placement.chargesRemaining = math.max(0, (placement.chargesRemaining or 0) - 1)
+			local remaining = placement.chargesRemaining
+			if remaining <= 0 then
+				table.remove(utilityState.crucifixPlacements, index)
+			end
+			self:_saveUtilityState(matchId, utilityState)
+
+			local result = {
+				chargesRemaining = remaining,
+				roomId = placement.roomId or ghostRoomId,
+				toolType = "Salib",
+			}
+			self:_publish("CrucifixTriggered", {
+				chargesRemaining = remaining,
+				matchId = matchId,
+				now = now,
+				roomId = result.roomId,
+				toolType = "Salib",
+				userId = placement.userId,
+			})
+			self:_publish("HuntBlocked", {
+				chargesRemaining = remaining,
+				matchId = matchId,
+				now = now,
+				reason = "crucifix_prevented_hunt",
+				roomId = result.roomId,
+				toolType = "Salib",
+			})
+			return true, "crucifix_prevented_hunt", result
+		end
+	end
+
+	self:_saveUtilityState(matchId, utilityState)
+	return false, "no_hunt_protection", nil
+end
+
+function EvidenceService:NotifyGhostPresence(matchId, payload)
+	if not matchId then
+		return nil
+	end
+
+	local now = payload and payload.now or os.clock()
+	local utilityState = self:_trimExpiredUtilityState(matchId, now)
+	local roomId = payload and (payload.roomId or payload.room)
+	if type(roomId) ~= "string" or roomId == "" then
+		roomId = self:_resolveGhostRoom(matchId)
+	end
+	if type(roomId) ~= "string" or roomId == "" then
+		return nil
+	end
+
+	for index, placement in ipairs(utilityState.saltPlacements or {}) do
+		if placement.roomId == nil or roomsMatch(placement.roomId, roomId) then
+			table.remove(utilityState.saltPlacements, index)
+			self:_saveUtilityState(matchId, utilityState)
+			self:_publish("SaltTriggered", {
+				matchId = matchId,
+				now = now,
+				roomId = roomId,
+				source = payload and payload.source or "ghost_presence",
+				toolType = "Garam",
+				userId = placement.userId,
+			})
+			return {
+				roomId = roomId,
+				toolType = "Garam",
+				userId = placement.userId,
+			}
+		end
+	end
+
+	self:_saveUtilityState(matchId, utilityState)
+	return nil
+end
+
 function EvidenceService:StartMatch(matchId, payload)
 	local seed = tonumber(payload and payload.ghostSeed)
 	if type(seed) == "number" then
@@ -581,6 +1045,11 @@ function EvidenceService:StartMatch(matchId, payload)
 	local matches = self._state:Get("evidenceMatches") or {}
 	matches[matchId] = session
 	self._state:Set("evidenceMatches", matches)
+	self:_saveUtilityState(matchId, {
+		crucifixPlacements = {},
+		saltPlacements = {},
+		smudgeEffects = {},
+	})
 	local candidates = self:_computeDeductionCandidates(matchId)
 	session.possibleGhosts = candidates
 	self:_publish("DeductionUpdated", { matchId = matchId, candidates = candidates })
@@ -594,6 +1063,7 @@ function EvidenceService:EndMatch(matchId)
 	local matches = self._state:Get("evidenceMatches") or {}
 	matches[matchId] = nil
 	self._state:Set("evidenceMatches", matches)
+	self:_clearUtilityState(matchId)
 end
 
 function EvidenceService:SetGhostProfile(matchId, payload)
@@ -658,6 +1128,11 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 	end
 
 	local toolType = payload.toolType
+	local requestPayload = payload.payload or {}
+	if UTILITY_TOOL_TYPES[toolType] == true then
+		return self:_processUtilityToolUse(player, matchId, toolType, requestPayload)
+	end
+
 	local evidenceType = TOOL_TO_EVIDENCE[toolType]
 	if not evidenceType then
 		return false, "invalid_tool_type", nil
@@ -671,7 +1146,6 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 	end
 	clarity = math.clamp(clarity or 1, 0, 1)
 
-	local requestPayload = payload.payload or {}
 	local baseChance = tonumber(requestPayload.baseChance) or tonumber(requestPayload.detectionChance) or 1
 	local detectionChance = baseChance * clarity
 	local roll = math.random()

@@ -10,6 +10,7 @@ local REMOTE_BEAM_NAME = "FlashlightRemoteBeam"
 local REMOTE_BEAM_START = "FlashlightRemoteBeamStart"
 local REMOTE_BEAM_END = "FlashlightRemoteBeamEnd"
 local REMOTE_AIM_ATTACHMENT = "FlashlightRemoteAim"
+local REMOTE_HANDLE_NAME = "FlashlightHandle"
 
 local FLASHLIGHT_RANGE = 50
 local FLASHLIGHT_ANGLE = 30
@@ -59,6 +60,36 @@ local function getHead(character)
     return head
 end
 
+local function getRightHand(character)
+    if not character then
+        return nil
+    end
+
+    for _, partName in ipairs({ "RightHand", "Right Arm", "RightLowerArm" }) do
+        local part = character:FindFirstChild(partName)
+        if part and part:IsA("BasePart") then
+            return part
+        end
+    end
+
+    return nil
+end
+
+local function getFlashlightMountPosition(part)
+    if not part then
+        return Vector3.new(0, -0.1, -0.35)
+    end
+
+    for _, attachmentName in ipairs({ "RightGripAttachment", "GripAttachment", "ToolGrip" }) do
+        local attachment = part:FindFirstChild(attachmentName)
+        if attachment and attachment:IsA("Attachment") then
+            return attachment.Position
+        end
+    end
+
+    return Vector3.new(0, -0.15, -(part.Size.Z * 0.5 + 0.2))
+end
+
 local function findOrCreateAttachment(parent, name)
     local existing = parent:FindFirstChild(name)
     if existing and existing:IsA("Attachment") then
@@ -71,6 +102,34 @@ local function findOrCreateAttachment(parent, name)
     attachment.Name = name
     attachment.Parent = parent
     return attachment
+end
+
+local function findOrCreateHandle(character)
+    if not character then
+        return nil
+    end
+
+    local existing = character:FindFirstChild(REMOTE_HANDLE_NAME)
+    if existing and existing:IsA("BasePart") then
+        return existing
+    end
+    if existing then
+        existing:Destroy()
+    end
+
+    local handle = Instance.new("Part")
+    handle.Name = REMOTE_HANDLE_NAME
+    handle.Size = Vector3.new(0.24, 0.24, 0.8)
+    handle.CanCollide = false
+    handle.CanTouch = false
+    handle.CanQuery = false
+    handle.CastShadow = false
+    handle.Massless = true
+    handle.Anchored = true
+    handle.Material = Enum.Material.Metal
+    handle.Color = Color3.fromRGB(48, 56, 68)
+    handle.Parent = character
+    return handle
 end
 
 local function findOrCreateSpotLight(parent)
@@ -144,8 +203,8 @@ local function findOrCreateFillLight(parent)
     return light
 end
 
-local function findOrCreateBeam(head, attachment0, attachment1)
-    local existing = head:FindFirstChild(REMOTE_BEAM_NAME)
+local function findOrCreateBeam(parent, attachment0, attachment1)
+    local existing = parent:FindFirstChild(REMOTE_BEAM_NAME)
     if existing and existing:IsA("Beam") then
         existing.Attachment0 = attachment0
         existing.Attachment1 = attachment1
@@ -166,7 +225,7 @@ local function findOrCreateBeam(head, attachment0, attachment1)
     beam.Color = ColorSequence.new(Color3.fromRGB(255, 250, 230))
     beam.FaceCamera = true
     beam.Enabled = false
-    beam.Parent = head
+    beam.Parent = parent
     return beam
 end
 
@@ -267,19 +326,31 @@ function Service:AttachFlashlight(player, character)
     end
 
     local head = getHead(character)
-    if not head then
+    local mountPart = getRightHand(character) or head
+    if not mountPart then
+        return
+    end
+    local flashlightHandle = findOrCreateHandle(character)
+    if not flashlightHandle then
         return
     end
 
-    local aimAttachment, beamStart, beamEnd = ensureAttachments(head)
+    local aimAttachment, beamStart, beamEnd = ensureAttachments(flashlightHandle)
     local spotlight = findOrCreateSpotLight(aimAttachment)
     local boost = findOrCreateBoostLight(aimAttachment)
     local fill = findOrCreateFillLight(aimAttachment)
-    local beam = findOrCreateBeam(head, beamStart, beamEnd)
+    local beam = findOrCreateBeam(flashlightHandle, beamStart, beamEnd)
+    local mountPosition = getFlashlightMountPosition(mountPart)
+    local worldPosition = mountPart.CFrame:PointToWorldSpace(mountPosition)
+    flashlightHandle.CFrame = CFrame.lookAt(worldPosition, worldPosition + mountPart.CFrame.LookVector)
 
     local data = self:_getPlayerState(userId) or {}
     data.player = player
+    data.character = character
     data.head = head
+    data.mountPart = mountPart
+    data.mountPosition = mountPosition
+    data.flashlightHandle = flashlightHandle
     data.aimAttachment = aimAttachment
     data.beamStart = beamStart
     data.beamEnd = beamEnd
@@ -302,16 +373,14 @@ function Service:_applyLookVector(lookVector, data)
         return
     end
 
-    local head = data.head
+    local mountPart = data.mountPart or data.head
+    local flashlightHandle = data.flashlightHandle
     local aimAttachment = data.aimAttachment
     local beamStart = data.beamStart
     local beamEnd = data.beamEnd
+    local mountPosition = data.mountPosition or Vector3.new()
 
-    if not (head and aimAttachment and beamStart and beamEnd) then
-        return
-    end
-
-    if not head then
+    if not (mountPart and flashlightHandle and aimAttachment and beamStart and beamEnd) then
         return
     end
 
@@ -320,17 +389,11 @@ function Service:_applyLookVector(lookVector, data)
         return
     end
 
-    local localDirection = head.CFrame:VectorToObjectSpace(unit)
-    if localDirection.Magnitude <= 0 then
-        return
-    end
-
-    local yaw = math.atan2(-localDirection.X, -localDirection.Z)
-    local pitch = math.atan2(localDirection.Y, math.sqrt(localDirection.X * localDirection.X + localDirection.Z * localDirection.Z))
-    local rotation = CFrame.Angles(pitch, yaw, 0)
-    aimAttachment.CFrame = rotation
-    beamStart.CFrame = rotation
-    beamEnd.CFrame = rotation * CFrame.new(0, 0, -FLASHLIGHT_RANGE)
+    local worldPosition = mountPart.CFrame:PointToWorldSpace(mountPosition)
+    flashlightHandle.CFrame = CFrame.lookAt(worldPosition, worldPosition + unit)
+    aimAttachment.CFrame = CFrame.new()
+    beamStart.CFrame = CFrame.new()
+    beamEnd.CFrame = CFrame.new(0, 0, -FLASHLIGHT_RANGE)
 end
 
 function Service:_setEnabled(data, enabled)

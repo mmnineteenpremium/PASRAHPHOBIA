@@ -5,12 +5,14 @@ local DEFAULT_CONFIG = {
 	ModeDefinitions = {
 		Classic = {
 			Name = "Classic",
-			AllowDifficultySelection = true,
+			AllowDifficultySelection = false,
+			PublicDifficultyLabel = "AUTO",
 			QueueType = "classic",
 		},
 		Ranked = {
 			Name = "Ranked",
 			AllowDifficultySelection = false,
+			PublicDifficultyLabel = "AUTO",
 			QueueType = "ranked",
 		},
 	},
@@ -49,28 +51,28 @@ local DEFAULT_CONFIG = {
 			HuntFrequency = 1.5,
 			EvidenceClarity = 0.65,
 			SanityDrain = 1.4,
-			DifficultyMode = "Hard",
+			DifficultyMode = "Nightmare",
 		},
 	},
 	RankedDifficultyBands = {
 		{
-			MinMMR = 0,
-			MaxMMR = 799,
+			MinRankScore = 0,
+			MaxRankScore = 799,
 			Difficulty = "Mudah",
 		},
 		{
-			MinMMR = 800,
-			MaxMMR = 1399,
+			MinRankScore = 800,
+			MaxRankScore = 1399,
 			Difficulty = "Lumayan",
 		},
 		{
-			MinMMR = 1400,
-			MaxMMR = 2099,
+			MinRankScore = 1400,
+			MaxRankScore = 2099,
 			Difficulty = "Angker",
 		},
 		{
-			MinMMR = 2100,
-			MaxMMR = 999999,
+			MinRankScore = 2100,
+			MaxRankScore = 999999,
 			Difficulty = "Uji Nyali",
 		},
 	},
@@ -81,6 +83,7 @@ local DEFAULT_CONFIG = {
 		lumayan = "Lumayan",
 		angker = "Angker",
 		ujinyali = "Uji Nyali",
+		auto = "Mudah",
 		easy = "Mudah",
 		normal = "Lumayan",
 		hard = "Angker",
@@ -136,6 +139,9 @@ function ModeSelectionConfig.Load()
 	local sharedModule = resolveSharedModule("ModeDifficultyConfig")
 	local loaded = safeRequire(sharedModule)
 	if type(loaded) == "table" then
+		if type(loaded.CloneConfig) == "function" then
+			return loaded.CloneConfig()
+		end
 		local merged = deepCopy(DEFAULT_CONFIG)
 		for key, value in pairs(loaded) do
 			merged[key] = value
@@ -146,6 +152,9 @@ function ModeSelectionConfig.Load()
 end
 
 function ModeSelectionConfig.NormalizeMode(config, modeName)
+	if type(config) == "table" and type(config.NormalizeMode) == "function" then
+		return config.NormalizeMode(modeName)
+	end
 	local modeDefinitions = config and config.ModeDefinitions or {}
 	if type(modeName) == "string" and modeDefinitions[modeName] then
 		return modeName
@@ -159,6 +168,9 @@ function ModeSelectionConfig.NormalizeMode(config, modeName)
 end
 
 function ModeSelectionConfig.NormalizeDifficulty(config, difficultyName)
+	if type(config) == "table" and type(config.NormalizeDifficulty) == "function" then
+		return config.NormalizeDifficulty(difficultyName)
+	end
 	local difficulties = config and config.ClassicDifficulties or {}
 	if type(difficultyName) == "string" and difficulties[difficultyName] then
 		return difficultyName
@@ -172,17 +184,20 @@ function ModeSelectionConfig.NormalizeDifficulty(config, difficultyName)
 end
 
 function ModeSelectionConfig.ResolveRankedDifficulty(config, payload)
+	if type(config) == "table" and type(config.ResolveRankedDifficulty) == "function" then
+		return config.ResolveRankedDifficulty(payload)
+	end
 	local manual = payload and (payload.balancedDifficulty or payload.rankedDifficulty)
 	if type(manual) == "string" then
 		return ModeSelectionConfig.NormalizeDifficulty(config, manual)
 	end
 
-	local averageMMR = tonumber(payload and (payload.averageMMR or payload.mmr or payload.rating or payload.rankedMMR))
-	if averageMMR then
+	local averageRankScore = tonumber(payload and (payload.averageRankScore or payload.rankScore or payload.rating or payload.rankedScore))
+	if averageRankScore then
 		for _, band in ipairs(config and config.RankedDifficultyBands or {}) do
-			local minMMR = tonumber(band.MinMMR) or 0
-			local maxMMR = tonumber(band.MaxMMR) or minMMR
-			if averageMMR >= minMMR and averageMMR <= maxMMR then
+			local minRankScore = tonumber(band.MinRankScore) or 0
+			local maxRankScore = tonumber(band.MaxRankScore) or minRankScore
+			if averageRankScore >= minRankScore and averageRankScore <= maxRankScore then
 				return ModeSelectionConfig.NormalizeDifficulty(config, band.Difficulty)
 			end
 		end
@@ -191,7 +206,63 @@ function ModeSelectionConfig.ResolveRankedDifficulty(config, payload)
 	return (config and config.DefaultRankedDifficulty) or "Lumayan"
 end
 
+function ModeSelectionConfig.ResolveClassicDifficulty(config, payload)
+	if type(config) == "table" and type(config.ResolveClassicDifficulty) == "function" then
+		return config.ResolveClassicDifficulty(payload)
+	end
+
+	if payload and payload.forceClassicDifficulty == true then
+		local requested = payload.classicDifficulty or payload.balancedDifficulty or payload.difficulty
+		if type(requested) == "string" and requested ~= "" then
+			return ModeSelectionConfig.NormalizeDifficulty(config, requested)
+		end
+	end
+
+	local partySize = tonumber(payload and (payload.partySize or payload.playerCount))
+	if partySize == nil and type(payload and payload.players) == "table" then
+		partySize = #payload.players
+	end
+	partySize = math.clamp(math.floor(tonumber(partySize) or 1), 1, 4)
+
+	local averagePlayerLevel = tonumber(payload and (payload.averagePlayerLevel or payload.avgPlayerLevel or payload.playerLevel)) or 1
+	averagePlayerLevel = math.max(1, averagePlayerLevel)
+	local partyWeights = config and config.ClassicPartySizeWeights or {}
+	local partyWeight = tonumber(partyWeights[partySize]) or 0
+	local score = (averagePlayerLevel / 18) + partyWeight
+
+	for _, band in ipairs(config and config.ClassicAutoBalanceBands or {}) do
+		local maxScore = tonumber(band.MaxScore) or 0
+		if score <= maxScore then
+			return ModeSelectionConfig.NormalizeDifficulty(config, band.Difficulty)
+		end
+	end
+
+	return (config and config.DefaultClassicDifficulty) or "Mudah"
+end
+
+function ModeSelectionConfig.AllowDifficultySelection(config, modeName)
+	local mode = ModeSelectionConfig.NormalizeMode(config, modeName)
+	local modeDefinition = config and config.ModeDefinitions and config.ModeDefinitions[mode] or nil
+	return modeDefinition and modeDefinition.AllowDifficultySelection == true or false
+end
+
+function ModeSelectionConfig.ResolveDisplayedDifficulty(config, modeName, difficultyName)
+	if type(config) == "table" and type(config.ResolveDisplayedDifficulty) == "function" then
+		return config.ResolveDisplayedDifficulty(modeName, difficultyName)
+	end
+
+	local mode = ModeSelectionConfig.NormalizeMode(config, modeName)
+	local modeDefinition = config and config.ModeDefinitions and config.ModeDefinitions[mode] or nil
+	if modeDefinition and modeDefinition.AllowDifficultySelection == false then
+		return modeDefinition.PublicDifficultyLabel or "AUTO"
+	end
+	return ModeSelectionConfig.NormalizeDifficulty(config, difficultyName)
+end
+
 function ModeSelectionConfig.GetModeList(config)
+	if type(config) == "table" and type(config.GetModeList) == "function" then
+		return config.GetModeList()
+	end
 	local modes = {}
 	for modeName in pairs(config and config.ModeDefinitions or {}) do
 		table.insert(modes, modeName)
@@ -201,6 +272,9 @@ function ModeSelectionConfig.GetModeList(config)
 end
 
 function ModeSelectionConfig.GetDifficultyList(config)
+	if type(config) == "table" and type(config.GetDifficultyList) == "function" then
+		return config.GetDifficultyList()
+	end
 	local difficulties = {}
 	for difficultyName in pairs(config and config.ClassicDifficulties or {}) do
 		table.insert(difficulties, difficultyName)
@@ -209,4 +283,21 @@ function ModeSelectionConfig.GetDifficultyList(config)
 	return difficulties
 end
 
+function ModeSelectionConfig.GetPublicDifficultyList(config, modeName)
+	if type(config) == "table" and type(config.GetPublicDifficultyList) == "function" then
+		return config.GetPublicDifficultyList(modeName)
+	end
+
+	if not ModeSelectionConfig.AllowDifficultySelection(config, modeName) then
+		local mode = ModeSelectionConfig.NormalizeMode(config, modeName)
+		local modeDefinition = config and config.ModeDefinitions and config.ModeDefinitions[mode] or nil
+		return {
+			modeDefinition and modeDefinition.PublicDifficultyLabel or "AUTO",
+		}
+	end
+
+	return ModeSelectionConfig.GetDifficultyList(config)
+end
+
 return ModeSelectionConfig
+

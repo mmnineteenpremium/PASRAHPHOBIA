@@ -67,6 +67,10 @@ function Service:GetMatch(matchId)
     return self._matchService:GetMatch(matchId)
 end
 
+function Service:GetLiveMatch(matchId)
+    return self._matchService:GetLiveMatch(matchId)
+end
+
 function Service:SetContractForParty(partyId, contractId)
     self._matchService:SetContractForParty(partyId, contractId)
 end

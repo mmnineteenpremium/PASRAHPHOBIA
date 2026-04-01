@@ -172,13 +172,6 @@ function Service:_computeCandidates(discoveredEvidence)
 end
 
 function Service:_publishCandidateUpdates(userId, player, matchId, discoveredEvidence, candidates)
-    self:_publish("GhostCandidatesUpdated", {
-        userId = userId,
-        player = player,
-        matchId = matchId or self._state:Get("activeMatchId"),
-        discoveredEvidence = copyList(discoveredEvidence),
-        candidates = copyList(candidates),
-    })
     self:_emitUIEvent("UIGhostPredictionUpdated", {
         userId = userId,
         player = player,

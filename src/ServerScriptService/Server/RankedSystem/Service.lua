@@ -3,6 +3,22 @@ Service.__index = Service
 
 local Services = require(script.Parent.Parent.Core.Services)
 
+local DIVISION_ROMAN = {
+    [1] = "I",
+    [2] = "II",
+    [3] = "III",
+    [4] = "IV",
+    [5] = "V",
+}
+
+local ROMAN_DIVISION = {
+    I = 1,
+    II = 2,
+    III = 3,
+    IV = 4,
+    V = 5,
+}
+
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
@@ -32,8 +48,7 @@ local function resolveProfileService(deps)
 end
 
 local function resolvePersistenceService(deps)
-    local persistence = Services.Get(deps, "DataPersistence")
-        or Services.Get(deps, "DataPersistenceService")
+    local persistence = Services.Get(deps, "DataPersistenceService")
     if type(persistence) ~= "table" then
         return nil
     end
@@ -56,13 +71,30 @@ local function toUserId(playerOrUserId)
     return nil
 end
 
+local function formatLegacyRankName(rank)
+    if type(rank) ~= "table" then
+        return nil
+    end
+
+    local tier = tostring(rank.tier or "Bayi")
+    if tier == "Sang Ahli" then
+        return tier
+    end
+    local division = math.floor(tonumber(rank.division) or 0)
+    if division <= 0 then
+        return tier
+    end
+
+    return string.format("%s %s", tier, DIVISION_ROMAN[division] or tostring(division))
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
-    self._profile = resolveProfileService(self._deps)
-    self._persistence = resolvePersistenceService(self._deps)
+    self._profile = nil
+    self._persistence = nil
     return self
 end
 
@@ -84,6 +116,20 @@ function Service:_publish(eventName, payload)
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
     end
+end
+
+function Service:_profileService()
+    if not self._profile then
+        self._profile = resolveProfileService(self._deps)
+    end
+    return self._profile
+end
+
+function Service:_persistenceService()
+    if not self._persistence then
+        self._persistence = resolvePersistenceService(self._deps)
+    end
+    return self._persistence
 end
 
 function Service:_rankTable()
@@ -114,6 +160,83 @@ function Service:_tierIndexByName(tierName)
     return 1
 end
 
+function Service:_parseRankName(rankName)
+    if type(rankName) ~= "string" then
+        return nil, nil, nil
+    end
+
+    local trimmed = rankName:match("^%s*(.-)%s*$")
+    if trimmed == nil or trimmed == "" then
+        return nil, nil, nil
+    end
+
+    local tier, victoryToken = trimmed:match("^(Sang Ahli)%s+[xX](%d+)$")
+    if tier and victoryToken then
+        return tier, 0, tonumber(victoryToken)
+    end
+
+    local tier, divisionToken = trimmed:match("^(.-)%s+([IVX]+)$")
+    if tier and ROMAN_DIVISION[divisionToken] then
+        return tier, ROMAN_DIVISION[divisionToken], nil
+    end
+
+    tier, divisionToken = trimmed:match("^(.-)%s+(%d+)$")
+    if tier and divisionToken then
+        return tier, tonumber(divisionToken), nil
+    end
+
+    return trimmed, 0, nil
+end
+
+function Service:_profileSnapshot(playerOrUserId)
+    local profileService = self:_profileService()
+    if type(profileService) ~= "table" then
+        return nil
+    end
+
+    local fn = profileService.GetPlayerProfile
+    if type(fn) ~= "function" then
+        return nil
+    end
+
+    local ok, profile = pcall(fn, profileService, playerOrUserId)
+    if not ok then
+        return nil
+    end
+    return profile
+end
+
+function Service:_bootstrapRank(playerOrUserId)
+    local profile = self:_profileSnapshot(playerOrUserId)
+    if type(profile) ~= "table" then
+        return nil
+    end
+
+    local rankData = type(profile.rank) == "table" and profile.rank or {}
+    local rankName = rankData.playerRank or profile.rankTier or (type(profile.profile) == "table" and profile.profile.rank) or nil
+    local parsedTier, parsedDivision, parsedVictories = self:_parseRankName(rankName)
+    local tier = tostring(rankData.tier or parsedTier or "")
+    if tier == "" then
+        return nil
+    end
+
+    local division = math.max(0, math.floor(tonumber(rankData.division) or parsedDivision or 0))
+    local stars = math.max(0, math.floor(tonumber(rankData.stars) or 0))
+    local victories = math.max(0, math.floor(tonumber(rankData.victories) or parsedVictories or 0))
+    local playerRank = tostring(rankName or formatLegacyRankName({
+        tier = tier,
+        division = division,
+    }))
+
+    return {
+        playerRank = playerRank,
+        tier = tier,
+        division = division,
+        stars = stars,
+        victories = victories,
+    }
+end
+
 function Service:_ensureRank(playerOrUserId)
     local userId = toUserId(playerOrUserId)
     if not userId then
@@ -122,13 +245,16 @@ function Service:_ensureRank(playerOrUserId)
 
     local rankByUserId = self:_ranks()
     if not rankByUserId[userId] then
-        local first = self:_rankTable()[1] or { tier = "Bayi", divisions = 3 }
-        rankByUserId[userId] = {
-            tier = first.tier,
-            division = math.max(first.divisions or 3, 1),
-            stars = 0,
-            victories = 0,
-        }
+        rankByUserId[userId] = self:_bootstrapRank(playerOrUserId)
+        if not rankByUserId[userId] then
+            local first = self:_rankTable()[1] or { tier = "Bayi", divisions = 3 }
+            rankByUserId[userId] = {
+                tier = first.tier,
+                division = math.max(first.divisions or 3, 1),
+                stars = 0,
+                victories = 0,
+            }
+        end
         self:_setRanks(rankByUserId)
     end
     return rankByUserId[userId]
@@ -136,9 +262,12 @@ end
 
 function Service:_serialize(playerOrUserId, rank)
     local userId = toUserId(playerOrUserId)
+    local playerRank = formatLegacyRankName(rank)
     return {
         player = type(playerOrUserId) == "number" and nil or playerOrUserId,
         userId = userId,
+        rank = playerRank,
+        playerRank = playerRank,
         tier = rank.tier,
         division = rank.division,
         stars = rank.stars,
@@ -196,17 +325,7 @@ function Service:_demote(rank)
     end
 
     if tierIndex == #rankTable then
-        if rank.victories > 0 then
-            rank.victories -= 1
-            return
-        end
-        local previousTier = rankTable[tierIndex - 1]
-        if previousTier then
-            rank.tier = previousTier.tier
-            rank.division = 1
-            rank.stars = math.max((previousTier.starsPerDivision or 3) - 1, 0)
-            rank.victories = 0
-        end
+        -- Canonical spec keeps Sang Ahli on a non-decreasing victory counter.
         return
     end
 
@@ -231,19 +350,35 @@ function Service:_demote(rank)
 end
 
 function Service:_syncProfile(playerOrUserId, rank)
-    if not self._persistence then
-        return
-    end
     local userId = toUserId(playerOrUserId)
     if not userId then
         return
     end
-    self._persistence:SaveProfile(userId, {
-        playerRank = rank.tier,
-        division = rank.division,
-        stars = rank.stars,
-        victories = rank.victories,
-    })
+
+    local payload = {
+        rank = {
+            playerRank = formatLegacyRankName(rank),
+            tier = rank.tier,
+            division = rank.division,
+            stars = rank.stars,
+            victories = rank.victories,
+        },
+    }
+
+    local profileService = self:_profileService()
+    if type(profileService) == "table" and type(profileService.UpdateProfile) == "function" then
+        local ok, updated = pcall(profileService.UpdateProfile, profileService, playerOrUserId, payload)
+        if ok and updated == true then
+            return
+        end
+    end
+
+    local persistence = self:_persistenceService()
+    if not persistence then
+        return
+    end
+
+    persistence:SaveProfile(userId, payload)
 end
 
 function Service:GetPlayerRank(playerOrUserId)
@@ -251,9 +386,7 @@ function Service:GetPlayerRank(playerOrUserId)
     if not rank then
         return nil
     end
-    local payload = self:_serialize(playerOrUserId, rank)
-    payload.rank = payload.tier
-    return payload
+    return self:_serialize(playerOrUserId, rank)
 end
 
 function Service:AddStar(playerOrUserId)
@@ -343,7 +476,10 @@ function Service:CalculateRankDifficulty(playerOrUserId)
     if self:_isTopTier(rank.tier) then
         return tierIndex + rank.victories
     end
-    return tierIndex + math.max((3 - (rank.division or 1)), 0)
+    local tierEntry = self:_rankTable()[tierIndex] or {}
+    local maxDivision = math.max(tonumber(tierEntry.divisions) or 1, 1)
+    local division = math.clamp(tonumber(rank.division) or maxDivision, 1, maxDivision)
+    return tierIndex + math.max((maxDivision - division), 0)
 end
 
 function Service:_collectMatchOutcomes(payload)

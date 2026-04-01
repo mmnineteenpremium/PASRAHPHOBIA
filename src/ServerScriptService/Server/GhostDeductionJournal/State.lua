@@ -1,16 +1,35 @@
 local State = {}
 State.__index = State
 
+local function loadGhostEvidenceMap()
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if not ok or typeof(replicatedStorage) ~= "Instance" then
+        return {}
+    end
+
+    local shared = replicatedStorage:FindFirstChild("Shared") or replicatedStorage:FindFirstChild("shared")
+    local dataTypes = shared and shared:FindFirstChild("DataTypes")
+    local evidence = dataTypes and dataTypes:FindFirstChild("Evidence")
+    local mapFolder = evidence and evidence:FindFirstChild("EvidenceGhostMap")
+    local moduleScript = mapFolder and mapFolder:FindFirstChild("ModuleScript")
+    if not moduleScript or not moduleScript:IsA("ModuleScript") then
+        return {}
+    end
+
+    local loaded, map = pcall(require, moduleScript)
+    if not loaded or type(map) ~= "table" then
+        return {}
+    end
+    return map
+end
+
 local DEFAULT_STATE = {
     playerJournalData = {},
     ghostCandidatesByPlayer = {},
     activeMatchId = nil,
-    ghostEvidenceMap = {
-        Pocong = { "SpiritBox", "GhostOrb", "FreezingTemp" },
-        Kuntilanak = { "GhostOrb", "GhostWriting", "EMF" },
-        Tuyul = { "SpiritBox", "EMF", "Fingerprints" },
-        Genderuwo = { "GhostWriting", "FreezingTemp", "EMF" },
-    },
+    ghostEvidenceMap = loadGhostEvidenceMap(),
 }
 
 local function deepCopy(value)

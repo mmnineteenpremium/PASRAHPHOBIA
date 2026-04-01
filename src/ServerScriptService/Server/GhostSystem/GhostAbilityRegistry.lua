@@ -110,14 +110,14 @@ local GHOST_ABILITY_MAP = {
 	Kuntilanak = { "Teleport", "WhisperSound", "FakeEvidence" },
 	Tuyul = { "FastRoam", "ObjectThrow", "FakeFootsteps" },
 	Genderuwo = { "DoorLock", "LightDrain", "ObjectThrow" },
-	["Wewe Gombel"] = { "WhisperSound", "FakeFootsteps", "ShadowWalk" },
+	WeweGombel = { "WhisperSound", "FakeFootsteps", "ShadowWalk" },
 	Palasik = { "FastRoam", "Teleport", "LightDrain" },
 	Banaspati = { "FastRoam", "DoorLock", "ObjectThrow" },
-	["Sundel Bolong"] = { "WhisperSound", "FakeEvidence", "LightDrain" },
+	SundelBolong = { "WhisperSound", "FakeEvidence", "LightDrain" },
 	Leak = { "ShadowWalk", "Teleport", "FakeFootsteps" },
-	["Hantu Jeruk Purut"] = { "WhisperSound", "DoorLock", "ShadowWalk" },
-	["Hantu Cermin"] = { "FakeEvidence", "ShadowWalk", "WhisperSound" },
-	["Arwah Penunggu"] = { "DoorLock", "LightDrain", "ObjectThrow" },
+	Jerangkong = { "WhisperSound", "DoorLock", "ShadowWalk" },
+	SilumanUlar = { "FakeEvidence", "ShadowWalk", "WhisperSound" },
+	HantuTanah = { "DoorLock", "LightDrain", "ObjectThrow" },
 }
 
 local PERSONALITY_ABILITY_MAP = {

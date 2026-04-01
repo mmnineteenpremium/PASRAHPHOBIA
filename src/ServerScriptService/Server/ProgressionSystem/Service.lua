@@ -175,49 +175,43 @@ end
 
 function Service:_syncProfileProgress(player, xp, level)
     local profileSystem = self._dependencies.ProfileSystem
+    local userId = toUserId(player)
+    local profileUpdated = false
 
     if type(profileSystem) == "table" then
-        if type(profileSystem.SetPlayerProgression) == "function" then
-            safeCall(profileSystem, "SetPlayerProgression", player, xp, level)
-            return
-        end
-
-        if type(profileSystem.Service) == "table" and type(profileSystem.Service.SetPlayerProgression) == "function" then
-            safeCall(profileSystem.Service, "SetPlayerProgression", player, xp, level)
-            return
-        end
-
-        if type(profileSystem.SetPlayerXP) == "function" then
-            safeCall(profileSystem, "SetPlayerXP", player, xp)
-        elseif type(profileSystem.Service) == "table" and type(profileSystem.Service.SetPlayerXP) == "function" then
-            safeCall(profileSystem.Service, "SetPlayerXP", player, xp)
-        end
-
-        if type(profileSystem.SetPlayerLevel) == "function" then
-            safeCall(profileSystem, "SetPlayerLevel", player, level)
-        elseif type(profileSystem.Service) == "table" and type(profileSystem.Service.SetPlayerLevel) == "function" then
-            safeCall(profileSystem.Service, "SetPlayerLevel", player, level)
-        end
-
         if type(profileSystem.UpdateProfile) == "function" then
-            safeCall(profileSystem, "UpdateProfile", player, {
+            profileUpdated = safeCall(profileSystem, "UpdateProfile", player, {
                 playerXP = xp,
                 playerLevel = level,
                 progression = {
                     exp = xp,
                     level = level,
                 },
-            })
+            }) == true
         elseif type(profileSystem.Service) == "table" and type(profileSystem.Service.UpdateProfile) == "function" then
-            safeCall(profileSystem.Service, "UpdateProfile", player, {
+            profileUpdated = safeCall(profileSystem.Service, "UpdateProfile", player, {
                 playerXP = xp,
                 playerLevel = level,
                 progression = {
                     exp = xp,
                     level = level,
                 },
-            })
+            }) == true
         end
+    end
+
+    local persistence = self._dependencies.DataPersistenceService
+    if not profileUpdated and userId and type(persistence) == "table" and type(persistence.SaveProfile) == "function" then
+        pcall(persistence.SaveProfile, persistence, userId, {
+            profile = {
+                progression = {
+                    exp = xp,
+                    level = level,
+                },
+                playerXP = xp,
+                playerLevel = level,
+            },
+        })
     end
 end
 
@@ -255,16 +249,29 @@ function Service:InitSession(userId, savedData)
     local savedLevel = 1
     local persistence = self._dependencies.DataPersistenceService
     local data = savedData
-    if not data and type(persistence) == "table" and type(persistence.GetData) == "function" then
-        local ok, result = pcall(persistence.GetData, persistence, resolvedId)
+    if not data and type(persistence) == "table" and type(persistence.LoadProfile) == "function" then
+        local ok, result = pcall(persistence.LoadProfile, persistence, resolvedId)
         if ok then
             data = result
         end
     end
 
     if type(data) == "table" then
-        savedXp = tonumber(data.xp or data.playerXP or data.exp) or 0
-        savedLevel = tonumber(data.level or data.playerLevel) or 1
+        local profileData = data.profile or data
+        local progressionData = profileData.progression or {}
+        savedXp = tonumber(
+            data.xp
+            or data.playerXP
+            or data.exp
+            or profileData.playerXP
+            or progressionData.exp
+        ) or 0
+        savedLevel = tonumber(
+            data.level
+            or data.playerLevel
+            or profileData.playerLevel
+            or progressionData.level
+        ) or 1
     end
 
     self._sessions[resolvedId] = {
@@ -283,11 +290,41 @@ function Service:SaveSession(userId)
     if not session then
         return false
     end
+    local profileSystem = self._dependencies.ProfileSystem
+    local profileUpdated = false
+    if type(profileSystem) == "table" then
+        if type(profileSystem.UpdateProfile) == "function" then
+            profileUpdated = safeCall(profileSystem, "UpdateProfile", resolvedId, {
+                playerXP = session.xp or 0,
+                playerLevel = session.level or 1,
+                progression = {
+                    exp = session.xp or 0,
+                    level = session.level or 1,
+                },
+            }) == true
+        elseif type(profileSystem.Service) == "table" and type(profileSystem.Service.UpdateProfile) == "function" then
+            profileUpdated = safeCall(profileSystem.Service, "UpdateProfile", resolvedId, {
+                playerXP = session.xp or 0,
+                playerLevel = session.level or 1,
+                progression = {
+                    exp = session.xp or 0,
+                    level = session.level or 1,
+                },
+            }) == true
+        end
+    end
+
     local persistence = self._dependencies.DataPersistenceService
-    if type(persistence) == "table" and type(persistence.SaveData) == "function" then
-        pcall(persistence.SaveData, persistence, resolvedId, {
-            xp = session.xp or 0,
-            level = session.level or 1,
+    if not profileUpdated and type(persistence) == "table" and type(persistence.SaveProfile) == "function" then
+        pcall(persistence.SaveProfile, persistence, resolvedId, {
+            profile = {
+                progression = {
+                    exp = session.xp or 0,
+                    level = session.level or 1,
+                },
+                playerXP = session.xp or 0,
+                playerLevel = session.level or 1,
+            },
         })
     end
     self._sessions[resolvedId] = nil

@@ -1,9 +1,10 @@
 return {
-    ghostName = "Sundel Bolong",
+    ghostName = "SundelBolong",
+    displayName = "Sundel Bolong",
     evidenceTypes = {
-        "GhostOrb",
-        "WritingBook",
-        "DOTS",
+        "BukuTerkutuk",
+        "To'un",
+        "Suara",
     },
     behaviorTraits = {
         "SilentDrifter",

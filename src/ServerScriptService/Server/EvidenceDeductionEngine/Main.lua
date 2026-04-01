@@ -1,5 +1,4 @@
 local Service = require(script.Parent.Service)
-local Controller = require(script.Parent.Controller)
 local State = require(script.Parent.State)
 
 local EvidenceDeductionEngine = {}
@@ -50,7 +49,6 @@ function EvidenceDeductionEngine.new(deps)
 	self._created = false
 	self.State = State.new(self._deps.EvidenceDeductionState)
 	self.Service = Service.new(self.State, self._deps)
-	self.Controller = Controller.new(self.State, self.Service, self._deps)
 	return self
 end
 
@@ -69,9 +67,6 @@ function EvidenceDeductionEngine:Initialize()
 	if type(self.Service.Create) == "function" then
 		self.Service:Create()
 	end
-	if type(self.Controller.Create) == "function" then
-		self.Controller:Create()
-	end
 
 	local registry = getRegistry(self._deps)
 	if registry and not hasService(registry, "EvidenceDeductionEngine") then
@@ -82,29 +77,36 @@ end
 function EvidenceDeductionEngine:Init()
 	self:Initialize()
 	self.Service:Init()
-	self.Controller:Init()
 end
 
 function EvidenceDeductionEngine:Start()
-	if type(self.Controller.Start) == "function" then
-		self.Controller:Start()
-	else
-		self.Controller:RegisterEventHandlers()
-	end
 	self.Service:Start()
 end
 
 function EvidenceDeductionEngine:Stop()
-	if type(self.Controller.Stop) == "function" then
-		self.Controller:Stop()
-	else
-		self.Controller:UnregisterEventHandlers()
-	end
 	self.Service:Stop()
 end
 
 function EvidenceDeductionEngine:LoadGhostDatabase()
 	return self.Service:LoadGhostDatabase()
+end
+
+function EvidenceDeductionEngine:GetGhostEvidenceMap()
+	local ghostDatabase = nil
+	if self.State and type(self.State.Get) == "function" then
+		ghostDatabase = self.State:Get("ghostDatabase")
+	end
+	if type(ghostDatabase) ~= "table" then
+		return {}
+	end
+
+	local map = {}
+	for _, entry in ipairs(ghostDatabase) do
+		if type(entry) == "table" and type(entry.name) == "string" and type(entry.evidence) == "table" then
+			map[entry.name] = entry.evidence
+		end
+	end
+	return map
 end
 
 function EvidenceDeductionEngine:CalculateCandidates(evidenceList)

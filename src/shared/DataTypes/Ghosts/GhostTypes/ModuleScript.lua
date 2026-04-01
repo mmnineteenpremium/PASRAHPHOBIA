@@ -2,10 +2,16 @@ local GhostTypes = {
 
     Pocong = "Pocong",
     Kuntilanak = "Kuntilanak",
-    Tuyul = "Tuyul",
     Genderuwo = "Genderuwo",
+    Tuyul = "Tuyul",
     WeweGombel = "WeweGombel",
-    Palasik = "Palasik"
+    Palasik = "Palasik",
+    Banaspati = "Banaspati",
+    Jerangkong = "Jerangkong",
+    Leak = "Leak",
+    SilumanUlar = "SilumanUlar",
+    SundelBolong = "SundelBolong",
+    HantuTanah = "HantuTanah"
 
 }
 

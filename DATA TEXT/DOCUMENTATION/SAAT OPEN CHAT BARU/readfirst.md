@@ -1,0 +1,13 @@
+ Baca dulu berurutan:
+
+  1. /C:/Projects/ROBLOX/PASRAHPHOBIA/DATA%20TEXT/DOCUMENTATION/AGENTS.md
+  2. /C:/Projects/ROBLOX/PASRAHPHOBIA/DATA%20TEXT/DOCUMENTATION/SAAT%20OPEN%20CHAT%20BARU/PASRAHPHOBIA_AI_SUPER_CONTEXT_V2.md
+  3. /C:/Projects/ROBLOX/PASRAHPHOBIA/DATA%20TEXT/DOCUMENTATION/SAAT%20OPEN%20CHAT%20BARU/REPORTS.md
+  4. /C:/Projects/ROBLOX/PASRAHPHOBIA/DATA%20TEXT/DOCUMENTATION/SAAT%20OPEN%20CHAT%20BARU/CANONICAL_SPECIFICATIONS_v2.md
+  5. /C:/Projects/ROBLOX/PASRAHPHOBIA/default.project.json
+  6. /C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Bootstrap.server.lua
+  7. /C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/ServerBootstrap.lua
+  8. /C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/Core/SystemRegistry.lua
+
+
+  9. task in prompt.txt in this folder

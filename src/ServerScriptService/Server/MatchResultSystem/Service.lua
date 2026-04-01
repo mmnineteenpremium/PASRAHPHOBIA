@@ -3,6 +3,21 @@ local Services = require(script.Parent.Parent.Core.Services)
 local Service = {}
 Service.__index = Service
 
+local function resolveMatchRemote()
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if not ok then
+        return nil
+    end
+    local remoteFolder = replicatedStorage:FindFirstChild("RemoteEvents")
+    local remote = remoteFolder and remoteFolder:FindFirstChild("MatchEvent")
+    if remote and remote:IsA("RemoteEvent") then
+        return remote
+    end
+    return nil
+end
+
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
@@ -33,6 +48,7 @@ function Service.new(state, deps)
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
     self._dependencies = {}
+    self._matchRemote = nil
     return self
 end
 
@@ -60,6 +76,52 @@ function Service:_publish(eventName, payload)
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
     end
+end
+
+function Service:_fireMatchEventToPlayers(players, payload)
+    if type(payload) ~= "table" then
+        return
+    end
+
+    local remote = self._matchRemote
+    if not remote then
+        remote = resolveMatchRemote()
+        self._matchRemote = remote
+    end
+    if not remote then
+        return
+    end
+
+    local sentByUserId = {}
+    for _, player in ipairs(players or {}) do
+        if typeof(player) == "Instance" and player:IsA("Player") and not sentByUserId[player.UserId] then
+            sentByUserId[player.UserId] = true
+            remote:FireClient(player, payload)
+        end
+    end
+end
+
+function Service:_collectPlayers(payload, result)
+    local players = {}
+    local addedByUserId = {}
+
+    local function addPlayer(player)
+        if typeof(player) ~= "Instance" or not player:IsA("Player") or addedByUserId[player.UserId] then
+            return
+        end
+        addedByUserId[player.UserId] = true
+        table.insert(players, player)
+    end
+
+    for _, player in ipairs((payload and payload.players) or {}) do
+        addPlayer(player)
+    end
+
+    for _, entry in pairs((result and result.playerOutcome) or {}) do
+        addPlayer(entry and entry.player)
+    end
+
+    return players
 end
 
 function Service:_matchId(payload)
@@ -184,6 +246,22 @@ function Service:HandleEvent(eventName, payload)
 
         self._state:Set("lastResult", result)
         self:_publish("MatchCompleted", result)
+        self:_fireMatchEventToPlayers(self:_collectPlayers(payload, result), {
+            eventName = "MatchCompleted",
+            matchId = result.matchId,
+            ghostType = result.ghostType,
+            correctGuess = result.correctGuess,
+            ghostIdentified = result.ghostIdentified,
+            evidenceCollected = result.evidenceCollected,
+            playersSurvived = result.playersSurvived,
+            playersDead = result.playersDead,
+            playersExtracted = result.playersExtracted,
+            contractSuccess = result.contractSuccess,
+            teamSuccess = result.teamSuccess,
+            extractionCompleted = result.extractionCompleted,
+            matchDuration = result.matchDuration,
+            playerOutcome = result.playerOutcome,
+        })
         return
     end
 

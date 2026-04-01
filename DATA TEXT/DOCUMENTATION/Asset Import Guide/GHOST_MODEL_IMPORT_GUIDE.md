@@ -15,7 +15,7 @@
 - **Transparency:** 0.3 base (semi-transparent)
 - **Animation Needs:** Float idle, slow drift, manifestation
 
-### 2. Kuntilanak (Female Banshee)
+### 2. Kuntilanak (Female Wailing Spirit)
 - **Type:** Female spirit with long hair
 - **Visual:** White dress, long black hair covering face
 - **Height:** ~5-6 studs

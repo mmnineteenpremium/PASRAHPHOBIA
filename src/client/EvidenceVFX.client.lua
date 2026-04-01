@@ -83,9 +83,9 @@ function EvidenceVFX.RevealFingerprint(evidenceNode)
 end
 
 -- Ghost Orb (floating light particle)
-function EvidenceVFX.CreateGhostOrb(position)
+function EvidenceVFX.CreateTounVisual(position)
     local orb = Instance.new("Part")
-    orb.Name = "GhostOrb"
+    orb.Name = "TounVisual"
     orb.Size = Vector3.new(0.5, 0.5, 0.5)
     orb.Shape = Enum.PartType.Ball
     orb.Material = Enum.Material.Neon

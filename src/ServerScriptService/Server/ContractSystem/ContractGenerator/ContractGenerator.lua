@@ -32,7 +32,7 @@ function ContractGenerator:Generate(payload)
         contractType = contractType,
         mapId = payload and payload.mapId or "AbandonedPalace",
         ghostType = payload and payload.ghostType or "UnknownGhost",
-        difficulty = payload and payload.difficulty or "Normal",
+        difficulty = payload and payload.difficulty or "Lumayan",
         objectives = objectives,
         reward = {
             MM = self._rewardDefaults.MM,

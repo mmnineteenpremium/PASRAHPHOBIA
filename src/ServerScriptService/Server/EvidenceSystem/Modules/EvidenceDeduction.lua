@@ -2,36 +2,57 @@ local EvidenceDeduction = {}
 EvidenceDeduction.__index = EvidenceDeduction
 
 local DEFAULT_GHOST_EVIDENCE_MAP = {
-	Pocong = { "BukuTerkutuk", "SuhuMembeku", "JejakEnergi" },
-	Kuntilanak = { "KotakArwah", "BolaArwah", "GerakanGaib" },
-	Tuyul = { "JejakEnergi", "GerakanGaib", "KotakArwah" },
-	Genderuwo = { "BukuTerkutuk", "KotakArwah", "SuhuMembeku" },
-	["Wewe Gombel"] = { "BolaArwah", "GerakanGaib", "JejakEnergi" },
-	Palasik = { "SuhuMembeku", "JejakEnergi", "KotakArwah" },
-	Banaspati = { "BolaArwah", "JejakEnergi", "GerakanGaib" },
-	["Sundel Bolong"] = { "BukuTerkutuk", "BolaArwah", "KotakArwah" },
-	Leak = { "GerakanGaib", "JejakEnergi", "SuhuMembeku" },
-	["Hantu Jeruk Purut"] = { "KotakArwah", "BolaArwah", "JejakEnergi" },
-	["Hantu Cermin"] = { "BukuTerkutuk", "GerakanGaib", "SuhuMembeku" },
-	["Arwah Penunggu"] = { "SuhuMembeku", "KotakArwah", "BukuTerkutuk" },
+	Pocong = { "MEDOK", "Suhu", "BukuTerkutuk" },
+	Kuntilanak = { "Suara", "To'un", "Pengganggu" },
+	Tuyul = { "To'un", "Suara", "BukuTerkutuk" },
+	Genderuwo = { "MEDOK", "Pengganggu", "Suhu" },
+	Leak = { "Suara", "MEDOK", "Pengganggu" },
+	Banaspati = { "Suhu", "To'un", "MEDOK" },
+	Jerangkong = { "BukuTerkutuk", "Pengganggu", "To'un" },
+	WeweGombel = { "Suara", "Suhu", "BukuTerkutuk" },
+	Palasik = { "To'un", "Pengganggu", "Suara" },
+	SilumanUlar = { "MEDOK", "Suhu", "To'un" },
+	SundelBolong = { "BukuTerkutuk", "To'un", "Suara" },
+	HantuTanah = { "Suhu", "MEDOK", "Pengganggu" },
+}
+
+local EVIDENCE_ALIASES = {
+	medok = "MEDOK",
+	jejakenergi = "MEDOK",
+	suhu = "Suhu",
+	suhumembeku = "Suhu",
+	bukuterkutuk = "BukuTerkutuk",
+	toun = "To'un",
+	bolaarwah = "To'un",
+	suara = "Suara",
+	kotakarwah = "Suara",
+	pengganggu = "Pengganggu",
+	motionsensor = "Pengganggu",
+	gerakangaib = "Pengganggu",
 }
 
 local function normalizeEvidence(evidenceType)
 	if type(evidenceType) ~= "string" then
 		return nil
 	end
-	return evidenceType:gsub("%s+", "")
+	local token = evidenceType
+		:gsub("[%s_%-]+", "")
+		:gsub("[^%w]", "")
+		:lower()
+	return EVIDENCE_ALIASES[token] or evidenceType
 end
 
 local function copyEvidenceMap(source)
 	local map = {}
 	for ghostType, evidenceList in pairs(source) do
 		local normalizedList = {}
+		local seen = {}
 		for _, evidenceType in ipairs(evidenceList) do
 			local normalized = normalizeEvidence(evidenceType)
-            if normalized then
-                table.insert(normalizedList, normalized)
-            end
+			if normalized and not seen[normalized] then
+				seen[normalized] = true
+				table.insert(normalizedList, normalized)
+			end
 		end
 		map[ghostType] = normalizedList
 	end

@@ -1,0 +1,251 @@
+local Services = require(script.Parent.Parent.Core.Services)
+
+local DoorRuntime = {}
+
+local PROMPT_NAME = "DoorPrompt"
+local PATH_MODIFIER_NAME = "DoorPathModifier"
+local OPEN_ANGLE = math.rad(88)
+local INTERACTION_DISTANCE = 10
+local PROMPT_HOLD_DURATION = 0
+
+local function resolveEventBus(deps)
+	local eventBus = Services.Get(deps, "EventBus")
+	if type(eventBus) ~= "table" then
+		return nil
+	end
+	if type(eventBus.Subscribe) == "function" and type(eventBus.Unsubscribe) == "function" then
+		return eventBus
+	end
+	if type(eventBus.Service) == "table"
+		and type(eventBus.Service.Subscribe) == "function"
+		and type(eventBus.Service.Unsubscribe) == "function" then
+		return eventBus.Service
+	end
+	return nil
+end
+
+local function resolveMapInteractionSystem(deps)
+	local interactionSystem = Services.Get(deps, "MapInteractionSystem")
+	if type(interactionSystem) ~= "table" then
+		return nil
+	end
+	return interactionSystem
+end
+
+local function ensurePathfindingModifier(part)
+	local existing = part:FindFirstChild(PATH_MODIFIER_NAME)
+	if existing and existing:IsA("PathfindingModifier") then
+		existing.Label = "Doorway"
+		existing.PassThrough = true
+		return existing
+	end
+
+	for _, child in ipairs(part:GetChildren()) do
+		if child:IsA("PathfindingModifier") then
+			child.Name = PATH_MODIFIER_NAME
+			child.Label = "Doorway"
+			child.PassThrough = true
+			return child
+		end
+	end
+
+	local ok, modifier = pcall(Instance.new, "PathfindingModifier")
+	if not ok or not modifier then
+		return nil
+	end
+	modifier.Name = PATH_MODIFIER_NAME
+	modifier.Label = "Doorway"
+	modifier.PassThrough = true
+	modifier.Parent = part
+	return modifier
+end
+
+local function getDoorPlane(part)
+	if part.Size.X <= part.Size.Z then
+		return "thin_x"
+	end
+	return "thin_z"
+end
+
+local function buildOpenCFrame(part, closedCFrame)
+	local plane = getDoorPlane(part)
+	if plane == "thin_x" then
+		local hingeLocal = Vector3.new(0, 0, -(part.Size.Z * 0.5) + (part.Size.X * 0.5))
+		local hingeWorld = closedCFrame * CFrame.new(hingeLocal)
+		return hingeWorld * CFrame.Angles(0, OPEN_ANGLE, 0) * CFrame.new(-hingeLocal)
+	end
+
+	local hingeLocal = Vector3.new(-(part.Size.X * 0.5) + (part.Size.Z * 0.5), 0, 0)
+	local hingeWorld = closedCFrame * CFrame.new(hingeLocal)
+	return hingeWorld * CFrame.Angles(0, -OPEN_ANGLE, 0) * CFrame.new(-hingeLocal)
+end
+
+local function setPromptState(prompt, isOpen, isLocked)
+	if not prompt then
+		return
+	end
+	if isLocked then
+		prompt.ActionText = "[E] Pintu Terkunci"
+		prompt.Enabled = false
+		return
+	end
+	prompt.Enabled = true
+	prompt.ActionText = isOpen and "[E] Tutup Pintu" or "[E] Buka Pintu"
+end
+
+local function applyDoorState(doorRecord, interactionType)
+	local part = doorRecord.part
+	if not part or part.Parent == nil then
+		return
+	end
+
+	if interactionType == "Open" then
+		part.CFrame = doorRecord.openCFrame
+		part.CanCollide = false
+		part.CanTouch = false
+		part:SetAttribute("DoorIsOpen", true)
+	elseif interactionType == "Close" or interactionType == "Slam" then
+		part.CFrame = doorRecord.closedCFrame
+		part.CanCollide = true
+		part.CanTouch = true
+		part:SetAttribute("DoorIsOpen", false)
+	end
+
+	setPromptState(doorRecord.prompt, part:GetAttribute("DoorIsOpen") == true, part:GetAttribute("DoorLocked") == true)
+end
+
+local function ensurePrompt(part)
+	local prompt = part:FindFirstChild(PROMPT_NAME)
+	if prompt and prompt:IsA("ProximityPrompt") then
+		prompt.KeyboardKeyCode = Enum.KeyCode.E
+		prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+		prompt.ObjectText = "Pintu"
+		prompt.MaxActivationDistance = INTERACTION_DISTANCE
+		prompt.RequiresLineOfSight = false
+		prompt.HoldDuration = PROMPT_HOLD_DURATION
+		prompt.Style = Enum.ProximityPromptStyle.Classic
+		return prompt
+	else
+		prompt = Instance.new("ProximityPrompt")
+		prompt.Name = PROMPT_NAME
+	end
+
+	prompt.KeyboardKeyCode = Enum.KeyCode.E
+	prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+	prompt.ObjectText = "Pintu"
+	prompt.ActionText = "[E] Buka Pintu"
+	prompt.MaxActivationDistance = INTERACTION_DISTANCE
+	prompt.RequiresLineOfSight = false
+	prompt.HoldDuration = PROMPT_HOLD_DURATION
+	prompt.Style = Enum.ProximityPromptStyle.Classic
+	prompt.Parent = part
+	return prompt
+end
+
+local function isDoorPart(part)
+	if not part:IsA("BasePart") then
+		return false
+	end
+	if not part.Name:match("^Door_") then
+		return false
+	end
+	if part.Name:match("_Frame") then
+		return false
+	end
+	return true
+end
+
+local function registerDoorInteraction(mapInteractionSystem, doorId, position)
+	if not mapInteractionSystem or type(mapInteractionSystem.RegisterObject) ~= "function" then
+		return
+	end
+	mapInteractionSystem:RegisterObject({
+		id = doorId,
+		type = "Door",
+		position = position,
+		interactions = { "Open", "Close", "Slam" },
+	})
+end
+
+function DoorRuntime.Attach(match, mapClone, deps)
+	if not mapClone or not mapClone:IsA("Model") then
+		return false
+	end
+
+	local doorsFolder = mapClone:FindFirstChild("Doors", true)
+	local scanRoot = doorsFolder or mapClone
+
+	local eventBus = resolveEventBus(deps)
+	local mapInteractionSystem = resolveMapInteractionSystem(deps)
+	local doorLookup = {}
+
+	if match and match._doorRuntimeSubscription and eventBus then
+		eventBus:Unsubscribe("MapObjectInteracted", match._doorRuntimeSubscription)
+		match._doorRuntimeSubscription = nil
+	end
+
+	for _, descendant in ipairs(scanRoot:GetDescendants()) do
+		if isDoorPart(descendant) then
+			local prompt = ensurePrompt(descendant)
+			local closedCFrame = descendant.CFrame
+			local record = {
+				part = descendant,
+				prompt = prompt,
+				closedCFrame = closedCFrame,
+				openCFrame = buildOpenCFrame(descendant, closedCFrame),
+			}
+			doorLookup[descendant.Name] = record
+			descendant.Anchored = true
+			descendant.CanQuery = true
+			descendant:SetAttribute("DoorObjectId", descendant.Name)
+			descendant:SetAttribute("DoorLocked", false)
+			descendant:SetAttribute("DoorIsOpen", false)
+			registerDoorInteraction(mapInteractionSystem, descendant.Name, descendant.Position)
+			ensurePathfindingModifier(descendant)
+			setPromptState(prompt, false, false)
+
+			prompt.Triggered:Connect(function()
+				if descendant:GetAttribute("DoorLocked") == true then
+					return
+				end
+
+				local nextInteraction = descendant:GetAttribute("DoorIsOpen") == true and "Close" or "Open"
+				applyDoorState(record, nextInteraction)
+				if mapInteractionSystem and type(mapInteractionSystem.ExecuteInteraction) == "function" then
+					mapInteractionSystem:ExecuteInteraction(descendant.Name, nextInteraction)
+				end
+			end)
+		end
+	end
+
+	if eventBus then
+		local callback = function(payload)
+			if type(payload) ~= "table" then
+				return
+			end
+			local matchId = match and tostring(match.matchId or match.id or "")
+			local payloadMatchId = tostring(payload.matchId or "")
+			if matchId ~= "" and payloadMatchId ~= "" and payloadMatchId ~= matchId then
+				return
+			end
+
+			local doorRecord = doorLookup[payload.objectId]
+			if not doorRecord then
+				return
+			end
+
+			local interactionType = payload.interactionType
+			if interactionType == "Open" or interactionType == "Close" or interactionType == "Slam" then
+				applyDoorState(doorRecord, interactionType)
+			end
+		end
+		eventBus:Subscribe("MapObjectInteracted", callback)
+		if match then
+			match._doorRuntimeSubscription = callback
+		end
+	end
+
+	return next(doorLookup) ~= nil
+end
+
+return DoorRuntime

@@ -1,4 +1,4 @@
-# PASRAHPHOBIA — AI MASTER PROMPT
+# PASRAHPHOBIA ï¿½ AI MASTER PROMPT
 
 This document defines the master prompt for AI agents working on the PASRAHPHOBIA Roblox project.
 
@@ -39,7 +39,7 @@ State.lua
 
 REPOSITORY STRUCTURE
 
-src/server
+src/ServerScriptService/Server
 Core gameplay systems.
 
 src/shared/DataTypes
@@ -172,7 +172,7 @@ Typical remaining systems:
 
 ShopSystem  
 CosmeticSystem  
-RankSystem  
+RankedSystem  
 ProgressionSystem  
 ContractRewardSystem  
 
@@ -193,3 +193,4 @@ Return module tables.
 --------------------------------------------------
 
 END OF MASTER PROMPT
+

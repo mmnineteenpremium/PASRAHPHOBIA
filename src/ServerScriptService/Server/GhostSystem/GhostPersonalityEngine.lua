@@ -68,7 +68,7 @@ local DEFAULT_PERSONALITIES = {
 			increase_aggression = 0.8,
 		},
 		evidenceBias = {
-			KotakArwah = 1.2,
+			Suara = 1.2,
 			BukuTerkutuk = 1.1,
 		},
 	},
@@ -101,8 +101,8 @@ local DEFAULT_PERSONALITIES = {
 			increase_aggression = 1.6,
 		},
 		evidenceBias = {
-			JejakEnergi = 1.25,
-			GerakanGaib = 1.2,
+			MEDOK = 1.25,
+			Pengganggu = 1.2,
 		},
 	},
 	Manipulator = {
@@ -141,8 +141,8 @@ local DEFAULT_PERSONALITIES = {
 			fake_manifestation = 1.1,
 		},
 		evidenceBias = {
-			BolaArwah = 1.2,
-			KotakArwah = 1.2,
+			["To'un"] = 1.2,
+			Suara = 1.2,
 		},
 	},
 	Roamer = {
@@ -174,8 +174,8 @@ local DEFAULT_PERSONALITIES = {
 			increase_aggression = 0.9,
 		},
 		evidenceBias = {
-			GerakanGaib = 1.2,
-			BolaArwah = 1.1,
+			Pengganggu = 1.2,
+			["To'un"] = 1.1,
 		},
 	},
 	Territorial = {
@@ -207,7 +207,7 @@ local DEFAULT_PERSONALITIES = {
 			increase_aggression = 1.7,
 		},
 		evidenceBias = {
-			SuhuMembeku = 1.3,
+			Suhu = 1.3,
 			BukuTerkutuk = 1.1,
 		},
 	},
@@ -240,8 +240,8 @@ local DEFAULT_PERSONALITIES = {
 			increase_aggression = 0.9,
 		},
 		evidenceBias = {
-			BolaArwah = 1.3,
-			GerakanGaib = 1.1,
+			["To'un"] = 1.3,
+			Pengganggu = 1.1,
 		},
 	},
 }

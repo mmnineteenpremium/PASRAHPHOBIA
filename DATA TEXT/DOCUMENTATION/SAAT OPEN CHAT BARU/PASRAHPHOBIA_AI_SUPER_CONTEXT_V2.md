@@ -1,471 +1,251 @@
-PASRAHPHOBIA — AI SUPER CONTEXT V2
-VERSION: 2.0
+PASRAHPHOBIA - AI SUPER CONTEXT V2
+VERSION: 2.1 (Runtime-Aligned)
 PROJECT ROOT: C:\Projects\ROBLOX\PASRAHPHOBIA
 ENGINE: Roblox (Luau)
 ARCHITECTURE: Server Authoritative Modular Backend
 
 ================================================================
+RUNTIME SOURCE OF TRUTH
+================================================================
+
+Active boot chain:
+
+src/ServerScriptService/Bootstrap.server.lua
+-> src/ServerScriptService/Server/ServerBootstrap.lua
+-> src/ServerScriptService/Server/Core/SystemRegistry.lua
+
+Active server runtime root:
+
+src/ServerScriptService/Server
+
+Deprecated or orphan boot layers have been removed from landing base.
+
+================================================================
 PROJECT SUMMARY
 ================================================================
 
-PASRAHPHOBIA adalah game horror investigation multiplayer
-inspired by Phasmophobia.
+PASRAHPHOBIA adalah game horror investigation multiplayer.
 
-Players investigate haunted locations, collect evidence,
-identify ghost type, survive hunts, and extract.
+Core loop:
 
-Max Players Per Match: 4
+- masuk lobby
+- room browser create/join/ready
+- host start countdown
+- teleport ke map match
+- investigasi evidence
+- identifikasi ghost
+- hasil dan reward
+- kembali ke lobby
 
-Game supports:
+Max players per match: 4
+
+Supported modes:
+
 - Solo
 - Multiplayer team
 - Ranked matchmaking
 
 ================================================================
-CORE ARCHITECTURE
+SERVER ARCHITECTURE
 ================================================================
 
-Server Architecture Pattern:
-
-SystemRegistry
-    ├ CoreSystems
-    ├ GameSystems
-    ├ GameplaySystems
-    └ LiveServiceSystems
-
-All server systems must implement lifecycle:
+All runtime systems must follow lifecycle:
 
 Init()
 Start()
 Shutdown()
 
-Systems communicate using EventBus.
+Cross-system communication must use EventBus.
 
-NO system should directly manipulate another system's internal state.
-
-================================================================
-SYSTEM REGISTRY STRUCTURE
-================================================================
-
-CoreSystems
-    EventBus
-    DataPersistenceService
-    ProfileSystem
-    InventorySystem
-    GamePhaseSystem
-
-GameSystems
-    MatchSystem
-    GhostSystem
-    EvidenceSystem
-
-GameplaySystems
-    SpectatorSystem
-    LobbySystem
-
-LiveServiceSystems
-    EconomySystem
-    ShopSystem
-    CosmeticSystem
-    ProgressionSystem
-    RankSystem
-    ContractRewardSystem
+No system may directly mutate internal state of another system.
 
 ================================================================
-MATCH SYSTEM ARCHITECTURE
+REGISTRY BASELINE
 ================================================================
 
-MatchSystem modules:
+CoreSystems:
 
-MatchService
-MatchQueue
-MatchBuilder
-MatchLifecycle
-MatchTeleport
-MatchInstance
+- EventBus
+- DataPersistenceService
+- ProfileSystem
+- InventorySystem
+- GamePhaseSystem
 
-Pipeline:
+GameSystems:
 
-Dev.Match()
-↓
-MatchService.JoinQueue
-↓
-MatchQueue.JoinQueue
-↓
-MatchService.TryCreateMatchFromQueue
-↓
-MatchBuilder.BuildMatch
-↓
-MatchLifecycle.StartMatch
-↓
-MatchTeleport.TeleportPlayers
+- MatchSystem
+- GhostSystem
+- EvidenceSystem
 
-Match creation log expected:
+GameplaySystems:
 
-[MatchBuilder] Match created
-[MatchLifecycle] Starting match
-[MatchTeleport] Teleported players to map
+- SpectatorSystem
+- LobbySystem
 
-================================================================
-MATCH DATA STRUCTURE
-================================================================
+LiveServiceSystems:
 
-match = {
-    matchId
-    players
-    partyIds
-    mapId
-    mapReference
-    difficulty
-    difficultyProfile
-    mode
-    gameMode
-    ghostSeed
-    phase
-    state
-    createdAt
-}
+- EconomySystem
+- ShopSystem
+- CosmeticSystem
+- ProgressionSystem
+- RankedSystem
+- ContractRewardSystem
+- TelemetrySystem
 
-Players are tracked with:
+Explicitly preloaded non-*System dependencies include:
 
-playersByUserId
-
-playerState = {
-    alive
-    extracted
-    deathReason
-}
+- HorrorDirector
+- LobbySocialHub
+- EvidenceDeductionEngine
 
 ================================================================
-GAME MODES
+MATCH SYSTEM BASELINE
 ================================================================
 
-Classic Mode
-    Difficulty selectable
+Primary modules:
 
-Ranked Mode
-    Difficulty determined by MMR bands
+- MatchService
+- MatchQueue
+- MatchBuilder
+- MatchLifecycle
+- MatchTeleport
+- MatchInstance
 
-ModeDefinitions:
+Queue path:
 
-Classic
-Ranked
-
-================================================================
-DIFFICULTY SYSTEM
-================================================================
-
-Classic Difficulties:
-
-Mudah
-Lumayan
-Angker
-Uji Nyali
-
-Parameters:
-
-EvidenceCount
-GhostAggression
-HuntFrequency
-EvidenceClarity
-SanityDrain
-RewardMultiplier
-
-Ranked Difficulty Bands:
-
-0-799 → Mudah
-800-1399 → Lumayan
-1400-2099 → Angker
-2100+ → Uji Nyali
+RoomBrowser action
+-> LobbySystem.QueueFromRoomBrowser
+-> MatchService.JoinQueue
+-> MatchService.TryCreateMatchFromQueue
+-> MatchService.StartMatch
 
 ================================================================
-MAP DATABASE
+MODE, DIFFICULTY, RANK
 ================================================================
 
-Maps currently implemented:
+Mode definitions:
 
-LobbySocialHub
-AbandonedPalace
-HauntedHouse
-EmptyBuilding
-StudioMMNineteen
+- Classic
+- Ranked
 
-Map sizes:
+Classic:
 
-LobbySocialHub
-420 x 420
+- auto-balanced by server
+- no user-facing tier selection
 
-AbandonedPalace
-180 x 180
+Ranked:
 
-HauntedHouse
-140 x 140
-2 floors
+- uses RankedSystem as single owner
+- uses RankScore for banding logic
 
-StudioMMNineteen
-90 x 90
-2 floors
-
-EmptyBuilding
-100 x 100
-2 floors
+Legacy RankSystem is not the runtime owner.
 
 ================================================================
-MATCH GAMEPLAY LOOP
+GHOST CANONICAL SET (INDONESIA, 12)
 ================================================================
 
-MatchStart
-↓
-Preparation Phase
-↓
-Ghost Spawn
-↓
-Evidence Spawn
-↓
-Investigation Phase
-↓
-Hunt Phase
-↓
-Extraction Phase
-↓
-Match End
-↓
-Rewards
+- Banaspati
+- Genderuwo
+- HantuTanah
+- Jerangkong
+- Kuntilanak
+- Leak
+- Palasik
+- Pocong
+- SilumanUlar
+- SundelBolong
+- Tuyul
+- WeweGombel
+
+All ghost data consumers should read from the same canonical set.
 
 ================================================================
-GHOST SYSTEM DESIGN
+EVIDENCE CANONICAL VOCABULARY
 ================================================================
 
-Ghost behavior parameters:
+Canonical evidence IDs:
 
-GhostAggression
-HuntFrequency
-RoamingRange
-EventFrequency
-TargetSwitchProbability
+- MEDOK
+- Suhu
+- BukuTerkutuk
+- To'un
+- Suara
+- Pengganggu
 
-Ghost hunts triggered by:
-
-Low sanity
-High aggression
-Scripted ghost events
-
-Ghost AI states:
-
-Idle
-Roaming
-Manifestation
-Hunting
-Cooldown
+Active tool naming in client remains Indonesian tool labels (for UI/tool modules).
+Internal deduction and ghost-evidence combinations must use canonical IDs above.
 
 ================================================================
-EVIDENCE SYSTEM
+ECONOMY AND PROGRESSION
 ================================================================
 
-Evidence Types:
+Wallet model:
 
-EMF Level 5
-Spirit Box
-Ghost Writing
-Freezing Temperatures
-Fingerprints
-Ghost Orb
+- MM
+- PP
+- Robux
 
-Evidence spawn logic:
-
-Map evidence nodes
-Randomized ghost evidence pool
-Evidence clarity affected by difficulty
+XP is retained for progression/level pipeline and is not removed as progression signal.
 
 ================================================================
-PLAYER DEATH SYSTEM
+PERSISTENCE CONTRACT
 ================================================================
 
-Death triggers:
+Persistence owner:
 
-Ghost hunt catch
-Special ghost ability
-Scripted event
+- DataPersistenceService
 
-Death consequences:
+Profile persistence path:
 
-Player becomes Spectator
-Ghost evidence distortion applied
-Player cannot interact with environment
+- LoadProfile
+- SaveProfile
 
-================================================================
-SPECTATOR SYSTEM
-================================================================
-
-Spectator receives distorted evidence.
-
-Ghost visibility probability:
-
-Fake ghost → 60%
-Uncertain → 30%
-Real ghost → 10%
-
-SpectatorDistortionSystem handles:
-
-Evidence hallucinations
-Fake EMF readings
-False ghost sightings
+Progression and ranked updates must converge on profile patch flow.
 
 ================================================================
-ECONOMY LOOP
+MAP BASELINE
 ================================================================
 
-Rewards based on:
+Current map IDs in runtime config:
 
-EvidenceFound
-GhostIdentified
-PlayerSurvival
-ContractCompletion
-DifficultyMultiplier
-
-Currencies:
-
-Cash
-XP
-MMR
-
-================================================================
-DATA PERSISTENCE
-================================================================
-
-All player data saved via DataPersistenceService.
-
-Save triggers:
-
-Autosave
-PlayerLeave
-ServerShutdown
-
-Saved Data:
-
-Inventory
-Cosmetics
-Rank
-Progression
-Currency
-
-================================================================
-SECURITY RULES
-================================================================
-
-All gameplay logic server authoritative.
-
-Client cannot:
-
-Spawn evidence
-Spawn ghost
-Create match
-Modify difficulty
-
-RemoteEvents must validate:
-
-Player
-Payload structure
-Allowed actions
-
-================================================================
-CODING RULES
-================================================================
-
-Use task.wait() instead of wait()
-
-Disconnect events when objects destroyed
-
-Always validate remote input
-
-Prefer immutable payloads
-
-Use Luau types for new modules
-
-Never break existing architecture
-
-Extend systems instead of replacing them
+- LobbySocialHub
+- AbandonedPalace
+- HauntedHouse
+- EmptyBuilding
+- StudioMMNineteen
 
 ================================================================
 AI EXECUTION PROTOCOL
 ================================================================
 
-When generating code:
+Before editing:
 
-1 Read PASRAHPHOBIA_AI_SUPER_CONTEXT_V2
-2 Read DOC_INDEX
-3 Read relevant module
-4 Continue from existing architecture
+1. Read this file.
+2. Read REPORTS.md.
+3. Read target modules only.
+4. Patch runtime-active path first.
 
-AI MUST NOT:
+AI must not:
 
-Rebuild systems
-Rewrite architecture
-Duplicate modules
-
-================================================================
-TOKEN OPTIMIZATION RULE
-================================================================
-
-Codex must avoid scanning entire repository.
-
-Allowed inputs:
-
-AI_SUPER_CONTEXT
-DOC_INDEX
-Relevant module file
-
-Disallowed:
-
-Full repository scan
-Recursive folder analysis
-Repeated architecture reconstruction
+- reintroduce legacy server tree
+- reintroduce RankSystem ownership
+- mix canonical evidence IDs with legacy English evidence IDs in deduction flow
+- fork ghost roster from canonical 12
 
 ================================================================
-CURRENT PROJECT STATUS
+CURRENT STATUS SNAPSHOT (2026-03-31)
 ================================================================
 
-Completed:
+Landing base cleanup executed:
 
-Server bootstrap
-SystemRegistry
-MatchQueue
-MatchBuilder
-MatchLifecycle
-MatchTeleport
-Map loading
+- removed archived documentation noise from do not read folder
+- removed orphan landing runtime files and deprecated bootstrap layer
 
-In Development:
+Landing runtime now centered on active boot chain and active server root path.
 
-GhostSystem
-EvidenceSystem
-HuntSystem
-LobbySystem
+Authoritative ongoing progress log:
 
-Planned:
-
-EconomySystem
-ShopSystem
-Cosmetics
-Progression
-Contracts
-RankSystem
-
-================================================================
-AI ROLE
-================================================================
-
-ChatGPT:
-
-System architect
-Debug reasoning
-Design authority
-
-Codex:
-
-Code generator
-Patch executor
-Module implementer
+DATA TEXT/DOCUMENTATION/SAAT OPEN CHAT BARU/REPORTS.md
 
 ================================================================
 END OF AI SUPER CONTEXT

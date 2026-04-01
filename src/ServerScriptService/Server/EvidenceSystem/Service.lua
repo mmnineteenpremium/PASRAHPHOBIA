@@ -43,6 +43,14 @@ function Service:ProcessToolUse(player, matchId, payload)
     return self._evidenceService:ProcessToolUse(player, matchId, payload)
 end
 
+function Service:TryConsumeHuntProtection(matchId, payload)
+    return self._evidenceService:TryConsumeHuntProtection(matchId, payload)
+end
+
+function Service:NotifyGhostPresence(matchId, payload)
+    return self._evidenceService:NotifyGhostPresence(matchId, payload)
+end
+
 function Service:CollectEvidence(player, matchId, payload)
     return self._evidenceService:CollectEvidence(player, matchId, payload)
 end

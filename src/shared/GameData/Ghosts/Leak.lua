@@ -1,9 +1,9 @@
 return {
     ghostName = "Leak",
     evidenceTypes = {
-        "EMF5",
-        "DOTS",
-        "FreezingTemp",
+        "Suara",
+        "MEDOK",
+        "Pengganggu",
     },
     behaviorTraits = {
         "Phased",

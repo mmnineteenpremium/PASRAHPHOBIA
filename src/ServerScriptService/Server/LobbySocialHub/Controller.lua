@@ -31,6 +31,7 @@ function Controller.new(state, service, deps)
     self._connections = {}
     self._eventBus = resolveEventBus(self._deps)
     self._playersService = resolvePlayersService(self._deps)
+    self._handlersRegistered = false
     return self
 end
 
@@ -39,6 +40,10 @@ function Controller:Init()
 end
 
 function Controller:RegisterEventHandlers()
+    if self._handlersRegistered then
+        return
+    end
+
     if self._eventBus then
         self:_subscribe("PlayerTeleported", function(payload)
             self:OnPlayerTeleported(payload)
@@ -64,9 +69,13 @@ function Controller:RegisterEventHandlers()
             })
         end
     end
+
+    self._handlersRegistered = true
 end
 
 function Controller:UnregisterEventHandlers()
+    self._handlersRegistered = false
+
     if self._eventBus then
         for _, subscription in ipairs(self._subscriptions) do
             self._eventBus:Unsubscribe(subscription.eventName, subscription.callback)

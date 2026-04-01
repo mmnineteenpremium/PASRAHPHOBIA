@@ -4,7 +4,147 @@ local Services = require(script.Parent.Parent.Core.Services)
 local Service = {}
 Service.__index = Service
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+
+local DEFAULT_GHOST_TYPES = {
+	"Pocong",
+	"Kuntilanak",
+	"Genderuwo",
+	"Tuyul",
+	"Leak",
+	"Banaspati",
+	"Jerangkong",
+	"WeweGombel",
+	"Palasik",
+	"SilumanUlar",
+	"SundelBolong",
+	"HantuTanah",
+}
+
+local function createGhostRigPart(model, name, size, offset, color)
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Size = size
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanTouch = false
+	part.CanQuery = false
+	part.Material = Enum.Material.SmoothPlastic
+	part.Color = color
+	part.CFrame = offset
+	part.Parent = model
+	return part
+end
+
+local function createVisibleGhostPlaceholder(spawnCFrame, ghostType)
+	local ghostModel = Instance.new("Model")
+	ghostModel.Name = string.format("GhostPlaceholder_%s", tostring(ghostType or "Unknown"))
+	ghostModel:SetAttribute("GhostType", ghostType)
+	ghostModel:SetAttribute("PlaceholderVisual", true)
+
+	local root = createGhostRigPart(ghostModel, "HumanoidRootPart", Vector3.new(2, 2, 1), spawnCFrame, Color3.fromRGB(80, 86, 96))
+	root.Transparency = 1
+
+	local torso = createGhostRigPart(ghostModel, "Torso", Vector3.new(2, 2, 1), spawnCFrame * CFrame.new(0, 0, 0), Color3.fromRGB(168, 176, 188))
+	local head = createGhostRigPart(ghostModel, "Head", Vector3.new(2, 1, 1), spawnCFrame * CFrame.new(0, 1.5, 0), Color3.fromRGB(214, 220, 228))
+	local leftArm = createGhostRigPart(ghostModel, "Left Arm", Vector3.new(1, 2, 1), spawnCFrame * CFrame.new(-1.5, 0, 0), Color3.fromRGB(160, 168, 182))
+	local rightArm = createGhostRigPart(ghostModel, "Right Arm", Vector3.new(1, 2, 1), spawnCFrame * CFrame.new(1.5, 0, 0), Color3.fromRGB(160, 168, 182))
+	local leftLeg = createGhostRigPart(ghostModel, "Left Leg", Vector3.new(1, 2, 1), spawnCFrame * CFrame.new(-0.5, -2, 0), Color3.fromRGB(124, 132, 148))
+	local rightLeg = createGhostRigPart(ghostModel, "Right Leg", Vector3.new(1, 2, 1), spawnCFrame * CFrame.new(0.5, -2, 0), Color3.fromRGB(124, 132, 148))
+
+	for _, limb in ipairs({ torso, head, leftArm, rightArm, leftLeg, rightLeg }) do
+		limb.CastShadow = false
+	end
+
+	local humanoid = Instance.new("Humanoid")
+	humanoid.Name = "GhostHumanoid"
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
+	humanoid.MaxHealth = 100
+	humanoid.Health = 100
+	humanoid.Parent = ghostModel
+
+	ghostModel.PrimaryPart = root
+	return ghostModel
+end
+
+local GHOST_RETRY_COUNT = 3
+local GHOST_RETRY_WAIT = 0.05
+
+local function safeRequire(moduleScript)
+	if not moduleScript then
+		return nil
+	end
+	local ok, result = pcall(require, moduleScript)
+	if ok then
+		return result
+	end
+	return nil
+end
+
+local function resolveSharedGameDataModule(moduleName)
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
+	if not shared then
+		return nil
+	end
+	local gameData = shared:FindFirstChild("GameData")
+	if not gameData then
+		return nil
+	end
+	return gameData:FindFirstChild(moduleName)
+end
+
+local function loadMapDatabase()
+	local database = safeRequire(resolveSharedGameDataModule("MapConfig"))
+	if type(database) == "table" then
+		return database
+	end
+	return {}
+end
+
+local function loadGhostDatabase()
+	local database = safeRequire(resolveSharedGameDataModule("GhostDatabase"))
+	if type(database) == "table" then
+		return database
+	end
+	return {}
+end
+
+local function resolveInvestigationToolService(deps)
+	local evidenceSystem = Services.Get(deps, "EvidenceSystem")
+	if type(evidenceSystem) ~= "table" then
+		return nil
+	end
+	if type(evidenceSystem.TryConsumeHuntProtection) == "function" then
+		return evidenceSystem
+	end
+	if type(evidenceSystem.Service) == "table" and type(evidenceSystem.Service.TryConsumeHuntProtection) == "function" then
+		return evidenceSystem.Service
+	end
+	return nil
+end
+
+local function deepCopy(value)
+	if type(value) ~= "table" then
+		return value
+	end
+	local out = {}
+	for key, nested in pairs(value) do
+		out[key] = deepCopy(nested)
+	end
+	return out
+end
+
+local function resolveMatchId(matchOrId)
+	if type(matchOrId) == "string" then
+		return matchOrId
+	end
+	if type(matchOrId) == "table" then
+		return matchOrId.matchId or matchOrId.id
+	end
+	return nil
+end
 
 local function collectSpawnParts(root)
 	local parts = {}
@@ -80,16 +220,8 @@ local function resolveMatchContainer(match)
 	return container, activeMatches
 end
 
-local function guardGhost(match)
-	if not match or not match.ghost then
-		warn("[GhostSystem] Missing ghost for match")
-		return false
-	end
-	return true
-end
-
 local function ensureGhostPlacement(match)
-	if not guardGhost(match) then
+	if not (match and match.ghost) then
 		return false
 	end
 	local container = match.container
@@ -110,7 +242,10 @@ function Service.new(state, deps)
 	self._state = state
 	self._deps = deps or {}
 	self._ghostService = GhostService.new(self._state, self._deps)
+	self._investigationToolService = resolveInvestigationToolService(self._deps)
 	self._matchSystem = Services.Get(self._deps, "MatchSystem")
+	self._mapDatabase = loadMapDatabase()
+	self._ghostDatabase = loadGhostDatabase()
 	return self
 end
 
@@ -126,28 +261,147 @@ function Service:Stop()
 	self._ghostService:Stop()
 end
 
-function Service:InitGhost(matchId, payload)
-	if not matchId then
-		return nil, "missing_match_id"
+function Service:_getMatchSystem()
+	if self._matchSystem then
+		return self._matchSystem
 	end
-	return self._ghostService:SpawnGhost(matchId, payload or {})
+	self._matchSystem = Services.Get(self._deps, "MatchSystem")
+	return self._matchSystem
+end
+
+function Service:_resolveLiveMatch(matchOrId)
+	local matchId = resolveMatchId(matchOrId)
+	local matchData = type(matchOrId) == "table" and matchOrId or nil
+	if not matchId then
+		return nil, nil
+	end
+
+	if type(matchData) == "table" and matchData.playersByUserId and matchData.history then
+		return matchData, matchId
+	end
+
+	local matchSystem = self:_getMatchSystem()
+	if not matchSystem then
+		return matchData, matchId
+	end
+
+	if type(matchSystem.GetLiveMatch) == "function" then
+		return matchSystem:GetLiveMatch(matchId) or matchData, matchId
+	end
+	if type(matchSystem.Service) == "table" and type(matchSystem.Service.GetLiveMatch) == "function" then
+		return matchSystem.Service:GetLiveMatch(matchId) or matchData, matchId
+	end
+
+	return matchData, matchId
+end
+
+function Service:_getMapDefinition(mapId)
+	if type(mapId) ~= "string" or mapId == "" then
+		return nil
+	end
+	local direct = self._mapDatabase[mapId]
+	if type(direct) == "table" then
+		return direct
+	end
+	local token = string.lower(mapId:gsub("[%s_%-%.]+", ""))
+	for key, value in pairs(self._mapDatabase) do
+		if string.lower(tostring(key):gsub("[%s_%-%.]+", "")) == token and type(value) == "table" then
+			return value
+		end
+	end
+	return nil
+end
+
+function Service:_buildGhostPayload(match, payload)
+	local incoming = type(payload) == "table" and payload or {}
+	local mapDefinition = self:_getMapDefinition(match and (match.mapId or match.map) or incoming.mapId)
+	local ghostType = incoming.ghostType or (match and match.ghostType) or "Pocong"
+	local ghostTypeData = incoming.ghostTypeData or self._ghostDatabase[ghostType]
+
+	local roomIds = incoming.roomIds
+		or (match and match.roomIds)
+		or (mapDefinition and mapDefinition.rooms)
+		or (mapDefinition and mapDefinition.ghostRoomCandidates)
+		or {}
+
+	return {
+		roomIds = deepCopy(roomIds),
+		roomGraph = incoming.roomGraph,
+		roomSpawnRules = incoming.roomSpawnRules,
+		ghostType = ghostType,
+		ghostTypeData = ghostTypeData,
+		personality = incoming.personality,
+		personalityType = incoming.personalityType,
+		evidenceSet = incoming.evidenceSet,
+		initialAggression = incoming.initialAggression,
+		difficulty = incoming.difficulty or (match and match.difficulty),
+		mode = incoming.mode or incoming.gameMode or (match and (match.mode or match.gameMode)),
+		gameMode = incoming.gameMode or incoming.mode or (match and (match.gameMode or match.mode)),
+		difficultyProfile = deepCopy(incoming.difficultyProfile or (match and match.difficultyProfile) or {}),
+		favoriteRoomId = incoming.favoriteRoomId,
+		now = incoming.now,
+	}
+end
+
+function Service:_ensureGhostReady(matchOrId, payload)
+	local liveMatch, matchId = self:_resolveLiveMatch(matchOrId)
+	if not matchId then
+		return nil, nil, "missing_match_id"
+	end
+
+	local lastReason = nil
+	for _ = 1, GHOST_RETRY_COUNT do
+		if type(liveMatch) == "table" and not liveMatch.ghost then
+			local _, initializeReason = self:InitializeMatch(liveMatch)
+			if initializeReason then
+				lastReason = initializeReason
+			end
+		end
+
+		if self._ghostService:GetGhostState(matchId) == nil then
+			local spawnedSession = self._ghostService:SpawnGhost(matchId, self:_buildGhostPayload(liveMatch, payload))
+			if not spawnedSession then
+				lastReason = lastReason or "spawn_returned_nil"
+			end
+		end
+
+		if type(liveMatch) == "table" and liveMatch.ghost then
+			ensureGhostPlacement(liveMatch)
+			if liveMatch.ghostSpawnPart == nil then
+				self:SelectGhostRoom(liveMatch)
+			end
+		end
+
+		if self._ghostService:GetGhostState(matchId) ~= nil then
+			return liveMatch, matchId, nil
+		end
+
+		task.wait(GHOST_RETRY_WAIT)
+		liveMatch = select(1, self:_resolveLiveMatch(matchId)) or liveMatch
+	end
+
+	warn(string.format("[GhostSystem] Failed to ensure ghost for match %s (%s)", tostring(matchId), tostring(lastReason or "unknown")))
+	return liveMatch, matchId, lastReason or "ghost_spawn_failed"
+end
+
+function Service:InitGhost(matchId, payload)
+	local liveMatch, _, err = self:_ensureGhostReady(matchId, payload)
+	if err then
+		return nil, err
+	end
+	return liveMatch
 end
 
 function Service:SpawnGhost(match, payload)
-	if type(match) ~= "table" then
-		warn("[GhostSystem] Missing match for SpawnGhost")
-		return nil, "invalid_match"
+	local liveMatch, _, err = self:_ensureGhostReady(match, payload)
+	if err then
+		return nil, err
 	end
-	local matchId = match.matchId or match.id
-	if not matchId then
-		warn("[GhostSystem] Missing match id for SpawnGhost")
-		return nil, "missing_match_id"
-	end
-	return self._ghostService:SpawnGhost(matchId, payload)
+	return liveMatch
 end
 
 function Service:SelectGhostRoom(match)
-	if not guardGhost(match) then
+	if type(match) ~= "table" or not match.ghost then
 		return nil, "missing_ghost"
 	end
 	if not ensureGhostPlacement(match) then
@@ -157,11 +411,14 @@ function Service:SelectGhostRoom(match)
 	if not container then
 		return nil, "missing_container"
 	end
-	local ghostSpawns = container:FindFirstChild("GhostSpawns")
-	if not ghostSpawns then
-		return nil, "missing_ghost_spawns"
-	end
+	local ghostSpawns = container:FindFirstChild("GhostSpawns") or container:FindFirstChild("GhostSpawnZones")
 	local spawnParts = collectSpawnParts(ghostSpawns)
+	if #spawnParts == 0 then
+		local fallbackSpawn = resolveSpawnPart(container)
+		if fallbackSpawn then
+			spawnParts = { fallbackSpawn }
+		end
+	end
 	if #spawnParts == 0 then
 		return nil, "no_spawn_parts"
 	end
@@ -191,10 +448,9 @@ function Service:InitializeMatch(match)
 	if not matchId then
 		return nil, "missing_match_id"
 	end
-	local ghostTypes = { "Wraith", "Shade", "Oni", "Yurei", "Banshee", "Revenant" }
 	local seed = tonumber(match.ghostSeed) or os.time()
 	local rng = Random.new(seed)
-	local ghostType = ghostTypes[rng:NextInteger(1, #ghostTypes)]
+	local ghostType = match.ghostType or DEFAULT_GHOST_TYPES[rng:NextInteger(1, #DEFAULT_GHOST_TYPES)]
 	match.ghostType = ghostType
 
 	local container = resolveMatchContainer(match)
@@ -205,20 +461,8 @@ function Service:InitializeMatch(match)
 	local spawnPart = resolveSpawnPart(container)
 	local spawnCFrame = spawnPart and spawnPart.CFrame or CFrame.new(0, 5, 0)
 
-	local ghostModel = Instance.new("Model")
-	ghostModel.Name = "Ghost"
+	local ghostModel = createVisibleGhostPlaceholder(spawnCFrame, ghostType)
 	ghostModel.Parent = container
-	ghostModel:SetAttribute("GhostType", ghostType)
-
-	local core = Instance.new("Part")
-	core.Name = "GhostCore"
-	core.Size = Vector3.new(2, 2, 2)
-	core.Anchored = true
-	core.CanCollide = false
-	core.Transparency = 1
-	core.CFrame = spawnCFrame
-	core.Parent = ghostModel
-	ghostModel.PrimaryPart = core
 
 	match.ghost = ghostModel
 
@@ -231,104 +475,99 @@ function Service:OnSanityCritical(matchId)
 	if not matchId then
 		return nil, "missing_match_id"
 	end
-	return self._ghostService:StartHunt(matchId, {}, os.clock())
+	return self:_startProtectedHunt(matchId, {}, os.clock())
 end
 
 function Service:OnAggressionThreshold(matchId)
 	if not matchId then
 		return nil, "missing_match_id"
 	end
-	return self._ghostService:StartHunt(matchId, {}, os.clock())
+	return self:_startProtectedHunt(matchId, {}, os.clock())
+end
+
+function Service:_startProtectedHunt(match, snapshot, now)
+	local _, authoritativeMatchId, err = self:_ensureGhostReady(match)
+	if err then
+		return nil, err
+	end
+
+	if self._investigationToolService and type(self._investigationToolService.TryConsumeHuntProtection) == "function" then
+		local ghostState = self._ghostService:GetGhostState(authoritativeMatchId) or {}
+		local ok, blocked = pcall(function()
+			return self._investigationToolService:TryConsumeHuntProtection(authoritativeMatchId, {
+				now = now or os.clock(),
+				roomId = ghostState.currentRoomId or ghostState.favoriteRoomId or (snapshot and snapshot.roomId),
+				snapshot = snapshot,
+			})
+		end)
+		if ok and blocked == true then
+			return false, "hunt_blocked"
+		end
+	end
+
+	return self._ghostService:StartHunt(authoritativeMatchId, snapshot or {}, now)
 end
 
 function Service:TransitionGhostState(matchId, stateName, now, snapshot)
 	if not matchId then
 		return nil, "missing_match_id"
 	end
-	return self._ghostService:TransitionGhostState(matchId, stateName, now, snapshot)
+	local _, authoritativeMatchId, err = self:_ensureGhostReady(matchId)
+	if err then
+		return nil, err
+	end
+	return self._ghostService:TransitionGhostState(authoritativeMatchId, stateName, now, snapshot)
 end
 
 function Service:TickGhost(match, snapshot, dt, now)
-	if not guardGhost(match) then
-		return nil, "missing_ghost"
-	end
-	local matchId = match.matchId or match.id
-	if not matchId then
-		warn("[GhostSystem] Missing match id for TickGhost")
-		return nil, "missing_match_id"
+	local _, matchId, err = self:_ensureGhostReady(match)
+	if err then
+		return nil, err
 	end
 	return self._ghostService:TickGhost(matchId, snapshot, dt, now)
 end
 
 function Service:StartHunt(match, snapshot, now)
-	if not guardGhost(match) then
-		return nil, "missing_ghost"
-	end
-	local matchId = match.matchId or match.id
-	if not matchId then
-		warn("[GhostSystem] Missing match id for StartHunt")
-		return nil, "missing_match_id"
-	end
-	return self._ghostService:StartHunt(matchId, snapshot, now)
+	return self:_startProtectedHunt(match, snapshot, now)
 end
 
 function Service:TriggerHunt(match, snapshot, now)
-	if not guardGhost(match) then
-		return nil, "missing_ghost"
+	local liveMatch, matchId, err = self:_ensureGhostReady(match)
+	if err then
+		return nil, err
 	end
-	local matchId = match.matchId or match.id
-	if not matchId then
-		warn("[GhostSystem] Missing match id for TriggerHunt")
-		return nil, "missing_match_id"
+	return self:_startProtectedHunt(matchId, snapshot or (liveMatch and liveMatch.snapshot) or {}, now)
+end
+
+function Service:ForceHunt(match, snapshot, now)
+	local _, matchId, err = self:_ensureGhostReady(match)
+	if err then
+		return nil, err
 	end
-	return self._ghostService:StartHunt(matchId, snapshot or match.snapshot or {}, now)
+	return self._ghostService:StartHunt(matchId, snapshot or {}, now)
 end
 
 function Service:EndHunt(match, now)
-	if not guardGhost(match) then
-		return nil, "missing_ghost"
-	end
-	local matchId = match.matchId or match.id
+	local _, matchId = self:_resolveLiveMatch(match)
 	if not matchId then
-		warn("[GhostSystem] Missing match id for EndHunt")
 		return nil, "missing_match_id"
 	end
 	return self._ghostService:EndHunt(matchId, now)
 end
 
 function Service:GetGhostState(match)
-	if not guardGhost(match) then
-		return nil, "missing_ghost"
-	end
-	local matchId = match.matchId or match.id
-	if not matchId then
-		warn("[GhostSystem] Missing match id for GetGhostState")
-		return nil, "missing_match_id"
+	local _, matchId, err = self:_ensureGhostReady(match)
+	if err then
+		return nil, err
 	end
 	return self._ghostService:GetGhostState(matchId)
 end
 
 function Service:DespawnGhost(match)
-	local matchId = nil
-	local matchData = nil
-	if type(match) == "table" then
-		matchId = match.matchId or match.id
-		matchData = match
-	elseif type(match) == "string" then
-		matchId = match
-	end
-
+	local matchData, matchId = self:_resolveLiveMatch(match)
 	if not matchId then
 		warn("[GhostSystem] Missing match id for DespawnGhost")
 		return nil, "missing_match_id"
-	end
-
-	if not matchData and self._matchSystem then
-		if type(self._matchSystem.GetMatch) == "function" then
-			matchData = self._matchSystem:GetMatch(matchId)
-		elseif type(self._matchSystem.Service) == "table" and type(self._matchSystem.Service.GetMatch) == "function" then
-			matchData = self._matchSystem.Service:GetMatch(matchId)
-		end
 	end
 
 	if matchData and matchData.ghost then
@@ -350,25 +589,17 @@ function Service:DespawnGhost(match)
 end
 
 function Service:ApplyDirectorEvent(match, eventName, payload)
-	if not guardGhost(match) then
-		return nil, "missing_ghost"
-	end
-	local matchId = match.matchId or match.id
-	if not matchId then
-		warn("[GhostSystem] Missing match id for ApplyDirectorEvent")
-		return nil, "missing_match_id"
+	local _, matchId, err = self:_ensureGhostReady(match)
+	if err then
+		return nil, err
 	end
 	return self._ghostService:ApplyDirectorEvent(matchId, eventName, payload)
 end
 
 function Service:ForceManifest(match, now)
-	if not guardGhost(match) then
-		return nil, "missing_ghost"
-	end
-	local matchId = match.matchId or match.id
-	if not matchId then
-		warn("[GhostSystem] Missing match id for ForceManifest")
-		return nil, "missing_match_id"
+	local _, matchId, err = self:_ensureGhostReady(match)
+	if err then
+		return nil, err
 	end
 	return self._ghostService:ForceManifest(matchId, now)
 end

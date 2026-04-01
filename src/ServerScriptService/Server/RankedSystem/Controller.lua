@@ -22,6 +22,7 @@ function Controller.new(state, service, deps)
     self._deps = deps or {}
     self._subscriptions = {}
     self._eventBus = resolveEventBus(self._deps)
+    self._handlersRegistered = false
     return self
 end
 
@@ -30,16 +31,15 @@ function Controller:Init()
 end
 
 function Controller:RegisterEventHandlers()
-    if not self._eventBus then
+    if not self._eventBus or self._handlersRegistered then
         return
     end
 
     self:_subscribe("MatchEnded", function(payload)
         self:OnMatchEnded(payload)
     end)
-    self:_subscribe("ResultsCalculated", function(payload)
-        self:OnResultsCalculated(payload)
-    end)
+
+    self._handlersRegistered = true
 end
 
 function Controller:UnregisterEventHandlers()
@@ -51,6 +51,7 @@ function Controller:UnregisterEventHandlers()
         self._eventBus:Unsubscribe(subscription.eventName, subscription.callback)
     end
     table.clear(self._subscriptions)
+    self._handlersRegistered = false
 end
 
 function Controller:_subscribe(eventName, callback)
@@ -62,10 +63,6 @@ function Controller:_subscribe(eventName, callback)
 end
 
 function Controller:OnMatchEnded(payload)
-    self._service:ApplyMatchResults(payload)
-end
-
-function Controller:OnResultsCalculated(payload)
     self._service:ApplyMatchResults(payload)
 end
 

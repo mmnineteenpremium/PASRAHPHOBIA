@@ -12,6 +12,7 @@ function Controller.new(state, service, deps)
     self._playersService = self._deps.Players or Players
     self._runService = self._deps.RunService or RunService
     self._connections = {}
+    self._handlersRegistered = false
     return self
 end
 
@@ -20,6 +21,10 @@ function Controller:Init()
 end
 
 function Controller:RegisterEventHandlers()
+    if self._handlersRegistered then
+        return
+    end
+
     if self._playersService then
         table.insert(self._connections, self._playersService.PlayerAdded:Connect(function(player)
             self._service:RegisterPlayer(player)
@@ -38,6 +43,8 @@ function Controller:RegisterEventHandlers()
             self._service:AutosaveTick(delta)
         end))
     end
+
+    self._handlersRegistered = true
 end
 
 function Controller:UnregisterEventHandlers()
@@ -45,6 +52,7 @@ function Controller:UnregisterEventHandlers()
         connection:Disconnect()
     end
     table.clear(self._connections)
+    self._handlersRegistered = false
 end
 
 return Controller

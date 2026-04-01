@@ -118,7 +118,7 @@ return {
                 startUnix = now,
                 endUnix = now + (60 * 60 * 24 * 45),
                 eventCurrency = "EC",
-                temporaryGhostTypes = { "PumpkinWraith", "LanternWidow" },
+                temporaryGhostTypes = { "Pocong", "Kuntilanak" },
                 eventCosmetics = { "Halloween_Mask_01", "Halloween_Emote_Scared" },
                 limitedMaps = { "HalloweenSchool", "AbandonedHospital", "RitualTemple" },
                 mapRotation = {
@@ -131,7 +131,7 @@ return {
                 startUnix = now + (60 * 60 * 24 * 60),
                 endUnix = now + (60 * 60 * 24 * 95),
                 eventCurrency = "EC",
-                temporaryGhostTypes = { "FrostSpecter" },
+                temporaryGhostTypes = { "SundelBolong" },
                 eventCosmetics = { "Holiday_Bell_Badge", "Holiday_Emote_Wave" },
                 limitedMaps = { "FrozenManor" },
                 mapRotation = {
@@ -239,9 +239,9 @@ return {
             "Jerangkong",
         },
         EvidenceCombinations = {
-            "EMF+Orb+Writing",
-            "Freezing+SpiritBox+Fingerprints",
-            "EMF+Freezing+SpiritBox",
+            "MEDOK+To'un+BukuTerkutuk",
+            "Suhu+Suara+Pengganggu",
+            "MEDOK+Suhu+Suara",
         },
         MapPools = {
             Core = {

@@ -1,4 +1,3 @@
-local MatchRewardModule = require(script.Parent.Rewards.MatchCompletion.Main)
 local DailyMissionModule = require(script.Parent.Rewards.DailyMissions.Main)
 local DailyCheckInModule = require(script.Parent.Rewards.DailyCheckIn.Main)
 local RoyalPassModule = require(script.Parent.Rewards.RoyalPass.Main)
@@ -18,10 +17,10 @@ local CHECKIN_REWARDS = {
     [1] = { currency = "MM", amount = 1000 },
     [2] = { currency = "MM", amount = 1000 },
     [3] = { currency = "MM", amount = 1000 },
-    [4] = { assetRarityRoll = { { rarity = "R1", weight = 80 }, { rarity = "R2", weight = 20 } } },
+    [4] = { assetRarityRoll = { { rarity = "R1", weight = 65 }, { rarity = "R2", weight = 22 }, { rarity = "R3", weight = 10 }, { rarity = "R4", weight = 3 } } },
     [5] = { currency = "MM", amount = 1500 },
     [6] = { currency = "MM", amount = 1500 },
-    [7] = { assetRarityRoll = { { rarity = "R1", weight = 60 }, { rarity = "R2", weight = 30 }, { rarity = "R3", weight = 10 } } },
+    [7] = { assetRarityRoll = { { rarity = "R1", weight = 35 }, { rarity = "R2", weight = 25 }, { rarity = "R3", weight = 20 }, { rarity = "R4", weight = 15 }, { rarity = "R5", weight = 5 } } },
 }
 
 local function resolveEventBus(deps)
@@ -56,13 +55,6 @@ local function cloneTable(source)
     return result
 end
 
-local function toMatchRewardLedgerKey(matchId, userId)
-    if matchId == nil or userId == nil then
-        return nil
-    end
-    return tostring(matchId) .. "::" .. tostring(userId)
-end
-
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -82,12 +74,6 @@ function Service.new(state, deps)
         EventBus = self._eventBus,
         RoyalPassState = self._deps.RoyalPassState,
     })
-    self._matchRewardDriver = MatchRewardModule.new({
-        EventBus = self._eventBus,
-        CurrencyService = self,
-        MatchRewardState = self._deps.MatchRewardState,
-        Random = self._deps.Random,
-    })
     self._dailyMissionsDriver = DailyMissionModule.new({
         EventBus = self._eventBus,
         CurrencyService = self,
@@ -105,15 +91,11 @@ function Service:Init()
     self._state:Set("walletByUserId", {})
     self._state:Set("dailyByUserId", {})
     self._state:Set("passByUserId", {})
-    self._state:Set("matchCashRewardLedger", {})
     if self._integrations then
         self._integrations:Init()
     end
     if self._royalPassDriver then
         self._royalPassDriver:Init()
-    end
-    if self._matchRewardDriver then
-        self._matchRewardDriver:Init()
     end
     if self._dailyMissionsDriver then
         self._dailyMissionsDriver:Init()
@@ -130,9 +112,6 @@ function Service:Start()
     if self._royalPassDriver then
         self._royalPassDriver:Start()
     end
-    if self._matchRewardDriver then
-        self._matchRewardDriver:Start()
-    end
     if self._dailyMissionsDriver then
         self._dailyMissionsDriver:Start()
     end
@@ -147,9 +126,6 @@ function Service:Stop()
     end
     if self._dailyMissionsDriver then
         self._dailyMissionsDriver:Stop()
-    end
-    if self._matchRewardDriver then
-        self._matchRewardDriver:Stop()
     end
     if self._royalPassDriver then
         self._royalPassDriver:Stop()
@@ -194,19 +170,15 @@ function Service:_ensureWallet(userId)
     local wallets = self:_wallets()
     if not wallets[userId] then
         wallets[userId] = {
-            Cash = 0,
-            XP = 0,
             MM = 0,
             PP = 0,
+            Robux = 0,
         }
         self:_setWallets(wallets)
     end
-    if wallets[userId].Cash == nil then
-        wallets[userId].Cash = 0
-    end
-    if wallets[userId].XP == nil then
-        wallets[userId].XP = 0
-    end
+    wallets[userId].MM = wallets[userId].MM or 0
+    wallets[userId].PP = wallets[userId].PP or 0
+    wallets[userId].Robux = wallets[userId].Robux or 0
     return wallets[userId]
 end
 
@@ -318,8 +290,26 @@ function Service:AddCurrency(player, currencyOrAmount, amountOrReason, reasonOrN
         return false, "invalid_amount"
     end
 
+    if currency == "RBX" then
+        currency = "Robux"
+    end
+
+    if currency == "XP" then
+        self:_publish("XPGranted", {
+            player = player,
+            userId = userId,
+            amount = amount,
+            source = reason or "manual_add",
+        })
+        return true, nil, amount
+    end
+
+    if currency ~= "MM" and currency ~= "PP" and currency ~= "Robux" then
+        return false, "unsupported_currency"
+    end
+
     if currency == "MM" then
-        if reason == "ShopPurchaseRefund" then
+        if reason == "ShopPurchaseRefund" or reason == "GiftPurchaseRefund" then
             local wallet = self:_ensureWallet(userId)
             wallet.MM += amount
             self:_publish("CurrencyChanged", {
@@ -335,20 +325,19 @@ function Service:AddCurrency(player, currencyOrAmount, amountOrReason, reasonOrN
         local granted = self:_addMMWithCap(player, amount, reason or "manual_add")
         return granted > 0, nil, granted
     end
-
-    if currency == "Cash" then
-        local capped = self:_applyWalletCap(userId, "Cash", amount)
+    if currency == "Robux" then
+        local capped = self:_applyWalletCap(userId, "Robux", amount)
         if capped <= 0 then
             return true, nil, 0
         end
         local wallet = self:_ensureWallet(userId)
-        wallet.Cash = (wallet.Cash or 0) + capped
+        wallet.Robux = (wallet.Robux or 0) + capped
         self:_publish("CurrencyChanged", {
             player = player,
             userId = userId,
-            currency = "Cash",
+            currency = "Robux",
             delta = capped,
-            balance = wallet.Cash,
+            balance = wallet.Robux,
             reason = reason or "manual_add",
         })
         return true, nil, capped
@@ -408,136 +397,23 @@ function Service:SpendCurrency(player, currencyOrAmount, amountOrReason, reasonO
     return true
 end
 
-function Service:CalculateMatchReward(matchData)
-    local performancePercent = matchData and (matchData.performancePercent or matchData.performance or 0) or 0
-    performancePercent = math.clamp(performancePercent, 0, 100)
-    local mmReward = math.floor(performancePercent * 10)
-    return {
-        currency = "MM",
-        amount = mmReward,
-        outcome = performancePercent > 50 and "win" or "lose",
-    }
-end
-
-function Service:_publishMatchRewardEvents(payload)
-    if not payload then
-        return
-    end
-    self:_publish("CurrencyEarned", payload)
-    self:_publish("RewardGranted", payload)
-end
-
-function Service:_grantMatchRewardEntry(entry, payloadContext)
-    if not entry then
-        return 0
-    end
-    local reward = self:CalculateMatchReward({
-        performancePercent = entry.performancePercent,
-    })
-    local awarded = self:_addMMWithCap(entry.player or entry.userId, reward.amount, payloadContext and payloadContext.reason or "match_reward")
-    if awarded > 0 then
-        local rewardPayload = {
-            player = entry.player,
-            userId = entry.userId,
-            matchId = payloadContext and payloadContext.matchId,
-            currency = reward.currency,
-            amount = awarded,
-            performancePercent = entry.performancePercent,
-            outcome = reward.outcome,
-            reason = payloadContext and payloadContext.reason or "MatchEnded",
-        }
-        self:_publishMatchRewardEvents(rewardPayload)
-        self:_publish("PlayerRewardGranted", rewardPayload)
-        self:_publish("RewardsGranted", rewardPayload)
-        return awarded, rewardPayload
-    end
-    return 0, nil
-end
-
-function Service:GrantMatchReward(userIdOrPayload, rewardPayload)
-    if type(userIdOrPayload) == "table" and rewardPayload == nil then
-        local entry = userIdOrPayload and (userIdOrPayload.entry or userIdOrPayload)
-        return self:_grantMatchRewardEntry(entry, userIdOrPayload)
-    end
-
-    local userId = toUserId(userIdOrPayload)
-    if not userId or type(rewardPayload) ~= "table" then
-        return false, "invalid_payload"
-    end
-
-    local baseCash = (tonumber(rewardPayload.cash) or 0)
-        + (tonumber(rewardPayload.evidenceBonus) or 0)
-        + (tonumber(rewardPayload.survivalBonus) or 0)
-        + (tonumber(rewardPayload.contractBonus) or 0)
-    local multiplier = tonumber(rewardPayload.difficultyMultiplier) or 1
-    local finalCash = math.max(0, math.floor(baseCash * multiplier))
-    local finalXp = math.max(0, math.floor((tonumber(rewardPayload.xp) or 0) * multiplier))
-    local matchId = rewardPayload.matchId or rewardPayload.matchID or rewardPayload.id
-    local ledgerKey = toMatchRewardLedgerKey(matchId, userId)
-    local ledger = self._state:Get("matchCashRewardLedger")
-    if type(ledger) ~= "table" then
-        ledger = {}
-        self._state:Set("matchCashRewardLedger", ledger)
-    end
-
-    if ledgerKey and ledger[ledgerKey] then
-        warn(string.format("[RewardPipeline] Duplicate match reward prevented matchId=%s userId=%s", tostring(matchId), tostring(userId)))
-        return true, "already_granted", { cash = 0, xp = 0 }
-    end
-
-    if ledgerKey then
-        ledger[ledgerKey] = true
-    end
-
-    print("[RewardPipeline] userId=" .. tostring(userId) .. " cash=" .. tostring(finalCash) .. " xp=" .. tostring(finalXp))
-
-    local ok = true
-    local granted = 0
-    if finalCash > 0 then
-        ok, granted = self:AddCurrency(userId, "Cash", finalCash, rewardPayload.source or "MatchEnded")
-    end
-
-    if not ok and ledgerKey then
-        ledger[ledgerKey] = nil
-    end
-
-    if ok and (granted or 0) > 0 then
-        self:_publish("CurrencyEarned", {
-            userId = userId,
-            amount = granted,
-            currency = "Cash",
-            source = rewardPayload.source or "MatchEnded",
-        })
-    end
-    if finalXp > 0 then
-        self:_publish("XPGranted", {
-            userId = userId,
-            amount = finalXp,
-            source = rewardPayload.source or "MatchEnded",
-        })
-    end
-
-    return ok, nil, { cash = granted or 0, xp = finalXp }
-end
-
 function Service:GrantMissionReward(userIdOrPlayer, missionReward)
     local userId = toUserId(userIdOrPlayer)
     if not userId or type(missionReward) ~= "table" then
         return false, "invalid_payload"
     end
 
-    local cash = math.max(0, math.floor(tonumber(missionReward.cash) or 0))
-    local cappedCash = self:_applyWalletCap(userId, "Cash", cash)
-    if cappedCash <= 0 then
-        return true, nil, cappedCash
+    local mmAmount = math.max(0, math.floor(tonumber(missionReward.mm) or 0))
+    if mmAmount <= 0 then
+        return true, nil, 0
     end
 
-    local ok, _, granted = self:AddCurrency(userId, "Cash", cappedCash, missionReward.source or "DailyMission")
+    local ok, _, granted = self:AddCurrency(userId, "MM", mmAmount, missionReward.source or "DailyMission")
     if ok and (granted or 0) > 0 then
         self:_publish("CurrencyEarned", {
             userId = userId,
             amount = granted,
-            currency = "Cash",
+            currency = "MM",
             source = missionReward.source or "DailyMission",
         })
     end
@@ -715,51 +591,6 @@ function Service:ClaimDailyCheckIn(player)
         rarity = rarity,
     }
 end
-
-function Service:_collectMatchPlayerResults(payload)
-    local collected = {}
-    local results = payload and payload.results or {}
-
-    for _, entry in ipairs(results.playerResults or {}) do
-        local player = entry.player
-        local userId = entry.userId or (player and player.UserId)
-        if player or userId then
-            table.insert(collected, {
-                player = player,
-                userId = userId,
-                performancePercent = entry.performancePercent or entry.performance or 0,
-            })
-        end
-    end
-
-    for userId, entry in pairs(results.byUserId or {}) do
-        if type(entry) == "table" then
-            table.insert(collected, {
-                player = entry.player,
-                userId = tonumber(userId) or userId,
-                performancePercent = entry.performancePercent or entry.performance or 0,
-            })
-        end
-    end
-
-    return collected
-end
-
-function Service:GrantMatchRewardsFromMatch(payload)
-    local entries = self:_collectMatchPlayerResults(payload)
-    local granted = {}
-
-    for _, entry in ipairs(entries) do
-        local _, rewardPayload = self:_grantMatchRewardEntry(entry, {
-            matchId = payload and payload.matchId,
-            reason = "MatchEnded",
-        })
-        table.insert(granted, rewardPayload)
-    end
-
-    return granted
-end
-
 
 return Service
 

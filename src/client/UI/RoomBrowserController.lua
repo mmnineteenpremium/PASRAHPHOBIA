@@ -2,7 +2,75 @@ local RoomBrowserController = {}
 RoomBrowserController.__index = RoomBrowserController
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local LOBBY_REMOTE_NAME = "LobbyEvent"
+
+local function appendTraceValue(parts, key, value)
+	if value == nil then
+		return
+	end
+	if type(value) == "table" then
+		return
+	end
+	table.insert(parts, string.format("%s=%s", key, tostring(value)))
+end
+
+local function summarizeTraceData(data)
+	if type(data) ~= "table" then
+		return ""
+	end
+
+	local parts = {}
+	for _, key in ipairs({
+		"requestId",
+		"action",
+		"eventName",
+		"roomId",
+		"mapId",
+		"mode",
+		"difficulty",
+		"ok",
+		"err",
+		"reason",
+		"countdownSeconds",
+		"isReady",
+	}) do
+		appendTraceValue(parts, key, data[key])
+	end
+
+	local selection = data.selection
+	if type(selection) == "table" then
+		appendTraceValue(parts, "selection.mode", selection.mode)
+		appendTraceValue(parts, "selection.difficulty", selection.difficulty)
+		appendTraceValue(parts, "selection.mapId", selection.mapId)
+	end
+
+	local snapshot = data.snapshot
+	if type(snapshot) == "table" then
+		appendTraceValue(parts, "snapshot.selectedMode", snapshot.selectedMode)
+		appendTraceValue(parts, "snapshot.selectedDifficulty", snapshot.selectedDifficulty)
+		appendTraceValue(parts, "snapshot.selectedMap", snapshot.selectedMap)
+		if type(snapshot.rooms) == "table" then
+			appendTraceValue(parts, "snapshot.rooms", #snapshot.rooms)
+		end
+	end
+
+	local room = data.room
+	if type(room) == "table" then
+		appendTraceValue(parts, "room.roomId", room.roomId or room.id)
+		appendTraceValue(parts, "room.mode", room.mode)
+		appendTraceValue(parts, "room.mapId", room.mapId)
+	end
+
+	if #parts == 0 then
+		return ""
+	end
+	return " [" .. table.concat(parts, ", ") .. "]"
+end
+
+local function shouldTraceRoomBrowser()
+	return RunService:IsStudio() and ReplicatedStorage:GetAttribute("PasrahRoomTrace") == true
+end
 
 function RoomBrowserController.new(lobbyRemote)
 	local self = setmetatable({}, RoomBrowserController)
@@ -13,7 +81,7 @@ function RoomBrowserController.new(lobbyRemote)
 		modes = {},
 		classicDifficulties = {},
 		selectedMode = "Classic",
-		selectedDifficulty = "Mudah",
+		selectedDifficulty = "AUTO",
 		selectedMap = "HauntedHouse",
 		rooms = {},
 		lastEvent = nil,
@@ -106,8 +174,9 @@ function RoomBrowserController:_send(action, payload)
 	request.action = action
 	request.requestId = request.requestId or self:_nextRequestId(action)
 	request.clientSentAt = request.clientSentAt or now
-	-- TODO: REMOVE AFTER VALIDATION
-	print("[ROOM TRACE][CLIENT->SERVER]", action)
+	if shouldTraceRoomBrowser() then
+		print(string.format("[ROOM TRACE][CLIENT->SERVER] %s%s", tostring(action), summarizeTraceData(request)))
+	end
 	remote:FireServer(request)
 	return true
 end
@@ -124,7 +193,7 @@ function RoomBrowserController:SelectMode(mode)
 	if mode == "Ranked" or mode == "Classic" then
 		self._state.selectedMode = mode
 	end
-	if mode == "Ranked" then
+	if mode == "Ranked" or mode == "Classic" then
 		self._state.selectedDifficulty = "AUTO"
 	end
 	self:_send("SelectMode", {
@@ -133,7 +202,7 @@ function RoomBrowserController:SelectMode(mode)
 end
 
 function RoomBrowserController:SelectDifficulty(difficulty)
-	if self._state.selectedMode ~= "Ranked" and type(difficulty) == "string" and difficulty ~= "" then
+	if self._state.selectedMode ~= "Ranked" and self._state.selectedMode ~= "Classic" and type(difficulty) == "string" and difficulty ~= "" then
 		self._state.selectedDifficulty = difficulty
 	end
 	self:_send("SelectDifficulty", {
@@ -222,6 +291,7 @@ function RoomBrowserController:HandleLobbyEvent(payload)
 		self._state.classicDifficulties = snapshot.classicDifficulties or self._state.classicDifficulties
 		self._state.selectedMode = snapshot.selectedMode or self._state.selectedMode
 		self._state.selectedDifficulty = snapshot.selectedDifficulty or self._state.selectedDifficulty
+		self._state.selectedMap = snapshot.selectedMap or self._state.selectedMap
 		self._state.rooms = snapshot.rooms or self._state.rooms
 		if snapshot.lobbyPlayers ~= nil then
 			self._state.lobbyPlayers = snapshot.lobbyPlayers or {}

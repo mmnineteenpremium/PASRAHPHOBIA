@@ -9,8 +9,16 @@ local LOBBY_NAME = "LobbySocialHub"
 local LOBBY_SPAWN_OFFSET = Vector3.new(0, 3, 0)
 local LOBBY_SPAWN_MAX_DELTA_XZ = 350
 local LOBBY_MIN_Y = -50
+local LOBBY_MAX_SPAWN_Y = 15
 local HOST_START_COUNTDOWN_SECONDS = 5
-local _standaloneMatchService = nil
+local DEFAULT_MAP_ID = "HauntedHouse"
+local LOBBY_SPAWN_PROTECTION_SECONDS = 3
+local SUPPORTED_MAP_IDS = {
+	HauntedHouse = true,
+	AbandonedPalace = true,
+	EmptyBuilding = true,
+	StudioMMNineteen = true,
+}
 
 local function resolveEventBus(deps)
 	local eventBus = Services.Get(deps, "EventBus")
@@ -36,6 +44,20 @@ local function resolveMatchSystem(deps)
 	end
 	if type(match.Service) == "table" and type(match.Service.JoinQueue) == "function" then
 		return match.Service
+	end
+	return nil
+end
+
+local function resolveProfileSystem(deps)
+	local profile = Services.Get(deps, "ProfileSystem")
+	if type(profile) ~= "table" then
+		return nil
+	end
+	if type(profile.GetPlayerLevel) == "function" then
+		return profile
+	end
+	if type(profile.Service) == "table" and type(profile.Service.GetPlayerLevel) == "function" then
+		return profile.Service
 	end
 	return nil
 end
@@ -70,6 +92,31 @@ local function nowClock()
 	return os.clock()
 end
 
+local function applyLobbySpawnState(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return
+	end
+
+	local protectUntil = os.clock() + LOBBY_SPAWN_PROTECTION_SECONDS
+	player:SetAttribute("InLobby", true)
+	player:SetAttribute("InMatch", nil)
+	player:SetAttribute("MatchId", nil)
+	player:SetAttribute("SpawnProtected", true)
+	player:SetAttribute("SpawnProtectedUntil", protectUntil)
+
+	task.delay(LOBBY_SPAWN_PROTECTION_SECONDS, function()
+		if not player.Parent then
+			return
+		end
+		local currentUntil = player:GetAttribute("SpawnProtectedUntil")
+		if type(currentUntil) == "number" and currentUntil > os.clock() then
+			return
+		end
+		player:SetAttribute("SpawnProtected", nil)
+		player:SetAttribute("SpawnProtectedUntil", nil)
+	end)
+end
+
 local function toUserId(player)
 	if typeof(player) == "Instance" and player:IsA("Player") then
 		return player.UserId
@@ -83,6 +130,21 @@ local function copyArray(list)
 		out[index] = value
 	end
 	return out
+end
+
+local function safeCall(target, methodName, ...)
+	if type(target) ~= "table" then
+		return nil
+	end
+	local method = target[methodName]
+	if type(method) ~= "function" then
+		return nil
+	end
+	local ok, result = pcall(method, target, ...)
+	if not ok then
+		return nil
+	end
+	return result
 end
 
 local function collectSpawnParts(root, out)
@@ -122,65 +184,16 @@ local function resolveLobbyRoot()
 	return nil
 end
 
-local function resolveStandaloneMatchService(registry)
-	if _standaloneMatchService then
-		return _standaloneMatchService
-	end
-
-	local serverScriptService = game:GetService("ServerScriptService")
-	local serverFolder = serverScriptService:FindFirstChild("Server")
-	local matchFolder = serverFolder and serverFolder:FindFirstChild("MatchSystem")
-	local stateModule = matchFolder and matchFolder:FindFirstChild("State")
-	local serviceModule = matchFolder and matchFolder:FindFirstChild("Service")
-	if not stateModule or not serviceModule then
-		return nil
-	end
-
-	local okState, stateFactory = pcall(require, stateModule)
-	local okService, serviceFactory = pcall(require, serviceModule)
-	if not okState or not okService then
-		return nil
-	end
-	if type(stateFactory) ~= "table" or type(stateFactory.new) ~= "function" then
-		return nil
-	end
-	if type(serviceFactory) ~= "table" or type(serviceFactory.new) ~= "function" then
-		return nil
-	end
-
-	local deps = {}
-	if type(registry) == "table" then
-		deps.Services = registry
-		deps.ServiceRegistry = registry
-	end
-
-	local state = stateFactory.new()
-	local service = serviceFactory.new(state, deps)
-	if type(service) ~= "table" then
-		return nil
-	end
-
-	if type(service.Init) == "function" then
-		pcall(function()
-			service:Init()
-		end)
-	end
-	if type(service.Start) == "function" then
-		pcall(function()
-			service:Start()
-		end)
-	end
-
-	if type(service.JoinQueue) == "function" and type(service.TryCreateMatchFromQueue) == "function" and type(service.StartMatch) == "function" then
-		_standaloneMatchService = service
-		return _standaloneMatchService
-	end
-
-	return nil
-end
-
 local function isValidLobbySpawnPart(lobbyRoot, spawnPart)
 	if not (spawnPart and spawnPart:IsA("BasePart")) then
+		return false
+	end
+
+	if spawnPart.Position.Y < LOBBY_MIN_Y then
+		return false
+	end
+
+	if spawnPart.Position.Y > LOBBY_MAX_SPAWN_Y then
 		return false
 	end
 
@@ -192,9 +205,6 @@ local function isValidLobbySpawnPart(lobbyRoot, spawnPart)
 		local pivot = lobbyRoot:GetPivot().Position
 		local delta = spawnPart.Position - pivot
 		if math.abs(delta.X) > LOBBY_SPAWN_MAX_DELTA_XZ or math.abs(delta.Z) > LOBBY_SPAWN_MAX_DELTA_XZ then
-			return false
-		end
-		if spawnPart.Position.Y < LOBBY_MIN_Y then
 			return false
 		end
 	end
@@ -210,20 +220,28 @@ local function resolveLobbySpawnParts()
 			return { lobbySpawn }
 		end
 
-		local spawnFolder = lobbyRoot:FindFirstChild("SpawnPoints", true)
-		local spawnParts = collectSpawnParts(spawnFolder, {})
-		table.sort(spawnParts, function(a, b)
-			return a.Name < b.Name
-		end)
-
-		local validSpawnParts = {}
-		for _, spawnPart in ipairs(spawnParts) do
-			if isValidLobbySpawnPart(lobbyRoot, spawnPart) then
-				table.insert(validSpawnParts, spawnPart)
+		local spawnFolders = {}
+		for _, descendant in ipairs(lobbyRoot:GetDescendants()) do
+			if descendant.Name == "SpawnPoints" and (descendant:IsA("Folder") or descendant:IsA("Model")) then
+				table.insert(spawnFolders, descendant)
 			end
 		end
-		if #validSpawnParts > 0 then
-			return validSpawnParts
+
+		for _, spawnFolder in ipairs(spawnFolders) do
+			local spawnParts = collectSpawnParts(spawnFolder, {})
+			table.sort(spawnParts, function(a, b)
+				return a.Name < b.Name
+			end)
+
+			local validSpawnParts = {}
+			for _, spawnPart in ipairs(spawnParts) do
+				if isValidLobbySpawnPart(lobbyRoot, spawnPart) then
+					table.insert(validSpawnParts, spawnPart)
+				end
+			end
+			if #validSpawnParts > 0 then
+				return validSpawnParts
+			end
 		end
 
 		local spawnLocation = lobbyRoot:FindFirstChildWhichIsA("SpawnLocation", true)
@@ -240,12 +258,28 @@ local function resolveLobbySpawnParts()
 	return {}
 end
 
+local function buildUprightPartCFrame(part, offset)
+	if not (part and part:IsA("BasePart")) then
+		return nil
+	end
+
+	local finalPosition = part.Position + (offset or Vector3.zero)
+	local flatLook = Vector3.new(part.CFrame.LookVector.X, 0, part.CFrame.LookVector.Z)
+	if flatLook.Magnitude <= 1e-4 then
+		flatLook = Vector3.new(0, 0, -1)
+	else
+		flatLook = flatLook.Unit
+	end
+	return CFrame.lookAt(finalPosition, finalPosition + flatLook, Vector3.yAxis)
+end
+
 function Service.new(state, deps)
 	local self = setmetatable({}, Service)
 	self._state = state
 	self._deps = deps or {}
 	self._eventBus = resolveEventBus(self._deps)
 	self._matchSystem = resolveMatchSystem(self._deps)
+	self._profileSystem = resolveProfileSystem(self._deps)
 	self._players = resolvePlayersService(self._deps)
 	self._modeConfig = ModeSelectionConfig.Load()
 	self._roomManager = resolveRoomManager()
@@ -268,7 +302,7 @@ function Service:_getMatchSystem()
 		return require(script.Parent.Parent.Core.SystemRegistry)
 	end)
 	if not ok or type(registry) ~= "table" then
-		return resolveStandaloneMatchService(nil)
+		return nil
 	end
 
 	local match = nil
@@ -283,7 +317,7 @@ function Service:_getMatchSystem()
 		match = registry:Get("MatchSystem")
 	end
 	if type(match) ~= "table" then
-		return resolveStandaloneMatchService(registry)
+		return nil
 	end
 	if type(match.JoinQueue) == "function" then
 		self._matchSystem = match
@@ -293,7 +327,16 @@ function Service:_getMatchSystem()
 		self._matchSystem = match.Service
 		return self._matchSystem
 	end
-	return resolveStandaloneMatchService(registry)
+	return nil
+end
+
+function Service:_getProfileSystem()
+	if self._profileSystem then
+		return self._profileSystem
+	end
+
+	self._profileSystem = resolveProfileSystem(self._deps)
+	return self._profileSystem
 end
 
 function Service:_publish(eventName, payload)
@@ -326,8 +369,48 @@ function Service:_normalizeDifficulty(difficultyName)
 	return ModeSelectionConfig.NormalizeDifficulty(self._modeConfig, difficultyName)
 end
 
+function Service:_resolveDisplayedDifficulty(modeName, difficultyName)
+	return ModeSelectionConfig.ResolveDisplayedDifficulty(self._modeConfig, modeName, difficultyName)
+end
+
+function Service:_allowDifficultySelection(modeName)
+	return ModeSelectionConfig.AllowDifficultySelection(self._modeConfig, modeName)
+end
+
+function Service:_normalizeMapId(mapId)
+	if type(mapId) == "string" and SUPPORTED_MAP_IDS[mapId] == true then
+		return mapId
+	end
+	return DEFAULT_MAP_ID
+end
+
 function Service:_resolveRankedDifficulty(payload)
 	return ModeSelectionConfig.ResolveRankedDifficulty(self._modeConfig, payload)
+end
+
+function Service:_buildLevelBalanceData(players)
+	local profileSystem = self:_getProfileSystem()
+	local playerLevels = {}
+	local totalLevel = 0
+	local count = 0
+
+	for _, player in ipairs(players or {}) do
+		local level = nil
+		if profileSystem then
+			level = safeCall(profileSystem, "GetPlayerLevel", player)
+		end
+		level = tonumber(level) or tonumber(typeof(player) == "Instance" and player:GetAttribute("PlayerLevel") or nil) or 1
+		level = math.max(1, math.floor(level))
+		table.insert(playerLevels, level)
+		totalLevel += level
+		count += 1
+	end
+
+	return {
+		playerLevels = playerLevels,
+		averagePlayerLevel = count > 0 and (totalLevel / count) or 1,
+		partySize = math.max(count, 1),
+	}
 end
 
 function Service:_getQueueTriggerPart()
@@ -363,7 +446,12 @@ function Service:_teleportPlayerToQueueAreaIfOutside(player)
 		return true, "already_in_area"
 	end
 
-	root.CFrame = queuePart.CFrame + Vector3.new(0, 4, 0)
+	local queueCFrame = buildUprightPartCFrame(queuePart, Vector3.new(0, 4, 0))
+	if queueCFrame then
+		root.CFrame = queueCFrame
+	else
+		root.CFrame = queuePart.CFrame + Vector3.new(0, 4, 0)
+	end
 	return true
 end
 
@@ -381,7 +469,8 @@ function Service:_ensurePlayerSelection(player)
 
 	selection = {
 		mode = self:_normalizeMode(nil),
-		difficulty = self:_normalizeDifficulty(nil),
+		difficulty = self:_resolveDisplayedDifficulty(self:_normalizeMode(nil), nil),
+		mapId = self:_normalizeMapId(nil),
 		updatedAt = nowClock(),
 	}
 	selections[userId] = selection
@@ -432,10 +521,10 @@ function Service:SetModeSelection(player, modeName, payload)
 
 	local mode = self:_normalizeMode(modeName)
 	selection.mode = mode
-	if mode == "Ranked" then
-		selection.difficulty = self:_resolveRankedDifficulty(payload)
-	else
+	if self:_allowDifficultySelection(mode) then
 		selection.difficulty = self:_normalizeDifficulty(selection.difficulty)
+	else
+		selection.difficulty = self:_resolveDisplayedDifficulty(mode, nil)
 	end
 	selection.updatedAt = nowClock()
 
@@ -449,6 +538,7 @@ function Service:SetModeSelection(player, modeName, payload)
 	return true, nil, {
 		mode = selection.mode,
 		difficulty = selection.difficulty,
+		mapId = selection.mapId,
 	}
 end
 
@@ -457,8 +547,8 @@ function Service:SetDifficultySelection(player, difficultyName)
 	if not selection then
 		return false, "invalid_player"
 	end
-	if selection.mode == "Ranked" then
-		return false, "ranked_difficulty_is_balanced"
+	if not self:_allowDifficultySelection(selection.mode) then
+		return false, "difficulty_selection_disabled"
 	end
 
 	selection.difficulty = self:_normalizeDifficulty(difficultyName)
@@ -474,6 +564,31 @@ function Service:SetDifficultySelection(player, difficultyName)
 	return true, nil, {
 		mode = selection.mode,
 		difficulty = selection.difficulty,
+		mapId = selection.mapId,
+	}
+end
+
+function Service:SetMapSelection(player, mapId)
+	local selection = self:_ensurePlayerSelection(player)
+	if not selection then
+		return false, "invalid_player"
+	end
+
+	selection.mapId = self:_normalizeMapId(mapId)
+	selection.updatedAt = nowClock()
+
+	self:_publish("RoomBrowserSelectionChanged", {
+		player = player,
+		userId = player.UserId,
+		mode = selection.mode,
+		difficulty = selection.difficulty,
+		mapId = selection.mapId,
+	})
+
+	return true, nil, {
+		mode = selection.mode,
+		difficulty = selection.difficulty,
+		mapId = selection.mapId,
 	}
 end
 
@@ -482,12 +597,13 @@ function Service:GetPlayerSelection(player, payload)
 	if not selection then
 		return nil
 	end
-	if selection.mode == "Ranked" then
-		selection.difficulty = self:_resolveRankedDifficulty(payload)
+	if not self:_allowDifficultySelection(selection.mode) then
+		selection.difficulty = self:_resolveDisplayedDifficulty(selection.mode, selection.difficulty)
 	end
 	return {
 		mode = selection.mode,
 		difficulty = selection.difficulty,
+		mapId = selection.mapId,
 	}
 end
 
@@ -798,7 +914,9 @@ function Service:GetRoomList()
 
 			mode = leaderSelection and leaderSelection.mode or self:_normalizeMode(nil),
 
-			difficulty = leaderSelection and leaderSelection.difficulty or self:_normalizeDifficulty(nil),
+			difficulty = leaderSelection and leaderSelection.difficulty or self:_resolveDisplayedDifficulty(self:_normalizeMode(nil), nil),
+
+			mapId = leaderSelection and leaderSelection.mapId or self:_normalizeMapId(nil),
 
 			players = roomPlayers,
 
@@ -818,13 +936,15 @@ end
 function Service:GetRoomBrowserSnapshot(player, payload)
 	local selection = self:GetPlayerSelection(player, payload) or {
 		mode = self:_normalizeMode(nil),
-		difficulty = self:_normalizeDifficulty(nil),
+		difficulty = self:_resolveDisplayedDifficulty(self:_normalizeMode(nil), nil),
+		mapId = self:_normalizeMapId(nil),
 	}
 	return {
 		modes = ModeSelectionConfig.GetModeList(self._modeConfig),
-		classicDifficulties = ModeSelectionConfig.GetDifficultyList(self._modeConfig),
+		classicDifficulties = ModeSelectionConfig.GetPublicDifficultyList(self._modeConfig, selection.mode),
 		selectedMode = selection.mode,
 		selectedDifficulty = selection.difficulty,
+		selectedMap = selection.mapId,
 		rooms = self:GetRoomList(),
 	}
 end
@@ -839,6 +959,8 @@ function Service:_buildQueuePayload(player, payload)
 	local difficulty = selection.difficulty
 	if mode == "Ranked" then
 		difficulty = self:_resolveRankedDifficulty(payload)
+	elseif not self:_allowDifficultySelection(mode) then
+		difficulty = nil
 	end
 
 	local roomPlayers = { player }
@@ -849,6 +971,8 @@ function Service:_buildQueuePayload(player, payload)
 		partyId = "room:" .. tostring(room.id)
 	end
 
+	local balanceData = self:_buildLevelBalanceData(roomPlayers)
+
 	return {
 		partyId = partyId,
 		leader = player,
@@ -858,10 +982,13 @@ function Service:_buildQueuePayload(player, payload)
 		mode = mode,
 		gameMode = mode,
 		difficulty = difficulty,
-		averageMMR = payload and payload.averageMMR or nil,
-		playerMMRs = payload and payload.playerMMRs or nil,
+		averagePlayerLevel = balanceData.averagePlayerLevel,
+		playerLevels = balanceData.playerLevels,
+		partySize = balanceData.partySize,
+		averageRankScore = payload and payload.averageRankScore or nil,
+		playerRankScores = payload and payload.playerRankScores or nil,
 		rankedDifficulty = payload and payload.rankedDifficulty or nil,
-		mapId = payload and payload.mapId or nil,
+		mapId = self:_normalizeMapId((payload and payload.mapId) or selection.mapId),
 		now = payload and payload.now or nil,
 	}
 end
@@ -872,14 +999,14 @@ function Service:QueueFromRoomBrowser(player, payload)
 		return false, err
 	end
 
-	if self._eventBus then
-		self:_publish("MatchmakingStarted", queuePayload)
-		return true, nil, queuePayload
-	end
-
 	local matchSystem = self:_getMatchSystem()
 	if not matchSystem then
 		return false, "missing_match_system"
+	end
+
+	if self._eventBus then
+		self:_publish("MatchmakingStarted", queuePayload)
+		return true, nil, queuePayload
 	end
 
 	local partyMembers = {}
@@ -897,8 +1024,8 @@ function Service:QueueFromRoomBrowser(player, payload)
 		mode = queuePayload.mode,
 		gameMode = queuePayload.gameMode,
 		difficulty = queuePayload.difficulty,
-		averageMMR = queuePayload.averageMMR,
-		playerMMRs = queuePayload.playerMMRs,
+		averageRankScore = queuePayload.averageRankScore,
+		playerRankScores = queuePayload.playerRankScores,
 		rankedDifficulty = queuePayload.rankedDifficulty,
 		now = queuePayload.now,
 	})
@@ -984,55 +1111,16 @@ function Service:OnPlayerJoin(player)
 	if not userId then
 		return
 	end
-	local players = self._state:Get("lobbyPlayers") or {}
-	players[userId] = player
-	self._state:Set("lobbyPlayers", players)
 
 	local previous = self._spawnConnectionsByUserId[userId]
 	if previous then
 		previous:Disconnect()
+		self._spawnConnectionsByUserId[userId] = nil
 	end
 
-	local function spawnToLobby(character, source)
-		if player:GetAttribute("InMatch") == true then
-			return
-		end
-
-		local root = character and character:FindFirstChild("HumanoidRootPart")
-		if not root or not root:IsA("BasePart") then
-			root = character and character:WaitForChild("HumanoidRootPart", 5)
-		end
-		if not root or not root:IsA("BasePart") then
-			warn(string.format("[LobbySystem] [%s] Missing root for %s", tostring(source), player.Name))
-			return
-		end
-
-		local spawnParts = resolveLobbySpawnParts()
-		if #spawnParts == 0 then
-			warn(string.format("[LobbySystem] [%s] Lobby spawn unresolved for %s", tostring(source), player.Name))
-			return
-		end
-
-		local index = (player.UserId % #spawnParts) + 1
-		local spawnPart = spawnParts[index]
-		root.AssemblyLinearVelocity = Vector3.zero
-		root.AssemblyAngularVelocity = Vector3.zero
-		root.CFrame = spawnPart.CFrame + LOBBY_SPAWN_OFFSET
-		player:SetAttribute("InLobby", true)
-		print(string.format("[LobbySystem] [%s] Spawned %s at %s", tostring(source), player.Name, tostring(spawnPart.Position)))
-	end
-
-	self._spawnConnectionsByUserId[userId] = player.CharacterAdded:Connect(function(character)
-		task.defer(function()
-			spawnToLobby(character, "CharacterAdded")
-		end)
-	end)
-
-	if player.Character then
-		task.defer(function()
-			spawnToLobby(player.Character, "OnPlayerJoin")
-		end)
-	end
+	-- LobbySocialHub owns lobby presence and spawn authority.
+	-- LobbySystem only initializes room-browser state for connected players.
+	self:_ensurePlayerSelection(player)
 end
 
 function Service:OnPlayerLeave(player)
@@ -1082,6 +1170,7 @@ function Service:OnPlayerRemoved(player)
 end
 
 return Service
+
 
 
 

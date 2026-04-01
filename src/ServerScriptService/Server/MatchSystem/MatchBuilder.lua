@@ -89,7 +89,6 @@ function MatchBuilder:BuildMatch(players)
 		createdAt = os.time(),
 	}
 
-	print("[MatchBuilder] Match created")
 	return match
 end
 

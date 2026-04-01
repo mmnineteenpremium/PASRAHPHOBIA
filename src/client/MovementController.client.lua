@@ -19,7 +19,8 @@ local WALK_SPEED = 10 -- Realistic human walk
 local SPRINT_SPEED = 14 -- Sprint with Shift
 local CROUCH_SPEED = 5 -- Crouch with Ctrl (optional)
 local BACKWARD_SPEED_MULTIPLIER = 0.65 -- Slower backward movement for realism
-local ROTATION_SMOOTH_SPEED = 12 -- Higher = snappier camera-yaw alignment in FPV
+local TELEMETRY_INTERVAL_SECONDS = 0.5
+local TELEMETRY_PREFIX = "[MovementTelemetry]"
 
 -- Jump power
 local JUMP_POWER = 32 -- Realistic jump height
@@ -32,7 +33,7 @@ humanoid.AutoRotate = true
 
 -- Sprint state
 local sprinting = false
-local currentYaw = nil
+local lastTelemetryAt = 0
 
 local function bindCharacter(newCharacter)
     character = newCharacter
@@ -42,6 +43,7 @@ local function bindCharacter(newCharacter)
     humanoid.JumpPower = JUMP_POWER
     humanoid.UseJumpPower = true
     humanoid.AutoRotate = true
+    lastTelemetryAt = 0
 end
 
 player.CharacterAdded:Connect(bindCharacter)
@@ -63,13 +65,7 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
-local function normalizeAngleDelta(delta)
-    local twoPi = math.pi * 2
-    delta = (delta + math.pi) % twoPi - math.pi
-    return delta
-end
-
-RunService.RenderStepped:Connect(function(deltaTime)
+RunService.RenderStepped:Connect(function()
     if not humanoid or not humanoidRootPart then
         return
     end
@@ -78,31 +74,27 @@ RunService.RenderStepped:Connect(function(deltaTime)
         camera = workspace.CurrentCamera or camera
     end
 
-    local fpvActive = player.CameraMode == Enum.CameraMode.LockFirstPerson
-    if fpvActive then
-        if humanoid.AutoRotate then
-            humanoid.AutoRotate = false
-        end
-        if camera then
-            local _, targetYaw, _ = camera.CFrame:ToOrientation()
-            if currentYaw == nil then
-                currentYaw = targetYaw
-            end
-            local deltaYaw = normalizeAngleDelta(targetYaw - currentYaw)
-            local alpha = math.clamp(deltaTime * ROTATION_SMOOTH_SPEED, 0, 1)
-            currentYaw = currentYaw + deltaYaw * alpha
-            humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position) * CFrame.Angles(0, currentYaw, 0)
-        end
-    else
-        if not humanoid.AutoRotate then
-            humanoid.AutoRotate = true
-        end
-        currentYaw = nil
+    -- Keep Roblox default rotation ownership to avoid local/client drift desync in FPV.
+    if not humanoid.AutoRotate then
+        humanoid.AutoRotate = true
     end
 
     local moveDirection = humanoid.MoveDirection
+    local inMatch = player:GetAttribute("InMatch") == true
     local baseSpeed = sprinting and SPRINT_SPEED or WALK_SPEED
     local targetSpeed = baseSpeed
+
+    -- Enforce planar movement in investigation so FPV/camera vectors cannot inject Y motion.
+    if inMatch and moveDirection.Magnitude > 0 then
+        local flatMove = Vector3.new(moveDirection.X, 0, moveDirection.Z)
+        if flatMove.Magnitude > 1e-4 then
+            humanoid:Move(flatMove.Unit * math.min(moveDirection.Magnitude, 1), false)
+            moveDirection = flatMove
+        else
+            humanoid:Move(Vector3.zero, false)
+            moveDirection = Vector3.zero
+        end
+    end
 
     if moveDirection.Magnitude > 0 then
         local flatMove = Vector3.new(moveDirection.X, 0, moveDirection.Z)
@@ -117,6 +109,23 @@ RunService.RenderStepped:Connect(function(deltaTime)
 
     if humanoid.WalkSpeed ~= targetSpeed then
         humanoid.WalkSpeed = targetSpeed
+    end
+
+    if inMatch then
+        local now = os.clock()
+        if (now - lastTelemetryAt) >= TELEMETRY_INTERVAL_SECONDS then
+            lastTelemetryAt = now
+            print(string.format(
+                "%s name=%s state=%s floor=%s velY=%.3f posY=%.3f moveY=%.3f",
+                TELEMETRY_PREFIX,
+                player.Name,
+                tostring(humanoid:GetState()),
+                tostring(humanoid.FloorMaterial),
+                humanoidRootPart.AssemblyLinearVelocity.Y,
+                humanoidRootPart.Position.Y,
+                moveDirection.Y
+            ))
+        end
     end
 end)
 

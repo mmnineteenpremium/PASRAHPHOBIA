@@ -5,13 +5,13 @@ local function nowOrClock(now)
 	return now or os.clock()
 end
 
-local EVIDENCE_TYPES = {
-	"BolaArwah",
+local DEFAULT_EVIDENCE_TYPES = {
+	"MEDOK",
+	"Suhu",
 	"BukuTerkutuk",
-	"GerakanGaib",
-	"JejakEnergi",
-	"KotakArwah",
-	"SuhuMembeku",
+	"To'un",
+	"Suara",
+	"Pengganggu",
 }
 
 local function listContains(list, value)
@@ -28,6 +28,26 @@ local function cloneList(list)
 	for _, value in ipairs(list or {}) do
 		table.insert(out, value)
 	end
+	return out
+end
+
+local function resolveEvidenceTypes(candidate)
+	if type(candidate) ~= "table" then
+		return cloneList(DEFAULT_EVIDENCE_TYPES)
+	end
+	if #candidate > 0 then
+		return cloneList(candidate)
+	end
+	local out = {}
+	for _, value in pairs(candidate) do
+		if type(value) == "string" then
+			table.insert(out, value)
+		end
+	end
+	if #out == 0 then
+		return cloneList(DEFAULT_EVIDENCE_TYPES)
+	end
+	table.sort(out)
 	return out
 end
 
@@ -74,6 +94,7 @@ function EvidenceEngine.new(deps)
 	self._tracker = assert(self._deps.Tracker, "EvidenceEngine requires Tracker")
 	self._deduction = assert(self._deps.Deduction, "EvidenceEngine requires Deduction")
 	self._rng = self._deps.Random or Random.new()
+	self._evidenceTypes = resolveEvidenceTypes(self._deps.EvidenceTypes)
 	self._sessions = {}
 	return self
 end
@@ -109,7 +130,7 @@ function EvidenceEngine:StartMatch(matchId, payload)
 		}
 		validationEvidence = cloneList(evidencePool)
 	elseif difficultyMode == "Easy" then
-		for _, evidenceType in ipairs(EVIDENCE_TYPES) do
+		for _, evidenceType in ipairs(self._evidenceTypes) do
 			if not listContains(ghostEvidence, evidenceType) then
 				table.insert(supplementalEvidence, evidenceType)
 			end
@@ -204,7 +225,7 @@ function EvidenceEngine:SetGhostProfile(matchId, profile)
 		}
 		validationEvidence = cloneList(evidencePool)
 	elseif resolvedMode == "Easy" then
-		for _, evidenceType in ipairs(EVIDENCE_TYPES) do
+		for _, evidenceType in ipairs(self._evidenceTypes) do
 			if not listContains(ghostEvidence, evidenceType) then
 				table.insert(supplementalEvidence, evidenceType)
 			end

@@ -146,6 +146,7 @@ function Service:LoadShopCatalog()
                 category = item.category or "Unknown",
                 slot = item.slot,
                 rarity = item.rarity,
+                rarityLabel = item.rarityLabel or item.rarity,
                 tags = type(item.tags) == "table" and item.tags or nil,
             }
         end

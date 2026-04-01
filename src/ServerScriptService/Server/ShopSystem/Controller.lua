@@ -40,6 +40,20 @@ local function resolveSecurityService(deps)
     return nil
 end
 
+local function resolveSocialCommerceService(deps)
+    local socialCommerce = Services.Get(deps, "SocialCommerceSystem")
+    if type(socialCommerce) ~= "table" then
+        return nil
+    end
+    if type(socialCommerce.ProcessGiftPurchase) == "function" then
+        return socialCommerce
+    end
+    if type(socialCommerce.Service) == "table" and type(socialCommerce.Service.ProcessGiftPurchase) == "function" then
+        return socialCommerce.Service
+    end
+    return nil
+end
+
 local function toUserId(player)
     if typeof(player) == "Instance" and player:IsA("Player") then
         return player.UserId
@@ -80,6 +94,27 @@ local function resolveItemIdFromRequest(request)
         return nil
     end
     return raw
+end
+
+local function resolveGiftRecipientUserId(request)
+    if type(request) ~= "table" then
+        return nil
+    end
+
+    local raw = request.recipientUserId
+    if raw == nil and type(request.payload) == "table" then
+        raw = request.payload.recipientUserId or request.payload.targetUserId
+    end
+
+    if raw == nil then
+        return nil
+    end
+
+    local recipientUserId = tonumber(raw)
+    if not recipientUserId or recipientUserId <= 0 then
+        return nil
+    end
+    return recipientUserId
 end
 
 function Controller.new(state, service, deps)
@@ -274,6 +309,38 @@ function Controller:OnPurchaseRemoteRequest(player, request)
         return
     end
 
+    local recipientUserId = resolveGiftRecipientUserId(request)
+    if recipientUserId and recipientUserId ~= toUserId(player) then
+        local socialCommerce = resolveSocialCommerceService(self._deps)
+        if not socialCommerce then
+            self:_sendPurchaseResponse(player, {
+                eventName = "PurchaseProcessed",
+                requestId = requestId,
+                success = false,
+                reason = "gift_system_unavailable",
+                itemId = itemId,
+                recipientUserId = recipientUserId,
+            })
+            return
+        end
+
+        local ok, reason = socialCommerce:ProcessGiftPurchase({
+            player = player,
+            fromPlayer = player,
+            recipientUserId = recipientUserId,
+            itemId = itemId,
+        })
+        self:_sendPurchaseResponse(player, {
+            eventName = "PurchaseProcessed",
+            requestId = requestId,
+            success = ok == true,
+            reason = reason,
+            itemId = itemId,
+            recipientUserId = recipientUserId,
+        })
+        return
+    end
+
     self:_publish("PurchaseRequestReceived", {
         player = player,
         itemId = itemId,
@@ -296,6 +363,19 @@ function Controller:OnPlayerPurchaseRequest(payload)
     local player = payload.player
     local itemId = payload.itemId
     if not player or type(itemId) ~= "string" or itemId == "" then
+        return
+    end
+    local recipientUserId = tonumber(payload.recipientUserId)
+    if recipientUserId and recipientUserId > 0 and recipientUserId ~= toUserId(player) then
+        local socialCommerce = resolveSocialCommerceService(self._deps)
+        if socialCommerce then
+            socialCommerce:ProcessGiftPurchase({
+                player = player,
+                fromPlayer = player,
+                recipientUserId = recipientUserId,
+                itemId = itemId,
+            })
+        end
         return
     end
     self._service:ProcessPurchase(player, itemId)

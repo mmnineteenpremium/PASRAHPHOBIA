@@ -41,7 +41,7 @@ State.lua
 
 Example structure:
 
-src/server/MatchSystem
+src/ServerScriptService/Server/MatchSystem
 
 MatchSystem
  + Main.lua
@@ -86,7 +86,7 @@ DATA PERSISTENCE
 
 All player data must go through:
 
-src/server/DataPersistenceService
+src/ServerScriptService/Server/DataPersistenceService
 
 Supported operations:
 
@@ -171,7 +171,7 @@ DIRECTORY STRUCTURE
 
 Server code:
 
-src/server
+src/ServerScriptService/Server
 
 Shared definitions:
 
@@ -203,15 +203,14 @@ Agents must follow these rules:
 
 CURRENT DEVELOPMENT STAGE
 
-Backend systems mostly implemented.
+Backend systems are active in runtime and mostly stabilized.
 
-Remaining systems include:
+Current focus items:
 
-ShopSystem
-CosmeticSystem
-RankSystem
-ProgressionSystem
-ContractRewardSystem
+Robux purchase flow hardening
+Classic difficulty auto-balance parity
+Investigation expansion beyond 6 core evidence tools
+Telemetry and production diagnostics polish
 
-Agents should prioritize implementing missing systems rather than refactoring existing ones.
+Agents should prioritize runtime consistency and source-of-truth alignment before adding new features.
 

@@ -177,7 +177,7 @@ DataPersistenceService saves data
 
 DIRECTORY STRUCTURE
 
-src/server
+src/ServerScriptService/Server
 
 Core systems:
 MatchSystem
@@ -246,7 +246,8 @@ Remaining systems typically include:
 
 ShopSystem
 CosmeticSystem
-RankSystem
+RankedSystem
 ProgressionSystem
 ContractRewardSystem
+
 

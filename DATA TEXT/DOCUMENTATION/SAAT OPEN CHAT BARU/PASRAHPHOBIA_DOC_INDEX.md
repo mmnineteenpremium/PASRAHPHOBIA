@@ -5,6 +5,13 @@ PASRAHPHOBIA — DOCUMENT INDEX
 This directory contains the full design documentation
 for the PASRAHPHOBIA Roblox game project.
 
+[2026-03-31 NOTE]
+This index is an aggregated snapshot and may still contain historical references from older revisions.
+Runtime source-of-truth for execution must follow:
+- `src/ServerScriptService/Server` for active server code
+- `REPORTS.md` for current implementation status
+- `CANONICAL_SPECIFICATIONS_v2.md` for canonical design targets
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 
@@ -2096,7 +2103,7 @@ New personalities can be added without modifying core systems.
 
 Possible future traits:
 
-Poltergeist-like behavior
+Chaotic object-throw behavior
 Light Manipulator
 Shadow Walker
 Door Keeper
@@ -6574,7 +6581,7 @@ HUBUNGAN DENGAN STRUKTUR FOLDER PROJECT
 
 Bootstrap berada di folder yang sudah ada di project kamu:
 
-src/server/Core
+src/ServerScriptService/Server/Core
 
 yang sekarang berisi:
 
@@ -6583,7 +6590,7 @@ ServiceRegistry
 
 Bootstrap akan menyalakan seluruh system dari folder:
 
-src/server/*
+src/ServerScriptService/Server/*
 
 
 
@@ -7252,7 +7259,7 @@ HUBUNGAN DENGAN STRUKTUR PROJECT KAMU
 
 Matrix ini langsung cocok dengan struktur folder kamu:
 
-src/server
+src/ServerScriptService/Server
 ├── Core
 ├── DataPersistence
 ├── ProfileSystem
@@ -8597,7 +8604,7 @@ Folder Integration
 
 Ini sudah cocok dengan folder project kamu:
 
-src/server/GamePhaseSystem
+src/ServerScriptService/Server/GamePhaseSystem
 
 Module utama:
 
@@ -8623,7 +8630,7 @@ Bootstrap
 Lokasi:
 
 src/shared
-src/server/Core
+src/ServerScriptService/Server/Core
 
 Tujuan:
 
@@ -8642,7 +8649,7 @@ RankData
 
 Lokasi:
 
-src/server/DataPersistence
+src/ServerScriptService/Server/DataPersistence
 
 Digunakan oleh:
 
@@ -8660,7 +8667,7 @@ ProfileInspect
 
 Lokasi:
 
-src/server/ProfileSystem
+src/ServerScriptService/Server/ProfileSystem
 
 Dependency:
 
@@ -9610,7 +9617,7 @@ Folder Integration (sesuai project kamu)
 
 Struktur ini sudah cocok dengan folder yang kamu buat:
 
-src/server/MatchSystem
+src/ServerScriptService/Server/MatchSystem
 
 Modules:
 
@@ -10058,7 +10065,7 @@ Folder Yang Mengimplementasikan Blueprint Ini
 
 Sudah sesuai dengan struktur kamu:
 
-src/server/GhostSystem
+src/ServerScriptService/Server/GhostSystem
 ├── GhostAI
 ├── GhostAbilities
 ├── RoomSystem
@@ -10850,7 +10857,7 @@ Struktur Folder yang Mengimplementasikan Sistem Ini
 
 Sudah sesuai dengan struktur project kamu:
 
-src/server/GhostSystem
+src/ServerScriptService/Server/GhostSystem
  ├─ GhostAI
  ├─ GhostAbilities
  ├─ States
@@ -12879,7 +12886,7 @@ Folder Structure Integration
 
 Ini akan masuk ke folder yang sudah ada di project kamu.
 
-src/server/DataPersistence
+src/ServerScriptService/Server/DataPersistence
 
 Modules:
 
@@ -13629,7 +13636,7 @@ Folder Integration
 
 Sesuai dengan project kamu:
 
-src/server/LobbySocialHub
+src/ServerScriptService/Server/LobbySocialHub
 
 Modules:
 
@@ -14084,7 +14091,7 @@ Folder Integration
 
 Sesuai dengan project kamu:
 
-src/server/LobbySocialHub
+src/ServerScriptService/Server/LobbySocialHub
 
 Modules:
 
@@ -14616,7 +14623,7 @@ Tables for system structures
 Code blocks for architecture diagrams
 
 Example:
-src/server/MatchSystem
+src/ServerScriptService/Server/MatchSystem
 MatchBuilder
 MatchLifecycle
 MatchInstance
@@ -14762,9 +14769,9 @@ AI menghasilkan code berdasarkan folder structure.
 
 Example:
 
-src/server/GhostSystem
-src/server/MatchSystem
-src/server/EvidenceSystem
+src/ServerScriptService/Server/GhostSystem
+src/ServerScriptService/Server/MatchSystem
+src/ServerScriptService/Server/EvidenceSystem
 
 Setiap folder berisi module Lua.
 
@@ -14913,6 +14920,7 @@ MatchSystem
 GamePhaseSystem
 ContractSystem
 TeleportService
+
 2️⃣ Hunt Algorithm Blueprint (Extremely Important)
 
 The hunt system is the heart of a horror investigation game.
@@ -14936,6 +14944,7 @@ hunt cooldown
 hunt duration
 ghost speed
 line-of-sight detection
+
 3️⃣ Sanity & Fear Formula Blueprint
 
 Right now we defined sanity conceptually, but not the exact formulas.
@@ -14954,6 +14963,7 @@ BaseDrain
 + DarknessModifier
 + GhostProximityModifier
 + EventModifier
+
 4️⃣ Ghost Spawn Algorithm
 
 Defines:
@@ -14967,6 +14977,7 @@ Uses:
 RoomGraph
 RoomSpawnRules
 RoomActivity
+
 5️⃣ Difficulty Scaling System
 
 This is important for Ranked Mode.
@@ -14986,6 +14997,7 @@ AggressionMultiplier = 0.8
 
 Difficulty 8
 AggressionMultiplier = 1.5
+
 6️⃣ Economy Reward Algorithm
 
 Defines exactly how rewards are calculated.
@@ -15145,7 +15157,7 @@ Lobby Systems
 
 Semua system server berada di:
 
-src/server
+src/ServerScriptService/Server
 
 ---
 
@@ -15175,7 +15187,7 @@ Start
 
 System di-load dari:
 
-src/server/Core/Bootstrap/SystemLoader
+src/ServerScriptService/Server/Core/Bootstrap/SystemLoader
 
 Contoh:
 
@@ -15193,7 +15205,7 @@ ProfileSystem
 InventorySystem
 EconomySystem
 ProgressionSystem
-RankSystem
+RankedSystem
 
 Persistence:
 
@@ -15221,7 +15233,7 @@ Tier 3 — Player
 
 ProfileSystem
 ProgressionSystem
-RankSystem
+RankedSystem
 
 Tier 4 — Lobby
 
@@ -15259,7 +15271,7 @@ MapEventSystem
 
 ## Server
 
-src/server
+src/ServerScriptService/Server
 
 MatchSystem
 GhostSystem
@@ -15283,21 +15295,21 @@ LobbySocialHub
 
 Core Systems
 
-src/server/MatchSystem  
-src/server/GhostSystem  
-src/server/EvidenceSystem  
-src/server/SpectatorSystem  
-src/server/HorrorDirector  
-src/server/SanitySystem  
-src/server/AggressionSystem  
+src/ServerScriptService/Server/MatchSystem  
+src/ServerScriptService/Server/GhostSystem  
+src/ServerScriptService/Server/EvidenceSystem  
+src/ServerScriptService/Server/SpectatorSystem  
+src/ServerScriptService/Server/HorrorDirector  
+src/ServerScriptService/Server/SanitySystem  
+src/ServerScriptService/Server/AggressionSystem  
 
 Meta Systems
 
-src/server/EconomySystem  
-src/server/InventorySystem  
-src/server/ProfileSystem  
-src/server/DataPersistenceService  
-src/server/LobbySocialHub  
+src/ServerScriptService/Server/EconomySystem  
+src/ServerScriptService/Server/InventorySystem  
+src/ServerScriptService/Server/ProfileSystem  
+src/ServerScriptService/Server/DataPersistenceService  
+src/ServerScriptService/Server/LobbySocialHub  
 
 ---
 
@@ -15531,7 +15543,7 @@ EconomySystem
 ↓
 ProgressionSystem
 ↓
-RankSystem
+RankedSystem
 
 Reward berasal dari:
 
@@ -15657,3 +15669,4 @@ New ghosts
 New maps
 New modifiers
 New gameplay systems
+

@@ -20,23 +20,19 @@ local AGGRESSION_RANGES = {
 }
 
 local EVIDENCE_ALIASES = {
-    emflevel = "EMFLevel",
-    emf5 = "EMFLevel",
-    jejakenergi = "EMFLevel",
-    spiritboxresponse = "SpiritBoxResponse",
-    spiritbox = "SpiritBoxResponse",
-    kotakarwah = "SpiritBoxResponse",
-    freezingtemperature = "FreezingTemperature",
-    freezingtemp = "FreezingTemperature",
-    suhumembeku = "FreezingTemperature",
-    uvmarks = "UVMarks",
-    dots = "UVMarks",
-    gerakangaib = "UVMarks",
-    ghostwriting = "GhostWriting",
-    writingbook = "GhostWriting",
-    bukuterkutuk = "GhostWriting",
-    ghostorb = "GhostOrb",
-    bolaarwah = "GhostOrb",
+    medok = "MEDOK",
+    jejakenergi = "MEDOK",
+    suhu = "Suhu",
+    suhumembeku = "Suhu",
+    bukuterkutuk = "BukuTerkutuk",
+    toun = "To'un",
+    ["to'un"] = "To'un",
+    bolaarwah = "To'un",
+    suara = "Suara",
+    kotakarwah = "Suara",
+    pengganggu = "Pengganggu",
+    gerakangaib = "Pengganggu",
+    motionsensor = "Pengganggu",
 }
 
 local function deepCopy(value)
@@ -78,7 +74,7 @@ local function normalizeEvidenceType(value)
     if type(value) ~= "string" then
         return nil
     end
-    local token = value:gsub("[%s_%-]+", ""):lower()
+    local token = value:gsub("[%s_%-]+", ""):gsub("[^%w]", ""):lower()
     return EVIDENCE_ALIASES[token] or value
 end
 
@@ -358,11 +354,15 @@ function Service:_loadGhostModules()
 end
 
 function Service:LoadGhosts()
+    local loadedFromModules, moduleResult = self:_loadGhostModules()
+    if loadedFromModules then
+        return true, moduleResult
+    end
     local configFolder = resolveGhostTypesConfigFolder()
     if configFolder then
         return self:_loadGhostConfigFolder()
     end
-    return self:_loadGhostModules()
+    return loadedFromModules, moduleResult
 end
 
 function Service:Reload()

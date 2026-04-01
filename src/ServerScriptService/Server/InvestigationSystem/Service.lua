@@ -164,11 +164,6 @@ function Service:UpdateGhostCandidates()
 
 	table.sort(possibleGhosts)
 	self._state:Set("possibleGhosts", possibleGhosts)
-	self:_publish("GhostCandidatesUpdated", {
-		matchId = self._state:Get("activeMatchId"),
-		possibleGhosts = possibleGhosts,
-		discoveredEvidence = discoveredEvidence,
-	})
 
 	if #possibleGhosts == 1 then
 		self:ConfirmGhost(possibleGhosts[1])

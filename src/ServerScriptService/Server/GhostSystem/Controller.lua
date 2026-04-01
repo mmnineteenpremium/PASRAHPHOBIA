@@ -1,9 +1,19 @@
 local Controller = {}
 Controller.__index = Controller
+
 local GhostInteractionGateway = require(script.Parent.GhostInteractionGateway)
 
+local INVESTIGATION_PHASES = {
+	Investigation = true,
+	InvestigationPhase = true,
+	Hunt = true,
+	HuntPhase = true,
+}
+
 local function resolveEventBus(deps)
-	local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
+	local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus"))
+		or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus"))
+		or (deps and deps.EventBus or nil)
 	if type(eventBus) ~= "table" then
 		return nil
 	end
@@ -30,7 +40,6 @@ function Controller.new(state, service, deps)
 end
 
 function Controller:Init()
-	-- Prepare controller-level wiring here.
 	self._gateway = GhostInteractionGateway.new(self._service, self._deps)
 end
 
@@ -38,10 +47,7 @@ function Controller:RegisterEventHandlers()
 	if self._gateway then
 		self._gateway:Start()
 	end
-	if not self._eventBus then
-		return
-	end
-	if self._handlersRegistered then
+	if not self._eventBus or self._handlersRegistered then
 		return
 	end
 
@@ -84,6 +90,7 @@ function Controller:RegisterEventHandlers()
 	self:_subscribe("EscalationStageChanged", function(payload)
 		self:OnEscalationStageChanged(payload)
 	end)
+
 	self._handlersRegistered = true
 end
 
@@ -91,10 +98,7 @@ function Controller:UnregisterEventHandlers()
 	if self._gateway then
 		self._gateway:Stop()
 	end
-	if not self._eventBus then
-		return
-	end
-	if not self._handlersRegistered then
+	if not self._eventBus or not self._handlersRegistered then
 		return
 	end
 
@@ -111,6 +115,12 @@ function Controller:_subscribe(eventName, callback)
 		eventName = eventName,
 		callback = callback,
 	})
+end
+
+function Controller:_publish(eventName, payload)
+	if self._eventBus then
+		self._eventBus:Publish(eventName, payload)
+	end
 end
 
 function Controller:_maybePublishAggressionThreshold(matchId, session)
@@ -138,7 +148,7 @@ function Controller:OnMatchStarted(payload)
 		return
 	end
 
-	self._service:InitGhost(matchId, {
+	local _, err = self._service:InitGhost(matchId, {
 		roomIds = payload.roomIds or payload.rooms,
 		roomGraph = payload.roomGraph,
 		roomSpawnRules = payload.roomSpawnRules,
@@ -150,8 +160,21 @@ function Controller:OnMatchStarted(payload)
 		initialAggression = payload.initialAggression,
 		difficulty = payload.difficulty,
 		mode = payload.mode or payload.gameMode,
+		gameMode = payload.gameMode or payload.mode,
 		difficultyProfile = payload.difficultyProfile,
+		favoriteRoomId = payload.favoriteRoomId,
+		now = payload.now,
 	})
+
+	if err then
+		self:_publish("MatchPhaseTransitionRequested", {
+			matchId = matchId,
+			endMatch = true,
+			reason = "ghost_spawn_failed",
+			missionFailed = true,
+			source = "GhostSystem",
+		})
+	end
 end
 
 function Controller:OnMatchEnded(payload)
@@ -160,6 +183,7 @@ function Controller:OnMatchEnded(payload)
 		return
 	end
 	self._service:DespawnGhost(matchId)
+	self._lastAggressionByMatch[matchId] = nil
 end
 
 function Controller:OnPhaseStarted(payload)
@@ -168,13 +192,12 @@ function Controller:OnPhaseStarted(payload)
 		return
 	end
 
-	local phaseName = payload.phaseName
-	if phaseName and phaseName ~= "Investigation" and phaseName ~= "Hunt" then
+	local phaseName = payload and (payload.phaseName or payload.lifecyclePhase or payload.phase)
+	if not INVESTIGATION_PHASES[phaseName] then
 		return
 	end
 
-	local snapshot = payload.snapshot or {}
-	local session = self._service:TickGhost(matchId, snapshot, payload.dt, payload.now)
+	local session = self._service:TickGhost(matchId, payload.snapshot or {}, payload.dt, payload.now)
 	self:_maybePublishAggressionThreshold(matchId, session)
 end
 
@@ -209,7 +232,9 @@ function Controller:OnForceHunt(payload)
 	if not matchId then
 		return
 	end
-	self._service:StartHunt(matchId, payload.snapshot, payload.now)
+	self._service:ForceHunt(matchId, payload.snapshot, payload.now)
+end
+
 function Controller:OnSanityCritical(payload)
 	local matchId = payload and payload.matchId
 	if not matchId then
@@ -240,8 +265,6 @@ function Controller:OnHuntEnded(payload)
 		return
 	end
 	self._service:TransitionGhostState(matchId, "Cooldown", payload and payload.now)
-end
-
 end
 
 function Controller:OnEvidenceCollected(payload)
@@ -288,4 +311,3 @@ function Controller:OnEscalationStageChanged(payload)
 end
 
 return Controller
-

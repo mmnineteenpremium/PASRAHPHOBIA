@@ -42,6 +42,36 @@ local function safeCall(target, methodName, ...)
     return result
 end
 
+local function cloneArray(source)
+    local result = {}
+    for index, value in ipairs(source or {}) do
+        result[index] = value
+    end
+    return result
+end
+
+local function toInteger(value, defaultValue, minValue)
+    local number = tonumber(value)
+    if number == nil then
+        number = defaultValue
+    end
+
+    number = math.floor(number or 0)
+    if minValue ~= nil then
+        number = math.max(minValue, number)
+    end
+    return number
+end
+
+local function calculateWinRate(totalWins, totalMatches)
+    totalWins = math.max(0, toInteger(totalWins, 0))
+    totalMatches = math.max(0, toInteger(totalMatches, 0))
+    if totalMatches <= 0 then
+        return 0
+    end
+    return math.floor((totalWins / totalMatches) * 100)
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -93,25 +123,34 @@ function Service:_buildProfile(userId, playerRef)
     local level = 1
     local rank = "Bayi III"
     local totalMatches = 0
+    local totalWins = 0
     local winRate = 0
     local flexGallery = {}
     local equippedCosmetics = {}
 
     if type(profile) == "table" then
         level = tonumber(profile.playerLevel or (profile.progression and profile.progression.level)) or level
-        rank = tostring(profile.rank or (profile.profile and profile.profile.rank) or rank)
+        local rankData = type(profile.rank) == "table" and profile.rank or {}
+        rank = tostring(rankData.playerRank or profile.rankTier or (profile.profile and profile.profile.rank) or rank)
         local stats = profile.statistics or {}
-        totalMatches = tonumber(stats.totalMatches) or totalMatches
-        local solo = tonumber(stats.soloGames) or 0
-        local team = tonumber(stats.teamGames) or 0
-        local totalGames = solo + team
-        local soloWins = tonumber(stats.soloWins) or 0
-        local teamWins = tonumber(stats.teamWins) or 0
-        local totalWins = soloWins + teamWins
-        if totalGames > 0 then
-            winRate = math.floor((totalWins / totalGames) * 100)
-        end
-        flexGallery = profile.profile and profile.profile.galleryItems or {}
+        local solo = toInteger(stats.soloGames, 0, 0)
+        local team = toInteger(stats.teamGames, 0, 0)
+        totalMatches = toInteger(
+            profile.totalMatches
+            or stats.totalMatches
+            or stats.totalGames,
+            solo + team,
+            0
+        )
+        totalMatches = math.max(totalMatches, solo + team)
+
+        local soloWins = toInteger(stats.soloWins, 0, 0)
+        local teamWins = toInteger(stats.teamWins, 0, 0)
+        totalWins = toInteger(profile.totalWins or stats.totalWins, soloWins + teamWins, 0)
+        totalWins = math.max(totalWins, soloWins + teamWins)
+        totalWins = math.min(totalWins, totalMatches)
+        winRate = toInteger(profile.winRate, calculateWinRate(totalWins, totalMatches), 0)
+        flexGallery = cloneArray(profile.profile and profile.profile.galleryItems or profile.flexGallery or {})
     end
 
     local invProfile = safeCall(inventorySystem, "GetPlayerInventory", playerRef or userId)
@@ -127,9 +166,12 @@ function Service:_buildProfile(userId, playerRef)
         playerLevel = math.max(1, math.floor(level)),
         rankTier = rank,
         totalMatches = math.max(0, math.floor(totalMatches)),
+        totalWins = math.max(0, math.floor(totalWins)),
         winRate = math.max(0, math.floor(winRate)),
         flexGallery = flexGallery,
         equippedCosmetics = equippedCosmetics,
+        rank = type(profile) == "table" and profile.rank or nil,
+        statistics = type(profile) == "table" and profile.statistics or nil,
         updatedAt = os.time(),
     }
 end

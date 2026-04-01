@@ -1,9 +1,10 @@
 return {
-    ghostName = "Siluman Ular",
+    ghostName = "SilumanUlar",
+    displayName = "Siluman Ular",
     evidenceTypes = {
-        "GhostOrb",
-        "EMF5",
-        "WritingBook",
+        "MEDOK",
+        "Suhu",
+        "To'un",
     },
     behaviorTraits = {
         "Coiled",

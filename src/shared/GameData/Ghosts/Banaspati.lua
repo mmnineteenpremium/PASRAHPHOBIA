@@ -1,9 +1,9 @@
 return {
     ghostName = "Banaspati",
     evidenceTypes = {
-        "FreezingTemp",
-        "EMF5",
-        "WritingBook",
+        "Suhu",
+        "To'un",
+        "MEDOK",
     },
     behaviorTraits = {
         "SpatialDistortion",

@@ -1,9 +1,9 @@
 return {
     ghostName = "Pocong",
     evidenceTypes = {
-        "SpiritBox",
-        "GhostOrb",
-        "FreezingTemp",
+        "MEDOK",
+        "Suhu",
+        "BukuTerkutuk",
     },
     behaviorTraits = {
         "Territorial",
