@@ -10,19 +10,24 @@ local TOOL_RESULT_EVENT_NAME = "EvidenceToolResult"
 local EVIDENCE_REMOTE_NAME = "EvidenceEvent"
 
 local TOOL_ALIASES = {
-	emf = "JejakEnergi",
 	jejakenergi = "JejakEnergi",
-	spiritbox = "KotakArwah",
+	medok = "JejakEnergi",
 	kotakarwah = "KotakArwah",
-	thermometer = "SuhuMembeku",
-	thermo = "SuhuMembeku",
+	suara = "KotakArwah",
 	suhumembeku = "SuhuMembeku",
-	writingbook = "BukuTerkutuk",
+	suhu = "SuhuMembeku",
 	bukuterkutuk = "BukuTerkutuk",
-	orbcamera = "BolaArwah",
 	bolaarwah = "BolaArwah",
-	motionsensor = "GerakanGaib",
+	toun = "BolaArwah",
 	gerakangaib = "GerakanGaib",
+	pengganggu = "GerakanGaib",
+	garam = "Garam",
+	salt = "Garam",
+	salib = "Salib",
+	crucifix = "Salib",
+	dupa = "Dupa",
+	smudge = "Dupa",
+	smudgestick = "Dupa",
 }
 
 local function resolveEventBus(deps)
@@ -189,6 +194,11 @@ for _, def in pairs(EVIDENCE_CONFIG) do
 end
 
 local EVIDENCE_TYPES = resolveSharedEvidenceTypes() or {}
+local UTILITY_TOOL_TYPES = {
+	Dupa = true,
+	Garam = true,
+	Salib = true,
+}
 local function resolveMatchSystem(deps)
     local match = Services.Get(deps, "MatchSystem")
     if type(match) ~= "table" then
@@ -286,12 +296,15 @@ function Controller:_isSpectator(matchId, player)
 end
 
 function Controller:_isEvidenceTypeAllowed(evidenceType)
-    if type(evidenceType) ~= "string" then
-        return false
-    end
-    for _, value in pairs(EVIDENCE_TOOL_IDS) do
-        if value == evidenceType then
-            return true
+	if type(evidenceType) ~= "string" then
+		return false
+	end
+	if UTILITY_TOOL_TYPES[evidenceType] == true then
+		return true
+	end
+	for _, value in pairs(EVIDENCE_TOOL_IDS) do
+		if value == evidenceType then
+			return true
         end
     end
     return false
@@ -659,10 +672,10 @@ function Controller:OnEvidenceRemoteRequest(player, request)
         return
     end
 
-    if not self:_validateEvidenceNode(matchId, requestPayload, canonicalToolType) then
-        warn("[ANTICHEAT] Invalid evidence submission from userId", player.UserId)
-        return
-    end
+	if UTILITY_TOOL_TYPES[canonicalToolType] ~= true and not self:_validateEvidenceNode(matchId, requestPayload, canonicalToolType) then
+		warn("[ANTICHEAT] Invalid evidence submission from userId", player.UserId)
+		return
+	end
 
     local validRequest = self:_validateRemoteRequest(player, EVIDENCE_REMOTE_NAME, request)
     if not validRequest then
@@ -769,13 +782,18 @@ function Controller:OnGhostInteraction(payload)
         return
     end
 
-    self._service:SpawnEvidence(matchId, {
-        source = "ghost_interaction",
-        trigger = "ghost_interaction",
-        activity = payload.intensity or payload.activity or 2,
-        roomId = payload.room,
-        now = payload.now,
-    })
+	self._service:SpawnEvidence(matchId, {
+		source = "ghost_interaction",
+		trigger = "ghost_interaction",
+		activity = payload.intensity or payload.activity or 2,
+		roomId = payload.room,
+		now = payload.now,
+	})
+	self._service:NotifyGhostPresence(matchId, {
+		now = payload.now,
+		roomId = payload.room or payload.roomId,
+		source = "ghost_interaction",
+	})
 end
 
 function Controller:OnGhostStateChanged(payload)
@@ -788,13 +806,18 @@ function Controller:OnGhostStateChanged(payload)
         return
     end
 
-    self._service:SpawnEvidence(matchId, {
-        source = "ghost_manifest",
-        trigger = "manifest",
-        activity = payload.intensity or 4,
-        roomId = payload.roomId,
-        now = payload.now,
-    })
+	self._service:SpawnEvidence(matchId, {
+		source = "ghost_manifest",
+		trigger = "manifest",
+		activity = payload.intensity or 4,
+		roomId = payload.roomId,
+		now = payload.now,
+	})
+	self._service:NotifyGhostPresence(matchId, {
+		now = payload.now,
+		roomId = payload.roomId,
+		source = "ghost_manifest",
+	})
 end
 
 function Controller:OnEvidenceCollected(payload)

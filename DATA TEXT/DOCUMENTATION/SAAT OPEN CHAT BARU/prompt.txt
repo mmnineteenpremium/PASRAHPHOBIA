@@ -1,0 +1,16 @@
+Follow SOURCE OF TRUTH:
+
+REPORTS.md > SystemRegistry > Loaded systems > Canonical
+
+Rules:
+- No duplicate systems
+- Modify existing only
+- One domain = one owner
+
+Ownership:
+RankedSystem, LobbySocialHub, LobbySystem, MatchSystem, DataPersistenceService, SystemRegistry
+
+Ignore .ai*, legacy, old bootstrap
+
+Goal:
+Stable runtime, no conflicts, working match flow

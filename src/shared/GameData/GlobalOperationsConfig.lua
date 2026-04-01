@@ -77,6 +77,7 @@ return {
     Commerce = {
         TradingEnabled = true,
         MarketplaceEnabled = true,
+        GiftingEnabled = true,
         TradeTimeoutSeconds = 120,
         TradeFeeCurrency = "MM",
         TradeFeeAmount = 50,

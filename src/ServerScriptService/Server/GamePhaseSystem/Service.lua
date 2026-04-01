@@ -2,10 +2,10 @@ local Service = {}
 Service.__index = Service
 
 local DEFAULT_PHASE_DURATIONS = {
-    PreparationPhase = 15,
-    InvestigationPhase = 180,
-    HuntPhase = 45,
-    EndgamePhase = 15,
+    PreparationPhase = 30,
+    InvestigationPhase = 480,
+    HuntPhase = 60,
+    EndgamePhase = 30,
 }
 
 local LEGACY_TO_PHASE = {

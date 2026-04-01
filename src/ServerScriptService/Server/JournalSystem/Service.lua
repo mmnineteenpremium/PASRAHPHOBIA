@@ -94,8 +94,31 @@ function Service:_resolveEvidenceRemote()
     return nil
 end
 
+function Service:_resolvePlayer(userId)
+    if type(userId) ~= "number" then
+        return nil
+    end
+
+    local ok, players = pcall(function()
+        return game:GetService("Players")
+    end)
+    if not ok or type(players) ~= "userdata" then
+        return nil
+    end
+
+    local player = players:GetPlayerByUserId(userId)
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        return player
+    end
+    return nil
+end
+
 function Service:_emitUIEvent(eventName, payload)
     self:_publish(eventName, payload)
+    self:_sendRemoteEvent(eventName, payload)
+end
+
+function Service:_sendRemoteEvent(eventName, payload)
     if not self._evidenceRemote then
         return
     end
@@ -137,11 +160,28 @@ function Service:_snapshot(userId)
     }
 end
 
-function Service:_publishJournalUpdated(userId)
+function Service:_publishJournalUpdated(userId, player, matchId)
+    local journalPayload = {
+        player = player or self:_resolvePlayer(userId),
+        userId = userId,
+        matchId = matchId or self._state:Get("activeMatchId"),
+        journalData = self:_snapshot(userId),
+    }
     self:_publish("JournalUpdated", {
         userId = userId,
-        matchId = self._state:Get("activeMatchId"),
-        journalData = self:_snapshot(userId),
+        matchId = journalPayload.matchId,
+        journalData = journalPayload.journalData,
+    })
+    self:_sendRemoteEvent("JournalUpdated", journalPayload)
+end
+
+function Service:_emitEvidenceSnapshot(player, userId, matchId)
+    self:_emitUIEvent("UIEvidenceUpdated", {
+        player = player,
+        userId = userId,
+        matchId = matchId or self._state:Get("activeMatchId"),
+        discoveredEvidence = copyList(self:_getOrCreateJournal(userId).discoveredEvidence),
+        confirmedEvidence = copyList(self:_getOrCreateJournal(userId).confirmedEvidence),
     })
 end
 
@@ -194,14 +234,34 @@ function Service:OnEvidenceDetected(payload)
         discoveredEvidence = copyList(journal.discoveredEvidence),
         confirmedEvidence = copyList(journal.confirmedEvidence),
     })
-    self:_publishJournalUpdated(userId)
-    self:_emitUIEvent("UIEvidenceUpdated", {
-        player = payload.player,
-        userId = userId,
-        matchId = payload.matchId or self._state:Get("activeMatchId"),
-        discoveredEvidence = copyList(journal.discoveredEvidence),
-        confirmedEvidence = copyList(journal.confirmedEvidence),
+    self:_publishJournalUpdated(userId, payload.player, payload.matchId)
+    self:_emitEvidenceSnapshot(payload.player, userId, payload.matchId)
+end
+
+function Service:OnEvidenceValidated(payload)
+    if type(payload) ~= "table" or payload.validated ~= true then
+        return
+    end
+
+    local userId = toUserId(payload.player or payload.userId)
+    local evidenceType = payload.evidenceType
+    if not userId or type(evidenceType) ~= "string" or evidenceType == "" then
+        return
+    end
+
+    local journal = self:_getOrCreateJournal(userId)
+    pushUnique(journal.discoveredEvidence, evidenceType)
+    pushUnique(journal.confirmedEvidence, evidenceType)
+    table.insert(journal.timeline, {
+        type = "EvidenceValidated",
+        evidenceType = evidenceType,
+        validated = true,
+        at = os.clock(),
     })
+    journal.lastUpdatedAt = os.clock()
+
+    self:_publishJournalUpdated(userId, payload.player, payload.matchId)
+    self:_emitEvidenceSnapshot(payload.player, userId, payload.matchId)
 end
 
 function Service:OnGhostCandidatesUpdated(payload)
@@ -219,7 +279,7 @@ function Service:OnGhostCandidatesUpdated(payload)
         local journal = self:_getOrCreateJournal(userId)
         journal.ghostCandidates = copyList(candidates)
         journal.lastUpdatedAt = os.clock()
-        self:_publishJournalUpdated(userId)
+        self:_publishJournalUpdated(userId, payload.player, payload.matchId)
         return
     end
 

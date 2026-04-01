@@ -1,9 +1,9 @@
 return {
     ghostName = "Tuyul",
     evidenceTypes = {
-        "GhostOrb",
-        "EMF5",
-        "FreezingTemp",
+        "To'un",
+        "Suara",
+        "BukuTerkutuk",
     },
     behaviorTraits = {
         "Swift",

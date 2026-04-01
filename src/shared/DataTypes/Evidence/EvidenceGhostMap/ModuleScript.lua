@@ -1,28 +1,76 @@
 local EvidenceGhostMap = {
 
     Pocong = {
-        "SuhuMembeku",
-        "JejakEnergi",
-        "KotakArwah"
+        "MEDOK",
+        "Suhu",
+        "BukuTerkutuk"
     },
 
     Kuntilanak = {
-        "BukuTerkutuk",
-        "BolaArwah",
-        "SuhuMembeku"
+        "Suara",
+        "To'un",
+        "Pengganggu"
     },
 
     Tuyul = {
-        "GerakanGaib",
-        "JejakEnergi",
-        "BolaArwah"
+        "To'un",
+        "Suara",
+        "BukuTerkutuk"
     },
 
     Genderuwo = {
-        "KotakArwah",
-        "GerakanGaib",
-        "JejakEnergi"
-    }
+        "MEDOK",
+        "Pengganggu",
+        "Suhu"
+    },
+
+    Leak = {
+        "Suara",
+        "MEDOK",
+        "Pengganggu"
+    },
+
+    Banaspati = {
+        "Suhu",
+        "To'un",
+        "MEDOK"
+    },
+
+    Jerangkong = {
+        "BukuTerkutuk",
+        "Pengganggu",
+        "To'un"
+    },
+
+    WeweGombel = {
+        "Suara",
+        "Suhu",
+        "BukuTerkutuk"
+    },
+
+    Palasik = {
+        "To'un",
+        "Pengganggu",
+        "Suara"
+    },
+
+    SilumanUlar = {
+        "MEDOK",
+        "Suhu",
+        "To'un"
+    },
+
+    SundelBolong = {
+        "BukuTerkutuk",
+        "To'un",
+        "Suara"
+    },
+
+    HantuTanah = {
+        "Suhu",
+        "MEDOK",
+        "Pengganggu"
+    },
 
 }
 

@@ -1,33 +1,33 @@
 local EvidenceRules = {
 
-    BolaArwah = {
-        tool = "BolaArwah",
-        roomRequired = true
-    },
-
-    BukuTerkutuk = {
-        tool = "BukuTerkutuk",
-        interaction = "GhostWriting"
-    },
-
-    GerakanGaib = {
-        tool = "GerakanGaib",
-        motionRequired = true
-    },
-
-    JejakEnergi = {
+    MEDOK = {
         tool = "JejakEnergi",
         surfaceTrace = true
     },
 
-    KotakArwah = {
+    Suhu = {
+        tool = "SuhuMembeku",
+        freezingTemp = true
+    },
+
+    BukuTerkutuk = {
+        tool = "BukuTerkutuk",
+        interaction = "BukuTerkutukWrite"
+    },
+
+    ["To'un"] = {
+        tool = "BolaArwah",
+        roomRequired = true
+    },
+
+    Suara = {
         tool = "KotakArwah",
         voiceResponse = true
     },
 
-    SuhuMembeku = {
-        tool = "Thermo",
-        freezingTemp = true
+    Pengganggu = {
+        tool = "GerakanGaib",
+        motionRequired = true
     }
 
 }

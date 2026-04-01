@@ -5,7 +5,8 @@ local ShopCatalog = {
         price = 850,
         category = "Cosmetic",
         slot = "head",
-        rarity = "Common",
+        rarity = "R1",
+        rarityLabel = "R1 B-ajah",
         tags = { "horror", "mask" },
     },
     {
@@ -14,7 +15,8 @@ local ShopCatalog = {
         price = 2400,
         category = "Cosmetic",
         slot = "head",
-        rarity = "Rare",
+        rarity = "R3",
+        rarityLabel = "R3 Lumayan",
         tags = { "horror", "veil" },
     },
     {
@@ -23,7 +25,8 @@ local ShopCatalog = {
         price = 1250,
         category = "Cosmetic",
         slot = "body",
-        rarity = "Common",
+        rarity = "R2",
+        rarityLabel = "R2 B-Lebih",
         tags = { "outfit" },
     },
     {
@@ -32,7 +35,8 @@ local ShopCatalog = {
         price = 3800,
         category = "Cosmetic",
         slot = "body",
-        rarity = "Epic",
+        rarity = "R4",
+        rarityLabel = "R4 Langka",
         tags = { "outfit", "ritual" },
     },
     {
@@ -41,7 +45,8 @@ local ShopCatalog = {
         price = 5100,
         category = "Cosmetic",
         slot = "outfit",
-        rarity = "Epic",
+        rarity = "R5",
+        rarityLabel = "R5 Gagah",
         tags = { "bundle", "investigator" },
     },
     {
@@ -50,7 +55,8 @@ local ShopCatalog = {
         price = 700,
         category = "Cosmetic",
         slot = "accessory",
-        rarity = "Common",
+        rarity = "R1",
+        rarityLabel = "R1 B-ajah",
         tags = { "accessory", "charm" },
     },
     {
@@ -59,7 +65,8 @@ local ShopCatalog = {
         price = 1800,
         category = "Cosmetic",
         slot = "accessory",
-        rarity = "Rare",
+        rarity = "R3",
+        rarityLabel = "R3 Lumayan",
         tags = { "accessory", "lantern" },
     },
     {
@@ -68,7 +75,8 @@ local ShopCatalog = {
         price = 500,
         category = "Cosmetic",
         slot = "emote",
-        rarity = "Common",
+        rarity = "R1",
+        rarityLabel = "R1 B-ajah",
         tags = { "emote" },
     },
     {
@@ -77,7 +85,8 @@ local ShopCatalog = {
         price = 1200,
         category = "Cosmetic",
         slot = "emote",
-        rarity = "Rare",
+        rarity = "R2",
+        rarityLabel = "R2 B-Lebih",
         tags = { "emote" },
     },
     {
@@ -85,7 +94,8 @@ local ShopCatalog = {
         name = "Sanity Pill (Standard)",
         price = 300,
         category = "Equipment",
-        rarity = "Common",
+        rarity = "R1",
+        rarityLabel = "R1 B-ajah",
         tags = { "consumable", "sanity" },
     },
     {
@@ -93,7 +103,8 @@ local ShopCatalog = {
         name = "Sanity Pill (Advanced)",
         price = 900,
         category = "Equipment",
-        rarity = "Rare",
+        rarity = "R2",
+        rarityLabel = "R2 B-Lebih",
         tags = { "consumable", "sanity" },
     },
     {
@@ -101,7 +112,8 @@ local ShopCatalog = {
         name = "Reinforced Salt Bag",
         price = 650,
         category = "Equipment",
-        rarity = "Common",
+        rarity = "R1",
+        rarityLabel = "R1 B-ajah",
         tags = { "tool" },
     },
     {
@@ -109,7 +121,8 @@ local ShopCatalog = {
         name = "UV Flashlight Mk2",
         price = 1500,
         category = "Equipment",
-        rarity = "Rare",
+        rarity = "R3",
+        rarityLabel = "R3 Lumayan",
         tags = { "tool", "uv" },
     },
     {
@@ -117,7 +130,8 @@ local ShopCatalog = {
         name = "Modded Spirit Box",
         price = 2900,
         category = "Equipment",
-        rarity = "Epic",
+        rarity = "R4",
+        rarityLabel = "R4 Langka",
         tags = { "tool", "spiritbox" },
     },
 }

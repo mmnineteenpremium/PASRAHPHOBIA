@@ -5,7 +5,7 @@ MatchQueue.queuePlayers = MatchQueue.queuePlayers or {}
 local DEFAULT_CONFIG = {
 	MinPlayersPerMatch = 1,
 	MaxPlayersPerMatch = 4,
-	RankedMMRSpread = 400,
+	RankedScoreSpread = 400,
 }
 
 local function getNow(now)
@@ -63,20 +63,20 @@ local function removeFromQueue(queue, player)
 	return false
 end
 
-local function resolveAverageMMR(payload)
-	local direct = tonumber(payload and (payload.averageMMR or payload.mmr or payload.rating or payload.rankedMMR))
+local function resolveAverageRankScore(payload)
+	local direct = tonumber(payload and (payload.averageRankScore or payload.rankScore or payload.rating or payload.rankedScore))
 	if direct then
 		return direct
 	end
 
-	local mmrList = payload and payload.playerMMRs
-	if type(mmrList) ~= "table" or #mmrList == 0 then
+	local rankScoreList = payload and payload.playerRankScores
+	if type(rankScoreList) ~= "table" or #rankScoreList == 0 then
 		return nil
 	end
 
 	local total = 0
 	local count = 0
-	for _, value in ipairs(mmrList) do
+	for _, value in ipairs(rankScoreList) do
 		local numeric = tonumber(value)
 		if numeric then
 			total += numeric
@@ -136,7 +136,7 @@ function MatchQueue:_buildEntry(player, payload)
 	end
 
 	local mode = payload and (payload.mode or payload.gameMode) or "Classic"
-	local averageMMR = resolveAverageMMR(payload)
+	local averageRankScore = resolveAverageRankScore(payload)
 
 	return {
 		partyId = payload and payload.partyId or ("solo:" .. tostring(toUserId(player))),
@@ -147,7 +147,7 @@ function MatchQueue:_buildEntry(player, payload)
 		enqueuedAt = getNow(payload and payload.now),
 		mapId = payload and payload.mapId or nil,
 		difficulty = payload and payload.difficulty or nil,
-		averageMMR = averageMMR,
+		averageRankScore = averageRankScore,
 	}
 end
 
@@ -167,7 +167,6 @@ function MatchQueue:JoinQueue(player, payload)
 		end
 
 		table.insert(queue, resolvedPlayer)
-		print("[MatchQueue] Player joined queue", resolvedPlayer.Name)
 		return true
 	end
 
@@ -261,23 +260,23 @@ end
 function MatchQueue:FindMatch()
 	local minPlayers = self._config.MinPlayersPerMatch
 	local maxPlayers = self._config.MaxPlayersPerMatch
-	local rankedSpread = tonumber(self._config.RankedMMRSpread) or 400
+	local rankedSpread = tonumber(self._config.RankedScoreSpread) or 400
 
 	local pickedEntries = {}
 	local totalPlayers = 0
 	local selectedMode = nil
 	local selectedDifficulty = nil
 	local selectedQueueType = nil
-	local rankedSeedMMR = nil
+	local rankedSeedRankScore = nil
 
 	local function entryMatchesSelection(entry)
 		local mode = entry.mode or entry.gameMode or "Classic"
 		local queueType = entry.queueType or "normal"
 		local difficulty = entry.difficulty
-		local averageMMR = tonumber(entry.averageMMR)
+		local averageRankScore = tonumber(entry.averageRankScore)
 
 		if selectedMode == nil then
-			return true, mode, queueType, difficulty, averageMMR
+			return true, mode, queueType, difficulty, averageRankScore
 		end
 
 		if mode ~= selectedMode then
@@ -288,23 +287,17 @@ function MatchQueue:FindMatch()
 			return false
 		end
 
-		if selectedMode == "Classic" then
-			local canonicalSelected = selectedDifficulty or "Mudah"
-			local canonicalEntry = difficulty or "Mudah"
-			if canonicalEntry ~= canonicalSelected then
-				return false
-			end
-		elseif selectedMode == "Ranked" then
-			if rankedSeedMMR and averageMMR and math.abs(averageMMR - rankedSeedMMR) > rankedSpread then
+		if selectedMode == "Ranked" then
+			if rankedSeedRankScore and averageRankScore and math.abs(averageRankScore - rankedSeedRankScore) > rankedSpread then
 				return false
 			end
 		end
 
-		return true, mode, queueType, difficulty, averageMMR
+		return true, mode, queueType, difficulty, averageRankScore
 	end
 
 	for _, entry in ipairs(self._entries) do
-		local canPick, mode, queueType, difficulty, averageMMR = entryMatchesSelection(entry)
+		local canPick, mode, queueType, difficulty, averageRankScore = entryMatchesSelection(entry)
 		if not canPick then
 			continue
 		end
@@ -314,13 +307,11 @@ function MatchQueue:FindMatch()
 			if selectedMode == nil then
 				selectedMode = mode
 				selectedQueueType = queueType
-				if mode == "Classic" then
-					selectedDifficulty = difficulty or "Mudah"
-				else
-					rankedSeedMMR = averageMMR
+				if mode ~= "Classic" then
+					rankedSeedRankScore = averageRankScore
 				end
-			elseif selectedMode == "Ranked" and rankedSeedMMR == nil and averageMMR then
-				rankedSeedMMR = averageMMR
+			elseif selectedMode == "Ranked" and rankedSeedRankScore == nil and averageRankScore then
+				rankedSeedRankScore = averageRankScore
 			end
 
 			table.insert(pickedEntries, entry)
@@ -341,22 +332,22 @@ function MatchQueue:FindMatch()
 	local chosenDifficulty = nil
 	local chosenMode = nil
 	local chosenQueueType = nil
-	local weightedMMRTotal = 0
-	local weightedMMRCount = 0
+	local weightedRankScoreTotal = 0
+	local weightedRankScoreCount = 0
 	for _, entry in ipairs(pickedEntries) do
 		table.insert(partyIds, entry.partyId)
 		chosenMap = chosenMap or entry.mapId
 		if chosenMode == "Classic" or (chosenMode == nil and (entry.mode or entry.gameMode or "Classic") == "Classic") then
-			chosenDifficulty = chosenDifficulty or entry.difficulty
+			chosenDifficulty = nil
 		end
 		chosenMode = chosenMode or entry.mode or entry.gameMode
 		chosenQueueType = chosenQueueType or entry.queueType
 
-		local entryAverageMMR = tonumber(entry.averageMMR)
-		if entryAverageMMR then
+		local entryAverageRankScore = tonumber(entry.averageRankScore)
+		if entryAverageRankScore then
 			local weight = math.max(#entry.players, 1)
-			weightedMMRTotal += entryAverageMMR * weight
-			weightedMMRCount += weight
+			weightedRankScoreTotal += entryAverageRankScore * weight
+			weightedRankScoreCount += weight
 		end
 
 		for _, member in ipairs(entry.players) do
@@ -364,9 +355,9 @@ function MatchQueue:FindMatch()
 		end
 	end
 
-	local averageMMR = nil
-	if weightedMMRCount > 0 then
-		averageMMR = weightedMMRTotal / weightedMMRCount
+	local averageRankScore = nil
+	if weightedRankScoreCount > 0 then
+		averageRankScore = weightedRankScoreTotal / weightedRankScoreCount
 	end
 
 	for _, entry in ipairs(pickedEntries) do
@@ -398,8 +389,9 @@ function MatchQueue:FindMatch()
 		mode = chosenMode or "Classic",
 		gameMode = chosenMode or "Classic",
 		queueType = chosenQueueType or "normal",
-		averageMMR = averageMMR,
+		averageRankScore = averageRankScore,
 	}
 end
 
 return MatchQueue
+

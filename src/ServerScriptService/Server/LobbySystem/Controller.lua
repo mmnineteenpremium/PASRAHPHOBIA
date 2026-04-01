@@ -27,6 +27,7 @@ local ACTION_HANDLERS = {
 	OpenRoomBrowser = "OnRequestRoomBrowserSnapshot",
 	RequestRoomList = "OnRequestRoomList",
 	SelectMode = "OnSelectMode",
+	SelectMap = "OnSelectMap",
 	SelectRoomMode = "OnSelectMode",
 	SelectDifficulty = "OnSelectDifficulty",
 	SelectClassicDifficulty = "OnSelectDifficulty",
@@ -42,6 +43,78 @@ local ACTION_HANDLERS = {
 	SetPassword = "OnSetPassword",
 	CreateRoom = "OnCreateRoom",
 }
+
+local function appendTraceValue(parts, key, value)
+	if value == nil then
+		return
+	end
+	if type(value) == "table" then
+		return
+	end
+	table.insert(parts, string.format("%s=%s", key, tostring(value)))
+end
+
+local function summarizeTraceData(data)
+	if type(data) ~= "table" then
+		return ""
+	end
+
+	local parts = {}
+	for _, key in ipairs({
+		"requestId",
+		"action",
+		"eventName",
+		"roomId",
+		"mapId",
+		"mode",
+		"difficulty",
+		"ok",
+		"err",
+		"reason",
+		"countdownSeconds",
+		"secondsLeft",
+		"isReady",
+	}) do
+		appendTraceValue(parts, key, data[key])
+	end
+
+	local selection = data.selection
+	if type(selection) == "table" then
+		appendTraceValue(parts, "selection.mode", selection.mode)
+		appendTraceValue(parts, "selection.difficulty", selection.difficulty)
+		appendTraceValue(parts, "selection.mapId", selection.mapId)
+	end
+
+	local snapshot = data.snapshot
+	if type(snapshot) == "table" then
+		appendTraceValue(parts, "snapshot.selectedMode", snapshot.selectedMode)
+		appendTraceValue(parts, "snapshot.selectedDifficulty", snapshot.selectedDifficulty)
+		appendTraceValue(parts, "snapshot.selectedMap", snapshot.selectedMap)
+		if type(snapshot.rooms) == "table" then
+			appendTraceValue(parts, "snapshot.rooms", #snapshot.rooms)
+		end
+	end
+
+	local room = data.room
+	if type(room) == "table" then
+		appendTraceValue(parts, "room.roomId", room.roomId or room.id)
+		appendTraceValue(parts, "room.mode", room.mode)
+		appendTraceValue(parts, "room.mapId", room.mapId)
+		appendTraceValue(parts, "room.playerCount", room.playerCount)
+	end
+
+	local queue = data.queue
+	if type(queue) == "table" then
+		appendTraceValue(parts, "queue.mode", queue.mode or queue.gameMode)
+		appendTraceValue(parts, "queue.difficulty", queue.difficulty)
+		appendTraceValue(parts, "queue.mapId", queue.mapId)
+	end
+
+	if #parts == 0 then
+		return ""
+	end
+	return " [" .. table.concat(parts, ", ") .. "]"
+end
 
 local function resolvePlayersService(deps)
 	if deps and deps.Players then
@@ -64,6 +137,38 @@ local function resolveEventBus(deps)
 	return nil
 end
 
+local function sanitizeRemoteValue(value, depth)
+	depth = depth or 0
+	if depth > 6 then
+		return nil
+	end
+
+	local valueType = typeof(value)
+	if valueType == "Instance" or valueType == "RBXScriptConnection" or valueType == "RBXScriptSignal" then
+		return nil
+	end
+
+	if type(value) == "table" then
+		local out = {}
+		for key, nestedValue in pairs(value) do
+			local sanitizedKey = sanitizeRemoteValue(key, depth + 1)
+			if type(sanitizedKey) == "string" or type(sanitizedKey) == "number" then
+				local sanitizedValue = sanitizeRemoteValue(nestedValue, depth + 1)
+				if sanitizedValue ~= nil then
+					out[sanitizedKey] = sanitizedValue
+				end
+			end
+		end
+		return out
+	end
+
+	if type(value) == "function" or type(value) == "userdata" or type(value) == "thread" then
+		return nil
+	end
+
+	return value
+end
+
 function Controller.new(state, service, deps)
 	local self = setmetatable({}, Controller)
 	self._state = state
@@ -78,6 +183,7 @@ function Controller.new(state, service, deps)
 	self._roomCountdownById = {}
 	self._seenRequestIdsByUserId = {}
 	self._fallbackActionWindowByUserId = {}
+	self._handlersRegistered = false
 	return self
 end
 
@@ -98,6 +204,10 @@ function Controller:_resolveLobbyRemote()
 end
 
 function Controller:RegisterEventHandlers()
+	if self._handlersRegistered then
+		return
+	end
+
 	self._state:Set("handlersRegistered", true)
 	self:_connectLobbyRemote()
 
@@ -121,11 +231,20 @@ function Controller:RegisterEventHandlers()
 		self:_subscribe("MatchEnded", function(payload)
 			self._service:OnMatchEnded(payload and payload.matchId)
 		end)
+		self:_subscribe("LobbyFlexSpotlightUpdated", function(payload)
+			self:_relayLobbyRuntimeEvent(payload)
+		end)
+		self:_subscribe("LobbyFlexSpotlightCleared", function(payload)
+			self:_relayLobbyRuntimeEvent(payload)
+		end)
 	end
+
+	self._handlersRegistered = true
 end
 
 function Controller:UnregisterEventHandlers()
 	self._state:Set("handlersRegistered", false)
+	self._handlersRegistered = false
 	self:_disconnectLobbyRemote()
 	for _, connection in ipairs(self._connections) do
 		connection:Disconnect()
@@ -221,11 +340,42 @@ end
 
 function Controller:_send(player, payload)
 	if self._lobbyRemote and player then
-		-- TODO: REMOVE AFTER VALIDATION
-		if type(payload) == "table" and payload.eventName then
-			print("[ROOM TRACE][SERVER->CLIENT]", payload.eventName, "to", player.Name)
-		end
 		self._lobbyRemote:FireClient(player, payload)
+	end
+end
+
+function Controller:_resolveLobbyRecipients(payload)
+	if type(payload) == "table" and type(payload.recipients) == "table" then
+		local recipients = {}
+		for _, player in ipairs(payload.recipients) do
+			if typeof(player) == "Instance" and player:IsA("Player") then
+				table.insert(recipients, player)
+			end
+		end
+		if #recipients > 0 then
+			return recipients
+		end
+	end
+
+	if self._players then
+		return self._players:GetPlayers()
+	end
+	return {}
+end
+
+function Controller:_relayLobbyRuntimeEvent(payload)
+	if type(payload) ~= "table" then
+		return
+	end
+
+	local clientPayload = sanitizeRemoteValue(payload)
+	if type(clientPayload) ~= "table" or type(clientPayload.eventName) ~= "string" then
+		return
+	end
+	clientPayload.recipients = nil
+
+	for _, player in ipairs(self:_resolveLobbyRecipients(payload)) do
+		self:_send(player, clientPayload)
 	end
 end
 
@@ -274,8 +424,6 @@ function Controller:OnLobbyRemoteRequest(player, request)
 	end
 
 	local action = request.action
-	-- TODO: REMOVE AFTER VALIDATION
-	print("[ROOM TRACE][SERVER RECEIVED]", action, "from", player.Name)
 	local handlerName = ACTION_HANDLERS[action]
 	local handler = handlerName and self[handlerName]
 	if type(handler) ~= "function" then
@@ -319,6 +467,28 @@ function Controller:OnSelectMode(player, request)
 		selection = selection,
 	})
 	self:OnRequestRoomBrowserSnapshot(player, request)
+end
+
+function Controller:OnSelectMap(player, request)
+	local ok, reason, selection = self._service:SetMapSelection(player, request.mapId)
+	if not ok then
+		self:_send(player, {
+			eventName = "RoomBrowserSelectionRejected",
+			reason = reason,
+		})
+		return
+	end
+	self:_send(player, {
+		eventName = "RoomBrowserSelectionConfirmed",
+		selection = selection,
+	})
+	self:OnRequestRoomBrowserSnapshot(player, request)
+
+	local room = self._service._roomManager and self._service._roomManager:GetRoomByPlayer(player) or nil
+	if room then
+		self:_broadcastRoomState(room)
+	end
+	self:_broadcastRoomListToAll()
 end
 
 function Controller:OnSelectDifficulty(player, request)

@@ -59,13 +59,13 @@ function EventScheduler:PickEventType(session)
 	if personality == "Trickster" then
 		return self._rng:NextNumber() <= 0.5 and "RadioNoise" or "ShadowMovement"
 	end
-	if personality == "Poltergeist" then
+	if personality == "Territorial" then
 		return self._rng:NextNumber() <= 0.6 and "ObjectThrow" or "DoorSlam"
 	end
-	if personality == "Demon" and tension >= 60 then
+	if personality == "Aggressive" and tension >= 60 then
 		return self._rng:NextNumber() <= 0.5 and "DoorSlam" or "ShadowMovement"
 	end
-	if personality == "Shade" and fear < 45 then
+	if personality == "Passive" and fear < 45 then
 		return "LightFlicker"
 	end
 	if tension >= 70 then

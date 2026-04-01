@@ -14,21 +14,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "FreezingTemperature"
+                "Value": "Suhu"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "EMFLevel"
+                "Value": "To'un"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "GhostWriting"
+                "Value": "MEDOK"
               },
               "className": "StringValue"
             }
@@ -58,21 +58,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "SpiritBoxResponse"
+                "Value": "MEDOK"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "EMFLevel"
+                "Value": "Pengganggu"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "GhostWriting"
+                "Value": "Suhu"
               },
               "className": "StringValue"
             }
@@ -102,21 +102,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "SpiritBoxResponse"
+                "Value": "Suhu"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "GhostOrb"
+                "Value": "MEDOK"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "EMFLevel"
+                "Value": "Pengganggu"
               },
               "className": "StringValue"
             }
@@ -146,21 +146,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "SpiritBoxResponse"
+                "Value": "BukuTerkutuk"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "FreezingTemperature"
+                "Value": "Pengganggu"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "UVMarks"
+                "Value": "To'un"
               },
               "className": "StringValue"
             }
@@ -190,21 +190,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "SpiritBoxResponse"
+                "Value": "Suara"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "GhostWriting"
+                "Value": "To'un"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "UVMarks"
+                "Value": "Pengganggu"
               },
               "className": "StringValue"
             }
@@ -234,21 +234,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "EMFLevel"
+                "Value": "Suara"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "UVMarks"
+                "Value": "MEDOK"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "FreezingTemperature"
+                "Value": "Pengganggu"
               },
               "className": "StringValue"
             }
@@ -278,21 +278,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "SpiritBoxResponse"
+                "Value": "To'un"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "GhostOrb"
+                "Value": "Pengganggu"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "UVMarks"
+                "Value": "Suara"
               },
               "className": "StringValue"
             }
@@ -322,21 +322,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "SpiritBoxResponse"
+                "Value": "MEDOK"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "GhostOrb"
+                "Value": "Suhu"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "FreezingTemperature"
+                "Value": "BukuTerkutuk"
               },
               "className": "StringValue"
             }
@@ -366,21 +366,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "GhostOrb"
+                "Value": "MEDOK"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "EMFLevel"
+                "Value": "Suhu"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "GhostWriting"
+                "Value": "To'un"
               },
               "className": "StringValue"
             }
@@ -410,21 +410,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "GhostOrb"
+                "Value": "BukuTerkutuk"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "GhostWriting"
+                "Value": "To'un"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "UVMarks"
+                "Value": "Suara"
               },
               "className": "StringValue"
             }
@@ -454,21 +454,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "GhostOrb"
+                "Value": "To'un"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "EMFLevel"
+                "Value": "Suara"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "FreezingTemperature"
+                "Value": "BukuTerkutuk"
               },
               "className": "StringValue"
             }
@@ -498,21 +498,21 @@
             {
               "properties": {
                 "Name": "Evidence1",
-                "Value": "UVMarks"
+                "Value": "Suara"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence2",
-                "Value": "FreezingTemperature"
+                "Value": "Suhu"
               },
               "className": "StringValue"
             },
             {
               "properties": {
                 "Name": "Evidence3",
-                "Value": "GhostWriting"
+                "Value": "BukuTerkutuk"
               },
               "className": "StringValue"
             }

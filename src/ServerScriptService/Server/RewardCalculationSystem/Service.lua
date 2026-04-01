@@ -29,6 +29,21 @@ local function resolveEventBus(deps)
     return nil
 end
 
+local function resolveMatchRemote()
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if not ok then
+        return nil
+    end
+    local remoteFolder = replicatedStorage:FindFirstChild("RemoteEvents")
+    local remote = remoteFolder and remoteFolder:FindFirstChild("MatchEvent")
+    if remote and remote:IsA("RemoteEvent") then
+        return remote
+    end
+    return nil
+end
+
 local function toUserId(playerOrUserId)
     if type(playerOrUserId) == "number" then
         return playerOrUserId
@@ -73,6 +88,7 @@ function Service.new(state, deps)
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
     self._dependencies = {}
+    self._matchRemote = nil
     return self
 end
 
@@ -99,6 +115,30 @@ function Service:_publish(eventName, payload)
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
     end
+end
+
+function Service:_fireMatchRewardSummary(player, matchId, reward)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return
+    end
+
+    local remote = self._matchRemote
+    if not remote then
+        remote = resolveMatchRemote()
+        self._matchRemote = remote
+    end
+    if not remote then
+        return
+    end
+
+    remote:FireClient(player, {
+        eventName = "MatchRewardSummary",
+        matchId = matchId,
+        currencyReward = reward.amount,
+        xpReward = reward.xp,
+        royalPassXP = reward.royalPassXP,
+        dailyProgress = reward.dailyProgress,
+    })
 end
 
 function Service:_isDistributed(matchId)
@@ -291,6 +331,8 @@ function Service:_grantToPlayer(matchId, payload, entry, reward)
         progress = reward.dailyProgress,
         sourceSystem = "RewardCalculationSystem",
     })
+
+    self:_fireMatchRewardSummary(entry.player or Players:GetPlayerByUserId(userId), matchId, reward)
 
     return rewardPayload
 end

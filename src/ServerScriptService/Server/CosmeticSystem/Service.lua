@@ -368,7 +368,11 @@ function Service:ApplyCosmetic(player)
 
     local playerEquipped = self:_resolveEquippedForPlayer(player)
     local lobby = self:_getLobby()
-    if type(lobby) == "table" and type(lobby.ApplyCosmetic) == "function" then
+    if type(lobby) == "table" and type(lobby.ApplyCosmetics) == "function" then
+        pcall(function()
+            lobby:ApplyCosmetics(player, playerEquipped)
+        end)
+    elseif type(lobby) == "table" and type(lobby.ApplyCosmetic) == "function" then
         for slot, cosmeticId in pairs(playerEquipped) do
             pcall(function()
                 lobby:ApplyCosmetic(player, cosmeticId, slot)

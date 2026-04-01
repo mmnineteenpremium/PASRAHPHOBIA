@@ -12,41 +12,37 @@ local DEPENDENCY_NAMES = {
 }
 
 local EVIDENCE_ALIASES = {
-    emflevel = "EMFLevel",
-    emf5 = "EMFLevel",
-    jejakenergi = "EMFLevel",
-    spiritboxresponse = "SpiritBoxResponse",
-    spiritbox = "SpiritBoxResponse",
-    kotakarwah = "SpiritBoxResponse",
-    freezingtemperature = "FreezingTemperature",
-    freezingtemp = "FreezingTemperature",
-    suhumembeku = "FreezingTemperature",
-    uvmarks = "UVMarks",
-    dots = "UVMarks",
-    gerakangaib = "UVMarks",
-    ghostwriting = "GhostWriting",
-    writingbook = "GhostWriting",
-    bukuterkutuk = "GhostWriting",
-    ghostorb = "GhostOrb",
-    bolaarwah = "GhostOrb",
+    medok = "MEDOK",
+    jejakenergi = "MEDOK",
+    suhu = "Suhu",
+    suhumembeku = "Suhu",
+    bukuterkutuk = "BukuTerkutuk",
+    toun = "To'un",
+    bolaarwah = "To'un",
+    ["to'un"] = "To'un",
+    suara = "Suara",
+    kotakarwah = "Suara",
+    pengganggu = "Pengganggu",
+    gerakangaib = "Pengganggu",
+    motionsensor = "Pengganggu",
 }
 
 local DISPLAY_NAMES = {
-    EMFLevel = "EMF Level",
-    SpiritBoxResponse = "Spirit Box Response",
-    FreezingTemperature = "Freezing Temperature",
-    UVMarks = "UV Marks",
-    GhostWriting = "Ghost Writing",
-    GhostOrb = "Ghost Orb",
+    MEDOK = "MEDOK",
+    Suhu = "Suhu",
+    BukuTerkutuk = "Buku Terkutuk",
+    ["To'un"] = "To'un",
+    Suara = "Suara",
+    Pengganggu = "Pengganggu",
 }
 
 local SUPPORTED_EVIDENCE = {
-    EMFLevel = true,
-    SpiritBoxResponse = true,
-    FreezingTemperature = true,
-    UVMarks = true,
-    GhostWriting = true,
-    GhostOrb = true,
+    MEDOK = true,
+    Suhu = true,
+    BukuTerkutuk = true,
+    ["To'un"] = true,
+    Suara = true,
+    Pengganggu = true,
 }
 
 local function deepCopy(value)
@@ -111,7 +107,7 @@ local function normalizeEvidenceType(value)
     if type(value) ~= "string" then
         return nil
     end
-    local token = value:gsub("[%s_%-]+", ""):lower()
+    local token = value:gsub("[%s_%-]+", ""):gsub("[^%w]", ""):lower()
     local canonical = EVIDENCE_ALIASES[token] or value
     if not SUPPORTED_EVIDENCE[canonical] then
         return nil
@@ -280,9 +276,9 @@ function Service:_loadFromLegacyModule()
 end
 
 function Service:Reload()
-    local loaded, result = self:_loadFromReplicatedConfig()
+    local loaded, result = self:_loadFromLegacyModule()
     if not loaded then
-        loaded, result = self:_loadFromLegacyModule()
+        loaded, result = self:_loadFromReplicatedConfig()
     end
     if not loaded then
         return false, result

@@ -25,14 +25,6 @@ local function toUserId(playerOrUserId)
     return nil
 end
 
-local function cloneRewardPayload(payload)
-    local out = {}
-    for key, value in pairs(payload or {}) do
-        out[key] = value
-    end
-    return out
-end
-
 function Controller.new(state, service, deps)
     local self = setmetatable({}, Controller)
     self._state = state
@@ -53,9 +45,6 @@ function Controller:RegisterEventHandlers()
         return
     end
     if self._eventBus then
-        self:_subscribe("MatchEnded", function(payload)
-            self:OnMatchEnded(payload)
-        end)
         self:_subscribe("DailyMissionCompleted", function(payload)
             self:OnDailyMissionCompleted(payload)
         end)
@@ -87,26 +76,6 @@ function Controller:_subscribe(eventName, callback)
     })
 end
 
-function Controller:OnMatchEnded(payload)
-    if type(payload) ~= "table" then
-        return
-    end
-
-    local rewardPayload = cloneRewardPayload(payload.rewardPayload or payload.rewards or payload.reward or {})
-    rewardPayload.matchId = rewardPayload.matchId or payload.matchId
-    rewardPayload.source = rewardPayload.source or "MatchEnded"
-
-    local players = payload.players or {}
-    local grantedByUserId = {}
-    for _, player in ipairs(players) do
-        local userId = toUserId(player)
-        if userId and not grantedByUserId[userId] then
-            grantedByUserId[userId] = true
-            self._service:GrantMatchReward(userId, rewardPayload)
-        end
-    end
-end
-
 function Controller:OnDailyMissionCompleted(payload)
     local userId = payload and (payload.userId or toUserId(payload.player))
     if not userId then
@@ -122,7 +91,7 @@ function Controller:OnDailyCheckinClaimed(payload)
     if not userId then
         return
     end
-    self._service:AddCurrency(userId, "Cash", reward, "DailyCheckIn")
+    self._service:AddCurrency(userId, "MM", reward, "DailyCheckIn")
 end
 
 return Controller

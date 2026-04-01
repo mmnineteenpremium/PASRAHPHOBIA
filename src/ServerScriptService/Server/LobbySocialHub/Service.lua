@@ -59,6 +59,10 @@ function Service:HandlePlayerTeleported(payload)
     self._lobbyService:HandlePlayerTeleported(payload)
 end
 
+function Service:ApplyCosmetics(player, equippedCosmetics)
+    return self._lobbyService:ApplyCosmetics(player, equippedCosmetics)
+end
+
 function Service:ApplyCosmetic(player, cosmeticId, category)
     return self._lobbyService:ApplyCosmetic(player, cosmeticId, category)
 end

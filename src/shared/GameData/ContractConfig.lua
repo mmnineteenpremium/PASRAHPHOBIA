@@ -1,22 +1,26 @@
 return {
-    SmallHouseInvestigation = {
-        map = "SmallHouse",
-        difficulty = "Easy",
-        rewardMultiplier = 1.0,
-    },
-    LargeSchoolInvestigation = {
-        map = "LargeSchool",
-        difficulty = "Normal",
-        rewardMultiplier = 1.35,
-    },
-    AsylumInvestigation = {
-        map = "Asylum",
-        difficulty = "Hard",
-        rewardMultiplier = 1.7,
-    },
-    NightmareAsylumInvestigation = {
-        map = "Asylum",
-        difficulty = "Nightmare",
-        rewardMultiplier = 2.2,
-    },
+	HauntedHouseInvestigation = {
+		map = "HauntedHouse",
+		mapId = "HauntedHouse",
+		difficulty = "Mudah",
+		rewardMultiplier = 1.0,
+	},
+	EmptyBuildingInvestigation = {
+		map = "EmptyBuilding",
+		mapId = "EmptyBuilding",
+		difficulty = "Lumayan",
+		rewardMultiplier = 1.2,
+	},
+	StudioMMNineteenInvestigation = {
+		map = "StudioMMNineteen",
+		mapId = "StudioMMNineteen",
+		difficulty = "Angker",
+		rewardMultiplier = 1.45,
+	},
+	AbandonedPalaceInvestigation = {
+		map = "AbandonedPalace",
+		mapId = "AbandonedPalace",
+		difficulty = "Uji Nyali",
+		rewardMultiplier = 1.7,
+	},
 }

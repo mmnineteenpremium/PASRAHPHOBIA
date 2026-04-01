@@ -4,21 +4,21 @@ local Service = {}
 Service.__index = Service
 
 local TOOL_SIGNAL_THRESHOLDS = {
-    SpiritBox = 0.45,
-    TemperatureMeter = 0.6,
-    EMFDetector = 0.5,
-    GhostCamera = 0.7,
-    WritingBook = 0.55,
-    EnergyCompass = 0.5,
+    JejakEnergi = 0.5,
+    KotakArwah = 0.45,
+    SuhuMembeku = 0.6,
+    BukuTerkutuk = 0.55,
+    BolaArwah = 0.7,
+    GerakanGaib = 0.5,
 }
 
 local TOOL_EVIDENCE_MAP = {
-    SpiritBox = "SpiritBox",
-    TemperatureMeter = "FreezingTemp",
-    EMFDetector = "EMF",
-    GhostCamera = "GhostOrb",
-    WritingBook = "GhostWriting",
-    EnergyCompass = "Fingerprints",
+    JejakEnergi = "MEDOK",
+    KotakArwah = "Suara",
+    SuhuMembeku = "Suhu",
+    BukuTerkutuk = "BukuTerkutuk",
+    BolaArwah = "To'un",
+    GerakanGaib = "Pengganggu",
 }
 
 local function resolveEventBus(deps)

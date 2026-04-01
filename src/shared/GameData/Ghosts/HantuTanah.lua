@@ -1,9 +1,10 @@
 return {
-    ghostName = "Hantu Tanah",
+    ghostName = "HantuTanah",
+    displayName = "Hantu Tanah",
     evidenceTypes = {
-        "SpiritBox",
-        "GhostOrb",
-        "EMF5",
+        "Suhu",
+        "MEDOK",
+        "Pengganggu",
     },
     behaviorTraits = {
         "Burrow",

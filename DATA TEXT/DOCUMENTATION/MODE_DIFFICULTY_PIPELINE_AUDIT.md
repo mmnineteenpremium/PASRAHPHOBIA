@@ -16,17 +16,17 @@ This audit covers the end-to-end mode and difficulty selection pipeline, plus ex
 **Key Files**
 1. `src/client/UI/Main.lua`
 2. `src/client/UI/RoomBrowserController.lua`
-3. `src/server/LobbySystem/Controller.lua`
-4. `src/server/LobbySystem/Service.lua`
-5. `src/server/MatchSystem/MatchService.lua`
-6. `src/server/MatchSystem/MatchQueue.lua`
-7. `src/server/MatchSystem/MatchBuilder.lua`
+3. `src/ServerScriptService/Server/LobbySystem/Controller.lua`
+4. `src/ServerScriptService/Server/LobbySystem/Service.lua`
+5. `src/ServerScriptService/Server/MatchSystem/MatchService.lua`
+6. `src/ServerScriptService/Server/MatchSystem/MatchQueue.lua`
+7. `src/ServerScriptService/Server/MatchSystem/MatchBuilder.lua`
 
 **Likely Failure Points**
-1. Reward difficulty multiplier mismatch: `RewardCalculationSystem` expects difficulty strings `Easy/Normal/Hard/Nightmare`, while match difficulty names are `Mudah/Lumayan/Angker/Uji Nyali`, so non-numeric difficulty values default to `1.2`. See `src/server/RewardCalculationSystem/Service.lua` and `src/shared/GameData/ModeDifficultyConfig.lua`.
-2. Ranked difficulty requires MMR data; if `averageMMR` is missing, Ranked difficulty falls back to `DefaultRankedDifficulty` (`Lumayan`). See `src/server/LobbySystem/Service.lua` and `src/server/MatchSystem/MatchService.lua`.
+1. Reward difficulty multiplier mismatch: `RewardCalculationSystem` expects difficulty strings `Easy/Normal/Hard/Nightmare`, while match difficulty names are `Mudah/Lumayan/Angker/Uji Nyali`, so non-numeric difficulty values default to `1.2`. See `src/ServerScriptService/Server/RewardCalculationSystem/Service.lua` and `src/shared/GameData/ModeDifficultyConfig.lua`.
+2. Ranked difficulty requires rank score data; if `averageRankScore` is missing, Ranked difficulty falls back to `DefaultRankedDifficulty` (`Lumayan`). See `src/ServerScriptService/Server/LobbySystem/Service.lua` and `src/ServerScriptService/Server/MatchSystem/MatchService.lua`.
 3. Config drift risk: there are defaults in `ModeDifficultyConfig.lua`, `LobbySystem/ModeSelectionConfig.lua`, and `MatchService.lua`. If any diverge, client/server selection can be inconsistent.
-4. MatchQueue difficulty resolution for Classic uses selected difficulty from queue entries; mixed party selections could lead to a non-obvious chosen difficulty. See `src/server/MatchSystem/MatchQueue.lua`.
+4. MatchQueue difficulty resolution for Classic uses selected difficulty from queue entries; mixed party selections could lead to a non-obvious chosen difficulty. See `src/ServerScriptService/Server/MatchSystem/MatchQueue.lua`.
 
 **Difficulty Table (Classic)**
 Source: `src/shared/GameData/ModeDifficultyConfig.lua`
@@ -39,14 +39,14 @@ Source: `src/shared/GameData/ModeDifficultyConfig.lua`
 | Uji Nyali | 2 | 1.65 | 1.5 | 0.65 | 1.4 | Hard | 1.7 |
 
 **Difficulty Profile Resolution**
-Source: `src/server/MatchSystem/MatchService.lua`
+Source: `src/ServerScriptService/Server/MatchSystem/MatchService.lua`
 1. Resolve mode to `Classic` or `Ranked`.
-2. Resolve difficulty name from Classic selection or Ranked MMR band.
+2. Resolve difficulty name from Classic selection or Ranked score band.
 3. Build `difficultyProfile` from `ModeDifficultyConfig` values.
 4. Merge legacy profile from `DifficultyConfigSystem` if available.
 
 **Sanity Drain Formulas**
-Source: `src/server/SanitySystem/Service.lua`
+Source: `src/ServerScriptService/Server/SanitySystem/Service.lua`
 
 Per snapshot:
 ```text
@@ -76,7 +76,7 @@ Event drains:
 5. Hunt pressure drain: `1.5 + pressure`
 
 **Hunt Trigger Logic (Threshold-Based)**
-Source: `src/server/HuntSystem/Service.lua`
+Source: `src/ServerScriptService/Server/HuntSystem/Service.lua`
 
 Hunt request allowed when:
 1. `averageSanity <= 45`
@@ -85,7 +85,7 @@ Hunt request allowed when:
 4. No active hunt, no pending hunt, and cooldown expired
 
 **Hunt Intensity and Duration (HuntSystem)**
-Source: `src/server/HuntSystem/Service.lua`
+Source: `src/ServerScriptService/Server/HuntSystem/Service.lua`
 
 ```text
 sanityFactor = clamp((100 - averageSanity) / 100, 0, 1)
@@ -98,7 +98,7 @@ speedMultiplier = clamp(1.15 + (intensity * 0.85), 1.15, 2)
 ```
 
 **Adaptive Hunt Intensity (AdaptiveHuntSystem)**
-Source: `src/server/AdaptiveHuntSystem/Service.lua`
+Source: `src/ServerScriptService/Server/AdaptiveHuntSystem/Service.lua`
 
 ```text
 intensity =
@@ -112,4 +112,5 @@ intensity =
 durationSeconds = clamp(20 + (intensity * 0.25), 18, 50)
 cooldownSeconds = clamp(65 - (intensity * 0.4), 20, 75)
 ```
+
 

@@ -15,12 +15,14 @@ local DEFAULT_MODE_CONFIG = {
 	ModeDefinitions = {
 		Classic = {
 			Name = "Classic",
-			AllowDifficultySelection = true,
+			AllowDifficultySelection = false,
+			PublicDifficultyLabel = "AUTO",
 			QueueType = "classic",
 		},
 		Ranked = {
 			Name = "Ranked",
 			AllowDifficultySelection = false,
+			PublicDifficultyLabel = "AUTO",
 			QueueType = "ranked",
 		},
 	},
@@ -59,28 +61,28 @@ local DEFAULT_MODE_CONFIG = {
 			HuntFrequency = 1.5,
 			EvidenceClarity = 0.65,
 			SanityDrain = 1.4,
-			DifficultyMode = "Hard",
+			DifficultyMode = "Nightmare",
 		},
 	},
 	RankedDifficultyBands = {
 		{
-			MinMMR = 0,
-			MaxMMR = 799,
+			MinRankScore = 0,
+			MaxRankScore = 799,
 			Difficulty = "Mudah",
 		},
 		{
-			MinMMR = 800,
-			MaxMMR = 1399,
+			MinRankScore = 800,
+			MaxRankScore = 1399,
 			Difficulty = "Lumayan",
 		},
 		{
-			MinMMR = 1400,
-			MaxMMR = 2099,
+			MinRankScore = 1400,
+			MaxRankScore = 2099,
 			Difficulty = "Angker",
 		},
 		{
-			MinMMR = 2100,
-			MaxMMR = 999999,
+			MinRankScore = 2100,
+			MaxRankScore = 999999,
 			Difficulty = "Uji Nyali",
 		},
 	},
@@ -91,11 +93,34 @@ local DEFAULT_MODE_CONFIG = {
 		lumayan = "Lumayan",
 		angker = "Angker",
 		ujinyali = "Uji Nyali",
+		auto = "Mudah",
 		easy = "Mudah",
 		normal = "Lumayan",
 		hard = "Angker",
 		nightmare = "Uji Nyali",
 	},
+}
+
+local DEFAULT_PHASE_DURATIONS = {
+	PreparationPhase = 30,
+	InvestigationPhase = 480,
+	HuntPhase = 60,
+	EndgamePhase = 30,
+}
+
+local CLIENT_PHASE_BY_MATCH_PHASE = {
+	Lobby = "Lobby",
+	PreparationPhase = "Preparation",
+	InvestigationPhase = "Investigation",
+	HuntPhase = "Hunt",
+	EndgamePhase = "Endgame",
+}
+
+local OBJECTIVE_TEXT_BY_PHASE = {
+	PreparationPhase = "Masuk ke lokasi dan siapkan tim.",
+	InvestigationPhase = "Investigasi lokasi, kumpulkan evidence, lalu tebak ghost sebelum waktu habis.",
+	HuntPhase = "Bertahan hidup, kunci bukti terakhir, dan siapkan tebakan ghost.",
+	EndgamePhase = "Misi ditutup. Tunggu hasil investigasi dan reward.",
 }
 
 local function resolveEventBus(deps)
@@ -140,6 +165,20 @@ local function resolveEventMapRotationSystem(deps)
 	return nil
 end
 
+local function resolveProfileSystem(deps)
+	local profile = Services.Get(deps, "ProfileSystem")
+	if type(profile) ~= "table" then
+		return nil
+	end
+	if type(profile.GetPlayerLevel) == "function" then
+		return profile
+	end
+	if type(profile.Service) == "table" and type(profile.Service.GetPlayerLevel) == "function" then
+		return profile.Service
+	end
+	return nil
+end
+
 local function deepCopy(value)
 	if type(value) ~= "table" then
 		return value
@@ -149,6 +188,21 @@ local function deepCopy(value)
 		out[key] = deepCopy(nested)
 	end
 	return out
+end
+
+local function safeCall(target, methodName, ...)
+	if type(target) ~= "table" then
+		return nil
+	end
+	local method = target[methodName]
+	if type(method) ~= "function" then
+		return nil
+	end
+	local ok, result = pcall(method, target, ...)
+	if not ok then
+		return nil
+	end
+	return result
 end
 
 local function safeRequire(moduleScript)
@@ -188,6 +242,15 @@ local function loadModeDifficultyConfig(deps)
 	return deepCopy(DEFAULT_MODE_CONFIG)
 end
 
+local function loadMapDatabase()
+	local sharedModule = resolveSharedGameDataModule("MapConfig")
+	local loaded = safeRequire(sharedModule)
+	if type(loaded) == "table" then
+		return loaded
+	end
+	return {}
+end
+
 local function preloadModeDefinitions()
 	local sharedModule = resolveSharedGameDataModule("ModeDifficultyConfig")
 	local loaded = safeRequire(sharedModule)
@@ -222,6 +285,19 @@ end
 
 local function getNow(now)
 	return now or os.clock()
+end
+
+local function mergePayload(basePayload, overrides)
+	local merged = {}
+	for key, value in pairs(basePayload or {}) do
+		merged[key] = value
+	end
+	for key, value in pairs(overrides or {}) do
+		if merged[key] == nil then
+			merged[key] = value
+		end
+	end
+	return merged
 end
 
 local function toUserId(playerOrUserId)
@@ -261,7 +337,11 @@ function MatchService.new(deps)
 	self._eventBus = resolveEventBus(self._deps)
 	self._difficultyConfigSystem = resolveDifficultyConfigSystem(self._deps)
 	self._eventMapRotationSystem = resolveEventMapRotationSystem(self._deps)
+	self._profileSystem = resolveProfileSystem(self._deps)
 	self._modeConfig = loadModeDifficultyConfig(self._deps)
+	self._mapDatabase = loadMapDatabase()
+	self._phaseDurations = (((self._deps or {}).GamePhaseConfig or (self._deps or {}).GamePhaseSystemConfig or {}).phaseDurations)
+		or DEFAULT_PHASE_DURATIONS
 
 	if type(self._modeConfig) ~= "table" then
 		self._modeConfig = {}
@@ -283,6 +363,9 @@ end
 
 function MatchService:_resolveMode(modeName)
 	local config = self._modeConfig or DEFAULT_MODE_CONFIG
+	if type(config) == "table" and type(config.NormalizeMode) == "function" then
+		return config.NormalizeMode(modeName)
+	end
 	local modeDefs = config.ModeDefinitions or DEFAULT_MODE_CONFIG.ModeDefinitions
 	local aliases = config.Aliases or DEFAULT_MODE_CONFIG.Aliases
 
@@ -302,33 +385,17 @@ function MatchService:_resolveMode(modeName)
 	return canonical
 end
 
-function MatchService:_resolveClassicDifficulty(difficultyName)
-	local config = self._modeConfig or DEFAULT_MODE_CONFIG
-	local difficulties = config.ClassicDifficulties or DEFAULT_MODE_CONFIG.ClassicDifficulties
-	if type(difficultyName) == "string" and difficulties[difficultyName] then
-		return difficultyName
-	end
-
-	local aliases = config.Aliases or DEFAULT_MODE_CONFIG.Aliases
-	local aliased = aliases[normalizeToken(difficultyName or "")]
-	if type(aliased) == "string" and difficulties[aliased] then
-		return aliased
-	end
-
-	return config.DefaultClassicDifficulty or DEFAULT_MODE_CONFIG.DefaultClassicDifficulty
-end
-
-function MatchService:_resolveAverageMMR(payload)
-	local direct = tonumber(payload and (payload.averageMMR or payload.mmr or payload.rating or payload.rankedMMR))
+function MatchService:_resolveAverageRankScore(payload)
+	local direct = tonumber(payload and (payload.averageRankScore or payload.rankScore or payload.rating or payload.rankedScore))
 	if direct then
 		return direct
 	end
 
-	local mmrList = payload and payload.playerMMRs
-	if type(mmrList) == "table" and #mmrList > 0 then
+	local rankScoreList = payload and payload.playerRankScores
+	if type(rankScoreList) == "table" and #rankScoreList > 0 then
 		local total = 0
 		local count = 0
-		for _, value in ipairs(mmrList) do
+		for _, value in ipairs(rankScoreList) do
 			local numeric = tonumber(value)
 			if numeric then
 				total += numeric
@@ -343,31 +410,128 @@ function MatchService:_resolveAverageMMR(payload)
 	return nil
 end
 
-function MatchService:_resolveRankedDifficulty(payload)
-	local rankedDifficulty = payload and (payload.balancedDifficulty or payload.rankedDifficulty)
-	if type(rankedDifficulty) == "string" then
-		return self:_resolveClassicDifficulty(rankedDifficulty)
+function MatchService:_resolveAveragePlayerLevel(payload)
+	local direct = tonumber(payload and (payload.averagePlayerLevel or payload.avgPlayerLevel or payload.playerLevel))
+	if direct then
+		return math.max(direct, 1)
 	end
 
-	local averageMMR = self:_resolveAverageMMR(payload)
-	if type(averageMMR) == "number" then
+	local levelList = payload and payload.playerLevels
+	if type(levelList) == "table" and #levelList > 0 then
+		local total = 0
+		local count = 0
+		for _, value in ipairs(levelList) do
+			local numeric = tonumber(value)
+			if numeric then
+				total += numeric
+				count += 1
+			end
+		end
+		if count > 0 then
+			return math.max(total / count, 1)
+		end
+	end
+
+	local profileSystem = self._profileSystem or resolveProfileSystem(self._deps)
+	local players = payload and payload.players
+	if type(players) == "table" and #players > 0 and profileSystem then
+		local total = 0
+		local count = 0
+		for _, playerOrUserId in ipairs(players) do
+			local level = safeCall(profileSystem, "GetPlayerLevel", playerOrUserId)
+			if level == nil then
+				local profile = safeCall(profileSystem, "GetPlayerProfile", playerOrUserId)
+				level = type(profile) == "table" and (profile.playerLevel or (profile.progression and profile.progression.level)) or nil
+			end
+			level = tonumber(level)
+			if level then
+				total += level
+				count += 1
+			end
+		end
+		if count > 0 then
+			return math.max(total / count, 1)
+		end
+	end
+
+	return 1
+end
+
+function MatchService:_resolvePartySize(payload)
+	local direct = tonumber(payload and (payload.partySize or payload.playerCount))
+	if direct then
+		return math.max(1, math.floor(direct))
+	end
+
+	local players = payload and payload.players
+	if type(players) == "table" and #players > 0 then
+		return #players
+	end
+
+	return 1
+end
+
+function MatchService:_resolveClassicDifficulty(payload, requestedDifficulty)
+	local config = self._modeConfig or DEFAULT_MODE_CONFIG
+	local incoming = type(payload) == "table" and payload or {}
+	local resolvedPayload = {}
+	for key, value in pairs(incoming) do
+		resolvedPayload[key] = value
+	end
+	resolvedPayload.averagePlayerLevel = resolvedPayload.averagePlayerLevel or self:_resolveAveragePlayerLevel(resolvedPayload)
+	resolvedPayload.partySize = resolvedPayload.partySize or self:_resolvePartySize(resolvedPayload)
+	resolvedPayload.difficulty = requestedDifficulty
+
+	if type(config) == "table" and type(config.ResolveClassicDifficulty) == "function" then
+		return config.ResolveClassicDifficulty(resolvedPayload)
+	end
+
+	if resolvedPayload.forceClassicDifficulty == true and type(requestedDifficulty) == "string" and requestedDifficulty ~= "" then
+		if type(config.NormalizeDifficulty) == "function" then
+			return config.NormalizeDifficulty(requestedDifficulty)
+		end
+		local difficulties = config.ClassicDifficulties or DEFAULT_MODE_CONFIG.ClassicDifficulties
+		if difficulties[requestedDifficulty] then
+			return requestedDifficulty
+		end
+	end
+
+	return config.DefaultClassicDifficulty or DEFAULT_MODE_CONFIG.DefaultClassicDifficulty
+end
+
+function MatchService:_resolveRankedDifficulty(payload)
+	local config = self._modeConfig or DEFAULT_MODE_CONFIG
+	if type(config) == "table" and type(config.ResolveRankedDifficulty) == "function" then
+		return config.ResolveRankedDifficulty(payload)
+	end
+	local rankedDifficulty = payload and (payload.balancedDifficulty or payload.rankedDifficulty)
+	if type(rankedDifficulty) == "string" then
+		return self:_resolveClassicDifficulty({
+			forceClassicDifficulty = true,
+		}, rankedDifficulty)
+	end
+
+	local averageRankScore = self:_resolveAverageRankScore(payload)
+	if type(averageRankScore) == "number" then
 		for _, band in ipairs(self._modeConfig.RankedDifficultyBands or {}) do
-			local minMMR = tonumber(band.MinMMR) or 0
-			local maxMMR = tonumber(band.MaxMMR) or minMMR
-			if averageMMR >= minMMR and averageMMR <= maxMMR then
-				return self:_resolveClassicDifficulty(band.Difficulty)
+			local minRankScore = tonumber(band.MinRankScore) or 0
+			local maxRankScore = tonumber(band.MaxRankScore) or minRankScore
+			if averageRankScore >= minRankScore and averageRankScore <= maxRankScore then
+				return self:_resolveClassicDifficulty({
+					forceClassicDifficulty = true,
+				}, band.Difficulty)
 			end
 		end
 	end
 
-	return self._modeConfig.DefaultRankedDifficulty or self:_resolveClassicDifficulty(nil)
+	return self._modeConfig.DefaultRankedDifficulty or self:_resolveClassicDifficulty(nil, nil)
 end
 
 function MatchService:_resolveDifficultyName(modeName, requestedDifficulty, payload)
 	if modeName == "Ranked" then
 		return self:_resolveRankedDifficulty(payload)
 	end
-	return self:_resolveClassicDifficulty(requestedDifficulty)
+	return self:_resolveClassicDifficulty(payload, requestedDifficulty)
 end
 
 function MatchService:_resolveLegacyDifficultyProfile(difficultyName, fallbackDifficultyMode)
@@ -389,7 +553,7 @@ function MatchService:_resolveLegacyDifficultyProfile(difficultyName, fallbackDi
 end
 
 function MatchService:_resolveDifficultyProfile(modeName, difficultyName, payload)
-	local canonicalDifficulty = self:_resolveClassicDifficulty(difficultyName)
+	local canonicalDifficulty = self:_resolveDifficultyName(modeName, difficultyName, payload)
 	local base = deepCopy((self._modeConfig.ClassicDifficulties or {})[canonicalDifficulty] or {})
 	base.Name = canonicalDifficulty
 	base.Mode = modeName
@@ -406,7 +570,7 @@ function MatchService:_resolveDifficultyProfile(modeName, difficultyName, payloa
 	base.DifficultyMode = base.DifficultyMode or "Normal"
 	base.difficultyMode = base.DifficultyMode
 	base.Ranked = modeName == "Ranked"
-	base.MMR = self:_resolveAverageMMR(payload)
+	base.RankScore = self:_resolveAverageRankScore(payload)
 
 	local legacy = self:_resolveLegacyDifficultyProfile(canonicalDifficulty, base.DifficultyMode)
 	if type(legacy) ~= "table" then
@@ -481,6 +645,83 @@ function MatchService:_fireMatchEventToPlayers(players, payload)
 	end
 end
 
+function MatchService:_getMapDefinition(mapId)
+	if type(mapId) ~= "string" or mapId == "" then
+		return nil
+	end
+	local database = self._mapDatabase or {}
+	local direct = database[mapId]
+	if type(direct) == "table" then
+		return direct
+	end
+	local normalized = normalizeToken(mapId)
+	for key, value in pairs(database) do
+		if normalizeToken(key) == normalized and type(value) == "table" then
+			return value
+		end
+	end
+	return nil
+end
+
+function MatchService:_hydrateMatchMapData(match)
+	if type(match) ~= "table" then
+		return nil
+	end
+	local mapDef = self:_getMapDefinition(match.mapId or match.map)
+	if type(mapDef) ~= "table" then
+		return nil
+	end
+
+	if type(match.roomIds) ~= "table" or #match.roomIds == 0 then
+		match.roomIds = deepCopy(mapDef.rooms or {})
+	end
+	if type(match.ghostRoomCandidates) ~= "table" or #match.ghostRoomCandidates == 0 then
+		match.ghostRoomCandidates = deepCopy(mapDef.ghostRoomCandidates or {})
+	end
+	if type(match.evidenceSpawnPoints) ~= "table" or #match.evidenceSpawnPoints == 0 then
+		match.evidenceSpawnPoints = deepCopy(mapDef.evidenceSpawnPoints or {})
+	end
+	match.mapDefinition = mapDef
+	return mapDef
+end
+
+function MatchService:_getPhaseDuration(phaseName)
+	local duration = self._phaseDurations and self._phaseDurations[phaseName]
+	if type(duration) == "number" and duration >= 0 then
+		return duration
+	end
+	return nil
+end
+
+function MatchService:_buildPhasePayload(match, phaseName, startedAt)
+	local durationSeconds = self:_getPhaseDuration(phaseName)
+	local phaseStartedAt = startedAt or getNow()
+	local endsAt = durationSeconds and (phaseStartedAt + durationSeconds) or nil
+	local mapDef = self:_hydrateMatchMapData(match)
+
+	return {
+		eventName = "PhaseChanged",
+		matchId = match.matchId,
+		matchPhase = phaseName,
+		phase = CLIENT_PHASE_BY_MATCH_PHASE[phaseName] or phaseName,
+		phaseName = CLIENT_PHASE_BY_MATCH_PHASE[phaseName] or phaseName,
+		lifecyclePhase = phaseName,
+		phaseStartedAt = phaseStartedAt,
+		durationSeconds = durationSeconds,
+		phaseEndsAt = endsAt,
+		objectiveText = OBJECTIVE_TEXT_BY_PHASE[phaseName],
+		mapId = match.mapId,
+		map = match.map or match.mapId,
+		mode = match.mode,
+		gameMode = match.gameMode,
+		difficulty = match.difficulty,
+		roomIds = deepCopy(match.roomIds or {}),
+		ghostRoomCandidates = deepCopy(match.ghostRoomCandidates or {}),
+		evidenceSpawnPoints = deepCopy(match.evidenceSpawnPoints or {}),
+		mapFloorCount = mapDef and mapDef.mapDimensions and mapDef.mapDimensions.floors or nil,
+	}
+end
+
 function MatchService:_matches()
 	return self._state:Get("matches") or {}
 end
@@ -497,8 +738,6 @@ end
 
 function MatchService:JoinQueue(player, payload)
 	ensureQueueAndDefinitions(self)
-	print("[MatchQueue] join", player.Name)
-	print("[MatchQueue] partyId", payload and payload.partyId)
 	local queuePayload = self:_sanitizeQueuePayload(payload)
 	local ok, reason, entry = self._queue:JoinQueue(player, queuePayload)
 	if not ok then
@@ -522,7 +761,6 @@ end
 
 function MatchService:TryCreateMatchFromQueue(payload)
 	ensureQueueAndDefinitions(self)
-	print("[MatchService] Attempting match creation")
 	local queueMatch, reason = self._queue:FindMatch()
 	if not queueMatch then
 		return nil, reason or "not_enough_players"
@@ -540,8 +778,8 @@ function MatchService:TryCreateMatchFromQueue(payload)
 			"gameMode",
 			"difficulty",
 			"difficultyProfile",
-			"averageMMR",
-			"playerMMRs",
+			"averageRankScore",
+			"playerRankScores",
 			"rankedDifficulty",
 			"now",
 		}
@@ -663,6 +901,7 @@ function MatchService:StartMatch(matchId)
 
 	local now = getNow()
 	self._lifecycle:Begin(match, now)
+	self:_hydrateMatchMapData(match)
 	match.mode = self:_resolveMode(match.mode or match.gameMode)
 	match.gameMode = match.mode
 	match.difficulty = self:_resolveDifficultyName(match.mode, match.difficulty, match)
@@ -680,14 +919,17 @@ function MatchService:StartMatch(matchId)
 		eventName = "MatchPreparing",
 		countdown = 2,
 	})
-	print("[SERVER MATCH FLOW] Preparing sent")
 	task.wait(1.5)
 
 	local teleportedPlayers = self._teleport:TeleportPlayers(match)
 	self:_fireMatchEventToPlayers(teleportedPlayers, {
 		eventName = "MatchStarted",
+		phase = CLIENT_PHASE_BY_MATCH_PHASE[match.phase] or match.phase,
+		lifecyclePhase = match.phase,
+		phaseStartedAt = now,
+		durationSeconds = self:_getPhaseDuration(match.phase),
 	})
-	print("[SERVER MATCH FLOW] Started sent")
+	self:_fireMatchEventToPlayers(teleportedPlayers, self:_buildPhasePayload(match, match.phase, now))
 
 	for _, player in ipairs(teleportedPlayers) do
 		self:_publish("PlayerTeleported", {
@@ -707,6 +949,9 @@ function MatchService:StartMatch(matchId)
 		difficulty = match.difficulty,
 		difficultyProfile = match.difficultyProfile,
 		phase = match.phase,
+		roomIds = deepCopy(match.roomIds or {}),
+		ghostRoomCandidates = deepCopy(match.ghostRoomCandidates or {}),
+		evidenceSpawnPoints = deepCopy(match.evidenceSpawnPoints or {}),
 		ghostSeed = match.ghostSeed,
 	})
 
@@ -729,10 +974,13 @@ function MatchService:AdvanceMatchPhase(matchId, nextPhase)
 		return nil, "missing_match"
 	end
 
-	local phase, reason = self._lifecycle:Advance(match, nextPhase, getNow())
+	local now = getNow()
+	local phase, reason = self._lifecycle:Advance(match, nextPhase, now)
 	if not phase then
 		return nil, reason
 	end
+
+	self:_fireMatchEventToPlayers(match.players, self:_buildPhasePayload(match, phase, now))
 
 	return match:ToPayload()
 end
@@ -908,7 +1156,12 @@ function MatchService:EndMatch(matchId, results)
 		})
 	end
 
-	local payload = match:ToPayload()
+	local payload = mergePayload(match:ToPayload(), safeResults)
+	payload.source = "MatchSystem"
+	self:_publish("MatchEnded", payload)
+	self:_fireMatchEventToPlayers(lobbyPlayers, mergePayload(payload, {
+		eventName = "MatchEnded",
+	}))
 	matches[matchId] = nil
 	self:_setMatches(matches)
 	return payload
@@ -920,6 +1173,10 @@ function MatchService:GetMatch(matchId)
 		return nil
 	end
 	return match:ToPayload()
+end
+
+function MatchService:GetLiveMatch(matchId)
+	return self:_matches()[matchId]
 end
 
 return MatchService

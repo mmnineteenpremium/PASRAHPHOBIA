@@ -33,4 +33,12 @@ function MatchSystem:Shutdown()
     self:Stop()
 end
 
+function MatchSystem:GetMatch(matchId)
+    return self.Service:GetMatch(matchId)
+end
+
+function MatchSystem:GetLiveMatch(matchId)
+    return self.Service:GetLiveMatch(matchId)
+end
+
 return MatchSystem

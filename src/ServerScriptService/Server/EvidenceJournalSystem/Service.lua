@@ -125,6 +125,7 @@ end
 function Service:_getOrCreatePlayerState(userId)
     local all = self._state:Get("playerJournalData") or {}
     all[userId] = all[userId] or {
+        discoveredEvidence = {},
         confirmedEvidence = {},
         lastUpdatedAt = 0,
     }
@@ -161,21 +162,34 @@ function Service:OnEvidenceLogged(payload)
     end
 
     local playerData = self:_getOrCreatePlayerState(userId)
-    addUnique(playerData.confirmedEvidence, evidenceType)
+    if type(payload.discoveredEvidence) == "table" then
+        playerData.discoveredEvidence = copyList(payload.discoveredEvidence)
+    else
+        addUnique(playerData.discoveredEvidence, evidenceType)
+    end
+    if type(payload.confirmedEvidence) == "table" then
+        playerData.confirmedEvidence = copyList(payload.confirmedEvidence)
+    elseif payload.confirmed == true then
+        addUnique(playerData.confirmedEvidence, evidenceType)
+    end
     playerData.lastUpdatedAt = os.clock()
+
+    local journalData = {
+        userId = userId,
+        discoveredEvidence = copyList(playerData.discoveredEvidence),
+        confirmedEvidence = copyList(playerData.confirmedEvidence),
+        lastUpdatedAt = playerData.lastUpdatedAt,
+    }
 
     self:_publish("JournalUpdated", {
         userId = userId,
         matchId = payload.matchId or self._state:Get("activeMatchId"),
-        journalData = {
-            userId = userId,
-            confirmedEvidence = copyList(playerData.confirmedEvidence),
-            lastUpdatedAt = playerData.lastUpdatedAt,
-        },
+        journalData = journalData,
     })
     self:_emitUIEvent("UIEvidenceUpdated", {
         userId = userId,
         matchId = payload.matchId or self._state:Get("activeMatchId"),
+        discoveredEvidence = journalData.discoveredEvidence,
         confirmedEvidence = copyList(playerData.confirmedEvidence),
     })
 end

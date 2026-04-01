@@ -152,7 +152,6 @@ function MatchCleanup.TeleportPlayersToLobby(matchId)
 			if hrp and lobbySpawn then
 				hrp.CFrame = lobbySpawn.CFrame + LOBBY_SPAWN_OFFSET
 				teleportCount = teleportCount + 1
-				print("[MatchCleanup] Teleported", player.Name, "to lobby from match", matchId)
 			end
 		end
 
@@ -161,7 +160,6 @@ function MatchCleanup.TeleportPlayersToLobby(matchId)
 		table.insert(teleportedPlayers, player)
 	end
 
-	print("[MatchCleanup] Teleported", teleportCount, "players to lobby")
 	return teleportedPlayers, teleportCount
 end
 
@@ -181,15 +179,12 @@ function MatchCleanup.DestroyMatchFolder(matchId)
 
 	-- Destroy entire match folder (including map, evidence, ghosts, etc.)
 	matchFolder:Destroy()
-	print("[MatchCleanup] Destroyed match folder:", matchId)
 
 	return true
 end
 
 -- Full cleanup sequence (call this when match ends)
 function MatchCleanup.CleanupMatch(matchId)
-	print("[MatchCleanup] Starting cleanup for match:", matchId)
-
 	-- Step 1: Teleport players FIRST (before destroying map)
 	local teleportedPlayers, teleportedCount = MatchCleanup.TeleportPlayersToLobby(matchId)
 
@@ -200,13 +195,14 @@ function MatchCleanup.CleanupMatch(matchId)
 	local destroyed = MatchCleanup.DestroyMatchFolder(matchId)
 
 	if destroyed then
-		print("[MatchCleanup] Match cleanup complete:", matchId)
-		print("  - Players teleported:", teleportedCount or 0)
-		print("  - Match folder destroyed: true")
-	else
-		warn("[MatchCleanup] Match cleanup FAILED:", matchId)
+		return {
+			destroyed = destroyed,
+			teleportedCount = teleportedCount or 0,
+			teleportedPlayers = teleportedPlayers or {},
+		}
 	end
 
+	warn("[MatchCleanup] Match cleanup FAILED:", matchId)
 	return {
 		destroyed = destroyed,
 		teleportedCount = teleportedCount or 0,

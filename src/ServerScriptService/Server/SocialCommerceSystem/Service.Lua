@@ -2,6 +2,7 @@ local Services = require(script.Parent.Parent.Core.Services)
 
 local Service = {}
 Service.__index = Service
+local Players = game:GetService("Players")
 
 local function deepCopy(tbl)
     local copy = {}
@@ -51,6 +52,52 @@ local function resolveGameDataModule(moduleName)
     return gameData:FindFirstChild(moduleName)
 end
 
+local function getByPath(root, path)
+    local node = root
+    for _, segment in ipairs(path or {}) do
+        if typeof(node) ~= "Instance" then
+            return nil
+        end
+        node = node:FindFirstChild(segment)
+        if not node then
+            return nil
+        end
+    end
+    return node
+end
+
+local function resolveCatalogModule()
+    local pathOptions = {
+        { "shared", "DataTypes", "ShopCatalog" },
+        { "Shared", "DataTypes", "ShopCatalog" },
+    }
+
+    local cursor = script
+    while cursor do
+        for _, path in ipairs(pathOptions) do
+            local moduleScript = getByPath(cursor, path)
+            if moduleScript then
+                return moduleScript
+            end
+        end
+        cursor = cursor.Parent
+    end
+
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if ok and typeof(replicatedStorage) == "Instance" then
+        for _, path in ipairs(pathOptions) do
+            local moduleScript = getByPath(replicatedStorage, path)
+            if moduleScript then
+                return moduleScript
+            end
+        end
+    end
+
+    return nil
+end
+
 local function safeRequire(moduleScript)
     if not moduleScript then
         return nil
@@ -91,7 +138,9 @@ function Service:Init()
     self._dependencies = {
         EconomySystem = Services.Get(self._deps, "EconomySystem"),
         InventorySystem = Services.Get(self._deps, "InventorySystem"),
+        DataPersistenceService = Services.Get(self._deps, "DataPersistenceService"),
     }
+    self._state:Set("shopCatalog", self:LoadShopCatalog())
     self:ReloadConfig()
 end
 
@@ -111,6 +160,74 @@ function Service:_publish(eventName, payload)
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
     end
+end
+
+function Service:LoadShopCatalog()
+    local loadedCatalog = safeRequire(resolveCatalogModule())
+    if type(loadedCatalog) ~= "table" then
+        return {}
+    end
+
+    local normalized = {}
+    for _, item in pairs(loadedCatalog) do
+        if type(item) == "table" and type(item.id) == "string" and item.id ~= "" then
+            normalized[item.id] = deepCopy(item)
+        end
+    end
+    return normalized
+end
+
+function Service:_getCatalogItem(itemId)
+    local catalog = self._state:Get("shopCatalog") or {}
+    return type(itemId) == "string" and catalog[itemId] or nil
+end
+
+function Service:_getInventoryService()
+    local inventory = self._dependencies.InventorySystem
+    if type(inventory) == "table" and type(inventory.Service) == "table" then
+        return inventory.Service
+    end
+    return inventory
+end
+
+function Service:_getEconomyService()
+    local economy = self._dependencies.EconomySystem
+    if type(economy) == "table" and type(economy.Service) == "table" then
+        return economy.Service
+    end
+    return economy
+end
+
+function Service:_getPersistenceService()
+    local persistence = self._dependencies.DataPersistenceService
+    if type(persistence) == "table" and type(persistence.Service) == "table" then
+        return persistence.Service
+    end
+    return persistence
+end
+
+function Service:_persistInventory(player)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return
+    end
+
+    local inventory = self:_getInventoryService()
+    local persistence = self:_getPersistenceService()
+    if type(inventory) ~= "table" or type(inventory.GetSnapshotForPersistence) ~= "function" then
+        return
+    end
+    if type(persistence) ~= "table" or type(persistence.SaveInventory) ~= "function" then
+        return
+    end
+
+    local snapshot = safeCall(inventory, "GetSnapshotForPersistence", player)
+    if type(snapshot) ~= "table" then
+        return
+    end
+
+    pcall(function()
+        persistence:SaveInventory(player.UserId, snapshot)
+    end)
 end
 
 function Service:HandleMarketplacePurchase(payload)
@@ -149,6 +266,86 @@ function Service:HandleMarketplacePurchase(payload)
         cosmeticId = cosmeticId,
         price = price,
         currency = "MM",
+    })
+
+    return true
+end
+
+function Service:ProcessGiftPurchase(payload)
+    local cfg = self._state:Get("config") or {}
+    if cfg.GiftingEnabled == false then
+        return false, "gifting_disabled"
+    end
+
+    local senderPlayer = payload and (payload.player or payload.fromPlayer)
+    local senderUserId = toUserId(senderPlayer or payload and payload.fromUserId)
+    local recipientUserId = toUserId(payload and (payload.recipientPlayer or payload.recipientUserId or payload.targetUserId))
+    local itemId = payload and payload.itemId
+
+    if not senderUserId or not recipientUserId or senderUserId == recipientUserId then
+        return false, "invalid_gift_users"
+    end
+    if type(itemId) ~= "string" or itemId == "" then
+        return false, "invalid_item_id"
+    end
+
+    local item = self:_getCatalogItem(itemId)
+    if type(item) ~= "table" then
+        return false, "item_not_found"
+    end
+    if item.category ~= "Cosmetic" then
+        return false, "gift_requires_cosmetic"
+    end
+
+    local recipientPlayer = payload and payload.recipientPlayer
+    if (typeof(recipientPlayer) ~= "Instance" or not recipientPlayer:IsA("Player")) and recipientUserId then
+        recipientPlayer = Players:GetPlayerByUserId(recipientUserId)
+    end
+    if typeof(recipientPlayer) ~= "Instance" or not recipientPlayer:IsA("Player") then
+        return false, "recipient_offline"
+    end
+
+    local inventory = self:_getInventoryService()
+    if type(inventory) ~= "table" then
+        return false, "inventory_unavailable"
+    end
+
+    local alreadyOwned = safeCall(inventory, "OwnsCosmetic", recipientPlayer, itemId)
+    if alreadyOwned == true then
+        return false, "recipient_already_owns_item"
+    end
+
+    local economy = self:_getEconomyService()
+    if type(economy) ~= "table" then
+        return false, "economy_unavailable"
+    end
+
+    local currency = type(item.currency) == "string" and item.currency or "MM"
+    local spendOk, spendErr = safeCall(economy, "SpendCurrency", senderPlayer or senderUserId, currency, tonumber(item.price) or 0, "GiftPurchase")
+    if spendOk ~= true then
+        return false, spendErr or "gift_payment_failed"
+    end
+
+    local granted = nil
+    if type(inventory.GrantItem) == "function" then
+        granted = safeCall(inventory, "GrantItem", recipientPlayer, itemId, item)
+    end
+    if granted ~= true then
+        granted = safeCall(inventory, "AddCosmeticOwnership", recipientPlayer, itemId)
+    end
+    if granted ~= true then
+        safeCall(economy, "AddCurrency", senderPlayer or senderUserId, currency, tonumber(item.price) or 0, "GiftPurchaseRefund")
+        return false, "gift_grant_failed"
+    end
+
+    self:_persistInventory(recipientPlayer)
+
+    self:_publish("GiftPurchaseCompleted", {
+        fromUserId = senderUserId,
+        toUserId = recipientPlayer.UserId,
+        itemId = itemId,
+        price = tonumber(item.price) or 0,
+        currency = currency,
     })
 
     return true

@@ -24,7 +24,7 @@ local CRITICAL_POST = {
 local MAP_ATMOSPHERE_OFFSETS = {
 	AbandonedPalace = 0.3,
 	HauntedHouse = 0.25,
-	StudioMMNINETEEN = 0.22,
+	StudioMMNineteen = 0.22,
 }
 
 local function ensureSanityColorCorrection()

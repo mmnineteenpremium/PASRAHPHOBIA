@@ -1,8 +1,12 @@
 local LobbyPlayerManager = {}
 LobbyPlayerManager.__index = LobbyPlayerManager
 
+local LobbyLocator = require(script.Parent.Parent.Core.LobbyLocator)
+
 local LOBBY_NAME = "LobbySocialHub"
 local LOBBY_SPAWN_OFFSET = Vector3.new(0, 3, 0)
+local LOBBY_SPAWN_PART_HEIGHT_FROM_FLOOR = 3.5
+local LOBBY_SPAWN_PROTECTION_SECONDS = 3
 local EXPECTED_SPAWN_COUNT = 4
 local SPAWN_OFFSETS = {
     Vector3.new(-10, 0, -10),
@@ -37,33 +41,16 @@ local function collectSpawnParts(root, out)
 end
 
 local function resolveLobbyRoot()
-    local workspaceLobby = workspace:FindFirstChild(LOBBY_NAME)
-    if workspaceLobby then
-        return workspaceLobby
-    end
-
-    local mapsFolder = workspace:FindFirstChild("Maps")
-    if mapsFolder then
-        local mapsLobby = mapsFolder:FindFirstChild(LOBBY_NAME)
-        if mapsLobby then
-            return mapsLobby
-        end
-    end
-
-    local currentMap = workspace:FindFirstChild("CurrentMap")
-    if currentMap and currentMap.Name == LOBBY_NAME then
-        return currentMap
-    end
-
-    return nil
+    return LobbyLocator.ResolveRoot(LOBBY_NAME, workspace)
 end
 
 local function getSpawnFolder(lobbyRoot)
     if not lobbyRoot then
         return nil
     end
-    local folder = lobbyRoot:FindFirstChild("SpawnPoints")
-    if folder and folder:IsA("Folder") then
+
+    local folder = lobbyRoot:FindFirstChild("SpawnPoints", true)
+    if folder and (folder:IsA("Folder") or folder:IsA("Model")) then
         return folder
     end
     return nil
@@ -76,7 +63,91 @@ local function sortSpawnParts(spawnParts)
     return spawnParts
 end
 
+local function applyLobbySpawnState(player)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return
+    end
+
+    local protectUntil = os.clock() + LOBBY_SPAWN_PROTECTION_SECONDS
+    player:SetAttribute("InLobby", true)
+    player:SetAttribute("InMatch", nil)
+    player:SetAttribute("MatchId", nil)
+    player:SetAttribute("SpawnProtected", true)
+    player:SetAttribute("SpawnProtectedUntil", protectUntil)
+
+    task.delay(LOBBY_SPAWN_PROTECTION_SECONDS, function()
+        if not player.Parent then
+            return
+        end
+        local currentUntil = player:GetAttribute("SpawnProtectedUntil")
+        if type(currentUntil) == "number" and currentUntil > os.clock() then
+            return
+        end
+        player:SetAttribute("SpawnProtected", nil)
+        player:SetAttribute("SpawnProtectedUntil", nil)
+    end)
+end
+
+local function resolvePrimaryFloorTopY(lobbyRoot)
+    if not lobbyRoot then
+        return nil
+    end
+
+    local floorPart = lobbyRoot:FindFirstChild("Floor_1_Main", true)
+    if not (floorPart and floorPart:IsA("BasePart")) then
+        for _, descendant in ipairs(lobbyRoot:GetDescendants()) do
+            if descendant:IsA("BasePart") and descendant.Name:match("^Floor") then
+                floorPart = descendant
+                break
+            end
+        end
+    end
+
+    if floorPart and floorPart:IsA("BasePart") then
+        return floorPart.Position.Y + (floorPart.Size.Y * 0.5)
+    end
+
+    return nil
+end
+
+local function resolveLobbyReferencePosition(lobbyRoot)
+    if not lobbyRoot then
+        return nil
+    end
+
+    local boundaryReference = lobbyRoot:FindFirstChild("BoundaryReference", true)
+    if boundaryReference and boundaryReference:IsA("BasePart") then
+        return boundaryReference.Position
+    end
+
+    local floorPart = lobbyRoot:FindFirstChild("Floor_1_Main", true)
+    if floorPart and floorPart:IsA("BasePart") then
+        return floorPart.Position
+    end
+
+    if lobbyRoot:IsA("Model") then
+        local ok, pivot = pcall(function()
+            return lobbyRoot:GetPivot().Position
+        end)
+        if ok and typeof(pivot) == "Vector3" then
+            return pivot
+        end
+    end
+
+    local firstPart = lobbyRoot:FindFirstChildWhichIsA("BasePart", true)
+    if firstPart then
+        return firstPart.Position
+    end
+
+    return nil
+end
+
 local function raycastSpawnY(lobbyRoot, targetXZ, fallbackY)
+    local floorTopY = resolvePrimaryFloorTopY(lobbyRoot)
+    if floorTopY then
+        return floorTopY
+    end
+
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Include
     params.FilterDescendantsInstances = { lobbyRoot }
@@ -100,14 +171,29 @@ local function spawnPartsAreHealthy(lobbyRoot, spawnParts)
         return false, string.format("spawn_count_%d", #spawnParts)
     end
 
-    local pivot = lobbyRoot:GetPivot().Position
+    local referencePosition = resolveLobbyReferencePosition(lobbyRoot)
+    local floorTopY = resolvePrimaryFloorTopY(lobbyRoot)
     for _, spawnPart in ipairs(spawnParts) do
         if not spawnPart:IsA("BasePart") then
             return false, "non_basepart"
         end
-        local delta = spawnPart.Position - pivot
-        if math.abs(delta.X) > 300 or math.abs(delta.Z) > 300 or spawnPart.Position.Y < -50 then
+
+        if spawnPart.Position.Y < -50 then
             return false, "spawn_out_of_lobby_bounds"
+        end
+
+        if referencePosition then
+            local delta = spawnPart.Position - referencePosition
+            if math.abs(delta.X) > 300 or math.abs(delta.Z) > 300 then
+                return false, "spawn_out_of_lobby_bounds"
+            end
+        end
+
+        if floorTopY then
+            local heightAboveFloor = spawnPart.Position.Y - floorTopY
+            if heightAboveFloor < 1 or heightAboveFloor > 6 then
+                return false, "spawn_height_invalid"
+            end
         end
     end
 
@@ -155,6 +241,22 @@ local function resolveSpawnPart(deps, config, player)
     end
 
     return nil
+end
+
+local function buildUprightPartCFrame(part, offset)
+    if not (part and part:IsA("BasePart")) then
+        return nil
+    end
+
+    local position = part.Position + (offset or Vector3.zero)
+    local flatLook = Vector3.new(part.CFrame.LookVector.X, 0, part.CFrame.LookVector.Z)
+    if flatLook.Magnitude <= 1e-4 then
+        flatLook = Vector3.new(0, 0, -1)
+    else
+        flatLook = flatLook.Unit
+    end
+
+    return CFrame.lookAt(position, position + flatLook, Vector3.yAxis)
 end
 
 function LobbyPlayerManager.new(deps, config)
@@ -221,10 +323,15 @@ function LobbyPlayerManager:_scanAndSyncLobbySpawns(reason)
     spawnFolder.Name = "SpawnPoints"
     spawnFolder.Parent = lobbyRoot
 
-    local pivot = lobbyRoot:GetPivot().Position
+    local referencePosition = resolveLobbyReferencePosition(lobbyRoot)
+    if not referencePosition then
+        warn(string.format("[LobbyPlayerManager] [%s] Missing lobby reference position for SpawnPoints rebuild", tostring(reason)))
+        return nil
+    end
+
     for index, offset in ipairs(SPAWN_OFFSETS) do
-        local target = pivot + Vector3.new(offset.X, 0, offset.Z)
-        local floorY = raycastSpawnY(lobbyRoot, target, pivot.Y)
+        local target = referencePosition + Vector3.new(offset.X, 0, offset.Z)
+        local floorY = raycastSpawnY(lobbyRoot, target, referencePosition.Y)
 
         local part = Instance.new("Part")
         part.Name = string.format("PlayerSpawn_%d", index)
@@ -232,7 +339,7 @@ function LobbyPlayerManager:_scanAndSyncLobbySpawns(reason)
         part.CanCollide = false
         part.Transparency = 1
         part.Size = Vector3.new(2, 1, 2)
-        part.Position = Vector3.new(target.X, floorY + 1, target.Z)
+        part.Position = Vector3.new(target.X, floorY + LOBBY_SPAWN_PART_HEIGHT_FROM_FLOOR, target.Z)
         part.Parent = spawnFolder
     end
 
@@ -289,7 +396,9 @@ function LobbyPlayerManager:_spawnPlayer(player, character)
 
     root.AssemblyLinearVelocity = Vector3.zero
     root.AssemblyAngularVelocity = Vector3.zero
-    root.CFrame = spawnPart.CFrame + LOBBY_SPAWN_OFFSET
+    local spawnCFrame = buildUprightPartCFrame(spawnPart, LOBBY_SPAWN_OFFSET)
+    root.CFrame = spawnCFrame or (spawnPart.CFrame + LOBBY_SPAWN_OFFSET)
+    applyLobbySpawnState(player)
     print(string.format("[LobbyPlayerManager] Spawned %s at %s", player.Name, tostring(spawnPart.Position)))
 end
 
@@ -304,7 +413,7 @@ function LobbyPlayerManager:RegisterPlayer(player)
     end
 
     self._players[userId] = player
-    player:SetAttribute("InLobby", true)
+    applyLobbySpawnState(player)
 
     self._connectionsByUserId[userId] = player.CharacterAdded:Connect(function(character)
         task.defer(function()

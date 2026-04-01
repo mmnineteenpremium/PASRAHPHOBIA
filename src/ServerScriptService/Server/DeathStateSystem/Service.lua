@@ -78,18 +78,12 @@ function Service:Init()
     }
     self._deps.SpectatorModeSystem = Services.Get(self._deps, "SpectatorModeSystem")
 end
-function Service:Start()
-    -- DEBUG: ensure a match context exists for spectator testing
-    if not self._state:Get("activeMatchId") then
-        self._state:Set("activeMatchId", "DEBUG_MATCH")
-    end
-end
+function Service:Start() end
 function Service:Stop() self._state:Clear() end
 function Service:_publish(eventName, payload)
     if self._eventBus then self._eventBus:Publish(eventName, payload) end
 end
 function Service:HandleEvent(eventName, payload)
-    print("[DeathStateSystem] HandleEvent:", eventName)
     if eventName == "MatchStarted" then
         self._state:Set("activeMatchId", payload and payload.matchId)
         if type(payload) == "table" and type(payload.players) == "table" then
@@ -102,6 +96,10 @@ function Service:HandleEvent(eventName, payload)
         self._state:Set("deathStateByPlayer", {})
         self._state:Set("lastDeathEventAtByPlayer", {})
     elseif eventName == "PlayerDied" then
+        local matchId = payload and payload.matchId or self._state:Get("activeMatchId")
+        if type(matchId) ~= "string" then
+            return
+        end
         local resolvedPlayer = resolvePlayerFromPayload(payload)
         if isProtectedInMatch(resolvedPlayer) then
             return
@@ -124,18 +122,27 @@ function Service:HandleEvent(eventName, payload)
         self._state:Set("lastDeathEventAtByPlayer", lastDeathEventAtByPlayer)
         local spectatorSystem = self._deps.SpectatorModeSystem
         if spectatorSystem and spectatorSystem.Service then
-            spectatorSystem.Service:HandleEvent("PlayerDied", payload)
+            spectatorSystem.Service:HandleEvent("PlayerDied", {
+                matchId = matchId,
+                userId = userId,
+                player = resolvedPlayer or payload.player,
+                reason = payload and payload.reason,
+            })
         end
         states[userId] = "Dead"
         self._state:Set("deathStateByPlayer", states)
-        self:_publish("DeathStateChanged", { userId = userId, player = resolvedPlayer or payload.player, state = "Dead", matchId = self._state:Get("activeMatchId") })
+        self:_publish("DeathStateChanged", { userId = userId, player = resolvedPlayer or payload.player, state = "Dead", matchId = matchId })
     elseif eventName == "PlayerRespawnRequested" then
+        local matchId = payload and payload.matchId or self._state:Get("activeMatchId")
+        if type(matchId) ~= "string" then
+            return
+        end
         local userId = toUserId(payload and (payload.player or payload.userId))
         if userId then
             local states = self._state:Get("deathStateByPlayer") or {}
             states[userId] = "RespawnRequested"
             self._state:Set("deathStateByPlayer", states)
-            self:_publish("DeathStateChanged", { userId = userId, player = payload.player, state = "RespawnRequested", matchId = self._state:Get("activeMatchId") })
+            self:_publish("DeathStateChanged", { userId = userId, player = payload.player, state = "RespawnRequested", matchId = matchId })
         end
     end
 end

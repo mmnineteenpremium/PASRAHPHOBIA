@@ -71,7 +71,7 @@ function Service:CalculateReward(playerOrUserId, matchData)
         return nil
     end
 
-    local difficulty = matchData and (matchData.difficulty or matchData.contractDifficulty or "Normal") or "Normal"
+    local difficulty = matchData and (matchData.difficulty or matchData.contractDifficulty or "Lumayan") or "Lumayan"
     local multipliers = self._state:Get("difficultyMultipliers") or {}
     local difficultyMultiplier = multipliers[difficulty] or 1.0
     local performance = math.clamp(math.floor(matchData and (matchData.performancePercent or matchData.performance) or 0), 0, 100)

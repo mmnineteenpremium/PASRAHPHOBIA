@@ -2,12 +2,27 @@ local EvidenceValidator = {}
 EvidenceValidator.__index = EvidenceValidator
 
 local DEFAULT_TOOL_EVIDENCE_MAP = {
-	camera = "BolaArwah",
-	thermometer = "SuhuMembeku",
-	spiritbox = "KotakArwah",
-	emf = "JejakEnergi",
+	camera = "To'un",
+	thermometer = "Suhu",
+	spiritbox = "Suara",
+	emf = "MEDOK",
 	writingbook = "BukuTerkutuk",
-	motionsensor = "GerakanGaib",
+	motionsensor = "Pengganggu",
+}
+
+local EVIDENCE_ALIASES = {
+	medok = "MEDOK",
+	jejakenergi = "MEDOK",
+	suhu = "Suhu",
+	suhumembeku = "Suhu",
+	bukuterkutuk = "BukuTerkutuk",
+	toun = "To'un",
+	bolaarwah = "To'un",
+	suara = "Suara",
+	kotakarwah = "Suara",
+	pengganggu = "Pengganggu",
+	motionsensor = "Pengganggu",
+	gerakangaib = "Pengganggu",
 }
 
 local function normalizeToken(value)
@@ -25,7 +40,11 @@ local function normalizeEvidenceType(evidenceType)
 	if type(evidenceType) ~= "string" then
 		return nil
 	end
-	return evidenceType:gsub("%s+", "")
+	local token = evidenceType
+		:lower()
+		:gsub("[%s_%-]+", "")
+		:gsub("[^%w]", "")
+	return EVIDENCE_ALIASES[token] or evidenceType
 end
 
 local function resolveToolEvidenceType(payload, toolEvidenceMap)

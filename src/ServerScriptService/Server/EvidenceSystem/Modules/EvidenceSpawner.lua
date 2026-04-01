@@ -2,12 +2,12 @@ local EvidenceSpawner = {}
 EvidenceSpawner.__index = EvidenceSpawner
 
 local DEFAULT_EVIDENCE_TYPES = {
-	"BolaArwah",
+	"MEDOK",
+	"Suhu",
 	"BukuTerkutuk",
-	"GerakanGaib",
-	"JejakEnergi",
-	"KotakArwah",
-	"SuhuMembeku",
+	"To'un",
+	"Suara",
+	"Pengganggu",
 }
 
 local DEFAULT_RULES = {

@@ -2,12 +2,12 @@ local GhostEvidenceController = {}
 GhostEvidenceController.__index = GhostEvidenceController
 
 local EVIDENCE_TYPES = {
-	"SuhuMembeku",
-	"BolaArwah",
+	"MEDOK",
+	"Suhu",
 	"BukuTerkutuk",
-	"KotakArwah",
-	"JejakEnergi",
-	"GerakanGaib",
+	"To'un",
+	"Suara",
+	"Pengganggu",
 }
 
 local STATE_BONUS = {

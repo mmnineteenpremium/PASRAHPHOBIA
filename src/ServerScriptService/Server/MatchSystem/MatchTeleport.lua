@@ -1,14 +1,33 @@
 local MatchTeleport = {}
 MatchTeleport.__index = MatchTeleport
 
+local DoorRuntime = require(script.Parent.DoorRuntime)
+local MapRuntimePatches = require(script.Parent.MapRuntimePatches)
+
 local Workspace = game:GetService("Workspace")
 
-local SAFE_MIN_SPAWN_Y = 5
+local SAFE_MIN_SPAWN_Y = 2.5
 local FLOOR_CHECK_DISTANCE = 50
-local FLOOR_RAY_START_OFFSET = 10
-local FLOOR_CLEARANCE = 4
+local FLOOR_RAY_START_OFFSET = 1.5
+local DEFAULT_FLOOR_CLEARANCE = 3.0
+local MIN_FLOOR_CLEARANCE = 2.75
+local MAX_FLOOR_CLEARANCE = 3.4
+local FLOOR_ABOVE_SPAWN_TOLERANCE = 1
+local FLOOR_RETRY_MAX_ITERATIONS = 6
+local FLOOR_RETRY_EPSILON = 0.05
 local SPAWN_WAIT_TIMEOUT = 5
 local SPAWN_WAIT_STEP = 0.1
+local DEFAULT_FORWARD = Vector3.new(0, 0, -1)
+
+-- Streaming + physics stabilization for in-place teleports (StreamingEnabled = true).
+-- Without this, clients can briefly have no colliders at the destination and the character can drift/fling.
+local STREAM_AROUND_TIMEOUT = 8
+local STREAM_AROUND_HARD_TIMEOUT = 10
+local POST_TELEPORT_FREEZE_OK_SECONDS = 0.12
+local POST_TELEPORT_FREEZE_TIMEOUT_SECONDS = 0.35
+local POST_TELEPORT_SERVER_OWNERSHIP_STREAMING_SECONDS = 180
+local POST_TELEPORT_SERVER_OWNERSHIP_NON_STREAMING_SECONDS = 6
+local REQUEST_STREAM_API_MISSING_WARNED = false
 
 local function getActiveMatchesFolder()
 	local folder = Workspace:FindFirstChild("ActiveMatches")
@@ -132,43 +151,107 @@ local function resolveMapTemplate(mapName)
 end
 
 local function computeMatchOffset(container)
-	local index = 1
+	local index = 0
 	if container and container.Parent then
-		index = #container.Parent:GetChildren() + 1
+		local siblings = container.Parent:GetChildren()
+		for i, sibling in ipairs(siblings) do
+			if sibling == container then
+				index = i - 1
+				break
+			end
+		end
+		if index < 0 then
+			index = math.max(#siblings - 1, 0)
+		end
 	end
 	local spacing = 3000
 	return Vector3.new(index * spacing, 0, 0)
 end
 
 local function applyWorldOffset(instance, offset)
-	local targetCFrame = CFrame.new(offset)
+	if typeof(offset) ~= "Vector3" then
+		return false
+	end
 
-	if instance:IsA("Model") then
-		if instance:FindFirstChildWhichIsA("BasePart", true) then
-			instance:PivotTo(targetCFrame)
+	local function moveModel(model)
+		if not model:FindFirstChildWhichIsA("BasePart", true) then
+			return false
+		end
+		local ok, pivot = pcall(function()
+			return model:GetPivot()
+		end)
+		if ok then
+			model:PivotTo(pivot + offset)
 			return true
 		end
 		return false
 	end
 
+	local function applyOffsetRecursive(node)
+		if node:IsA("Model") then
+			return moveModel(node)
+		end
+		if node:IsA("BasePart") then
+			node.CFrame = node.CFrame + offset
+			return true
+		end
+
+		local movedAny = false
+		for _, child in ipairs(node:GetChildren()) do
+			if child:IsA("Model") then
+				if moveModel(child) then
+					movedAny = true
+				end
+			elseif child:IsA("BasePart") then
+				child.CFrame = child.CFrame + offset
+				movedAny = true
+			elseif child:IsA("Folder") then
+				if applyOffsetRecursive(child) then
+					movedAny = true
+				end
+			end
+		end
+
+		return movedAny
+	end
+
+	return applyOffsetRecursive(instance)
+end
+
+local function resolveSpatialAnchorCFrame(instance)
+	if not instance then
+		return nil, nil
+	end
+
+	if instance:IsA("Model") and instance:FindFirstChildWhichIsA("BasePart", true) then
+		local ok, pivot = pcall(function()
+			return instance:GetPivot()
+		end)
+		if ok then
+			return pivot, instance.Name
+		end
+	end
+
 	if instance:IsA("BasePart") then
-		instance.CFrame = targetCFrame
-		return true
+		return instance.CFrame, instance.Name
 	end
 
 	local nestedModel = instance:FindFirstChildWhichIsA("Model", true)
 	if nestedModel and nestedModel:FindFirstChildWhichIsA("BasePart", true) then
-		nestedModel:PivotTo(targetCFrame)
-		return true
+		local ok, pivot = pcall(function()
+			return nestedModel:GetPivot()
+		end)
+		if ok then
+			return pivot, nestedModel.Name
+		end
 	end
 
 	local nestedPart = instance:FindFirstChildWhichIsA("BasePart", true)
 	if nestedPart then
-		nestedPart.CFrame = targetCFrame
-		return true
+		return nestedPart.CFrame, nestedPart.Name
 	end
 
-	return false
+	return nil, nil
 end
 
 local function getCharacterRoot(character)
@@ -179,6 +262,153 @@ local function getCharacterRoot(character)
 		return character.PrimaryPart
 	end
 	return character:FindFirstChild("HumanoidRootPart") or character:FindFirstChildWhichIsA("BasePart")
+end
+
+local function resolveHumanoidFloorClearance(character)
+	local root = getCharacterRoot(character)
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not (root and root:IsA("BasePart") and humanoid) then
+		return DEFAULT_FLOOR_CLEARANCE
+	end
+
+	local hipHeight = tonumber(humanoid.HipHeight) or 0
+	local clearance = (root.Size.Y * 0.5) + math.max(hipHeight, 0) + 0.15
+	if clearance < MIN_FLOOR_CLEARANCE then
+		clearance = MIN_FLOOR_CLEARANCE
+	elseif clearance > MAX_FLOOR_CLEARANCE then
+		clearance = MAX_FLOOR_CLEARANCE
+	end
+	return clearance
+end
+
+local function clearAssemblyVelocities(rootPart)
+	if not (rootPart and rootPart:IsA("BasePart")) then
+		return
+	end
+	rootPart.AssemblyLinearVelocity = Vector3.zero
+	rootPart.AssemblyAngularVelocity = Vector3.zero
+end
+
+local function withServerNetworkOwnership(rootPart, durationSeconds)
+	if not (rootPart and rootPart:IsA("BasePart")) then
+		return
+	end
+
+	pcall(function()
+		rootPart:SetNetworkOwner(nil)
+	end)
+
+	local seconds = tonumber(durationSeconds) or 0.75
+	if seconds <= 0 then
+		return
+	end
+	task.delay(seconds, function()
+		if not (rootPart and rootPart.Parent) then
+			return
+		end
+		pcall(function()
+			rootPart:SetNetworkOwnershipAuto()
+		end)
+	end)
+end
+
+local function requestStreamAroundPlayer(player, position)
+	if not Workspace.StreamingEnabled then
+		return true
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false
+	end
+	if typeof(position) ~= "Vector3" then
+		return false
+	end
+	if typeof(player.RequestStreamAroundAsync) ~= "function" then
+		if not REQUEST_STREAM_API_MISSING_WARNED then
+			REQUEST_STREAM_API_MISSING_WARNED = true
+			warn("[MatchTeleport] StreamingEnabled=true but Player:RequestStreamAroundAsync is not available in this runtime.")
+		end
+		return false
+	end
+
+	local completed = false
+	task.spawn(function()
+		pcall(function()
+			player:RequestStreamAroundAsync(position, STREAM_AROUND_TIMEOUT)
+		end)
+		completed = true
+	end)
+
+	local deadline = os.clock() + STREAM_AROUND_HARD_TIMEOUT
+	while not completed and os.clock() < deadline do
+		task.wait(0.05)
+	end
+
+	return completed
+end
+
+local function safeTeleportCharacter(player, targetCFrame)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+	if typeof(targetCFrame) ~= "CFrame" then
+		return false, "invalid_target_cframe"
+	end
+
+	local character = player.Character
+	if not character then
+		return false, "missing_character"
+	end
+
+	local root = getCharacterRoot(character)
+	if not (root and root:IsA("BasePart")) then
+		return false, "missing_root"
+	end
+
+	local ownershipDuration = Workspace.StreamingEnabled
+		and POST_TELEPORT_SERVER_OWNERSHIP_STREAMING_SECONDS
+		or POST_TELEPORT_SERVER_OWNERSHIP_NON_STREAMING_SECONDS
+	withServerNetworkOwnership(root, ownershipDuration)
+
+	local previousAnchored = root.Anchored
+	root.Anchored = true
+	clearAssemblyVelocities(root)
+
+	local streamStart = os.clock()
+	local streamedOk = requestStreamAroundPlayer(player, targetCFrame.Position)
+	local streamDuration = os.clock() - streamStart
+	if Workspace.StreamingEnabled and not streamedOk then
+		warn(string.format(
+			"[MatchTeleport] RequestStreamAroundAsync timed out (%.2fs) for %s at %s",
+			streamDuration,
+			player.Name,
+			tostring(targetCFrame.Position)
+		))
+	end
+
+	local pivotOk = pcall(function()
+		character:PivotTo(targetCFrame)
+	end)
+	if not pivotOk then
+		root.CFrame = targetCFrame
+	end
+
+	clearAssemblyVelocities(root)
+	if Workspace.StreamingEnabled then
+		task.wait(streamedOk and POST_TELEPORT_FREEZE_OK_SECONDS or POST_TELEPORT_FREEZE_TIMEOUT_SECONDS)
+	else
+		task.wait()
+	end
+	task.wait()
+	root.Anchored = previousAnchored
+	clearAssemblyVelocities(root)
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		pcall(function()
+			humanoid:ChangeState(Enum.HumanoidStateType.Running)
+		end)
+	end
+
+	return true
 end
 
 local function extractSpawnCFrame(spawnNode)
@@ -232,7 +462,30 @@ local function waitForSpawnCandidates(mapClone)
 	return getSpawnCandidates(mapClone)
 end
 
-local function buildSafeSpawnCFrame(mapClone, rawCFrame)
+local function resolveUprightForward(rawCFrame)
+	if typeof(rawCFrame) ~= "CFrame" then
+		return DEFAULT_FORWARD
+	end
+
+	local flatLook = Vector3.new(rawCFrame.LookVector.X, 0, rawCFrame.LookVector.Z)
+	if flatLook.Magnitude > 1e-4 then
+		return flatLook.Unit
+	end
+
+	local flatRight = Vector3.new(rawCFrame.RightVector.X, 0, rawCFrame.RightVector.Z)
+	if flatRight.Magnitude > 1e-4 then
+		return flatRight.Unit
+	end
+
+	return DEFAULT_FORWARD
+end
+
+local function buildUprightFacingCFrame(position, rawCFrame)
+	local forward = resolveUprightForward(rawCFrame)
+	return CFrame.lookAt(position, position + forward, Vector3.yAxis)
+end
+
+local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance)
 	if not rawCFrame then
 		return nil, "missing_spawn_cframe"
 	end
@@ -252,26 +505,47 @@ local function buildSafeSpawnCFrame(mapClone, rawCFrame)
 	rayParams.FilterType = Enum.RaycastFilterType.Include
 	rayParams.FilterDescendantsInstances = { mapClone }
 	rayParams.IgnoreWater = true
+	rayParams.RespectCanCollide = true
 
 	local rayOrigin = correctedPosition + Vector3.new(0, FLOOR_RAY_START_OFFSET, 0)
 	local rayDirection = Vector3.new(0, -(FLOOR_RAY_START_OFFSET + FLOOR_CHECK_DISTANCE), 0)
 	local floorHit = Workspace:Raycast(rayOrigin, rayDirection, rayParams)
+	local retryCount = 0
+	while floorHit and retryCount < FLOOR_RETRY_MAX_ITERATIONS do
+		local hitY = floorHit.Position.Y
+		if hitY <= (rawPosition.Y + FLOOR_ABOVE_SPAWN_TOLERANCE) then
+			break
+		end
+
+		retryCount += 1
+		local retryOriginY = hitY - FLOOR_RETRY_EPSILON
+		local retryDistance = retryOriginY - (correctedPosition.Y - FLOOR_CHECK_DISTANCE)
+		if retryDistance <= 0 then
+			floorHit = nil
+			break
+		end
+		floorHit = Workspace:Raycast(
+			Vector3.new(correctedPosition.X, retryOriginY, correctedPosition.Z),
+			Vector3.new(0, -retryDistance, 0),
+			rayParams
+		)
+	end
 	if not floorHit then
 		return nil, "no_floor_within_50"
 	end
 
 	local floorY = floorHit.Position.Y
+	local appliedClearance = tonumber(floorClearance) or DEFAULT_FLOOR_CLEARANCE
 	local finalPosition = Vector3.new(
 		correctedPosition.X,
-		math.max(floorY + FLOOR_CLEARANCE, SAFE_MIN_SPAWN_Y),
+		math.max(floorY + appliedClearance, SAFE_MIN_SPAWN_Y),
 		correctedPosition.Z
 	)
 
-	local rotation = rawCFrame - rawPosition
-	return CFrame.new(finalPosition) * rotation, nil
+	return buildUprightFacingCFrame(finalPosition, rawCFrame), nil
 end
 
-local function resolveSafeSpawnCFrame(mapClone, spawnCandidates, preferredIndex)
+local function resolveSafeSpawnCFrame(mapClone, spawnCandidates, preferredIndex, floorClearance)
 	local orderedCandidates = {}
 	local preferred = spawnCandidates[preferredIndex] or spawnCandidates[#spawnCandidates]
 	if preferred then
@@ -295,7 +569,7 @@ local function resolveSafeSpawnCFrame(mapClone, spawnCandidates, preferredIndex)
 
 	for _, candidate in ipairs(orderedCandidates) do
 		local candidateCFrame = extractSpawnCFrame(candidate)
-		local safeCFrame, reason = buildSafeSpawnCFrame(mapClone, candidateCFrame)
+		local safeCFrame, reason = buildSafeSpawnCFrame(mapClone, candidateCFrame, floorClearance)
 		if safeCFrame then
 			return safeCFrame, candidate
 		end
@@ -353,14 +627,19 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 	local teleported = {}
 	local mapTemplate, mapSource, resolvedTemplateName, mapsFolder = resolveMapTemplate(resolvedMapName)
 	if mapTemplate then
-		print("[MatchTeleport] Using map template:", resolvedTemplateName, "from", mapSource or "unknown")
-		local mapClone = mapTemplate:Clone()
 		local container = getMatchContainer(match)
+		for _, child in ipairs(container:GetChildren()) do
+			child:Destroy()
+		end
+
+		local mapClone = mapTemplate:Clone()
 		mapClone.Parent = container
+		MapRuntimePatches.Apply(resolvedMapName or resolvedTemplateName, mapClone)
 		local offset = computeMatchOffset(container)
 		if not applyWorldOffset(mapClone, offset) then
 			warn("[MatchTeleport] Unable to apply map offset (no pivotable part):", mapClone:GetFullName())
 		end
+		DoorRuntime.Attach(match, mapClone, self._deps)
 
 		local spawnPoints = waitForSpawnCandidates(mapClone)
 		if #spawnPoints == 0 then
@@ -371,7 +650,8 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 			if typeof(player) == "Instance" and player:IsA("Player") then
 				local character = player.Character
 				local root = getCharacterRoot(character)
-				local safeSpawnCFrame, usedSpawn = resolveSafeSpawnCFrame(mapClone, spawnPoints, index)
+				local floorClearance = resolveHumanoidFloorClearance(character)
+				local safeSpawnCFrame = resolveSafeSpawnCFrame(mapClone, spawnPoints, index, floorClearance)
 				if not safeSpawnCFrame then
 					warn("[MatchTeleport] HARD FAIL SAFE SPAWN TRIGGERED")
 					local fallbackPart = mapClone:FindFirstChildWhichIsA("BasePart", true)
@@ -391,19 +671,22 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 
 				player:SetAttribute("SpawnProtected", true)
 				player:SetAttribute("SpawnProtectedUntil", os.clock() + 3)
-				root.CFrame = safeSpawnCFrame
+
+				local teleOk = safeTeleportCharacter(player, safeSpawnCFrame)
+				if not teleOk then
+					-- Fallback: keep legacy behavior if character is in a strange state.
+					root.CFrame = safeSpawnCFrame
+					clearAssemblyVelocities(root)
+				end
+
 				player:SetAttribute("InMatch", true)
 				if match and (match.matchId or match.id) then
 					player:SetAttribute("MatchId", tostring(match.matchId or match.id))
-				end
-				if usedSpawn then
-					print(string.format("[MatchTeleport] Spawned %s at %s via %s", player.Name, tostring(safeSpawnCFrame.Position), usedSpawn.Name))
 				end
 				table.insert(teleported, player)
 			end
 		end
 
-		print("[MatchTeleport] Teleported players to map", resolvedTemplateName or resolvedMapName)
 		return teleported
 	end
 

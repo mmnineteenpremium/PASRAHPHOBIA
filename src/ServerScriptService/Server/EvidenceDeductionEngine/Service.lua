@@ -109,7 +109,6 @@ function Service.new(state, deps)
 	self._deps = deps or {}
 	self._eventBus = nil
 	self._dependencies = {}
-	self._evidenceStateSubscription = nil
 	return self
 end
 
@@ -131,27 +130,10 @@ function Service:Init()
 end
 
 function Service:Start()
-	if self._eventBus and not self._evidenceStateSubscription then
-		self._evidenceStateSubscription = function(state)
-			if type(state) ~= "table" then
-				return
-			end
-			local ghostDatabaseSystem = self._dependencies.GhostDatabaseSystem
-			if type(ghostDatabaseSystem) ~= "table" or type(ghostDatabaseSystem.GetPossibleGhosts) ~= "function" then
-				return
-			end
-			local possibleGhosts = ghostDatabaseSystem:GetPossibleGhosts(state)
-			self._eventBus:Publish("GhostPossibilitiesUpdated", possibleGhosts)
-		end
-		self._eventBus:Subscribe("EvidenceStateUpdated", self._evidenceStateSubscription)
-	end
+	-- Event-driven engine; candidate recalculation is driven by evidence collected/removed.
 end
 
 function Service:Stop()
-	if self._eventBus and self._evidenceStateSubscription then
-		self._eventBus:Unsubscribe("EvidenceStateUpdated", self._evidenceStateSubscription)
-		self._evidenceStateSubscription = nil
-	end
 	self._state:Clear()
 end
 
@@ -251,12 +233,6 @@ function Service:CalculateCandidates(evidenceList)
 		evidence = normalizedEvidence,
 		candidates = candidates,
 		time = os.clock(),
-	})
-
-	self:_publish("GhostCandidatesUpdated", {
-		matchId = self._state:Get("activeMatchId"),
-		evidenceList = normalizedEvidence,
-		candidates = candidates,
 	})
 
 	self:IdentifyGhost(candidates)

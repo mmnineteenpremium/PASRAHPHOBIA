@@ -1,9 +1,10 @@
 return {
-    ghostName = "Wewe Gombel",
+    ghostName = "WeweGombel",
+    displayName = "Wewe Gombel",
     evidenceTypes = {
-        "DOTS",
-        "FreezingTemp",
-        "WritingBook",
+        "Suara",
+        "Suhu",
+        "BukuTerkutuk",
     },
     behaviorTraits = {
         "ChildAttraction",

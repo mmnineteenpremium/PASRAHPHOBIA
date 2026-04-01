@@ -34,7 +34,7 @@ LobbySocialHub	420 × 420	1	Lobby
 AbandonedPalace	180 × 180	1	Large
 HauntedHouse	140 × 140	2	Medium
 EmptyBuilding	100 × 100	2	Medium Small
-StudioMMNINETEEN	90 × 90	2	Small
+StudioMMNineteen	90 × 90	2	Small
 
 
 
@@ -265,7 +265,7 @@ Spawn count
 
 5 – 7 spawn points
 MAP 5
-StudioMMNINETEEN
+StudioMMNineteen
 
 Type
 
@@ -352,7 +352,7 @@ ghost interaction radius 5 stud
 Ghost AI menyesuaikan ukuran map.
 
 Map	Roaming Radius	Hunt Range
-StudioMMNINETEEN	20–25	22–26
+StudioMMNineteen	20–25	22–26
 EmptyBuilding	25–30	28–32
 HauntedHouse	25–30	30
 AbandonedPalace	35–45	40
@@ -368,7 +368,7 @@ Workspace
   AbandonedPalace
   HauntedHouse
   EmptyBuilding
-  StudioMMNINETEEN
+  StudioMMNineteen
 
 Setiap map harus memiliki:
 
@@ -402,7 +402,7 @@ EmptyBuilding
 
 100 × 100
 
-StudioMMNINETEEN
+StudioMMNineteen
 
 90 × 90
 8. LIGHTING STANDARD
@@ -462,9 +462,9 @@ LobbySocialHub	18 - 25	25	Plafon tinggi memberikan kesan megah dan terbuka untuk
 AbandonedPalace	25 - 35	35	Istana membutuhkan plafon sangat tinggi (High Ceiling) agar pemain merasa kecil dan terintimidasi.
 HauntedHouse	12 - 14	28	Skala rumah tinggal yang sedikit lebih tinggi dari standar agar eksplorasi FPV tetap nyaman.
 EmptyBuilding	11 - 13	26	Memberikan kesan fungsional/perkantoran yang kaku dan klaustrofobik.
-StudioMMNINETEEN	10 - 12	24	Ukuran paling intim dan sempit; ketinggian rendah memaksa pemain fokus pada detail sekitar.
+StudioMMNineteen	10 - 12	24	Ukuran paling intim dan sempit; ketinggian rendah memaksa pemain fokus pada detail sekitar.
 Tips Tambahan untuk Skala Realistis:
 Pintu & Jendela: Gunakan tinggi pintu standar 10-12 stud. Jika pintu terlalu pendek, karakter akan terlihat "raksasa" saat mendekat dalam mode FPV.
 Ketebalan Dinding: Gunakan ketebalan minimal 1-2 stud. Dinding tipis (0.5 stud) sering kali membocorkan cahaya dari sistem Future Lighting dan terlihat tidak nyata.
 Eye Level: Pastikan kamera FPV Anda berada di ketinggian sekitar 5.5 - 6 stud dari lantai (posisi mata karakter R6/R15 standar) untuk menjaga perspektif tetap akurat.
-Apakah Anda sudah menentukan jenis hantu yang akan muncul di map paling kecil (StudioMMNINETEEN)? Karena ruang sempit biasanya membutuhkan hantu dengan AI yang lebih roaming daripada stalking.
+Apakah Anda sudah menentukan jenis hantu yang akan muncul di map paling kecil (StudioMMNineteen)? Karena ruang sempit biasanya membutuhkan hantu dengan AI yang lebih roaming daripada stalking.

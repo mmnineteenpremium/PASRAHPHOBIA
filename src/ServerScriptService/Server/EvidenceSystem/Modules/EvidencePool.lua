@@ -3,7 +3,7 @@ local EvidencePool = {}
 EvidencePool.types = {
 	"MEDOK",
 	"Suhu",
-	"Buku Terkutuk",
+	"BukuTerkutuk",
 	"To'un",
 	"Suara",
 	"Pengganggu"

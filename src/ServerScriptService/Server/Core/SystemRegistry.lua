@@ -8,6 +8,67 @@ local SYSTEM_GROUP_ORDER = {
     "LiveServiceSystems",
 }
 
+local DISABLED_RUNTIME_SYSTEM_NAMES = {
+    -- Match flow ownership lives in LobbySystem + MatchSystem.
+    MatchmakingSystem = true,
+    ServerQueueSystem = true,
+    -- Evidence detection ownership lives in EvidenceSystem/EvidenceGateway.
+    EvidenceToolSystem = true,
+    ToolSignalProcessingSystem = true,
+    ToolInteractionSystem = true,
+    -- Journal/UI evidence ownership lives in JournalSystem.
+    EvidenceJournalSystem = true,
+    -- Generic reward fan-out duplicates active reward owners.
+    RewardSystem = true,
+    ContractRewardSystem = true,
+    -- Config loader mirrors publish unused events and are not active owners.
+    ContractConfigSystem = true,
+    GameConfigSystem = true,
+    -- Startup and diagnostics observers only emit orphan internal events.
+    EngineStartupValidator = true,
+    FinalEngineBootstrap = true,
+    SystemIntegrationController = true,
+    SystemDiagnosticsController = true,
+    DependencyVerificationSystem = true,
+    RuntimeIntegritySystem = true,
+    ProductionSafetySystem = true,
+    -- Monitoring and recovery mirrors emit orphan internal events or depend on stale monitor chains.
+    ErrorMonitoringSystem = true,
+    LatencyMonitoringSystem = true,
+    MemoryTrackingSystem = true,
+    RuntimeMetricsSystem = true,
+    ServerProfilerSystem = true,
+    DataIntegritySystem = true,
+    AutoRecoverySystem = true,
+    FailSafeSystem = true,
+    BackendStabilitySystem = true,
+    WatchdogSystem = true,
+    -- Legacy health/performance monitors overlap active owners or publish orphan warnings.
+    ServerHealthSystem = true,
+    ServerPerformanceSystem = true,
+    ServerPerformance = true,
+    -- QA/platform advisory layers are not wired into the active runtime graph.
+    OperationsQASystem = true,
+    PlatformSupportSystem = true,
+}
+
+local EXPLICIT_SYSTEM_NAMES = {
+    EvidenceDeductionEngine = true,
+    HorrorDirector = true,
+    LobbySocialHub = true,
+}
+
+local EARLY_PRELOAD_SYSTEMS = {
+    "EventBus",
+    "DataPersistenceService",
+    "ProfileSystem",
+    "RankedSystem",
+    "MatchSystem",
+    "HorrorDirector",
+    "LobbySocialHub",
+    "EvidenceDeductionEngine",
+}
+
 local SYSTEMS_BY_GROUP = {
     CoreSystems = {
         "EventBus",
@@ -30,7 +91,7 @@ local SYSTEMS_BY_GROUP = {
         "ShopSystem",
         "CosmeticSystem",
         "ProgressionSystem",
-        "RankSystem",
+        "RankedSystem",
         "ContractRewardSystem",
         "TelemetrySystem",
     },
@@ -82,6 +143,99 @@ local function validateLifecycle(systemName, system)
         system.Shutdown = function() end
     end
     return true
+end
+
+local function isSystemContainer(candidate)
+    if not candidate then
+        return false
+    end
+    if not (candidate:IsA("Folder") or candidate:IsA("ModuleScript")) then
+        return false
+    end
+    local name = candidate.Name
+    if DISABLED_RUNTIME_SYSTEM_NAMES[name] == true then
+        return false
+    end
+    if EXPLICIT_SYSTEM_NAMES[name] == true then
+        return true
+    end
+    if name == "EventBus" then
+        return true
+    end
+    if name:match("System$") then
+        return true
+    end
+    if name:match("Service$") then
+        return true
+    end
+    return false
+end
+
+local function resolveSystemModule(systemContainer)
+    if systemContainer:IsA("ModuleScript") then
+        return systemContainer
+    end
+
+    local mainModule = systemContainer:FindFirstChild("Main")
+    if mainModule and mainModule:IsA("ModuleScript") then
+        return mainModule
+    end
+
+    return nil
+end
+
+local function collectSystemContainers(serverRoot)
+    local systemsByName = {}
+
+    for _, child in ipairs(serverRoot:GetChildren()) do
+        if isSystemContainer(child) then
+            if systemsByName[child.Name] ~= nil then
+                warn(string.format("[Registry] Duplicate system folder: %s", child.Name))
+            else
+                systemsByName[child.Name] = child
+            end
+        end
+    end
+
+    return systemsByName
+end
+
+local function buildContainerLoadList(systemsByName)
+    local ordered = {}
+    local seen = {}
+
+    for _, systemName in ipairs(EARLY_PRELOAD_SYSTEMS) do
+        local container = systemsByName[systemName]
+        if container ~= nil then
+            table.insert(ordered, container)
+            seen[systemName] = true
+        end
+    end
+
+    for _, systemName in ipairs(buildSystemOrder()) do
+        local container = systemsByName[systemName]
+        if container ~= nil and seen[systemName] ~= true then
+            table.insert(ordered, container)
+            seen[systemName] = true
+        end
+    end
+
+    local remaining = {}
+    for systemName, container in pairs(systemsByName) do
+        if seen[systemName] ~= true then
+            table.insert(remaining, container)
+        end
+    end
+
+    table.sort(remaining, function(a, b)
+        return a.Name < b.Name
+    end)
+
+    for _, container in ipairs(remaining) do
+        table.insert(ordered, container)
+    end
+
+    return ordered
 end
 
 function SystemRegistry.new(deps)
@@ -150,37 +304,28 @@ function SystemRegistry:Initialize()
     self._bootStart = os.clock()
 
     local serverRoot = script.Parent.Parent
-    local systems = {}
-
-    for _, child in ipairs(serverRoot:GetChildren()) do
-        if child:IsA("Folder") and child.Name:match("System$") then
-            table.insert(systems, child)
-        end
-    end
-
-    table.sort(systems, function(a, b)
-        return a.Name < b.Name
-    end)
+    local systemsByName = collectSystemContainers(serverRoot)
+    local systems = buildContainerLoadList(systemsByName)
 
     local seen = {}
     local loadOrder = {}
     local loadedSystems = {}
 
-    for _, systemFolder in ipairs(systems) do
-        local systemName = systemFolder.Name
+    for _, systemContainer in ipairs(systems) do
+        local systemName = systemContainer.Name
         if seen[systemName] then
             warn(string.format("[Registry] Duplicate system folder: %s", systemName))
         else
             seen[systemName] = true
 
-            local mainModule = systemFolder:FindFirstChild("Main")
-            if not mainModule then
+            local systemModule = resolveSystemModule(systemContainer)
+            if not systemModule then
                 error(string.format("[Registry] Missing Main module for %s", systemName))
             end
 
-            local requireOk, moduleOrError = pcall(require, mainModule)
+            local requireOk, moduleOrError = pcall(require, systemModule)
             if not requireOk then
-                error(string.format("[Registry] Failed requiring %s.Main: %s", systemName, tostring(moduleOrError)))
+                error(string.format("[Registry] Failed requiring %s module: %s", systemName, tostring(moduleOrError)))
             end
 
             local instance, instantiateError = instantiateSystem(moduleOrError, self._deps)

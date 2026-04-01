@@ -37,7 +37,7 @@ function Service:_publish(eventName, payload)
 end
 function Service:HandleEvent(eventName, payload)
     if eventName == "MatchStarted" then self._state:Set("activeMatchId", payload and payload.matchId)
-    elseif eventName == "MatchEnded" then self._state:Set("activeMatchId", nil) end
+    end
     if eventName == "MatchStarted" then
         self._state:Set("objectivesCompleted", 0)
         self._state:Set("ghostIdentified", false)
@@ -52,9 +52,11 @@ function Service:HandleEvent(eventName, payload)
         local total = (self._state:Get("playersExtracted") or 0) + 1
         self._state:Set("playersExtracted", total)
     elseif eventName == "MatchEnded" then
+        local matchId = (payload and payload.matchId) or self._state:Get("activeMatchId")
         local success = (self._state:Get("ghostIdentified") == true) and ((self._state:Get("objectivesCompleted") or 0) >= 1) and ((self._state:Get("playersExtracted") or 0) >= 1)
         self._state:Set("contractSuccess", success)
-        self:_publish("ContractCompletionEvaluated", { matchId = self._state:Get("activeMatchId"), contractSuccess = success, ghostIdentified = self._state:Get("ghostIdentified"), objectivesCompleted = self._state:Get("objectivesCompleted"), playersExtracted = self._state:Get("playersExtracted") })
+        self:_publish("ContractCompletionEvaluated", { matchId = matchId, contractSuccess = success, ghostIdentified = self._state:Get("ghostIdentified"), objectivesCompleted = self._state:Get("objectivesCompleted"), playersExtracted = self._state:Get("playersExtracted") })
+        self._state:Set("activeMatchId", nil)
     end
 end
 return Service

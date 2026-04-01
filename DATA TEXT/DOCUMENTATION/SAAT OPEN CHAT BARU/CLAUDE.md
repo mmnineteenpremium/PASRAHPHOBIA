@@ -45,12 +45,12 @@ SESSION START CHECKLIST (MANDATORY)
 ================================================================
 
 Every new session, read in this order:
-1. PASRAHPHOBIA_AI_SUPER_CONTEXT_V2.txt
-2. PASRAHPHOBIA_DOC_INDEX.txt  
-3. folder_structure.txt
-4. reports.md
+1. PASRAHPHOBIA_AI_SUPER_CONTEXT_V2.md
+2. PASRAHPHOBIA_DOC_INDEX.md
+3. struktur folder.txt
+4. REPORTS.md
 5. CLAUDE.md (this file)
-6. CANONICAL SPECIFICATIONS v2.0
+6. CANONICAL_SPECIFICATIONS_v2.md
 
 Confirm current phase before ANY action.
 
@@ -58,7 +58,7 @@ Confirm current phase before ANY action.
 CURRENT STATUS — 2026-03-17
 ================================================================
 
-PHASE: Step 3 Local server 2-player test (match flow validated)
+PHASE: Late Phase 6 stabilization -> entering Phase 7 consistency lock
 BOOT: 84ms, FAILED: 0, all systems Init+Start clean
 
 COMPLETED TODAY:
@@ -78,10 +78,11 @@ KNOWN ISSUES (blocking / non-blocking):
 | SystemDiagnostics Loaded: 0 | LOW | Counter not reading from SystemRegistry; cosmetic sync later. |
 
 NEXT IMMEDIATE ACTION:
-→ Step 3: Local server 2-player test — Player1 hosts (HostStart), Player2 observes Player2 joining same map, confirm MatchBuilder → MatchLifecycle → teleport logs.
-→ Document RoomBrowser UI state: grab screenshot of "RUANG INVESTIGASI" panel, verify CreateRoom, SetReady, HostStart, cancel countdown, map selector, host kick/password controls, and that host start triggers countdown + match pipeline.
-→ Gate LobbyEventTap queue broadcasts once player is queued/in room, fix RoomBrowser toggle to reset visibility state, and replace all `UIPadding.PaddingAll` references before Phase 7 polish.
-→ After Step 3 validation and UI fixes, proceed to Phase 6 Security & Performance (profiling + anti-cheat verification) and loop back to Phase 7 once stable.
+→ Maintain runtime parity: `src/ServerScriptService/Server` is the only active server tree.
+→ Keep ghost/evidence canonical: 12 Indonesian ghosts + evidence vocabulary `MEDOK/Suhu/BukuTerkutuk/To'un/Suara/Pengganggu`.
+→ Keep rank owner single-source: `RankedSystem` only.
+→ Keep currency model canonical: `MM/PP/Robux`, while `XP` remains progression-only.
+→ Continue Phase 7 launch hardening (security/perf validation, telemetry, monetization QA).
 
 ================================================================
 SYSTEM STATUS QUICK REFERENCE
@@ -97,7 +98,7 @@ Lobby Map Geometry
 IN PROGRESS / VALIDATED TODAY:
 HuntSystem, SanitySystem, EvidenceSystem,
 EconomySystem, ProgressionSystem, SpectatorDistortion,
-RankSystem, LiveOps(TelemetrySystem-parked)
+RankedSystem, LiveOps(TelemetrySystem-parked)
 
 PLANNED / NEXT:
 Phase 6: Performance & Security
@@ -119,7 +120,7 @@ Match-scoped = all gameplay state lives/dies with matchId
 RemoteEvents = always validate server-side
 
 SystemRegistry scan pattern:
-  Scans src/server/ children
+  Scans src/ServerScriptService/Server/ children
   Finds folders ending with "System"
   Requires folder/Main.lua
   → Every system MUST have Main.lua with .new() + lifecycle
@@ -202,8 +203,8 @@ END OF CLAUDE.md
 ```
 WAJIB (paste atau attach):
 1. CLAUDE.md                    ← file ini
-2. reports.md                   ← status terbaru
-3. PASRAHPHOBIA_AI_SUPER_CONTEXT_V2.txt
+2. REPORTS.md                   ← status terbaru
+3. PASRAHPHOBIA_AI_SUPER_CONTEXT_V2.md
 
 OPSIONAL (jika ada perubahan):
 4. Boot log terbaru dari Studio
@@ -216,11 +217,8 @@ OPSIONAL (jika ada perubahan):
 ```
 LANGSUNG LANJUT KE:
 
-Step 3 — Local server 2 player test
-Focus: RoomBrowser UI, HostStart countdown + match pipeline, and LobbyEventTap queue gating
-
-Setelah Step 3:
-→ Phase 6 Security & Performance (profiling + anti-cheat validation)
+Phase 7 consistency lock + launch hardening
+Focus: runtime parity, evidence/ghost canonical sync, RankedSystem-only rank flow, and MM/PP/Robux economy audit
 ```
 
 ---
@@ -255,7 +253,7 @@ Current runtime status:
 Major progress:
 - Added server request idempotency guard (`requestId` + dedupe window) to reduce duplicate trigger risks.
 - RoomBrowser UI now supports:
-  - floating open button (`RUANG INVESTIGASI`),
+  - floating open button (`RUANG INVESTIGASI`) make UI ROBLOX FRIENDLY,
   - hidden on spawn by default,
   - hidden while in match.
 - Room list and room state are now broadcast cross-client on create/join/leave/ready in fallback path.
@@ -280,3 +278,17 @@ Password + kick updates:
 Pending verification focus:
 - Re-test full 2-client room UX after latest password modal and inline kick UI updates.
 - Keep architecture stable: no new system layer, continue extending active Lobby/Room path only.
+
+## SESSION APPEND — 2026-04-01 (Codex continuation)
+
+[STEP 101%]
+G: Selaraskan `DeathEventBridge` aktif dengan handoff follow-up `2026-04-01`.
+C: Hapus dua trace `warn(...)` yang masih tersisa pada jalur spawn-protection dan debounce death event.
+F: src/ServerScriptService/Server/DeathStateSystem/DeathEventBridge.lua; DATA TEXT/DOCUMENTATION/SAAT OPEN CHAT BARU/REPORTS.md; DATA TEXT/DOCUMENTATION/SAAT OPEN CHAT BARU/CLAUDE.md
+I: Repo aktif masih menyisakan trace `DeathEventBridge` walau state follow-up sebelumnya sudah menyatakan trace itu dibersihkan. Patch ini menutup mismatch handoff tanpa mengubah owner, payload, atau guard `matchId` pada runtime death flow.
+N: Verifikasi runtime berikutnya: jalankan match sungguhan di Studio dan pastikan `DeathStateSystem` tetap memancarkan state death dengan `matchId` nyata dari `MatchStarted`, tetap mengabaikan death/respawn di luar match, dan tidak lagi menghasilkan trace `DeathEventBridge` pada kasus spawn-protection/debounce.
+
+[STATE]
+M: `DeathStateSystem` sudah sinkron dengan handoff follow-up `2026-04-01`: injeksi `DEBUG_MATCH` tetap tidak ada, guard `matchId` nyata tetap aktif, dan `DeathEventBridge` tidak lagi menyisakan trace `warn(...)` pada jalur spawn-protection/debounce. Runtime owner lain tetap sama: `MatchSystem` memancarkan `MatchEnded`, `RankedSystem` tetap owner tunggal rank flow, owner reward/event duplicate tidak lagi ikut autoload, dan registry active path tetap `src/ServerScriptService/Server`.
+P: 100% batch cleanup low-risk tetap selesai; follow-up sinkronisasi `DeathEventBridge` selesai.
+B: Tidak ada blocker kode aktif untuk task ini; verifikasi runtime Studio tetap pending sebagai langkah berikutnya.

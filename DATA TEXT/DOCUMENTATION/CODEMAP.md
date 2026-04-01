@@ -27,7 +27,7 @@ CosmeticSystem
 EconomySystem
 RewardSystem
 ProgressionSystem
-RankSystem
+RankedSystem
 ContractSystem
 ShopSystem
 

@@ -140,7 +140,7 @@ Layer 3 — Player Systems
 
 ProfileSystem
 ProgressionSystem
-RankSystem
+RankedSystem
 
 Layer 4 — Lobby Systems
 
@@ -286,7 +286,7 @@ MatchSystem
 → RewardSystem
 → EconomySystem
 → ProgressionSystem
-→ RankSystem
+→ RankedSystem
 
 Economy rewards sources:
 
@@ -354,7 +354,7 @@ AI agents must follow these rules:
 REPOSITORY STRUCTURE
 --------------------------------------------------
 
-src/server
+src/ServerScriptService/Server
 
 Backend gameplay systems.
 

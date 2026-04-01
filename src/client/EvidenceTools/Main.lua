@@ -4,12 +4,15 @@ EvidenceTools.__index = EvidenceTools
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local TOOL_REQUEST_TYPES = {
-	JejakEnergi = "EMFScan",
-	KotakArwah = "SpiritBoxQuestion",
-	SuhuMembeku = "TemperatureReading",
-	BukuTerkutuk = "GhostWritingCheck",
-	BolaArwah = "GhostOrbCameraDetection",
-	GerakanGaib = "MotionSensorCheck",
+	JejakEnergi = "JejakEnergiScan",
+	KotakArwah = "KotakArwahQuestion",
+	SuhuMembeku = "SuhuReading",
+	BukuTerkutuk = "BukuTerkutukCheck",
+	BolaArwah = "TounDetection",
+	GerakanGaib = "PenggangguCheck",
+	Garam = "SaltPlacement",
+	Salib = "CrucifixPlacement",
+	Dupa = "SmudgeIgnite",
 }
 
 local ToolModules = {
@@ -19,6 +22,9 @@ local ToolModules = {
 	BukuTerkutuk = require(script.Parent.BukuTerkutuk.Main),
 	BolaArwah = require(script.Parent.BolaArwah.Main),
 	GerakanGaib = require(script.Parent.GerakanGaib.Main),
+	Garam = require(script.Parent.Garam.Main),
+	Salib = require(script.Parent.Salib.Main),
+	Dupa = require(script.Parent.Dupa.Main),
 }
 
 function EvidenceTools:Init(context)

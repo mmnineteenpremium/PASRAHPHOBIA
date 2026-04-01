@@ -1,3 +1,6 @@
+-- Deprecated non-runtime layer.
+-- Active runtime persistence is owned by DataPersistenceService via SystemRegistry.
+
 local Service = require(script.Parent.Service)
 local Controller = require(script.Parent.Controller)
 local State = require(script.Parent.State)

@@ -49,6 +49,10 @@ function GhostSystem:TriggerHunt(match, snapshot, now)
     return self.Service:TriggerHunt(match, snapshot, now)
 end
 
+function GhostSystem:ForceHunt(match, snapshot, now)
+    return self.Service:ForceHunt(match, snapshot, now)
+end
+
 function GhostSystem:EndHunt(match, now)
     return self.Service:EndHunt(match, now)
 end

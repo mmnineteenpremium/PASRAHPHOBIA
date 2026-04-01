@@ -12,7 +12,7 @@
         {
           "properties": {
             "Name": "GhostAggression",
-            "Value": "Normal"
+            "Value": "Low"
           },
           "className": "StringValue"
         },
@@ -34,7 +34,36 @@
         {
           "properties": {
             "Name": "EvidenceRequired",
-            "Value": 2
+            "Value": 3
+          },
+          "className": "IntValue"
+        },
+        {
+          "properties": {
+            "Name": "GhostAggression",
+            "Value": "Normal"
+          },
+          "className": "StringValue"
+        },
+        {
+          "properties": {
+            "Name": "HuntFrequency",
+            "Value": "Normal"
+          },
+          "className": "StringValue"
+        }
+      ],
+      "className": "Folder",
+      "properties": {
+        "Name": "Normal"
+      }
+    },
+    {
+      "children": [
+        {
+          "properties": {
+            "Name": "EvidenceRequired",
+            "Value": 3
           },
           "className": "IntValue"
         },
@@ -56,6 +85,35 @@
       "className": "Folder",
       "properties": {
         "Name": "Hard"
+      }
+    },
+    {
+      "children": [
+        {
+          "properties": {
+            "Name": "EvidenceRequired",
+            "Value": 2
+          },
+          "className": "IntValue"
+        },
+        {
+          "properties": {
+            "Name": "GhostAggression",
+            "Value": "Extreme"
+          },
+          "className": "StringValue"
+        },
+        {
+          "properties": {
+            "Name": "HuntFrequency",
+            "Value": "Extreme"
+          },
+          "className": "StringValue"
+        }
+      ],
+      "className": "Folder",
+      "properties": {
+        "Name": "Nightmare"
       }
     }
   ],

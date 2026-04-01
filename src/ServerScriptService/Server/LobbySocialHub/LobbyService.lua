@@ -1,8 +1,64 @@
-local LobbyPlayerManager = require(script.Parent.LobbyPlayerManager)
-local LobbyZoneManager = require(script.Parent.LobbyZoneManager)
-local LobbyInteraction = require(script.Parent.LobbyInteraction)
-local PartySystem = require(script.Parent.PartySystem)
-local LobbyPopulationController = require(script.Parent.LobbyPopulationController)
+local function resolveNamedModule(container, childName)
+    local fallbackMainModule = nil
+
+    for _, child in ipairs(container:GetChildren()) do
+        if child.Name == childName then
+            if child:IsA("ModuleScript") then
+                return child
+            end
+
+            if child:IsA("Folder") then
+                local mainModule = child:FindFirstChild("Main")
+                if mainModule and mainModule:IsA("ModuleScript") then
+                    fallbackMainModule = mainModule
+                end
+            end
+        end
+    end
+
+    return fallbackMainModule
+end
+
+local function requireNamedModule(container, childName)
+    local moduleScript = resolveNamedModule(container, childName)
+    if not moduleScript then
+        error(string.format("[LobbyService] Missing module child: %s", childName))
+    end
+
+    return require(moduleScript)
+end
+
+local LobbyPlayerManager = requireNamedModule(script.Parent, "LobbyPlayerManager")
+local LobbyZoneManager = requireNamedModule(script.Parent, "LobbyZoneManager")
+local LobbyInteraction = requireNamedModule(script.Parent, "LobbyInteraction")
+local PartySystem = requireNamedModule(script.Parent, "PartySystem")
+local LobbyPopulationController = requireNamedModule(script.Parent, "LobbyPopulationController")
+local Services = require(script.Parent.Parent.Core.Services)
+
+local LOBBY_COSMETIC_FOLDER_NAME = "LobbyCosmeticVisuals"
+local LOBBY_COSMETIC_GUI_NAME = "LobbyCosmeticBillboard"
+local FLEX_SPOTLIGHT_PARTICIPANT_LIMIT = 4
+
+local SLOT_DISPLAY_ORDER = {
+    outfit = 1,
+    body = 2,
+    head = 3,
+    accessory = 4,
+    emote = 5,
+}
+
+local RARITY_COLORS = {
+    R1 = Color3.fromRGB(150, 189, 255),
+    R2 = Color3.fromRGB(118, 232, 196),
+    R3 = Color3.fromRGB(255, 183, 112),
+    R4 = Color3.fromRGB(255, 130, 130),
+    R5 = Color3.fromRGB(214, 146, 255),
+    Common = Color3.fromRGB(150, 189, 255),
+    Rare = Color3.fromRGB(118, 232, 196),
+    Epic = Color3.fromRGB(255, 183, 112),
+    Legendary = Color3.fromRGB(255, 130, 130),
+    Mythic = Color3.fromRGB(214, 146, 255),
+}
 
 local LobbyService = {}
 LobbyService.__index = LobbyService
@@ -21,6 +77,221 @@ local function resolveEventBus(deps)
     return nil
 end
 
+local function safeRequire(moduleScript)
+    if not moduleScript then
+        return nil
+    end
+    local ok, result = pcall(require, moduleScript)
+    if ok then
+        return result
+    end
+    return nil
+end
+
+local function getByPath(root, path)
+    local node = root
+    for _, segment in ipairs(path or {}) do
+        if typeof(node) ~= "Instance" then
+            return nil
+        end
+        node = node:FindFirstChild(segment)
+        if not node then
+            return nil
+        end
+    end
+    return node
+end
+
+local function resolveShopCatalogModule()
+    local pathOptions = {
+        { "shared", "DataTypes", "ShopCatalog" },
+        { "Shared", "DataTypes", "ShopCatalog" },
+    }
+
+    local cursor = script
+    while cursor do
+        for _, path in ipairs(pathOptions) do
+            local moduleScript = getByPath(cursor, path)
+            if moduleScript then
+                return moduleScript
+            end
+        end
+        cursor = cursor.Parent
+    end
+
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if ok and typeof(replicatedStorage) == "Instance" then
+        for _, path in ipairs(pathOptions) do
+            local moduleScript = getByPath(replicatedStorage, path)
+            if moduleScript then
+                return moduleScript
+            end
+        end
+    end
+
+    return nil
+end
+
+local function toUserId(player)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return nil
+    end
+    return player.UserId
+end
+
+local function cloneMap(source)
+    local result = {}
+    if type(source) ~= "table" then
+        return result
+    end
+    for key, value in pairs(source) do
+        result[key] = value
+    end
+    return result
+end
+
+local function cloneArray(source)
+    local result = {}
+    if type(source) ~= "table" then
+        return result
+    end
+    for index, value in ipairs(source) do
+        result[index] = value
+    end
+    return result
+end
+
+local function removeArrayValue(source, targetValue)
+    if type(source) ~= "table" then
+        return
+    end
+    for index = #source, 1, -1 do
+        if source[index] == targetValue then
+            table.remove(source, index)
+        end
+    end
+end
+
+local function sanitizeEquippedCosmetics(equippedCosmetics)
+    local sanitized = {}
+    if type(equippedCosmetics) ~= "table" then
+        return sanitized
+    end
+    for slot, cosmeticId in pairs(equippedCosmetics) do
+        if type(slot) == "string" and slot ~= "" and type(cosmeticId) == "string" and cosmeticId ~= "" then
+            sanitized[slot] = cosmeticId
+        end
+    end
+    return sanitized
+end
+
+local function titleCaseToken(token)
+    if token == "" then
+        return token
+    end
+    if #token <= 3 and string.match(token, "^%u+$") then
+        return token
+    end
+    return string.upper(string.sub(token, 1, 1)) .. string.lower(string.sub(token, 2))
+end
+
+local function humanizeCosmeticId(cosmeticId)
+    local cleaned = tostring(cosmeticId or "")
+        :gsub("^cos_", "")
+        :gsub("^eq_", "")
+        :gsub("^cosmetic_", "")
+        :gsub("_", " ")
+
+    local words = {}
+    for token in string.gmatch(cleaned, "%S+") do
+        table.insert(words, titleCaseToken(token))
+    end
+
+    if #words == 0 then
+        return "Cosmetic"
+    end
+    return table.concat(words, " ")
+end
+
+local function getCharacterPart(character, partNames)
+    if not character then
+        return nil
+    end
+    for _, partName in ipairs(partNames or {}) do
+        local candidate = character:FindFirstChild(partName)
+        if candidate and candidate:IsA("BasePart") then
+            return candidate
+        end
+    end
+    return nil
+end
+
+local function createVisualFolder(character)
+    local folder = Instance.new("Folder")
+    folder.Name = LOBBY_COSMETIC_FOLDER_NAME
+    folder.Parent = character
+    return folder
+end
+
+local function createWeldedVisual(folder, anchorPart, name, props)
+    if not folder or not anchorPart then
+        return nil
+    end
+
+    local part = Instance.new("Part")
+    part.Name = name
+    part.Anchored = false
+    part.CanCollide = false
+    part.CanQuery = false
+    part.CanTouch = false
+    part.CastShadow = false
+    part.Massless = true
+    part.Locked = true
+    part.TopSurface = Enum.SurfaceType.Smooth
+    part.BottomSurface = Enum.SurfaceType.Smooth
+    part.Material = props.material or Enum.Material.SmoothPlastic
+    part.Transparency = props.transparency or 0
+    part.Color = props.color or Color3.fromRGB(255, 255, 255)
+    part.Size = props.size or Vector3.new(1, 1, 1)
+    part.Shape = props.shape or Enum.PartType.Block
+    part.CFrame = anchorPart.CFrame * (props.offset or CFrame.new())
+    part.Parent = folder
+
+    local weld = Instance.new("WeldConstraint")
+    weld.Part0 = anchorPart
+    weld.Part1 = part
+    weld.Parent = part
+
+    return part
+end
+
+local function chooseRarityColor(rarity, fallback)
+    if type(rarity) == "string" and RARITY_COLORS[rarity] then
+        return RARITY_COLORS[rarity]
+    end
+    return fallback
+end
+
+local function isLobbyCharacter(player, character)
+    return player
+        and character
+        and player:GetAttribute("InLobby") == true
+        and player:GetAttribute("InMatch") ~= true
+end
+
+local function clampDisplayNames(entries)
+    local names = {}
+    for _, entry in ipairs(entries) do
+        table.insert(names, entry.name)
+        if #names >= 3 then
+            break
+        end
+    end
+    return names
+end
+
 function LobbyService.new(state, deps)
     local self = setmetatable({}, LobbyService)
     self._state = state
@@ -32,13 +303,554 @@ function LobbyService.new(state, deps)
     self._interaction = LobbyInteraction.new(self._deps, self._deps.LobbyInteractionConfig)
     self._partySystem = PartySystem.new(self._deps, self._deps.PartySystemConfig)
     self._population = LobbyPopulationController.new(self._state, self._deps, self._deps.LobbyPopulationConfig)
+    self._characterConnections = {}
+    self._cosmeticCatalogById = {}
+    self._dependencies = {}
     return self
+end
+
+function LobbyService:_loadCosmeticCatalog()
+    local catalog = safeRequire(resolveShopCatalogModule()) or {}
+    local catalogById = {}
+
+    for _, entry in pairs(catalog) do
+        if type(entry) == "table" and type(entry.id) == "string" and entry.id ~= "" then
+            catalogById[entry.id] = entry
+        end
+    end
+
+    self._cosmeticCatalogById = catalogById
 end
 
 function LobbyService:_publish(eventName, payload)
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
     end
+end
+
+function LobbyService:_getAppliedCosmeticsStore()
+    local store = self._state:Get("appliedCosmeticsByUserId")
+    if type(store) ~= "table" then
+        store = {}
+        self._state:Set("appliedCosmeticsByUserId", store)
+    end
+    return store
+end
+
+function LobbyService:_getAppliedCosmetics(player)
+    local userId = toUserId(player)
+    if not userId then
+        return {}
+    end
+
+    local store = self:_getAppliedCosmeticsStore()
+    return cloneMap(store[userId] or {})
+end
+
+function LobbyService:_setAppliedCosmetics(player, equippedCosmetics)
+    local userId = toUserId(player)
+    if not userId then
+        return {}
+    end
+
+    local store = self:_getAppliedCosmeticsStore()
+    local snapshot = sanitizeEquippedCosmetics(equippedCosmetics)
+    store[userId] = snapshot
+    self._state:Set("appliedCosmeticsByUserId", store)
+    return snapshot
+end
+
+function LobbyService:_disconnectCharacterConnection(userId)
+    local connection = self._characterConnections[userId]
+    if connection then
+        connection:Disconnect()
+        self._characterConnections[userId] = nil
+    end
+end
+
+function LobbyService:_clearCosmeticVisuals(character)
+    if not character then
+        return
+    end
+
+    local visuals = character:FindFirstChild(LOBBY_COSMETIC_FOLDER_NAME)
+    if visuals then
+        visuals:Destroy()
+    end
+
+    character:SetAttribute("LobbyEquippedEmote", nil)
+end
+
+function LobbyService:_buildDisplayEntries(equippedCosmetics)
+    local entries = {}
+
+    for slot, cosmeticId in pairs(equippedCosmetics or {}) do
+        local catalogEntry = self._cosmeticCatalogById[cosmeticId]
+        table.insert(entries, {
+            slot = slot,
+            cosmeticId = cosmeticId,
+            name = (type(catalogEntry) == "table" and type(catalogEntry.name) == "string" and catalogEntry.name ~= "")
+                    and catalogEntry.name
+                or humanizeCosmeticId(cosmeticId),
+            rarity = type(catalogEntry) == "table" and catalogEntry.rarity or nil,
+        })
+    end
+
+    table.sort(entries, function(left, right)
+        local leftOrder = SLOT_DISPLAY_ORDER[left.slot] or 99
+        local rightOrder = SLOT_DISPLAY_ORDER[right.slot] or 99
+        if leftOrder == rightOrder then
+            return left.name < right.name
+        end
+        return leftOrder < rightOrder
+    end)
+
+    return entries
+end
+
+function LobbyService:_getFlexState()
+    local flexState = self._state:Get("flexZoneState")
+    if type(flexState) ~= "table" then
+        flexState = {}
+    end
+
+    if type(flexState.participantsByUserId) ~= "table" then
+        flexState.participantsByUserId = {}
+    end
+    if type(flexState.rotationOrder) ~= "table" then
+        flexState.rotationOrder = {}
+    end
+    if type(flexState.spotlightUserId) ~= "number" then
+        flexState.spotlightUserId = nil
+    end
+
+    self._state:Set("flexZoneState", flexState)
+    return flexState
+end
+
+function LobbyService:_getPlayerProfileSystem()
+    local profileSystem = self._dependencies.PlayerProfileSystem
+    if profileSystem ~= nil then
+        return profileSystem
+    end
+
+    profileSystem = Services.Get(self._deps, "PlayerProfileSystem")
+    self._dependencies.PlayerProfileSystem = profileSystem
+    return profileSystem
+end
+
+function LobbyService:_getPublicProfile(player)
+    local profileSystem = self:_getPlayerProfileSystem()
+    if type(profileSystem) ~= "table" then
+        return nil
+    end
+
+    local profile = safeCall(profileSystem, "GetPublicProfile", player)
+    if profile == nil and type(profileSystem.Service) == "table" then
+        profile = safeCall(profileSystem.Service, "GetPublicProfile", player)
+    end
+    if profile ~= nil then
+        return profile
+    end
+
+    profile = safeCall(profileSystem, "RefreshProfile", player)
+    if profile == nil and type(profileSystem.Service) == "table" then
+        profile = safeCall(profileSystem.Service, "RefreshProfile", player)
+    end
+    return profile
+end
+
+function LobbyService:_summarizeFlexShowcase(entry)
+    local featuredNames = clampDisplayNames(entry and entry.showcaseItems or {})
+    if #featuredNames == 0 then
+        return "-"
+    end
+    return table.concat(featuredNames, ", ")
+end
+
+function LobbyService:_buildFlexParticipant(player)
+    local userId = toUserId(player)
+    if not userId then
+        return nil
+    end
+
+    local profile = self:_getPublicProfile(player)
+    local equippedCosmetics = self:_getAppliedCosmetics(player)
+    if next(equippedCosmetics) == nil and type(profile) == "table" then
+        equippedCosmetics = sanitizeEquippedCosmetics(profile.equippedCosmetics)
+    end
+
+    local displayEntries = self:_buildDisplayEntries(equippedCosmetics)
+    local showcaseItems = {}
+    for _, entry in ipairs(displayEntries) do
+        table.insert(showcaseItems, {
+            slot = entry.slot,
+            cosmeticId = entry.cosmeticId,
+            name = entry.name,
+            rarity = entry.rarity,
+        })
+        if #showcaseItems >= FLEX_SPOTLIGHT_PARTICIPANT_LIMIT then
+            break
+        end
+    end
+
+    return {
+        userId = userId,
+        playerName = player.Name,
+        displayName = player.DisplayName or player.Name,
+        playerLevel = math.max(1, math.floor(tonumber(profile and profile.playerLevel) or 1)),
+        rankTier = tostring(profile and profile.rankTier or "Bayi III"),
+        winRate = math.max(0, math.floor(tonumber(profile and profile.winRate) or 0)),
+        totalMatches = math.max(0, math.floor(tonumber(profile and profile.totalMatches) or 0)),
+        totalWins = math.max(0, math.floor(tonumber(profile and profile.totalWins) or 0)),
+        flexGallery = cloneArray(profile and profile.flexGallery or {}),
+        equippedCosmetics = sanitizeEquippedCosmetics(equippedCosmetics),
+        showcaseItems = showcaseItems,
+        spotlightSummary = self:_summarizeFlexShowcase({
+            showcaseItems = showcaseItems,
+        }),
+        updatedAt = os.time(),
+    }
+end
+
+function LobbyService:_buildFlexParticipantSummary(entry)
+    if type(entry) ~= "table" then
+        return nil
+    end
+    return {
+        userId = entry.userId,
+        displayName = entry.displayName,
+        playerName = entry.playerName,
+        playerLevel = entry.playerLevel,
+        rankTier = entry.rankTier,
+        winRate = entry.winRate,
+        totalMatches = entry.totalMatches,
+        totalWins = entry.totalWins,
+        showcaseSummary = entry.spotlightSummary,
+        featuredNames = clampDisplayNames(entry.showcaseItems or {}),
+    }
+end
+
+function LobbyService:_buildFlexSpotlight(entry)
+    if type(entry) ~= "table" then
+        return nil
+    end
+    return {
+        userId = entry.userId,
+        displayName = entry.displayName,
+        playerName = entry.playerName,
+        playerLevel = entry.playerLevel,
+        rankTier = entry.rankTier,
+        winRate = entry.winRate,
+        totalMatches = entry.totalMatches,
+        totalWins = entry.totalWins,
+        showcaseSummary = entry.spotlightSummary,
+        featuredNames = clampDisplayNames(entry.showcaseItems or {}),
+        showcaseItems = cloneArray(entry.showcaseItems),
+        flexGallery = cloneArray(entry.flexGallery),
+        equippedCosmetics = cloneMap(entry.equippedCosmetics),
+        updatedAt = entry.updatedAt,
+    }
+end
+
+function LobbyService:_buildFlexParticipantsList(flexState)
+    local participants = {}
+    local participantsByUserId = flexState.participantsByUserId or {}
+
+    for _, userId in ipairs(flexState.rotationOrder or {}) do
+        local summary = self:_buildFlexParticipantSummary(participantsByUserId[userId])
+        if summary then
+            table.insert(participants, summary)
+        end
+        if #participants >= FLEX_SPOTLIGHT_PARTICIPANT_LIMIT then
+            break
+        end
+    end
+
+    return participants
+end
+
+function LobbyService:_publishFlexSpotlight(flexState, reason)
+    local spotlight = flexState and flexState.participantsByUserId and flexState.participantsByUserId[flexState.spotlightUserId] or nil
+    local payload = {
+        eventName = spotlight and "LobbyFlexSpotlightUpdated" or "LobbyFlexSpotlightCleared",
+        source = "LobbySocialHub",
+        zoneName = "FlexZone",
+        reason = reason or "updated",
+        spotlight = self:_buildFlexSpotlight(spotlight),
+        participants = self:_buildFlexParticipantsList(flexState or self:_getFlexState()),
+        activeVisitorCount = #(flexState and flexState.rotationOrder or {}),
+        updatedAt = os.time(),
+        recipients = self:GetLobbyPlayers(),
+    }
+    flexState.lastPayload = payload
+    flexState.lastUpdatedAt = payload.updatedAt
+    self._state:Set("flexZoneState", flexState)
+    self:_publish(payload.eventName, payload)
+end
+
+function LobbyService:_activateFlexSpotlight(player, reason)
+    local participant = self:_buildFlexParticipant(player)
+    if not participant then
+        return
+    end
+
+    local flexState = self:_getFlexState()
+    flexState.participantsByUserId[participant.userId] = participant
+    removeArrayValue(flexState.rotationOrder, participant.userId)
+    table.insert(flexState.rotationOrder, 1, participant.userId)
+    flexState.spotlightUserId = participant.userId
+    self:_publishFlexSpotlight(flexState, reason or "zone_entered")
+end
+
+function LobbyService:_removeFlexParticipant(player)
+    local userId = toUserId(player)
+    if not userId then
+        return
+    end
+
+    local flexState = self:_getFlexState()
+    if flexState.participantsByUserId[userId] == nil then
+        return
+    end
+
+    flexState.participantsByUserId[userId] = nil
+    removeArrayValue(flexState.rotationOrder, userId)
+
+    if flexState.spotlightUserId == userId then
+        flexState.spotlightUserId = flexState.rotationOrder[1]
+        self:_publishFlexSpotlight(flexState, "spotlight_left")
+        return
+    end
+
+    if flexState.spotlightUserId ~= nil then
+        self:_publishFlexSpotlight(flexState, "participant_left")
+        return
+    end
+
+    self._state:Set("flexZoneState", flexState)
+end
+
+function LobbyService:_refreshFlexParticipant(player, reason)
+    local userId = toUserId(player)
+    if not userId then
+        return
+    end
+
+    local flexState = self:_getFlexState()
+    if flexState.participantsByUserId[userId] == nil then
+        return
+    end
+
+    local participant = self:_buildFlexParticipant(player)
+    if not participant then
+        return
+    end
+
+    flexState.participantsByUserId[userId] = participant
+    if flexState.spotlightUserId == userId then
+        self:_publishFlexSpotlight(flexState, reason or "spotlight_refreshed")
+        return
+    end
+
+    self._state:Set("flexZoneState", flexState)
+end
+
+function LobbyService:_createBillboard(folder, head, equippedCosmetics)
+    if not folder or not head then
+        return
+    end
+
+    local entries = self:_buildDisplayEntries(equippedCosmetics)
+    local emoteName = nil
+    local flexEntries = {}
+
+    for _, entry in ipairs(entries) do
+        if entry.slot == "emote" and emoteName == nil then
+            emoteName = entry.name
+        else
+            table.insert(flexEntries, entry)
+        end
+    end
+
+    local primaryNames = clampDisplayNames(flexEntries)
+    local primaryText = #primaryNames > 0 and table.concat(primaryNames, " | ") or "Lobby Flex Active"
+    local secondaryText = emoteName and ("Emote: " .. emoteName) or "Cosmetics visible in lobby"
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = LOBBY_COSMETIC_GUI_NAME
+    billboard.Adornee = head
+    billboard.AlwaysOnTop = true
+    billboard.LightInfluence = 0
+    billboard.MaxDistance = 80
+    billboard.Size = UDim2.fromOffset(240, 56)
+    billboard.StudsOffsetWorldSpace = Vector3.new(0, 3.4, 0)
+    billboard.Parent = folder
+
+    local primaryLabel = Instance.new("TextLabel")
+    primaryLabel.Name = "Primary"
+    primaryLabel.BackgroundTransparency = 1
+    primaryLabel.Font = Enum.Font.GothamBold
+    primaryLabel.TextColor3 = Color3.fromRGB(255, 244, 212)
+    primaryLabel.TextScaled = true
+    primaryLabel.TextStrokeTransparency = 0.5
+    primaryLabel.TextWrapped = true
+    primaryLabel.Size = UDim2.new(1, 0, 0.58, 0)
+    primaryLabel.Text = primaryText
+    primaryLabel.Parent = billboard
+
+    local secondaryLabel = Instance.new("TextLabel")
+    secondaryLabel.Name = "Secondary"
+    secondaryLabel.BackgroundTransparency = 1
+    secondaryLabel.Font = Enum.Font.Gotham
+    secondaryLabel.TextColor3 = Color3.fromRGB(196, 232, 255)
+    secondaryLabel.TextScaled = true
+    secondaryLabel.TextStrokeTransparency = 0.65
+    secondaryLabel.TextWrapped = true
+    secondaryLabel.Position = UDim2.new(0, 0, 0.58, 0)
+    secondaryLabel.Size = UDim2.new(1, 0, 0.42, 0)
+    secondaryLabel.Text = secondaryText
+    secondaryLabel.Parent = billboard
+end
+
+function LobbyService:_applyHeadVisual(folder, character, rarity)
+    local head = getCharacterPart(character, { "Head" })
+    if not head then
+        return
+    end
+
+    createWeldedVisual(folder, head, "HeadVisual", {
+        size = Vector3.new(1.5, 1.15, 0.18),
+        offset = CFrame.new(0, 0, -0.5),
+        color = chooseRarityColor(rarity, Color3.fromRGB(214, 224, 255)),
+        transparency = 0.1,
+        material = Enum.Material.SmoothPlastic,
+    })
+
+    createWeldedVisual(folder, head, "HeadSeal", {
+        size = Vector3.new(0.55, 0.2, 0.14),
+        offset = CFrame.new(0, -0.1, -0.6),
+        color = chooseRarityColor(rarity, Color3.fromRGB(255, 244, 212)),
+        transparency = 0,
+        material = Enum.Material.Neon,
+    })
+end
+
+function LobbyService:_applyBodyVisual(folder, character, rarity)
+    local torso = getCharacterPart(character, { "UpperTorso", "Torso" })
+    if not torso then
+        return
+    end
+
+    createWeldedVisual(folder, torso, "BodyVisual", {
+        size = Vector3.new(2.1, 2.35, 0.18),
+        offset = CFrame.new(0, 0, -0.6),
+        color = chooseRarityColor(rarity, Color3.fromRGB(112, 170, 255)),
+        transparency = 0.15,
+        material = Enum.Material.Fabric,
+    })
+end
+
+function LobbyService:_applyOutfitVisual(folder, character, rarity)
+    local torso = getCharacterPart(character, { "UpperTorso", "Torso" })
+    if not torso then
+        return
+    end
+
+    createWeldedVisual(folder, torso, "OutfitFront", {
+        size = Vector3.new(2.25, 2.7, 0.16),
+        offset = CFrame.new(0, -0.05, -0.58),
+        color = chooseRarityColor(rarity, Color3.fromRGB(205, 128, 96)),
+        transparency = 0.08,
+        material = Enum.Material.Fabric,
+    })
+
+    createWeldedVisual(folder, torso, "OutfitBack", {
+        size = Vector3.new(2, 2.8, 0.14),
+        offset = CFrame.new(0, -0.2, 0.56),
+        color = chooseRarityColor(rarity, Color3.fromRGB(82, 34, 34)),
+        transparency = 0.2,
+        material = Enum.Material.Fabric,
+    })
+end
+
+function LobbyService:_applyAccessoryVisual(folder, character, rarity)
+    local anchor = getCharacterPart(character, { "RightHand", "RightLowerArm", "Right Arm", "UpperTorso", "Torso" })
+    if not anchor then
+        return
+    end
+
+    local accessory = createWeldedVisual(folder, anchor, "AccessoryVisual", {
+        size = Vector3.new(0.45, 0.45, 0.45),
+        offset = CFrame.new(0.45, -0.2, -0.15),
+        color = chooseRarityColor(rarity, Color3.fromRGB(255, 221, 145)),
+        material = Enum.Material.Neon,
+        shape = Enum.PartType.Ball,
+    })
+
+    if accessory then
+        local charm = createWeldedVisual(folder, accessory, "AccessoryCharm", {
+            size = Vector3.new(0.18, 0.6, 0.18),
+            offset = CFrame.new(0, -0.45, 0),
+            color = Color3.fromRGB(255, 244, 212),
+            material = Enum.Material.Metal,
+        })
+        if charm then
+            charm.Shape = Enum.PartType.Cylinder
+            charm.CFrame = accessory.CFrame * CFrame.new(0, -0.45, 0) * CFrame.Angles(0, 0, math.rad(90))
+        end
+    end
+end
+
+function LobbyService:_renderLobbyCosmetics(player, character, equippedCosmetics)
+    self:_clearCosmeticVisuals(character)
+
+    if not isLobbyCharacter(player, character) then
+        return true
+    end
+
+    local sanitized = sanitizeEquippedCosmetics(equippedCosmetics)
+    if next(sanitized) == nil then
+        return true
+    end
+
+    local head = getCharacterPart(character, { "Head" })
+    local folder = createVisualFolder(character)
+
+    for slot, cosmeticId in pairs(sanitized) do
+        local catalogEntry = self._cosmeticCatalogById[cosmeticId]
+        local rarity = type(catalogEntry) == "table" and catalogEntry.rarity or nil
+
+        if slot == "head" then
+            self:_applyHeadVisual(folder, character, rarity)
+        elseif slot == "body" then
+            self:_applyBodyVisual(folder, character, rarity)
+        elseif slot == "outfit" then
+            self:_applyOutfitVisual(folder, character, rarity)
+        elseif slot == "accessory" then
+            self:_applyAccessoryVisual(folder, character, rarity)
+        elseif slot == "emote" then
+            character:SetAttribute("LobbyEquippedEmote", humanizeCosmeticId(cosmeticId))
+        end
+    end
+
+    self:_createBillboard(folder, head, sanitized)
+    return true
+end
+
+function LobbyService:_ensureCharacterConnection(player)
+    local userId = toUserId(player)
+    if not userId then
+        return
+    end
+
+    self:_disconnectCharacterConnection(userId)
+    self._characterConnections[userId] = player.CharacterAdded:Connect(function(character)
+        task.defer(function()
+            task.wait()
+            self:_renderLobbyCosmetics(player, character, self:_getAppliedCosmetics(player))
+        end)
+    end)
 end
 
 function LobbyService:_refreshPopulation()
@@ -48,6 +860,9 @@ end
 
 function LobbyService:Init()
     self._state:Set("lobbyStatus", "initialized")
+    self._dependencies.PlayerProfileSystem = Services.Get(self._deps, "PlayerProfileSystem")
+    self._state:Set("flexZoneState", self:_getFlexState())
+    self:_loadCosmeticCatalog()
     self._playerManager:Init()
     self._zoneManager:Init()
     self._interaction:Init()
@@ -85,6 +900,15 @@ function LobbyService:Stop()
     self._partySystem:Stop()
     self._playerManager:Stop()
     self._population:Stop()
+    self._state:Set("flexZoneState", {
+        participantsByUserId = {},
+        rotationOrder = {},
+        spotlightUserId = nil,
+    })
+
+    for userId in pairs(self._characterConnections) do
+        self:_disconnectCharacterConnection(userId)
+    end
 end
 
 function LobbyService:RegisterPlayer(player)
@@ -97,10 +921,20 @@ function LobbyService:RegisterPlayer(player)
         return true
     end
 
+    self:_ensureCharacterConnection(player)
     self:_publish("PlayerEnteredLobby", {
         player = player,
     })
+    local flexState = self:_getFlexState()
+    if type(flexState.lastPayload) == "table" and type(flexState.lastPayload.eventName) == "string" then
+        local replayPayload = cloneMap(flexState.lastPayload)
+        replayPayload.recipients = { player }
+        self:_publish(replayPayload.eventName, replayPayload)
+    end
     self:_refreshPopulation()
+    task.defer(function()
+        self:_renderLobbyCosmetics(player, player.Character, self:_getAppliedCosmetics(player))
+    end)
     return true
 end
 
@@ -114,6 +948,9 @@ function LobbyService:RemovePlayer(player)
         return false, reason
     end
 
+    self:_disconnectCharacterConnection(player.UserId)
+    self:_clearCosmeticVisuals(player.Character)
+    self:_removeFlexParticipant(player)
     self._partySystem:LeaveParty(player)
     self:_refreshPopulation()
     return true
@@ -154,8 +991,8 @@ function LobbyService:StartMatchmaking(player, payload)
         difficulty = payload and payload.difficulty or nil,
         mode = payload and (payload.mode or payload.gameMode) or "Classic",
         gameMode = payload and (payload.gameMode or payload.mode) or "Classic",
-        averageMMR = payload and payload.averageMMR or nil,
-        playerMMRs = payload and payload.playerMMRs or nil,
+        averageRankScore = payload and payload.averageRankScore or nil,
+        playerRankScores = payload and payload.playerRankScores or nil,
         rankedDifficulty = payload and payload.rankedDifficulty or nil,
     })
     return true
@@ -167,6 +1004,10 @@ function LobbyService:OnPlayerEnteredZone(player, zoneName)
     end
 
     self._interaction:HandleZoneEntry(player, zoneName)
+
+    if zoneName == "FlexZone" then
+        self:_activateFlexSpotlight(player, "zone_entered")
+    end
 
     if zoneName == "MatchmakingZone" then
         self:_publish("PlayerEnteredMatchmaking", {
@@ -190,13 +1031,43 @@ function LobbyService:HandlePlayerTeleported(payload)
     end
 end
 
-function LobbyService:ApplyCosmetic(player, cosmeticId, category)
+function LobbyService:ApplyCosmetics(player, equippedCosmetics)
+    local userId = toUserId(player)
+    if not userId then
+        return false, "invalid_player"
+    end
+
+    local snapshot = self:_setAppliedCosmetics(player, equippedCosmetics)
+    self:_renderLobbyCosmetics(player, player.Character, snapshot)
+
     self:_publish("LobbyCosmeticApplied", {
         player = player,
-        cosmeticId = cosmeticId,
-        category = category,
+        userId = userId,
+        equipped = snapshot,
     })
+    self:_refreshFlexParticipant(player, "cosmetics_updated")
     return true
 end
 
+function LobbyService:ApplyCosmetic(player, cosmeticId, category)
+    local slot = category
+    if (type(slot) ~= "string" or slot == "") and type(cosmeticId) == "string" then
+        local catalogEntry = self._cosmeticCatalogById[cosmeticId]
+        slot = type(catalogEntry) == "table" and catalogEntry.slot or nil
+    end
+    if type(slot) ~= "string" or slot == "" then
+        return false, "invalid_slot"
+    end
+
+    local equipped = self:_getAppliedCosmetics(player)
+    if type(cosmeticId) == "string" and cosmeticId ~= "" then
+        equipped[slot] = cosmeticId
+    else
+        equipped[slot] = nil
+    end
+
+    return self:ApplyCosmetics(player, equipped)
+end
+
 return LobbyService
+

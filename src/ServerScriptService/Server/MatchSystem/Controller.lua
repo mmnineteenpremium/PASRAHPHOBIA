@@ -135,8 +135,8 @@ function Controller:OnMatchmakingStarted(payload)
         mode = payload.mode or payload.gameMode,
         gameMode = payload.gameMode or payload.mode,
         difficulty = payload.difficulty,
-        averageMMR = payload.averageMMR,
-        playerMMRs = payload.playerMMRs,
+        averageRankScore = payload.averageRankScore,
+        playerRankScores = payload.playerRankScores,
         rankedDifficulty = payload.rankedDifficulty,
     })
 end
@@ -231,4 +231,5 @@ function Controller:OnPlayerExtracted(payload)
 end
 
 return Controller
+
 
