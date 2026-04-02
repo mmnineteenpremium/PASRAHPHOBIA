@@ -1,6 +1,25 @@
-local Controller = require(script.Parent.Controller)
-local Service = require(script.Parent.Service)
-local State = require(script.Parent.State)
+local function resolveModule(container, childName)
+    local direct = container:FindFirstChild(childName)
+    if direct and direct:IsA("ModuleScript") then
+        return direct
+    end
+
+    for _, candidateName in ipairs({
+        childName .. ".Lua",
+        childName .. ".lua",
+    }) do
+        local candidate = container:FindFirstChild(candidateName)
+        if candidate and candidate:IsA("ModuleScript") then
+            return candidate
+        end
+    end
+
+    error(string.format("[SocialCommerceSystem] Missing module child: %s", tostring(childName)))
+end
+
+local Controller = require(resolveModule(script.Parent, "Controller"))
+local Service = require(resolveModule(script.Parent, "Service"))
+local State = require(resolveModule(script.Parent, "State"))
 
 local SocialCommerceSystem = {}
 SocialCommerceSystem.__index = SocialCommerceSystem

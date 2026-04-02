@@ -1471,7 +1471,7 @@ function UISystem:_toggleAuxiliaryWindow(guiName)
 	if not self._uiState[guiName] then
 		return
 	end
-	if self._uiState[guiName].visible ~= true then
+	if self._uiState[guiName].visible ~= true or self._windowDismissed[guiName] == true then
 		self:_openAuxiliaryWindow(guiName)
 		return
 	end
@@ -2096,24 +2096,31 @@ function UISystem:_refreshWindowText(guiName, statusText, primaryText, secondary
 		return
 	end
 
+	local function resolveText(value)
+		if value == nil then
+			return ""
+		end
+		return tostring(value)
+	end
+
 	if window.StatusBadge then
-		window.StatusBadge.Text = statusText
+		window.StatusBadge.Text = resolveText(statusText)
 		if badgeColor then
 			window.StatusBadge.BackgroundColor3 = badgeColor
 		end
 	end
 	if window.PrimaryLabel then
-		window.PrimaryLabel.Text = primaryText
+		window.PrimaryLabel.Text = resolveText(primaryText)
 	end
 	if window.SecondaryLabel then
-		window.SecondaryLabel.Text = secondaryText
+		window.SecondaryLabel.Text = resolveText(secondaryText)
 	end
 	if window.ContentText then
-		window.ContentText.Text = contentText
-		window.ContentText.Visible = contentText ~= nil
+		window.ContentText.Text = resolveText(contentText)
+		window.ContentText.Visible = contentText ~= nil and contentText ~= ""
 	end
 	if window.FooterLabel and footerText then
-		window.FooterLabel.Text = footerText
+		window.FooterLabel.Text = resolveText(footerText)
 	end
 end
 
@@ -4410,7 +4417,7 @@ function UISystem:_ensureBasicUIs()
 			if floatBtn:GetAttribute("Bound") ~= true then
 				floatBtn:SetAttribute("Bound", true)
 				connectButtonPress(floatBtn, function()
-					self:_setAuxiliaryWindowDismissed(guiName, false)
+					self:_openAuxiliaryWindow(guiName)
 				end)
 			end
 			if toolActionButton and toolActionButton:GetAttribute("Bound") ~= true then

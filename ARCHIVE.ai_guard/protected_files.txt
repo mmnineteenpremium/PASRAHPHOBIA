@@ -1,3 +1,0 @@
-config/
-.ai_memory/
-.git/

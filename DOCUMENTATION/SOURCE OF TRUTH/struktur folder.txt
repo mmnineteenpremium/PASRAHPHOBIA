@@ -1623,7 +1623,7 @@ Generated: 2026-03-31 04:32:58
 [D] src\ServerScriptService\Server\SocialCommerceSystem
 [F] src\ServerScriptService\Server\SocialCommerceSystem\Controller.lua
 [F] src\ServerScriptService\Server\SocialCommerceSystem\Main.lua
-[F] src\ServerScriptService\Server\SocialCommerceSystem\Service.Lua
+[F] src\ServerScriptService\Server\SocialCommerceSystem\Service.lua
 [F] src\ServerScriptService\Server\SocialCommerceSystem\State.lua
 [D] src\ServerScriptService\Server\SocialEmoteSystem
 [F] src\ServerScriptService\Server\SocialEmoteSystem\Controller.lua
