@@ -488,4 +488,3 @@ function Service:OnMatchEnded(payload)
 end
 
 return Service
-

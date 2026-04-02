@@ -10,6 +10,7 @@
 
 local Players = game:GetService("Players")
 local workspace = game:GetService("Workspace")
+local LobbyLocator = require(script.Parent.Parent.Core.LobbyLocator)
 
 local MatchCleanup = {}
 
@@ -18,6 +19,7 @@ local LOBBY_NAME = "LobbySocialHub"
 local LOBBY_SPAWN_OFFSET = Vector3.new(0, 3, 0)
 local LOBBY_SPAWN_MAX_DELTA_XZ = 350
 local LOBBY_MIN_Y = -50
+local LOBBY_MAX_SPAWN_Y = 15
 
 local function collectSpawnParts(root, out)
 	out = out or {}
@@ -37,29 +39,19 @@ local function collectSpawnParts(root, out)
 end
 
 local function resolveLobbyRoot()
-	local direct = workspace:FindFirstChild(LOBBY_NAME)
-	if direct then
-		return direct
-	end
-
-	local mapsFolder = workspace:FindFirstChild("Maps")
-	if mapsFolder then
-		local nested = mapsFolder:FindFirstChild(LOBBY_NAME)
-		if nested then
-			return nested
-		end
-	end
-
-	local currentMap = workspace:FindFirstChild("CurrentMap")
-	if currentMap and currentMap.Name == LOBBY_NAME then
-		return currentMap
-	end
-
-	return nil
+	return LobbyLocator.ResolveRoot(LOBBY_NAME, workspace)
 end
 
 local function isValidLobbySpawnPart(lobbyRoot, spawnPart)
 	if not (spawnPart and spawnPart:IsA("BasePart")) then
+		return false
+	end
+
+	if spawnPart.Position.Y < LOBBY_MIN_Y then
+		return false
+	end
+
+	if spawnPart.Position.Y > LOBBY_MAX_SPAWN_Y then
 		return false
 	end
 
@@ -81,34 +73,58 @@ local function isValidLobbySpawnPart(lobbyRoot, spawnPart)
 	return true
 end
 
-local function resolveLobbySpawnPart()
+local function sortSpawnParts(spawnParts)
+	table.sort(spawnParts, function(a, b)
+		return a.Name < b.Name
+	end)
+	return spawnParts
+end
+
+local function buildUprightPartCFrame(part, offset)
+	if not (part and part:IsA("BasePart")) then
+		return nil
+	end
+
+	local position = part.Position + (offset or Vector3.zero)
+	local flatLook = Vector3.new(part.CFrame.LookVector.X, 0, part.CFrame.LookVector.Z)
+	if flatLook.Magnitude <= 1e-4 then
+		flatLook = Vector3.new(0, 0, -1)
+	else
+		flatLook = flatLook.Unit
+	end
+
+	return CFrame.lookAt(position, position + flatLook, Vector3.yAxis)
+end
+
+local function resolveLobbySpawnParts()
 	local lobby = resolveLobbyRoot()
 	if lobby then
 		local lobbySpawn = lobby:FindFirstChild("LobbySpawn", true)
 		if isValidLobbySpawnPart(lobby, lobbySpawn) then
-			return lobbySpawn
+			return { lobbySpawn }
 		end
 
 		local spawnFolder = lobby:FindFirstChild("SpawnPoints", true)
-		local spawnParts = collectSpawnParts(spawnFolder)
-		table.sort(spawnParts, function(a, b)
-			return a.Name < b.Name
-		end)
+		local spawnParts = sortSpawnParts(collectSpawnParts(spawnFolder))
+		local validSpawnParts = {}
 		for _, spawnPart in ipairs(spawnParts) do
 			if isValidLobbySpawnPart(lobby, spawnPart) then
-				return spawnPart
+				table.insert(validSpawnParts, spawnPart)
 			end
+		end
+		if #validSpawnParts > 0 then
+			return validSpawnParts
 		end
 
 		local spawnLocation = lobby:FindFirstChildWhichIsA("SpawnLocation", true)
 		if isValidLobbySpawnPart(lobby, spawnLocation) then
-			return spawnLocation
+			return { spawnLocation }
 		end
 	end
 
 	local directSpawn = workspace:FindFirstChild("LobbySpawn")
 	if isValidLobbySpawnPart(lobby, directSpawn) then
-		return directSpawn
+		return { directSpawn }
 	end
 
 	if not lobby then
@@ -129,8 +145,8 @@ function MatchCleanup.TeleportPlayersToLobby(matchId)
 		warn("[MatchCleanup] Match folder not found:", matchId)
 	end
 
-	local lobbySpawn, spawnReason = resolveLobbySpawnPart()
-	if not lobbySpawn then
+	local lobbySpawns, spawnReason = resolveLobbySpawnParts()
+	if not lobbySpawns or #lobbySpawns == 0 then
 		warn(string.format("[MatchCleanup] Lobby spawn unresolved (%s). Players will be flagged out-of-match only.", tostring(spawnReason)))
 	end
 
@@ -149,8 +165,12 @@ function MatchCleanup.TeleportPlayersToLobby(matchId)
 		local character = player.Character
 		if character then
 			local hrp = character:FindFirstChild("HumanoidRootPart")
-			if hrp and lobbySpawn then
-				hrp.CFrame = lobbySpawn.CFrame + LOBBY_SPAWN_OFFSET
+			if hrp and lobbySpawns and #lobbySpawns > 0 then
+				local spawnIndex = (math.abs(player.UserId) % #lobbySpawns) + 1
+				local lobbySpawn = lobbySpawns[spawnIndex]
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hrp.AssemblyAngularVelocity = Vector3.zero
+				hrp.CFrame = buildUprightPartCFrame(lobbySpawn, LOBBY_SPAWN_OFFSET) or (lobbySpawn.CFrame + LOBBY_SPAWN_OFFSET)
 				teleportCount = teleportCount + 1
 			end
 		end

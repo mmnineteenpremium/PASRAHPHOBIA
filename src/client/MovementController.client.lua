@@ -19,8 +19,6 @@ local WALK_SPEED = 10 -- Realistic human walk
 local SPRINT_SPEED = 14 -- Sprint with Shift
 local CROUCH_SPEED = 5 -- Crouch with Ctrl (optional)
 local BACKWARD_SPEED_MULTIPLIER = 0.65 -- Slower backward movement for realism
-local TELEMETRY_INTERVAL_SECONDS = 0.5
-local TELEMETRY_PREFIX = "[MovementTelemetry]"
 
 -- Jump power
 local JUMP_POWER = 32 -- Realistic jump height
@@ -33,7 +31,6 @@ humanoid.AutoRotate = true
 
 -- Sprint state
 local sprinting = false
-local lastTelemetryAt = 0
 
 local function bindCharacter(newCharacter)
     character = newCharacter
@@ -43,7 +40,6 @@ local function bindCharacter(newCharacter)
     humanoid.JumpPower = JUMP_POWER
     humanoid.UseJumpPower = true
     humanoid.AutoRotate = true
-    lastTelemetryAt = 0
 end
 
 player.CharacterAdded:Connect(bindCharacter)
@@ -111,22 +107,6 @@ RunService.RenderStepped:Connect(function()
         humanoid.WalkSpeed = targetSpeed
     end
 
-    if inMatch then
-        local now = os.clock()
-        if (now - lastTelemetryAt) >= TELEMETRY_INTERVAL_SECONDS then
-            lastTelemetryAt = now
-            print(string.format(
-                "%s name=%s state=%s floor=%s velY=%.3f posY=%.3f moveY=%.3f",
-                TELEMETRY_PREFIX,
-                player.Name,
-                tostring(humanoid:GetState()),
-                tostring(humanoid.FloorMaterial),
-                humanoidRootPart.AssemblyLinearVelocity.Y,
-                humanoidRootPart.Position.Y,
-                moveDirection.Y
-            ))
-        end
-    end
 end)
 
 print("[Phase7.1] Movement Controller initialized")
