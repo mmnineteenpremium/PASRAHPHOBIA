@@ -3009,14 +3009,276 @@ function UISystem:_refreshWindowText(guiName, statusText, primaryText, secondary
 	end
 end
 
+function UISystem:_layoutJournalWindow(window)
+	if not window or not window.Panel then
+		return
+	end
+
+	local viewportSize = Vector2.new(1280, 720)
+	local camera = Workspace.CurrentCamera
+	if camera then
+		viewportSize = camera.ViewportSize
+	end
+
+	local lobbyVisible = false
+	local lobby = self._uxWidgets and self._uxWidgets.lobby or nil
+	if lobby and lobby.BasicPanel and lobby.BasicPanel.Visible == true then
+		lobbyVisible = true
+	end
+
+	if viewportSize.X >= 1080 then
+		window.Panel.Position = lobbyVisible and UDim2.fromOffset(372, 16) or UDim2.fromOffset(16, 104)
+	else
+		window.Panel.Position = UDim2.fromOffset(16, 104)
+	end
+end
+
+function UISystem:_ensureJournalWidgets(window)
+	if not window or not window.ContentFrame then
+		return nil
+	end
+	if window.JournalWidgets then
+		return window.JournalWidgets
+	end
+
+	if window.ContentText then
+		window.ContentText.Visible = false
+	end
+
+	local contentFrame = window.ContentFrame
+	local deck = contentFrame:FindFirstChild("JournalDeck")
+	if deck and not deck:IsA("Frame") then
+		deck:Destroy()
+		deck = nil
+	end
+	if not deck then
+		deck = Instance.new("Frame")
+		deck.Name = "JournalDeck"
+		deck.Size = UDim2.new(1, -4, 0, 0)
+		deck.AutomaticSize = Enum.AutomaticSize.Y
+		deck.BackgroundTransparency = 1
+		deck.Parent = contentFrame
+
+		local layout = Instance.new("UIListLayout")
+		layout.FillDirection = Enum.FillDirection.Vertical
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Padding = UDim.new(0, 8)
+		layout.Parent = deck
+	end
+
+	local heroCard = Instance.new("Frame")
+	heroCard.Name = "HeroCard"
+	heroCard.Size = UDim2.new(1, 0, 0, 104)
+	heroCard.BackgroundColor3 = Color3.fromRGB(28, 38, 48)
+	heroCard.BorderSizePixel = 0
+	heroCard.Parent = deck
+
+	local heroCorner = Instance.new("UICorner")
+	heroCorner.CornerRadius = UDim.new(0, 12)
+	heroCorner.Parent = heroCard
+
+	local heroStroke = Instance.new("UIStroke")
+	heroStroke.Name = "HeroStroke"
+	heroStroke.Thickness = 1.5
+	heroStroke.Color = Color3.fromRGB(56, 92, 128)
+	heroStroke.Transparency = 0.16
+	heroStroke.Parent = heroCard
+
+	local heroBadge = Instance.new("TextLabel")
+	heroBadge.Name = "HeroBadge"
+	heroBadge.Position = UDim2.fromOffset(12, 10)
+	heroBadge.Size = UDim2.fromOffset(118, 20)
+	heroBadge.BackgroundColor3 = Color3.fromRGB(56, 92, 128)
+	heroBadge.BorderSizePixel = 0
+	heroBadge.Font = Enum.Font.GothamBold
+	heroBadge.TextSize = 10
+	heroBadge.TextColor3 = Color3.fromRGB(244, 244, 238)
+	heroBadge.Text = "JOURNAL"
+	heroBadge.Parent = heroCard
+
+	local heroBadgeCorner = Instance.new("UICorner")
+	heroBadgeCorner.CornerRadius = UDim.new(1, 0)
+	heroBadgeCorner.Parent = heroBadge
+
+	local heroTitle = Instance.new("TextLabel")
+	heroTitle.Name = "HeroTitle"
+	heroTitle.Position = UDim2.fromOffset(12, 38)
+	heroTitle.Size = UDim2.new(1, -100, 0, 24)
+	heroTitle.BackgroundTransparency = 1
+	heroTitle.Font = Enum.Font.GothamBold
+	heroTitle.TextSize = 16
+	heroTitle.TextColor3 = Color3.fromRGB(244, 244, 238)
+	heroTitle.TextWrapped = true
+	heroTitle.TextXAlignment = Enum.TextXAlignment.Left
+	heroTitle.TextYAlignment = Enum.TextYAlignment.Top
+	heroTitle.Text = "Belum ada evidence."
+	heroTitle.Parent = heroCard
+
+	local heroMeta = Instance.new("TextLabel")
+	heroMeta.Name = "HeroMeta"
+	heroMeta.Position = UDim2.fromOffset(12, 66)
+	heroMeta.Size = UDim2.new(1, -100, 0, 24)
+	heroMeta.BackgroundTransparency = 1
+	heroMeta.Font = Enum.Font.Gotham
+	heroMeta.TextSize = 11
+	heroMeta.TextColor3 = Color3.fromRGB(188, 199, 212)
+	heroMeta.TextWrapped = true
+	heroMeta.TextXAlignment = Enum.TextXAlignment.Left
+	heroMeta.TextYAlignment = Enum.TextYAlignment.Top
+	heroMeta.Text = "Confirmed 0 | Kandidat 0 | Event Idle"
+	heroMeta.Parent = heroCard
+
+	local heroGlyph = Instance.new("TextLabel")
+	heroGlyph.Name = "HeroGlyph"
+	heroGlyph.AnchorPoint = Vector2.new(1, 0)
+	heroGlyph.Position = UDim2.new(1, -12, 0, 12)
+	heroGlyph.Size = UDim2.fromOffset(84, 60)
+	heroGlyph.BackgroundTransparency = 1
+	heroGlyph.Font = Enum.Font.GothamBlack
+	heroGlyph.TextSize = 44
+	heroGlyph.TextColor3 = Color3.fromRGB(86, 118, 148)
+	heroGlyph.TextTransparency = 0.28
+	heroGlyph.TextXAlignment = Enum.TextXAlignment.Right
+	heroGlyph.Text = "JN"
+	heroGlyph.Parent = heroCard
+
+	local statRow = Instance.new("Frame")
+	statRow.Name = "StatRow"
+	statRow.Size = UDim2.new(1, 0, 0, 56)
+	statRow.BackgroundTransparency = 1
+	statRow.Parent = deck
+
+	local statLayout = Instance.new("UIListLayout")
+	statLayout.FillDirection = Enum.FillDirection.Horizontal
+	statLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	statLayout.Padding = UDim.new(0, 8)
+	statLayout.Parent = statRow
+
+	local function createStatCard(name, title, tint)
+		local card = Instance.new("Frame")
+		card.Name = name
+		card.Size = UDim2.new(0.3333, -6, 1, 0)
+		card.BackgroundColor3 = tint
+		card.BackgroundTransparency = 0.18
+		card.BorderSizePixel = 0
+		card.Parent = statRow
+
+		local cardCorner = Instance.new("UICorner")
+		cardCorner.CornerRadius = UDim.new(0, 10)
+		cardCorner.Parent = card
+
+		local valueLabel = Instance.new("TextLabel")
+		valueLabel.Name = "ValueLabel"
+		valueLabel.Position = UDim2.fromOffset(10, 6)
+		valueLabel.Size = UDim2.new(1, -20, 0, 22)
+		valueLabel.BackgroundTransparency = 1
+		valueLabel.Font = Enum.Font.GothamBold
+		valueLabel.TextSize = 18
+		valueLabel.TextColor3 = Color3.fromRGB(244, 244, 238)
+		valueLabel.TextXAlignment = Enum.TextXAlignment.Left
+		valueLabel.Text = "0"
+		valueLabel.Parent = card
+
+		local titleLabel = Instance.new("TextLabel")
+		titleLabel.Name = "TitleLabel"
+		titleLabel.Position = UDim2.fromOffset(10, 28)
+		titleLabel.Size = UDim2.new(1, -20, 0, 16)
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Font = Enum.Font.GothamBold
+		titleLabel.TextSize = 10
+		titleLabel.TextColor3 = Color3.fromRGB(228, 232, 236)
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		titleLabel.Text = title
+		titleLabel.Parent = card
+
+		return valueLabel
+	end
+
+	local discoveredCount = createStatCard("DiscoveredCard", "DISCOVERED", Color3.fromRGB(52, 86, 118))
+	local confirmedCount = createStatCard("ConfirmedCard", "CONFIRMED", Color3.fromRGB(58, 108, 86))
+	local candidateCount = createStatCard("CandidateCard", "CANDIDATES", Color3.fromRGB(96, 78, 50))
+
+	local function createSectionCard(name, title, tint)
+		local card = Instance.new("Frame")
+		card.Name = name
+		card.Size = UDim2.new(1, 0, 0, 86)
+		card.BackgroundColor3 = Color3.fromRGB(18, 26, 34)
+		card.BorderSizePixel = 0
+		card.Parent = deck
+
+		local cardCorner = Instance.new("UICorner")
+		cardCorner.CornerRadius = UDim.new(0, 10)
+		cardCorner.Parent = card
+
+		local cardStroke = Instance.new("UIStroke")
+		cardStroke.Thickness = 1
+		cardStroke.Color = tint
+		cardStroke.Transparency = 0.2
+		cardStroke.Parent = card
+
+		local titleLabel = Instance.new("TextLabel")
+		titleLabel.Name = "SectionTitle"
+		titleLabel.Position = UDim2.fromOffset(12, 10)
+		titleLabel.Size = UDim2.new(1, -24, 0, 16)
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Font = Enum.Font.GothamBold
+		titleLabel.TextSize = 11
+		titleLabel.TextColor3 = tint:Lerp(Color3.fromRGB(244, 244, 238), 0.18)
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		titleLabel.Text = title
+		titleLabel.Parent = card
+
+		local bodyLabel = Instance.new("TextLabel")
+		bodyLabel.Name = "BodyLabel"
+		bodyLabel.Position = UDim2.fromOffset(12, 30)
+		bodyLabel.Size = UDim2.new(1, -24, 1, -40)
+		bodyLabel.BackgroundTransparency = 1
+		bodyLabel.Font = Enum.Font.Gotham
+		bodyLabel.TextSize = 12
+		bodyLabel.TextColor3 = Color3.fromRGB(206, 214, 222)
+		bodyLabel.TextWrapped = true
+		bodyLabel.TextXAlignment = Enum.TextXAlignment.Left
+		bodyLabel.TextYAlignment = Enum.TextYAlignment.Top
+		bodyLabel.Text = "-"
+		bodyLabel.Parent = card
+
+		return bodyLabel
+	end
+
+	local discoveredBody = createSectionCard("DiscoveredSection", "DISCOVERED EVIDENCE", Color3.fromRGB(76, 118, 164))
+	local confirmedBody = createSectionCard("ConfirmedSection", "CONFIRMED EVIDENCE", Color3.fromRGB(70, 132, 98))
+	local candidateBody = createSectionCard("CandidateSection", "GHOST CANDIDATES", Color3.fromRGB(120, 96, 58))
+
+	window.JournalWidgets = {
+		Deck = deck,
+		HeroCard = heroCard,
+		HeroStroke = heroStroke,
+		HeroBadge = heroBadge,
+		HeroTitle = heroTitle,
+		HeroMeta = heroMeta,
+		HeroGlyph = heroGlyph,
+		DiscoveredCount = discoveredCount,
+		ConfirmedCount = confirmedCount,
+		CandidateCount = candidateCount,
+		DiscoveredBody = discoveredBody,
+		ConfirmedBody = confirmedBody,
+		CandidateBody = candidateBody,
+	}
+
+	return window.JournalWidgets
+end
+
 function UISystem:_refreshJournalPanel()
 	local state = self._journalState or {}
 	local discovered = state.discoveredEvidence or {}
 	local confirmed = state.confirmedEvidence or {}
 	local candidates = state.candidates or {}
-	local statusText = #confirmed > 0 and "CONFIRMED" or (#discovered > 0 and "EVIDENCE" or "JOURNAL")
-	local badgeColor = #confirmed > 0 and Color3.fromRGB(58, 116, 90) or Color3.fromRGB(56, 92, 128)
-	local primaryText = #discovered > 0
+	local hasConfirmed = #confirmed > 0
+	local hasDiscovered = #discovered > 0
+	local statusText = hasConfirmed and "CONFIRMED" or (hasDiscovered and "EVIDENCE" or "JOURNAL")
+	local badgeColor = hasConfirmed and Color3.fromRGB(58, 116, 90) or Color3.fromRGB(56, 92, 128)
+	local glyphText = hasConfirmed and "CF" or (hasDiscovered and "EV" or "JN")
+	local primaryText = hasDiscovered
 		and string.format("%d evidence tercatat. Gunakan ini untuk deduction cepat.", #discovered)
 		or "Belum ada evidence tercatat."
 	local secondaryText = string.format(
@@ -3050,7 +3312,49 @@ function UISystem:_refreshJournalPanel()
 		badgeColor
 	)
 
+	local function summarizeList(values, emptyText, maxItems)
+		if type(values) ~= "table" or #values == 0 then
+			return emptyText
+		end
+		local limit = maxItems or 4
+		local rows = {}
+		for index, value in ipairs(values) do
+			if index > limit then
+				break
+			end
+			rows[#rows + 1] = "• " .. tostring(value)
+		end
+		if #values > limit then
+			rows[#rows + 1] = string.format("+%d lainnya", #values - limit)
+		end
+		return table.concat(rows, "\n")
+	end
+
 	local window = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows.JournalUI
+	if window then
+		self:_layoutJournalWindow(window)
+		local widgets = self:_ensureJournalWidgets(window)
+		if widgets then
+			widgets.HeroStroke.Color = badgeColor
+			widgets.HeroBadge.Text = statusText
+			widgets.HeroBadge.BackgroundColor3 = badgeColor
+			widgets.HeroTitle.Text = hasConfirmed
+				and "Evidence penting sudah terkunci. Saatnya persempit ghost."
+				or (hasDiscovered
+					and "Catatan evidence aktif. Review cepat sebelum investigasi lanjut."
+					or "Belum ada evidence. Gunakan tool dan scan untuk mulai deduction.")
+			widgets.HeroMeta.Text = secondaryText
+			widgets.HeroGlyph.Text = glyphText
+			widgets.HeroGlyph.TextColor3 = badgeColor:Lerp(Color3.fromRGB(244, 244, 238), 0.22)
+			widgets.DiscoveredCount.Text = tostring(#discovered)
+			widgets.ConfirmedCount.Text = tostring(#confirmed)
+			widgets.CandidateCount.Text = tostring(#candidates)
+			widgets.DiscoveredBody.Text = summarizeList(discovered, "Belum ada evidence tercatat.", 4)
+			widgets.ConfirmedBody.Text = summarizeList(confirmed, "Belum ada evidence confirmed.", 3)
+			widgets.CandidateBody.Text = summarizeList(candidates, "Belum ada kandidat ghost.", 4)
+		end
+	end
+
 	if window and window.ToolStatusLabel then
 		local statusLine = string.format(
 			"SCAN STATUS\n%s\n%s",
@@ -3058,9 +3362,13 @@ function UISystem:_refreshJournalPanel()
 			tostring(state.toolReason or "-")
 		)
 		window.ToolStatusLabel.Text = statusLine
+		window.ToolStatusLabel.BackgroundColor3 = Color3.fromRGB(20, 28, 38)
+		window.ToolStatusLabel.BackgroundTransparency = 0.06
+		window.ToolStatusLabel.TextColor3 = Color3.fromRGB(196, 206, 220)
 	end
 	if window and window.ToolActionButton then
 		window.ToolActionButton.Text = "SCAN JEJAK"
+		window.ToolActionButton.BackgroundColor3 = badgeColor:Lerp(Color3.fromRGB(42, 62, 84), 0.24)
 	end
 end
 
@@ -6071,33 +6379,41 @@ function UISystem:_ensureBasicUIs()
 			local toolActionButton = nil
 			local toolStatusLabel = nil
 			if guiName == "JournalUI" then
-				contentFrame.Position = UDim2.fromOffset(12, 156)
-				contentFrame.Size = UDim2.new(1, -24, 1, -268)
+				contentFrame.Position = UDim2.fromOffset(12, 152)
+				contentFrame.Size = UDim2.new(1, -24, 1, -262)
 
 				toolActionButton = panel:FindFirstChild("ToolActionButton")
 				if not toolActionButton then
 					toolActionButton = Instance.new("TextButton")
 					toolActionButton.Name = "ToolActionButton"
-					toolActionButton.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 106)
-					toolActionButton.Size = UDim2.fromOffset(148, 38)
+					toolActionButton.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 102)
+					toolActionButton.Size = UDim2.fromOffset(156, 40)
 					styleButton(toolActionButton, "SCAN JEJAK")
 					toolActionButton.BackgroundColor3 = Color3.fromRGB(56, 92, 128)
 					toolActionButton.Parent = panel
 
-					local toolCorner = Instance.new("UICorner")
-					toolCorner.CornerRadius = UDim.new(0, 8)
-					toolCorner.Parent = toolActionButton
-
 					self:_setSelectableStyle(toolActionButton)
+				end
+				toolActionButton.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 102)
+				toolActionButton.Size = UDim2.fromOffset(156, 40)
+
+				local toolCorner = toolActionButton:FindFirstChild("ButtonCorner")
+				if not toolCorner or not toolCorner:IsA("UICorner") then
+					toolCorner = Instance.new("UICorner")
+					toolCorner.Name = "ButtonCorner"
+					toolCorner.CornerRadius = UDim.new(0, 10)
+					toolCorner.Parent = toolActionButton
 				end
 
 				toolStatusLabel = panel:FindFirstChild("ToolStatusLabel")
 				if not toolStatusLabel then
 					toolStatusLabel = Instance.new("TextLabel")
 					toolStatusLabel.Name = "ToolStatusLabel"
-					toolStatusLabel.Position = UDim2.fromOffset(172, auxiliaryConfig.panelSize.Y - 110)
-					toolStatusLabel.Size = UDim2.new(1, -184, 0, 46)
-					toolStatusLabel.BackgroundTransparency = 1
+					toolStatusLabel.Position = UDim2.fromOffset(176, auxiliaryConfig.panelSize.Y - 106)
+					toolStatusLabel.Size = UDim2.new(1, -188, 0, 50)
+					toolStatusLabel.BackgroundColor3 = Color3.fromRGB(20, 28, 38)
+					toolStatusLabel.BackgroundTransparency = 0.06
+					toolStatusLabel.BorderSizePixel = 0
 					toolStatusLabel.Font = Enum.Font.Gotham
 					toolStatusLabel.TextSize = 11
 					toolStatusLabel.TextColor3 = Color3.fromRGB(178, 192, 214)
@@ -6107,8 +6423,42 @@ function UISystem:_ensureBasicUIs()
 					toolStatusLabel.Text = "SCAN STATUS"
 					toolStatusLabel.Parent = panel
 				end
+				toolStatusLabel.Position = UDim2.fromOffset(176, auxiliaryConfig.panelSize.Y - 106)
+				toolStatusLabel.Size = UDim2.new(1, -188, 0, 50)
+				toolStatusLabel.BackgroundColor3 = Color3.fromRGB(20, 28, 38)
+				toolStatusLabel.BackgroundTransparency = 0.06
+				toolStatusLabel.BorderSizePixel = 0
 
-				footerLabel.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 54)
+				local statusCorner = toolStatusLabel:FindFirstChild("StatusCorner")
+				if not statusCorner or not statusCorner:IsA("UICorner") then
+					statusCorner = Instance.new("UICorner")
+					statusCorner.Name = "StatusCorner"
+					statusCorner.CornerRadius = UDim.new(0, 10)
+					statusCorner.Parent = toolStatusLabel
+				end
+
+				local statusStroke = toolStatusLabel:FindFirstChild("StatusStroke")
+				if not statusStroke or not statusStroke:IsA("UIStroke") then
+					statusStroke = Instance.new("UIStroke")
+					statusStroke.Name = "StatusStroke"
+					statusStroke.Thickness = 1
+					statusStroke.Color = Color3.fromRGB(58, 92, 128)
+					statusStroke.Transparency = 0.24
+					statusStroke.Parent = toolStatusLabel
+				end
+
+				local statusPadding = toolStatusLabel:FindFirstChild("StatusPadding")
+				if not statusPadding or not statusPadding:IsA("UIPadding") then
+					statusPadding = Instance.new("UIPadding")
+					statusPadding.Name = "StatusPadding"
+					statusPadding.PaddingLeft = UDim.new(0, 10)
+					statusPadding.PaddingRight = UDim.new(0, 8)
+					statusPadding.PaddingTop = UDim.new(0, 8)
+					statusPadding.PaddingBottom = UDim.new(0, 6)
+					statusPadding.Parent = toolStatusLabel
+				end
+
+				footerLabel.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 50)
 				footerLabel.Size = UDim2.new(1, -24, 0, 40)
 			end
 
