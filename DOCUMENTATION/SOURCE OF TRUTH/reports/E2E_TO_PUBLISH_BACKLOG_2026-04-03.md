@@ -1155,3 +1155,18 @@ Urutan yang paling masuk akal dari titik sekarang:
 - dampak:
   - sumber paling berisiko untuk audio/event dobel di client sudah ditutup di level arsitektur, bukan sekadar patch gejala
 
+## Update 2026-04-04 02:57 ICT
+
+- bug UX `MapSelector` host room browser ditutup dengan perbaikan layout responsif:
+  - root cause: pada viewport desktop pendek, layout non-compact membuat area kontrol host (`Ready/Start/Leave`) menumpuk area selector mode/map
+  - efeknya: `MapSelector` sulit/tidak bisa diinteraksi konsisten
+- patch:
+  - `UISystem:_applyRoomBrowserSizing()` sekarang memaksa mode compact juga untuk viewport pendek (`usableHeight <= 700`)
+  - ini menjaga urutan vertikal panel room menjadi scroll-based, bukan overlap absolute
+- validasi live:
+  - `MapSelector` dan `ReadyButton` tidak lagi overlap (`MapSelector.Y=562`, `ReadyButton.Y=854` pada sesi validasi)
+  - interaksi `MapSelector` dapat membuka `MapDropdown.Visible = true` setelah panel berada pada posisi scroll yang tepat
+- dampak:
+  - kontrol host room browser lebih stabil di resolusi desktop pendek/laptop
+  - jalur pilih map tidak lagi terblokir oleh tombol action panel bawah
+
