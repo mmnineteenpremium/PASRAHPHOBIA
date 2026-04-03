@@ -5755,3 +5755,35 @@ Menutup coverage `E2E-07` untuk manifestation ghost final (`Pocong`) di runtime 
 
 - `E2E-07` sekarang berstatus `PASS` pada matrix inti.
 - backlog matrix inti tersisa pada `E2E-02`, `E2E-05`, dan `E2E-06` untuk menutup loop gameplay tengah.
+
+## 2026-04-04 06:09 ICT
+
+### Task
+
+Menutup coverage `E2E-02` (lobby entry) dan `E2E-05` (preparation state) di matrix inti.
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TEST_MATRIX_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Validation Notes
+
+- `E2E-02` verifikasi live:
+  - `InMatch=false`
+  - `LobbyUI.Enabled=true`
+  - `LobbyUI.MainPanel.Visible=true`
+  - karakter spawn normal di lobby
+- `E2E-05` verifikasi live:
+  - flow `CreateRoom -> HostStart` mencapai `MatchPhase=Preparing`
+  - `MatchUI.HeaderCard.StateBadge = PERSIAPAN`
+  - `MatchUI.HeaderCard.SecondaryLabel` terisi objective awal
+  - `MatchUI.SummaryFrame.StatusRow.Value = BRIEFING`
+- cleanup:
+  - `EndMatch` dipanggil dan player kembali ke lobby setelah run preparation check
+
+### Interpretation
+
+- matrix inti hampir penuh:
+  - `PASS` untuk `E2E-01/02/03/04/05/07/08/09/10`
+  - tersisa `E2E-06` sebagai pending utama (evidence tool dedicated pass).

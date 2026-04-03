@@ -110,3 +110,23 @@ Status matrix inti saat ini:
 
 - `PASS`: `E2E-01`, `E2E-03`, `E2E-04`, `E2E-07`, `E2E-08`, `E2E-09`, `E2E-10`
 - `PENDING`: `E2E-02`, `E2E-05`, `E2E-06`
+
+## Update 2026-04-04 06:09 ICT
+
+Verifikasi lanjutan lobby + preparation:
+
+- `E2E-02 Masuk lobby`: `PASS`
+  - `InMatch=false`
+  - `LobbyUI.Enabled=true`
+  - `LobbyUI.MainPanel.Visible=true`
+  - karakter spawn normal di area lobby
+- `E2E-05 Preparation`: `PASS`
+  - flow `CreateRoom -> HostStart` mencapai `MatchPhase=Preparing`
+  - `MatchUI.HeaderCard.StateBadge = PERSIAPAN`
+  - `MatchUI.HeaderCard.SecondaryLabel` terisi objective awal (`Tunggu loading selesai, lalu mulai cari evidence.`)
+  - `MatchUI.SummaryFrame.StatusRow.Value = BRIEFING`
+
+Status matrix inti final per run saat ini:
+
+- `PASS`: `E2E-01`, `E2E-02`, `E2E-03`, `E2E-04`, `E2E-05`, `E2E-07`, `E2E-08`, `E2E-09`, `E2E-10`
+- `PENDING`: `E2E-06` (tool evidence minimum pass dedicated)
