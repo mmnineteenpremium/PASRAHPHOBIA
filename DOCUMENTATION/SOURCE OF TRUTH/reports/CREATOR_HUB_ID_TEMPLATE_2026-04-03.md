@@ -12,7 +12,9 @@ Isi file ini dengan ID nyata dari Creator Hub / Dashboard sebelum item `Robux` d
    - game pass untuk entitlement permanen
    - developer product untuk pembelian berulang
 2. Tempel ID-nya ke tabel di bawah.
-3. Setelah ID nyata siap, mirror ke source katalog item yang akan dijual.
+3. Setelah ID nyata siap, isi ke source:
+   - `src/shared/DataTypes/ShopMarketplaceConfig.lua` (utama, direkomendasikan)
+   - `src/shared/DataTypes/ShopCatalog.lua` (fallback/manual langsung jika diperlukan)
 4. Jalankan smoke test lagi:
    - prompt muncul
    - grant server-side terjadi

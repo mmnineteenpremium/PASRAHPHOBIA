@@ -5169,3 +5169,34 @@ Mengaktifkan shop content slice nyata (`MM/PP`) dan mengeraskan guard monetizati
 
 - shop tidak lagi tampil “kosong/placeholder”; jalur item aktif dan jalur monetization sudah terpisah secara operasional
 - blocker tersisa tetap tunggal dan jelas: isi `marketplaceId` nyata dari Creator Hub untuk mengaktifkan item `Robux`
+
+## 2026-04-04 03:30 ICT
+
+### Task
+
+Menambahkan layer override ID monetization agar aktivasi item `Robux` tidak perlu mengubah katalog besar.
+
+### Files Changed
+
+- `src/shared/DataTypes/ShopCatalog.lua`
+- `src/shared/DataTypes/ShopMarketplaceConfig.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/CREATOR_HUB_ID_TEMPLATE_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `ShopCatalog` sekarang membaca override optional dari `ShopMarketplaceConfig`:
+  - override `marketplaceId`, `enabled`, `marketplaceType`, `price`
+  - opsi `autoEnableWhenIdPresent` untuk otomatis mengaktifkan item Robux saat ID valid sudah terisi
+- file baru `ShopMarketplaceConfig.lua` ditambahkan sebagai titik edit tunggal untuk:
+  - 4 game pass
+  - 4 developer product
+- dokumen template Creator Hub dan backlog diperbarui agar alur manual tim mengarah ke file override ini
+
+### Interpretation
+
+- blocker manual Creator Hub tetap ada, tapi effort aktivasi turun signifikan:
+  - isi ID di satu file
+  - build + smoke test
+  - tidak perlu sentuh struktur katalog utama

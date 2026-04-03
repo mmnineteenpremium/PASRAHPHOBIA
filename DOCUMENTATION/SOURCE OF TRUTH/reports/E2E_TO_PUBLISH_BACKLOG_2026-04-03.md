@@ -797,7 +797,7 @@ Status:
 
 Pekerjaan:
 
-- isi `marketplaceId` nyata pada item `Robux` di `shared/DataTypes/ShopCatalog.lua`
+- isi `marketplaceId` nyata pada `shared/DataTypes/ShopMarketplaceConfig.lua` (override utama)
 - jalankan smoke test `cancel / success / relog ownership sync / duplicate receipt`
 - tetapkan sumber `PP` live yang jelas (match reward, mission, atau top-up gating) agar jalur prestige tidak hanya UI
 
