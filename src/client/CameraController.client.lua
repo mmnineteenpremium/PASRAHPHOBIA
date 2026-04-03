@@ -50,6 +50,12 @@ local LOCAL_LIGHT_CONFIG = FLASHLIGHT_CONFIG.localLight or {}
 local VIEWMODEL_CONFIG = FLASHLIGHT_CONFIG.viewmodel or {}
 local FPV_BASE_OFFSET = VIEWMODEL_CONFIG.baseOffset or (CFrame.new(0, -1.36, -1.54) * CFrame.Angles(math.rad(-12), 0, 0))
 local FPV_PART_SCALE = tonumber(VIEWMODEL_CONFIG.partScale) or 0.86
+local VIEWMODEL_HANDS_ONLY = VIEWMODEL_CONFIG.handsOnly == true
+local VIEWMODEL_ARM_MATERIAL = VIEWMODEL_CONFIG.armMaterial or Enum.Material.SmoothPlastic
+local VIEWMODEL_ARM_BRIGHTNESS_SCALE = tonumber(VIEWMODEL_CONFIG.armBrightnessScale) or 0.62
+local VIEWMODEL_HAND_BRIGHTNESS_SCALE = tonumber(VIEWMODEL_CONFIG.handBrightnessScale) or 0.52
+local VIEWMODEL_ARM_MIN_CHANNEL = tonumber(VIEWMODEL_CONFIG.armMinChannel) or 0.12
+local VIEWMODEL_ARM_MAX_CHANNEL = tonumber(VIEWMODEL_CONFIG.armMaxChannel) or 0.62
 local fpvArmsModel = nil
 local fpvFlashlightModel = nil
 local fpvFlashlightHandle = nil
@@ -58,6 +64,20 @@ local fpvFlashlightLight = nil
 local fpvArmsSourceParts = {}
 local lastArmCamCF = nil
 local _fpvJustActivated = false
+
+local function toneMapArmChannel(value)
+	return math.clamp(value, VIEWMODEL_ARM_MIN_CHANNEL, VIEWMODEL_ARM_MAX_CHANNEL)
+end
+
+local function buildArmColor(sourceColor, brightnessScale)
+	local color = sourceColor or Color3.fromRGB(190, 170, 150)
+	local scale = brightnessScale or VIEWMODEL_ARM_BRIGHTNESS_SCALE
+	return Color3.new(
+		toneMapArmChannel(color.R * scale),
+		toneMapArmChannel(color.G * scale),
+		toneMapArmChannel(color.B * scale)
+	)
+end
 
 local function ensureCameraAuthority(humanoid)
 	if not camera or not humanoid then
@@ -225,9 +245,9 @@ local function ensureLocalFlashlightLight(parent)
 	local spotlight = Instance.new("SpotLight")
 	spotlight.Name = "FPV_LocalSpotLight"
 	spotlight.Face = Enum.NormalId.Front
-	spotlight.Brightness = tonumber(LOCAL_LIGHT_CONFIG.brightness) or 2.6
-	spotlight.Range = tonumber(LOCAL_LIGHT_CONFIG.range) or 18
-	spotlight.Angle = tonumber(LOCAL_LIGHT_CONFIG.angle) or 38
+	spotlight.Brightness = tonumber(LOCAL_LIGHT_CONFIG.brightness) or 1.35
+	spotlight.Range = tonumber(LOCAL_LIGHT_CONFIG.range) or 12
+	spotlight.Angle = tonumber(LOCAL_LIGHT_CONFIG.angle) or 24
 	spotlight.Color = LOCAL_LIGHT_CONFIG.color or Color3.fromRGB(255, 244, 214)
 	spotlight.Enabled = false
 	spotlight.Shadows = false
@@ -296,7 +316,7 @@ local function updateFpvFlashlightVisual()
 	end
 end
 
-local function sanitizeFpvClonePart(clonePart)
+local function sanitizeFpvClonePart(clonePart, sourcePart, cloneName)
 	if not (clonePart and clonePart:IsA("BasePart")) then
 		return
 	end
@@ -318,7 +338,12 @@ local function sanitizeFpvClonePart(clonePart)
 		end
 	end
 
-	clonePart.Material = Enum.Material.Plastic
+	local isHandPart = string.find(tostring(cloneName or ""), "Hand") ~= nil
+	local brightnessScale = isHandPart and VIEWMODEL_HAND_BRIGHTNESS_SCALE or VIEWMODEL_ARM_BRIGHTNESS_SCALE
+
+	clonePart.Material = VIEWMODEL_ARM_MATERIAL
+	clonePart.Color = buildArmColor(sourcePart and sourcePart.Color or clonePart.Color, brightnessScale)
+	clonePart.Transparency = 0
 	clonePart.Reflectance = 0
 	clonePart.CastShadow = false
 
@@ -326,9 +351,6 @@ local function sanitizeFpvClonePart(clonePart)
 		if child:IsA("PointLight") or child:IsA("SpotLight") or child:IsA("SurfaceLight") then
 			child:Destroy()
 		end
-	end
-	if clonePart:IsA("MeshPart") then
-		clonePart.TextureID = clonePart.TextureID
 	end
 end
 
@@ -338,6 +360,16 @@ local function getSegmentLayout(partName)
 		return layouts[partName]
 	end
 	return nil
+end
+
+local function shouldHideSegmentInHandsOnly(partName)
+	if not VIEWMODEL_HANDS_ONLY then
+		return false
+	end
+	return partName == "FPV_LeftUpperArm"
+		or partName == "FPV_LeftLowerArm"
+		or partName == "FPV_RightUpperArm"
+		or partName == "FPV_RightLowerArm"
 end
 
 local function applyViewmodelSegmentLayout(model, viewRoot)
@@ -357,6 +389,11 @@ local function applyViewmodelSegmentLayout(model, viewRoot)
 						math.rad(layout.rotation.Y),
 						math.rad(layout.rotation.Z)
 					)
+				if shouldHideSegmentInHandsOnly(child.Name) then
+					child.Transparency = 1
+				else
+					child.Transparency = 0
+				end
 			end
 		end
 	end
@@ -402,7 +439,7 @@ local function ensureFpvArms(character)
 		local sourcePart = def.source
 		if sourcePart and sourcePart:IsA("BasePart") then
 			local clone = sourcePart:Clone()
-			sanitizeFpvClonePart(clone)
+			sanitizeFpvClonePart(clone, sourcePart, def.cloneName)
 			clone.Name = def.cloneName
 			clone.Anchored = true
 			clone.CanCollide = false

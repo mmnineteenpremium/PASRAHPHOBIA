@@ -1281,3 +1281,41 @@ Urutan yang paling masuk akal dari titik sekarang:
   - `RuntimeCountdownTick` terdeteksi `5`x.
   - `RuntimeTeleportDrop` terdeteksi `1`x (no duplicate).
 
+## Update 2026-04-04 04:33 ICT
+
+- task flashlight FPV (asset jalur `516522664`) masuk tahap stabilisasi visual source:
+  - local spotlight diturunkan agar tidak membakar warna tangan (`1.35/12/24`).
+  - viewmodel sekarang punya mode `handsOnly` untuk R15 (upper/lower arm disembunyikan).
+  - tone-map warna arm/hand ditambahkan supaya tangan tidak tampil seperti objek putih menyala.
+- validasi teknis:
+  - dua build lolos (`_tmp_flashlight_viewmodel_tune_build.rbxlx`, `_tmp_flashlight_hands_only_build.rbxlx`).
+  - runtime config di Studio terbaca sesuai source via MCP `script_read`.
+- housekeeping:
+  - artefak model test `Workspace.516522664 Realistic Flashlight` dihapus agar warning audio sanitizer tidak mengotori log startup.
+- status:
+  - **SELESAI (teknis source)** untuk baseline “dua tangan visible + anti-overbright”.
+  - **PENDING (polish art)** untuk tahap akhir: model tangan custom/animasi tangan sinematik bila ingin kualitas visual di atas baseline teknis saat ini.
+
+## Update 2026-04-04 05:17 ICT
+
+- konsolidasi owner reward match ditutup untuk mencegah kebocoran ekonomi:
+  - `EconomySystem.Controller` tidak lagi subscribe `MatchEnded` (reward owner tunggal kembali ke `RewardCalculationSystem`).
+- `RewardCalculationSystem` sekarang menutup jalur payload Studio fallback:
+  - baca `playerResults` selain `playerOutcome`,
+  - fallback `payload.player/userId` juga bisa di-upsert.
+- PP reward resmi sekarang ikut jalur endgame reward owner:
+  - `MatchRewardSummary` client membawa `ppReward`,
+  - grant currency menulis `PP` langsung via `EconomySystem`.
+- hardening Studio E2E:
+  - `StudioE2EControlSystem` fallback `EndMatch` sekarang menyertakan `playerOutcome` + `playerResults`,
+  - fallback hanya boleh jalan bila player benar-benar `InMatch` (guard anti-abuse test harness),
+  - action `GetWallet` ditambahkan untuk verifikasi saldo deterministic saat playtest.
+- validasi live via MCP:
+  - baseline wallet: `MM=1200 PP=12 Robux=0`
+  - 1x flow canonical `CreateRoom -> HostStart -> EndMatch` menghasilkan delta:
+    - `MM +306`
+    - `PP +2`
+  - probe `EndMatch` fake saat `InMatch=false` ditolak (`end_match_failed`) dengan delta wallet `0`.
+- catatan sinkronisasi:
+  - patch juga diterapkan langsung ke script Studio karena saat validasi ditemukan drift runtime (source lokal belum otomatis ter-push ke DataModel).
+

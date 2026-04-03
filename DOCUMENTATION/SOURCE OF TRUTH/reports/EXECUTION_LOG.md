@@ -5281,3 +5281,97 @@ Menstabilkan sinkron countdown audio dan memastikan cue teleport tidak dobel pad
 ### Interpretation
 
 - regresi yang dilaporkan user (countdown terasa random + cue transisi dobel) ditutup pada baseline teknis current flow.
+
+## 2026-04-04 04:33 ICT
+
+### Task
+
+Stabilisasi visual flashlight FPV agar dua tangan tetap terlihat kiri/kanan tanpa efek overbright “seperti senter”.
+
+### Files Changed
+
+- `src/shared/GameData/FlashlightConfig.lua`
+- `src/client/CameraController.client.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- tuning flashlight local light FPV:
+  - brightness/range/angle diturunkan (`1.35 / 12 / 24`) agar tidak washout tangan.
+- tuning mount flashlight viewmodel:
+  - posisi mount + lens offset digeser agar beam tidak terlalu “memukul” area tangan.
+- hardening viewmodel arm rendering:
+  - tambah tone-mapping warna clone arm/hand (`armBrightnessScale`, `handBrightnessScale`, clamp channel).
+  - fallback material arm jadi konsisten dari config.
+- tambah mode `handsOnly` untuk R15:
+  - segmen `UpperArm/LowerArm` disembunyikan, mempertahankan tangan kiri/kanan tetap terlihat.
+- cleanup artefak runtime Studio:
+  - model test `Workspace.516522664 Realistic Flashlight` dihapus supaya warning audio sanitizer tidak berulang.
+
+### Validation Notes
+
+- build source lokal sukses:
+  - `_tmp_flashlight_viewmodel_tune_build.rbxlx`
+  - `_tmp_flashlight_hands_only_build.rbxlx`
+- verifikasi runtime script Studio (MCP `script_read`) menunjukkan config baru aktif:
+  - `localLight = 1.35/12/24`
+  - `viewmodel.handsOnly = true`
+  - parameter tone-map arm/hand aktif.
+- probe runtime (MCP `execute_luau`) sempat menunjukkan:
+  - `FPV_LeftHand` dan `FPV_RightHand` warna sudah turun ke tone netral (bukan putih murni)
+  - spotlight lokal aktif pada nilai baru.
+- warning startup untuk model test flashlight hilang sesudah cleanup model Workspace.
+
+### Interpretation
+
+- baseline teknis untuk task “dua tangan terlihat, bukan blob putih overbright” sudah diperketat di source.
+- tetap ada risiko drift antara source lokal dan runtime Studio; validasi visual akhir sebaiknya selalu lewat 1 sesi playtest manual setelah sync Rojo dipastikan hijau.
+
+## 2026-04-04 05:17 ICT
+
+### Task
+
+Konsolidasi owner reward match agar tidak grant ganda, plus hardening harness Studio E2E untuk verifikasi wallet deterministic.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/EconomySystem/Controller.lua`
+- `src/ServerScriptService/Server/RewardCalculationSystem/Service.lua`
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- owner reward `MatchEnded` dikembalikan ke satu jalur:
+  - `EconomySystem.Controller` tidak lagi subscribe `MatchEnded`.
+- `RewardCalculationSystem` di-upgrade:
+  - `MatchRewardSummary` sekarang kirim `ppReward`,
+  - parser outcome baca `playerResults` + fallback `payload.player/userId`,
+  - team success juga menghitung flag `payload.success`,
+  - grant `PP` ditulis ke ekonomi pada jalur endgame reward.
+- `StudioE2EControlSystem` di-upgrade:
+  - fallback `EndMatch` publish `playerOutcome` dan `playerResults`,
+  - guard fallback ditambah: hanya jalan jika player memang `InMatch` dan `MatchId` konsisten,
+  - action Studio-only `GetWallet` ditambahkan untuk audit saldo runtime.
+
+### Validation Notes
+
+- build source lokal sukses:
+  - `_tmp_reward_owner_consolidation_build.rbxlx`
+  - `_tmp_studio_wallet_probe_build.rbxlx`
+- validasi live MCP (runtime):
+  - baseline wallet: `MM=1200 PP=12 Robux=0`
+  - `CreateRoom -> HostStart -> EndMatch`:
+    - `MM delta = +306`
+    - `PP delta = +2`
+  - `EndMatch` fake saat `InMatch=false`:
+    - ack: `end_match_failed`
+    - delta wallet: `0`
+- saat validasi, terdeteksi drift source vs script Studio; patch runtime juga di-apply langsung ke Studio sebelum retest.
+
+### Interpretation
+
+- risiko kebocoran ekonomi dari grant reward ganda sudah ditutup di owner layer.
+- harness Studio untuk audit saldo kini lebih deterministic, sehingga anomali reward lebih cepat dideteksi sebelum masuk fase publish.

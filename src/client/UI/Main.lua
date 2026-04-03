@@ -811,6 +811,7 @@ local function createDefaultMatchResult()
 		playersDead = 0,
 		matchDuration = 0,
 		currencyReward = 0,
+		ppReward = 0,
 		xpReward = 0,
 	}
 end
@@ -827,6 +828,15 @@ local function formatCountdown(seconds)
 	local minutes = math.floor(numeric / 60)
 	local remainingSeconds = numeric % 60
 	return string.format("%02d:%02d", minutes, remainingSeconds)
+end
+
+local function formatCurrencyAndPrestigeReward(currencyReward, ppReward)
+	local mm = math.floor(tonumber(currencyReward or 0) or 0)
+	local pp = math.floor(tonumber(ppReward or 0) or 0)
+	if pp > 0 then
+		return string.format("%d MM | %d PP", mm, pp)
+	end
+	return tostring(mm)
 end
 
 local function formatJoinedValues(values, fallback)
@@ -2799,6 +2809,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 					playersDead = payload.playersDead or 0,
 					matchDuration = payload.matchDuration or 0,
 					currencyReward = payload.currencyReward or 0,
+					ppReward = payload.ppReward or payload.ppAmount or 0,
 					xpReward = payload.xpReward or 0,
 				}
 			end
@@ -2819,6 +2830,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 		elseif eventName == "MatchRewardSummary" then
 			if payload and type(payload) == "table" then
 				self._matchResult.currencyReward = payload.currencyReward or self._matchResult.currencyReward
+				self._matchResult.ppReward = payload.ppReward or payload.ppAmount or self._matchResult.ppReward
 				self._matchResult.xpReward = payload.xpReward or self._matchResult.xpReward
 			end
 			self._uiState.PASRA_UI.lastEvent = eventName
@@ -2828,8 +2840,8 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._pasraState.lastEvent = eventName
 			self._pasraState.status = "Reward summary diterima dari server."
 			self._pasraState.subtitle = string.format(
-				"MM %s | XP %s",
-				tostring(math.floor(tonumber(self._matchResult.currencyReward or 0) or 0)),
+				"MM/PP %s | XP %s",
+				formatCurrencyAndPrestigeReward(self._matchResult.currencyReward, self._matchResult.ppReward),
 				tostring(math.floor(tonumber(self._matchResult.xpReward or 0) or 0))
 			)
 			self._windowDismissed.PASRA_UI = true
@@ -3509,7 +3521,7 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 		self:_setSummaryValue(rowWidgets.playersSurvived, tostring(tonumber(result.playersSurvived or 0) or 0))
 		self:_setSummaryValue(rowWidgets.playersDead, tostring(tonumber(result.playersDead or 0) or 0))
 		self:_setSummaryValue(rowWidgets.matchDuration, formatMatchDuration(result.matchDuration))
-		self:_setSummaryValue(rowWidgets.currencyReward, tostring(math.floor(tonumber(result.currencyReward or 0) or 0)))
+		self:_setSummaryValue(rowWidgets.currencyReward, formatCurrencyAndPrestigeReward(result.currencyReward, result.ppReward))
 		self:_setSummaryValue(rowWidgets.xpReward, tostring(math.floor(tonumber(result.xpReward or 0) or 0)))
 	else
 		local phaseSummary = {
@@ -6011,6 +6023,7 @@ function UISystem:_refreshPasraPanel()
 		string.format("Pemain Mati: %s", tostring(result.playersDead or 0)),
 		string.format("Durasi: %s", formatMatchDuration(result.matchDuration)),
 		string.format("Hadiah MM: %s", tostring(math.floor(tonumber(result.currencyReward or 0) or 0))),
+		string.format("Hadiah PP: %s", tostring(math.floor(tonumber(result.ppReward or 0) or 0))),
 		string.format("Hadiah XP: %s", tostring(math.floor(tonumber(result.xpReward or 0) or 0))),
 		string.format("Last Event: %s", tostring(self._pasraState.lastEvent or "Idle")),
 	}, "\n")
@@ -8078,7 +8091,7 @@ function UISystem:_ensureUXLayers()
 		playersSurvived = ensureResultSummaryValue("SurvivedRow", "Pemain Selamat"),
 		playersDead = ensureResultSummaryValue("DeadRow", "Pemain Mati"),
 		matchDuration = ensureResultSummaryValue("DurationRow", "Durasi"),
-		currencyReward = ensureResultSummaryValue("RewardRow", "Hadiah MM"),
+		currencyReward = ensureResultSummaryValue("RewardRow", "Hadiah MM / PP"),
 		xpReward = ensureResultSummaryValue("XpRow", "Hadiah XP"),
 	}
 
@@ -9549,7 +9562,7 @@ function UISystem:_ensureBasicUIs()
 				playersSurvived = ensureSummaryValue("SurvivedRow", "Pemain Selamat"),
 				playersDead = ensureSummaryValue("DeadRow", "Pemain Mati"),
 				matchDuration = ensureSummaryValue("DurationRow", "Durasi"),
-				currencyReward = ensureSummaryValue("RewardRow", "Hadiah MM"),
+				currencyReward = ensureSummaryValue("RewardRow", "Hadiah MM / PP"),
 				xpReward = ensureSummaryValue("XpRow", "Hadiah XP"),
 			}
 

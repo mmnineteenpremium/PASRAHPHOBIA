@@ -15,6 +15,15 @@ local MAX_WALLET_BALANCE = 9999999
 local DEFAULT_STARTING_MM = 1200
 local DEFAULT_STARTING_PP = 12
 local DEFAULT_STARTING_ROBUX = 0
+local MATCH_MM_BASE = 180
+local MATCH_MM_PERFORMANCE_MULTIPLIER = 4
+local MATCH_SURVIVE_BONUS_MM = 40
+local MATCH_EXTRACT_BONUS_MM = 30
+local MATCH_PP_BASE = 1
+local MATCH_PP_THRESHOLD_A = 70
+local MATCH_PP_THRESHOLD_B = 90
+local MATCH_PP_EXTRACT_BONUS = 1
+local MATCH_PP_MAX = 4
 
 local CHECKIN_REWARDS = {
     [1] = { currency = "MM", amount = 1000 },
@@ -94,6 +103,7 @@ function Service:Init()
     self._state:Set("walletByUserId", {})
     self._state:Set("dailyByUserId", {})
     self._state:Set("passByUserId", {})
+    self._state:Set("matchRewardGrantedByKey", {})
     if self._integrations then
         self._integrations:Init()
     end
@@ -167,6 +177,28 @@ end
 
 function Service:_setPasses(passByUserId)
     self._state:Set("passByUserId", passByUserId)
+end
+
+function Service:_matchRewardGrants()
+    return self._state:Get("matchRewardGrantedByKey") or {}
+end
+
+function Service:_setMatchRewardGrants(matchRewardGrantedByKey)
+    self._state:Set("matchRewardGrantedByKey", matchRewardGrantedByKey)
+end
+
+function Service:_markMatchRewardGranted(matchId, userId)
+    if type(matchId) ~= "string" or matchId == "" or type(userId) ~= "number" then
+        return false
+    end
+    local key = string.format("%s:%d", matchId, userId)
+    local grants = self:_matchRewardGrants()
+    if grants[key] == true then
+        return true
+    end
+    grants[key] = true
+    self:_setMatchRewardGrants(grants)
+    return false
 end
 
 function Service:_ensureWallet(userId)
@@ -498,6 +530,82 @@ function Service:GrantAllMissionsCompleted(player)
         self:_publish("RewardsGranted", rewardPayload)
     end
     return true, nil, awarded
+end
+
+function Service:GrantMatchReward(payload)
+    local rewardPayload = type(payload) == "table" and payload or {}
+    local entry = type(rewardPayload.entry) == "table" and rewardPayload.entry or rewardPayload
+    local playerOrUserId = entry.player or entry.userId or rewardPayload.player or rewardPayload.userId
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return false, "invalid_player"
+    end
+
+    local matchId = type(rewardPayload.matchId) == "string" and rewardPayload.matchId
+        or (type(entry.matchId) == "string" and entry.matchId or nil)
+    if self:_markMatchRewardGranted(matchId, userId) then
+        return false, "already_rewarded"
+    end
+
+    local performance = math.clamp(
+        math.floor(tonumber(entry.performancePercent or entry.performance or rewardPayload.performancePercent or 60) or 60),
+        0,
+        100
+    )
+    local survived = (entry.survived ~= false) and (rewardPayload.survived ~= false)
+    local extracted = entry.extracted == true or rewardPayload.extracted == true
+
+    local mmAmount = MATCH_MM_BASE + (performance * MATCH_MM_PERFORMANCE_MULTIPLIER)
+    if survived then
+        mmAmount += MATCH_SURVIVE_BONUS_MM
+    end
+    if extracted then
+        mmAmount += MATCH_EXTRACT_BONUS_MM
+    end
+    local mmAwarded = self:_addMMWithCap(playerOrUserId, mmAmount, "match_completion")
+
+    local ppAmount = MATCH_PP_BASE
+    if performance >= MATCH_PP_THRESHOLD_A then
+        ppAmount += 1
+    end
+    if performance >= MATCH_PP_THRESHOLD_B then
+        ppAmount += 1
+    end
+    if extracted then
+        ppAmount += MATCH_PP_EXTRACT_BONUS
+    end
+    if not survived then
+        ppAmount = math.max(ppAmount - 1, 0)
+    end
+    ppAmount = math.clamp(ppAmount, 0, MATCH_PP_MAX)
+
+    local ppAwarded = 0
+    if ppAmount > 0 then
+        local ppOk, _, ppGranted = self:AddCurrency(playerOrUserId, "PP", ppAmount, "match_completion")
+        if ppOk == true then
+            ppAwarded = math.max(0, math.floor(tonumber(ppGranted) or ppAmount))
+        end
+    end
+
+    local emitted = {
+        player = playerOrUserId,
+        userId = userId,
+        matchId = matchId,
+        currency = "MM",
+        amount = mmAwarded,
+        ppReward = ppAwarded,
+        performancePercent = performance,
+        survived = survived,
+        extracted = extracted,
+        reason = rewardPayload.reason or "MatchCompletion",
+        context = "MatchCompletion",
+    }
+    self:_publish("CurrencyEarned", emitted)
+    self:_publish("RewardGranted", emitted)
+    self:_publish("PlayerRewardGranted", emitted)
+    self:_publish("RewardsGranted", emitted)
+
+    return true, nil, emitted
 end
 
 function Service:_rollRarity(weighted)
