@@ -758,6 +758,40 @@ Done jika:
 
 - pass gate minimum sebelum publish
 
+## Update 2026-04-03 23:59 ICT
+
+- hiding non-safe-zone sekarang tidak lagi kosong:
+  - `ClosetHidingMechanic` sudah diregister resmi ke `SystemRegistry`
+  - runtime `HideSpotPrompt` sekarang terpasang otomatis pada `Room_ClosetA` dan `Room_ClosetB` di `HauntedHouse`
+  - prompt toggle occupancy sekarang jujur:
+    - saat pemain masuk hide: action text berubah ke `Keluar`
+    - saat pemain keluar hide: action text kembali ke `Bersembunyi`
+- `HidingSystem` tidak lagi merusak hide state `Closet/Locker` pada tick safe-zone
+- auto-exit closet sekarang jalan tanpa bergantung pada publisher `GameplayTick` yang ternyata tidak ada di runtime:
+  - `ClosetHidingMechanic` sekarang punya loop internal ringan untuk sync hide spot + occupancy
+  - volume check closet sekarang memakai toleransi vertikal yang cocok untuk `HumanoidRootPart`, bukan mentah tinggi part lantai `1 stud`
+- `StudioE2EControlSystem` sekarang punya action resmi:
+  - `EnterHide`
+  - `ExitHide`
+  - ini dipertahankan sebagai harness validasi server-authoritative, bukan debug sekali pakai
+- validasi live final yang sudah tertutup:
+  - `HideSpotPrompt` muncul di `Workspace.ActiveMatches.Match_match_1.HauntedHouse.HauntedHouse.Rooms.Room_ClosetA`
+  - saat posisi pemain di dalam `ClosetA`:
+    - `PasrahHideState = Hidden`
+    - `PasrahHideSpotType = Closet`
+    - `PasrahHideZoneId = Room_ClosetA`
+    - prompt = `Keluar`
+  - saat posisi pemain keluar dari volume closet:
+    - `PasrahHideState = Exposed`
+    - `PasrahHideSpotType = None`
+    - `PasrahHideZoneId = ""`
+    - prompt = `Bersembunyi`
+- status jujur setelah slice ini:
+  - baseline hiding non-safe-zone untuk `HauntedHouse` sudah playable
+  - debt berikutnya bukan lagi “apakah closet hiding bekerja”, tetapi:
+    - perluasan hiding spot final lintas map
+    - aturan survive hunt yang lebih kaya dari hanya safe zone + closet baseline
+
 ## Urutan Praktis
 
 Urutan yang paling masuk akal dari titik sekarang:

@@ -6,6 +6,7 @@ Controller.__index = Controller
 local SUBSCRIPTIONS = {
     "MatchStarted",
     "MatchEnded",
+    "PlayerTeleported",
     "PlayerAttemptHide",
     "PlayerExitHide",
 }
@@ -33,7 +34,10 @@ function Controller:Init() end
 function Controller:RegisterEventHandlers()
     if not self._eventBus or self._registered then return end
     for _, eventName in ipairs(SUBSCRIPTIONS) do
-        self:_subscribe(eventName, function(payload) self._service:HandleEvent(eventName, payload) end)
+        local currentEventName = eventName
+        self:_subscribe(currentEventName, function(payload)
+            self._service:HandleEvent(currentEventName, payload)
+        end)
     end
     self._registered = true
 end
