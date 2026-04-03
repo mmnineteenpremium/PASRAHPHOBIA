@@ -369,11 +369,23 @@ Status:
   - progress bar tier yang nyata
   - tiga row preview track
   - CTA `LIHAT SHOP` yang membuka `ShopUI`
+- `RoyalPassUI` sekarang juga punya struktur season yang lebih konkret:
+  - tab `30 DAY REWARD`
+  - tab `30 DAY MISSION`
+  - horizontal scroller berisi 30 kartu harian
+  - hari ke-30 menampilkan placeholder hadiah karakter rarity 5
 - validasi live terbaru membuktikan:
   - `RoyalPassUI.MainPanel.ContentFrame.RoyalPassDeck` hadir di runtime
   - `HeroTitle = SEASON S1 • TIER 01`
   - `HeroBadge = FREE TRACK`
   - klik `PremiumActionButton` menutup `RoyalPassUI` dan membuka `ShopUI`
+  - `TrackScroller` berisi `30` kartu
+  - reward mode final card:
+    - `Title = DAY 30 • CHARACTER R5`
+    - `Reward = R5 BORDER`
+  - mission mode final card:
+    - `Title = MISSION 30 • GRAND FINALE`
+    - `Reward = R5 TOKEN`
 - room browser dan host room sekarang tidak lagi memakai literal `MAP IMAGE` placeholder:
   - preview map sudah menjadi kartu prosedural source-owned
   - kartu menampilkan glyph map, atmosfer, ukuran, jumlah room, lantai, dan footer nama map
@@ -442,15 +454,18 @@ Status:
 - review live terbaru juga menandai debt UX baru yang harus diprioritaskan setelah task aktif selesai:
   - `RoomBrowserUI` masih belum mobile-first penuh, tetapi overlap antar panel sudah ditutup
   - versi fullscreen/flexible untuk viewport mobile tetap pending sebagai rework layout yang lebih besar
-  - `RoyalPassUI` perlu track 30 hari, track misi 30 hari, dan placeholder reward rarity 5 di hari terakhir
+  - `RoyalPassUI` track 30 hari sudah ada, tetapi polish responsive/scrolling untuk track panjang masih perlu pass lanjutan
 - pass responsive konservatif terbaru sudah menutup readability dasar dua panel utama:
   - `LobbyUI` sekarang memakai viewport-aware size `396x384` pada viewport desktop sempit saat ini, bukan lagi fixed `340x368`
-  - `RoyalPassUI` sekarang memakai viewport-aware size `404x388` pada viewport desktop sempit saat ini, bukan lagi fixed `348x340`
+  - `RoyalPassUI` sekarang memakai viewport-aware size `436x520` pada viewport desktop sempit saat ini, bukan lagi fixed `348x340`
   - `LobbyToggleButton` juga ikut bergeser mengikuti lebar panel aktif (`x=416` pada viewport validasi)
 - pass focus terbaru untuk room browser menutup overlap visual yang paling tidak etis:
   - saat `RoomBrowserUI` aktif, float kanan lain (`MENU`, `PASS`, `RANK`, dst.) tidak lagi tampil
   - validasi live terbaru menunjukkan hanya `RoomBrowserFloatButton` yang masih visible secara properti internal screen, sementara `RoomBrowserFloatUI.Enabled = false` dan rail kanan lain tidak tampil di layar
   - panel room browser juga sekarang memakai skala viewport yang lebih agresif (`UIScale ~= 1.18` pada viewport `1180x942`), sehingga terasa lebih fokus dibanding baseline 920px lama
+- polish lanjutan `RoyalPassUI` juga sudah membuat track 30 hari muncul lebih cepat di viewport aktif:
+  - tab `30 DAY REWARD` dan `30 DAY MISSION` sekarang terlihat di atas scroller track
+  - screenshot validasi `ScreenCapture_RoyalPass_30Day_Taller` menunjukkan kartu hari awal langsung terlihat tanpa scroll panjang
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:
@@ -465,7 +480,7 @@ Pekerjaan:
 - ubah right rail menjadi stack fixed top-to-bottom dengan affordance mobile yang lebih jelas
 - terapkan aturan single-open untuk panel besar agar lobby/pass/shop/rank tidak terasa tumpang tindih
 - desain ulang `RoomBrowserUI` menjadi mobile fullscreen / flexible sheet
-- desain `RoyalPassUI` menjadi flow 30-day reward + 30-day mission dengan swipe/slide dan placeholder reward rarity 5
+- polish responsive `RoyalPassUI` untuk track 30 hari yang lebih nyaman di viewport kecil
 
 Done jika:
 
