@@ -85,6 +85,29 @@ local function flattenDirection(vector)
 	return flattened.Unit
 end
 
+local function resolveDoorAnchoredInteractionPosition(room, door, insideOffset)
+	if not (room and room:IsA("BasePart") and door and door:IsA("BasePart")) then
+		return nil
+	end
+
+	local directionToRoom = flattenDirection(room.Position - door.Position)
+	if not directionToRoom then
+		return nil
+	end
+
+	local resolvedOffset = tonumber(insideOffset)
+	if resolvedOffset == nil then
+		local minRoomSpan = math.min(room.Size.X, room.Size.Z)
+		resolvedOffset = math.clamp(minRoomSpan * 0.3, 3, 6)
+	end
+
+	return Vector3.new(
+		door.Position.X,
+		room.Position.Y + INTERACTION_HEIGHT_OFFSET,
+		door.Position.Z
+	) + (directionToRoom * resolvedOffset)
+end
+
 local function getXZBounds(part)
 	local halfSize = part.Size * 0.5
 	return {
@@ -307,16 +330,15 @@ local function patchInteractionPoints(mapId, mapClone)
 				local doorOverride = interactionDoorOverrides and interactionDoorOverrides[interactionPoint.Name]
 				if type(doorOverride) == "table" and doorsFolder then
 					local door = doorsFolder:FindFirstChild(doorOverride.doorName)
-					if door and door:IsA("BasePart") then
-						local directionToRoom = flattenDirection(room.Position - door.Position)
-						local insideOffset = tonumber(doorOverride.insideOffset) or 4
-						if directionToRoom then
-							targetPosition = Vector3.new(
-								door.Position.X,
-								room.Position.Y + INTERACTION_HEIGHT_OFFSET,
-								door.Position.Z
-							) + (directionToRoom * insideOffset)
-						end
+					local anchoredTarget = resolveDoorAnchoredInteractionPosition(room, door, doorOverride.insideOffset)
+					if anchoredTarget then
+						targetPosition = anchoredTarget
+					end
+				elseif doorsFolder then
+					local exactDoor = doorsFolder:FindFirstChild("Door_" .. room.Name:gsub("^Room_", ""))
+					local anchoredTarget = resolveDoorAnchoredInteractionPosition(room, exactDoor, nil)
+					if anchoredTarget then
+						targetPosition = anchoredTarget
 					end
 				end
 				local explicitOverride = interactionOverrides and interactionOverrides[interactionPoint.Name]
