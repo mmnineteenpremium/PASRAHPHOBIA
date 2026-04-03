@@ -5665,3 +5665,36 @@ Menambah probe readiness shop di harness Studio E2E untuk mempercepat gate `TECH
 
 - status readiness shop sekarang bisa dibaca dengan satu action tanpa audit manual katalog.
 - blocker marketplace ID tetap terang: seluruh slot Robux (`8`) masih menunggu input Creator Hub.
+
+## 2026-04-04 06:03 ICT
+
+### Task
+
+Menjalankan smoke E2E terstruktur dan mengisi status PASS/BLOCKED terbaru pada matrix test.
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TEST_MATRIX_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Validation Notes
+
+- smoke flow live MCP:
+  - `SelectMode(Ranked) -> CreateRoom -> HostStart(EmptyBuilding) -> EndMatch`
+- hasil runtime:
+  - `PasrahStudioE2EReady = true`
+  - `enteredMatch = true`
+  - `MatchPhase = Preparing`
+  - `RoomBrowserUI.Panel.Visible = false` setelah teleport
+  - `returnedLobby = true` sesudah `EndMatch`
+- status matrix yang diperbarui:
+  - `E2E-01`: `PASS`
+  - `E2E-03`: `PASS`
+  - `E2E-04`: `PASS`
+  - `E2E-10`: `PASS`
+  - `E2E-05` s.d. `E2E-09`: `BLOCKED/PENDING` (belum pass dedicated)
+
+### Interpretation
+
+- loop lobby -> match -> kembali lobby tetap stabil di baseline terbaru.
+- coverage fase gameplay tengah (preparation/investigation/hunt/extraction visual) masih perlu run khusus untuk menutup matrix penuh.

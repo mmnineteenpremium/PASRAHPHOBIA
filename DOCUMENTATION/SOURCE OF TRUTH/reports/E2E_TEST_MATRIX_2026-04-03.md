@@ -62,3 +62,20 @@ Untuk setiap sesi uji penting, simpan:
 - gunakan MCP untuk start/stop playtest dan ambil bukti runtime
 - jika perubahan dilakukan di Studio untuk tuning visual, mirror hasil final ke repo sebelum test berikutnya
 
+## Update 2026-04-04 06:03 ICT
+
+Smoke run live terbaru (`Ranked -> CreateRoom -> HostStart -> EndMatch`) menghasilkan status berikut:
+
+- `E2E-01 Boot Studio`: `PASS`
+  - `PasrahStudioE2EReady = true`
+  - remote `StudioE2EControl` tersedia
+- `E2E-03 Buat room`: `PASS`
+  - room flow menghasilkan event list lobby aktif (`23` event pada run ini)
+- `E2E-04 Start match`: `PASS`
+  - `enteredMatch = true`
+  - `MatchPhase = Preparing`
+  - `RoomBrowserUI.Panel.Visible = false` setelah teleport
+- `E2E-10 Results return`: `PASS`
+  - `EndMatch` via StudioE2E mengembalikan player ke lobby (`InMatch=false`)
+- `E2E-05` sampai `E2E-09`: `BLOCKED/PENDING`
+  - belum dieksekusi penuh pada smoke run ini; butuh pass dedicated per fase gameplay/hunt/extraction visual
