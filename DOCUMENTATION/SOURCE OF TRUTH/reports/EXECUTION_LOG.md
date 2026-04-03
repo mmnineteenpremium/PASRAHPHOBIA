@@ -2484,3 +2484,49 @@ UI branch ini sekarang cukup matang untuk kembali ke debt gameplay/runtime yang 
 1. sinkronisasi countdown + audio tick sebelum teleport
 2. pastikan panel room browser benar-benar menutup state yang tersisa saat match mulai/teleport
 3. lanjut ke map logic dan hunt survival loop
+
+## 2026-04-03 14:41 ICT
+
+### Task
+
+Merapikan sinkronisasi countdown room sebelum teleport agar tick audio tidak menumpuk dan transisi ke fase match tetap bersih.
+
+### Linked Issues
+
+- user melaporkan countdown dan suara tidak sinkron berdasarkan detik
+- sampling runtime menunjukkan countdown visual sudah benar, tetapi `RuntimeCountdownTick` bisa bertumpuk sampai empat instance karena asset tick lebih panjang dari satu detik
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- menambahkan registry `activeRuntimeUISounds` untuk runtime UI sound yang perlu dijaga single-instance
+- `CountdownTick` sekarang selalu menghentikan instance tick sebelumnya sebelum memainkan tick detik berikutnya
+- saat countdown selesai atau room browser disuppress oleh transisi match, tick aktif dibersihkan dan label countdown di-reset
+- retest flow `HostStart -> Countdown -> Preparing` juga mengonfirmasi lagi bahwa `RoomBrowserUI` benar-benar mati saat match mulai, jadi bug panel room tertinggal tidak muncul pada runtime sekarang
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_countdown_sync_build.rbxlx`
+- timeline baseline sebelum patch:
+  - `RuntimeCountdownTick` sempat bertumpuk sampai `soundCount = 4`
+- timeline retest sesudah patch:
+  - `overlayText` tetap urut `5 -> 4 -> 3 -> 2 -> 1`
+  - `soundCount = 1` pada setiap detik countdown
+  - saat `t = 5.0s` transisi ke `Preparing`, `RoomBrowserUI.Enabled = false`
+  - pada fase setelah teleport hanya `RuntimeTeleportDrop` yang masih aktif
+- capture referensi:
+  - `ScreenCapture_Countdown_PreStart_State`
+  - `ScreenCapture_Countdown_Retest_Final`
+
+### Next Step
+
+Debt berikutnya yang paling bernilai sekarang:
+1. audit gameplay survival loop: hiding spot, pintu, dan cara selamat dari hunt
+2. audit map traversal vertikal/tangga agar layout tidak terasa palsu
+3. lanjut ke polish asset/audio final yang masih belum legal/final
