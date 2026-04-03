@@ -1033,6 +1033,110 @@ local function resolveShopCurrencyTheme(currency)
 	return SHOP_CURRENCY_THEMES[key] or SHOP_CURRENCY_THEMES.default
 end
 
+local function parseCurrencyPillValue(rawText)
+	local amount, currency = tostring(rawText or ""):match("^([%+%-]?%d+)%s+([%a$]+)$")
+	if amount and (currency == "MM" or currency == "PP" or currency == "Robux" or currency == "R$") then
+		return amount, currency
+	end
+	return nil, nil
+end
+
+local function applyPricePillVisual(pricePill, rawText, backgroundColor, textColor)
+	if not pricePill then
+		return
+	end
+
+	local pillText = tostring(rawText or "-")
+	local amount, currency = parseCurrencyPillValue(pillText)
+	pricePill.BackgroundColor3 = backgroundColor
+	pricePill.TextColor3 = textColor
+
+	local amountLabel = pricePill:FindFirstChild("CurrencyAmount")
+	if not amountLabel or not amountLabel:IsA("TextLabel") then
+		amountLabel = Instance.new("TextLabel")
+		amountLabel.Name = "CurrencyAmount"
+		amountLabel.BackgroundTransparency = 1
+		amountLabel.Font = Enum.Font.GothamBold
+		amountLabel.TextSize = 9
+		amountLabel.TextXAlignment = Enum.TextXAlignment.Left
+		amountLabel.TextYAlignment = Enum.TextYAlignment.Center
+		amountLabel.ZIndex = pricePill.ZIndex + 1
+		amountLabel.Parent = pricePill
+	end
+
+	local unitLabel = pricePill:FindFirstChild("CurrencyUnit")
+	if not unitLabel or not unitLabel:IsA("TextLabel") then
+		unitLabel = Instance.new("TextLabel")
+		unitLabel.Name = "CurrencyUnit"
+		unitLabel.BackgroundTransparency = 1
+		unitLabel.Font = Enum.Font.GothamBlack
+		unitLabel.TextSize = 8
+		unitLabel.TextXAlignment = Enum.TextXAlignment.Right
+		unitLabel.TextYAlignment = Enum.TextYAlignment.Center
+		unitLabel.ZIndex = pricePill.ZIndex + 1
+		unitLabel.Parent = pricePill
+	end
+
+	local glyphPlate = pricePill:FindFirstChild("CurrencyGlyphPlate")
+	if not glyphPlate or not glyphPlate:IsA("Frame") then
+		glyphPlate = Instance.new("Frame")
+		glyphPlate.Name = "CurrencyGlyphPlate"
+		glyphPlate.BorderSizePixel = 0
+		glyphPlate.ZIndex = pricePill.ZIndex + 1
+		glyphPlate.Parent = pricePill
+	end
+
+	local glyphCorner = glyphPlate:FindFirstChild("CurrencyGlyphPlateCorner")
+	if not glyphCorner or not glyphCorner:IsA("UICorner") then
+		glyphCorner = Instance.new("UICorner")
+		glyphCorner.Name = "CurrencyGlyphPlateCorner"
+		glyphCorner.Parent = glyphPlate
+	end
+	glyphCorner.CornerRadius = UDim.new(1, 0)
+
+	local glyphLabel = glyphPlate:FindFirstChild("CurrencyGlyph")
+	if not glyphLabel or not glyphLabel:IsA("TextLabel") then
+		glyphLabel = Instance.new("TextLabel")
+		glyphLabel.Name = "CurrencyGlyph"
+		glyphLabel.BackgroundTransparency = 1
+		glyphLabel.Font = Enum.Font.GothamBlack
+		glyphLabel.TextSize = 8
+		glyphLabel.TextXAlignment = Enum.TextXAlignment.Center
+		glyphLabel.TextYAlignment = Enum.TextYAlignment.Center
+		glyphLabel.ZIndex = glyphPlate.ZIndex + 1
+		glyphLabel.Parent = glyphPlate
+	end
+
+	if amount and currency then
+		local unitText = currency == "Robux" and "R$" or currency
+		local glyphText = currency == "Robux" and "R" or string.sub(unitText, 1, 1)
+		pricePill.Text = ""
+		glyphPlate.Visible = true
+		amountLabel.Visible = true
+		unitLabel.Visible = true
+		glyphPlate.Position = UDim2.fromOffset(4, 2)
+		glyphPlate.Size = UDim2.fromOffset(24, math.max(12, pricePill.AbsoluteSize.Y - 4))
+		glyphPlate.BackgroundColor3 = backgroundColor:Lerp(Color3.fromRGB(255, 248, 236), 0.22)
+		glyphPlate.BackgroundTransparency = 0.14
+		glyphLabel.Size = UDim2.fromScale(1, 1)
+		glyphLabel.Text = glyphText
+		glyphLabel.TextColor3 = textColor
+		amountLabel.Position = UDim2.fromOffset(32, 0)
+		amountLabel.Size = UDim2.new(1, -56, 1, 0)
+		amountLabel.Text = amount
+		amountLabel.TextColor3 = textColor
+		unitLabel.Position = UDim2.new(1, -24, 0, 0)
+		unitLabel.Size = UDim2.fromOffset(20, pricePill.AbsoluteSize.Y)
+		unitLabel.Text = unitText
+		unitLabel.TextColor3 = textColor:Lerp(Color3.fromRGB(255, 248, 236), 0.08)
+	else
+		pricePill.Text = pillText
+		glyphPlate.Visible = false
+		amountLabel.Visible = false
+		unitLabel.Visible = false
+	end
+end
+
 local function buildShopItemGlyph(item)
 	if type(item) ~= "table" then
 		return "IT"
@@ -3385,8 +3489,7 @@ function UISystem:_refreshLeaderboardPanel()
 				row.PreviewGlyph.Text = data.glyph
 				row.Title.Text = data.title
 				row.Meta.Text = data.meta
-				row.PricePill.BackgroundColor3 = data.accent
-				row.PricePill.Text = data.pill
+				applyPricePillVisual(row.PricePill, data.pill, data.accent, Color3.fromRGB(247, 243, 236))
 				row.Button.BackgroundColor3 = data.preview
 				row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
 				row.Button.Text = data.button
@@ -4128,8 +4231,7 @@ function UISystem:_refreshProfilePanel()
 			row.PreviewGlyph.Text = data.glyph
 			row.Title.Text = data.title
 			row.Meta.Text = data.meta
-			row.PricePill.BackgroundColor3 = data.accent
-			row.PricePill.Text = data.pill
+			applyPricePillVisual(row.PricePill, data.pill, data.accent, Color3.fromRGB(247, 243, 236))
 			row.Button.BackgroundColor3 = data.preview
 			row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
 			row.Button.Text = data.button
@@ -4200,9 +4302,12 @@ function UISystem:_applyShopRowVisual(row, item, index)
 		row.Meta.Text = buildShopItemMeta(item)
 	end
 	if row.PricePill then
-		row.PricePill.BackgroundColor3 = currencyTheme.background
-		row.PricePill.TextColor3 = currencyTheme.text
-		row.PricePill.Text = string.format("%s %s", tostring(item and item.price or 0), currency)
+		applyPricePillVisual(
+			row.PricePill,
+			string.format("%s %s", tostring(item and item.price or 0), currency),
+			currencyTheme.background,
+			currencyTheme.text
+		)
 	end
 	if row.Button then
 		row.Button.Text = "BELI"
@@ -4673,8 +4778,7 @@ function UISystem:_refreshRoyalPassPanel()
 			row.PreviewGlyph.Text = data.glyph
 			row.Title.Text = data.title
 			row.Meta.Text = data.meta
-			row.PricePill.Text = data.pill
-			row.PricePill.BackgroundColor3 = data.accent
+			applyPricePillVisual(row.PricePill, data.pill, data.accent, Color3.fromRGB(247, 243, 236))
 			row.Button.Text = data.button
 			row.Button.BackgroundColor3 = data.preview
 			row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
