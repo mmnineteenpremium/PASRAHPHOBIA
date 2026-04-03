@@ -170,11 +170,11 @@ Aturan baca:
    - Source in repo:
      - `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
    - Provenance status:
-     - `verified (provisional)`
+     - `replace/remove` (until ambience final diisi lagi)
    - Notes:
-     - slot ambience sekarang terisi asset account-owned `138884191945388` (creator `ZyraaaVex`)
-     - ini menutup blocker slot kosong untuk publish baseline
-     - status tetap `provisional` untuk kualitas audio, karena ambience final brand bisa masih diganti pada pass polish
+     - slot ambience sengaja dikosongkan lagi (`AudioContent = ""`) untuk menghindari overlap dengan `Heartbeat`
+     - sebelumnya slot ini sempat memakai ID heartbeat yang sama, sehingga diagnosis audio runtime bisa bias/dobel
+     - status publish untuk ambience kembali `open` sampai asset ambience final legal di-upload
    - Replacement queue:
      - lihat `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md` bila ingin ambience khusus brand
 
@@ -223,4 +223,19 @@ Kesimpulan:
 
 - daftar audio yang diaudit di atas tetap `verified` sebagai account-owned untuk workspace ini.
 - blocker lisensi audio bergeser ke dokumentasi `Pocong` dan cleanup legacy, bukan lagi broken ownership batch audio.
+
+## Update 2026-04-04 05:55 ICT
+
+Audit live terbaru `MarketplaceService:GetProductInfo()` atas seluruh `ReplicatedStorage.Assets.Audio` aktif menunjukkan:
+
+- total sound canonical terdeteksi: `13`
+- invalid `GetProductInfo` lookup: `0`
+- slot non-asset yang memang sengaja kosong:
+  - `AmbientLoop_Main`
+  - `ButtonClick_01` (fallback built-in Roblox tetap aktif di runtime UI)
+
+Catatan:
+
+- `AmbientLoop_Main` sekarang memang disengaja kosong untuk menghindari overlap dengan `Heartbeat`.
+- asset canonical lain tetap valid dan terbaca creator/account sesuai status sebelumnya.
 
