@@ -363,6 +363,11 @@ Status:
   - tombol `Open Room Browser`, `Profile`, `Shop`, `Royal Pass`, `Menu`, dan `Rank` kembali hadir di panel canonical
   - panel lobby sekarang default terbuka saat join, tapi tetap bisa diminimize lewat toggle `<`
   - validasi live membuktikan `LobbyUI.MainPanel.Visible = true` dan `LobbyToggleButton.Text = "<"` pada boot playtest baru
+- `JournalUI` sekarang tidak lagi menumpuk di atas `LobbyUI` saat lobby test:
+  - panel journal diposisikan ulang ke kanan ketika `LobbyUI` terbuka pada viewport desktop
+  - konten deduction tidak lagi hanya blok teks panjang; sekarang ada hero card, count cards, dan section cards untuk discovered / confirmed / candidates
+  - `ToolStatusLabel` dan `SCAN JEJAK` sekarang tampil sebagai control card yang lebih readable
+  - validasi live membuktikan `JournalUI.MainPanel.Position = {0, 372}, {0, 16}` dan board baru muncul di runtime canonical
 - `ProfileUI` sekarang juga naik dari panel teks polos menjadi kartu identitas + stat deck:
   - hero card player
   - status pill

@@ -1699,3 +1699,53 @@ Lanjutkan ke surface berikut yang masih paling utilitarian atau masih punya bloc
 1. `JournalUI`
 2. asset audio final (`AmbientLoop_Main`, `GhostWhisper_01`, `ButtonClick_01`)
 3. vertical slice ghost/map flow berikutnya
+
+## 2026-04-03 10:56 ICT
+
+### Task
+
+Menaikkan `JournalUI` dari blok teks deduction menjadi evidence board yang lebih cepat dibaca dan tidak lagi menabrak `LobbyUI` saat flow lobby test.
+
+### Linked Issues
+
+- `JournalUI` lama masih utilitarian dan terasa seperti dump teks
+- saat dibuka di lobby, panel journal overlap langsung dengan `LobbyUI`
+- tool scan sudah ada, tapi status dan evidence grouping belum punya hierarchy visual yang cukup kuat
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `JournalUI` sekarang punya layout responsif desktop sederhana:
+  - jika `LobbyUI` terbuka dan viewport lebar cukup, panel journal pindah ke kanan
+  - jika tidak, tetap memakai posisi fallback kiri
+- konten deduction sekarang dibentuk sebagai `JournalDeck` source-owned di `ContentFrame`:
+  - hero card status
+  - tiga stat card (`Discovered`, `Confirmed`, `Candidates`)
+  - section card untuk discovered evidence, confirmed evidence, dan ghost candidates
+- `ToolStatusLabel` sekarang bergaya card dengan stroke/padding, bukan teks menggantung
+- `SCAN JEJAK` tetap canonical, tapi visualnya sekarang konsisten dengan hierarchy journal baru
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_journal_ui_polish_build.rbxlx`
+- validasi live lewat MCP membuktikan:
+  - `JournalUI.MainPanel.Visible = true`
+  - `JournalUI.MainPanel.Position = {0, 372}, {0, 16}` saat `LobbyUI` aktif
+  - screenshot runtime:
+    - `ScreenCapture_JournalUI_PostPolish_1`
+- catatan jujur:
+  - state evidence saat validasi masih kosong, jadi section cards diuji pada state `idle/empty`
+  - validasi untuk state journal berisi evidence nyata masih perlu ditutup saat vertical slice evidence dijalankan
+
+### Next Step
+
+Kembali ke blocker gameplay/map yang lebih dekat ke publish:
+1. generalisasi perilaku pintu / traversal di semua map aktif
+2. vertical slice evidence + journal dengan state non-empty
+3. asset audio final yang masih kosong
