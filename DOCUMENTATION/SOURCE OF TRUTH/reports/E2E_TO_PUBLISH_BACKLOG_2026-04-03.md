@@ -121,7 +121,6 @@ Status:
     - `ButtonClick_01` sekarang punya fallback runtime built-in Roblox di `UISystem`
   - masih kosong eksplisit:
     - `AmbientLoop_Main`
-    - `GhostWhisper_01`
 - validasi live terbaru menunjukkan boot tidak lagi mengeluarkan warning audio invalid sama sekali
 - root cause audio modern juga sudah ditutup:
   - `AudioSystem` sekarang me-relay event audio ke `MatchEvent` client
@@ -136,7 +135,7 @@ Pekerjaan:
 
 - keluarkan txt contoh dari tree runtime
 - trim registry untuk vertical slice
-- ganti dua slot audio kosong yang tersisa dengan asset final yang sah
+- ganti slot ambience loop terakhir dengan asset final yang sah
 
 Done jika:
 
@@ -316,9 +315,10 @@ Status:
   - jadi automation harus memanggil `SelectMode("Ranked")` sebelum `CreateRoom/HostStart`
   - payload `HostStart(mode = "Ranked")` saja tidak mengganti selection yang tersimpan
 - countdown room sekarang dipacu dari angka visual yang sama dengan cue audio:
-  - overlay countdown menyimpan anchor second lokal dari update server terakhir
-  - tick audio hanya dipicu saat angka visual berubah
+  - overlay countdown sekarang memakai `countdownSecondsLeft` server sebagai angka display final
+  - tick audio hanya dipicu saat angka server berubah, bukan dari pengurang waktu lokal `0.1s`
   - pitch tick dibuat stabil (`PlaybackSpeed = 1`) agar tidak terasa acak terhadap detik yang tampil
+  - validasi runtime terbaru menunjukkan spawn `RuntimeCountdownTick` sinkron dengan perubahan label `4 -> 3 -> 2 -> 1`
 
 Pekerjaan:
 
@@ -513,7 +513,7 @@ Status:
   - pack animasi aktif terverifikasi sebagai animasi default `Roblox`
 - blocker yang masih nyata sekarang menyempit ke:
   - `Pocong` masih `user-asserted` sampai bukti lisensinya diarsipkan
-  - dua slot audio canonical masih `replace/remove`
+  - satu slot audio canonical masih `replace/remove` (`AmbientLoop_Main`)
   - `ButtonClick` runtime sudah tertutup via fallback built-in, tetapi belum punya signature click brand final
   - upload asset final ke Roblox account masih perlu langkah manual
 - replacement queue dan helper apply sekarang sudah siap:
@@ -564,3 +564,4 @@ Urutan yang paling masuk akal dari titik sekarang:
 - jangan hidupkan kembali `Rojo Two-Way Edit`
 - jangan andalkan state Studio-only tanpa mirror ke repo
 - jangan aktifkan monetization publik sebelum licensing dan commerce bridge benar-benar siap
+

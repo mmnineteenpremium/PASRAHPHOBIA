@@ -71,6 +71,8 @@ Aturan baca:
    - Notes:
      - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
      - validasi client live menunjukkan `GhostAudioRuntime` benar-benar `IsPlaying = true`
+     - asset ini sekarang juga dipakai oleh `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
+     - validasi client live `2026-04-03` membuktikan template `GhostWhisper_01` sekarang `IsLoaded = true` dan `IsPlaying = true` setelah restart playtest
 
 4. `HuntStart_01`
    - Asset:
@@ -167,13 +169,12 @@ Aturan baca:
 1. Remaining unresolved audio slots
    - Source in repo:
      - `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
-     - `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
    - Provenance status:
      - `replace/remove`
    - Notes:
      - broken ID lama sudah dibuang dari source aktif
-     - dua slot ini masih kosong secara eksplisit dan tidak boleh dianggap publish-ready
-     - `AmbientLoop_Main` juga berarti ambience loop aktif masih belum punya asset final
+     - slot ambience loop ini masih kosong secara eksplisit dan tidak boleh dianggap publish-ready
+     - seluruh cue aktif non-ambient yang dipakai runtime modern sekarang sudah punya asset legal/source-controlled atau fallback built-in yang tervalidasi
    - Replacement queue:
      - lihat `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
 
@@ -204,3 +205,4 @@ Status:
    - hapus dari source
    - atau dokumentasikan ownership-nya
 5. Jangan aktifkan monetization publik sebelum slot audio kosong mendapat asset final yang benar-benar diunggah ke Roblox account aktif.
+

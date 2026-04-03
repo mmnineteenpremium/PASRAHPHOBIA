@@ -2240,6 +2240,17 @@ end
 function UISystem:_forceCloseAllPanelsForTeleport()
 	self._roomBrowserVisible = false
 	self._roomBrowserSuppressed = true
+	self._countdownDisplaySecond = nil
+	self._lastCountdownAudioSecond = nil
+
+	if self._roomBrowserGui then
+		for _, childName in ipairs({ "RoomPanel", "ModeDropdown", "MapDropdown", "InviteDropdown", "PasswordModal", "KickNoticeModal", "CountdownOverlay" }) do
+			local child = self._roomBrowserGui:FindFirstChild(childName, true)
+			if child and child:IsA("GuiObject") then
+				child.Visible = false
+			end
+		end
+	end
 
 	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
 		if self._uiState[guiName] then
@@ -9752,6 +9763,14 @@ function UISystem:_updateRoomBrowserVisibility()
 		if rootPanel and rootPanel:IsA("GuiObject") then
 			rootPanel.Visible = roomBrowserEnabled
 		end
+		if roomBrowserEnabled ~= true then
+			for _, childName in ipairs({ "RoomPanel", "ModeDropdown", "MapDropdown", "InviteDropdown", "PasswordModal", "KickNoticeModal" }) do
+				local child = self._roomBrowserGui:FindFirstChild(childName, true)
+				if child and child:IsA("GuiObject") then
+					child.Visible = false
+				end
+			end
+		end
 		local countdownOverlay = self._roomBrowserGui:FindFirstChild("CountdownOverlay")
 		if countdownOverlay and countdownOverlay:IsA("GuiObject") and roomBrowserEnabled ~= true then
 			countdownOverlay.Visible = false
@@ -10228,30 +10247,24 @@ function UISystem:_updateCountdownOverlay(state)
 	overlay.Visible = showCountdown
 	if not showCountdown then
 		self._lastCountdownAudioSecond = nil
-		self._countdownAnchorSecond = nil
-		self._countdownAnchorAt = nil
+		self._countdownDisplaySecond = nil
 		cancelButton.Visible = false
 		return
 	end
 
-	local rawCountdown = math.max(0, math.floor(tonumber(state.countdownSecondsLeft or state.countdownTotal or 5) or 5))
-	local now = tick()
-	if self._countdownAnchorSecond ~= rawCountdown then
-		self._countdownAnchorSecond = rawCountdown
-		self._countdownAnchorAt = now
-	end
-
-	local elapsedWholeSeconds = math.floor(math.max(0, now - (self._countdownAnchorAt or now)))
-	local displayCountdown = math.max(0, rawCountdown - elapsedWholeSeconds)
+	local displayCountdown = math.max(0, math.floor(tonumber(state.countdownSecondsLeft or state.countdownTotal or 5) or 5))
 	label.Text = tostring(displayCountdown)
 
-	if displayCountdown > 0 and self._lastCountdownAudioSecond ~= displayCountdown then
+	if displayCountdown > 0 and self._countdownDisplaySecond ~= displayCountdown then
+		self._countdownDisplaySecond = displayCountdown
 		self._lastCountdownAudioSecond = displayCountdown
 		pulseCountdownLabel(label)
 		playRuntimeUISound("CountdownTick", {
 			VolumeScale = 1,
 			PlaybackSpeed = 1,
 		})
+	elseif displayCountdown <= 0 then
+		self._countdownDisplaySecond = displayCountdown
 	end
 
 	cancelButton.Visible = state.isHost == true
