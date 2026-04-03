@@ -233,11 +233,11 @@ Status:
 - runtime clone sekarang menormalkan `InteractionPoints` ke room anchor yang benar
 - pintu interior clone sekarang memiliki owner runtime yang konsisten:
   - `DoorTraversalRuntimePatched = true`
-  - `DoorTraversalMode = PromptManual`
+  - `DoorTraversalMode = HybridRadiusPrompt`
   - `Door_DiningRoom.CanCollide = true`
   - `Door_DiningRoom.CanTouch = true`
   - `Door_DiningRoom.DoorIsOpen = false`
-  - `Door_DiningRoom.DoorTraversalPolicy = PromptManual`
+  - `Door_DiningRoom.DoorTraversalPolicy = HybridRadiusPrompt`
   - `Door_DiningRoom` membawa `DoorPrompt` + `DoorPathModifier`
 - rute interior yang sebelumnya gagal sekarang lolos setelah karakter ditempatkan di spawn map aktif
 - fallback pintu sekarang digeneralisasi ke semua map playable current:
@@ -270,30 +270,24 @@ Status:
     - `EmptyBuilding`: `14/14` prompt + `14/14` pasangan sound
     - `HauntedHouse`: `11/11` prompt + `11/11` pasangan sound
     - `StudioMMNineteen`: `8/8` prompt + `8/8` pasangan sound
-  - sample runtime `Door_DiningRoom` sekarang punya:
-    - `DoorOpenSoundId = rbxassetid://139204195403262`
-    - `DoorCloseSoundId = rbxassetid://83336813491039`
+- sample runtime `Door_DiningRoom` sekarang punya:
+  - `DoorOpenSoundId = rbxassetid://139204195403262`
+  - `DoorCloseSoundId = rbxassetid://83336813491039`
 - art pass map masih belum final, tetapi tidak lagi menjadi blocker untuk loop vertical slice
-- policy pintu `PromptManual` sekarang menjadi baseline traversal runtime yang source-controlled; desain final hybrid radius/manual tetap deferred
+- policy pintu `HybridRadiusPrompt` sekarang menjadi baseline traversal runtime yang source-controlled:
+  - prompt manual tetap ada untuk lintas platform
+  - radius membuka/menutup pintu otomatis untuk mengurangi friction traversal
+  - validasi live terbaru di `HauntedHouse` membuktikan:
+    - pemain didekatkan ke `Door_DiningRoom` -> `DoorIsOpen = true`
+    - pemain dijauhkan lagi -> `DoorIsOpen = false`
 - follow-up deferred yang wajib masuk phase berikutnya:
-  - pintu harus diputuskan finalnya antara radius, prompt manual, atau hybrid yang tetap logis lintas platform
   - audit tangga, akses lantai 2, dan jalur traversal map harus ditutup agar layout tidak terasa palsu saat investigasi/hunt
   - hiding spot dan aturan selamat dari hunt masih perlu didefinisikan secara eksplisit
-  - prototipe `SafeZone`/shelter berbasis `HidingSystem` sudah masuk ke source, tetapi validasi live server-side masih blocked:
-    - player attr `PasrahHideState` belum terbukti terisi di runtime
-    - probe Studio-only terbaru membuktikan source edit-time sudah memuat:
-      - `ServerScriptService.Server.HidingSystem`
-      - `ServerScriptService.Server.PlayerHealthSystem`
-      - readiness marker `PasrahHidingReady` dan `PasrahHuntPressureReady`
-    - namun saat playtest marker runtime itu tetap `nil`, jadi blocker terbaru ada di aktivasi startup/runtime system, bukan di definisi `SafeZone` source
-    - `StudioE2EControl` sekarang sudah source-controlled di `ReplicatedStorage.RemoteEvents`, tetapi listener server/ack masih tidak muncul di runtime terbaru
-    - jadi survival loop hunt belum boleh dianggap selesai walau UI objective/hunt guidance sudah mulai disiapkan
 
 Pekerjaan:
 
 - pilih satu map utama
 - audit extraction zone, spawn, blocker, collision, dan art pass minimum
-- redesign interaksi pintu menjadi hybrid radius/manual yang tetap aman untuk roaming ghost
 - audit traversal vertikal, tangga, pintu terkunci, dan akses lantai antar-map
 - definisikan hiding spot, jalur selamat hunt, dan feedback yang menjelaskan cara survive kepada pemain
 

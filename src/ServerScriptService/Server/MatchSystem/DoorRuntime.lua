@@ -1,4 +1,5 @@
 local Services = require(script.Parent.Parent.Core.Services)
+local RunService = game:GetService("RunService")
 
 local DoorRuntime = {}
 
@@ -12,6 +13,14 @@ local CLOSE_SOUND_NAME = "DoorCloseSound"
 local OPEN_ANGLE = math.rad(88)
 local INTERACTION_DISTANCE = 10
 local PROMPT_HOLD_DURATION = 0
+local POLICY_PROMPT_MANUAL = "PromptManual"
+local POLICY_HYBRID_RADIUS_PROMPT = "HybridRadiusPrompt"
+local HYBRID_OPEN_DISTANCE = 10
+local HYBRID_CLOSE_DISTANCE = 13
+local HYBRID_CLOSE_DELAY = 1.15
+local MANUAL_OVERRIDE_SECONDS = 1.8
+local LOCAL_PROMPT_SOURCE = "DoorRuntimePrompt"
+local LOCAL_AUTO_SOURCE = "DoorRuntimeAuto"
 local DEFAULT_OPEN_SOUND_ID = "rbxassetid://139204195403262"
 local DEFAULT_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
 local DEFAULT_SOUND_VOLUME = 0.45
@@ -159,6 +168,22 @@ local function playDoorSound(sound, playbackSpeed)
 	sound:Play()
 end
 
+local function normalizePolicy(policy)
+	if type(policy) ~= "string" then
+		return POLICY_PROMPT_MANUAL
+	end
+
+	local normalized = policy:gsub("[%s_%-_%.]+", ""):lower()
+	if normalized == "hybridradiusprompt" or normalized == "hybridassist" or normalized == "hybrid" then
+		return POLICY_HYBRID_RADIUS_PROMPT
+	end
+	return POLICY_PROMPT_MANUAL
+end
+
+local function isLocalDoorSource(source)
+	return source == LOCAL_PROMPT_SOURCE or source == LOCAL_AUTO_SOURCE
+end
+
 local function applyDoorState(doorRecord, interactionType, suppressSound)
 	local part = doorRecord.part
 	if not part or part.Parent == nil then
@@ -184,6 +209,72 @@ local function applyDoorState(doorRecord, interactionType, suppressSound)
 	end
 
 	setPromptState(doorRecord.prompt, part:GetAttribute("DoorIsOpen") == true, part:GetAttribute("DoorLocked") == true)
+end
+
+local function getDoorDistanceFromPlayer(part, player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return nil
+	end
+
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not root or (humanoid and humanoid.Health <= 0) then
+		return nil
+	end
+
+	return (root.Position - part.Position).Magnitude
+end
+
+local function getNearestPlayerDistance(part, players, matchId)
+	local nearest = nil
+
+	for _, player in ipairs(players or {}) do
+		if typeof(player) == "Instance"
+			and player:IsA("Player")
+			and (matchId == nil or tostring(player:GetAttribute("MatchId") or "") == tostring(matchId))
+			and player:GetAttribute("InMatch") == true then
+			local distance = getDoorDistanceFromPlayer(part, player)
+			if distance and (nearest == nil or distance < nearest) then
+				nearest = distance
+			end
+		end
+	end
+
+	return nearest
+end
+
+local function executeDoorInteraction(doorRecord, interactionType, interactionSource)
+	if not doorRecord or not interactionType then
+		return false
+	end
+
+	local now = os.clock()
+	doorRecord.lastInteractionAt = now
+	if interactionSource == LOCAL_PROMPT_SOURCE then
+		doorRecord.manualOverrideUntil = now + MANUAL_OVERRIDE_SECONDS
+		doorRecord.manualOverrideState = interactionType == "Open" and "Open" or "Closed"
+	elseif interactionSource == LOCAL_AUTO_SOURCE then
+		doorRecord.manualOverrideState = nil
+	else
+		doorRecord.manualOverrideUntil = 0
+		doorRecord.manualOverrideState = nil
+	end
+
+	applyDoorState(doorRecord, interactionType)
+	local interactionSystem = doorRecord.mapInteractionSystem
+	if interactionSystem then
+		if type(interactionSystem.Service) == "table"
+			and type(interactionSystem.Service.ExecuteInteraction) == "function" then
+			interactionSystem.Service:ExecuteInteraction(doorRecord.objectId, interactionType, {
+				now = now,
+				source = interactionSource,
+			})
+		elseif type(interactionSystem.ExecuteInteraction) == "function" then
+			interactionSystem:ExecuteInteraction(doorRecord.objectId, interactionType)
+		end
+	end
+	return true
 end
 
 local function ensurePrompt(part)
@@ -266,14 +357,21 @@ function DoorRuntime.Attach(match, mapClone, deps)
 				prompt = prompt,
 				closedCFrame = closedCFrame,
 				openCFrame = buildOpenCFrame(descendant, closedCFrame),
-				policy = initialState.policy,
+				policy = normalizePolicy(initialState.policy),
 				openSound = ensureDoorSound(descendant, OPEN_SOUND_NAME, descendant:GetAttribute(OPEN_SOUND_ATTR_NAME) or DEFAULT_OPEN_SOUND_ID),
 				closeSound = ensureDoorSound(descendant, CLOSE_SOUND_NAME, descendant:GetAttribute(CLOSE_SOUND_ATTR_NAME) or DEFAULT_CLOSE_SOUND_ID),
+				objectId = descendant.Name,
+				mapInteractionSystem = mapInteractionSystem,
+				lastNearbyAt = 0,
+				lastInteractionAt = 0,
+				manualOverrideUntil = 0,
+				manualOverrideState = nil,
 			}
 			doorLookup[descendant.Name] = record
 			descendant.Anchored = true
 			descendant.CanQuery = true
 			descendant:SetAttribute("DoorObjectId", descendant.Name)
+			descendant:SetAttribute(POLICY_ATTR_NAME, record.policy)
 			descendant:SetAttribute("DoorLocked", initialState.isLocked)
 			descendant:SetAttribute("DoorIsOpen", initialState.isOpen)
 			registerDoorInteraction(mapInteractionSystem, descendant.Name, descendant.Position)
@@ -287,12 +385,59 @@ function DoorRuntime.Attach(match, mapClone, deps)
 				end
 
 				local nextInteraction = descendant:GetAttribute("DoorIsOpen") == true and "Close" or "Open"
-				applyDoorState(record, nextInteraction)
-				if mapInteractionSystem and type(mapInteractionSystem.ExecuteInteraction) == "function" then
-					mapInteractionSystem:ExecuteInteraction(descendant.Name, nextInteraction)
-				end
+				executeDoorInteraction(record, nextInteraction, LOCAL_PROMPT_SOURCE)
 			end)
 		end
+	end
+
+	if match and match._doorRuntimeHeartbeat then
+		match._doorRuntimeHeartbeat:Disconnect()
+		match._doorRuntimeHeartbeat = nil
+	end
+
+	if next(doorLookup) ~= nil and match and type(match.players) == "table" then
+		local matchId = tostring(match.matchId or match.id or "")
+		match._doorRuntimeHeartbeat = RunService.Heartbeat:Connect(function()
+			if typeof(mapClone) ~= "Instance" or mapClone.Parent == nil then
+				if match._doorRuntimeHeartbeat then
+					match._doorRuntimeHeartbeat:Disconnect()
+					match._doorRuntimeHeartbeat = nil
+				end
+				return
+			end
+
+			local now = os.clock()
+			for _, doorRecord in pairs(doorLookup) do
+				if doorRecord.policy ~= POLICY_HYBRID_RADIUS_PROMPT then
+					continue
+				end
+
+				local part = doorRecord.part
+				if not part or part.Parent == nil or part:GetAttribute("DoorLocked") == true then
+					continue
+				end
+
+				local currentOpen = part:GetAttribute("DoorIsOpen") == true
+				local nearestDistance = getNearestPlayerDistance(part, match.players, matchId ~= "" and matchId or nil)
+				local playerNearby = type(nearestDistance) == "number" and nearestDistance <= HYBRID_OPEN_DISTANCE
+				local playerWithinKeepOpen = type(nearestDistance) == "number" and nearestDistance <= HYBRID_CLOSE_DISTANCE
+				if playerNearby then
+					doorRecord.lastNearbyAt = now
+				end
+
+				local overrideActive = now < (doorRecord.manualOverrideUntil or 0)
+				local overrideState = doorRecord.manualOverrideState
+
+				if playerNearby and not currentOpen and not (overrideActive and overrideState == "Closed") then
+					executeDoorInteraction(doorRecord, "Open", LOCAL_AUTO_SOURCE)
+				elseif currentOpen and not playerWithinKeepOpen and not overrideActive then
+					local idleTime = now - (doorRecord.lastNearbyAt or 0)
+					if idleTime >= HYBRID_CLOSE_DELAY then
+						executeDoorInteraction(doorRecord, "Close", LOCAL_AUTO_SOURCE)
+					end
+				end
+			end
+		end)
 	end
 
 	if eventBus then
@@ -308,6 +453,9 @@ function DoorRuntime.Attach(match, mapClone, deps)
 
 			local doorRecord = doorLookup[payload.objectId]
 			if not doorRecord then
+				return
+			end
+			if isLocalDoorSource(payload.source) then
 				return
 			end
 

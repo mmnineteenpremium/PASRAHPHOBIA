@@ -7,6 +7,7 @@ local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
 local DOOR_CLOSE_SOUND_ATTR = "DoorCloseSoundId"
+local DEFAULT_DOOR_POLICY = "HybridRadiusPrompt"
 local DEFAULT_DOOR_OPEN_SOUND_ID = "rbxassetid://139204195403262"
 local DEFAULT_DOOR_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
 local MIN_SEGMENT_SIZE = 0.25
@@ -293,7 +294,7 @@ local function patchDoorTraversal(mapClone)
 			descendant.CanQuery = true
 			descendant:SetAttribute("DoorLocked", false)
 			descendant:SetAttribute("DoorIsOpen", false)
-			descendant:SetAttribute(DOOR_POLICY_ATTR, "PromptManual")
+			descendant:SetAttribute(DOOR_POLICY_ATTR, DEFAULT_DOOR_POLICY)
 			descendant:SetAttribute(DOOR_OPEN_SOUND_ATTR, DEFAULT_DOOR_OPEN_SOUND_ID)
 			descendant:SetAttribute(DOOR_CLOSE_SOUND_ATTR, DEFAULT_DOOR_CLOSE_SOUND_ID)
 			ensureDoorPathModifier(descendant)
@@ -303,7 +304,7 @@ local function patchDoorTraversal(mapClone)
 
 	if patchedAny then
 		mapClone:SetAttribute(DOOR_PATCH_ATTR, true)
-		mapClone:SetAttribute(DOOR_MODE_ATTR, "PromptManual")
+		mapClone:SetAttribute(DOOR_MODE_ATTR, DEFAULT_DOOR_POLICY)
 	end
 	return patchedAny
 end
