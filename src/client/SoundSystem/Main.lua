@@ -16,6 +16,7 @@ local EVENT_TO_CATEGORY = {
 	FearAudioTriggered = "FearAudio",
 	GhostAudioTriggered = "GhostAudio",
 	HuntAudioTriggered = "HuntAudio",
+	JumpscareAudioTriggered = "JumpscareAudio",
 }
 
 local CATEGORY_TEMPLATE_PATHS = {
@@ -23,6 +24,7 @@ local CATEGORY_TEMPLATE_PATHS = {
 	EnvironmentalAudio = { "Assets", "Audio", "Environment", "EnvironmentalCreak_01" },
 	FearAudio = { "Assets", "Audio", "Sensory", "Heartbeat" },
 	HuntAudio = { "Assets", "Audio", "Ghost", "HuntStart_01" },
+	JumpscareAudio = { "Assets", "Audio", "Jumpscare", "Jumpscare_01" },
 }
 
 local CATEGORY_BASE_VOLUME = {
@@ -31,6 +33,7 @@ local CATEGORY_BASE_VOLUME = {
 	FearAudio = 0.7,
 	GhostAudio = 0.85,
 	HuntAudio = 1.0,
+	JumpscareAudio = 1.0,
 }
 
 local LOOPED_CATEGORIES = {
@@ -39,6 +42,7 @@ local LOOPED_CATEGORIES = {
 
 local ONESHOT_DEDUPE_WINDOW_SECONDS = {
 	HuntAudio = 2.25,
+	JumpscareAudio = 1.5,
 }
 
 local function resolveTemplate(root, pathSegments)

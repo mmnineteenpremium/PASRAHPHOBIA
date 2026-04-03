@@ -90,6 +90,9 @@ function Controller:RegisterEventHandlers()
 	self:_subscribe("HuntEnded", function(payload)
 		self:OnHuntEnded(payload)
 	end)
+	self:_subscribe("JumpscareTriggered", function(payload)
+		self:OnJumpscareTriggered(payload)
+	end)
 	self:_subscribe("AmbientAudioTriggered", function(payload)
 		self:OnAudioTriggered("AmbientAudioTriggered", payload)
 	end)
@@ -104,6 +107,9 @@ function Controller:RegisterEventHandlers()
 	end)
 	self:_subscribe("HuntAudioTriggered", function(payload)
 		self:OnAudioTriggered("HuntAudioTriggered", payload)
+	end)
+	self:_subscribe("JumpscareAudioTriggered", function(payload)
+		self:OnAudioTriggered("JumpscareAudioTriggered", payload)
 	end)
 end
 
@@ -230,6 +236,19 @@ function Controller:OnHuntEnded(payload)
 			now = payload.now,
 		})
 	end
+end
+
+function Controller:OnJumpscareTriggered(payload)
+	local matchId = payload and payload.matchId
+	if not matchId then
+		return
+	end
+	self._service:TriggerJumpscareAudio(matchId, {
+		cue = payload and payload.cue or "jumpscare_stinger",
+		roomId = payload and payload.roomId,
+		intensity = payload and payload.intensity or 1.0,
+		now = payload and payload.now,
+	})
 end
 
 function Controller:OnAudioTriggered(eventName, payload)

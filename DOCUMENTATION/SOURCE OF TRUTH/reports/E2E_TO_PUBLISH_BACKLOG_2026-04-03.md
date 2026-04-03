@@ -1439,3 +1439,20 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (baseline runtime)** untuk “ghost selalu punya visual mesh”.
   - **PENDING (content quality)** tetap pada impor model dedicated per tipe ghost di fase konten akhir.
 
+## Update 2026-04-04 06:52 ICT
+
+- `P2.13 Polish audio dan visual` naik satu tahap:
+  - jalur jumpscare kini event-driven end-to-end (`JumpscareTriggered -> JumpscareAudioTriggered -> client runtime`).
+  - `StudioE2EControl` ditambah action `TriggerJumpscare` agar validasi audio tidak lagi manual/tebakan.
+- asset audio source-controlled yang sebelumnya kosong sekarang terisi:
+  - `AmbientLoop_Main`
+  - `ButtonClick_01`
+  - `Jumpscare_01`
+- validasi live:
+  - runtime menemukan `JumpscareAudioRuntime`
+  - `SoundId=rbxassetid://101202336513383`
+  - `IsPlaying=true` setelah trigger harness
+- status jujur:
+  - **SELESAI (slice jumpscare + empty-slot cleanup)**.
+  - **PENDING** untuk pass artistik lanjutan (material/lighting, ambience brand final, VFX ambiance detail).
+

@@ -553,6 +553,33 @@ function StudioE2EControlSystem:_handleSetForcedGhost(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleTriggerJumpscare(player, request)
+	if not self._eventBus then
+		return false, "missing_event_bus"
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	self._eventBus:Publish("JumpscareTriggered", {
+		matchId = matchId,
+		player = player,
+		userId = player.UserId,
+		cue = type(request) == "table" and request.cue or "jumpscare_stinger",
+		roomId = type(request) == "table" and request.roomId or nil,
+		intensity = tonumber(type(request) == "table" and request.intensity) or 1.0,
+		now = os.clock(),
+		source = "StudioE2EControlSystem",
+	})
+
+	return true, string.format("match=%s jumpscare=triggered", tostring(matchId))
+end
+
 function StudioE2EControlSystem:_handleHidingDebugSnapshot(player, request)
 	local hidingSystem = resolveSystem(self._deps, "HidingSystem")
 	if type(hidingSystem) ~= "table" then
@@ -699,6 +726,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGetShopReadiness()
 	elseif action == "UseEvidenceTool" then
 		ok, result = self:_handleUseEvidenceTool(player, request)
+	elseif action == "TriggerJumpscare" then
+		ok, result = self:_handleTriggerJumpscare(player, request)
 	elseif action == "HidingDebugSnapshot" then
 		ok, result = self:_handleHidingDebugSnapshot(player, request)
 	elseif action == "EnterHide" then

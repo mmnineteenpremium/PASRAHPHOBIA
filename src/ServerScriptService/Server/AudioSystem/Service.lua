@@ -7,6 +7,7 @@ local DEFAULT_COOLDOWNS = {
 	FearAudio = 4,
 	GhostAudio = 4,
 	HuntAudio = 2,
+	JumpscareAudio = 2,
 }
 
 local function resolveEventBus(deps)
@@ -119,6 +120,20 @@ function Service:TriggerGhostAudio(matchId, payload)
 		cue = payload and payload.cue or "ghost_whisper",
 		roomId = payload and payload.roomId,
 		intensity = payload and payload.intensity or 0.65,
+	})
+	return true
+end
+
+function Service:TriggerJumpscareAudio(matchId, payload)
+	if not self:_canPlay(matchId, "JumpscareAudio", payload and payload.now) then
+		return false
+	end
+	self:_publish("JumpscareAudioTriggered", {
+		matchId = matchId,
+		category = "JumpscareAudio",
+		cue = payload and payload.cue or "jumpscare_stinger",
+		roomId = payload and payload.roomId,
+		intensity = payload and payload.intensity or 1.0,
 	})
 	return true
 end
