@@ -351,6 +351,16 @@ Status:
     - `MatchUI.MainPanel.AbsoluteSize = 340x454`
     - `EvidenceQuickButton.AbsoluteSize = 142x48`
     - `MatchTimerLabel.AbsoluteSize = 126x40`
+- summary deck `MatchUI` sekarang juga tidak lagi kosong selama fase aktif:
+  - sebelum `Results`, row deck sekarang menampilkan status fase, progress evidence, kandidat, dan status survival dasar
+  - validasi live `Briefing` terbaru menunjukkan:
+    - `StatusRow = BRIEFING`
+    - `GhostRow = Belum teridentifikasi`
+    - `EvidenceRow = 0 disc / 0 conf`
+    - `SurvivedRow = Semua aktif`
+  - copy `HUNT` juga dibuat lebih jujur:
+    - tidak lagi mengklaim `Safe Zone biru` sebagai sistem final
+    - guidance sekarang tetap berguna tetapi conditional: putus `line-of-sight`, gunakan prompt pintu, dan cari ruang aman jika tersedia
 
 Pekerjaan:
 
@@ -506,6 +516,10 @@ Status:
   - panel match, header, summary, footer, timer, hint bar, dan quick evidence action sekarang dihitung ulang dari viewport aktif
   - pada desktop validasi terbaru layout tetap rapih dan tidak overlap dengan rail kanan lain
   - basis compact/mobile sudah masuk ke source untuk phase berikutnya, walau validasi device-emulator/handset nyata masih pending
+- `MatchUI` guidance pass terbaru juga membuat panel match terasa lebih informatif saat live:
+  - summary rows tidak lagi berupa deretan `-` selama `Preparation/Investigation/Hunt`
+  - footer dan objective hunt sekarang tidak overclaim tentang shelter yang belum tervalidasi
+  - screenshot validasi `ScreenCapture_MatchUI_Guidance_Briefing` menunjukkan panel briefing lebih jujur dan lebih mudah dipindai
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:

@@ -2725,3 +2725,52 @@ Menutup drift countdown room, memastikan panel room tidak bocor ke fase match, l
 1. checkpoint commit untuk fix countdown/panel/tooling canonical ini
 2. lanjut ke task unblocked berikutnya sambil memarkir `StudioE2EControl` sebagai blocker tooling
 3. kembali ke survival/hunt loop setelah jalur debug server bisa dihidupkan lagi atau diganti pendekatan lain
+
+## 2026-04-03 16:54 ICT
+
+### Task
+
+Mengubah `MatchUI` dari panel status pasif menjadi panel fase yang benar-benar informatif selama match berjalan.
+
+### Linked Issues
+
+- panel match masih terasa terlalu generik dan banyak row kosong sebelum results
+- copy hunt sebelumnya terlalu pasti soal shelter/safe zone padahal runtime survival loop belum tervalidasi penuh
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `MatchUI` summary rows sekarang memakai state runtime aktif saat belum ada result final:
+  - status fase
+  - evidence discovered/confirmed
+  - kandidat ghost
+  - status survival dasar
+  - reward state `Pending`
+- guidance hunt dibuat lebih jujur:
+  - tidak lagi mengarahkan pemain ke `Safe Zone biru` seolah sistem itu sudah final
+  - sekarang copy fokus ke aksi yang benar-benar relevan saat ini: putus `line-of-sight`, rotasi lewat pintu, cari ruang aman jika tersedia
+- footer/copy briefing juga ikut lebih rapi karena summary deck sekarang mengisi kekosongan informasi, bukan lagi memaksa semua konteks ke satu paragraf
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_matchui_guidance_build.rbxlx`
+- validasi live `Ranked + HauntedHouse` pada `Briefing`:
+  - `StatusRow = BRIEFING`
+  - `GhostRow = Belum teridentifikasi`
+  - `GuessRow = Belum dikunci`
+  - `EvidenceRow = 0 disc / 0 conf`
+  - `SurvivedRow = Semua aktif`
+  - `DeadRow = Belum ada`
+- capture referensi:
+  - `ScreenCapture_MatchUI_Guidance_Briefing`
+
+### Next Step
+
+1. lanjut ke surface unblocked berikutnya atau kembali ke gameplay/map debt
+2. pertahankan `StudioE2EControl` sebagai blocker tooling terpisah sampai listener server benar-benar pulih
