@@ -4592,3 +4592,44 @@ Menyambungkan `HideSpotLabel` runtime ke hunt guidance client agar teks objectiv
 
 1. lanjut ke review distribusi hide spot canonical lintas map
 2. atau kembali ke slice UI compact/mobile bila ingin menutup `P2.12` lebih jauh
+
+## 2026-04-04 02:17 ICT
+
+### Task
+
+Menambahkan pengingat backlog final untuk topik retention `reason to return` sesuai arahan user.
+
+### Linked Issues
+
+- user menegaskan risiko drop-off: install -> enjoy -> selesai tanpa alasan kembali besok
+- area retention loop yang sering diabaikan perlu dikunci sebagai pembahasan wajib di akhir, bukan diselipkan di tengah hardening runtime
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- ditambahkan item backlog baru `### 19. Final discussion: Reason to return (retention loop)`
+- status ditandai `deferred` dengan aturan:
+  - dibahas di akhir
+  - tidak dieksekusi sekarang
+- scope yang dikunci di task pengingat:
+  - daily quest/streak
+  - meta progression
+  - social pressure loop
+  - content rotation
+  - replayability horror (randomization + speedrun mode)
+  - achievement hunting
+  - unlockable lore/story pieces
+
+### Interpretation
+
+- prioritas user sekarang tercatat eksplisit di source of truth dan tidak akan hilang di sesi lanjutan
+- pembahasan retention akan dilakukan di fase akhir sesuai urutan yang diminta user
+
+### Next Step
+
+1. lanjutkan eksekusi task aktif sekarang tanpa menarik task retention ini ke depan
+2. ketika backlog utama hampir selesai, angkat task `Reason to return` sebagai agenda final review
