@@ -5096,3 +5096,25 @@ Menutup error startup `ShopSystem` terkait callback `MarketplaceService.ProcessR
 
 - ini menyelaraskan implementasi dengan batasan API Roblox callback member
 - error `ProcessReceipt ... get is not available` tidak lagi dipicu oleh source terbaru
+
+## 2026-04-04 03:12 ICT
+
+### Task
+
+Merapikan prioritas pemilihan ghost agar mode force ghost Studio tetap deterministik.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/GhostSystem/Service.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- urutan fallback ghost type di `InitializeMatch` diubah:
+  - sebelum: `match.ghostType` diprioritaskan, force ghost Studio bisa terlewati
+  - sesudah: `resolveForcedStudioGhostType()` diprioritaskan sebelum `match.ghostType`
+
+### Interpretation
+
+- jalur test Studio yang memaksa tipe ghost kini lebih konsisten dan tidak mudah drift karena nilai lama pada objek match

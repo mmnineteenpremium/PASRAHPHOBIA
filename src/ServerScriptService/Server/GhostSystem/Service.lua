@@ -724,8 +724,9 @@ function Service:InitializeMatch(match)
 	end
 	local seed = tonumber(match.ghostSeed) or os.time()
 	local rng = Random.new(seed)
-	local ghostType = match.ghostType
-		or resolveForcedStudioGhostType()
+	local forcedGhostType = resolveForcedStudioGhostType()
+	local ghostType = forcedGhostType
+		or match.ghostType
 		or DEFAULT_GHOST_TYPES[rng:NextInteger(1, #DEFAULT_GHOST_TYPES)]
 	match.ghostType = ghostType
 

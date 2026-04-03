@@ -1233,3 +1233,9 @@ Urutan yang paling masuk akal dari titik sekarang:
 - dampak:
   - error boot `ProcessReceipt is a callback member ... get is not available` tidak lagi relevan pada source terbaru
 
+## Update 2026-04-04 03:12 ICT
+
+- hardening determinisme ghost untuk Studio E2E:
+  - `GhostSystem.Service.InitializeMatch()` sekarang memprioritaskan forced ghost runtime Studio sebelum `match.ghostType`
+  - tujuan: ketika force ghost diaktifkan untuk test, hasil spawn tidak diam-diam tertimpa nilai lama di match object
+
