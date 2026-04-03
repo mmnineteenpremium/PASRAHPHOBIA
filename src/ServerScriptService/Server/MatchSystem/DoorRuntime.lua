@@ -5,9 +5,17 @@ local DoorRuntime = {}
 local PROMPT_NAME = "DoorPrompt"
 local PATH_MODIFIER_NAME = "DoorPathModifier"
 local POLICY_ATTR_NAME = "DoorTraversalPolicy"
+local OPEN_SOUND_ATTR_NAME = "DoorOpenSoundId"
+local CLOSE_SOUND_ATTR_NAME = "DoorCloseSoundId"
+local OPEN_SOUND_NAME = "DoorOpenSound"
+local CLOSE_SOUND_NAME = "DoorCloseSound"
 local OPEN_ANGLE = math.rad(88)
 local INTERACTION_DISTANCE = 10
 local PROMPT_HOLD_DURATION = 0
+local DEFAULT_OPEN_SOUND_ID = "rbxassetid://139204195403262"
+local DEFAULT_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
+local DEFAULT_SOUND_VOLUME = 0.45
+local DEFAULT_SOUND_MAX_DISTANCE = 42
 
 local function resolveEventBus(deps)
 	local eventBus = Services.Get(deps, "EventBus")
@@ -102,7 +110,56 @@ local function readInitialDoorState(part)
 	}
 end
 
-local function applyDoorState(doorRecord, interactionType)
+local function normalizeSoundId(soundId)
+	if type(soundId) ~= "string" or soundId == "" then
+		return nil
+	end
+	if soundId:match("^rbxassetid://") then
+		return soundId
+	end
+	local digits = soundId:match("(%d+)")
+	if digits then
+		return "rbxassetid://" .. digits
+	end
+	return soundId
+end
+
+local function ensureDoorSound(part, soundName, soundId)
+	local normalizedSoundId = normalizeSoundId(soundId)
+	if not normalizedSoundId then
+		return nil
+	end
+
+	local sound = part:FindFirstChild(soundName)
+	if sound and not sound:IsA("Sound") then
+		sound:Destroy()
+		sound = nil
+	end
+	if not sound then
+		sound = Instance.new("Sound")
+		sound.Name = soundName
+		sound.Parent = part
+	end
+
+	sound.SoundId = normalizedSoundId
+	sound.RollOffMaxDistance = DEFAULT_SOUND_MAX_DISTANCE
+	sound.RollOffMinDistance = 8
+	sound.RollOffMode = Enum.RollOffMode.InverseTapered
+	sound.Volume = DEFAULT_SOUND_VOLUME
+	sound.PlaybackSpeed = 1
+	return sound
+end
+
+local function playDoorSound(sound, playbackSpeed)
+	if not sound then
+		return
+	end
+	sound.PlaybackSpeed = playbackSpeed or 1
+	sound.TimePosition = 0
+	sound:Play()
+end
+
+local function applyDoorState(doorRecord, interactionType, suppressSound)
 	local part = doorRecord.part
 	if not part or part.Parent == nil then
 		return
@@ -113,11 +170,17 @@ local function applyDoorState(doorRecord, interactionType)
 		part.CanCollide = false
 		part.CanTouch = false
 		part:SetAttribute("DoorIsOpen", true)
+		if suppressSound ~= true then
+			playDoorSound(doorRecord.openSound, 1)
+		end
 	elseif interactionType == "Close" or interactionType == "Slam" then
 		part.CFrame = doorRecord.closedCFrame
 		part.CanCollide = true
 		part.CanTouch = true
 		part:SetAttribute("DoorIsOpen", false)
+		if suppressSound ~= true then
+			playDoorSound(doorRecord.closeSound, interactionType == "Slam" and 0.9 or 1)
+		end
 	end
 
 	setPromptState(doorRecord.prompt, part:GetAttribute("DoorIsOpen") == true, part:GetAttribute("DoorLocked") == true)
@@ -204,6 +267,8 @@ function DoorRuntime.Attach(match, mapClone, deps)
 				closedCFrame = closedCFrame,
 				openCFrame = buildOpenCFrame(descendant, closedCFrame),
 				policy = initialState.policy,
+				openSound = ensureDoorSound(descendant, OPEN_SOUND_NAME, descendant:GetAttribute(OPEN_SOUND_ATTR_NAME) or DEFAULT_OPEN_SOUND_ID),
+				closeSound = ensureDoorSound(descendant, CLOSE_SOUND_NAME, descendant:GetAttribute(CLOSE_SOUND_ATTR_NAME) or DEFAULT_CLOSE_SOUND_ID),
 			}
 			doorLookup[descendant.Name] = record
 			descendant.Anchored = true
@@ -213,7 +278,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 			descendant:SetAttribute("DoorIsOpen", initialState.isOpen)
 			registerDoorInteraction(mapInteractionSystem, descendant.Name, descendant.Position)
 			ensurePathfindingModifier(descendant)
-			applyDoorState(record, initialState.isOpen and "Open" or "Close")
+			applyDoorState(record, initialState.isOpen and "Open" or "Close", true)
 			setPromptState(prompt, initialState.isOpen, initialState.isLocked)
 
 			prompt.Triggered:Connect(function()
@@ -248,7 +313,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 
 			local interactionType = payload.interactionType
 			if interactionType == "Open" or interactionType == "Close" or interactionType == "Slam" then
-				applyDoorState(doorRecord, interactionType)
+				applyDoorState(doorRecord, interactionType, false)
 			end
 		end
 		eventBus:Subscribe("MapObjectInteracted", callback)
