@@ -1866,3 +1866,54 @@ Lanjut ke blocker publish berikutnya:
 1. finalisasi tiga slot audio kosong (`AmbientLoop_Main`, `GhostWhisper_01`, `ButtonClick_01`)
 2. lanjutkan polish UX Roblox-friendly pada surface yang masih utilitarian
 3. lanjutkan loop match hasil/ekstraksi dan publish gate yang masih tersisa
+
+## 2026-04-03 11:00 ICT
+
+### Task
+
+Menutup micro-feedback click pada UI canonical dengan fallback built-in Roblox yang legal, supaya lobby/shop/profile/journal tidak terasa mati sambil menunggu signature click final.
+
+### Linked Issues
+
+- `ButtonClick_01` masih kosong di source aktif
+- player feedback tombol sudah punya motion, tetapi audio click masih nihil
+- upload asset Roblox final untuk click brand belum ada, jadi perlu fallback yang aman dulu
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/ASSET_LICENSE_LEDGER_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `UISystem` sekarang punya fallback built-in untuk `ButtonClick`:
+  - `rbxasset://sounds/volume_slider.ogg`
+- fallback dipakai hanya saat template `ButtonClick_01` belum punya asset final yang valid
+- jadi source-of-truth asset tetap jujur kosong, tetapi runtime pemain tetap mendapat click feedback
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_button_click_fallback_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_button_click_attr_probe_build.rbxlx`
+- validasi live via MCP:
+  - klik `LobbyUI.MainPanel.ShopButton` benar-benar membuka `ShopUI`
+  - probe runtime `UISystem` menunjukkan cue yang dipilih saat click adalah:
+    - `rbxasset://sounds/volume_slider.ogg`
+  - ini membuktikan jalur click canonical sudah punya audio feedback tanpa menunggu upload asset Roblox baru
+- catatan jujur:
+  - ini fallback runtime yang aman, bukan signature click final brand `PASRAHPHOBIA`
+  - blocker audio upload yang tersisa sekarang tinggal:
+    - `AmbientLoop_Main`
+    - `GhostWhisper_01`
+
+### Next Step
+
+Lanjut ke blocker publish berikutnya:
+1. finalisasi `AmbientLoop_Main` dan `GhostWhisper_01`
+2. teruskan polish UI/UX Roblox-friendly pada surface yang masih utilitarian
+3. lanjutkan publish gate yang masih butuh input Creator Hub/manual
