@@ -1,0 +1,164 @@
+{
+  "className": "Model",
+  "properties": {
+    "Name": "Salib"
+  },
+  "children": [
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Stem",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Position": [
+          0.0,
+          1.05,
+          0.0
+        ],
+        "Size": [
+          0.26,
+          2.1,
+          0.2
+        ],
+        "Material": "Wood",
+        "Color": [
+          0.36,
+          0.25,
+          0.16
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Crossbar",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Position": [
+          0.0,
+          1.46,
+          0.0
+        ],
+        "Size": [
+          1.28,
+          0.24,
+          0.2
+        ],
+        "Material": "Wood",
+        "Color": [
+          0.39,
+          0.28,
+          0.18
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Base",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Position": [
+          0.0,
+          0.12,
+          0.0
+        ],
+        "Size": [
+          0.72,
+          0.24,
+          0.72
+        ],
+        "Material": "Slate",
+        "Color": [
+          0.15,
+          0.15,
+          0.17
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Charge1",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Position": [
+          -0.36,
+          1.86,
+          0.0
+        ],
+        "Size": [
+          0.18,
+          0.18,
+          0.18
+        ],
+        "Material": "Neon",
+        "Color": [
+          1.0,
+          0.83,
+          0.37
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Charge2",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Position": [
+          0.0,
+          1.98,
+          0.0
+        ],
+        "Size": [
+          0.18,
+          0.18,
+          0.18
+        ],
+        "Material": "Neon",
+        "Color": [
+          1.0,
+          0.83,
+          0.37
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Charge3",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Position": [
+          0.36,
+          1.86,
+          0.0
+        ],
+        "Size": [
+          0.18,
+          0.18,
+          0.18
+        ],
+        "Material": "Neon",
+        "Color": [
+          1.0,
+          0.83,
+          0.37
+        ]
+      }
+    }
+  ]
+}

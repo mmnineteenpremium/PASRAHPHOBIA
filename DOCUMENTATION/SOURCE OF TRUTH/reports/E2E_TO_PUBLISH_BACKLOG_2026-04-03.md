@@ -532,6 +532,19 @@ Status:
   - summary rows tidak lagi berupa deretan `-` selama `Preparation/Investigation/Hunt`
   - footer dan objective hunt sekarang tidak overclaim tentang shelter yang belum tervalidasi
   - screenshot validasi `ScreenCapture_MatchUI_Guidance_Briefing` menunjukkan panel briefing lebih jujur dan lebih mudah dipindai
+- `MatchUI` sekarang juga punya `Field Kit` canonical untuk tool utility:
+  - tombol `SCAN`, `GARAM`, `SALIB`, `DUPA` hadir di surface runtime `MatchUI`
+  - shortcut keyboard `[1] [2] [3] [4]` hidup pada jalur UI canonical, bukan debug path terpisah
+  - event utility `SaltPlaced`, `SaltTriggered`, `CrucifixPlaced`, `CrucifixTriggered`, `SmudgeActivated`, `GhostRepelled`, dan `HuntBlocked` sekarang memberi feedback ke client tanpa memaksa panel journal terbuka
+  - default client tool utility tidak lagi auto-claim `nearGhostRoom`, jadi tool benar-benar dipasang sebagai field tool pemain
+- validasi live Studio terbaru membuktikan:
+  - `MatchUI.FieldKitFrame.Visible = true` saat match aktif
+  - tekan `[2]` menghasilkan `Garam aktif. Menunggu ghost menginjak area ini.`
+  - `Workspace.ActiveMatches.Match_match_1.InvestigationTools` berisi model runtime nyata:
+    - `Garam_*`
+    - `Salib_*`
+    - `Dupa_*`
+  - `JournalUI.MainPanel.Visible` tetap `false` saat event utility masuk, jadi feedback non-intrusif benar-benar berjalan
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:

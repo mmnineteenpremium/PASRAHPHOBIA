@@ -130,6 +130,37 @@ local CLOSE_KEYBOARD_KEY = Enum.KeyCode.Escape
 local CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
 local CLOSE_HINT_TEXT = "[Esc] / [B] / [X] untuk tutup"
 local JOURNAL_TOOL_TYPE = "JejakEnergi"
+local FIELD_KIT_TOOL_ORDER = { "JejakEnergi", "Garam", "Salib", "Dupa" }
+local FIELD_KIT_TOOL_CONFIG = {
+	JejakEnergi = {
+		accent = Color3.fromRGB(66, 104, 146),
+		label = "SCAN",
+		openJournal = true,
+		shortcut = "1",
+		keyCode = Enum.KeyCode.One,
+	},
+	Garam = {
+		accent = Color3.fromRGB(122, 110, 68),
+		label = "GARAM",
+		openJournal = false,
+		shortcut = "2",
+		keyCode = Enum.KeyCode.Two,
+	},
+	Salib = {
+		accent = Color3.fromRGB(110, 84, 58),
+		label = "SALIB",
+		openJournal = false,
+		shortcut = "3",
+		keyCode = Enum.KeyCode.Three,
+	},
+	Dupa = {
+		accent = Color3.fromRGB(132, 78, 52),
+		label = "DUPA",
+		openJournal = false,
+		shortcut = "4",
+		keyCode = Enum.KeyCode.Four,
+	},
+}
 local RESULTS_LOCK_SECONDS = 5
 local DEFAULT_MATCH_OBJECTIVE_TEXT = "Investigate the location\nFind evidence\nIdentify the ghost"
 local TELEPORT_OVERLAY_GUI_NAME = "TeleportScreen"
@@ -1585,6 +1616,113 @@ local function titleCaseToken(token)
 	return string.upper(string.sub(raw, 1, 1)) .. string.sub(raw, 2)
 end
 
+local function buildToolContextSummary(data)
+	if type(data) ~= "table" then
+		return nil
+	end
+
+	local fragments = {}
+	if type(data.roomId) == "string" and data.roomId ~= "" then
+		table.insert(fragments, "Room " .. tostring(data.roomId))
+	end
+
+	local chargesRemaining = tonumber(data.chargesRemaining)
+	if chargesRemaining ~= nil then
+		table.insert(fragments, string.format("Charge %d", math.max(0, math.floor(chargesRemaining))))
+	end
+
+	if data.tracksDetected == true then
+		table.insert(fragments, "Jejak terdeteksi")
+	end
+	if data.huntRepelled == true then
+		table.insert(fragments, "Ghost terpukul mundur")
+	end
+	if data.repellentUntil ~= nil then
+		table.insert(fragments, "Repellent aktif")
+	end
+
+	if #fragments == 0 then
+		return nil
+	end
+	return table.concat(fragments, " | ")
+end
+
+local function resolveToolFeedback(toolType, success, reason, data, eventName)
+	local toolConfig = FIELD_KIT_TOOL_CONFIG[toolType]
+	local toolLabel = toolConfig and toolConfig.label or titleCaseToken(toolType or "tool")
+	local status = nil
+	local detail = nil
+
+	if eventName == "SaltPlaced" then
+		status = "Garam aktif."
+		detail = "Menunggu ghost menginjak area ini."
+	elseif eventName == "SaltTriggered" then
+		status = "Jejak garam terpicu."
+		detail = "Ghost melintas di area garam."
+	elseif eventName == "CrucifixPlaced" then
+		status = "Salib disiagakan."
+		detail = "Siap memblok hunt dekat titik ini."
+	elseif eventName == "CrucifixTriggered" then
+		local chargesRemaining = tonumber(data and data.chargesRemaining)
+		status = "Salib bereaksi."
+		detail = chargesRemaining and chargesRemaining > 0
+			and string.format("Hunt diblokir. Sisa charge %d.", math.floor(chargesRemaining))
+			or "Hunt diblokir. Charge habis."
+	elseif eventName == "SmudgeActivated" then
+		status = "Dupa menyala."
+		detail = data and data.huntRepelled == true
+			and "Ghost mundur. Manfaatkan jeda untuk reposisi."
+			or "Area sementara lebih aman untuk rotasi."
+	elseif eventName == "GhostRepelled" then
+		status = "Ghost terpukul mundur."
+		detail = "Jarak aman sementara tercipta."
+	elseif eventName == "HuntBlocked" then
+		status = "Hunt diblokir."
+		detail = reason == "crucifix_prevented_hunt"
+			and "Salib menahan trigger hunt."
+			or "Repellent dupa masih aktif."
+	elseif reason == "salt_placed" then
+		status = "Garam terpasang."
+		detail = "Titik investigasi siap dipantau."
+	elseif reason == "salt_triggered" then
+		status = "Jejak terdeteksi."
+		detail = "Garam langsung bereaksi dekat ghost."
+	elseif reason == "crucifix_armed" then
+		status = "Salib siap."
+		detail = "Perlindungan hunt dipasang."
+	elseif reason == "smudge_activated" then
+		status = "Dupa aktif."
+		detail = data and data.huntRepelled == true
+			and "Ghost terdorong dan sanity dipulihkan."
+			or "Repellent menyala di area target."
+	elseif reason == "tool_local_cooldown" or reason == "tool_cooldown" then
+		status = toolLabel .. " cooldown."
+		detail = "Tunggu sebentar sebelum memakai tool lagi."
+	elseif reason == "ghost_out_of_range" then
+		status = toolLabel .. " ditolak."
+		detail = "Ghost terlalu jauh dari target."
+	elseif reason == "spectator_blocked" then
+		status = toolLabel .. " ditolak."
+		detail = "Spectator tidak boleh memakai tool."
+	elseif reason == "missing_match_id" then
+		status = toolLabel .. " ditolak."
+		detail = "Match aktif tidak terdeteksi."
+	elseif success == false then
+		status = toolLabel .. " ditolak."
+		detail = titleCaseToken(reason or "unknown")
+	else
+		status = toolLabel .. " digunakan."
+		detail = titleCaseToken(reason or "request_sent")
+	end
+
+	local contextSummary = buildToolContextSummary(data)
+	if contextSummary and contextSummary ~= detail then
+		detail = string.format("%s | %s", tostring(detail or "-"), contextSummary)
+	end
+
+	return status, detail
+end
+
 local function loadShopCatalog()
 	local shared = ReplicatedStorage:FindFirstChild("Shared")
 	if not shared then
@@ -1926,7 +2064,7 @@ function UISystem:Init(context)
 	self._teleportOverlayTween = nil
 	self._lastCountdownAudioSecond = nil
 	self._matchWindowDismissed = false
-	self._matchControlsHintText = "[J] Journal   [F] Flashlight   [K] Panel Match   [B] Shop   [Esc] Tutup UI"
+	self._matchControlsHintText = "[1] Scan   [2] Garam   [3] Salib   [4] Dupa   [J] Journal   [F] Flashlight   [K] Match   [Esc] Tutup UI"
 	self._uxWidgets = {
 		match = {},
 		lobby = {},
@@ -2047,6 +2185,7 @@ function UISystem:Start()
 	self:_bindRoomBrowserToggleInput()
 	self:_bindAuxiliaryToggleInput()
 	self:_bindMatchPanelToggleInput()
+	self:_bindMatchToolInput()
 	self:_bindWindowCloseInput()
 	self:_bindPostTeleportLoading()
 	self:_startPhaseTimer()
@@ -2101,9 +2240,12 @@ function UISystem:_onServerEvent(remoteName, payload)
 
 	if remoteName == "EvidenceEvent" then
 		self._uiState.JournalUI.lastEvent = eventName
-		self._uiState.JournalUI.visible = true
-		self._windowDismissed.JournalUI = false
-		self:_closeConflictingWindows("JournalUI")
+		local shouldAutoOpenJournal = payload == nil or payload.autoOpenJournal ~= false
+		if shouldAutoOpenJournal then
+			self._uiState.JournalUI.visible = true
+			self._windowDismissed.JournalUI = false
+			self:_closeConflictingWindows("JournalUI")
+		end
 		self._journalState.lastEvent = eventName
 		self._journalState.matchId = payload and payload.matchId or self._journalState.matchId
 		if eventName == "UIEvidenceUpdated" then
@@ -2139,6 +2281,20 @@ function UISystem:_onServerEvent(remoteName, payload)
 				self._journalState.toolSuccess = true
 				self._journalState.toolLastUsedAt = os.clock()
 			end
+		elseif payload and type(payload.toolType) == "string" and FIELD_KIT_TOOL_CONFIG[payload.toolType] then
+			local toolData = payload.result or payload.data or payload
+			local statusText, detailText = resolveToolFeedback(
+				payload.toolType,
+				payload.success ~= false,
+				payload.reason,
+				toolData,
+				eventName
+			)
+			self._journalState.toolType = payload.toolType
+			self._journalState.toolStatus = statusText
+			self._journalState.toolReason = detailText
+			self._journalState.toolSuccess = payload.success ~= false
+			self._journalState.toolLastUsedAt = os.clock()
 		end
 	elseif remoteName == "LobbyEvent" then
 		if eventName == "RoomBrowserRoomLeft" or eventName == "LobbyEntered" then
@@ -2783,10 +2939,13 @@ function UISystem:_getEvidenceToolsService()
 	return registry:Get("EvidenceTools")
 end
 
-function UISystem:_triggerJournalToolScan()
+function UISystem:_useInvestigationTool(toolType, options)
 	local tools = self:_getEvidenceToolsService()
+	local settings = options or {}
+	local payload = type(settings.payload) == "table" and settings.payload or nil
+	local openJournal = settings.openJournal == true
 	local state = self._journalState or {}
-	state.toolType = JOURNAL_TOOL_TYPE
+	state.toolType = toolType
 	state.toolLastUsedAt = os.clock()
 
 	if not tools or type(tools.UseTool) ~= "function" then
@@ -2795,27 +2954,88 @@ function UISystem:_triggerJournalToolScan()
 		state.toolSuccess = false
 		self._journalState = state
 		self:_refreshJournalPanel()
+		self:_refreshFieldKitPanel()
+		self:_applyVisibility()
 		return
 	end
 
 	local okCall, success, reason, response = pcall(function()
-		return tools:UseTool(JOURNAL_TOOL_TYPE)
+		return tools:UseTool(toolType, payload)
 	end)
 	if not okCall then
-		state.toolStatus = "Scan gagal."
+		state.toolStatus = (FIELD_KIT_TOOL_CONFIG[toolType] and FIELD_KIT_TOOL_CONFIG[toolType].label or "Tool") .. " gagal."
 		state.toolReason = tostring(success)
 		state.toolSuccess = false
 	else
+		local responseData = type(response) == "table" and ((type(response.data) == "table" and response.data.result) or response.result or response.data) or nil
+		local statusText, detailText = resolveToolFeedback(toolType, success == true, reason or (response and response.reason), responseData, nil)
 		state.toolSuccess = success == true
-		state.toolStatus = success == true and "Scan berhasil dikirim." or "Scan ditolak."
-		state.toolReason = titleCaseToken(reason or (response and response.reason) or "unknown")
+		state.toolStatus = statusText
+		state.toolReason = detailText
 	end
 
 	self._journalState = state
-	self._uiState.JournalUI.visible = true
-	self._windowDismissed.JournalUI = false
-	self:_closeConflictingWindows("JournalUI")
+	self:_refreshJournalPanel()
+	self:_refreshFieldKitPanel()
+	if openJournal then
+		self._uiState.JournalUI.visible = true
+		self._windowDismissed.JournalUI = false
+		self:_closeConflictingWindows("JournalUI")
+	end
 	self:_applyVisibility()
+end
+
+function UISystem:_triggerJournalToolScan()
+	self:_useInvestigationTool(JOURNAL_TOOL_TYPE, {
+		openJournal = true,
+	})
+end
+
+function UISystem:_refreshFieldKitPanel()
+	local match = self._uxWidgets and self._uxWidgets.match or nil
+	if not match or not match.FieldKitFrame then
+		return
+	end
+
+	local screenEnabled = (match.BasicGui and match.BasicGui.Enabled == true)
+		or (self._uiState.MatchUI and self._uiState.MatchUI.visible == true)
+	local showFieldKit = screenEnabled and self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
+	match.FieldKitFrame.Visible = showFieldKit
+
+	local state = self._journalState or {}
+	local activeTool = FIELD_KIT_TOOL_CONFIG[state.toolType] and state.toolType or JOURNAL_TOOL_TYPE
+	local activeConfig = FIELD_KIT_TOOL_CONFIG[activeTool] or FIELD_KIT_TOOL_CONFIG[JOURNAL_TOOL_TYPE]
+	local detailText = tostring(state.toolReason or "Pilih tool untuk lanjut investigasi.")
+	local statusText = tostring(state.toolStatus or "Field kit siap.")
+	local isRecent = (os.clock() - (tonumber(state.toolLastUsedAt) or 0)) <= 4
+
+	if match.FieldKitFrame then
+		match.FieldKitFrame.BackgroundColor3 = activeConfig.accent:Lerp(Color3.fromRGB(14, 18, 26), 0.78)
+	end
+	if match.FieldKitTitle then
+		match.FieldKitTitle.Text = "FIELD KIT"
+		match.FieldKitTitle.TextColor3 = activeConfig.accent:Lerp(Color3.fromRGB(244, 246, 248), 0.26)
+	end
+	if match.FieldKitStatusLabel then
+		match.FieldKitStatusLabel.Text = string.format("%s\n%s", statusText, detailText)
+		match.FieldKitStatusLabel.TextColor3 = state.toolSuccess == false
+			and Color3.fromRGB(244, 204, 204)
+			or Color3.fromRGB(214, 222, 234)
+	end
+	if match.FieldKitButtons then
+		for toolName, button in pairs(match.FieldKitButtons) do
+			local toolConfig = FIELD_KIT_TOOL_CONFIG[toolName]
+			if button and toolConfig then
+				local selected = isRecent and activeTool == toolName
+				button.BackgroundColor3 = selected
+					and toolConfig.accent
+					or toolConfig.accent:Lerp(Color3.fromRGB(34, 42, 56), 0.44)
+				button.Text = self._deviceProfile and self._deviceProfile.isMobile
+					and toolConfig.label
+					or string.format("%s [%s]", toolConfig.label, toolConfig.shortcut)
+			end
+		end
+	end
 end
 
 function UISystem:_refreshBasicWindows()
@@ -3010,7 +3230,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		secondaryText = timerVisible
 			and ("Sisa waktu investigasi: " .. timerText .. ". Cari evidence, cek jurnal, dan tentukan ghost.")
 			or "Cari evidence, cek jurnal, dan tentukan ghost yang benar."
-		footerText = CLOSE_HINT_TEXT .. ". Gunakan tombol EVIDENCE [J] untuk scan tool dan buka jurnal."
+		footerText = CLOSE_HINT_TEXT .. ". Gunakan Field Kit [1-4] untuk tool cepat dan EVIDENCE [J] untuk jurnal."
 	elseif viewState == "Hunt" then
 		badgeText = "HUNT"
 		badgeColor = Color3.fromRGB(132, 56, 56)
@@ -3115,6 +3335,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		end
 	end
 	self:_updateMatchSummaryRows(match.BasicSummaryRows, viewState)
+	self:_refreshFieldKitPanel()
 	self:_syncMatchWindowVisibility()
 end
 
@@ -4051,7 +4272,7 @@ function UISystem:_refreshJournalPanel()
 		primaryText,
 		secondaryText,
 		contentText,
-		"Shortcut: J. Tekan SCAN JEJAK untuk uji 1 evidence tool end-to-end. " .. CLOSE_HINT_TEXT .. ".",
+		"Shortcut: J. Gunakan Field Kit atau tombol SCAN JEJAK untuk uji tool investigasi end-to-end. " .. CLOSE_HINT_TEXT .. ".",
 		badgeColor
 	)
 
@@ -4113,6 +4334,7 @@ function UISystem:_refreshJournalPanel()
 		window.ToolActionButton.Text = "SCAN JEJAK"
 		window.ToolActionButton.BackgroundColor3 = badgeColor:Lerp(Color3.fromRGB(42, 62, 84), 0.24)
 	end
+	self:_refreshFieldKitPanel()
 end
 
 function UISystem:_ensureProfileWidgets(window)
@@ -6008,6 +6230,39 @@ function UISystem:_applyDeviceSizing()
 	end
 	if match and match.ControlsHintLabel then
 		match.ControlsHintLabel.TextSize = profile.isMobile and 13 or 12
+	end
+	if match and match.FieldKitFrame then
+		local kitWidth = profile.isMobile and math.min(viewportSize.X - 20, 420) or 334
+		local kitHeight = profile.isMobile and 132 or 118
+		match.FieldKitFrame.Size = UDim2.fromOffset(math.max(profile.isMobile and 316 or 300, math.floor(kitWidth)), kitHeight)
+		if profile.isMobile then
+			match.FieldKitFrame.AnchorPoint = Vector2.new(0.5, 1)
+			match.FieldKitFrame.Position = UDim2.new(0.5, 0, 1, -(60 + bottomRightInset.Y))
+		else
+			match.FieldKitFrame.AnchorPoint = Vector2.new(0, 1)
+			match.FieldKitFrame.Position = UDim2.new(0, 14 + topLeftInset.X, 1, -(58 + bottomRightInset.Y))
+		end
+	end
+	if match and match.FieldKitTitle then
+		match.FieldKitTitle.Position = UDim2.fromOffset(12, 10)
+		match.FieldKitTitle.Size = UDim2.new(1, -24, 0, 18)
+		match.FieldKitTitle.TextSize = profile.isMobile and 12 or 11
+	end
+	if match and match.FieldKitButtonsFrame then
+		match.FieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
+		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, profile.isMobile and 44 or 40)
+	end
+	if match and match.FieldKitGrid and match.FieldKitFrame then
+		local availableWidth = math.max(280, match.FieldKitFrame.Size.X.Offset - 24)
+		local cellPadding = profile.isMobile and 6 or 6
+		local cellWidth = math.floor((availableWidth - (cellPadding * 3)) / 4)
+		match.FieldKitGrid.CellPadding = UDim2.fromOffset(cellPadding, 0)
+		match.FieldKitGrid.CellSize = UDim2.fromOffset(math.max(profile.isMobile and 72 or 66, cellWidth), profile.isMobile and 44 or 40)
+	end
+	if match and match.FieldKitStatusLabel then
+		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, profile.isMobile and 84 or 80)
+		match.FieldKitStatusLabel.Size = UDim2.new(1, -24, 0, profile.isMobile and 38 or 30)
+		match.FieldKitStatusLabel.TextSize = profile.isMobile and 12 or 11
 	end
 	if self._uxWidgets and self._uxWidgets.windows then
 		for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
@@ -8588,6 +8843,113 @@ function UISystem:_ensureBasicUIs()
 				controlsHintLabel.Parent = controlsHintBar
 			end
 
+			local fieldKitFrame = gui:FindFirstChild("FieldKitFrame")
+			if not fieldKitFrame then
+				fieldKitFrame = Instance.new("Frame")
+				fieldKitFrame.Name = "FieldKitFrame"
+				fieldKitFrame.AnchorPoint = Vector2.new(0, 1)
+				fieldKitFrame.Position = UDim2.new(0, 16, 1, -60)
+				fieldKitFrame.Size = UDim2.fromOffset(334, 118)
+				fieldKitFrame.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
+				fieldKitFrame.BackgroundTransparency = 0.08
+				fieldKitFrame.BorderSizePixel = 0
+				fieldKitFrame.Visible = false
+				fieldKitFrame.Parent = gui
+
+				local frameCorner = Instance.new("UICorner")
+				frameCorner.CornerRadius = UDim.new(0, 12)
+				frameCorner.Parent = fieldKitFrame
+
+				local frameStroke = Instance.new("UIStroke")
+				frameStroke.Name = "FrameStroke"
+				frameStroke.Thickness = 1
+				frameStroke.Color = Color3.fromRGB(88, 108, 132)
+				frameStroke.Transparency = 0.18
+				frameStroke.Parent = fieldKitFrame
+			end
+
+			local fieldKitTitle = fieldKitFrame:FindFirstChild("Title")
+			if not fieldKitTitle then
+				fieldKitTitle = Instance.new("TextLabel")
+				fieldKitTitle.Name = "Title"
+				fieldKitTitle.Position = UDim2.fromOffset(12, 10)
+				fieldKitTitle.Size = UDim2.new(1, -24, 0, 18)
+				fieldKitTitle.BackgroundTransparency = 1
+				fieldKitTitle.Font = Enum.Font.GothamBold
+				fieldKitTitle.TextSize = 11
+				fieldKitTitle.TextColor3 = Color3.fromRGB(202, 214, 228)
+				fieldKitTitle.TextXAlignment = Enum.TextXAlignment.Left
+				fieldKitTitle.Text = "FIELD KIT"
+				fieldKitTitle.Parent = fieldKitFrame
+			end
+
+			local fieldKitButtonsFrame = fieldKitFrame:FindFirstChild("Buttons")
+			if not fieldKitButtonsFrame then
+				fieldKitButtonsFrame = Instance.new("Frame")
+				fieldKitButtonsFrame.Name = "Buttons"
+				fieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
+				fieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, 40)
+				fieldKitButtonsFrame.BackgroundTransparency = 1
+				fieldKitButtonsFrame.Parent = fieldKitFrame
+
+				local fieldKitGrid = Instance.new("UIGridLayout")
+				fieldKitGrid.Name = "Grid"
+				fieldKitGrid.CellPadding = UDim2.fromOffset(6, 0)
+				fieldKitGrid.CellSize = UDim2.fromOffset(73, 40)
+				fieldKitGrid.FillDirection = Enum.FillDirection.Horizontal
+				fieldKitGrid.FillDirectionMaxCells = 4
+				fieldKitGrid.HorizontalAlignment = Enum.HorizontalAlignment.Left
+				fieldKitGrid.SortOrder = Enum.SortOrder.LayoutOrder
+				fieldKitGrid.VerticalAlignment = Enum.VerticalAlignment.Top
+				fieldKitGrid.Parent = fieldKitButtonsFrame
+			end
+
+			local fieldKitStatusLabel = fieldKitFrame:FindFirstChild("StatusLabel")
+			if not fieldKitStatusLabel then
+				fieldKitStatusLabel = Instance.new("TextLabel")
+				fieldKitStatusLabel.Name = "StatusLabel"
+				fieldKitStatusLabel.Position = UDim2.fromOffset(12, 80)
+				fieldKitStatusLabel.Size = UDim2.new(1, -24, 0, 30)
+				fieldKitStatusLabel.BackgroundTransparency = 1
+				fieldKitStatusLabel.Font = Enum.Font.Gotham
+				fieldKitStatusLabel.TextSize = 11
+				fieldKitStatusLabel.TextColor3 = Color3.fromRGB(208, 216, 228)
+				fieldKitStatusLabel.TextWrapped = true
+				fieldKitStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+				fieldKitStatusLabel.TextYAlignment = Enum.TextYAlignment.Top
+				fieldKitStatusLabel.Text = "Field kit siap.\nPilih tool untuk lanjut investigasi."
+				fieldKitStatusLabel.Parent = fieldKitFrame
+			end
+
+			local fieldKitButtons = {}
+			for order, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+				local definition = FIELD_KIT_TOOL_CONFIG[toolType]
+				local buttonName = toolType .. "Button"
+				local toolButton = fieldKitButtonsFrame:FindFirstChild(buttonName)
+				if not toolButton then
+					toolButton = Instance.new("TextButton")
+					toolButton.Name = buttonName
+					toolButton.LayoutOrder = order
+					toolButton.Size = UDim2.fromOffset(73, 40)
+					styleButton(toolButton, definition.label)
+					toolButton.TextWrapped = true
+					toolButton.BackgroundColor3 = definition.accent:Lerp(Color3.fromRGB(34, 42, 56), 0.44)
+					toolButton.Parent = fieldKitButtonsFrame
+					self:_setSelectableStyle(toolButton)
+				end
+				if toolButton:GetAttribute("Bound") ~= true then
+					local boundToolType = toolType
+					local boundOpenJournal = definition.openJournal == true
+					toolButton:SetAttribute("Bound", true)
+					connectButtonPress(toolButton, function()
+						self:_useInvestigationTool(boundToolType, {
+							openJournal = boundOpenJournal,
+						})
+					end)
+				end
+				fieldKitButtons[toolType] = toolButton
+			end
+
 			local floatBtn = gui:FindFirstChild("MatchFloatButton")
 			if not floatBtn then
 				floatBtn = Instance.new("TextButton")
@@ -8682,6 +9044,12 @@ function UISystem:_ensureBasicUIs()
 			self._uxWidgets.match.EvidenceQuickButton = evidenceQuickButton
 			self._uxWidgets.match.ControlsHintBar = controlsHintBar
 			self._uxWidgets.match.ControlsHintLabel = controlsHintLabel
+			self._uxWidgets.match.FieldKitFrame = fieldKitFrame
+			self._uxWidgets.match.FieldKitTitle = fieldKitTitle
+			self._uxWidgets.match.FieldKitButtonsFrame = fieldKitButtonsFrame
+			self._uxWidgets.match.FieldKitButtons = fieldKitButtons
+			self._uxWidgets.match.FieldKitStatusLabel = fieldKitStatusLabel
+			self._uxWidgets.match.FieldKitGrid = fieldKitButtonsFrame:FindFirstChild("Grid")
 			self._uxWidgets.match.BasicSummaryRows = summaryRows
 			self._uxWidgets.match.BasicFloatButton = floatBtn
 			self._uxWidgets.match.BasicCloseButton = closeBtn
@@ -11254,6 +11622,31 @@ function UISystem:_bindMatchPanelToggleInput()
 		end
 		self:_setMatchWindowDismissed(not (self._matchWindowDismissed == true))
 		self:_applyVisibility()
+	end))
+end
+
+function UISystem:_bindMatchToolInput()
+	if self._matchToolInputBound then
+		return
+	end
+	self._matchToolInputBound = true
+	table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed or UserInputService:GetFocusedTextBox() then
+			return
+		end
+		if self._matchPhase == MATCH_PHASE.LOBBY or self:_isMatchResultsPhase() then
+			return
+		end
+
+		for _, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+			local toolConfig = FIELD_KIT_TOOL_CONFIG[toolType]
+			if toolConfig and input.KeyCode == toolConfig.keyCode then
+				self:_useInvestigationTool(toolType, {
+					openJournal = toolConfig.openJournal == true,
+				})
+				break
+			end
+		end
 	end))
 end
 
