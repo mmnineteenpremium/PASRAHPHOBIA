@@ -1428,3 +1428,14 @@ Urutan yang paling masuk akal dari titik sekarang:
   - pada sesi ini terdeteksi lagi drift local->Studio; patch runtime juga diterapkan via MCP agar test tidak membaca source lama.
   - workflow tetap: source of truth di repo, lalu validasi runtime wajib cross-check script Studio aktif.
 
+## Update 2026-04-04 06:49 ICT
+
+- hardening ghost roster sementara ditutup:
+  - jika ghost type belum punya model dedicated di `ReplicatedStorage.Assets.Models.Ghosts`, runtime sekarang fallback ke template `Pocong`.
+  - tujuan: mencegah visual jatuh ke placeholder box saat random ghost memilih tipe non-Pocong.
+- validasi live:
+  - forced ghost `Kuntilanak` memunculkan `Ghost_Kuntilanak` dengan mesh nyata (`VisualTemplateName=Pocong`, `PlaceholderVisual=false`).
+- status:
+  - **SELESAI (baseline runtime)** untuk “ghost selalu punya visual mesh”.
+  - **PENDING (content quality)** tetap pada impor model dedicated per tipe ghost di fase konten akhir.
+
