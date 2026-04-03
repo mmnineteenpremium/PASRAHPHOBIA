@@ -1,3 +1,8 @@
+local Debris = game:GetService("Debris")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
+local Workspace = game:GetService("Workspace")
+
 local AudioController = require(script.Parent.Parent.Controllers.Sensory.AudioController)
 local VFXController = require(script.Parent.Parent.Controllers.Sensory.VFXController)
 local HorrorHUD = require(script.Parent.Parent.UI.HUD.HorrorHUD)
@@ -13,12 +18,82 @@ local EVENT_TO_CATEGORY = {
 	HuntAudioTriggered = "HuntAudio",
 }
 
+local CATEGORY_TEMPLATE_PATHS = {
+	AmbientAudio = { "Assets", "Audio", "Ambient", "AmbientLoop_Main" },
+	EnvironmentalAudio = { "Assets", "Audio", "Environment", "EnvironmentalCreak_01" },
+	FearAudio = { "Assets", "Audio", "Sensory", "Heartbeat" },
+	HuntAudio = { "Assets", "Audio", "Ghost", "HuntStart_01" },
+}
+
+local CATEGORY_BASE_VOLUME = {
+	AmbientAudio = 0.35,
+	EnvironmentalAudio = 0.75,
+	FearAudio = 0.7,
+	GhostAudio = 0.85,
+	HuntAudio = 1.0,
+}
+
+local LOOPED_CATEGORIES = {
+	AmbientAudio = true,
+}
+
+local function resolveTemplate(root, pathSegments)
+	local cursor = root
+	for _, segment in ipairs(pathSegments or {}) do
+		if not cursor then
+			return nil
+		end
+		cursor = cursor:FindFirstChild(segment)
+	end
+	if cursor and cursor:IsA("Sound") and tostring(cursor.SoundId or "") ~= "" then
+		return cursor
+	end
+	return nil
+end
+
+local function normalizeCue(cue)
+	return tostring(cue or ""):gsub("[%s_%-]+", "_"):lower()
+end
+
+local function resolveGhostTemplate(root, cue)
+	local audioRoot = root and root:FindFirstChild("Assets")
+	local audioFolder = audioRoot and audioRoot:FindFirstChild("Audio")
+	local ghostFolder = audioFolder and audioFolder:FindFirstChild("Ghost")
+	if not ghostFolder then
+		return nil
+	end
+
+	local cueToken = normalizeCue(cue)
+	local primaryName = "GhostManifest_01"
+	if string.find(cueToken, "whisper", 1, true) then
+		primaryName = "GhostWhisper_01"
+	elseif string.find(cueToken, "manifest", 1, true) then
+		primaryName = "GhostManifest_01"
+	elseif string.find(cueToken, "interaction", 1, true) then
+		primaryName = "GhostManifest_01"
+	end
+
+	local primary = ghostFolder:FindFirstChild(primaryName)
+	if primary and primary:IsA("Sound") and tostring(primary.SoundId or "") ~= "" then
+		return primary
+	end
+
+	local fallback = ghostFolder:FindFirstChild("GhostManifest_01")
+	if fallback and fallback:IsA("Sound") and tostring(fallback.SoundId or "") ~= "" then
+		return fallback
+	end
+	return nil
+end
+
 function SoundSystem:Init(context)
 	self._context = context
 	self._remotes = context.Remotes
 	self._connections = {}
 	self._lastAudioByCategory = {}
 	self._managedControllers = {}
+	self._activeSounds = {}
+	self._audioTemplates = {}
+	self._audioRoot = ReplicatedStorage
 	self:_registerSensoryController("AudioController", AudioController, context)
 	self:_registerSensoryController("VFXController", VFXController, context)
 	self:_registerSensoryController("HorrorHUD", HorrorHUD, context)
@@ -30,6 +105,7 @@ function SoundSystem:Stop()
 			controller:Stop()
 		end
 	end
+	self:_stopAllAudio()
 	for _, conn in ipairs(self._connections) do
 		conn:Disconnect()
 	end
@@ -54,13 +130,26 @@ function SoundSystem:Start()
 	local matchEvent = self._remotes.MatchEvent
 	if matchEvent and matchEvent.OnClientEvent then
 		table.insert(self._connections, matchEvent.OnClientEvent:Connect(function(payload)
-			self:_onAudioEvent(payload)
+			self:_onMatchEvent(payload)
 		end))
 	end
 	for _, controller in ipairs(self._managedControllers) do
 		if type(controller.Start) == "function" then
 			controller:Start(self._context)
 		end
+	end
+end
+
+function SoundSystem:_onMatchEvent(payload)
+	local eventName = payload and payload.eventName
+	local category = eventName and EVENT_TO_CATEGORY[eventName] or nil
+	if category then
+		self:_onAudioEvent(payload)
+		return
+	end
+
+	if eventName == "MatchEnded" or eventName == "MatchCompleted" then
+		self:_stopAllAudio()
 	end
 end
 
@@ -71,10 +160,118 @@ function SoundSystem:_onAudioEvent(payload)
 		return
 	end
 	self._lastAudioByCategory[category] = payload
+	self:_playCategoryAudio(category, payload)
 end
 
 function SoundSystem:GetLastAudio(category)
 	return self._lastAudioByCategory[category]
+end
+
+function SoundSystem:_getParentForCategory(category)
+	if category == "AmbientAudio" then
+		return SoundService
+	end
+	return Workspace.CurrentCamera or SoundService
+end
+
+function SoundSystem:_getTemplateForCategory(category, payload)
+	if category == "GhostAudio" then
+		return resolveGhostTemplate(self._audioRoot, payload and payload.cue)
+	end
+
+	local cached = self._audioTemplates[category]
+	if cached and cached.Parent then
+		return cached
+	end
+
+	local pathSegments = CATEGORY_TEMPLATE_PATHS[category]
+	local template = resolveTemplate(self._audioRoot, pathSegments)
+	if template then
+		self._audioTemplates[category] = template
+	end
+	return template
+end
+
+function SoundSystem:_applySoundProfile(sound, category, payload)
+	local intensity = math.clamp(tonumber(payload and payload.intensity) or 1, 0.15, 1.5)
+	local baseVolume = CATEGORY_BASE_VOLUME[category] or 0.7
+	local templateVolume = tonumber(sound.Volume) or baseVolume
+	sound.Volume = math.clamp(templateVolume * intensity, 0, 1)
+	sound:SetAttribute("PasrahAudioCategory", category)
+	sound:SetAttribute("PasrahAudioCue", tostring(payload and payload.cue or ""))
+
+	if category == "FearAudio" then
+		sound.PlaybackSpeed = math.clamp(0.92 + intensity * 0.4, 0.92, 1.45)
+	elseif category == "HuntAudio" then
+		sound.PlaybackSpeed = math.clamp(0.96 + intensity * 0.14, 0.96, 1.18)
+	elseif category == "GhostAudio" then
+		sound.PlaybackSpeed = math.clamp(0.98 + intensity * 0.1, 0.95, 1.18)
+	else
+		sound.PlaybackSpeed = math.clamp(0.98 + intensity * 0.06, 0.92, 1.1)
+	end
+end
+
+function SoundSystem:_stopActiveSound(category)
+	local sound = self._activeSounds[category]
+	if sound and sound.Parent then
+		sound:Stop()
+		sound:Destroy()
+	end
+	self._activeSounds[category] = nil
+end
+
+function SoundSystem:_stopAllAudio()
+	for category in pairs(self._activeSounds) do
+		self:_stopActiveSound(category)
+	end
+end
+
+function SoundSystem:_playLoopedCategory(category, template, payload)
+	local active = self._activeSounds[category]
+	if active and active.Parent and active.SoundId == template.SoundId then
+		self:_applySoundProfile(active, category, payload)
+		if not active.IsPlaying then
+			active:Play()
+		end
+		return
+	end
+
+	self:_stopActiveSound(category)
+
+	local runtimeSound = template:Clone()
+	runtimeSound.Name = category .. "Runtime"
+	runtimeSound.Looped = true
+	runtimeSound.Parent = self:_getParentForCategory(category)
+	self:_applySoundProfile(runtimeSound, category, payload)
+	runtimeSound:Play()
+	self._activeSounds[category] = runtimeSound
+end
+
+function SoundSystem:_playOneShotCategory(category, template, payload)
+	local runtimeSound = template:Clone()
+	runtimeSound.Name = category .. "Runtime"
+	runtimeSound.Looped = false
+	runtimeSound.Parent = self:_getParentForCategory(category)
+	self:_applySoundProfile(runtimeSound, category, payload)
+	runtimeSound.Ended:Connect(function()
+		if runtimeSound.Parent then
+			runtimeSound:Destroy()
+		end
+	end)
+	runtimeSound:Play()
+	Debris:AddItem(runtimeSound, math.max(runtimeSound.TimeLength + 1, 6))
+end
+
+function SoundSystem:_playCategoryAudio(category, payload)
+	local template = self:_getTemplateForCategory(category, payload)
+	if not template then
+		return
+	end
+	if LOOPED_CATEGORIES[category] then
+		self:_playLoopedCategory(category, template, payload)
+		return
+	end
+	self:_playOneShotCategory(category, template, payload)
 end
 
 return setmetatable({}, SoundSystem)

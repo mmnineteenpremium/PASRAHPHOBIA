@@ -113,19 +113,30 @@ Status:
   - `AudioSanitizer` merangkum invalid sound menjadi summary count + preview
   - `AudioErrorGuard` melewati sound yang sudah ditandai `PasrahAudioSanitized`
   - validasi live terbaru menunjukkan boot cukup menulis `Disabled 5 invalid sounds` alih-alih daftar panjang per-instance
-- lima ghost audio broken sekarang sudah dipindahkan ke placeholder kosong source-controlled:
-  - `AmbientLoop_Main`
-  - `EnvironmentalCreak_01`
-  - `GhostManifest_01`
-  - `GhostWhisper_01`
-  - `HuntStart_01`
+- slot canonical yang dulu broken sekarang sudah terbelah jelas:
+  - sudah dipulihkan:
+    - `EnvironmentalCreak_01`
+    - `GhostManifest_01`
+    - `HuntStart_01`
+  - masih kosong eksplisit:
+    - `AmbientLoop_Main`
+    - `GhostWhisper_01`
+    - `ButtonClick_01`
 - validasi live terbaru menunjukkan boot tidak lagi mengeluarkan warning audio invalid sama sekali
+- root cause audio modern juga sudah ditutup:
+  - `AudioSystem` sekarang me-relay event audio ke `MatchEvent` client
+  - `client/SoundSystem` sekarang memutar `Sound` runtime nyata, bukan sekadar menyimpan payload
+- smoke test client live terbaru membuktikan cue ini benar-benar `IsPlaying = true`:
+  - `EnvironmentalAudioRuntime`
+  - `FearAudioRuntime`
+  - `GhostAudioRuntime`
+  - `HuntAudioRuntime`
 
 Pekerjaan:
 
 - keluarkan txt contoh dari tree runtime
 - trim registry untuk vertical slice
-- ganti placeholder audio kosong dengan asset final yang sah
+- ganti tiga slot audio kosong yang tersisa dengan asset final yang sah
 
 Done jika:
 
@@ -253,6 +264,11 @@ Status:
   - `Hunt` tampil pada HUD dengan state `HUNT`
   - `Result` tampil pada HUD setelah extraction override Studio
   - player kembali ke lobby dan `ActiveMatches = 0`
+- room browser tidak lagi bocor ke fase match:
+  - validasi live terbaru di `Ranked + HauntedHouse` membuktikan saat `InMatch = true` dan `MatchPhase = Briefing`:
+    - `RoomBrowserUI.Enabled = false`
+    - `RoomBrowserUI.Panel.Visible = false`
+  - jadi panel room besar tidak lagi menumpuk di atas `MatchUI` setelah teleport
 - drift fase awal client juga sudah dipotong:
   - setelah `HostStart` pada `Ranked + EmptyBuilding`, client tetap berada di `Preparation/Briefing`
   - `Player.MatchPhase = Briefing`
@@ -280,6 +296,10 @@ Status:
   - jalur room browser memakai `player selection` sebagai sumber mode canonical
   - jadi automation harus memanggil `SelectMode("Ranked")` sebelum `CreateRoom/HostStart`
   - payload `HostStart(mode = "Ranked")` saja tidak mengganti selection yang tersimpan
+- countdown room sekarang dipacu dari angka visual yang sama dengan cue audio:
+  - overlay countdown menyimpan anchor second lokal dari update server terakhir
+  - tick audio hanya dipicu saat angka visual berubah
+  - pitch tick dibuat stabil (`PlaybackSpeed = 1`) agar tidak terasa acak terhadap detik yang tampil
 
 Pekerjaan:
 
@@ -318,6 +338,16 @@ Status:
   - tombol float `PASS` muncul di lobby
   - klik membuka panel `Royal Pass`
   - hotkey `R` menutup dan membuka kembali panel
+- `RoyalPassUI` tidak lagi hanya panel teks tipis:
+  - sekarang punya hero card progress
+  - progress bar tier yang nyata
+  - tiga row preview track
+  - CTA `LIHAT SHOP` yang membuka `ShopUI`
+- validasi live terbaru membuktikan:
+  - `RoyalPassUI.MainPanel.ContentFrame.RoyalPassDeck` hadir di runtime
+  - `HeroTitle = SEASON S1 • TIER 01`
+  - `HeroBadge = FREE TRACK`
+  - klik `PremiumActionButton` menutup `RoyalPassUI` dan membuka `ShopUI`
 - room browser dan host room sekarang tidak lagi memakai literal `MAP IMAGE` placeholder:
   - preview map sudah menjadi kartu prosedural source-owned
   - kartu menampilkan glyph map, atmosfer, ukuran, jumlah room, lantai, dan footer nama map
@@ -328,6 +358,24 @@ Status:
 - panel lobby sekarang punya CTA `ROYAL PASS` langsung:
   - layout tombol lobby naik menjadi grid yang lebih jelas
   - tombol baru terbukti membuka `RoyalPassUI.MainPanel` di runtime live
+- `ProfileUI` sekarang juga naik dari panel teks polos menjadi kartu identitas + stat deck:
+  - hero card player
+  - status pill
+  - spotlight line
+  - CTA `OPEN ROOMS`
+  - tiga stat rows visual
+- validasi live terbaru membuktikan:
+  - `ProfileUI.MainPanel.ContentFrame.ProfileDeck` hadir di runtime
+  - `ProfileTitle = ZyraaaVex • LV 1`
+  - klik `ActionButton` benar-benar membuka `RoomBrowserUI`
+- `MatchUI` sekarang juga punya header card yang lebih scan-friendly:
+  - hero header dengan accent warna per fase
+  - glyph fase besar (`PR`, `IN`, `HU`, `OK/FG`) untuk membantu recognition cepat
+  - summary frame dan quick action sekarang ikut memakai accent fase aktif
+- validasi live terbaru membuktikan:
+  - `MatchUI.MainPanel.HeaderCard` hadir di runtime
+  - `MatchUI.MainPanel.BrandStroke` hadir di panel canonical
+  - screenshot `ScreenCapture_MatchUI_PostPolish_2` menunjukkan panel persiapan lebih jelas terbaca di map aktif
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:
@@ -351,6 +399,7 @@ Status:
 - surface preview map aktif sudah naik dari placeholder generik ke visual prosedural source-owned
 - debt polish yang masih tersisa tetap besar:
   - ambient loops final
+  - UI click audio final
   - jumpscare cues final
   - material/lighting pass map
   - icon dan asset visual konten lain
@@ -423,11 +472,17 @@ Status:
   - pack animasi aktif terverifikasi sebagai animasi default `Roblox`
 - blocker yang masih nyata sekarang menyempit ke:
   - `Pocong` masih `user-asserted` sampai bukti lisensinya diarsipkan
-  - lima slot ghost audio kosong masih `replace/remove`
+  - tiga slot audio canonical masih `replace/remove`
   - upload asset final ke Roblox account masih perlu langkah manual
 - replacement queue dan helper apply sekarang sudah siap:
   - `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
   - `scripts/set-audio-asset-ids.ps1`
+ - validasi live `MarketplaceService:GetProductInfo()` dan client playback sekarang juga sudah menutup beberapa asset aktif:
+   - `EnvironmentalCreak_01`
+   - `GhostManifest_01`
+   - `HuntStart_01`
+   - `CountdownTick_01`
+   - footstep set `Wood/Concrete/Metal`
 
 Pekerjaan:
 

@@ -1379,3 +1379,276 @@ Menambahkan CTA `Royal Pass` langsung ke panel lobby agar akses progression tida
 Lanjutkan dua jalur yang masih paling bernilai:
 1. UI/UX aktif lain yang masih belum cukup jelas
 2. atau apply audio final begitu asset hasil upload tersedia
+
+## 2026-04-03 14:32 ICT
+
+### Task
+
+Menutup jalur audio modern agar asset Roblox yang valid benar-benar bisa terdengar di runtime canonical, lalu memetakan ulang status licensing/audio berdasarkan validasi live terbaru.
+
+### Linked Issues
+
+- audio modern hanya menyimpan payload
+- audio cue server belum sampai ke client canonical
+- broken ID ternyata bercampur dengan wiring drift
+
+### Files Changed
+
+- `src/ServerScriptService/Server/AudioSystem/Controller.lua`
+- `src/client/SoundSystem/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/ASSET_LICENSE_LEDGER_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+
+### Change Summary
+
+- `AudioSystem` server sekarang me-relay event:
+  - `AmbientAudioTriggered`
+  - `EnvironmentalAudioTriggered`
+  - `FearAudioTriggered`
+  - `GhostAudioTriggered`
+  - `HuntAudioTriggered`
+  ke `RemoteEvents.MatchEvent` client berdasarkan `matchId`
+- `client/SoundSystem` sekarang tidak lagi berhenti di `self._lastAudioByCategory`
+  - payload audio sekarang dipetakan ke template source-owned
+  - `Environmental`, `Fear`, `Ghost`, dan `Hunt` sekarang memutar `Sound` runtime
+  - `Ambient` juga sudah punya jalur loop canonical, tetapi masih menunggu asset final karena `AmbientLoop_Main` masih kosong
+- audit ulang audio sekarang membedakan dua hal:
+  - asset ID Roblox yang benar-benar invalid
+  - asset sehat yang sebelumnya tidak terdengar karena routing runtime belum ada
+- status report audio diperbarui:
+  - slot canonical kosong yang tersisa tinggal `AmbientLoop_Main`, `GhostWhisper_01`, dan `ButtonClick_01`
+  - `EnvironmentalCreak_01`, `GhostManifest_01`, `HuntStart_01`, `CountdownTick_01`, dan footstep set sekarang tercatat sebagai source-owned/verified
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_audio_runtime_bridge_build.rbxlx`
+- validasi live `MarketplaceService:GetProductInfo()` + `ContentProvider:GetAssetFetchStatus()` sebelumnya sudah membuktikan ID user-supplied sehat
+- validasi client live terbaru lewat MCP pada playtest membuktikan runtime sound benar-benar dibuat dan bermain:
+  - `EnvironmentalAudioRuntime -> rbxassetid://139204195403262 -> IsPlaying = true`
+  - `FearAudioRuntime -> rbxassetid://138884191945388 -> IsPlaying = true`
+  - `GhostAudioRuntime -> rbxassetid://83336813491039 -> IsPlaying = true`
+  - `HuntAudioRuntime -> rbxassetid://138329686293368 -> IsPlaying = true`
+- `AmbientAudio` belum menghasilkan runtime sound karena slot source-nya memang masih kosong
+
+### Next Step
+
+Lanjutkan ke salah satu dari dua jalur bernilai tertinggi:
+1. isi tiga slot audio kosong yang tersisa (`AmbientLoop_Main`, `GhostWhisper_01`, `ButtonClick_01`)
+2. atau kembali ke phase content/presentation berikutnya sambil menyisakan audio final sebagai blocker manual terdefinisi
+
+## 2026-04-03 15:02 ICT
+
+### Task
+
+Menaikkan `RoyalPassUI` dari panel teks tipis menjadi surface progression yang lebih jelas, lebih branded, dan punya CTA nyata ke jalur monetization/content yang sudah ada.
+
+### Linked Issues
+
+- `RoyalPassUI` terlalu datar dan mudah terlewat
+- progression panel belum cukup memorable untuk brand
+- CTA dari progression ke shop belum eksplisit
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `RoyalPassUI` sekarang membangun deck visual sendiri di `ContentFrame`:
+  - hero card progress
+  - progress bar tier
+  - ringkasan XP/tier
+  - tiga preview row untuk state track
+- panel sekarang menampilkan progression dengan struktur yang lebih mudah dibaca:
+  - season
+  - tier aktif
+  - progress XP
+  - preview reward tier berikutnya
+  - summary track free/premium
+- CTA `LIHAT SHOP` ditambahkan langsung di hero card
+  - saat belum premium, CTA ini menjadi jembatan eksplisit ke `ShopUI`
+  - saat premium aktif, state CTA berganti menjadi `PREMIUM AKTIF`
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_royalpass_visual_build.rbxlx`
+- validasi live lewat MCP membuktikan:
+  - `RoyalPassUI.MainPanel.ContentFrame.RoyalPassDeck` hadir di runtime
+  - `HeroBadge = FREE TRACK`
+  - `HeroTitle = SEASON S1  •  TIER 01`
+  - `ProgressCaption = 200 XP to next tier  •  0 unlocked tier`
+  - klik `PremiumActionButton` benar-benar menghasilkan:
+    - `royalVisible = false`
+    - `shopVisible = true`
+- screenshot runtime:
+  - `ScreenCapture_RoyalPass_Polish_1`
+
+### Next Step
+
+Lanjutkan ke salah satu jalur berikut:
+1. teruskan polish panel modular lain (`ProfileUI` / `MatchUI`) dengan standar visual yang sama
+2. atau tutup audio gameplay yang tersisa, terutama ambience, whisper, dan UI click
+
+## 2026-04-03 15:21 ICT
+
+### Task
+
+Menaikkan `ProfileUI` menjadi panel identitas yang lebih jelas dan menyambungkan CTA profile ke room browser, sambil menambah hierarchy visual pada summary hasil `MatchUI`.
+
+### Linked Issues
+
+- `ProfileUI` masih terlalu text-heavy
+- panel modular belum punya bahasa visual yang konsisten
+- summary hasil `MatchUI` belum cukup scan-friendly
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `ProfileUI` sekarang membangun `ProfileDeck` di `ContentFrame`:
+  - hero card player
+  - status pill
+  - spotlight line
+  - CTA `OPEN ROOMS`
+  - tiga visual stat rows
+- CTA profile sekarang langsung membuka `RoomBrowserUI`
+- `MatchUI` summary rows sekarang punya emphasis warna:
+  - row status menjadi hijau/merah saat hasil tersedia
+  - row reward dan XP mendapat aksen terpisah agar hasil match lebih cepat terbaca
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_profile_match_visual_build.rbxlx`
+- validasi live lewat MCP membuktikan:
+  - `ProfileUI.MainPanel.ContentFrame.ProfileDeck` hadir di runtime
+  - `StatusPill = SAFE`
+  - `ProfileTitle = ZyraaaVex • LV 1`
+  - klik `ActionButton` benar-benar menghasilkan `roomVisible = true`
+- screenshot runtime:
+  - `ScreenCapture_Profile_Polish_1`
+- catatan jujur:
+  - styling summary `MatchUI` sudah masuk ke code path aktif
+  - validasi full result-phase live untuk warna row belum saya tutup di entry ini
+
+### Next Step
+
+Lanjutkan ke jalur bernilai tinggi berikut:
+1. tutup audio konten yang masih kosong (`AmbientLoop_Main`, `GhostWhisper_01`, `ButtonClick_01`)
+2. atau teruskan polish panel modular yang tersisa dengan standar visual yang sama
+
+## 2026-04-03 10:11 ICT
+
+### Task
+
+Menutup dua drift UX yang terlihat langsung saat playtest live:
+- `RoomBrowserUI` masih tertinggal terbuka setelah teleport ke match
+- countdown room memicu tick secara terasa acak terhadap angka yang tampil
+
+### Linked Issues
+
+- room browser masih bocor ke fase `Briefing/InGame`
+- countdown overlay masih mengikat tick ke churn render, bukan ke angka visual yang sedang dilihat player
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `UISystem` sekarang punya sinkronisasi penekanan room browser terhadap context match:
+  - `InMatch` atau fase selain `Lobby` langsung menandai room browser sebagai suppressed
+  - `RoomBrowserUI` dan root `Panel` dipadamkan eksplisit saat masuk match
+  - loop room browser juga ikut menyinkronkan suppression, jadi state tidak lagi bergantung pada satu event attribute saja
+- countdown overlay sekarang dipacu dari nilai visual yang sama dengan cue audio:
+  - client menyimpan anchor second lokal dari update server terakhir
+  - angka visual dihitung dari anchor itu
+  - tick audio hanya dipicu saat angka visual berubah
+  - playback tick dibuat stabil agar tidak terasa random terhadap detik yang sedang dilihat
+- countdown label sekarang dipulse ringan setiap pergantian detik agar perubahan terasa lebih tegas tanpa motion berlebihan
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_room_browser_countdown_fix_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_room_browser_countdown_fix_build_v2.rbxlx`
+- validasi live lewat MCP membuktikan:
+  - setelah `Ranked -> CreateRoom -> HostStart -> teleport`, runtime client menunjukkan:
+    - `InMatch = true`
+    - `MatchPhase = Briefing`
+    - `RoomBrowserUI.Enabled = false`
+    - `RoomBrowserUI.Panel.Visible = false`
+  - screenshot proof:
+    - `ScreenCapture_CountdownFix_v2_InMatch`
+  - countdown overlay live kembali muncul mulai dari `5` saat host start, tidak lagi langsung terasa meloncat dari angka acak saat source patch ini aktif
+- catatan jujur:
+  - saya tidak menangkap waveform audio langsung dari tooling MCP
+  - tetapi code path tick sekarang sudah diikat ke perubahan angka visual, bukan ke render churn yang sebelumnya memicu drift
+
+### Next Step
+
+Lanjutkan ke backlog `P2.12 Rapikan UI modular`, terutama panel `LobbyUI` atau `MatchUI` yang masih paling utilitarian dibanding `ShopUI`, `RoyalPassUI`, dan `ProfileUI`.
+
+## 2026-04-03 10:18 ICT
+
+### Task
+
+Menaikkan `MatchUI` dari panel status utilitarian menjadi surface fase yang lebih cepat dibaca dan lebih konsisten dengan bahasa visual panel modern lain.
+
+### Linked Issues
+
+- `MatchUI` masih terasa paling datar dibanding `ShopUI`, `RoyalPassUI`, dan `ProfileUI`
+- state fase match belum cukup “nempel” secara visual saat pemain lagi bergerak di map
+- hierarchy panel kanan masih terlalu tipis untuk kondisi tegang / low-visibility
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `MatchUI` sekarang punya `HeaderCard` canonical di dalam `MainPanel`:
+  - badge fase tetap
+  - headline fase
+  - subtitle fase
+  - glyph fase besar di sisi kanan untuk recognition cepat
+- panel match sekarang juga punya stroke dan accent warna yang mengikuti fase aktif
+- `SummaryFrame`, timer chip, quick evidence button, dan controls hint ikut mengambil aksen fase aktif agar panel terasa satu sistem visual
+- fase glyph yang dipakai:
+  - `PR` untuk `Preparation/Loading`
+  - `IN` untuk `Investigation`
+  - `HU` untuk `Hunt`
+  - `OK` / `FG` untuk `Results`
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_match_ui_polish_build.rbxlx`
+- validasi live lewat MCP membuktikan:
+  - `MatchUI.MainPanel.HeaderCard` hadir di runtime canonical
+  - `MatchUI.MainPanel.BrandStroke` hadir di panel match
+  - screenshot runtime:
+    - `ScreenCapture_MatchUI_PostPolish_2`
+- catatan jujur:
+  - validasi ini dilakukan pada fase `Preparation/Briefing`
+  - saya belum menutup screenshot paralel untuk semua fase `Investigation/Hunt/Result` pada entry ini
+
+### Next Step
+
+Lanjutkan ke panel modular berikut yang masih paling utilitarian:
+1. `LobbyUI`
+2. `JournalUI`
+3. atau kembali ke blocker audio final (`AmbientLoop_Main`, `GhostWhisper_01`, `ButtonClick_01`) kalau asset Roblox-nya sudah siap

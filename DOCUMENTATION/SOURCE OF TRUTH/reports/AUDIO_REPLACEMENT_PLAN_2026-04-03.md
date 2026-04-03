@@ -15,16 +15,41 @@ Targetnya bukan sekadar "cari sound", tetapi:
 
 ## Status Saat Ini
 
-Slot berikut masih kosong di source aktif:
+Slot canonical yang **masih kosong** di source aktif sekarang tinggal:
 
 1. `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
-2. `src/ReplicatedStorage/Assets/Audio/Environment/EnvironmentalCreak_01.model.json`
-3. `src/ReplicatedStorage/Assets/Audio/Ghost/GhostManifest_01.model.json`
-4. `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
-5. `src/ReplicatedStorage/Assets/Audio/Ghost/HuntStart_01.model.json`
-6. `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+2. `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
+3. `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
 
-Semua slot di atas sekarang aman dari sisi runtime error, tetapi **belum layak publish** karena masih `AudioContent = ""`.
+Slot canonical yang **sudah terisi lagi** dan sudah tervalidasi runtime:
+
+1. `src/ReplicatedStorage/Assets/Audio/Environment/EnvironmentalCreak_01.model.json`
+2. `src/ReplicatedStorage/Assets/Audio/Ghost/GhostManifest_01.model.json`
+3. `src/ReplicatedStorage/Assets/Audio/Ghost/HuntStart_01.model.json`
+4. `src/ReplicatedStorage/Assets/Audio/UI/CountdownTick_01.model.json`
+5. `src/ReplicatedStorage/Assets/Audio/UI/TeleportDrop_01.model.json`
+6. `src/ReplicatedStorage/Assets/Audio/Sensory/Heartbeat.model.json`
+7. `src/ReplicatedStorage/Assets/Audio/Footsteps/Woodstep_01.model.json`
+8. `src/ReplicatedStorage/Assets/Audio/Footsteps/ConcreteStep_01.model.json`
+9. `src/ReplicatedStorage/Assets/Audio/Footsteps/MetalStep_01.model.json`
+
+Catatan penting:
+
+- audio yang tadi terasa `broken` ternyata bukan terutama karena asset Roblox invalid
+- akar masalah runtime yang nyata adalah:
+  - slot canonical dulu berisi placeholder/broken ID lama
+  - event audio server belum di-relay ke `MatchEvent` client
+  - `client/SoundSystem` hanya menyimpan payload dan belum memutar `Sound` runtime
+- pada `2026-04-03` jalur playback modern sudah ditutup untuk:
+  - `EnvironmentalAudio`
+  - `FearAudio`
+  - `GhostAudio`
+  - `HuntAudio`
+- validasi client live membuktikan cue berikut benar-benar membuat `Sound` runtime yang `IsPlaying = true`:
+  - `EnvironmentalAudioRuntime -> rbxassetid://139204195403262`
+  - `FearAudioRuntime -> rbxassetid://138884191945388`
+  - `GhostAudioRuntime -> rbxassetid://83336813491039`
+  - `HuntAudioRuntime -> rbxassetid://138329686293368`
 
 ## Asset Yang Sudah Tervalidasi
 
@@ -126,8 +151,9 @@ Semua kandidat di bawah dipilih karena lisensinya jelas dari halaman sumber dan 
   - klik tombol UI utama
   - dipakai untuk micro-feedback pada lobby, room browser, shop, dan panel auxiliary
 - Candidate:
-  - `Tick Tock UI Blip` by `zhr__`
-  - Source: <https://freesound.org/people/zhr__/"
+  - pending
+  - belum ada asset final yang dikunci untuk karakter klik UI brand `PASRAHPHOBIA`
+  - jangan pakai asset sementara yang tidak punya provenance jelas hanya demi menutup slot
 
 ## Kenapa Belum Langsung Di-apply
 
@@ -164,11 +190,18 @@ pwsh -NoLogo -File .\scripts\set-audio-asset-ids.ps1 `
 
 Script itu akan menulis `AudioContent = "rbxassetid://..."` langsung ke lima file source canonical.
 
+Untuk slot UI click, tambahkan:
+
+```powershell
+pwsh -NoLogo -File .\scripts\set-audio-asset-ids.ps1 `
+  -UIButtonClickId 1234567895
+```
+
 ## Exit Criteria
 
 Dokumen ini dianggap selesai jika:
 
-1. lima slot kosong sudah punya Roblox asset ID final
+1. tiga slot kosong yang tersisa sudah punya Roblox asset ID final
 2. source `.model.json` sudah terisi
-3. playtest boot tidak lagi memakai slot audio kosong
-4. `ASSET_LICENSE_LEDGER_2026-04-03.md` tidak lagi menyimpan broken ghost audio sebagai `replace/remove`
+3. playtest boot tidak lagi memakai slot canonical kosong pada jalur aktif
+4. `ASSET_LICENSE_LEDGER_2026-04-03.md` tidak lagi menyimpan unresolved audio slot sebagai blocker publish
