@@ -779,15 +779,27 @@ Status:
 - validasi live memastikan purchase MM lama tidak regress:
   - request `eq_sanitypill_standard` tetap diproses pada jalur lama
   - hasil runtime tetap jujur `PurchaseProcessed(success=false, reason=insufficient_currency)`
+- katalog shop aktif sekarang benar-benar terisi:
+  - total `26` item (`MM=14`, `PP=4`, `Robux=8`)
+  - jalur `PP` sudah ada sebagai prestige soft-currency
+  - jalur `Robux` sudah source-controlled sebagai slot produksi (`GamePass` + `DeveloperProduct`)
+- guard transaksi sekarang lebih ketat dan konsisten:
+  - validasi saldo mengikuti mata uang item (`MM/PP`), tidak lagi hardcoded `MM`
+  - refund pembelian gagal mengikuti mata uang item (`MM/PP`), tidak lagi hardcoded `MM`
+  - item `enabled=false` ditolak sebagai `item_disabled` dari server
+  - gift path juga menolak item disabled dan menolak item `Robux`
+- UI shop sekarang menandai item yang belum siap:
+  - tombol `SETUP` untuk item `Robux` yang `marketplaceId` belum valid
+  - klik item yang belum siap tidak mengirim request buta ke server
 - blocker tersisa:
-  - belum ada item source-controlled yang benar-benar punya `gamePassId/productId` nyata
+  - belum ada item source-controlled yang benar-benar punya `gamePassId/productId` nyata dari Creator Hub
   - jadi jalur Robux production belum bisa ditutup end-to-end tanpa input manual dari Creator Hub
 
 Pekerjaan:
 
-- sambungkan Robux purchase flow nyata
-- pastikan economy tidak hanya konseptual
-- audit entitlement dan reward grant
+- isi `marketplaceId` nyata pada item `Robux` di `shared/DataTypes/ShopCatalog.lua`
+- jalankan smoke test `cancel / success / relog ownership sync / duplicate receipt`
+- tetapkan sumber `PP` live yang jelas (match reward, mission, atau top-up gating) agar jalur prestige tidak hanya UI
 
 Done jika:
 

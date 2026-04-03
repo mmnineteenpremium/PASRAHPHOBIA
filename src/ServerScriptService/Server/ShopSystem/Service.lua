@@ -147,6 +147,7 @@ function Service:LoadShopCatalog()
                 name = item.name or item.id,
                 price = tonumber(item.price) or 0,
                 currency = item.currency or DEFAULT_PURCHASE_CURRENCY,
+                enabled = item.enabled ~= false,
                 category = item.category or "Unknown",
                 slot = item.slot,
                 rarity = item.rarity,
@@ -159,6 +160,7 @@ function Service:LoadShopCatalog()
                 grantItem = item.grantItem ~= false,
                 grantCurrency = item.grantCurrency,
                 grantCurrencyAmount = tonumber(item.grantCurrencyAmount) or nil,
+                setupHint = item.setupHint,
             }
         end
     end
@@ -245,15 +247,20 @@ function Service:_persistInventorySnapshot(player, userId)
     end)
 end
 
-function Service:_refundCurrency(player, userId, amount, itemId, reason)
+function Service:_refundCurrency(player, userId, amount, itemId, reason, currency)
     local economy = self:_getEconomyService()
     if type(economy) ~= "table" or type(economy.AddCurrency) ~= "function" then
         return
     end
 
+    local refundCurrency = self:_normalizePurchaseCurrency(currency)
+    if refundCurrency ~= "MM" and refundCurrency ~= "PP" then
+        refundCurrency = "MM"
+    end
+
     local refunded = false
     pcall(function()
-        local ok = economy:AddCurrency(player, "MM", amount, "ShopPurchaseRefund")
+        local ok = economy:AddCurrency(player, refundCurrency, amount, "ShopPurchaseRefund")
         refunded = ok ~= false
     end)
 
@@ -263,6 +270,7 @@ function Service:_refundCurrency(player, userId, amount, itemId, reason)
             userId = userId,
             itemId = itemId,
             amount = amount,
+            currency = refundCurrency,
             reason = reason or "grant_failed",
         })
     end
@@ -308,6 +316,9 @@ function Service:ValidatePurchase(player, itemId)
     if type(item) ~= "table" then
         return false, "item_not_found"
     end
+    if item.enabled == false then
+        return false, "item_disabled"
+    end
     if type(item.price) ~= "number" or item.price <= 0 then
         return false, "invalid_price"
     end
@@ -351,7 +362,7 @@ function Service:ValidatePurchase(player, itemId)
         end)
         if ok then
             if type(result) == "table" then
-                balance = tonumber(result.MM or result.currency or result.balance)
+                balance = tonumber(result[purchaseCurrency] or result.currency or result.balance)
             else
                 balance = tonumber(result)
             end
@@ -485,7 +496,7 @@ function Service:ProcessPurchase(player, itemId)
 
     local granted, grantErr = self:GrantItem(player, itemId, item)
     if not granted then
-        self:_refundCurrency(player, userId, item.price, itemId, grantErr)
+        self:_refundCurrency(player, userId, item.price, itemId, grantErr, purchaseCurrency)
         activeTransactions[userId] = nil
         self._state:Set("activeTransactions", activeTransactions)
         self:_publish("PurchaseFailed", {
