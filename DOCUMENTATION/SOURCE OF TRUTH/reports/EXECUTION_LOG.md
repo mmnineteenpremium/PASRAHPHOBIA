@@ -1749,3 +1749,56 @@ Kembali ke blocker gameplay/map yang lebih dekat ke publish:
 1. generalisasi perilaku pintu / traversal di semua map aktif
 2. vertical slice evidence + journal dengan state non-empty
 3. asset audio final yang masih kosong
+
+## 2026-04-03 11:09 ICT
+
+### Task
+
+Menutup feedback runtime pintu lintas map dengan audio buka/tutup dan audit clone supaya loop traversal tidak hanya “bisa lewat”, tapi juga punya feedback yang konsisten untuk `Classic` maupun `Ranked`.
+
+### Linked Issues
+
+- pintu lintas map sebelumnya memang sudah auto-open, tapi belum punya feedback audio runtime yang jelas
+- user meminta perilaku pintu yang tidak lagi fragile per map dan tidak bergantung pada satu mode saja
+- perlu bukti nyata bahwa semua map aktif, bukan cuma `HauntedHouse`, menerima policy yang sama
+
+### Files Changed
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+- `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `MapRuntimePatches` sekarang menanamkan attribute sound default pada setiap pintu clone:
+  - `DoorOpenSoundId = rbxassetid://139204195403262`
+  - `DoorCloseSoundId = rbxassetid://83336813491039`
+- `DoorRuntime` sekarang:
+  - membuat `DoorOpenSound` dan `DoorCloseSound` runtime per pintu
+  - memutar audio buka/tutup saat interaksi `Open/Close/Slam`
+  - tetap mempertahankan `ProximityPromptStyle.Default` dan `AutoOpenToggle` yang mode-agnostic
+- policy traversal tetap sama untuk `Classic` dan `Ranked` karena semuanya masuk lewat clone path `MatchTeleport -> MapRuntimePatches -> DoorRuntime`
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_door_runtime_audio_build.rbxlx`
+- audit live via MCP pada clone semua map membuktikan:
+  - `AbandonedPalace doors=18 prompts=18 sounds=18 mode=AutoOpenToggle`
+  - `EmptyBuilding doors=14 prompts=14 sounds=14 mode=AutoOpenToggle`
+  - `HauntedHouse doors=11 prompts=11 sounds=11 mode=AutoOpenToggle`
+  - `StudioMMNineteen doors=8 prompts=8 sounds=8 mode=AutoOpenToggle`
+- sample inspect runtime:
+  - `Workspace.AssistantDoorAudit.HauntedHouse_Audit.Doors.Door_DiningRoom`
+  - child yang hadir: `DoorPathModifier`, `DoorPrompt`, `DoorOpenSound`, `DoorCloseSound`
+- catatan jujur:
+  - validasi ini menutup layer attachment/runtime clone, bukan subjective mix/volume final di telinga pemain
+  - balancing volume dan pilihan SFX final masih bisa disetel lagi jika nanti audio ambience sudah lengkap
+
+### Next Step
+
+Lanjut ke blocker gameplay berikutnya:
+1. vertical slice evidence + journal dengan state non-empty
+2. extraction flow pada map clone aktif
+3. finalisasi slot audio kosong yang masih menahan publish polish

@@ -224,6 +224,16 @@ Status:
   - `Door_Lobby.DoorObjectId = Door_Lobby`
   - `Door_Lobby` sekarang punya child `DoorPrompt` (`ProximityPrompt`)
   - `Door_Lobby` benar-benar terbuka secara visual (`Rotation.Y ~= -88`)
+- audit runtime clone terbaru sekarang juga menutup feedback layer pintu:
+  - semua map aktif membawa pasangan `DoorOpenSound` + `DoorCloseSound` pada setiap pintu clone
+  - hasil audit:
+    - `AbandonedPalace`: `18/18` prompt + `18/18` pasangan sound
+    - `EmptyBuilding`: `14/14` prompt + `14/14` pasangan sound
+    - `HauntedHouse`: `11/11` prompt + `11/11` pasangan sound
+    - `StudioMMNineteen`: `8/8` prompt + `8/8` pasangan sound
+  - sample runtime `Door_DiningRoom` sekarang punya:
+    - `DoorOpenSoundId = rbxassetid://139204195403262`
+    - `DoorCloseSoundId = rbxassetid://83336813491039`
 - art pass map masih belum final, tetapi tidak lagi menjadi blocker untuk loop vertical slice
 - pintu sekarang dianggap default auto-open lintas platform, jadi loop playable tidak lagi bergantung pada prompt manual
 

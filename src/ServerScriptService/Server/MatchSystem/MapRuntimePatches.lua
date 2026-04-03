@@ -5,6 +5,10 @@ local INTERACTION_PATCH_ATTR = "InteractionPointsRuntimePatched"
 local DOOR_PATCH_ATTR = "DoorTraversalRuntimePatched"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
+local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
+local DOOR_CLOSE_SOUND_ATTR = "DoorCloseSoundId"
+local DEFAULT_DOOR_OPEN_SOUND_ID = "rbxassetid://139204195403262"
+local DEFAULT_DOOR_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
 local MIN_SEGMENT_SIZE = 0.25
 local STAIR_MARGIN = 0.75
 local INTERACTION_HEIGHT_OFFSET = 1.5
@@ -290,6 +294,8 @@ local function patchDoorTraversal(mapClone)
 			descendant:SetAttribute("DoorLocked", false)
 			descendant:SetAttribute("DoorIsOpen", true)
 			descendant:SetAttribute(DOOR_POLICY_ATTR, "AutoOpenToggle")
+			descendant:SetAttribute(DOOR_OPEN_SOUND_ATTR, DEFAULT_DOOR_OPEN_SOUND_ID)
+			descendant:SetAttribute(DOOR_CLOSE_SOUND_ATTR, DEFAULT_DOOR_CLOSE_SOUND_ID)
 			ensureDoorPathModifier(descendant)
 			patchedAny = true
 		end
