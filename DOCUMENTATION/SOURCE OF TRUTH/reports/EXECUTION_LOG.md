@@ -1917,3 +1917,57 @@ Lanjut ke blocker publish berikutnya:
 1. finalisasi `AmbientLoop_Main` dan `GhostWhisper_01`
 2. teruskan polish UI/UX Roblox-friendly pada surface yang masih utilitarian
 3. lanjutkan publish gate yang masih butuh input Creator Hub/manual
+
+## 2026-04-03 11:42 ICT
+
+### Task
+
+Mengangkat `LeaderboardUI` dari panel snapshot teks menjadi rank board visual yang lebih nyaman dibaca, tetap jujur terhadap data lokal, dan konsisten dengan surface lobby/profile/shop/journal yang sudah dipoles.
+
+### Linked Issues
+
+- `LeaderboardUI` masih berupa text dump utilitarian
+- rank board belum punya hero hierarchy, meter, atau stat cards
+- panel rank sudah ada, tetapi belum meninggalkan nuansa placeholder internal
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `LeaderboardUI` sekarang punya `LeaderboardDeck` di `ContentFrame`
+- hero card menampilkan:
+  - badge snapshot/mode
+  - nama pemain + tier rank
+  - meta `LV / match / victory`
+  - sanity meter live
+- empat stat rows visual sekarang dibangun untuk:
+  - `Tier status`
+  - `Pressure band`
+  - `Room browser pulse`
+  - `Mastery footprint`
+- panel diperbesar ke `340x448` supaya deck rank lebih lapang dan tombol aksi bawah tidak menumpuk dengan konten
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_leaderboard_polish_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_leaderboard_polish_build_2.rbxlx`
+- validasi live via Studio MCP:
+  - playtest di-restart agar `LocalScript` baru terpasang ke `PlayerGui`
+  - `LeaderboardUI.MainPanel` berhasil dibuka pada lobby runtime
+  - probe runtime menunjukkan:
+    - `HeroTitle = ZyraaaVex • Bayi III`
+    - `canvas = 316,214`
+    - rows = `Tier status`, `Pressure band`, `Room browser pulse`, `Mastery footprint`
+  - screenshot `ScreenCapture_LeaderboardUI_Final` menunjukkan rank board baru tampil di lobby aktif
+
+### Next Step
+
+Lanjut ke surface berikutnya yang masih paling utilitarian atau masih menahan publish polish:
+1. `MainMenuUI` jika perlu dinaikkan ke deck visual yang setara
+2. finalisasi dua blocker audio canonical yang masih kosong
+3. teruskan polish material/lighting/icon agar experience tidak berhenti di UI saja

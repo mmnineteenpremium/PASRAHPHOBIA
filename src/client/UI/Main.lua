@@ -2926,6 +2926,164 @@ function UISystem:_refreshMainMenuPanel()
 	end
 end
 
+function UISystem:_ensureLeaderboardWidgets(window)
+	if not window or not window.ContentFrame then
+		return nil
+	end
+	if window.LeaderboardWidgets then
+		return window.LeaderboardWidgets
+	end
+
+	if window.ContentText then
+		window.ContentText.Visible = false
+	end
+
+	local contentFrame = window.ContentFrame
+	local deck = contentFrame:FindFirstChild("LeaderboardDeck")
+	if deck and not deck:IsA("Frame") then
+		deck:Destroy()
+		deck = nil
+	end
+	if not deck then
+		deck = Instance.new("Frame")
+		deck.Name = "LeaderboardDeck"
+		deck.Size = UDim2.new(1, -4, 0, 0)
+		deck.AutomaticSize = Enum.AutomaticSize.Y
+		deck.BackgroundTransparency = 1
+		deck.Parent = contentFrame
+
+		local deckLayout = Instance.new("UIListLayout")
+		deckLayout.FillDirection = Enum.FillDirection.Vertical
+		deckLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		deckLayout.Padding = UDim.new(0, 8)
+		deckLayout.Parent = deck
+	end
+
+	local heroCard = Instance.new("Frame")
+	heroCard.Name = "HeroCard"
+	heroCard.Size = UDim2.new(1, 0, 0, 116)
+	heroCard.BackgroundColor3 = Color3.fromRGB(28, 35, 46)
+	heroCard.BorderSizePixel = 0
+	heroCard.Parent = deck
+	local heroCorner = Instance.new("UICorner")
+	heroCorner.CornerRadius = UDim.new(0, 10)
+	heroCorner.Parent = heroCard
+
+	local heroStroke = Instance.new("UIStroke")
+	heroStroke.Name = "HeroStroke"
+	heroStroke.Thickness = 1.5
+	heroStroke.Color = Color3.fromRGB(102, 116, 64)
+	heroStroke.Transparency = 0.18
+	heroStroke.Parent = heroCard
+
+	local heroBadge = Instance.new("TextLabel")
+	heroBadge.Name = "HeroBadge"
+	heroBadge.Position = UDim2.fromOffset(12, 12)
+	heroBadge.Size = UDim2.fromOffset(132, 20)
+	heroBadge.BackgroundColor3 = Color3.fromRGB(92, 104, 60)
+	heroBadge.BorderSizePixel = 0
+	heroBadge.Font = Enum.Font.GothamBold
+	heroBadge.TextSize = 10
+	heroBadge.TextColor3 = Color3.fromRGB(248, 244, 234)
+	heroBadge.Text = "LOCAL SNAPSHOT"
+	heroBadge.Parent = heroCard
+	local heroBadgeCorner = Instance.new("UICorner")
+	heroBadgeCorner.CornerRadius = UDim.new(1, 0)
+	heroBadgeCorner.Parent = heroBadge
+
+	local heroTitle = Instance.new("TextLabel")
+	heroTitle.Name = "HeroTitle"
+	heroTitle.Position = UDim2.fromOffset(12, 38)
+	heroTitle.Size = UDim2.new(1, -24, 0, 24)
+	heroTitle.BackgroundTransparency = 1
+	heroTitle.Font = Enum.Font.GothamBold
+	heroTitle.TextSize = 18
+	heroTitle.TextXAlignment = Enum.TextXAlignment.Left
+	heroTitle.TextColor3 = Color3.fromRGB(244, 246, 250)
+	heroTitle.Text = "PLAYER • RANK"
+	heroTitle.Parent = heroCard
+
+	local heroMeta = Instance.new("TextLabel")
+	heroMeta.Name = "HeroMeta"
+	heroMeta.Position = UDim2.fromOffset(12, 62)
+	heroMeta.Size = UDim2.new(1, -24, 0, 18)
+	heroMeta.BackgroundTransparency = 1
+	heroMeta.Font = Enum.Font.Gotham
+	heroMeta.TextSize = 12
+	heroMeta.TextXAlignment = Enum.TextXAlignment.Left
+	heroMeta.TextColor3 = Color3.fromRGB(192, 202, 214)
+	heroMeta.Text = "Level • Match • Victory"
+	heroMeta.Parent = heroCard
+
+	local progressTrack = Instance.new("Frame")
+	progressTrack.Name = "ProgressTrack"
+	progressTrack.Position = UDim2.fromOffset(12, 82)
+	progressTrack.Size = UDim2.new(1, -24, 0, 14)
+	progressTrack.BackgroundColor3 = Color3.fromRGB(38, 46, 58)
+	progressTrack.BorderSizePixel = 0
+	progressTrack.Parent = heroCard
+	local progressTrackCorner = Instance.new("UICorner")
+	progressTrackCorner.CornerRadius = UDim.new(1, 0)
+	progressTrackCorner.Parent = progressTrack
+
+	local progressFill = Instance.new("Frame")
+	progressFill.Name = "ProgressFill"
+	progressFill.Size = UDim2.fromScale(1, 1)
+	progressFill.BackgroundColor3 = Color3.fromRGB(104, 148, 220)
+	progressFill.BorderSizePixel = 0
+	progressFill.Parent = progressTrack
+	local progressFillCorner = Instance.new("UICorner")
+	progressFillCorner.CornerRadius = UDim.new(1, 0)
+	progressFillCorner.Parent = progressFill
+
+	local progressCaption = Instance.new("TextLabel")
+	progressCaption.Name = "ProgressCaption"
+	progressCaption.Position = UDim2.fromOffset(12, 98)
+	progressCaption.Size = UDim2.new(1, -24, 0, 16)
+	progressCaption.BackgroundTransparency = 1
+	progressCaption.Font = Enum.Font.Gotham
+	progressCaption.TextSize = 11
+	progressCaption.TextXAlignment = Enum.TextXAlignment.Left
+	progressCaption.TextColor3 = Color3.fromRGB(184, 196, 210)
+	progressCaption.Text = "Sanity live 100% • Status Safe"
+	progressCaption.Parent = heroCard
+
+	local tierList = Instance.new("Frame")
+	tierList.Name = "TierList"
+	tierList.Size = UDim2.new(1, 0, 0, 0)
+	tierList.AutomaticSize = Enum.AutomaticSize.Y
+	tierList.BackgroundTransparency = 1
+	tierList.Parent = deck
+	local tierLayout = Instance.new("UIListLayout")
+	tierLayout.FillDirection = Enum.FillDirection.Vertical
+	tierLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	tierLayout.Padding = UDim.new(0, 6)
+	tierLayout.Parent = tierList
+
+	local rows = {}
+	for index = 1, 4 do
+		local row = createActionRow(tierList, "RankRow" .. tostring(index), "RANK", "-", "INFO")
+		row.Button.Active = false
+		row.Button.AutoButtonColor = false
+		row.Button.Selectable = false
+		table.insert(rows, row)
+	end
+
+	window.LeaderboardWidgets = {
+		Deck = deck,
+		HeroCard = heroCard,
+		HeroStroke = heroStroke,
+		HeroBadge = heroBadge,
+		HeroTitle = heroTitle,
+		HeroMeta = heroMeta,
+		ProgressTrack = progressTrack,
+		ProgressFill = progressFill,
+		ProgressCaption = progressCaption,
+		Rows = rows,
+	}
+	return window.LeaderboardWidgets
+end
+
 function UISystem:_refreshLeaderboardPanel()
 	local window = self._uxWidgets and self._uxWidgets.basicWindows and self._uxWidgets.basicWindows.LeaderboardUI
 	if not window then
@@ -2950,12 +3108,24 @@ function UISystem:_refreshLeaderboardPanel()
 	local badgeColor = Color3.fromRGB(92, 104, 60)
 	local secondaryText = string.format("Rank %s | Match %d | Snapshot Lokal", leaderboardLabel, totalGames)
 	local roomLine = string.format("Room Browser %s | %d room terlihat", self._roomBrowserVisible and "terbuka" or "tertutup", #rooms)
+	local roomMode = currentRoom and tostring(currentRoom.mode or state.selectedMode or "Classic") or tostring(state.selectedMode or "Classic")
+	local roomModeLower = string.lower(roomMode)
+	local playerCount = currentRoom and (type(currentRoom.players) == "table" and #currentRoom.players or 0) or 0
+	local maxPlayers = currentRoom and math.max(playerCount, math.floor(tonumber(currentRoom.maxPlayers or 4) or 4)) or 4
+	local statusToken = tostring(profile.status or "safe")
+	local statusLabel = titleCaseToken(statusToken)
+	local statusAccent = Color3.fromRGB(90, 122, 80)
+	if statusToken == "hunt_risk" then
+		statusAccent = Color3.fromRGB(132, 68, 68)
+	elseif statusToken == "high_paranormal_activity" then
+		statusAccent = Color3.fromRGB(130, 92, 54)
+	elseif statusToken == "unstable" then
+		statusAccent = Color3.fromRGB(82, 96, 128)
+	end
 
 	if currentRoom and currentRoom.roomId then
-		local roomMode = tostring(currentRoom.mode or state.selectedMode or "Classic")
-		local playerCount = type(currentRoom.players) == "table" and #currentRoom.players or 0
 		badgeText = string.upper(roomMode) .. " ROOM"
-		badgeColor = string.lower(roomMode) == "ranked"
+		badgeColor = roomModeLower == "ranked"
 			and Color3.fromRGB(132, 96, 52)
 			or Color3.fromRGB(60, 96, 132)
 		roomLine = string.format(
@@ -2979,26 +3149,101 @@ function UISystem:_refreshLeaderboardPanel()
 	if window.SecondaryLabel then
 		window.SecondaryLabel.Text = secondaryText
 	end
-	if window.ContentText then
-		window.ContentText.Text = table.concat({
-			"PERSONAL SNAPSHOT",
-			string.format("- Rank Saat Ini: %s", leaderboardLabel),
-			string.format("- Rank Tier Raw: %s", rankName),
-			string.format("- Level: %d", level),
-			string.format("- Total Match: %d", totalGames),
-			string.format("- Sanity: %d", sanity),
-			string.format("- Victory Counter Lokal: %d", victories),
-			"",
-			"SERVER BOARD",
-			"1. Leaderboard kanonik memakai progres rank, dan Sang Ahli memakai victory counter.",
-			"2. Slot leaderboard server belum di-stream ke panel basic ini.",
-			"3. Snapshot ini sengaja tidak lagi memakai formula preview palsu.",
-			"",
-			roomLine,
-		}, "\n")
-	end
 	if window.FooterLabel then
-		window.FooterLabel.Text = "Panel rank ini tetap basic: hanya snapshot lokal, tanpa skor leaderboard buatan."
+		window.FooterLabel.Text = "Rank board ini sengaja tetap jujur: snapshot lokal yang nyaman dibaca, tanpa angka leaderboard server palsu."
+	end
+
+	local widgets = self:_ensureLeaderboardWidgets(window)
+	if widgets then
+		local roomBadgeText = currentRoom and (string.upper(roomMode) .. " ROOM") or "LOCAL SNAPSHOT"
+		local roomBadgeColor = currentRoom and badgeColor or Color3.fromRGB(92, 104, 60)
+		local roomGlyph = roomModeLower == "ranked" and "RK" or "CL"
+		local victoryRate = totalGames > 0 and math.floor((victories / math.max(totalGames, 1)) * 100 + 0.5) or 0
+		local sanityPercent = math.clamp(sanity / 100, 0.08, 1)
+		local rows = widgets.Rows or {}
+		local rankGlyph = string.match(string.upper(rankName), "^SANG AHLI") and "SA" or "RB"
+		local roomSummary = currentRoom
+			and string.format(
+				"Room #%s • %s • %d/%d pemain",
+				tostring(currentRoom.roomId),
+				tostring(currentRoom.mapId or state.selectedMap or MAPS[1] or "HauntedHouse"),
+				playerCount,
+				maxPlayers
+			)
+			or string.format("Browser %s • %d room terlihat", self._roomBrowserVisible and "terbuka" or "tertutup", #rooms)
+
+		widgets.HeroStroke.Color = roomBadgeColor
+		widgets.HeroBadge.BackgroundColor3 = roomBadgeColor
+		widgets.HeroBadge.Text = roomBadgeText
+		widgets.HeroTitle.Text = string.format("%s • %s", playerName, leaderboardLabel)
+		widgets.HeroMeta.Text = string.format("LV %d • %d match • %d victory", level, totalGames, victories)
+		widgets.ProgressFill.BackgroundColor3 = statusAccent
+		widgets.ProgressFill.Size = UDim2.fromScale(sanityPercent, 1)
+		widgets.ProgressCaption.Text = string.format("Sanity live %d%% • Status %s • %s", sanity, statusLabel, roomSummary)
+
+		local rowData = {
+			{
+				badge = "RANK",
+				glyph = rankGlyph,
+				title = "Tier status",
+				meta = string.format("Rank aktif %s • raw tier %s", leaderboardLabel, rankName),
+				pill = string.format("LV %d", level),
+				button = "LOCAL",
+				accent = roomBadgeColor,
+				preview = roomModeLower == "ranked" and Color3.fromRGB(62, 48, 30) or Color3.fromRGB(40, 52, 70),
+			},
+			{
+				badge = "MIND",
+				glyph = "SN",
+				title = "Pressure band",
+				meta = string.format("Status %s • event %s", statusLabel, tostring(profile.lastEvent or "Idle")),
+				pill = string.format("%d%%", sanity),
+				button = sanity <= 35 and "RISK" or "SAFE",
+				accent = statusAccent,
+				preview = sanity <= 35 and Color3.fromRGB(62, 42, 42) or Color3.fromRGB(42, 56, 46),
+			},
+			{
+				badge = roomModeLower == "ranked" and "MODE" or "ROOM",
+				glyph = roomGlyph,
+				title = currentRoom and "Live room pulse" or "Room browser pulse",
+				meta = roomSummary,
+				pill = currentRoom and string.format("%d/%d", playerCount, maxPlayers) or string.format("%d ROOM", #rooms),
+				button = self._roomBrowserVisible and "OPEN" or "IDLE",
+				accent = badgeColor,
+				preview = roomModeLower == "ranked" and Color3.fromRGB(58, 46, 32) or Color3.fromRGB(38, 52, 70),
+			},
+			{
+				badge = "WIN",
+				glyph = "VG",
+				title = "Mastery footprint",
+				meta = string.format("Victory counter lokal %d • %d%% ratio snapshot", victories, victoryRate),
+				pill = string.format("%d WIN", victories),
+				button = totalGames > 0 and "TRACK" or "FRESH",
+				accent = Color3.fromRGB(112, 84, 52),
+				preview = Color3.fromRGB(50, 40, 32),
+			},
+		}
+
+		for index, row in ipairs(rows) do
+			local data = rowData[index]
+			if data then
+				row.Root.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+				row.Accent.BackgroundColor3 = data.accent
+				row.Preview.BackgroundColor3 = data.preview
+				row.PreviewBadge.BackgroundColor3 = data.accent
+				row.PreviewBadge.TextColor3 = Color3.fromRGB(247, 243, 236)
+				row.PreviewBadge.Text = data.badge
+				row.PreviewGlyph.TextColor3 = Color3.fromRGB(247, 243, 236)
+				row.PreviewGlyph.Text = data.glyph
+				row.Title.Text = data.title
+				row.Meta.Text = data.meta
+				row.PricePill.BackgroundColor3 = data.accent
+				row.PricePill.Text = data.pill
+				row.Button.BackgroundColor3 = data.preview
+				row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
+				row.Button.Text = data.button
+			end
+		end
 	end
 
 	local _, menuPanel = self:_getBasicWindowState("MainMenuUI")
@@ -7054,7 +7299,7 @@ function UISystem:_ensureBasicUIs()
 					title = "RANK BOARD",
 					panelAnchorPoint = Vector2.new(0.5, 1),
 					panelPosition = UDim2.new(0.5, 0, 1, -16),
-					panelSize = Vector2.new(340, 348),
+					panelSize = Vector2.new(340, 448),
 					panelColor = Color3.fromRGB(18, 25, 34),
 					badgeColor = Color3.fromRGB(92, 104, 60),
 					floatPosition = UDim2.new(1, -18, 0.58, 0),
@@ -7281,6 +7526,10 @@ function UISystem:_ensureBasicUIs()
 				footerLabel.Position = UDim2.fromOffset(12, 284)
 				footerLabel.Size = UDim2.new(1, -24, 0, 24)
 			else
+				local contentFrameHeight = guiName == "LeaderboardUI" and 214 or 112
+				local actionRowY = guiName == "LeaderboardUI" and 378 or 276
+				local footerY = guiName == "LeaderboardUI" and 420 or 318
+				local footerHeight = guiName == "LeaderboardUI" and 18 or 22
 				contentFrame = panel:FindFirstChild("ContentFrame")
 				if contentFrame and not contentFrame:IsA("ScrollingFrame") then
 					contentFrame:Destroy()
@@ -7290,7 +7539,7 @@ function UISystem:_ensureBasicUIs()
 					contentFrame = Instance.new("ScrollingFrame")
 					contentFrame.Name = "ContentFrame"
 					contentFrame.Position = UDim2.fromOffset(12, 154)
-					contentFrame.Size = UDim2.new(1, -24, 0, 112)
+					contentFrame.Size = UDim2.new(1, -24, 0, contentFrameHeight)
 					contentFrame.BackgroundColor3 = Color3.fromRGB(20, 27, 36)
 					contentFrame.BackgroundTransparency = 0.06
 					contentFrame.BorderSizePixel = 0
@@ -7312,6 +7561,7 @@ function UISystem:_ensureBasicUIs()
 					contentPadding.PaddingRight = UDim.new(0, 10)
 					contentPadding.Parent = contentFrame
 				end
+				contentFrame.Size = UDim2.new(1, -24, 0, contentFrameHeight)
 
 				contentText = contentFrame:FindFirstChild("ContentText")
 				if not contentText then
@@ -7333,7 +7583,7 @@ function UISystem:_ensureBasicUIs()
 				if not profileAction then
 					profileAction = Instance.new("TextButton")
 					profileAction.Name = "ProfileButton"
-					profileAction.Position = UDim2.fromOffset(12, 276)
+					profileAction.Position = UDim2.fromOffset(12, actionRowY)
 					profileAction.Size = UDim2.fromOffset(98, 36)
 					styleButton(profileAction, "PROFILE")
 					profileAction.BackgroundColor3 = Color3.fromRGB(58, 84, 62)
@@ -7345,13 +7595,14 @@ function UISystem:_ensureBasicUIs()
 
 					self:_setSelectableStyle(profileAction)
 				end
+				profileAction.Position = UDim2.fromOffset(12, actionRowY)
 				profileButton = profileAction
 
 				local roomAction = panel:FindFirstChild("RoomBrowserButton")
 				if not roomAction then
 					roomAction = Instance.new("TextButton")
 					roomAction.Name = "RoomBrowserButton"
-					roomAction.Position = UDim2.fromOffset(120, 276)
+					roomAction.Position = UDim2.fromOffset(120, actionRowY)
 					roomAction.Size = UDim2.fromOffset(98, 36)
 					styleButton(roomAction, "OPEN ROOMS")
 					roomAction.BackgroundColor3 = Color3.fromRGB(46, 78, 114)
@@ -7363,13 +7614,14 @@ function UISystem:_ensureBasicUIs()
 
 					self:_setSelectableStyle(roomAction)
 				end
+				roomAction.Position = UDim2.fromOffset(120, actionRowY)
 				roomBrowserButton = roomAction
 
 				local menuAction = panel:FindFirstChild("MenuButton")
 				if not menuAction then
 					menuAction = Instance.new("TextButton")
 					menuAction.Name = "MenuButton"
-					menuAction.Position = UDim2.fromOffset(228, 276)
+					menuAction.Position = UDim2.fromOffset(228, actionRowY)
 					menuAction.Size = UDim2.fromOffset(98, 36)
 					styleButton(menuAction, "OPEN MENU")
 					menuAction.BackgroundColor3 = Color3.fromRGB(58, 66, 84)
@@ -7381,11 +7633,12 @@ function UISystem:_ensureBasicUIs()
 
 					self:_setSelectableStyle(menuAction)
 				end
+				menuAction.Position = UDim2.fromOffset(228, actionRowY)
 				menuButton = menuAction
 				actionButtons = { profileButton, roomBrowserButton, menuButton }
 
-				footerLabel.Position = UDim2.fromOffset(12, 318)
-				footerLabel.Size = UDim2.new(1, -24, 0, 22)
+				footerLabel.Position = UDim2.fromOffset(12, footerY)
+				footerLabel.Size = UDim2.new(1, -24, 0, footerHeight)
 			end
 
 			local initAttribute = guiName == "LeaderboardUI" and "LeaderboardInitDone" or "MainMenuInitDone"

@@ -405,6 +405,16 @@ Status:
   - `MatchUI.MainPanel.HeaderCard` hadir di runtime
   - `MatchUI.MainPanel.BrandStroke` hadir di panel canonical
   - screenshot `ScreenCapture_MatchUI_PostPolish_2` menunjukkan panel persiapan lebih jelas terbaca di map aktif
+- `LeaderboardUI` sekarang tidak lagi berupa blok snapshot teks:
+  - rank board memakai hero card, sanity meter, dan empat stat rows yang konsisten dengan bahasa visual panel lain
+  - panel tetap jujur sebagai snapshot lokal tanpa memalsukan leaderboard server
+  - aksi bawah `Profile`, `Open Rooms`, dan `Open Menu` tetap hidup setelah layout baru masuk
+- validasi live terbaru membuktikan:
+  - `LeaderboardUI.MainPanel.Size = 340x448`
+  - `LeaderboardDeck` hadir di runtime canonical
+  - `HeroTitle = ZyraaaVex • Bayi III`
+  - rows yang terbentuk: `Tier status`, `Pressure band`, `Room browser pulse`, `Mastery footprint`
+  - screenshot `ScreenCapture_LeaderboardUI_Final` menunjukkan rank board baru tampil di lobby aktif
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:
@@ -415,6 +425,7 @@ Pekerjaan:
 - `JournalUI`
 - `MatchUI`
 - `LobbyUI`
+- `LeaderboardUI`
 
 Done jika:
 
@@ -426,6 +437,7 @@ Status:
 
 - in progress
 - surface preview map aktif sudah naik dari placeholder generik ke visual prosedural source-owned
+- `LeaderboardUI` active snapshot juga sudah naik dari text dump ke deck visual source-owned
 - debt polish yang masih tersisa tetap besar:
   - ambient loops final
   - signature UI click audio final jika nanti ingin mengganti fallback built-in
