@@ -3485,3 +3485,64 @@ Mengurangi interaction point palsu dengan menambahkan normalisasi reachability r
 2. lanjut ke residual map-specific traversal:
    - `HauntedHouse`: `Bedroom1` dan `Kitchen`
    - `EmptyBuilding`: `WorkspaceOpen`, `OfficeB`, `Bathroom1`
+
+## 2026-04-03 21:45 ICT
+
+### Task
+
+Menutup residual runtime `EmptyBuilding` yang sempat tersisa pada `InteractionPoints` dan `SafeZones`, lalu memverifikasi ulang clone match setelah settle final agar audit tidak berhenti di false negative.
+
+### Linked Issues
+
+- audit cepat sesudah `HostStart` sempat membaca `EmptyBuilding` seolah masih `6/8 fail`, padahal clone runtime belum selesai settle
+- override spesifik map untuk `InteractionPoints` dan `SafeZones` bergantung pada token `mapId`; pada jalur runtime ini token yang sampai ke `MapRuntimePatches` tidak selalu cocok dengan `emptybuilding`
+- akibatnya patch generik `SecondFloor` dan `DoorTraversal` aktif, tetapi patch spesifik `EmptyBuilding` tidak selalu ikut terbaca
+
+### Files Changed
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `MapRuntimePatches` sekarang memakai helper `resolveMapOverrideToken(mapId, mapClone)`:
+  - prioritas pertama tetap `mapId`
+  - fallback kedua memakai `mapClone.Name`
+- patch spesifik berikut sekarang tidak lagi bergantung penuh pada token queue/runtime yang drift:
+  - `INTERACTION_POSITION_OVERRIDES.emptybuilding`
+  - `SAFE_ZONE_POSITION_OVERRIDES.emptybuilding`
+- validasi tidak lagi membaca clone terlalu cepat; audit akhir dilakukan pada clone yang sama setelah settle final
+
+### Validation Notes
+
+- source Studio terverifikasi memuat helper fallback token baru sebelum playtest ulang
+- validasi live terbaru pada clone `Workspace.ActiveMatches.Match_match_1.EmptyBuilding` setelah settle final menunjukkan:
+  - `SecondFloorRuntimePatched = true`
+  - `DoorTraversalRuntimePatched = true`
+  - `InteractionPointsRuntimePatched = true`
+  - `SafeZoneRuntimePatched = true`
+- posisi final penting yang tervalidasi:
+  - `Interact_WorkspaceOpen = (800, 2, -8)`
+  - `Interact_OfficeB = (822.667, 2, -8)`
+  - `Interact_Bathroom1 = (822, 2, -9)`
+  - `SafeZone_1 = (778, 4, -10)`
+  - `SafeZone_2 = (824, 4, -20)`
+- audit pathfinding final dari `PlayerSpawn_1` menghasilkan:
+  - `EmptyBuilding`: `0/8` interaction point fail
+  - `EmptyBuilding`: `2/2` safe zone success
+
+### Interpretation
+
+- residual `EmptyBuilding` yang sebelumnya terlihat seperti debt layout ternyata gabungan dua hal:
+  - token override spesifik map tidak cukup defensif
+  - audit dilakukan terlalu cepat sebelum runtime point selesai settle
+- setelah dua hal itu ditutup, debt aktif bergeser dari `interaction anchor bohong` ke `door/map gameplay polish`
+
+### Next Step
+
+1. checkpoint commit untuk penutupan residual `EmptyBuilding`
+2. lanjut ke pass `door/map gameplay polish`:
+   - radius/manual flow pintu lintas map
+   - traversal visual yang lebih logis
+   - penutupan debt tangga/lantai atas yang masih terasa basic
