@@ -1179,3 +1179,15 @@ Urutan yang paling masuk akal dari titik sekarang:
   - daftar ID di atas tetap aman sebagai asset account-owned untuk project aktif
   - blocker lisensi audio yang tersisa tetap `AmbientLoop_Main` (slot ambience kosong), bukan broken ID dari batch ini
 
+## Update 2026-04-04 03:00 ICT
+
+- blocker audio slot kosong ditutup:
+  - `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
+  - `AudioContent` sekarang diisi `rbxassetid://138884191945388` (account-owned `ZyraaaVex`)
+  - `Volume` dituning konservatif ke `0.18` untuk baseline ambience agar tidak menabrak cue hunt
+- validasi live:
+  - `ReplicatedStorage.Assets.Audio.Ambient.AmbientLoop_Main.SoundId = rbxassetid://138884191945388`
+  - properti runtime slot sudah terbaca sebagai `Looped=true` dan bukan placeholder kosong
+- implikasi publish gate:
+  - blocker lisensi audio bergeser dari “slot ambience kosong” menjadi pure polish keputusan ambience brand final
+
