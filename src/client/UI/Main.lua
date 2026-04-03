@@ -65,7 +65,7 @@ local AUXILIARY_WINDOW_CONFIG = {
 		panelPosition = UDim2.new(1, -372, 0, 16),
 		panelAnchorPoint = Vector2.new(0, 0),
 		panelSize = Vector2.new(340, 300),
-		floatPosition = UDim2.new(1, -18, 0.3, 0),
+		floatPosition = UDim2.new(1, -18, 0.28, 0),
 		badgeColor = Color3.fromRGB(74, 96, 58),
 		footer = "Ringkasan profil dasar ini memakai data runtime yang tersedia di client.",
 	},
@@ -76,7 +76,7 @@ local AUXILIARY_WINDOW_CONFIG = {
 		panelPosition = UDim2.new(1, -16, 1, -16),
 		panelAnchorPoint = Vector2.new(1, 1),
 		panelSize = Vector2.new(356, 424),
-		floatPosition = UDim2.new(1, -18, 0.68, 0),
+		floatPosition = UDim2.new(1, -18, 0.78, 0),
 		badgeColor = Color3.fromRGB(124, 92, 48),
 		footer = "Item shop basic ini bisa kirim request PurchaseEvent untuk test E2E.",
 	},
@@ -87,7 +87,7 @@ local AUXILIARY_WINDOW_CONFIG = {
 		panelPosition = UDim2.new(1, -16, 0.5, 0),
 		panelAnchorPoint = Vector2.new(1, 0.5),
 		panelSize = Vector2.new(348, 340),
-		floatPosition = UDim2.new(1, -18, 0.5, 0),
+		floatPosition = UDim2.new(1, -18, 0.46, 0),
 		badgeColor = Color3.fromRGB(116, 88, 44),
 		footer = "Shortcut: R. Progress Royal Pass ini hanya surface client untuk snapshot runtime yang aktif.",
 	},
@@ -580,6 +580,143 @@ local function styleButton(button, text)
 	button.AutoButtonColor = false
 	button.TextStrokeTransparency = 0.92
 	button.TextStrokeColor3 = UI_BRAND.ink
+	bindButtonPolish(button)
+	refreshButtonPolish(button, true)
+end
+
+local function deriveFloatGlyph(labelText)
+	local compact = tostring(labelText or ""):gsub("[%c]+", " "):gsub("%s+", " "):match("^%s*(.-)%s*$") or ""
+	if compact == "" then
+		return "UI"
+	end
+
+	local initials = {}
+	for token in compact:gmatch("%S+") do
+		table.insert(initials, token:sub(1, 1))
+		if #initials >= 2 then
+			break
+		end
+	end
+	if #initials == 0 then
+		return "UI"
+	end
+	if #initials == 1 then
+		local collapsed = compact:gsub("%s+", "")
+		return string.upper((collapsed:sub(1, 2) ~= "" and collapsed:sub(1, 2)) or initials[1])
+	end
+	return string.upper(table.concat(initials, ""))
+end
+
+local function styleFloatingButton(button, labelText, accentColor)
+	if not button then
+		return
+	end
+
+	local captionText = tostring(labelText or ""):gsub("[%c]+", " "):gsub("%s+", " "):match("^%s*(.-)%s*$") or "OPEN"
+	if captionText == "" then
+		captionText = "OPEN"
+	end
+	captionText = string.upper(captionText)
+
+	local accent = accentColor or UI_BRAND.focus
+	button.Text = ""
+	button.AutoButtonColor = false
+	button.TextScaled = false
+	button.TextWrapped = false
+	button.BackgroundColor3 = Color3.fromRGB(18, 24, 33)
+	button.BackgroundTransparency = 0.08
+	button.BorderSizePixel = 0
+	button.ClipsDescendants = true
+	ensureCorner(button, "FloatButtonCorner", UDim.new(0, 18))
+	local polish = ensureButtonPolish(button)
+	if polish and polish.Stroke then
+		polish.Stroke.Color = accent:Lerp(Color3.fromRGB(255, 248, 236), 0.2)
+	end
+	if polish and polish.Gradient then
+		polish.Gradient.Rotation = 32
+		polish.Gradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, accent:Lerp(Color3.fromRGB(255, 248, 236), 0.18)),
+			ColorSequenceKeypoint.new(0.55, Color3.fromRGB(44, 56, 74)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 24, 33)),
+		})
+		polish.Gradient.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.18),
+			NumberSequenceKeypoint.new(1, 0.36),
+		})
+	end
+
+	local accentBar = button:FindFirstChild("FloatAccent")
+	if not accentBar or not accentBar:IsA("Frame") then
+		accentBar = Instance.new("Frame")
+		accentBar.Name = "FloatAccent"
+		accentBar.BorderSizePixel = 0
+		accentBar.ZIndex = button.ZIndex + 1
+		accentBar.Parent = button
+	end
+	accentBar.BackgroundColor3 = accent
+	accentBar.BackgroundTransparency = 0.08
+	accentBar.Position = UDim2.new(0.18, 0, 0, 6)
+	accentBar.Size = UDim2.new(0.64, 0, 0, 4)
+	ensureCorner(accentBar, "FloatAccentCorner", UDim.new(0, 999))
+
+	local glyph = button:FindFirstChild("FloatGlyph")
+	if not glyph or not glyph:IsA("TextLabel") then
+		glyph = Instance.new("TextLabel")
+		glyph.Name = "FloatGlyph"
+		glyph.BackgroundTransparency = 1
+		glyph.Font = Enum.Font.GothamBlack
+		glyph.ZIndex = button.ZIndex + 1
+		glyph.Parent = button
+	end
+	glyph.Position = UDim2.new(0.08, 0, 0.12, 0)
+	glyph.Size = UDim2.new(0.84, 0, 0.48, 0)
+	glyph.Text = deriveFloatGlyph(captionText)
+	glyph.TextColor3 = accent:Lerp(Color3.fromRGB(255, 245, 228), 0.35)
+	glyph.TextTransparency = 0.18
+	glyph.TextScaled = false
+	glyph.TextSize = 22
+	glyph.TextXAlignment = Enum.TextXAlignment.Center
+	glyph.TextYAlignment = Enum.TextYAlignment.Center
+
+	local caption = button:FindFirstChild("FloatCaption")
+	if not caption or not caption:IsA("TextLabel") then
+		caption = Instance.new("TextLabel")
+		caption.Name = "FloatCaption"
+		caption.BackgroundTransparency = 1
+		caption.Font = Enum.Font.GothamBold
+		caption.ZIndex = button.ZIndex + 1
+		caption.Parent = button
+	end
+	caption.Position = UDim2.new(0.1, 0, 0.58, 0)
+	caption.Size = UDim2.new(0.8, 0, 0.26, 0)
+	caption.Text = captionText
+	caption.TextColor3 = UI_BRAND.text
+	caption.TextTransparency = 0.04
+	caption.TextScaled = false
+	caption.TextSize = 10
+	caption.TextWrapped = true
+	caption.TextXAlignment = Enum.TextXAlignment.Center
+	caption.TextYAlignment = Enum.TextYAlignment.Top
+
+	local subcaption = button:FindFirstChild("FloatSubcaption")
+	if not subcaption or not subcaption:IsA("TextLabel") then
+		subcaption = Instance.new("TextLabel")
+		subcaption.Name = "FloatSubcaption"
+		subcaption.BackgroundTransparency = 1
+		subcaption.Font = Enum.Font.GothamSemibold
+		subcaption.ZIndex = button.ZIndex + 1
+		subcaption.Parent = button
+	end
+	subcaption.Position = UDim2.new(0.12, 0, 0.83, 0)
+	subcaption.Size = UDim2.new(0.76, 0, 0.12, 0)
+	subcaption.Text = "OPEN"
+	subcaption.TextColor3 = accent:Lerp(Color3.fromRGB(255, 248, 236), 0.25)
+	subcaption.TextTransparency = 0.22
+	subcaption.TextScaled = false
+	subcaption.TextSize = 8
+	subcaption.TextXAlignment = Enum.TextXAlignment.Center
+	subcaption.TextYAlignment = Enum.TextYAlignment.Center
+
 	bindButtonPolish(button)
 	refreshButtonPolish(button, true)
 end
@@ -4700,7 +4837,8 @@ function UISystem:_applyDeviceSizing()
 			match.BasicStateBadge.TextSize = math.max(11, profile:GetTextSize() - 4)
 		end
 		if match.BasicFloatButton then
-			match.BasicFloatButton.TextSize = profile.isConsole and 14 or 12
+			local floatSize = profile.isConsole and 74 or (profile.isMobile and 68 or 66)
+			match.BasicFloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
 		end
 	end
 	if match and match.ResultsTitle and match.ResultsStatus then
@@ -4733,7 +4871,8 @@ function UISystem:_applyDeviceSizing()
 					window.StatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
 				end
 				if window.FloatButton then
-					window.FloatButton.TextSize = profile.isConsole and 14 or 12
+					local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
+					window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
 				end
 				if window.ItemRows then
 					for _, row in ipairs(window.ItemRows) do
@@ -4769,7 +4908,8 @@ function UISystem:_applyDeviceSizing()
 				window.StatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
 			end
 			if window.FloatButton then
-				window.FloatButton.TextSize = profile.isConsole and 14 or 12
+				local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
+				window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
 			end
 			if window.ActionButtons then
 				for _, button in ipairs(window.ActionButtons) do
@@ -4783,16 +4923,15 @@ function UISystem:_applyDeviceSizing()
 
 	local widgets = self._roomBrowserWidgets
 	if widgets and widgets.FloatButton then
-		local sizePx = 64
+		local sizePx = 72
 		if profile.isMobile then
-			sizePx = 72
-		elseif profile.isConsole then
 			sizePx = 78
+		elseif profile.isConsole then
+			sizePx = 84
 		end
 		local _, bottomRightInset = resolveSafeInsets()
 		widgets.FloatButton.Size = UDim2.fromOffset(sizePx, sizePx)
-		widgets.FloatButton.Position = UDim2.new(1, -(20 + bottomRightInset.X), 0.5, 0)
-		widgets.FloatButton.TextSize = profile.isConsole and 14 or 12
+		widgets.FloatButton.Position = UDim2.new(1, -(20 + bottomRightInset.X), 0.56, 0)
 	end
 	if widgets and widgets.RoomPreviewPlayersList then
 		local layout = widgets.RoomPreviewPlayersList:FindFirstChildOfClass("UIGridLayout")
@@ -6784,7 +6923,7 @@ function UISystem:_ensureBasicUIs()
 				floatBtn.Name = floatName
 				floatBtn.AnchorPoint = Vector2.new(0.5, 0.5)
 				floatBtn.Position = auxiliaryConfig.floatPosition
-				floatBtn.Size = UDim2.fromOffset(62, 62)
+				floatBtn.Size = UDim2.fromOffset(60, 60)
 				floatBtn.BackgroundColor3 = Color3.fromRGB(34, 46, 62)
 				floatBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
 				floatBtn.Font = Enum.Font.GothamBold
@@ -6805,6 +6944,7 @@ function UISystem:_ensureBasicUIs()
 
 				self:_setSelectableStyle(floatBtn)
 			end
+			styleFloatingButton(floatBtn, auxiliaryConfig.floatText, auxiliaryConfig.badgeColor)
 			makeFloatingButtonDraggable(floatBtn)
 
 			local itemRows = nil
@@ -7210,8 +7350,8 @@ function UISystem:_ensureBasicUIs()
 				floatBtn = Instance.new("TextButton")
 				floatBtn.Name = "MatchFloatButton"
 				floatBtn.AnchorPoint = Vector2.new(1, 0.5)
-				floatBtn.Position = UDim2.new(1, -18, 0.58, 0)
-				floatBtn.Size = UDim2.fromOffset(62, 62)
+				floatBtn.Position = UDim2.new(1, -18, 0.68, 0)
+				floatBtn.Size = UDim2.fromOffset(66, 66)
 				floatBtn.BackgroundColor3 = Color3.fromRGB(34, 46, 62)
 				floatBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
 				floatBtn.Font = Enum.Font.GothamBold
@@ -7232,6 +7372,7 @@ function UISystem:_ensureBasicUIs()
 
 				self:_setSelectableStyle(floatBtn)
 			end
+			styleFloatingButton(floatBtn, "MATCH", Color3.fromRGB(98, 122, 154))
 			makeFloatingButtonDraggable(floatBtn)
 
 			local function ensureSummaryValue(rowName, labelText)
@@ -7313,7 +7454,7 @@ function UISystem:_ensureBasicUIs()
 					panelSize = Vector2.new(340, 448),
 					panelColor = Color3.fromRGB(18, 25, 34),
 					badgeColor = Color3.fromRGB(92, 104, 60),
-					floatPosition = UDim2.new(1, -18, 0.58, 0),
+					floatPosition = UDim2.new(1, -18, 0.64, 0),
 					floatText = "RANK",
 				}
 				or {
@@ -7323,7 +7464,7 @@ function UISystem:_ensureBasicUIs()
 					panelSize = Vector2.new(340, 318),
 					panelColor = Color3.fromRGB(18, 26, 34),
 					badgeColor = Color3.fromRGB(60, 92, 132),
-					floatPosition = UDim2.new(1, -18, 0.44, 0),
+					floatPosition = UDim2.new(1, -18, 0.36, 0),
 					floatText = "MENU",
 				}
 			panel.AnchorPoint = config.panelAnchorPoint
@@ -7420,7 +7561,7 @@ function UISystem:_ensureBasicUIs()
 				floatBtn.Name = floatName
 				floatBtn.AnchorPoint = Vector2.new(1, 0.5)
 				floatBtn.Position = config.floatPosition
-				floatBtn.Size = UDim2.fromOffset(54, 54)
+				floatBtn.Size = UDim2.fromOffset(60, 60)
 				floatBtn.BackgroundColor3 = Color3.fromRGB(44, 55, 74)
 				floatBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
 				floatBtn.Font = Enum.Font.GothamBold
@@ -7444,6 +7585,7 @@ function UISystem:_ensureBasicUIs()
 			floatBtn.Name = floatName
 			floatBtn.Position = config.floatPosition
 			floatBtn.Text = config.floatText
+			styleFloatingButton(floatBtn, config.floatText, config.badgeColor)
 
 			local footerLabel = panel:FindFirstChild("FooterLabel")
 			if not footerLabel then
@@ -7873,8 +8015,8 @@ function UISystem:_ensureRoomBrowserGui()
 	local floatButton = Instance.new("TextButton")
 	floatButton.Name = "RoomBrowserFloatButton"
 	floatButton.AnchorPoint = Vector2.new(1, 0.5)
-	floatButton.Position = UDim2.new(1, -20, 0.5, 0)
-	floatButton.Size = UDim2.fromOffset(64, 64)
+	floatButton.Position = UDim2.new(1, -20, 0.56, 0)
+	floatButton.Size = UDim2.fromOffset(72, 72)
 	floatButton.BackgroundColor3 = Color3.fromRGB(38, 47, 62)
 	floatButton.TextColor3 = Color3.fromRGB(245, 245, 245)
 	floatButton.Font = Enum.Font.GothamBold
@@ -7893,6 +8035,7 @@ function UISystem:_ensureRoomBrowserGui()
 	floatStroke.Thickness = 2
 	floatStroke.Color = Color3.fromRGB(95, 118, 150)
 	floatStroke.Parent = floatButton
+	styleFloatingButton(floatButton, "RUANG INVESTIGASI", Color3.fromRGB(95, 118, 150))
 	makeFloatingButtonDraggable(floatButton)
 
 	local statusLabel = Instance.new("TextLabel")

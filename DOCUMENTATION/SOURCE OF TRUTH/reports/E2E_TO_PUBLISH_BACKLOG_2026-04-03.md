@@ -415,6 +415,10 @@ Status:
   - `HeroTitle = ZyraaaVex • Bayi III`
   - rows yang terbentuk: `Tier status`, `Pressure band`, `Room browser pulse`, `Mastery footprint`
   - screenshot `ScreenCapture_LeaderboardUI_Final` menunjukkan rank board baru tampil di lobby aktif
+- cluster float button kanan sekarang tidak lagi sekadar lingkaran teks polos:
+  - `MENU`, `PASS`, `ROOMS`, dan `RANK` sudah memakai chip branded dengan glyph + caption + accent warna
+  - lane default kanan dipisah agar tidak saling menumpuk saat beberapa surface disembunyikan sekaligus
+  - validasi live terbaru `ScreenCapture_FloatButtons_Polished_Lobby_2` menunjukkan cluster kanan lebih terbaca dan tidak overlap antar lane internal PASRA
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:
@@ -444,6 +448,9 @@ Status:
   - jumpscare cues final
   - material/lighting pass map
   - icon dan asset visual konten lain
+- catatan kandidat ambience:
+  - kandidat Roblox `Cloudy Space (7399811837)` dan `No Light (7399814871)` sudah dicek lewat `MarketplaceService:GetProductInfo()`
+  - keduanya `IsPublicDomain = false`, jadi tidak dipakai sebagai solusi publish-safe
 
 Pekerjaan:
 
