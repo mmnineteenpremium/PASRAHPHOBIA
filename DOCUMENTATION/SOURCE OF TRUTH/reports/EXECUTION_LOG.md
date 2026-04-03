@@ -2074,3 +2074,64 @@ Lanjut ke blocker publish berikutnya:
 1. finalisasi `AmbientLoop_Main`
 2. teruskan polish UX/brand pada surface yang masih utilitarian
 3. hanya kembali ke eksperimen ghost deterministic setelah blocker publish yang lebih langsung makin tipis
+
+## 2026-04-03 21:02 ICT
+
+### Task
+
+Menaikkan kualitas float button cluster kanan agar lebih Roblox-friendly, terbaca, dan tidak saling menabrak saat beberapa panel disembunyikan bersamaan.
+
+### Linked Issues
+
+- float button kanan masih terlihat seperti debug chips
+- `PASS` dan `ROOMS` saling overlap pada lane default lama
+- brand language panel sudah naik, tetapi affordance tombol minim dan terlalu statis
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- menambahkan helper `styleFloatingButton()` untuk memberi float button:
+  - accent bar
+  - glyph dua huruf
+  - caption utama
+  - subcaption `OPEN`
+- helper ini diterapkan ke:
+  - auxiliary float buttons (`Profile`, `Shop`, `Royal Pass`, dst.)
+  - `MainMenuFloatButton`
+  - `LeaderboardFloatButton`
+  - `MatchFloatButton`
+  - `RoomBrowserFloatButton`
+- ukuran float button dibuat sedikit lebih lapang agar caption tetap terbaca di desktop/mobile/console
+- lane default kanan dipisah:
+  - `MENU` naik ke `0.36`
+  - `PASS` di `0.46`
+  - `ROOMS` di `0.56`
+  - `RANK` di `0.64`
+  - `MATCH` di `0.68`
+- hasilnya cluster kanan tidak lagi numpuk pada lane `0.5` yang sebelumnya dipakai bersama oleh `PASS` dan `ROOMS`
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_float_button_polish_build.rbxlx`
+  - `rojo build default.project.json --output .\_tmp_float_lane_polish_build.rbxlx`
+- screenshot live lobby:
+  - `ScreenCapture_FloatButtons_Polished_Lobby`
+  - `ScreenCapture_FloatButtons_Polished_Lobby_2`
+- probe runtime terbaru membuktikan:
+  - `MainMenuFloatButton = 60x60 @ y=0.36`
+  - `RoyalPassUIFloatButton = 60x60 @ y=0.46`
+  - `RoomBrowserFloatButton = 72x72 @ y=0.56`
+  - `LeaderboardFloatButton = 60x60 @ y=0.64`
+
+### Next Step
+
+Lanjut ke blocker publish yang benar-benar tersisa:
+1. finalisasi `AmbientLoop_Main` dengan asset yang legal dan publish-safe
+2. lanjutkan polish visual/audio lain yang masih generik
+3. pertahankan jalur forced-ghost sebagai eksperimen terpisah sampai memang dibutuhkan lagi
