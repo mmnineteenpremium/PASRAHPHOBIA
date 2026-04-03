@@ -3318,3 +3318,58 @@ Mengubah baseline pintu map playable dari `PromptManual` menjadi hybrid radius/m
 2. lanjut ke pass gameplay berikutnya:
    - hiding spot affordance
    - flow traversal/map readability
+
+## 2026-04-03 20:02 ICT
+
+### Task
+
+Menambahkan affordance world-space untuk `SafeZone` saat hunt aktif, supaya pemain tidak hanya diberi teks HUD tetapi juga target visual nyata untuk berlindung di runtime map.
+
+### Linked Issues
+
+- rule `Hidden / Sheltered` sudah hidup, tetapi affordance shelter di dunia 3D masih terlalu samar
+- validasi pertama sempat bohong karena Rojo belum aktif, sehingga Studio masih menjalankan source lama tanpa marker runtime
+
+### Files Changed
+
+- `src/ServerScriptService/Server/HidingSystem/Service.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `HidingSystem.Service` sekarang membuat marker runtime untuk setiap `SafeZone`:
+  - folder runtime `SafeZoneRuntimeMarker`
+  - `BoxHandleAdornment` outline
+  - `BillboardGui` dengan panel `SAFE ZONE`
+- marker hanya diaktifkan saat hunt aktif, sejalan dengan visual `ForceField` biru yang sudah ada
+- cleanup match sekarang juga membersihkan marker runtime agar clone berikutnya tidak mewarisi adornment lama
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_safezone_affordance_build.rbxlx`
+- setelah Rojo diaktifkan ulang, Studio edit-time mengonfirmasi patch benar-benar tersinkron:
+  - grep `SafeZoneRuntimeMarker` ditemukan
+  - grep `Diam di sini saat hunt` ditemukan
+- validasi live Studio pada jalur `Ranked -> CreateRoom -> HostStart -> ForceHunt` sukses:
+  - `LocalPlayer.MatchPhase = Hunt`
+  - `Workspace.ActiveMatches.Match_match_1.HauntedHouse.HauntedHouse.SafeZones.SafeZone_1` membawa:
+    - `Transparency = 0.82`
+    - `Material = Enum.Material.ForceField`
+    - child `SafeZoneRuntimeMarker`
+    - `Outline.Visible = true`
+    - `Billboard.Enabled = true`
+    - `Billboard.StudsOffsetWorldSpace = 0, 6.6, 0`
+
+### Interpretation
+
+- shelter sekarang tidak lagi hanya konsep backend + teks HUD; pemain punya marker world-space yang jujur saat hunt
+- debt berikutnya bergeser ke kualitas placement hiding spot lintas map dan layout traversal, bukan lagi ke affordance minimum untuk survive
+
+### Next Step
+
+1. checkpoint commit untuk slice safe zone affordance
+2. lanjut ke readability/traversal pass berikutnya:
+   - audit spot hiding final lintas map
+   - polish flow layout dan akses ruangan penting
