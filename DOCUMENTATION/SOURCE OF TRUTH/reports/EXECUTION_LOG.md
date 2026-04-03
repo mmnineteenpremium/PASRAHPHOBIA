@@ -3924,7 +3924,7 @@ Menutup blocker runtime `Preparing -> MatchStarted`, lalu menyelesaikan validasi
 
 ### Task
 
-Memulai traversal polish pada interaction point residual dengan pendekatan anchor berbasis pintu, lalu memvalidasi bahwa patch baru tidak merusak host-start/match start.
+Memulai traversal polish pada interaction point dengan pendekatan anchor berbasis pintu, lalu memperluasnya menjadi fallback global `Door_<RoomName>` yang tetap aman terhadap host-start/match start.
 
 ### Linked Issues
 
@@ -3941,13 +3941,19 @@ Memulai traversal polish pada interaction point residual dengan pendekatan ancho
 ### Change Summary
 
 - `MapRuntimePatches` sekarang punya `INTERACTION_DOOR_OVERRIDES`
+- fallback normal interaction point sekarang juga bisa otomatis mencari pintu exact-match `Door_<RoomName>`
 - patch interaction point bisa menghitung anchor dari:
   - posisi pintu
   - arah `door -> room center`
   - `insideOffset` per room
-- target pertama yang ditutup:
+- explicit target pertama yang ditutup:
   - `HauntedHouse`: `Interact_Bedroom1`, `Interact_Kitchen`
   - `EmptyBuilding`: `Interact_WorkspaceOpen`, `Interact_OfficeB`, `Interact_Bathroom1`
+- setelah coverage dicek, fallback global ini ternyata berlaku hampir penuh:
+  - `AbandonedPalace`: `8/8`
+  - `StudioMMNineteen`: `8/8`
+  - `EmptyBuilding`: `8/8`
+  - `HauntedHouse`: `7/8`
 - explicit vector override lama untuk `EmptyBuilding` yang tidak lagi masuk akal sudah dibuang
 
 ### Validation Notes
@@ -3955,16 +3961,23 @@ Memulai traversal polish pada interaction point residual dengan pendekatan ancho
 - build source sukses:
   - `rojo build default.project.json --output .\\_tmp_map_patch_validation.rbxlx`
 - edit-mode clone validation:
+  - coverage global:
+    - `AbandonedPalace`: `8/8` anchor pintu
+    - `StudioMMNineteen`: `8/8` anchor pintu
+    - `EmptyBuilding`: `8/8` anchor pintu
+    - `HauntedHouse`: `7/8` anchor pintu, `Interact_HallwayMain` tetap room-center
   - `HauntedHouse`
     - `Interact_Bedroom1 = 1178.75, 2, 35`
     - `Interact_Kitchen = 1220.25, 2, -25`
+    - `Interact_HallwayMain = 1200, 2, 0`
   - `EmptyBuilding`
     - `Interact_WorkspaceOpen = 800, 14, 13.75`
     - `Interact_OfficeB = 774.75, 2, 35`
     - `Interact_Bathroom1 = 826.25, 2, 35`
-- smoke test live `EmptyBuilding` juga tetap sehat:
+- smoke test live tetap sehat:
   - `PasrahLastHostStartCommit = commit ok=true err=nil roomId=1`
   - `PasrahLastMatchStartTrace = match=match_1 players=1 teleported=1 phase=PreparationPhase map=EmptyBuilding mode=Classic`
+  - `PasrahLastMatchStartTrace = match=match_1 players=1 teleported=1 phase=PreparationPhase map=HauntedHouse mode=Classic`
   - runtime clone memakai posisi interaction point yang sama dengan hasil edit-mode validation
 
 ### Interpretation
@@ -3972,9 +3985,10 @@ Memulai traversal polish pada interaction point residual dengan pendekatan ancho
 - traversal polish sekarang bergerak ke arah yang lebih profesional:
   - interaksi diletakkan dekat akses masuk room
   - bukan sekadar di tengah ruangan atau di koordinat residual yang tidak sinkron lagi
-- pola `door anchor + insideOffset` juga lebih mudah dipelihara saat map direvisi daripada menyimpan angka raw yang tidak punya konteks
+- pola `door anchor + insideOffset` sekarang juga menjadi fallback sistemik lintas map, bukan patch lokal sekali pakai
+- ini menurunkan kebutuhan override manual untuk map yang struktur namanya konsisten
 
 ### Next Step
 
-1. checkpoint commit untuk interaction point door-anchor pass pertama
+1. checkpoint commit untuk interaction point door-anchor fallback global
 2. lanjut ke room residual/traversal berikutnya dan audit owner client yang masih `in progress`

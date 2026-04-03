@@ -858,29 +858,34 @@ Urutan yang paling masuk akal dari titik sekarang:
 
 ## Update 2026-04-03 23:18 ICT
 
-- traversal/interaksi map sekarang mulai dipoles dengan anchor berbasis pintu, bukan sekadar titik tengah room:
-  - `HauntedHouse`
-    - `Interact_Bedroom1` sekarang diposisikan dari `Door_Bedroom1` ke arah dalam room
-    - `Interact_Kitchen` sekarang diposisikan dari `Door_Kitchen` ke arah dalam room
-  - `EmptyBuilding`
-    - `Interact_WorkspaceOpen` sekarang diposisikan dari `Door_WorkspaceOpen`
-    - `Interact_OfficeB` sekarang diposisikan dari `Door_OfficeB`
-    - `Interact_Bathroom1` sekarang diposisikan dari `Door_Bathroom1`
+- traversal/interaksi map sekarang memakai fallback global berbasis pintu, bukan sekadar titik tengah room:
+  - jika ada pintu bernama `Door_<RoomName>`, interaction point otomatis di-anchor dari pintu ke arah dalam room
+  - explicit door override tetap dipakai untuk room yang butuh jarak khusus
+  - hanya `HauntedHouse.Interact_HallwayMain` yang tetap fallback ke pusat room karena memang tidak punya pintu matching
 - pendekatan ini mengganti override angka liar yang tidak lagi representatif terhadap layout room modern
 - validasi tertutup:
   - build source sukses: `_tmp_map_patch_validation.rbxlx`
-  - edit-mode clone validation:
+  - edit-mode clone validation menunjukkan coverage global:
+    - `AbandonedPalace`: `8/8` interaction point ter-anchor pintu
+    - `StudioMMNineteen`: `8/8` interaction point ter-anchor pintu
+    - `EmptyBuilding`: `8/8` interaction point ter-anchor pintu
+    - `HauntedHouse`: `7/8` interaction point ter-anchor pintu, `Interact_HallwayMain` tetap fallback room-center
+  - contoh hasil patch:
     - `HauntedHouse`
-      - `Interact_Bedroom1 = 1178.75, 2, 35`
       - `Interact_Kitchen = 1220.25, 2, -25`
+      - `Interact_Bedroom1 = 1178.75, 2, 35`
+      - `Interact_HallwayMain = 1200, 2, 0`
     - `EmptyBuilding`
       - `Interact_WorkspaceOpen = 800, 14, 13.75`
       - `Interact_OfficeB = 774.75, 2, 35`
       - `Interact_Bathroom1 = 826.25, 2, 35`
-  - smoke test live `EmptyBuilding`:
+  - smoke test live:
     - `HostStartCommit = commit ok=true err=nil roomId=1`
-    - `MatchStartTrace` kembali sukses
-    - interaction point runtime clone membaca posisi baru yang sama persis
+    - `MatchStartTrace` kembali sukses pada `EmptyBuilding` dan `HauntedHouse`
+    - runtime clone membaca posisi baru yang sama persis, termasuk:
+      - `EmptyBuilding.Interact_WorkspaceOpen = 800, 14, 13.75`
+      - `HauntedHouse.Interact_LivingRoom = 1183.75, 2, 0`
+      - `HauntedHouse.Interact_HallwayMain = 1200, 2, 0`
 - dampak:
   - interaction point lebih dekat ke akses masuk room
   - traversal visual lebih logis untuk map yang belum full redesign
