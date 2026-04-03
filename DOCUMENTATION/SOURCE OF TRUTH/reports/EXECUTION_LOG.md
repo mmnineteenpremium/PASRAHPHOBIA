@@ -5020,3 +5020,29 @@ Menambah guard dedupe audio transisi untuk mengurangi risiko cue ganda pada fase
 
 1. lakukan verifikasi pendengaran manual flow host-start -> countdown -> teleport
 2. lanjutkan publish gate lisensi (`Pocong` proof archive + legacy cleanup)
+
+## 2026-04-04 03:04 ICT
+
+### Task
+
+Memverifikasi guard dedupe `HuntAudio` dengan probe runtime terkontrol.
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Validation Notes
+
+- metode:
+  - dari client runtime, panggil `_playCategoryAudio(\"HuntAudio\", { cue = \"dedupe_probe\" })` dua kali dengan jeda `0.2s`
+  - hitung jumlah `Sound` bernama `HuntAudioRuntime` setelah trigger pertama dan kedua
+- hasil:
+  - `first=1`
+  - `second=1`
+  - artinya trigger kedua tidak membuat instance tambahan untuk cue identik dalam jendela dedupe
+
+### Interpretation
+
+- dedupe guard `HuntAudio` (`2.25s`) berfungsi sesuai tujuan untuk menahan duplikasi cepat
+- risiko “double hit” dari event duplikat berdekatan berkurang signifikan pada jalur ini

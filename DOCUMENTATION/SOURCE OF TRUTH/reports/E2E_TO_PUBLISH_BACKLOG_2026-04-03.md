@@ -1204,3 +1204,11 @@ Urutan yang paling masuk akal dari titik sekarang:
   - build source sukses: `_tmp_audio_dedupe_guard.rbxlx`
   - smoke play start/stop berhasil tanpa error sintaks
 
+## Update 2026-04-04 03:04 ICT
+
+- verifikasi dedupe hunt audio sudah dilakukan dengan probe lokal terkontrol:
+  - trigger `HuntAudio` cue yang sama dua kali dalam jeda `0.2s`
+  - hasil runtime count: `first=1 second=1` (tidak naik menjadi 2)
+- dampak:
+  - guard `HuntAudio` dedupe `2.25s` terbukti menahan playback duplikat cepat untuk cue yang sama
+
