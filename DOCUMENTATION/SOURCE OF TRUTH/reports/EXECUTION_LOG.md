@@ -2297,3 +2297,45 @@ Task responsive yang benar-benar besar masih tersisa:
 1. `RoomBrowserUI` fullscreen/flexible layout
 2. `RoyalPassUI` 30-day reward + 30-day mission flow
 3. touch target dan typography mobile yang lebih agresif setelah sheet utama aman
+
+## 2026-04-03 13:24 ICT
+
+### Task
+
+Menutup overlap visual `RoomBrowserUI` terhadap rail kanan dan membuat browser tampil lebih fokus pada viewport aktif.
+
+### Linked Issues
+
+- right rail masih terlihat di samping `RoomBrowserUI`, sehingga surface utama terasa bertumpuk
+- room browser masih terlalu kecil dan tidak memakai ruang viewport secara cukup agresif
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- float kanan auxiliary/basic sekarang otomatis disembunyikan saat `RoomBrowserUI` aktif
+- `_layoutLobbyFloatRail()` tidak lagi mencoba menyusun rail kanan ketika room browser sedang terbuka
+- scaling `RoomBrowserUI` dinaikkan menjadi lebih agresif terhadap viewport + safe inset, jadi browser tidak lagi berhenti di footprint desktop lama
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_roombrowser_focus_build.rbxlx`
+- validasi live:
+  - `ScreenCapture_RoomBrowser_Focus_NoOverlap`
+  - runtime:
+    - `RoomBrowserUI.Panel.Visible = true`
+    - `RoomBrowserUI.Panel.UIScale.Scale = 1.18`
+    - `Viewport = 1180x942`
+    - rail kanan lain tidak tampil di layar saat room browser aktif
+
+### Next Step
+
+Lanjut ke surface berikutnya yang masih paling jelas unfinished:
+1. struktur `RoyalPassUI` 30 hari
+2. misi 30 hari + placeholder reward rarity 5
+3. setelah itu baru kembali ke rework layout `RoomBrowserUI` mobile-fullscreen yang lebih besar
