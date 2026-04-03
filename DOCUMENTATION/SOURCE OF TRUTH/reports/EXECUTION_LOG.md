@@ -3098,3 +3098,62 @@ Mengganti flashlight procedural lama dengan slice flashlight tangan-kanan berbas
 
 1. lanjutkan pass polish visual/tool readability berikutnya tanpa menyentuh ulang arsitektur flashlight
 2. kalau perlu, lakukan pass art lanjutan agar silhouette tangan lebih natural, tetapi basis system sudah stabil
+
+## 2026-04-03 17:50 ICT
+
+### Task
+
+Menutup gap `hiding/survival clarity` tanpa membuat sistem baru: validasi runtime `SafeZone` dan `hunt pressure` yang sudah ada, lalu promosikan state survive ke `MatchUI` supaya pemain mendapat instruksi yang jujur saat diburu.
+
+### Linked Issues
+
+- pemain belum punya penjelasan yang cukup jelas tentang cara selamat dari hunt
+- `HidingSystem` dan `PlayerHealthSystem` sudah punya state runtime, tetapi `MatchUI` masih terlalu generik saat hunt aktif
+- safe zone ada di map, namun guidance ke pemain belum memanfaatkan state `Hidden / Sheltered / Tracked / Critical`
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- saya pertahankan arsitektur yang ada dan hanya menambah interpretasi UI:
+  - helper `getHuntStatusSnapshot()`
+  - helper badge `HIDDEN / SHELTERED / TRACKED / CRITICAL / HUNT`
+  - helper controls hint yang berubah mengikuti state survive
+- `MatchUI` sekarang saat hunt:
+  - status row tidak lagi selalu generik `CRITICAL`
+  - summary rows menampilkan guidance survive yang lebih eksplisit
+  - controls hint berganti antara:
+    - cari safe zone
+    - putus line-of-sight
+    - diam dan tunggu hunt selesai
+
+### Validation Notes
+
+- validasi live server rule:
+  - `HidingSystem` aktif
+  - `HauntedHouse` runtime mendaftarkan `2` safe zone
+  - saat karakter dipindahkan ke `SafeZone_1`, atribut player berubah menjadi:
+    - `PasrahHideState = Hidden`
+    - `PasrahHideZoneId = SafeZone_1`
+    - `PasrahHuntThreatState = Sheltered`
+- validasi client:
+  - tidak ada error baru di log client setelah patch `UI/Main.lua`
+- batas validasi yang masih terbuka:
+  - helper Studio `AdvancePhase/ForceHunt` belum konsisten memindahkan panel ke visual state `Hunt`
+  - jadi verifikasi slice ini ditutup pada level:
+    - state server live benar
+    - interpretasi UI sudah source-controlled dan bebas error
+
+### Interpretation
+
+- debt utama sekarang bukan lagi rule survive, melainkan penyajian dan alur test helper Studio
+- pemain sekarang punya guidance survive yang jauh lebih dekat ke reality state server, bukan copy generik
+
+### Next Step
+
+1. lanjutkan noise/runtime cleanup atau phase helper Studio agar validasi hunt visual lebih deterministik
+2. setelah itu masuk ke slice polish berikutnya yang paling relevan dengan publish

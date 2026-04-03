@@ -130,6 +130,14 @@ Status:
   - `FearAudioRuntime`
   - `GhostAudioRuntime`
   - `HuntAudioRuntime`
+- hunt/survival clarity sudah naik satu level:
+  - `HidingSystem` live tervalidasi mendaftarkan safe zone aktif
+  - `MatchUI` hunt sekarang membaca state survive live:
+    - `HIDDEN`
+    - `SHELTERED`
+    - `TRACKED`
+    - `CRITICAL`
+  - blocker sisa untuk slice ini pindah ke helper test Studio yang belum konsisten memaksa phase visual `Hunt`
 
 Pekerjaan:
 

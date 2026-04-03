@@ -1596,6 +1596,56 @@ local function getHuntObjectiveText()
 	return "Hunt aktif. Gunakan prompt pintu, putus line-of-sight, dan cari ruang aman jika tersedia."
 end
 
+local function getHuntStatusSnapshot()
+	local player = Players.LocalPlayer
+	if not player then
+		return {
+			hideState = "Exposed",
+			hideZoneId = "",
+			threatState = "Clear",
+			threatDistance = nil,
+		}
+	end
+
+	return {
+		hideState = tostring(player:GetAttribute("PasrahHideState") or "Exposed"),
+		hideZoneId = tostring(player:GetAttribute("PasrahHideZoneId") or ""),
+		threatState = tostring(player:GetAttribute("PasrahHuntThreatState") or "Clear"),
+		threatDistance = tonumber(player:GetAttribute("PasrahHuntThreatDistance")),
+	}
+end
+
+local function getHuntStatusBadge(snapshot)
+	snapshot = snapshot or getHuntStatusSnapshot()
+	if snapshot.hideState == "Hidden" then
+		return "HIDDEN"
+	end
+	if snapshot.threatState == "Sheltered" then
+		return "SHELTERED"
+	end
+	if snapshot.threatState == "Critical" or snapshot.threatState == "Close" then
+		return "CRITICAL"
+	end
+	if snapshot.threatState == "Tracked" or snapshot.threatState == "Warn" then
+		return "TRACKED"
+	end
+	return "HUNT"
+end
+
+local function getHuntControlsHintText()
+	local snapshot = getHuntStatusSnapshot()
+	if snapshot.hideState == "Hidden" then
+		return "SAFE ZONE AKTIF  •  DIAM  •  TUNGGU HUNT SELESAI"
+	end
+	if snapshot.threatState == "Critical" or snapshot.threatState == "Close" then
+		return "PUTUS LINE-OF-SIGHT  •  PINTU: E/X/TAP  •  SAFE ZONE BIRU"
+	end
+	if snapshot.threatState == "Tracked" or snapshot.threatState == "Warn" then
+		return "PUTAR JALUR  •  JAGA JARAK  •  CARI SAFE ZONE BIRU"
+	end
+	return "PINTU: E/X/TAP  •  TARGET: SAFE ZONE BIRU  •  JANGAN LARI LURUS"
+end
+
 local function bulletList(list, emptyText)
 	if type(list) ~= "table" or #list == 0 then
 		return emptyText or "- Tidak ada"
@@ -3136,16 +3186,48 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 		local deathSummary = viewState == "Hunt" and "Hindari contact" or "Belum ada"
 		local durationSummary = remaining and formatCountdown(remaining) or "Live"
 		local rewardSummary = viewState == "Lobby" and "-" or "Pending"
+		if viewState == "Hunt" then
+			local huntSnapshot = getHuntStatusSnapshot()
+			local huntBadge = getHuntStatusBadge(huntSnapshot)
+			local huntDistanceText = type(huntSnapshot.threatDistance) == "number"
+				and string.format("%dst", math.max(0, math.floor(huntSnapshot.threatDistance + 0.5)))
+				or "-"
+			local zoneLabel = huntSnapshot.hideZoneId ~= "" and huntSnapshot.hideZoneId or "Belum aman"
+			local guidance = "Cari safe zone"
+			if huntSnapshot.hideState == "Hidden" then
+				guidance = zoneLabel
+				deathSummary = "Diam sampai selesai"
+			elseif huntSnapshot.threatState == "Critical" or huntSnapshot.threatState == "Close" then
+				guidance = "Putus line-of-sight"
+				deathSummary = "Ghost " .. huntDistanceText
+			elseif huntSnapshot.threatState == "Tracked" or huntSnapshot.threatState == "Warn" then
+				guidance = "Rotasi lewat pintu"
+				deathSummary = "Ghost " .. huntDistanceText
+			else
+				deathSummary = "Safe zone biru aktif"
+			end
 
-		self:_setSummaryValue(rowWidgets.status, phaseSummary[viewState or "Lobby"] or "LIVE")
-		self:_setSummaryValue(rowWidgets.ghostType, #confirmedEvidence > 0 and "Profil menyempit" or "Belum teridentifikasi")
-		self:_setSummaryValue(rowWidgets.correctGuess, candidateSummary)
-		self:_setSummaryValue(rowWidgets.evidenceCollected, evidenceSummary)
-		self:_setSummaryValue(rowWidgets.playersSurvived, survivalSummary)
-		self:_setSummaryValue(rowWidgets.playersDead, deathSummary)
-		self:_setSummaryValue(rowWidgets.matchDuration, durationSummary)
-		self:_setSummaryValue(rowWidgets.currencyReward, rewardSummary)
-		self:_setSummaryValue(rowWidgets.xpReward, rewardSummary)
+			self:_setSummaryValue(rowWidgets.status, huntBadge)
+			self:_setSummaryValue(rowWidgets.ghostType, "Mode berburu")
+			self:_setSummaryValue(rowWidgets.correctGuess, guidance)
+			self:_setSummaryValue(rowWidgets.evidenceCollected, evidenceSummary)
+			self:_setSummaryValue(rowWidgets.playersSurvived, zoneLabel)
+			self:_setSummaryValue(rowWidgets.playersDead, deathSummary)
+			self:_setSummaryValue(rowWidgets.matchDuration, durationSummary)
+			self:_setSummaryValue(rowWidgets.currencyReward, rewardSummary)
+			self:_setSummaryValue(rowWidgets.xpReward, rewardSummary)
+			survivalSummary = guidance
+		else
+			self:_setSummaryValue(rowWidgets.status, phaseSummary[viewState or "Lobby"] or "LIVE")
+			self:_setSummaryValue(rowWidgets.ghostType, #confirmedEvidence > 0 and "Profil menyempit" or "Belum teridentifikasi")
+			self:_setSummaryValue(rowWidgets.correctGuess, candidateSummary)
+			self:_setSummaryValue(rowWidgets.evidenceCollected, evidenceSummary)
+			self:_setSummaryValue(rowWidgets.playersSurvived, survivalSummary)
+			self:_setSummaryValue(rowWidgets.playersDead, deathSummary)
+			self:_setSummaryValue(rowWidgets.matchDuration, durationSummary)
+			self:_setSummaryValue(rowWidgets.currencyReward, rewardSummary)
+			self:_setSummaryValue(rowWidgets.xpReward, rewardSummary)
+		end
 	end
 
 	local statusValue = rowWidgets.status and rowWidgets.status.Text or "-"
@@ -3157,6 +3239,12 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 			statusRow.BackgroundColor3 = Color3.fromRGB(68, 40, 40)
 		elseif statusValue == "CRITICAL" then
 			statusRow.BackgroundColor3 = Color3.fromRGB(88, 46, 46)
+		elseif statusValue == "TRACKED" then
+			statusRow.BackgroundColor3 = Color3.fromRGB(94, 72, 44)
+		elseif statusValue == "HUNT" then
+			statusRow.BackgroundColor3 = Color3.fromRGB(78, 48, 48)
+		elseif statusValue == "HIDDEN" or statusValue == "SHELTERED" then
+			statusRow.BackgroundColor3 = Color3.fromRGB(34, 62, 74)
 		elseif statusValue == "LIVE" then
 			statusRow.BackgroundColor3 = Color3.fromRGB(30, 56, 44)
 		elseif statusValue == "BRIEFING" or statusValue == "LOADING" then
@@ -3322,7 +3410,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	if match.ControlsHintLabel then
 		match.ControlsHintLabel.Visible = self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
 		match.ControlsHintLabel.Text = viewState == "Hunt"
-			and "PINTU: E/X/TAP  •  TARGET: SAFE ZONE BIRU  •  JOURNAL: J"
+			and getHuntControlsHintText()
 			or self._matchControlsHintText
 	end
 	if match.ObjectiveLabel then
