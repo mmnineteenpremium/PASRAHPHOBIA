@@ -122,8 +122,22 @@ Aturan baca:
      - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan:
        - `Creator = samthemagicman`
        - `IsPublicDomain = true`
-       - `AssetTypeId = 3`
+     - `AssetTypeId = 3`
      - asset ini tidak lagi dianggap abu-abu untuk publish gate
+
+8. `ButtonClick` runtime fallback
+   - Asset:
+     - `rbxasset://sounds/volume_slider.ogg`
+   - Source in repo:
+     - `src/client/UI/Main.lua`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - fallback built-in Roblox dipakai langsung oleh `UISystem` saat template `ButtonClick_01` belum punya asset final
+     - validasi live `2026-04-03` membuktikan klik tombol lobby canonical memilih cue built-in ini
+   - Publish gate:
+     - aman sebagai fallback runtime
+     - tetap boleh diganti nanti jika ingin signature click brand sendiri
 
 ### Animation active
 
@@ -154,12 +168,11 @@ Aturan baca:
    - Source in repo:
      - `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
      - `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
-     - `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
    - Provenance status:
      - `replace/remove`
    - Notes:
      - broken ID lama sudah dibuang dari source aktif
-     - tiga slot ini masih kosong secara eksplisit dan tidak boleh dianggap publish-ready
+     - dua slot ini masih kosong secara eksplisit dan tidak boleh dianggap publish-ready
      - `AmbientLoop_Main` juga berarti ambience loop aktif masih belum punya asset final
    - Replacement queue:
      - lihat `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
@@ -185,7 +198,7 @@ Status:
    - screenshot license page
    - nama author
    - syarat attribution
-2. Isi tiga slot audio kosong yang masih `replace/remove`.
+2. Isi dua slot audio kosong yang masih `replace/remove`.
 3. Upload candidate audio legal ke akun Roblox aktif lalu isi `AudioContent` source dengan asset ID final.
 4. Putuskan nasib asset `LegacyDisabled`:
    - hapus dari source

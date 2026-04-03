@@ -197,6 +197,12 @@ local UI_SOUND_PATHS = {
 	CountdownTick = { "Assets", "Audio", "UI", "CountdownTick_01" },
 	TeleportDrop = { "Assets", "Audio", "UI", "TeleportDrop_01" },
 }
+local UI_SOUND_FALLBACKS = {
+	ButtonClick = {
+		SoundId = "rbxasset://sounds/volume_slider.ogg",
+		Volume = 0.14,
+	},
+}
 local cachedSoundTemplates = {}
 
 local function logRoomClickConnected(buttonName)
@@ -263,6 +269,23 @@ local function resolveSoundTemplate(pathSegments)
 	return nil
 end
 
+local function createFallbackSoundTemplate(soundKey)
+	local config = UI_SOUND_FALLBACKS[soundKey]
+	if type(config) ~= "table" then
+		return nil
+	end
+
+	local template = Instance.new("Sound")
+	template.Name = "Fallback" .. tostring(soundKey)
+	template.SoundId = tostring(config.SoundId or "")
+	template.Volume = tonumber(config.Volume) or 0.2
+	template.RollOffMinDistance = tonumber(config.RollOffMinDistance) or 5
+	template.RollOffMaxDistance = tonumber(config.RollOffMaxDistance) or 40
+	template.Looped = config.Looped == true
+	template:SetAttribute("PasrahRuntimeTemplate", true)
+	return template
+end
+
 local function getCachedSoundTemplate(soundKey)
 	local pathSegments = UI_SOUND_PATHS[soundKey]
 	if type(pathSegments) ~= "table" then
@@ -270,14 +293,22 @@ local function getCachedSoundTemplate(soundKey)
 	end
 
 	local cached = cachedSoundTemplates[soundKey]
-	if cached and cached.Parent then
+	if cached and (cached.Parent or cached:GetAttribute("PasrahRuntimeTemplate") == true) then
 		return cached
 	end
 
 	local resolved = resolveSoundTemplate(pathSegments)
-	if resolved then
+	if resolved and tostring(resolved.SoundId or "") ~= "" then
 		cachedSoundTemplates[soundKey] = resolved
+		return resolved
 	end
+
+	local fallback = createFallbackSoundTemplate(soundKey)
+	if fallback then
+		cachedSoundTemplates[soundKey] = fallback
+		return fallback
+	end
+
 	return resolved
 end
 
@@ -310,6 +341,25 @@ local function playRuntimeUISound(soundKey, options)
 end
 
 local function playUIButtonClick()
+	if not getCachedSoundTemplate("ButtonClick") then
+		local fallbackConfig = UI_SOUND_FALLBACKS.ButtonClick
+		if type(fallbackConfig) == "table" and type(fallbackConfig.SoundId) == "string" and fallbackConfig.SoundId ~= "" then
+			local runtimeSound = Instance.new("Sound")
+			runtimeSound.Name = "RuntimeButtonClick"
+			runtimeSound.SoundId = fallbackConfig.SoundId
+			runtimeSound.Volume = tonumber(fallbackConfig.Volume) or 0.14
+			runtimeSound.Looped = false
+			runtimeSound.Parent = SoundService
+			runtimeSound:Play()
+			task.delay(math.max(runtimeSound.TimeLength, 0.35) + 0.2, function()
+				if runtimeSound and runtimeSound.Parent then
+					runtimeSound:Destroy()
+				end
+			end)
+			return
+		end
+	end
+
 	playRuntimeUISound("ButtonClick", {
 		PlaybackJitter = 0.04,
 	})

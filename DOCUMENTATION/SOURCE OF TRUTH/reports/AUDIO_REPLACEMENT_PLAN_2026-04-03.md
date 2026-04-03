@@ -19,7 +19,15 @@ Slot canonical yang **masih kosong** di source aktif sekarang tinggal:
 
 1. `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
 2. `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
-3. `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+
+Slot canonical yang **sudah punya fallback runtime aman** walau asset Roblox final belum di-upload:
+
+1. `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+   - runtime canonical `UISystem` sekarang memakai fallback built-in `rbxasset://sounds/volume_slider.ogg`
+   - validasi live `2026-04-03` membuktikan klik tombol lobby canonical memang memilih cue itu
+   - status:
+     - cukup untuk micro-feedback runtime saat ini
+     - tetap boleh diganti nanti dengan signature click `PASRAHPHOBIA` setelah asset final di-upload
 
 Slot canonical yang **sudah terisi lagi** dan sudah tervalidasi runtime:
 
@@ -150,10 +158,15 @@ Semua kandidat di bawah dipilih karena lisensinya jelas dari halaman sumber dan 
 - Role:
   - klik tombol UI utama
   - dipakai untuk micro-feedback pada lobby, room browser, shop, dan panel auxiliary
-- Candidate:
-  - pending
-  - belum ada asset final yang dikunci untuk karakter klik UI brand `PASRAHPHOBIA`
-  - jangan pakai asset sementara yang tidak punya provenance jelas hanya demi menutup slot
+- Current runtime fallback:
+  - `rbxasset://sounds/volume_slider.ogg`
+  - dipakai langsung dari `UISystem` sebagai fallback built-in Roblox
+- Status:
+  - blocker runtime sudah tertutup
+  - blocker brand/audio-direction masih terbuka kalau nanti ingin cue khas sendiri
+- Candidate final:
+  - optional
+  - hanya diperlukan jika ingin mengganti fallback built-in dengan signature click yang lebih khas
 
 ## Kenapa Belum Langsung Di-apply
 
@@ -201,7 +214,7 @@ pwsh -NoLogo -File .\scripts\set-audio-asset-ids.ps1 `
 
 Dokumen ini dianggap selesai jika:
 
-1. tiga slot kosong yang tersisa sudah punya Roblox asset ID final
+1. dua slot kosong yang tersisa (`AmbientLoop_Main`, `GhostWhisper_01`) sudah punya Roblox asset ID final
 2. source `.model.json` sudah terisi
 3. playtest boot tidak lagi memakai slot canonical kosong pada jalur aktif
 4. `ASSET_LICENSE_LEDGER_2026-04-03.md` tidak lagi menyimpan unresolved audio slot sebagai blocker publish

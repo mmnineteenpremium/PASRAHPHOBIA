@@ -118,10 +118,10 @@ Status:
     - `EnvironmentalCreak_01`
     - `GhostManifest_01`
     - `HuntStart_01`
+    - `ButtonClick_01` sekarang punya fallback runtime built-in Roblox di `UISystem`
   - masih kosong eksplisit:
     - `AmbientLoop_Main`
     - `GhostWhisper_01`
-    - `ButtonClick_01`
 - validasi live terbaru menunjukkan boot tidak lagi mengeluarkan warning audio invalid sama sekali
 - root cause audio modern juga sudah ditutup:
   - `AudioSystem` sekarang me-relay event audio ke `MatchEvent` client
@@ -136,7 +136,7 @@ Pekerjaan:
 
 - keluarkan txt contoh dari tree runtime
 - trim registry untuk vertical slice
-- ganti tiga slot audio kosong yang tersisa dengan asset final yang sah
+- ganti dua slot audio kosong yang tersisa dengan asset final yang sah
 
 Done jika:
 
@@ -428,7 +428,7 @@ Status:
 - surface preview map aktif sudah naik dari placeholder generik ke visual prosedural source-owned
 - debt polish yang masih tersisa tetap besar:
   - ambient loops final
-  - UI click audio final
+  - signature UI click audio final jika nanti ingin mengganti fallback built-in
   - jumpscare cues final
   - material/lighting pass map
   - icon dan asset visual konten lain
@@ -501,7 +501,8 @@ Status:
   - pack animasi aktif terverifikasi sebagai animasi default `Roblox`
 - blocker yang masih nyata sekarang menyempit ke:
   - `Pocong` masih `user-asserted` sampai bukti lisensinya diarsipkan
-  - tiga slot audio canonical masih `replace/remove`
+  - dua slot audio canonical masih `replace/remove`
+  - `ButtonClick` runtime sudah tertutup via fallback built-in, tetapi belum punya signature click brand final
   - upload asset final ke Roblox account masih perlu langkah manual
 - replacement queue dan helper apply sekarang sudah siap:
   - `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
