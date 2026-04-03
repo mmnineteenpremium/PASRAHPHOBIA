@@ -50,7 +50,68 @@ Aturan baca:
        - `AssetTypeId = 3`
      - asset ini sekarang dianggap internal/account-owned untuk workspace aktif ini
 
-2. `Jumpscare_01`
+2. `EnvironmentalCreak_01`
+   - Asset:
+     - `rbxassetid://139204195403262`
+   - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/Environment/EnvironmentalCreak_01.model.json`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
+     - validasi client live menunjukkan `EnvironmentalAudioRuntime` benar-benar `IsPlaying = true`
+
+3. `GhostManifest_01`
+   - Asset:
+     - `rbxassetid://83336813491039`
+   - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/Ghost/GhostManifest_01.model.json`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
+     - validasi client live menunjukkan `GhostAudioRuntime` benar-benar `IsPlaying = true`
+
+4. `HuntStart_01`
+   - Asset:
+     - `rbxassetid://138329686293368`
+   - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/Ghost/HuntStart_01.model.json`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
+     - dipakai juga sebagai `TeleportDrop_01`
+     - validasi client live menunjukkan `HuntAudioRuntime` benar-benar `IsPlaying = true`
+
+5. `CountdownTick_01`
+   - Asset:
+     - `rbxassetid://101202336513383`
+   - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/UI/CountdownTick_01.model.json`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
+     - dipakai untuk countdown overlay canonical
+
+6. Footstep set
+   - Asset IDs:
+     - `rbxassetid://104336169985098`
+     - `rbxassetid://79900103772577`
+     - `rbxassetid://90448271562175`
+   - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/Footsteps/Woodstep_01.model.json`
+     - `src/ReplicatedStorage/Assets/Audio/Footsteps/ConcreteStep_01.model.json`
+     - `src/ReplicatedStorage/Assets/Audio/Footsteps/MetalStep_01.model.json`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
+     - asset sudah source-controlled
+     - belum masuk jalur locomotion modern, jadi statusnya legal/runtime-ready tetapi belum gameplay-live
+
+7. `Jumpscare_01`
    - Asset:
      - `rbxassetid://138186576`
    - Source in repo:
@@ -89,26 +150,17 @@ Aturan baca:
 
 ## Active Runtime Assets That Must Be Replaced Or Documented
 
-1. Broken ghost audio set
-   - Assets:
-     - `rbxassetid://1837467338`
-     - `rbxassetid://9125962736`
-     - `rbxassetid://1837829568`
-     - `rbxassetid://9125710681`
-     - `rbxassetid://1843529608`
+1. Remaining unresolved audio slots
    - Source in repo:
      - `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
-     - `src/ReplicatedStorage/Assets/Audio/Environment/EnvironmentalCreak_01.model.json`
-     - `src/ReplicatedStorage/Assets/Audio/Ghost/GhostManifest_01.model.json`
      - `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
-     - `src/ReplicatedStorage/Assets/Audio/Ghost/HuntStart_01.model.json`
+     - `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
    - Provenance status:
      - `replace/remove`
    - Notes:
-     - asset ID rusak sudah dibuang dari source aktif
-     - source sekarang menyimpan placeholder kosong yang eksplisit
-     - runtime boot tidak lagi menganggap mereka sebagai error
-     - tetap belum layak publish sampai diganti asset final yang sah
+     - broken ID lama sudah dibuang dari source aktif
+     - tiga slot ini masih kosong secara eksplisit dan tidak boleh dianggap publish-ready
+     - `AmbientLoop_Main` juga berarti ambience loop aktif masih belum punya asset final
    - Replacement queue:
      - lihat `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
 
@@ -119,8 +171,6 @@ Asset berikut masih terlihat di source, tetapi sekarang berada pada jalur `Legac
 - `rbxassetid://1885779457`
 - `rbxassetid://2036442782`
 - `rbxassetid://910433616998508`
-- `rbxassetid://79900103772577`
-- `rbxassetid://90448271562175`
 
 Status:
 
@@ -135,7 +185,7 @@ Status:
    - screenshot license page
    - nama author
    - syarat attribution
-2. Ganti semua broken ghost audio yang masih `replace/remove`.
+2. Isi tiga slot audio kosong yang masih `replace/remove`.
 3. Upload candidate audio legal ke akun Roblox aktif lalu isi `AudioContent` source dengan asset ID final.
 4. Putuskan nasib asset `LegacyDisabled`:
    - hapus dari source

@@ -1,3 +1,5 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Controller = {}
 Controller.__index = Controller
 
@@ -15,6 +17,32 @@ local function resolveEventBus(deps)
 	return nil
 end
 
+local function resolveMatchSystem(deps)
+	local matchSystem = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("MatchSystem")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("MatchSystem")) or (deps and deps.MatchSystem or nil)
+	if type(matchSystem) ~= "table" then
+		return nil
+	end
+	if type(matchSystem.GetLiveMatch) == "function" then
+		return matchSystem
+	end
+	if type(matchSystem.Service) == "table" and type(matchSystem.Service.GetLiveMatch) == "function" then
+		return matchSystem.Service
+	end
+	return nil
+end
+
+local function resolveMatchRemote()
+	local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	if not remoteFolder then
+		return nil
+	end
+	local remote = remoteFolder:FindFirstChild("MatchEvent")
+	if remote and remote:IsA("RemoteEvent") then
+		return remote
+	end
+	return nil
+end
+
 function Controller.new(state, service, deps)
 	local self = setmetatable({}, Controller)
 	self._state = state
@@ -22,6 +50,8 @@ function Controller.new(state, service, deps)
 	self._deps = deps or {}
 	self._subscriptions = {}
 	self._eventBus = resolveEventBus(self._deps)
+	self._matchSystem = resolveMatchSystem(self._deps)
+	self._matchRemote = resolveMatchRemote()
 	return self
 end
 
@@ -59,6 +89,21 @@ function Controller:RegisterEventHandlers()
 	end)
 	self:_subscribe("HuntEnded", function(payload)
 		self:OnHuntEnded(payload)
+	end)
+	self:_subscribe("AmbientAudioTriggered", function(payload)
+		self:OnAudioTriggered("AmbientAudioTriggered", payload)
+	end)
+	self:_subscribe("EnvironmentalAudioTriggered", function(payload)
+		self:OnAudioTriggered("EnvironmentalAudioTriggered", payload)
+	end)
+	self:_subscribe("FearAudioTriggered", function(payload)
+		self:OnAudioTriggered("FearAudioTriggered", payload)
+	end)
+	self:_subscribe("GhostAudioTriggered", function(payload)
+		self:OnAudioTriggered("GhostAudioTriggered", payload)
+	end)
+	self:_subscribe("HuntAudioTriggered", function(payload)
+		self:OnAudioTriggered("HuntAudioTriggered", payload)
 	end)
 end
 
@@ -184,6 +229,37 @@ function Controller:OnHuntEnded(payload)
 			intensity = 0.4,
 			now = payload.now,
 		})
+	end
+end
+
+function Controller:OnAudioTriggered(eventName, payload)
+	local matchSystem = self._matchSystem or resolveMatchSystem(self._deps)
+	local remote = self._matchRemote or resolveMatchRemote()
+	local matchId = payload and payload.matchId
+	if not matchSystem or not remote or not matchId then
+		return
+	end
+
+	self._matchSystem = matchSystem
+	self._matchRemote = remote
+
+	local match = matchSystem:GetLiveMatch(matchId)
+	local players = type(match) == "table" and match.players or nil
+	if type(players) ~= "table" then
+		return
+	end
+
+	local clientPayload = {}
+	for key, value in pairs(payload or {}) do
+		clientPayload[key] = value
+	end
+	clientPayload.eventName = eventName
+	clientPayload.source = clientPayload.source or "AudioSystem"
+
+	for _, player in ipairs(players) do
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			remote:FireClient(player, clientPayload)
+		end
 	end
 end
 

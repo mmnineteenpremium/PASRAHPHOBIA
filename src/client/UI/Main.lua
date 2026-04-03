@@ -315,6 +315,18 @@ local function playUIButtonClick()
 	})
 end
 
+local function pulseCountdownLabel(label)
+	if not label then
+		return
+	end
+
+	local scale = ensureNamedScale(label, "CountdownPulseScale")
+	scale.Scale = 1.12
+	tweenInstance(scale, TweenInfo.new(0.16, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+		Scale = 1,
+	})
+end
+
 local function ensureButtonPolish(button)
 	if not button then
 		return nil
@@ -2150,8 +2162,25 @@ function UISystem:_isMatchPanelOpen()
 	return self._uiState.MatchUI and self._uiState.MatchUI.visible == true and self._matchWindowDismissed ~= true
 end
 
+function UISystem:_syncRoomBrowserSuppressionFromMatchContext()
+	local localPlayer = Players.LocalPlayer
+	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true or false
+	local suppressForPhase = self._matchPhase ~= nil and self._matchPhase ~= MATCH_PHASE.LOBBY
+
+	self._roomBrowserSuppressed = inMatch or suppressForPhase
+	if self._roomBrowserSuppressed then
+		self._roomBrowserVisible = false
+		if self._roomBrowserWidgets and self._roomBrowserWidgets.CountdownOverlay then
+			self._roomBrowserWidgets.CountdownOverlay.Visible = false
+		end
+	end
+
+	self:_updateRoomBrowserVisibility()
+end
+
 function UISystem:_forceCloseAllPanelsForTeleport()
 	self._roomBrowserVisible = false
+	self._roomBrowserSuppressed = true
 
 	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
 		if self._uiState[guiName] then
@@ -2423,6 +2452,28 @@ function UISystem:_updateMatchSummaryRows(rowWidgets)
 	self:_setSummaryValue(rowWidgets.matchDuration, hasResults and formatMatchDuration(result.matchDuration) or "-")
 	self:_setSummaryValue(rowWidgets.currencyReward, hasResults and tostring(math.floor(tonumber(result.currencyReward or 0) or 0)) or "-")
 	self:_setSummaryValue(rowWidgets.xpReward, hasResults and tostring(math.floor(tonumber(result.xpReward or 0) or 0)) or "-")
+
+	local statusValue = rowWidgets.status and rowWidgets.status.Text or "-"
+	local statusRow = rowWidgets.status and rowWidgets.status.Parent or nil
+	if statusRow and statusRow:IsA("Frame") then
+		if statusValue == "BERHASIL" then
+			statusRow.BackgroundColor3 = Color3.fromRGB(34, 64, 48)
+		elseif statusValue == "GAGAL" then
+			statusRow.BackgroundColor3 = Color3.fromRGB(68, 40, 40)
+		else
+			statusRow.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
+		end
+	end
+
+	local rewardRow = rowWidgets.currencyReward and rowWidgets.currencyReward.Parent or nil
+	if rewardRow and rewardRow:IsA("Frame") then
+		rewardRow.BackgroundColor3 = hasResults and Color3.fromRGB(54, 46, 30) or Color3.fromRGB(24, 30, 40)
+	end
+
+	local xpRow = rowWidgets.xpReward and rowWidgets.xpReward.Parent or nil
+	if xpRow and xpRow:IsA("Frame") then
+		xpRow.BackgroundColor3 = hasResults and Color3.fromRGB(32, 48, 60) or Color3.fromRGB(24, 30, 40)
+	end
 end
 
 function UISystem:_refreshBasicMatchPanel(viewState, payload)
@@ -2445,6 +2496,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 
 	local badgeText = "STATUS MATCH"
 	local badgeColor = Color3.fromRGB(62, 80, 104)
+	local phaseGlyphText = "LO"
 	local primaryText = "Menunggu event match."
 	local secondaryText = "Panel ini bisa ditutup jika menghalangi pandangan."
 	local footerText = CLOSE_HINT_TEXT .. ". Tombol MATCH akan muncul di tepi layar."
@@ -2459,6 +2511,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	if viewState == "Preparation" or viewState == "Loading" then
 		badgeText = "PERSIAPAN"
 		badgeColor = Color3.fromRGB(70, 96, 132)
+		phaseGlyphText = "PR"
 		primaryText = "Masuk ke lokasi..."
 		secondaryText = timerVisible
 			and ("Loading dan briefing aktif. Waktu fase: " .. timerText .. ".")
@@ -2466,6 +2519,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	elseif viewState == "Investigation" then
 		badgeText = "INVESTIGASI"
 		badgeColor = Color3.fromRGB(58, 112, 90)
+		phaseGlyphText = "IN"
 		primaryText = "Investigasi aktif."
 		secondaryText = timerVisible
 			and ("Sisa waktu investigasi: " .. timerText .. ". Cari evidence, cek jurnal, dan tentukan ghost.")
@@ -2474,6 +2528,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	elseif viewState == "Hunt" then
 		badgeText = "HUNT"
 		badgeColor = Color3.fromRGB(132, 56, 56)
+		phaseGlyphText = "HU"
 		primaryText = "Ghost sedang memburu."
 		secondaryText = timerVisible
 			and ("Sisa waktu hunt: " .. timerText .. ". Utamakan bertahan hidup.")
@@ -2491,18 +2546,35 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		end
 		badgeText = missionFailed and "MISI GAGAL" or "MISI SELESAI"
 		badgeColor = missionFailed and Color3.fromRGB(132, 56, 56) or Color3.fromRGB(56, 118, 82)
+		phaseGlyphText = missionFailed and "FG" or "OK"
 		primaryText = "Hasil investigasi sudah tersedia."
 		secondaryText = "Ringkasan lengkap ada di bawah. Hadiah akan terisi saat server mengirim reward final."
 		footerText = "Hasil akan tetap terlihat sampai kembali ke lobby. Anda tetap bisa menutup panel jika perlu."
 	elseif viewState == "Lobby" then
 		badgeText = "LOBBY"
 		badgeColor = Color3.fromRGB(62, 80, 104)
+		phaseGlyphText = "LO"
 		primaryText = "Belum ada match aktif."
 		secondaryText = "Panel akan terisi otomatis saat match dimulai."
 	end
 
+	local headerFill = badgeColor:Lerp(Color3.fromRGB(18, 22, 30), 0.72)
+	local summaryFill = badgeColor:Lerp(Color3.fromRGB(20, 27, 36), 0.76)
+	local actionFill = badgeColor:Lerp(Color3.fromRGB(34, 48, 64), 0.42)
+	local hintFill = badgeColor:Lerp(Color3.fromRGB(18, 22, 30), 0.6)
+
 	if match.BasicTitle then
 		match.BasicTitle.Text = "PANEL MATCH"
+	end
+	if match.HeaderCard then
+		match.HeaderCard.BackgroundColor3 = headerFill
+	end
+	if match.HeaderStroke then
+		match.HeaderStroke.Color = badgeColor
+	end
+	if match.PhaseGlyph then
+		match.PhaseGlyph.Text = phaseGlyphText
+		match.PhaseGlyph.TextColor3 = badgeColor:Lerp(Color3.fromRGB(255, 244, 228), 0.28)
 	end
 	if match.BasicStateBadge then
 		match.BasicStateBadge.Text = badgeText
@@ -2517,20 +2589,27 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	if match.BasicFooterLabel then
 		match.BasicFooterLabel.Text = footerText
 	end
+	if match.SummaryFrame then
+		match.SummaryFrame.BackgroundColor3 = summaryFill
+	end
 	if match.TimerLabel then
 		match.TimerLabel.Visible = timerVisible and viewState ~= "Lobby" and not self:_isMatchResultsPhase()
 		match.TimerLabel.Text = timerVisible and timerText or ""
+		match.TimerLabel.BackgroundColor3 = headerFill
 	end
 	if match.TimerCaption then
 		match.TimerCaption.Visible = match.TimerLabel and match.TimerLabel.Visible
 		match.TimerCaption.Text = viewState == "Hunt" and "HUNT TIMER" or "PHASE TIMER"
+		match.TimerCaption.TextColor3 = badgeColor:Lerp(Color3.fromRGB(232, 238, 246), 0.4)
 	end
 	if match.EvidenceQuickButton then
 		match.EvidenceQuickButton.Visible = self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
 		match.EvidenceQuickButton.Text = self._windowDismissed.JournalUI == true and "EVIDENCE [J]" or "TUTUP EVIDENCE [J]"
+		match.EvidenceQuickButton.BackgroundColor3 = actionFill
 	end
 	if match.ControlsHintBar then
 		match.ControlsHintBar.Visible = self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
+		match.ControlsHintBar.BackgroundColor3 = hintFill
 	end
 	if match.ControlsHintLabel then
 		match.ControlsHintLabel.Visible = self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
@@ -2956,6 +3035,187 @@ function UISystem:_refreshJournalPanel()
 	end
 end
 
+function UISystem:_ensureProfileWidgets(window)
+	if not window or not window.ContentFrame then
+		return nil
+	end
+	if window.ProfileWidgets then
+		return window.ProfileWidgets
+	end
+
+	if window.ContentText then
+		window.ContentText.Visible = false
+	end
+
+	local contentFrame = window.ContentFrame
+	local deck = contentFrame:FindFirstChild("ProfileDeck")
+	if deck and not deck:IsA("Frame") then
+		deck:Destroy()
+		deck = nil
+	end
+	if not deck then
+		deck = Instance.new("Frame")
+		deck.Name = "ProfileDeck"
+		deck.Size = UDim2.new(1, -4, 0, 0)
+		deck.AutomaticSize = Enum.AutomaticSize.Y
+		deck.BackgroundTransparency = 1
+		deck.Parent = contentFrame
+
+		local layout = Instance.new("UIListLayout")
+		layout.FillDirection = Enum.FillDirection.Vertical
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Padding = UDim.new(0, 8)
+		layout.Parent = deck
+	end
+
+	local heroCard = Instance.new("Frame")
+	heroCard.Name = "HeroCard"
+	heroCard.Size = UDim2.new(1, 0, 0, 122)
+	heroCard.BackgroundColor3 = Color3.fromRGB(28, 36, 42)
+	heroCard.BorderSizePixel = 0
+	heroCard.Parent = deck
+
+	local heroCorner = Instance.new("UICorner")
+	heroCorner.CornerRadius = UDim.new(0, 10)
+	heroCorner.Parent = heroCard
+
+	local heroStroke = Instance.new("UIStroke")
+	heroStroke.Name = "HeroStroke"
+	heroStroke.Thickness = 1.5
+	heroStroke.Color = Color3.fromRGB(74, 96, 58)
+	heroStroke.Transparency = 0.18
+	heroStroke.Parent = heroCard
+
+	local avatarGlyph = Instance.new("TextLabel")
+	avatarGlyph.Name = "AvatarGlyph"
+	avatarGlyph.Position = UDim2.fromOffset(12, 16)
+	avatarGlyph.Size = UDim2.fromOffset(58, 58)
+	avatarGlyph.BackgroundColor3 = Color3.fromRGB(62, 84, 70)
+	avatarGlyph.BorderSizePixel = 0
+	avatarGlyph.Font = Enum.Font.GothamBold
+	avatarGlyph.TextSize = 24
+	avatarGlyph.TextColor3 = Color3.fromRGB(244, 244, 238)
+	avatarGlyph.Text = "P"
+	avatarGlyph.Parent = heroCard
+
+	local avatarCorner = Instance.new("UICorner")
+	avatarCorner.CornerRadius = UDim.new(1, 0)
+	avatarCorner.Parent = avatarGlyph
+
+	local profileTitle = Instance.new("TextLabel")
+	profileTitle.Name = "ProfileTitle"
+	profileTitle.Position = UDim2.fromOffset(82, 16)
+	profileTitle.Size = UDim2.new(1, -94, 0, 24)
+	profileTitle.BackgroundTransparency = 1
+	profileTitle.Font = Enum.Font.GothamBold
+	profileTitle.TextSize = 18
+	profileTitle.TextColor3 = Color3.fromRGB(244, 244, 238)
+	profileTitle.TextXAlignment = Enum.TextXAlignment.Left
+	profileTitle.Text = "PLAYER"
+	profileTitle.Parent = heroCard
+
+	local profileMeta = Instance.new("TextLabel")
+	profileMeta.Name = "ProfileMeta"
+	profileMeta.Position = UDim2.fromOffset(82, 42)
+	profileMeta.Size = UDim2.new(1, -94, 0, 18)
+	profileMeta.BackgroundTransparency = 1
+	profileMeta.Font = Enum.Font.Gotham
+	profileMeta.TextSize = 12
+	profileMeta.TextColor3 = Color3.fromRGB(188, 199, 212)
+	profileMeta.TextXAlignment = Enum.TextXAlignment.Left
+	profileMeta.Text = "Rank • Level • Input"
+	profileMeta.Parent = heroCard
+
+	local statusPill = Instance.new("TextLabel")
+	statusPill.Name = "StatusPill"
+	statusPill.Position = UDim2.fromOffset(82, 66)
+	statusPill.Size = UDim2.fromOffset(122, 18)
+	statusPill.BackgroundColor3 = Color3.fromRGB(74, 96, 58)
+	statusPill.BorderSizePixel = 0
+	statusPill.Font = Enum.Font.GothamBold
+	statusPill.TextSize = 9
+	statusPill.TextColor3 = Color3.fromRGB(244, 244, 238)
+	statusPill.Text = "SAFE"
+	statusPill.Parent = heroCard
+
+	local statusCorner = Instance.new("UICorner")
+	statusCorner.CornerRadius = UDim.new(1, 0)
+	statusCorner.Parent = statusPill
+
+	local spotlight = Instance.new("TextLabel")
+	spotlight.Name = "Spotlight"
+	spotlight.Position = UDim2.fromOffset(12, 88)
+	spotlight.Size = UDim2.new(1, -24, 0, 24)
+	spotlight.BackgroundTransparency = 1
+	spotlight.Font = Enum.Font.Gotham
+	spotlight.TextSize = 11
+	spotlight.TextColor3 = Color3.fromRGB(182, 194, 206)
+	spotlight.TextXAlignment = Enum.TextXAlignment.Left
+	spotlight.TextWrapped = true
+	spotlight.Text = "Spotlight belum tersedia."
+	spotlight.Parent = heroCard
+
+	local actionButton = Instance.new("TextButton")
+	actionButton.Name = "ActionButton"
+	actionButton.AnchorPoint = Vector2.new(1, 0)
+	actionButton.Position = UDim2.new(1, -12, 0, 16)
+	actionButton.Size = UDim2.fromOffset(108, 30)
+	styleButton(actionButton, "OPEN ROOMS")
+	actionButton.BackgroundColor3 = Color3.fromRGB(58, 86, 122)
+	actionButton.TextColor3 = Color3.fromRGB(245, 245, 240)
+	actionButton.Parent = heroCard
+
+	local actionCorner = Instance.new("UICorner")
+	actionCorner.CornerRadius = UDim.new(0, 8)
+	actionCorner.Parent = actionButton
+	self:_setSelectableStyle(actionButton)
+
+	local statList = Instance.new("Frame")
+	statList.Name = "StatList"
+	statList.Size = UDim2.new(1, 0, 0, 0)
+	statList.AutomaticSize = Enum.AutomaticSize.Y
+	statList.BackgroundTransparency = 1
+	statList.Parent = deck
+
+	local statLayout = Instance.new("UIListLayout")
+	statLayout.FillDirection = Enum.FillDirection.Vertical
+	statLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	statLayout.Padding = UDim.new(0, 6)
+	statLayout.Parent = statList
+
+	local rows = {
+		sanity = createActionRow(statList, "SanityRow", "SANITY", "-", "LIVE"),
+		match = createActionRow(statList, "MatchRow", "MATCH", "-", "STAT"),
+		favorite = createActionRow(statList, "FavoriteRow", "TOOL", "-", "LOAD"),
+	}
+	for _, row in pairs(rows) do
+		row.Button.Active = false
+		row.Button.AutoButtonColor = false
+		row.Button.Selectable = false
+	end
+
+	if actionButton:GetAttribute("Bound") ~= true then
+		actionButton:SetAttribute("Bound", true)
+		connectButtonPress(actionButton, function()
+			self:_toggleRoomBrowserVisible()
+		end)
+	end
+
+	window.ProfileWidgets = {
+		Deck = deck,
+		HeroCard = heroCard,
+		HeroStroke = heroStroke,
+		AvatarGlyph = avatarGlyph,
+		ProfileTitle = profileTitle,
+		ProfileMeta = profileMeta,
+		StatusPill = statusPill,
+		Spotlight = spotlight,
+		ActionButton = actionButton,
+		Rows = rows,
+	}
+	return window.ProfileWidgets
+end
+
 function UISystem:_refreshProfilePanel()
 	local player = Players.LocalPlayer
 	local profile = self._profileState or {}
@@ -2993,17 +3253,99 @@ function UISystem:_refreshProfilePanel()
 		table.insert(contentLines, string.format("Flex Visitors: %s", tostring(featuredFlex.activeVisitorCount or 0)))
 	end
 
-	local contentText = table.concat(contentLines, "\n")
-
 	self:_refreshWindowText(
 		"ProfileUI",
 		badgeText,
 		string.format("%s | Lv %s", playerName, tostring(profile.level or 1)),
 		string.format("Rank %s | Sanity %d", tostring(profile.rank or "Bayi III"), sanity),
-		contentText,
+		nil,
 		"Profile basic ini menampilkan data client yang tersedia tanpa asumsi server tambahan.",
 		badgeColor
 	)
+
+	local window = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows.ProfileUI
+	local widgets = self:_ensureProfileWidgets(window)
+	if not widgets then
+		return
+	end
+
+	local heroAccent = badgeColor
+	widgets.HeroStroke.Color = heroAccent
+	widgets.AvatarGlyph.BackgroundColor3 = heroAccent
+	widgets.AvatarGlyph.Text = string.upper(string.sub(playerName, 1, 1))
+	widgets.ProfileTitle.Text = string.format("%s  •  LV %s", playerName, tostring(profile.level or 1))
+	widgets.ProfileMeta.Text = string.format(
+		"%s • %s • %s",
+		tostring(profile.rank or "Bayi III"),
+		tostring(self:GetInputType()),
+		tostring(player and player.UserId or "-")
+	)
+	widgets.StatusPill.BackgroundColor3 = heroAccent
+	widgets.StatusPill.Text = badgeText
+	widgets.Spotlight.Text = featuredFlex and string.format(
+		"Spotlight %s • WR %s%% • %s match",
+		tostring(featuredFlex.displayName or "Player"),
+		tostring(featuredFlex.winRate or 0),
+		tostring(featuredFlex.totalMatches or 0)
+	) or "Belum ada spotlight. Profile ini memakai snapshot client yang aktif."
+
+	local rows = widgets.Rows or {}
+	local statRows = {
+		{
+			key = "sanity",
+			badge = "MIND",
+			glyph = "SN",
+			title = "Sanity monitor",
+			meta = string.format("Status %s • event %s", titleCaseToken(statusToken), tostring(profile.lastEvent or "Idle")),
+			pill = string.format("%d%%", sanity),
+			button = sanity <= 35 and "RISK" or "SAFE",
+			accent = sanity <= 35 and Color3.fromRGB(126, 72, 72) or heroAccent,
+			preview = sanity <= 35 and Color3.fromRGB(62, 42, 42) or Color3.fromRGB(42, 56, 46),
+		},
+		{
+			key = "match",
+			badge = "RUN",
+			glyph = "MM",
+			title = "Match footprint",
+			meta = string.format("Rank %s • input %s", tostring(profile.rank or "Bayi III"), tostring(self:GetInputType())),
+			pill = string.format("%s GAME", tostring(profile.totalGames or 0)),
+			button = "LIVE",
+			accent = Color3.fromRGB(76, 96, 126),
+			preview = Color3.fromRGB(40, 52, 68),
+		},
+		{
+			key = "favorite",
+			badge = "TOOL",
+			glyph = "JT",
+			title = "Favorite loadout",
+			meta = string.format("Tool favorit %s • visitors %s", tostring(profile.favoriteTool or "-"), tostring(featuredFlex and featuredFlex.activeVisitorCount or 0)),
+			pill = tostring(featuredFlex and featuredFlex.rank or "BASIC"),
+			button = "SHOW",
+			accent = Color3.fromRGB(118, 88, 52),
+			preview = Color3.fromRGB(54, 44, 32),
+		},
+	}
+
+	for _, data in ipairs(statRows) do
+		local row = rows[data.key]
+		if row then
+			row.Root.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+			row.Accent.BackgroundColor3 = data.accent
+			row.Preview.BackgroundColor3 = data.preview
+			row.PreviewBadge.BackgroundColor3 = data.accent
+			row.PreviewBadge.TextColor3 = Color3.fromRGB(247, 243, 236)
+			row.PreviewBadge.Text = data.badge
+			row.PreviewGlyph.TextColor3 = Color3.fromRGB(247, 243, 236)
+			row.PreviewGlyph.Text = data.glyph
+			row.Title.Text = data.title
+			row.Meta.Text = data.meta
+			row.PricePill.BackgroundColor3 = data.accent
+			row.PricePill.Text = data.pill
+			row.Button.BackgroundColor3 = data.preview
+			row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
+			row.Button.Text = data.button
+		end
+	end
 end
 
 function UISystem:_requestShopPurchase(itemId)
@@ -3184,7 +3526,192 @@ function UISystem:_applyRoyalPassSnapshot(snapshot)
 	self._royalPassState = state
 end
 
+function UISystem:_ensureRoyalPassWidgets(window)
+	if not window or not window.ContentFrame then
+		return nil
+	end
+	if window.RoyalPassWidgets then
+		return window.RoyalPassWidgets
+	end
+
+	if window.ContentText then
+		window.ContentText.Visible = false
+	end
+
+	local contentFrame = window.ContentFrame
+	local deck = contentFrame:FindFirstChild("RoyalPassDeck")
+	if deck and not deck:IsA("Frame") then
+		deck:Destroy()
+		deck = nil
+	end
+	if not deck then
+		deck = Instance.new("Frame")
+		deck.Name = "RoyalPassDeck"
+		deck.Size = UDim2.new(1, -4, 0, 0)
+		deck.AutomaticSize = Enum.AutomaticSize.Y
+		deck.BackgroundTransparency = 1
+		deck.Parent = contentFrame
+
+		local deckLayout = Instance.new("UIListLayout")
+		deckLayout.FillDirection = Enum.FillDirection.Vertical
+		deckLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		deckLayout.Padding = UDim.new(0, 8)
+		deckLayout.Parent = deck
+	end
+
+	local heroCard = Instance.new("Frame")
+	heroCard.Name = "HeroCard"
+	heroCard.Size = UDim2.new(1, 0, 0, 130)
+	heroCard.BackgroundColor3 = Color3.fromRGB(30, 37, 48)
+	heroCard.BorderSizePixel = 0
+	heroCard.Parent = deck
+	local heroCorner = Instance.new("UICorner")
+	heroCorner.CornerRadius = UDim.new(0, 10)
+	heroCorner.Parent = heroCard
+
+	local heroStroke = Instance.new("UIStroke")
+	heroStroke.Name = "HeroStroke"
+	heroStroke.Thickness = 1.5
+	heroStroke.Color = Color3.fromRGB(126, 102, 58)
+	heroStroke.Transparency = 0.18
+	heroStroke.Parent = heroCard
+
+	local heroBadge = Instance.new("TextLabel")
+	heroBadge.Name = "HeroBadge"
+	heroBadge.Position = UDim2.fromOffset(12, 12)
+	heroBadge.Size = UDim2.fromOffset(112, 20)
+	heroBadge.BackgroundColor3 = Color3.fromRGB(116, 88, 44)
+	heroBadge.BorderSizePixel = 0
+	heroBadge.Font = Enum.Font.GothamBold
+	heroBadge.TextSize = 10
+	heroBadge.TextColor3 = Color3.fromRGB(248, 242, 230)
+	heroBadge.Text = "FREE TRACK"
+	heroBadge.Parent = heroCard
+	local heroBadgeCorner = Instance.new("UICorner")
+	heroBadgeCorner.CornerRadius = UDim.new(1, 0)
+	heroBadgeCorner.Parent = heroBadge
+
+	local heroTitle = Instance.new("TextLabel")
+	heroTitle.Name = "HeroTitle"
+	heroTitle.Position = UDim2.fromOffset(12, 38)
+	heroTitle.Size = UDim2.new(1, -24, 0, 24)
+	heroTitle.BackgroundTransparency = 1
+	heroTitle.Font = Enum.Font.GothamBold
+	heroTitle.TextSize = 20
+	heroTitle.TextXAlignment = Enum.TextXAlignment.Left
+	heroTitle.TextColor3 = Color3.fromRGB(245, 240, 232)
+	heroTitle.Text = "SEASON S1"
+	heroTitle.Parent = heroCard
+
+	local heroMeta = Instance.new("TextLabel")
+	heroMeta.Name = "HeroMeta"
+	heroMeta.Position = UDim2.fromOffset(12, 62)
+	heroMeta.Size = UDim2.new(1, -24, 0, 18)
+	heroMeta.BackgroundTransparency = 1
+	heroMeta.Font = Enum.Font.Gotham
+	heroMeta.TextSize = 12
+	heroMeta.TextXAlignment = Enum.TextXAlignment.Left
+	heroMeta.TextColor3 = Color3.fromRGB(194, 203, 216)
+	heroMeta.Text = "Progress"
+	heroMeta.Parent = heroCard
+
+	local progressTrack = Instance.new("Frame")
+	progressTrack.Name = "ProgressTrack"
+	progressTrack.Position = UDim2.fromOffset(12, 86)
+	progressTrack.Size = UDim2.new(1, -24, 0, 14)
+	progressTrack.BackgroundColor3 = Color3.fromRGB(38, 46, 58)
+	progressTrack.BorderSizePixel = 0
+	progressTrack.Parent = heroCard
+	local progressTrackCorner = Instance.new("UICorner")
+	progressTrackCorner.CornerRadius = UDim.new(1, 0)
+	progressTrackCorner.Parent = progressTrack
+
+	local progressFill = Instance.new("Frame")
+	progressFill.Name = "ProgressFill"
+	progressFill.Size = UDim2.fromScale(0.1, 1)
+	progressFill.BackgroundColor3 = Color3.fromRGB(212, 168, 92)
+	progressFill.BorderSizePixel = 0
+	progressFill.Parent = progressTrack
+	local progressFillCorner = Instance.new("UICorner")
+	progressFillCorner.CornerRadius = UDim.new(1, 0)
+	progressFillCorner.Parent = progressFill
+
+	local progressCaption = Instance.new("TextLabel")
+	progressCaption.Name = "ProgressCaption"
+	progressCaption.Position = UDim2.fromOffset(12, 104)
+	progressCaption.Size = UDim2.new(1, -148, 0, 18)
+	progressCaption.BackgroundTransparency = 1
+	progressCaption.Font = Enum.Font.Gotham
+	progressCaption.TextSize = 11
+	progressCaption.TextXAlignment = Enum.TextXAlignment.Left
+	progressCaption.TextColor3 = Color3.fromRGB(186, 198, 214)
+	progressCaption.Text = "0/200 XP"
+	progressCaption.Parent = heroCard
+
+	local premiumActionButton = Instance.new("TextButton")
+	premiumActionButton.Name = "PremiumActionButton"
+	premiumActionButton.AnchorPoint = Vector2.new(1, 1)
+	premiumActionButton.Position = UDim2.new(1, -12, 1, -10)
+	premiumActionButton.Size = UDim2.fromOffset(124, 34)
+	styleButton(premiumActionButton, "LIHAT SHOP")
+	premiumActionButton.BackgroundColor3 = Color3.fromRGB(116, 88, 44)
+	premiumActionButton.TextColor3 = Color3.fromRGB(248, 242, 230)
+	premiumActionButton.Parent = heroCard
+	local premiumButtonCorner = Instance.new("UICorner")
+	premiumButtonCorner.CornerRadius = UDim.new(0, 8)
+	premiumButtonCorner.Parent = premiumActionButton
+	self:_setSelectableStyle(premiumActionButton)
+
+	local tierList = Instance.new("Frame")
+	tierList.Name = "TierList"
+	tierList.Size = UDim2.new(1, 0, 0, 0)
+	tierList.AutomaticSize = Enum.AutomaticSize.Y
+	tierList.BackgroundTransparency = 1
+	tierList.Parent = deck
+	local tierLayout = Instance.new("UIListLayout")
+	tierLayout.FillDirection = Enum.FillDirection.Vertical
+	tierLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	tierLayout.Padding = UDim.new(0, 6)
+	tierLayout.Parent = tierList
+
+	local rows = {}
+	for index = 1, 3 do
+		local row = createActionRow(tierList, "TierRow" .. tostring(index), "TIER", "-", "INFO")
+		row.Button.Active = false
+		row.Button.AutoButtonColor = false
+		row.Button.Selectable = false
+		table.insert(rows, row)
+	end
+
+	if premiumActionButton:GetAttribute("Bound") ~= true then
+		premiumActionButton:SetAttribute("Bound", true)
+		connectButtonPress(premiumActionButton, function()
+			self:_toggleAuxiliaryWindow("ShopUI")
+		end)
+	end
+
+	window.RoyalPassWidgets = {
+		Deck = deck,
+		HeroCard = heroCard,
+		HeroStroke = heroStroke,
+		HeroBadge = heroBadge,
+		HeroTitle = heroTitle,
+		HeroMeta = heroMeta,
+		ProgressTrack = progressTrack,
+		ProgressFill = progressFill,
+		ProgressCaption = progressCaption,
+		PremiumActionButton = premiumActionButton,
+		Rows = rows,
+	}
+	return window.RoyalPassWidgets
+end
+
 function UISystem:_refreshRoyalPassPanel()
+	local window = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows.RoyalPassUI
+	if not window then
+		return
+	end
+
 	local state = self._royalPassState or {}
 	local currentTier = math.max(1, math.floor(tonumber(state.currentTier or 1) or 1))
 	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or 50) or 50))
@@ -3193,6 +3720,7 @@ function UISystem:_refreshRoyalPassPanel()
 	local totalXP = math.max(0, math.floor(tonumber(state.totalXP or 0) or 0))
 	local remainingXP = math.max(0, math.floor(tonumber(state.remainingXP or 0) or 0))
 	local premiumOwned = state.premiumOwned == true
+	local progressPercent = math.clamp(tonumber(state.progressPercent or 0) or 0, 0, 1)
 
 	local badgeText = premiumOwned and "PREMIUM" or "FREE TRACK"
 	local badgeColor = premiumOwned and Color3.fromRGB(136, 102, 48) or Color3.fromRGB(78, 92, 118)
@@ -3256,10 +3784,113 @@ function UISystem:_refreshRoyalPassPanel()
 		badgeText,
 		primaryText,
 		secondaryText,
-		contentText,
+		nil,
 		footerText,
 		badgeColor
 	)
+
+	local widgets = self:_ensureRoyalPassWidgets(window)
+	if not widgets then
+		return
+	end
+
+	local heroAccent = premiumOwned and Color3.fromRGB(126, 98, 52) or Color3.fromRGB(72, 94, 128)
+	local heroBackground = premiumOwned and Color3.fromRGB(34, 31, 24) or Color3.fromRGB(28, 36, 48)
+
+	widgets.HeroCard.BackgroundColor3 = heroBackground
+	widgets.HeroStroke.Color = heroAccent
+	widgets.HeroBadge.BackgroundColor3 = heroAccent
+	widgets.HeroBadge.Text = premiumOwned and "PREMIUM ACTIVE" or "FREE TRACK"
+	widgets.HeroTitle.Text = string.format("SEASON %s  •  TIER %02d", tostring(state.seasonId or "S1"), currentTier)
+	widgets.HeroMeta.Text = string.format(
+		"%d / %d XP on current tier  •  %d total XP",
+		currentTierXP,
+		xpPerTier,
+		totalXP
+	)
+	widgets.ProgressFill.BackgroundColor3 = premiumOwned and Color3.fromRGB(220, 178, 92) or Color3.fromRGB(104, 148, 220)
+	widgets.ProgressFill.Size = UDim2.fromScale(math.max(0.06, progressPercent), 1)
+	widgets.ProgressCaption.Text = string.format(
+		"%d XP to next tier  •  %d unlocked tier",
+		remainingXP,
+		math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0))
+	)
+	widgets.PremiumActionButton.BackgroundColor3 = premiumOwned and Color3.fromRGB(74, 108, 70) or heroAccent
+	widgets.PremiumActionButton.Text = premiumOwned and "PREMIUM AKTIF" or "LIHAT SHOP"
+
+	local unlockedPreview = "-"
+	if type(state.unlockedTiers) == "table" and #state.unlockedTiers > 0 then
+		local recent = {}
+		local startIndex = math.max(1, #state.unlockedTiers - 3)
+		for index = startIndex, #state.unlockedTiers do
+			table.insert(recent, "T" .. tostring(state.unlockedTiers[index]))
+		end
+		unlockedPreview = table.concat(recent, ", ")
+	end
+
+	local nextRewardTitle = state.nextTier and ("Tier " .. tostring(state.nextTier) .. " reward") or "MAX TIER"
+	local nextRewardMeta = state.nextReward
+		and string.format(
+			"%d MM + %d XP bonus menunggu di track berikutnya.",
+			math.max(0, math.floor(tonumber(state.nextReward.currency) or 0)),
+			math.max(0, math.floor(tonumber(state.nextReward.xp) or 0))
+		)
+		or "Semua tier utama sudah terbuka."
+
+	local rows = widgets.Rows or {}
+	local rowData = {
+		{
+			badge = premiumOwned and "PRM" or "FREE",
+			glyph = string.format("T%02d", currentTier),
+			title = "Tier aktif",
+			meta = string.format("Track %s • %d/%d XP • event %s", premiumOwned and "premium" or "free", currentTierXP, xpPerTier, tostring(state.lastEvent or "Idle")),
+			pill = string.format("%d XP", totalXP),
+			button = "LIVE",
+			accent = heroAccent,
+			preview = premiumOwned and Color3.fromRGB(66, 54, 32) or Color3.fromRGB(46, 58, 78),
+		},
+		{
+			badge = "NEXT",
+			glyph = state.nextTier and string.format("T%02d", state.nextTier) or "MAX",
+			title = nextRewardTitle,
+			meta = nextRewardMeta,
+			pill = state.nextReward and string.format("+%d MM", math.max(0, math.floor(tonumber(state.nextReward.currency) or 0))) or "CLEAR",
+			button = state.nextReward and "READY" or "DONE",
+			accent = Color3.fromRGB(118, 88, 46),
+			preview = Color3.fromRGB(60, 50, 34),
+		},
+		{
+			badge = "TRACK",
+			glyph = premiumOwned and "RP" or "FT",
+			title = premiumOwned and "Premium trajectory" or "Free trajectory",
+			meta = string.format("Unlocked %d tier • preview %s", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0)), unlockedPreview),
+			pill = string.format("%d LEFT", remainingXP),
+			button = premiumOwned and "OWNED" or "SHOP",
+			accent = premiumOwned and Color3.fromRGB(90, 126, 88) or Color3.fromRGB(74, 92, 118),
+			preview = premiumOwned and Color3.fromRGB(42, 58, 40) or Color3.fromRGB(38, 48, 62),
+		},
+	}
+
+	for index, row in ipairs(rows) do
+		local data = rowData[index]
+		if data then
+			row.Root.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+			row.Accent.BackgroundColor3 = data.accent
+			row.Preview.BackgroundColor3 = data.preview
+			row.PreviewBadge.BackgroundColor3 = data.accent
+			row.PreviewBadge.TextColor3 = Color3.fromRGB(247, 243, 236)
+			row.PreviewBadge.Text = data.badge
+			row.PreviewGlyph.TextColor3 = Color3.fromRGB(247, 243, 236)
+			row.PreviewGlyph.Text = data.glyph
+			row.Title.Text = data.title
+			row.Meta.Text = data.meta
+			row.PricePill.Text = data.pill
+			row.PricePill.BackgroundColor3 = data.accent
+			row.Button.Text = data.button
+			row.Button.BackgroundColor3 = data.preview
+			row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
+		end
+	end
 end
 
 function UISystem:_refreshPasraPanel()
@@ -3679,6 +4310,7 @@ function UISystem:_setPhase(newPhase, payload)
 		localPlayer:SetAttribute("MatchPhase", newPhase)
 	end
 
+	self:_syncRoomBrowserSuppressionFromMatchContext()
 	self:_renderPhase(newPhase, payload)
 end
 
@@ -4248,12 +4880,7 @@ function UISystem:_bindRoomBrowserMatchVisibility()
 	end
 
 	local function syncFromAttribute()
-		local inMatch = player:GetAttribute("InMatch") == true
-		self._roomBrowserSuppressed = inMatch
-		if inMatch then
-			self._roomBrowserVisible = false
-		end
-		self:_updateRoomBrowserVisibility()
+		self:_syncRoomBrowserSuppressionFromMatchContext()
 	end
 
 	table.insert(self._connections, player:GetAttributeChangedSignal("InMatch"):Connect(syncFromAttribute))
@@ -5552,6 +6179,73 @@ function UISystem:_ensureBasicUIs()
 				secondaryLabel.Parent = panel
 			end
 
+			local panelStroke = panel:FindFirstChild("BrandStroke")
+			if not panelStroke or not panelStroke:IsA("UIStroke") then
+				panelStroke = Instance.new("UIStroke")
+				panelStroke.Name = "BrandStroke"
+				panelStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				panelStroke.Thickness = 1
+				panelStroke.Transparency = 0.24
+				panelStroke.Color = Color3.fromRGB(84, 104, 132)
+				panelStroke.Parent = panel
+			end
+
+			local headerCard = panel:FindFirstChild("HeaderCard")
+			if not headerCard then
+				headerCard = Instance.new("Frame")
+				headerCard.Name = "HeaderCard"
+				headerCard.Position = UDim2.fromOffset(12, 42)
+				headerCard.Size = UDim2.new(1, -24, 0, 118)
+				headerCard.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
+				headerCard.BackgroundTransparency = 0.04
+				headerCard.BorderSizePixel = 0
+				headerCard.Parent = panel
+
+				local headerCorner = Instance.new("UICorner")
+				headerCorner.CornerRadius = UDim.new(0, 12)
+				headerCorner.Parent = headerCard
+
+				local headerStroke = Instance.new("UIStroke")
+				headerStroke.Name = "HeaderStroke"
+				headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				headerStroke.Thickness = 1
+				headerStroke.Transparency = 0.18
+				headerStroke.Color = Color3.fromRGB(84, 104, 132)
+				headerStroke.Parent = headerCard
+			end
+
+			local phaseGlyph = headerCard:FindFirstChild("PhaseGlyph")
+			if not phaseGlyph then
+				phaseGlyph = Instance.new("TextLabel")
+				phaseGlyph.Name = "PhaseGlyph"
+				phaseGlyph.AnchorPoint = Vector2.new(1, 0)
+				phaseGlyph.Position = UDim2.new(1, -12, 0, 8)
+				phaseGlyph.Size = UDim2.fromOffset(84, 74)
+				phaseGlyph.BackgroundTransparency = 1
+				phaseGlyph.Font = Enum.Font.GothamBlack
+				phaseGlyph.TextSize = 52
+				phaseGlyph.TextColor3 = Color3.fromRGB(88, 112, 148)
+				phaseGlyph.TextTransparency = 0.38
+				phaseGlyph.TextXAlignment = Enum.TextXAlignment.Right
+				phaseGlyph.Text = "PR"
+				phaseGlyph.Parent = headerCard
+			end
+
+			stateBadge.Parent = headerCard
+			stateBadge.Position = UDim2.fromOffset(14, 12)
+			stateBadge.Size = UDim2.fromOffset(144, 26)
+			stateBadge.TextSize = 11
+			stateBadge.Font = Enum.Font.GothamBlack
+
+			primaryLabel.Parent = headerCard
+			primaryLabel.Position = UDim2.fromOffset(14, 46)
+			primaryLabel.Size = UDim2.new(1, -112, 0, 32)
+
+			secondaryLabel.Parent = headerCard
+			secondaryLabel.Position = UDim2.fromOffset(14, 78)
+			secondaryLabel.Size = UDim2.new(1, -112, 0, 30)
+			secondaryLabel.TextSize = 13
+
 			local summaryFrame = panel:FindFirstChild("SummaryFrame")
 			if summaryFrame and not summaryFrame:IsA("ScrollingFrame") then
 				summaryFrame:Destroy()
@@ -5576,6 +6270,14 @@ function UISystem:_ensureBasicUIs()
 				local summaryCorner = Instance.new("UICorner")
 				summaryCorner.CornerRadius = UDim.new(0, 10)
 				summaryCorner.Parent = summaryFrame
+
+				local summaryStroke = Instance.new("UIStroke")
+				summaryStroke.Name = "BrandStroke"
+				summaryStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				summaryStroke.Thickness = 1
+				summaryStroke.Transparency = 0.2
+				summaryStroke.Color = Color3.fromRGB(80, 100, 126)
+				summaryStroke.Parent = summaryFrame
 
 				local summaryPadding = Instance.new("UIPadding")
 				summaryPadding.PaddingTop = UDim.new(0, 10)
@@ -5787,11 +6489,15 @@ function UISystem:_ensureBasicUIs()
 
 			self._uxWidgets.match.BasicGui = gui
 			self._uxWidgets.match.BasicPanel = panel
+			self._uxWidgets.match.HeaderCard = headerCard
+			self._uxWidgets.match.HeaderStroke = headerCard:FindFirstChild("HeaderStroke")
+			self._uxWidgets.match.PhaseGlyph = phaseGlyph
 			self._uxWidgets.match.BasicTitle = title
 			self._uxWidgets.match.BasicStateBadge = stateBadge
 			self._uxWidgets.match.BasicPrimaryLabel = primaryLabel
 			self._uxWidgets.match.BasicSecondaryLabel = secondaryLabel
 			self._uxWidgets.match.BasicFooterLabel = footerLabel
+			self._uxWidgets.match.SummaryFrame = summaryFrame
 			self._uxWidgets.match.TimerLabel = timerLabel
 			self._uxWidgets.match.TimerCaption = timerCaption
 			self._uxWidgets.match.EvidenceQuickButton = evidenceQuickButton
@@ -8240,9 +8946,24 @@ function UISystem:_setButtonSelected(button, selected)
 end
 
 function UISystem:_updateRoomBrowserVisibility()
+	local playerGui = self:_getPlayerGui()
+	if playerGui then
+		self._roomBrowserGui = playerGui:FindFirstChild("RoomBrowserUI") or self._roomBrowserGui
+		self._roomBrowserFloatGui = playerGui:FindFirstChild("RoomBrowserFloatUI") or self._roomBrowserFloatGui
+	end
+
 	local suppressed = self._roomBrowserSuppressed == true
+	local roomBrowserEnabled = (not suppressed) and self._roomBrowserVisible
 	if self._roomBrowserGui then
-		self._roomBrowserGui.Enabled = (not suppressed) and self._roomBrowserVisible
+		self._roomBrowserGui.Enabled = roomBrowserEnabled
+		local rootPanel = self._roomBrowserGui:FindFirstChild("Panel")
+		if rootPanel and rootPanel:IsA("GuiObject") then
+			rootPanel.Visible = roomBrowserEnabled
+		end
+		local countdownOverlay = self._roomBrowserGui:FindFirstChild("CountdownOverlay")
+		if countdownOverlay and countdownOverlay:IsA("GuiObject") and roomBrowserEnabled ~= true then
+			countdownOverlay.Visible = false
+		end
 	end
 	if self._roomBrowserFloatGui then
 		self._roomBrowserFloatGui.Enabled = (not suppressed) and (not self._roomBrowserVisible)
@@ -8695,25 +9416,53 @@ function UISystem:_refreshRoomBrowserView()
 		self._roomBrowserWidgets.KickButton.Visible = false
 	end
 
-	local showCountdown = state.matchStarting == true
-	self._roomBrowserWidgets.CountdownOverlay.Visible = showCountdown
-	if showCountdown then
-		local countdownValue = math.max(0, math.floor(tonumber(state.countdownSecondsLeft or state.countdownTotal or 5) or 5))
-		self._roomBrowserWidgets.CountdownLabel.Text = tostring(countdownValue)
-		if countdownValue > 0 and self._lastCountdownAudioSecond ~= countdownValue then
-			self._lastCountdownAudioSecond = countdownValue
-			playRuntimeUISound("CountdownTick", {
-				VolumeScale = 1,
-				PlaybackSpeed = math.clamp(0.88 + ((5 - math.min(countdownValue, 5)) * 0.05), 0.88, 1.12),
-			})
-		end
-		self._roomBrowserWidgets.CancelCountdown.Visible = state.isHost == true
-	else
-		self._lastCountdownAudioSecond = nil
-		self._roomBrowserWidgets.CancelCountdown.Visible = false
-	end
 	self:_updateRoomBrowserVisibility()
 	self:_refreshBasicLobbyPanel()
+end
+
+function UISystem:_updateCountdownOverlay(state)
+	if not self._roomBrowserWidgets then
+		return
+	end
+
+	local overlay = self._roomBrowserWidgets.CountdownOverlay
+	local label = self._roomBrowserWidgets.CountdownLabel
+	local cancelButton = self._roomBrowserWidgets.CancelCountdown
+	if not overlay or not label or not cancelButton then
+		return
+	end
+
+	local showCountdown = type(state) == "table" and state.matchStarting == true and self._roomBrowserSuppressed ~= true
+	overlay.Visible = showCountdown
+	if not showCountdown then
+		self._lastCountdownAudioSecond = nil
+		self._countdownAnchorSecond = nil
+		self._countdownAnchorAt = nil
+		cancelButton.Visible = false
+		return
+	end
+
+	local rawCountdown = math.max(0, math.floor(tonumber(state.countdownSecondsLeft or state.countdownTotal or 5) or 5))
+	local now = tick()
+	if self._countdownAnchorSecond ~= rawCountdown then
+		self._countdownAnchorSecond = rawCountdown
+		self._countdownAnchorAt = now
+	end
+
+	local elapsedWholeSeconds = math.floor(math.max(0, now - (self._countdownAnchorAt or now)))
+	local displayCountdown = math.max(0, rawCountdown - elapsedWholeSeconds)
+	label.Text = tostring(displayCountdown)
+
+	if displayCountdown > 0 and self._lastCountdownAudioSecond ~= displayCountdown then
+		self._lastCountdownAudioSecond = displayCountdown
+		pulseCountdownLabel(label)
+		playRuntimeUISound("CountdownTick", {
+			VolumeScale = 1,
+			PlaybackSpeed = 1,
+		})
+	end
+
+	cancelButton.Visible = state.isHost == true
 end
 
 function UISystem:_startRoomBrowserLoop()
@@ -8726,6 +9475,8 @@ function UISystem:_startRoomBrowserLoop()
 			if self._roomBrowserController then
 				local state = self._roomBrowserController:GetState()
 				if state then
+					self:_syncRoomBrowserSuppressionFromMatchContext()
+					self:_updateCountdownOverlay(state)
 					self:_renderRoomUI(state)
 				end
 			end
