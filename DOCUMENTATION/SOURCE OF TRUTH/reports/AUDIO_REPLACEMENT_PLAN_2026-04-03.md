@@ -18,7 +18,6 @@ Targetnya bukan sekadar "cari sound", tetapi:
 Slot canonical yang **masih kosong** di source aktif sekarang tinggal:
 
 1. `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
-2. `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
 
 Slot canonical yang **sudah punya fallback runtime aman** walau asset Roblox final belum di-upload:
 
@@ -33,13 +32,14 @@ Slot canonical yang **sudah terisi lagi** dan sudah tervalidasi runtime:
 
 1. `src/ReplicatedStorage/Assets/Audio/Environment/EnvironmentalCreak_01.model.json`
 2. `src/ReplicatedStorage/Assets/Audio/Ghost/GhostManifest_01.model.json`
-3. `src/ReplicatedStorage/Assets/Audio/Ghost/HuntStart_01.model.json`
-4. `src/ReplicatedStorage/Assets/Audio/UI/CountdownTick_01.model.json`
-5. `src/ReplicatedStorage/Assets/Audio/UI/TeleportDrop_01.model.json`
-6. `src/ReplicatedStorage/Assets/Audio/Sensory/Heartbeat.model.json`
-7. `src/ReplicatedStorage/Assets/Audio/Footsteps/Woodstep_01.model.json`
-8. `src/ReplicatedStorage/Assets/Audio/Footsteps/ConcreteStep_01.model.json`
-9. `src/ReplicatedStorage/Assets/Audio/Footsteps/MetalStep_01.model.json`
+3. `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
+4. `src/ReplicatedStorage/Assets/Audio/Ghost/HuntStart_01.model.json`
+5. `src/ReplicatedStorage/Assets/Audio/UI/CountdownTick_01.model.json`
+6. `src/ReplicatedStorage/Assets/Audio/UI/TeleportDrop_01.model.json`
+7. `src/ReplicatedStorage/Assets/Audio/Sensory/Heartbeat.model.json`
+8. `src/ReplicatedStorage/Assets/Audio/Footsteps/Woodstep_01.model.json`
+9. `src/ReplicatedStorage/Assets/Audio/Footsteps/ConcreteStep_01.model.json`
+10. `src/ReplicatedStorage/Assets/Audio/Footsteps/MetalStep_01.model.json`
 
 Catatan penting:
 
@@ -214,7 +214,8 @@ pwsh -NoLogo -File .\scripts\set-audio-asset-ids.ps1 `
 
 Dokumen ini dianggap selesai jika:
 
-1. dua slot kosong yang tersisa (`AmbientLoop_Main`, `GhostWhisper_01`) sudah punya Roblox asset ID final
-2. source `.model.json` sudah terisi
-3. playtest boot tidak lagi memakai slot canonical kosong pada jalur aktif
-4. `ASSET_LICENSE_LEDGER_2026-04-03.md` tidak lagi menyimpan unresolved audio slot sebagai blocker publish
+1. slot kosong yang tersisa (`AmbientLoop_Main`) sudah punya Roblox asset ID final
+2. source `.model.json` sudah terisi untuk seluruh cue aktif lain yang dipakai runtime modern
+3. playtest boot tidak lagi memakai slot canonical kosong pada jalur aktif selain ambience loop yang memang masih ditahan jujur
+4. `ASSET_LICENSE_LEDGER_2026-04-03.md` tidak lagi menyimpan `GhostWhisper_01` sebagai blocker publish
+

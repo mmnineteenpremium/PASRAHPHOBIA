@@ -1971,3 +1971,106 @@ Lanjut ke surface berikutnya yang masih paling utilitarian atau masih menahan pu
 1. `MainMenuUI` jika perlu dinaikkan ke deck visual yang setara
 2. finalisasi dua blocker audio canonical yang masih kosong
 3. teruskan polish material/lighting/icon agar experience tidak berhenti di UI saja
+
+## 2026-04-03 19:35 ICT
+
+### Task
+
+Revalidasi flow `Ranked -> countdown -> teleport` secara visual dan menutup satu slot audio canonical lagi dengan asset Roblox yang sudah di-upload user.
+
+### Linked Issues
+
+- room browser bocor setelah teleport
+- countdown/audio sinkron perlu bukti runtime baru
+- `GhostWhisper_01` masih kosong walau user sudah punya asset Roblox yang valid
+
+### Files Changed
+
+- `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
+- `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/ASSET_LICENSE_LEDGER_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- flow `Ranked -> CreateRoom -> HostStart -> teleport` divalidasi ulang di Studio live dan hasilnya tetap bersih:
+  - `RoomBrowserUI.Enabled = false`
+  - `MatchUI.Enabled = true`
+  - player sudah berada di `match_1`
+- sembilan asset audio upload user yang sudah terpasang sebelumnya diuji ulang langsung di client template dan semuanya `IsLoaded = true` + `IsPlaying = true`
+- `GhostWhisper_01` sekarang diisi `rbxassetid://83336813491039` dan lolos validasi client live setelah restart playtest
+- percobaan menjadikan `ButtonClick_01` template source-owned dengan built-in `rbxasset://sounds/volume_slider.ogg` dibatalkan lagi, karena jalur resolver UI canonical membaca template dari `SoundId` non-kosong dan representasi built-in itu tidak surface dengan cara yang bisa dipakai template path ini
+- kesimpulan mutakhir:
+  - blocker audio canonical tinggal `AmbientLoop_Main`
+  - `ButtonClick` tetap aman via fallback runtime built-in Roblox
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_audio_fill_build.rbxlx`
+- screenshot runtime:
+  - `ScreenCapture_RankedRoom_Start_Clicked`
+  - `ScreenCapture_After_Ranked_Teleport_Check`
+- probe runtime client membuktikan:
+  - `roomBrowserVisible = false`
+  - `matchUIVisible = true`
+  - `playerMatchId = match_1`
+- probe audio template baru membuktikan:
+  - `GhostWhisper_01 -> rbxassetid://83336813491039 -> IsLoaded = true`
+
+### Next Step
+
+Lanjut ke blocker konten/publish berikutnya yang benar-benar tersisa:
+1. finalisasi `AmbientLoop_Main`
+2. teruskan polish UX/brand visual pada surface yang masih utilitarian
+3. kembali ke jalur automation ghost deterministic jika dibutuhkan setelah blocker konten langsung ini makin tipis
+
+## 2026-04-03 20:22 ICT
+
+### Task
+
+Mengunci transisi `RoomBrowser -> match` agar panel room tidak bocor saat teleport dan menyelaraskan countdown tick ke angka server yang benar-benar tampil di client.
+
+### Linked Issues
+
+- room panel masih sempat terlihat saat flow teleport berlangsung
+- countdown tick terasa acak karena UI menghitung mundur lokal di antara update server
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `_forceCloseAllPanelsForTeleport()` sekarang memaksa menutup `RoomPanel`, dropdown, modal, dan `CountdownOverlay`, bukan hanya menyetel `ScreenGui.Enabled = false`
+- `_updateRoomBrowserVisibility()` sekarang juga men-collapse subtree room browser saat browser disuppress
+- `_updateCountdownOverlay()` tidak lagi memakai anchor timer lokal; display countdown langsung mengikuti `countdownSecondsLeft` / `countdownTotal` dari server
+- tick audio sekarang hanya dipicu saat angka server benar-benar berubah, sehingga sinkron dengan label yang dilihat pemain
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_countdown_room_fix_build.rbxlx`
+- validasi live `Ranked -> CreateRoom -> ReadyButton(Start) -> teleport` membuktikan:
+  - tepat sesudah start click:
+    - `RoomBrowserUI.Enabled = false`
+    - `RoomBrowserUI.Panel.Visible = false`
+    - `RoomBrowserUI.Panel.RoomPanel.Visible = false`
+  - setelah teleport:
+    - `InMatch = true`
+    - `MatchPhase = Briefing`
+    - `MatchUI.Enabled = true`
+- probe countdown runtime menunjukkan urutan sinkron:
+  - `RuntimeCountdownTick` muncul bersamaan dengan perubahan label `4`, `3`, `2`, `1`
+  - tidak ada lagi drift dari pengurang detik lokal di loop `0.1`
+
+### Next Step
+
+Lanjut ke blocker publish berikutnya:
+1. finalisasi `AmbientLoop_Main`
+2. teruskan polish UX/brand pada surface yang masih utilitarian
+3. hanya kembali ke eksperimen ghost deterministic setelah blocker publish yang lebih langsung makin tipis
