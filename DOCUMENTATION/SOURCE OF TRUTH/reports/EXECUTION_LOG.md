@@ -5560,6 +5560,7 @@ Menetralkan slot ambience canonical agar tidak overlap dengan heartbeat fear loo
 ### Files Changed
 
 - `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/ASSET_LICENSE_LEDGER_2026-04-03.md`
 - `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
 - `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
 
@@ -5577,6 +5578,10 @@ Menetralkan slot ambience canonical agar tidak overlap dengan heartbeat fear loo
   - `_tmp_ambient_slot_placeholder_build.rbxlx`
 - patch runtime Studio:
   - `ReplicatedStorage.Assets.Audio.Ambient.AmbientLoop_Main.SoundId` disetel ke kosong.
+- audit canonical audio `MarketplaceService:GetProductInfo()`:
+  - total sound canonical: `13`
+  - invalid lookup: `0`
+  - slot sengaja kosong: `AmbientLoop_Main`, `ButtonClick_01`
 - smoke runtime:
   - flow `Ranked -> CreateRoom -> HostStart` tidak memunculkan `AmbientAudioRuntime` aktif pada window validasi.
 
