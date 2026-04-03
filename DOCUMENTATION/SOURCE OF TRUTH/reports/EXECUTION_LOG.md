@@ -2596,3 +2596,62 @@ Menutup debt UX yang masih terlihat setelah teleport ke match, sekaligus menaikk
 1. kembali ke debt gameplay/runtime: audit pintu hybrid radius/manual, traversal tangga, dan hiding spot
 2. lanjutkan shelter/hunt survival setelah server-side debug bridge stabil lagi
 3. teruskan polish asset/audio final yang masih belum legal/final
+
+## 2026-04-03 14:56 ICT
+
+### Task
+
+Menggeser runtime pintu dari mode `pass-through` default ke basis interaksi pemain yang lebih logis dan lintas platform.
+
+### Linked Issues
+
+- user menegaskan pintu tidak boleh terasa palsu; pemain harus punya affordance yang masuk akal untuk buka/tutup
+- traversal vertikal ke lantai dua terasa tidak logis jika pintu selalu pass-through
+
+### Files Changed
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- runtime patch map tidak lagi memaksa pintu clone playable map selalu terbuka
+- policy default clone sekarang menjadi:
+  - `DoorTraversalPolicy = PromptManual`
+  - `DoorIsOpen = false`
+  - `DoorLocked = false`
+- ini menjaga affordance lintas platform tetap jelas karena `DoorRuntime` sudah memasang `ProximityPrompt` dengan:
+  - keyboard `E`
+  - gamepad `X`
+  - clickable prompt untuk touch/tap
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_door_prompt_manual_build.rbxlx`
+- validasi live pada `Workspace.ActiveMatches.Match_match_1.HauntedHouse.HauntedHouse.Doors.Door_DiningRoom`:
+  - `DoorTraversalPolicy = PromptManual`
+  - `DoorIsOpen = false`
+  - `CanCollide = true`
+  - child runtime hadir:
+    - `DoorPrompt`
+    - `DoorPathModifier`
+    - `DoorOpenSound`
+    - `DoorCloseSound`
+  - `DoorPrompt` aktif dengan `ActionText = Buka Pintu`
+- capture referensi:
+  - `ScreenCapture_StairTraversal_Bedroom1_Attempt`
+  - `ScreenCapture_DoorPromptManual_OpenedConfirmed`
+
+### Caveat
+
+- trigger prompt via automation input masih belum cukup konsisten untuk saya jadikan bukti final buka/tutup pintu
+- prompt memang muncul live di layar, tetapi state part hasil `keyPress(E)` belum stabil jika dibaca ulang lewat tool
+- jadi task ini sekarang berada di status: `baseline runtime fixed, final manual confirmation still required`
+
+### Next Step
+
+1. validasi manual sekali untuk buka/tutup pintu pada runtime baru
+2. lanjut audit traversal tangga dan akses lantai dua setelah pintu manual dipastikan stabil
+3. kembali ke shelter/hiding runtime setelah server-side debug bridge pulih
