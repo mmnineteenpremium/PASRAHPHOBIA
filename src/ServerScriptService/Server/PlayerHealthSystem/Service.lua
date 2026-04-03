@@ -1,5 +1,7 @@
 local Services = require(script.Parent.Parent.Core.Services)
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Service = {}
 Service.__index = Service
@@ -77,6 +79,13 @@ local function clamp(value, minValue, maxValue)
     return value
 end
 
+local function setStudioRuntimeAttribute(name, value)
+    if not RunService:IsStudio() then
+        return
+    end
+    ReplicatedStorage:SetAttribute(name, value)
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -102,6 +111,7 @@ function Service:Init()
 end
 
 function Service:Start()
+    setStudioRuntimeAttribute("PasrahHuntPressureReady", true)
     if self._running then
         return
     end
@@ -120,6 +130,8 @@ end
 
 function Service:Stop()
     self._running = false
+    setStudioRuntimeAttribute("PasrahHuntPressureReady", nil)
+    setStudioRuntimeAttribute("PasrahHuntPressureActiveMatchId", nil)
     self._state:Clear()
 end
 
@@ -477,6 +489,7 @@ function Service:HandleEvent(eventName, payload)
             return
         end
         self._state:Set("activeMatchId", matchId)
+        setStudioRuntimeAttribute("PasrahHuntPressureActiveMatchId", matchId)
         self:_setHuntActive(matchId, false)
         self:_registerMatchPlayers(payload)
         for _, player in ipairs(payload and payload.players or {}) do
@@ -497,6 +510,7 @@ function Service:HandleEvent(eventName, payload)
         if self._state:Get("activeMatchId") == matchId then
             self._state:Set("activeMatchId", nil)
         end
+        setStudioRuntimeAttribute("PasrahHuntPressureActiveMatchId", nil)
         return
     end
 
