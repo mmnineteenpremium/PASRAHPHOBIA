@@ -12251,15 +12251,15 @@ function UISystem:_refreshRoomBrowserView()
 	end
 
 	if showRoomPanel then
-		if state.isHost ~= true then
-			self._roomModeDropdownOpen = false
-			self._roomMapDropdownOpen = false
-		end
 		local localUserId = Players.LocalPlayer and Players.LocalPlayer.UserId or nil
 		local localName = Players.LocalPlayer and Players.LocalPlayer.Name or nil
 		local hostCanControl = state.isHost == true
 			or (roomData.hostUserId ~= nil and roomData.hostUserId == localUserId)
 			or (localName ~= nil and tostring(roomData.hostName or "") == tostring(localName))
+		if hostCanControl ~= true then
+			self._roomModeDropdownOpen = false
+			self._roomMapDropdownOpen = false
+		end
 		local roomPlayersData = type(roomData.players) == "table" and roomData.players or nil
 		if (not roomPlayersData or #roomPlayersData == 0) and type(state.currentRoom) == "table" and type(state.currentRoom.players) == "table" then
 			roomPlayersData = state.currentRoom.players
