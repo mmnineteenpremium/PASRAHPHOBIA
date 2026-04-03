@@ -31,6 +31,8 @@ return {
     },
     hideSpotRooms = {
         "Storage",
+        "ArchiveRoom",
+        "SecurityRoom",
     },
     ghostRoomCandidates = {
         "ServerRoom",
