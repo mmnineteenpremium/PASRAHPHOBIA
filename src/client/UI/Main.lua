@@ -1531,7 +1531,7 @@ function UISystem:Init(context)
 	self._roomBrowserInputBound = false
 	self._auxiliaryInputBound = false
 	self._windowCloseInputBound = false
-	self._lobbyPanelCollapsed = true
+	self._lobbyPanelCollapsed = false
 	self._roomBrowserMissingWidgetsLogged = false
 	self._roomBrowserModeView = "Selected"
 	self._passwordJoinPendingRoomId = nil
@@ -2691,6 +2691,7 @@ function UISystem:_refreshBasicLobbyPanel()
 	local currentRoom = type(state.currentRoom) == "table" and state.currentRoom or nil
 	local badgeText = "LOBBY"
 	local badgeColor = Color3.fromRGB(54, 116, 82)
+	local glyphText = "LO"
 	local primaryText = "Buka Room Browser, Profile, Shop, Royal Pass, Menu, atau Rank untuk lanjut test E2E."
 	local selectedMode = tostring(state.selectedMode or "Classic")
 	local selectedMap = tostring(state.selectedMap or MAPS[1] or "HauntedHouse")
@@ -2703,6 +2704,7 @@ function UISystem:_refreshBasicLobbyPanel()
 		local roomMap = tostring(currentRoom.mapId or selectedMap)
 		badgeText = state.matchStarting == true and "COUNTDOWN" or "DALAM ROOM"
 		badgeColor = state.matchStarting == true and Color3.fromRGB(126, 84, 48) or Color3.fromRGB(62, 96, 132)
+		glyphText = state.matchStarting == true and "GO" or "RM"
 		primaryText = string.format("Room #%s siap. Lanjutkan kontrol host atau ready dari Room Browser.", tostring(currentRoom.roomId))
 		secondaryText = string.format("%s | %s | %d pemain", roomMode, roomMap, playerCount)
 		if state.matchStarting == true then
@@ -2712,11 +2714,25 @@ function UISystem:_refreshBasicLobbyPanel()
 	elseif state.lastError then
 		badgeText = "PERLU CEK"
 		badgeColor = Color3.fromRGB(118, 74, 48)
+		glyphText = "ER"
 		hintText = "Status terakhir: " .. tostring(state.lastError)
 	end
 
+	local headerFill = badgeColor:Lerp(Color3.fromRGB(18, 26, 34), 0.72)
+	local actionFill = badgeColor:Lerp(Color3.fromRGB(38, 56, 74), 0.42)
+
 	if lobby.BasicTitle then
 		lobby.BasicTitle.Text = "LOBBY PANEL"
+	end
+	if lobby.BasicHeaderCard then
+		lobby.BasicHeaderCard.BackgroundColor3 = headerFill
+	end
+	if lobby.BasicHeaderStroke then
+		lobby.BasicHeaderStroke.Color = badgeColor
+	end
+	if lobby.BasicLobbyGlyph then
+		lobby.BasicLobbyGlyph.Text = glyphText
+		lobby.BasicLobbyGlyph.TextColor3 = badgeColor:Lerp(Color3.fromRGB(255, 244, 228), 0.28)
 	end
 	if lobby.BasicStatusBadge then
 		lobby.BasicStatusBadge.Text = badgeText
@@ -2731,11 +2747,24 @@ function UISystem:_refreshBasicLobbyPanel()
 	if lobby.BasicHintLabel then
 		lobby.BasicHintLabel.Text = hintText
 	end
+	if lobby.BasicModePill then
+		lobby.BasicModePill.Text = string.upper(selectedMode)
+		lobby.BasicModePill.BackgroundColor3 = Color3.fromRGB(58, 92, 126)
+	end
+	if lobby.BasicMapPill then
+		lobby.BasicMapPill.Text = tostring(currentRoom and currentRoom.mapId or selectedMap)
+		lobby.BasicMapPill.BackgroundColor3 = Color3.fromRGB(70, 86, 64)
+	end
+	if lobby.BasicRoomPill then
+		local roomText = currentRoom and string.format("ROOM #%s", tostring(currentRoom.roomId)) or string.format("%d ROOM", #rooms)
+		lobby.BasicRoomPill.Text = roomText
+		lobby.BasicRoomPill.BackgroundColor3 = Color3.fromRGB(96, 76, 48)
+	end
 	if lobby.BasicOpenRoomBrowserButton then
 		lobby.BasicOpenRoomBrowserButton.Text = self._roomBrowserVisible and "TUTUP ROOM BROWSER" or "OPEN ROOM BROWSER"
 		lobby.BasicOpenRoomBrowserButton.BackgroundColor3 = self._roomBrowserVisible
-			and Color3.fromRGB(66, 104, 144)
-			or Color3.fromRGB(46, 78, 114)
+			and badgeColor:Lerp(Color3.fromRGB(72, 118, 160), 0.24)
+			or actionFill
 	end
 	if lobby.BasicProfileButton then
 		local profileOpen = self._uiState.ProfileUI and self._uiState.ProfileUI.visible == true and self._windowDismissed.ProfileUI ~= true
@@ -5618,6 +5647,101 @@ function UISystem:_ensureBasicUIs()
 				secondaryLabel.Parent = panel
 			end
 
+			local panelStroke = panel:FindFirstChild("BrandStroke")
+			if not panelStroke or not panelStroke:IsA("UIStroke") then
+				panelStroke = Instance.new("UIStroke")
+				panelStroke.Name = "BrandStroke"
+				panelStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				panelStroke.Thickness = 1
+				panelStroke.Transparency = 0.22
+				panelStroke.Color = Color3.fromRGB(82, 116, 94)
+				panelStroke.Parent = panel
+			end
+
+			local headerCard = panel:FindFirstChild("HeaderCard")
+			if not headerCard then
+				headerCard = Instance.new("Frame")
+				headerCard.Name = "HeaderCard"
+				headerCard.Position = UDim2.fromOffset(12, 42)
+				headerCard.Size = UDim2.new(1, -24, 0, 112)
+				headerCard.BackgroundColor3 = Color3.fromRGB(24, 34, 40)
+				headerCard.BackgroundTransparency = 0.04
+				headerCard.BorderSizePixel = 0
+				headerCard.Parent = panel
+
+				local headerCorner = Instance.new("UICorner")
+				headerCorner.CornerRadius = UDim.new(0, 12)
+				headerCorner.Parent = headerCard
+
+				local headerStroke = Instance.new("UIStroke")
+				headerStroke.Name = "HeaderStroke"
+				headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+				headerStroke.Thickness = 1
+				headerStroke.Transparency = 0.18
+				headerStroke.Color = Color3.fromRGB(82, 116, 94)
+				headerStroke.Parent = headerCard
+			end
+
+			local lobbyGlyph = headerCard:FindFirstChild("LobbyGlyph")
+			if not lobbyGlyph then
+				lobbyGlyph = Instance.new("TextLabel")
+				lobbyGlyph.Name = "LobbyGlyph"
+				lobbyGlyph.AnchorPoint = Vector2.new(1, 0)
+				lobbyGlyph.Position = UDim2.new(1, -12, 0, 8)
+				lobbyGlyph.Size = UDim2.fromOffset(84, 64)
+				lobbyGlyph.BackgroundTransparency = 1
+				lobbyGlyph.Font = Enum.Font.GothamBlack
+				lobbyGlyph.TextSize = 46
+				lobbyGlyph.TextColor3 = Color3.fromRGB(88, 122, 100)
+				lobbyGlyph.TextTransparency = 0.38
+				lobbyGlyph.TextXAlignment = Enum.TextXAlignment.Right
+				lobbyGlyph.Text = "LO"
+				lobbyGlyph.Parent = headerCard
+			end
+
+			statusBadge.Parent = headerCard
+			statusBadge.Position = UDim2.fromOffset(12, 10)
+			statusBadge.Size = UDim2.fromOffset(108, 24)
+			statusBadge.Font = Enum.Font.GothamBlack
+			statusBadge.TextSize = 11
+
+			primaryLabel.Parent = headerCard
+			primaryLabel.Position = UDim2.fromOffset(12, 40)
+			primaryLabel.Size = UDim2.new(1, -110, 0, 24)
+			primaryLabel.TextSize = 15
+
+			secondaryLabel.Parent = headerCard
+			secondaryLabel.Position = UDim2.fromOffset(12, 64)
+			secondaryLabel.Size = UDim2.new(1, -110, 0, 20)
+			secondaryLabel.TextSize = 12
+
+			local function ensureHeaderPill(name, position, size, backgroundColor)
+				local pill = headerCard:FindFirstChild(name)
+				if not pill then
+					pill = Instance.new("TextLabel")
+					pill.Name = name
+					pill.BackgroundColor3 = backgroundColor
+					pill.BackgroundTransparency = 0.08
+					pill.BorderSizePixel = 0
+					pill.Font = Enum.Font.GothamBold
+					pill.TextSize = 10
+					pill.TextColor3 = Color3.fromRGB(242, 246, 250)
+					pill.Text = "-"
+					pill.Parent = headerCard
+
+					local pillCorner = Instance.new("UICorner")
+					pillCorner.CornerRadius = UDim.new(1, 0)
+					pillCorner.Parent = pill
+				end
+				pill.Position = position
+				pill.Size = size
+				return pill
+			end
+
+			local modePill = ensureHeaderPill("ModePill", UDim2.fromOffset(12, 88), UDim2.fromOffset(70, 18), Color3.fromRGB(58, 92, 126))
+			local mapPill = ensureHeaderPill("MapPill", UDim2.fromOffset(88, 88), UDim2.fromOffset(116, 18), Color3.fromRGB(70, 86, 64))
+			local roomPill = ensureHeaderPill("RoomPill", UDim2.fromOffset(210, 88), UDim2.fromOffset(94, 18), Color3.fromRGB(96, 76, 48))
+
 			local openRoomBrowserButton = panel:FindFirstChild("OpenRoomBrowserButton")
 			if not openRoomBrowserButton then
 				openRoomBrowserButton = Instance.new("TextButton")
@@ -5770,10 +5894,16 @@ function UISystem:_ensureBasicUIs()
 
 			self._uxWidgets.lobby.BasicGui = gui
 			self._uxWidgets.lobby.BasicPanel = panel
+			self._uxWidgets.lobby.BasicHeaderCard = headerCard
+			self._uxWidgets.lobby.BasicHeaderStroke = headerCard:FindFirstChild("HeaderStroke")
+			self._uxWidgets.lobby.BasicLobbyGlyph = lobbyGlyph
 			self._uxWidgets.lobby.BasicTitle = title
 			self._uxWidgets.lobby.BasicStatusBadge = statusBadge
 			self._uxWidgets.lobby.BasicPrimaryLabel = primaryLabel
 			self._uxWidgets.lobby.BasicSecondaryLabel = secondaryLabel
+			self._uxWidgets.lobby.BasicModePill = modePill
+			self._uxWidgets.lobby.BasicMapPill = mapPill
+			self._uxWidgets.lobby.BasicRoomPill = roomPill
 			self._uxWidgets.lobby.BasicHintLabel = hintLabel
 			self._uxWidgets.lobby.BasicOpenRoomBrowserButton = openRoomBrowserButton
 			self._uxWidgets.lobby.BasicProfileButton = profileButton

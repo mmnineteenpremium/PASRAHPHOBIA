@@ -1652,3 +1652,50 @@ Lanjutkan ke panel modular berikut yang masih paling utilitarian:
 1. `LobbyUI`
 2. `JournalUI`
 3. atau kembali ke blocker audio final (`AmbientLoop_Main`, `GhostWhisper_01`, `ButtonClick_01`) kalau asset Roblox-nya sudah siap
+
+## 2026-04-03 10:37 ICT
+
+### Task
+
+Menutup regress `LobbyUI` setelah polish pass dan memastikan panel lobby boot dalam keadaan terbuka, bukan collapsed.
+
+### Linked Issues
+
+- `LobbyUI` sempat kehilangan semua tombol bawah setelah polish runtime
+- panel lobby default lama terlalu tersembunyi untuk flow test lobby modern
+- validasi visual user-facing perlu kembali jelas sebelum lanjut ke surface UI berikutnya
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- typo builder `stateBadge` dikoreksi menjadi `statusBadge`, sehingga builder `LobbyUI` tidak lagi terputus di tengah
+- tombol canonical `Open Room Browser`, `Profile`, `Shop`, `Royal Pass`, `Menu`, `Rank`, dan `HintLabel` kembali dibuat penuh
+- default `self._lobbyPanelCollapsed` diubah menjadi `false`, jadi panel lobby langsung terbuka saat playtest boot baru
+- toggle minimize tetap dipertahankan, dengan state visual `<` saat panel sedang terbuka
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_lobby_ui_fix_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_lobby_ui_default_open_build.rbxlx`
+- validasi live lewat MCP membuktikan:
+  - `LobbyUI.MainPanel` kembali punya child tombol penuh
+  - `LobbyUI.MainPanel.Visible = true` pada playtest baru
+  - `LobbyUI.LobbyToggleButton.Text = "<"` pada state default boot
+  - screenshot runtime:
+    - `ScreenCapture_LobbyUI_DefaultOpen_Validated`
+- catatan jujur:
+  - saya sempat force-open panel sekali lewat `execute_luau` untuk membedakan bug builder vs state collapse
+  - sesudah patch default open, playtest baru membuktikan panel memang muncul tanpa injeksi manual
+
+### Next Step
+
+Lanjutkan ke surface berikut yang masih paling utilitarian atau masih punya blocker publish:
+1. `JournalUI`
+2. asset audio final (`AmbientLoop_Main`, `GhostWhisper_01`, `ButtonClick_01`)
+3. vertical slice ghost/map flow berikutnya
