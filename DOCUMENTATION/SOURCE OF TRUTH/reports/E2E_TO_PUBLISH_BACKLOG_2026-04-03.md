@@ -1023,3 +1023,28 @@ Urutan yang paling masuk akal dari titik sekarang:
   - aturan single-open panel besar lobby sudah tervalidasi live untuk jalur utama dan jalur silang yang sempat bocor
   - `P2.12` masih `in progress` hanya untuk sisa polish compact/mobile, bukan lagi karena owner conflict dasar
 
+## Update 2026-04-04 02:11 ICT
+
+- hiding/survival affordance naik satu level lagi tanpa menambah spot palsu:
+  - `ClosetHidingMechanic` sekarang memberi world-space marker runtime pada hide spot canonical
+  - marker hanya menyala saat `HuntStarted`, lalu mati lagi pada `HuntEnded/MatchEnded`
+  - ini melengkapi `HideSpotPrompt` yang sebelumnya ada tetapi terlalu pasif untuk mengajari pemain survive hunt
+- marker runtime baru untuk hide spot berisi:
+  - outline world-space pada volume room hide spot
+  - billboard label dengan nama room (`ClosetA`, `Storage`, dst.)
+  - subtitle `Bersembunyi saat hunt`
+- blocker teknis yang sempat membuat marker tidak hidup juga sudah ditutup:
+  - `ClosetHidingMechanic.Controller` sekarang subscribe ke `HuntStarted` dan `HuntEnded`
+- validasi live tertutup:
+  - `HauntedHouse` -> `Room_ClosetA`
+    - match start canonical sukses
+    - `ForceHunt` sukses (`ok=true | action=ForceHunt | result=match=match_1 forced`)
+    - runtime instance memiliki `HideSpotRuntimeMarker`
+    - `HideSpotRuntimeMarker.Outline.Visible = true`
+    - `HideSpotRuntimeMarker.Billboard.Enabled = true`
+    - `HideSpotPrompt.ActionText = Bersembunyi`
+    - `HideSpotLabel = ClosetA`
+- dampak:
+  - pemain sekarang punya affordance visual nyata untuk hide spot saat hunt, bukan hanya safe zone marker atau petunjuk teks UI
+  - debt survival berikutnya bergeser ke perluasan/review distribusi hide spot lintas map, bukan lagi “spot ada tapi tidak terbaca”
+

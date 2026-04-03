@@ -7,6 +7,8 @@ local SUBSCRIPTIONS = {
     "MatchCreated",
     "MatchStarted",
     "MatchEnded",
+    "HuntStarted",
+    "HuntEnded",
     "PlayerTeleported",
     "PlayerAttemptHide",
     "PlayerExitHide",

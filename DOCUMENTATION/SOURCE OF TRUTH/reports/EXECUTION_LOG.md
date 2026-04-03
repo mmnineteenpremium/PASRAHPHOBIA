@@ -4478,3 +4478,70 @@ Menutup bypass single-open pada UI lobby yang membuat `LobbyUI` bisa overlap den
 
 1. lanjut ke validasi compact/mobile `RoomBrowserUI` dan `RoyalPassUI`
 2. jika tidak ada blocker baru, lanjut ke polish lobby/map berikutnya tanpa membawa debt overlap lama
+
+## 2026-04-04 02:11 ICT
+
+### Task
+
+Menambah affordance visual runtime untuk hide spot canonical agar pemain lebih jelas membaca jalur survive saat hunt.
+
+### Linked Issues
+
+- hiding non-safe-zone memang sudah playable, tetapi masih terlalu pasif:
+  - `HideSpotPrompt` ada
+  - UI hunt bisa menyebut `Storage/Closet`
+  - namun di world-space belum ada marker yang cukup jelas seperti safe zone marker
+- user juga sudah menyorot kebutuhan cara survive hunt yang lebih terbaca secara visual, bukan hanya lewat teks
+
+### Files Changed
+
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua`
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Controller.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `ClosetHidingMechanic.Service` sekarang membuat marker runtime per hide spot:
+  - `HideSpotRuntimeMarker.Outline`
+  - `HideSpotRuntimeMarker.Billboard`
+  - label runtime memakai nama room hide spot
+  - subtitle runtime: `Bersembunyi saat hunt`
+- marker disetel lewat owner pusat `:_setHideSpotVisualState(matchId, isVisible)` sehingga:
+  - default `false` saat match start
+  - `true` saat `HuntStarted`
+  - `false` lagi saat `HuntEnded` dan `MatchEnded`
+- atribut room hide spot juga ditambah:
+  - `HideSpotLabel`
+- blocker wiring yang membuat marker awalnya tidak pernah hidup juga ditutup:
+  - `ClosetHidingMechanic.Controller` sekarang subscribe ke `HuntStarted` dan `HuntEnded`
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_hide_spot_marker_fix.rbxlx`
+- validasi live canonical di Studio:
+  - playtest baru
+  - `OpenRoomBrowser -> CreateRoom -> ReadyButton/Start`
+  - countdown host-start sukses
+  - `PasrahLastMatchStartTrace = match=match_1 players=1 teleported=1 phase=PreparationPhase map=HauntedHouse mode=Classic`
+  - `StudioE2EControl.ForceHunt` sukses:
+    - `PasrahStudioE2ELastResult = ok=true | action=ForceHunt | result=match=match_1 forced`
+  - inspeksi runtime `Workspace.ActiveMatches.Match_match_1.HauntedHouse.Rooms.Room_ClosetA` dari client live menunjukkan:
+    - `HideSpotRuntimeMarker` ada
+    - `Outline.Visible = true`
+    - `Billboard.Enabled = true`
+    - `HideSpotPrompt.ActionText = Bersembunyi`
+    - `HideSpotLabel = ClosetA`
+    - `player.MatchPhase = Hunt`
+
+### Interpretation
+
+- hide spot canonical sekarang tidak lagi “diam” saat hunt aktif
+- safe zone dan hide spot sekarang sama-sama punya affordance world-space yang bisa dibaca pemain
+- debt berikutnya bergeser ke distribusi/kurasi hide spot lintas map, bukan lagi ke visibility dasar affordance runtime
+
+### Next Step
+
+1. lanjut ke review distribusi hide spot lintas map atau gameplay survival affordance berikutnya
+2. hindari menambah hide spot asal-asalan; tetap pakai room canonical yang benar-benar masuk akal secara layout
