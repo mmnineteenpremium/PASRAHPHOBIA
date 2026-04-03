@@ -1912,6 +1912,7 @@ function UISystem:Init(context)
 		unlockedTierCount = 0,
 		nextTier = 2,
 		nextReward = nil,
+		viewMode = "Rewards",
 	}
 	self._spectatorState = {
 		lastEvent = "Idle",
@@ -4509,6 +4510,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 
 	local heroCard = Instance.new("Frame")
 	heroCard.Name = "HeroCard"
+	heroCard.LayoutOrder = 1
 	heroCard.Size = UDim2.new(1, 0, 0, 130)
 	heroCard.BackgroundColor3 = Color3.fromRGB(30, 37, 48)
 	heroCard.BorderSizePixel = 0
@@ -4612,6 +4614,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 
 	local tierList = Instance.new("Frame")
 	tierList.Name = "TierList"
+	tierList.LayoutOrder = 5
 	tierList.Size = UDim2.new(1, 0, 0, 0)
 	tierList.AutomaticSize = Enum.AutomaticSize.Y
 	tierList.BackgroundTransparency = 1
@@ -4625,16 +4628,218 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	local rows = {}
 	for index = 1, 3 do
 		local row = createActionRow(tierList, "TierRow" .. tostring(index), "TIER", "-", "INFO")
+		row.Root.LayoutOrder = index
 		row.Button.Active = false
 		row.Button.AutoButtonColor = false
 		row.Button.Selectable = false
 		table.insert(rows, row)
 	end
 
+	local trackTabs = Instance.new("Frame")
+	trackTabs.Name = "TrackTabs"
+	trackTabs.LayoutOrder = 2
+	trackTabs.Size = UDim2.new(1, 0, 0, 34)
+	trackTabs.BackgroundTransparency = 1
+	trackTabs.Parent = deck
+
+	local rewardTab = Instance.new("TextButton")
+	rewardTab.Name = "RewardTab"
+	rewardTab.Position = UDim2.fromOffset(0, 0)
+	rewardTab.Size = UDim2.new(0.5, -4, 1, 0)
+	styleButton(rewardTab, "30 DAY REWARD")
+	rewardTab.BackgroundColor3 = Color3.fromRGB(74, 92, 118)
+	rewardTab.Parent = trackTabs
+	local rewardTabCorner = Instance.new("UICorner")
+	rewardTabCorner.CornerRadius = UDim.new(0, 10)
+	rewardTabCorner.Parent = rewardTab
+	self:_setSelectableStyle(rewardTab)
+
+	local missionTab = Instance.new("TextButton")
+	missionTab.Name = "MissionTab"
+	missionTab.AnchorPoint = Vector2.new(1, 0)
+	missionTab.Position = UDim2.new(1, 0, 0, 0)
+	missionTab.Size = UDim2.new(0.5, -4, 1, 0)
+	styleButton(missionTab, "30 DAY MISSION")
+	missionTab.BackgroundColor3 = Color3.fromRGB(52, 62, 78)
+	missionTab.Parent = trackTabs
+	local missionTabCorner = Instance.new("UICorner")
+	missionTabCorner.CornerRadius = UDim.new(0, 10)
+	missionTabCorner.Parent = missionTab
+	self:_setSelectableStyle(missionTab)
+
+	local trackHint = Instance.new("TextLabel")
+	trackHint.Name = "TrackHint"
+	trackHint.LayoutOrder = 3
+	trackHint.Size = UDim2.new(1, 0, 0, 18)
+	trackHint.BackgroundTransparency = 1
+	trackHint.Font = Enum.Font.Gotham
+	trackHint.TextSize = 11
+	trackHint.TextXAlignment = Enum.TextXAlignment.Left
+	trackHint.TextColor3 = Color3.fromRGB(170, 184, 202)
+	trackHint.Text = "Geser horizontal untuk melihat 30 hari. Hari ke-30 menampilkan placeholder hadiah karakter rarity 5."
+	trackHint.Parent = deck
+
+	local trackScroller = Instance.new("ScrollingFrame")
+	trackScroller.Name = "TrackScroller"
+	trackScroller.LayoutOrder = 4
+	trackScroller.Size = UDim2.new(1, 0, 0, 178)
+	trackScroller.BackgroundColor3 = Color3.fromRGB(18, 24, 32)
+	trackScroller.BackgroundTransparency = 0.08
+	trackScroller.BorderSizePixel = 0
+	trackScroller.AutomaticCanvasSize = Enum.AutomaticSize.X
+	trackScroller.CanvasSize = UDim2.fromOffset(0, 0)
+	trackScroller.ScrollBarThickness = 5
+	trackScroller.ScrollingDirection = Enum.ScrollingDirection.X
+	trackScroller.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+	trackScroller.HorizontalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+	trackScroller.Parent = deck
+	local trackScrollerCorner = Instance.new("UICorner")
+	trackScrollerCorner.CornerRadius = UDim.new(0, 10)
+	trackScrollerCorner.Parent = trackScroller
+	local trackScrollerStroke = Instance.new("UIStroke")
+	trackScrollerStroke.Name = "TrackScrollerStroke"
+	trackScrollerStroke.Thickness = 1
+	trackScrollerStroke.Color = Color3.fromRGB(76, 95, 122)
+	trackScrollerStroke.Transparency = 0.18
+	trackScrollerStroke.Parent = trackScroller
+	local trackScrollerPadding = Instance.new("UIPadding")
+	trackScrollerPadding.PaddingLeft = UDim.new(0, 8)
+	trackScrollerPadding.PaddingRight = UDim.new(0, 8)
+	trackScrollerPadding.PaddingTop = UDim.new(0, 8)
+	trackScrollerPadding.PaddingBottom = UDim.new(0, 8)
+	trackScrollerPadding.Parent = trackScroller
+	local trackLayout = Instance.new("UIListLayout")
+	trackLayout.FillDirection = Enum.FillDirection.Horizontal
+	trackLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	trackLayout.Padding = UDim.new(0, 8)
+	trackLayout.Parent = trackScroller
+
+	local trackCards = {}
+	for index = 1, 30 do
+		local card = Instance.new("Frame")
+		card.Name = "DayCard" .. tostring(index)
+		card.Size = UDim2.fromOffset(140, 156)
+		card.BackgroundColor3 = Color3.fromRGB(26, 34, 44)
+		card.BorderSizePixel = 0
+		card.Parent = trackScroller
+		local cardCorner = Instance.new("UICorner")
+		cardCorner.CornerRadius = UDim.new(0, 12)
+		cardCorner.Parent = card
+		local cardStroke = Instance.new("UIStroke")
+		cardStroke.Name = "CardStroke"
+		cardStroke.Thickness = 1
+		cardStroke.Color = Color3.fromRGB(82, 100, 126)
+		cardStroke.Transparency = 0.16
+		cardStroke.Parent = card
+
+		local accent = Instance.new("Frame")
+		accent.Name = "Accent"
+		accent.Size = UDim2.new(1, 0, 0, 5)
+		accent.BackgroundColor3 = Color3.fromRGB(90, 126, 188)
+		accent.BorderSizePixel = 0
+		accent.Parent = card
+
+		local dayBadge = Instance.new("TextLabel")
+		dayBadge.Name = "DayBadge"
+		dayBadge.Position = UDim2.fromOffset(10, 12)
+		dayBadge.Size = UDim2.fromOffset(78, 18)
+		dayBadge.BackgroundColor3 = Color3.fromRGB(48, 62, 82)
+		dayBadge.BorderSizePixel = 0
+		dayBadge.Font = Enum.Font.GothamBlack
+		dayBadge.TextSize = 10
+		dayBadge.TextColor3 = Color3.fromRGB(242, 245, 248)
+		dayBadge.Text = string.format("DAY %02d", index)
+		dayBadge.Parent = card
+		local dayBadgeCorner = Instance.new("UICorner")
+		dayBadgeCorner.CornerRadius = UDim.new(1, 0)
+		dayBadgeCorner.Parent = dayBadge
+
+		local titleLabel = Instance.new("TextLabel")
+		titleLabel.Name = "Title"
+		titleLabel.Position = UDim2.fromOffset(10, 40)
+		titleLabel.Size = UDim2.new(1, -20, 0, 36)
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Font = Enum.Font.GothamBold
+		titleLabel.TextSize = 14
+		titleLabel.TextWrapped = true
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		titleLabel.TextYAlignment = Enum.TextYAlignment.Top
+		titleLabel.TextColor3 = Color3.fromRGB(244, 240, 232)
+		titleLabel.Text = "TRACK"
+		titleLabel.Parent = card
+
+		local metaLabel = Instance.new("TextLabel")
+		metaLabel.Name = "Meta"
+		metaLabel.Position = UDim2.fromOffset(10, 78)
+		metaLabel.Size = UDim2.new(1, -20, 0, 38)
+		metaLabel.BackgroundTransparency = 1
+		metaLabel.Font = Enum.Font.Gotham
+		metaLabel.TextSize = 11
+		metaLabel.TextWrapped = true
+		metaLabel.TextXAlignment = Enum.TextXAlignment.Left
+		metaLabel.TextYAlignment = Enum.TextYAlignment.Top
+		metaLabel.TextColor3 = Color3.fromRGB(188, 198, 214)
+		metaLabel.Text = "-"
+		metaLabel.Parent = card
+
+		local rewardPill = Instance.new("TextLabel")
+		rewardPill.Name = "RewardPill"
+		rewardPill.Position = UDim2.fromOffset(10, 120)
+		rewardPill.Size = UDim2.new(1, -20, 0, 22)
+		rewardPill.BackgroundColor3 = Color3.fromRGB(60, 88, 128)
+		rewardPill.BorderSizePixel = 0
+		rewardPill.Font = Enum.Font.GothamBold
+		rewardPill.TextSize = 10
+		rewardPill.TextColor3 = Color3.fromRGB(245, 245, 245)
+		rewardPill.Text = "+"
+		rewardPill.Parent = card
+		local rewardPillCorner = Instance.new("UICorner")
+		rewardPillCorner.CornerRadius = UDim.new(1, 0)
+		rewardPillCorner.Parent = rewardPill
+
+		local footerLabel = Instance.new("TextLabel")
+		footerLabel.Name = "Footer"
+		footerLabel.AnchorPoint = Vector2.new(1, 0)
+		footerLabel.Position = UDim2.new(1, -10, 0, 14)
+		footerLabel.Size = UDim2.fromOffset(36, 16)
+		footerLabel.BackgroundTransparency = 1
+		footerLabel.Font = Enum.Font.GothamBlack
+		footerLabel.TextSize = 9
+		footerLabel.TextColor3 = Color3.fromRGB(220, 226, 236)
+		footerLabel.TextXAlignment = Enum.TextXAlignment.Right
+		footerLabel.Text = "LOCK"
+		footerLabel.Parent = card
+
+		trackCards[index] = {
+			Root = card,
+			Accent = accent,
+			Stroke = cardStroke,
+			DayBadge = dayBadge,
+			Title = titleLabel,
+			Meta = metaLabel,
+			RewardPill = rewardPill,
+			Footer = footerLabel,
+		}
+	end
+
 	if premiumActionButton:GetAttribute("Bound") ~= true then
 		premiumActionButton:SetAttribute("Bound", true)
 		connectButtonPress(premiumActionButton, function()
 			self:_toggleAuxiliaryWindow("ShopUI")
+		end)
+	end
+	if rewardTab:GetAttribute("Bound") ~= true then
+		rewardTab:SetAttribute("Bound", true)
+		connectButtonPress(rewardTab, function()
+			self._royalPassState.viewMode = "Rewards"
+			self:_refreshRoyalPassPanel()
+		end)
+	end
+	if missionTab:GetAttribute("Bound") ~= true then
+		missionTab:SetAttribute("Bound", true)
+		connectButtonPress(missionTab, function()
+			self._royalPassState.viewMode = "Missions"
+			self:_refreshRoyalPassPanel()
 		end)
 	end
 
@@ -4650,6 +4855,12 @@ function UISystem:_ensureRoyalPassWidgets(window)
 		ProgressCaption = progressCaption,
 		PremiumActionButton = premiumActionButton,
 		Rows = rows,
+		TrackTabs = trackTabs,
+		RewardTab = rewardTab,
+		MissionTab = missionTab,
+		TrackHint = trackHint,
+		TrackScroller = trackScroller,
+		TrackCards = trackCards,
 	}
 	return window.RoyalPassWidgets
 end
@@ -4741,6 +4952,7 @@ function UISystem:_refreshRoyalPassPanel()
 	if not widgets then
 		return
 	end
+	state.viewMode = state.viewMode == "Missions" and "Missions" or "Rewards"
 
 	local heroAccent = premiumOwned and Color3.fromRGB(126, 98, 52) or Color3.fromRGB(72, 94, 128)
 	local heroBackground = premiumOwned and Color3.fromRGB(34, 31, 24) or Color3.fromRGB(28, 36, 48)
@@ -4837,6 +5049,94 @@ function UISystem:_refreshRoyalPassPanel()
 			row.Button.BackgroundColor3 = data.preview
 			row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
 		end
+	end
+
+	if widgets.RewardTab and widgets.MissionTab then
+		local rewardsActive = state.viewMode ~= "Missions"
+		widgets.RewardTab.BackgroundColor3 = rewardsActive and Color3.fromRGB(78, 108, 152) or Color3.fromRGB(50, 60, 78)
+		widgets.MissionTab.BackgroundColor3 = rewardsActive and Color3.fromRGB(50, 60, 78) or Color3.fromRGB(92, 76, 126)
+		widgets.RewardTab.TextColor3 = rewardsActive and Color3.fromRGB(246, 242, 234) or Color3.fromRGB(194, 204, 216)
+		widgets.MissionTab.TextColor3 = rewardsActive and Color3.fromRGB(194, 204, 216) or Color3.fromRGB(246, 242, 234)
+	end
+	if widgets.TrackHint then
+		widgets.TrackHint.Text = state.viewMode == "Missions"
+			and "Geser horizontal untuk melihat 30 hari misi. Hari ke-30 menjaga placeholder hadiah karakter rarity 5."
+			or "Geser horizontal untuk melihat 30 hari reward. Hari ke-30 menampilkan placeholder hadiah karakter rarity 5."
+	end
+
+	local trackCards = widgets.TrackCards or {}
+	local unlockedDays = math.clamp(math.max(1, currentTier), 1, 30)
+	local currentDay = math.min(unlockedDays, 30)
+	for index, card in ipairs(trackCards) do
+		local isFinalDay = index == 30
+		local isCurrentDay = index == currentDay
+		local isUnlocked = index < currentDay
+		local isLocked = index > currentDay
+		local accentColor = Color3.fromRGB(82, 104, 132)
+		local strokeColor = Color3.fromRGB(78, 96, 122)
+		local badgeColor = Color3.fromRGB(58, 72, 94)
+		local footerText = isUnlocked and "DONE" or (isCurrentDay and "LIVE" or "LOCK")
+		local titleText
+		local metaText
+		local rewardText
+		local cardBackground = Color3.fromRGB(24, 32, 42)
+
+		if state.viewMode == "Missions" then
+			local missionTemplates = {
+				"Menangkan 1 investigasi penuh",
+				"Kumpulkan 2 evidence penting",
+				"Selamat dari 1 hunt tanpa mati",
+				"Gunakan tool investigasi 3 kali",
+				"Bermain bersama 1 teman",
+			}
+			titleText = isFinalDay and "MISSION 30 • GRAND FINALE" or string.format("MISSION %02d", index)
+			metaText = isFinalDay
+				and "Selesaikan misi penutup season untuk membuka placeholder hadiah karakter rarity 5."
+				or missionTemplates[((index - 1) % #missionTemplates) + 1]
+			rewardText = isFinalDay and "R5 TOKEN" or string.format("+%d XP", 60 + (index * 5))
+			accentColor = isFinalDay and Color3.fromRGB(210, 160, 86) or Color3.fromRGB(112, 84, 150)
+			strokeColor = isFinalDay and Color3.fromRGB(232, 186, 104) or Color3.fromRGB(118, 90, 156)
+			badgeColor = isFinalDay and Color3.fromRGB(108, 78, 46) or Color3.fromRGB(76, 58, 102)
+			cardBackground = isFinalDay and Color3.fromRGB(40, 30, 22) or Color3.fromRGB(32, 28, 42)
+		else
+			titleText = isFinalDay and "DAY 30 • CHARACTER R5" or string.format("DAY %02d REWARD", index)
+			metaText = isFinalDay
+				and "Border placeholder untuk hadiah karakter rarity 5 di penghujung 30 hari season."
+				or string.format("Claim harian untuk ritme login. Bonus tier mengikuti season %s.", tostring(state.seasonId or "S1"))
+			rewardText = isFinalDay and "R5 BORDER" or string.format("+%d MM", 120 + ((index - 1) * 20))
+			accentColor = isFinalDay and Color3.fromRGB(224, 170, 88) or (premiumOwned and Color3.fromRGB(126, 98, 52) or Color3.fromRGB(82, 110, 162))
+			strokeColor = isFinalDay and Color3.fromRGB(244, 198, 112) or accentColor
+			badgeColor = isFinalDay and Color3.fromRGB(118, 86, 42) or Color3.fromRGB(60, 82, 118)
+			cardBackground = isFinalDay and Color3.fromRGB(42, 30, 20) or Color3.fromRGB(24, 32, 42)
+		end
+
+		if isCurrentDay then
+			cardBackground = cardBackground:Lerp(Color3.fromRGB(52, 64, 82), 0.28)
+			footerText = "TODAY"
+		elseif isUnlocked then
+			footerText = "DONE"
+		elseif isLocked then
+			footerText = "LOCK"
+		end
+
+		card.Root.BackgroundColor3 = cardBackground
+		card.Accent.BackgroundColor3 = accentColor
+		card.Stroke.Color = strokeColor
+		card.Stroke.Thickness = isFinalDay and 2 or 1
+		card.DayBadge.BackgroundColor3 = badgeColor
+		card.DayBadge.Text = string.format("DAY %02d", index)
+		card.Title.Text = titleText
+		card.Meta.Text = metaText
+		card.Footer.Text = footerText
+		card.Footer.TextColor3 = isLocked
+			and Color3.fromRGB(174, 182, 194)
+			or (isFinalDay and Color3.fromRGB(244, 214, 146) or Color3.fromRGB(220, 230, 238))
+		applyPricePillVisual(
+			card.RewardPill,
+			rewardText,
+			accentColor,
+			isFinalDay and Color3.fromRGB(248, 242, 230) or Color3.fromRGB(236, 240, 246)
+		)
 	end
 end
 
@@ -5064,12 +5364,12 @@ function UISystem:_applyDeviceSizing()
 			if window then
 				if guiName == "RoyalPassUI" and window.Panel then
 					local width = (profile.isMobile or viewportSize.X <= 1280)
-						and math.min(viewportSize.X - (profile.isMobile and 20 or 28), 404)
-						or 348
+						and math.min(viewportSize.X - (profile.isMobile and 20 or 28), 436)
+						or 364
 					local height = (profile.isMobile or viewportSize.X <= 1280)
-						and math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 48), 388)
-						or 340
-					window.Panel.Size = UDim2.fromOffset(math.max(348, math.floor(width)), math.max(340, math.floor(height)))
+						and math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 36), 520)
+						or 420
+					window.Panel.Size = UDim2.fromOffset(math.max(364, math.floor(width)), math.max(420, math.floor(height)))
 					window.Panel.AnchorPoint = Vector2.new(1, 0.5)
 					window.Panel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0.5, 0)
 				end

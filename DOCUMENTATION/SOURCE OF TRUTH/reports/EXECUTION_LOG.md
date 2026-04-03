@@ -2339,3 +2339,93 @@ Lanjut ke surface berikutnya yang masih paling jelas unfinished:
 1. struktur `RoyalPassUI` 30 hari
 2. misi 30 hari + placeholder reward rarity 5
 3. setelah itu baru kembali ke rework layout `RoomBrowserUI` mobile-fullscreen yang lebih besar
+
+## 2026-04-03 13:29 ICT
+
+### Task
+
+Menaikkan `RoyalPassUI` dari preview tiga row menjadi surface season 30 hari yang lebih nyata, dengan dua track dan placeholder hadiah karakter rarity 5.
+
+### Linked Issues
+
+- royal pass belum memberi gambaran season progression yang bisa diingat pemain
+- reward/misi harian masih abstrak dan belum punya affordance untuk di-swipe/di-scroll sebagai track panjang
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- menambahkan tab `30 DAY REWARD` dan `30 DAY MISSION` ke `RoyalPassUI`
+- menambahkan `TrackScroller` horizontal berisi 30 kartu harian
+- hari ke-30 sekarang punya treatment placeholder hadiah karakter rarity 5:
+  - reward mode `DAY 30 • CHARACTER R5`
+  - mission mode `MISSION 30 • GRAND FINALE`
+- mode tab disimpan di state runtime client (`viewMode`) sehingga panel bisa refresh antara reward dan mission tanpa kehilangan snapshot server utama
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_royalpass_30day_build.rbxlx`
+- validasi reward mode:
+  - `ScreenCapture_RoyalPass_30Day_Rewards`
+  - runtime:
+    - `TrackScroller cardCount = 30`
+    - `finalTitle = DAY 30 • CHARACTER R5`
+    - `finalReward = R5 BORDER`
+- validasi mission mode:
+  - `ScreenCapture_RoyalPass_30Day_Missions`
+  - runtime:
+    - `hint = Geser horizontal untuk melihat 30 hari misi...`
+    - `finalTitle = MISSION 30 • GRAND FINALE`
+    - `finalReward = R5 TOKEN`
+
+### Next Step
+
+Masih ada polish visual/responsive yang tersisa:
+1. `RoyalPassUI` track panjang perlu pass viewport kecil yang lebih nyaman
+2. `RoomBrowserUI` fullscreen/flexible layout tetap pending
+3. setelah dua itu stabil, baru kembali ke map logic/hunt loop
+
+## 2026-04-03 13:37 ICT
+
+### Task
+
+Merapikan affordance `RoyalPassUI` 30 hari agar tab dan scroller track benar-benar masuk ke area baca utama, bukan tenggelam di bawah fold panel.
+
+### Linked Issues
+
+- track 30 hari sudah ada, tetapi pada panel lama tab dan scroller masih terlalu rendah
+- royal pass terasa seperti panel desktop sempit, bukan surface progression yang pantas dibaca
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `RoyalPassUI` panel diperbesar lagi pada jalur viewport-aware menjadi footprint yang lebih layak (`436x520` pada viewport validasi)
+- urutan deck diubah agar `30 DAY REWARD`, `30 DAY MISSION`, dan `TrackScroller` muncul sebelum blok summary tambahan
+- hasilnya pemain langsung melihat tab dan kartu hari awal tanpa harus menggulung jauh ke bawah
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_royalpass_tab_order_build.rbxlx`
+  - `rojo build default.project.json --output .\_tmp_royalpass_height_build.rbxlx`
+- validasi visual:
+  - `ScreenCapture_RoyalPass_30Day_TabOrder`
+  - `ScreenCapture_RoyalPass_30Day_Taller`
+- runtime akhir:
+  - `RoyalPassUI.MainPanel.Size = {0, 436}, {0, 520}`
+
+### Next Step
+
+UI branch ini sekarang cukup stabil untuk digeser ke dua debt besar yang tersisa:
+1. `RoomBrowserUI` fullscreen/flexible mobile layout
+2. map logic + hunt survival loop yang lebih logis dan tidak terasa placeholder
