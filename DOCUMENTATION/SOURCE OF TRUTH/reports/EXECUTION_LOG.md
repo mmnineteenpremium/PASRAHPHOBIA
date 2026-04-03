@@ -4276,3 +4276,205 @@ Mengeraskan lookup refuge client untuk state `Exposed` dengan fallback berbasis 
 
 1. checkpoint hardening fallback refuge lookup
 2. kembali ke validasi `Exposed` pada sesi runtime yang lebih stabil, atau lanjut ke gameplay/layout polish lain
+
+## 2026-04-04 16:20 ICT
+
+### Task
+
+Menambahkan task deferred final-pass untuk perubahan dan restruktur `LOBBY` serta `MAP IN GAME` ke source of truth.
+
+### Linked Issues
+
+- user ingin restruktur besar lobby dan map tetap tercatat, tetapi baru dikerjakan di akhir
+- task ini perlu persisten lintas sesi agar AI berikutnya tidak mengerjakannya terlalu dini
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- backlog sekarang punya item khusus `18. Final pass perubahan dan restruktur LOBBY + MAP IN GAME`
+- status task ditandai `deferred`
+- catatan eksplisit ditambahkan agar user diingatkan saat backlog sudah sampai tahap ini
+
+### Interpretation
+
+- restruktur besar lobby/map sekarang resmi menjadi target akhir, bukan blocker aktif fase hardening saat ini
+- prioritas eksekusi tetap pada backlog inti yang masih terbuka
+
+### Next Step
+
+1. lanjutkan backlog aktif tanpa menarik restruktur besar ini ke depan
+2. ingatkan user saat seluruh target inti sudah cukup dekat untuk masuk final pass lobby/map
+
+## 2026-04-04 16:38 ICT
+
+### Task
+
+Mengurangi surface runtime client dengan mengeluarkan modul legacy yang sudah tidak punya consumer aktif dari path sinkronisasi `StarterPlayerScripts.Client`.
+
+### Linked Issues
+
+- `P0.1 Konsolidasi owner client` masih menyisakan modul mati yang tetap ikut tersync ke Studio
+- `P0.5 Bersihkan noise runtime` belum benar-benar tuntas selama bangkai modul client lama masih tampil di edit tree dan runtime
+
+### Files Changed
+
+- `src/client/EvidenceBoardSystem/Main.lua`
+- `src/client/EvidenceBoardSystem/init.lua`
+- `src/client/GhostPredictionSystem/Main.lua`
+- `src/client/GhostPredictionSystem/init.lua`
+- `src/client/InvestigationUISystem/Main.lua`
+- `src/client/InvestigationUISystem/init.lua`
+- `src/client/LegacyDisabled/AtmosphericSetup.lua`
+- `src/client/LegacyDisabled/AudioManager.lua`
+- `src/client/LegacyDisabled/EMFReaderGUI.lua`
+- `src/client/LegacyDisabled/EvidenceVFX.lua`
+- `src/client/LegacyDisabled/SanityVFX.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- modul investigasi client lama yang sudah tidak punya consumer aktif dihapus dari source path yang tersync ke `StarterPlayerScripts.Client`
+- folder `LegacyDisabled` yang sebelumnya masih ikut terbawa ke Studio juga dikeluarkan dari source path runtime
+- residu folder kosong di `StarterPlayer.StarterPlayerScripts.Client` dibersihkan live agar Studio edit tree kembali sinkron dengan source
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_client_surface_cleanup.rbxlx`
+- search source lokal tidak lagi menemukan token:
+  - `InvestigationUISystem`
+  - `EvidenceBoardSystem`
+  - `GhostPredictionSystem`
+  - `LegacyDisabled`
+- validasi edit tree Studio:
+  - `StarterPlayer.StarterPlayerScripts.Client` tidak lagi punya folder kosong `LegacyDisabled`, `EvidenceBoardSystem`, `GhostPredictionSystem`, `InvestigationUISystem`
+- validasi play runtime:
+  - `Players.ZyraaaVex.PlayerScripts.Client` hanya memuat modul aktif
+  - folder legacy investigasi lama tidak lagi ikut spawn ke runtime client
+- smoke boot setelah cleanup tidak menunjukkan warning bootstrap client baru
+
+### Interpretation
+
+- surface runtime client sekarang lebih kecil dan lebih jujur terhadap owner yang benar-benar aktif
+- slice ini tidak menutup seluruh `P0.1` atau `P0.5`, tetapi menurunkan risiko drift karena modul mati tidak lagi ikut tersync ke Studio/play runtime
+
+### Next Step
+
+1. lanjut ke blocker aktif berikutnya yang tidak bentrok dengan dirty worktree lain
+2. kandidat paling logis: validasi final guidance `Exposed` saat hunt, atau lanjut ke pass UI modular/mobile berikutnya
+
+## 2026-04-04 17:02 ICT
+
+### Task
+
+Menutup proof final preferensi refuge hunt saat player masih `Exposed`, dengan repro live dekat hide spot runtime `Room_Storage`.
+
+### Linked Issues
+
+- backlog sebelumnya masih menandai proof final `HideSpot vs SafeZone` pada state `Exposed` sebagai belum tertutup
+- jalur hidden sudah tervalidasi, tetapi jalur `Exposed` perlu bukti live bahwa UI tidak lagi bias ke `SafeZone`
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- tidak ada patch code baru pada slice ini
+- saya memakai jalur client canonical `LobbyEvent` untuk:
+  - `SelectMode(Classic)`
+  - `SelectMap(EmptyBuilding)`
+  - `CreateRoom`
+  - `HostStart`
+- lalu repro live dilakukan pada posisi `846, 4, -20`, yaitu dekat `Room_Storage` tetapi tetap `Exposed`
+- `ForceHunt` dijalankan lewat `StudioE2EControl`, lalu surface UI hunt dibaca langsung dari `UXLayer` dan `MatchUI`
+
+### Validation Notes
+
+- jalur start match canonical sukses:
+  - `PasrahLastHostStartCommit = commit ok=true err=nil roomId=1`
+  - `PasrahLastMatchStartTrace = match=match_1 players=1 teleported=1 phase=PreparationPhase map=EmptyBuilding mode=Classic`
+- posisi repro final:
+  - `HumanoidRootPart ~= 846, 3.47, -20`
+  - `PasrahHideState = Exposed`
+  - `PasrahHideSpotType = None`
+  - `PasrahHideZoneId = ""`
+- hasil UI hunt:
+  - `UXLayer.MatchUXGui.MatchUXLayer.ObjectiveLabel = Hunt aktif. Gunakan prompt pintu, putus line-of-sight, lalu masuk Storage 16st.`
+  - `MatchUI.MainPanel.HeaderCard.SecondaryLabel = Hunt aktif. Gunakan prompt pintu, putus line-of-sight, lalu masuk Storage 16st.`
+  - `MatchUI.ControlsHintBar.Label = PINTU: E/X/TAP  •  TARGET: Storage 16st  •  JANGAN LARI LURUS`
+  - `MatchUI.MainPanel.SummaryFrame.SurvivedRow.Value = Storage 16st`
+
+### Interpretation
+
+- proof final untuk `Exposed` sekarang tertutup: client tidak lagi bias ke `SafeZone` ketika hide spot runtime yang lebih relevan memang lebih dekat secara operasional
+- debt guidance hunt untuk vertical slice inti turun level; fokus bisa kembali ke slice UI modular/mobile dan polish berikutnya
+
+### Next Step
+
+1. lanjut ke `P2.12 Rapikan UI modular`
+2. target terdekat: ownership/single-open panel besar dan affordance lobby/runtime yang masih belum konsisten
+
+## 2026-04-04 01:57 ICT
+
+### Task
+
+Menutup bypass single-open pada UI lobby yang membuat `LobbyUI` bisa overlap dengan auxiliary panel saat `LobbyToggleButton` dipakai.
+
+### Linked Issues
+
+- jalur validasi live sebelumnya menemukan bug nyata:
+  - `ShopUI = true`
+  - klik `LobbyToggleButton`
+  - hasil buruk: `LobbyUI = true` dan `ShopUI = true` bersamaan
+- akar masalahnya bukan binding tombol ganda, tetapi state conflict di owner pusat yang tidak langsung di-sync ke visual auxiliary window
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `UISystem:_closeConflictingWindows()` sekarang tidak berhenti di update state saja
+- setelah dismissal conflict diubah, fungsi ini juga:
+  - `:_syncAuxiliaryWindowVisibility()`
+  - `:_syncMatchWindowVisibility()`
+  - `:_refreshBasicLobbyPanel()`
+  - `:_refreshBasicWindows()`
+  - `:_layoutLobbyFloatRail()`
+- pendekatan ini menutup bypass global pada jalur owner pusat, bukan menambal satu tombol tertentu
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_ui_single_open_fix.rbxlx`
+- validasi live setelah restart play:
+  - boot baru:
+    - `LobbyUI = true`
+    - `ProfileUI/ShopUI/RoyalPassUI/MainMenuUI/LeaderboardUI/RoomBrowserUI = false`
+  - `LobbyUI.MainPanel.ShopButton`:
+    - hasil `ShopUI = true`, panel besar lain `false`
+  - saat `ShopUI` masih terbuka, klik `LobbyToggleButton`:
+    - hasil benar `LobbyUI = true`, `ShopUI = false`
+  - `OpenRoomBrowserButton`:
+    - hasil `RoomBrowserUI = true`, panel besar lain `false`
+  - `MainMenuUI -> ProfileUI`:
+    - hasil `ProfileUI = true`, `MainMenuUI = false`, panel besar lain `false`
+
+### Interpretation
+
+- ownership/single-open panel besar lobby sekarang benar-benar enforced di jalur runtime utama
+- `P2.12` masih belum selesai total, tetapi blocker owner conflict dasarnya sudah turun level; sisa kerja bergeser ke compact/mobile polish dan affordance visual
+
+### Next Step
+
+1. lanjut ke validasi compact/mobile `RoomBrowserUI` dan `RoyalPassUI`
+2. jika tidak ada blocker baru, lanjut ke polish lobby/map berikutnya tanpa membawa debt overlap lama

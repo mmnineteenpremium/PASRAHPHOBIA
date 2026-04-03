@@ -2969,6 +2969,11 @@ function UISystem:_closeConflictingWindows(activeWindowName)
 	end
 
 	self:_updateRoomBrowserVisibility()
+	self:_syncAuxiliaryWindowVisibility()
+	self:_syncMatchWindowVisibility()
+	self:_refreshBasicLobbyPanel()
+	self:_refreshBasicWindows()
+	self:_layoutLobbyFloatRail()
 end
 
 function UISystem:_closeTopmostWindow()

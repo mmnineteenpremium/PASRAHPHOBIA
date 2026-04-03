@@ -22,6 +22,11 @@ Status:
   - `EvidenceBoardSystem`
   - `GhostPredictionSystem`
   sudah dikeluarkan dari bootstrap aktif
+- modul legacy client yang tidak lagi punya consumer sekarang juga sudah dikeluarkan dari path sinkronisasi `StarterPlayerScripts.Client`:
+  - `InvestigationUISystem`
+  - `EvidenceBoardSystem`
+  - `GhostPredictionSystem`
+  - `LegacyDisabled/*`
 - `UI/Main` tetap menjadi owner tunggal untuk:
   - `UIEvidenceUpdated`
   - `JournalUpdated`
@@ -55,6 +60,17 @@ Catatan validasi terbaru:
 - `FlashlightToggleUI` sekarang hanya dibuat dan ditampilkan untuk:
   - `UserInputService.TouchEnabled == true`
   - player sedang `InMatch`
+- build source terbaru sukses:
+  - `_tmp_client_surface_cleanup.rbxlx`
+- validasi edit tree Studio terbaru:
+  - `StarterPlayer.StarterPlayerScripts.Client` tidak lagi membawa folder kosong:
+    - `LegacyDisabled`
+    - `EvidenceBoardSystem`
+    - `GhostPredictionSystem`
+    - `InvestigationUISystem`
+- validasi play runtime terbaru:
+  - `Players.ZyraaaVex.PlayerScripts.Client` hanya membawa modul aktif (`Core`, `UI`, `SoundSystem`, `EvidenceTools`, `GhostRenderer`, `GhostAnimationPipeline`, `Spectator*`, controller lokal)
+  - folder legacy investigasi lama tidak lagi ikut spawn ke runtime client
 
 ### 2. Canonical remote contract
 
@@ -183,6 +199,12 @@ Status:
   - `PlayerGui.SensoryHorrorHUD` absen saat `InMatch = false`
   - HUD baru dibuat saat player masuk match dan `MatchPhase` aktif (`InGame`, `Escalation`, `Hunt`)
   - HUD kembali hilang saat state kembali ke lobby
+- surface client runtime sekarang juga tidak lagi membawa bangkai modul investigasi lama:
+  - `LegacyDisabled`
+  - `EvidenceBoardSystem`
+  - `GhostPredictionSystem`
+  - `InvestigationUISystem`
+- hasilnya, `StarterPlayerScripts.Client` dan `PlayerScripts.Client` menjadi lebih jujur terhadap owner runtime yang benar-benar aktif
 
 Pekerjaan:
 
@@ -467,7 +489,14 @@ Status:
   - lookup refuge client sekarang juga punya fallback ke `HideSpotPrompt` pada room runtime:
     - jika `HideSpotId/HideSpotType` belum datang tepat waktu, UI masih bisa menginfer hide spot dari prompt aktif
     - build hardening ini sudah lolos, sehingga race kecil pada state `Exposed` tidak lagi sepenuhnya bergantung pada replication order attribute
-    - proof final untuk preferensi `HideSpot` saat player masih `Exposed` tetap saya anggap `in progress`
+    - proof final untuk preferensi `HideSpot` saat player masih `Exposed` sekarang sudah tertutup:
+      - repro live `Classic -> EmptyBuilding -> posisi 846,4,-20 -> ForceHunt`
+      - state tetap `PasrahHideState = Exposed`, `PasrahHideSpotType = None`
+      - `UXLayer.MatchUXGui.MatchUXLayer.ObjectiveLabel = Hunt aktif. Gunakan prompt pintu, putus line-of-sight, lalu masuk Storage 16st.`
+      - `MatchUI.HeaderCard.SecondaryLabel = Hunt aktif. Gunakan prompt pintu, putus line-of-sight, lalu masuk Storage 16st.`
+      - `MatchUI.ControlsHintBar.Label = PINTU: E/X/TAP  •  TARGET: Storage 16st  •  JANGAN LARI LURUS`
+      - `MatchUI.SummaryFrame.SurvivedRow.Value = Storage 16st`
+    - artinya jalur `Exposed` tidak lagi bias ke `SafeZone` ketika hide spot runtime yang lebih relevan memang lebih dekat secara operasional
 
 Pekerjaan:
 
@@ -500,6 +529,10 @@ Pekerjaan:
 Status:
 
 - in progress
+- aturan single-open untuk surface lobby utama sekarang sudah tertutup di jalur yang sebelumnya bocor:
+  - `ShopUI -> LobbyToggleButton` tidak lagi menghasilkan overlap `LobbyUI + ShopUI`
+  - `RoomBrowserUI` terbuka sendirian tanpa panel besar lain ikut hidup
+  - transisi silang `MainMenuUI -> ProfileUI` menutup panel asal dengan benar
 - `RoyalPassUI` sekarang sudah punya owner canonical aktif di `src/client/UI/Main.lua`
 - `RoyalPassEvent` sekarang source-controlled dan mendorong snapshot runtime ke client
 - validasi live di Studio membuktikan:
@@ -666,7 +699,6 @@ Pekerjaan:
 - `LobbyUI`
 - `LeaderboardUI`
 - ubah right rail menjadi stack fixed top-to-bottom dengan affordance mobile yang lebih jelas
-- terapkan aturan single-open untuk panel besar agar lobby/pass/shop/rank tidak terasa tumpang tindih
 - validasi nyata `RoomBrowserUI` compact/mobile pada device emulator atau handset
 - validasi nyata `RoyalPassUI` compact/mobile pada device emulator atau handset
 
@@ -809,6 +841,31 @@ Done jika:
 
 - pass gate minimum sebelum publish
 
+### 18. Final pass perubahan dan restruktur LOBBY + MAP IN GAME
+
+Status:
+
+- deferred
+- dikerjakan paling akhir setelah blocker E2E, vertical slice, content fill utama, dan publish gate inti tertutup
+- task ini sengaja tidak ditarik ke depan agar tidak membuka drift UI/layout besar di tengah hardening runtime
+
+Pekerjaan:
+
+- restruktur final `Lobby` dari sisi layout, hierarchy panel, affordance mobile, visual hierarchy, dan readability brand
+- restruktur final `Map` in-game dari sisi traversal, landmark, access logic, hiding affordance, dan art/layout pass akhir
+- selaraskan bahasa visual antara lobby dan in-game agar identitas brand, kenyamanan baca, dan retensi terasa konsisten
+- audit ulang overlap, tumpang tindih, dan affordance palsu sebelum publish
+
+Done jika:
+
+- `Lobby` dan `Map` in-game sudah melewati pass restruktur final tanpa membuka blocker E2E baru
+- tidak ada tech debt layout besar yang sengaja ditinggalkan untuk sesudah publish
+
+Catatan:
+
+- ingatkan user secara eksplisit saat backlog sudah sampai tahap ini
+- jangan eksekusi lebih awal kecuali user mengubah prioritas
+
 ## Update 2026-04-03 23:59 ICT
 
 - hiding non-safe-zone sekarang tidak lagi kosong:
@@ -948,4 +1005,21 @@ Urutan yang paling masuk akal dari titik sekarang:
   - interaction point lebih dekat ke akses masuk room
   - traversal visual lebih logis untuk map yang belum full redesign
   - jalur start match tetap aman setelah patch
+
+## Update 2026-04-04 01:57 ICT
+
+- `P2.12 Rapikan UI modular` naik satu tahap karena bypass single-open lobby sudah tertutup di owner pusat:
+  - `UISystem:_closeConflictingWindows()` sekarang langsung menyinkronkan ulang auxiliary window, match window, refresh lobby/basic panel, dan rail layout setelah state conflict diubah
+  - ini menutup jalur kebocoran saat `LobbyToggleButton` membuka lobby sementara auxiliary window seperti `ShopUI` masih terlihat
+- validasi live yang sudah tertutup:
+  - boot playtest baru: `LobbyUI = true`, panel besar lain `false`
+  - `ShopButton` -> `ShopUI = true`, panel besar lain `false`
+  - `ShopUI terbuka` lalu klik `LobbyToggleButton` -> `LobbyUI = true`, `ShopUI = false`
+  - `OpenRoomBrowserButton` -> `RoomBrowserUI = true`, panel besar lain `false`
+  - `MenuButton` lalu `MainMenuUI.ProfileButton` -> `ProfileUI = true`, `MainMenuUI = false`
+- build source sukses:
+  - `_tmp_ui_single_open_fix.rbxlx`
+- status jujur setelah slice ini:
+  - aturan single-open panel besar lobby sudah tervalidasi live untuk jalur utama dan jalur silang yang sempat bocor
+  - `P2.12` masih `in progress` hanya untuk sisa polish compact/mobile, bukan lagi karena owner conflict dasar
 
