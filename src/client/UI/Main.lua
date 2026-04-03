@@ -4940,6 +4940,12 @@ function UISystem:_applyDeviceSizing()
 	if not profile then
 		return
 	end
+	local viewportSize = Vector2.new(1280, 720)
+	local camera = Workspace.CurrentCamera
+	if camera and typeof(camera.ViewportSize) == "Vector2" then
+		viewportSize = camera.ViewportSize
+	end
+	local topLeftInset, bottomRightInset = resolveSafeInsets()
 	local lobby = self._uxWidgets.lobby
 	if lobby and lobby.PlayButton and lobby.FeedbackLabel then
 		local buttonSize = profile:GetButtonSize()
@@ -4948,6 +4954,49 @@ function UISystem:_applyDeviceSizing()
 		lobby.FeedbackLabel.TextSize = math.max(16, profile:GetTextSize() - 2)
 	end
 	if lobby and lobby.BasicOpenRoomBrowserButton and lobby.BasicPrimaryLabel then
+		local lobbyWidth = (profile.isMobile or viewportSize.X <= 1280)
+			and math.min(viewportSize.X - (profile.isMobile and 20 or 28), 396)
+			or 340
+		local lobbyHeight = (profile.isMobile or viewportSize.X <= 1280) and 384 or 368
+		local panelWidth = math.max(340, math.floor(lobbyWidth))
+		local panelHeight = math.max(368, math.floor(lobbyHeight))
+		if lobby.BasicPanel then
+			lobby.BasicPanel.Position = UDim2.fromOffset(12 + topLeftInset.X, 12 + topLeftInset.Y)
+			lobby.BasicPanel.Size = UDim2.fromOffset(panelWidth, panelHeight)
+		end
+		if lobby.ToggleButton then
+			lobby.ToggleButton.Position = UDim2.fromOffset(12 + topLeftInset.X + panelWidth + 8, 120 + topLeftInset.Y)
+		end
+		if lobby.BasicHeaderCard then
+			lobby.BasicHeaderCard.Size = UDim2.new(1, -24, 0, 112)
+		end
+		local halfButtonWidth = math.floor((panelWidth - 36) * 0.5)
+		local rightButtonX = 12 + halfButtonWidth + 12
+		lobby.BasicOpenRoomBrowserButton.Size = UDim2.new(1, -24, 0, profile.isMobile and 46 or 42)
+		if lobby.BasicProfileButton then
+			lobby.BasicProfileButton.Position = UDim2.fromOffset(12, 214)
+			lobby.BasicProfileButton.Size = UDim2.fromOffset(halfButtonWidth, 36)
+		end
+		if lobby.BasicShopButton then
+			lobby.BasicShopButton.Position = UDim2.fromOffset(rightButtonX, 214)
+			lobby.BasicShopButton.Size = UDim2.fromOffset(halfButtonWidth, 36)
+		end
+		if lobby.BasicRoyalPassButton then
+			lobby.BasicRoyalPassButton.Position = UDim2.fromOffset(12, 262)
+			lobby.BasicRoyalPassButton.Size = UDim2.new(1, -24, 0, 36)
+		end
+		if lobby.BasicMenuButton then
+			lobby.BasicMenuButton.Position = UDim2.fromOffset(12, 304)
+			lobby.BasicMenuButton.Size = UDim2.fromOffset(halfButtonWidth, 36)
+		end
+		if lobby.BasicRankButton then
+			lobby.BasicRankButton.Position = UDim2.fromOffset(rightButtonX, 304)
+			lobby.BasicRankButton.Size = UDim2.fromOffset(halfButtonWidth, 36)
+		end
+		if lobby.BasicHintLabel then
+			lobby.BasicHintLabel.Position = UDim2.fromOffset(12, 348)
+			lobby.BasicHintLabel.Size = UDim2.new(1, -24, 0, 22)
+		end
 		lobby.BasicOpenRoomBrowserButton.TextSize = math.max(14, profile:GetTextSize() - 2)
 		if lobby.BasicProfileButton then
 			lobby.BasicProfileButton.TextSize = math.max(13, profile:GetTextSize() - 4)
@@ -5011,11 +5060,28 @@ function UISystem:_applyDeviceSizing()
 		for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
 			local window = self._uxWidgets.windows[guiName]
 			if window then
+				if guiName == "RoyalPassUI" and window.Panel then
+					local width = (profile.isMobile or viewportSize.X <= 1280)
+						and math.min(viewportSize.X - (profile.isMobile and 20 or 28), 404)
+						or 348
+					local height = (profile.isMobile or viewportSize.X <= 1280)
+						and math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 48), 388)
+						or 340
+					window.Panel.Size = UDim2.fromOffset(math.max(348, math.floor(width)), math.max(340, math.floor(height)))
+					window.Panel.AnchorPoint = Vector2.new(1, 0.5)
+					window.Panel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0.5, 0)
+				end
 				if window.PrimaryLabel then
 					window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
+					if guiName == "RoyalPassUI" then
+						window.PrimaryLabel.TextSize = math.max(window.PrimaryLabel.TextSize, 17)
+					end
 				end
 				if window.SecondaryLabel then
 					window.SecondaryLabel.TextSize = math.max(12, profile:GetTextSize() - 5)
+					if guiName == "RoyalPassUI" then
+						window.SecondaryLabel.TextSize = math.max(window.SecondaryLabel.TextSize, 13)
+					end
 				end
 				if window.ContentText then
 					window.ContentText.TextSize = math.max(12, profile:GetTextSize() - 5)

@@ -440,9 +440,13 @@ Status:
   - membuka `RoomBrowserUI` dari float `ROOMS` otomatis menyembunyikan `RoyalPassUI`
   - validasi live terbaru membuktikan `lobbyCollapsed = true`, `royalVisible = false`, `roomBrowserVisible = true` setelah transisi `Lobby -> RoyalPass -> RoomBrowser`
 - review live terbaru juga menandai debt UX baru yang harus diprioritaskan setelah task aktif selesai:
-  - `LobbyUI`, `RoyalPassUI`, dan `RoomBrowserUI` masih belum mobile-first dan ukuran teksnya terlalu desktop
+  - `RoomBrowserUI` masih belum mobile-first dan belum menjadi fullscreen/flexible sheet
   - `RoomBrowserUI` perlu versi layar penuh/flexible untuk viewport mobile
   - `RoyalPassUI` perlu track 30 hari, track misi 30 hari, dan placeholder reward rarity 5 di hari terakhir
+- pass responsive konservatif terbaru sudah menutup readability dasar dua panel utama:
+  - `LobbyUI` sekarang memakai viewport-aware size `396x384` pada viewport desktop sempit saat ini, bukan lagi fixed `340x368`
+  - `RoyalPassUI` sekarang memakai viewport-aware size `404x388` pada viewport desktop sempit saat ini, bukan lagi fixed `348x340`
+  - `LobbyToggleButton` juga ikut bergeser mengikuti lebar panel aktif (`x=416` pada viewport validasi)
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:
