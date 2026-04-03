@@ -4750,3 +4750,54 @@ Memanusiakan label hide spot runtime agar nama refuge yang tampil di marker/UI t
 
 1. lanjut ke pass fairness hide spot (LOS break + radius akses) lintas map
 2. pertahankan task retention `Reason to return` tetap untuk pembahasan final
+
+## 2026-04-04 02:33 ICT
+
+### Task
+
+Meningkatkan fairness akses hide spot dengan prompt distance adaptif per ukuran room.
+
+### Linked Issues
+
+- prompt hide spot sebelumnya fixed `8` stud untuk semua room
+- akibatnya beberapa room menengah-besar terasa kurang responsif karena prompt berada di tengah volume room
+
+### Files Changed
+
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- prompt distance hide spot sekarang dihitung runtime dari dimensi room:
+  - basis: rata-rata `(Size.X + Size.Z) / 2`
+  - skala: `0.45`
+  - clamp: `8..16`
+- atribut observability baru ditambahkan:
+  - `HideSpotPromptDistance`
+- cleanup match end juga membersihkan atribut tersebut
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_hide_prompt_distance_adaptive.rbxlx`
+- validasi live `AbandonedPalace`:
+  - `PasrahLastMatchStartTrace = ... map=AbandonedPalace ...`
+  - `Room_StorageWing` size `24,1,16` -> `promptDistance=9`, `attrDistance=9`
+  - `Room_ServantRoomA` size `24,1,16` -> `promptDistance=9`, `attrDistance=9`
+  - `Room_ServantRoomB` size `24,1,16` -> `promptDistance=9`, `attrDistance=9`
+- validasi live `StudioMMNineteen`:
+  - `PasrahLastMatchStartTrace = ... map=StudioMMNineteen ...`
+  - `Room_StorageRoom` size `18,1,14` -> `promptDistance=8`, `attrDistance=8`
+  - `Room_Office` size `18,1,14` -> `promptDistance=8`, `attrDistance=8`
+
+### Interpretation
+
+- akses hide spot sekarang lebih proporsional terhadap footprint room tanpa membuka exploit radius berlebihan
+- perubahan ini tetap konservatif dan kompatibel dengan flow hunt/hide yang sudah berjalan
+
+### Next Step
+
+1. lanjut ke slice LOS-break fairness atau cover affordance map yang belum rapi
+2. tetap simpan task retention final untuk dibahas di akhir sesuai prioritas user
