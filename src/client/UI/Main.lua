@@ -1533,7 +1533,7 @@ end
 local function getHuntObjectiveText()
 	local player = Players.LocalPlayer
 	if not player then
-		return "Hunt aktif. Cari Safe Zone biru dan jauhi ghost."
+		return "Hunt aktif. Putus line-of-sight, gunakan pintu seperlunya, dan cari ruang aman jika tersedia."
 	end
 
 	local hideState = tostring(player:GetAttribute("PasrahHideState") or "Exposed")
@@ -1545,24 +1545,24 @@ local function getHuntObjectiveText()
 		if hideZoneId ~= "" then
 			return string.format("Berlindung di %s. Tunggu hunt selesai sebelum keluar.", hideZoneId)
 		end
-		return "Berlindung di shelter. Tunggu hunt selesai sebelum keluar."
+		return "Kamu sedang bersembunyi. Tunggu hunt selesai sebelum keluar."
 	end
 
 	if threatState == "Critical" or threatState == "Close" then
 		if threatDistance then
-			return string.format("Ghost dekat (%dst). Buka pintu via prompt dan lari ke Safe Zone biru.", threatDistance)
+			return string.format("Ghost dekat (%dst). Putus line-of-sight, rotasi lewat pintu, lalu cari ruang aman jika tersedia.", threatDistance)
 		end
-		return "Ghost dekat. Buka pintu via prompt dan lari ke Safe Zone biru."
+		return "Ghost dekat. Putus line-of-sight, rotasi lewat pintu, lalu cari ruang aman jika tersedia."
 	end
 
 	if threatState == "Tracked" or threatState == "Warn" then
 		if threatDistance then
-			return string.format("Ghost melacak (%dst). Putar jalur dan cari Safe Zone biru.", threatDistance)
+			return string.format("Ghost melacak (%dst). Putar jalur, jaga jarak, dan cari ruang aman jika tersedia.", threatDistance)
 		end
-		return "Ghost melacak. Putar jalur dan cari Safe Zone biru."
+		return "Ghost melacak. Putar jalur, jaga jarak, dan cari ruang aman jika tersedia."
 	end
 
-	return "Hunt aktif. Cari Safe Zone biru, gunakan prompt pintu, dan jaga jarak dari ghost."
+	return "Hunt aktif. Gunakan prompt pintu, putus line-of-sight, dan cari ruang aman jika tersedia."
 end
 
 local function bulletList(list, emptyText)
@@ -2873,27 +2873,59 @@ function UISystem:_setSummaryValue(label, value)
 	label.Text = tostring(value or "-")
 end
 
-function UISystem:_updateMatchSummaryRows(rowWidgets)
+function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 	if type(rowWidgets) ~= "table" then
 		return
 	end
 
 	local result = self._matchResult or createDefaultMatchResult()
+	local journalState = self._journalState or {}
+	local discoveredEvidence = type(journalState.discoveredEvidence) == "table" and journalState.discoveredEvidence or {}
+	local confirmedEvidence = type(journalState.confirmedEvidence) == "table" and journalState.confirmedEvidence or {}
+	local candidateGhosts = type(journalState.candidates) == "table" and journalState.candidates or {}
 	local hasResults = result.ghostType ~= "Unknown"
 		or tonumber(result.matchDuration or 0) > 0
 		or tonumber(result.evidenceCollected or 0) > 0
 		or tonumber(result.playersSurvived or 0) > 0
 		or tonumber(result.playersDead or 0) > 0
 
-	self:_setSummaryValue(rowWidgets.status, hasResults and (result.correctGuess and "BERHASIL" or "GAGAL") or "-")
-	self:_setSummaryValue(rowWidgets.ghostType, hasResults and tostring(result.ghostType or "Unknown") or "-")
-	self:_setSummaryValue(rowWidgets.correctGuess, hasResults and (result.correctGuess and "BENAR" or "SALAH") or "-")
-	self:_setSummaryValue(rowWidgets.evidenceCollected, hasResults and tostring(tonumber(result.evidenceCollected or 0) or 0) or "-")
-	self:_setSummaryValue(rowWidgets.playersSurvived, hasResults and tostring(tonumber(result.playersSurvived or 0) or 0) or "-")
-	self:_setSummaryValue(rowWidgets.playersDead, hasResults and tostring(tonumber(result.playersDead or 0) or 0) or "-")
-	self:_setSummaryValue(rowWidgets.matchDuration, hasResults and formatMatchDuration(result.matchDuration) or "-")
-	self:_setSummaryValue(rowWidgets.currencyReward, hasResults and tostring(math.floor(tonumber(result.currencyReward or 0) or 0)) or "-")
-	self:_setSummaryValue(rowWidgets.xpReward, hasResults and tostring(math.floor(tonumber(result.xpReward or 0) or 0)) or "-")
+	if hasResults then
+		self:_setSummaryValue(rowWidgets.status, result.correctGuess and "BERHASIL" or "GAGAL")
+		self:_setSummaryValue(rowWidgets.ghostType, tostring(result.ghostType or "Unknown"))
+		self:_setSummaryValue(rowWidgets.correctGuess, result.correctGuess and "BENAR" or "SALAH")
+		self:_setSummaryValue(rowWidgets.evidenceCollected, tostring(tonumber(result.evidenceCollected or 0) or 0))
+		self:_setSummaryValue(rowWidgets.playersSurvived, tostring(tonumber(result.playersSurvived or 0) or 0))
+		self:_setSummaryValue(rowWidgets.playersDead, tostring(tonumber(result.playersDead or 0) or 0))
+		self:_setSummaryValue(rowWidgets.matchDuration, formatMatchDuration(result.matchDuration))
+		self:_setSummaryValue(rowWidgets.currencyReward, tostring(math.floor(tonumber(result.currencyReward or 0) or 0)))
+		self:_setSummaryValue(rowWidgets.xpReward, tostring(math.floor(tonumber(result.xpReward or 0) or 0)))
+	else
+		local phaseSummary = {
+			Lobby = "MENUNGGU",
+			Preparation = "BRIEFING",
+			Loading = "LOADING",
+			Investigation = "LIVE",
+			Hunt = "CRITICAL",
+			Results = "RESULT",
+		}
+		local remaining = self._phaseDuration and math.max(0, self._phaseDuration - (tick() - (self._phaseStartTime or tick()))) or nil
+		local evidenceSummary = string.format("%d disc / %d conf", #discoveredEvidence, #confirmedEvidence)
+		local candidateSummary = #candidateGhosts > 0 and string.format("%d kandidat", #candidateGhosts) or "Belum dikunci"
+		local survivalSummary = viewState == "Hunt" and "Prioritas survive" or "Semua aktif"
+		local deathSummary = viewState == "Hunt" and "Hindari contact" or "Belum ada"
+		local durationSummary = remaining and formatCountdown(remaining) or "Live"
+		local rewardSummary = viewState == "Lobby" and "-" or "Pending"
+
+		self:_setSummaryValue(rowWidgets.status, phaseSummary[viewState or "Lobby"] or "LIVE")
+		self:_setSummaryValue(rowWidgets.ghostType, #confirmedEvidence > 0 and "Profil menyempit" or "Belum teridentifikasi")
+		self:_setSummaryValue(rowWidgets.correctGuess, candidateSummary)
+		self:_setSummaryValue(rowWidgets.evidenceCollected, evidenceSummary)
+		self:_setSummaryValue(rowWidgets.playersSurvived, survivalSummary)
+		self:_setSummaryValue(rowWidgets.playersDead, deathSummary)
+		self:_setSummaryValue(rowWidgets.matchDuration, durationSummary)
+		self:_setSummaryValue(rowWidgets.currencyReward, rewardSummary)
+		self:_setSummaryValue(rowWidgets.xpReward, rewardSummary)
+	end
 
 	local statusValue = rowWidgets.status and rowWidgets.status.Text or "-"
 	local statusRow = rowWidgets.status and rowWidgets.status.Parent or nil
@@ -2902,9 +2934,20 @@ function UISystem:_updateMatchSummaryRows(rowWidgets)
 			statusRow.BackgroundColor3 = Color3.fromRGB(34, 64, 48)
 		elseif statusValue == "GAGAL" then
 			statusRow.BackgroundColor3 = Color3.fromRGB(68, 40, 40)
+		elseif statusValue == "CRITICAL" then
+			statusRow.BackgroundColor3 = Color3.fromRGB(88, 46, 46)
+		elseif statusValue == "LIVE" then
+			statusRow.BackgroundColor3 = Color3.fromRGB(30, 56, 44)
+		elseif statusValue == "BRIEFING" or statusValue == "LOADING" then
+			statusRow.BackgroundColor3 = Color3.fromRGB(38, 50, 68)
 		else
 			statusRow.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
 		end
+	end
+
+	local evidenceRow = rowWidgets.evidenceCollected and rowWidgets.evidenceCollected.Parent or nil
+	if evidenceRow and evidenceRow:IsA("Frame") then
+		evidenceRow.BackgroundColor3 = #discoveredEvidence > 0 and Color3.fromRGB(28, 50, 62) or Color3.fromRGB(24, 30, 40)
 	end
 
 	local rewardRow = rowWidgets.currencyReward and rowWidgets.currencyReward.Parent or nil
@@ -2976,7 +3019,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		secondaryText = timerVisible
 			and ("Sisa waktu hunt: " .. timerText .. ". " .. huntObjective)
 			or huntObjective
-		footerText = "Gunakan prompt pintu E/X/tap untuk rotasi. Safe Zone biru adalah shelter saat hunt."
+		footerText = "Gunakan prompt pintu E/X/tap untuk rotasi. Putus line-of-sight dan cari ruang aman jika tersedia."
 	elseif viewState == "Results" then
 		local missionFailed = payload and (
 			payload.success == false
@@ -3070,7 +3113,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			match.ObjectiveLabel.Visible = true
 		end
 	end
-	self:_updateMatchSummaryRows(match.BasicSummaryRows)
+	self:_updateMatchSummaryRows(match.BasicSummaryRows, viewState)
 	self:_syncMatchWindowVisibility()
 end
 
@@ -3117,7 +3160,7 @@ function UISystem:_renderResultsPanel(payload)
 			and "Tekan tombol lanjut untuk kembali ke lobby flow. Ringkasan ini dipertahankan untuk E2E."
 			or "Hasil match fullscreen dikunci 5 detik agar semua pemain sempat membaca hasil."
 	end
-	self:_updateMatchSummaryRows(match.ResultsSummaryRows)
+	self:_updateMatchSummaryRows(match.ResultsSummaryRows, "Results")
 	self:_syncMatchWindowVisibility()
 end
 
