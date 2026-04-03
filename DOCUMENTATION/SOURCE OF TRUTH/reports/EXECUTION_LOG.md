@@ -5118,3 +5118,54 @@ Merapikan prioritas pemilihan ghost agar mode force ghost Studio tetap determini
 ### Interpretation
 
 - jalur test Studio yang memaksa tipe ghost kini lebih konsisten dan tidak mudah drift karena nilai lama pada objek match
+
+## 2026-04-04 03:28 ICT
+
+### Task
+
+Mengaktifkan shop content slice nyata (`MM/PP`) dan mengeraskan guard monetization (`Robux setup`) tanpa merusak flow pembelian canonical.
+
+### Files Changed
+
+- `src/shared/DataTypes/ShopCatalog.lua`
+- `src/ServerScriptService/Server/ShopSystem/Service.lua`
+- `src/ServerScriptService/Server/SocialCommerceSystem/Service.Lua`
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- katalog shop diperluas dan dipisah jelas:
+  - `MM` soft-currency items aktif
+  - `PP` prestige items aktif
+  - `Robux` slots source-controlled (`GamePass` + `DeveloperProduct`) dengan `enabled=false` sampai Creator Hub ID siap
+- `ShopSystem.Service` diperbaiki:
+  - validasi saldo mengikuti currency item (`MM/PP`), bukan hardcoded `MM`
+  - refund pembelian gagal mengikuti currency item (`MM/PP`)
+  - item `enabled=false` ditolak sebagai `item_disabled`
+- `SocialCommerceSystem` gift flow diperketat:
+  - menolak item disabled
+  - menolak gift untuk item `Robux` (`gift_not_supported_for_marketplace`)
+- `UI/Main` shop interaction diperjelas:
+  - semua item katalog dirender (tidak lagi dipotong `10` item)
+  - item `Robux` yang belum siap ditandai `SETUP`
+  - tombol item yang belum siap tidak menembak request buta ke server
+  - copy panel diperbarui agar mencerminkan flow `MM/PP/Robux setup`
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output _tmp_shop_catalog_refresh_build.rbxlx`
+  - `rojo build default.project.json --output _tmp_shop_catalog_refresh_build_v2.rbxlx`
+- smoke runtime via MCP (play mode):
+  - catalog client terload: `total=26`, `MM=14`, `PP=4`, `Robux=8`, `disabled=8`
+  - request MM item -> `PurchaseProcessed(success=false, reason=insufficient_currency)`
+  - request PP item -> `PurchaseProcessed(success=false, reason=insufficient_currency)`
+  - request Robux disabled item -> `PurchaseProcessed(success=false, reason=item_disabled)`
+- server boot sesudah patch tidak memunculkan error startup baru terkait shop flow
+
+### Interpretation
+
+- shop tidak lagi tampil “kosong/placeholder”; jalur item aktif dan jalur monetization sudah terpisah secara operasional
+- blocker tersisa tetap tunggal dan jelas: isi `marketplaceId` nyata dari Creator Hub untuk mengaktifkan item `Robux`

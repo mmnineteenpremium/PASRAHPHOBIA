@@ -78,7 +78,7 @@ local AUXILIARY_WINDOW_CONFIG = {
 		panelSize = Vector2.new(356, 424),
 		floatPosition = UDim2.new(1, -18, 0.78, 0),
 		badgeColor = Color3.fromRGB(124, 92, 48),
-		footer = "Item shop basic ini bisa kirim request PurchaseEvent untuk test E2E.",
+		footer = "Shop aktif mendukung MM/PP dan slot Robux yang siap diaktifkan lewat Creator Hub.",
 	},
 	RoyalPassUI = {
 		title = "ROYAL PASS",
@@ -1105,6 +1105,48 @@ local function resolveShopCurrencyTheme(currency)
 	return SHOP_CURRENCY_THEMES[key] or SHOP_CURRENCY_THEMES.default
 end
 
+local function isShopMarketplaceReady(item)
+	if type(item) ~= "table" then
+		return false
+	end
+	if tostring(item.currency or "MM") ~= "Robux" then
+		return true
+	end
+	local marketplaceType = tostring(item.marketplaceType or "")
+	if marketplaceType ~= "GamePass" and marketplaceType ~= "DeveloperProduct" then
+		return false
+	end
+	local marketplaceId = tonumber(item.marketplaceId)
+	return marketplaceId ~= nil and marketplaceId > 0
+end
+
+local function isShopItemPurchasable(item)
+	if type(item) ~= "table" then
+		return false, "invalid_item"
+	end
+	if item.enabled == false then
+		return false, "item_disabled"
+	end
+	if not isShopMarketplaceReady(item) then
+		return false, "marketplace_id_missing"
+	end
+	return true, nil
+end
+
+local function describeShopPurchaseBlock(item, reason)
+	if reason == "item_disabled" then
+		local setupHint = type(item) == "table" and item.setupHint or nil
+		if type(setupHint) == "string" and setupHint ~= "" then
+			return setupHint
+		end
+		return "Item belum diaktifkan."
+	end
+	if reason == "marketplace_id_missing" then
+		return "Item Robux belum aktif. Isi marketplaceId di ShopCatalog."
+	end
+	return "Item belum bisa dibeli saat ini."
+end
+
 local function parseCurrencyPillValue(rawText)
 	local amount, currency = tostring(rawText or ""):match("^([%+%-]?%d+)%s+([%a$]+)$")
 	if amount and (currency == "MM" or currency == "PP" or currency == "Robux" or currency == "R$") then
@@ -1292,6 +1334,13 @@ local function buildShopItemMeta(item)
 			table.insert(tagParts, string.upper(humanizeToken(item.tags[index])))
 		end
 		table.insert(parts, table.concat(tagParts, ", "))
+	end
+	if tostring(item.currency or "MM") == "Robux" then
+		local flow = type(item.marketplaceType) == "string" and string.upper(item.marketplaceType) or "MARKETPLACE"
+		table.insert(parts, flow)
+		if item.enabled == false or not isShopMarketplaceReady(item) then
+			table.insert(parts, "SETUP")
+		end
 	end
 	return table.concat(parts, "  •  ")
 end
@@ -2442,7 +2491,7 @@ function UISystem:Init(context)
 		lastEvent = "Idle",
 		catalog = loadShopCatalog(),
 		lastPurchase = nil,
-		lastMessage = "Pilih item untuk test remote PurchaseEvent.",
+		lastMessage = "Pilih item untuk dibeli.",
 		pendingMarketplacePrompt = nil,
 	}
 	self._royalPassState = {
@@ -5077,6 +5126,7 @@ function UISystem:_applyShopRowVisual(row, item, index)
 	local rarityColor = SHOP_RARITY_COLORS[tostring(item and item.rarity or "")] or theme.accent
 	local currency = tostring(item and item.currency or "MM")
 	local currencyTheme = resolveShopCurrencyTheme(currency)
+	local purchasable, blockedReason = isShopItemPurchasable(item)
 
 	if row.Root then
 		row.Root.BackgroundColor3 = theme.background
@@ -5111,9 +5161,22 @@ function UISystem:_applyShopRowVisual(row, item, index)
 		)
 	end
 	if row.Button then
-		row.Button.Text = "BELI"
-		row.Button.BackgroundColor3 = theme.accent
-		row.Button.TextColor3 = Color3.fromRGB(245, 245, 245)
+		row.Button.AutoButtonColor = purchasable == true
+		row.Button:SetAttribute("ShopPurchasable", purchasable == true)
+		row.Button:SetAttribute("ShopDisabledReason", blockedReason or "")
+		if purchasable == true then
+			row.Button.Text = "BELI"
+			row.Button.BackgroundColor3 = theme.accent
+			row.Button.TextColor3 = Color3.fromRGB(245, 245, 245)
+		elseif blockedReason == "marketplace_id_missing" then
+			row.Button.Text = "SETUP"
+			row.Button.BackgroundColor3 = Color3.fromRGB(78, 72, 48)
+			row.Button.TextColor3 = Color3.fromRGB(238, 230, 192)
+		else
+			row.Button.Text = "LOCK"
+			row.Button.BackgroundColor3 = Color3.fromRGB(70, 70, 78)
+			row.Button.TextColor3 = Color3.fromRGB(216, 216, 224)
+		end
 	end
 end
 
@@ -5150,10 +5213,10 @@ function UISystem:_refreshShopPanel()
 	self:_refreshWindowText(
 		"ShopUI",
 		statusText,
-		"Shop basic siap untuk test PurchaseEvent.",
+		"Shop aktif untuk MM/PP dan prompt Roblox.",
 		secondaryText,
 		nil,
-		"Klik BELI untuk kirim request pembelian basic. Response akan tampil di badge dan subtitle.",
+		"Klik BELI untuk item aktif. Label SETUP berarti item Robux belum diisi marketplaceId.",
 		badgeColor
 	)
 
@@ -8942,7 +9005,7 @@ function UISystem:_ensureBasicUIs()
 					itemLayout.Parent = itemList
 				end
 				itemRows = {}
-				local displayCount = math.min(#self._shopState.catalog, 10)
+				local displayCount = #self._shopState.catalog
 				for index = 1, displayCount do
 					local existing = itemList:FindFirstChild("ItemRow" .. tostring(index))
 					if existing then
@@ -8959,6 +9022,17 @@ function UISystem:_ensureBasicUIs()
 						connectButtonPress(row.Button, function()
 							local catalogItem = self._shopState.catalog[index]
 							if catalogItem then
+								local purchasable, blockedReason = isShopItemPurchasable(catalogItem)
+								if not purchasable then
+									self._shopState.lastPurchase = {
+										itemId = catalogItem.id,
+										success = false,
+										reason = blockedReason or "item_disabled",
+									}
+									self._shopState.lastMessage = describeShopPurchaseBlock(catalogItem, blockedReason)
+									self:_openAuxiliaryWindow("ShopUI")
+									return
+								end
 								self:_requestShopPurchase(catalogItem.id)
 							end
 						end)

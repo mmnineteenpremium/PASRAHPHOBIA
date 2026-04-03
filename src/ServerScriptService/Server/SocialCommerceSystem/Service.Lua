@@ -293,6 +293,9 @@ function Service:ProcessGiftPurchase(payload)
     if type(item) ~= "table" then
         return false, "item_not_found"
     end
+    if item.enabled == false then
+        return false, "item_disabled"
+    end
     if item.category ~= "Cosmetic" then
         return false, "gift_requires_cosmetic"
     end
@@ -321,6 +324,9 @@ function Service:ProcessGiftPurchase(payload)
     end
 
     local currency = type(item.currency) == "string" and item.currency or "MM"
+    if currency == "Robux" then
+        return false, "gift_not_supported_for_marketplace"
+    end
     local spendOk, spendErr = safeCall(economy, "SpendCurrency", senderPlayer or senderUserId, currency, tonumber(item.price) or 0, "GiftPurchase")
     if spendOk ~= true then
         return false, spendErr or "gift_payment_failed"
