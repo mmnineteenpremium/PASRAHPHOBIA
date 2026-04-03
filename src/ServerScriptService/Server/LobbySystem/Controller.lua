@@ -4,11 +4,14 @@ Controller.__index = Controller
 local Services = require(script.Parent.Parent.Core.Services)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local LOBBY_REMOTE_NAME = "LobbyEvent"
 local HOST_START_COUNTDOWN_SECONDS = 5
 local REQUEST_DEDUPE_TTL_SECONDS = 15
 local REQUEST_FALLBACK_ACTION_WINDOW_SECONDS = 0.25
+local FORCE_GHOST_TYPE_ATTR = "PasrahForceGhostType"
+local FORCE_GHOST_VISUAL_STATE_ATTR = "PasrahForceGhostVisualState"
 
 local REQUEST_CRITICAL_ACTIONS = {
 	CreateRoom = true,
@@ -643,6 +646,8 @@ function Controller:_broadcastRoomState(room)
 			isReady = room.readyPlayers[member] or false,
 			allReady = self._service._roomManager:IsAllReady(room.id),
 			countdownSecondsLeft = countdown and countdown.secondsLeft or nil,
+			countdownTotal = countdown and countdown.totalSeconds or nil,
+			countdownEndsAt = countdown and countdown.endsAt or nil,
 		})
 	end
 end
@@ -693,16 +698,21 @@ function Controller:OnHostStart(player, request)
 
 	self:_cancelRoomCountdown(roomId)
 	local countdownSeconds = tonumber(startInfo.countdownSeconds) or HOST_START_COUNTDOWN_SECONDS
+	local countdownStartedAt = Workspace:GetServerTimeNow()
 	self._roomCountdownById[roomId] = {
 		cancelled = false,
 		secondsLeft = countdownSeconds,
 		hostUserId = player.UserId,
+		totalSeconds = countdownSeconds,
+		startedAt = countdownStartedAt,
+		endsAt = countdownStartedAt + countdownSeconds,
 	}
 
 	self:_broadcastToRoom(room, {
 		eventName = "RoomMatchStarting",
 		roomId = roomId,
 		countdownSeconds = countdownSeconds,
+		countdownEndsAt = countdownStartedAt + countdownSeconds,
 	})
 	self:_broadcastRoomState(room)
 	self:_broadcastRoomListToAll()
@@ -720,6 +730,7 @@ function Controller:OnHostStart(player, request)
 				roomId = roomId,
 				secondsLeft = seconds,
 				totalSeconds = countdownSeconds,
+				countdownEndsAt = countdown.endsAt,
 			})
 			self:_broadcastRoomState(room)
 			task.wait(1)
@@ -889,5 +900,55 @@ function Controller:OnCreateRoom(player)
 	self:_broadcastRoomListToAll()
 end
 
+function Controller:OnSetForcedGhost(player, request)
+	if not RunService:IsStudio() then
+		self:_send(player, {
+			eventName = "SetForcedGhostResult",
+			ok = false,
+			err = "studio_only",
+		})
+		return
+	end
+
+	local ghostType = request and request.ghostType or nil
+	local visualState = request and request.visualState or nil
+
+	if ghostType == false or ghostType == "" then
+		ghostType = nil
+	end
+	if visualState == false or visualState == "" then
+		visualState = nil
+	end
+
+	if ghostType ~= nil and type(ghostType) ~= "string" then
+		self:_send(player, {
+			eventName = "SetForcedGhostResult",
+			ok = false,
+			err = "invalid_ghost_type",
+		})
+		return
+	end
+	if visualState ~= nil and type(visualState) ~= "string" then
+		self:_send(player, {
+			eventName = "SetForcedGhostResult",
+			ok = false,
+			err = "invalid_visual_state",
+		})
+		return
+	end
+
+	ReplicatedStorage:SetAttribute(FORCE_GHOST_TYPE_ATTR, ghostType)
+	ReplicatedStorage:SetAttribute(FORCE_GHOST_VISUAL_STATE_ATTR, visualState)
+	setStudioDebugAttribute(
+		"PasrahLastForcedGhost",
+		string.format("ghostType=%s visualState=%s", tostring(ghostType), tostring(visualState))
+	)
+	self:_send(player, {
+		eventName = "SetForcedGhostResult",
+		ok = true,
+		ghostType = ghostType,
+		visualState = visualState,
+	})
+end
 return Controller
 

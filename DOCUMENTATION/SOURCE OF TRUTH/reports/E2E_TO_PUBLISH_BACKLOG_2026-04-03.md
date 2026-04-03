@@ -256,7 +256,7 @@ Status:
   - hiding spot dan aturan selamat dari hunt masih perlu didefinisikan secara eksplisit
   - prototipe `SafeZone`/shelter berbasis `HidingSystem` sudah masuk ke source, tetapi validasi live server-side masih blocked:
     - player attr `PasrahHideState` belum terbukti terisi di runtime
-    - jalur introspeksi server via `StudioE2EControl` tidak muncul di runtime terbaru
+    - `StudioE2EControl` sekarang sudah source-controlled di `ReplicatedStorage.RemoteEvents`, tetapi listener server/ack masih tidak muncul di runtime terbaru
     - jadi survival loop hunt belum boleh dianggap selesai walau UI objective/hunt guidance sudah mulai disiapkan
 
 Pekerjaan:
@@ -335,14 +335,22 @@ Status:
   - jadi automation harus memanggil `SelectMode("Ranked")` sebelum `CreateRoom/HostStart`
   - payload `HostStart(mode = "Ranked")` saja tidak mengganti selection yang tersimpan
 - countdown room sekarang dipacu dari angka visual yang sama dengan cue audio:
-  - overlay countdown sekarang memakai `countdownSecondsLeft` server sebagai angka display final
-  - tick audio hanya dipicu saat angka server berubah, bukan dari pengurang waktu lokal `0.1s`
-  - pitch tick dibuat stabil (`PlaybackSpeed = 1`) agar tidak terasa acak terhadap detik yang tampil
-  - `RuntimeCountdownTick` sekarang dipaksa `single-instance`, jadi asset tick yang berdurasi >1 detik tidak lagi menumpuk antar detik
+  - server sekarang membroadcast `countdownEndsAt` sebagai anchor waktu yang sama untuk semua client
+  - `RoomBrowserController` menyimpan deadline countdown canonical itu, lalu overlay menghitung angka dari `Workspace:GetServerTimeNow()`
+  - tick audio hanya dipicu saat angka visual benar-benar berubah, bukan dari pengurang waktu lokal `0.1s`
+  - pitch tick dibuat stabil (`PlaybackSpeed = 1`) dan `RuntimeCountdownTick` dipaksa `single-instance`
   - validasi runtime terbaru menunjukkan:
     - countdown visual tetap urut `5 -> 4 -> 3 -> 2 -> 1`
     - `soundCount` untuk tick stabil `= 1` di tiap detik countdown
     - saat transisi ke `Preparing`, tick dibersihkan dan hanya `RuntimeTeleportDrop` yang tersisa
+- `MatchUI` sekarang juga punya sizing viewport-aware dasar, bukan sekadar typography pass:
+  - panel utama, header card, summary frame, footer action, timer chip, quick evidence button, dan controls hint bar ikut mengikuti viewport
+  - basis desktop tetap kanan-atas
+  - basis compact/mobile kini diposisikan sebagai sheet yang lebih lebar dan lebih mudah dibaca
+  - validasi live desktop terbaru membuktikan layout canonical tetap stabil pada `Briefing` tanpa overlap baru:
+    - `MatchUI.MainPanel.AbsoluteSize = 340x454`
+    - `EvidenceQuickButton.AbsoluteSize = 142x48`
+    - `MatchTimerLabel.AbsoluteSize = 126x40`
 
 Pekerjaan:
 
@@ -494,6 +502,10 @@ Status:
 - polish lanjutan `RoyalPassUI` juga sudah membuat track 30 hari muncul lebih cepat di viewport aktif:
   - tab `30 DAY REWARD` dan `30 DAY MISSION` sekarang terlihat di atas scroller track
   - screenshot validasi `ScreenCapture_RoyalPass_30Day_Taller` menunjukkan kartu hari awal langsung terlihat tanpa scroll panjang
+- `MatchUI` sekarang ikut masuk pass viewport-aware agar tidak hanya nyaman di desktop lebar:
+  - panel match, header, summary, footer, timer, hint bar, dan quick evidence action sekarang dihitung ulang dari viewport aktif
+  - pada desktop validasi terbaru layout tetap rapih dan tidak overlap dengan rail kanan lain
+  - basis compact/mobile sudah masuk ke source untuk phase berikutnya, walau validasi device-emulator/handset nyata masih pending
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:

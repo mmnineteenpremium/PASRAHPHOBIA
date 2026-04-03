@@ -5851,6 +5851,69 @@ function UISystem:_applyDeviceSizing()
 		match.ObjectiveLabel.TextSize = profile:GetTextSize()
 	end
 	if match and match.BasicPrimaryLabel and match.BasicSecondaryLabel then
+		local matchCompact = profile.isMobile or viewportSize.X <= 960
+		local panelWidth = matchCompact
+			and math.min(viewportSize.X - (profile.isMobile and 12 or 28), profile.isMobile and 420 or 396)
+			or 340
+		local panelHeight = matchCompact
+			and math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 20), profile.isMobile and 544 or 500)
+			or 454
+		local resolvedPanelWidth = math.max(matchCompact and 320 or 340, math.floor(panelWidth))
+		local resolvedPanelHeight = math.max(matchCompact and 428 or 454, math.floor(panelHeight))
+		local bottomActionY = resolvedPanelHeight - (matchCompact and 50 or 58)
+		local footerX = matchCompact and 12 or 166
+		local footerWidth = matchCompact and (resolvedPanelWidth - 24) or (resolvedPanelWidth - 178)
+		local summaryY = matchCompact and 182 or 168
+		local summaryHeight = resolvedPanelHeight - summaryY - (matchCompact and 86 or 76)
+
+		if match.BasicPanel then
+			if matchCompact then
+				match.BasicPanel.AnchorPoint = Vector2.new(0.5, 0)
+				match.BasicPanel.Position = UDim2.new(0.5, 0, 0, 12 + topLeftInset.Y)
+			else
+				match.BasicPanel.AnchorPoint = Vector2.new(1, 0)
+				match.BasicPanel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0, 16 + topLeftInset.Y)
+			end
+			match.BasicPanel.Size = UDim2.fromOffset(resolvedPanelWidth, resolvedPanelHeight)
+		end
+		if match.HeaderCard then
+			match.HeaderCard.Position = UDim2.fromOffset(12, 42)
+			match.HeaderCard.Size = UDim2.new(1, -24, 0, matchCompact and 130 or 118)
+		end
+		if match.PhaseGlyph then
+			match.PhaseGlyph.Size = UDim2.fromOffset(matchCompact and 96 or 84, matchCompact and 82 or 74)
+			match.PhaseGlyph.TextSize = matchCompact and 58 or 52
+		end
+		if match.BasicStateBadge then
+			match.BasicStateBadge.Position = UDim2.fromOffset(14, 12)
+			match.BasicStateBadge.Size = UDim2.fromOffset(matchCompact and 154 or 144, matchCompact and 28 or 26)
+			match.BasicStateBadge.TextSize = math.max(11, profile:GetTextSize() - 3)
+		end
+		if match.BasicPrimaryLabel then
+			match.BasicPrimaryLabel.Position = UDim2.fromOffset(14, matchCompact and 50 or 46)
+			match.BasicPrimaryLabel.Size = UDim2.new(1, matchCompact and -122 or -112, 0, matchCompact and 38 or 32)
+		end
+		if match.BasicSecondaryLabel then
+			match.BasicSecondaryLabel.Position = UDim2.fromOffset(14, matchCompact and 88 or 78)
+			match.BasicSecondaryLabel.Size = UDim2.new(1, matchCompact and -122 or -112, 0, matchCompact and 34 or 30)
+		end
+		if match.SummaryFrame then
+			match.SummaryFrame.Position = UDim2.fromOffset(12, summaryY)
+			match.SummaryFrame.Size = UDim2.new(1, -24, 0, math.max(152, summaryHeight))
+		end
+		if match.BasicHideButton then
+			match.BasicHideButton.Position = UDim2.fromOffset(12, bottomActionY)
+			match.BasicHideButton.Size = UDim2.fromOffset(matchCompact and 156 or 144, matchCompact and 38 or 40)
+			match.BasicHideButton.TextSize = math.max(12, profile:GetTextSize() - 4)
+		end
+		if match.BasicFooterLabel then
+			match.BasicFooterLabel.Position = UDim2.fromOffset(footerX, bottomActionY)
+			match.BasicFooterLabel.Size = UDim2.fromOffset(math.max(124, footerWidth), matchCompact and 38 or 40)
+		end
+		if match.BasicCloseButton then
+			match.BasicCloseButton.Position = UDim2.new(1, -10, 0, 8)
+			match.BasicCloseButton.Size = UDim2.fromOffset(matchCompact and 30 or 28, matchCompact and 30 or 28)
+		end
 		match.BasicPrimaryLabel.TextSize = math.max(16, profile:GetTextSize())
 		match.BasicSecondaryLabel.TextSize = math.max(13, profile:GetTextSize() - 2)
 		if match.BasicFooterLabel then
@@ -5862,6 +5925,7 @@ function UISystem:_applyDeviceSizing()
 		if match.BasicFloatButton then
 			local floatSize = profile.isConsole and 74 or (profile.isMobile and 68 or 66)
 			match.BasicFloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
+			match.BasicFloatButton.Position = UDim2.new(1, -(16 + bottomRightInset.X), matchCompact and 0.72 or 0.68, 0)
 		end
 	end
 	if match and match.ResultsTitle and match.ResultsStatus then
@@ -5873,6 +5937,33 @@ function UISystem:_applyDeviceSizing()
 		if match.ResultsFooter then
 			match.ResultsFooter.TextSize = math.max(13, profile:GetTextSize() - 2)
 		end
+	end
+	if match and match.TimerLabel then
+		local timerWidth = profile.isMobile and 148 or 126
+		local timerHeight = profile.isMobile and 44 or 40
+		match.TimerLabel.Size = UDim2.fromOffset(timerWidth, timerHeight)
+		match.TimerLabel.Position = UDim2.new(0.5, 0, 0, 14 + topLeftInset.Y)
+		match.TimerLabel.TextSize = profile.isMobile and 26 or 24
+	end
+	if match and match.TimerCaption then
+		match.TimerCaption.Position = UDim2.new(0.5, 0, 0, (profile.isMobile and 60 or 58) + topLeftInset.Y)
+		match.TimerCaption.Size = UDim2.fromOffset(profile.isMobile and 190 or 170, 18)
+		match.TimerCaption.TextSize = profile.isMobile and 12 or 11
+	end
+	if match and match.EvidenceQuickButton then
+		local quickWidth = profile.isMobile and math.min(viewportSize.X - 24, 188) or 142
+		local quickHeight = profile.isMobile and 52 or 48
+		match.EvidenceQuickButton.Size = UDim2.fromOffset(math.floor(quickWidth), quickHeight)
+		match.EvidenceQuickButton.Position = UDim2.new(1, -(14 + bottomRightInset.X), 1, -(14 + bottomRightInset.Y))
+		match.EvidenceQuickButton.TextSize = profile.isMobile and 13 or 12
+	end
+	if match and match.ControlsHintBar then
+		local hintWidth = math.min(viewportSize.X - (profile.isMobile and 20 or 40), 620)
+		match.ControlsHintBar.Size = UDim2.fromOffset(math.max(280, math.floor(hintWidth)), profile.isMobile and 40 or 34)
+		match.ControlsHintBar.Position = UDim2.new(0.5, 0, 1, -(12 + bottomRightInset.Y))
+	end
+	if match and match.ControlsHintLabel then
+		match.ControlsHintLabel.TextSize = profile.isMobile and 13 or 12
 	end
 	if self._uxWidgets and self._uxWidgets.windows then
 		for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
@@ -6555,7 +6646,7 @@ function UISystem:_renderPhase(phase, payload)
 
 	if phase == MATCH_PHASE.PREPARING then
 		lobbyUI.Enabled = false
-		roomUI.Enabled = true
+		roomUI.Enabled = false
 		if hud then
 			hud.Enabled = false
 		end
@@ -6573,7 +6664,7 @@ function UISystem:_renderPhase(phase, payload)
 
 	if phase == MATCH_PHASE.LOADING then
 		lobbyUI.Enabled = false
-		roomUI.Enabled = true
+		roomUI.Enabled = false
 		if hud then
 			hud.Enabled = false
 		end
@@ -6586,30 +6677,19 @@ function UISystem:_renderPhase(phase, payload)
 			matchUX.MessageLabel.Visible = true
 		end
 
-		local label = roomUI:FindFirstChild("LoadingLabel")
-		if label and label:IsA("TextLabel") then
-			label.Visible = true
-			label.Text = "Masuk ke lokasi..."
-		end
 		self:_refreshBasicMatchPanel("Loading", payload)
 		return
 	end
 
 	if phase == MATCH_PHASE.BRIEFING then
 		lobbyUI.Enabled = false
-		roomUI.Enabled = true
+		roomUI.Enabled = false
 		if hud then
 			hud.Enabled = false
 		end
 		if loadingUI and loadingUI:IsA("ScreenGui") then
 			self:_startLoadingScreenLoop(payload)
 			self:_setLoadingScreenContent("Briefing Investigasi", payload, 0.82, "Pelajari objective dan tips sebelum masuk.")
-		end
-
-		local label = roomUI:FindFirstChild("ObjectiveLabel")
-		if label and label:IsA("TextLabel") then
-			label.Visible = true
-			label.Text = DEFAULT_MATCH_OBJECTIVE_TEXT
 		end
 		return
 	end
@@ -11502,6 +11582,15 @@ function UISystem:_updateCountdownOverlay(state)
 	end
 
 	local displayCountdown = math.max(0, math.floor(tonumber(state.countdownSecondsLeft or state.countdownTotal or 5) or 5))
+	local countdownEndsAt = tonumber(state.countdownEndsAt)
+	if countdownEndsAt then
+		local remaining = countdownEndsAt - Workspace:GetServerTimeNow()
+		if remaining > 0 then
+			displayCountdown = math.max(1, math.ceil(remaining))
+		elseif state.matchStarting == true then
+			displayCountdown = 1
+		end
+	end
 	label.Text = tostring(displayCountdown)
 
 	if displayCountdown > 0 and self._countdownDisplaySecond ~= displayCountdown then
