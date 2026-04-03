@@ -25,6 +25,7 @@ return {
     },
     hideSpotRooms = {
         "StorageRoom",
+        "Office",
     },
     ghostRoomCandidates = {
         "RecordingRoom",

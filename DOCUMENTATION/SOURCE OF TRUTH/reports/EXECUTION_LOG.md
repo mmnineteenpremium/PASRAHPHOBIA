@@ -4633,3 +4633,74 @@ Menambahkan pengingat backlog final untuk topik retention `reason to return` ses
 
 1. lanjutkan eksekusi task aktif sekarang tanpa menarik task retention ini ke depan
 2. ketika backlog utama hampir selesai, angkat task `Reason to return` sebagai agenda final review
+
+## 2026-04-04 02:26 ICT
+
+### Task
+
+Memperluas distribusi `hideSpotRooms` lintas map agar survival loop tidak hanya bertumpu pada satu titik hide per map.
+
+### Linked Issues
+
+- debt sebelumnya sudah jelas: beberapa map masih hanya punya satu hide spot canonical
+- akibatnya hunt path terasa sempit dan cenderung biner (ketemu satu spot atau mati)
+
+### Files Changed
+
+- `src/shared/GameData/Maps/EmptyBuilding.lua`
+- `src/shared/GameData/Maps/AbandonedPalace.lua`
+- `src/shared/GameData/Maps/StudioMMNineteen.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `EmptyBuilding.hideSpotRooms`:
+  - `Storage`
+  - `ArchiveRoom`
+  - `SecurityRoom`
+- `AbandonedPalace.hideSpotRooms`:
+  - `StorageWing`
+  - `ServantRoomA`
+  - `ServantRoomB`
+- `StudioMMNineteen.hideSpotRooms`:
+  - `StorageRoom`
+  - `Office`
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_hide_spot_distribution.rbxlx`
+- validasi runtime live memakai jalur room-browser canonical `LobbyEvent:FireServer({ action = ... })`
+- hasil validasi:
+  - `EmptyBuilding`:
+    - `PasrahLastMatchStartTrace = match=match_1 ... map=EmptyBuilding ...`
+    - `Room_Storage`, `Room_ArchiveRoom`, `Room_SecurityRoom`:
+      - `HideSpotPrompt` ada
+      - `HideSpotType = Closet`
+      - `HideSpotId` terisi sesuai room
+  - `AbandonedPalace`:
+    - `PasrahLastMatchStartTrace = match=match_2 ... map=AbandonedPalace ...`
+    - `Room_StorageWing`, `Room_ServantRoomA`, `Room_ServantRoomB`:
+      - `HideSpotPrompt` ada
+      - `HideSpotType = Closet`
+      - `HideSpotId` terisi sesuai room
+  - `StudioMMNineteen`:
+    - `PasrahLastMatchStartTrace = match=match_3 ... map=StudioMMNineteen ...`
+    - `Room_StorageRoom`, `Room_Office`:
+      - `HideSpotPrompt` ada
+      - `HideSpotType = Closet`
+      - `HideSpotId` terisi sesuai room
+- catatan protokol:
+  - format lama `LobbyEvent:FireServer(\"Action\", payload)` tidak reliable untuk validasi runtime saat ini
+  - jalur validasi yang benar adalah request table `{ action = \"...\" }`
+
+### Interpretation
+
+- survival affordance lintas map naik dari baseline terlalu tipis ke baseline yang lebih layak untuk hunt
+- perubahan ini tetap konservatif karena semua hide spot diambil dari room canonical yang memang ada di map
+
+### Next Step
+
+1. lanjutkan review kualitas posisi hide spot (jarak ke door line, LOS break, dan fairness ghost pathing)
+2. lanjut ke slice berikutnya tanpa menarik task `Reason to return` yang sudah didefer ke akhir

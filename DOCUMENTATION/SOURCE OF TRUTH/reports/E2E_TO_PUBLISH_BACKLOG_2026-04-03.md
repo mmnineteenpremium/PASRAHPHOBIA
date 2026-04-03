@@ -1088,3 +1088,26 @@ Urutan yang paling masuk akal dari titik sekarang:
   - guidance hunt sekarang memakai label runtime yang sama dengan affordance world-space hide spot
   - client dan server lebih sinkron saat menyebut nama refuge ke pemain
 
+## Update 2026-04-04 02:26 ICT
+
+- distribusi hide spot lintas map sudah dinaikkan dari baseline 1 titik/map ke baseline yang lebih playable:
+  - `EmptyBuilding.hideSpotRooms`: `Storage`, `ArchiveRoom`, `SecurityRoom`
+  - `AbandonedPalace.hideSpotRooms`: `StorageWing`, `ServantRoomA`, `ServantRoomB`
+  - `StudioMMNineteen.hideSpotRooms`: `StorageRoom`, `Office`
+- validasi live canonical (bukan asumsi file) berhasil:
+  - `EmptyBuilding`:
+    - `PasrahLastMatchStartTrace = ... map=EmptyBuilding ...`
+    - `Room_Storage`, `Room_ArchiveRoom`, `Room_SecurityRoom` masing-masing memiliki `HideSpotPrompt`
+  - `AbandonedPalace`:
+    - `PasrahLastMatchStartTrace = ... map=AbandonedPalace ...`
+    - `Room_StorageWing`, `Room_ServantRoomA`, `Room_ServantRoomB` masing-masing memiliki `HideSpotPrompt`
+  - `StudioMMNineteen`:
+    - `PasrahLastMatchStartTrace = ... map=StudioMMNineteen ...`
+    - `Room_StorageRoom` dan `Room_Office` masing-masing memiliki `HideSpotPrompt`
+- catatan teknis penting dari validasi ini:
+  - jalur room-browser canonical saat ini menggunakan payload table `LobbyEvent:FireServer({ action = ... })`
+  - format lama `FireServer(\"Action\", payload)` tidak lagi bisa dipakai sebagai basis validasi runtime
+- dampak:
+  - pemain tidak lagi dipaksa mengandalkan satu spot hide tunggal di map besar/sedang
+  - affordance survival lintas map naik tanpa menambah spot palsu atau override map art manual
+
