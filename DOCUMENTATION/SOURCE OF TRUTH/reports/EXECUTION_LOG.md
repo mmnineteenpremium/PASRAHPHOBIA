@@ -3601,3 +3601,62 @@ Memoles ulang perilaku auto-open pintu hybrid supaya tidak lagi memakai radius b
 2. lanjut ke slice survival readability:
    - definisi hiding spot non-safe-zone
    - guidance survive hunt yang lebih jelas ke pemain
+
+## 2026-04-03 22:46 ICT
+
+### Task
+
+Membuat guidance survive hunt lebih operasional dengan menunjuk `safe zone` runtime terdekat, bukan hanya memberi slogan generik saat hunt aktif.
+
+### Linked Issues
+
+- user secara eksplisit masih belum tahu "cara selamat dari hunt itu harus gimana"
+- marker `SAFE ZONE` sudah ada di world, tetapi copy HUD masih bisa terlalu generik untuk pemain baru
+- saat tekanan hunt naik, pemain butuh jawaban yang lebih konkret daripada sekadar "cari ruang aman"
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `Main.lua` sekarang punya helper client untuk:
+  - menemukan map aktif dari `Workspace.ActiveMatches`
+  - menghitung `safe zone` runtime terdekat dari posisi `HumanoidRootPart`
+  - memformat label target seperti `SafeZone 1 52st`
+- helper ini dipakai untuk memperkaya tiga surface hunt:
+  - `getHuntObjectiveText()`
+  - `getHuntControlsHintText()`
+  - summary guidance pada panel `MatchUI`
+- guidance hunt sekarang lebih konkret:
+  - `Critical`: putus LOS lalu menuju safe zone terdekat
+  - `Tracked`: rotasi jalur lalu menuju safe zone terdekat
+  - `Sheltered`: tahan posisi
+  - `Hidden`: diam sampai hunt selesai
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_survival_hint_build.rbxlx`
+- validasi live helper pada match aktif `HauntedHouse` menghasilkan:
+  - nearest safe zone = `SafeZone_1`
+  - distance ≈ `52st`
+  - hint sample:
+    - `PINTU: E/X/TAP  •  TARGET: SafeZone 1 52st  •  JANGAN LARI LURUS`
+  - objective sample:
+    - `Hunt aktif. Gunakan prompt pintu, putus line-of-sight, lalu menuju SafeZone 1 52st.`
+- catatan jujur:
+  - capture label HUD final via automation Studio masih belum konsisten karena jalur phase E2E pada sesi ini sempat tertahan di `Preparing`
+  - tetapi source sync, build, dan helper output live dari match aktif sudah tervalidasi
+
+### Interpretation
+
+- pemain sekarang tidak hanya diberi instruksi abstrak, tetapi target aksi yang lebih jelas saat hunt aktif
+- ini menaikkan readability survival loop tanpa mengarang sistem hiding spot baru yang belum benar-benar ada
+
+### Next Step
+
+1. checkpoint commit untuk survival readability hint
+2. lanjut ke hiding spot non-safe-zone atau survival affordance berikutnya bila masih dibutuhkan
