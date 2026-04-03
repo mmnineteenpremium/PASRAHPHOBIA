@@ -497,7 +497,9 @@ function Service:_tickSafeZones()
 
         local hiddenEntry = hidden[userId]
         if activeZoneId ~= nil then
-            if type(hiddenEntry) ~= "table" or hiddenEntry.spotType ~= "SafeZone" or hiddenEntry.zoneId ~= activeZoneId then
+            if type(hiddenEntry) == "table" and hiddenEntry.spotType ~= "SafeZone" then
+                applyHideAttributes(player, "Hidden", hiddenEntry.spotType or "Unknown", hiddenEntry.zoneId or "")
+            elseif type(hiddenEntry) ~= "table" or hiddenEntry.spotType ~= "SafeZone" or hiddenEntry.zoneId ~= activeZoneId then
                 hidden[userId] = {
                     spotType = "SafeZone",
                     zoneId = activeZoneId,

@@ -3849,3 +3849,73 @@ Memulai ekspansi hiding affordance lintas map dengan pendekatan data-driven (`hi
 
 1. checkpoint commit untuk ekspansi data-driven hide spot lintas map
 2. lanjut ke stabilisasi `Preparing -> match active` agar validasi full hide-state tidak intermittent
+
+## 2026-04-03 22:53 ICT
+
+### Task
+
+Menutup blocker runtime `Preparing -> MatchStarted`, lalu menyelesaikan validasi penuh hiding `EmptyBuilding` tanpa merusak baseline `HauntedHouse`.
+
+### Linked Issues
+
+- `HostStart` countdown selesai, tetapi commit/start match sempat menggantung tanpa jejak final
+- `MatchPreparing` sempat terkirim, tetapi pipeline berhenti sebelum teleport dan `MatchStarted`
+- `EmptyBuilding.Room_Storage` overlap dengan `SafeZone_2`, sehingga hide eksplisit `Closet` sempat ditimpa tick safe-zone
+- patch interaction point runtime terlalu mahal karena menghitung pathfinding saat setiap match clone
+
+### Files Changed
+
+- `src/ServerScriptService/Server/HidingSystem/Service.lua`
+- `src/ServerScriptService/Server/LobbySystem/Controller.lua`
+- `src/ServerScriptService/Server/MatchSystem/Controller.lua`
+- `src/ServerScriptService/Server/MatchSystem/MatchService.lua`
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `HidingSystem`:
+  - safe-zone tick tidak lagi menimpa hide eksplisit `Closet/Locker` saat pemain memang sudah memilih hide spot
+  - ketika pemain `ExitHide` tetapi masih berdiri di volume safe zone, safe-zone tetap boleh mengambil alih lagi pada tick berikutnya
+- `LobbySystem.Controller`:
+  - countdown host-start sekarang punya hardening Studio debug untuk tail finalize
+  - jalur ini tidak lagi silent hang saat `CommitHostStart` tertahan oleh pipeline berikutnya
+- `MatchSystem.Controller`:
+  - `StartMatch()` sekarang dijalankan async dari `OnPlayerQueued`, bukan inline di callback EventBus
+- `MatchService`:
+  - pipeline setelah `MatchPreparing` sekarang diteruskan lewat `task.delay` alih-alih yield inline
+  - ditambah stage trace Studio-only agar bottleneck start match bisa dibaca langsung (`PasrahLastMatchStartStage`)
+- `MapRuntimePatches`:
+  - normalisasi interaction point runtime tidak lagi memakai `PathfindingService:ComputeAsync()` massal pada start match
+  - runtime patch sekarang deterministic memakai posisi room + explicit override
+
+### Validation Notes
+
+- validasi live `EmptyBuilding` sukses penuh:
+  - `PasrahLastHostStartCommit = commit ok=true err=nil roomId=1`
+  - `PasrahLastMatchStartTrace = match=match_1 players=1 teleported=1 phase=PreparationPhase map=EmptyBuilding mode=Classic`
+  - `PasrahLastTeleportTrace` lengkap sampai `player=ZyraaaVex status=teleported_counted`
+  - `Room_Storage`:
+    - `EnterHide` -> `Hidden / Closet / Room_Storage`
+    - prompt berubah ke `Keluar`
+    - `ExitHide` sambil tetap di storage -> `Hidden / SafeZone / SafeZone_2`
+    - prompt kembali ke `Bersembunyi`
+- sanity regression `HauntedHouse` juga tertutup:
+  - `Room_ClosetA` kembali memberi `Hidden / Closet / Room_ClosetA`
+  - prompt tetap jujur: `Keluar`
+
+### Interpretation
+
+- blocker sebelumnya ternyata kombinasi dari dua hal:
+  - `StartMatch()` yield di jalur callback yang salah
+  - patch interaction point runtime terlalu berat untuk jalur clone map
+- setelah dua akar itu ditutup, validasi hide lintas map bisa kembali dijalankan secara sah
+- overlap `Storage` vs `SafeZone_2` di `EmptyBuilding` sekarang sudah punya perilaku yang konsisten:
+  - hide eksplisit menang saat pemain benar-benar masuk closet
+  - safe zone tetap aktif saat pemain keluar dari closet tetapi masih di area aman
+
+### Next Step
+
+1. checkpoint commit untuk stabilisasi `HostStart/StartMatch` + prioritas hide explicit
+2. lanjut ke slice traversal/map polish berikutnya tanpa kembali ke blocker `Preparing`

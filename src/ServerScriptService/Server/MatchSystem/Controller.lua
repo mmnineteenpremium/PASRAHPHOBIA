@@ -109,7 +109,9 @@ function Controller:OnPlayerQueued(payload)
     if not match then
         return
     end
-    self._service:StartMatch(match.matchId)
+    task.spawn(function()
+        self._service:StartMatch(match.matchId)
+    end)
 end
 
 function Controller:OnMatchmakingStarted(payload)
