@@ -334,4 +334,66 @@ local ShopCatalog = {
     },
 }
 
+local function safeRequire(moduleScript)
+    if not moduleScript then
+        return nil
+    end
+    local ok, result = pcall(require, moduleScript)
+    if ok then
+        return result
+    end
+    return nil
+end
+
+local function applyMarketplaceConfig(catalog)
+    local configModule = script.Parent:FindFirstChild("ShopMarketplaceConfig")
+    local config = safeRequire(configModule)
+    if type(config) ~= "table" then
+        return
+    end
+
+    local catalogById = {}
+    for _, entry in ipairs(catalog) do
+        if type(entry) == "table" and type(entry.id) == "string" and entry.id ~= "" then
+            catalogById[entry.id] = entry
+        end
+    end
+
+    local itemOverrides = type(config.items) == "table" and config.items or {}
+    for itemId, override in pairs(itemOverrides) do
+        local item = catalogById[itemId]
+        if item and type(override) == "table" then
+            if override.price ~= nil then
+                local parsedPrice = tonumber(override.price)
+                if parsedPrice and parsedPrice > 0 then
+                    item.price = math.floor(parsedPrice)
+                end
+            end
+            if override.marketplaceId ~= nil then
+                item.marketplaceId = tonumber(override.marketplaceId) or 0
+            end
+            if override.marketplaceType ~= nil then
+                item.marketplaceType = override.marketplaceType
+            end
+            if override.enabled ~= nil then
+                item.enabled = override.enabled == true
+            end
+        end
+    end
+
+    local autoEnable = config.autoEnableWhenIdPresent == true
+    if autoEnable then
+        for _, item in ipairs(catalog) do
+            if tostring(item.currency or "MM") == "Robux" then
+                local id = tonumber(item.marketplaceId) or 0
+                if id > 0 then
+                    item.enabled = true
+                end
+            end
+        end
+    end
+end
+
+applyMarketplaceConfig(ShopCatalog)
+
 return ShopCatalog
