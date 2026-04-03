@@ -13,6 +13,10 @@ local function toProfileKey(playerId)
     return string.format("profile:%s", toKey(playerId))
 end
 
+local function toReceiptKey(receiptId)
+    return string.format("receipt:%s", tostring(receiptId))
+end
+
 local RANK_PROFILE_FIELDS = {
     playerLevel = true,
     playerRank = true,
@@ -151,7 +155,9 @@ function Service.new(state, deps)
     self._studioMockStore = self._state:Get("studioMockStore") or {
         inventory = {},
         profiles = {},
+        receipts = {},
     }
+    self._studioMockStore.receipts = self._studioMockStore.receipts or {}
     self._playersService = self._deps.Players or game:GetService("Players")
     self._inventoryService = self._deps.InventoryService
     self._autosaveInterval = self._state:Get("autosaveIntervalSeconds") or 60
@@ -335,6 +341,79 @@ function Service:LoadProfile(playerId)
         return nil
     end
     return normalizeProfileRecord(data)
+end
+
+function Service:HasProcessedReceipt(receiptId)
+    local normalizedId = tostring(receiptId or "")
+    if normalizedId == "" then
+        return false, "invalid_receipt_id"
+    end
+
+    local key = toReceiptKey(normalizedId)
+    if self._useMockStore then
+        local stored = self._studioMockStore.receipts[key]
+        if stored == true then
+            return true
+        end
+        if type(stored) == "table" and stored.processed == true then
+            return true
+        end
+        return false
+    end
+
+    if not self._dataStore then
+        return false, "datastore_disabled"
+    end
+
+    local success, data = pcall(function()
+        return self._dataStore:GetAsync(key)
+    end)
+    if not success then
+        warn("DataPersistenceService: failed to read receipt ledger for", normalizedId, data)
+        return false, data
+    end
+
+    if data == true then
+        return true
+    end
+    if type(data) == "table" and data.processed == true then
+        return true
+    end
+    return false
+end
+
+function Service:MarkReceiptProcessed(receiptId, metadata)
+    local normalizedId = tostring(receiptId or "")
+    if normalizedId == "" then
+        return false, "invalid_receipt_id"
+    end
+
+    local key = toReceiptKey(normalizedId)
+    local record = {
+        processed = true,
+        processedAt = os.time(),
+    }
+    if type(metadata) == "table" then
+        record.metadata = clone(metadata)
+    end
+
+    if self._useMockStore then
+        self._studioMockStore.receipts[key] = record
+        self._state:Set("studioMockStore", self._studioMockStore)
+        return true, "mock_store"
+    end
+
+    if not self._dataStore then
+        return false, "datastore_disabled"
+    end
+
+    local success, err = pcall(function()
+        self._dataStore:SetAsync(key, record)
+    end)
+    if not success then
+        warn("DataPersistenceService: failed to persist receipt ledger for", normalizedId, err)
+    end
+    return success, err
 end
 
 return Service

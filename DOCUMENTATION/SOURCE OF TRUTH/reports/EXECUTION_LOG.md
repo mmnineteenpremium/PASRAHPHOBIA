@@ -5375,3 +5375,212 @@ Konsolidasi owner reward match agar tidak grant ganda, plus hardening harness St
 
 - risiko kebocoran ekonomi dari grant reward ganda sudah ditutup di owner layer.
 - harness Studio untuk audit saldo kini lebih deterministic, sehingga anomali reward lebih cepat dideteksi sebelum masuk fase publish.
+
+## 2026-04-04 05:38 ICT
+
+### Task
+
+Hardening validasi mobile UI (RoomBrowser/RoyalPass/right rail) dengan override runtime agar test bisa deterministic walau Studio headless.
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- tambah atribut override untuk profil input client:
+  - `PasrahUIInputProfileOverride` (`mobile|pc|console`)
+- tambah atribut override compact/layout:
+  - `PasrahUIForceCompact`
+- tambah atribut override viewport:
+  - `PasrahUIViewportOverrideX`
+  - `PasrahUIViewportOverrideY`
+- bind refresh UI diperluas:
+  - perubahan atribut override sekarang memicu `_applyDeviceSizing()` tanpa restart client.
+- right-rail di mode mobile diringkas ke tombol primer:
+  - `ROOMS`, `PASS`, `MENU`, `RANK`
+  - float `Profile/Shop` tidak ikut memenuhi rail mobile.
+- `RoomBrowserUI` compact/mobile:
+  - margin mobile dipersempit.
+  - compact canvas room panel ditambah safe-bottom supaya tombol bawah tetap terbaca di layar kecil.
+- `RoyalPassUI` mobile:
+  - panel utama berubah ke near-fullscreen sheet berdasarkan viewport override aktif.
+
+### Validation Notes
+
+- build source lokal sukses:
+  - `_tmp_mobile_ui_override_build.rbxlx`
+  - `_tmp_mobile_layout_validation_build.rbxlx`
+- validasi live MCP dengan override:
+  - `PasrahUIInputProfileOverride = mobile`
+  - `PasrahUIForceCompact = true`
+  - `PasrahUIViewportOverrideX/Y = 390/844`
+- hasil runtime terukur:
+  - `RoomBrowserUI.Panel.Size` terbaca sekitar `388x842`
+  - `RoyalPassUI.MainPanel.Size` terbaca sekitar `382x832`
+  - rail kanan tetap berurutan atas-ke-bawah untuk tombol primer; `Profile/Shop` float tidak terlihat.
+- cleanup:
+  - atribut override dikembalikan ke `nil` setelah test.
+
+### Interpretation
+
+- pending validasi compact/mobile tidak lagi sepenuhnya bergantung device fisik; sekarang ada harness deterministic di runtime client.
+- risiko overlap rail/panel pada mobile turun, dan baseline size panel utama sudah mendekati full-sheet yang lebih layak sentuh.
+
+## 2026-04-04 05:47 ICT
+
+### Task
+
+Menutup drift countdown audio saat panel room disembunyikan (suppressed) agar tick tetap sinkron per detik sampai teleport.
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `UISystem:_updateCountdownOverlay` dihardening:
+  - pisahkan state `countdownActive` vs `showCountdown`.
+  - audio `CountdownTick` tetap diproses saat `matchStarting=true` walau overlay disuppress oleh context match.
+  - pulse label hanya dijalankan saat overlay memang visible.
+  - tombol cancel host hanya visible saat overlay visible.
+- tujuan patch:
+  - hindari kasus countdown event tetap berjalan di server, tapi client kehilangan tick audio karena panel room sudah dipaksa hidden.
+
+### Validation Notes
+
+- build source lokal sukses:
+  - `_tmp_countdown_audio_unsuppressed_build.rbxlx`
+- validasi live MCP (client runtime):
+  - flow: `LeaveRoom -> SelectMode(Ranked) -> CreateRoom -> HostStart(EmptyBuilding)`
+  - hasil:
+    - `RuntimeCountdownTick`: `maxTickInstances=1`, `maxTickPlaying=1`
+    - `RuntimeTeleportDrop`: `maxTeleportInstances=1`, `maxTeleportPlaying=1`
+    - sesudah teleport: `RoomBrowserUI.Panel.Visible=false`, `MatchPhase=Briefing`, `InMatch=true`
+- catatan sinkronisasi:
+  - runtime Studio sempat belum menarik patch dari source, jadi patch identik juga di-apply ke script Studio target sebelum retest.
+
+### Interpretation
+
+- regresi “tick countdown hilang/random saat panel room tertutup” tertutup di jalur runtime yang sempat drift.
+- transisi audio countdown -> teleport tetap single-instance tanpa membuka duplikasi cue baru.
+
+## 2026-04-04 05:51 ICT
+
+### Task
+
+Hardening monetization anti-duplicate grant dengan ledger receipt persisten untuk `ProcessReceipt`.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/DataPersistenceService/Service.lua`
+- `src/ServerScriptService/Server/ShopSystem/Controller.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `DataPersistenceService`:
+  - tambah key helper `receipt:<PurchaseId>`.
+  - mock store Studio sekarang punya bucket `receipts`.
+  - tambah API:
+    - `HasProcessedReceipt(receiptId)`
+    - `MarkReceiptProcessed(receiptId, metadata)`
+- `ShopSystem.Controller`:
+  - tambah resolver dependency `DataPersistenceService`.
+  - `_isReceiptProcessed` sekarang cek cache lokal **dan** ledger persisten.
+  - `_markReceiptProcessed` sekarang menulis cache lokal sekaligus persist ke ledger.
+- dampak:
+  - receipt yang sudah pernah diproses tidak lagi mengandalkan umur server instance saat ini.
+
+### Validation Notes
+
+- build source lokal sukses:
+  - `_tmp_receipt_ledger_persistence_build.rbxlx`
+- sinkron runtime Studio:
+  - script Studio belum otomatis mengikuti source, jadi patch identik di-apply langsung ke:
+    - `game.ServerScriptService.Server.ShopSystem.Controller`
+    - `game.ServerScriptService.Server.DataPersistenceService.Service`
+- smoke test live MCP:
+  - request pembelian `MM` (`eq_saltbag_reinforced`) tetap sukses:
+    - `PurchaseProcessed.success = true`
+  - tidak muncul error startup `ShopSystem Start failed` baru setelah patch ini.
+
+### Interpretation
+
+- risiko grant ulang `DeveloperProduct` karena restart/session drift berkurang karena status receipt kini punya jejak persisten.
+- blocker `marketplaceId` nyata dari Creator Hub tetap terpisah dan masih perlu input manual untuk menutup jalur Robux production full E2E.
+
+## 2026-04-04 05:53 ICT
+
+### Task
+
+Mengurangi noise bootstrap berulang agar log startup tidak terlihat seperti duplikasi layer runtime.
+
+### Files Changed
+
+- `src/ServerScriptService/Bootstrap.server.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `Bootstrap.server` sekarang melakukan guard awal:
+  - jika `_G.__PASRAH_SERVER_BOOT_DONE == true`, script langsung `return` sebelum emit log.
+  - set `_G.__PASRAH_SERVER_BOOT_DONE = true` dipindah ke awal jalur bootstrap canonical.
+- dampak:
+  - copy bootstrap tambahan tidak lagi mencetak rangkaian log startup penuh.
+  - startup flow (`ServerBootstrap.Start` + `ensureStudioE2EFallback`) tetap dipanggil oleh owner pertama.
+
+### Validation Notes
+
+- build source lokal sukses:
+  - `_tmp_bootstrap_log_guard_build.rbxlx`
+- patch identik juga di-apply ke script Studio aktif:
+  - `game.ServerScriptService.Bootstrap`
+- smoke start runtime:
+  - `PasrahStudioE2EReady = true`
+  - remote `StudioE2EControl` tersedia setelah startup.
+
+### Interpretation
+
+- noise log boot berulang tidak lagi membingungkan pembacaan runtime health.
+- guard ini tidak mengubah ownership boot, hanya memastikan satu jalur yang bicara di console.
+
+## 2026-04-04 05:55 ICT
+
+### Task
+
+Menetralkan slot ambience canonical agar tidak overlap dengan heartbeat fear loop.
+
+### Files Changed
+
+- `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `AmbientLoop_Main` dikembalikan ke placeholder kosong:
+  - `AudioContent = \"\"`
+- alasan:
+  - slot ambience sempat berisi ID heartbeat (`138884191945388`) yang sama dengan channel fear.
+  - kondisi ini berpotensi menghasilkan overlap ambience/fear dan membuat diagnosis “audio dobel” menjadi bias.
+
+### Validation Notes
+
+- build source lokal sukses:
+  - `_tmp_ambient_slot_placeholder_build.rbxlx`
+- patch runtime Studio:
+  - `ReplicatedStorage.Assets.Audio.Ambient.AmbientLoop_Main.SoundId` disetel ke kosong.
+- smoke runtime:
+  - flow `Ranked -> CreateRoom -> HostStart` tidak memunculkan `AmbientAudioRuntime` aktif pada window validasi.
+
+### Interpretation
+
+- jalur audio sekarang lebih jujur: fear cue tidak lagi “ditumpuk” oleh ambience heartbeat yang sama.
+- slot ambience final tetap menjadi pekerjaan content pass berikutnya setelah asset legal final tersedia.

@@ -145,6 +145,10 @@ Status:
 - in progress
 - duplicate telemetry lifecycle log sudah dibersihkan
 - surface runtime client jauh lebih kecil dari baseline awal
+- startup noise bootstrap juga sudah dipersempit:
+  - `Bootstrap.server` sekarang keluar awal jika `_G.__PASRAH_SERVER_BOOT_DONE == true` sebelum mencetak log
+  - log boot canonical (`Studio runtime detected`, `skeleton loaded`, `server ready`) sekarang hanya dicetak oleh instance bootstrap pertama
+  - ini menutup kesan “duplikasi layer” pada sesi yang membawa lebih dari satu copy script bootstrap
 - duplikasi `StarterGui` kosong untuk `LobbyUI`, `MatchUI`, `ShopUI`, `MainMenuUI`, `LeaderboardUI`, `PASRA_UI`, dan `SpectatorUI` sudah dibersihkan
 - `PlayerGui` runtime sekarang hanya punya satu owner untuk surface inti:
   - `LobbyUI`
@@ -165,6 +169,9 @@ Status:
     - `ButtonClick_01` sekarang punya fallback runtime built-in Roblox di `UISystem`
   - masih kosong eksplisit:
     - `AmbientLoop_Main`
+- `AmbientLoop_Main` sekarang ditegaskan kembali sebagai placeholder kosong source-owned:
+  - slot ini sempat terisi ID heartbeat yang sama dengan `FearAudio`, sehingga berisiko overlap ambience/fear yang menipu diagnosis audio dobel
+  - sekarang dikosongkan lagi (`AudioContent = ""`) sampai asset ambience final legal benar-benar siap
 - validasi live terbaru menunjukkan boot tidak lagi mengeluarkan warning audio invalid sama sekali
 - root cause audio modern juga sudah ditutup:
   - `AudioSystem` sekarang me-relay event audio ke `MatchEvent` client
@@ -456,6 +463,14 @@ Status:
     - countdown visual tetap urut `5 -> 4 -> 3 -> 2 -> 1`
     - `soundCount` untuk tick stabil `= 1` di tiap detik countdown
     - saat transisi ke `Preparing`, tick dibersihkan dan hanya `RuntimeTeleportDrop` yang tersisa
+- hardening countdown audio terbaru menutup celah saat panel room disuppress sebelum countdown selesai:
+  - `UISystem:_updateCountdownOverlay` sekarang memisahkan `countdownActive` vs `showCountdown`
+  - audio tick tetap ikut detik authoritative saat `matchStarting=true`, walau overlay room disembunyikan karena context phase
+  - pulse visual label hanya dijalankan saat overlay memang visible, jadi UI tidak memicu animasi tersembunyi
+  - validasi live terbaru (`Ranked -> CreateRoom -> HostStart`) membuktikan:
+    - `RuntimeCountdownTick` terdeteksi aktif dengan `maxTickInstances=1`, `maxTickPlaying=1`
+    - `RuntimeTeleportDrop` tetap single-cue (`maxTeleportInstances=1`, `maxTeleportPlaying=1`)
+    - setelah teleport, `RoomBrowserUI.Panel.Visible=false` dan `MatchPhase=Briefing`
 - `MatchUI` sekarang juga punya sizing viewport-aware dasar, bukan sekadar typography pass:
   - panel utama, header card, summary frame, footer action, timer chip, quick evidence button, dan controls hint bar ikut mengikuti viewport
   - basis desktop tetap kanan-atas
@@ -788,6 +803,13 @@ Status:
   - refund pembelian gagal mengikuti mata uang item (`MM/PP`), tidak lagi hardcoded `MM`
   - item `enabled=false` ditolak sebagai `item_disabled` dari server
   - gift path juga menolak item disabled dan menolak item `Robux`
+- ledger receipt `DeveloperProduct` sekarang tidak lagi murni in-memory:
+  - `ShopSystem` kini memeriksa receipt cache lokal **dan** ledger persisten `DataPersistenceService`
+  - receipt yang sudah pernah diproses akan dipetakan kembali ke cache runtime lalu langsung dianggap `PurchaseGranted`
+  - saat grant berhasil, receipt juga ditulis ke ledger persisten sehingga restart server tidak membuka grant ulang untuk `PurchaseId` yang sama
+- validasi live terbaru:
+  - jalur shop `MM` tetap sehat (`eq_saltbag_reinforced -> success=true`)
+  - tidak muncul error startup baru pada jalur `ShopSystem` sesudah hardening receipt ledger
 - UI shop sekarang menandai item yang belum siap:
   - tombol `SETUP` untuk item `Robux` yang `marketplaceId` belum valid
   - klik item yang belum siap tidak mengirim request buta ke server
@@ -1318,4 +1340,27 @@ Urutan yang paling masuk akal dari titik sekarang:
   - probe `EndMatch` fake saat `InMatch=false` ditolak (`end_match_failed`) dengan delta wallet `0`.
 - catatan sinkronisasi:
   - patch juga diterapkan langsung ke script Studio karena saat validasi ditemukan drift runtime (source lokal belum otomatis ter-push ke DataModel).
+
+## Update 2026-04-04 05:38 ICT
+
+- `P2.12` (UI modular compact/mobile) naik lagi dengan harness validasi baru yang bisa dipakai saat Studio headless:
+  - `UI.Main` sekarang mendukung override input profile via attribute:
+    - `PasrahUIInputProfileOverride = mobile|pc|console`
+  - layout compact bisa dipaksa via:
+    - `PasrahUIForceCompact = true`
+  - viewport test dapat dipaksa via:
+    - `PasrahUIViewportOverrideX`
+    - `PasrahUIViewportOverrideY`
+- rail kanan sekarang lebih disiplin di mobile:
+  - hanya tombol primer (`ROOMS`, `PASS`, `MENU`, `RANK`) yang dipertahankan
+  - `Profile/Shop` float tidak ikut menumpuk di jalur mobile
+- sizing compact/mobile dipoles ulang:
+  - `RoomBrowserUI` margin mobile dipersempit dan canvas host-room ditambah safe-bottom agar control bawah tidak ketutup.
+  - `RoyalPassUI` mobile sekarang bergerak ke near-fullscreen sheet (bukan panel kecil sempit) pada viewport override aktif.
+- validasi live MCP (Studio, override `390x844` + `mobile` + `forceCompact=true`) menunjukkan:
+  - `RoomBrowserUI.Panel.Size ~= 388x842`
+  - `RoyalPassUI.MainPanel.Size ~= 382x832`
+  - rail tombol kanan terurut atas-ke-bawah dengan tombol primer terlihat, sedangkan float `Profile/Shop` tidak terlihat.
+- catatan:
+  - tool `mouse click/screen capture` MCP sempat timeout, jadi validasi dilakukan via inspeksi runtime property (`AbsoluteSize/Position/Visible`) dan bukan screenshot visual.
 

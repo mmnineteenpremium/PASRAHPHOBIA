@@ -56,6 +56,23 @@ local function resolveSocialCommerceService(deps)
     return nil
 end
 
+local function resolvePersistenceService(deps)
+    local persistence = Services.Get(deps, "DataPersistenceService")
+    if type(persistence) ~= "table" then
+        return nil
+    end
+    if type(persistence.HasProcessedReceipt) == "function" and type(persistence.MarkReceiptProcessed) == "function" then
+        return persistence
+    end
+    if type(persistence.Service) == "table"
+        and type(persistence.Service.HasProcessedReceipt) == "function"
+        and type(persistence.Service.MarkReceiptProcessed) == "function"
+    then
+        return persistence.Service
+    end
+    return nil
+end
+
 local function toUserId(player)
     if typeof(player) == "Instance" and player:IsA("Player") then
         return player.UserId
@@ -126,6 +143,7 @@ function Controller.new(state, service, deps)
     self._deps = deps or {}
     self._eventBus = nil
     self._security = nil
+    self._persistence = nil
     self._subscriptions = {}
     self._registered = false
     self._purchaseRemote = nil
@@ -139,6 +157,7 @@ end
 function Controller:Create()
     self._eventBus = resolveEventBus(self._deps)
     self._security = resolveSecurityService(self._deps)
+    self._persistence = resolvePersistenceService(self._deps)
     self._purchaseRemote = resolvePurchaseRemote()
     self:_rebuildMarketplaceItemIndex()
 end
@@ -222,13 +241,39 @@ function Controller:_processedReceipts()
 end
 
 function Controller:_markReceiptProcessed(receiptId)
+    local receiptKey = tostring(receiptId)
     local processed = self:_processedReceipts()
-    processed[tostring(receiptId)] = true
+    processed[receiptKey] = true
     self._state:Set("processedReceiptIds", processed)
+
+    if self._persistence and type(self._persistence.MarkReceiptProcessed) == "function" then
+        pcall(function()
+            self._persistence:MarkReceiptProcessed(receiptKey, {
+                source = "ShopSystem",
+            })
+        end)
+    end
 end
 
 function Controller:_isReceiptProcessed(receiptId)
-    return self:_processedReceipts()[tostring(receiptId)] == true
+    local receiptKey = tostring(receiptId)
+    if self:_processedReceipts()[receiptKey] == true then
+        return true
+    end
+
+    if self._persistence and type(self._persistence.HasProcessedReceipt) == "function" then
+        local ok, persisted = pcall(function()
+            return self._persistence:HasProcessedReceipt(receiptKey)
+        end)
+        if ok and persisted == true then
+            local processed = self:_processedReceipts()
+            processed[receiptKey] = true
+            self._state:Set("processedReceiptIds", processed)
+            return true
+        end
+    end
+
+    return false
 end
 
 function Controller:_trackMarketplacePrompt(player, itemId, item)
