@@ -247,6 +247,14 @@ local function ensureNamedScale(guiObject, name)
 	return scale
 end
 
+local function setOffsetBounds(guiObject, x, y, width, height)
+	if not guiObject then
+		return
+	end
+	guiObject.Position = UDim2.fromOffset(math.floor(x), math.floor(y))
+	guiObject.Size = UDim2.fromOffset(math.floor(width), math.floor(height))
+end
+
 local function tweenInstance(instance, tweenInfo, properties)
 	local tween = TweenService:Create(instance, tweenInfo, properties)
 	tween:Play()
@@ -5237,6 +5245,429 @@ function UISystem:_setSelectableStyle(guiObject)
 	end))
 end
 
+function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, bottomRightInset)
+	local widgets = self._roomBrowserWidgets
+	if not widgets or not widgets.RootPanel then
+		return
+	end
+
+	local panel = widgets.RootPanel
+	local title = widgets.HeaderTitle
+	local titleGlow = widgets.HeaderTitleGlow
+	local statusLabel = widgets.Status
+	local closeButton = panel:FindFirstChild("CloseButton")
+	local dragBar = panel:FindFirstChild("DragBar")
+	local panelScale = panel:FindFirstChildOfClass("UIScale")
+	local roomList = widgets.RoomList
+	local roomPreviewPanel = widgets.RoomPreviewPanel
+	local roomPreviewTitle = widgets.RoomPreviewTitle
+	local roomPreviewInfo = widgets.RoomPreviewInfo
+	local roomPreviewMap = widgets.RoomPreviewMap
+	local roomPreviewPlayersList = widgets.RoomPreviewPlayersList
+	local joinPassword = widgets.JoinPassword
+	local refreshButton = widgets.RefreshButton
+	local createRoomButton = widgets.CreateRoomButton
+	local queueButton = widgets.QueueButton
+	local quickClassicButton = widgets.QuickJoinClassicButton
+	local quickRankedButton = widgets.QuickJoinRankedButton
+	local roomPanel = widgets.RoomPanel
+	local roomTitle = widgets.RoomTitle
+	local roomHost = widgets.RoomHost
+	local playersList = widgets.PlayersList
+	local readyButton = widgets.ReadyButton
+	local startButton = widgets.StartButton
+	local cancelStartButton = widgets.CancelStartButton
+	local modeSelector = widgets.ModeSelector
+	local modeDropdown = widgets.ModeDropdown
+	local mapSelector = widgets.MapSelector
+	local mapDropdown = widgets.MapDropdown
+	local rankedTierLabel = widgets.RankedTierLabel
+	local mapPreview = widgets.MapPreview
+	local setPasswordBox = widgets.SetPasswordBox
+	local setPasswordButton = widgets.SetPasswordButton
+	local inviteButton = widgets.InviteButton
+	local inviteDropdown = widgets.InviteDropdown
+	local kickNameBox = widgets.KickNameBox
+	local kickButton = widgets.KickButton
+	local floatButton = widgets.FloatButton
+	local countdownOverlay = widgets.CountdownOverlay
+	local countdownLabel = widgets.CountdownLabel
+	local cancelCountdown = widgets.CancelCountdown
+
+	local playersLabel = roomPanel and roomPanel:FindFirstChild("PlayersLabel")
+	local mapPreviewTitle = mapPreview and mapPreview:FindFirstChild("Title")
+	local mapPreviewLabel = mapPreview and mapPreview:FindFirstChild("Label")
+	local mapPreviewImage = mapPreview and mapPreview:FindFirstChild("MapImagePlaceholder")
+	local mapPreviewImageChip = mapPreviewImage and mapPreviewImage:FindFirstChild("MoodChip")
+	local mapPreviewImageLabel = mapPreviewImage and mapPreviewImage:FindFirstChild("ImageLabel")
+	local mapPreviewImageStats = mapPreviewImage and mapPreviewImage:FindFirstChild("Stats")
+	local mapPreviewImageFooter = mapPreviewImage and mapPreviewImage:FindFirstChild("Footer")
+	local roomPreviewPlayersTitle = roomPreviewPanel and roomPreviewPanel:FindFirstChild("PlayersTitle")
+	local roomPreviewPlayersLayout = roomPreviewPlayersList and roomPreviewPlayersList:FindFirstChildOfClass("UIGridLayout")
+	local playersListLayout = playersList and playersList:FindFirstChildOfClass("UIGridLayout")
+	local modeClassicOption = modeDropdown and modeDropdown:FindFirstChild("ClassicOption")
+	local modeRankedOption = modeDropdown and modeDropdown:FindFirstChild("RankedOption")
+	local mapOptions = {}
+	if mapDropdown then
+		for _, child in ipairs(mapDropdown:GetChildren()) do
+			if child:IsA("TextButton") and string.find(child.Name, "MapOption_", 1, true) == 1 then
+				table.insert(mapOptions, child)
+			end
+		end
+		table.sort(mapOptions, function(a, b)
+			return a.Name < b.Name
+		end)
+	end
+
+	local margin = profile.isMobile and 10 or 14
+	local usableWidth = math.max(360, viewportSize.X - (topLeftInset.X + bottomRightInset.X + margin * 2))
+	local usableHeight = math.max(420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + margin * 2))
+	local isCompact = profile.isMobile or viewportSize.X <= 980
+	self._roomBrowserCompact = isCompact
+
+	local panelWidth = isCompact and usableWidth or math.min(1080, usableWidth)
+	local panelHeight = isCompact and usableHeight or math.min(668, usableHeight)
+	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
+	panel.Position = UDim2.fromOffset(
+		topLeftInset.X + margin + math.floor(panelWidth * 0.5),
+		topLeftInset.Y + margin + math.floor(panelHeight * 0.5)
+	)
+	panel.BackgroundTransparency = isCompact and 0.14 or 0.18
+	panel.ClipsDescendants = true
+	if panelScale then
+		panelScale.Scale = 1
+	end
+
+	local headerPadding = isCompact and 14 or 16
+	local headerWidth = panelWidth - (headerPadding * 2) - 42
+	if dragBar then
+		setOffsetBounds(dragBar, 0, 0, panelWidth, isCompact and 52 or 44)
+		dragBar.Active = not profile.isMobile
+	end
+	if closeButton then
+		setOffsetBounds(closeButton, panelWidth - 46, 10, 34, 28)
+		closeButton.TextSize = isCompact and 14 or 13
+	end
+	if title then
+		setOffsetBounds(title, headerPadding, 8, headerWidth, isCompact and 28 or 30)
+		title.TextSize = isCompact and 22 or 25
+	end
+	if titleGlow and title then
+		titleGlow.Position = title.Position + UDim2.fromOffset(2, 2)
+		titleGlow.Size = title.Size
+		titleGlow.TextSize = title.TextSize
+	end
+	if statusLabel then
+		setOffsetBounds(statusLabel, headerPadding, isCompact and 40 or 44, panelWidth - headerPadding * 2, 24)
+		statusLabel.TextSize = isCompact and 13 or 12
+	end
+
+	local controlsY = isCompact and 72 or 74
+	local tabHeight = isCompact and 36 or 30
+	local tabGap = 6
+	local tabWidth = math.floor((panelWidth - headerPadding * 2 - (tabGap * 2)) / 3)
+	setOffsetBounds(widgets.ClassicButton, headerPadding, controlsY, tabWidth, tabHeight)
+	setOffsetBounds(widgets.AllModesButton, headerPadding + tabWidth + tabGap, controlsY, tabWidth, tabHeight)
+	setOffsetBounds(widgets.RankedButton, headerPadding + (tabWidth + tabGap) * 2, controlsY, tabWidth, tabHeight)
+	if widgets.ClassicButton then
+		widgets.ClassicButton.TextSize = isCompact and 13 or 12
+	end
+	if widgets.AllModesButton then
+		widgets.AllModesButton.TextSize = isCompact and 13 or 12
+	end
+	if widgets.RankedButton then
+		widgets.RankedButton.TextSize = isCompact and 13 or 12
+	end
+
+	local previewMapTitle = roomPreviewMap and roomPreviewMap:FindFirstChild("MapTitle")
+	local previewMapMood = roomPreviewMap and roomPreviewMap:FindFirstChild("Mood")
+	local previewMapStats = roomPreviewMap and roomPreviewMap:FindFirstChild("Stats")
+	local previewMapFooter = roomPreviewMap and roomPreviewMap:FindFirstChild("MapLabel")
+	local previewMapAccent = roomPreviewMap and roomPreviewMap:FindFirstChild("Accent")
+	local previewMapGradient = roomPreviewMap and roomPreviewMap:FindFirstChild("PreviewGradient")
+
+	local contentTop = controlsY + tabHeight + 12
+	local actionStackHeight = isCompact and 130 or 128
+	if isCompact then
+		local previewWidth = panelWidth - headerPadding * 2
+		local previewHeight = math.clamp(math.floor(panelHeight * 0.36), 254, 320)
+		local actionY = panelHeight - actionStackHeight
+		local roomListY = contentTop + previewHeight + 12
+		local roomListHeight = actionY - roomListY - 10
+		if roomListHeight < 140 then
+			local deficit = 140 - roomListHeight
+			previewHeight = math.max(224, previewHeight - deficit)
+			roomListY = contentTop + previewHeight + 12
+			roomListHeight = math.max(140, actionY - roomListY - 10)
+		end
+
+		setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, previewWidth, previewHeight)
+		setOffsetBounds(roomList, headerPadding, roomListY, previewWidth, roomListHeight)
+		setOffsetBounds(joinPassword, headerPadding, actionY - 42, previewWidth, 34)
+		setOffsetBounds(queueButton, headerPadding, actionY, previewWidth, 42)
+		setOffsetBounds(quickClassicButton, headerPadding, actionY + 46, math.floor((previewWidth - 6) * 0.5), 36)
+		setOffsetBounds(quickRankedButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, actionY + 46, math.floor((previewWidth - 6) * 0.5), 36)
+		setOffsetBounds(refreshButton, headerPadding, actionY + 86, math.floor((previewWidth - 6) * 0.5), 36)
+		setOffsetBounds(createRoomButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, actionY + 86, math.floor((previewWidth - 6) * 0.5), 36)
+
+		local previewMapHeight = math.clamp(math.floor(previewHeight * 0.45), 112, 136)
+		setOffsetBounds(roomPreviewTitle, 12, 10, previewWidth - 24, 18)
+		setOffsetBounds(roomPreviewInfo, 12, 30, previewWidth - 24, 30)
+		setOffsetBounds(roomPreviewMap, 12, 66, previewWidth - 24, previewMapHeight)
+		setOffsetBounds(roomPreviewPlayersTitle, 12, 66 + previewMapHeight + 10, previewWidth - 24, 16)
+		setOffsetBounds(roomPreviewPlayersList, 12, 66 + previewMapHeight + 30, previewWidth - 24, previewHeight - (66 + previewMapHeight + 40))
+		if previewMapTitle then
+			setOffsetBounds(previewMapTitle, 16, 8, previewWidth - 48, 14)
+			previewMapTitle.TextSize = 10
+		end
+		if previewMapMood then
+			setOffsetBounds(previewMapMood, previewWidth - 24 - 144, 8, 144, 18)
+			previewMapMood.TextSize = 10
+		end
+		if previewMapFooter then
+			setOffsetBounds(previewMapFooter, 16, 30, previewWidth - 48, 44)
+			previewMapFooter.TextSize = 13
+		end
+		if previewMapStats then
+			setOffsetBounds(previewMapStats, 16, previewMapHeight - 24, previewWidth - 48, 16)
+			previewMapStats.TextSize = 10
+		end
+		if previewMapAccent then
+			setOffsetBounds(previewMapAccent, 0, 0, 6, previewMapHeight)
+		end
+		if previewMapGradient then
+			previewMapGradient.Rotation = 14
+		end
+
+		if roomPreviewPlayersLayout then
+			roomPreviewPlayersLayout.FillDirectionMaxCells = 1
+			roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(previewWidth - 36, 74)
+		end
+	else
+		local listWidth = math.clamp(math.floor(panelWidth * 0.39), 380, 432)
+		local previewX = headerPadding + listWidth + 16
+		local previewWidth = panelWidth - previewX - headerPadding
+		local actionY = panelHeight - actionStackHeight
+		local roomListHeight = actionY - contentTop - 10
+
+		setOffsetBounds(roomList, headerPadding, contentTop, listWidth, roomListHeight)
+		setOffsetBounds(roomPreviewPanel, previewX, contentTop, previewWidth, panelHeight - contentTop - headerPadding)
+		setOffsetBounds(joinPassword, headerPadding, actionY - 40, listWidth, 30)
+		setOffsetBounds(queueButton, headerPadding, actionY, listWidth, 40)
+		setOffsetBounds(quickClassicButton, headerPadding, actionY + 44, math.floor((listWidth - 6) * 0.5), 38)
+		setOffsetBounds(quickRankedButton, headerPadding + math.floor((listWidth - 6) * 0.5) + 6, actionY + 44, math.floor((listWidth - 6) * 0.5), 38)
+		setOffsetBounds(refreshButton, headerPadding, actionY + 86, math.floor((listWidth - 6) * 0.5), 36)
+		setOffsetBounds(createRoomButton, headerPadding + math.floor((listWidth - 6) * 0.5) + 6, actionY + 86, math.floor((listWidth - 6) * 0.5), 36)
+
+		local previewHeight = panelHeight - contentTop - headerPadding
+		local previewMapHeight = math.clamp(math.floor(previewHeight * 0.32), 112, 136)
+		setOffsetBounds(roomPreviewTitle, 12, 10, previewWidth - 24, 20)
+		setOffsetBounds(roomPreviewInfo, 12, 32, previewWidth - 24, 20)
+		setOffsetBounds(roomPreviewMap, 12, 58, previewWidth - 24, previewMapHeight)
+		setOffsetBounds(roomPreviewPlayersTitle, 12, 58 + previewMapHeight + 8, previewWidth - 24, 16)
+		setOffsetBounds(roomPreviewPlayersList, 12, 58 + previewMapHeight + 28, previewWidth - 24, previewHeight - (58 + previewMapHeight + 40))
+		if previewMapTitle then
+			setOffsetBounds(previewMapTitle, 16, 8, previewWidth - 48, 14)
+		end
+		if previewMapMood then
+			setOffsetBounds(previewMapMood, previewWidth - 24 - 148, 8, 148, 18)
+		end
+		if previewMapFooter then
+			setOffsetBounds(previewMapFooter, 16, 30, previewWidth - 48, 46)
+		end
+		if previewMapStats then
+			setOffsetBounds(previewMapStats, 16, previewMapHeight - 24, previewWidth - 48, 16)
+		end
+		if previewMapAccent then
+			setOffsetBounds(previewMapAccent, 0, 0, 6, previewMapHeight)
+		end
+		if roomPreviewPlayersLayout then
+			local cellWidth = math.max(186, math.floor((previewWidth - 38) * 0.5))
+			roomPreviewPlayersLayout.FillDirectionMaxCells = 2
+			roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(cellWidth, 78)
+		end
+	end
+
+	if roomPreviewPlayersList then
+		roomPreviewPlayersList.ScrollBarThickness = isCompact and 6 or 4
+	end
+	if roomList then
+		roomList.ScrollBarThickness = isCompact and 6 or 4
+	end
+	if joinPassword then
+		joinPassword.TextSize = isCompact and 14 or 12
+	end
+	if refreshButton then
+		refreshButton.TextSize = isCompact and 13 or 12
+	end
+	if createRoomButton then
+		createRoomButton.TextSize = isCompact and 13 or 12
+	end
+	if queueButton then
+		queueButton.TextSize = isCompact and 14 or 12
+	end
+	if quickClassicButton then
+		quickClassicButton.TextSize = isCompact and 13 or 11
+	end
+	if quickRankedButton then
+		quickRankedButton.TextSize = isCompact and 13 or 11
+	end
+
+	if roomPanel then
+		roomPanel.Position = UDim2.fromOffset(0, 0)
+		roomPanel.Size = UDim2.fromScale(1, 1)
+		roomPanel.ScrollBarThickness = isCompact and 6 or 4
+	end
+
+	if isCompact then
+		local contentWidth = panelWidth - headerPadding * 2
+		local mapPreviewHeight = 176
+		local playersY = 72 + mapPreviewHeight + 30
+		local playersHeight = math.clamp(math.floor(panelHeight * 0.24), 150, 196)
+		local controlsY = playersY + playersHeight + 12
+		local mapSelectorY = controlsY + 122
+		local setPasswordY = mapSelectorY + 162
+		local kickRowY = setPasswordY + 42
+		local inviteY = kickRowY + 42
+		local readyY = inviteY + 46
+		local leaveY = readyY + 48
+		local roomCanvasHeight = leaveY + 54
+
+		setOffsetBounds(roomTitle, headerPadding, 12, contentWidth, 24)
+		setOffsetBounds(roomHost, headerPadding, 38, contentWidth, 18)
+		setOffsetBounds(mapPreview, headerPadding, 72, contentWidth, mapPreviewHeight)
+		if playersLabel then
+			setOffsetBounds(playersLabel, headerPadding, playersY - 20, contentWidth, 18)
+			playersLabel.TextSize = 13
+		end
+		setOffsetBounds(playersList, headerPadding, playersY, contentWidth, playersHeight)
+		if playersListLayout then
+			playersListLayout.FillDirectionMaxCells = 1
+			playersListLayout.CellSize = UDim2.fromOffset(contentWidth - 16, 108)
+		end
+		setOffsetBounds(modeSelector, headerPadding, controlsY, contentWidth, 36)
+		setOffsetBounds(modeDropdown, headerPadding, controlsY + 40, contentWidth, 72)
+		if modeClassicOption then
+			setOffsetBounds(modeClassicOption, 8, 8, contentWidth - 16, 26)
+			modeClassicOption.TextSize = 12
+		end
+		if modeRankedOption then
+			setOffsetBounds(modeRankedOption, 8, 38, contentWidth - 16, 26)
+			modeRankedOption.TextSize = 12
+		end
+		setOffsetBounds(mapSelector, headerPadding, mapSelectorY, contentWidth, 36)
+		setOffsetBounds(rankedTierLabel, headerPadding, mapSelectorY, contentWidth, 36)
+		setOffsetBounds(mapDropdown, headerPadding, mapSelectorY + 40, contentWidth, 112)
+		for index, option in ipairs(mapOptions) do
+			setOffsetBounds(option, 8, 8 + (index - 1) * 26, contentWidth - 16, 22)
+			option.TextSize = 12
+		end
+		setOffsetBounds(setPasswordBox, headerPadding, setPasswordY, contentWidth - 122, 34)
+		setOffsetBounds(setPasswordButton, headerPadding + contentWidth - 116, setPasswordY, 116, 34)
+		setOffsetBounds(kickNameBox, headerPadding, kickRowY, contentWidth - 122, 34)
+		setOffsetBounds(kickButton, headerPadding + contentWidth - 116, kickRowY, 116, 34)
+		setOffsetBounds(inviteButton, headerPadding, inviteY, contentWidth, 36)
+		setOffsetBounds(inviteDropdown, headerPadding, inviteY + 40, contentWidth, 156)
+		setOffsetBounds(readyButton, headerPadding, readyY, contentWidth, 42)
+		setOffsetBounds(startButton, headerPadding, readyY, contentWidth, 42)
+		setOffsetBounds(cancelStartButton, headerPadding, readyY + 46, contentWidth, 34)
+		setOffsetBounds(panel:FindFirstChild("RoomPanel"):FindFirstChild("LeaveRoomButton"), headerPadding, leaveY, contentWidth, 36)
+		roomCanvasHeight = math.max(roomCanvasHeight, inviteY + 204)
+		roomPanel.CanvasSize = UDim2.fromOffset(0, roomCanvasHeight)
+	end
+
+	if not isCompact then
+		local leftWidth = math.clamp(math.floor((panelWidth - (headerPadding * 2) - 16) * 0.42), 392, 448)
+		local rightX = headerPadding + leftWidth + 16
+		local rightWidth = panelWidth - rightX - headerPadding
+		local hostFooterY = panelHeight - 80
+
+		setOffsetBounds(roomTitle, headerPadding, 12, leftWidth, 24)
+		setOffsetBounds(roomHost, headerPadding, 38, leftWidth, 18)
+		setOffsetBounds(mapPreview, headerPadding, 72, leftWidth, 208)
+		if playersLabel then
+			setOffsetBounds(playersLabel, rightX, 12, rightWidth, 16)
+			playersLabel.TextSize = 12
+		end
+		setOffsetBounds(playersList, rightX, 34, rightWidth, panelHeight - 126)
+		if playersListLayout then
+			local playerCellWidth = math.max(180, math.floor((rightWidth - 18) * 0.5))
+			playersListLayout.FillDirectionMaxCells = 2
+			playersListLayout.CellSize = UDim2.fromOffset(playerCellWidth, 132)
+		end
+		setOffsetBounds(modeSelector, headerPadding, 292, leftWidth, 32)
+		setOffsetBounds(modeDropdown, headerPadding, 328, leftWidth, 72)
+		if modeClassicOption then
+			setOffsetBounds(modeClassicOption, 8, 8, leftWidth - 16, 26)
+		end
+		if modeRankedOption then
+			setOffsetBounds(modeRankedOption, 8, 38, leftWidth - 16, 26)
+		end
+		setOffsetBounds(mapSelector, headerPadding, 406, leftWidth, 32)
+		setOffsetBounds(rankedTierLabel, headerPadding, 406, leftWidth, 32)
+		setOffsetBounds(mapDropdown, headerPadding, 442, leftWidth, 112)
+		for index, option in ipairs(mapOptions) do
+			setOffsetBounds(option, 8, 8 + (index - 1) * 26, leftWidth - 16, 22)
+		end
+		setOffsetBounds(setPasswordBox, headerPadding, 562, leftWidth - 122, 32)
+		setOffsetBounds(setPasswordButton, headerPadding + leftWidth - 116, 562, 116, 32)
+		setOffsetBounds(kickNameBox, headerPadding, 600, leftWidth - 122, 30)
+		setOffsetBounds(kickButton, headerPadding + leftWidth - 116, 600, 116, 30)
+		setOffsetBounds(inviteButton, rightX, hostFooterY, rightWidth, 32)
+		setOffsetBounds(inviteDropdown, rightX, math.max(220, hostFooterY - 224), rightWidth, 216)
+		setOffsetBounds(readyButton, headerPadding, panelHeight - 80, leftWidth, 36)
+		setOffsetBounds(startButton, headerPadding, panelHeight - 80, leftWidth, 36)
+		setOffsetBounds(cancelStartButton, headerPadding, panelHeight - 40, leftWidth, 28)
+		setOffsetBounds(panel:FindFirstChild("RoomPanel"):FindFirstChild("LeaveRoomButton"), headerPadding, panelHeight - 40, leftWidth, 28)
+		roomPanel.CanvasSize = UDim2.fromOffset(0, panelHeight)
+	end
+
+	if mapPreviewTitle then
+		setOffsetBounds(mapPreviewTitle, 10, 8, mapPreview.AbsoluteSize.X - 20, 14)
+		mapPreviewTitle.TextSize = isCompact and 10 or 10
+	end
+	if mapPreviewLabel then
+		setOffsetBounds(mapPreviewLabel, 10, 26, mapPreview.AbsoluteSize.X - 20, 16)
+		mapPreviewLabel.TextSize = isCompact and 12 or 12
+	end
+	if mapPreviewImage then
+		local imageWidth = math.min(math.floor((mapPreview.AbsoluteSize.X or 200) - 24), isCompact and 240 or 220)
+		local imageHeight = isCompact and 126 or 150
+		setOffsetBounds(mapPreviewImage, math.floor(((mapPreview.AbsoluteSize.X or imageWidth) - imageWidth) * 0.5), isCompact and 48 or 46, imageWidth, imageHeight)
+	end
+	if mapPreviewImageChip and mapPreviewImage then
+		setOffsetBounds(mapPreviewImageChip, 12, 10, math.min(140, mapPreviewImage.AbsoluteSize.X - 24), 18)
+		mapPreviewImageChip.TextSize = 10
+	end
+	if mapPreviewImageLabel and mapPreviewImage then
+		setOffsetBounds(mapPreviewImageLabel, 12, 28, mapPreviewImage.AbsoluteSize.X - 24, isCompact and 58 or 76)
+		mapPreviewImageLabel.TextSize = isCompact and 36 or 42
+	end
+	if mapPreviewImageStats and mapPreviewImage then
+		setOffsetBounds(mapPreviewImageStats, 12, mapPreviewImage.AbsoluteSize.Y - 42, mapPreviewImage.AbsoluteSize.X - 24, 16)
+		mapPreviewImageStats.TextSize = 10
+	end
+	if mapPreviewImageFooter and mapPreviewImage then
+		setOffsetBounds(mapPreviewImageFooter, 12, mapPreviewImage.AbsoluteSize.Y - 24, mapPreviewImage.AbsoluteSize.X - 24, 18)
+		mapPreviewImageFooter.TextSize = 12
+	end
+	if floatButton then
+		local floatSize = profile.isConsole and 84 or (profile.isMobile and 72 or 68)
+		floatButton.Size = UDim2.fromOffset(floatSize, floatSize)
+		floatButton.Position = UDim2.new(1, -(16 + bottomRightInset.X), isCompact and 0.72 or 0.56, 0)
+		floatButton.TextSize = profile.isMobile and 11 or 12
+	end
+	if countdownLabel then
+		countdownLabel.TextSize = isCompact and 72 or 96
+	end
+	if cancelCountdown then
+		cancelCountdown.Size = UDim2.fromOffset(isCompact and 240 or 220, isCompact and 42 or 38)
+	end
+	if countdownOverlay then
+		countdownOverlay.ZIndex = 40
+	end
+end
+
 function UISystem:_applyDeviceSizing()
 	local profile = self._deviceProfile
 	if not profile then
@@ -5445,30 +5876,7 @@ function UISystem:_applyDeviceSizing()
 		end
 	end
 
-	local widgets = self._roomBrowserWidgets
-	if widgets and widgets.FloatButton then
-		local sizePx = 72
-		if profile.isMobile then
-			sizePx = 78
-		elseif profile.isConsole then
-			sizePx = 84
-		end
-		local _, bottomRightInset = resolveSafeInsets()
-		widgets.FloatButton.Size = UDim2.fromOffset(sizePx, sizePx)
-		widgets.FloatButton.Position = UDim2.new(1, -(20 + bottomRightInset.X), 0.56, 0)
-	end
-	if widgets and widgets.RoomPreviewPlayersList then
-		local layout = widgets.RoomPreviewPlayersList:FindFirstChildOfClass("UIGridLayout")
-		if layout then
-			if profile.isMobile then
-				layout.FillDirectionMaxCells = 1
-				layout.CellSize = UDim2.fromOffset(442, 78)
-			else
-				layout.FillDirectionMaxCells = 2
-				layout.CellSize = UDim2.fromOffset(220, 78)
-			end
-		end
-	end
+	self:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, bottomRightInset)
 	self:_layoutLobbyFloatRail()
 end
 
@@ -8474,17 +8882,7 @@ function UISystem:_ensureRoomBrowserGui()
 	panelScale.Parent = panel
 
 	local function updateRoomBrowserPanelScale()
-		local viewport = Vector2.new(1920, 1080)
-		local camera = Workspace.CurrentCamera
-		if camera and typeof(camera.ViewportSize) == "Vector2" then
-			viewport = camera.ViewportSize
-		end
-		local topLeftInset, bottomRightInset = resolveSafeInsets()
-		local availableWidth = math.max(360, viewport.X - (topLeftInset.X + bottomRightInset.X + 24))
-		local availableHeight = math.max(420, viewport.Y - (topLeftInset.Y + bottomRightInset.Y + 24))
-		local scaleX = availableWidth / 920
-		local scaleY = availableHeight / 560
-		panelScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.48, 1.18)
+		panelScale.Scale = 1
 	end
 	updateRoomBrowserPanelScale()
 	if Workspace.CurrentCamera then
@@ -8957,13 +9355,18 @@ function UISystem:_ensureRoomBrowserGui()
 	quickRankedBtn.BackgroundColor3 = Color3.fromRGB(108, 78, 132)
 	quickRankedBtn.Parent = panel
 
-	local roomPanel = Instance.new("Frame")
+	local roomPanel = Instance.new("ScrollingFrame")
 	roomPanel.Name = "RoomPanel"
 	roomPanel.Position = UDim2.fromOffset(0, 0)
 	roomPanel.Size = UDim2.fromScale(1, 1)
 	roomPanel.BackgroundColor3 = Color3.fromRGB(26, 32, 42)
 	roomPanel.BackgroundTransparency = 0
 	roomPanel.BorderSizePixel = 0
+	roomPanel.AutomaticCanvasSize = Enum.AutomaticSize.None
+	roomPanel.CanvasSize = UDim2.fromOffset(0, 0)
+	roomPanel.ScrollBarThickness = 6
+	roomPanel.ScrollingDirection = Enum.ScrollingDirection.Y
+	roomPanel.Active = true
 	roomPanel.Visible = false
 	roomPanel.Parent = panel
 
@@ -9729,11 +10132,12 @@ function UISystem:_ensureRoomBrowserGui()
 			return
 		end
 
+		local compactPreview = self._roomBrowserCompact == true
 		for _, info in ipairs(players) do
 			local card = Instance.new("Frame")
 			card.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
 			card.BorderSizePixel = 0
-			card.Size = UDim2.fromOffset(220, 78)
+			card.Size = UDim2.fromOffset(compactPreview and 320 or 220, compactPreview and 74 or 78)
 			card.Parent = roomPreviewPlayersList
 			local cardCorner = Instance.new("UICorner")
 			cardCorner.CornerRadius = UDim.new(0, 8)
@@ -9747,7 +10151,7 @@ function UISystem:_ensureRoomBrowserGui()
 			preview.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
 			preview.BorderSizePixel = 0
 			preview.Position = UDim2.fromOffset(6, 6)
-			preview.Size = UDim2.fromOffset(54, 66)
+			preview.Size = UDim2.fromOffset(compactPreview and 52 or 54, compactPreview and 62 or 66)
 			preview.Parent = card
 			local previewCorner = Instance.new("UICorner")
 			previewCorner.CornerRadius = UDim.new(0, 6)
@@ -9757,11 +10161,11 @@ function UISystem:_ensureRoomBrowserGui()
 			local nameLabel = Instance.new("TextLabel")
 			nameLabel.BackgroundTransparency = 1
 			nameLabel.Position = UDim2.fromOffset(66, 7)
-			nameLabel.Size = UDim2.fromOffset(146, 32)
+			nameLabel.Size = UDim2.fromOffset(compactPreview and 226 or 146, 32)
 			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 			nameLabel.TextYAlignment = Enum.TextYAlignment.Top
 			nameLabel.Font = Enum.Font.GothamBold
-			nameLabel.TextSize = 10
+			nameLabel.TextSize = compactPreview and 11 or 10
 			nameLabel.TextWrapped = true
 			nameLabel.TextColor3 = Color3.fromRGB(236, 240, 245)
 			local roleTag = info.isHost and "[HOST]" or "[MEMBER]"
@@ -9771,10 +10175,10 @@ function UISystem:_ensureRoomBrowserGui()
 			local stateLabel = Instance.new("TextLabel")
 			stateLabel.BackgroundTransparency = 1
 			stateLabel.Position = UDim2.fromOffset(66, 44)
-			stateLabel.Size = UDim2.fromOffset(146, 20)
+			stateLabel.Size = UDim2.fromOffset(compactPreview and 226 or 146, 20)
 			stateLabel.TextXAlignment = Enum.TextXAlignment.Left
 			stateLabel.Font = Enum.Font.GothamSemibold
-			stateLabel.TextSize = 10
+			stateLabel.TextSize = compactPreview and 11 or 10
 			stateLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 220, 145) or Color3.fromRGB(255, 195, 120)
 			stateLabel.Text = info.isReady and "READY" or "NOT READY"
 			stateLabel.Parent = card
@@ -9782,6 +10186,7 @@ function UISystem:_ensureRoomBrowserGui()
 	end
 
 	local function renderRoomList(rooms)
+		local compactRoomBrowser = self._roomBrowserCompact == true
 		local roomIdSet = {}
 		for _, room in ipairs(rooms or {}) do
 			roomIdSet[tostring(room.roomId)] = true
@@ -9798,12 +10203,14 @@ function UISystem:_ensureRoomBrowserGui()
 		for _, room in ipairs(rooms or {}) do
 			local row = Instance.new("TextButton")
 			row.Name = "Room_" .. tostring(room.roomId)
-			row.Size = UDim2.new(1, -8, 0, 36)
+			row.Size = UDim2.new(1, -8, 0, compactRoomBrowser and 56 or 36)
 			row.LayoutOrder = room.roomId
 			row.BorderSizePixel = 0
 			row.Font = Enum.Font.Gotham
-			row.TextSize = 13
+			row.TextSize = compactRoomBrowser and 14 or 13
 			row.TextXAlignment = Enum.TextXAlignment.Left
+			row.TextYAlignment = Enum.TextYAlignment.Center
+			row.TextWrapped = compactRoomBrowser
 			row.Text = roomRowText(room)
 			row:SetAttribute("RoomId", room.roomId)
 			row:SetAttribute("InGame", room.inGame == true)
