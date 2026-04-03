@@ -4229,3 +4229,50 @@ Menyelaraskan hunt guidance UI agar mengenali hide spot runtime nyata, bukan sel
 
 1. checkpoint patch hunt refuge guidance
 2. lanjut ke teachability survive loop saat player masih `Exposed`, atau ke traversal/layout polish berikutnya
+
+## 2026-04-04 00:56 ICT
+
+### Task
+
+Mengeraskan lookup refuge client untuk state `Exposed` dengan fallback berbasis `HideSpotPrompt`, agar guidance tidak buta jika attribute hide spot datang belakangan.
+
+### Linked Issues
+
+- smoke `Exposed near Storage` sempat jatuh ke wording generik / safe-zone bias
+- jalur hidden sudah tervalidasi, tetapi jalur `Exposed` masih sensitif terhadap kapan `HideSpotId` dan `HideSpotType` tersedia di client
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `getNearestHideSpotInfo()` sekarang tidak hanya membaca:
+  - `HideSpotId`
+  - `HideSpotType`
+- ia juga bisa fallback ke:
+  - child `HideSpotPrompt`
+  - nama `Room_*` runtime
+- tujuan patch ini adalah mengecilkan race replication pada state `Exposed`, tanpa mengubah jalur final saat attribute sudah hadir normal
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_hunt_refuge_guidance_v3.rbxlx`
+- smoke runtime `Exposed` masih belum saya anggap proof final:
+  - sesi hunt berakhir/reset terlalu cepat untuk distance audit yang bersih
+  - tetapi patch fallback aman secara logika dan tidak mengubah proof runtime sebelumnya untuk hidden path
+
+### Interpretation
+
+- ini adalah hardening kecil, bukan closure final untuk teachability `Exposed`
+- debt berikutnya tetap sama:
+  - validasi final preferensi `HideSpot` vs `SafeZone` saat player masih `Exposed`
+  - atau lanjut ke slice traversal/layout yang lebih besar
+
+### Next Step
+
+1. checkpoint hardening fallback refuge lookup
+2. kembali ke validasi `Exposed` pada sesi runtime yang lebih stabil, atau lanjut ke gameplay/layout polish lain
