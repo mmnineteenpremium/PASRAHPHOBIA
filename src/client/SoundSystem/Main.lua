@@ -37,6 +37,10 @@ local LOOPED_CATEGORIES = {
 	AmbientAudio = true,
 }
 
+local ONESHOT_DEDUPE_WINDOW_SECONDS = {
+	HuntAudio = 2.25,
+}
+
 local function resolveTemplate(root, pathSegments)
 	local cursor = root
 	for _, segment in ipairs(pathSegments or {}) do
@@ -90,6 +94,7 @@ function SoundSystem:Init(context)
 	self._remotes = context.Remotes
 	self._connections = {}
 	self._lastAudioByCategory = {}
+	self._lastOneShotAtByKey = {}
 	self._managedControllers = {}
 	self._activeSounds = {}
 	self._audioTemplates = {}
@@ -248,6 +253,18 @@ function SoundSystem:_playLoopedCategory(category, template, payload)
 end
 
 function SoundSystem:_playOneShotCategory(category, template, payload)
+	local dedupeWindow = ONESHOT_DEDUPE_WINDOW_SECONDS[category]
+	if dedupeWindow and dedupeWindow > 0 then
+		local cueToken = tostring(payload and payload.cue or template.SoundId or "")
+		local dedupeKey = string.format("%s::%s", tostring(category), cueToken)
+		local now = tick()
+		local lastAt = self._lastOneShotAtByKey[dedupeKey]
+		if lastAt and (now - lastAt) < dedupeWindow then
+			return
+		end
+		self._lastOneShotAtByKey[dedupeKey] = now
+	end
+
 	local runtimeSound = template:Clone()
 	runtimeSound.Name = category .. "Runtime"
 	runtimeSound.Looped = false

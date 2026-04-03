@@ -1191,3 +1191,16 @@ Urutan yang paling masuk akal dari titik sekarang:
 - implikasi publish gate:
   - blocker lisensi audio bergeser dari “slot ambience kosong” menjadi pure polish keputusan ambience brand final
 
+## Update 2026-04-04 03:02 ICT
+
+- hardening audio transisi untuk laporan “double audio”:
+  - `UI.Main`:
+    - default dedupe `TeleportOverlay` dinaikkan dari `0.75s` -> `4s`
+    - event transisi yang berdekatan tidak lagi mudah memicu cue teleport berlapis
+  - `SoundSystem.Main`:
+    - tambah dedupe one-shot kategori `HuntAudio` (`2.25s` per cue)
+    - ini mencegah event hunt start duplikat memutar cue yang sama dua kali beruntun
+- validasi:
+  - build source sukses: `_tmp_audio_dedupe_guard.rbxlx`
+  - smoke play start/stop berhasil tanpa error sintaks
+

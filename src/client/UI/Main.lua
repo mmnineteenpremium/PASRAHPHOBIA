@@ -7232,7 +7232,7 @@ function UISystem:_showTeleportOverlay(durationSeconds, options)
 
 	local overlayAlreadyVisible = screen.Enabled == true and overlay.BackgroundTransparency <= 0.05
 	local suppressAudio = type(options) == "table" and options.suppressAudio == true
-	local dedupeWindowSeconds = tonumber(type(options) == "table" and options.dedupeWindowSeconds) or 0.75
+	local dedupeWindowSeconds = tonumber(type(options) == "table" and options.dedupeWindowSeconds) or 4
 	local now = tick()
 	local recentlyPlayed = self._lastTeleportOverlaySoundAt and (now - self._lastTeleportOverlaySoundAt) < math.max(0, dedupeWindowSeconds)
 

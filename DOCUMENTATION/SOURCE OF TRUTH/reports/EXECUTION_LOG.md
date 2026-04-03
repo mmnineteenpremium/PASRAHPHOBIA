@@ -4981,3 +4981,42 @@ Menutup blocker `AmbientLoop_Main` yang masih kosong agar jalur publish baseline
 
 1. lanjutkan QA manual “double audio after countdown” pada flow host-start -> teleport
 2. lanjutkan publish gate berikutnya (Pocong proof archive + legacy cleanup)
+
+## 2026-04-04 03:02 ICT
+
+### Task
+
+Menambah guard dedupe audio transisi untuk mengurangi risiko cue ganda pada fase countdown/teleport/hunt.
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `src/client/SoundSystem/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- teleport overlay:
+  - default dedupe window dinaikkan menjadi `4s` (dari `0.75s`)
+- hunt one-shot audio:
+  - `SoundSystem` sekarang punya dedupe key per `category::cue`
+  - `HuntAudio` diberi dedupe window `2.25s`
+  - event hunt duplikat berdekatan akan di-skip pada playback kedua
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output _tmp_audio_dedupe_guard.rbxlx`
+- smoke run:
+  - play start/stop berhasil
+  - tidak ada error sintaks dari patch dedupe
+
+### Interpretation
+
+- patch ini bukan pengganti QA pendengaran final, tetapi menutup kelas masalah event duplikat yang paling sering memicu audio dobel
+
+### Next Step
+
+1. lakukan verifikasi pendengaran manual flow host-start -> countdown -> teleport
+2. lanjutkan publish gate lisensi (`Pocong` proof archive + legacy cleanup)
