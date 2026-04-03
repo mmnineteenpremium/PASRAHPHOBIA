@@ -1585,16 +1585,6 @@ local function formatHideSpotLabel(zoneId)
 	return formatRuntimeAreaLabel(zoneId:gsub("^Room_", ""))
 end
 
-local function formatHideZoneLabel(zoneId, spotType)
-	if type(zoneId) ~= "string" or zoneId == "" then
-		return nil
-	end
-	if tostring(spotType or "") == "SafeZone" or zoneId:match("^SafeZone") then
-		return formatSafeZoneLabel(zoneId) or zoneId
-	end
-	return formatHideSpotLabel(zoneId) or formatRuntimeAreaLabel(zoneId) or zoneId
-end
-
 local function getActiveMatchMapModel()
 	local player = Players.LocalPlayer
 	if not player then
@@ -1633,6 +1623,42 @@ local function getActiveMatchMapModel()
 	end
 
 	return nil
+end
+
+local function getRuntimeHideSpotLabel(zoneId)
+	if type(zoneId) ~= "string" or zoneId == "" then
+		return nil
+	end
+
+	local mapModel = getActiveMatchMapModel()
+	local roomsFolder = mapModel and mapModel:FindFirstChild("Rooms", true)
+	if not roomsFolder then
+		return nil
+	end
+
+	for _, child in ipairs(roomsFolder:GetChildren()) do
+		if child:IsA("BasePart") then
+			local childHideSpotId = tostring(child:GetAttribute("HideSpotId") or "")
+			if childHideSpotId == zoneId or child.Name == zoneId then
+				local label = tostring(child:GetAttribute("HideSpotLabel") or "")
+				if label ~= "" then
+					return label
+				end
+			end
+		end
+	end
+
+	return nil
+end
+
+local function resolveHideZoneLabel(zoneId, spotType)
+	if type(zoneId) ~= "string" or zoneId == "" then
+		return nil
+	end
+	if tostring(spotType or "") == "SafeZone" or zoneId:match("^SafeZone") then
+		return formatSafeZoneLabel(zoneId) or zoneId
+	end
+	return getRuntimeHideSpotLabel(zoneId) or formatHideSpotLabel(zoneId) or formatRuntimeAreaLabel(zoneId) or zoneId
 end
 
 local function getNearestSafeZoneInfo()
@@ -1700,7 +1726,7 @@ local function getNearestHideSpotInfo()
 						kind = "HideSpot",
 						zoneId = hideSpotId,
 						spotType = hideSpotType,
-						label = formatHideZoneLabel(hideSpotId, hideSpotType) or hideSpotId,
+						label = resolveHideZoneLabel(hideSpotId, hideSpotType) or hideSpotId,
 						distance = distance,
 					}
 				end
@@ -1784,7 +1810,7 @@ local function getHuntObjectiveText()
 		if hideZoneId ~= "" then
 			return string.format(
 				"Berlindung di %s. Diam dan tunggu hunt selesai sebelum keluar.",
-				formatHideZoneLabel(hideZoneId, hideSpotType) or hideZoneId
+				resolveHideZoneLabel(hideZoneId, hideSpotType) or hideZoneId
 			)
 		end
 		return "Kamu sedang bersembunyi. Tunggu hunt selesai sebelum keluar."
@@ -1884,7 +1910,7 @@ local function getHuntControlsHintText()
 	local refugeHint = getRefugeHintText(nearestRefuge)
 	local alternateHint = getRefugeHintText(alternateRefuge)
 	if snapshot.hideState == "Hidden" then
-		local hiddenLabel = formatHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType) or refugeHint
+		local hiddenLabel = resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType) or refugeHint
 		return string.upper(hiddenLabel) .. "  •  DIAM  •  TUNGGU HUNT SELESAI"
 	end
 	if snapshot.threatState == "Sheltered" then
@@ -3462,7 +3488,7 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 				and string.format("%dst", math.max(0, math.floor(huntSnapshot.threatDistance + 0.5)))
 				or "-"
 			local zoneLabel = huntSnapshot.hideZoneId ~= ""
-				and (formatHideZoneLabel(huntSnapshot.hideZoneId, huntSnapshot.hideSpotType) or huntSnapshot.hideZoneId)
+				and (resolveHideZoneLabel(huntSnapshot.hideZoneId, huntSnapshot.hideSpotType) or huntSnapshot.hideZoneId)
 				or refugeHint
 			local guidance = "Menuju " .. refugeHint
 			if huntSnapshot.hideState == "Hidden" then

@@ -4545,3 +4545,50 @@ Menambah affordance visual runtime untuk hide spot canonical agar pemain lebih j
 
 1. lanjut ke review distribusi hide spot lintas map atau gameplay survival affordance berikutnya
 2. hindari menambah hide spot asal-asalan; tetap pakai room canonical yang benar-benar masuk akal secara layout
+
+## 2026-04-04 02:19 ICT
+
+### Task
+
+Menyambungkan `HideSpotLabel` runtime ke hunt guidance client agar teks objective memakai label refuge canonical dari map aktif.
+
+### Linked Issues
+
+- setelah marker hide spot aktif, client masih bisa jatuh ke label hasil format `zoneId`
+- itu tidak merusak gameplay, tetapi tetap lebih lemah daripada memakai label runtime yang sama dengan marker world-space
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- ditambahkan resolver client untuk membaca `HideSpotLabel` langsung dari room runtime aktif
+- `getNearestHideSpotInfo()` sekarang memprioritaskan label runtime tersebut
+- surface hunt yang menyebut refuge hidden/current sekarang memakai resolver baru, bukan hanya format `PasrahHideZoneId`
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_hide_label_fix.rbxlx`
+- validasi live di `HauntedHouse`:
+  - `OpenRoomBrowser -> CreateRoom -> Start`
+  - setelah teleport, player dipindah dekat `Room_ClosetA`
+  - `ForceHunt` dijalankan via `StudioE2EControl`
+  - hasil runtime:
+    - `HideSpotLabel = ClosetA`
+    - `player.MatchPhase = Hunt`
+    - `UXLayer.ObjectiveLabel = Ghost dekat (4st). Putus line-of-sight, rotasi lewat pintu, lalu masuk ClosetA 4st. Jika tertutup, menuju SafeZone 1 10st.`
+    - `MatchUI.HeaderCard.SecondaryLabel` menampilkan teks yang sama
+
+### Interpretation
+
+- jalur survival guidance sekarang konsisten dari world-space marker sampai teks objective/hint
+- ini menurunkan drift antara label visual hide spot dan label refuge yang dibaca UI client
+
+### Next Step
+
+1. lanjut ke review distribusi hide spot canonical lintas map
+2. atau kembali ke slice UI compact/mobile bila ingin menutup `P2.12` lebih jauh
