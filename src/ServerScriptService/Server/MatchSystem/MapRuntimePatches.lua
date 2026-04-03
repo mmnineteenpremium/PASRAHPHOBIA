@@ -20,6 +20,13 @@ local INTERACTION_REACHABILITY_FORWARD_STEPS = { 0, 4, 8, 12, 16, 20, 24, 28, 32
 local INTERACTION_REACHABILITY_LATERAL_STEPS = { 0, -4, 4, -8, 8, -12, 12 }
 local INTERACTION_REACHABILITY_GRID_RADIUS = 32
 local INTERACTION_REACHABILITY_GRID_STEP = 4
+local INTERACTION_POSITION_OVERRIDES = {
+	emptybuilding = {
+		Interact_WorkspaceOpen = Vector3.new(800, 2, -8),
+		Interact_OfficeB = Vector3.new(822.667, 2, -8),
+		Interact_Bathroom1 = Vector3.new(822, 2, -9),
+	},
+}
 local SAFE_ZONE_POSITION_OVERRIDES = {
 	abandonedpalace = {
 		SafeZone_1 = Vector3.new(-63.2, 4, 32.4),
@@ -38,6 +45,17 @@ local function normalizeToken(value)
 		return nil
 	end
 	return value:gsub("[%s_%-%.]+", ""):lower()
+end
+
+local function resolveMapOverrideToken(mapId, mapClone)
+	local primaryToken = normalizeToken(mapId)
+	if primaryToken then
+		return primaryToken
+	end
+	if typeof(mapClone) == "Instance" then
+		return normalizeToken(mapClone.Name)
+	end
+	return nil
 end
 
 local function getXZBounds(part)
@@ -223,10 +241,16 @@ local function patchSecondFloor(mapClone)
 	return didPatch
 end
 
-local function patchInteractionPoints(mapClone)
+local function patchInteractionPoints(mapId, mapClone)
 	if not mapClone or mapClone:GetAttribute(INTERACTION_PATCH_ATTR) == true then
 		return false
 	end
+
+	local mapToken = resolveMapOverrideToken(mapId, mapClone)
+	if mapToken and INTERACTION_POSITION_OVERRIDES[mapToken] == nil then
+		mapToken = resolveMapOverrideToken(nil, mapClone)
+	end
+	local interactionOverrides = mapToken and INTERACTION_POSITION_OVERRIDES[mapToken] or nil
 
 	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
 	local interactionPointsFolder = mapClone:FindFirstChild("InteractionPoints", true)
@@ -325,6 +349,10 @@ local function patchInteractionPoints(mapClone)
 			if room then
 				local targetPosition = room.Position + Vector3.new(0, INTERACTION_HEIGHT_OFFSET, 0)
 				targetPosition = findReachableInteractionPosition(primarySpawnPosition, targetPosition)
+				local explicitOverride = interactionOverrides and interactionOverrides[interactionPoint.Name]
+				if typeof(explicitOverride) == "Vector3" then
+					targetPosition = explicitOverride
+				end
 				if (interactionPoint.Position - targetPosition).Magnitude > 0.5 then
 					interactionPoint.CFrame = CFrame.new(targetPosition)
 					movedAny = true
@@ -403,7 +431,10 @@ local function patchDoorTraversal(mapClone)
 end
 
 local function patchSafeZones(mapId, mapClone)
-	local token = normalizeToken(mapId)
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if token and SAFE_ZONE_POSITION_OVERRIDES[token] == nil then
+		token = resolveMapOverrideToken(nil, mapClone)
+	end
 	local overrides = token and SAFE_ZONE_POSITION_OVERRIDES[token]
 	if not mapClone or not overrides or mapClone:GetAttribute(SAFE_ZONE_PATCH_ATTR) == true then
 		return false
@@ -436,7 +467,7 @@ local function patchSafeZones(mapId, mapClone)
 end
 
 function MapRuntimePatches.Apply(mapId, mapClone)
-	local token = normalizeToken(mapId)
+	local token = resolveMapOverrideToken(mapId, mapClone)
 	if token == nil or mapClone == nil then
 		return false
 	end
@@ -444,7 +475,7 @@ function MapRuntimePatches.Apply(mapId, mapClone)
 	local didPatch = false
 	didPatch = patchSecondFloor(mapClone) or didPatch
 	didPatch = patchDoorTraversal(mapClone) or didPatch
-	didPatch = patchInteractionPoints(mapClone) or didPatch
+	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
 	return didPatch
 end

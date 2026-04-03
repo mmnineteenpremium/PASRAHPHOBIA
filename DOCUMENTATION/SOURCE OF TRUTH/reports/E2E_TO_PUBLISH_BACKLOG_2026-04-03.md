@@ -294,16 +294,17 @@ Status:
   - `AbandonedPalace`: `2/2` safe zone path success setelah runtime nudge `SafeZone_1`
   - `EmptyBuilding`: `2/2` safe zone path success setelah runtime nudge `SafeZone_1` dan `SafeZone_2`
   - `StudioMMNineteen`: `2/2` safe zone path success setelah runtime nudge `SafeZone_1`
-- interaction point reachability juga sudah dibersihkan sebagian:
+- interaction point reachability sekarang sudah tertutup untuk map yang sudah diaudit settle final:
   - `AbandonedPalace`: `0/8` fail setelah patch order + runtime nudge
   - `StudioMMNineteen`: `0/8` fail setelah runtime nudge settle
-  - residual blocker saat ini:
-    - `HauntedHouse`: `2/8` fail (`Interact_Bedroom1`, `Interact_Kitchen`)
-    - `EmptyBuilding`: `3/8` fail (`Interact_WorkspaceOpen`, `Interact_OfficeB`, `Interact_Bathroom1`)
+  - `EmptyBuilding`: `0/8` fail setelah fallback token override + settle final
+  - catatan penting:
+    - audit yang membaca clone terlalu cepat bisa menghasilkan false negative karena point runtime masih bergerak beberapa detik setelah match start
+    - residual `HauntedHouse` sebelumnya diperlakukan sebagai candidate layout debt, bukan blocker aktif, kecuali muncul lagi pada audit settle final berikutnya
 - follow-up deferred yang wajib masuk phase berikutnya:
   - audit tangga, akses lantai 2, dan jalur traversal map harus ditutup agar layout tidak terasa palsu saat investigasi/hunt
   - hiding spot final lintas map masih perlu didefinisikan lebih kaya dari sekadar safe zone baseline
-  - residual interaction anchor pada `HauntedHouse` dan `EmptyBuilding` masih perlu diputus apakah dinudge lagi atau butuh perbaikan layout yang lebih besar
+  - kualitas pintu dan flow traversal antar-ruang masih perlu dinaikkan dari baseline teknis ke logika map yang lebih profesional
 
 Pekerjaan:
 
