@@ -826,3 +826,33 @@ Urutan yang paling masuk akal dari titik sekarang:
 - jangan andalkan state Studio-only tanpa mirror ke repo
 - jangan aktifkan monetization publik sebelum licensing dan commerce bridge benar-benar siap
 
+## Update 2026-04-03 22:53 ICT
+
+- blocker `Preparing -> MatchStarted` yang sempat mengganggu validasi hiding lintas map sekarang sudah tertutup:
+  - `MatchSystem.Controller:OnPlayerQueued` tidak lagi memanggil `StartMatch()` secara sinkron di callback EventBus
+  - `MatchService:StartMatch()` tidak lagi menggantung di jalur `task.wait(1.5)`; continuation start sekarang dijalankan via `task.delay`
+  - `LobbySystem.Controller` juga sudah dihardening agar countdown host-start tidak lagi gagal diam-diam tanpa debug attr
+- runtime patch match start juga sekarang lebih ringan:
+  - `MapRuntimePatches.patchInteractionPoints()` tidak lagi menjalankan `PathfindingService:ComputeAsync()` besar-besaran pada setiap clone map
+  - interaction point runtime kembali deterministic memakai posisi room + explicit override yang sudah ada
+- `HidingSystem` sekarang punya prioritas yang benar saat room hide spot overlap dengan safe zone:
+  - hide eksplisit `Closet/Locker` tetap dipertahankan
+  - jika pemain keluar dari hide eksplisit tetapi masih berdiri di dalam safe zone, state kembali ke `SafeZone`
+- validasi live yang sudah tertutup:
+  - `EmptyBuilding`
+    - `PasrahLastHostStartCommit = commit ok=true err=nil roomId=1`
+    - `PasrahLastMatchStartTrace = match=match_1 players=1 teleported=1 phase=PreparationPhase map=EmptyBuilding mode=Classic`
+    - `PasrahLastTeleportTrace` menunjukkan pipeline teleport lengkap sampai `teleported_counted`
+    - `Room_Storage`:
+      - `EnterHide` -> `PasrahHideState = Hidden`, `PasrahHideSpotType = Closet`, `PasrahHideZoneId = Room_Storage`, prompt = `Keluar`
+      - `ExitHide` sambil tetap berada di storage -> `PasrahHideState = Hidden`, `PasrahHideSpotType = SafeZone`, `PasrahHideZoneId = SafeZone_2`, prompt = `Bersembunyi`
+  - `HauntedHouse`
+    - sanity regression pass sukses di `Room_ClosetA`
+    - hasil tetap: `PasrahHideState = Hidden`, `PasrahHideSpotType = Closet`, `PasrahHideZoneId = Room_ClosetA`, prompt = `Keluar`
+- status jujur setelah slice ini:
+  - blocker fase match yang sebelumnya membuat validasi lintas map intermittent sudah tidak menjadi alasan utama lagi
+  - fondasi runtime sekarang cukup stabil untuk lanjut ke slice berikutnya:
+    - traversal/map polish
+    - hiding/survival affordance lanjutan
+    - UI/mobile polish dan content fill
+

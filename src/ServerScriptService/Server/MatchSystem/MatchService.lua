@@ -330,6 +330,13 @@ local function setStudioMatchStartTrace(summary)
 	ReplicatedStorage:SetAttribute("PasrahLastMatchStartTrace", summary)
 end
 
+local function setStudioMatchStartStage(summary)
+	if not RunService:IsStudio() then
+		return
+	end
+	ReplicatedStorage:SetAttribute("PasrahLastMatchStartStage", summary)
+end
+
 function MatchService.new(deps)
 	local self = setmetatable({}, MatchService)
 	self._deps = deps or {}
@@ -908,6 +915,7 @@ function MatchService:StartMatch(matchId)
 	end
 
 	local now = getNow()
+	setStudioMatchStartStage(string.format("match=%s stage=begin", tostring(matchId)))
 	self._lifecycle:Begin(match, now)
 	self:_hydrateMatchMapData(match)
 	match.mode = self:_resolveMode(match.mode or match.gameMode)
@@ -927,59 +935,83 @@ function MatchService:StartMatch(matchId)
 		eventName = "MatchPreparing",
 		countdown = 2,
 	})
-	task.wait(1.5)
+	setStudioMatchStartStage(string.format("match=%s stage=preparing_sent", tostring(matchId)))
 
-	local teleportedPlayers = self._teleport:TeleportPlayers(match)
-	setStudioMatchStartTrace(string.format(
-		"match=%s players=%d teleported=%d phase=%s map=%s mode=%s",
-		tostring(match.matchId),
-		#(match.players or {}),
-		#(teleportedPlayers or {}),
-		tostring(match.phase),
-		tostring(match.mapId),
-		tostring(match.mode)
-	))
-	self:_fireMatchEventToPlayers(teleportedPlayers, {
-		eventName = "MatchStarted",
-		phase = CLIENT_PHASE_BY_MATCH_PHASE[match.phase] or match.phase,
-		lifecyclePhase = match.phase,
-		phaseStartedAt = now,
-		durationSeconds = self:_getPhaseDuration(match.phase),
-	})
-	self:_fireMatchEventToPlayers(teleportedPlayers, self:_buildPhasePayload(match, match.phase, now))
+	task.delay(1.5, function()
+		local ok, err = pcall(function()
+			setStudioMatchStartStage(string.format("match=%s stage=preparing_wait_complete", tostring(matchId)))
 
-	for _, player in ipairs(teleportedPlayers) do
-		self:_publish("PlayerTeleported", {
-			player = player,
-			matchId = match.matchId,
-			mapId = match.mapId,
-		})
-	end
+			setStudioMatchStartStage(string.format("match=%s stage=teleport_begin", tostring(matchId)))
+			local teleportOk, teleportedPlayersOrErr = pcall(function()
+				return self._teleport:TeleportPlayers(match)
+			end)
+			if not teleportOk then
+				local teleportErr = tostring(teleportedPlayersOrErr)
+				setStudioMatchStartStage(string.format("match=%s stage=teleport_error err=%s", tostring(matchId), teleportErr))
+				setStudioMatchStartTrace(string.format("match=%s error=teleport_failed err=%s", tostring(matchId), teleportErr))
+				return
+			end
 
-	self:_publish("MatchStarted", {
-		matchId = match.matchId,
-		players = match.players,
-		map = match.mapId,
-		mapId = match.mapId,
-		mode = match.mode,
-		gameMode = match.gameMode,
-		difficulty = match.difficulty,
-		difficultyProfile = match.difficultyProfile,
-		phase = match.phase,
-		roomIds = deepCopy(match.roomIds or {}),
-		ghostRoomCandidates = deepCopy(match.ghostRoomCandidates or {}),
-		evidenceSpawnPoints = deepCopy(match.evidenceSpawnPoints or {}),
-		ghostSeed = match.ghostSeed,
-	})
+			local phaseNow = getNow()
+			local teleportedPlayers = teleportedPlayersOrErr
+			setStudioMatchStartTrace(string.format(
+				"match=%s players=%d teleported=%d phase=%s map=%s mode=%s",
+				tostring(match.matchId),
+				#(match.players or {}),
+				#(teleportedPlayers or {}),
+				tostring(match.phase),
+				tostring(match.mapId),
+				tostring(match.mode)
+			))
+			self:_fireMatchEventToPlayers(teleportedPlayers, {
+				eventName = "MatchStarted",
+				phase = CLIENT_PHASE_BY_MATCH_PHASE[match.phase] or match.phase,
+				lifecyclePhase = match.phase,
+				phaseStartedAt = phaseNow,
+				durationSeconds = self:_getPhaseDuration(match.phase),
+			})
+			self:_fireMatchEventToPlayers(teleportedPlayers, self:_buildPhasePayload(match, match.phase, phaseNow))
+			setStudioMatchStartStage(string.format("match=%s stage=match_started_sent", tostring(matchId)))
 
-	if match.difficultyProfile then
-		self:_publish("MatchDifficultyResolved", {
-			matchId = match.matchId,
-			mode = match.mode,
-			difficulty = match.difficulty,
-			difficultyProfile = match.difficultyProfile,
-		})
-	end
+			for _, player in ipairs(teleportedPlayers) do
+				self:_publish("PlayerTeleported", {
+					player = player,
+					matchId = match.matchId,
+					mapId = match.mapId,
+				})
+			end
+
+			self:_publish("MatchStarted", {
+				matchId = match.matchId,
+				players = match.players,
+				map = match.mapId,
+				mapId = match.mapId,
+				mode = match.mode,
+				gameMode = match.gameMode,
+				difficulty = match.difficulty,
+				difficultyProfile = match.difficultyProfile,
+				phase = match.phase,
+				roomIds = deepCopy(match.roomIds or {}),
+				ghostRoomCandidates = deepCopy(match.ghostRoomCandidates or {}),
+				evidenceSpawnPoints = deepCopy(match.evidenceSpawnPoints or {}),
+				ghostSeed = match.ghostSeed,
+			})
+
+			if match.difficultyProfile then
+				self:_publish("MatchDifficultyResolved", {
+					matchId = match.matchId,
+					mode = match.mode,
+					difficulty = match.difficulty,
+					difficultyProfile = match.difficultyProfile,
+				})
+			end
+		end)
+		if not ok then
+			local startErr = tostring(err)
+			setStudioMatchStartStage(string.format("match=%s stage=deferred_error err=%s", tostring(matchId), startErr))
+			setStudioMatchStartTrace(string.format("match=%s error=deferred_start_failed err=%s", tostring(matchId), startErr))
+		end
+	end)
 
 	return match:ToPayload()
 end

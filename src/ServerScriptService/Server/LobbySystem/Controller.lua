@@ -717,70 +717,172 @@ function Controller:OnHostStart(player, request)
 	self:_broadcastRoomState(room)
 	self:_broadcastRoomListToAll()
 
-	task.spawn(function()
-		for seconds = countdownSeconds, 1, -1 do
-			local countdown = self._roomCountdownById[roomId]
-			if not countdown or countdown.cancelled then
-				return
+		task.spawn(function()
+			for seconds = countdownSeconds, 1, -1 do
+				local countdown = self._roomCountdownById[roomId]
+				if not countdown or countdown.cancelled then
+					return
+				end
+
+				countdown.secondsLeft = seconds
+				setStudioDebugAttribute(
+					"PasrahLastHostStartTick",
+					string.format("roomId=%s seconds=%s stage=broadcast", tostring(roomId), tostring(seconds))
+				)
+				local broadcastOk, broadcastErr = pcall(function()
+					self:_broadcastToRoom(room, {
+						eventName = "RoomMatchCountdown",
+						roomId = roomId,
+						secondsLeft = seconds,
+						totalSeconds = countdownSeconds,
+						countdownEndsAt = countdown.endsAt,
+					})
+				end)
+				if not broadcastOk then
+					setStudioDebugAttribute(
+						"PasrahLastHostStartTick",
+						string.format(
+							"roomId=%s seconds=%s stage=broadcast_error err=%s",
+							tostring(roomId),
+							tostring(seconds),
+							tostring(broadcastErr)
+						)
+					)
+				end
+				local roomStateOk, roomStateErr = pcall(function()
+					self:_broadcastRoomState(room)
+				end)
+				if not roomStateOk then
+					setStudioDebugAttribute(
+						"PasrahLastHostStartTick",
+						string.format(
+							"roomId=%s seconds=%s stage=state_error err=%s",
+							tostring(roomId),
+							tostring(seconds),
+							tostring(roomStateErr)
+						)
+					)
+				else
+					setStudioDebugAttribute(
+						"PasrahLastHostStartTick",
+						string.format("roomId=%s seconds=%s stage=wait", tostring(roomId), tostring(seconds))
+					)
+				end
+				task.wait(1)
+				setStudioDebugAttribute(
+					"PasrahLastHostStartTick",
+					string.format("roomId=%s seconds=%s stage=post_wait", tostring(roomId), tostring(seconds))
+				)
 			end
 
-			countdown.secondsLeft = seconds
-			self:_broadcastToRoom(room, {
-				eventName = "RoomMatchCountdown",
-				roomId = roomId,
-				secondsLeft = seconds,
-				totalSeconds = countdownSeconds,
-				countdownEndsAt = countdown.endsAt,
-			})
-			self:_broadcastRoomState(room)
-			task.wait(1)
-		end
-
-		local countdown = self._roomCountdownById[roomId]
-		if not countdown or countdown.cancelled then
-			return
-		end
-		self._roomCountdownById[roomId] = nil
-
-		local commitOk, commitErr = self._service:CommitHostStart(player, request)
-		setStudioDebugAttribute(
-			"PasrahLastHostStartCommit",
-			string.format(
-				"commit ok=%s err=%s roomId=%s",
-				tostring(commitOk),
-				tostring(commitErr),
-				tostring(roomId)
+			setStudioDebugAttribute(
+				"PasrahLastHostStartTick",
+				string.format("roomId=%s stage=loop_complete", tostring(roomId))
 			)
-		)
-		if not commitOk then
-			local liveRoom = self._service._roomManager and self._service._roomManager:GetRoomById(roomId) or room
-			self:_broadcastToRoom(liveRoom, {
-				eventName = "RoomMatchCountdownCancelled",
-				roomId = roomId,
-				reason = commitErr or "start_failed",
-			})
-			if liveRoom then
-				self:_broadcastRoomState(liveRoom)
-			end
-			self:_broadcastRoomListToAll()
-			self:_send(player, {
-				eventName = "HostStartResult",
-				ok = false,
-				err = commitErr or "start_failed",
-			})
-			return
-		end
+			local finalizeOk, finalizeErr = pcall(function()
+				local countdownById = self._roomCountdownById
+				if type(countdownById) ~= "table" then
+					error("missing_countdown_registry")
+				end
 
-		local liveRoom = self._service._roomManager and self._service._roomManager:GetRoomById(roomId) or room
-		self:_broadcastToRoom(liveRoom, {
-			eventName = "RoomMatchCountdownCompleted",
-			roomId = roomId,
-		})
-		if liveRoom then
-			self:_broadcastRoomState(liveRoom)
-		end
-		self:_broadcastRoomListToAll()
-	end)
+				local countdown = countdownById[roomId]
+				if not countdown or countdown.cancelled then
+					setStudioDebugAttribute(
+						"PasrahLastHostStartCommit",
+						string.format(
+							"commit ok=false err=%s roomId=%s",
+							tostring(countdown and "cancelled" or "missing_countdown"),
+							tostring(roomId)
+						)
+					)
+					return
+				end
+				countdownById[roomId] = nil
+
+				local service = self._service
+				if type(service) ~= "table" then
+					error("missing_lobby_service")
+				end
+
+				local commitSucceeded, commitOk, commitErr = pcall(function()
+					return service:CommitHostStart(player, request)
+				end)
+				if not commitSucceeded then
+					local liveRoom = service._roomManager and service._roomManager:GetRoomById(roomId) or room
+					local commitError = tostring(commitOk)
+					setStudioDebugAttribute(
+						"PasrahLastHostStartCommit",
+						string.format(
+							"commit ok=false err=%s roomId=%s",
+							commitError,
+							tostring(roomId)
+						)
+					)
+					self:_broadcastToRoom(liveRoom, {
+						eventName = "RoomMatchCountdownCancelled",
+						roomId = roomId,
+						reason = commitError,
+					})
+					if liveRoom then
+						self:_broadcastRoomState(liveRoom)
+					end
+					self:_broadcastRoomListToAll()
+					self:_send(player, {
+						eventName = "HostStartResult",
+						ok = false,
+						err = commitError,
+					})
+					return
+				end
+				setStudioDebugAttribute(
+					"PasrahLastHostStartCommit",
+					string.format(
+						"commit ok=%s err=%s roomId=%s",
+						tostring(commitOk),
+						tostring(commitErr),
+						tostring(roomId)
+					)
+				)
+				if not commitOk then
+					local liveRoom = service._roomManager and service._roomManager:GetRoomById(roomId) or room
+					self:_broadcastToRoom(liveRoom, {
+						eventName = "RoomMatchCountdownCancelled",
+						roomId = roomId,
+						reason = commitErr or "start_failed",
+					})
+					if liveRoom then
+						self:_broadcastRoomState(liveRoom)
+					end
+					self:_broadcastRoomListToAll()
+					self:_send(player, {
+						eventName = "HostStartResult",
+						ok = false,
+						err = commitErr or "start_failed",
+					})
+					return
+				end
+
+				local liveRoom = service._roomManager and service._roomManager:GetRoomById(roomId) or room
+				self:_broadcastToRoom(liveRoom, {
+					eventName = "RoomMatchCountdownCompleted",
+					roomId = roomId,
+				})
+				if liveRoom then
+					self:_broadcastRoomState(liveRoom)
+				end
+				self:_broadcastRoomListToAll()
+			end)
+			if not finalizeOk then
+				setStudioDebugAttribute(
+					"PasrahLastHostStartCommit",
+					string.format(
+						"commit ok=false err=%s roomId=%s",
+						tostring(finalizeErr),
+						tostring(roomId)
+					)
+				)
+			end
+		end)
 end
 
 function Controller:OnCancelHostStart(player)
