@@ -1,5 +1,5 @@
 local ClientMain = require(script.Parent.Parent)
-local client = ClientMain.new()
+local client = ClientMain.shared()
 
 client:Init()
 client:Start()

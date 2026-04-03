@@ -4801,3 +4801,59 @@ Meningkatkan fairness akses hide spot dengan prompt distance adaptif per ukuran 
 
 1. lanjut ke slice LOS-break fairness atau cover affordance map yang belum rapi
 2. tetap simpan task retention final untuk dibahas di akhir sesuai prioritas user
+
+## 2026-04-04 02:53 ICT
+
+### Task
+
+Menutup sumber drift client yang memicu gejala audio/event dobel, lalu membersihkan script legacy liar di StarterPlayerScripts.
+
+### Linked Issues
+
+- laporan user: audio dobel setelah countdown
+- indikasi runtime drift: script `StarterPlayerScripts.LocalScript` legacy masih aktif dan mem-fire event test
+- risiko bootstrap ganda: `ClientBootstrap.client.lua` selalu membuat object baru lewat `ClientMain.new()`
+
+### Files Changed
+
+- `src/client/Main.lua`
+- `src/client/StarterPlayerScripts/ClientBootstrap.client.lua`
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `ClientMain` sekarang punya singleton runtime:
+  - tambah `ClientMain._sharedInstance`
+  - tambah API `ClientMain.shared(deps)`
+- bootstrap LocalScript sekarang memakai singleton:
+  - `ClientMain.new()` -> `ClientMain.shared()`
+- fallback host ownership room-browser dipertahankan:
+  - reset dropdown map/mode kini memakai `hostCanControl` (bukan `state.isHost` mentah)
+  - ini mencegah dropdown host tertutup saat payload host flag belum sinkron tapi ownership room sebenarnya valid
+- cleanup Studio edit-time:
+  - `StarterPlayer.StarterPlayerScripts.LocalScript` legacy (`TEST EVIDENCE TRIGGER`) dihapus dari DataModel edit-time
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output _tmp_client_singleton_guard.rbxlx`
+- validasi Studio edit-time:
+  - `StarterPlayer.StarterPlayerScripts.LocalScript` legacy sudah hilang
+- validasi playtest:
+  - `Players.<LocalPlayer>.PlayerScripts.LocalScript` legacy tidak muncul lagi
+  - flow UI tetap hidup:
+    - `OpenRoomBrowserButton` membuka `RoomBrowserUI`
+    - `CreateRoomButton` membuka `RoomPanel`
+    - transisi match tetap berjalan (`InMatch=true`, `MatchId=match_1`)
+
+### Interpretation
+
+- penyebab drift paling berisiko untuk audio/event dobel kini ditutup pada level inisialisasi arsitektur client
+- noise runtime dari script test legacy yang sempat mengacaukan observasi juga sudah dibersihkan
+
+### Next Step
+
+1. lanjutkan pass `P2.13` (audio polish) dengan verifikasi manual pendengaran untuk countdown/teleport/hunt cue setelah guard singleton aktif
+2. lanjutkan gate publish readiness berikutnya tanpa membuka kembali script liar non-source

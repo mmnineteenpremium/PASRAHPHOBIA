@@ -1136,3 +1136,22 @@ Urutan yang paling masuk akal dari titik sekarang:
   - room hide spot yang lebih besar tidak lagi terasa “mati” karena prompt terlalu ketat
   - room kecil tetap ketat agar hunt tidak trivial
 
+## Update 2026-04-04 02:53 ICT
+
+- hardening drift client untuk kasus audio dobel/countdown dobel:
+  - `ClientMain` sekarang punya instance singleton (`ClientMain.shared()`)
+  - `StarterPlayerScripts/ClientBootstrap.client.lua` sekarang memakai singleton itu, bukan selalu `new()`
+  - ini mencegah init/start service client ganda saat ada jalur bootstrap duplikat di runtime
+- cleanup runtime liar di Studio edit-time:
+  - `StarterPlayer.StarterPlayerScripts.LocalScript` legacy (script test evidence `TEST EVIDENCE TRIGGER`) dihapus dari DataModel edit-time
+  - script liar itu sebelumnya ikut ter-copy ke `Players.<Player>.PlayerScripts.LocalScript` dan menambah noise event palsu
+- validasi live:
+  - build source sukses: `_tmp_client_singleton_guard.rbxlx`
+  - setelah restart playtest, `PlayerScripts.LocalScript` legacy tidak muncul lagi
+  - smoke flow UI tetap jalan:
+    - `OpenRoomBrowserButton` bisa membuka `RoomBrowserUI`
+    - `CreateRoomButton` bisa masuk `RoomPanel`
+    - flow lanjut ke match masih hidup (`InMatch=true`, `MatchId=match_1`)
+- dampak:
+  - sumber paling berisiko untuk audio/event dobel di client sudah ditutup di level arsitektur, bukan sekadar patch gejala
+
