@@ -2774,3 +2774,67 @@ Mengubah `MatchUI` dari panel status pasif menjadi panel fase yang benar-benar i
 
 1. lanjut ke surface unblocked berikutnya atau kembali ke gameplay/map debt
 2. pertahankan `StudioE2EControl` sebagai blocker tooling terpisah sampai listener server benar-benar pulih
+
+## 2026-04-03 15:39 ICT
+
+### Task
+
+Menyelaraskan runtime patch pintu dengan `DoorRuntime`, lalu memvalidasi kembali clone `HauntedHouse` pada jalur `Ranked` agar traversal pintu dan akses lantai dua tidak lagi saling bertentangan.
+
+### Linked Issues
+
+- pintu clone sebelumnya berstatus `PromptManual`, tetapi masih `CanCollide = false`, sehingga visual dan collision saling bohong
+- user secara eksplisit meminta perilaku pintu yang logis, bukan pass-through yang membuat layout map terasa palsu
+- debt audit traversal vertikal masih pending sesudah patch pintu manual
+
+### Files Changed
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `patchDoorTraversal()` tidak lagi memaksa pintu clone menjadi tembus saat policy-nya `PromptManual`
+- default runtime pintu sekarang konsisten dengan `DoorRuntime`:
+  - `CanCollide = true`
+  - `CanTouch = true`
+  - `DoorIsOpen = false`
+  - `DoorTraversalPolicy = PromptManual`
+- backlog source-of-truth saya rapikan agar tidak lagi menyimpan truth lama `AutoOpenToggle` sebagai state aktif
+- task lanjutan juga dikunci lebih jelas:
+  - desain final hybrid radius/manual tetap deferred
+  - audit tangga/lantai dua/hiding spot tetap phase berikutnya, bukan hilang dari backlog
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_door_runtime_patch_build.rbxlx`
+- validasi live jalur `Ranked -> SelectMode -> SelectMap(HauntedHouse) -> CreateRoom -> HostStart` sukses:
+  - `CreateRoomResult.ok = true`
+  - `HostStartResult.ok = true`
+  - `RoomMatchCountdownCompleted` diterima client
+- audit clone aktif `Workspace.ActiveMatches.Match_match_1.HauntedHouse.HauntedHouse.Doors.Door_DiningRoom`:
+  - `DoorTraversalPolicy = PromptManual`
+  - `DoorIsOpen = false`
+  - `CanCollide = true`
+  - `CanTouch = true`
+  - `DoorPrompt` ada
+- audit traversal vertikal dasar `HauntedHouse`:
+  - `Floor_2_North` runtime sudah tercarve menjadi `Floor_2_North_North`, `Floor_2_North_West`, `Floor_2_North_East`
+  - tidak ada segmen `Floor_2_*` yang overlap dengan bounds `CentralStaircase`
+
+### Blocker Notes
+
+- trigger `E` melalui automation keyboard MCP masih belum cukup konsisten untuk dijadikan verifikasi final interaksi prompt
+- jadi truth saat ini adalah:
+  - state pintu clone sudah benar
+  - interaksi prompt masih butuh satu verifikasi manual manusia di Studio untuk penutupan penuh task pintu
+
+### Next Step
+
+1. checkpoint commit untuk patch pintu manual + sinkronisasi report
+2. lanjut ke debt gameplay/map yang tersisa:
+   - audit traversal vertikal yang lebih nyata
+   - definisi hiding spot / survive hunt
+3. pertahankan `StudioE2EControl` sebagai blocker tooling terpisah sampai listener server pulih atau diganti pendekatan lain

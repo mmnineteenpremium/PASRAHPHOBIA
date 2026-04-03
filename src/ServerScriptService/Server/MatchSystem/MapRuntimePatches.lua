@@ -288,8 +288,8 @@ local function patchDoorTraversal(mapClone)
 	for _, descendant in ipairs(doorsFolder:GetDescendants()) do
 		if descendant:IsA("BasePart") and descendant.Name:match("^Door_") and not descendant.Name:match("_Frame") then
 			descendant.Anchored = true
-			descendant.CanCollide = false
-			descendant.CanTouch = false
+			descendant.CanCollide = true
+			descendant.CanTouch = true
 			descendant.CanQuery = true
 			descendant:SetAttribute("DoorLocked", false)
 			descendant:SetAttribute("DoorIsOpen", false)

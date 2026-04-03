@@ -213,31 +213,33 @@ Status:
 - done untuk baseline blocker/collision map utama
 - `HauntedHouse` ditetapkan sebagai map playable pertama
 - runtime clone sekarang menormalkan `InteractionPoints` ke room anchor yang benar
-- pintu interior clone sekarang memiliki fallback traversal runtime:
+- pintu interior clone sekarang memiliki owner runtime yang konsisten:
   - `DoorTraversalRuntimePatched = true`
-  - `DoorTraversalMode = AutoOpenToggle`
-  - `Door_DiningRoom.CanCollide = false`
-  - `Door_DiningRoom` memiliki `DoorPathModifier`
+  - `DoorTraversalMode = PromptManual`
+  - `Door_DiningRoom.CanCollide = true`
+  - `Door_DiningRoom.CanTouch = true`
+  - `Door_DiningRoom.DoorIsOpen = false`
+  - `Door_DiningRoom.DoorTraversalPolicy = PromptManual`
+  - `Door_DiningRoom` membawa `DoorPrompt` + `DoorPathModifier`
 - rute interior yang sebelumnya gagal sekarang lolos setelah karakter ditempatkan di spawn map aktif
 - fallback pintu sekarang digeneralisasi ke semua map playable current:
   - `HauntedHouse`
   - `AbandonedPalace`
   - `EmptyBuilding`
   - `StudioMMNineteen`
-- pass runtime terbaru menggeser basis pintu dari `pass-through` ke `prompt manual`:
-  - `Door_DiningRoom.DoorTraversalPolicy = PromptManual`
-  - `Door_DiningRoom.DoorIsOpen = false`
-  - `Door_DiningRoom.CanCollide = true`
-  - `Door_DiningRoom.DoorPrompt` aktif dengan:
-    - `Keyboard = E`
-    - `Gamepad = X`
-    - `ClickablePrompt = true`
-    - `ActionText = Buka Pintu`
+- validasi live terbaru pada jalur `Ranked -> CreateRoom -> HostStart -> HauntedHouse` membuktikan:
+  - clone aktif tetap memakai policy pintu yang sama, bukan hanya `Classic`
+  - `Door_DiningRoom` mulai tertutup dan collidable
+  - `DoorPrompt` benar-benar ada pada pintu clone aktif
+  - `ActionText = Buka Pintu`
   - ini membuat traversal pemain kembali logis, sementara path modifier tetap ada untuk menjaga runtime owner pintu tetap konsisten
 - validasi trigger `E` via automation tool masih belum bisa saya kunci end-to-end:
   - prompt memang muncul live di layar
   - tetapi state part hasil input otomatis belum cukup konsisten untuk saya tandai `done`
   - jadi policy pintu baru sudah aktif, namun verifikasi manual satu kali di Studio masih diperlukan untuk menutup task interaksi pintu sepenuhnya
+- audit clone `HauntedHouse` terbaru juga mengonfirmasi traversal vertikal dasar tidak lagi diblok lantai dua:
+  - `Floor_2_North` runtime sudah terpecah menjadi segmen carved di sekitar `CentralStaircase`
+  - tidak ada segmen `Floor_2_*` yang overlap dengan bounds tangga aktif
 - audit runtime clone terbaru sekarang juga menutup feedback layer pintu:
   - semua map aktif membawa pasangan `DoorOpenSound` + `DoorCloseSound` pada setiap pintu clone
   - hasil audit:
@@ -249,9 +251,9 @@ Status:
     - `DoorOpenSoundId = rbxassetid://139204195403262`
     - `DoorCloseSoundId = rbxassetid://83336813491039`
 - art pass map masih belum final, tetapi tidak lagi menjadi blocker untuk loop vertical slice
-- policy pintu `AutoOpenToggle` sekarang hanya baseline traversal runtime, bukan desain final interaksi pemain
+- policy pintu `PromptManual` sekarang menjadi baseline traversal runtime yang source-controlled; desain final hybrid radius/manual tetap deferred
 - follow-up deferred yang wajib masuk phase berikutnya:
-  - pintu harus bereaksi logis terhadap radius atau prompt manual lintas platform, bukan sekadar pass-through
+  - pintu harus diputuskan finalnya antara radius, prompt manual, atau hybrid yang tetap logis lintas platform
   - audit tangga, akses lantai 2, dan jalur traversal map harus ditutup agar layout tidak terasa palsu saat investigasi/hunt
   - hiding spot dan aturan selamat dari hunt masih perlu didefinisikan secara eksplisit
   - prototipe `SafeZone`/shelter berbasis `HidingSystem` sudah masuk ke source, tetapi validasi live server-side masih blocked:
