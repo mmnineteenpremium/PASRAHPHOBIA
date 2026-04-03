@@ -294,6 +294,9 @@ Status:
     - `RoomBrowserUI.Enabled = false`
     - `RoomBrowserUI.Panel.Visible = false`
   - jadi panel room besar tidak lagi menumpuk di atas `MatchUI` setelah teleport
+  - retest runtime terbaru untuk flow `HostStart -> Countdown -> Preparing` juga mengonfirmasi hasil yang sama:
+    - pada `t = 5.0s` room browser sudah `Enabled = false`
+    - overlay countdown ikut hilang bersih (`CountdownOverlay.Visible = false`)
 - drift fase awal client juga sudah dipotong:
   - setelah `HostStart` pada `Ranked + EmptyBuilding`, client tetap berada di `Preparation/Briefing`
   - `Player.MatchPhase = Briefing`
@@ -325,7 +328,11 @@ Status:
   - overlay countdown sekarang memakai `countdownSecondsLeft` server sebagai angka display final
   - tick audio hanya dipicu saat angka server berubah, bukan dari pengurang waktu lokal `0.1s`
   - pitch tick dibuat stabil (`PlaybackSpeed = 1`) agar tidak terasa acak terhadap detik yang tampil
-  - validasi runtime terbaru menunjukkan spawn `RuntimeCountdownTick` sinkron dengan perubahan label `4 -> 3 -> 2 -> 1`
+  - `RuntimeCountdownTick` sekarang dipaksa `single-instance`, jadi asset tick yang berdurasi >1 detik tidak lagi menumpuk antar detik
+  - validasi runtime terbaru menunjukkan:
+    - countdown visual tetap urut `5 -> 4 -> 3 -> 2 -> 1`
+    - `soundCount` untuk tick stabil `= 1` di tiap detik countdown
+    - saat transisi ke `Preparing`, tick dibersihkan dan hanya `RuntimeTeleportDrop` yang tersisa
 
 Pekerjaan:
 

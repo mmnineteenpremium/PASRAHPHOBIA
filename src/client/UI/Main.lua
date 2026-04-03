@@ -204,6 +204,7 @@ local UI_SOUND_FALLBACKS = {
 	},
 }
 local cachedSoundTemplates = {}
+local activeRuntimeUISounds = {}
 
 local function logRoomClickConnected(buttonName)
 	return buttonName
@@ -326,6 +327,15 @@ local function playRuntimeUISound(soundKey, options)
 		return
 	end
 
+	local existing = activeRuntimeUISounds[soundKey]
+	if options and options.SingleInstance and existing then
+		if existing.Parent then
+			existing:Stop()
+			existing:Destroy()
+		end
+		activeRuntimeUISounds[soundKey] = nil
+	end
+
 	local runtimeSound = template:Clone()
 	runtimeSound.Name = "Runtime" .. tostring(soundKey)
 	runtimeSound.Looped = false
@@ -340,12 +350,35 @@ local function playRuntimeUISound(soundKey, options)
 		runtimeSound.PlaybackSpeed = math.clamp(runtimeSound.PlaybackSpeed + ((math.random() * jitter) - (jitter * 0.5)), 0.85, 1.25)
 	end
 	runtimeSound.Parent = SoundService
+	if options and options.SingleInstance then
+		activeRuntimeUISounds[soundKey] = runtimeSound
+	end
 	runtimeSound:Play()
+	runtimeSound.Ended:Connect(function()
+		if activeRuntimeUISounds[soundKey] == runtimeSound then
+			activeRuntimeUISounds[soundKey] = nil
+		end
+	end)
 	task.delay(math.max(runtimeSound.TimeLength, 0.35) + 0.2, function()
 		if runtimeSound and runtimeSound.Parent then
 			runtimeSound:Destroy()
 		end
+		if activeRuntimeUISounds[soundKey] == runtimeSound then
+			activeRuntimeUISounds[soundKey] = nil
+		end
 	end)
+end
+
+local function stopRuntimeUISound(soundKey)
+	local existing = activeRuntimeUISounds[soundKey]
+	if not existing then
+		return
+	end
+	activeRuntimeUISounds[soundKey] = nil
+	if existing.Parent then
+		existing:Stop()
+		existing:Destroy()
+	end
 end
 
 local function playUIButtonClick()
@@ -11329,6 +11362,8 @@ function UISystem:_updateCountdownOverlay(state)
 	if not showCountdown then
 		self._lastCountdownAudioSecond = nil
 		self._countdownDisplaySecond = nil
+		label.Text = ""
+		stopRuntimeUISound("CountdownTick")
 		cancelButton.Visible = false
 		return
 	end
@@ -11343,9 +11378,11 @@ function UISystem:_updateCountdownOverlay(state)
 		playRuntimeUISound("CountdownTick", {
 			VolumeScale = 1,
 			PlaybackSpeed = 1,
+			SingleInstance = true,
 		})
 	elseif displayCountdown <= 0 then
 		self._countdownDisplaySecond = displayCountdown
+		stopRuntimeUISound("CountdownTick")
 	end
 
 	cancelButton.Visible = state.isHost == true
