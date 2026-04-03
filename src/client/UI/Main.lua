@@ -2110,6 +2110,7 @@ function UISystem:Init(context)
 	self._hasPostTeleportLoaded = false
 	self._postTeleportFlowRunning = false
 	self._awaitingPostTeleportFlow = false
+	self._postTeleportFlowToken = 0
 	self._teleportOverlayToken = 0
 	self._teleportOverlayTween = nil
 	self._lastCountdownAudioSecond = nil
@@ -6534,16 +6535,25 @@ function UISystem:_runPostTeleportLoadingFlow()
 	if not player or player:GetAttribute("InMatch") ~= true then
 		return
 	end
-	if self._matchPhase == MATCH_PHASE.INGAME then
+	if self._matchPhase == MATCH_PHASE.INGAME or self._matchPhase == MATCH_PHASE.HUNT then
 		self._hasPostTeleportLoaded = true
 		self._awaitingPostTeleportFlow = false
 		return
 	end
 
+	self._postTeleportFlowToken += 1
+	local flowToken = self._postTeleportFlowToken
 	self._postTeleportFlowRunning = true
 	task.spawn(function()
+		if self._postTeleportFlowToken ~= flowToken then
+			return
+		end
 		self:_setPhase(MATCH_PHASE.LOADING)
 		task.wait(2)
+
+		if self._postTeleportFlowToken ~= flowToken then
+			return
+		end
 
 		local currentPlayer = Players.LocalPlayer
 		if not currentPlayer or currentPlayer:GetAttribute("InMatch") ~= true then
@@ -6553,6 +6563,10 @@ function UISystem:_runPostTeleportLoadingFlow()
 
 		self:_setPhase(MATCH_PHASE.BRIEFING)
 		task.wait(3)
+
+		if self._postTeleportFlowToken ~= flowToken then
+			return
+		end
 
 		currentPlayer = Players.LocalPlayer
 		if currentPlayer and currentPlayer:GetAttribute("InMatch") == true then
@@ -6566,6 +6580,16 @@ function UISystem:_runPostTeleportLoadingFlow()
 
 		self._postTeleportFlowRunning = false
 	end)
+end
+
+function UISystem:_cancelPostTeleportLoadingFlow(markLoaded)
+	self._postTeleportFlowToken += 1
+	self._postTeleportFlowRunning = false
+	self._awaitingPostTeleportFlow = false
+	self._pendingInGamePayload = nil
+	if markLoaded ~= nil then
+		self._hasPostTeleportLoaded = markLoaded == true
+	end
 end
 
 function UISystem:_onMarketplacePromptFinished(purchaseType, productId, wasPurchased)
@@ -7189,6 +7213,12 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		if resolvedPhase then
 			self:_setPhase(resolvedPhase, payload)
 		end
+	elseif eventName == "HuntStarted" or eventName == "GhostHuntStarted" then
+		self:_cancelPostTeleportLoadingFlow(true)
+		self:_setPhase(MATCH_PHASE.HUNT, payload)
+	elseif eventName == "HuntEnded" or eventName == "GhostHuntEnded" then
+		self:_cancelPostTeleportLoadingFlow(true)
+		self:_setPhase(MATCH_PHASE.INGAME, payload)
 	elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 		self._matchStartTransitionAudioArmed = false
 		self._hasPostTeleportLoaded = false

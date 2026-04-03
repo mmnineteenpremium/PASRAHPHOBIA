@@ -137,7 +137,17 @@ Status:
     - `SHELTERED`
     - `TRACKED`
     - `CRITICAL`
-  - blocker sisa untuk slice ini pindah ke helper test Studio yang belum konsisten memaksa phase visual `Hunt`
+  - `HuntSystem.Controller` sekarang me-relay `HuntStarted` dan `HuntEnded` ke `MatchEvent` client
+  - `UISystem` sekarang membatalkan post-teleport loading lama saat hunt datang dan mengangkat `MatchPhase` canonical ke `Hunt`
+  - smoke test live terbaru di Studio membuktikan jalur `CreateRoom -> HostStart -> ForceHunt` sekarang menghasilkan:
+    - event client `HuntStarted`
+    - `LocalPlayer.MatchPhase = Hunt`
+    - hunt tidak lagi diam-diam tertimpa flow `Loading/Briefing`
+  - validasi exit hunt natural juga sudah tertutup pada level perilaku:
+    - player dipindahkan ke `SafeZone_1`
+    - state live menjadi `Hidden / Sheltered`
+    - setelah hunt selesai natural, `LocalPlayer.MatchPhase` kembali ke `InGame`
+    - sesi tidak jatuh ke `Result` saat menunggu hunt selesai
 
 Pekerjaan:
 
