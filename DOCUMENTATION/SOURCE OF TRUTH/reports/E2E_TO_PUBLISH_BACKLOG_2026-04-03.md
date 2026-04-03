@@ -1048,3 +1048,16 @@ Urutan yang paling masuk akal dari titik sekarang:
   - pemain sekarang punya affordance visual nyata untuk hide spot saat hunt, bukan hanya safe zone marker atau petunjuk teks UI
   - debt survival berikutnya bergeser ke perluasan/review distribusi hide spot lintas map, bukan lagi “spot ada tapi tidak terbaca”
 
+## Update 2026-04-04 02:19 ICT
+
+- follow-up client untuk survival guidance juga tertutup:
+  - `Main.lua` sekarang membaca `HideSpotLabel` runtime dari room aktif bila tersedia
+  - objective/hint hunt tidak lagi harus menebak nama spot hanya dari `PasrahHideZoneId`
+- validasi live di `HauntedHouse` setelah teleport dekat `Room_ClosetA` dan `ForceHunt`:
+  - `HideSpotLabel = ClosetA`
+  - `ObjectiveLabel = Ghost dekat (4st). Putus line-of-sight, rotasi lewat pintu, lalu masuk ClosetA 4st. Jika tertutup, menuju SafeZone 1 10st.`
+  - `HeaderCard.SecondaryLabel` menampilkan teks yang sama
+- dampak:
+  - guidance hunt sekarang memakai label runtime yang sama dengan affordance world-space hide spot
+  - client dan server lebih sinkron saat menyebut nama refuge ke pemain
+
