@@ -9,6 +9,34 @@ local HIDE_PROMPT_NAME = "HideSpotPrompt"
 local HIDE_PROMPT_DISTANCE = 8
 local HIDE_PROMPT_HOLD_DURATION = 0
 local HIDE_ROOM_VERTICAL_TOLERANCE = 6
+local HIDE_SPOT_MARKER_FOLDER_NAME = "HideSpotRuntimeMarker"
+local HIDE_SPOT_MARKER_OUTLINE_NAME = "Outline"
+local HIDE_SPOT_MARKER_LABEL_NAME = "Billboard"
+local HIDE_SPOT_MARKER_OUTLINE_COLOR = Color3.fromRGB(214, 184, 122)
+local HIDE_SPOT_MARKER_PANEL_COLOR = Color3.fromRGB(28, 22, 14)
+local HIDE_SPOT_MARKER_PANEL_STROKE = Color3.fromRGB(244, 206, 132)
+local HIDE_SPOT_MARKER_TITLE_COLOR = Color3.fromRGB(255, 244, 224)
+local HIDE_SPOT_MARKER_SUBTITLE_COLOR = Color3.fromRGB(229, 202, 152)
+local HIDE_SPOT_MARKER_SUBTITLE_TEXT = "Bersembunyi saat hunt"
+local HIDE_SPOT_MARKER_STUDS_OFFSET = 2.6
+
+local function createMarkerTextLabel(name, font, textSize, textColor, text, height, position)
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.BackgroundTransparency = 1
+	label.BorderSizePixel = 0
+	label.Position = position
+	label.Size = UDim2.new(1, -18, 0, height)
+	label.Font = font
+	label.Text = text
+	label.TextColor3 = textColor
+	label.TextSize = textSize
+	label.TextTransparency = 0
+	label.TextStrokeTransparency = 0.82
+	label.TextWrapped = true
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	return label
+end
 
 local function resolveEventBus(deps)
 	local eventBus = Services.Get(deps, "EventBus")
@@ -199,6 +227,156 @@ local function formatClosetLabel(part)
 	return raw:gsub("^%l", string.upper)
 end
 
+local function ensureHideSpotMarker(record)
+	if type(record) ~= "table" then
+		return
+	end
+
+	local part = record.part
+	if not part or part.Parent == nil then
+		return
+	end
+
+	local markerFolder = record.markerFolder
+	if typeof(markerFolder) ~= "Instance" or markerFolder.Parent ~= part then
+		markerFolder = part:FindFirstChild(HIDE_SPOT_MARKER_FOLDER_NAME)
+		if not (markerFolder and markerFolder:IsA("Folder")) then
+			if markerFolder then
+				markerFolder:Destroy()
+			end
+			markerFolder = Instance.new("Folder")
+			markerFolder.Name = HIDE_SPOT_MARKER_FOLDER_NAME
+			markerFolder.Parent = part
+		end
+		record.markerFolder = markerFolder
+	end
+
+	local outline = markerFolder:FindFirstChild(HIDE_SPOT_MARKER_OUTLINE_NAME)
+	if not (outline and outline:IsA("BoxHandleAdornment")) then
+		if outline then
+			outline:Destroy()
+		end
+		outline = Instance.new("BoxHandleAdornment")
+		outline.Name = HIDE_SPOT_MARKER_OUTLINE_NAME
+		outline.Parent = markerFolder
+	end
+	outline.Adornee = part
+	outline.AlwaysOnTop = true
+	outline.Color3 = HIDE_SPOT_MARKER_OUTLINE_COLOR
+	outline.Size = part.Size + Vector3.new(0.18, 0.18, 0.18)
+	outline.Transparency = 0.32
+	outline.ZIndex = 6
+	outline.Visible = false
+	record.markerOutline = outline
+
+	local labelGui = markerFolder:FindFirstChild(HIDE_SPOT_MARKER_LABEL_NAME)
+	if not (labelGui and labelGui:IsA("BillboardGui")) then
+		if labelGui then
+			labelGui:Destroy()
+		end
+		labelGui = Instance.new("BillboardGui")
+		labelGui.Name = HIDE_SPOT_MARKER_LABEL_NAME
+		labelGui.Parent = markerFolder
+	end
+	labelGui.Active = false
+	labelGui.Adornee = part
+	labelGui.AlwaysOnTop = true
+	labelGui.Brightness = 2
+	labelGui.ClipsDescendants = false
+	labelGui.Enabled = false
+	labelGui.LightInfluence = 0
+	labelGui.MaxDistance = 80
+	labelGui.ResetOnSpawn = false
+	labelGui.Size = UDim2.fromOffset(196, 48)
+	labelGui.StudsOffsetWorldSpace = Vector3.new(0, part.Size.Y * 0.5 + HIDE_SPOT_MARKER_STUDS_OFFSET, 0)
+	record.markerBillboard = labelGui
+
+	local panel = labelGui:FindFirstChild("Panel")
+	if not (panel and panel:IsA("Frame")) then
+		if panel then
+			panel:Destroy()
+		end
+		panel = Instance.new("Frame")
+		panel.Name = "Panel"
+		panel.Parent = labelGui
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 12)
+		corner.Parent = panel
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Name = "Stroke"
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke.Color = HIDE_SPOT_MARKER_PANEL_STROKE
+		stroke.Transparency = 0.14
+		stroke.Thickness = 1.4
+		stroke.Parent = panel
+
+		local accent = Instance.new("Frame")
+		accent.Name = "Accent"
+		accent.AnchorPoint = Vector2.new(0, 0.5)
+		accent.BackgroundColor3 = HIDE_SPOT_MARKER_PANEL_STROKE
+		accent.BorderSizePixel = 0
+		accent.Position = UDim2.new(0, 10, 0.5, 0)
+		accent.Size = UDim2.fromOffset(3, 28)
+		accent.Parent = panel
+
+		local accentCorner = Instance.new("UICorner")
+		accentCorner.CornerRadius = UDim.new(1, 0)
+		accentCorner.Parent = accent
+
+		createMarkerTextLabel(
+			"Title",
+			Enum.Font.GothamBold,
+			13,
+			HIDE_SPOT_MARKER_TITLE_COLOR,
+			record.label or "Hide Spot",
+			18,
+			UDim2.new(0, 20, 0, 6)
+		).Parent = panel
+
+		createMarkerTextLabel(
+			"Subtitle",
+			Enum.Font.GothamMedium,
+			11,
+			HIDE_SPOT_MARKER_SUBTITLE_COLOR,
+			HIDE_SPOT_MARKER_SUBTITLE_TEXT,
+			16,
+			UDim2.new(0, 20, 0, 22)
+		).Parent = panel
+	end
+
+	panel.BackgroundColor3 = HIDE_SPOT_MARKER_PANEL_COLOR
+	panel.BackgroundTransparency = 0.12
+	panel.BorderSizePixel = 0
+	panel.Size = UDim2.fromScale(1, 1)
+
+	local title = panel:FindFirstChild("Title")
+	if title and title:IsA("TextLabel") then
+		title.Text = record.label or "Hide Spot"
+	end
+	local subtitle = panel:FindFirstChild("Subtitle")
+	if subtitle and subtitle:IsA("TextLabel") then
+		subtitle.Text = HIDE_SPOT_MARKER_SUBTITLE_TEXT
+	end
+	record.markerPanel = panel
+end
+
+local function cleanupHideSpotMarker(record)
+	if type(record) ~= "table" then
+		return
+	end
+
+	local markerFolder = record.markerFolder
+	if typeof(markerFolder) == "Instance" and markerFolder.Parent ~= nil then
+		markerFolder:Destroy()
+	end
+	record.markerFolder = nil
+	record.markerOutline = nil
+	record.markerBillboard = nil
+	record.markerPanel = nil
+end
+
 local function ensurePrompt(part)
 	local prompt = part:FindFirstChild(HIDE_PROMPT_NAME)
 	if prompt and prompt:IsA("ProximityPrompt") then
@@ -234,6 +412,7 @@ function Service.new(state, deps)
 	self._eventBus = resolveEventBus(self._deps)
 	self._dependencies = {}
 	self._runtimeHideSpotsByMatchId = {}
+	self._hideSpotVisualByMatchId = {}
 	self._running = false
 	self._runtimeThread = nil
 	return self
@@ -316,6 +495,7 @@ function Service:_updatePromptState(record)
 	record.part:SetAttribute("HideSpotId", record.id)
 	record.part:SetAttribute("HideSpotType", "Closet")
 	record.part:SetAttribute("HideSpotOccupied", occupied)
+	record.part:SetAttribute("HideSpotLabel", record.label)
 end
 
 function Service:_syncPromptStates(matchId)
@@ -326,6 +506,26 @@ function Service:_syncPromptStates(matchId)
 
 	for _, record in pairs(state.records or {}) do
 		self:_updatePromptState(record)
+	end
+end
+
+function Service:_setHideSpotVisualState(matchId, isVisible)
+	local visible = isVisible == true
+	self._hideSpotVisualByMatchId[matchId] = visible
+
+	local state = self._runtimeHideSpotsByMatchId[matchId]
+	if type(state) ~= "table" then
+		return
+	end
+
+	for _, record in pairs(state.records or {}) do
+		ensureHideSpotMarker(record)
+		if record.markerOutline then
+			record.markerOutline.Visible = visible
+		end
+		if record.markerBillboard then
+			record.markerBillboard.Enabled = visible
+		end
 	end
 end
 
@@ -342,14 +542,17 @@ function Service:_cleanupHideSpots(matchId)
 		if record.prompt and record.prompt.Parent then
 			record.prompt:Destroy()
 		end
+		cleanupHideSpotMarker(record)
 		if record.part and record.part.Parent then
 			record.part:SetAttribute("HideSpotId", nil)
 			record.part:SetAttribute("HideSpotType", nil)
 			record.part:SetAttribute("HideSpotOccupied", nil)
+			record.part:SetAttribute("HideSpotLabel", nil)
 		end
 	end
 
 	self._runtimeHideSpotsByMatchId[matchId] = nil
+	self._hideSpotVisualByMatchId[matchId] = nil
 end
 
 function Service:_registerHideSpots(matchId)
@@ -427,6 +630,7 @@ function Service:_registerHideSpots(matchId)
 	self._runtimeHideSpotsByMatchId[matchId] = {
 		records = records,
 	}
+	self:_setHideSpotVisualState(matchId, self._hideSpotVisualByMatchId[matchId] == true)
 end
 
 function Service:_ensureHideSpotsRegistered(matchId)
@@ -493,8 +697,15 @@ function Service:HandleEvent(eventName, payload)
 	elseif eventName == "MatchStarted" then
 		self:_setOccupancy({})
 		self:_registerHideSpots(payload and payload.matchId)
+		self:_setHideSpotVisualState(payload and payload.matchId, false)
 	elseif eventName == "PlayerTeleported" then
 		self:_ensureHideSpotsRegistered(payload and payload.matchId)
+	elseif eventName == "HuntStarted" then
+		local matchId = payload and payload.matchId or self._state:Get("activeMatchId")
+		self:_setHideSpotVisualState(matchId, true)
+	elseif eventName == "HuntEnded" then
+		local matchId = payload and payload.matchId or self._state:Get("activeMatchId")
+		self:_setHideSpotVisualState(matchId, false)
 	elseif eventName == "PlayerAttemptHide" then
 		if payload and payload.spotType ~= "Closet" and payload.spotType ~= "Locker" then
 			return
@@ -532,6 +743,7 @@ function Service:HandleEvent(eventName, payload)
 			self:_syncPromptStates(self._state:Get("activeMatchId"))
 		end
 	elseif eventName == "MatchEnded" then
+		self:_setHideSpotVisualState(payload and payload.matchId, false)
 		self:_cleanupHideSpots(payload and payload.matchId)
 		self:_setOccupancy({})
 	end
