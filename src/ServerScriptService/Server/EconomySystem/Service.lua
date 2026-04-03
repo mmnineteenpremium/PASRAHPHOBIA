@@ -12,6 +12,9 @@ local LIFETIME_CAP_MULTIPLIER = 2
 local MISSION_REWARD = 1000
 local ALL_MISSION_BONUS = 2000
 local MAX_WALLET_BALANCE = 9999999
+local DEFAULT_STARTING_MM = 1200
+local DEFAULT_STARTING_PP = 12
+local DEFAULT_STARTING_ROBUX = 0
 
 local CHECKIN_REWARDS = {
     [1] = { currency = "MM", amount = 1000 },
@@ -170,15 +173,15 @@ function Service:_ensureWallet(userId)
     local wallets = self:_wallets()
     if not wallets[userId] then
         wallets[userId] = {
-            MM = 0,
-            PP = 0,
-            Robux = 0,
+            MM = DEFAULT_STARTING_MM,
+            PP = DEFAULT_STARTING_PP,
+            Robux = DEFAULT_STARTING_ROBUX,
         }
         self:_setWallets(wallets)
     end
-    wallets[userId].MM = wallets[userId].MM or 0
-    wallets[userId].PP = wallets[userId].PP or 0
-    wallets[userId].Robux = wallets[userId].Robux or 0
+    wallets[userId].MM = math.max(0, math.floor(tonumber(wallets[userId].MM) or DEFAULT_STARTING_MM))
+    wallets[userId].PP = math.max(0, math.floor(tonumber(wallets[userId].PP) or DEFAULT_STARTING_PP))
+    wallets[userId].Robux = math.max(0, math.floor(tonumber(wallets[userId].Robux) or DEFAULT_STARTING_ROBUX))
     return wallets[userId]
 end
 

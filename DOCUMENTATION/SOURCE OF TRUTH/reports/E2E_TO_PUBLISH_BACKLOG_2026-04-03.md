@@ -1251,3 +1251,19 @@ Urutan yang paling masuk akal dari titik sekarang:
   - `GhostSystem.Service.InitializeMatch()` sekarang memprioritaskan forced ghost runtime Studio sebelum `match.ghostType`
   - tujuan: ketika force ghost diaktifkan untuk test, hasil spawn tidak diam-diam tertimpa nilai lama di match object
 
+## Update 2026-04-04 03:57 ICT
+
+- blocker shop `insufficient_currency` untuk item termurah sekarang tertutup pada baseline runtime:
+  - wallet awal session ditetapkan ke `MM=1200`, `PP=12`, `Robux=0`
+  - config global sekarang eksplisit punya `Economy.StartingWallet`
+- validasi live via MCP (play mode) setelah restart:
+  - `eq_saltbag_reinforced` -> `PurchaseProcessed(success=true)`
+  - `pp_cos_head_nightoracle` -> `PurchaseProcessed(success=true)`
+  - repeat cepat item yang sama menghasilkan guard expected (`already_owned` / `purchase_cooldown`)
+- catatan penting untuk fase berikutnya:
+  - sempat terdeteksi drift source lokal vs script Studio pada file economy/config
+  - setiap anomali runtime harus divalidasi dengan baca script target di Studio, bukan asumsi dari file lokal saja
+- implikasi ke prioritas:
+  - “shop ada tapi tidak ada yang dijual” sudah bukan blocker aktif untuk MM/PP
+  - sisa blocker monetization tetap pada aktivasi `Robux` (Creator Hub IDs) dan sinkronisasi workflow Rojo yang disiplin
+

@@ -74,6 +74,14 @@ return {
         },
     },
 
+    Economy = {
+        StartingWallet = {
+            MM = 1200,
+            PP = 12,
+            Robux = 0,
+        },
+    },
+
     Commerce = {
         TradingEnabled = true,
         MarketplaceEnabled = true,
@@ -96,6 +104,11 @@ return {
         ReturningPlayerReward = {
             currency = 650,
             xp = 220,
+        },
+        NewPlayerWelcomeReward = {
+            currency = 0,
+            pp = 0,
+            xp = 0,
         },
         DiscoveryRetentionDays = 3,
     },
