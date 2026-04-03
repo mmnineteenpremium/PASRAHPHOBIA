@@ -2429,3 +2429,58 @@ Merapikan affordance `RoyalPassUI` 30 hari agar tab dan scroller track benar-ben
 UI branch ini sekarang cukup stabil untuk digeser ke dua debt besar yang tersisa:
 1. `RoomBrowserUI` fullscreen/flexible mobile layout
 2. map logic + hunt survival loop yang lebih logis dan tidak terasa placeholder
+
+## 2026-04-03 14:24 ICT
+
+### Task
+
+Mendesain ulang `RoomBrowserUI` agar menjadi surface fokus yang benar-benar fleksibel: split-pane desktop yang rapi, detail room yang tetap terbaca, dan jalur compact/mobile yang tidak lagi memaksa layout desktop.
+
+### Linked Issues
+
+- room browser lama masih berbasis koordinat absolut desktop sehingga cepat berantakan saat viewport menyempit
+- state detail room berisiko memotong tombol penting host/ready/leave pada viewport pendek
+- user secara eksplisit meminta panel besar tidak tumpang tindih dan browser room harus terasa lebih pantas di mobile
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- menambahkan pass layout `RoomBrowserUI` baru yang membagi browser menjadi dua mode:
+  - desktop: split-pane fokus dengan daftar room kiri, preview kanan, dan action stack bawah yang tidak saling menimpa
+  - compact/mobile: fullscreen sheet dengan preview di atas, room list di tengah, dan action buttons ditumpuk di bawah
+- `RoomPanel` detail room diubah menjadi `ScrollingFrame`, lalu ditata ulang:
+  - desktop: kolom kiri untuk map/control host, kolom kanan untuk anggota room
+  - compact/mobile: satu kolom scrollable agar `mode`, `map`, `invite`, `ready`, dan `leave` tidak terpotong
+- browser tidak lagi bergantung pada `UIScale` agresif; ukuran panel utama sekarang diatur langsung berdasarkan viewport
+- row room list dan kartu player preview ikut dibesarkan pada mode compact agar tetap terbaca
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_roombrowser_mobile_pass_build.rbxlx`
+- validasi live desktop browse state:
+  - `ScreenCapture_RoomBrowser_Open_DesktopPass`
+  - runtime:
+    - `RoomBrowserUI.Panel.Size = {0, 1080}, {0, 668}`
+    - `RoomBrowserUI.Panel.UIScale.Scale = 1`
+- validasi live desktop room detail state:
+  - `ScreenCapture_RoomBrowser_RoomPanel_DesktopPass`
+  - runtime:
+    - `RoomPanel.Visible = true`
+    - `RoomPanel.CanvasSize = {0, 0}, {0, 668}`
+    - `PlayersList.Size = {0, 599}, {0, 542}`
+- catatan jujur:
+  - jalur compact/mobile sudah masuk ke source
+  - pass visual handset/device emulator nyata masih pending dan tetap harus divalidasi manual pada langkah berikutnya
+
+### Next Step
+
+UI branch ini sekarang cukup matang untuk kembali ke debt gameplay/runtime yang sempat tertunda:
+1. sinkronisasi countdown + audio tick sebelum teleport
+2. pastikan panel room browser benar-benar menutup state yang tersisa saat match mulai/teleport
+3. lanjut ke map logic dan hunt survival loop

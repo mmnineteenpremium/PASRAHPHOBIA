@@ -452,8 +452,8 @@ Status:
   - membuka `RoomBrowserUI` dari float `ROOMS` otomatis menyembunyikan `RoyalPassUI`
   - validasi live terbaru membuktikan `lobbyCollapsed = true`, `royalVisible = false`, `roomBrowserVisible = true` setelah transisi `Lobby -> RoyalPass -> RoomBrowser`
 - review live terbaru juga menandai debt UX baru yang harus diprioritaskan setelah task aktif selesai:
-  - `RoomBrowserUI` masih belum mobile-first penuh, tetapi overlap antar panel sudah ditutup
-  - versi fullscreen/flexible untuk viewport mobile tetap pending sebagai rework layout yang lebih besar
+  - `RoomBrowserUI` sekarang sudah berubah jadi surface fokus split-pane di desktop dan sheet adaptif di viewport compact; overlap panel besar ditutup dan panel detail room dibuat scrollable
+  - validasi live desktop sudah lolos, tetapi pass device-emulator/handset nyata untuk mode compact masih pending agar mobile behavior tidak hanya diasumsikan dari source
   - `RoyalPassUI` track 30 hari sudah ada, tetapi polish responsive/scrolling untuk track panjang masih perlu pass lanjutan
 - pass responsive konservatif terbaru sudah menutup readability dasar dua panel utama:
   - `LobbyUI` sekarang memakai viewport-aware size `396x384` pada viewport desktop sempit saat ini, bukan lagi fixed `340x368`
@@ -462,7 +462,11 @@ Status:
 - pass focus terbaru untuk room browser menutup overlap visual yang paling tidak etis:
   - saat `RoomBrowserUI` aktif, float kanan lain (`MENU`, `PASS`, `RANK`, dst.) tidak lagi tampil
   - validasi live terbaru menunjukkan hanya `RoomBrowserFloatButton` yang masih visible secara properti internal screen, sementara `RoomBrowserFloatUI.Enabled = false` dan rail kanan lain tidak tampil di layar
-  - panel room browser juga sekarang memakai skala viewport yang lebih agresif (`UIScale ~= 1.18` pada viewport `1180x942`), sehingga terasa lebih fokus dibanding baseline 920px lama
+  - panel room browser juga sekarang tidak lagi bergantung pada `UIScale` agresif; panel utamanya memakai layout responsif penuh (`1080x668` pada viewport validasi desktop), bukan sekadar footprint 920px lama yang dikecil-besarkan
+- pass layout besar terbaru untuk `RoomBrowserUI` juga sudah menutup debt visual yang sebelumnya paling mengganggu:
+  - browse state sekarang menjadi split-pane fokus dengan daftar room di kiri, preview di kanan, dan action stack yang tidak lagi berhimpitan
+  - room detail state sekarang memakai panel kanan-kiri yang lebih logis di desktop, plus `RoomPanel` scrollable agar control host/ready/leave tidak terpotong di viewport pendek
+  - jalur compact/mobile sekarang ada di source: browser berubah menjadi fullscreen sheet, daftar room dan preview ditumpuk vertikal, dan detail room pindah ke layout satu kolom
 - polish lanjutan `RoyalPassUI` juga sudah membuat track 30 hari muncul lebih cepat di viewport aktif:
   - tab `30 DAY REWARD` dan `30 DAY MISSION` sekarang terlihat di atas scroller track
   - screenshot validasi `ScreenCapture_RoyalPass_30Day_Taller` menunjukkan kartu hari awal langsung terlihat tanpa scroll panjang
@@ -479,7 +483,7 @@ Pekerjaan:
 - `LeaderboardUI`
 - ubah right rail menjadi stack fixed top-to-bottom dengan affordance mobile yang lebih jelas
 - terapkan aturan single-open untuk panel besar agar lobby/pass/shop/rank tidak terasa tumpang tindih
-- desain ulang `RoomBrowserUI` menjadi mobile fullscreen / flexible sheet
+- validasi nyata `RoomBrowserUI` compact/mobile pada device emulator atau handset
 - polish responsive `RoyalPassUI` untuk track 30 hari yang lebih nyaman di viewport kecil
 
 Done jika:
