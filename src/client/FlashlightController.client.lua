@@ -26,6 +26,15 @@ local toggleGui = nil
 local toggleButton = nil
 local toggleFlashlight
 
+local function isPlayerInMatch()
+	return player:GetAttribute("InMatch") == true
+		or tostring(player:GetAttribute("MatchId") or "") ~= ""
+end
+
+local function shouldShowToggleUI()
+	return UserInputService.TouchEnabled == true and isPlayerInMatch()
+end
+
 local function makeButtonDraggable(button)
 	if not button or button:GetAttribute("DragBound") == true then
 		return
@@ -119,45 +128,70 @@ end
 local function ensureToggleUI()
 	local playerGui = player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui")
 	local existing = playerGui:FindFirstChild("FlashlightToggleUI")
+	if UserInputService.TouchEnabled ~= true then
+		if existing then
+			existing:Destroy()
+		end
+		toggleGui = nil
+		toggleButton = nil
+		return nil
+	end
 	if existing and existing:IsA("ScreenGui") then
-		existing:Destroy()
+		toggleGui = existing
+		toggleButton = existing:FindFirstChild("ToggleButton")
+		if toggleButton and not toggleButton:IsA("TextButton") then
+			toggleButton:Destroy()
+			toggleButton = nil
+		end
+	else
+		if existing then
+			existing:Destroy()
+		end
+		toggleGui = nil
+		toggleButton = nil
 	end
 
-	toggleGui = Instance.new("ScreenGui")
-	toggleGui.Name = "FlashlightToggleUI"
-	toggleGui.ResetOnSpawn = false
-	toggleGui.IgnoreGuiInset = false
-	toggleGui.DisplayOrder = 250
-	toggleGui.Parent = playerGui
+	if not toggleGui then
+		toggleGui = Instance.new("ScreenGui")
+		toggleGui.Name = "FlashlightToggleUI"
+		toggleGui.ResetOnSpawn = false
+		toggleGui.IgnoreGuiInset = false
+		toggleGui.DisplayOrder = 250
+		toggleGui.Parent = playerGui
+	end
 
-	toggleButton = Instance.new("TextButton")
-	toggleButton.Name = "ToggleButton"
-	toggleButton.AnchorPoint = Vector2.new(1, 0.5)
-	toggleButton.Position = UDim2.new(1, -18, 0.62, 0)
-	toggleButton.Size = UDim2.fromOffset(72, 72)
-	toggleButton.BackgroundColor3 = Color3.fromRGB(52, 62, 80)
-	toggleButton.TextColor3 = Color3.fromRGB(245, 245, 245)
-	toggleButton.Font = Enum.Font.GothamBold
-	toggleButton.TextScaled = true
-	toggleButton.TextWrapped = true
-	toggleButton.AutoButtonColor = true
-	toggleButton.Parent = toggleGui
+	if not toggleButton then
+		toggleButton = Instance.new("TextButton")
+		toggleButton.Name = "ToggleButton"
+		toggleButton.AnchorPoint = Vector2.new(1, 0.5)
+		toggleButton.Position = UDim2.new(1, -18, 0.62, 0)
+		toggleButton.Size = UDim2.fromOffset(72, 72)
+		toggleButton.BackgroundColor3 = Color3.fromRGB(52, 62, 80)
+		toggleButton.TextColor3 = Color3.fromRGB(245, 245, 245)
+		toggleButton.Font = Enum.Font.GothamBold
+		toggleButton.TextScaled = true
+		toggleButton.TextWrapped = true
+		toggleButton.AutoButtonColor = true
+		toggleButton.Parent = toggleGui
 
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(1, 0)
-	corner.Parent = toggleButton
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = toggleButton
 
-	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 2
-	stroke.Color = Color3.fromRGB(135, 155, 185)
-	stroke.Parent = toggleButton
-	makeButtonDraggable(toggleButton)
+		local stroke = Instance.new("UIStroke")
+		stroke.Thickness = 2
+		stroke.Color = Color3.fromRGB(135, 155, 185)
+		stroke.Parent = toggleButton
+		makeButtonDraggable(toggleButton)
 
-	toggleButton.Activated:Connect(function()
-		toggleFlashlight()
-	end)
+		toggleButton.Activated:Connect(function()
+			toggleFlashlight()
+		end)
+	end
 
+	toggleGui.Enabled = shouldShowToggleUI()
 	updateToggleVisual()
+	return toggleGui
 end
 
 toggleFlashlight = function()
@@ -177,8 +211,29 @@ toggleFlashlight = function()
 	end
 end
 
+local function refreshToggleUIVisibility()
+	if UserInputService.TouchEnabled ~= true then
+		if toggleGui and toggleGui.Parent then
+			toggleGui:Destroy()
+		end
+		toggleGui = nil
+		toggleButton = nil
+		return
+	end
+	if not toggleGui or not toggleGui.Parent then
+		ensureToggleUI()
+	end
+	if toggleGui then
+		toggleGui.Enabled = shouldShowToggleUI()
+	end
+end
+
 player:SetAttribute(FLASHLIGHT_ATTRIBUTE, flashlightOn)
 ensureToggleUI()
+refreshToggleUIVisibility()
+
+player:GetAttributeChangedSignal("InMatch"):Connect(refreshToggleUIVisibility)
+player:GetAttributeChangedSignal("MatchId"):Connect(refreshToggleUIVisibility)
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then

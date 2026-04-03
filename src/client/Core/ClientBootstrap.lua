@@ -36,9 +36,6 @@ local SpectatorSystem = safeRequire(findModule({ "SpectatorSystem", "Main" }), "
 local SpectatorEffects = safeRequire(findModule({ "SpectatorEffects", "Main" }), "SpectatorEffects")
 local SoundSystem = safeRequire(findModule({ "SoundSystem", "Main" }), "SoundSystem")
 local UISystem = safeRequire(findModule({ "UI", "Main" }), "UI")
-local InvestigationUISystem = safeRequire(findModule({ "InvestigationUISystem", "Main" }), "InvestigationUISystem")
-local EvidenceBoardSystem = safeRequire(findModule({ "EvidenceBoardSystem", "Main" }), "EvidenceBoardSystem")
-local GhostPredictionSystem = safeRequire(findModule({ "GhostPredictionSystem", "Main" }), "GhostPredictionSystem")
 
 local ClientBootstrap = {}
 ClientBootstrap.__index = ClientBootstrap
@@ -60,9 +57,6 @@ addSystem("SpectatorSystem", SpectatorSystem)
 addSystem("SpectatorEffects", SpectatorEffects)
 addSystem("SoundSystem", SoundSystem)
 addSystem("UI", UISystem)
-addSystem("InvestigationUISystem", InvestigationUISystem)
-addSystem("EvidenceBoardSystem", EvidenceBoardSystem)
-addSystem("GhostPredictionSystem", GhostPredictionSystem)
 
 local REMOTE_NAMES = {
 	"EvidenceEvent",

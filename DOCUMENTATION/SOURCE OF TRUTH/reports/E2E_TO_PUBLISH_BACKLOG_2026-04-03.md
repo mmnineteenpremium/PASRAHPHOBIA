@@ -17,6 +17,18 @@ Status:
 - in progress
 - dual-stack paling jelas sudah dipotong
 - legacy remote consumer utama sudah keluar dari surface runtime
+- owner investigasi client sekarang tidak lagi ganda pada jalur bootstrap:
+  - `InvestigationUISystem`
+  - `EvidenceBoardSystem`
+  - `GhostPredictionSystem`
+  sudah dikeluarkan dari bootstrap aktif
+- `UI/Main` tetap menjadi owner tunggal untuk:
+  - `UIEvidenceUpdated`
+  - `JournalUpdated`
+  - `UIGhostPredictionUpdated`
+- satelit yang masih hidup dan disengaja saat ini:
+  - `SoundSystem -> SensoryHorrorHUD`
+  - `FlashlightController -> FlashlightToggleUI` hanya untuk device touch saat player sudah masuk match
 
 Pekerjaan:
 
@@ -27,6 +39,22 @@ Pekerjaan:
 Done jika:
 
 - client boot tidak lagi memuat owner ganda untuk surface utama
+
+Catatan validasi terbaru:
+
+- search global source lokal menunjukkan:
+  - `InvestigationUISystem`, `EvidenceBoardSystem`, dan `GhostPredictionSystem` tidak punya consumer lain selain bootstrap + file modulnya sendiri
+- build source sukses:
+  - `_tmp_client_owner_cleanup.rbxlx`
+- smoke boot Studio sukses tanpa warning bootstrap client baru
+- `PlayerGui` saat boot lobby tetap sehat:
+  - `LobbyUI`, `MatchUI`, `ProfileUI`, `RoyalPassUI`, `JournalUI`, `ShopUI`, `PASRA_UI`, `SpectatorUI`, `RoomBrowserUI`
+- satelit runtime desktop saat boot lobby:
+  - `SensoryHorrorHUD` masih hadir sebagai overlay sanity/vignette yang disengaja
+  - `FlashlightToggleUI` tidak lagi hadir di desktop lobby boot
+- `FlashlightToggleUI` sekarang hanya dibuat dan ditampilkan untuk:
+  - `UserInputService.TouchEnabled == true`
+  - player sedang `InMatch`
 
 ### 2. Canonical remote contract
 
