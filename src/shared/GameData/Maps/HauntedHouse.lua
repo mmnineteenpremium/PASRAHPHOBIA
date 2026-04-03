@@ -27,6 +27,10 @@ return {
         "Basement",
         "StairHall",
     },
+    hideSpotRooms = {
+        "ClosetA",
+        "ClosetB",
+    },
     ghostRoomCandidates = {
         "Attic",
         "Basement",

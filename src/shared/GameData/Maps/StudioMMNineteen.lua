@@ -23,6 +23,9 @@ return {
         "HallwayA",
         "HallwayB",
     },
+    hideSpotRooms = {
+        "StorageRoom",
+    },
     ghostRoomCandidates = {
         "RecordingRoom",
         "ControlRoom",

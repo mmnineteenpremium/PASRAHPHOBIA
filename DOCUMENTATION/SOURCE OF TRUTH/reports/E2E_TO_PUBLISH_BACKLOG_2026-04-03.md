@@ -797,6 +797,18 @@ Done jika:
     - masuk zone -> `PasrahHideState = Hidden`, `PasrahHideSpotType = SafeZone`
     - keluar zone -> `PasrahHideState = Exposed`, `PasrahHideSpotType = None`
   - artinya loop survival dasar tidak lagi diam-diam bergantung pada publisher yang hilang
+- hide spot lintas map sekarang mulai data-driven:
+  - map data kini punya `hideSpotRooms` (`HauntedHouse`, `EmptyBuilding`, `StudioMMNineteen`, `AbandonedPalace`)
+  - `ClosetHidingMechanic` membaca daftar itu lewat `MapConfigSystem` (fallback `Closet/Locker` tetap ada)
+  - validasi live menutup satu bukti penting:
+    - `Workspace.ActiveMatches.Match_match_1.EmptyBuilding.EmptyBuilding.Rooms.Room_Storage` sekarang memiliki `HideSpotPrompt` (`Bersembunyi`)
+  - `MatchCreated` juga sudah dijadikan trigger registrasi awal agar prompt tidak selalu menunggu fase lanjut
+- blocker yang masih tersisa untuk slice ini:
+  - pada sesi Studio yang nyangkut di `Preparing`, `HidingSystem` snapshot masih bisa menunjukkan:
+    - `activeMatchId=nil`
+    - `zoneCount=0`
+    - `hiddenCount=0`
+  - artinya affordance prompt lintas map sudah naik, tetapi validasi penuh `EnterHide -> Hidden` masih perlu dijalankan pada sesi yang benar-benar masuk fase match aktif
 
 ## Urutan Praktis
 

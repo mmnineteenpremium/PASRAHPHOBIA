@@ -29,6 +29,9 @@ return {
         "StaircaseNorth",
         "StaircaseSouth",
     },
+    hideSpotRooms = {
+        "Storage",
+    },
     ghostRoomCandidates = {
         "ServerRoom",
         "ArchiveRoom",
