@@ -3157,3 +3157,59 @@ Menutup gap `hiding/survival clarity` tanpa membuat sistem baru: validasi runtim
 
 1. lanjutkan noise/runtime cleanup atau phase helper Studio agar validasi hunt visual lebih deterministik
 2. setelah itu masuk ke slice polish berikutnya yang paling relevan dengan publish
+
+## 2026-04-03 18:06 ICT
+
+### Task
+
+Tutup drift hunt client dengan menghubungkan `HuntStarted/HuntEnded` ke `MatchEvent` dan menghentikan post-teleport loading yang menimpa state hunt.
+
+### Linked Issues
+
+- hunt visual drift
+- post-teleport loading override
+- Studio E2E force hunt tidak terlihat di client
+
+### Files Changed
+
+- `src/ServerScriptService/Server/HuntSystem/Controller.lua`
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `HuntSystem.Controller` sekarang me-relay `HuntStarted` dan `HuntEnded` ke `MatchEvent` untuk semua player di match aktif
+- `UISystem` sekarang:
+  - punya token cancel untuk post-teleport loading flow
+  - membatalkan loading flow lama saat hunt datang
+  - mengangkat `MatchPhase` canonical ke `Hunt` saat `HuntStarted`
+  - mengembalikan `MatchPhase` ke `InGame` saat `HuntEnded`
+- jalur ini menjaga state inti UI tetap sinkron tanpa memaksa lifecycle match linear menjadi alat hunt sementara
+
+### Validation Notes
+
+- validasi live Studio berhasil:
+  - playtest restart
+  - `CreateRoom -> HostStart -> ForceHunt`
+  - `PasrahStudioE2ELastResult = ok=true | action=ForceHunt | result=match=match_1 forced`
+  - client menerima event `HuntStarted`
+  - `LocalPlayer.MatchPhase = Hunt`
+- validasi live exit hunt juga berhasil:
+  - player dipindahkan ke `SafeZone_1` runtime `HauntedHouse`
+  - atribut player menjadi `PasrahHideState = Hidden` dan `PasrahHuntThreatState = Sheltered`
+  - setelah hunt selesai natural, `LocalPlayer.MatchPhase` kembali ke `InGame`
+  - sesi tetap hidup dan tidak jatuh ke `Result` saat menunggu hunt selesai
+- sesi uji sebelumnya menunjukkan root cause asli:
+  - `ForceHunt` accepted server-side
+  - tetapi client tidak menerima event hunt dan tetap jatuh ke `Briefing`
+
+### Interpretation
+
+- blocker hunt visual Studio E2E sudah tidak lagi berada di helper force trigger
+- debt kecil yang tersisa di slice ini bukan lagi phase drift, melainkan polish perilaku hunt dan presentasi match
+
+### Next Step
+
+1. tutup satu pass live untuk natural hunt exit jika kesempatan runtime mendukung
+2. lanjut ke item publish-critical berikutnya dari backlog tanpa membuka drift baru
