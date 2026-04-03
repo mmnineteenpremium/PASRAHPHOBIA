@@ -2570,6 +2570,7 @@ function UISystem:_forceCloseAllPanelsForTeleport()
 	self._roomBrowserSuppressed = true
 	self._countdownDisplaySecond = nil
 	self._lastCountdownAudioSecond = nil
+	stopRuntimeUISound("CountdownTick")
 
 	if self._roomBrowserGui then
 		for _, childName in ipairs({ "RoomPanel", "ModeDropdown", "MapDropdown", "InviteDropdown", "PasswordModal", "KickNoticeModal", "CountdownOverlay" }) do
@@ -6500,11 +6501,17 @@ function UISystem:_ensureTeleportOverlay()
 	return screen, overlay
 end
 
-function UISystem:_showTeleportOverlay(durationSeconds)
+function UISystem:_showTeleportOverlay(durationSeconds, options)
 	local screen, overlay = self:_ensureTeleportOverlay()
 	if not screen or not overlay then
 		return
 	end
+
+	local overlayAlreadyVisible = screen.Enabled == true and overlay.BackgroundTransparency <= 0.05
+	local suppressAudio = type(options) == "table" and options.suppressAudio == true
+	local dedupeWindowSeconds = tonumber(type(options) == "table" and options.dedupeWindowSeconds) or 0.75
+	local now = tick()
+	local recentlyPlayed = self._lastTeleportOverlaySoundAt and (now - self._lastTeleportOverlaySoundAt) < math.max(0, dedupeWindowSeconds)
 
 	self._teleportOverlayToken = (self._teleportOverlayToken or 0) + 1
 	local token = self._teleportOverlayToken
@@ -6514,10 +6521,14 @@ function UISystem:_showTeleportOverlay(durationSeconds)
 		self._teleportOverlayTween = nil
 	end
 
-	playRuntimeUISound("TeleportDrop", {
-		VolumeScale = 1,
-		PlaybackSpeed = 0.94,
-	})
+	if not suppressAudio and not overlayAlreadyVisible and not recentlyPlayed then
+		playRuntimeUISound("TeleportDrop", {
+			VolumeScale = 1,
+			PlaybackSpeed = 0.94,
+			SingleInstance = true,
+		})
+		self._lastTeleportOverlaySoundAt = now
+	end
 	overlay.BackgroundTransparency = 0
 	screen.Enabled = true
 
@@ -6808,13 +6819,21 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 	payload = decoratePhasePayload(payload)
 	if eventName == "MatchPreparing" then
 		self:_forceCloseAllPanelsForTeleport()
-		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS)
+		self._matchStartTransitionAudioArmed = true
+		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS, {
+			suppressAudio = false,
+			dedupeWindowSeconds = 4,
+		})
 		self._hasPostTeleportLoaded = false
 		self._awaitingPostTeleportFlow = true
 		self:_setPhase(MATCH_PHASE.PREPARING, payload)
 	elseif eventName == "MatchStarted" then
 		self:_forceCloseAllPanelsForTeleport()
-		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS)
+		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS, {
+			suppressAudio = self._matchStartTransitionAudioArmed == true,
+			dedupeWindowSeconds = 4,
+		})
+		self._matchStartTransitionAudioArmed = false
 		self._hasPostTeleportLoaded = false
 		self._awaitingPostTeleportFlow = true
 		self:_runPostTeleportLoadingFlow()
@@ -6828,6 +6847,7 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 			self:_setPhase(resolvedPhase, payload)
 		end
 	elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
+		self._matchStartTransitionAudioArmed = false
 		self._hasPostTeleportLoaded = false
 		self._awaitingPostTeleportFlow = false
 		local missionFailed = payload and (
@@ -6839,6 +6859,7 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		self:_setPhase(MATCH_PHASE.RESULT, { duration = 5, missionFailed = missionFailed == true })
 	elseif eventName == "RoomBrowserRoomLeft" or eventName == "ReturnedToLobby" then
 		self:_forceCloseAllPanelsForTeleport()
+		self._matchStartTransitionAudioArmed = false
 		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS)
 		self._hasPostTeleportLoaded = false
 		self._awaitingPostTeleportFlow = false
