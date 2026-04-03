@@ -2246,3 +2246,54 @@ Masuk ke pass responsive yang lebih besar:
 1. `RoomBrowserUI` mobile fullscreen / flexible sheet
 2. `RoyalPassUI` mobile readability + 30-day track structure
 3. `LobbyUI` dan right rail touch targets yang lebih nyaman di mobile
+
+## 2026-04-03 13:21 ICT
+
+### Task
+
+Menjalankan pass responsive konservatif untuk `LobbyUI` dan `RoyalPassUI` agar dua panel utama ini tidak lagi sepenuhnya terkunci ke ukuran desktop lama.
+
+### Linked Issues
+
+- lobby dan royal pass masih terasa sempit pada viewport desktop yang lebih kecil
+- readability mobile belum bisa dikejar penuh sebelum `RoomBrowserUI` ikut dipecah menjadi layout fleksibel
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `LobbyUI` sekarang memakai ukuran viewport-aware pada jalur device sizing:
+  - desktop sempit / mobile tidak lagi memaksa `340x368`
+  - tombol `Profile`, `Shop`, `Royal Pass`, `Menu`, dan `Rank` ikut dihitung ulang berdasarkan lebar panel aktif
+  - `LobbyToggleButton` ikut bergeser mengikuti lebar panel
+- `RoyalPassUI` sekarang juga memakai ukuran viewport-aware:
+  - panel melebar dan meninggi secara konservatif tanpa mengubah flow buka-tutup yang sudah stabil
+  - text size `PrimaryLabel` dan `SecondaryLabel` dinaikkan sedikit untuk readability dasar
+- `RoomBrowserUI` sengaja belum dirombak dalam patch ini; debt fullscreen/flexible mobile tetap dipertahankan sebagai task terpisah agar tidak mencampur perubahan besar dengan patch yang sudah stabil
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_responsive_lobby_pass_build.rbxlx`
+- validasi lobby:
+  - `ScreenCapture_Responsive_Lobby`
+  - runtime:
+    - `LobbyUI.MainPanel.Size = {0, 396}, {0, 384}`
+    - `LobbyUI.MainPanel.Position = {0, 12}, {0, 12}`
+    - `LobbyToggleButton.Position = {0, 416}, {0, 120}`
+- validasi royal pass:
+  - `ScreenCapture_Responsive_RoyalPass`
+  - runtime:
+    - `RoyalPassUI.MainPanel.Size = {0, 404}, {0, 388}`
+    - `RoyalPassUI.MainPanel.Visible = true`
+
+### Next Step
+
+Task responsive yang benar-benar besar masih tersisa:
+1. `RoomBrowserUI` fullscreen/flexible layout
+2. `RoyalPassUI` 30-day reward + 30-day mission flow
+3. touch target dan typography mobile yang lebih agresif setelah sheet utama aman
