@@ -4172,3 +4172,60 @@ Menutup bukti runtime yang masih tertinggal pada dua debt gameplay: validasi liv
 
 1. checkpoint laporan validasi runtime pintu + hiding lintas map
 2. lanjut ke perluasan hiding affordance dan readability survive hunt, atau ke layout/traversal polish berikutnya
+
+## 2026-04-04 00:49 ICT
+
+### Task
+
+Menyelaraskan hunt guidance UI agar mengenali hide spot runtime nyata, bukan selalu menyebut `SafeZone`.
+
+### Linked Issues
+
+- sesudah hide spot lintas map tervalidasi, copy HUD hunt masih berpotensi misleading
+- saat player hide di `Closet/Locker`, `ObjectiveLabel` dan `ControlsHintBar` tidak boleh tetap memberi kesan bahwa player ada di `SafeZone`
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `UI/Main` sekarang punya helper runtime baru:
+  - format label hide spot
+  - baca hide spot terdekat dari `Rooms` yang sudah diberi `HideSpotId/HideSpotType`
+  - pilih refuge prioritas antara `HideSpot` dan `SafeZone`
+- objective/copy hunt tidak lagi hardcoded `SafeZone` untuk semua konteks
+- saat player benar-benar hide di room runtime, label sekarang memakai nama room yang jujur (`Storage`, bukan `SafeZone 2`)
+- `ControlsHintBar` hidden state juga ikut disinkronkan ke nama hide spot aktif
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_hunt_refuge_guidance.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_hunt_refuge_guidance_v2.rbxlx`
+- smoke runtime baru di `Classic -> EmptyBuilding -> ForceHunt -> EnterHide(Room_Storage)` menunjukkan:
+  - `MatchPhase = Hunt`
+  - `PasrahHideState = Hidden`
+  - `PasrahHideSpotType = Closet`
+  - `PasrahHideZoneId = Room_Storage`
+  - `Players.ZyraaaVex.PlayerGui.UXLayer.MatchUXGui.MatchUXLayer.ObjectiveLabel = Berlindung di Storage. Diam dan tunggu hunt selesai sebelum keluar.`
+  - `Players.ZyraaaVex.PlayerGui.MatchUI.MainPanel.HeaderCard.SecondaryLabel = Berlindung di Storage. Diam dan tunggu hunt selesai sebelum keluar.`
+  - `Players.ZyraaaVex.PlayerGui.MatchUI.ControlsHintBar.Label = STORAGE  •  DIAM  •  TUNGGU HUNT SELESAI`
+  - `Players.ZyraaaVex.PlayerGui.MatchUI.MainPanel.SummaryFrame.GuessRow.Value = Storage`
+  - `Players.ZyraaaVex.PlayerGui.MatchUI.MainPanel.SummaryFrame.SurvivedRow.Value = Storage`
+
+### Interpretation
+
+- teachability survive loop sekarang naik satu level:
+  - UI tidak lagi hanya berkata “lari ke safe zone”
+  - ketika player sudah masuk refuge nyata, semua surface utama sepakat soal tempatnya
+- debt berikutnya bergeser ke:
+  - kapan memilih `HideSpot` dibanding `SafeZone` saat player masih `Exposed`
+  - perluasan readability lintas map/room lain
+
+### Next Step
+
+1. checkpoint patch hunt refuge guidance
+2. lanjut ke teachability survive loop saat player masih `Exposed`, atau ke traversal/layout polish berikutnya

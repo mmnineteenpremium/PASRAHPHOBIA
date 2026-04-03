@@ -1561,17 +1561,38 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	}
 end
 
-local function formatSafeZoneLabel(zoneId)
-	if type(zoneId) ~= "string" or zoneId == "" then
+local function formatRuntimeAreaLabel(areaId)
+	if type(areaId) ~= "string" or areaId == "" then
 		return nil
 	end
 
-	local formatted = zoneId
+	local formatted = areaId
 		:gsub("_", " ")
 		:gsub("([%a])(%d)", "%1 %2")
 		:gsub("(%d)([%a])", "%1 %2")
 		:gsub("^%l", string.upper)
 	return formatted
+end
+
+local function formatSafeZoneLabel(zoneId)
+	return formatRuntimeAreaLabel(zoneId)
+end
+
+local function formatHideSpotLabel(zoneId)
+	if type(zoneId) ~= "string" or zoneId == "" then
+		return nil
+	end
+	return formatRuntimeAreaLabel(zoneId:gsub("^Room_", ""))
+end
+
+local function formatHideZoneLabel(zoneId, spotType)
+	if type(zoneId) ~= "string" or zoneId == "" then
+		return nil
+	end
+	if tostring(spotType or "") == "SafeZone" or zoneId:match("^SafeZone") then
+		return formatSafeZoneLabel(zoneId) or zoneId
+	end
+	return formatHideSpotLabel(zoneId) or formatRuntimeAreaLabel(zoneId) or zoneId
 end
 
 local function getActiveMatchMapModel()
@@ -1645,6 +1666,44 @@ local function getNearestSafeZoneInfo()
 	return nearest
 end
 
+local function getNearestHideSpotInfo()
+	local player = Players.LocalPlayer
+	local character = player and player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+
+	local mapModel = getActiveMatchMapModel()
+	local roomsFolder = mapModel and mapModel:FindFirstChild("Rooms", true)
+	if not roomsFolder then
+		return nil
+	end
+
+	local nearest = nil
+	for _, child in ipairs(roomsFolder:GetChildren()) do
+		if child:IsA("BasePart") then
+			local hideSpotId = tostring(child:GetAttribute("HideSpotId") or "")
+			local hideSpotType = tostring(child:GetAttribute("HideSpotType") or "")
+			local hideSpotOccupied = child:GetAttribute("HideSpotOccupied") == true
+			if hideSpotId ~= "" and hideSpotType ~= "" and not hideSpotOccupied then
+				local distance = (root.Position - child.Position).Magnitude
+				if nearest == nil or distance < nearest.distance then
+					nearest = {
+						kind = "HideSpot",
+						zoneId = hideSpotId,
+						spotType = hideSpotType,
+						label = formatHideZoneLabel(hideSpotId, hideSpotType) or hideSpotId,
+						distance = distance,
+					}
+				end
+			end
+		end
+	end
+
+	return nearest
+end
+
 local function getSafeZoneHintText(nearestSafeZone)
 	local info = nearestSafeZone or getNearestSafeZoneInfo()
 	if type(info) ~= "table" then
@@ -1658,6 +1717,46 @@ local function getSafeZoneHintText(nearestSafeZone)
 	return label
 end
 
+local function getHideSpotHintText(nearestHideSpot)
+	local info = nearestHideSpot or getNearestHideSpotInfo()
+	if type(info) ~= "table" then
+		return "HIDE SPOT TERDEKAT"
+	end
+
+	local label = info.label or "HIDE SPOT"
+	if type(info.distance) == "number" then
+		return string.format("%s %dst", label, math.max(0, math.floor(info.distance + 0.5)))
+	end
+	return label
+end
+
+local function getPreferredHuntRefugeInfo()
+	local nearestSafeZone = getNearestSafeZoneInfo()
+	local nearestHideSpot = getNearestHideSpotInfo()
+	if nearestHideSpot and (not nearestSafeZone or nearestHideSpot.distance <= (nearestSafeZone.distance + 4)) then
+		return nearestHideSpot, nearestSafeZone
+	end
+	return nearestSafeZone, nearestHideSpot
+end
+
+local function getRefugeHintText(refugeInfo)
+	if type(refugeInfo) ~= "table" then
+		return "RUANG AMAN"
+	end
+	if refugeInfo.kind == "HideSpot" then
+		return getHideSpotHintText(refugeInfo)
+	end
+	return getSafeZoneHintText(refugeInfo)
+end
+
+local function getRefugeActionText(refugeInfo)
+	local hintText = getRefugeHintText(refugeInfo)
+	if type(refugeInfo) == "table" and refugeInfo.kind == "HideSpot" then
+		return "masuk " .. hintText
+	end
+	return "menuju " .. hintText
+end
+
 local function getHuntObjectiveText()
 	local player = Players.LocalPlayer
 	if not player then
@@ -1665,49 +1764,74 @@ local function getHuntObjectiveText()
 	end
 
 	local hideState = tostring(player:GetAttribute("PasrahHideState") or "Exposed")
+	local hideSpotType = tostring(player:GetAttribute("PasrahHideSpotType") or "None")
 	local hideZoneId = tostring(player:GetAttribute("PasrahHideZoneId") or "")
 	local threatState = tostring(player:GetAttribute("PasrahHuntThreatState") or "Clear")
 	local threatDistance = tonumber(player:GetAttribute("PasrahHuntThreatDistance"))
-	local nearestSafeZone = getNearestSafeZoneInfo()
-	local safeZoneHint = getSafeZoneHintText(nearestSafeZone)
+	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
+	local refugeHint = getRefugeHintText(nearestRefuge)
+	local refugeAction = getRefugeActionText(nearestRefuge)
+	local alternateHint = getRefugeHintText(alternateRefuge)
 
 	if hideState == "Hidden" then
 		if hideZoneId ~= "" then
 			return string.format(
 				"Berlindung di %s. Diam dan tunggu hunt selesai sebelum keluar.",
-				formatSafeZoneLabel(hideZoneId) or hideZoneId
+				formatHideZoneLabel(hideZoneId, hideSpotType) or hideZoneId
 			)
 		end
 		return "Kamu sedang bersembunyi. Tunggu hunt selesai sebelum keluar."
 	end
 
 	if threatState == "Sheltered" then
-		return string.format("Kamu sudah dekat %s. Jaga posisi dan jangan keluar saat hunt masih aktif.", safeZoneHint)
+		return string.format("Kamu sudah dekat %s. Jaga posisi dan jangan keluar saat hunt masih aktif.", refugeHint)
 	end
 
 	if threatState == "Critical" or threatState == "Close" then
 		if threatDistance then
+			if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
+				return string.format(
+					"Ghost dekat (%dst). Putus line-of-sight, rotasi lewat pintu, lalu %s. Jika tertutup, menuju %s.",
+					threatDistance,
+					refugeAction,
+					alternateHint
+				)
+			end
+			return string.format("Ghost dekat (%dst). Putus line-of-sight, rotasi lewat pintu, lalu %s.", threatDistance, refugeAction)
+		end
+		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
 			return string.format(
-				"Ghost dekat (%dst). Putus line-of-sight, rotasi lewat pintu, lalu menuju %s.",
-				threatDistance,
-				safeZoneHint
+				"Ghost dekat. Putus line-of-sight, rotasi lewat pintu, lalu %s. Jika tertutup, menuju %s.",
+				refugeAction,
+				alternateHint
 			)
 		end
-		return string.format("Ghost dekat. Putus line-of-sight, rotasi lewat pintu, lalu menuju %s.", safeZoneHint)
+		return string.format("Ghost dekat. Putus line-of-sight, rotasi lewat pintu, lalu %s.", refugeAction)
 	end
 
 	if threatState == "Tracked" or threatState == "Warn" then
 		if threatDistance then
+			if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
+				return string.format(
+					"Ghost melacak (%dst). Putar jalur, jaga jarak, lalu %s. Jika gagal, menuju %s.",
+					threatDistance,
+					refugeAction,
+					alternateHint
+				)
+			end
+			return string.format("Ghost melacak (%dst). Putar jalur, jaga jarak, lalu %s.", threatDistance, refugeAction)
+		end
+		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
 			return string.format(
-				"Ghost melacak (%dst). Putar jalur, jaga jarak, lalu menuju %s.",
-				threatDistance,
-				safeZoneHint
+				"Ghost melacak. Putar jalur, jaga jarak, lalu %s. Jika gagal, menuju %s.",
+				refugeAction,
+				alternateHint
 			)
 		end
-		return string.format("Ghost melacak. Putar jalur, jaga jarak, lalu menuju %s.", safeZoneHint)
+		return string.format("Ghost melacak. Putar jalur, jaga jarak, lalu %s.", refugeAction)
 	end
 
-	return string.format("Hunt aktif. Gunakan prompt pintu, putus line-of-sight, lalu menuju %s.", safeZoneHint)
+	return string.format("Hunt aktif. Gunakan prompt pintu, putus line-of-sight, lalu %s.", refugeAction)
 end
 
 local function getHuntStatusSnapshot()
@@ -1723,6 +1847,7 @@ local function getHuntStatusSnapshot()
 
 	return {
 		hideState = tostring(player:GetAttribute("PasrahHideState") or "Exposed"),
+		hideSpotType = tostring(player:GetAttribute("PasrahHideSpotType") or "None"),
 		hideZoneId = tostring(player:GetAttribute("PasrahHideZoneId") or ""),
 		threatState = tostring(player:GetAttribute("PasrahHuntThreatState") or "Clear"),
 		threatDistance = tonumber(player:GetAttribute("PasrahHuntThreatDistance")),
@@ -1748,21 +1873,29 @@ end
 
 local function getHuntControlsHintText()
 	local snapshot = getHuntStatusSnapshot()
-	local nearestSafeZone = getNearestSafeZoneInfo()
-	local safeZoneHint = getSafeZoneHintText(nearestSafeZone)
+	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
+	local refugeHint = getRefugeHintText(nearestRefuge)
+	local alternateHint = getRefugeHintText(alternateRefuge)
 	if snapshot.hideState == "Hidden" then
-		return "SAFE ZONE AKTIF  •  DIAM  •  TUNGGU HUNT SELESAI"
+		local hiddenLabel = formatHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType) or refugeHint
+		return string.upper(hiddenLabel) .. "  •  DIAM  •  TUNGGU HUNT SELESAI"
 	end
 	if snapshot.threatState == "Sheltered" then
-		return string.format("%s  •  JAGA POSISI  •  TUNGGU HUNT", safeZoneHint)
+		return string.format("%s  •  JAGA POSISI  •  TUNGGU HUNT", refugeHint)
 	end
 	if snapshot.threatState == "Critical" or snapshot.threatState == "Close" then
-		return string.format("PUTUS LINE-OF-SIGHT  •  PINTU: E/X/TAP  •  %s", safeZoneHint)
+		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
+			return string.format("PUTUS LOS  •  PINTU: E/X/TAP  •  %s  •  ALT %s", refugeHint, alternateHint)
+		end
+		return string.format("PUTUS LINE-OF-SIGHT  •  PINTU: E/X/TAP  •  %s", refugeHint)
 	end
 	if snapshot.threatState == "Tracked" or snapshot.threatState == "Warn" then
-		return string.format("PUTAR JALUR  •  JAGA JARAK  •  %s", safeZoneHint)
+		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
+			return string.format("PUTAR JALUR  •  %s  •  ALT %s", refugeHint, alternateHint)
+		end
+		return string.format("PUTAR JALUR  •  JAGA JARAK  •  %s", refugeHint)
 	end
-	return string.format("PINTU: E/X/TAP  •  TARGET: %s  •  JANGAN LARI LURUS", safeZoneHint)
+	return string.format("PINTU: E/X/TAP  •  TARGET: %s  •  JANGAN LARI LURUS", refugeHint)
 end
 
 local function bulletList(list, emptyText)
@@ -3309,30 +3442,34 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 		local rewardSummary = viewState == "Lobby" and "-" or "Pending"
 		if viewState == "Hunt" then
 			local huntSnapshot = getHuntStatusSnapshot()
-			local nearestSafeZone = getNearestSafeZoneInfo()
-			local nearestSafeZoneHint = getSafeZoneHintText(nearestSafeZone)
+			local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
+			local refugeHint = getRefugeHintText(nearestRefuge)
+			local alternateHint = getRefugeHintText(alternateRefuge)
 			local huntBadge = getHuntStatusBadge(huntSnapshot)
 			local huntDistanceText = type(huntSnapshot.threatDistance) == "number"
 				and string.format("%dst", math.max(0, math.floor(huntSnapshot.threatDistance + 0.5)))
 				or "-"
 			local zoneLabel = huntSnapshot.hideZoneId ~= ""
-				and (formatSafeZoneLabel(huntSnapshot.hideZoneId) or huntSnapshot.hideZoneId)
-				or nearestSafeZoneHint
-			local guidance = "Menuju " .. nearestSafeZoneHint
+				and (formatHideZoneLabel(huntSnapshot.hideZoneId, huntSnapshot.hideSpotType) or huntSnapshot.hideZoneId)
+				or refugeHint
+			local guidance = "Menuju " .. refugeHint
 			if huntSnapshot.hideState == "Hidden" then
 				guidance = zoneLabel
 				deathSummary = "Diam sampai selesai"
 			elseif huntSnapshot.threatState == "Sheltered" then
 				guidance = "Tahan posisi"
-				deathSummary = nearestSafeZoneHint
+				deathSummary = refugeHint
 			elseif huntSnapshot.threatState == "Critical" or huntSnapshot.threatState == "Close" then
-				guidance = "Putus LOS -> " .. nearestSafeZoneHint
+				guidance = "Putus LOS -> " .. refugeHint
 				deathSummary = "Ghost " .. huntDistanceText
 			elseif huntSnapshot.threatState == "Tracked" or huntSnapshot.threatState == "Warn" then
-				guidance = "Rotasi -> " .. nearestSafeZoneHint
+				guidance = "Rotasi -> " .. refugeHint
 				deathSummary = "Ghost " .. huntDistanceText
+				if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
+					deathSummary = "Ghost " .. huntDistanceText .. " / ALT " .. alternateHint
+				end
 			else
-				deathSummary = nearestSafeZoneHint
+				deathSummary = refugeHint
 			end
 
 			self:_setSummaryValue(rowWidgets.status, huntBadge)
