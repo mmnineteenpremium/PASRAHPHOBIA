@@ -3730,3 +3730,59 @@ Menutup hiding spot non-safe-zone baseline dengan membuat `closet hiding` runtim
 
 1. checkpoint commit untuk baseline closet hiding runtime
 2. lanjut ke perluasan hiding affordance lintas map atau gameplay survival slice berikutnya
+
+## 2026-04-04 00:18 ICT
+
+### Task
+
+Menutup debt arsitektur `GameplayTick` yang ternyata tidak pernah dipublish, lalu memvalidasi bahwa `SafeZone` auto-hide kembali hidup pada runtime aktif.
+
+### Linked Issues
+
+- audit closet hiding membuktikan `GameplayTick` tidak punya publisher canonical sama sekali
+- beberapa system aktif masih subscribe ke `GameplayTick`:
+  - `GameplayLoopController`
+  - `HuntPhaseController`
+  - `GhostPathingSystem`
+  - `PlayerSurvivalSystem`
+  - `HidingSystem`
+- tanpa publisher ini, sebagian loop survival/timer hanya tampak ada di source tetapi sebenarnya dorman
+
+### Files Changed
+
+- `src/ServerScriptService/Server/GameplayLoopController/Service.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `GameplayLoopController` sekarang punya publisher runtime ringan:
+  - hanya aktif saat `activeMatchId` ada
+  - publish `GameplayTick` setiap `0.25s`
+  - payload membawa `matchId`, `dt`, dan `now`
+- pendekatan ini menghidupkan subscriber canonical tanpa menambah bootstrap/poller ad-hoc baru di banyak system
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_gameplay_tick_build.rbxlx`
+- validasi live di `HauntedHouse` setelah match aktif:
+  - saat root dipindahkan ke `Workspace.ActiveMatches.Match_match_1.HauntedHouse.HauntedHouse.SafeZones.SafeZone_1`
+    - `PasrahHideState = Hidden`
+    - `PasrahHideSpotType = SafeZone`
+    - `PasrahHideZoneId = SafeZone_1`
+  - saat root dipindahkan keluar zone:
+    - `PasrahHideState = Exposed`
+    - `PasrahHideSpotType = None`
+    - `PasrahHideZoneId = ""`
+- ini menutup bukti paling penting bahwa `GameplayTick` publisher sekarang benar-benar berjalan, bukan hanya source patch
+
+### Interpretation
+
+- loop survival dasar kembali jujur: `SafeZone` auto-hide tidak lagi bergantung pada kondisi kebetulan atau tool khusus
+- publisher `GameplayTick` sekarang punya owner canonical, sehingga debt berikutnya bisa difokuskan ke gameplay/content, bukan event loop yang hilang
+
+### Next Step
+
+1. checkpoint commit untuk restore publisher `GameplayTick`
+2. lanjut ke slice survival/map berikutnya dengan fondasi tick yang sudah aktif

@@ -1,6 +1,7 @@
 local Services = require(script.Parent.Parent.Core.Services)
 local Service = {}
 Service.__index = Service
+local GAMEPLAY_TICK_INTERVAL = 0.25
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then return nil end
@@ -19,6 +20,8 @@ function Service.new(state, deps)
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
     self._dependencies = {}
+    self._running = false
+    self._tickThread = nil
     return self
 end
 function Service:Init()
@@ -30,8 +33,29 @@ function Service:Init()
         ProfileSystem = Services.Get(self._deps, "ProfileSystem"),
     }
 end
-function Service:Start() end
-function Service:Stop() self._state:Clear() end
+function Service:Start()
+    self._running = true
+    if self._tickThread == nil then
+        self._tickThread = task.spawn(function()
+            while self._running do
+                local activeMatchId = self._state:Get("activeMatchId")
+                if type(activeMatchId) == "string" and activeMatchId ~= "" then
+                    self:_publish("GameplayTick", {
+                        matchId = activeMatchId,
+                        dt = GAMEPLAY_TICK_INTERVAL,
+                        now = os.clock(),
+                    })
+                end
+                task.wait(GAMEPLAY_TICK_INTERVAL)
+            end
+            self._tickThread = nil
+        end)
+    end
+end
+function Service:Stop()
+    self._running = false
+    self._state:Clear()
+end
 function Service:_publish(eventName, payload)
     if self._eventBus then self._eventBus:Publish(eventName, payload) end
 end
