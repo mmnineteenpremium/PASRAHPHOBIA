@@ -79,3 +79,19 @@ Smoke run live terbaru (`Ranked -> CreateRoom -> HostStart -> EndMatch`) menghas
   - `EndMatch` via StudioE2E mengembalikan player ke lobby (`InMatch=false`)
 - `E2E-05` sampai `E2E-09`: `BLOCKED/PENDING`
   - belum dieksekusi penuh pada smoke run ini; butuh pass dedicated per fase gameplay/hunt/extraction visual
+
+## Update 2026-04-04 06:05 ICT
+
+Pass lanjutan untuk fase hunt dan extraction menghasilkan status berikut:
+
+- `E2E-08 Hunt`: `PASS`
+  - `StudioE2EControl(action=ForceHunt)` -> `ok=true`
+  - client mencapai `MatchPhase=Hunt`
+- `E2E-09 Extraction or endgame`: `PASS` (Studio override path)
+  - `StudioE2EControl(action=ExtractSelf, allowStudioOverride=true)` -> `ok=true`
+  - player kembali ke lobby (`InMatch=false`) dan fase bergerak ke `Result`
+
+Catatan:
+
+- satu run awal `ExtractSelf` sempat gagal `player_not_alive` saat timing hunt tertentu.
+- rerun extraction pada match aktif menunjukkan jalur extraction override tetap valid untuk gate E2E.

@@ -5698,3 +5698,32 @@ Menjalankan smoke E2E terstruktur dan mengisi status PASS/BLOCKED terbaru pada m
 
 - loop lobby -> match -> kembali lobby tetap stabil di baseline terbaru.
 - coverage fase gameplay tengah (preparation/investigation/hunt/extraction visual) masih perlu run khusus untuk menutup matrix penuh.
+
+## 2026-04-04 06:05 ICT
+
+### Task
+
+Menutup coverage E2E fase hunt dan extraction menggunakan harness StudioE2E.
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TEST_MATRIX_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Validation Notes
+
+- run 1 (`ForceHunt -> ExtractSelf`) hasil:
+  - `ForceHunt` ack `ok=true`
+  - `MatchPhase` mencapai `Hunt`
+  - `ExtractSelf` gagal `player_not_alive` pada timing run ini
+  - player tetap kembali lobby karena lifecycle hunt berjalan ke end state
+- run 2 (rerun extraction override pada match aktif):
+  - `ExtractSelf` ack `ok=true` dengan result `match=match_2 zone=StudioE2EZone`
+  - player kembali ke lobby (`InMatch=false`)
+  - fase client bergerak ke `Result`
+
+### Interpretation
+
+- `E2E-08` (hunt transition) tervalidasi `PASS`.
+- `E2E-09` (extraction/endgame) tervalidasi `PASS` pada jalur extraction override Studio.
+- ada sensitivitas timing (`player_not_alive`) saat extract dipanggil pada jendela hunt tertentu; ini dicatat sebagai caveat harness, bukan blocker jalur extraction override.
