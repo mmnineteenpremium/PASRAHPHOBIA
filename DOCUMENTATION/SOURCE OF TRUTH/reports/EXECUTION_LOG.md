@@ -3373,3 +3373,58 @@ Menambahkan affordance world-space untuk `SafeZone` saat hunt aktif, supaya pema
 2. lanjut ke readability/traversal pass berikutnya:
    - audit spot hiding final lintas map
    - polish flow layout dan akses ruangan penting
+
+## 2026-04-03 20:23 ICT
+
+### Task
+
+Menutup drift shelter lintas playable map dengan mengaudit path runtime dari spawn map ke `SafeZone`, lalu menormalkan posisi zone yang gagal melalui `MapRuntimePatches`.
+
+### Linked Issues
+
+- shelter sudah punya marker visual, tetapi beberapa map masih berisiko bohong karena `SafeZone` tidak benar-benar reachable dari spawn match
+- audit awal lintas map menunjukkan blocker nyata:
+  - `AbandonedPalace`: `SafeZone_1` = `NoPath`
+  - `EmptyBuilding`: `SafeZone_1` dan `SafeZone_2` = `NoPath`
+  - `StudioMMNineteen`: `SafeZone_1` = `NoPath`
+
+### Files Changed
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- saya tambahkan `SAFE_ZONE_POSITION_OVERRIDES` source-controlled di `MapRuntimePatches`
+- clone runtime sekarang menormalkan posisi `SafeZone` yang gagal pada tiga map:
+  - `AbandonedPalace.SafeZone_1 -> (-63.2, 4, 32.4)`
+  - `EmptyBuilding.SafeZone_1 -> (778, 4, -10)`
+  - `EmptyBuilding.SafeZone_2 -> (824, 4, -20)`
+  - `StudioMMNineteen.SafeZone_1 -> (369.4, 4, 18.2)`
+- patch ini sengaja diletakkan di runtime patch layer, bukan mengubah model mentah, agar fix tetap mode-agnostic dan mudah diaudit ulang
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_safezone_runtime_patch_build.rbxlx`
+- edit-time Studio mengonfirmasi patch sinkron:
+  - grep `SAFE_ZONE_POSITION_OVERRIDES` ditemukan
+  - grep `SafeZoneRuntimePatched` ditemukan
+- re-audit live runtime dari `PlayerSpawn_1` ke semua `SafeZone` menghasilkan:
+  - `HauntedHouse`: `SafeZone_1 Success (26 waypoint)`, `SafeZone_2 Success (32 waypoint)`
+  - `AbandonedPalace`: `SafeZone_1 Success (47 waypoint)`, `SafeZone_2 Success (87 waypoint)`
+  - `EmptyBuilding`: `SafeZone_1 Success (4 waypoint)`, `SafeZone_2 Success (10 waypoint)`
+  - `StudioMMNineteen`: `SafeZone_1 Success (15 waypoint)`, `SafeZone_2 Success (16 waypoint)`
+
+### Interpretation
+
+- baseline shelter current playable maps sekarang sudah benar-benar reachable, bukan sekadar part invisible yang kebetulan ada di data model
+- debt map berikutnya turun level menjadi art/layout readability dan hiding spot final yang lebih kaya, bukan lagi blocker akses dasar ke safe zone
+
+### Next Step
+
+1. checkpoint commit untuk patch safe zone runtime lintas map
+2. lanjut ke debt traversal/layout berikutnya:
+   - audit pintu terkunci dan flow ruangan penting
+   - definisi hiding spot final di luar baseline safe zone
