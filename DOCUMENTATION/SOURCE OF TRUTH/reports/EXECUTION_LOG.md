@@ -3213,3 +3213,55 @@ Tutup drift hunt client dengan menghubungkan `HuntStarted/HuntEnded` ke `MatchEv
 
 1. tutup satu pass live untuk natural hunt exit jika kesempatan runtime mendukung
 2. lanjut ke item publish-critical berikutnya dari backlog tanpa membuka drift baru
+
+## 2026-04-03 18:56 ICT
+
+### Task
+
+Polish `RoomBrowserUI` compact/mobile dan `RoyalPassUI` track 30 hari agar surface besar terasa lebih fokus, lebih mudah dibaca, dan lebih dekat ke perilaku panel produksi.
+
+### Linked Issues
+
+- mobile room browser readability
+- royal pass long-track scrolling
+- finale placeholder kurang menonjol
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `RoomBrowserUI`:
+  - margin mobile dipersempit lagi agar sheet compact lebih dekat ke fullscreen
+  - close button mobile diperbesar
+  - title mobile diperbesar
+  - background sheet mobile dibuat sedikit lebih solid untuk bantu keterbacaan
+- `RoyalPassUI`:
+  - track sekarang auto-focus ke hari aktif saat season/view/tier berubah
+  - kartu hari ke-30 dibuat lebih lebar sebagai finale placeholder rarity 5
+  - state fokus track disimpan terpisah agar refresh berikutnya tidak terus-menerus memaksa scroll
+
+### Validation Notes
+
+- validasi live desktop berhasil:
+  - `RoomBrowserUI.Panel.Size = 1080x668`
+  - `CloseButton.Size = 34x28`
+  - `RoomBrowserUI` tetap terbuka normal pada viewport desktop `1600x734`
+  - `RoyalPassUI` tetap hidup dan `DayCard30.Size = 158x156`
+  - `TrackScroller.CanvasPosition = 0,0` pada baseline `Tier 01`
+- log runtime terbaru tidak menunjukkan error UI baru setelah restart playtest
+- batas validasi yang masih terbuka:
+  - handset/device emulator nyata masih perlu pass lanjutan untuk membuktikan effect patch compact/mobile, karena sesi ini hanya memverifikasi runtime desktop langsung
+
+### Interpretation
+
+- debt layout besar tidak lagi semata soal ukuran panel; sekarang masuk ke polish ergonomi dan scroll focus
+- `RoyalPassUI` sudah lebih dekat ke ekspektasi pass live, sementara `RoomBrowserUI` compact punya base yang lebih aman untuk pass handset berikutnya
+
+### Next Step
+
+1. lanjutkan pass handset/device-aware untuk `RoomBrowserUI` dan `RoyalPassUI` bila butuh validasi visual yang lebih tajam
+2. setelah itu masuk ke slice map/door/gameplay polish yang paling mengganggu flow investigasi

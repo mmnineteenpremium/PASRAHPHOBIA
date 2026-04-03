@@ -539,9 +539,23 @@ Status:
     - `RoomBrowserUI.Panel.Visible = false`
     - `MatchPhase = Briefing`
   - `RoyalPassUI` sekarang punya layout yang lebih lebar/tinggi untuk viewport kecil dan track card lebih besar agar 30-day pass tidak terasa sempit
+- pass compact terbaru untuk `RoomBrowserUI` juga menyiapkan handset dengan sheet yang lebih rapat dan lebih mudah disentuh:
+  - margin mobile dipersempit lagi agar footprint lebih dekat ke fullscreen sheet
+  - close button mobile dibesarkan
+  - judul mobile dibesarkan dan background sheet dibuat sedikit lebih solid agar keterbacaan naik
+  - validasi live desktop tetap stabil:
+    - `RoomBrowserUI.Panel.Size = 1080x668`
+    - `CloseButton.Size = 34x28`
+    - tidak muncul error UI baru di boot/runtime desktop
 - polish lanjutan `RoyalPassUI` juga sudah membuat track 30 hari muncul lebih cepat di viewport aktif:
   - tab `30 DAY REWARD` dan `30 DAY MISSION` sekarang terlihat di atas scroller track
   - screenshot validasi `ScreenCapture_RoyalPass_30Day_Taller` menunjukkan kartu hari awal langsung terlihat tanpa scroll panjang
+- polish track terbaru juga membuat `RoyalPassUI` terasa lebih seperti pass yang bisa di-swipe:
+  - track sekarang auto-focus ke hari aktif saat season/view/tier berubah
+  - kartu hari ke-30 dibuat lebih lebar sebagai finale placeholder agar hadiah karakter rarity 5 tidak tenggelam di antara kartu lain
+  - validasi live desktop terbaru membuktikan:
+    - `TrackScroller.CanvasPosition = 0,0` pada baseline `Tier 01`
+    - `DayCard30.Size = 158x156`
 - `MatchUI` sekarang ikut masuk pass viewport-aware agar tidak hanya nyaman di desktop lebar:
   - panel match, header, summary, footer, timer, hint bar, dan quick evidence action sekarang dihitung ulang dari viewport aktif
   - pada desktop validasi terbaru layout tetap rapih dan tidak overlap dengan rail kanan lain

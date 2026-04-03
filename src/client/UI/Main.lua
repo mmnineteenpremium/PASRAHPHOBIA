@@ -2179,6 +2179,7 @@ function UISystem:Init(context)
 		nextReward = nil,
 		viewMode = "Rewards",
 	}
+	self._royalPassTrackFocusKey = nil
 	self._spectatorState = {
 		lastEvent = "Idle",
 		title = "Belum spectate.",
@@ -5582,6 +5583,54 @@ function UISystem:_refreshRoyalPassPanel()
 			isFinalDay and Color3.fromRGB(248, 242, 230) or Color3.fromRGB(236, 240, 246)
 		)
 	end
+
+	local focusKey = string.format(
+		"%s:%s:%d:%d",
+		tostring(state.seasonId or "S1"),
+		tostring(state.viewMode or "Rewards"),
+		currentDay,
+		premiumOwned and 1 or 0
+	)
+	if self._royalPassTrackFocusKey ~= focusKey then
+		self._royalPassTrackFocusKey = focusKey
+		self:_focusRoyalPassTrackCard(widgets, currentDay)
+	end
+end
+
+function UISystem:_focusRoyalPassTrackCard(widgets, targetIndex)
+	if type(widgets) ~= "table" then
+		return
+	end
+
+	local scroller = widgets.TrackScroller
+	local cards = widgets.TrackCards
+	local targetCard = type(cards) == "table" and cards[targetIndex] or nil
+	local targetRoot = targetCard and targetCard.Root
+	if not scroller or not targetRoot or not targetRoot.Parent then
+		return
+	end
+
+	task.defer(function()
+		if not scroller.Parent or not targetRoot.Parent then
+			return
+		end
+
+		local visibleWidth = scroller.AbsoluteWindowSize.X
+		local canvasWidth = scroller.AbsoluteCanvasSize.X
+		if visibleWidth <= 0 or canvasWidth <= visibleWidth then
+			scroller.CanvasPosition = Vector2.new(0, 0)
+			return
+		end
+
+		local cardOffsetX = targetRoot.AbsolutePosition.X - scroller.AbsolutePosition.X + scroller.CanvasPosition.X
+		local cardCenterX = cardOffsetX + (targetRoot.AbsoluteSize.X * 0.5)
+		local desiredX = math.clamp(
+			math.floor(cardCenterX - (visibleWidth * 0.5)),
+			0,
+			math.max(0, canvasWidth - visibleWidth)
+		)
+		scroller.CanvasPosition = Vector2.new(desiredX, 0)
+	end)
 end
 
 function UISystem:_refreshPasraPanel()
@@ -5755,7 +5804,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		end)
 	end
 
-	local margin = profile.isMobile and 6 or 14
+	local margin = profile.isMobile and 4 or 14
 	local usableWidth = math.max(360, viewportSize.X - (topLeftInset.X + bottomRightInset.X + margin * 2))
 	local usableHeight = math.max(420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + margin * 2))
 	local isCompact = profile.isMobile or viewportSize.X <= 980
@@ -5764,15 +5813,15 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local panelWidth = isCompact and usableWidth or math.min(1080, usableWidth)
 	local panelHeight = isCompact and usableHeight or math.min(668, usableHeight)
 	if profile.isMobile then
-		panelWidth = math.max(320, viewportSize.X - (topLeftInset.X + bottomRightInset.X + 12))
-		panelHeight = math.max(460, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 14))
+		panelWidth = math.max(336, viewportSize.X - (topLeftInset.X + bottomRightInset.X + 8))
+		panelHeight = math.max(500, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 8))
 	end
 	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
 	panel.Position = UDim2.fromOffset(
 		topLeftInset.X + margin + math.floor(panelWidth * 0.5),
 		topLeftInset.Y + margin + math.floor(panelHeight * 0.5)
 	)
-	panel.BackgroundTransparency = isCompact and 0.14 or 0.18
+	panel.BackgroundTransparency = profile.isMobile and 0.08 or (isCompact and 0.14 or 0.18)
 	panel.ClipsDescendants = true
 	if panelScale then
 		panelScale.Scale = 1
@@ -5785,12 +5834,12 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		dragBar.Active = not profile.isMobile
 	end
 	if closeButton then
-		setOffsetBounds(closeButton, panelWidth - 46, 10, 34, 28)
-		closeButton.TextSize = isCompact and 14 or 13
+		setOffsetBounds(closeButton, panelWidth - (profile.isMobile and 52 or 46), 10, profile.isMobile and 40 or 34, profile.isMobile and 32 or 28)
+		closeButton.TextSize = profile.isMobile and 16 or (isCompact and 14 or 13)
 	end
 	if title then
 		setOffsetBounds(title, headerPadding, 8, headerWidth, isCompact and 28 or 30)
-		title.TextSize = profile.isMobile and 24 or (isCompact and 22 or 25)
+		title.TextSize = profile.isMobile and 26 or (isCompact and 22 or 25)
 	end
 	if titleGlow and title then
 		titleGlow.Position = title.Position + UDim2.fromOffset(2, 2)
@@ -6454,9 +6503,13 @@ function UISystem:_applyDeviceSizing()
 						widgets.TrackScroller.Size = UDim2.new(1, 0, 0, scrollerHeight)
 						widgets.TrackScroller.ScrollBarThickness = passMobile and 6 or 5
 					end
-					for _, card in ipairs(widgets.TrackCards or {}) do
+					local totalCards = #(widgets.TrackCards or {})
+					for index, card in ipairs(widgets.TrackCards or {}) do
+						local cardWidth = (index == totalCards)
+							and (trackCardWidth + (passMobile and 24 or 18))
+							or trackCardWidth
 						if card.Root then
-							card.Root.Size = UDim2.fromOffset(trackCardWidth, trackCardHeight)
+							card.Root.Size = UDim2.fromOffset(cardWidth, trackCardHeight)
 						end
 						if card.Title then
 							card.Title.TextSize = passMobile and 15 or 14
