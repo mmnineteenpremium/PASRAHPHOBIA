@@ -1751,6 +1751,15 @@ function UISystem:_onServerEvent(remoteName, payload)
 		elseif eventName == "EvidenceCollected" then
 			local collectedToolType = payload and payload.toolType
 			local collectedEvidenceType = payload and payload.evidenceType
+			if type(payload and payload.discoveredEvidence) == "table" then
+				self._journalState.discoveredEvidence = payload.discoveredEvidence
+			end
+			if type(payload and payload.confirmedEvidence) == "table" then
+				self._journalState.confirmedEvidence = payload.confirmedEvidence
+			end
+			if type(payload and (payload.possibleGhosts or payload.candidates)) == "table" then
+				self._journalState.candidates = payload.possibleGhosts or payload.candidates
+			end
 			if type(collectedToolType) == "string" and collectedToolType ~= "" then
 				self._journalState.toolType = collectedToolType
 				self._journalState.toolStatus = "Evidence berhasil dibaca."
