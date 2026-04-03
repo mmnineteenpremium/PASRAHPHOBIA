@@ -6108,7 +6108,9 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local margin = profile.isMobile and 4 or 14
 	local usableWidth = math.max(360, viewportSize.X - (topLeftInset.X + bottomRightInset.X + margin * 2))
 	local usableHeight = math.max(420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + margin * 2))
-	local isCompact = profile.isMobile or viewportSize.X <= 980
+	-- Force compact layout for short viewports so room controls do not overlap
+	-- host action buttons (Start/Leave) in the room detail panel.
+	local isCompact = profile.isMobile or viewportSize.X <= 980 or usableHeight <= 700
 	self._roomBrowserCompact = isCompact
 
 	local panelWidth = isCompact and usableWidth or math.min(1080, usableWidth)

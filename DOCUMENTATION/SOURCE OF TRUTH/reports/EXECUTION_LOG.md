@@ -4857,3 +4857,51 @@ Menutup sumber drift client yang memicu gejala audio/event dobel, lalu membersih
 
 1. lanjutkan pass `P2.13` (audio polish) dengan verifikasi manual pendengaran untuk countdown/teleport/hunt cue setelah guard singleton aktif
 2. lanjutkan gate publish readiness berikutnya tanpa membuka kembali script liar non-source
+
+## 2026-04-04 02:57 ICT
+
+### Task
+
+Menutup bug room browser host di mana `MapSelector` sulit dibuka karena tumpang tindih layout pada viewport pendek.
+
+### Linked Issues
+
+- symptom: klik `MapSelector` tampak gagal membuka `MapDropdown`
+- observasi runtime: posisi kontrol host bawah menutupi area selector map/mode saat tinggi viewport tidak cukup
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- logic compact room browser sekarang tidak hanya berbasis lebar:
+  - sebelum: `isCompact = mobile OR width <= 980`
+  - sesudah: `isCompact = mobile OR width <= 980 OR usableHeight <= 700`
+- efek langsung:
+  - viewport desktop pendek masuk ke jalur compact scrollable
+  - kontrol `ModeSelector/MapSelector` tidak lagi tertimpa tombol `Ready/Start/Leave`
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output _tmp_roombrowser_compact_height_guard.rbxlx`
+- validasi live:
+  - room browser dapat dibuka dan room dapat dibuat (`OpenRoomBrowserButton`, `CreateRoomButton`)
+  - posisi runtime tidak overlap:
+    - `MapSelector.Position.Y = 562`
+    - `ReadyButton.Position.Y = 854`
+  - setelah scroll panel ke area selector, klik `MapSelector` berhasil:
+    - `MapDropdown.Visible = true`
+
+### Interpretation
+
+- masalah bukan semata event click, melainkan geometry/layout collision di viewport pendek
+- patch ini menutup blocker UX host-map-selection tanpa menambah cabang layout baru yang berisiko
+
+### Next Step
+
+1. lanjutkan pass audio (`P2.13`) dengan verifikasi manual untuk isu “double audio after countdown”
+2. lanjutkan item publish readiness lain sesuai backlog prioritas
