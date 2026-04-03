@@ -3265,3 +3265,56 @@ Polish `RoomBrowserUI` compact/mobile dan `RoyalPassUI` track 30 hari agar surfa
 
 1. lanjutkan pass handset/device-aware untuk `RoomBrowserUI` dan `RoyalPassUI` bila butuh validasi visual yang lebih tajam
 2. setelah itu masuk ke slice map/door/gameplay polish yang paling mengganggu flow investigasi
+
+## 2026-04-03 19:44 ICT
+
+### Task
+
+Mengubah baseline pintu map playable dari `PromptManual` menjadi hybrid radius/manual yang tetap menjaga prompt lintas platform, lalu memvalidasi buka/tutup otomatisnya langsung di runtime `HauntedHouse`.
+
+### Linked Issues
+
+- user meminta pintu tidak sekadar "otomatis terbuka", tetapi logis untuk traversal, konsisten lintas platform, dan tidak kembali ke state map basic
+- backlog sebelumnya masih menandai desain pintu hybrid sebagai deferred padahal implementasi runtime sekarang sudah siap diuji
+
+### Files Changed
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+- `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `MapRuntimePatches` sekarang menjadikan `HybridRadiusPrompt` sebagai default `DoorTraversalMode` pada clone map runtime
+- `DoorRuntime` sekarang:
+  - menormalkan policy pintu ke canonical enum runtime
+  - tetap mempertahankan `DoorPrompt` manual
+  - menambah loop radius assist berbasis `Heartbeat` untuk buka/tutup otomatis saat pemain mendekat/menjauh
+  - menjaga manual override singkat agar interaksi prompt pemain tidak langsung dilawan oleh auto-close
+  - mengirim interaction source lokal eksplisit agar event bus tidak memantulkan state pintu yang sama dua kali
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_door_hybrid_build.rbxlx`
+- validasi live Studio pada jalur `CreateRoom -> HostStart -> HauntedHouse` sukses:
+  - clone aktif `Workspace.ActiveMatches.Match_match_1.HauntedHouse.HauntedHouse.Doors.Door_DiningRoom` membawa:
+    - `DoorTraversalPolicy = HybridRadiusPrompt`
+    - `DoorPrompt.ActionText = Buka Pintu`
+  - saat karakter dipindahkan dekat pintu:
+    - `DoorIsOpen = true`
+  - saat karakter dipindahkan menjauh lagi:
+    - `DoorIsOpen = false`
+
+### Interpretation
+
+- desain pintu hybrid radius/manual untuk baseline playable map sudah tidak lagi berada di status deferred
+- debt berikutnya bergeser ke kualitas layout/map dan definisi hiding spot, bukan lagi ke pemilihan policy pintu dasar
+
+### Next Step
+
+1. checkpoint commit untuk slice pintu hybrid + sinkronisasi report
+2. lanjut ke pass gameplay berikutnya:
+   - hiding spot affordance
+   - flow traversal/map readability
