@@ -358,6 +358,11 @@ Status:
 - panel lobby sekarang punya CTA `ROYAL PASS` langsung:
   - layout tombol lobby naik menjadi grid yang lebih jelas
   - tombol baru terbukti membuka `RoyalPassUI.MainPanel` di runtime live
+- `LobbyUI` sekarang kembali stabil setelah polish pass:
+  - runtime typo yang memutus builder (`stateBadge` vs `statusBadge`) sudah ditutup
+  - tombol `Open Room Browser`, `Profile`, `Shop`, `Royal Pass`, `Menu`, dan `Rank` kembali hadir di panel canonical
+  - panel lobby sekarang default terbuka saat join, tapi tetap bisa diminimize lewat toggle `<`
+  - validasi live membuktikan `LobbyUI.MainPanel.Visible = true` dan `LobbyToggleButton.Text = "<"` pada boot playtest baru
 - `ProfileUI` sekarang juga naik dari panel teks polos menjadi kartu identitas + stat deck:
   - hero card player
   - status pill
