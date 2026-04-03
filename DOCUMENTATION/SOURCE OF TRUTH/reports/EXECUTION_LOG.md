@@ -3992,3 +3992,65 @@ Memulai traversal polish pada interaction point dengan pendekatan anchor berbasi
 
 1. checkpoint commit untuk interaction point door-anchor fallback global
 2. lanjut ke room residual/traversal berikutnya dan audit owner client yang masih `in progress`
+
+## 2026-04-03 23:42 ICT
+
+### Task
+
+Menutup owner client ganda pada surface investigasi dengan mematikan subscriber state yang tidak punya consumer runtime jelas.
+
+### Linked Issues
+
+- `UI/Main` sudah menjadi owner nyata untuk `EvidenceEvent`
+- tetapi bootstrap client masih menyalakan tiga sistem tambahan yang hanya subscribe lalu menyimpan state masing-masing:
+  - `InvestigationUISystem`
+  - `EvidenceBoardSystem`
+  - `GhostPredictionSystem`
+- search global source lokal menunjukkan tiga sistem ini tidak dipakai consumer lain selain bootstrap itu sendiri
+
+### Files Changed
+
+- `src/client/Core/ClientBootstrap.lua`
+- `src/client/FlashlightController.client.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `ClientBootstrap` tidak lagi me-require atau me-register:
+  - `InvestigationUISystem`
+  - `EvidenceBoardSystem`
+  - `GhostPredictionSystem`
+- owner surface investigasi sekarang lebih jelas:
+  - `UI/Main` = owner jurnal/evidence/prediction UI
+  - `EvidenceTools` = owner request tool client
+  - `SoundSystem` = owner sensory audio/VFX satelit
+- `FlashlightController` sekarang memperlakukan toggle UI sebagai satelit mobile saja:
+  - `FlashlightToggleUI` dihancurkan pada device non-touch
+  - `FlashlightToggleUI.Enabled` hanya `true` saat player benar-benar sedang `InMatch`
+
+### Validation Notes
+
+- search global source lokal:
+  - tidak ada consumer runtime lain untuk `InvestigationUISystem`, `EvidenceBoardSystem`, atau `GhostPredictionSystem`
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_client_owner_cleanup.rbxlx`
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_flashlight_ui_cleanup.rbxlx`
+- smoke boot Studio sukses:
+  - tidak ada warning bootstrap client baru
+  - `PlayerGui` lobby tetap sehat
+  - `ScreenGui` utama tetap muncul normal
+  - `FlashlightToggleUI` tidak ada di desktop lobby boot (`UserInputService.TouchEnabled = false`)
+
+### Interpretation
+
+- ini belum menutup seluruh `P0.1`, tetapi menutup satu jenis drift yang paling bersih:
+  - subscriber ganda tanpa consumer
+- sekaligus memperkecil noise GUI satelit yang sebelumnya ikut hidup di desktop tanpa kebutuhan runtime
+- langkah ini menurunkan noise ownership dan risiko state investigasi saling berbeda antar modul
+
+### Next Step
+
+1. checkpoint commit untuk owner cleanup investigasi client
+2. lanjut audit satelit UI yang memang sengaja hidup seperti `FlashlightToggleUI` dan `SensoryHorrorHUD`
