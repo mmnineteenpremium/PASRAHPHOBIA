@@ -4704,3 +4704,49 @@ Memperluas distribusi `hideSpotRooms` lintas map agar survival loop tidak hanya 
 
 1. lanjutkan review kualitas posisi hide spot (jarak ke door line, LOS break, dan fairness ghost pathing)
 2. lanjut ke slice berikutnya tanpa menarik task `Reason to return` yang sudah didefer ke akhir
+
+## 2026-04-04 02:27 ICT
+
+### Task
+
+Memanusiakan label hide spot runtime agar nama refuge yang tampil di marker/UI tidak mentah dari token room.
+
+### Linked Issues
+
+- setelah ekspansi hide spot lintas map, label seperti `SecurityRoom` masih terlalu teknis untuk pemain
+
+### Files Changed
+
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `formatClosetLabel()` sekarang memecah:
+  - lower-to-upper boundary (`aB`)
+  - letter-to-digit (`A1`)
+  - digit-to-letter (`1A`)
+- hasil label hide spot runtime sekarang lebih natural untuk UI/hint:
+  - `Security Room`
+  - `Archive Room`
+  - `Servant Room A`
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_hide_label_humanized.rbxlx`
+- validasi live `EmptyBuilding`:
+  - `PasrahLastMatchStartTrace = ... map=EmptyBuilding ...`
+  - `Room_SecurityRoom.HideSpotLabel = Security Room`
+  - `Room_ArchiveRoom.HideSpotLabel = Archive Room`
+
+### Interpretation
+
+- survival guidance jadi lebih manusiawi tanpa mengubah mekanik inti
+- ini menurunkan noise istilah internal yang bocor ke surface pemain
+
+### Next Step
+
+1. lanjut ke pass fairness hide spot (LOS break + radius akses) lintas map
+2. pertahankan task retention `Reason to return` tetap untuk pembahasan final

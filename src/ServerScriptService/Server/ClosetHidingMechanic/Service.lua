@@ -224,6 +224,15 @@ end
 
 local function formatClosetLabel(part)
 	local raw = tostring(part and part.Name or "Hide Spot"):gsub("^Room_", ""):gsub("_", " ")
+	raw = raw
+		:gsub("(%l)(%u)", "%1 %2")
+		:gsub("(%a)(%d)", "%1 %2")
+		:gsub("(%d)(%a)", "%1 %2")
+		:gsub("%s+", " ")
+		:match("^%s*(.-)%s*$") or "Hide Spot"
+	if raw == "" then
+		return "Hide Spot"
+	end
 	return raw:gsub("^%l", string.upper)
 end
 

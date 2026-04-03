@@ -1111,3 +1111,15 @@ Urutan yang paling masuk akal dari titik sekarang:
   - pemain tidak lagi dipaksa mengandalkan satu spot hide tunggal di map besar/sedang
   - affordance survival lintas map naik tanpa menambah spot palsu atau override map art manual
 
+## Update 2026-04-04 02:27 ICT
+
+- polish label hide spot runtime juga sudah ditutup:
+  - formatter server sekarang memecah `camelCase` dan angka pada nama room hide spot
+  - contoh: `SecurityRoom -> Security Room`, `ArchiveRoom -> Archive Room`, `ServantRoomA -> Servant Room A`
+- validasi live `EmptyBuilding` membuktikan atribut runtime:
+  - `Room_SecurityRoom.HideSpotLabel = Security Room`
+  - `Room_ArchiveRoom.HideSpotLabel = Archive Room`
+- dampak:
+  - objective/hint hunt jadi lebih natural dibaca pemain
+  - konsistensi bahasa antara marker world-space dan teks UI meningkat
+
