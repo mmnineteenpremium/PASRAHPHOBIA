@@ -456,6 +456,14 @@ Status:
       - client menghitung `safe zone` runtime terdekat dari match aktif
       - objective/hint sekarang bisa menunjuk target operasional seperti `SafeZone 1 52st`
       - ini memberi jawaban yang lebih konkret untuk pemain: bukan sekadar "lari", tetapi ke mana mereka seharusnya bergerak saat hunt aktif
+  - guidance hunt sekarang juga sudah paham hide spot runtime:
+    - jika player benar-benar hide di `Closet/Locker`, label tidak lagi dipaksa `SAFE ZONE`
+    - validasi live terbaru di `EmptyBuilding.Room_Storage` menunjukkan:
+      - `ObjectiveLabel = Berlindung di Storage. Diam dan tunggu hunt selesai sebelum keluar.`
+      - `MatchUI.HeaderCard.SecondaryLabel = Berlindung di Storage...`
+      - `ControlsHintBar = STORAGE • DIAM • TUNGGU HUNT SELESAI`
+      - `SummaryFrame.GuessRow/SurvivedRow = Storage`
+    - artinya surface UI hunt sekarang sinkron dengan hide spot runtime nyata, bukan wording generik yang membingungkan
 
 Pekerjaan:
 
