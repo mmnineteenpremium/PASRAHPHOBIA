@@ -2335,6 +2335,7 @@ function UISystem:_applyVisibility()
 	self:_refreshAuxiliaryPanels()
 	self:_refreshBasicLobbyPanel()
 	self:_refreshBasicWindows()
+	self:_layoutLobbyFloatRail()
 end
 
 function UISystem:SetState(state)
@@ -2399,6 +2400,10 @@ end
 function UISystem:_closeConflictingWindows(activeWindowName)
 	local activeName = tostring(activeWindowName or "")
 
+	if activeName ~= "LobbyUI" and self._lobbyPanelCollapsed ~= true then
+		self:_setLobbyPanelCollapsed(true)
+	end
+
 	if activeName ~= "RoomBrowser" then
 		self._roomBrowserVisible = false
 	end
@@ -2430,6 +2435,11 @@ function UISystem:_closeTopmostWindow()
 
 	if self._uiState.MatchUI and self._uiState.MatchUI.visible == true and self._matchWindowDismissed ~= true then
 		self:_setMatchWindowDismissed(true)
+		return true
+	end
+
+	if self._matchPhase == MATCH_PHASE.LOBBY and self._lobbyPanelCollapsed ~= true then
+		self:_setLobbyPanelCollapsed(true)
 		return true
 	end
 
@@ -2629,7 +2639,49 @@ function UISystem:_syncLobbyPanelVisibility()
 	end
 end
 
+function UISystem:_layoutLobbyFloatRail()
+	local profile = self._deviceProfile and self._deviceProfile.profile or {}
+	if self._matchPhase ~= MATCH_PHASE.LOBBY then
+		return
+	end
+
+	local rightRailButtons = {}
+	local function pushButton(button)
+		if button and button.Parent and button.Visible == true then
+			table.insert(rightRailButtons, button)
+		end
+	end
+
+	local basicWindows = self._uxWidgets and self._uxWidgets.basicWindows or nil
+	local auxiliaryWindows = self._uxWidgets and self._uxWidgets.windows or nil
+
+	pushButton(basicWindows and basicWindows.MainMenuUI and basicWindows.MainMenuUI.FloatButton or nil)
+	pushButton(auxiliaryWindows and auxiliaryWindows.RoyalPassUI and auxiliaryWindows.RoyalPassUI.FloatButton or nil)
+	pushButton(self._roomBrowserWidgets and self._roomBrowserWidgets.FloatButton or nil)
+	pushButton(basicWindows and basicWindows.LeaderboardUI and basicWindows.LeaderboardUI.FloatButton or nil)
+	pushButton(auxiliaryWindows and auxiliaryWindows.ProfileUI and auxiliaryWindows.ProfileUI.FloatButton or nil)
+	pushButton(auxiliaryWindows and auxiliaryWindows.ShopUI and auxiliaryWindows.ShopUI.FloatButton or nil)
+
+	local topLeftInset, bottomRightInset = resolveSafeInsets()
+	local railX = -(18 + bottomRightInset.X)
+	local railTop = topLeftInset.Y + (profile.isMobile and 96 or 88)
+	local gap = profile.isMobile and 12 or 10
+
+	for _, button in ipairs(rightRailButtons) do
+		local height = button.AbsoluteSize.Y
+		if height <= 0 then
+			height = button.Size.Y.Offset > 0 and button.Size.Y.Offset or (profile.isMobile and 68 or 60)
+		end
+		button.AnchorPoint = Vector2.new(1, 0)
+		button.Position = UDim2.new(1, railX, 0, railTop)
+		railTop += height + gap
+	end
+end
+
 function UISystem:_setLobbyPanelCollapsed(collapsed)
+	if collapsed ~= true then
+		self:_closeConflictingWindows("LobbyUI")
+	end
 	self._lobbyPanelCollapsed = collapsed == true
 	local player = Players.LocalPlayer
 	if player then
@@ -5049,6 +5101,7 @@ function UISystem:_applyDeviceSizing()
 			end
 		end
 	end
+	self:_layoutLobbyFloatRail()
 end
 
 function UISystem:_runPostTeleportLoadingFlow()
@@ -10026,6 +10079,7 @@ function UISystem:_updateRoomBrowserVisibility()
 	if self._roomBrowserFloatGui then
 		self._roomBrowserFloatGui.Enabled = (not suppressed) and (not self._roomBrowserVisible)
 	end
+	self:_layoutLobbyFloatRail()
 end
 
 function UISystem:_setRoomBrowserVisible(visible)
@@ -10040,6 +10094,8 @@ function UISystem:_setRoomBrowserVisible(visible)
 	if self._roomBrowserVisible and self._roomBrowserWidgets and self._roomBrowserWidgets.RootPanel then
 		animatePanelReveal(self._roomBrowserWidgets.RootPanel, false)
 	end
+	self:_syncAuxiliaryWindowVisibility()
+	self:_syncLobbyAuxiliaryWindowVisibility()
 	self:_refreshBasicLobbyPanel()
 	self:_refreshBasicWindows()
 end

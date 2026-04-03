@@ -2189,3 +2189,60 @@ Lanjut ke debt UX yang paling dekat ke gameplay nyata:
 1. fixed right rail + aturan single-open
 2. mobile-first pass untuk `LobbyUI`, `RoyalPassUI`, dan `RoomBrowserUI`
 3. baru sesudah itu masuk ke redesign pintu/map traversal dan definisi survive hunt
+
+## 2026-04-03 13:09 ICT
+
+### Task
+
+Menutup debt ownership UI lobby dengan membuat right rail deterministic top-to-bottom dan menerapkan single-open behavior antar surface utama lobby.
+
+### Linked Issues
+
+- float rail kanan masih bergerak berdasarkan lane persen lama
+- `LobbyUI`, `RoyalPassUI`, dan `RoomBrowserUI` masih bisa terasa bertumpuk pada flow buka panel berurutan
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- menambahkan `_layoutLobbyFloatRail()` untuk menghitung posisi rail kanan berdasarkan tombol yang benar-benar visible
+- `MENU`, `PASS`, `ROOMS`, dan `RANK` sekarang disusun fixed dari atas ke bawah, bukan lagi tergantung `UDim2` persen tersebar
+- membuka panel besar selain lobby sekarang otomatis meng-collapse `LobbyUI`
+- jalur `RoomBrowser` sekarang ikut menyinkronkan auxiliary visibility, sehingga membuka `RoomBrowser` benar-benar menutup `RoyalPassUI`
+- `Esc/B` sekarang juga bisa meng-collapse lobby panel saat itu menjadi surface teratas yang masih terbuka
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_right_rail_single_open_build.rbxlx`
+  - `rojo build default.project.json --output .\_tmp_right_rail_single_open_build_2.rbxlx`
+- baseline rail lobby:
+  - `ScreenCapture_RightRail_SingleOpen_Lobby`
+  - probe runtime:
+    - `MENU @ y=88`
+    - `PASS @ y=158`
+    - `ROOMS @ y=228`
+    - `RANK @ y=310`
+- validasi `Lobby -> RoyalPass`:
+  - `ScreenCapture_RightRail_SingleOpen_RoyalPass`
+  - runtime:
+    - `lobbyCollapsed = true`
+    - `lobbyVisible = false`
+    - `royalVisible = true`
+- validasi `RoyalPass -> RoomBrowser`:
+  - `ScreenCapture_RightRail_SingleOpen_RoomBrowser_2`
+  - runtime:
+    - `lobbyCollapsed = true`
+    - `royalVisible = false`
+    - `roomBrowserVisible = true`
+
+### Next Step
+
+Masuk ke pass responsive yang lebih besar:
+1. `RoomBrowserUI` mobile fullscreen / flexible sheet
+2. `RoyalPassUI` mobile readability + 30-day track structure
+3. `LobbyUI` dan right rail touch targets yang lebih nyaman di mobile

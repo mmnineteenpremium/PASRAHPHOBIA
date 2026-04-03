@@ -429,8 +429,17 @@ Status:
   - `MENU`, `PASS`, `ROOMS`, dan `RANK` sudah memakai chip branded dengan glyph + caption + accent warna
   - lane default kanan dipisah agar tidak saling menumpuk saat beberapa surface disembunyikan sekaligus
   - validasi live terbaru `ScreenCapture_FloatButtons_Polished_Lobby_2` menunjukkan cluster kanan lebih terbaca dan tidak overlap antar lane internal PASRA
+- right rail lobby sekarang sudah dipaku menjadi stack top-to-bottom yang deterministik:
+  - `MENU @ y=88`
+  - `PASS @ y=158`
+  - `ROOMS @ y=228`
+  - `RANK @ y=310`
+  - posisi dihitung ulang dari state tombol yang benar-benar visible, bukan lagi lane persen yang loncat
+- aturan single-open untuk surface lobby sekarang juga lebih tegas:
+  - membuka `RoyalPassUI` dari lobby otomatis collapse `LobbyUI`
+  - membuka `RoomBrowserUI` dari float `ROOMS` otomatis menyembunyikan `RoyalPassUI`
+  - validasi live terbaru membuktikan `lobbyCollapsed = true`, `royalVisible = false`, `roomBrowserVisible = true` setelah transisi `Lobby -> RoyalPass -> RoomBrowser`
 - review live terbaru juga menandai debt UX baru yang harus diprioritaskan setelah task aktif selesai:
-  - rail kanan masih perlu dibuat fixed dari atas ke bawah dengan aturan satu panel utama aktif pada satu waktu
   - `LobbyUI`, `RoyalPassUI`, dan `RoomBrowserUI` masih belum mobile-first dan ukuran teksnya terlalu desktop
   - `RoomBrowserUI` perlu versi layar penuh/flexible untuk viewport mobile
   - `RoyalPassUI` perlu track 30 hari, track misi 30 hari, dan placeholder reward rarity 5 di hari terakhir
