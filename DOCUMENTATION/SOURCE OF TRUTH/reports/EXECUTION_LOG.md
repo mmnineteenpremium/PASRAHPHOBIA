@@ -5727,3 +5727,31 @@ Menutup coverage E2E fase hunt dan extraction menggunakan harness StudioE2E.
 - `E2E-08` (hunt transition) tervalidasi `PASS`.
 - `E2E-09` (extraction/endgame) tervalidasi `PASS` pada jalur extraction override Studio.
 - ada sensitivitas timing (`player_not_alive`) saat extract dipanggil pada jendela hunt tertentu; ini dicatat sebagai caveat harness, bukan blocker jalur extraction override.
+
+## 2026-04-04 06:07 ICT
+
+### Task
+
+Menutup coverage `E2E-07` untuk manifestation ghost final (`Pocong`) di runtime match aktif.
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TEST_MATRIX_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Validation Notes
+
+- flow live MCP:
+  - set override `SetForcedGhost(ghostType=Pocong, visualState=Manifestation)`
+  - `Ranked -> CreateRoom -> HostStart`
+- hasil runtime:
+  - model `Ghost_Pocong` ditemukan di match aktif
+  - `MeshPart.Transparency = 0` (manifestation visible)
+  - override ghost dibersihkan kembali setelah verifikasi
+- cleanup sesi:
+  - `EndMatch` dipanggil untuk mengembalikan player ke lobby
+
+### Interpretation
+
+- `E2E-07` sekarang berstatus `PASS` pada matrix inti.
+- backlog matrix inti tersisa pada `E2E-02`, `E2E-05`, dan `E2E-06` untuk menutup loop gameplay tengah.
