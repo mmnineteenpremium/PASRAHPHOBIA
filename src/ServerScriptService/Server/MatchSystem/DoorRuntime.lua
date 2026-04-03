@@ -15,8 +15,10 @@ local INTERACTION_DISTANCE = 10
 local PROMPT_HOLD_DURATION = 0
 local POLICY_PROMPT_MANUAL = "PromptManual"
 local POLICY_HYBRID_RADIUS_PROMPT = "HybridRadiusPrompt"
-local HYBRID_OPEN_DISTANCE = 10
-local HYBRID_CLOSE_DISTANCE = 13
+local HYBRID_OPEN_APPROACH_DEPTH = 6
+local HYBRID_CLOSE_APPROACH_DEPTH = 8
+local HYBRID_LATERAL_PADDING = 1.75
+local HYBRID_VERTICAL_TOLERANCE = 6
 local HYBRID_CLOSE_DELAY = 1.15
 local MANUAL_OVERRIDE_SECONDS = 1.8
 local LOCAL_PROMPT_SOURCE = "DoorRuntimePrompt"
@@ -211,11 +213,16 @@ local function applyDoorState(doorRecord, interactionType, suppressSound)
 	setPromptState(doorRecord.prompt, part:GetAttribute("DoorIsOpen") == true, part:GetAttribute("DoorLocked") == true)
 end
 
-local function getDoorDistanceFromPlayer(part, player)
+local function getPlayerDoorApproachDistance(doorRecord, player, depthThreshold, widthPadding)
 	if typeof(player) ~= "Instance" or not player:IsA("Player") then
 		return nil
 	end
 
+	if type(doorRecord) ~= "table" or typeof(doorRecord.part) ~= "Instance" then
+		return nil
+	end
+
+	local part = doorRecord.part
 	local character = player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -223,10 +230,36 @@ local function getDoorDistanceFromPlayer(part, player)
 		return nil
 	end
 
-	return (root.Position - part.Position).Magnitude
+	local referenceCFrame = doorRecord.closedCFrame or part.CFrame
+	local localPosition = referenceCFrame:PointToObjectSpace(root.Position)
+	if math.abs(localPosition.Y) > HYBRID_VERTICAL_TOLERANCE then
+		return nil
+	end
+
+	local plane = getDoorPlane(part)
+	local threshold = depthThreshold or HYBRID_OPEN_APPROACH_DEPTH
+	local lateralAllowance = widthPadding or HYBRID_LATERAL_PADDING
+
+	if plane == "thin_x" then
+		local normalDistance = math.max(0, math.abs(localPosition.X) - (part.Size.X * 0.5))
+		local lateralDistance = math.abs(localPosition.Z)
+		local lateralLimit = (part.Size.Z * 0.5) + lateralAllowance
+		if lateralDistance > lateralLimit or normalDistance > threshold then
+			return nil
+		end
+		return normalDistance
+	end
+
+	local normalDistance = math.max(0, math.abs(localPosition.Z) - (part.Size.Z * 0.5))
+	local lateralDistance = math.abs(localPosition.X)
+	local lateralLimit = (part.Size.X * 0.5) + lateralAllowance
+	if lateralDistance > lateralLimit or normalDistance > threshold then
+		return nil
+	end
+	return normalDistance
 end
 
-local function getNearestPlayerDistance(part, players, matchId)
+local function getNearestPlayerApproachDistance(doorRecord, players, matchId, depthThreshold, widthPadding)
 	local nearest = nil
 
 	for _, player in ipairs(players or {}) do
@@ -234,7 +267,7 @@ local function getNearestPlayerDistance(part, players, matchId)
 			and player:IsA("Player")
 			and (matchId == nil or tostring(player:GetAttribute("MatchId") or "") == tostring(matchId))
 			and player:GetAttribute("InMatch") == true then
-			local distance = getDoorDistanceFromPlayer(part, player)
+			local distance = getPlayerDoorApproachDistance(doorRecord, player, depthThreshold, widthPadding)
 			if distance and (nearest == nil or distance < nearest) then
 				nearest = distance
 			end
@@ -418,9 +451,22 @@ function DoorRuntime.Attach(match, mapClone, deps)
 				end
 
 				local currentOpen = part:GetAttribute("DoorIsOpen") == true
-				local nearestDistance = getNearestPlayerDistance(part, match.players, matchId ~= "" and matchId or nil)
-				local playerNearby = type(nearestDistance) == "number" and nearestDistance <= HYBRID_OPEN_DISTANCE
-				local playerWithinKeepOpen = type(nearestDistance) == "number" and nearestDistance <= HYBRID_CLOSE_DISTANCE
+				local nearestOpenDistance = getNearestPlayerApproachDistance(
+					doorRecord,
+					match.players,
+					matchId ~= "" and matchId or nil,
+					HYBRID_OPEN_APPROACH_DEPTH,
+					HYBRID_LATERAL_PADDING
+				)
+				local nearestKeepOpenDistance = getNearestPlayerApproachDistance(
+					doorRecord,
+					match.players,
+					matchId ~= "" and matchId or nil,
+					HYBRID_CLOSE_APPROACH_DEPTH,
+					HYBRID_LATERAL_PADDING + 1
+				)
+				local playerNearby = type(nearestOpenDistance) == "number"
+				local playerWithinKeepOpen = type(nearestKeepOpenDistance) == "number"
 				if playerNearby then
 					doorRecord.lastNearbyAt = now
 				end

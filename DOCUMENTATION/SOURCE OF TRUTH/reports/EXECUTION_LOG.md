@@ -3546,3 +3546,58 @@ Menutup residual runtime `EmptyBuilding` yang sempat tersisa pada `InteractionPo
    - radius/manual flow pintu lintas map
    - traversal visual yang lebih logis
    - penutupan debt tangga/lantai atas yang masih terasa basic
+
+## 2026-04-03 22:18 ICT
+
+### Task
+
+Memoles ulang perilaku auto-open pintu hybrid supaya tidak lagi memakai radius bola mentah, lalu memvalidasi bahwa pintu hanya membuka saat pemain benar-benar masuk zona ambang pintu.
+
+### Linked Issues
+
+- policy `HybridRadiusPrompt` sudah aktif, tetapi pendekatan radius murni masih terlalu kasar untuk map sempit
+- saat daun pintu sudah terbuka dan berputar, zona deteksi lama ikut bergeser bersama `part.CFrame`
+- efek sampingnya pintu bisa terasa "lengket" terbuka atau berbunyi tidak logis hanya karena pemain masih dekat di samping daun pintu
+
+### Files Changed
+
+- `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `DoorRuntime` tidak lagi menghitung auto-open berdasarkan jarak Euclidean sederhana ke pusat pintu
+- deteksi hybrid sekarang memakai zona ambang pintu yang:
+  - membaca posisi pemain di local space pintu
+  - mengecek toleransi vertikal
+  - membatasi lateral range sesuai lebar pintu
+  - memakai `closedCFrame` sebagai referensi tetap, bukan `part.CFrame` saat daun pintu sudah terbuka
+- prompt manual lintas platform tetap dipertahankan; yang berubah hanya heuristik auto-open/auto-close agar lebih masuk akal secara visual
+
+### Validation Notes
+
+- source Studio terverifikasi memuat helper `getPlayerDoorApproachDistance(...)` yang membaca `doorRecord.closedCFrame`
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_door_zone_polish_build.rbxlx`
+- validasi live di `Workspace.ActiveMatches.Match_match_1.HauntedHouse.HauntedHouse.Doors.Door_DiningRoom` menunjukkan:
+  - `DoorPrompt` hadir
+  - `DoorTraversalPolicy = HybridRadiusPrompt`
+  - baseline spawn/jauh dari pintu: `DoorIsOpen = false`
+  - karakter dinavigasikan ke jalur pintu (`x≈1212, z≈24.26`): `DoorIsOpen = true`
+  - karakter digeser dekat tetapi keluar dari jalur ambang (`x≈1212, z≈30.21`): `DoorIsOpen = false`
+
+### Interpretation
+
+- baseline pintu hybrid sekarang lebih dekat ke logika traversal map yang profesional:
+  - tetap nyaman dilalui
+  - tetap ada affordance manual
+  - tidak lagi mudah terbuka "secara gaib" hanya karena posisi pemain dekat secara radial
+- debt berikutnya bergeser dari heuristik pintu ke layout survival/hiding yang lebih eksplisit
+
+### Next Step
+
+1. checkpoint commit untuk polish pintu hybrid berbasis doorway zone
+2. lanjut ke slice survival readability:
+   - definisi hiding spot non-safe-zone
+   - guidance survive hunt yang lebih jelas ke pemain
