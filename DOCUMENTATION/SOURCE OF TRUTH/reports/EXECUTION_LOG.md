@@ -2135,3 +2135,57 @@ Lanjut ke blocker publish yang benar-benar tersisa:
 1. finalisasi `AmbientLoop_Main` dengan asset yang legal dan publish-safe
 2. lanjutkan polish visual/audio lain yang masih generik
 3. pertahankan jalur forced-ghost sebagai eksperimen terpisah sampai memang dibutuhkan lagi
+
+## 2026-04-03 13:00 ICT
+
+### Task
+
+Menyelesaikan chip currency terstruktur pada surface ekonomi aktif, lalu memasukkan debt UX/mobile dan redesign pintu/map traversal terbaru ke backlog resmi.
+
+### Linked Issues
+
+- affordance economy masih terlihat seperti teks utilitarian
+- review live terbaru menemukan rail kanan, mobile layout, dan desain pintu/map traversal belum layak dijadikan baseline final
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `PricePill` sekarang memakai helper canonical `applyPricePillVisual()` di semua surface yang sebelumnya masih set teks langsung
+- parser currency diperbaiki ke pattern Luau yang valid; hasilnya pill `MM/PP/Robux` benar-benar berubah menjadi glyph + amount + unit
+- chip ekonomi Shop sekarang tidak lagi hanya `\"850 MM\"`, tetapi layout terstruktur dengan glyph kiri, amount tengah, dan unit kanan
+- backlog resmi ditambah untuk debt berikut:
+  - fixed right rail top-to-bottom
+  - aturan single-open untuk panel besar
+  - `RoomBrowserUI` mobile fullscreen/flexible
+  - `RoyalPassUI` 30-day reward + 30-day mission flow
+  - redesign pintu hybrid radius/manual
+  - audit tangga, akses lantai, hiding spot, dan aturan survive hunt
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\_tmp_currency_chip_build.rbxlx`
+  - `rojo build default.project.json --output .\_tmp_currency_chip_build_2.rbxlx`
+  - `rojo build default.project.json --output .\_tmp_currency_chip_build_3.rbxlx`
+- validasi live Shop:
+  - `ScreenCapture_CurrencyChip_Shop_3`
+  - probe runtime `ItemRow1.PricePill`:
+    - `Text = ""`
+    - `CurrencyGlyph = "M"`
+    - `CurrencyAmount = "850"`
+    - `CurrencyUnit = "MM"`
+- validasi live Royal Pass:
+  - `ScreenCapture_CurrencyChip_RoyalPass`
+  - helper canonical aktif di row `PricePill`; panel yang saat ini tampil masih memakai pill non-currency seperti `0 XP / CLEAR / 200 LEFT`, sehingga fallback text tetap dipertahankan dengan aman
+
+### Next Step
+
+Lanjut ke debt UX yang paling dekat ke gameplay nyata:
+1. fixed right rail + aturan single-open
+2. mobile-first pass untuk `LobbyUI`, `RoyalPassUI`, dan `RoomBrowserUI`
+3. baru sesudah itu masuk ke redesign pintu/map traversal dan definisi survive hunt

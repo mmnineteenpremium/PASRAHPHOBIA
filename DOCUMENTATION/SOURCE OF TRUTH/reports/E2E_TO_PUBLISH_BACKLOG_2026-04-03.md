@@ -243,12 +243,19 @@ Status:
     - `DoorOpenSoundId = rbxassetid://139204195403262`
     - `DoorCloseSoundId = rbxassetid://83336813491039`
 - art pass map masih belum final, tetapi tidak lagi menjadi blocker untuk loop vertical slice
-- pintu sekarang dianggap default auto-open lintas platform, jadi loop playable tidak lagi bergantung pada prompt manual
+- policy pintu `AutoOpenToggle` sekarang hanya baseline traversal runtime, bukan desain final interaksi pemain
+- follow-up deferred yang wajib masuk phase berikutnya:
+  - pintu harus bereaksi logis terhadap radius atau prompt manual lintas platform, bukan sekadar pass-through
+  - audit tangga, akses lantai 2, dan jalur traversal map harus ditutup agar layout tidak terasa palsu saat investigasi/hunt
+  - hiding spot dan aturan selamat dari hunt masih perlu didefinisikan secara eksplisit
 
 Pekerjaan:
 
 - pilih satu map utama
 - audit extraction zone, spawn, blocker, collision, dan art pass minimum
+- redesign interaksi pintu menjadi hybrid radius/manual yang tetap aman untuk roaming ghost
+- audit traversal vertikal, tangga, pintu terkunci, dan akses lantai antar-map
+- definisikan hiding spot, jalur selamat hunt, dan feedback yang menjelaskan cara survive kepada pemain
 
 Done jika:
 
@@ -374,6 +381,9 @@ Status:
 - `ShopUI` item rows sekarang tidak lagi hanya teks + tombol polos:
   - tiap item punya glyph prosedural, badge kategori/slot, accent rarity, dan pill harga/currency
   - validasi live membuktikan kartu shop tampil di runtime canonical `ShopUI.MainPanel`
+- chip currency ekonomi sekarang sudah memakai layout terstruktur, bukan teks datar:
+  - `ShopUI` price pill aktif menampilkan glyph ringkas + amount + unit
+  - validasi live terbaru membuktikan `ItemRow1.PricePill = glyph M / amount 850 / unit MM`
 - panel lobby sekarang punya CTA `ROYAL PASS` langsung:
   - layout tombol lobby naik menjadi grid yang lebih jelas
   - tombol baru terbukti membuka `RoyalPassUI.MainPanel` di runtime live
@@ -419,6 +429,11 @@ Status:
   - `MENU`, `PASS`, `ROOMS`, dan `RANK` sudah memakai chip branded dengan glyph + caption + accent warna
   - lane default kanan dipisah agar tidak saling menumpuk saat beberapa surface disembunyikan sekaligus
   - validasi live terbaru `ScreenCapture_FloatButtons_Polished_Lobby_2` menunjukkan cluster kanan lebih terbaca dan tidak overlap antar lane internal PASRA
+- review live terbaru juga menandai debt UX baru yang harus diprioritaskan setelah task aktif selesai:
+  - rail kanan masih perlu dibuat fixed dari atas ke bawah dengan aturan satu panel utama aktif pada satu waktu
+  - `LobbyUI`, `RoyalPassUI`, dan `RoomBrowserUI` masih belum mobile-first dan ukuran teksnya terlalu desktop
+  - `RoomBrowserUI` perlu versi layar penuh/flexible untuk viewport mobile
+  - `RoyalPassUI` perlu track 30 hari, track misi 30 hari, dan placeholder reward rarity 5 di hari terakhir
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:
@@ -430,6 +445,10 @@ Pekerjaan:
 - `MatchUI`
 - `LobbyUI`
 - `LeaderboardUI`
+- ubah right rail menjadi stack fixed top-to-bottom dengan affordance mobile yang lebih jelas
+- terapkan aturan single-open untuk panel besar agar lobby/pass/shop/rank tidak terasa tumpang tindih
+- desain ulang `RoomBrowserUI` menjadi mobile fullscreen / flexible sheet
+- desain `RoyalPassUI` menjadi flow 30-day reward + 30-day mission dengan swipe/slide dan placeholder reward rarity 5
 
 Done jika:
 
