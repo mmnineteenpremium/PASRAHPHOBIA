@@ -2655,3 +2655,73 @@ Menggeser runtime pintu dari mode `pass-through` default ke basis interaksi pema
 1. validasi manual sekali untuk buka/tutup pintu pada runtime baru
 2. lanjut audit traversal tangga dan akses lantai dua setelah pintu manual dipastikan stabil
 3. kembali ke shelter/hiding runtime setelah server-side debug bridge pulih
+
+## 2026-04-03 16:22 ICT
+
+### Task
+
+Menutup drift countdown room, memastikan panel room tidak bocor ke fase match, lalu menyiapkan ulang jalur `StudioE2EControl` sebagai remote canonical tanpa menghentikan progres UI.
+
+### Linked Issues
+
+- user melaporkan panel room masih tertinggal setelah teleport ke map match
+- user melaporkan countdown dan suara tidak sinkron berdasarkan detik
+- debt survival/hunt tetap blocked karena `StudioE2EControl` hilang dari runtime client
+
+### Files Changed
+
+- `src/ServerScriptService/Server/LobbySystem/Controller.lua`
+- `src/client/UI/RoomBrowserController.lua`
+- `src/client/UI/Main.lua`
+- `src/ReplicatedStorage/RemoteEvents/StudioE2EControl.model.json`
+- `src/ServerScriptService/Bootstrap.server.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- countdown room sekarang memakai anchor waktu server:
+  - server mengirim `countdownEndsAt` bersama payload countdown
+  - client menyimpan deadline itu di `RoomBrowserController`
+  - overlay countdown menghitung angka dari `Workspace:GetServerTimeNow()`
+- panel room sekarang benar-benar mati di `Preparing/Loading/Briefing`; `MatchUI` dan loading flow menjadi owner tampilan fase match
+- `StudioE2EControl` sekarang source-controlled di `ReplicatedStorage.RemoteEvents` agar tidak lagi bergantung pada remote runtime sementara
+- fallback kedua ditambahkan di `Bootstrap.server.lua` untuk mencoba menyalakan `StudioE2EControlSystem` setelah bootstrap utama
+- `MatchUI` juga saya naikkan ke sizing viewport-aware:
+  - panel, header, summary, footer, timer, quick evidence button, dan controls hint bar mengikuti viewport aktif
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_countdown_roomfix_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_studioe2e_remote_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_studioe2e_fallback_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_matchui_responsive_build.rbxlx`
+- validasi live `HostStart(Ranked, HauntedHouse)`:
+  - `RoomBrowserUI.Enabled = false`
+  - `RoomBrowserUI.Panel.Visible = false`
+  - `MatchPhase = Briefing`
+  - capture referensi:
+    - `ScreenCapture_CountdownRoomFix_Briefing`
+- retest countdown + sound:
+  - label countdown stabil berubah `5 -> 4 -> 3 -> 2 -> 1`
+  - `RuntimeCountdownTick` tercipta `count=5`, satu kali per angka countdown
+- validasi `MatchUI` terbaru di `Briefing`:
+  - `MatchUI.MainPanel.AbsoluteSize = 340x454`
+  - `EvidenceQuickButton.AbsoluteSize = 142x48`
+  - `MatchTimerLabel.AbsoluteSize = 126x40`
+  - capture referensi:
+    - `ScreenCapture_MatchUI_Responsive_Briefing`
+
+### Blocker Notes
+
+- `StudioE2EControl` sekarang muncul sebagai remote client, tetapi listener server masih belum attach:
+  - `PasrahStudioE2EReady` tetap `nil`
+  - request `SetForcedGhost` tidak menghasilkan ack maupun update attribute
+- artinya blocker tooling untuk audit shelter/hunt belum tertutup, walau canonical remote-nya sekarang sudah aman di source
+
+### Next Step
+
+1. checkpoint commit untuk fix countdown/panel/tooling canonical ini
+2. lanjut ke task unblocked berikutnya sambil memarkir `StudioE2EControl` sebagai blocker tooling
+3. kembali ke survival/hunt loop setelah jalur debug server bisa dihidupkan lagi atau diganti pendekatan lain

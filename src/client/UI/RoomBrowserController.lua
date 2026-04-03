@@ -3,6 +3,7 @@ RoomBrowserController.__index = RoomBrowserController
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local LOBBY_REMOTE_NAME = "LobbyEvent"
 
 local function appendTraceValue(parts, key, value)
@@ -90,6 +91,7 @@ function RoomBrowserController.new(lobbyRemote)
 		matchStarting = false,
 		countdownSecondsLeft = nil,
 		countdownTotal = nil,
+		countdownEndsAt = nil,
 		currentRoom = nil,
 		lastRoomId = nil,
 		isHost = false,
@@ -329,6 +331,7 @@ function RoomBrowserController:HandleLobbyEvent(payload)
 		self._state.matchStarting = false
 		self._state.countdownSecondsLeft = nil
 		self._state.countdownTotal = nil
+		self._state.countdownEndsAt = nil
 		self._state.lastError = nil
 	elseif eventName == "RoomBrowserRoomJoinFailed" then
 		self:_setPendingRoomTransition(false)
@@ -359,19 +362,23 @@ function RoomBrowserController:HandleLobbyEvent(payload)
 		self._state.matchStarting = true
 		self._state.countdownTotal = payload.countdownSeconds or self._state.countdownTotal or 5
 		self._state.countdownSecondsLeft = payload.countdownSeconds or self._state.countdownSecondsLeft
+		self._state.countdownEndsAt = tonumber(payload.countdownEndsAt) or (payload.countdownSeconds and (Workspace:GetServerTimeNow() + tonumber(payload.countdownSeconds))) or self._state.countdownEndsAt
 	elseif eventName == "RoomMatchCountdown" then
 		self._state.matchStarting = true
 		self._state.countdownSecondsLeft = payload.secondsLeft
 		self._state.countdownTotal = payload.totalSeconds or self._state.countdownTotal
+		self._state.countdownEndsAt = tonumber(payload.countdownEndsAt) or (payload.secondsLeft and (Workspace:GetServerTimeNow() + tonumber(payload.secondsLeft))) or self._state.countdownEndsAt
 	elseif eventName == "RoomMatchCountdownCancelled" then
 		self._state.matchStarting = false
 		self._state.countdownSecondsLeft = nil
 		self._state.countdownTotal = nil
+		self._state.countdownEndsAt = nil
 		self._state.lastError = payload.reason == "host_cancelled" and nil or payload.reason
 	elseif eventName == "RoomMatchCountdownCompleted" then
 		self._state.matchStarting = false
 		self._state.countdownSecondsLeft = nil
 		self._state.countdownTotal = nil
+		self._state.countdownEndsAt = nil
 	elseif eventName == "RoomStateUpdate" then
 		self:_setPendingRoomTransition(false)
 		local roomData = payload.room
@@ -398,9 +405,11 @@ function RoomBrowserController:HandleLobbyEvent(payload)
 		self._state.countdownSecondsLeft = payload.countdownSecondsLeft
 		if payload.countdownSecondsLeft ~= nil then
 			self._state.matchStarting = true
-			self._state.countdownTotal = self._state.countdownTotal or payload.countdownSecondsLeft
+			self._state.countdownTotal = payload.countdownTotal or self._state.countdownTotal or payload.countdownSecondsLeft
+			self._state.countdownEndsAt = tonumber(payload.countdownEndsAt) or self._state.countdownEndsAt
 		elseif self._state.matchStarting ~= true then
 			self._state.countdownTotal = nil
+			self._state.countdownEndsAt = nil
 		end
 		self._state.lastError = nil
 	elseif eventName == "RoomBrowserLobbyPlayers" then
