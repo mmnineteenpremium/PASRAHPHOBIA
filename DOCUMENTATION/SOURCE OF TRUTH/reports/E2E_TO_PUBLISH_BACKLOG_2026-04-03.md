@@ -1225,3 +1225,11 @@ Urutan yang paling masuk akal dari titik sekarang:
 - tujuan:
   - mempercepat penutupan gate compliance tanpa bolak-balik format saat final publish
 
+## Update 2026-04-04 03:10 ICT
+
+- fix startup blocker `ShopSystem` dipastikan masuk commit:
+  - menghapus pembacaan callback `MarketplaceService.ProcessReceipt` (read) yang memang tidak diizinkan Roblox API
+  - flow sekarang hanya melakukan assignment callback resmi (`set`) tanpa restore via read-back
+- dampak:
+  - error boot `ProcessReceipt is a callback member ... get is not available` tidak lagi relevan pada source terbaru
+
