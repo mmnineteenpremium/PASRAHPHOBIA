@@ -836,12 +836,19 @@ function Controller:OnEvidenceCollected(payload)
         return
     end
 
+    local collectedEvidence = self._service:GetCollectedEvidence(matchId) or {}
+    local possibleGhosts = self._service:GetPossibleGhosts(matchId) or {}
+
     self:_broadcastEvidence(matchId, {
         eventName = "EvidenceCollected",
         matchId = matchId,
         evidenceType = payload.evidenceType,
         playerId = payload.userId or (payload.player and payload.player.UserId),
         toolType = payload.toolType,
+        discoveredEvidence = collectedEvidence,
+        confirmedEvidence = collectedEvidence,
+        possibleGhosts = possibleGhosts,
+        evidenceFound = #collectedEvidence,
     })
     self:_broadcastEvidenceFound(matchId, {
         matchId = matchId,

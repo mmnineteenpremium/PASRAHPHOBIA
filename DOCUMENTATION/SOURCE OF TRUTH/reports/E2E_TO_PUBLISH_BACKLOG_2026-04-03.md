@@ -187,6 +187,15 @@ Status:
   - response tool kembali `success=true`, `reason=collected`, `evidenceType=MEDOK`
   - `JournalUI` menampilkan `Discovered Evidence - MEDOK`
   - `ToolStatusLabel` menampilkan `Evidence berhasil dibaca. / Collected MEDOK`
+- bridge runtime modern `EvidenceCollected -> JournalUI` sekarang juga mengisi state deduction non-empty tanpa menunggu journal owner lama:
+  - `EvidenceSystem.Controller` menyiarkan `discoveredEvidence`, `confirmedEvidence`, dan `possibleGhosts` ke `EvidenceEvent`
+  - `UISystem` memakai payload itu sebagai fallback canonical saat collect berhasil
+- validasi live terbaru sukses dengan ghost kompatibel `SundelBolong`:
+  - client request `TounDetection` berhasil untuk `match_1`
+  - response tool kembali `success=true`, `reason=collected`, `evidenceType=To'un`
+  - `JournalUI` sekarang tampil non-empty dengan `Confirmed 1 | Kandidat 7 | Event EvidenceCollected`
+  - hero copy berubah ke `Evidence penting sudah terkunci. Saatnya persempit ghost.`
+  - `ToolStatusLabel` menampilkan `Evidence berhasil dibaca. / Collected To'un`
 
 Pekerjaan:
 

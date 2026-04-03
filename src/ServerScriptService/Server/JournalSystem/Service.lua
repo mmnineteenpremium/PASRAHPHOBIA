@@ -264,6 +264,32 @@ function Service:OnEvidenceValidated(payload)
     self:_emitEvidenceSnapshot(payload.player, userId, payload.matchId)
 end
 
+function Service:OnEvidenceCollected(payload)
+    if type(payload) ~= "table" then
+        return
+    end
+
+    local userId = toUserId(payload.player or payload.userId)
+    local evidenceType = payload.evidenceType
+    if not userId or type(evidenceType) ~= "string" or evidenceType == "" then
+        return
+    end
+
+    local journal = self:_getOrCreateJournal(userId)
+    pushUnique(journal.discoveredEvidence, evidenceType)
+    pushUnique(journal.confirmedEvidence, evidenceType)
+    table.insert(journal.timeline, {
+        type = "EvidenceCollected",
+        evidenceType = evidenceType,
+        toolType = payload.toolType,
+        at = os.clock(),
+    })
+    journal.lastUpdatedAt = os.clock()
+
+    self:_publishJournalUpdated(userId, payload.player, payload.matchId)
+    self:_emitEvidenceSnapshot(payload.player, userId, payload.matchId)
+end
+
 function Service:OnGhostCandidatesUpdated(payload)
     if type(payload) ~= "table" then
         return

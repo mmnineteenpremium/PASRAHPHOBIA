@@ -1802,3 +1802,67 @@ Lanjut ke blocker gameplay berikutnya:
 1. vertical slice evidence + journal dengan state non-empty
 2. extraction flow pada map clone aktif
 3. finalisasi slot audio kosong yang masih menahan publish polish
+
+## 2026-04-03 11:00 ICT
+
+### Task
+
+Menutup vertical slice `evidence -> journal non-empty` dengan jalur runtime yang benar-benar aktif, tanpa bergantung pada two-way Studio hack atau owner journal lama yang sudah drift.
+
+### Linked Issues
+
+- `JournalUI` sebelumnya hanya berubah di status tool, tetapi body evidence/candidate tetap kosong walau `EvidenceRequest` sukses
+- runtime modern mem-publish `EvidenceCollected`, sementara owner journal lama tidak lagi menjadi jalur yang bisa dipercaya
+- deduction payload sudah tersedia di backend, tetapi belum ikut dibawa ke surface client yang benar-benar aktif
+
+### Files Changed
+
+- `src/ServerScriptService/Server/JournalSystem/Controller.lua`
+- `src/ServerScriptService/Server/JournalSystem/Service.lua`
+- `src/ServerScriptService/Server/EvidenceSystem/Controller.lua`
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `JournalSystem` sekarang ikut mendengar event runtime modern:
+  - `EvidenceCollected`
+  - `DeductionUpdated`
+- `JournalSystem.Service` sekarang punya fallback `OnEvidenceCollected`, sehingga evidence yang benar-benar sudah terkumpul tetap membentuk snapshot journal walau `EvidenceValidated`/owner lama tidak cukup
+- `EvidenceSystem.Controller:OnEvidenceCollected` sekarang membroadcast snapshot runtime yang sudah aman dipakai client:
+  - `discoveredEvidence`
+  - `confirmedEvidence`
+  - `possibleGhosts`
+  - `evidenceFound`
+- `UISystem` sekarang memakai payload `EvidenceCollected` itu sebagai bridge canonical ke `JournalUI`, jadi body journal tidak lagi menunggu surface journal legacy
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_journal_fix_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_journal_collect_bridge_build.rbxlx`
+- restart playtest penuh dilakukan dua kali untuk memastikan server + client benar-benar memuat patch
+- automation live via MCP berhasil mengulang flow:
+  - `SelectMode(Ranked)`
+  - `SelectMap(EmptyBuilding)`
+  - `CreateRoom`
+  - `HostStart`
+  - tunggu `MatchPhase = Briefing`
+- validasi runtime akhir sukses pada ghost aktif `SundelBolong`:
+  - client request `TounDetection` kembali `success=true`, `reason=collected`, `evidenceType=To'un`
+  - `JournalUI` sekarang membaca state non-empty:
+    - `heroTitle = Evidence penting sudah terkunci. Saatnya persempit ghost.`
+    - `heroMeta = Confirmed 1 | Kandidat 7 | Event EvidenceCollected`
+    - `ToolStatusLabel = Evidence berhasil dibaca. / Collected To'un`
+  - screenshot runtime:
+    - `ScreenCapture_JournalAfterEvidenceCollectBridge`
+- catatan jujur:
+  - bridge ini menutup vertical slice sekarang, tetapi owner journal lama masih layak dibersihkan di fase refactor berikutnya agar tidak ada dua jalur sinkronisasi yang samar
+
+### Next Step
+
+Lanjut ke blocker publish berikutnya:
+1. finalisasi tiga slot audio kosong (`AmbientLoop_Main`, `GhostWhisper_01`, `ButtonClick_01`)
+2. lanjutkan polish UX Roblox-friendly pada surface yang masih utilitarian
+3. lanjutkan loop match hasil/ekstraksi dan publish gate yang masih tersisa
