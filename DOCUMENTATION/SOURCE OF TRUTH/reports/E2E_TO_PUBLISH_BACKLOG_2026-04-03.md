@@ -1412,3 +1412,19 @@ Urutan yang paling masuk akal dari titik sekarang:
 - catatan:
   - tool `mouse click/screen capture` MCP sempat timeout, jadi validasi dilakukan via inspeksi runtime property (`AbsoluteSize/Position/Visible`) dan bukan screenshot visual.
 
+## Update 2026-04-04 06:45 ICT
+
+- blocker gameplay fairness yang dilaporkan user ditutup:
+  - utility item tidak lagi unlimited di runtime (`Garam/Salib/Dupa` kini punya kuota per pemain per match).
+  - UI feedback field kit kini memunculkan status habis stok (`tool_out_of_stock`) + sisa pakai.
+- validasi live StudioE2E:
+  - `Garam`: gagal di attempt 4 (`tool_out_of_stock`)
+  - `Salib`: gagal di attempt 3 (`tool_out_of_stock`)
+  - `Dupa`: gagal di attempt 3 (`tool_out_of_stock`)
+- blocker visual ghost skala raksasa juga ditutup:
+  - model `Pocong` dinormalisasi dari tinggi ekstrem (`23`) ke proporsional (`8.5`) di source + runtime.
+  - offset visual runtime `Pocong` disesuaikan dari `10.5` menjadi `0.4`.
+- catatan sinkronisasi:
+  - pada sesi ini terdeteksi lagi drift local->Studio; patch runtime juga diterapkan via MCP agar test tidak membaca source lama.
+  - workflow tetap: source of truth di repo, lalu validasi runtime wajib cross-check script Studio aktif.
+

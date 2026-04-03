@@ -2029,6 +2029,11 @@ local function buildToolContextSummary(data)
 		table.insert(fragments, string.format("Charge %d", math.max(0, math.floor(chargesRemaining))))
 	end
 
+	local usesRemaining = tonumber(data.usesRemaining)
+	if usesRemaining ~= nil then
+		table.insert(fragments, string.format("Sisa pakai %d", math.max(0, math.floor(usesRemaining))))
+	end
+
 	if data.tracksDetected == true then
 		table.insert(fragments, "Jejak terdeteksi")
 	end
@@ -2096,6 +2101,9 @@ local function resolveToolFeedback(toolType, success, reason, data, eventName)
 	elseif reason == "tool_local_cooldown" or reason == "tool_cooldown" then
 		status = toolLabel .. " cooldown."
 		detail = "Tunggu sebentar sebelum memakai tool lagi."
+	elseif reason == "tool_out_of_stock" then
+		status = toolLabel .. " habis."
+		detail = "Stok tool habis untuk match ini."
 	elseif reason == "ghost_out_of_range" then
 		status = toolLabel .. " ditolak."
 		detail = "Ghost terlalu jauh dari target."

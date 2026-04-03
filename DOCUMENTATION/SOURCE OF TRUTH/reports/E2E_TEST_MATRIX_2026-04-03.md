@@ -151,3 +151,19 @@ Catatan:
 Status matrix inti saat ini:
 
 - `PASS`: `E2E-01`, `E2E-02`, `E2E-03`, `E2E-04`, `E2E-05`, `E2E-06`, `E2E-07`, `E2E-08`, `E2E-09`, `E2E-10`
+
+## Update 2026-04-04 06:45 ICT
+
+Regression pass tambahan untuk area yang dikeluhkan user:
+
+- utility tool stock guard:
+  - `Garam` sekarang gagal di attempt ke-4 (`tool_out_of_stock`)
+  - `Salib` sekarang gagal di attempt ke-3 (`tool_out_of_stock`)
+  - `Dupa` sekarang gagal di attempt ke-3 (`tool_out_of_stock`)
+- ghost visual scale:
+  - `Ghost_Pocong` runtime muncul dengan bounding box `~2.59 x 8.5 x 2.2` (tidak raksasa lagi)
+
+Implikasi matrix:
+
+- `E2E-06` tetap `PASS` dan sekarang lebih aman karena utility branch sudah punya guard stok.
+- `E2E-07` tetap `PASS` dengan kualitas visual lebih proporsional untuk validasi gameplay.

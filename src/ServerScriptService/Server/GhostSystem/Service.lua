@@ -26,7 +26,7 @@ local DEFAULT_GHOST_TYPES = {
 }
 
 local GHOST_TEMPLATE_VISUAL_OFFSETS = {
-	Pocong = Vector3.new(0, 10.5, 0),
+	Pocong = Vector3.new(0, 0.4, 0),
 }
 
 local GHOST_VISUAL_TRANSPARENCY_BY_STATE = {

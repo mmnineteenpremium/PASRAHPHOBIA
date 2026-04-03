@@ -135,15 +135,18 @@ local UTILITY_TOOL_CONFIG = {
 		durationSeconds = 20,
 		repelDistance = 12,
 		sanityRestore = 10,
+		maxUsesPerPlayer = 2,
 	},
 	Garam = {
 		durationSeconds = 180,
 		immediateTriggerDistance = 8,
 		maxPlacements = 6,
+		maxUsesPerPlayer = 3,
 	},
 	Salib = {
 		charges = 3,
 		durationSeconds = 180,
+		maxUsesPerPlayer = 2,
 	},
 }
 
@@ -777,11 +780,15 @@ function EvidenceService:_getUtilityState(matchId)
 	if type(utilityState) ~= "table" then
 		utilityState = {
 			crucifixPlacements = {},
+			playerToolStocks = {},
 			saltPlacements = {},
 			smudgeEffects = {},
 		}
 		utilityToolsByMatch[matchId] = utilityState
 		self._state:Set("utilityToolsByMatch", utilityToolsByMatch)
+	end
+	if type(utilityState.playerToolStocks) ~= "table" then
+		utilityState.playerToolStocks = {}
 	end
 	return utilityState
 end
@@ -834,6 +841,48 @@ function EvidenceService:_generatePlacementId(toolType)
 	return string.format("%s_%s", tostring(toolType or "Tool"), HttpService:GenerateGUID(false))
 end
 
+function EvidenceService:_getDefaultToolStock(toolType)
+	local config = UTILITY_TOOL_CONFIG[toolType]
+	local stock = config and tonumber(config.maxUsesPerPlayer) or nil
+	if stock == nil then
+		return 0
+	end
+	return math.max(0, math.floor(stock))
+end
+
+function EvidenceService:_consumePlayerToolStock(matchId, userId, toolType)
+	if type(userId) ~= "number" or userId <= 0 then
+		return false, "invalid_player", 0
+	end
+
+	local utilityState = self:_getUtilityState(matchId)
+	local stocksByPlayer = utilityState.playerToolStocks or {}
+	local userKey = tostring(userId)
+	local userStock = stocksByPlayer[userKey]
+	if type(userStock) ~= "table" then
+		userStock = {}
+		stocksByPlayer[userKey] = userStock
+	end
+
+	if userStock[toolType] == nil then
+		userStock[toolType] = self:_getDefaultToolStock(toolType)
+	end
+
+	local current = math.max(0, math.floor(tonumber(userStock[toolType]) or 0))
+	if current <= 0 then
+		userStock[toolType] = 0
+		utilityState.playerToolStocks = stocksByPlayer
+		self:_saveUtilityState(matchId, utilityState)
+		return false, "tool_out_of_stock", 0
+	end
+
+	local remaining = current - 1
+	userStock[toolType] = remaining
+	utilityState.playerToolStocks = stocksByPlayer
+	self:_saveUtilityState(matchId, utilityState)
+	return true, nil, remaining
+end
+
 function EvidenceService:_placeUtilityVisual(matchId, toolType, placementId, player, requestPayload)
 	if not self._utilityVisuals or not matchId or not toolType or not placementId then
 		return nil
@@ -875,6 +924,13 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
+	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, userId, "Garam")
+	if stockOk ~= true then
+		return false, stockReason or "tool_out_of_stock", {
+			toolType = "Garam",
+			usesRemaining = math.max(0, tonumber(usesRemaining) or 0),
+		}
+	end
 	local placementId = self:_generatePlacementId("Garam")
 
 	local placement = {
@@ -913,6 +969,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 			source = "salt_placement",
 			toolType = "Garam",
 			userId = userId,
+			usesRemaining = usesRemaining,
 			visualPlaced = visualPlaced,
 		})
 		return true, "salt_triggered", {
@@ -922,6 +979,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 			roomId = roomId or ghostRoomId,
 			toolType = "Garam",
 			tracksDetected = true,
+			usesRemaining = usesRemaining,
 			visualPlaced = visualPlaced,
 		}
 	end
@@ -937,6 +995,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 		roomId = roomId,
 		toolType = "Garam",
 		userId = userId,
+		usesRemaining = usesRemaining,
 		visualPlaced = visualPlaced,
 	})
 	return true, "salt_placed", {
@@ -946,6 +1005,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 		roomId = roomId,
 		toolType = "Garam",
 		tracksDetected = false,
+		usesRemaining = usesRemaining,
 		visualPlaced = visualPlaced,
 	}
 end
@@ -957,6 +1017,13 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
+	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, userId, "Salib")
+	if stockOk ~= true then
+		return false, stockReason or "tool_out_of_stock", {
+			toolType = "Salib",
+			usesRemaining = math.max(0, tonumber(usesRemaining) or 0),
+		}
+	end
 	local placementId = self:_generatePlacementId("Salib")
 
 	local placement = {
@@ -984,6 +1051,7 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 		roomId = roomId,
 		toolType = "Salib",
 		userId = userId,
+		usesRemaining = usesRemaining,
 		visualPlaced = visualPlaced,
 	})
 
@@ -995,6 +1063,7 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 		placementActive = true,
 		roomId = roomId,
 		toolType = "Salib",
+		usesRemaining = usesRemaining,
 		visualPlaced = visualPlaced,
 	}
 end
@@ -1006,6 +1075,13 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
+	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, userId, "Dupa")
+	if stockOk ~= true then
+		return false, stockReason or "tool_out_of_stock", {
+			toolType = "Dupa",
+			usesRemaining = math.max(0, tonumber(usesRemaining) or 0),
+		}
+	end
 	local placementId = self:_generatePlacementId("Dupa")
 
 	local effect = {
@@ -1049,6 +1125,7 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 		sanityRestored = config.sanityRestore,
 		toolType = "Dupa",
 		userId = userId,
+		usesRemaining = usesRemaining,
 		visualPlaced = visualPlaced,
 	})
 
@@ -1073,6 +1150,7 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 		roomId = roomId or ghostRoomId,
 		sanityRestored = config.sanityRestore,
 		toolType = "Dupa",
+		usesRemaining = usesRemaining,
 		visualPlaced = visualPlaced,
 	}
 end
