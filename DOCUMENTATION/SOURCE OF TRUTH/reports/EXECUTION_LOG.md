@@ -5244,3 +5244,40 @@ Menutup blocker shop `insufficient_currency` untuk item termurah dan melacak dri
 
 - shop sekarang benar-benar bisa menjual item `MM/PP` dari sesi baru, bukan hanya render katalog.
 - drift antara source lokal dan script Studio adalah risiko nyata; perlu disiplin satu koneksi Rojo aktif + verifikasi script target saat gejala runtime tidak sesuai source.
+
+## 2026-04-04 04:05 ICT
+
+### Task
+
+Menstabilkan sinkron countdown audio dan memastikan cue teleport tidak dobel pada transisi host-start.
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- countdown overlay sekarang memprioritaskan `countdownSecondsLeft` dari server sebagai sumber detik utama.
+- fallback berbasis `countdownEndsAt` hanya dipakai jika detik authoritative tidak tersedia.
+- cue teleport disetel menjadi single-cue:
+  - `MatchPreparing` overlay tetap tampil tapi audio disenyapkan.
+  - `MatchStarted` memutar satu cue audio teleport dengan `forceAudio` agar tetap terdengar walau overlay sudah aktif.
+
+### Validation Notes
+
+- smoke flow `OpenRoomBrowser -> CreateRoom -> HostStart` (MCP live):
+  - `MatchStarted = true`
+  - `InMatch = true`
+  - `MatchPhase = Briefing`
+  - `RoomPanel.Visible = false` (panel room tetap tertutup saat masuk match)
+- observasi runtime sound:
+  - `RuntimeCountdownTick` spawn `5` kali (sesuai countdown 5 detik)
+  - `RuntimeTeleportDrop` spawn `1` kali (tidak dobel)
+- build source lokal sukses:
+  - `_tmp_countdown_audio_singlecue_build.rbxlx`
+
+### Interpretation
+
+- regresi yang dilaporkan user (countdown terasa random + cue transisi dobel) ditutup pada baseline teknis current flow.

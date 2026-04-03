@@ -7295,6 +7295,7 @@ function UISystem:_showTeleportOverlay(durationSeconds, options)
 
 	local overlayAlreadyVisible = screen.Enabled == true and overlay.BackgroundTransparency <= 0.05
 	local suppressAudio = type(options) == "table" and options.suppressAudio == true
+	local forceAudio = type(options) == "table" and options.forceAudio == true
 	local dedupeWindowSeconds = tonumber(type(options) == "table" and options.dedupeWindowSeconds) or 4
 	local now = tick()
 	local recentlyPlayed = self._lastTeleportOverlaySoundAt and (now - self._lastTeleportOverlaySoundAt) < math.max(0, dedupeWindowSeconds)
@@ -7307,7 +7308,7 @@ function UISystem:_showTeleportOverlay(durationSeconds, options)
 		self._teleportOverlayTween = nil
 	end
 
-	if not suppressAudio and not overlayAlreadyVisible and not recentlyPlayed then
+	if not suppressAudio and ((forceAudio and not recentlyPlayed) or (not overlayAlreadyVisible and not recentlyPlayed)) then
 		playRuntimeUISound("TeleportDrop", {
 			VolumeScale = 1,
 			PlaybackSpeed = 0.94,
@@ -7607,7 +7608,7 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		self:_forceCloseAllPanelsForTeleport()
 		self._matchStartTransitionAudioArmed = true
 		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS, {
-			suppressAudio = false,
+			suppressAudio = true,
 			dedupeWindowSeconds = 4,
 		})
 		self._hasPostTeleportLoaded = false
@@ -7616,7 +7617,8 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 	elseif eventName == "MatchStarted" then
 		self:_forceCloseAllPanelsForTeleport()
 		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS, {
-			suppressAudio = self._matchStartTransitionAudioArmed == true,
+			suppressAudio = false,
+			forceAudio = true,
 			dedupeWindowSeconds = 4,
 		})
 		self._matchStartTransitionAudioArmed = false
@@ -12586,9 +12588,10 @@ function UISystem:_updateCountdownOverlay(state)
 		return
 	end
 
+	local hasAuthoritativeSecond = state.countdownSecondsLeft ~= nil
 	local displayCountdown = math.max(0, math.floor(tonumber(state.countdownSecondsLeft or state.countdownTotal or 5) or 5))
 	local countdownEndsAt = tonumber(state.countdownEndsAt)
-	if countdownEndsAt then
+	if not hasAuthoritativeSecond and countdownEndsAt then
 		local remaining = countdownEndsAt - Workspace:GetServerTimeNow()
 		if remaining > 0 then
 			displayCountdown = math.max(1, math.ceil(remaining))

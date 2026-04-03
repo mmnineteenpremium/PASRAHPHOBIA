@@ -1267,3 +1267,17 @@ Urutan yang paling masuk akal dari titik sekarang:
   - “shop ada tapi tidak ada yang dijual” sudah bukan blocker aktif untuk MM/PP
   - sisa blocker monetization tetap pada aktivasi `Robux` (Creator Hub IDs) dan sinkronisasi workflow Rojo yang disiplin
 
+## Update 2026-04-04 04:05 ICT
+
+- stabilisasi transisi countdown/teleport masuk ke baseline:
+  - countdown UI kini pakai detik authoritative server (`countdownSecondsLeft`) sebagai prioritas.
+  - fallback `countdownEndsAt` hanya dipakai saat detik authoritative tidak tersedia.
+- cue teleport kini single-cue:
+  - `MatchPreparing` tetap menampilkan overlay tapi tanpa audio.
+  - `MatchStarted` memutar satu cue teleport dengan guard `forceAudio`.
+- validasi live:
+  - flow host-start sukses sampai `MatchStarted`.
+  - `RoomPanel` tetap `Visible=false` saat masuk match.
+  - `RuntimeCountdownTick` terdeteksi `5`x.
+  - `RuntimeTeleportDrop` terdeteksi `1`x (no duplicate).
+
