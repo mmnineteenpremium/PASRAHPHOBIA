@@ -413,6 +413,10 @@ Status:
   - copy `HUNT` juga dibuat lebih jujur:
     - tidak lagi mengklaim `Safe Zone biru` sebagai sistem final
     - guidance sekarang tetap berguna tetapi conditional: putus `line-of-sight`, gunakan prompt pintu, dan cari ruang aman jika tersedia
+    - hunt guidance sekarang juga tidak lagi generik:
+      - client menghitung `safe zone` runtime terdekat dari match aktif
+      - objective/hint sekarang bisa menunjuk target operasional seperti `SafeZone 1 52st`
+      - ini memberi jawaban yang lebih konkret untuk pemain: bukan sekadar "lari", tetapi ke mana mereka seharusnya bergerak saat hunt aktif
 
 Pekerjaan:
 
