@@ -1,12 +1,11 @@
 {
   "className": "Sound",
   "properties": {
-    "Name": "HuntStart_01",
-    "SoundId": "rbxassetid://1843529608",
-    "Looped": false,
-    "Volume": 0.85,
-    "RollOffMinDistance": 10,
-    "RollOffMaxDistance": 120,
-    "PlaybackSpeed": 1
+    "AudioContent": "rbxassetid://138329686293368",
+    "Volume": 0.8500000238418579,
+    "RollOffMaxDistance": 120.0,
+    "AcousticSimulationEnabled": {
+      "Bool": true
+    }
   }
 }

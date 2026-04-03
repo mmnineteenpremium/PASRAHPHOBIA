@@ -2,9 +2,52 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Rojo: Install Toolchain",
+      "type": "shell",
+      "command": "aftman",
+      "args": [
+        "install"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Rojo: Install Studio Plugin",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo",
+        "-File",
+        "scripts/Invoke-Rojo.ps1",
+        "plugin",
+        "install"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Rojo: Serve (Studio Live Sync)",
       "type": "shell",
-      "command": "rojo serve default.project.json --port 34872",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo",
+        "-File",
+        "scripts/serve-rojo.ps1"
+      ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -18,7 +61,18 @@
     {
       "label": "Rojo: Sourcemap (Watch)",
       "type": "shell",
-      "command": "rojo sourcemap default.project.json --output sourcemap.json --watch --include-non-scripts",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo",
+        "-File",
+        "scripts/Invoke-Rojo.ps1",
+        "sourcemap",
+        "default.project.json",
+        "--output",
+        "sourcemap.json",
+        "--watch",
+        "--include-non-scripts"
+      ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -32,7 +86,16 @@
     {
       "label": "Rojo: Build Place",
       "type": "shell",
-      "command": "rojo build default.project.json --output PASRAHPHOBIA.rojo.rbxlx",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo",
+        "-File",
+        "scripts/Invoke-Rojo.ps1",
+        "build",
+        "default.project.json",
+        "--output",
+        "PASRAHPHOBIA.rojo.rbxlx"
+      ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -42,6 +105,67 @@
         "clear": true
       },
       "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Rojo: Syncback Ghost Snapshot",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo",
+        "-File",
+        "scripts/pull-from-studio.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Rojo: Syncback Studio-Safe Snapshot",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo",
+        "-File",
+        "scripts/pull-from-studio.ps1",
+        "-ProjectPath",
+        "syncback.studio-safe.project.json"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Rojo: Syncback Full Snapshot",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoLogo",
+        "-File",
+        "scripts/pull-from-studio.ps1",
+        "-ProjectPath",
+        "syncback.project.json"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
       "problemMatcher": []
     }
   ]

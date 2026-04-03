@@ -117,6 +117,57 @@ function Service:_rewardForTier(tier, premium)
     return reward
 end
 
+function Service:GetPlayerSnapshot(player)
+    local userId = self:_ensurePlayerState(player)
+    if not userId then
+        return nil
+    end
+
+    local playerXP = self._state:Get("playerXP") or {}
+    local tierProgress = self._state:Get("tierProgress") or {}
+    local unlockedTiers = self._state:Get("unlockedTiers") or {}
+    local premiumOwners = self._state:Get("premiumOwners") or {}
+
+    local totalXP = math.max(0, math.floor(tonumber(playerXP[userId]) or 0))
+    local currentTier = math.clamp(math.floor(tonumber(tierProgress[userId]) or 1), 1, MAX_TIER)
+    local tierBaseXP = math.max(0, (currentTier - 1) * TIER_XP)
+    local currentTierXP = math.clamp(totalXP - tierBaseXP, 0, TIER_XP)
+    local remainingXP = currentTier >= MAX_TIER and 0 or math.max(0, TIER_XP - currentTierXP)
+    local premiumOwned = premiumOwners[userId] == true
+
+    local unlockedList = {}
+    local unlockedByTier = unlockedTiers[userId] or {}
+    for tier, isUnlocked in pairs(unlockedByTier) do
+        if isUnlocked == true then
+            local numericTier = tonumber(tier)
+            if numericTier and numericTier >= 1 and numericTier <= MAX_TIER then
+                table.insert(unlockedList, math.floor(numericTier))
+            end
+        end
+    end
+    table.sort(unlockedList)
+
+    local nextTier = currentTier < MAX_TIER and (currentTier + 1) or nil
+    local nextReward = nextTier and self:_rewardForTier(nextTier, premiumOwned) or nil
+
+    return {
+        userId = userId,
+        seasonId = self._state:Get("seasonId"),
+        totalXP = totalXP,
+        currentTier = currentTier,
+        maxTier = MAX_TIER,
+        xpPerTier = TIER_XP,
+        currentTierXP = currentTierXP,
+        remainingXP = remainingXP,
+        progressPercent = TIER_XP > 0 and math.clamp(currentTierXP / TIER_XP, 0, 1) or 0,
+        premiumOwned = premiumOwned,
+        unlockedTiers = unlockedList,
+        unlockedTierCount = #unlockedList,
+        nextTier = nextTier,
+        nextReward = nextReward,
+    }
+end
+
 function Service:_grantTierReward(player, tier)
     local userId = self:_ensurePlayerState(player)
     if not userId then
@@ -144,6 +195,25 @@ function Service:_grantTierReward(player, tier)
         xp = reward.xp,
         source = "RoyalPass",
     })
+end
+
+function Service:SetPremiumOwnership(player, ownsPremium)
+    local userId = self:_ensurePlayerState(player)
+    if not userId then
+        return false, "invalid_player"
+    end
+
+    local premiumOwners = self._state:Get("premiumOwners") or {}
+    premiumOwners[userId] = ownsPremium == true
+    self._state:Set("premiumOwners", premiumOwners)
+
+    self:_publish("RoyalPassPremiumOwnershipChanged", {
+        player = player,
+        userId = userId,
+        ownsPremium = premiumOwners[userId] == true,
+        seasonId = self._state:Get("seasonId"),
+    })
+    return true
 end
 
 function Service:AddXP(player, amount, source)

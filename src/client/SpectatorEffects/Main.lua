@@ -20,19 +20,55 @@ local DISTORTION_EVENT_NAMES = {
 	GhostDistortionPulse = true,
 }
 
+local function ensureOverlayFrame(parent, name, backgroundTransparency)
+	local overlay = parent:FindFirstChild(name)
+	if overlay and overlay:IsA("Frame") then
+		overlay.BackgroundColor3 = Color3.new(0, 0, 0)
+		overlay.BackgroundTransparency = backgroundTransparency
+		overlay.BorderSizePixel = 0
+		overlay.Size = UDim2.fromScale(1, 1)
+		overlay.Visible = false
+		return overlay
+	end
+
+	overlay = Instance.new("Frame")
+	overlay.Name = name
+	overlay.BackgroundColor3 = Color3.new(0, 0, 0)
+	overlay.BackgroundTransparency = backgroundTransparency
+	overlay.BorderSizePixel = 0
+	overlay.Size = UDim2.fromScale(1, 1)
+	overlay.Visible = false
+	overlay.Parent = parent
+	return overlay
+end
+
 local function findOverlayFrames(player)
 	local playerGui = player:FindFirstChildOfClass("PlayerGui")
 	if not playerGui then
 		return nil, nil
 	end
 
-	local spectatorUi = playerGui:FindFirstChild("SpectatorUI")
-	if not spectatorUi then
+	local fallbackUi = nil
+	for _, child in ipairs(playerGui:GetChildren()) do
+		if child:IsA("ScreenGui") and child.Name == "SpectatorUI" then
+			local staticOverlay = child:FindFirstChild("StaticFlickerOverlay")
+			local desaturationOverlay = child:FindFirstChild("ColorDesaturationOverlay")
+			if staticOverlay or desaturationOverlay then
+				return staticOverlay, desaturationOverlay
+			end
+			if fallbackUi == nil then
+				fallbackUi = child
+			end
+		end
+	end
+
+	if not fallbackUi then
 		return nil, nil
 	end
 
-	local staticOverlay = spectatorUi:FindFirstChild("StaticFlickerOverlay")
-	local desaturationOverlay = spectatorUi:FindFirstChild("ColorDesaturationOverlay")
+	local spectatorUi = fallbackUi
+	local staticOverlay = ensureOverlayFrame(spectatorUi, "StaticFlickerOverlay", 0.35)
+	local desaturationOverlay = ensureOverlayFrame(spectatorUi, "ColorDesaturationOverlay", 0.5)
 	return staticOverlay, desaturationOverlay
 end
 

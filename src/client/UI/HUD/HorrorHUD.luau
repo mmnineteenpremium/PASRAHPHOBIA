@@ -1,7 +1,7 @@
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
-local VIGNETTE_IMAGE = "rbxassetid://YOUR_VIGNETTE_TEXTURE_ID"
+local VIGNETTE_IMAGE = nil
 local VIGNETTE_TWEEN_TIME = 0.45
 
 local HorrorHUD = {}
@@ -12,6 +12,30 @@ local function findLobbyUI(playerGui)
 		return nil
 	end
 	return playerGui:FindFirstChild("LobbyUI")
+end
+
+local function hasConfiguredVignetteImage()
+	return type(VIGNETTE_IMAGE) == "string"
+		and VIGNETTE_IMAGE ~= ""
+		and string.match(VIGNETTE_IMAGE, "^rbxassetid://%d+$") ~= nil
+end
+
+local function addProceduralVignetteEdge(parent, name, position, size, rotation)
+	local edge = Instance.new("Frame")
+	edge.Name = name
+	edge.BackgroundColor3 = Color3.new(0, 0, 0)
+	edge.BorderSizePixel = 0
+	edge.Position = position
+	edge.Size = size
+	edge.Parent = parent
+
+	local gradient = Instance.new("UIGradient")
+	gradient.Rotation = rotation
+	gradient.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	gradient.Parent = edge
 end
 
 local function createVignetteGui(playerGui)
@@ -26,17 +50,32 @@ local function createVignetteGui(playerGui)
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Parent = playerGui
 
-	local intensityFrame = Instance.new("ImageLabel")
-	intensityFrame.Name = "Vignette"
-	intensityFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-	intensityFrame.Position = UDim2.fromScale(0.5, 0.5)
-	intensityFrame.Size = UDim2.fromScale(1.2, 1.2)
-	intensityFrame.BackgroundTransparency = 1
-	intensityFrame.BorderSizePixel = 0
-	intensityFrame.Image = VIGNETTE_IMAGE
-	intensityFrame.ImageColor3 = Color3.fromRGB(0, 0, 0)
-	intensityFrame.ImageTransparency = 1
-	intensityFrame.Parent = screenGui
+	if hasConfiguredVignetteImage() then
+		local intensityFrame = Instance.new("ImageLabel")
+		intensityFrame.Name = "Vignette"
+		intensityFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+		intensityFrame.Position = UDim2.fromScale(0.5, 0.5)
+		intensityFrame.Size = UDim2.fromScale(1.2, 1.2)
+		intensityFrame.BackgroundTransparency = 1
+		intensityFrame.BorderSizePixel = 0
+		intensityFrame.Image = VIGNETTE_IMAGE
+		intensityFrame.ImageColor3 = Color3.fromRGB(0, 0, 0)
+		intensityFrame.ImageTransparency = 1
+		intensityFrame.Parent = screenGui
+	else
+		local vignetteGroup = Instance.new("CanvasGroup")
+		vignetteGroup.Name = "Vignette"
+		vignetteGroup.Size = UDim2.fromScale(1, 1)
+		vignetteGroup.BackgroundTransparency = 1
+		vignetteGroup.BorderSizePixel = 0
+		vignetteGroup.GroupTransparency = 1
+		vignetteGroup.Parent = screenGui
+
+		addProceduralVignetteEdge(vignetteGroup, "Top", UDim2.fromScale(0, 0), UDim2.fromScale(1, 0.22), 90)
+		addProceduralVignetteEdge(vignetteGroup, "Bottom", UDim2.fromScale(0, 0.78), UDim2.fromScale(1, 0.22), 270)
+		addProceduralVignetteEdge(vignetteGroup, "Left", UDim2.fromScale(0, 0), UDim2.fromScale(0.22, 1), 0)
+		addProceduralVignetteEdge(vignetteGroup, "Right", UDim2.fromScale(0.78, 0), UDim2.fromScale(0.22, 1), 180)
+	end
 
 	return screenGui
 end
@@ -110,7 +149,7 @@ function HorrorHUD:_tweenVignette()
 	end
 
 	local normalized = math.clamp(self._currentSanity / 100, 0, 1)
-	local targetTransparency = math.clamp(0.15 + (1 - normalized) * 0.7, 0.15, 0.9)
+	local targetTransparency = math.clamp(0.85 - (1 - normalized) * 0.7, 0.15, 0.85)
 
 	if self._vignetteTween then
 		self._vignetteTween:Cancel()
@@ -119,7 +158,9 @@ function HorrorHUD:_tweenVignette()
 	self._vignetteTween = TweenService:Create(
 		self._vignetteImage,
 		TweenInfo.new(VIGNETTE_TWEEN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-		{ ImageTransparency = targetTransparency }
+		self._vignetteImage:IsA("ImageLabel")
+			and { ImageTransparency = targetTransparency }
+			or { GroupTransparency = targetTransparency }
 	)
 	self._vignetteTween:Play()
 end

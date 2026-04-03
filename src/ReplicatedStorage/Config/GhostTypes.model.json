@@ -1,872 +1,821 @@
 {
+  "className": "Folder",
   "children": [
     {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "Banaspati"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        },
-        {
-          "properties": {
-            "Name": "HuntBehavior",
-            "Value": "Charge"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "ManifestBehavior",
-            "Value": "FlameSurge"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "SpeedModifier",
-            "Value": 1.15
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionLevel",
-            "Value": "High"
-          },
-          "className": "StringValue"
-        }
-      ],
+      "name": "Pocong",
       "className": "Folder",
-      "properties": {
-        "Name": "Banaspati"
-      }
-    },
-    {
       "children": [
         {
+          "name": "GhostName",
+          "className": "StringValue",
           "properties": {
-            "Name": "GhostName",
-            "Value": "Genderuwo"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        },
-        {
-          "properties": {
-            "Name": "HuntBehavior",
-            "Value": "NullZone"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "ManifestBehavior",
-            "Value": "ShadowCloak"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "SpeedModifier",
-            "Value": 1.05
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionLevel",
-            "Value": "High"
-          },
-          "className": "StringValue"
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Genderuwo"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "HantuTanah"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        },
-        {
-          "properties": {
-            "Name": "HuntBehavior",
-            "Value": "Ensnare"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "ManifestBehavior",
-            "Value": "EarthRift"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "SpeedModifier",
-            "Value": 1.0
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionLevel",
-            "Value": "Normal"
-          },
-          "className": "StringValue"
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "HantuTanah"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "Jerangkong"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        },
-        {
-          "properties": {
-            "Name": "HuntBehavior",
-            "Value": "Pursuit"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "ManifestBehavior",
-            "Value": "BoneRattle"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "SpeedModifier",
-            "Value": 1.08
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionLevel",
-            "Value": "Normal"
-          },
-          "className": "StringValue"
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Jerangkong"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "Kuntilanak"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        },
-        {
-          "properties": {
-            "Name": "HuntBehavior",
-            "Value": "Stalk"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "ManifestBehavior",
-            "Value": "WailManifest"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "SpeedModifier",
-            "Value": 1.12
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionLevel",
-            "Value": "High"
-          },
-          "className": "StringValue"
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Kuntilanak"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "Leak"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        },
-        {
-          "properties": {
-            "Name": "HuntBehavior",
-            "Value": "PhaseCharge"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "ManifestBehavior",
-            "Value": "PhaseBlink"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "SpeedModifier",
-            "Value": 1.18
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionLevel",
-            "Value": "High"
-          },
-          "className": "StringValue"
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Leak"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "Palasik"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        },
-        {
-          "properties": {
-            "Name": "HuntBehavior",
-            "Value": "Leap"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "ManifestBehavior",
-            "Value": "BloodMist"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "SpeedModifier",
-            "Value": 1.1
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionLevel",
-            "Value": "High"
-          },
-          "className": "StringValue"
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Palasik"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
             "Value": "Pocong"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
           }
         },
         {
-          "properties": {
-            "Name": "HuntBehavior",
-            "Value": "Ambush"
-          },
-          "className": "StringValue"
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            }
+          ]
         },
         {
+          "name": "HuntBehavior",
+          "className": "StringValue",
           "properties": {
-            "Name": "ManifestBehavior",
+            "Value": "Ambush"
+          }
+        },
+        {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
+          "properties": {
             "Value": "SuddenHop"
-          },
-          "className": "StringValue"
+          }
         },
         {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
           "properties": {
-            "Name": "SpeedModifier",
             "Value": 1.03
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionLevel",
-            "Value": "Normal"
-          },
-          "className": "StringValue"
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Pocong"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "SilumanUlar"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
           }
         },
         {
+          "name": "AggressionLevel",
+          "className": "StringValue",
           "properties": {
-            "Name": "HuntBehavior",
-            "Value": "Squeeze"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "ManifestBehavior",
-            "Value": "CoilManifest"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "SpeedModifier",
-            "Value": 1.07
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionLevel",
             "Value": "Normal"
-          },
-          "className": "StringValue"
+          }
         }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "SilumanUlar"
-      }
+      ]
     },
     {
+      "name": "Leak",
+      "className": "Folder",
       "children": [
         {
+          "name": "GhostName",
+          "className": "StringValue",
           "properties": {
-            "Name": "GhostName",
+            "Value": "Leak"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "PhaseCharge"
+          }
+        },
+        {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "PhaseBlink"
+          }
+        },
+        {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 1.18
+          }
+        },
+        {
+          "name": "AggressionLevel",
+          "className": "StringValue",
+          "properties": {
+            "Value": "High"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SundelBolong",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
             "Value": "SundelBolong"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
           }
         },
         {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
           "properties": {
-            "Name": "HuntBehavior",
             "Value": "Ambush"
-          },
-          "className": "StringValue"
+          }
         },
         {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
           "properties": {
-            "Name": "ManifestBehavior",
             "Value": "VeilReveal"
-          },
-          "className": "StringValue"
+          }
         },
         {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
           "properties": {
-            "Name": "SpeedModifier",
             "Value": 1.06
-          },
-          "className": "NumberValue"
+          }
         },
         {
+          "name": "AggressionLevel",
+          "className": "StringValue",
           "properties": {
-            "Name": "AggressionLevel",
             "Value": "Normal"
-          },
-          "className": "StringValue"
+          }
         }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "SundelBolong"
-      }
+      ]
     },
     {
+      "name": "Banaspati",
+      "className": "Folder",
       "children": [
         {
+          "name": "GhostName",
+          "className": "StringValue",
           "properties": {
-            "Name": "GhostName",
+            "Value": "Banaspati"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Charge"
+          }
+        },
+        {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "FlameSurge"
+          }
+        },
+        {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 1.15
+          }
+        },
+        {
+          "name": "AggressionLevel",
+          "className": "StringValue",
+          "properties": {
+            "Value": "High"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jerangkong",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Jerangkong"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Pursuit"
+          }
+        },
+        {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "BoneRattle"
+          }
+        },
+        {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 1.08
+          }
+        },
+        {
+          "name": "AggressionLevel",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Normal"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SilumanUlar",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "SilumanUlar"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Squeeze"
+          }
+        },
+        {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "CoilManifest"
+          }
+        },
+        {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 1.07
+          }
+        },
+        {
+          "name": "AggressionLevel",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Normal"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tuyul",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
             "Value": "Tuyul"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
           }
         },
         {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
           "properties": {
-            "Name": "HuntBehavior",
             "Value": "Rush"
-          },
-          "className": "StringValue"
+          }
         },
         {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
           "properties": {
-            "Name": "ManifestBehavior",
             "Value": "FastSkitter"
-          },
-          "className": "StringValue"
+          }
         },
         {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
           "properties": {
-            "Name": "SpeedModifier",
             "Value": 1.2
-          },
-          "className": "NumberValue"
+          }
         },
         {
+          "name": "AggressionLevel",
+          "className": "StringValue",
           "properties": {
-            "Name": "AggressionLevel",
             "Value": "Low"
-          },
-          "className": "StringValue"
+          }
         }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Tuyul"
-      }
+      ]
     },
     {
+      "name": "Genderuwo",
+      "className": "Folder",
       "children": [
         {
+          "name": "GhostName",
+          "className": "StringValue",
           "properties": {
-            "Name": "GhostName",
-            "Value": "WeweGombel"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
+            "Value": "Genderuwo"
           }
         },
         {
-          "properties": {
-            "Name": "HuntBehavior",
-            "Value": "Trail"
-          },
-          "className": "StringValue"
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            }
+          ]
         },
         {
+          "name": "HuntBehavior",
+          "className": "StringValue",
           "properties": {
-            "Name": "ManifestBehavior",
-            "Value": "LullabyManifest"
-          },
-          "className": "StringValue"
+            "Value": "NullZone"
+          }
         },
         {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
           "properties": {
-            "Name": "SpeedModifier",
-            "Value": 0.98
-          },
-          "className": "NumberValue"
+            "Value": "ShadowCloak"
+          }
         },
         {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
           "properties": {
-            "Name": "AggressionLevel",
-            "Value": "Normal"
-          },
-          "className": "StringValue"
+            "Value": 1.05
+          }
+        },
+        {
+          "name": "AggressionLevel",
+          "className": "StringValue",
+          "properties": {
+            "Value": "High"
+          }
         }
-      ],
+      ]
+    },
+    {
+      "name": "WeweGombel",
       "className": "Folder",
-      "properties": {
-        "Name": "WeweGombel"
-      }
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "WeweGombel"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Trail"
+          }
+        },
+        {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "LullabyManifest"
+          }
+        },
+        {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 0.98
+          }
+        },
+        {
+          "name": "AggressionLevel",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Normal"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kuntilanak",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Kuntilanak"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Stalk"
+          }
+        },
+        {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "WailManifest"
+          }
+        },
+        {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 1.12
+          }
+        },
+        {
+          "name": "AggressionLevel",
+          "className": "StringValue",
+          "properties": {
+            "Value": "High"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Palasik",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Palasik"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Leap"
+          }
+        },
+        {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "BloodMist"
+          }
+        },
+        {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 1.1
+          }
+        },
+        {
+          "name": "AggressionLevel",
+          "className": "StringValue",
+          "properties": {
+            "Value": "High"
+          }
+        }
+      ]
+    },
+    {
+      "name": "HantuTanah",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "HantuTanah"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HuntBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Ensnare"
+          }
+        },
+        {
+          "name": "ManifestBehavior",
+          "className": "StringValue",
+          "properties": {
+            "Value": "EarthRift"
+          }
+        },
+        {
+          "name": "SpeedModifier",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 1.0
+          }
+        },
+        {
+          "name": "AggressionLevel",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Normal"
+          }
+        }
+      ]
     }
-  ],
-  "className": "Folder",
-  "properties": {
-    "Name": "GhostTypes"
-  }
+  ]
 }

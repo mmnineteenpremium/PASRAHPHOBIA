@@ -1,5 +1,7 @@
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Services = require(script.Parent.Parent.Core.Services)
 
@@ -9,6 +11,8 @@ Service.__index = Service
 local EXTRACTION_TAG = "ExtractionZone"
 local EXTRACTION_FOLDER_NAME = "ExtractionZones"
 local DEFAULT_ZONE_NAME = "ExtractionZone_Main"
+local EXTRACTION_TRACE_ATTRIBUTE = "PasrahExtractionTrace"
+local EXTRACTION_OVERRIDE_ATTRIBUTE = "PasrahAllowStudioExtraction"
 
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
@@ -53,6 +57,75 @@ local function getMapModel(mapId)
     return nil
 end
 
+local function shouldTraceExtraction()
+    return ReplicatedStorage:GetAttribute(EXTRACTION_TRACE_ATTRIBUTE) == true
+end
+
+local function canUseStudioExtractionOverride()
+    return RunService:IsStudio() and ReplicatedStorage:GetAttribute(EXTRACTION_OVERRIDE_ATTRIBUTE) == true
+end
+
+local function traceExtraction(message, payload)
+    if not shouldTraceExtraction() then
+        return
+    end
+
+    local parts = {}
+    for key, value in pairs(payload or {}) do
+        if type(value) ~= "table" then
+            table.insert(parts, string.format("%s=%s", tostring(key), tostring(value)))
+        end
+    end
+    table.sort(parts)
+    if #parts > 0 then
+        print(string.format("[EXTRACTION TRACE] %s [%s]", tostring(message), table.concat(parts, ", ")))
+    else
+        print(string.format("[EXTRACTION TRACE] %s", tostring(message)))
+    end
+end
+
+local function getLiveMatch(matchSystem, matchId)
+    if type(matchSystem) ~= "table" or type(matchId) ~= "string" or matchId == "" then
+        return nil
+    end
+    if type(matchSystem.GetLiveMatch) == "function" then
+        return matchSystem:GetLiveMatch(matchId)
+    end
+    if type(matchSystem.Service) == "table" and type(matchSystem.Service.GetLiveMatch) == "function" then
+        return matchSystem.Service:GetLiveMatch(matchId)
+    end
+    return nil
+end
+
+local function getRuntimeMapModel(matchSystem, matchId)
+    local liveMatch = getLiveMatch(matchSystem, matchId)
+    if type(liveMatch) ~= "table" then
+        return nil
+    end
+
+    local container = liveMatch.container
+    if typeof(container) ~= "Instance" then
+        return nil
+    end
+
+    for _, expectedName in ipairs({ liveMatch.mapId, liveMatch.map }) do
+        if type(expectedName) == "string" and expectedName ~= "" then
+            local exact = container:FindFirstChild(expectedName)
+            if exact then
+                return exact
+            end
+        end
+    end
+
+    for _, child in ipairs(container:GetChildren()) do
+        if (child:IsA("Model") or child:IsA("Folder")) and not child.Name:match("^GhostPlaceholder_") then
+            return child
+        end
+    end
+
+    return nil
+end
+
 local function ensureExtractionFolder(mapModel)
     if not mapModel then
         return nil
@@ -75,7 +148,22 @@ local function getFallbackZonePosition(mapModel)
             return firstSpawn.Position + Vector3.new(0, 2, 0)
         end
     end
-    return mapModel and mapModel:GetPivot().Position + Vector3.new(0, 4, 0) or Vector3.new(0, 4, 0)
+
+    local anchor = mapModel and mapModel:FindFirstChildWhichIsA("BasePart", true)
+    if anchor then
+        return anchor.Position + Vector3.new(0, 4, 0)
+    end
+
+    if mapModel and mapModel:IsA("Model") then
+        local ok, pivot = pcall(function()
+            return mapModel:GetPivot()
+        end)
+        if ok then
+            return pivot.Position + Vector3.new(0, 4, 0)
+        end
+    end
+
+    return Vector3.new(0, 4, 0)
 end
 
 local function ensureZonePart(mapModel, folder)
@@ -107,6 +195,15 @@ function Service.new(state, deps)
     self._dependencies = {}
     self._zoneConnectionsByMatchId = {}
     return self
+end
+
+function Service:_resolveMapModel(matchId, mapId)
+    local matchSystem = self._dependencies and self._dependencies.MatchSystem
+    local runtimeMap = getRuntimeMapModel(matchSystem, matchId)
+    if runtimeMap then
+        return runtimeMap
+    end
+    return getMapModel(mapId)
 end
 
 function Service:Init()
@@ -265,7 +362,7 @@ function Service:_checkExtractionComplete(matchId)
 end
 
 function Service:_registerZones(matchId, mapId)
-    local mapModel = getMapModel(mapId)
+    local mapModel = self:_resolveMapModel(matchId, mapId)
     if not mapModel then
         return
     end
@@ -284,6 +381,12 @@ function Service:_registerZones(matchId, mapId)
     local connection = zonePart.Touched:Connect(function(hit)
         local player = getPlayerFromHit(hit)
         if player then
+            traceExtraction("ZoneTouched", {
+                matchId = matchId,
+                player = player.Name,
+                userId = player.UserId,
+                zone = zonePart.Name,
+            })
             self:HandlePlayerExtraction(player, matchId, zonePart.Name, "touch")
         end
     end)
@@ -324,13 +427,35 @@ function Service:HandlePlayerExtraction(player, matchId, zoneId, source)
     if not userId or type(matchId) ~= "string" then
         return false, "invalid_player"
     end
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        player:SetAttribute("LastExtractionResult", nil)
+        player:SetAttribute("LastExtractionZone", zoneId)
+    end
     if self:_isExtracted(matchId, userId) then
+        if typeof(player) == "Instance" and player:IsA("Player") then
+            player:SetAttribute("LastExtractionResult", "already_extracted")
+        end
         return false, "already_extracted"
     end
     if not self:_isAlive(matchId, userId) then
+        if typeof(player) == "Instance" and player:IsA("Player") then
+            player:SetAttribute("LastExtractionResult", "player_not_alive")
+        end
         return false, "player_not_alive"
     end
-    if not self:_isGhostIdentified(matchId) then
+    local ghostIdentified = self:_isGhostIdentified(matchId)
+    local studioOverride = canUseStudioExtractionOverride()
+    if not ghostIdentified and not studioOverride then
+        if typeof(player) == "Instance" and player:IsA("Player") then
+            player:SetAttribute("LastExtractionResult", "ghost_not_identified")
+        end
+        traceExtraction("ExtractionDenied", {
+            matchId = matchId,
+            player = player.Name,
+            userId = userId,
+            zone = zoneId,
+            reason = "ghost_not_identified",
+        })
         self:_publish("ExtractionDenied", {
             matchId = matchId,
             userId = userId,
@@ -342,6 +467,17 @@ function Service:HandlePlayerExtraction(player, matchId, zoneId, source)
     end
 
     self:_setExtracted(matchId, userId, true)
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        player:SetAttribute("LastExtractionResult", studioOverride and "extracted_via_studio_override" or "extracted")
+    end
+    traceExtraction("ExtractionAccepted", {
+        matchId = matchId,
+        player = player.Name,
+        userId = userId,
+        zone = zoneId,
+        source = source or "HuntEscapeSystem",
+        studioOverride = studioOverride,
+    })
     self:_publish("PlayerExtracted", {
         matchId = matchId,
         userId = userId,

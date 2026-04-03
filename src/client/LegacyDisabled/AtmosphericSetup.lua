@@ -6,6 +6,14 @@
     Phase: 7.1
 ]]
 
+-- Disabled on 2026-04-04.
+-- This legacy LocalScript overwrites Lighting state and conflicts with the
+-- modern sensory pipeline driven by VFXController.
+return {
+	Disabled = true,
+	Reason = "Legacy atmospheric setup archived after sensory pipeline consolidation.",
+}
+
 local Lighting = game:GetService("Lighting")
 local _ReplicatedStorage = game:GetService("ReplicatedStorage")
 

@@ -10,6 +10,14 @@
     Based on: CANONICAL_SPECIFICATIONS_v2.md Phase 7.3
 ]]
 
+-- Disabled on 2026-04-03.
+-- This legacy LocalScript depends on the removed "EMFUpdate" remote and an
+-- old tool layout that is not part of the current canonical client flow.
+return {
+	Disabled = true,
+	Reason = "Legacy EMFReader GUI archived after remote contract cleanup.",
+}
+
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()

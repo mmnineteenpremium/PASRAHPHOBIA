@@ -1,16 +1,12 @@
 {
   "className": "Animation",
-  "properties": {
-    "Name": "GhostJumpscare",
-    "AnimationId": "rbxassetid://507776043"
-  },
   "children": [
     {
-      "className": "BoolValue",
-      "properties": {
-        "Name": "Looped",
-        "Value": false
-      }
+      "name": "Looped",
+      "className": "BoolValue"
     }
-  ]
+  ],
+  "properties": {
+    "AnimationId": "rbxassetid://507776043"
+  }
 }

@@ -5,6 +5,14 @@
     Based on: CANONICAL_SPECIFICATIONS_v2.md Phase 7.4
 ]]
 
+-- Disabled on 2026-04-03.
+-- This legacy LocalScript depends on the removed "TemperatureUpdate" remote
+-- and conflicts with the modern evidence/UI pipeline.
+return {
+	Disabled = true,
+	Reason = "Legacy Evidence VFX script archived after evidence/UI consolidation.",
+}
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

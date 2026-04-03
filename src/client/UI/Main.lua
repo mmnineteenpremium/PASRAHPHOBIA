@@ -2,7 +2,9 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local GuiService = game:GetService("GuiService")
+local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 local Workspace = game:GetService("Workspace")
 
 local UISystem = {}
@@ -16,28 +18,31 @@ local UI_MODULES = {
 	"MatchUI",
 	"ProfileUI",
 	"ShopUI",
+	"RoyalPassUI",
 	"PASRA_UI",
 	"SpectatorUI",
 }
 
-local REMOTE_NAMES = { "MatchEvent", "LobbyEvent", "EvidenceEvent", "PurchaseEvent", "SanityEvent" }
+local REMOTE_NAMES = { "MatchEvent", "LobbyEvent", "EvidenceEvent", "PurchaseEvent", "RoyalPassEvent", "SanityEvent" }
 local ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
 local MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
-local BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
+local BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
 local CONFLICT_BASIC_GUI_NAMES = { "MainMenuUI", "LeaderboardUI" }
 local MAPS = { "HauntedHouse", "AbandonedPalace", "EmptyBuilding", "StudioMMNineteen" }
 local LOBBY_ONLY_GUI_NAMES = {
 	LobbyUI = true,
 	ProfileUI = true,
+	RoyalPassUI = true,
 	ShopUI = true,
 	LeaderboardUI = true,
 	MainMenuUI = true,
 }
-local AUXILIARY_UI_NAMES = { "JournalUI", "ProfileUI", "ShopUI", "PASRA_UI", "SpectatorUI" }
+local AUXILIARY_UI_NAMES = { "JournalUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI" }
 local AUXILIARY_WINDOW_TOGGLE_KEYS = {
 	JournalUI = Enum.KeyCode.J,
 	ProfileUI = Enum.KeyCode.P,
 	ShopUI = Enum.KeyCode.B,
+	RoyalPassUI = Enum.KeyCode.R,
 	PASRA_UI = Enum.KeyCode.U,
 	SpectatorUI = Enum.KeyCode.V,
 }
@@ -74,6 +79,17 @@ local AUXILIARY_WINDOW_CONFIG = {
 		floatPosition = UDim2.new(1, -18, 0.68, 0),
 		badgeColor = Color3.fromRGB(124, 92, 48),
 		footer = "Item shop basic ini bisa kirim request PurchaseEvent untuk test E2E.",
+	},
+	RoyalPassUI = {
+		title = "ROYAL PASS",
+		badgeText = "PASS",
+		floatText = "PASS",
+		panelPosition = UDim2.new(1, -16, 0.5, 0),
+		panelAnchorPoint = Vector2.new(1, 0.5),
+		panelSize = Vector2.new(348, 340),
+		floatPosition = UDim2.new(1, -18, 0.5, 0),
+		badgeColor = Color3.fromRGB(116, 88, 44),
+		footer = "Shortcut: R. Progress Royal Pass ini hanya surface client untuk snapshot runtime yang aktif.",
 	},
 	PASRA_UI = {
 		title = "PASRA STATUS",
@@ -115,6 +131,7 @@ local CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
 local CLOSE_HINT_TEXT = "[Esc] / [B] / [X] untuk tutup"
 local JOURNAL_TOOL_TYPE = "JejakEnergi"
 local RESULTS_LOCK_SECONDS = 5
+local DEFAULT_MATCH_OBJECTIVE_TEXT = "Investigate the location\nFind evidence\nIdentify the ghost"
 local TELEPORT_OVERLAY_GUI_NAME = "TeleportScreen"
 local TELEPORT_OVERLAY_FRAME_NAME = "LoadingOverlay"
 local TELEPORT_OVERLAY_HOLD_SECONDS = 5
@@ -164,19 +181,345 @@ local function loadMapMetadata()
 end
 
 local MAP_METADATA = loadMapMetadata()
+local UI_BRAND = {
+	text = Color3.fromRGB(244, 241, 234),
+	muted = Color3.fromRGB(184, 194, 208),
+	ink = Color3.fromRGB(18, 22, 30),
+	focus = Color3.fromRGB(236, 196, 116),
+	focusSoft = Color3.fromRGB(132, 101, 58),
+	sheen = Color3.fromRGB(255, 237, 199),
+}
+local BUTTON_TWEEN_INFO = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local BUTTON_PRESS_TWEEN_INFO = TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local PANEL_REVEAL_TWEEN_INFO = TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local UI_SOUND_PATHS = {
+	ButtonClick = { "Assets", "Audio", "UI", "ButtonClick_01" },
+	CountdownTick = { "Assets", "Audio", "UI", "CountdownTick_01" },
+	TeleportDrop = { "Assets", "Audio", "UI", "TeleportDrop_01" },
+}
+local cachedSoundTemplates = {}
 
 local function logRoomClickConnected(buttonName)
 	return buttonName
 end
 
+local function ensureCorner(guiObject, name, radius)
+	if not guiObject then
+		return nil
+	end
+
+	local corner = nil
+	if name then
+		corner = guiObject:FindFirstChild(name)
+	end
+	if not corner then
+		corner = guiObject:FindFirstChildOfClass("UICorner")
+	end
+	if not corner then
+		corner = Instance.new("UICorner")
+		if name then
+			corner.Name = name
+		end
+		corner.Parent = guiObject
+	end
+	if radius then
+		corner.CornerRadius = radius
+	end
+	return corner
+end
+
+local function ensureNamedScale(guiObject, name)
+	local scale = guiObject:FindFirstChild(name)
+	if scale and scale:IsA("UIScale") then
+		return scale
+	end
+
+	scale = Instance.new("UIScale")
+	scale.Name = name
+	scale.Scale = 1
+	scale.Parent = guiObject
+	return scale
+end
+
+local function tweenInstance(instance, tweenInfo, properties)
+	local tween = TweenService:Create(instance, tweenInfo, properties)
+	tween:Play()
+	return tween
+end
+
+local function resolveSoundTemplate(pathSegments)
+	local cursor = ReplicatedStorage
+	for _, segment in ipairs(pathSegments) do
+		if not cursor then
+			return nil
+		end
+		cursor = cursor:FindFirstChild(segment)
+	end
+
+	if cursor and cursor:IsA("Sound") and tostring(cursor.SoundId or "") ~= "" then
+		return cursor
+	end
+
+	return nil
+end
+
+local function getCachedSoundTemplate(soundKey)
+	local pathSegments = UI_SOUND_PATHS[soundKey]
+	if type(pathSegments) ~= "table" then
+		return nil
+	end
+
+	local cached = cachedSoundTemplates[soundKey]
+	if cached and cached.Parent then
+		return cached
+	end
+
+	local resolved = resolveSoundTemplate(pathSegments)
+	if resolved then
+		cachedSoundTemplates[soundKey] = resolved
+	end
+	return resolved
+end
+
+local function playRuntimeUISound(soundKey, options)
+	local template = getCachedSoundTemplate(soundKey)
+	if not template then
+		return
+	end
+
+	local runtimeSound = template:Clone()
+	runtimeSound.Name = "Runtime" .. tostring(soundKey)
+	runtimeSound.Looped = false
+	if options and options.VolumeScale then
+		runtimeSound.Volume = math.max(0, runtimeSound.Volume * options.VolumeScale)
+	end
+	if options and options.PlaybackSpeed then
+		runtimeSound.PlaybackSpeed = options.PlaybackSpeed
+	end
+	if options and options.PlaybackJitter then
+		local jitter = tonumber(options.PlaybackJitter) or 0
+		runtimeSound.PlaybackSpeed = math.clamp(runtimeSound.PlaybackSpeed + ((math.random() * jitter) - (jitter * 0.5)), 0.85, 1.25)
+	end
+	runtimeSound.Parent = SoundService
+	runtimeSound:Play()
+	task.delay(math.max(runtimeSound.TimeLength, 0.35) + 0.2, function()
+		if runtimeSound and runtimeSound.Parent then
+			runtimeSound:Destroy()
+		end
+	end)
+end
+
+local function playUIButtonClick()
+	playRuntimeUISound("ButtonClick", {
+		PlaybackJitter = 0.04,
+	})
+end
+
+local function ensureButtonPolish(button)
+	if not button then
+		return nil
+	end
+
+	button.ClipsDescendants = true
+	ensureCorner(button, "ButtonCorner", UDim.new(0, 8))
+
+	local scale = ensureNamedScale(button, "BrandScale")
+
+	local overlay = button:FindFirstChild("BrandOverlay")
+	if not overlay or not overlay:IsA("Frame") then
+		overlay = Instance.new("Frame")
+		overlay.Name = "BrandOverlay"
+		overlay.BackgroundColor3 = UI_BRAND.sheen
+		overlay.BackgroundTransparency = 0.95
+		overlay.BorderSizePixel = 0
+		overlay.Size = UDim2.fromScale(1, 1)
+		overlay.ZIndex = math.max(0, button.ZIndex - 1)
+		overlay.Active = false
+		overlay.Parent = button
+	end
+	overlay.Size = UDim2.fromScale(1, 1)
+	ensureCorner(overlay, "OverlayCorner", UDim.new(0, 8))
+
+	local stroke = button:FindFirstChild("BrandStroke")
+	if not stroke or not stroke:IsA("UIStroke") then
+		stroke = Instance.new("UIStroke")
+		stroke.Name = "BrandStroke"
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke.LineJoinMode = Enum.LineJoinMode.Round
+		stroke.Thickness = 1
+		stroke.Transparency = 0.34
+		stroke.Color = UI_BRAND.focusSoft
+		stroke.Parent = button
+	end
+
+	local gradient = button:FindFirstChild("BrandGradient")
+	if not gradient or not gradient:IsA("UIGradient") then
+		gradient = Instance.new("UIGradient")
+		gradient.Name = "BrandGradient"
+		gradient.Rotation = 90
+		gradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(210, 220, 236)),
+		})
+		gradient.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.12),
+			NumberSequenceKeypoint.new(1, 0.34),
+		})
+		gradient.Parent = button
+	end
+
+	return {
+		Scale = scale,
+		Overlay = overlay,
+		Stroke = stroke,
+		Gradient = gradient,
+	}
+end
+
+local function refreshButtonPolish(button, immediate)
+	local parts = ensureButtonPolish(button)
+	if not parts then
+		return
+	end
+
+	local hovered = button:GetAttribute("BrandHovered") == true
+	local focused = button:GetAttribute("BrandFocused") == true
+	local pressed = button:GetAttribute("BrandPressed") == true
+	local selected = button:GetAttribute("BrandSelected") == true
+
+	local overlayTransparency = 0.95
+	local strokeTransparency = 0.34
+	local strokeThickness = 1
+	local scaleTarget = 1
+
+	if selected then
+		overlayTransparency = 0.9
+		strokeTransparency = 0.12
+		strokeThickness = 1.8
+	end
+	if hovered then
+		overlayTransparency = math.min(overlayTransparency, 0.87)
+		strokeTransparency = math.min(strokeTransparency, 0.22)
+		strokeThickness = math.max(strokeThickness, 1.4)
+		scaleTarget = math.max(scaleTarget, 1.012)
+	end
+	if focused then
+		overlayTransparency = math.min(overlayTransparency, 0.82)
+		strokeTransparency = 0
+		strokeThickness = math.max(strokeThickness, 2.2)
+		scaleTarget = math.max(scaleTarget, 1.02)
+	end
+	if pressed then
+		overlayTransparency = math.min(overlayTransparency, 0.76)
+		strokeTransparency = 0
+		strokeThickness = math.max(strokeThickness, 2.8)
+		scaleTarget = 0.985
+	end
+
+	if immediate then
+		parts.Overlay.BackgroundTransparency = overlayTransparency
+		parts.Stroke.Transparency = strokeTransparency
+		parts.Stroke.Thickness = strokeThickness
+		parts.Scale.Scale = scaleTarget
+	else
+		local tweenInfo = pressed and BUTTON_PRESS_TWEEN_INFO or BUTTON_TWEEN_INFO
+		tweenInstance(parts.Overlay, tweenInfo, { BackgroundTransparency = overlayTransparency })
+		tweenInstance(parts.Stroke, tweenInfo, {
+			Transparency = strokeTransparency,
+			Thickness = strokeThickness,
+		})
+		tweenInstance(parts.Scale, tweenInfo, { Scale = scaleTarget })
+	end
+end
+
+local function bindButtonPolish(button)
+	if not button or button:GetAttribute("BrandFeedbackBound") == true then
+		refreshButtonPolish(button, true)
+		return
+	end
+
+	button:SetAttribute("BrandFeedbackBound", true)
+	ensureButtonPolish(button)
+	refreshButtonPolish(button, true)
+
+	button.MouseEnter:Connect(function()
+		button:SetAttribute("BrandHovered", true)
+		refreshButtonPolish(button, false)
+	end)
+	button.MouseLeave:Connect(function()
+		button:SetAttribute("BrandHovered", false)
+		button:SetAttribute("BrandPressed", false)
+		refreshButtonPolish(button, false)
+	end)
+	button.SelectionGained:Connect(function()
+		button:SetAttribute("BrandFocused", true)
+		refreshButtonPolish(button, false)
+	end)
+	button.SelectionLost:Connect(function()
+		button:SetAttribute("BrandFocused", false)
+		refreshButtonPolish(button, false)
+	end)
+	button.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or tostring(input.KeyCode) == tostring(Enum.KeyCode.ButtonA)
+		then
+			button:SetAttribute("BrandPressed", true)
+			refreshButtonPolish(button, false)
+		end
+	end)
+	button.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or tostring(input.KeyCode) == tostring(Enum.KeyCode.ButtonA)
+		then
+			button:SetAttribute("BrandPressed", false)
+			refreshButtonPolish(button, false)
+		end
+	end)
+end
+
+local function animatePanelReveal(panel, immediate)
+	if not panel or not panel:IsA("GuiObject") then
+		return
+	end
+
+	local scale = ensureNamedScale(panel, "BrandPanelScale")
+	if immediate then
+		scale.Scale = 1
+		return
+	end
+
+	scale.Scale = 0.985
+	tweenInstance(scale, PANEL_REVEAL_TWEEN_INFO, { Scale = 1 })
+end
+
+local function setAnimatedPanelVisible(panel, visible, immediate)
+	if not panel or not panel:IsA("GuiObject") then
+		return
+	end
+
+	local shouldShow = visible == true
+	local wasVisible = panel:GetAttribute("BrandPanelVisible") == true or panel.Visible == true
+	panel.Visible = shouldShow
+	panel:SetAttribute("BrandPanelVisible", shouldShow)
+	if shouldShow and not wasVisible then
+		animatePanelReveal(panel, immediate)
+	end
+end
+
 local function styleButton(button, text)
 	button.Text = text
-	button.TextColor3 = Color3.fromRGB(245, 245, 245)
+	button.TextColor3 = UI_BRAND.text
 	button.Font = Enum.Font.GothamSemibold
 	button.TextSize = 14
 	button.BorderSizePixel = 0
 	button.BackgroundColor3 = Color3.fromRGB(46, 57, 73)
 	button.AutoButtonColor = false
+	button.TextStrokeTransparency = 0.92
+	button.TextStrokeColor3 = UI_BRAND.ink
+	bindButtonPolish(button)
+	refreshButtonPolish(button, true)
 end
 
 local function styleLabel(label, text, size)
@@ -281,6 +624,301 @@ local function formatMapSummary(mapId)
 	end
 
 	return string.format("%s\n%s", displayName, table.concat(details, " | "))
+end
+
+local function humanizeToken(token)
+	local raw = tostring(token or "-")
+	raw = raw:gsub("_", " ")
+	raw = raw:gsub("(%l)(%u)", "%1 %2")
+	raw = raw:gsub("%s+", " ")
+	raw = raw:match("^%s*(.-)%s*$")
+	if raw == nil or raw == "" then
+		return "-"
+	end
+	return raw
+end
+
+local MAP_PREVIEW_THEMES = {
+	default = {
+		background = Color3.fromRGB(24, 30, 40),
+		stroke = Color3.fromRGB(75, 92, 120),
+		accent = Color3.fromRGB(86, 116, 152),
+		accentSoft = Color3.fromRGB(38, 52, 74),
+		text = Color3.fromRGB(236, 242, 250),
+		muted = Color3.fromRGB(196, 210, 228),
+	},
+	DomesticDecay = {
+		background = Color3.fromRGB(32, 26, 24),
+		stroke = Color3.fromRGB(124, 92, 78),
+		accent = Color3.fromRGB(160, 114, 78),
+		accentSoft = Color3.fromRGB(70, 48, 36),
+		text = Color3.fromRGB(244, 232, 218),
+		muted = Color3.fromRGB(214, 192, 172),
+	},
+	ColdRoyal = {
+		background = Color3.fromRGB(28, 30, 46),
+		stroke = Color3.fromRGB(118, 112, 170),
+		accent = Color3.fromRGB(164, 156, 220),
+		accentSoft = Color3.fromRGB(62, 58, 96),
+		text = Color3.fromRGB(239, 236, 252),
+		muted = Color3.fromRGB(202, 198, 232),
+	},
+	CorporateDerelict = {
+		background = Color3.fromRGB(22, 30, 36),
+		stroke = Color3.fromRGB(88, 118, 128),
+		accent = Color3.fromRGB(114, 168, 174),
+		accentSoft = Color3.fromRGB(34, 56, 62),
+		text = Color3.fromRGB(228, 240, 242),
+		muted = Color3.fromRGB(182, 208, 210),
+	},
+	BroadcastNightmare = {
+		background = Color3.fromRGB(32, 22, 30),
+		stroke = Color3.fromRGB(142, 88, 108),
+		accent = Color3.fromRGB(206, 118, 144),
+		accentSoft = Color3.fromRGB(78, 34, 54),
+		text = Color3.fromRGB(248, 228, 236),
+		muted = Color3.fromRGB(228, 184, 198),
+	},
+	ranked = {
+		background = Color3.fromRGB(38, 24, 42),
+		stroke = Color3.fromRGB(172, 136, 88),
+		accent = Color3.fromRGB(224, 184, 92),
+		accentSoft = Color3.fromRGB(84, 58, 28),
+		text = Color3.fromRGB(252, 240, 214),
+		muted = Color3.fromRGB(232, 208, 154),
+	},
+}
+
+local function resolveMapPreviewTheme(mapId, modeText)
+	if tostring(modeText or "") == "Ranked" then
+		return MAP_PREVIEW_THEMES.ranked
+	end
+
+	local metadata = resolveMapMetadata(mapId)
+	local ambiance = type(metadata) == "table" and type(metadata.visualTheme) == "table" and metadata.visualTheme.ambiance or nil
+	return MAP_PREVIEW_THEMES[ambiance] or MAP_PREVIEW_THEMES.default
+end
+
+local function buildMapPreviewGlyph(mapId, modeText)
+	if tostring(modeText or "") == "Ranked" then
+		return "RP"
+	end
+
+	local displayName = getMapDisplayName(mapId)
+	local letters = {}
+	for word in string.gmatch(displayName, "[%w]+") do
+		local first = string.sub(word, 1, 1)
+		if first ~= "" then
+			table.insert(letters, string.upper(first))
+		end
+		if #letters >= 2 then
+			break
+		end
+	end
+
+	if #letters == 0 then
+		local compact = string.upper(string.sub(displayName, 1, 2))
+		return compact ~= "" and compact or "??"
+	end
+	if #letters == 1 then
+		local compact = string.upper(string.sub(displayName, 1, 2))
+		return compact ~= "" and compact or (letters[1] .. letters[1])
+	end
+	return table.concat(letters, "")
+end
+
+local function buildMapPreviewMood(mapId, modeText)
+	if tostring(modeText or "") == "Ranked" then
+		return "RANKED PRESSURE"
+	end
+
+	local metadata = resolveMapMetadata(mapId)
+	if type(metadata) == "table" and type(metadata.visualTheme) == "table" then
+		local ambiance = metadata.visualTheme.ambiance
+		if type(ambiance) == "string" and ambiance ~= "" then
+			return string.upper(humanizeToken(ambiance))
+		end
+	end
+
+	if type(metadata) == "table" and type(metadata.mapCategory) == "string" and metadata.mapCategory ~= "" then
+		return string.upper(metadata.mapCategory)
+	end
+
+	return "UNKNOWN ATMOSPHERE"
+end
+
+local function buildMapPreviewStats(mapId)
+	local metadata = resolveMapMetadata(mapId)
+	if type(metadata) ~= "table" then
+		return "DETAIL MAP BELUM TERSEDIA"
+	end
+
+	local details = {}
+	if type(metadata.mapSize) == "string" and metadata.mapSize ~= "" then
+		table.insert(details, string.upper(humanizeToken(metadata.mapSize)))
+	end
+
+	local roomCount = type(metadata.rooms) == "table" and #metadata.rooms or 0
+	if roomCount > 0 then
+		table.insert(details, string.format("%d ROOM", roomCount))
+	end
+
+	local dimensions = metadata.mapDimensions or {}
+	local floors = math.max(1, math.floor(tonumber(dimensions.floors) or 1))
+	table.insert(details, string.format("%d FLOOR", floors))
+
+	local width = math.floor(tonumber(dimensions.width) or 0)
+	local depth = math.floor(tonumber(dimensions.depth) or 0)
+	if width > 0 and depth > 0 then
+		table.insert(details, string.format("%dx%d", width, depth))
+	end
+
+	return table.concat(details, "  •  ")
+end
+
+local SHOP_CATEGORY_THEMES = {
+	Cosmetic = {
+		background = Color3.fromRGB(44, 30, 46),
+		preview = Color3.fromRGB(76, 48, 82),
+		accent = Color3.fromRGB(208, 126, 182),
+		text = Color3.fromRGB(248, 228, 242),
+	},
+	Equipment = {
+		background = Color3.fromRGB(28, 36, 44),
+		preview = Color3.fromRGB(44, 62, 78),
+		accent = Color3.fromRGB(118, 178, 214),
+		text = Color3.fromRGB(228, 240, 248),
+	},
+	default = {
+		background = Color3.fromRGB(24, 30, 40),
+		preview = Color3.fromRGB(38, 52, 74),
+		accent = Color3.fromRGB(86, 116, 152),
+		text = Color3.fromRGB(236, 242, 250),
+	},
+}
+
+local SHOP_CURRENCY_THEMES = {
+	MM = {
+		background = Color3.fromRGB(42, 66, 98),
+		text = Color3.fromRGB(236, 244, 252),
+	},
+	PP = {
+		background = Color3.fromRGB(102, 76, 28),
+		text = Color3.fromRGB(250, 238, 206),
+	},
+	Robux = {
+		background = Color3.fromRGB(30, 88, 60),
+		text = Color3.fromRGB(228, 248, 236),
+	},
+	default = {
+		background = Color3.fromRGB(60, 88, 128),
+		text = Color3.fromRGB(245, 245, 245),
+	},
+}
+
+local SHOP_RARITY_COLORS = {
+	R1 = Color3.fromRGB(126, 144, 170),
+	R2 = Color3.fromRGB(90, 156, 120),
+	R3 = Color3.fromRGB(82, 136, 196),
+	R4 = Color3.fromRGB(160, 110, 196),
+	R5 = Color3.fromRGB(216, 162, 84),
+}
+
+local function resolveShopCategoryTheme(item)
+	local category = type(item) == "table" and tostring(item.category or "") or ""
+	return SHOP_CATEGORY_THEMES[category] or SHOP_CATEGORY_THEMES.default
+end
+
+local function resolveShopCurrencyTheme(currency)
+	local key = tostring(currency or "MM")
+	return SHOP_CURRENCY_THEMES[key] or SHOP_CURRENCY_THEMES.default
+end
+
+local function buildShopItemGlyph(item)
+	if type(item) ~= "table" then
+		return "IT"
+	end
+
+	local tags = {}
+	if type(item.tags) == "table" then
+		for _, tag in ipairs(item.tags) do
+			tags[string.lower(tostring(tag))] = true
+		end
+	end
+
+	if tags.uv then
+		return "UV"
+	elseif tags.spiritbox then
+		return "SB"
+	elseif tags.sanity then
+		return "SP"
+	elseif tags.bundle then
+		return "BD"
+	elseif tags.emote then
+		return "EM"
+	elseif tags.lantern then
+		return "LN"
+	elseif tags.mask then
+		return "MK"
+	elseif tags.veil then
+		return "VL"
+	elseif tags.charm then
+		return "CH"
+	end
+
+	local source = tostring(item.name or item.id or "IT")
+	local letters = {}
+	for word in string.gmatch(source, "[%w]+") do
+		table.insert(letters, string.upper(string.sub(word, 1, 1)))
+		if #letters >= 2 then
+			break
+		end
+	end
+	if #letters == 0 then
+		return "IT"
+	end
+	if #letters == 1 then
+		local compact = string.upper(string.sub(source, 1, 2))
+		return compact ~= "" and compact or "IT"
+	end
+	return table.concat(letters, "")
+end
+
+local function buildShopItemBadge(item)
+	if type(item) ~= "table" then
+		return "ITEM"
+	end
+
+	local slot = type(item.slot) == "string" and humanizeToken(item.slot) or nil
+	if slot and slot ~= "" and slot ~= "-" then
+		return string.upper(slot)
+	end
+	local category = type(item.category) == "string" and humanizeToken(item.category) or "Item"
+	return string.upper(category)
+end
+
+local function buildShopItemMeta(item)
+	if type(item) ~= "table" then
+		return "-"
+	end
+
+	local parts = {}
+	if type(item.category) == "string" and item.category ~= "" then
+		table.insert(parts, string.upper(humanizeToken(item.category)))
+	end
+	if type(item.rarityLabel) == "string" and item.rarityLabel ~= "" then
+		table.insert(parts, tostring(item.rarityLabel))
+	elseif type(item.rarity) == "string" and item.rarity ~= "" then
+		table.insert(parts, tostring(item.rarity))
+	end
+	if type(item.tags) == "table" and #item.tags > 0 then
+		local tagParts = {}
+		for index = 1, math.min(#item.tags, 2) do
+			table.insert(tagParts, string.upper(humanizeToken(item.tags[index])))
+		end
+		table.insert(parts, table.concat(tagParts, ", "))
+	end
+	return table.concat(parts, "  •  ")
 end
 
 local function resolveMapDisplayName(payload)
@@ -424,7 +1062,7 @@ end
 local function createActionRow(parent, rowName, defaultTitle, defaultMeta, buttonText)
 	local row = Instance.new("Frame")
 	row.Name = rowName
-	row.Size = UDim2.new(1, 0, 0, 56)
+	row.Size = UDim2.new(1, 0, 0, 72)
 	row.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
 	row.BackgroundTransparency = 0.06
 	row.BorderSizePixel = 0
@@ -434,10 +1072,57 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	corner.CornerRadius = UDim.new(0, 8)
 	corner.Parent = row
 
+	local accent = Instance.new("Frame")
+	accent.Name = "Accent"
+	accent.Size = UDim2.fromOffset(6, 72)
+	accent.BackgroundColor3 = Color3.fromRGB(86, 116, 152)
+	accent.BorderSizePixel = 0
+	accent.Parent = row
+
+	local preview = Instance.new("Frame")
+	preview.Name = "Preview"
+	preview.Position = UDim2.fromOffset(14, 8)
+	preview.Size = UDim2.fromOffset(52, 56)
+	preview.BackgroundColor3 = Color3.fromRGB(38, 52, 74)
+	preview.BorderSizePixel = 0
+	preview.Parent = row
+	local previewCorner = Instance.new("UICorner")
+	previewCorner.CornerRadius = UDim.new(0, 8)
+	previewCorner.Parent = preview
+
+	local previewBadge = Instance.new("TextLabel")
+	previewBadge.Name = "PreviewBadge"
+	previewBadge.BackgroundColor3 = Color3.fromRGB(58, 76, 102)
+	previewBadge.BackgroundTransparency = 0.12
+	previewBadge.Position = UDim2.fromOffset(4, 4)
+	previewBadge.Size = UDim2.new(1, -8, 0, 14)
+	previewBadge.Font = Enum.Font.GothamBold
+	previewBadge.TextSize = 8
+	previewBadge.TextColor3 = Color3.fromRGB(236, 242, 250)
+	previewBadge.BorderSizePixel = 0
+	previewBadge.Text = "ITEM"
+	previewBadge.Parent = preview
+	local previewBadgeCorner = Instance.new("UICorner")
+	previewBadgeCorner.CornerRadius = UDim.new(1, 0)
+	previewBadgeCorner.Parent = previewBadge
+
+	local previewGlyph = Instance.new("TextLabel")
+	previewGlyph.Name = "PreviewGlyph"
+	previewGlyph.BackgroundTransparency = 1
+	previewGlyph.Position = UDim2.fromOffset(6, 16)
+	previewGlyph.Size = UDim2.new(1, -12, 0, 34)
+	previewGlyph.Font = Enum.Font.GothamBold
+	previewGlyph.TextSize = 24
+	previewGlyph.TextColor3 = Color3.fromRGB(236, 242, 250)
+	previewGlyph.TextXAlignment = Enum.TextXAlignment.Left
+	previewGlyph.TextYAlignment = Enum.TextYAlignment.Center
+	previewGlyph.Text = "IT"
+	previewGlyph.Parent = preview
+
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Position = UDim2.fromOffset(10, 6)
-	title.Size = UDim2.new(1, -112, 0, 20)
+	title.Position = UDim2.fromOffset(78, 8)
+	title.Size = UDim2.new(1, -176, 0, 20)
 	title.BackgroundTransparency = 1
 	title.Text = defaultTitle or "ITEM"
 	title.TextColor3 = Color3.fromRGB(240, 244, 248)
@@ -448,8 +1133,8 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 
 	local meta = Instance.new("TextLabel")
 	meta.Name = "Meta"
-	meta.Position = UDim2.fromOffset(10, 28)
-	meta.Size = UDim2.new(1, -112, 0, 18)
+	meta.Position = UDim2.fromOffset(78, 28)
+	meta.Size = UDim2.new(1, -176, 0, 18)
 	meta.BackgroundTransparency = 1
 	meta.Text = defaultMeta or "-"
 	meta.TextColor3 = Color3.fromRGB(176, 190, 212)
@@ -458,6 +1143,22 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	meta.TextXAlignment = Enum.TextXAlignment.Left
 	meta.TextWrapped = true
 	meta.Parent = row
+
+	local pricePill = Instance.new("TextLabel")
+	pricePill.Name = "PricePill"
+	pricePill.BackgroundColor3 = Color3.fromRGB(60, 88, 128)
+	pricePill.BackgroundTransparency = 0.08
+	pricePill.Position = UDim2.fromOffset(78, 50)
+	pricePill.Size = UDim2.fromOffset(92, 16)
+	pricePill.Font = Enum.Font.GothamBold
+	pricePill.TextSize = 9
+	pricePill.TextColor3 = Color3.fromRGB(245, 245, 245)
+	pricePill.Text = "-"
+	pricePill.BorderSizePixel = 0
+	pricePill.Parent = row
+	local pricePillCorner = Instance.new("UICorner")
+	pricePillCorner.CornerRadius = UDim.new(1, 0)
+	pricePillCorner.Parent = pricePill
 
 	local button = Instance.new("TextButton")
 	button.Name = "ActionButton"
@@ -474,8 +1175,13 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 
 	return {
 		Root = row,
+		Accent = accent,
+		Preview = preview,
+		PreviewBadge = previewBadge,
+		PreviewGlyph = previewGlyph,
 		Title = title,
 		Meta = meta,
+		PricePill = pricePill,
 		Button = button,
 	}
 end
@@ -617,6 +1323,7 @@ local function connectButtonPress(button, callback)
 	if not button or type(callback) ~= "function" then
 		return
 	end
+	bindButtonPolish(button)
 	local lastPressAt = 0
 	local function invoke()
 		local now = os.clock()
@@ -624,16 +1331,15 @@ local function connectButtonPress(button, callback)
 			return
 		end
 		lastPressAt = now
-		if button:IsA("TextButton") then
-			local originalColor = button.BackgroundColor3
-			local pressedColor = originalColor:Lerp(Color3.new(0, 0, 0), 0.2)
-			button.BackgroundColor3 = pressedColor
-			task.delay(0.12, function()
-				if button and button.Parent then
-					button.BackgroundColor3 = originalColor
-				end
-			end)
-		end
+		button:SetAttribute("BrandPressed", true)
+		refreshButtonPolish(button, false)
+		playUIButtonClick()
+		task.delay(0.08, function()
+			if button and button.Parent then
+				button:SetAttribute("BrandPressed", false)
+				refreshButtonPolish(button, false)
+			end
+		end)
 		callback()
 	end
 	button.Activated:Connect(invoke)
@@ -839,6 +1545,7 @@ function UISystem:Init(context)
 	self._awaitingPostTeleportFlow = false
 	self._teleportOverlayToken = 0
 	self._teleportOverlayTween = nil
+	self._lastCountdownAudioSecond = nil
 	self._matchWindowDismissed = false
 	self._matchControlsHintText = "[J] Journal   [F] Flashlight   [K] Panel Match   [B] Shop   [Esc] Tutup UI"
 	self._uxWidgets = {
@@ -851,6 +1558,7 @@ function UISystem:Init(context)
 		JournalUI = true,
 		ProfileUI = true,
 		ShopUI = true,
+		RoyalPassUI = true,
 		PASRA_UI = false,
 		SpectatorUI = false,
 	}
@@ -882,6 +1590,25 @@ function UISystem:Init(context)
 		catalog = loadShopCatalog(),
 		lastPurchase = nil,
 		lastMessage = "Pilih item untuk test remote PurchaseEvent.",
+		pendingMarketplacePrompt = nil,
+	}
+	self._royalPassState = {
+		lastEvent = "Idle",
+		lastSource = nil,
+		lastAmount = 0,
+		seasonId = "S1",
+		totalXP = 0,
+		currentTier = 1,
+		maxTier = 50,
+		xpPerTier = 200,
+		currentTierXP = 0,
+		remainingXP = 200,
+		progressPercent = 0,
+		premiumOwned = false,
+		unlockedTiers = {},
+		unlockedTierCount = 0,
+		nextTier = 2,
+		nextReward = nil,
 	}
 	self._spectatorState = {
 		lastEvent = "Idle",
@@ -900,6 +1627,7 @@ function UISystem:Init(context)
 		self._uiState[moduleName] = { lastEvent = nil, visible = false }
 	end
 	self._uiState.LobbyUI.visible = true
+	self._uiState.RoyalPassUI.visible = true
 
 	self._matchResult = createDefaultMatchResult()
 end
@@ -917,6 +1645,15 @@ function UISystem:Start()
 		end
 	end
 	self:_connectLobbyEventRouting()
+	table.insert(self._connections, MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, gamePassId, wasPurchased)
+		if player ~= Players.LocalPlayer then
+			return
+		end
+		self:_onMarketplacePromptFinished("GamePass", gamePassId, wasPurchased)
+	end))
+	table.insert(self._connections, MarketplaceService.PromptProductPurchaseFinished:Connect(function(_userId, productId, isPurchased)
+		self:_onMarketplacePromptFinished("DeveloperProduct", productId, isPurchased)
+	end))
 
 	if self._roomBrowser then
 		self._roomBrowser:Start()
@@ -999,6 +1736,20 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._journalState.candidates = journalData.ghostCandidates or self._journalState.candidates
 		elseif eventName == "UIGhostPredictionUpdated" then
 			self._journalState.candidates = payload and (payload.candidates or payload.possibleGhosts) or self._journalState.candidates
+		elseif eventName == "EvidenceCollected" then
+			local collectedToolType = payload and payload.toolType
+			local collectedEvidenceType = payload and payload.evidenceType
+			if type(collectedToolType) == "string" and collectedToolType ~= "" then
+				self._journalState.toolType = collectedToolType
+				self._journalState.toolStatus = "Evidence berhasil dibaca."
+				if type(collectedEvidenceType) == "string" and collectedEvidenceType ~= "" then
+					self._journalState.toolReason = string.format("Collected %s", tostring(collectedEvidenceType))
+				else
+					self._journalState.toolReason = "Collected evidence."
+				end
+				self._journalState.toolSuccess = true
+				self._journalState.toolLastUsedAt = os.clock()
+			end
 		end
 	elseif remoteName == "LobbyEvent" then
 		if eventName == "RoomBrowserRoomLeft" or eventName == "LobbyEntered" then
@@ -1010,6 +1761,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._matchResult = createDefaultMatchResult()
 			self._uiState.MatchUI.visible = false
 			self._uiState.JournalUI.visible = false
+			self._uiState.RoyalPassUI.visible = true
 			self._uiState.PASRA_UI.visible = false
 			self._uiState.SpectatorUI.visible = false
 			self:_setMatchWindowDismissed(false)
@@ -1190,7 +1942,10 @@ function UISystem:_onServerEvent(remoteName, payload)
 		self._uiState.ShopUI.visible = true
 		self:_closeConflictingWindows("ShopUI")
 		self._shopState.lastEvent = eventName
-		if eventName == "PurchaseProcessed" then
+		if eventName == "PurchasePromptRequested" then
+			self:_requestMarketplacePrompt(payload or {})
+		elseif eventName == "PurchaseProcessed" then
+			self._shopState.pendingMarketplacePrompt = nil
 			self._shopState.lastPurchase = {
 				itemId = payload and payload.itemId or "-",
 				success = payload and payload.success == true,
@@ -1202,6 +1957,23 @@ function UISystem:_onServerEvent(remoteName, payload)
 				or ("Pembelian gagal: " .. titleCaseToken(payload and payload.reason or "unknown"))
 		end
 		self._windowDismissed.ShopUI = false
+	elseif remoteName == "RoyalPassEvent" then
+		self._uiState.RoyalPassUI.lastEvent = eventName
+		self._uiState.RoyalPassUI.visible = true
+		self._royalPassState.lastEvent = eventName
+		self._royalPassState.lastSource = payload and payload.source or self._royalPassState.lastSource
+		if payload and payload.amount ~= nil then
+			self._royalPassState.lastAmount = math.max(0, math.floor(tonumber(payload.amount) or 0))
+		end
+		self:_applyRoyalPassSnapshot(payload and payload.snapshot or nil)
+		if eventName == "RoyalPassTierUnlocked" or eventName == "RoyalPassPremiumUpdated" then
+			if self._matchPhase == MATCH_PHASE.LOBBY then
+				self._windowDismissed.RoyalPassUI = false
+				self:_closeConflictingWindows("RoyalPassUI")
+			else
+				self._windowDismissed.RoyalPassUI = true
+			end
+		end
 	elseif remoteName == "SanityEvent" then
 		self._uiState.ProfileUI.lastEvent = eventName
 		self._profileState.lastEvent = eventName
@@ -1304,7 +2076,7 @@ function UISystem:_setBasicWindowPanelVisible(guiName, visible)
 
 	local shouldShow = visible == true
 	if panel and panel:IsA("GuiObject") then
-		panel.Visible = shouldShow
+		setAnimatedPanelVisible(panel, shouldShow, false)
 	end
 	if floatButton and floatButton:IsA("GuiObject") then
 		floatButton.Visible = self._matchPhase == MATCH_PHASE.LOBBY and not shouldShow
@@ -1440,7 +2212,7 @@ function UISystem:_syncAuxiliaryWindowVisibility()
 			local screenEnabled = gui.Enabled == true
 			local dismissed = self._windowDismissed[guiName] == true
 			if widgets.Panel then
-				widgets.Panel.Visible = screenEnabled and not dismissed
+				setAnimatedPanelVisible(widgets.Panel, screenEnabled and not dismissed, false)
 			end
 			if widgets.FloatButton then
 				widgets.FloatButton.Visible = screenEnabled and dismissed
@@ -1840,11 +2612,11 @@ function UISystem:_refreshBasicLobbyPanel()
 	local currentRoom = type(state.currentRoom) == "table" and state.currentRoom or nil
 	local badgeText = "LOBBY"
 	local badgeColor = Color3.fromRGB(54, 116, 82)
-	local primaryText = "Buka Room Browser, Profile, Shop, Menu, atau Rank untuk lanjut test E2E."
+	local primaryText = "Buka Room Browser, Profile, Shop, Royal Pass, Menu, atau Rank untuk lanjut test E2E."
 	local selectedMode = tostring(state.selectedMode or "Classic")
 	local selectedMap = tostring(state.selectedMap or MAPS[1] or "HauntedHouse")
 	local secondaryText = string.format("Mode %s | Map %s | %d room aktif", selectedMode, selectedMap, #rooms)
-	local hintText = "Shortcut: tekan M untuk buka atau tutup Room Browser."
+	local hintText = "Shortcut: tekan M untuk Room Browser dan R untuk Royal Pass."
 
 	if currentRoom and currentRoom.roomId then
 		local playerCount = type(currentRoom.players) == "table" and #currentRoom.players or 0
@@ -1893,6 +2665,10 @@ function UISystem:_refreshBasicLobbyPanel()
 	if lobby.BasicShopButton then
 		local shopOpen = self._uiState.ShopUI and self._uiState.ShopUI.visible == true and self._windowDismissed.ShopUI ~= true
 		lobby.BasicShopButton.Text = shopOpen and "TUTUP SHOP" or "SHOP"
+	end
+	if lobby.BasicRoyalPassButton then
+		local royalPassOpen = self._uiState.RoyalPassUI and self._uiState.RoyalPassUI.visible == true and self._windowDismissed.RoyalPassUI ~= true
+		lobby.BasicRoyalPassButton.Text = royalPassOpen and "TUTUP ROYAL PASS" or "ROYAL PASS"
 	end
 	if lobby.BasicMenuButton then
 		local _, menuPanel = self:_getBasicWindowState("MainMenuUI")
@@ -2085,6 +2861,7 @@ function UISystem:_refreshAuxiliaryPanels()
 	self:_refreshJournalPanel()
 	self:_refreshProfilePanel()
 	self:_refreshShopPanel()
+	self:_refreshRoyalPassPanel()
 	self:_refreshPasraPanel()
 	self:_refreshSpectatorPanel()
 	self:_syncAuxiliaryWindowVisibility()
@@ -2257,6 +3034,52 @@ function UISystem:_requestShopPurchase(itemId)
 	self:_openAuxiliaryWindow("ShopUI")
 end
 
+function UISystem:_applyShopRowVisual(row, item, index)
+	if type(row) ~= "table" then
+		return
+	end
+
+	local theme = resolveShopCategoryTheme(item)
+	local rarityColor = SHOP_RARITY_COLORS[tostring(item and item.rarity or "")] or theme.accent
+	local currency = tostring(item and item.currency or "MM")
+	local currencyTheme = resolveShopCurrencyTheme(currency)
+
+	if row.Root then
+		row.Root.BackgroundColor3 = theme.background
+	end
+	if row.Accent then
+		row.Accent.BackgroundColor3 = rarityColor
+	end
+	if row.Preview then
+		row.Preview.BackgroundColor3 = theme.preview
+	end
+	if row.PreviewBadge then
+		row.PreviewBadge.BackgroundColor3 = theme.accent
+		row.PreviewBadge.TextColor3 = theme.text
+		row.PreviewBadge.Text = buildShopItemBadge(item)
+	end
+	if row.PreviewGlyph then
+		row.PreviewGlyph.TextColor3 = theme.text
+		row.PreviewGlyph.Text = buildShopItemGlyph(item)
+	end
+	if row.Title then
+		row.Title.Text = item and tostring(item.name or item.id or ("Item " .. tostring(index))) or ("Item " .. tostring(index))
+	end
+	if row.Meta then
+		row.Meta.Text = buildShopItemMeta(item)
+	end
+	if row.PricePill then
+		row.PricePill.BackgroundColor3 = currencyTheme.background
+		row.PricePill.TextColor3 = currencyTheme.text
+		row.PricePill.Text = string.format("%s %s", tostring(item and item.price or 0), currency)
+	end
+	if row.Button then
+		row.Button.Text = "BELI"
+		row.Button.BackgroundColor3 = theme.accent
+		row.Button.TextColor3 = Color3.fromRGB(245, 245, 245)
+	end
+end
+
 function UISystem:_refreshShopPanel()
 	local window = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows.ShopUI
 	if not window then
@@ -2282,6 +3105,9 @@ function UISystem:_refreshShopPanel()
 	elseif lastPurchase and lastPurchase.reason == "pending" then
 		statusText = "PROCESSING"
 		badgeColor = Color3.fromRGB(82, 94, 126)
+	elseif lastPurchase and lastPurchase.reason == "prompting" then
+		statusText = "PROMPT"
+		badgeColor = Color3.fromRGB(82, 94, 126)
 	end
 
 	self:_refreshWindowText(
@@ -2301,18 +3127,139 @@ function UISystem:_refreshShopPanel()
 				row.Root.Visible = item ~= nil
 			end
 			if item then
-				row.Title.Text = tostring(item.name or item.id or ("Item " .. tostring(index)))
-				row.Meta.Text = string.format(
-					"%s | %s | %s MM",
-					tostring(item.category or "Item"),
-					tostring(item.rarityLabel or item.rarity or "R1"),
-					tostring(item.price or 0)
-				)
-				row.Button.Text = "BELI"
-				row.Button.BackgroundColor3 = Color3.fromRGB(60, 88, 128)
+				self:_applyShopRowVisual(row, item, index)
 			end
 		end
 	end
+end
+
+function UISystem:_applyRoyalPassSnapshot(snapshot)
+	if type(snapshot) ~= "table" then
+		return
+	end
+
+	local state = self._royalPassState or {}
+	state.seasonId = tostring(snapshot.seasonId or state.seasonId or "S1")
+	state.totalXP = math.max(0, math.floor(tonumber(snapshot.totalXP) or state.totalXP or 0))
+	state.currentTier = math.max(1, math.floor(tonumber(snapshot.currentTier) or state.currentTier or 1))
+	state.maxTier = math.max(state.currentTier, math.floor(tonumber(snapshot.maxTier) or state.maxTier or 50))
+	state.xpPerTier = math.max(1, math.floor(tonumber(snapshot.xpPerTier) or state.xpPerTier or 200))
+	state.currentTierXP = math.clamp(
+		math.floor(tonumber(snapshot.currentTierXP) or state.currentTierXP or 0),
+		0,
+		state.xpPerTier
+	)
+	state.remainingXP = math.max(0, math.floor(tonumber(snapshot.remainingXP) or state.remainingXP or 0))
+	state.progressPercent = math.clamp(
+		tonumber(snapshot.progressPercent) or (state.xpPerTier > 0 and (state.currentTierXP / state.xpPerTier) or 0),
+		0,
+		1
+	)
+	state.premiumOwned = snapshot.premiumOwned == true
+	state.nextTier = snapshot.nextTier and math.max(1, math.floor(tonumber(snapshot.nextTier) or state.nextTier or (state.currentTier + 1)))
+		or nil
+
+	local unlockedTiers = {}
+	if type(snapshot.unlockedTiers) == "table" then
+		for _, tierValue in ipairs(snapshot.unlockedTiers) do
+			local numericTier = tonumber(tierValue)
+			if numericTier and numericTier >= 1 then
+				table.insert(unlockedTiers, math.floor(numericTier))
+			end
+		end
+		table.sort(unlockedTiers)
+	end
+	state.unlockedTiers = unlockedTiers
+	state.unlockedTierCount = math.max(0, math.floor(tonumber(snapshot.unlockedTierCount) or #unlockedTiers))
+
+	if type(snapshot.nextReward) == "table" then
+		state.nextReward = {
+			currency = math.max(0, math.floor(tonumber(snapshot.nextReward.currency) or 0)),
+			xp = math.max(0, math.floor(tonumber(snapshot.nextReward.xp) or 0)),
+		}
+	else
+		state.nextReward = nil
+	end
+
+	self._royalPassState = state
+end
+
+function UISystem:_refreshRoyalPassPanel()
+	local state = self._royalPassState or {}
+	local currentTier = math.max(1, math.floor(tonumber(state.currentTier or 1) or 1))
+	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or 50) or 50))
+	local xpPerTier = math.max(1, math.floor(tonumber(state.xpPerTier or 200) or 200))
+	local currentTierXP = math.clamp(math.floor(tonumber(state.currentTierXP or 0) or 0), 0, xpPerTier)
+	local totalXP = math.max(0, math.floor(tonumber(state.totalXP or 0) or 0))
+	local remainingXP = math.max(0, math.floor(tonumber(state.remainingXP or 0) or 0))
+	local premiumOwned = state.premiumOwned == true
+
+	local badgeText = premiumOwned and "PREMIUM" or "FREE TRACK"
+	local badgeColor = premiumOwned and Color3.fromRGB(136, 102, 48) or Color3.fromRGB(78, 92, 118)
+	local primaryText = string.format("Season %s | Tier %d/%d", tostring(state.seasonId or "S1"), currentTier, maxTier)
+	local secondaryText = string.format(
+		"Progress %d/%d XP | Total %d XP",
+		currentTierXP,
+		xpPerTier,
+		totalXP
+	)
+
+	local unlockedPreview = "-"
+	if type(state.unlockedTiers) == "table" and #state.unlockedTiers > 0 then
+		local recent = {}
+		local startIndex = math.max(1, #state.unlockedTiers - 5)
+		for index = startIndex, #state.unlockedTiers do
+			table.insert(recent, tostring(state.unlockedTiers[index]))
+		end
+		unlockedPreview = table.concat(recent, ", ")
+	end
+
+	local nextRewardLine = "Next Reward: MAX TIER"
+	if type(state.nextReward) == "table" then
+		nextRewardLine = string.format(
+			"Next Reward: %d MM + %d XP bonus",
+			math.max(0, math.floor(tonumber(state.nextReward.currency) or 0)),
+			math.max(0, math.floor(tonumber(state.nextReward.xp) or 0))
+		)
+	elseif state.nextTier then
+		nextRewardLine = string.format("Next Reward: Tier %s reward belum tersedia.", tostring(state.nextTier))
+	end
+
+	local lastGainLine = "Last Gain: belum ada update runtime."
+	if math.max(0, math.floor(tonumber(state.lastAmount or 0) or 0)) > 0 then
+		lastGainLine = string.format(
+			"Last Gain: +%d RP XP dari %s",
+			math.max(0, math.floor(tonumber(state.lastAmount) or 0)),
+			tostring(state.lastSource or "runtime")
+		)
+	elseif state.lastSource then
+		lastGainLine = string.format("Last Update: %s", tostring(state.lastSource))
+	end
+
+	local contentText = table.concat({
+		string.format("Track: %s", premiumOwned and "Premium aktif" or "Free only"),
+		string.format("Tier saat ini: %d", currentTier),
+		string.format("Sisa XP ke tier berikutnya: %d", remainingXP),
+		string.format("Tier terbuka: %d", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0))),
+		string.format("Preview tier terbuka: %s", unlockedPreview),
+		nextRewardLine,
+		lastGainLine,
+		string.format("Last Event: %s", tostring(state.lastEvent or "Idle")),
+	}, "\n")
+
+	local footerText = premiumOwned
+		and "Premium track aktif. Reward premium mengikuti snapshot server yang sedang berjalan."
+		or "Belum premium. Pembelian premium track tetap harus lewat purchase prompt Roblox resmi."
+
+	self:_refreshWindowText(
+		"RoyalPassUI",
+		badgeText,
+		primaryText,
+		secondaryText,
+		contentText,
+		footerText,
+		badgeColor
+	)
 end
 
 function UISystem:_refreshPasraPanel()
@@ -2393,6 +3340,10 @@ function UISystem:_setSelectableStyle(guiObject)
 		return
 	end
 	guiObject.Selectable = true
+	if guiObject:IsA("GuiButton") then
+		bindButtonPolish(guiObject)
+		return
+	end
 	local stroke = Instance.new("UIStroke")
 	stroke.Name = "SelectionStroke"
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -2427,6 +3378,9 @@ function UISystem:_applyDeviceSizing()
 		end
 		if lobby.BasicShopButton then
 			lobby.BasicShopButton.TextSize = math.max(13, profile:GetTextSize() - 4)
+		end
+		if lobby.BasicRoyalPassButton then
+			lobby.BasicRoyalPassButton.TextSize = math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicMenuButton then
 			lobby.BasicMenuButton.TextSize = math.max(13, profile:GetTextSize() - 4)
@@ -2605,14 +3559,96 @@ function UISystem:_runPostTeleportLoadingFlow()
 
 		currentPlayer = Players.LocalPlayer
 		if currentPlayer and currentPlayer:GetAttribute("InMatch") == true then
-			self:_setPhase(MATCH_PHASE.INGAME, self._pendingInGamePayload)
-			self._pendingInGamePayload = nil
 			self._hasPostTeleportLoaded = true
 			self._awaitingPostTeleportFlow = false
+			if self._pendingInGamePayload then
+				self:_setPhase(MATCH_PHASE.INGAME, self._pendingInGamePayload)
+				self._pendingInGamePayload = nil
+			end
 		end
 
 		self._postTeleportFlowRunning = false
 	end)
+end
+
+function UISystem:_onMarketplacePromptFinished(purchaseType, productId, wasPurchased)
+	local pending = self._shopState.pendingMarketplacePrompt
+	if type(pending) ~= "table" then
+		return
+	end
+	if pending.purchaseType ~= purchaseType then
+		return
+	end
+	if tonumber(pending.productId) ~= tonumber(productId) then
+		return
+	end
+	if wasPurchased == true then
+		self._shopState.lastMessage = "Pembelian dikirim. Menunggu konfirmasi server..."
+		return
+	end
+
+	self._shopState.pendingMarketplacePrompt = nil
+	self._shopState.lastPurchase = {
+		itemId = pending.itemId,
+		success = false,
+		reason = "purchase_cancelled",
+		requestId = pending.requestId,
+	}
+	self._shopState.lastMessage = "Prompt pembelian ditutup."
+	self:_openAuxiliaryWindow("ShopUI")
+end
+
+function UISystem:_requestMarketplacePrompt(payload)
+	local purchaseType = payload and payload.purchaseType
+	local productId = tonumber(payload and payload.productId)
+	local itemId = payload and payload.itemId
+	if type(purchaseType) ~= "string" or not productId or productId <= 0 then
+		self._shopState.lastPurchase = {
+			itemId = itemId,
+			success = false,
+			reason = "marketplace_prompt_invalid",
+			requestId = payload and payload.requestId or nil,
+		}
+		self._shopState.lastMessage = "Prompt Roblox tidak valid."
+		return
+	end
+
+	self._shopState.pendingMarketplacePrompt = {
+		itemId = itemId,
+		purchaseType = purchaseType,
+		productId = productId,
+		requestId = payload and payload.requestId or nil,
+	}
+	self._shopState.lastPurchase = {
+		itemId = itemId,
+		success = nil,
+		reason = "prompting",
+		requestId = payload and payload.requestId or nil,
+	}
+	self._shopState.lastMessage = string.format("Membuka prompt %s untuk %s...", tostring(purchaseType), tostring(itemId or "-"))
+
+	local ok, err = pcall(function()
+		if purchaseType == "GamePass" then
+			MarketplaceService:PromptGamePassPurchase(Players.LocalPlayer, productId)
+		elseif purchaseType == "DeveloperProduct" then
+			MarketplaceService:PromptProductPurchase(Players.LocalPlayer, productId)
+		else
+			error("unsupported_purchase_type")
+		end
+	end)
+
+	if not ok then
+		self._shopState.pendingMarketplacePrompt = nil
+		self._shopState.lastPurchase = {
+			itemId = itemId,
+			success = false,
+			reason = "marketplace_prompt_failed",
+			requestId = payload and payload.requestId or nil,
+		}
+		self._shopState.lastMessage = "Gagal membuka prompt Roblox: " .. tostring(err)
+	end
+
+	self:_openAuxiliaryWindow("ShopUI")
 end
 
 function UISystem:_bindPostTeleportLoading()
@@ -2824,6 +3860,10 @@ function UISystem:_showTeleportOverlay(durationSeconds)
 		self._teleportOverlayTween = nil
 	end
 
+	playRuntimeUISound("TeleportDrop", {
+		VolumeScale = 1,
+		PlaybackSpeed = 0.94,
+	})
 	overlay.BackgroundTransparency = 0
 	screen.Enabled = true
 
@@ -2942,7 +3982,7 @@ function UISystem:_renderPhase(phase, payload)
 
 	local lobbyUI = playerGui:FindFirstChild("LobbyUI")
 	local roomUI = playerGui:FindFirstChild("RoomBrowserUI")
-	local hud = playerGui:FindFirstChild("HorrorHUD")
+	local hud = playerGui:FindFirstChild("SensoryHorrorHUD") or playerGui:FindFirstChild("HorrorHUD")
 	local loadingUI = playerGui:FindFirstChild("MatchLoadingUI")
 	local matchUX = self._uxWidgets and self._uxWidgets.match or nil
 
@@ -2988,10 +4028,6 @@ function UISystem:_renderPhase(phase, payload)
 		roomUI.Enabled = false
 		if hud then
 			hud.Enabled = false
-			local warning = hud:FindFirstChild("Warning")
-			if warning then
-				warning.Visible = false
-			end
 		end
 		self:_refreshBasicMatchPanel("Lobby", payload)
 		return
@@ -3053,7 +4089,7 @@ function UISystem:_renderPhase(phase, payload)
 		local label = roomUI:FindFirstChild("ObjectiveLabel")
 		if label and label:IsA("TextLabel") then
 			label.Visible = true
-			label.Text = "Investigate the location\nFind evidence\nIdentify the ghost"
+			label.Text = DEFAULT_MATCH_OBJECTIVE_TEXT
 		end
 		return
 	end
@@ -3088,14 +4124,6 @@ function UISystem:_renderPhase(phase, payload)
 
 		if hud then
 			hud.Enabled = true
-			local objective = hud:FindFirstChild("Objective")
-			if objective and objective:IsA("TextLabel") then
-				objective.Text = "Investigate the location\nFind evidence\nIdentify the ghost"
-			end
-			local warning = hud:FindFirstChild("Warning")
-			if warning then
-				warning.Visible = false
-			end
 		end
 		self:_refreshBasicMatchPanel("Investigation", payload)
 		return
@@ -3104,10 +4132,6 @@ function UISystem:_renderPhase(phase, payload)
 	if phase == MATCH_PHASE.ESCALATION then
 		if hud then
 			hud.Enabled = true
-			local vignette = hud:FindFirstChild("Vignette")
-			if vignette and vignette:IsA("ImageLabel") then
-				vignette.ImageTransparency = 0.3
-			end
 		end
 		self:_refreshBasicMatchPanel("Investigation", payload)
 		return
@@ -3116,16 +4140,6 @@ function UISystem:_renderPhase(phase, payload)
 	if phase == MATCH_PHASE.HUNT then
 		if hud then
 			hud.Enabled = true
-			local warning = hud:FindFirstChild("Warning")
-			if warning and warning:IsA("TextLabel") then
-				warning.Visible = true
-				warning.Text = "HUNT"
-			end
-
-			local heartbeat = hud:FindFirstChild("Heartbeat")
-			if heartbeat and heartbeat:IsA("Sound") and not heartbeat.IsPlaying then
-				heartbeat:Play()
-			end
 		end
 		self:_refreshBasicMatchPanel("Hunt", payload)
 		return
@@ -3134,14 +4148,6 @@ function UISystem:_renderPhase(phase, payload)
 	if phase == MATCH_PHASE.RESULT or phase == MATCH_PHASE.END then
 		if hud then
 			hud.Enabled = false
-			local warning = hud:FindFirstChild("Warning")
-			if warning then
-				warning.Visible = false
-			end
-			local heartbeat = hud:FindFirstChild("Heartbeat")
-			if heartbeat and heartbeat:IsA("Sound") and heartbeat.IsPlaying then
-				heartbeat:Stop()
-			end
 		end
 
 		roomUI.Enabled = true
@@ -3730,10 +4736,10 @@ function UISystem:TransitionTo(state, payload)
 	end
 
 	if match.Gui then
-		match.Gui.Enabled = (state == "Preparation" or state == "Hunt" or state == "Results")
+		match.Gui.Enabled = (state == "Preparation" or state == "Investigation" or state == "Hunt" or state == "Results")
 	end
 	if match.Layer then
-		match.Layer.Visible = (state == "Preparation" or state == "Hunt" or state == "Results")
+		match.Layer.Visible = (state == "Preparation" or state == "Investigation" or state == "Hunt" or state == "Results")
 	end
 
 	if state == "Preparation" then
@@ -3741,9 +4747,15 @@ function UISystem:TransitionTo(state, payload)
 		match.MessageLabel.Visible = true
 		fadeGuiObject(match.MessageLabel, 0, 0.2)
 	elseif state == "Investigation" then
+		match.MessageLabel.Text = ""
+		match.MessageLabel.Visible = false
+		match.ObjectiveLabel.Text = DEFAULT_MATCH_OBJECTIVE_TEXT
+		match.ObjectiveLabel.Visible = true
+	elseif state == "Hunt" then
+		match.MessageLabel.Text = "HUNT"
+		match.MessageLabel.Visible = true
 		match.ObjectiveLabel.Text = ""
 		match.ObjectiveLabel.Visible = false
-	elseif state == "Hunt" then
 		self:_startHuntPulse()
 	elseif state == "Results" then
 		self:_startResultsCloseLock(payload)
@@ -3916,7 +4928,7 @@ function UISystem:_ensureBasicUIs()
 		if guiName == "LobbyUI" then
 			panel.AnchorPoint = Vector2.new(0, 0)
 			panel.Position = UDim2.fromOffset(16, 16)
-			panel.Size = UDim2.fromOffset(340, 320)
+			panel.Size = UDim2.fromOffset(340, 368)
 			panel.BackgroundColor3 = Color3.fromRGB(18, 26, 34)
 			panel.BackgroundTransparency = 0.08
 
@@ -3995,7 +5007,7 @@ function UISystem:_ensureBasicUIs()
 			if not menuButton then
 				menuButton = Instance.new("TextButton")
 				menuButton.Name = "MenuButton"
-				menuButton.Position = UDim2.fromOffset(12, 258)
+				menuButton.Position = UDim2.fromOffset(12, 304)
 				menuButton.Size = UDim2.fromOffset(152, 36)
 				styleButton(menuButton, "MENU")
 				menuButton.BackgroundColor3 = Color3.fromRGB(58, 66, 84)
@@ -4007,7 +5019,7 @@ function UISystem:_ensureBasicUIs()
 			if not rankButton then
 				rankButton = Instance.new("TextButton")
 				rankButton.Name = "RankButton"
-				rankButton.Position = UDim2.fromOffset(176, 258)
+				rankButton.Position = UDim2.fromOffset(176, 304)
 				rankButton.Size = UDim2.fromOffset(152, 36)
 				styleButton(rankButton, "RANK")
 				rankButton.BackgroundColor3 = Color3.fromRGB(74, 82, 58)
@@ -4039,11 +5051,23 @@ function UISystem:_ensureBasicUIs()
 				self:_setSelectableStyle(shopButton)
 			end
 
+			local royalPassButton = panel:FindFirstChild("RoyalPassButton")
+			if not royalPassButton then
+				royalPassButton = Instance.new("TextButton")
+				royalPassButton.Name = "RoyalPassButton"
+				royalPassButton.Position = UDim2.fromOffset(12, 258)
+				royalPassButton.Size = UDim2.new(1, -24, 0, 36)
+				styleButton(royalPassButton, "ROYAL PASS")
+				royalPassButton.BackgroundColor3 = Color3.fromRGB(116, 88, 44)
+				royalPassButton.Parent = panel
+				self:_setSelectableStyle(royalPassButton)
+			end
+
 			local hintLabel = panel:FindFirstChild("HintLabel")
 			if not hintLabel then
 				hintLabel = Instance.new("TextLabel")
 				hintLabel.Name = "HintLabel"
-				hintLabel.Position = UDim2.fromOffset(12, 300)
+				hintLabel.Position = UDim2.fromOffset(12, 348)
 				hintLabel.Size = UDim2.new(1, -24, 0, 16)
 				hintLabel.BackgroundTransparency = 1
 				hintLabel.Font = Enum.Font.Gotham
@@ -4098,6 +5122,12 @@ function UISystem:_ensureBasicUIs()
 					self:_toggleAuxiliaryWindow("ShopUI")
 				end)
 			end
+			if royalPassButton:GetAttribute("Bound") ~= true then
+				royalPassButton:SetAttribute("Bound", true)
+				connectButtonPress(royalPassButton, function()
+					self:_toggleAuxiliaryWindow("RoyalPassUI")
+				end)
+			end
 			if rankButton:GetAttribute("Bound") ~= true then
 				rankButton:SetAttribute("Bound", true)
 				connectButtonPress(rankButton, function()
@@ -4121,6 +5151,7 @@ function UISystem:_ensureBasicUIs()
 			self._uxWidgets.lobby.BasicOpenRoomBrowserButton = openRoomBrowserButton
 			self._uxWidgets.lobby.BasicProfileButton = profileButton
 			self._uxWidgets.lobby.BasicShopButton = shopButton
+			self._uxWidgets.lobby.BasicRoyalPassButton = royalPassButton
 			self._uxWidgets.lobby.BasicMenuButton = menuButton
 			self._uxWidgets.lobby.BasicRankButton = rankButton
 			self._uxWidgets.lobby.ToggleButton = toggleBtn
@@ -4387,13 +5418,7 @@ function UISystem:_ensureBasicUIs()
 					self:_setSelectableStyle(row.Button)
 					local item = self._shopState.catalog[index]
 					if item then
-						row.Title.Text = tostring(item.name or item.id or ("Item " .. tostring(index)))
-						row.Meta.Text = string.format(
-							"%s | %s | %s MM",
-							tostring(item.category or "Item"),
-							tostring(item.rarityLabel or item.rarity or "R1"),
-							tostring(item.price or 0)
-						)
+						self:_applyShopRowVisual(row, item, index)
 					end
 					if row.Button:GetAttribute("Bound") ~= true then
 						row.Button:SetAttribute("Bound", true)
@@ -5474,12 +6499,44 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewMapStroke.Thickness = 1
 	roomPreviewMapStroke.Color = Color3.fromRGB(72, 90, 116)
 	roomPreviewMapStroke.Parent = roomPreviewMap
+	local roomPreviewMapGradient = Instance.new("UIGradient")
+	roomPreviewMapGradient.Name = "PreviewGradient"
+	roomPreviewMapGradient.Rotation = 18
+	roomPreviewMapGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(36, 44, 58)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 18, 24)),
+	})
+	roomPreviewMapGradient.Parent = roomPreviewMap
+
+	local roomPreviewMapAccent = Instance.new("Frame")
+	roomPreviewMapAccent.Name = "Accent"
+	roomPreviewMapAccent.Position = UDim2.fromOffset(0, 0)
+	roomPreviewMapAccent.Size = UDim2.fromOffset(6, 112)
+	roomPreviewMapAccent.BackgroundColor3 = Color3.fromRGB(86, 116, 152)
+	roomPreviewMapAccent.BorderSizePixel = 0
+	roomPreviewMapAccent.Parent = roomPreviewMap
+
+	local roomPreviewMapMood = Instance.new("TextLabel")
+	roomPreviewMapMood.Name = "Mood"
+	roomPreviewMapMood.BackgroundColor3 = Color3.fromRGB(38, 52, 74)
+	roomPreviewMapMood.BackgroundTransparency = 0.18
+	roomPreviewMapMood.Position = UDim2.new(1, -164, 0, 8)
+	roomPreviewMapMood.Size = UDim2.fromOffset(148, 18)
+	roomPreviewMapMood.Font = Enum.Font.GothamBold
+	roomPreviewMapMood.TextSize = 10
+	roomPreviewMapMood.TextColor3 = Color3.fromRGB(236, 242, 250)
+	roomPreviewMapMood.Text = "ATMOSPHERE"
+	roomPreviewMapMood.BorderSizePixel = 0
+	roomPreviewMapMood.Parent = roomPreviewMap
+	local roomPreviewMapMoodCorner = Instance.new("UICorner")
+	roomPreviewMapMoodCorner.CornerRadius = UDim.new(1, 0)
+	roomPreviewMapMoodCorner.Parent = roomPreviewMapMood
 
 	local roomPreviewMapTitle = Instance.new("TextLabel")
 	roomPreviewMapTitle.Name = "MapTitle"
 	roomPreviewMapTitle.BackgroundTransparency = 1
-	roomPreviewMapTitle.Position = UDim2.fromOffset(10, 8)
-	roomPreviewMapTitle.Size = UDim2.fromOffset(436, 16)
+	roomPreviewMapTitle.Position = UDim2.fromOffset(16, 8)
+	roomPreviewMapTitle.Size = UDim2.fromOffset(268, 16)
 	roomPreviewMapTitle.TextXAlignment = Enum.TextXAlignment.Left
 	roomPreviewMapTitle.Font = Enum.Font.GothamSemibold
 	roomPreviewMapTitle.TextSize = 11
@@ -5490,8 +6547,8 @@ function UISystem:_ensureRoomBrowserGui()
 	local roomPreviewMapLabel = Instance.new("TextLabel")
 	roomPreviewMapLabel.Name = "MapLabel"
 	roomPreviewMapLabel.BackgroundTransparency = 1
-	roomPreviewMapLabel.Position = UDim2.fromOffset(10, 30)
-	roomPreviewMapLabel.Size = UDim2.fromOffset(436, 74)
+	roomPreviewMapLabel.Position = UDim2.fromOffset(16, 30)
+	roomPreviewMapLabel.Size = UDim2.fromOffset(424, 46)
 	roomPreviewMapLabel.TextXAlignment = Enum.TextXAlignment.Left
 	roomPreviewMapLabel.TextYAlignment = Enum.TextYAlignment.Top
 	roomPreviewMapLabel.Font = Enum.Font.GothamBold
@@ -5500,6 +6557,18 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewMapLabel.TextColor3 = Color3.fromRGB(236, 242, 250)
 	roomPreviewMapLabel.Text = "Pilih room untuk lihat detail map."
 	roomPreviewMapLabel.Parent = roomPreviewMap
+
+	local roomPreviewMapStats = Instance.new("TextLabel")
+	roomPreviewMapStats.Name = "Stats"
+	roomPreviewMapStats.BackgroundTransparency = 1
+	roomPreviewMapStats.Position = UDim2.fromOffset(16, 84)
+	roomPreviewMapStats.Size = UDim2.fromOffset(424, 18)
+	roomPreviewMapStats.TextXAlignment = Enum.TextXAlignment.Left
+	roomPreviewMapStats.Font = Enum.Font.Gotham
+	roomPreviewMapStats.TextSize = 10
+	roomPreviewMapStats.TextColor3 = Color3.fromRGB(196, 210, 228)
+	roomPreviewMapStats.Text = "DETAIL MAP AKAN MUNCUL SAAT ROOM DIPILIH"
+	roomPreviewMapStats.Parent = roomPreviewMap
 
 	local roomPreviewPlayersTitle = Instance.new("TextLabel")
 	roomPreviewPlayersTitle.Name = "PlayersTitle"
@@ -5945,16 +7014,76 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewImageStroke.Thickness = 1
 	mapPreviewImageStroke.Color = Color3.fromRGB(83, 101, 128)
 	mapPreviewImageStroke.Parent = mapPreviewImage
+	local mapPreviewImageGradient = Instance.new("UIGradient")
+	mapPreviewImageGradient.Name = "PreviewGradient"
+	mapPreviewImageGradient.Rotation = 18
+	mapPreviewImageGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(42, 54, 72)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 18, 24)),
+	})
+	mapPreviewImageGradient.Parent = mapPreviewImage
+
+	local mapPreviewImageAccent = Instance.new("Frame")
+	mapPreviewImageAccent.Name = "AccentBar"
+	mapPreviewImageAccent.Position = UDim2.fromOffset(0, 0)
+	mapPreviewImageAccent.Size = UDim2.fromOffset(8, 150)
+	mapPreviewImageAccent.BackgroundColor3 = Color3.fromRGB(96, 128, 164)
+	mapPreviewImageAccent.BorderSizePixel = 0
+	mapPreviewImageAccent.Parent = mapPreviewImage
+
+	local mapPreviewImageChip = Instance.new("TextLabel")
+	mapPreviewImageChip.Name = "MoodChip"
+	mapPreviewImageChip.BackgroundColor3 = Color3.fromRGB(38, 52, 74)
+	mapPreviewImageChip.BackgroundTransparency = 0.12
+	mapPreviewImageChip.Position = UDim2.fromOffset(12, 10)
+	mapPreviewImageChip.Size = UDim2.fromOffset(128, 18)
+	mapPreviewImageChip.Font = Enum.Font.GothamBold
+	mapPreviewImageChip.TextSize = 10
+	mapPreviewImageChip.TextColor3 = Color3.fromRGB(236, 242, 250)
+	mapPreviewImageChip.Text = "ATMOSPHERE"
+	mapPreviewImageChip.BorderSizePixel = 0
+	mapPreviewImageChip.Parent = mapPreviewImage
+	local mapPreviewImageChipCorner = Instance.new("UICorner")
+	mapPreviewImageChipCorner.CornerRadius = UDim.new(1, 0)
+	mapPreviewImageChipCorner.Parent = mapPreviewImageChip
+
 	local mapPreviewImageLabel = Instance.new("TextLabel")
 	mapPreviewImageLabel.Name = "ImageLabel"
 	mapPreviewImageLabel.BackgroundTransparency = 1
-	mapPreviewImageLabel.Size = UDim2.fromScale(1, 1)
+	mapPreviewImageLabel.Position = UDim2.fromOffset(12, 26)
+	mapPreviewImageLabel.Size = UDim2.new(1, -24, 0, 76)
 	mapPreviewImageLabel.Font = Enum.Font.GothamBold
-	mapPreviewImageLabel.TextSize = 12
-	mapPreviewImageLabel.TextColor3 = Color3.fromRGB(210, 220, 236)
-	mapPreviewImageLabel.TextWrapped = true
-	mapPreviewImageLabel.Text = "4:3\nMAP IMAGE"
+	mapPreviewImageLabel.TextSize = 42
+	mapPreviewImageLabel.TextColor3 = Color3.fromRGB(228, 236, 246)
+	mapPreviewImageLabel.TextWrapped = false
+	mapPreviewImageLabel.TextYAlignment = Enum.TextYAlignment.Center
+	mapPreviewImageLabel.TextXAlignment = Enum.TextXAlignment.Left
+	mapPreviewImageLabel.Text = "HH"
 	mapPreviewImageLabel.Parent = mapPreviewImage
+
+	local mapPreviewImageStats = Instance.new("TextLabel")
+	mapPreviewImageStats.Name = "Stats"
+	mapPreviewImageStats.BackgroundTransparency = 1
+	mapPreviewImageStats.Position = UDim2.fromOffset(12, 106)
+	mapPreviewImageStats.Size = UDim2.new(1, -24, 0, 16)
+	mapPreviewImageStats.Font = Enum.Font.GothamSemibold
+	mapPreviewImageStats.TextSize = 10
+	mapPreviewImageStats.TextColor3 = Color3.fromRGB(210, 220, 236)
+	mapPreviewImageStats.TextXAlignment = Enum.TextXAlignment.Left
+	mapPreviewImageStats.Text = "DETAIL"
+	mapPreviewImageStats.Parent = mapPreviewImage
+
+	local mapPreviewImageFooter = Instance.new("TextLabel")
+	mapPreviewImageFooter.Name = "Footer"
+	mapPreviewImageFooter.BackgroundTransparency = 1
+	mapPreviewImageFooter.Position = UDim2.fromOffset(12, 122)
+	mapPreviewImageFooter.Size = UDim2.new(1, -24, 0, 20)
+	mapPreviewImageFooter.Font = Enum.Font.GothamBold
+	mapPreviewImageFooter.TextSize = 12
+	mapPreviewImageFooter.TextColor3 = Color3.fromRGB(236, 242, 250)
+	mapPreviewImageFooter.TextXAlignment = Enum.TextXAlignment.Left
+	mapPreviewImageFooter.Text = getMapDisplayName(MAPS[1])
+	mapPreviewImageFooter.Parent = mapPreviewImage
 
 	local setPwdBox = Instance.new("TextBox")
 	setPwdBox.Name = "SetPasswordBox"
@@ -6267,19 +7396,32 @@ function UISystem:_ensureRoomBrowserGui()
 	local function updateMapPreview(modeText, mapName)
 		modeText = modeText or "Classic"
 		mapName = mapName or resolveEffectiveMapId(self:GetRoomBrowserState(), nil) or MAPS[mapIndex]
-		if modeText == "Ranked" then
-			mapPreview.BackgroundColor3 = Color3.fromRGB(46, 32, 62)
-			mapPreviewStroke.Color = Color3.fromRGB(140, 102, 196)
-			mapPreviewTitle.Text = "RANKED PREVIEW"
-			mapPreviewLabel.Text = "TIER HOST: " .. resolveLocalTierText()
-			mapPreviewImageLabel.Text = "4:3\nRANKED ARENA"
-		else
-			mapPreview.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
-			mapPreviewStroke.Color = Color3.fromRGB(75, 92, 120)
-			mapPreviewTitle.Text = "MAP PREVIEW"
-			mapPreviewLabel.Text = formatMapSummary(mapName)
-			mapPreviewImageLabel.Text = "4:3\n" .. getMapDisplayName(mapName)
-		end
+		local theme = resolveMapPreviewTheme(mapName, modeText)
+		mapPreview.BackgroundColor3 = theme.background
+		mapPreviewStroke.Color = theme.stroke
+		mapPreviewImage.BackgroundColor3 = theme.background
+		mapPreviewImageStroke.Color = theme.stroke
+		mapPreviewImageAccent.BackgroundColor3 = theme.accent
+		mapPreviewImageChip.BackgroundColor3 = theme.accentSoft
+		mapPreviewImageChip.TextColor3 = theme.text
+		mapPreviewImageLabel.TextColor3 = theme.text
+		mapPreviewImageStats.TextColor3 = theme.muted
+		mapPreviewImageFooter.TextColor3 = theme.text
+		mapPreviewImageGradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, theme.accentSoft),
+			ColorSequenceKeypoint.new(1, theme.background),
+		})
+
+		mapPreviewTitle.Text = modeText == "Ranked" and "RANKED DEPLOYMENT" or "MAP PREVIEW"
+		mapPreviewLabel.Text = modeText == "Ranked"
+			and string.format("%s\nHost Tier %s", formatMapSummary(mapName), resolveLocalTierText())
+			or formatMapSummary(mapName)
+		mapPreviewImageLabel.Text = buildMapPreviewGlyph(mapName, modeText)
+		mapPreviewImageChip.Text = buildMapPreviewMood(mapName, modeText)
+		mapPreviewImageStats.Text = buildMapPreviewStats(mapName)
+		mapPreviewImageFooter.Text = modeText == "Ranked"
+			and string.format("%s  |  TIER %s", getMapDisplayName(mapName), resolveLocalTierText())
+			or getMapDisplayName(mapName)
 	end
 
 	local function renderRoomSelectionPreview(rooms)
@@ -6331,8 +7473,17 @@ function UISystem:_ensureRoomBrowserGui()
 			roomPreviewTitle.Text = "PREVIEW ROOM"
 			roomPreviewInfo.Text = "Klik room di daftar untuk lihat detail."
 			roomPreviewMapLabel.Text = "Belum ada room dipilih."
+			roomPreviewMapTitle.Text = "MAP ROOM"
+			roomPreviewMapStats.Text = "DETAIL MAP AKAN MUNCUL SAAT ROOM DIPILIH"
+			roomPreviewMapMood.Text = "ATMOSPHERE"
 			roomPreviewMap.BackgroundColor3 = Color3.fromRGB(18, 24, 32)
 			roomPreviewMapStroke.Color = Color3.fromRGB(72, 90, 116)
+			roomPreviewMapAccent.BackgroundColor3 = Color3.fromRGB(86, 116, 152)
+			roomPreviewMapMood.BackgroundColor3 = Color3.fromRGB(38, 52, 74)
+			roomPreviewMapGradient.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(36, 44, 58)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 18, 24)),
+			})
 			local empty = Instance.new("TextLabel")
 			empty.BackgroundTransparency = 1
 			empty.Size = UDim2.new(1, -12, 1, 0)
@@ -6365,14 +7516,23 @@ function UISystem:_ensureRoomBrowserGui()
 			maxPlayers,
 			roomState
 		)
+		local theme = resolveMapPreviewTheme(mapId, modeText)
+		roomPreviewMapTitle.Text = modeText == "Ranked" and "RANKED ROOM" or "MAP ROOM"
 		roomPreviewMapLabel.Text = formatMapSummary(mapId)
-		if modeText == "Ranked" then
-			roomPreviewMap.BackgroundColor3 = Color3.fromRGB(36, 28, 52)
-			roomPreviewMapStroke.Color = Color3.fromRGB(124, 96, 170)
-		else
-			roomPreviewMap.BackgroundColor3 = Color3.fromRGB(18, 24, 32)
-			roomPreviewMapStroke.Color = Color3.fromRGB(72, 90, 116)
-		end
+		roomPreviewMapStats.Text = buildMapPreviewStats(mapId)
+		roomPreviewMapMood.Text = buildMapPreviewMood(mapId, modeText)
+		roomPreviewMap.BackgroundColor3 = theme.background
+		roomPreviewMapStroke.Color = theme.stroke
+		roomPreviewMapAccent.BackgroundColor3 = theme.accent
+		roomPreviewMapMood.BackgroundColor3 = theme.accentSoft
+		roomPreviewMapMood.TextColor3 = theme.text
+		roomPreviewMapTitle.TextColor3 = theme.muted
+		roomPreviewMapLabel.TextColor3 = theme.text
+		roomPreviewMapStats.TextColor3 = theme.muted
+		roomPreviewMapGradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, theme.accentSoft),
+			ColorSequenceKeypoint.new(1, theme.background),
+		})
 
 		local players = type(selectedRoom.players) == "table" and selectedRoom.players or {}
 		if #players == 0 then
@@ -7075,6 +8235,8 @@ function UISystem:_setButtonSelected(button, selected)
 		return
 	end
 	button.BackgroundColor3 = selected and Color3.fromRGB(88, 121, 173) or Color3.fromRGB(46, 57, 73)
+	button:SetAttribute("BrandSelected", selected == true)
+	refreshButtonPolish(button, false)
 end
 
 function UISystem:_updateRoomBrowserVisibility()
@@ -7096,6 +8258,9 @@ function UISystem:_setRoomBrowserVisible(visible)
 	end
 	self._roomBrowserVisible = visible == true
 	self:_updateRoomBrowserVisibility()
+	if self._roomBrowserVisible and self._roomBrowserWidgets and self._roomBrowserWidgets.RootPanel then
+		animatePanelReveal(self._roomBrowserWidgets.RootPanel, false)
+	end
 	self:_refreshBasicLobbyPanel()
 	self:_refreshBasicWindows()
 end
@@ -7533,9 +8698,18 @@ function UISystem:_refreshRoomBrowserView()
 	local showCountdown = state.matchStarting == true
 	self._roomBrowserWidgets.CountdownOverlay.Visible = showCountdown
 	if showCountdown then
-		self._roomBrowserWidgets.CountdownLabel.Text = tostring(state.countdownSecondsLeft or state.countdownTotal or 5)
+		local countdownValue = math.max(0, math.floor(tonumber(state.countdownSecondsLeft or state.countdownTotal or 5) or 5))
+		self._roomBrowserWidgets.CountdownLabel.Text = tostring(countdownValue)
+		if countdownValue > 0 and self._lastCountdownAudioSecond ~= countdownValue then
+			self._lastCountdownAudioSecond = countdownValue
+			playRuntimeUISound("CountdownTick", {
+				VolumeScale = 1,
+				PlaybackSpeed = math.clamp(0.88 + ((5 - math.min(countdownValue, 5)) * 0.05), 0.88, 1.12),
+			})
+		end
 		self._roomBrowserWidgets.CancelCountdown.Visible = state.isHost == true
 	else
+		self._lastCountdownAudioSecond = nil
 		self._roomBrowserWidgets.CancelCountdown.Visible = false
 	end
 	self:_updateRoomBrowserVisibility()

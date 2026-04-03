@@ -5,6 +5,7 @@ local DEFAULT_STATE = {
     shopCatalog = {},
     activeTransactions = {},
     purchaseHistory = {},
+    processedReceiptIds = {},
 }
 
 local function deepCopy(value)

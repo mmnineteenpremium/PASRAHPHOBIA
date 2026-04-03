@@ -1,0 +1,23 @@
+{
+  "name": "PASRAHPHOBIA",
+  "syncbackRules": {
+    "ignoreTrees": [],
+    "ignorePaths": [],
+    "ignoreProperties": {},
+    "syncCurrentCamera": false,
+    "syncUnscriptable": true,
+    "ignoreReferents": false
+  },
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Assets": {
+        "$path": "src/ReplicatedStorage/Assets"
+      },
+      "Config": {
+        "$path": "src/ReplicatedStorage/Config"
+      }
+    }
+  }
+}

@@ -2,6 +2,9 @@ local Controller = {}
 Controller.__index = Controller
 
 local GhostInteractionGateway = require(script.Parent.GhostInteractionGateway)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local GHOST_TRACE_ATTRIBUTE = "PasrahGhostTrace"
 
 local INVESTIGATION_PHASES = {
 	Investigation = true,
@@ -24,6 +27,35 @@ local function resolveEventBus(deps)
 		return eventBus.Service
 	end
 	return nil
+end
+
+local function shouldTraceGhost()
+	return RunService:IsStudio() and ReplicatedStorage:GetAttribute(GHOST_TRACE_ATTRIBUTE) == true
+end
+
+local function traceGhost(message, payload)
+	if not shouldTraceGhost() then
+		return
+	end
+
+	local parts = {}
+	for key, value in pairs(payload or {}) do
+		table.insert(parts, string.format("%s=%s", tostring(key), tostring(value)))
+	end
+	table.sort(parts)
+	if #parts > 0 then
+		warn(string.format("[GHOST TRACE] %s [%s]", tostring(message), table.concat(parts, ", ")))
+	else
+		warn(string.format("[GHOST TRACE] %s", tostring(message)))
+	end
+end
+
+local function setGhostTraceState(stage, details)
+	if not shouldTraceGhost() then
+		return
+	end
+	ReplicatedStorage:SetAttribute("PasrahGhostTraceStage", stage)
+	ReplicatedStorage:SetAttribute("PasrahGhostTraceDetails", details)
 end
 
 function Controller.new(state, service, deps)
@@ -147,23 +179,38 @@ function Controller:OnMatchStarted(payload)
 	if not matchId then
 		return
 	end
+	setGhostTraceState("OnMatchStarted", string.format("match=%s;payloadGhostType=%s", tostring(matchId), tostring(payload and payload.ghostType)))
+	traceGhost("OnMatchStarted", {
+		matchId = matchId,
+		payloadGhostType = payload and payload.ghostType or nil,
+	})
 
-	local _, err = self._service:InitGhost(matchId, {
-		roomIds = payload.roomIds or payload.rooms,
-		roomGraph = payload.roomGraph,
-		roomSpawnRules = payload.roomSpawnRules,
-		ghostType = payload.ghostType,
-		ghostTypeData = payload.ghostTypeData,
-		personality = payload.personality,
-		personalityType = payload.personalityType,
-		evidenceSet = payload.evidenceSet,
-		initialAggression = payload.initialAggression,
-		difficulty = payload.difficulty,
-		mode = payload.mode or payload.gameMode,
-		gameMode = payload.gameMode or payload.mode,
-		difficultyProfile = payload.difficultyProfile,
-		favoriteRoomId = payload.favoriteRoomId,
-		now = payload.now,
+	local ok, _, err = pcall(function()
+		return self._service:InitGhost(matchId, {
+			roomIds = payload.roomIds or payload.rooms,
+			roomGraph = payload.roomGraph,
+			roomSpawnRules = payload.roomSpawnRules,
+			ghostType = payload.ghostType,
+			ghostTypeData = payload.ghostTypeData,
+			personality = payload.personality,
+			personalityType = payload.personalityType,
+			evidenceSet = payload.evidenceSet,
+			initialAggression = payload.initialAggression,
+			difficulty = payload.difficulty,
+			mode = payload.mode or payload.gameMode,
+			gameMode = payload.gameMode or payload.mode,
+			difficultyProfile = payload.difficultyProfile,
+			favoriteRoomId = payload.favoriteRoomId,
+			now = payload.now,
+		})
+	end)
+	if not ok then
+		err = tostring(_)
+	end
+	setGhostTraceState("InitGhostResult", string.format("match=%s;error=%s", tostring(matchId), tostring(err)))
+	traceGhost("InitGhostResult", {
+		matchId = matchId,
+		error = err or "nil",
 	})
 
 	if err then

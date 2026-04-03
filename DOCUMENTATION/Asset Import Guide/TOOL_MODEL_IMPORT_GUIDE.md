@@ -9,7 +9,7 @@
 ## DEFAULT LOADOUT TOOLS (IMPLEMENT FIRST)
 
 ### 1. Senter (Flashlight) — ALREADY IMPLEMENTED
-- **Status:** ✅ Code complete (FlashlightController.client.lua)
+- **Status:** ✅ Code complete (FlashlightController.client.lua) but not stable, kedua tangan nyala seperti flashlight
 - **Visual:** Optional 3D flashlight model in player hand
 - **Note:** Currently uses invisible SpotLight + Beam
 - **Enhancement:** Add handheld flashlight model for immersion

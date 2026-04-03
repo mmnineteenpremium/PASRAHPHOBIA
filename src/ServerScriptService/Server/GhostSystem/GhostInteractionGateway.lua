@@ -156,10 +156,12 @@ function GhostInteractionGateway:_resolveRemote()
     end
 
     local folder = replicatedStorage:FindFirstChild(REMOTE_FUNCTIONS_FOLDER_NAME)
-    if not folder then
-        folder = Instance.new("Folder")
-        folder.Name = REMOTE_FUNCTIONS_FOLDER_NAME
-        folder.Parent = replicatedStorage
+    if not (folder and folder:IsA("Folder")) then
+        warn(string.format(
+            "[GhostInteractionGateway] Missing canonical folder ReplicatedStorage.%s",
+            REMOTE_FUNCTIONS_FOLDER_NAME
+        ))
+        return nil
     end
 
     local remote = folder:FindFirstChild(REQUEST_REMOTE_NAME)
@@ -167,10 +169,12 @@ function GhostInteractionGateway:_resolveRemote()
         return remote
     end
 
-    local created = Instance.new("RemoteFunction")
-    created.Name = REQUEST_REMOTE_NAME
-    created.Parent = folder
-    return created
+    warn(string.format(
+        "[GhostInteractionGateway] Missing canonical remote ReplicatedStorage.%s.%s",
+        REMOTE_FUNCTIONS_FOLDER_NAME,
+        REQUEST_REMOTE_NAME
+    ))
+    return nil
 end
 
 function GhostInteractionGateway:Start()

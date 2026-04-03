@@ -10,6 +10,14 @@
     Based on: CANONICAL_SPECIFICATIONS_v2.md Phase 7.4
 ]]
 
+-- Disabled on 2026-04-04.
+-- This legacy LocalScript is not required by the current client bootstrap and
+-- only adds duplicate runtime surface alongside SoundSystem/AudioController.
+return {
+	Disabled = true,
+	Reason = "Legacy audio manager archived after audio ownership moved to SoundSystem.",
+}
+
 local AudioManager = {}
 
 -- Material-based footstep sounds

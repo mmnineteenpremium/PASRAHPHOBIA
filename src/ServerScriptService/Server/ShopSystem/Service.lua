@@ -3,6 +3,8 @@ local Services = require(script.Parent.Parent.Core.Services)
 local Service = {}
 Service.__index = Service
 
+local DEFAULT_PURCHASE_CURRENCY = "MM"
+
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
@@ -106,6 +108,7 @@ function Service:Create()
         InventorySystem = Services.Get(self._deps, "InventorySystem"),
         ProfileSystem = Services.Get(self._deps, "ProfileSystem"),
         DataPersistenceService = Services.Get(self._deps, "DataPersistenceService"),
+        RoyalPassSystem = Services.Get(self._deps, "RoyalPassSystem"),
     }
 end
 
@@ -143,20 +146,49 @@ function Service:LoadShopCatalog()
                 id = item.id,
                 name = item.name or item.id,
                 price = tonumber(item.price) or 0,
+                currency = item.currency or DEFAULT_PURCHASE_CURRENCY,
                 category = item.category or "Unknown",
                 slot = item.slot,
                 rarity = item.rarity,
                 rarityLabel = item.rarityLabel or item.rarity,
                 tags = type(item.tags) == "table" and item.tags or nil,
+                marketplaceType = item.marketplaceType,
+                marketplaceId = tonumber(item.marketplaceId) or nil,
+                entitlementKey = item.entitlementKey,
+                royalPassPremium = item.royalPassPremium == true,
+                grantItem = item.grantItem ~= false,
+                grantCurrency = item.grantCurrency,
+                grantCurrencyAmount = tonumber(item.grantCurrencyAmount) or nil,
             }
         end
     end
     return normalized
 end
 
+function Service:GetCatalog()
+    return self._state:Get("shopCatalog") or {}
+end
+
 function Service:_getCatalogItem(itemId)
     local catalog = self._state:Get("shopCatalog") or {}
     return catalog[itemId]
+end
+
+function Service:_normalizePurchaseCurrency(currency)
+    if type(currency) ~= "string" or currency == "" then
+        return DEFAULT_PURCHASE_CURRENCY
+    end
+    if currency == "RBX" then
+        return "Robux"
+    end
+    return currency
+end
+
+function Service:IsMarketplacePurchase(item)
+    if type(item) ~= "table" then
+        return false
+    end
+    return self:_normalizePurchaseCurrency(item.currency) == "Robux"
 end
 
 function Service:_getEconomyService()
@@ -181,6 +213,14 @@ function Service:_getPersistenceService()
         return persistence.Service
     end
     return persistence
+end
+
+function Service:_getRoyalPassService()
+    local royalPass = self._dependencies.RoyalPassSystem
+    if type(royalPass) == "table" and type(royalPass.Service) == "table" then
+        return royalPass.Service
+    end
+    return royalPass
 end
 
 function Service:_persistInventorySnapshot(player, userId)
@@ -272,6 +312,20 @@ function Service:ValidatePurchase(player, itemId)
         return false, "invalid_price"
     end
 
+    local purchaseCurrency = self:_normalizePurchaseCurrency(item.currency)
+    if purchaseCurrency ~= "MM" and purchaseCurrency ~= "PP" and purchaseCurrency ~= "Robux" then
+        return false, "unsupported_currency"
+    end
+    if purchaseCurrency == "Robux" then
+        local marketplaceType = item.marketplaceType
+        if marketplaceType ~= "GamePass" and marketplaceType ~= "DeveloperProduct" then
+            return false, "marketplace_type_missing"
+        end
+        if type(item.marketplaceId) ~= "number" or item.marketplaceId <= 0 then
+            return false, "marketplace_id_missing"
+        end
+    end
+
     local activeTransactions = self._state:Get("activeTransactions") or {}
     if activeTransactions[userId] ~= nil then
         return false, "transaction_in_progress"
@@ -284,6 +338,10 @@ function Service:ValidatePurchase(player, itemId)
     local economy = self:_getEconomyService()
     if type(economy) ~= "table" then
         return false, "economy_unavailable"
+    end
+
+    if purchaseCurrency == "Robux" then
+        return true, nil, item, userId
     end
 
     local balance = nil
@@ -305,6 +363,34 @@ function Service:ValidatePurchase(player, itemId)
     end
 
     return true, nil, item, userId
+end
+
+function Service:ResolvePurchaseIntent(player, itemId)
+    local ok, err, item, userId = self:ValidatePurchase(player, itemId)
+    if not ok then
+        return false, err
+    end
+
+    local purchaseCurrency = self:_normalizePurchaseCurrency(item.currency)
+    if purchaseCurrency == "Robux" then
+        return true, nil, {
+            flow = "Marketplace",
+            userId = userId,
+            itemId = itemId,
+            item = item,
+            purchaseCurrency = purchaseCurrency,
+            marketplaceType = item.marketplaceType,
+            marketplaceId = item.marketplaceId,
+        }
+    end
+
+    return true, nil, {
+        flow = "SoftCurrency",
+        userId = userId,
+        itemId = itemId,
+        item = item,
+        purchaseCurrency = purchaseCurrency,
+    }
 end
 
 function Service:GrantItem(player, itemId, itemData)
@@ -355,6 +441,11 @@ function Service:ProcessPurchase(player, itemId)
         return false, err
     end
 
+    local purchaseCurrency = self:_normalizePurchaseCurrency(item.currency)
+    if purchaseCurrency == "Robux" then
+        return false, "marketplace_prompt_required"
+    end
+
     local activeTransactions = self._state:Get("activeTransactions") or {}
     activeTransactions[userId] = {
         itemId = itemId,
@@ -368,7 +459,7 @@ function Service:ProcessPurchase(player, itemId)
 
     if type(economy.SpendCurrency) == "function" then
         local spendOk, resultA, resultB = pcall(function()
-            return economy:SpendCurrency(player, "MM", item.price, "ShopPurchase")
+            return economy:SpendCurrency(player, purchaseCurrency, item.price, "ShopPurchase")
         end)
         if spendOk then
             if resultA == false then
@@ -421,12 +512,107 @@ function Service:ProcessPurchase(player, itemId)
     activeTransactions[userId] = nil
     self._state:Set("activeTransactions", activeTransactions)
 
+        self:_publish("ItemPurchased", {
+            player = player,
+            userId = userId,
+            itemId = itemId,
+            price = item.price,
+            category = item.category,
+            currency = purchaseCurrency,
+            source = "SoftCurrency",
+        })
+    return true
+end
+
+function Service:_grantEntitlements(player, item)
+    local grantedAny = false
+    local economy = self:_getEconomyService()
+    if type(item.entitlementKey) == "string" and item.entitlementKey ~= "" then
+        if type(economy) == "table" and type(economy.SetPassOwnership) == "function" then
+            local ok = pcall(function()
+                economy:SetPassOwnership(player, {
+                    [item.entitlementKey] = true,
+                })
+            end)
+            grantedAny = ok or grantedAny
+        end
+    end
+
+    if item.royalPassPremium == true then
+        local royalPass = self:_getRoyalPassService()
+        if type(royalPass) == "table" and type(royalPass.SetPremiumOwnership) == "function" then
+            local ok = pcall(function()
+                royalPass:SetPremiumOwnership(player, true)
+            end)
+            grantedAny = ok or grantedAny
+        end
+    end
+
+    return grantedAny
+end
+
+function Service:GrantMarketplacePurchase(player, itemId, context)
+    local item = self:_getCatalogItem(itemId)
+    if type(item) ~= "table" then
+        return false, "item_not_found"
+    end
+    if not self:IsMarketplacePurchase(item) then
+        return false, "not_marketplace_item"
+    end
+
+    local userId = toUserId(player)
+    if not userId then
+        return false, "invalid_player"
+    end
+
+    local grantedEntitlements = self:_grantEntitlements(player, item)
+    local grantedInventory = true
+    if item.grantItem ~= false and not self:_alreadyOwned(player, itemId, item.category) then
+        grantedInventory, _ = self:GrantItem(player, itemId, item)
+    end
+
+    local grantedCurrency = false
+    if type(item.grantCurrency) == "string" and type(item.grantCurrencyAmount) == "number" and item.grantCurrencyAmount > 0 then
+        local economy = self:_getEconomyService()
+        if type(economy) == "table" and type(economy.AddCurrency) == "function" then
+            local ok = pcall(function()
+                economy:AddCurrency(player, item.grantCurrency, item.grantCurrencyAmount, "MarketplacePurchase")
+            end)
+            grantedCurrency = ok or grantedCurrency
+        end
+    end
+
+    if item.grantItem ~= false and grantedInventory == false and grantedEntitlements ~= true and grantedCurrency ~= true then
+        return false, "grant_item_failed"
+    end
+
+    self:_persistInventorySnapshot(player, userId)
+
+    local history = self._state:Get("purchaseHistory") or {}
+    history[userId] = history[userId] or {}
+    table.insert(history[userId], {
+        itemId = itemId,
+        price = item.price,
+        currency = self:_normalizePurchaseCurrency(item.currency),
+        category = item.category,
+        purchasedAt = os.time(),
+        source = type(context) == "table" and context.source or "Marketplace",
+        receiptId = type(context) == "table" and context.receiptId or nil,
+        marketplaceType = item.marketplaceType,
+        marketplaceId = item.marketplaceId,
+    })
+    self._state:Set("purchaseHistory", history)
+
     self:_publish("ItemPurchased", {
         player = player,
         userId = userId,
         itemId = itemId,
         price = item.price,
         category = item.category,
+        currency = self:_normalizePurchaseCurrency(item.currency),
+        source = type(context) == "table" and context.source or "Marketplace",
+        marketplaceType = item.marketplaceType,
+        marketplaceId = item.marketplaceId,
     })
     return true
 end

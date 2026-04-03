@@ -18,6 +18,17 @@ local HEARTBEAT_SPEED_RANGE = {
 local AudioController = {}
 AudioController.__index = AudioController
 
+local function normalizePhaseToken(payload)
+	local token = tostring(
+		(payload and payload.matchPhase)
+			or (payload and payload.lifecyclePhase)
+			or (payload and payload.phase)
+			or (payload and payload.phaseName)
+			or ""
+	)
+	return token:gsub("[%s_%-_]+", ""):lower()
+end
+
 local function lookupHeartbeatSound()
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
 	local audioFolder = assets and assets:FindFirstChild("Audio")
@@ -30,7 +41,6 @@ local function lookupHeartbeatSound()
 	end
 	local fallback = Instance.new("Sound")
 	fallback.Name = "Heartbeat"
-	fallback.SoundId = "rbxassetid://YOUR_HEARTBEAT_ID"
 	return fallback
 end
 
@@ -44,6 +54,7 @@ function AudioController:Init(context)
 	self._heartbeatSound = lookupHeartbeatSound()
 	self._heartbeatSound.Looped = true
 	self._heartbeatSound.Volume = 0
+	self._heartbeatSound:SetAttribute("MissingSourceAsset", self._heartbeatSound.SoundId == "")
 	local camera = Workspace.CurrentCamera or Workspace:FindFirstChildWhichIsA("Camera")
 	self._heartbeatSound.Parent = camera or Workspace
 end
@@ -98,10 +109,25 @@ function AudioController:_onMatchEvent(payload)
 	if eventName == "MatchStarted" then
 		local mapName = (payload and payload.mapName) or (payload and payload.map) or payload.mapType or "Unknown"
 		self:_applyMapReverb(mapName)
+	elseif eventName == "PhaseChanged" then
+		local phaseToken = normalizePhaseToken(payload)
+		if phaseToken == "hunt" or phaseToken == "huntphase" then
+			self._ghostHuntActive = true
+			self:_updateHeartbeat()
+		elseif phaseToken == "investigation" or phaseToken == "investigationphase"
+			or phaseToken == "preparation" or phaseToken == "preparationphase"
+			or phaseToken == "endgame" or phaseToken == "endgamephase"
+			or phaseToken == "result" or phaseToken == "end" then
+			self._ghostHuntActive = false
+			self:_updateHeartbeat()
+		end
 	elseif eventName == "HuntStarted" or eventName == "GhostHuntStarted" then
 		self._ghostHuntActive = true
 		self:_updateHeartbeat()
 	elseif eventName == "HuntEnded" or eventName == "GhostHuntEnded" then
+		self._ghostHuntActive = false
+		self:_updateHeartbeat()
+	elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 		self._ghostHuntActive = false
 		self:_updateHeartbeat()
 	end
@@ -109,6 +135,9 @@ end
 
 function AudioController:_updateHeartbeat()
 	if not self._heartbeatSound then
+		return
+	end
+	if self._heartbeatSound.SoundId == "" then
 		return
 	end
 

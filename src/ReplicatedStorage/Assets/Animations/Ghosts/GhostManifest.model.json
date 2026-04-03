@@ -1,16 +1,12 @@
 {
   "className": "Animation",
-  "properties": {
-    "Name": "GhostManifest",
-    "AnimationId": "rbxassetid://507771019"
-  },
   "children": [
     {
-      "className": "BoolValue",
-      "properties": {
-        "Name": "Looped",
-        "Value": false
-      }
+      "name": "Looped",
+      "className": "BoolValue"
     }
-  ]
+  ],
+  "properties": {
+    "AnimationId": "rbxassetid://507771019"
+  }
 }
