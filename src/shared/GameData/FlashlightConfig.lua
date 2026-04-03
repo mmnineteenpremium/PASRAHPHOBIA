@@ -9,7 +9,7 @@ local FlashlightConfig = {
 		meshScale = Vector3.new(0.7, 0.7, 0.7),
 		gripCFrame = CFrame.new(0.1, -0.4, 0),
 		fallbackMountCFrame = CFrame.new(0.1, -0.28, -0.08),
-		lensOffset = CFrame.new(0, 0, -0.96),
+		lensOffset = CFrame.new(0, 0, -1.14),
 	},
 	sound = {
 		soundId = "rbxassetid://115959318",
@@ -26,9 +26,9 @@ local FlashlightConfig = {
 		offTransparency = 0.34,
 	},
 	localLight = {
-		brightness = 2.6,
-		range = 18,
-		angle = 38,
+		brightness = 1.35,
+		range = 12,
+		angle = 24,
 		color = Color3.fromRGB(255, 244, 214),
 	},
 	remoteLight = {
@@ -44,8 +44,14 @@ local FlashlightConfig = {
 	},
 	viewmodel = {
 		baseOffset = CFrame.new(0, -0.52, -1.0) * CFrame.Angles(math.rad(-8), 0, 0),
-		partScale = 0.72,
-		flashlightMountCFrame = CFrame.new(0.24, 0.02, -0.12),
+		partScale = 0.62,
+		flashlightMountCFrame = CFrame.new(0.24, -0.02, -0.28),
+		handsOnly = true,
+		armMaterial = Enum.Material.SmoothPlastic,
+		armBrightnessScale = 0.62,
+		handBrightnessScale = 0.52,
+		armMinChannel = 0.12,
+		armMaxChannel = 0.62,
 		segmentLayouts = {
 			FPV_LeftUpperArm = {
 				position = Vector3.new(-0.72, -0.06, -0.16),

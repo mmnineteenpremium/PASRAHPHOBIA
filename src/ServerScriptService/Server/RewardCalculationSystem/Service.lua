@@ -135,6 +135,7 @@ function Service:_fireMatchRewardSummary(player, matchId, reward)
         eventName = "MatchRewardSummary",
         matchId = matchId,
         currencyReward = reward.amount,
+        ppReward = reward.ppReward,
         xpReward = reward.xp,
         royalPassXP = reward.royalPassXP,
         dailyProgress = reward.dailyProgress,
@@ -209,11 +210,39 @@ function Service:_collectOutcomes(payload)
         end
     end
 
+    local resultEntries = {
+        payload and payload.playerResults,
+        payload and payload.results and payload.results.playerResults,
+    }
+    for _, entries in ipairs(resultEntries) do
+        if type(entries) == "table" then
+            for _, entry in ipairs(entries) do
+                if type(entry) == "table" then
+                    local userId = toUserId(entry.player or entry.userId) or toNumberUserId(entry.userId)
+                    upsert(userId, entry)
+                end
+            end
+        end
+    end
+
     local players = payload and (payload.players or (payload.results and payload.results.players))
     if type(players) == "table" then
         for _, player in ipairs(players) do
             upsert(toUserId(player), { player = player, survived = true })
         end
+    end
+
+    local directPlayer = payload and payload.player
+    local directUserId = payload and payload.userId
+    local directResolvedUserId = toUserId(directPlayer) or toNumberUserId(directUserId)
+    if type(directResolvedUserId) == "number" then
+        upsert(directResolvedUserId, {
+            player = directPlayer,
+            userId = directUserId,
+            survived = payload and payload.survived,
+            extracted = payload and payload.extracted,
+            performancePercent = payload and payload.performancePercent,
+        })
     end
 
     return result
@@ -223,6 +252,7 @@ function Service:_calculateReward(payload, entry)
     local multiplier = resolveDifficultyMultiplier(payload)
     local teamSuccess = (payload and payload.teamSuccess == true)
         or (payload and payload.contractSuccess == true)
+        or (payload and payload.success == true)
         or (payload and payload.extractionCompleted == true)
     local correctGuess = (payload and payload.correctGuess == true) or (payload and payload.ghostIdentified == true)
     local evidenceCollected = math.max(0, tonumber(payload and payload.evidenceCollected) or 0)
@@ -255,14 +285,36 @@ function Service:_calculateReward(payload, entry)
         xp += 20
     end
 
+    local ppReward = 0
+    if teamSuccess then
+        ppReward += 1
+    end
+    if correctGuess then
+        ppReward += 1
+    end
+    if entry.survived then
+        ppReward += 1
+    end
+    if entry.extracted then
+        ppReward += 1
+    end
+    if multiplier >= 1.45 then
+        ppReward += 1
+    end
+    if (not entry.survived) and (not teamSuccess) then
+        ppReward = math.max(ppReward - 1, 0)
+    end
+
     currency = math.max(0, math.floor(currency * multiplier))
     xp = math.max(1, math.floor(xp * multiplier))
+    ppReward = math.clamp(math.floor(ppReward), 0, 5)
     local royalPassXP = math.max(15, math.floor(xp * 0.45))
     local dailyProgress = (teamSuccess and 2 or 1) + (entry.survived and 1 or 0)
 
     return {
         currency = "MM",
         amount = currency,
+        ppReward = ppReward,
         xp = xp,
         royalPassXP = royalPassXP,
         dailyProgress = dailyProgress,
@@ -279,8 +331,14 @@ function Service:_grantToPlayer(matchId, payload, entry, reward)
     if type(economy) == "table" then
         if type(economy.AddCurrency) == "function" then
             economy:AddCurrency(playerOrUserId, reward.currency, reward.amount, "endgame_match_reward")
+            if (tonumber(reward.ppReward) or 0) > 0 then
+                economy:AddCurrency(playerOrUserId, "PP", reward.ppReward, "endgame_match_reward")
+            end
         elseif type(economy.Service) == "table" and type(economy.Service.AddCurrency) == "function" then
             economy.Service:AddCurrency(playerOrUserId, reward.currency, reward.amount, "endgame_match_reward")
+            if (tonumber(reward.ppReward) or 0) > 0 then
+                economy.Service:AddCurrency(playerOrUserId, "PP", reward.ppReward, "endgame_match_reward")
+            end
         end
     end
 
@@ -306,12 +364,25 @@ function Service:_grantToPlayer(matchId, payload, entry, reward)
         userId = userId,
         currency = reward.currency,
         amount = reward.amount,
+        ppReward = reward.ppReward,
         xp = reward.xp,
         royalPassXP = reward.royalPassXP,
         dailyProgress = reward.dailyProgress,
         reason = "endgame_match_reward",
         sourceSystem = "RewardCalculationSystem",
     }
+
+    if (tonumber(reward.ppReward) or 0) > 0 then
+        self:_publish("CurrencyEarned", {
+            matchId = matchId,
+            player = entry.player,
+            userId = userId,
+            currency = "PP",
+            amount = reward.ppReward,
+            reason = "endgame_match_reward",
+            sourceSystem = "RewardCalculationSystem",
+        })
+    end
 
     self:_publish("RewardGranted", rewardPayload)
     self:_publish("RewardsGranted", rewardPayload)

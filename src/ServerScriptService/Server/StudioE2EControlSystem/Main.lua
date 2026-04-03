@@ -97,6 +97,7 @@ function StudioE2EControlSystem.new(deps)
 	self._matchSystem = nil
 	self._huntEscapeSystem = nil
 	self._sanitySystem = nil
+	self._economyService = nil
 	self._eventBus = nil
 	return self
 end
@@ -105,6 +106,7 @@ function StudioE2EControlSystem:Init()
 	self._matchSystem = resolveService(self._deps, "MatchSystem", "AdvanceMatchPhase")
 	self._huntEscapeSystem = resolveService(self._deps, "HuntEscapeSystem", "HandlePlayerExtraction")
 	self._sanitySystem = resolveService(self._deps, "SanitySystem", "DrainSanity")
+	self._economyService = resolveService(self._deps, "EconomySystem", "GetBalance")
 	self._eventBus = resolveEventBus(self._deps)
 end
 
@@ -222,10 +224,77 @@ function StudioE2EControlSystem:_handleEndMatch(player, request)
 		source = "StudioE2EControlSystem",
 	}
 	local payload = self._matchSystem:EndMatch(matchId, results)
-	if not payload then
-		return false, "end_match_failed"
+	if payload then
+		return true, string.format("match=%s ended", matchId)
 	end
-	return true, string.format("match=%s ended", matchId)
+
+	-- Studio fallback:
+	-- If MatchSystem no longer has the match entry but client still stuck InMatch,
+	-- publish synthetic MatchEnded so reward/UI pipelines can unwind for E2E loops.
+	if RunService:IsStudio() and self._eventBus then
+		if typeof(player) ~= "Instance" or not player:IsA("Player") then
+			return false, "invalid_player"
+		end
+		if player:GetAttribute("InMatch") ~= true then
+			return false, "end_match_failed"
+		end
+		local liveMatchId = player:GetAttribute("MatchId")
+		if type(liveMatchId) == "string" and liveMatchId ~= "" and liveMatchId ~= matchId then
+			return false, "match_id_mismatch"
+		end
+
+		local userId = typeof(player) == "Instance" and player:IsA("Player") and player.UserId or nil
+		local performancePercent = tonumber(type(request) == "table" and request.performancePercent) or 75
+		local survived = type(request) == "table" and request.survived ~= false or true
+		local extracted = type(request) == "table" and request.extracted == true or false
+		self._eventBus:Publish("MatchEnded", {
+			matchId = matchId,
+			players = { player },
+			player = player,
+			userId = userId,
+			playerOutcome = {
+				[tostring(userId)] = {
+					player = player,
+					userId = userId,
+					performancePercent = performancePercent,
+					survived = survived,
+					extracted = extracted,
+				},
+			},
+			results = {
+				playerResults = {
+					{
+						player = player,
+						userId = userId,
+						performancePercent = performancePercent,
+						survived = survived,
+						extracted = extracted,
+					},
+				},
+				playerOutcome = {
+					[tostring(userId)] = {
+						player = player,
+						userId = userId,
+						performancePercent = performancePercent,
+						survived = survived,
+						extracted = extracted,
+					},
+				},
+			},
+			source = "StudioE2EControlFallback",
+			reason = results.reason,
+			success = results.success,
+			missionFailed = results.missionFailed,
+			correctGuess = results.correctGuess,
+		})
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			player:SetAttribute("InMatch", false)
+			player:SetAttribute("MatchId", "")
+		end
+		return true, string.format("match=%s ended_fallback", matchId)
+	end
+
+	return false, "end_match_failed"
 end
 
 function StudioE2EControlSystem:_handleDrainSanity(player, request)
@@ -251,6 +320,27 @@ function StudioE2EControlSystem:_handleDrainSanity(player, request)
 		return false, tostring(reason or "drain_failed")
 	end
 	return true, string.format("match=%s sanity=%s", matchId, tostring(newSanity))
+end
+
+function StudioE2EControlSystem:_handleGetWallet(player)
+	if not self._economyService then
+		return false, "missing_economy_service"
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local wallet = self._economyService:GetBalance(player)
+	if type(wallet) ~= "table" then
+		return false, "wallet_unavailable"
+	end
+
+	return true, string.format(
+		"MM=%d PP=%d Robux=%d",
+		math.max(0, math.floor(tonumber(wallet.MM) or 0)),
+		math.max(0, math.floor(tonumber(wallet.PP) or 0)),
+		math.max(0, math.floor(tonumber(wallet.Robux) or 0))
+	)
 end
 
 function StudioE2EControlSystem:_handleSetForcedGhost(player, request)
@@ -423,6 +513,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleSetForcedGhost(player, request)
 	elseif action == "EndMatch" then
 		ok, result = self:_handleEndMatch(player, request)
+	elseif action == "GetWallet" then
+		ok, result = self:_handleGetWallet(player)
 	elseif action == "HidingDebugSnapshot" then
 		ok, result = self:_handleHidingDebugSnapshot(player, request)
 	elseif action == "EnterHide" then
