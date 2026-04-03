@@ -283,6 +283,12 @@ Status:
   - validasi live terbaru di `HauntedHouse` membuktikan:
     - pemain didekatkan ke `Door_DiningRoom` -> `DoorIsOpen = true`
     - pemain dijauhkan lagi -> `DoorIsOpen = false`
+  - baseline hybrid ini sekarang juga tidak lagi memakai radius bola mentah:
+    - auto-open dihitung dari zona ambang pintu yang dikunci ke `closedCFrame`
+    - ini mencegah pintu terasa "lengket" terbuka hanya karena daun pintu yang sudah berputar mengubah arah deteksi
+    - validasi live terbaru juga membuktikan:
+      - karakter diposisikan tepat di jalur `Door_DiningRoom` -> `DoorIsOpen = true`
+      - karakter digeser dekat tapi keluar dari jalur ambang pintu -> `DoorIsOpen = false`
 - affordance survive dasar sekarang juga tidak lagi buta:
   - saat hunt aktif, `SafeZone_1` runtime tervalidasi membawa:
     - `SafeZoneRuntimeMarker`
