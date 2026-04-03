@@ -1,7 +1,7 @@
 {
   "className": "Sound",
   "properties": {
-    "AudioContent": "",
+    "AudioContent": "rbxasset://sounds/electronicpingshort.wav",
     "Looped": false,
     "RollOffMinDistance": 5.0,
     "RollOffMaxDistance": 40.0,

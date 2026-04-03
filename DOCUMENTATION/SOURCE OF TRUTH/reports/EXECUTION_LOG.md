@@ -5955,3 +5955,46 @@ Menutup gap “E2E tanpa ghost” untuk ghost type non-Pocong yang belum punya m
 
 - ghost non-dedicated tidak lagi turun ke rig placeholder box selama template `Pocong` tersedia.
 - ini mengamankan pengalaman visual baseline sambil menunggu impor roster ghost final per tipe.
+
+## 2026-04-04 06:52 ICT
+
+### Task
+
+Menaikkan baseline SFX runtime dengan jalur jumpscare event-driven end-to-end dan menutup slot audio kosong yang masih placeholder.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/AudioSystem/Service.lua`
+- `src/ServerScriptService/Server/AudioSystem/Controller.lua`
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+- `src/client/SoundSystem/Main.lua`
+- `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
+- `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+- `src/ReplicatedStorage/Assets/Audio/Jumpscare/Jumpscare_01.model.json`
+
+### Change Summary
+
+- event audio baru `JumpscareAudioTriggered` ditambahkan di AudioSystem dan direlay ke client.
+- `StudioE2EControl` sekarang punya action `TriggerJumpscare` untuk test harness MCP.
+- client `SoundSystem` sekarang punya kategori `JumpscareAudio` + dedupe window `1.5s`.
+- asset audio source-controlled diperbarui:
+  - `AmbientLoop_Main` -> `rbxassetid://138884191945388`
+  - `ButtonClick_01` -> `rbxasset://sounds/electronicpingshort.wav`
+  - `Jumpscare_01` -> `rbxassetid://101202336513383` (volume `0.9`)
+
+### Validation Notes
+
+- build lokal lolos:
+  - `_tmp_audio_jumpscare_pipeline_build.rbxlx`
+  - `_tmp_studioe2e_jumpscare_action_build.rbxlx`
+  - `_tmp_audio_jumpscare_relay_fix_build.rbxlx`
+- smoke live MCP:
+  - `TriggerJumpscare` ack: `match=match_1 jumpscare=triggered`
+  - client runtime menemukan `JumpscareAudioRuntime`
+  - `SoundId=rbxassetid://101202336513383`
+  - `IsPlaying=true`
+
+### Interpretation
+
+- jalur SFX jumpscare kini benar-benar aktif end-to-end (server event -> relay -> client audio runtime).
+- debt VFX/SFX tidak selesai total, tetapi area jumpscare + slot audio kosong sudah naik dari placeholder ke runtime owner yang jelas.

@@ -179,3 +179,14 @@ Tambahan coverage untuk fallback visual ghost type non-dedicated:
 Implikasi matrix:
 
 - `E2E-07` tetap `PASS` dengan baseline visual ghost yang konsisten lintas tipe meski roster dedicated belum lengkap.
+
+## Update 2026-04-04 06:52 ICT
+
+Tambahan smoke untuk audio pressure di fase gameplay:
+
+- harness `StudioE2EControl(action=TriggerJumpscare)` berhasil mengirim trigger dalam match aktif.
+- client runtime membuat `JumpscareAudioRuntime` dengan `SoundId=rbxassetid://101202336513383` dan status `IsPlaying=true`.
+
+Implikasi matrix:
+
+- `E2E-08 Hunt` tetap `PASS` dan kini punya jalur verifikasi SFX jumpscare yang deterministic untuk regression.
