@@ -15,10 +15,31 @@ local MIN_SEGMENT_SIZE = 0.25
 local STAIR_MARGIN = 0.75
 local INTERACTION_HEIGHT_OFFSET = 1.5
 local INTERACTION_POSITION_OVERRIDES = {
+}
+local INTERACTION_DOOR_OVERRIDES = {
+	hauntedhouse = {
+		Interact_Bedroom1 = {
+			doorName = "Door_Bedroom1",
+			insideOffset = 5,
+		},
+		Interact_Kitchen = {
+			doorName = "Door_Kitchen",
+			insideOffset = 5,
+		},
+	},
 	emptybuilding = {
-		Interact_WorkspaceOpen = Vector3.new(800, 2, -8),
-		Interact_OfficeB = Vector3.new(822.667, 2, -8),
-		Interact_Bathroom1 = Vector3.new(822, 2, -9),
+		Interact_WorkspaceOpen = {
+			doorName = "Door_WorkspaceOpen",
+			insideOffset = 6,
+		},
+		Interact_OfficeB = {
+			doorName = "Door_OfficeB",
+			insideOffset = 5,
+		},
+		Interact_Bathroom1 = {
+			doorName = "Door_Bathroom1",
+			insideOffset = 4,
+		},
 	},
 }
 local SAFE_ZONE_POSITION_OVERRIDES = {
@@ -50,6 +71,18 @@ local function resolveMapOverrideToken(mapId, mapClone)
 		return normalizeToken(mapClone.Name)
 	end
 	return nil
+end
+
+local function flattenDirection(vector)
+	if typeof(vector) ~= "Vector3" then
+		return nil
+	end
+
+	local flattened = Vector3.new(vector.X, 0, vector.Z)
+	if flattened.Magnitude <= 1e-4 then
+		return nil
+	end
+	return flattened.Unit
 end
 
 local function getXZBounds(part)
@@ -245,9 +278,11 @@ local function patchInteractionPoints(mapId, mapClone)
 		mapToken = resolveMapOverrideToken(nil, mapClone)
 	end
 	local interactionOverrides = mapToken and INTERACTION_POSITION_OVERRIDES[mapToken] or nil
+	local interactionDoorOverrides = mapToken and INTERACTION_DOOR_OVERRIDES[mapToken] or nil
 
 	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
 	local interactionPointsFolder = mapClone:FindFirstChild("InteractionPoints", true)
+	local doorsFolder = mapClone:FindFirstChild("Doors", true)
 	if not roomsFolder or not interactionPointsFolder then
 		return false
 	end
@@ -269,6 +304,21 @@ local function patchInteractionPoints(mapId, mapClone)
 			local room = token and roomsByToken[token] or nil
 			if room then
 				local targetPosition = room.Position + Vector3.new(0, INTERACTION_HEIGHT_OFFSET, 0)
+				local doorOverride = interactionDoorOverrides and interactionDoorOverrides[interactionPoint.Name]
+				if type(doorOverride) == "table" and doorsFolder then
+					local door = doorsFolder:FindFirstChild(doorOverride.doorName)
+					if door and door:IsA("BasePart") then
+						local directionToRoom = flattenDirection(room.Position - door.Position)
+						local insideOffset = tonumber(doorOverride.insideOffset) or 4
+						if directionToRoom then
+							targetPosition = Vector3.new(
+								door.Position.X,
+								room.Position.Y + INTERACTION_HEIGHT_OFFSET,
+								door.Position.Z
+							) + (directionToRoom * insideOffset)
+						end
+					end
+				end
 				local explicitOverride = interactionOverrides and interactionOverrides[interactionPoint.Name]
 				if typeof(explicitOverride) == "Vector3" then
 					targetPosition = explicitOverride

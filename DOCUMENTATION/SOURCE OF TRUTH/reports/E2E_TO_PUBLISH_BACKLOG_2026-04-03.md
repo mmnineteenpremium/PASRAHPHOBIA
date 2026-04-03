@@ -856,3 +856,33 @@ Urutan yang paling masuk akal dari titik sekarang:
     - hiding/survival affordance lanjutan
     - UI/mobile polish dan content fill
 
+## Update 2026-04-03 23:18 ICT
+
+- traversal/interaksi map sekarang mulai dipoles dengan anchor berbasis pintu, bukan sekadar titik tengah room:
+  - `HauntedHouse`
+    - `Interact_Bedroom1` sekarang diposisikan dari `Door_Bedroom1` ke arah dalam room
+    - `Interact_Kitchen` sekarang diposisikan dari `Door_Kitchen` ke arah dalam room
+  - `EmptyBuilding`
+    - `Interact_WorkspaceOpen` sekarang diposisikan dari `Door_WorkspaceOpen`
+    - `Interact_OfficeB` sekarang diposisikan dari `Door_OfficeB`
+    - `Interact_Bathroom1` sekarang diposisikan dari `Door_Bathroom1`
+- pendekatan ini mengganti override angka liar yang tidak lagi representatif terhadap layout room modern
+- validasi tertutup:
+  - build source sukses: `_tmp_map_patch_validation.rbxlx`
+  - edit-mode clone validation:
+    - `HauntedHouse`
+      - `Interact_Bedroom1 = 1178.75, 2, 35`
+      - `Interact_Kitchen = 1220.25, 2, -25`
+    - `EmptyBuilding`
+      - `Interact_WorkspaceOpen = 800, 14, 13.75`
+      - `Interact_OfficeB = 774.75, 2, 35`
+      - `Interact_Bathroom1 = 826.25, 2, 35`
+  - smoke test live `EmptyBuilding`:
+    - `HostStartCommit = commit ok=true err=nil roomId=1`
+    - `MatchStartTrace` kembali sukses
+    - interaction point runtime clone membaca posisi baru yang sama persis
+- dampak:
+  - interaction point lebih dekat ke akses masuk room
+  - traversal visual lebih logis untuk map yang belum full redesign
+  - jalur start match tetap aman setelah patch
+

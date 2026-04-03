@@ -3919,3 +3919,62 @@ Menutup blocker runtime `Preparing -> MatchStarted`, lalu menyelesaikan validasi
 
 1. checkpoint commit untuk stabilisasi `HostStart/StartMatch` + prioritas hide explicit
 2. lanjut ke slice traversal/map polish berikutnya tanpa kembali ke blocker `Preparing`
+
+## 2026-04-03 23:18 ICT
+
+### Task
+
+Memulai traversal polish pada interaction point residual dengan pendekatan anchor berbasis pintu, lalu memvalidasi bahwa patch baru tidak merusak host-start/match start.
+
+### Linked Issues
+
+- sesudah pathfinding-heavy patch dibuang, interaction point default kembali ke pusat room
+- untuk beberapa room, pusat room terasa tidak logis secara traversal karena tidak berada dekat jalur masuk
+- override legacy `EmptyBuilding` lama sudah tidak representatif terhadap geometri room aktif
+
+### Files Changed
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `MapRuntimePatches` sekarang punya `INTERACTION_DOOR_OVERRIDES`
+- patch interaction point bisa menghitung anchor dari:
+  - posisi pintu
+  - arah `door -> room center`
+  - `insideOffset` per room
+- target pertama yang ditutup:
+  - `HauntedHouse`: `Interact_Bedroom1`, `Interact_Kitchen`
+  - `EmptyBuilding`: `Interact_WorkspaceOpen`, `Interact_OfficeB`, `Interact_Bathroom1`
+- explicit vector override lama untuk `EmptyBuilding` yang tidak lagi masuk akal sudah dibuang
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_map_patch_validation.rbxlx`
+- edit-mode clone validation:
+  - `HauntedHouse`
+    - `Interact_Bedroom1 = 1178.75, 2, 35`
+    - `Interact_Kitchen = 1220.25, 2, -25`
+  - `EmptyBuilding`
+    - `Interact_WorkspaceOpen = 800, 14, 13.75`
+    - `Interact_OfficeB = 774.75, 2, 35`
+    - `Interact_Bathroom1 = 826.25, 2, 35`
+- smoke test live `EmptyBuilding` juga tetap sehat:
+  - `PasrahLastHostStartCommit = commit ok=true err=nil roomId=1`
+  - `PasrahLastMatchStartTrace = match=match_1 players=1 teleported=1 phase=PreparationPhase map=EmptyBuilding mode=Classic`
+  - runtime clone memakai posisi interaction point yang sama dengan hasil edit-mode validation
+
+### Interpretation
+
+- traversal polish sekarang bergerak ke arah yang lebih profesional:
+  - interaksi diletakkan dekat akses masuk room
+  - bukan sekadar di tengah ruangan atau di koordinat residual yang tidak sinkron lagi
+- pola `door anchor + insideOffset` juga lebih mudah dipelihara saat map direvisi daripada menyimpan angka raw yang tidak punya konteks
+
+### Next Step
+
+1. checkpoint commit untuk interaction point door-anchor pass pertama
+2. lanjut ke room residual/traversal berikutnya dan audit owner client yang masih `in progress`
