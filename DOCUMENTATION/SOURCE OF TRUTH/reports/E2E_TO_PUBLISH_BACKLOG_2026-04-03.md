@@ -1170,3 +1170,12 @@ Urutan yang paling masuk akal dari titik sekarang:
   - kontrol host room browser lebih stabil di resolusi desktop pendek/laptop
   - jalur pilih map tidak lagi terblokir oleh tombol action panel bawah
 
+## Update 2026-04-04 02:58 ICT
+
+- audit ulang lisensi/ownership audio aktif (batch ID dari user) selesai di Studio runtime:
+  - `Woodstep_01`, `Heartbeat`, `EnvironmentalCreak_01`, `CountdownTick_01`, `GhostManifest_01`, `MetalStep_01`, `ConcreteStep_01`, `TeleportDrop_01`
+  - seluruh ID terverifikasi via `MarketplaceService:GetProductInfo()` sebagai creator `ZyraaaVex` (`IsPublicDomain=false`)
+- implikasi publish gate:
+  - daftar ID di atas tetap aman sebagai asset account-owned untuk project aktif
+  - blocker lisensi audio yang tersisa tetap `AmbientLoop_Main` (slot ambience kosong), bukan broken ID dari batch ini
+
