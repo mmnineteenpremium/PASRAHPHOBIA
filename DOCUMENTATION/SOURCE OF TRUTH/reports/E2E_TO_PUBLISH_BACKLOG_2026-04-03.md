@@ -277,6 +277,12 @@ Status:
   - `JournalUI` sekarang tampil non-empty dengan `Confirmed 1 | Kandidat 7 | Event EvidenceCollected`
   - hero copy berubah ke `Evidence penting sudah terkunci. Saatnya persempit ghost.`
   - `ToolStatusLabel` menampilkan `Evidence berhasil dibaca. / Collected To'un`
+- harness StudioE2E sekarang punya action `UseEvidenceTool` untuk pass deterministic tool evidence:
+  - `UseEvidenceTool(toolType=JejakEnergi)` tervalidasi menghasilkan update journal:
+    - `Discovered Evidence - MEDOK`
+    - `Confirmed Evidence - MEDOK`
+    - `ToolStatusLabel = Evidence berhasil dibaca. / Collected MEDOK`
+  - fallback harness sengaja ditambahkan agar jalur E2E tidak gagal hanya karena RNG spawn evidence saat smoke test
 
 Pekerjaan:
 
@@ -945,6 +951,29 @@ Done jika:
 - ada blueprint retention yang bisa dieksekusi bertahap tanpa merusak arsitektur runtime sekarang
 - semua loop di atas punya owner system, cadence, reward source, dan anti-exploit baseline
 - kita bahas ini di akhir sesuai prioritas user
+
+### 20. Final polish tambahan (Windows FPV + Camera realism)
+
+Status:
+
+- deferred (task tambahan user, dikerjakan di akhir setelah blocker inti tertutup)
+
+Pekerjaan:
+
+- mode Windows FPV:
+  - sediakan satu toggle/tombol/hotkey untuk melepas cursor mouse agar UI tetap bisa diklik tanpa friction
+  - pastikan toggle ini tidak merusak input flow movement + camera look saat kembali lock
+- head bobbing:
+  - pulihkan implementasi head bobbing yang sempat ada tapi sekarang hilang
+  - buat intensity adaptif agar tetap nyaman (tidak motion-sickness) lintas perangkat
+- flashlight realism:
+  - naikkan kualitas feel flashlight agar lebih realistis (beam behavior, transition, handling), tetap menjaga readability gameplay
+
+Done jika:
+
+- pemain Windows di FPV bisa switch lock/unlock cursor dengan cepat untuk interaksi UI
+- head bobbing aktif kembali dan tervalidasi nyaman dipakai
+- flashlight terasa lebih natural tanpa merusak visibilitas/hunt readability
 
 ## Update 2026-04-03 23:59 ICT
 

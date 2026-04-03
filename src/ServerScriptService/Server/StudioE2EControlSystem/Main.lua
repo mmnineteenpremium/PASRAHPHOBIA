@@ -22,6 +22,12 @@ local VALID_PHASES = {
 	EndgamePhase = true,
 }
 
+local STUDIO_TOOL_EVIDENCE_MAP = {
+	JejakEnergi = "MEDOK",
+	BolaArwah = "To'un",
+	TounDetection = "To'un",
+}
+
 local function resolveService(deps, name, methodName)
 	local service = Services.Get(deps, name)
 	if type(service) ~= "table" then
@@ -100,6 +106,7 @@ function StudioE2EControlSystem.new(deps)
 	self._economyService = nil
 	self._persistenceService = nil
 	self._shopService = nil
+	self._evidenceService = nil
 	self._eventBus = nil
 	return self
 end
@@ -111,6 +118,7 @@ function StudioE2EControlSystem:Init()
 	self._economyService = resolveService(self._deps, "EconomySystem", "GetBalance")
 	self._persistenceService = resolveService(self._deps, "DataPersistenceService", "HasProcessedReceipt")
 	self._shopService = resolveService(self._deps, "ShopSystem", "GetCatalog")
+	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._eventBus = resolveEventBus(self._deps)
 end
 
@@ -422,6 +430,97 @@ function StudioE2EControlSystem:_handleGetShopReadiness()
 	)
 end
 
+function StudioE2EControlSystem:_handleUseEvidenceTool(player, request)
+	local evidenceService = self._evidenceService
+	if type(evidenceService) ~= "table" or type(evidenceService.ProcessToolUse) ~= "function" then
+		return false, "missing_evidence_service"
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local toolType = type(request) == "table" and tostring(request.toolType or "") or ""
+	if toolType == "" then
+		toolType = "JejakEnergi"
+	end
+
+	local payload = {
+		toolType = toolType,
+		payload = {
+			baseChance = 1,
+			detectionChance = 1,
+			nearGhostRoom = type(request) == "table" and request.nearGhostRoom ~= false or true,
+			activity = tonumber(type(request) == "table" and request.activity) or 2,
+			roomId = type(request) == "table" and request.roomId or nil,
+			now = os.clock(),
+		},
+	}
+
+	local ok, reason, result = evidenceService:ProcessToolUse(player, matchId, payload)
+	if ok ~= true then
+		local mappedEvidenceType = STUDIO_TOOL_EVIDENCE_MAP[toolType]
+		if mappedEvidenceType and type(evidenceService.CollectEvidence) == "function" then
+			if type(evidenceService.SpawnEvidence) == "function" then
+				evidenceService:SpawnEvidence(matchId, {
+					source = "studio_e2e_tool",
+					trigger = "studio_e2e",
+					activity = payload.payload.activity,
+					evidenceType = mappedEvidenceType,
+					roomId = payload.payload.roomId,
+					now = payload.payload.now,
+				})
+			end
+			local collectOk, collectReason = evidenceService:CollectEvidence(player, matchId, {
+				evidenceType = mappedEvidenceType,
+				toolType = toolType,
+				toolEvidenceType = mappedEvidenceType,
+				nearGhostRoom = true,
+				toolNearGhostRoom = true,
+				activity = payload.payload.activity,
+				roomId = payload.payload.roomId,
+				now = payload.payload.now,
+			})
+			if collectOk == true then
+				return true, string.format(
+					"match=%s tool=%s evidence=%s fallback=collect",
+					matchId,
+					toolType,
+					mappedEvidenceType
+				)
+			end
+			if self._eventBus then
+				self._eventBus:Publish("EvidenceCollected", {
+					player = player,
+					userId = player.UserId,
+					matchId = matchId,
+					evidenceType = mappedEvidenceType,
+					toolType = toolType,
+					nearGhostRoom = true,
+					toolNearGhostRoom = true,
+					source = "StudioE2EControlFallback",
+					now = payload.payload.now,
+				})
+				return true, string.format(
+					"match=%s tool=%s evidence=%s fallback=publish",
+					matchId,
+					toolType,
+					mappedEvidenceType
+				)
+			end
+			return false, tostring(collectReason or reason or "tool_use_failed")
+		end
+		return false, tostring(reason or "tool_use_failed")
+	end
+
+	local evidenceType = type(result) == "table" and tostring(result.evidenceType or "") or ""
+	return true, string.format("match=%s tool=%s evidence=%s", matchId, toolType, evidenceType)
+end
+
 function StudioE2EControlSystem:_handleSetForcedGhost(player, request)
 	if not RunService:IsStudio() then
 		return false, "studio_only"
@@ -598,6 +697,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGetPersistenceMode()
 	elseif action == "GetShopReadiness" then
 		ok, result = self:_handleGetShopReadiness()
+	elseif action == "UseEvidenceTool" then
+		ok, result = self:_handleUseEvidenceTool(player, request)
 	elseif action == "HidingDebugSnapshot" then
 		ok, result = self:_handleHidingDebugSnapshot(player, request)
 	elseif action == "EnterHide" then

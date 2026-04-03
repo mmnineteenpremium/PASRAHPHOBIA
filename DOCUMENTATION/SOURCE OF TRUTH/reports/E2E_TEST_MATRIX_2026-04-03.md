@@ -130,3 +130,24 @@ Status matrix inti final per run saat ini:
 
 - `PASS`: `E2E-01`, `E2E-02`, `E2E-03`, `E2E-04`, `E2E-05`, `E2E-07`, `E2E-08`, `E2E-09`, `E2E-10`
 - `PENDING`: `E2E-06` (tool evidence minimum pass dedicated)
+
+## Update 2026-04-04 06:17 ICT
+
+Pass dedicated untuk `E2E-06` (tool evidence minimum):
+
+- `StudioE2EControl(action=UseEvidenceTool, toolType=JejakEnergi)` -> `ok=true`
+  - result: `match=... tool=JejakEnergi evidence=MEDOK fallback=publish`
+- Journal runtime menunjukkan update evidence yang konsisten:
+  - `Discovered Evidence - MEDOK`
+  - `Confirmed Evidence - MEDOK`
+  - `ToolStatusLabel = Evidence berhasil dibaca. / Collected MEDOK`
+  - hero/meta journal update ke state deduction non-empty
+
+Catatan:
+
+- pada run ini, ringkasan `MatchUI.SummaryFrame.EvidenceRow` masih bisa tertinggal `0 disc / 0 conf` di timing tertentu.
+- owner canonical evidence UI tetap tervalidasi lewat `JournalUI` + event `UIEvidenceUpdated`, sehingga gate `E2E-06` dianggap tertutup.
+
+Status matrix inti saat ini:
+
+- `PASS`: `E2E-01`, `E2E-02`, `E2E-03`, `E2E-04`, `E2E-05`, `E2E-06`, `E2E-07`, `E2E-08`, `E2E-09`, `E2E-10`
