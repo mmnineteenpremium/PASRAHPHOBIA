@@ -5589,3 +5589,41 @@ Menetralkan slot ambience canonical agar tidak overlap dengan heartbeat fear loo
 
 - jalur audio sekarang lebih jujur: fear cue tidak lagi “ditumpuk” oleh ambience heartbeat yang sama.
 - slot ambience final tetap menjadi pekerjaan content pass berikutnya setelah asset legal final tersedia.
+
+## 2026-04-04 05:59 ICT
+
+### Task
+
+Menambah observability persistence mode ke harness Studio E2E agar QA tidak lagi menebak runtime pakai mock atau DataStore nyata.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `StudioE2EControlSystem` sekarang resolve `DataPersistenceService`.
+- action baru ditambahkan:
+  - `GetPersistenceMode`
+- response action memuat ringkasan:
+  - `mode=mock|datastore`
+  - `hasDataStore=true|false`
+  - `allowStudioDataStore=true|false`
+  - `trackedPlayers=<n>`
+
+### Validation Notes
+
+- build source lokal sukses:
+  - `_tmp_studio_persistence_mode_probe_build.rbxlx`
+- patch identik di-apply ke script Studio aktif:
+  - `game.ServerScriptService.Server.StudioE2EControlSystem.Main`
+- smoke test live MCP:
+  - `StudioE2EControl(action=GetPersistenceMode)` -> `ok=true`
+  - result: `mode=mock hasDataStore=false allowStudioDataStore=false trackedPlayers=1`
+
+### Interpretation
+
+- gate `TECH-06` sekarang punya probe runtime konkret untuk membedakan mock vs datastore.
+- ini belum menutup validasi non-mock, tetapi menghapus blind spot utama saat menjalankan uji persistence di Studio.

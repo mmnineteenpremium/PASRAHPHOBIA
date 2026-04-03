@@ -764,6 +764,20 @@ Status:
 
 ### 14. Persistence nyata
 
+Status:
+
+- in progress
+- `DataPersistenceService` sekarang expose ledger receipt persisten (`HasProcessedReceipt` / `MarkReceiptProcessed`) untuk menurunkan risiko grant ulang setelah restart session
+- `StudioE2EControlSystem` sekarang punya action `GetPersistenceMode` untuk cek mode persistence runtime secara eksplisit saat playtest
+- validasi live terbaru `GetPersistenceMode` mengembalikan:
+  - `mode=mock`
+  - `hasDataStore=false`
+  - `allowStudioDataStore=false`
+  - ini membuat status mock-vs-real tidak lagi asumsi buta di fase QA
+- blocker utama tetap:
+  - belum ada validasi non-mock end-to-end di environment target publish
+  - belum ada uji migration/failover lintas versi schema
+
 Pekerjaan:
 
 - validasi di lingkungan non-mock

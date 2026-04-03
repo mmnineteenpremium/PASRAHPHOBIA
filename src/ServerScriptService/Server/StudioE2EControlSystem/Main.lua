@@ -98,6 +98,7 @@ function StudioE2EControlSystem.new(deps)
 	self._huntEscapeSystem = nil
 	self._sanitySystem = nil
 	self._economyService = nil
+	self._persistenceService = nil
 	self._eventBus = nil
 	return self
 end
@@ -107,6 +108,7 @@ function StudioE2EControlSystem:Init()
 	self._huntEscapeSystem = resolveService(self._deps, "HuntEscapeSystem", "HandlePlayerExtraction")
 	self._sanitySystem = resolveService(self._deps, "SanitySystem", "DrainSanity")
 	self._economyService = resolveService(self._deps, "EconomySystem", "GetBalance")
+	self._persistenceService = resolveService(self._deps, "DataPersistenceService", "HasProcessedReceipt")
 	self._eventBus = resolveEventBus(self._deps)
 end
 
@@ -343,6 +345,31 @@ function StudioE2EControlSystem:_handleGetWallet(player)
 	)
 end
 
+function StudioE2EControlSystem:_handleGetPersistenceMode()
+	local persistence = self._persistenceService
+	if type(persistence) ~= "table" then
+		return false, "missing_persistence_service"
+	end
+
+	local useMockStore = persistence._useMockStore == true
+	local hasDataStore = persistence._dataStore ~= nil
+	local allowStudioDataStore = persistence._allowStudioDataStore == true
+	local trackedPlayers = 0
+	if type(persistence._trackedPlayers) == "table" then
+		for _ in pairs(persistence._trackedPlayers) do
+			trackedPlayers += 1
+		end
+	end
+
+	return true, string.format(
+		"mode=%s hasDataStore=%s allowStudioDataStore=%s trackedPlayers=%d",
+		useMockStore and "mock" or "datastore",
+		tostring(hasDataStore),
+		tostring(allowStudioDataStore),
+		trackedPlayers
+	)
+end
+
 function StudioE2EControlSystem:_handleSetForcedGhost(player, request)
 	if not RunService:IsStudio() then
 		return false, "studio_only"
@@ -515,6 +542,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleEndMatch(player, request)
 	elseif action == "GetWallet" then
 		ok, result = self:_handleGetWallet(player)
+	elseif action == "GetPersistenceMode" then
+		ok, result = self:_handleGetPersistenceMode()
 	elseif action == "HidingDebugSnapshot" then
 		ok, result = self:_handleHidingDebugSnapshot(player, request)
 	elseif action == "EnterHide" then
