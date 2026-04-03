@@ -3428,3 +3428,60 @@ Menutup drift shelter lintas playable map dengan mengaudit path runtime dari spa
 2. lanjut ke debt traversal/layout berikutnya:
    - audit pintu terkunci dan flow ruangan penting
    - definisi hiding spot final di luar baseline safe zone
+
+## 2026-04-03 20:37 ICT
+
+### Task
+
+Mengurangi interaction point palsu dengan menambahkan normalisasi reachability runtime: interaction point tetap ditambatkan ke room anchor, tetapi jika `NoPath` dari spawn map maka ia didorong ke spot reachable terdekat sesudah patch pintu hybrid aktif.
+
+### Linked Issues
+
+- audit runtime menunjukkan banyak `InteractionPoint` jatuh di pusat room yang tidak pathable dari spawn match
+- urutan patch awal sempat salah: reachability dihitung sebelum pintu hybrid/path modifier aktif, sehingga menghasilkan false negative
+
+### Files Changed
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `MapRuntimePatches` sekarang:
+  - memanggil `patchDoorTraversal()` sebelum `patchInteractionPoints()`
+  - memakai `PathfindingService` untuk menilai reachability dari `PlayerSpawn_1`
+  - mencoba nudge linear ke arah jalur masuk, lalu fallback grid search lokal bila perlu
+- target patch ini bukan mengganti desain map mentah, tetapi mengurangi titik investigasi yang bohong pada clone runtime
+
+### Validation Notes
+
+- build source lolos berturut-turut:
+  - `rojo build default.project.json --output .\\_tmp_interaction_reachability_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_interaction_reachability_reorder_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_interaction_reachability_grid_build.rbxlx`
+- edit-time Studio mengonfirmasi patch sinkron:
+  - grep `findReachableInteractionPosition` ditemukan
+  - grep `INTERACTION_REACHABILITY_GRID_RADIUS` ditemukan
+- audit live terbaru setelah clone settle:
+  - `AbandonedPalace`: `0/8` interaction point fail
+  - `StudioMMNineteen`: `0/8` interaction point fail
+  - `HauntedHouse`: `2/8` fail tersisa
+    - `Interact_Bedroom1`
+    - `Interact_Kitchen`
+  - `EmptyBuilding`: `3/8` fail tersisa
+    - `Interact_WorkspaceOpen`
+    - `Interact_OfficeB`
+    - `Interact_Bathroom1`
+
+### Interpretation
+
+- patch generik ini berhasil menutup mayoritas drift interaction point tanpa perlu mengotak-atik model map mentah
+- residual yang tersisa sekarang lebih kecil dan lebih spesifik; beberapa anchor tampaknya butuh keputusan layout/map-specific, bukan sekadar nudge generik lagi
+
+### Next Step
+
+1. checkpoint commit untuk interaction reachability runtime
+2. lanjut ke residual map-specific traversal:
+   - `HauntedHouse`: `Bedroom1` dan `Kitchen`
+   - `EmptyBuilding`: `WorkspaceOpen`, `OfficeB`, `Bathroom1`

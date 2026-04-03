@@ -1,5 +1,7 @@
 local MapRuntimePatches = {}
 
+local PathfindingService = game:GetService("PathfindingService")
+
 local FLOOR_PATCH_ATTR = "SecondFloorRuntimePatched"
 local INTERACTION_PATCH_ATTR = "InteractionPointsRuntimePatched"
 local DOOR_PATCH_ATTR = "DoorTraversalRuntimePatched"
@@ -14,6 +16,10 @@ local DEFAULT_DOOR_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
 local MIN_SEGMENT_SIZE = 0.25
 local STAIR_MARGIN = 0.75
 local INTERACTION_HEIGHT_OFFSET = 1.5
+local INTERACTION_REACHABILITY_FORWARD_STEPS = { 0, 4, 8, 12, 16, 20, 24, 28, 32 }
+local INTERACTION_REACHABILITY_LATERAL_STEPS = { 0, -4, 4, -8, 8, -12, 12 }
+local INTERACTION_REACHABILITY_GRID_RADIUS = 32
+local INTERACTION_REACHABILITY_GRID_STEP = 4
 local SAFE_ZONE_POSITION_OVERRIDES = {
 	abandonedpalace = {
 		SafeZone_1 = Vector3.new(-63.2, 4, 32.4),
@@ -228,6 +234,13 @@ local function patchInteractionPoints(mapClone)
 		return false
 	end
 
+	local primarySpawn = interactionPointsFolder.Parent and interactionPointsFolder.Parent:FindFirstChild("SpawnPoints")
+	local primarySpawnPart = primarySpawn and primarySpawn:FindFirstChild("PlayerSpawn_1")
+	if not primarySpawnPart then
+		primarySpawnPart = mapClone:FindFirstChild("PlayerSpawn_1", true)
+	end
+	local primarySpawnPosition = primarySpawnPart and primarySpawnPart:IsA("BasePart") and primarySpawnPart.Position or nil
+
 	local roomsByToken = {}
 	for _, room in ipairs(roomsFolder:GetChildren()) do
 		if room:IsA("BasePart") then
@@ -238,6 +251,72 @@ local function patchInteractionPoints(mapClone)
 		end
 	end
 
+	local function isReachable(originPosition, targetPosition)
+		if typeof(originPosition) ~= "Vector3" or typeof(targetPosition) ~= "Vector3" then
+			return false
+		end
+
+		local path = PathfindingService:CreatePath({
+			AgentRadius = 2,
+			AgentHeight = 5,
+			AgentCanJump = true,
+		})
+		local ok = pcall(function()
+			path:ComputeAsync(originPosition, targetPosition)
+		end)
+		return ok and path.Status == Enum.PathStatus.Success
+	end
+
+	local function findReachableInteractionPosition(originPosition, targetPosition)
+		if typeof(originPosition) ~= "Vector3" or typeof(targetPosition) ~= "Vector3" then
+			return targetPosition
+		end
+		if isReachable(originPosition, targetPosition) then
+			return targetPosition
+		end
+
+		local toOrigin = Vector3.new(originPosition.X - targetPosition.X, 0, originPosition.Z - targetPosition.Z)
+		local direction = toOrigin.Magnitude > 0.05 and toOrigin.Unit or Vector3.new(1, 0, 0)
+		local perpendicular = Vector3.new(-direction.Z, 0, direction.X)
+		local bestCandidate = nil
+		local bestDistance = nil
+
+		for _, forwardStep in ipairs(INTERACTION_REACHABILITY_FORWARD_STEPS) do
+			local forwardPosition = targetPosition + direction * forwardStep
+			for _, lateralStep in ipairs(INTERACTION_REACHABILITY_LATERAL_STEPS) do
+				local candidate = Vector3.new(
+					forwardPosition.X + perpendicular.X * lateralStep,
+					targetPosition.Y,
+					forwardPosition.Z + perpendicular.Z * lateralStep
+				)
+				if isReachable(originPosition, candidate) then
+					local distance = (candidate - targetPosition).Magnitude
+					if bestCandidate == nil or distance < bestDistance then
+						bestCandidate = candidate
+						bestDistance = distance
+					end
+				end
+			end
+		end
+
+		if bestCandidate == nil then
+			for dx = -INTERACTION_REACHABILITY_GRID_RADIUS, INTERACTION_REACHABILITY_GRID_RADIUS, INTERACTION_REACHABILITY_GRID_STEP do
+				for dz = -INTERACTION_REACHABILITY_GRID_RADIUS, INTERACTION_REACHABILITY_GRID_RADIUS, INTERACTION_REACHABILITY_GRID_STEP do
+					local candidate = targetPosition + Vector3.new(dx, 0, dz)
+					if isReachable(originPosition, candidate) then
+						local distance = (candidate - targetPosition).Magnitude
+						if bestCandidate == nil or distance < bestDistance then
+							bestCandidate = candidate
+							bestDistance = distance
+						end
+					end
+				end
+			end
+		end
+
+		return bestCandidate or targetPosition
+	end
+
 	local movedAny = false
 	for _, interactionPoint in ipairs(interactionPointsFolder:GetChildren()) do
 		if interactionPoint:IsA("BasePart") then
@@ -245,6 +324,7 @@ local function patchInteractionPoints(mapClone)
 			local room = token and roomsByToken[token] or nil
 			if room then
 				local targetPosition = room.Position + Vector3.new(0, INTERACTION_HEIGHT_OFFSET, 0)
+				targetPosition = findReachableInteractionPosition(primarySpawnPosition, targetPosition)
 				if (interactionPoint.Position - targetPosition).Magnitude > 0.5 then
 					interactionPoint.CFrame = CFrame.new(targetPosition)
 					movedAny = true
@@ -363,8 +443,8 @@ function MapRuntimePatches.Apply(mapId, mapClone)
 
 	local didPatch = false
 	didPatch = patchSecondFloor(mapClone) or didPatch
-	didPatch = patchInteractionPoints(mapClone) or didPatch
 	didPatch = patchDoorTraversal(mapClone) or didPatch
+	didPatch = patchInteractionPoints(mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
 	return didPatch
 end
