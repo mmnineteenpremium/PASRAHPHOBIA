@@ -11,18 +11,42 @@ local REMOTE_BEAM_START = "FlashlightRemoteBeamStart"
 local REMOTE_BEAM_END = "FlashlightRemoteBeamEnd"
 local REMOTE_AIM_ATTACHMENT = "FlashlightRemoteAim"
 local REMOTE_HANDLE_NAME = "FlashlightHandle"
+local TOGGLE_SOUND_NAME = "FlashlightToggleClick"
 
-local FLASHLIGHT_RANGE = 50
-local FLASHLIGHT_ANGLE = 30
-local FLASHLIGHT_BRIGHTNESS = 8
-local BOOST_RANGE = 25
-local BOOST_ANGLE = 55
-local BOOST_BRIGHTNESS = 8
-local FILL_RANGE = 13
-local FILL_BRIGHTNESS = 3
 local AIM_UPDATE_MIN_INTERVAL = 1 / 30
 local AIM_SMOOTH_SPEED = 3 -- lower = more delay/lag
 local AIM_MAX_ALPHA = 0.2
+
+local function safeRequire(moduleScript)
+    if not moduleScript then
+        return nil
+    end
+    local ok, result = pcall(require, moduleScript)
+    if ok then
+        return result
+    end
+    return nil
+end
+
+local function resolveFlashlightConfig()
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local shared = replicatedStorage:FindFirstChild("Shared") or replicatedStorage:FindFirstChild("shared")
+    local gameData = shared and shared:FindFirstChild("GameData")
+    return safeRequire(gameData and gameData:FindFirstChild("FlashlightConfig")) or {}
+end
+
+local FLASHLIGHT_CONFIG = resolveFlashlightConfig()
+local HANDLE_CONFIG = FLASHLIGHT_CONFIG.handle or {}
+local SOUND_CONFIG = FLASHLIGHT_CONFIG.sound or {}
+local REMOTE_LIGHT_CONFIG = FLASHLIGHT_CONFIG.remoteLight or {}
+local FLASHLIGHT_RANGE = tonumber(REMOTE_LIGHT_CONFIG.range) or 50
+local FLASHLIGHT_ANGLE = tonumber(REMOTE_LIGHT_CONFIG.angle) or 30
+local FLASHLIGHT_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.brightness) or 8
+local BOOST_RANGE = tonumber(REMOTE_LIGHT_CONFIG.boostRange) or 25
+local BOOST_ANGLE = tonumber(REMOTE_LIGHT_CONFIG.boostAngle) or 55
+local BOOST_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.boostBrightness) or 8
+local FILL_RANGE = tonumber(REMOTE_LIGHT_CONFIG.fillRange) or 13
+local FILL_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.fillBrightness) or 3
 
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
@@ -75,19 +99,20 @@ local function getRightHand(character)
     return nil
 end
 
-local function getFlashlightMountPosition(part)
+local function getFlashlightMountCFrame(part)
     if not part then
-        return Vector3.new(0, -0.1, -0.35)
+        return HANDLE_CONFIG.fallbackMountCFrame or CFrame.new(0.1, -0.28, -0.08)
     end
 
+    local gripCFrame = HANDLE_CONFIG.gripCFrame or CFrame.new(0.1, -0.4, 0)
     for _, attachmentName in ipairs({ "RightGripAttachment", "GripAttachment", "ToolGrip" }) do
         local attachment = part:FindFirstChild(attachmentName)
         if attachment and attachment:IsA("Attachment") then
-            return attachment.Position
+            return attachment.CFrame * gripCFrame
         end
     end
 
-    return Vector3.new(0, -0.15, -(part.Size.Z * 0.5 + 0.2))
+    return HANDLE_CONFIG.fallbackMountCFrame or CFrame.new(0.1, -0.28, -0.08)
 end
 
 local function findOrCreateAttachment(parent, name)
@@ -104,6 +129,62 @@ local function findOrCreateAttachment(parent, name)
     return attachment
 end
 
+local function findOrCreateHandleMesh(parent)
+    local existing = parent:FindFirstChild("Mesh")
+    if existing and existing:IsA("SpecialMesh") then
+        existing.MeshType = Enum.MeshType.FileMesh
+        existing.MeshId = tostring(HANDLE_CONFIG.meshId or "")
+        existing.TextureId = tostring(HANDLE_CONFIG.textureId or "")
+        existing.Scale = HANDLE_CONFIG.meshScale or Vector3.new(0.7, 0.7, 0.7)
+        return existing
+    end
+    if existing then
+        existing:Destroy()
+    end
+
+    local mesh = Instance.new("SpecialMesh")
+    mesh.Name = "Mesh"
+    mesh.MeshType = Enum.MeshType.FileMesh
+    mesh.MeshId = tostring(HANDLE_CONFIG.meshId or "")
+    mesh.TextureId = tostring(HANDLE_CONFIG.textureId or "")
+    mesh.Scale = HANDLE_CONFIG.meshScale or Vector3.new(0.7, 0.7, 0.7)
+    mesh.Parent = parent
+    return mesh
+end
+
+local function findOrCreateToggleSound(parent)
+    if not parent then
+        return nil
+    end
+
+    local existing = parent:FindFirstChild(TOGGLE_SOUND_NAME)
+    if existing and existing:IsA("Sound") then
+        existing.SoundId = tostring(SOUND_CONFIG.soundId or "")
+        existing.Volume = tonumber(SOUND_CONFIG.volume) or 0.32
+        existing.PlaybackSpeed = tonumber(SOUND_CONFIG.playbackSpeed) or 1
+        existing.RollOffMode = Enum.RollOffMode.Linear
+        existing.RollOffMinDistance = tonumber(SOUND_CONFIG.rollOffMinDistance) or 4
+        existing.RollOffMaxDistance = tonumber(SOUND_CONFIG.rollOffMaxDistance) or 30
+        existing.Looped = false
+        return existing
+    end
+    if existing then
+        existing:Destroy()
+    end
+
+    local sound = Instance.new("Sound")
+    sound.Name = TOGGLE_SOUND_NAME
+    sound.SoundId = tostring(SOUND_CONFIG.soundId or "")
+    sound.Volume = tonumber(SOUND_CONFIG.volume) or 0.32
+    sound.PlaybackSpeed = tonumber(SOUND_CONFIG.playbackSpeed) or 1
+    sound.RollOffMode = Enum.RollOffMode.Linear
+    sound.RollOffMinDistance = tonumber(SOUND_CONFIG.rollOffMinDistance) or 4
+    sound.RollOffMaxDistance = tonumber(SOUND_CONFIG.rollOffMaxDistance) or 30
+    sound.Looped = false
+    sound.Parent = parent
+    return sound
+end
+
 local function findOrCreateHandle(character)
     if not character then
         return nil
@@ -111,6 +192,17 @@ local function findOrCreateHandle(character)
 
     local existing = character:FindFirstChild(REMOTE_HANDLE_NAME)
     if existing and existing:IsA("BasePart") then
+        existing.Size = HANDLE_CONFIG.size or Vector3.new(0.5, 0.5, 2)
+        existing.Material = HANDLE_CONFIG.material or Enum.Material.SmoothPlastic
+        existing.Color = HANDLE_CONFIG.color or Color3.fromRGB(44, 46, 50)
+        existing.CanCollide = false
+        existing.CanTouch = false
+        existing.CanQuery = false
+        existing.CastShadow = false
+        existing.Massless = true
+        existing.Anchored = true
+        findOrCreateHandleMesh(existing)
+        findOrCreateToggleSound(existing)
         return existing
     end
     if existing then
@@ -119,16 +211,18 @@ local function findOrCreateHandle(character)
 
     local handle = Instance.new("Part")
     handle.Name = REMOTE_HANDLE_NAME
-    handle.Size = Vector3.new(0.24, 0.24, 0.8)
+    handle.Size = HANDLE_CONFIG.size or Vector3.new(0.5, 0.5, 2)
     handle.CanCollide = false
     handle.CanTouch = false
     handle.CanQuery = false
     handle.CastShadow = false
     handle.Massless = true
     handle.Anchored = true
-    handle.Material = Enum.Material.Metal
-    handle.Color = Color3.fromRGB(48, 56, 68)
+    handle.Material = HANDLE_CONFIG.material or Enum.Material.SmoothPlastic
+    handle.Color = HANDLE_CONFIG.color or Color3.fromRGB(44, 46, 50)
     handle.Parent = character
+    findOrCreateHandleMesh(handle)
+    findOrCreateToggleSound(handle)
     return handle
 end
 
@@ -147,7 +241,7 @@ local function findOrCreateSpotLight(parent)
     spotlight.Brightness = FLASHLIGHT_BRIGHTNESS
     spotlight.Range = FLASHLIGHT_RANGE
     spotlight.Angle = FLASHLIGHT_ANGLE
-    spotlight.Color = Color3.fromRGB(255, 250, 230)
+    spotlight.Color = REMOTE_LIGHT_CONFIG.color or Color3.fromRGB(255, 250, 230)
     spotlight.Shadows = true
     spotlight.Enabled = false
     spotlight.Parent = parent
@@ -173,7 +267,7 @@ local function findOrCreateBoostLight(parent)
     spotlight.Brightness = BOOST_BRIGHTNESS
     spotlight.Range = BOOST_RANGE
     spotlight.Angle = BOOST_ANGLE
-    spotlight.Color = Color3.fromRGB(255, 250, 230)
+    spotlight.Color = REMOTE_LIGHT_CONFIG.color or Color3.fromRGB(255, 250, 230)
     spotlight.Shadows = false
     spotlight.Enabled = false
     spotlight.Parent = parent
@@ -196,7 +290,7 @@ local function findOrCreateFillLight(parent)
     light.Name = REMOTE_FILL_NAME
     light.Brightness = FILL_BRIGHTNESS
     light.Range = FILL_RANGE
-    light.Color = Color3.fromRGB(255, 250, 230)
+    light.Color = REMOTE_LIGHT_CONFIG.color or Color3.fromRGB(255, 250, 230)
     light.Shadows = false
     light.Enabled = false
     light.Parent = parent
@@ -222,7 +316,7 @@ local function findOrCreateBeam(parent, attachment0, attachment1)
     beam.Transparency = NumberSequence.new(0.5)
     beam.Width0 = 0.35
     beam.Width1 = 1.8
-    beam.Color = ColorSequence.new(Color3.fromRGB(255, 250, 230))
+    beam.Color = ColorSequence.new(REMOTE_LIGHT_CONFIG.color or Color3.fromRGB(255, 250, 230))
     beam.FaceCamera = true
     beam.Enabled = false
     beam.Parent = parent
@@ -340,16 +434,17 @@ function Service:AttachFlashlight(player, character)
     local boost = findOrCreateBoostLight(aimAttachment)
     local fill = findOrCreateFillLight(aimAttachment)
     local beam = findOrCreateBeam(flashlightHandle, beamStart, beamEnd)
-    local mountPosition = getFlashlightMountPosition(mountPart)
-    local worldPosition = mountPart.CFrame:PointToWorldSpace(mountPosition)
-    flashlightHandle.CFrame = CFrame.lookAt(worldPosition, worldPosition + mountPart.CFrame.LookVector)
+    local toggleSound = findOrCreateToggleSound(flashlightHandle)
+    local mountCFrame = getFlashlightMountCFrame(mountPart)
+    local worldMount = mountPart.CFrame * mountCFrame
+    flashlightHandle.CFrame = CFrame.lookAt(worldMount.Position, worldMount.Position + mountPart.CFrame.LookVector, mountPart.CFrame.UpVector)
 
     local data = self:_getPlayerState(userId) or {}
     data.player = player
     data.character = character
     data.head = head
     data.mountPart = mountPart
-    data.mountPosition = mountPosition
+    data.mountCFrame = mountCFrame
     data.flashlightHandle = flashlightHandle
     data.aimAttachment = aimAttachment
     data.beamStart = beamStart
@@ -358,6 +453,7 @@ function Service:AttachFlashlight(player, character)
     data.boost = boost
     data.fill = fill
     data.beam = beam
+    data.toggleSound = toggleSound
     data.lastUpdate = data.lastUpdate or 0
     data.lastAimAt = data.lastAimAt or 0
     data.currentLook = data.currentLook or nil
@@ -378,7 +474,7 @@ function Service:_applyLookVector(lookVector, data)
     local aimAttachment = data.aimAttachment
     local beamStart = data.beamStart
     local beamEnd = data.beamEnd
-    local mountPosition = data.mountPosition or Vector3.new()
+    local mountCFrame = data.mountCFrame or CFrame.new()
 
     if not (mountPart and flashlightHandle and aimAttachment and beamStart and beamEnd) then
         return
@@ -389,8 +485,8 @@ function Service:_applyLookVector(lookVector, data)
         return
     end
 
-    local worldPosition = mountPart.CFrame:PointToWorldSpace(mountPosition)
-    flashlightHandle.CFrame = CFrame.lookAt(worldPosition, worldPosition + unit)
+    local worldPosition = (mountPart.CFrame * mountCFrame).Position
+    flashlightHandle.CFrame = CFrame.lookAt(worldPosition, worldPosition + unit, mountPart.CFrame.UpVector)
     aimAttachment.CFrame = CFrame.new()
     beamStart.CFrame = CFrame.new()
     beamEnd.CFrame = CFrame.new(0, 0, -FLASHLIGHT_RANGE)
@@ -414,6 +510,20 @@ function Service:_setEnabled(data, enabled)
     end
 end
 
+function Service:_playToggleSound(data)
+    if not data then
+        return
+    end
+
+    local sound = data.toggleSound
+    if not (sound and sound.Parent and tostring(sound.SoundId or "") ~= "") then
+        return
+    end
+
+    sound.TimePosition = 0
+    sound:Play()
+end
+
 function Service:HandleRemote(player, payload)
     if typeof(player) ~= "Instance" or not player:IsA("Player") then
         return
@@ -435,8 +545,12 @@ function Service:HandleRemote(player, payload)
     local action = payload.action
     if action == "Toggle" then
         local enabled = payload.enabled == true
+        local wasEnabled = data.flashlightOn == true
         data.flashlightOn = enabled
         self:_setEnabled(data, enabled)
+        if wasEnabled ~= enabled then
+            self:_playToggleSound(data)
+        end
         self:_storePlayer(userId, data)
         self:_publish("FlashlightToggled", {
             player = player,

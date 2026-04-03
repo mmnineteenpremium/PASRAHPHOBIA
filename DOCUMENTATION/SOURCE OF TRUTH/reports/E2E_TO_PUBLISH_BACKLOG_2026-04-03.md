@@ -592,6 +592,20 @@ Pekerjaan:
 
 ## P3 - Publish Readiness
 
+### Flashlight hand/viewmodel slice
+
+Status:
+
+- completed baseline
+- flashlight asset `516522664` sekarang sudah masuk ke source-controlled path melalui `shared/GameData/FlashlightConfig.lua`
+- mesh/texture/toggle click sound sudah canonical untuk client FPV dan server sync
+- `CameraController` tidak lagi hanya mengandalkan flashlight procedural
+- blocker lama "hands are flashlight" sudah ditutup
+- residual polish yang masih boleh dikerjakan belakangan:
+  - silhouette tangan masih bisa dibuat lebih natural
+  - material/skin readability bisa dipoles lagi saat pass visual akhir
+  - mobile/brightness balancing masih bisa disempurnakan bersamaan dengan pass UI/VFX berikutnya
+
 ### 14. Persistence nyata
 
 Pekerjaan:

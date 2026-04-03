@@ -7,6 +7,7 @@
 ]]
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -25,10 +26,33 @@ local FPV_ARMS_MODEL_NAME = "FPV_Arms"
 local FPV_VIEW_ROOT_NAME = "FPV_ViewRoot"
 local FPV_FLASHLIGHT_MODEL_NAME = "FPV_Flashlight"
 local FLASHLIGHT_ATTRIBUTE = "FlashlightEnabled"
-local FPV_BASE_OFFSET = CFrame.new(0, -1.36, -1.54) * CFrame.Angles(math.rad(-12), 0, 0)
-local FPV_PART_SCALE = 0.86
+local function safeRequire(moduleScript)
+	if not moduleScript then
+		return nil
+	end
+	local ok, result = pcall(require, moduleScript)
+	if ok then
+		return result
+	end
+	return nil
+end
+
+local function loadFlashlightConfig()
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
+	local gameData = shared and shared:FindFirstChild("GameData")
+	return safeRequire(gameData and gameData:FindFirstChild("FlashlightConfig")) or {}
+end
+
+local FLASHLIGHT_CONFIG = loadFlashlightConfig()
+local HANDLE_CONFIG = FLASHLIGHT_CONFIG.handle or {}
+local LENS_CONFIG = FLASHLIGHT_CONFIG.lens or {}
+local LOCAL_LIGHT_CONFIG = FLASHLIGHT_CONFIG.localLight or {}
+local VIEWMODEL_CONFIG = FLASHLIGHT_CONFIG.viewmodel or {}
+local FPV_BASE_OFFSET = VIEWMODEL_CONFIG.baseOffset or (CFrame.new(0, -1.36, -1.54) * CFrame.Angles(math.rad(-12), 0, 0))
+local FPV_PART_SCALE = tonumber(VIEWMODEL_CONFIG.partScale) or 0.86
 local fpvArmsModel = nil
 local fpvFlashlightModel = nil
+local fpvFlashlightHandle = nil
 local fpvFlashlightLens = nil
 local fpvFlashlightLight = nil
 local fpvArmsSourceParts = {}
@@ -51,6 +75,7 @@ local function clearFpvArms()
 	end
 	fpvArmsModel = nil
 	fpvFlashlightModel = nil
+	fpvFlashlightHandle = nil
 	fpvFlashlightLens = nil
 	fpvFlashlightLight = nil
 
@@ -134,6 +159,33 @@ local function ensureToolGrip(handPart)
 	return grip
 end
 
+local function ensureSpecialMesh(parent, meshName)
+	if not parent then
+		return nil
+	end
+
+	local existing = parent:FindFirstChild(meshName)
+	if existing and existing:IsA("SpecialMesh") then
+		existing.MeshType = Enum.MeshType.FileMesh
+		existing.MeshId = tostring(HANDLE_CONFIG.meshId or "")
+		existing.TextureId = tostring(HANDLE_CONFIG.textureId or "")
+		existing.Scale = HANDLE_CONFIG.meshScale or Vector3.new(0.7, 0.7, 0.7)
+		return existing
+	end
+	if existing then
+		existing:Destroy()
+	end
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.Name = meshName
+	mesh.MeshType = Enum.MeshType.FileMesh
+	mesh.MeshId = tostring(HANDLE_CONFIG.meshId or "")
+	mesh.TextureId = tostring(HANDLE_CONFIG.textureId or "")
+	mesh.Scale = HANDLE_CONFIG.meshScale or Vector3.new(0.7, 0.7, 0.7)
+	mesh.Parent = parent
+	return mesh
+end
+
 local function createFpvFlashlightPart(name, size, color, material, transparency)
 	local part = Instance.new("Part")
 	part.Name = name
@@ -147,6 +199,15 @@ local function createFpvFlashlightPart(name, size, color, material, transparency
 	part.Material = material or Enum.Material.SmoothPlastic
 	part.Color = color
 	part.Transparency = transparency or 0
+	return part
+end
+
+local function createFpvFlashlightHandlePart(name)
+	local size = HANDLE_CONFIG.size or Vector3.new(0.5, 0.5, 2)
+	local color = HANDLE_CONFIG.color or Color3.fromRGB(44, 46, 50)
+	local material = HANDLE_CONFIG.material or Enum.Material.SmoothPlastic
+	local part = createFpvFlashlightPart(name, size, color, material, 0)
+	ensureSpecialMesh(part, "Mesh")
 	return part
 end
 
@@ -164,10 +225,10 @@ local function ensureLocalFlashlightLight(parent)
 	local spotlight = Instance.new("SpotLight")
 	spotlight.Name = "FPV_LocalSpotLight"
 	spotlight.Face = Enum.NormalId.Front
-	spotlight.Brightness = 2.6
-	spotlight.Range = 18
-	spotlight.Angle = 38
-	spotlight.Color = Color3.fromRGB(255, 244, 214)
+	spotlight.Brightness = tonumber(LOCAL_LIGHT_CONFIG.brightness) or 2.6
+	spotlight.Range = tonumber(LOCAL_LIGHT_CONFIG.range) or 18
+	spotlight.Angle = tonumber(LOCAL_LIGHT_CONFIG.angle) or 38
+	spotlight.Color = LOCAL_LIGHT_CONFIG.color or Color3.fromRGB(255, 244, 214)
 	spotlight.Enabled = false
 	spotlight.Shadows = false
 	spotlight.Parent = parent
@@ -183,7 +244,11 @@ local function ensureFpvFlashlight(model, handPart)
 	local existing = model:FindFirstChild(FPV_FLASHLIGHT_MODEL_NAME)
 	if existing and existing:IsA("Model") then
 		fpvFlashlightModel = existing
+		fpvFlashlightHandle = existing:FindFirstChild("Handle")
 		fpvFlashlightLens = existing:FindFirstChild("Lens")
+		if fpvFlashlightLens then
+			ensureLocalFlashlightLight(fpvFlashlightLens)
+		end
 		return existing
 	end
 
@@ -196,49 +261,24 @@ local function ensureFpvFlashlight(model, handPart)
 	flashlightModel.Name = FPV_FLASHLIGHT_MODEL_NAME
 	flashlightModel.Parent = model
 
-	local body = createFpvFlashlightPart(
-		"Body",
-		Vector3.new(0.34, 0.34, 0.88),
-		Color3.fromRGB(48, 56, 68),
-		Enum.Material.Metal,
-		0
-	)
-	body.CFrame = grip.WorldCFrame * CFrame.new(0, -0.03, -0.46)
-	body.Parent = flashlightModel
-
-	local barrel = createFpvFlashlightPart(
-		"Barrel",
-		Vector3.new(0.26, 0.26, 0.42),
-		Color3.fromRGB(74, 82, 96),
-		Enum.Material.Metal,
-		0
-	)
-	barrel.CFrame = grip.WorldCFrame * CFrame.new(0, -0.03, -0.88)
-	barrel.Parent = flashlightModel
-
-	local handle = createFpvFlashlightPart(
-		"Handle",
-		Vector3.new(0.16, 0.42, 0.16),
-		Color3.fromRGB(28, 32, 40),
-		Enum.Material.SmoothPlastic,
-		0
-	)
-	handle.CFrame = grip.WorldCFrame * CFrame.new(0, -0.31, -0.16)
+	local handle = createFpvFlashlightHandlePart("Handle")
+	handle.CFrame = grip.WorldCFrame * (VIEWMODEL_CONFIG.flashlightMountCFrame or CFrame.new(0.12, -0.39, -0.04))
 	handle.Parent = flashlightModel
 
 	local lens = createFpvFlashlightPart(
 		"Lens",
-		Vector3.new(0.22, 0.22, 0.05),
-		Color3.fromRGB(255, 230, 176),
+		LENS_CONFIG.size or Vector3.new(0.2, 0.2, 0.05),
+		LENS_CONFIG.offColor or Color3.fromRGB(120, 132, 148),
 		Enum.Material.SmoothPlastic,
-		0.14
+		LENS_CONFIG.offTransparency or 0.34
 	)
-	lens.CFrame = grip.WorldCFrame * CFrame.new(0, -0.03, -1.13)
+	lens.CFrame = handle.CFrame * (HANDLE_CONFIG.lensOffset or CFrame.new(0, 0, -0.96))
 	lens.Parent = flashlightModel
 	ensureLocalFlashlightLight(lens)
 
-	flashlightModel.PrimaryPart = body
+	flashlightModel.PrimaryPart = handle
 	fpvFlashlightModel = flashlightModel
+	fpvFlashlightHandle = handle
 	fpvFlashlightLens = lens
 	return flashlightModel
 end
@@ -249,8 +289,8 @@ local function updateFpvFlashlightVisual()
 	end
 
 	local enabled = player:GetAttribute(FLASHLIGHT_ATTRIBUTE) == true
-	fpvFlashlightLens.Color = enabled and Color3.fromRGB(255, 232, 186) or Color3.fromRGB(120, 132, 148)
-	fpvFlashlightLens.Transparency = enabled and 0.04 or 0.36
+	fpvFlashlightLens.Color = enabled and (LENS_CONFIG.onColor or Color3.fromRGB(255, 232, 186)) or (LENS_CONFIG.offColor or Color3.fromRGB(120, 132, 148))
+	fpvFlashlightLens.Transparency = enabled and (LENS_CONFIG.onTransparency or 0.04) or (LENS_CONFIG.offTransparency or 0.36)
 	if fpvFlashlightLight then
 		fpvFlashlightLight.Enabled = enabled
 	end
@@ -293,41 +333,11 @@ local function sanitizeFpvClonePart(clonePart)
 end
 
 local function getSegmentLayout(partName)
-	local layouts = {
-		FPV_LeftUpperArm = {
-			position = Vector3.new(-0.72, -0.46, -0.14),
-			rotation = Vector3.new(-10, -6, 34),
-		},
-		FPV_LeftLowerArm = {
-			position = Vector3.new(-1.02, -0.86, -0.42),
-			rotation = Vector3.new(-22, -8, 16),
-		},
-		FPV_LeftHand = {
-			position = Vector3.new(-1.18, -1.16, -0.76),
-			rotation = Vector3.new(-26, 180, 10),
-		},
-		FPV_RightUpperArm = {
-			position = Vector3.new(0.72, -0.46, -0.14),
-			rotation = Vector3.new(-10, 6, -34),
-		},
-		FPV_RightLowerArm = {
-			position = Vector3.new(1.02, -0.86, -0.42),
-			rotation = Vector3.new(-22, 8, -16),
-		},
-		FPV_RightHand = {
-			position = Vector3.new(1.18, -1.16, -0.76),
-			rotation = Vector3.new(-26, 180, -10),
-		},
-		FPV_LeftArm = {
-			position = Vector3.new(-0.96, -0.86, -0.44),
-			rotation = Vector3.new(-20, 180, 18),
-		},
-		FPV_RightArm = {
-			position = Vector3.new(0.96, -0.86, -0.44),
-			rotation = Vector3.new(-20, 180, -18),
-		},
-	}
-	return layouts[partName]
+	local layouts = VIEWMODEL_CONFIG.segmentLayouts
+	if type(layouts) == "table" then
+		return layouts[partName]
+	end
+	return nil
 end
 
 local function applyViewmodelSegmentLayout(model, viewRoot)
@@ -574,6 +584,15 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 
 	if camera ~= workspace.CurrentCamera then
 		camera = workspace.CurrentCamera or camera
+	end
+
+	local shouldLockFromState = player:GetAttribute("InMatch") == true
+	if shouldLockFromState ~= FPV_LOCKED then
+		setFpvLocked(shouldLockFromState)
+	elseif shouldLockFromState and player.CameraMode ~= Enum.CameraMode.LockFirstPerson then
+		setFpvLocked(true)
+	elseif (not shouldLockFromState) and player.CameraMode ~= Enum.CameraMode.Classic then
+		setFpvLocked(false)
 	end
 
 	if humanoid.MoveDirection.Magnitude > 0 and FPV_LOCKED then

@@ -3031,3 +3031,70 @@ Menutup gap utility tool yang sebelumnya hanya ada di backend evidence, lalu mem
    - hiding/survival clarity
    - polish `MatchUI`/mobile layout lanjutan
    - asset audio/ambient final yang masih kosong
+
+## 2026-04-03 17:37 ICT
+
+### Task
+
+Mengganti flashlight procedural lama dengan slice flashlight tangan-kanan berbasis asset `516522664`, memunculkan dua tangan FPV di sisi bawah layar, dan memastikan toggle click sound benar-benar aktif saat flashlight dinyalakan/dimatikan.
+
+### Linked Issues
+
+- flashlight FPV lama masih berupa part procedural, bukan asset flashlight yang benar
+- `CameraController` sempat gagal total karena syntax error, sehingga `LockFirstPerson` dan FPV hands tidak pernah hidup
+- target user meminta dua tangan tetap terlihat di kiri-bawah/kanan-bawah, dan flashlight harus menjadi objek terpisah, bukan "tangan jadi senter"
+
+### Files Changed
+
+- `src/shared/GameData/FlashlightConfig.lua`
+- `src/client/CameraController.client.lua`
+- `src/ServerScriptService/Server/FlashlightSyncSystem/Service.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- saya buat source-of-truth baru `FlashlightConfig` di `shared/GameData` untuk:
+  - `assetId = 516522664`
+  - mesh `115955313`
+  - texture `115955343`
+  - click sound `115959318`
+  - FPV hand layout, mount offset, dan light tuning
+- `CameraController` sekarang:
+  - load config shared, bukan hardcode procedural lama
+  - render flashlight sebagai objek `Handle + Lens` terpisah di tangan kanan
+  - tetap render dua tangan FPV di bawah layar
+  - punya runtime guard yang memaksa `LockFirstPerson` tetap konsisten saat `InMatch = true`
+  - syntax error parser di line flashlight builder sudah dibersihkan
+- `FlashlightSyncSystem` server sekarang:
+  - pakai mesh flashlight yang sama untuk representasi player lain
+  - pasang `FlashlightToggleClick`
+  - memutar click sound saat state toggle berubah
+
+### Validation Notes
+
+- inspeksi asset live via Studio:
+  - `516522664` resolve ke `Tool` bernama `Flashlight`
+  - handle membawa mesh `115955313`, texture `115955343`, sound `115959318`
+- playtest Studio tervalidasi:
+  - create room -> ready -> host start
+  - `Players.LocalPlayer.CameraMode = Enum.CameraMode.LockFirstPerson`
+  - `Workspace.CurrentCamera.FPV_Arms` ada selama match
+  - toggle `[F]` mengubah `FlashlightEnabled = true`
+  - `Character.FlashlightHandle.FlashlightToggleClick` ada
+  - `IsPlaying = true` saat toggle, `SoundId = rbxassetid://115959318`
+- visual runtime snapshot menunjukkan:
+  - dua tangan tetap hadir di bawah layar
+  - flashlight tampil sebagai objek terpisah di sisi kanan bawah
+  - blocker lama "tangan adalah flashlight" sudah tertutup secara sistem
+
+### Interpretation
+
+- slice flashlight sekarang sudah source-controlled dan tidak bergantung pada insert manual di Studio
+- visual player lain dan visual FPV pemain lokal memakai identitas asset yang sama
+- sisa debt untuk slice ini sekarang turun level menjadi polish framing/material, bukan lagi blocker fungsi
+
+### Next Step
+
+1. lanjutkan pass polish visual/tool readability berikutnya tanpa menyentuh ulang arsitektur flashlight
+2. kalau perlu, lakukan pass art lanjutan agar silhouette tangan lebih natural, tetapi basis system sudah stabil
