@@ -5855,3 +5855,74 @@ Mencatat task tambahan user untuk final pass FPV Windows + camera realism di bac
 
 - request UX tambahan user sudah aman tercatat sebagai pengingat akhir.
 - fokus eksekusi tetap pada hardening kualitas runtime + final deferred polish tanpa menggeser prioritas publish gate.
+
+## 2026-04-04 06:43 ICT
+
+### Task
+
+Menutup bug utility item unlimited (`Garam/Salib/Dupa`) dan menyelaraskan feedback UI agar stok habis terbaca jelas oleh pemain.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceService.lua`
+- `src/client/UI/Main.lua`
+
+### Change Summary
+
+- menambahkan kuota penggunaan per pemain per match:
+  - `Garam = 3`
+  - `Salib = 2`
+  - `Dupa = 2`
+- menambahkan state `playerToolStocks` di utility state match.
+- menambahkan guard server-side `tool_out_of_stock` + payload `usesRemaining`.
+- memperbarui feedback `Field Kit` client:
+  - reason `tool_out_of_stock` -> status `"<Tool> habis."`
+  - context summary menampilkan `Sisa pakai X`.
+
+### Validation Notes
+
+- build lokal lolos:
+  - `_tmp_utility_stock_limit_build.rbxlx`
+- validasi live StudioE2E (MCP) setelah patch runtime:
+  - `Garam` attempt ke-4 -> `tool_out_of_stock`
+  - `Salib` attempt ke-3 -> `tool_out_of_stock`
+  - `Dupa` attempt ke-3 -> `tool_out_of_stock`
+
+### Interpretation
+
+- exploit basic “utility tool unlimited” ditutup di server-authoritative layer.
+- UX client sekarang menampilkan alasan habis stok dengan konteks numerik yang langsung terbaca.
+
+## 2026-04-04 06:45 ICT
+
+### Task
+
+Normalisasi model ghost `Pocong` agar tidak raksasa dan tetap masuk akal untuk evaluasi E2E visual.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/GhostSystem/Service.lua`
+- `src/ReplicatedStorage/Assets/GhostVisualProfiles/Pocong.lua`
+- `src/ReplicatedStorage/Assets/Models/Ghosts/Pocong.model.json`
+
+### Change Summary
+
+- offset visual template `Pocong` diturunkan:
+  - `Vector3.new(0, 10.5, 0)` -> `Vector3.new(0, 0.4, 0)`
+- profil visual `Pocong` disesuaikan:
+  - ukuran mesh `6.6 x 23.0 x 5.35` -> `2.6 x 8.5 x 2.2`
+  - `visualOffset` -> `{ 0, 0.4, 0 }`
+- model source-controlled `Pocong.model.json` diselaraskan ke ukuran/offset yang sama.
+
+### Validation Notes
+
+- build lokal lolos:
+  - `_tmp_ghost_scale_and_tool_stock_build.rbxlx`
+- validasi live Studio (MCP):
+  - ghost asset folder tetap memuat `Pocong:Model`
+  - runtime match memunculkan `Ghost_Pocong` dengan bounding box `~2.59 x 8.5 x 2.2`
+
+### Interpretation
+
+- gate `E2E-07` tetap `PASS`, dengan skala visual ghost yang lebih proporsional untuk test gameplay.
+- langkah berikutnya tetap ekspansi roster ghost, bukan kembali ke model raksasa placeholder.
