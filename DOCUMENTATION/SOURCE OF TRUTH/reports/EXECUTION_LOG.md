@@ -4107,3 +4107,68 @@ Mengubah `SensoryHorrorHUD` menjadi satelit lazy runtime agar tidak ikut memenuh
 
 1. checkpoint commit untuk lazy `SensoryHorrorHUD`
 2. lanjut ke slice map/door/gameplay atau debt `P0.5` runtime noise berikutnya
+
+## 2026-04-04 00:39 ICT
+
+### Task
+
+Menutup bukti runtime yang masih tertinggal pada dua debt gameplay: validasi live pintu hybrid dan validasi hide spot lintas map di luar `HauntedHouse`.
+
+### Linked Issues
+
+- source of truth masih menyisakan catatan bahwa pintu hybrid membutuhkan satu verifikasi manual Studio
+- hide spot lintas map sudah data-driven, tetapi `EmptyBuilding` baru terbukti sampai level prompt hadir, belum lifecycle penuh `enter -> exit`
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- tidak ada patch code baru; slice ini murni validasi runtime dan sinkronisasi truth
+- pintu hybrid `HauntedHouse.Door_Kitchen` sekarang tervalidasi live:
+  - mendekat ke ambang pintu -> pintu membuka
+  - menjauh ke spawn -> pintu menutup lagi
+- hide spot lintas map `EmptyBuilding.Room_Storage` sekarang tervalidasi live:
+  - prompt hadir
+  - `EnterHide` membuat player `Hidden / Closet / Room_Storage`
+  - keluar volume room mengembalikan player ke `Exposed / None / ""`
+  - `HideSpotOccupied` ikut toggle `false -> true -> false`
+
+### Validation Notes
+
+- `HauntedHouse` runtime clone:
+  - path pintu aktif: `Workspace.ActiveMatches.Match_match_1.HauntedHouse.HauntedHouse.Doors.Door_Kitchen`
+  - state sebelum pendekatan: `DoorIsOpen = false`
+  - sesudah karakter didekatkan: `DoorIsOpen = true`, `Rotation.Y ~= 88`, `CanCollide = false`
+  - sesudah karakter dikembalikan ke spawn: `DoorIsOpen = false`, `Rotation.Y = 0`, `CanCollide = true`
+- `EmptyBuilding` runtime clone:
+  - room hide spot aktif: `Workspace.ActiveMatches.Match_match_1.EmptyBuilding.EmptyBuilding.Rooms.Room_Storage`
+  - prompt + attribute hadir:
+    - `HideSpotPrompt`
+    - `HideSpotId = Room_Storage`
+    - `HideSpotType = Closet`
+  - `StudioE2EControl EnterHide` berhasil:
+    - `PasrahHideState = Hidden`
+    - `PasrahHideSpotType = Closet`
+    - `PasrahHideZoneId = Room_Storage`
+    - `HideSpotOccupied = true`
+  - sesudah root dipindahkan keluar volume room:
+    - `PasrahHideState = Exposed`
+    - `PasrahHideSpotType = None`
+    - `PasrahHideZoneId = ""`
+    - `HideSpotOccupied = false`
+
+### Interpretation
+
+- debt aktif map/door sekarang benar-benar bergeser dari “apakah sistem dasar hidup” ke:
+  - kualitas layout/traversal visual
+  - richness hiding affordance lintas map
+  - teachability survive loop
+- debt aktif hiding lintas map juga turun level; `EmptyBuilding` sudah bukan sekadar placeholder config
+
+### Next Step
+
+1. checkpoint laporan validasi runtime pintu + hiding lintas map
+2. lanjut ke perluasan hiding affordance dan readability survive hunt, atau ke layout/traversal polish berikutnya
