@@ -866,6 +866,33 @@ Catatan:
 - ingatkan user secara eksplisit saat backlog sudah sampai tahap ini
 - jangan eksekusi lebih awal kecuali user mengubah prioritas
 
+### 19. Final discussion: Reason to return (retention loop)
+
+Status:
+
+- deferred
+- bahas dan putuskan di akhir, setelah blocker E2E + publish gate utama tertutup
+- jangan dieksekusi sekarang; ini pengingat final sesuai arahan user
+
+Pekerjaan:
+
+- rumuskan `tomorrow reason to return` yang konkret setelah user install dan enjoy
+- desain `daily quest/streak` untuk extrinsic motivation
+- desain `meta progression` (unlock tree/skill tree/progression lane)
+- desain `social pressure loop` (leaderboard cadence, guild/clan foundation, social comparison)
+- desain `content rotation` (daily challenge, weekly modifier, live event cadence)
+- desain mekanik replayability khusus horror:
+  - randomization yang tetap fair
+  - mode speedrun/time-attack
+- desain `achievement hunting` yang tidak sekadar grind
+- desain `unlockable lore/story pieces` sebagai long-tail retention hook
+
+Done jika:
+
+- ada blueprint retention yang bisa dieksekusi bertahap tanpa merusak arsitektur runtime sekarang
+- semua loop di atas punya owner system, cadence, reward source, dan anti-exploit baseline
+- kita bahas ini di akhir sesuai prioritas user
+
 ## Update 2026-04-03 23:59 ICT
 
 - hiding non-safe-zone sekarang tidak lagi kosong:
