@@ -3,6 +3,7 @@ local MapRuntimePatches = {}
 local FLOOR_PATCH_ATTR = "SecondFloorRuntimePatched"
 local INTERACTION_PATCH_ATTR = "InteractionPointsRuntimePatched"
 local DOOR_PATCH_ATTR = "DoorTraversalRuntimePatched"
+local SAFE_ZONE_PATCH_ATTR = "SafeZoneRuntimePatched"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
@@ -13,6 +14,18 @@ local DEFAULT_DOOR_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
 local MIN_SEGMENT_SIZE = 0.25
 local STAIR_MARGIN = 0.75
 local INTERACTION_HEIGHT_OFFSET = 1.5
+local SAFE_ZONE_POSITION_OVERRIDES = {
+	abandonedpalace = {
+		SafeZone_1 = Vector3.new(-63.2, 4, 32.4),
+	},
+	emptybuilding = {
+		SafeZone_1 = Vector3.new(778, 4, -10),
+		SafeZone_2 = Vector3.new(824, 4, -20),
+	},
+	studiommnineteen = {
+		SafeZone_1 = Vector3.new(369.4, 4, 18.2),
+	},
+}
 
 local function normalizeToken(value)
 	if type(value) ~= "string" then
@@ -309,6 +322,39 @@ local function patchDoorTraversal(mapClone)
 	return patchedAny
 end
 
+local function patchSafeZones(mapId, mapClone)
+	local token = normalizeToken(mapId)
+	local overrides = token and SAFE_ZONE_POSITION_OVERRIDES[token]
+	if not mapClone or not overrides or mapClone:GetAttribute(SAFE_ZONE_PATCH_ATTR) == true then
+		return false
+	end
+
+	local safeZonesFolder = mapClone:FindFirstChild("SafeZones", true)
+	if not safeZonesFolder then
+		return false
+	end
+
+	local patchedAny = false
+	for zoneName, targetPosition in pairs(overrides) do
+		local zone = safeZonesFolder:FindFirstChild(zoneName)
+		if zone and zone:IsA("BasePart") then
+			if (zone.Position - targetPosition).Magnitude > 0.05 then
+				zone.CFrame = CFrame.new(targetPosition)
+				patchedAny = true
+			end
+			zone.Anchored = true
+			zone.CanCollide = false
+			zone.CanTouch = false
+			zone.CanQuery = true
+		end
+	end
+
+	if patchedAny then
+		mapClone:SetAttribute(SAFE_ZONE_PATCH_ATTR, true)
+	end
+	return patchedAny
+end
+
 function MapRuntimePatches.Apply(mapId, mapClone)
 	local token = normalizeToken(mapId)
 	if token == nil or mapClone == nil then
@@ -319,6 +365,7 @@ function MapRuntimePatches.Apply(mapId, mapClone)
 	didPatch = patchSecondFloor(mapClone) or didPatch
 	didPatch = patchInteractionPoints(mapClone) or didPatch
 	didPatch = patchDoorTraversal(mapClone) or didPatch
+	didPatch = patchSafeZones(mapId, mapClone) or didPatch
 	return didPatch
 end
 

@@ -289,6 +289,11 @@ Status:
     - `Outline.Visible = true`
     - `Billboard.Enabled = true`
   - ini memberi target visual yang jujur untuk shelter tanpa mengubah rule `Hidden / Sheltered` yang sudah hidup
+- shelter baseline playable maps sekarang juga tidak lagi bohong soal akses:
+  - `HauntedHouse`: `2/2` safe zone path success
+  - `AbandonedPalace`: `2/2` safe zone path success setelah runtime nudge `SafeZone_1`
+  - `EmptyBuilding`: `2/2` safe zone path success setelah runtime nudge `SafeZone_1` dan `SafeZone_2`
+  - `StudioMMNineteen`: `2/2` safe zone path success setelah runtime nudge `SafeZone_1`
 - follow-up deferred yang wajib masuk phase berikutnya:
   - audit tangga, akses lantai 2, dan jalur traversal map harus ditutup agar layout tidak terasa palsu saat investigasi/hunt
   - hiding spot final lintas map masih perlu didefinisikan lebih kaya dari sekadar safe zone baseline
