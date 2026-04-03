@@ -24,6 +24,10 @@ local UI_MODULES = {
 }
 
 local REMOTE_NAMES = { "MatchEvent", "LobbyEvent", "EvidenceEvent", "PurchaseEvent", "RoyalPassEvent", "SanityEvent" }
+local UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
+local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
+local UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
+local UI_VIEWPORT_OVERRIDE_Y_ATTR = "PasrahUIViewportOverrideY"
 local ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
 local MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
 local BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
@@ -2354,14 +2358,51 @@ local function resolveSafeInsets()
 end
 
 local function createDeviceProfile()
+	local function resolveInputOverride()
+		local raw = ReplicatedStorage:GetAttribute(UI_INPUT_PROFILE_OVERRIDE_ATTR)
+		if type(raw) ~= "string" then
+			return nil
+		end
+		local token = string.lower(raw)
+		if token == "mobile" or token == "console" or token == "pc" then
+			return token
+		end
+		return nil
+	end
+
 	local profile = {
 		isMobile = false,
 		isPC = true,
 		isConsole = false,
 		_inputType = "PC",
+		overrideInput = nil,
 	}
 
 	function profile:Refresh(lastInputType)
+		local overrideInput = resolveInputOverride()
+		self.overrideInput = overrideInput
+		if overrideInput == "mobile" then
+			self.isMobile = true
+			self.isConsole = false
+			self.isPC = false
+			self._inputType = "Mobile"
+			return
+		end
+		if overrideInput == "console" then
+			self.isMobile = false
+			self.isConsole = true
+			self.isPC = false
+			self._inputType = "Console"
+			return
+		end
+		if overrideInput == "pc" then
+			self.isMobile = false
+			self.isConsole = false
+			self.isPC = true
+			self._inputType = "PC"
+			return
+		end
+
 		local inputName = lastInputType and tostring(lastInputType) or ""
 		local usingTouch = inputName == tostring(Enum.UserInputType.Touch)
 		local usingGamepad = string.find(inputName, "Gamepad", 1, true) ~= nil
@@ -3293,13 +3334,28 @@ function UISystem:_layoutLobbyFloatRail()
 
 	local basicWindows = self._uxWidgets and self._uxWidgets.basicWindows or nil
 	local auxiliaryWindows = self._uxWidgets and self._uxWidgets.windows or nil
+	local menuButton = basicWindows and basicWindows.MainMenuUI and basicWindows.MainMenuUI.FloatButton or nil
+	local passButton = auxiliaryWindows and auxiliaryWindows.RoyalPassUI and auxiliaryWindows.RoyalPassUI.FloatButton or nil
+	local roomsButton = self._roomBrowserWidgets and self._roomBrowserWidgets.FloatButton or nil
+	local rankButton = basicWindows and basicWindows.LeaderboardUI and basicWindows.LeaderboardUI.FloatButton or nil
+	local profileButton = auxiliaryWindows and auxiliaryWindows.ProfileUI and auxiliaryWindows.ProfileUI.FloatButton or nil
+	local shopButton = auxiliaryWindows and auxiliaryWindows.ShopUI and auxiliaryWindows.ShopUI.FloatButton or nil
 
-	pushButton(basicWindows and basicWindows.MainMenuUI and basicWindows.MainMenuUI.FloatButton or nil)
-	pushButton(auxiliaryWindows and auxiliaryWindows.RoyalPassUI and auxiliaryWindows.RoyalPassUI.FloatButton or nil)
-	pushButton(self._roomBrowserWidgets and self._roomBrowserWidgets.FloatButton or nil)
-	pushButton(basicWindows and basicWindows.LeaderboardUI and basicWindows.LeaderboardUI.FloatButton or nil)
-	pushButton(auxiliaryWindows and auxiliaryWindows.ProfileUI and auxiliaryWindows.ProfileUI.FloatButton or nil)
-	pushButton(auxiliaryWindows and auxiliaryWindows.ShopUI and auxiliaryWindows.ShopUI.FloatButton or nil)
+	if profile.isMobile then
+		-- Keep the rail concise on phones/tablets: primary navigation only.
+		pushButton(roomsButton)
+		pushButton(passButton)
+		pushButton(menuButton)
+		pushButton(rankButton)
+	else
+		-- Desktop order is fixed top-to-bottom for deterministic scanning.
+		pushButton(menuButton)
+		pushButton(passButton)
+		pushButton(roomsButton)
+		pushButton(rankButton)
+		pushButton(profileButton)
+		pushButton(shopButton)
+	end
 
 	local topLeftInset, bottomRightInset = resolveSafeInsets()
 	local railX = -(18 + bottomRightInset.X)
@@ -6181,19 +6237,20 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		end)
 	end
 
-	local margin = profile.isMobile and 4 or 14
+	local margin = profile.isMobile and 2 or 14
 	local usableWidth = math.max(360, viewportSize.X - (topLeftInset.X + bottomRightInset.X + margin * 2))
 	local usableHeight = math.max(420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + margin * 2))
+	local forceCompact = ReplicatedStorage:GetAttribute(UI_FORCE_COMPACT_ATTR) == true
 	-- Force compact layout for short viewports so room controls do not overlap
 	-- host action buttons (Start/Leave) in the room detail panel.
-	local isCompact = profile.isMobile or viewportSize.X <= 980 or usableHeight <= 700
+	local isCompact = forceCompact or profile.isMobile or viewportSize.X <= 980 or usableHeight <= 700
 	self._roomBrowserCompact = isCompact
 
 	local panelWidth = isCompact and usableWidth or math.min(1080, usableWidth)
 	local panelHeight = isCompact and usableHeight or math.min(668, usableHeight)
 	if profile.isMobile then
-		panelWidth = math.max(336, viewportSize.X - (topLeftInset.X + bottomRightInset.X + 8))
-		panelHeight = math.max(500, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 8))
+		panelWidth = math.max(336, viewportSize.X - (topLeftInset.X + bottomRightInset.X + 2))
+		panelHeight = math.max(500, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 2))
 	end
 	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
 	panel.Position = UDim2.fromOffset(
@@ -6441,7 +6498,8 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		setOffsetBounds(cancelStartButton, headerPadding, readyY + 46, contentWidth, 34)
 		setOffsetBounds(panel:FindFirstChild("RoomPanel"):FindFirstChild("LeaveRoomButton"), headerPadding, leaveY, contentWidth, 36)
 		roomCanvasHeight = math.max(roomCanvasHeight, inviteY + 204)
-		roomPanel.CanvasSize = UDim2.fromOffset(0, roomCanvasHeight)
+		local compactCanvasHeight = roomCanvasHeight + (profile.isMobile and (bottomRightInset.Y + 36) or 0)
+		roomPanel.CanvasSize = UDim2.fromOffset(0, compactCanvasHeight)
 	end
 
 	if not isCompact then
@@ -6545,6 +6603,11 @@ function UISystem:_applyDeviceSizing()
 	local camera = Workspace.CurrentCamera
 	if camera and typeof(camera.ViewportSize) == "Vector2" then
 		viewportSize = camera.ViewportSize
+	end
+	local viewportOverrideX = tonumber(ReplicatedStorage:GetAttribute(UI_VIEWPORT_OVERRIDE_X_ATTR))
+	local viewportOverrideY = tonumber(ReplicatedStorage:GetAttribute(UI_VIEWPORT_OVERRIDE_Y_ATTR))
+	if viewportOverrideX and viewportOverrideY and viewportOverrideX > 0 and viewportOverrideY > 0 then
+		viewportSize = Vector2.new(math.floor(viewportOverrideX), math.floor(viewportOverrideY))
 	end
 	local topLeftInset, bottomRightInset = resolveSafeInsets()
 	local lobby = self._uxWidgets.lobby
@@ -6786,13 +6849,19 @@ function UISystem:_applyDeviceSizing()
 			local window = self._uxWidgets.windows[guiName]
 			if window then
 				if guiName == "RoyalPassUI" and window.Panel then
-					local width = (profile.isMobile or viewportSize.X <= 1280)
-						and math.min(viewportSize.X - (profile.isMobile and 12 or 28), profile.isMobile and 460 or 436)
-						or 364
-					local height = (profile.isMobile or viewportSize.X <= 1280)
-						and math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + (profile.isMobile and 16 or 36)), profile.isMobile and 680 or 520)
-						or 420
-					window.Panel.Size = UDim2.fromOffset(math.max(profile.isMobile and 340 or 364, math.floor(width)), math.max(profile.isMobile and 520 or 420, math.floor(height)))
+					local width = 364
+					local height = 420
+					if profile.isMobile then
+						width = viewportSize.X - (topLeftInset.X + bottomRightInset.X + 8)
+						height = viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 12)
+					elseif viewportSize.X <= 1280 then
+						width = math.min(viewportSize.X - 28, 436)
+						height = math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 36), 520)
+					end
+					window.Panel.Size = UDim2.fromOffset(
+						math.max(profile.isMobile and 352 or 364, math.floor(width)),
+						math.max(profile.isMobile and 540 or 420, math.floor(height))
+					)
 					if profile.isMobile then
 						window.Panel.AnchorPoint = Vector2.new(0.5, 0.5)
 						window.Panel.Position = UDim2.new(0.5, 0, 0.5, math.floor((topLeftInset.Y - bottomRightInset.Y) * 0.5))
@@ -7734,6 +7803,23 @@ function UISystem:_bindInputProfileUpdates()
 
 	table.insert(self._uxConnections, UserInputService.LastInputTypeChanged:Connect(function(lastInputType)
 		self._deviceProfile:Refresh(lastInputType)
+		self:_applyDeviceSizing()
+	end))
+
+	table.insert(self._uxConnections, ReplicatedStorage:GetAttributeChangedSignal(UI_INPUT_PROFILE_OVERRIDE_ATTR):Connect(function()
+		self._deviceProfile:Refresh(UserInputService:GetLastInputType())
+		self:_applyDeviceSizing()
+	end))
+
+	table.insert(self._uxConnections, ReplicatedStorage:GetAttributeChangedSignal(UI_FORCE_COMPACT_ATTR):Connect(function()
+		self:_applyDeviceSizing()
+	end))
+
+	table.insert(self._uxConnections, ReplicatedStorage:GetAttributeChangedSignal(UI_VIEWPORT_OVERRIDE_X_ATTR):Connect(function()
+		self:_applyDeviceSizing()
+	end))
+
+	table.insert(self._uxConnections, ReplicatedStorage:GetAttributeChangedSignal(UI_VIEWPORT_OVERRIDE_Y_ATTR):Connect(function()
 		self:_applyDeviceSizing()
 	end))
 end
@@ -12590,9 +12676,10 @@ function UISystem:_updateCountdownOverlay(state)
 		return
 	end
 
-	local showCountdown = type(state) == "table" and state.matchStarting == true and self._roomBrowserSuppressed ~= true
+	local countdownActive = type(state) == "table" and state.matchStarting == true
+	local showCountdown = countdownActive and self._roomBrowserSuppressed ~= true
 	overlay.Visible = showCountdown
-	if not showCountdown then
+	if not countdownActive then
 		self._lastCountdownAudioSecond = nil
 		self._countdownDisplaySecond = nil
 		label.Text = ""
@@ -12612,12 +12699,14 @@ function UISystem:_updateCountdownOverlay(state)
 			displayCountdown = 1
 		end
 	end
-	label.Text = tostring(displayCountdown)
+	label.Text = showCountdown and tostring(displayCountdown) or ""
 
 	if displayCountdown > 0 and self._countdownDisplaySecond ~= displayCountdown then
 		self._countdownDisplaySecond = displayCountdown
 		self._lastCountdownAudioSecond = displayCountdown
-		pulseCountdownLabel(label)
+		if showCountdown then
+			pulseCountdownLabel(label)
+		end
 		playRuntimeUISound("CountdownTick", {
 			VolumeScale = 1,
 			PlaybackSpeed = 1,
@@ -12628,7 +12717,7 @@ function UISystem:_updateCountdownOverlay(state)
 		stopRuntimeUISound("CountdownTick")
 	end
 
-	cancelButton.Visible = state.isHost == true
+	cancelButton.Visible = showCountdown and state.isHost == true
 end
 
 function UISystem:_startRoomBrowserLoop()
