@@ -286,10 +286,17 @@ Status:
   - `DoorPrompt` benar-benar ada pada pintu clone aktif
   - `ActionText = Buka Pintu`
   - ini membuat traversal pemain kembali logis, sementara path modifier tetap ada untuk menjaga runtime owner pintu tetap konsisten
-- validasi trigger `E` via automation tool masih belum bisa saya kunci end-to-end:
-  - prompt memang muncul live di layar
-  - tetapi state part hasil input otomatis belum cukup konsisten untuk saya tandai `done`
-  - jadi policy pintu baru sudah aktif, namun verifikasi manual satu kali di Studio masih diperlukan untuk menutup task interaksi pintu sepenuhnya
+- validasi live terbaru sekarang juga sudah menutup hutang “manual validation satu kali” untuk pintu hybrid:
+  - jalur `Classic -> CreateRoom -> HostStart -> HauntedHouse` tervalidasi sampai clone aktif `Door_Kitchen`
+  - saat karakter didekatkan ke jalur ambang pintu:
+    - `DoorIsOpen = true`
+    - `Rotation.Y ~= 88`
+    - `CanCollide = false`
+  - saat karakter dijauhkan kembali ke spawn:
+    - `DoorIsOpen = false`
+    - `Rotation.Y = 0`
+    - `CanCollide = true`
+  - artinya hybrid `radius + prompt` bukan lagi asumsi teknis; lifecycle buka/tutup pintu aktif benar-benar berjalan di runtime
 - audit clone `HauntedHouse` terbaru juga mengonfirmasi traversal vertikal dasar tidak lagi diblok lantai dua:
   - `Floor_2_North` runtime sudah terpecah menjadi segmen carved di sekitar `CentralStaircase`
   - tidak ada segmen `Floor_2_*` yang overlap dengan bounds tangga aktif
@@ -832,15 +839,22 @@ Done jika:
 - hide spot lintas map sekarang mulai data-driven:
   - map data kini punya `hideSpotRooms` (`HauntedHouse`, `EmptyBuilding`, `StudioMMNineteen`, `AbandonedPalace`)
   - `ClosetHidingMechanic` membaca daftar itu lewat `MapConfigSystem` (fallback `Closet/Locker` tetap ada)
-  - validasi live menutup satu bukti penting:
-    - `Workspace.ActiveMatches.Match_match_1.EmptyBuilding.EmptyBuilding.Rooms.Room_Storage` sekarang memiliki `HideSpotPrompt` (`Bersembunyi`)
+  - validasi live sekarang menutup bukti sampai lifecycle dasar:
+    - `Workspace.ActiveMatches.Match_match_1.EmptyBuilding.EmptyBuilding.Rooms.Room_Storage` memiliki `HideSpotPrompt`
+    - `EnterHide` via `StudioE2EControl` menghasilkan:
+      - `PasrahHideState = Hidden`
+      - `PasrahHideSpotType = Closet`
+      - `PasrahHideZoneId = Room_Storage`
+      - `HideSpotOccupied = true`
+    - saat pemain dipindahkan keluar volume room:
+      - `PasrahHideState = Exposed`
+      - `PasrahHideSpotType = None`
+      - `PasrahHideZoneId = ""`
+      - `HideSpotOccupied = false`
   - `MatchCreated` juga sudah dijadikan trigger registrasi awal agar prompt tidak selalu menunggu fase lanjut
-- blocker yang masih tersisa untuk slice ini:
-  - pada sesi Studio yang nyangkut di `Preparing`, `HidingSystem` snapshot masih bisa menunjukkan:
-    - `activeMatchId=nil`
-    - `zoneCount=0`
-    - `hiddenCount=0`
-  - artinya affordance prompt lintas map sudah naik, tetapi validasi penuh `EnterHide -> Hidden` masih perlu dijalankan pada sesi yang benar-benar masuk fase match aktif
+- blocker yang tersisa untuk slice ini sekarang turun level:
+  - perluasan coverage hide spot ke lebih banyak room/map, bukan lagi pembuktian satu lifecycle enter/exit dasar
+  - teachability survive hunt masih perlu ditingkatkan agar pemain paham kapan memakai `SafeZone`, kapan memakai room hide spot, dan kapan hanya putus `line-of-sight`
 
 ## Urutan Praktis
 
