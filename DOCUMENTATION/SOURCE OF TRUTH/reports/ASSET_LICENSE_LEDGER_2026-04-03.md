@@ -206,3 +206,21 @@ Status:
    - atau dokumentasikan ownership-nya
 5. Jangan aktifkan monetization publik sebelum slot audio kosong mendapat asset final yang benar-benar diunggah ke Roblox account aktif.
 
+## Update 2026-04-04 02:58 ICT
+
+Audit ulang live `MarketplaceService:GetProductInfo()` untuk paket audio yang user kirim ulang menutup validasi ownership terbaru berikut:
+
+- `Woodstep_01` (`104336169985098`) -> creator `ZyraaaVex`, `IsPublicDomain=false`
+- `Heartbeat` (`138884191945388`) -> creator `ZyraaaVex`, `IsPublicDomain=false`
+- `EnvironmentalCreak_01` (`139204195403262`) -> creator `ZyraaaVex`, `IsPublicDomain=false`
+- `CountdownTick_01` (`101202336513383`) -> creator `ZyraaaVex`, `IsPublicDomain=false`
+- `GhostManifest_01` (`83336813491039`) -> creator `ZyraaaVex`, `IsPublicDomain=false`
+- `MetalStep_01` (`90448271562175`) -> creator `ZyraaaVex`, `IsPublicDomain=false`
+- `ConcreteStep_01` (`79900103772577`) -> creator `ZyraaaVex`, `IsPublicDomain=false`
+- `TeleportDrop_01`/`HuntStart_01` (`138329686293368`) -> creator `ZyraaaVex`, `IsPublicDomain=false`
+
+Kesimpulan:
+
+- daftar audio yang diaudit di atas tetap `verified` sebagai account-owned untuk workspace ini.
+- blocker lisensi audio tersisa tetap sama: slot ambience loop yang memang masih kosong (`AmbientLoop_Main`), bukan dari daftar ID di atas.
+
