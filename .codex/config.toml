@@ -1,0 +1,7 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+[mcp_servers.Roblox_Studio]
+command = "cmd.exe"
+args = ["/c", "%LOCALAPPDATA%\\Roblox\\mcp.bat"]
+startup_timeout_sec = 20
+tool_timeout_sec = 180

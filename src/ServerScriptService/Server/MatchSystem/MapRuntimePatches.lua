@@ -1,8 +1,13 @@
 local MapRuntimePatches = {}
 
 local FLOOR_PATCH_ATTR = "SecondFloorRuntimePatched"
+local INTERACTION_PATCH_ATTR = "InteractionPointsRuntimePatched"
+local DOOR_PATCH_ATTR = "DoorTraversalRuntimePatched"
+local DOOR_MODE_ATTR = "DoorTraversalMode"
+local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local MIN_SEGMENT_SIZE = 0.25
 local STAIR_MARGIN = 0.75
+local INTERACTION_HEIGHT_OFFSET = 1.5
 
 local function normalizeToken(value)
 	if type(value) ~= "string" then
@@ -194,12 +199,120 @@ local function patchSecondFloor(mapClone)
 	return didPatch
 end
 
+local function patchInteractionPoints(mapClone)
+	if not mapClone or mapClone:GetAttribute(INTERACTION_PATCH_ATTR) == true then
+		return false
+	end
+
+	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
+	local interactionPointsFolder = mapClone:FindFirstChild("InteractionPoints", true)
+	if not roomsFolder or not interactionPointsFolder then
+		return false
+	end
+
+	local roomsByToken = {}
+	for _, room in ipairs(roomsFolder:GetChildren()) do
+		if room:IsA("BasePart") then
+			local token = normalizeToken(room.Name:gsub("^Room_", ""))
+			if token then
+				roomsByToken[token] = room
+			end
+		end
+	end
+
+	local movedAny = false
+	for _, interactionPoint in ipairs(interactionPointsFolder:GetChildren()) do
+		if interactionPoint:IsA("BasePart") then
+			local token = normalizeToken(interactionPoint.Name:gsub("^Interact_", ""))
+			local room = token and roomsByToken[token] or nil
+			if room then
+				local targetPosition = room.Position + Vector3.new(0, INTERACTION_HEIGHT_OFFSET, 0)
+				if (interactionPoint.Position - targetPosition).Magnitude > 0.5 then
+					interactionPoint.CFrame = CFrame.new(targetPosition)
+					movedAny = true
+				end
+			end
+		end
+	end
+
+	if movedAny then
+		mapClone:SetAttribute(INTERACTION_PATCH_ATTR, true)
+	end
+	return movedAny
+end
+
+local function ensureDoorPathModifier(part)
+	local existing = part:FindFirstChild("DoorPathModifier")
+	if existing and existing:IsA("PathfindingModifier") then
+		existing.Label = "Doorway"
+		existing.PassThrough = true
+		return existing
+	end
+
+	for _, child in ipairs(part:GetChildren()) do
+		if child:IsA("PathfindingModifier") then
+			child.Name = "DoorPathModifier"
+			child.Label = "Doorway"
+			child.PassThrough = true
+			return child
+		end
+	end
+
+	local ok, modifier = pcall(Instance.new, "PathfindingModifier")
+	if not ok or not modifier then
+		return nil
+	end
+	modifier.Name = "DoorPathModifier"
+	modifier.Label = "Doorway"
+	modifier.PassThrough = true
+	modifier.Parent = part
+	return modifier
+end
+
+local function patchDoorTraversal(mapClone)
+	if not mapClone or mapClone:GetAttribute(DOOR_PATCH_ATTR) == true then
+		return false
+	end
+
+	local doorsFolder = mapClone:FindFirstChild("Doors", true)
+	if not doorsFolder then
+		return false
+	end
+
+	-- MatchTeleport clones every playable map for both Classic and Ranked, so this fallback stays mode-agnostic.
+	local patchedAny = false
+	for _, descendant in ipairs(doorsFolder:GetDescendants()) do
+		if descendant:IsA("BasePart") and descendant.Name:match("^Door_") and not descendant.Name:match("_Frame") then
+			descendant.Anchored = true
+			descendant.CanCollide = false
+			descendant.CanTouch = false
+			descendant.CanQuery = true
+			descendant:SetAttribute("DoorLocked", false)
+			descendant:SetAttribute("DoorIsOpen", true)
+			descendant:SetAttribute(DOOR_POLICY_ATTR, "AutoOpenToggle")
+			ensureDoorPathModifier(descendant)
+			patchedAny = true
+		end
+	end
+
+	if patchedAny then
+		mapClone:SetAttribute(DOOR_PATCH_ATTR, true)
+		mapClone:SetAttribute(DOOR_MODE_ATTR, "AutoOpenToggle")
+	end
+	return patchedAny
+end
+
 function MapRuntimePatches.Apply(mapId, mapClone)
 	local token = normalizeToken(mapId)
 	if token == nil or mapClone == nil then
 		return false
 	end
-	return patchSecondFloor(mapClone)
+
+	local didPatch = false
+	didPatch = patchSecondFloor(mapClone) or didPatch
+	didPatch = patchInteractionPoints(mapClone) or didPatch
+	didPatch = patchDoorTraversal(mapClone) or didPatch
+	return didPatch
 end
 
 return MapRuntimePatches

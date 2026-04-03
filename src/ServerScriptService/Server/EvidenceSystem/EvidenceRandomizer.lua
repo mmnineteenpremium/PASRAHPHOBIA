@@ -206,7 +206,12 @@ function EvidenceRandomizer:Spawn(matchId, payload, spawnFn, publishFn)
         return nil, "delayed"
     end
 
-    return spawnFn and spawnFn(payload or {}) or nil
+    if not spawnFn then
+        return nil
+    end
+
+    local signal, reason = spawnFn(payload or {})
+    return signal, reason
 end
 
 return EvidenceRandomizer

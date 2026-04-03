@@ -5,7 +5,10 @@ local Service = {}
 Service.__index = Service
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local GHOST_TRACE_ATTRIBUTE = "PasrahGhostTrace"
+local GHOST_FORCE_VISUAL_STATE_ATTRIBUTE = "PasrahForceGhostVisualState"
 
 local DEFAULT_GHOST_TYPES = {
 	"Pocong",
@@ -22,6 +25,54 @@ local DEFAULT_GHOST_TYPES = {
 	"HantuTanah",
 }
 
+local GHOST_TEMPLATE_VISUAL_OFFSETS = {
+	Pocong = Vector3.new(0, 10.5, 0),
+}
+
+local GHOST_VISUAL_TRANSPARENCY_BY_STATE = {
+	Idle = 0.75,
+	Roaming = 0.35,
+	Manifestation = 0.0,
+	Hunting = 0.05,
+	Cooldown = 0.55,
+}
+
+local function normalizeToken(value)
+	if type(value) ~= "string" then
+		return nil
+	end
+	local trimmed = value:gsub("^%s+", ""):gsub("%s+$", "")
+	if trimmed == "" then
+		return nil
+	end
+	return trimmed:gsub("[%s_%-_%.]+", ""):lower()
+end
+
+local function normalizeGhostVisualState(stateName)
+	if type(stateName) ~= "string" then
+		return nil
+	end
+
+	local trimmed = stateName:gsub("^%s+", ""):gsub("%s+$", "")
+	if trimmed == "" then
+		return nil
+	end
+
+	if trimmed == "Manifest" or trimmed == "Manifestation" then
+		return "Manifestation"
+	end
+	if trimmed == "Hunt" or trimmed == "Hunting" then
+		return "Hunting"
+	end
+	if trimmed == "Retreat" or trimmed == "Cooldown" then
+		return "Cooldown"
+	end
+	if trimmed == "Idle" or trimmed == "Roaming" then
+		return trimmed
+	end
+	return nil
+end
+
 local function createGhostRigPart(model, name, size, offset, color)
 	local part = Instance.new("Part")
 	part.Name = name
@@ -35,6 +86,17 @@ local function createGhostRigPart(model, name, size, offset, color)
 	part.CFrame = offset
 	part.Parent = model
 	return part
+end
+
+local function createGhostHumanoid(model)
+	local humanoid = Instance.new("Humanoid")
+	humanoid.Name = "GhostHumanoid"
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
+	humanoid.MaxHealth = 100
+	humanoid.Health = 100
+	humanoid.Parent = model
+	return humanoid
 end
 
 local function createVisibleGhostPlaceholder(spawnCFrame, ghostType)
@@ -57,14 +119,7 @@ local function createVisibleGhostPlaceholder(spawnCFrame, ghostType)
 		limb.CastShadow = false
 	end
 
-	local humanoid = Instance.new("Humanoid")
-	humanoid.Name = "GhostHumanoid"
-	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-	humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
-	humanoid.MaxHealth = 100
-	humanoid.Health = 100
-	humanoid.Parent = ghostModel
-
+	createGhostHumanoid(ghostModel)
 	ghostModel.PrimaryPart = root
 	return ghostModel
 end
@@ -81,6 +136,112 @@ local function safeRequire(moduleScript)
 		return result
 	end
 	return nil
+end
+
+local function resolveGhostModelTemplate(ghostType)
+	if type(ghostType) ~= "string" or ghostType == "" then
+		return nil
+	end
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	if not assets then
+		return nil
+	end
+	local models = assets:FindFirstChild("Models")
+	if not models then
+		return nil
+	end
+	local ghosts = models:FindFirstChild("Ghosts")
+	if not ghosts then
+		return nil
+	end
+	return ghosts:FindFirstChild(ghostType)
+end
+
+local function resolveForcedStudioGhostType()
+	if not RunService:IsStudio() then
+		return nil
+	end
+	local ghostType = ReplicatedStorage:GetAttribute("PasrahForceGhostType")
+	if type(ghostType) ~= "string" or ghostType == "" then
+		return nil
+	end
+	return ghostType
+end
+
+local function shouldTraceGhost()
+	return RunService:IsStudio() and ReplicatedStorage:GetAttribute(GHOST_TRACE_ATTRIBUTE) == true
+end
+
+local function traceGhost(message, payload)
+	if not shouldTraceGhost() then
+		return
+	end
+
+	local parts = {}
+	for key, value in pairs(payload or {}) do
+		table.insert(parts, string.format("%s=%s", tostring(key), tostring(value)))
+	end
+	table.sort(parts)
+	if #parts > 0 then
+		warn(string.format("[GHOST TRACE] %s [%s]", tostring(message), table.concat(parts, ", ")))
+	else
+		warn(string.format("[GHOST TRACE] %s", tostring(message)))
+	end
+end
+
+local function setGhostTraceState(stage, details)
+	if not shouldTraceGhost() then
+		return
+	end
+	ReplicatedStorage:SetAttribute("PasrahGhostTraceStage", stage)
+	ReplicatedStorage:SetAttribute("PasrahGhostTraceDetails", details)
+end
+
+local function createGhostFromTemplate(spawnCFrame, ghostType)
+	local template = resolveGhostModelTemplate(ghostType)
+	if typeof(template) ~= "Instance" or not template:IsA("Model") then
+		return nil
+	end
+
+	local ghostModel = template:Clone()
+	ghostModel.Name = string.format("Ghost_%s", tostring(ghostType or "Unknown"))
+	ghostModel:SetAttribute("GhostType", ghostType)
+	ghostModel:SetAttribute("PlaceholderVisual", false)
+	ghostModel:SetAttribute("VisualTemplateName", template.Name)
+
+	for _, descendant in ipairs(ghostModel:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.CanCollide = false
+			descendant.CanTouch = false
+			descendant.CanQuery = false
+			descendant.Anchored = true
+		end
+	end
+
+	local root = ghostModel:FindFirstChild("HumanoidRootPart", true)
+	if root and root:IsA("BasePart") then
+		ghostModel.PrimaryPart = root
+		ghostModel:SetPrimaryPartCFrame(spawnCFrame)
+	else
+		local firstPart = ghostModel:FindFirstChildWhichIsA("BasePart", true)
+		if firstPart then
+			ghostModel.PrimaryPart = firstPart
+			ghostModel:PivotTo(spawnCFrame)
+		end
+	end
+
+	local visualOffset = GHOST_TEMPLATE_VISUAL_OFFSETS[ghostType]
+	if visualOffset and ghostModel.PrimaryPart then
+		local visualMesh = ghostModel:FindFirstChildWhichIsA("MeshPart", true)
+		if visualMesh then
+			visualMesh.CFrame = ghostModel.PrimaryPart.CFrame * CFrame.new(visualOffset)
+		end
+	end
+
+	if not ghostModel:FindFirstChildOfClass("Humanoid") then
+		createGhostHumanoid(ghostModel)
+	end
+	return ghostModel
 end
 
 local function resolveSharedGameDataModule(moduleName)
@@ -157,6 +318,35 @@ local function collectSpawnParts(root)
 		end
 	end
 	return parts
+end
+
+local function findNamedBasePart(root, ...)
+	if typeof(root) ~= "Instance" then
+		return nil
+	end
+
+	local tokens = {}
+	for _, value in ipairs({ ... }) do
+		local token = normalizeToken(value)
+		if token then
+			tokens[token] = true
+		end
+	end
+
+	if next(tokens) == nil then
+		return nil
+	end
+
+	for _, descendant in ipairs(root:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			local token = normalizeToken(descendant.Name)
+			if token and tokens[token] then
+				return descendant
+			end
+		end
+	end
+
+	return nil
 end
 
 local function resolveSpawnPart(container)
@@ -343,6 +533,89 @@ function Service:_buildGhostPayload(match, payload)
 	}
 end
 
+function Service:_resolveRoomAnchor(match, roomId)
+	if type(match) ~= "table" or type(roomId) ~= "string" or roomId == "" then
+		return nil
+	end
+
+	local container = match.container
+	if typeof(container) ~= "Instance" then
+		return nil
+	end
+
+	local roomsRoot = container:FindFirstChild("Rooms", true) or container
+	return findNamedBasePart(roomsRoot, roomId, "Room_" .. roomId)
+		or findNamedBasePart(container, roomId, "Room_" .. roomId)
+end
+
+function Service:_applyGhostVisualState(match, ghostState)
+	if type(match) ~= "table" or typeof(match.ghost) ~= "Instance" then
+		return
+	end
+
+	local actualStateName = ghostState and ghostState.state or nil
+	local overrideStateName = nil
+	if RunService:IsStudio() then
+		overrideStateName = normalizeGhostVisualState(ReplicatedStorage:GetAttribute(GHOST_FORCE_VISUAL_STATE_ATTRIBUTE))
+	end
+
+	local stateName = overrideStateName or actualStateName
+	local transparency = GHOST_VISUAL_TRANSPARENCY_BY_STATE[stateName] or 0.35
+	if not overrideStateName and ghostState and ghostState.huntActive == true then
+		transparency = GHOST_VISUAL_TRANSPARENCY_BY_STATE.Hunting
+	end
+
+	match.ghost:SetAttribute("RuntimeGhostState", tostring(stateName or "Unknown"))
+	match.ghost:SetAttribute("RuntimeGhostStateActual", tostring(actualStateName or "Unknown"))
+	if overrideStateName then
+		match.ghost:SetAttribute("RuntimeGhostStateOverride", overrideStateName)
+	else
+		match.ghost:SetAttribute("RuntimeGhostStateOverride", nil)
+	end
+
+	for _, descendant in ipairs(match.ghost:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			if descendant.Name == "HumanoidRootPart" then
+				descendant.Transparency = 1
+			else
+				descendant.Transparency = transparency
+			end
+		end
+	end
+end
+
+function Service:_syncGhostVisual(match, ghostState)
+	if type(match) ~= "table" or typeof(match.ghost) ~= "Instance" or type(ghostState) ~= "table" then
+		return false
+	end
+
+	ensureGhostPlacement(match)
+	local roomId = ghostState.currentRoomId or ghostState.favoriteRoomId
+	match.ghost:SetAttribute("CurrentRoomId", ghostState.currentRoomId)
+	match.ghost:SetAttribute("FavoriteRoomId", ghostState.favoriteRoomId)
+	local roomAnchor = self:_resolveRoomAnchor(match, roomId)
+	if roomAnchor and match.ghost.PrimaryPart then
+		local targetPosition = roomAnchor.Position
+		match.ghost:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+	end
+
+	self:_applyGhostVisualState(match, ghostState)
+	return true
+end
+
+function Service:_syncGhostVisualByMatch(matchOrId)
+	local liveMatch, matchId = self:_resolveLiveMatch(matchOrId)
+	if not matchId then
+		return false
+	end
+
+	local ghostState = self._ghostService:GetGhostState(matchId)
+	if type(liveMatch) == "table" and type(ghostState) == "table" then
+		return self:_syncGhostVisual(liveMatch, ghostState)
+	end
+	return false
+end
+
 function Service:_ensureGhostReady(matchOrId, payload)
 	local liveMatch, matchId = self:_resolveLiveMatch(matchOrId)
 	if not matchId then
@@ -373,6 +646,7 @@ function Service:_ensureGhostReady(matchOrId, payload)
 		end
 
 		if self._ghostService:GetGhostState(matchId) ~= nil then
+			self:_syncGhostVisualByMatch(liveMatch or matchId)
 			return liveMatch, matchId, nil
 		end
 
@@ -450,7 +724,9 @@ function Service:InitializeMatch(match)
 	end
 	local seed = tonumber(match.ghostSeed) or os.time()
 	local rng = Random.new(seed)
-	local ghostType = match.ghostType or DEFAULT_GHOST_TYPES[rng:NextInteger(1, #DEFAULT_GHOST_TYPES)]
+	local ghostType = match.ghostType
+		or resolveForcedStudioGhostType()
+		or DEFAULT_GHOST_TYPES[rng:NextInteger(1, #DEFAULT_GHOST_TYPES)]
 	match.ghostType = ghostType
 
 	local container = resolveMatchContainer(match)
@@ -461,8 +737,23 @@ function Service:InitializeMatch(match)
 	local spawnPart = resolveSpawnPart(container)
 	local spawnCFrame = spawnPart and spawnPart.CFrame or CFrame.new(0, 5, 0)
 
-	local ghostModel = createVisibleGhostPlaceholder(spawnCFrame, ghostType)
+	local ghostModel = createGhostFromTemplate(spawnCFrame, ghostType)
+		or createVisibleGhostPlaceholder(spawnCFrame, ghostType)
 	ghostModel.Parent = container
+	setGhostTraceState("InitializeMatch", string.format(
+		"match=%s;ghostType=%s;model=%s;placeholder=%s",
+		tostring(matchId),
+		tostring(ghostType),
+		tostring(ghostModel.Name),
+		tostring(ghostModel:GetAttribute("PlaceholderVisual"))
+	))
+	traceGhost("InitializeMatch", {
+		matchId = matchId,
+		ghostType = ghostType,
+		modelName = ghostModel.Name,
+		container = container:GetFullName(),
+		placeholder = ghostModel:GetAttribute("PlaceholderVisual"),
+	})
 
 	match.ghost = ghostModel
 
@@ -505,7 +796,9 @@ function Service:_startProtectedHunt(match, snapshot, now)
 		end
 	end
 
-	return self._ghostService:StartHunt(authoritativeMatchId, snapshot or {}, now)
+	local result = self._ghostService:StartHunt(authoritativeMatchId, snapshot or {}, now)
+	self:_syncGhostVisualByMatch(authoritativeMatchId)
+	return result
 end
 
 function Service:TransitionGhostState(matchId, stateName, now, snapshot)
@@ -516,15 +809,21 @@ function Service:TransitionGhostState(matchId, stateName, now, snapshot)
 	if err then
 		return nil, err
 	end
-	return self._ghostService:TransitionGhostState(authoritativeMatchId, stateName, now, snapshot)
+	local result = self._ghostService:TransitionGhostState(authoritativeMatchId, stateName, now, snapshot)
+	self:_syncGhostVisualByMatch(authoritativeMatchId)
+	return result
 end
 
 function Service:TickGhost(match, snapshot, dt, now)
-	local _, matchId, err = self:_ensureGhostReady(match)
+	local liveMatch, matchId, err = self:_ensureGhostReady(match)
 	if err then
 		return nil, err
 	end
-	return self._ghostService:TickGhost(matchId, snapshot, dt, now)
+	local result = self._ghostService:TickGhost(matchId, snapshot, dt, now)
+	if type(liveMatch) == "table" then
+		self:_syncGhostVisual(liveMatch, self._ghostService:GetGhostState(matchId))
+	end
+	return result
 end
 
 function Service:StartHunt(match, snapshot, now)
@@ -544,7 +843,9 @@ function Service:ForceHunt(match, snapshot, now)
 	if err then
 		return nil, err
 	end
-	return self._ghostService:StartHunt(matchId, snapshot or {}, now)
+	local result = self._ghostService:StartHunt(matchId, snapshot or {}, now)
+	self:_syncGhostVisualByMatch(matchId)
+	return result
 end
 
 function Service:EndHunt(match, now)
@@ -552,7 +853,9 @@ function Service:EndHunt(match, now)
 	if not matchId then
 		return nil, "missing_match_id"
 	end
-	return self._ghostService:EndHunt(matchId, now)
+	local result = self._ghostService:EndHunt(matchId, now)
+	self:_syncGhostVisualByMatch(matchId)
+	return result
 end
 
 function Service:GetGhostState(match)
@@ -601,7 +904,9 @@ function Service:ForceManifest(match, now)
 	if err then
 		return nil, err
 	end
-	return self._ghostService:ForceManifest(matchId, now)
+	local result = self._ghostService:ForceManifest(matchId, now)
+	self:_syncGhostVisualByMatch(matchId)
+	return result
 end
 
 return Service

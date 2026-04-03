@@ -2,6 +2,8 @@ local Controller = {}
 Controller.__index = Controller
 
 local Services = require(script.Parent.Parent.Core.Services)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local LOBBY_REMOTE_NAME = "LobbyEvent"
 local HOST_START_COUNTDOWN_SECONDS = 5
@@ -114,6 +116,28 @@ local function summarizeTraceData(data)
 		return ""
 	end
 	return " [" .. table.concat(parts, ", ") .. "]"
+end
+
+local function shouldTraceRoomBrowser()
+	return ReplicatedStorage:GetAttribute("PasrahRoomTrace") == true
+end
+
+local function traceRoomBrowser(prefix, player, data)
+	if not shouldTraceRoomBrowser() then
+		return
+	end
+	local playerLabel = "server"
+	if typeof(player) == "Instance" and player:IsA("Player") then
+		playerLabel = string.format("%s(%d)", player.Name, player.UserId)
+	end
+	print(string.format("[ROOM TRACE][%s][%s]%s", tostring(prefix), playerLabel, summarizeTraceData(data)))
+end
+
+local function setStudioDebugAttribute(name, value)
+	if not RunService:IsStudio() then
+		return
+	end
+	ReplicatedStorage:SetAttribute(name, value)
 end
 
 local function resolvePlayersService(deps)
@@ -340,6 +364,7 @@ end
 
 function Controller:_send(player, payload)
 	if self._lobbyRemote and player then
+		traceRoomBrowser("SERVER->CLIENT", player, payload)
 		self._lobbyRemote:FireClient(player, payload)
 	end
 end
@@ -413,13 +438,23 @@ end
 
 function Controller:OnLobbyRemoteRequest(player, request)
 	if type(request) ~= "table" then
+		traceRoomBrowser("CLIENT->SERVER", player, {
+			action = "INVALID_REQUEST",
+			reason = "invalid_request",
+		})
 		self:_send(player, {
 			eventName = "RoomBrowserError",
 			reason = "invalid_request",
 		})
 		return
 	end
+	traceRoomBrowser("CLIENT->SERVER", player, request)
 	if self:_isDuplicateRequest(player, request) then
+		traceRoomBrowser("CLIENT->SERVER", player, {
+			requestId = request.requestId,
+			action = request.action,
+			reason = "duplicate_request_ignored",
+		})
 		return
 	end
 
@@ -427,6 +462,11 @@ function Controller:OnLobbyRemoteRequest(player, request)
 	local handlerName = ACTION_HANDLERS[action]
 	local handler = handlerName and self[handlerName]
 	if type(handler) ~= "function" then
+		traceRoomBrowser("CLIENT->SERVER", player, {
+			requestId = request.requestId,
+			action = action,
+			reason = "unsupported_action",
+		})
 		self:_send(player, {
 			eventName = "RoomBrowserError",
 			action = action,
@@ -625,6 +665,16 @@ end
 
 function Controller:OnHostStart(player, request)
 	local ok, err, startInfo = self._service:BeginHostStart(player)
+	setStudioDebugAttribute(
+		"PasrahLastHostStart",
+		string.format(
+			"begin ok=%s err=%s roomId=%s countdown=%s",
+			tostring(ok),
+			tostring(err),
+			tostring(startInfo and startInfo.roomId or nil),
+			tostring(startInfo and startInfo.countdownSeconds or nil)
+		)
+	)
 	self:_send(player, {
 		eventName = "HostStartResult",
 		ok = ok,
@@ -682,6 +732,15 @@ function Controller:OnHostStart(player, request)
 		self._roomCountdownById[roomId] = nil
 
 		local commitOk, commitErr = self._service:CommitHostStart(player, request)
+		setStudioDebugAttribute(
+			"PasrahLastHostStartCommit",
+			string.format(
+				"commit ok=%s err=%s roomId=%s",
+				tostring(commitOk),
+				tostring(commitErr),
+				tostring(roomId)
+			)
+		)
 		if not commitOk then
 			local liveRoom = self._service._roomManager and self._service._roomManager:GetRoomById(roomId) or room
 			self:_broadcastToRoom(liveRoom, {

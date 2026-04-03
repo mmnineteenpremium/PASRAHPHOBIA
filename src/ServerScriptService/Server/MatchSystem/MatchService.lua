@@ -4,6 +4,7 @@ local MatchLifecycle = require(script.Parent.MatchLifecycle)
 local MatchTeleport = require(script.Parent.MatchTeleport)
 local Services = require(script.Parent.Parent.Core.Services)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local MatchService = {}
 MatchService.__index = MatchService
@@ -320,6 +321,13 @@ local function resolveMatchRemote()
 		return remote
 	end
 	return nil
+end
+
+local function setStudioMatchStartTrace(summary)
+	if not RunService:IsStudio() then
+		return
+	end
+	ReplicatedStorage:SetAttribute("PasrahLastMatchStartTrace", summary)
 end
 
 function MatchService.new(deps)
@@ -922,6 +930,15 @@ function MatchService:StartMatch(matchId)
 	task.wait(1.5)
 
 	local teleportedPlayers = self._teleport:TeleportPlayers(match)
+	setStudioMatchStartTrace(string.format(
+		"match=%s players=%d teleported=%d phase=%s map=%s mode=%s",
+		tostring(match.matchId),
+		#(match.players or {}),
+		#(teleportedPlayers or {}),
+		tostring(match.phase),
+		tostring(match.mapId),
+		tostring(match.mode)
+	))
 	self:_fireMatchEventToPlayers(teleportedPlayers, {
 		eventName = "MatchStarted",
 		phase = CLIENT_PHASE_BY_MATCH_PHASE[match.phase] or match.phase,
@@ -1180,4 +1197,3 @@ function MatchService:GetLiveMatch(matchId)
 end
 
 return MatchService
-

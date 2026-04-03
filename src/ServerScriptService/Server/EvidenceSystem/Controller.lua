@@ -572,11 +572,21 @@ function Controller:_sendToolResponse(player, payload)
 end
 
 function Controller:_resolveMatchIdForPlayer(player, requestPayload)
-    local providedMatchId = nil
+    local providedMatchId = requestPayload and requestPayload.matchId
+    if player and providedMatchId == nil then
+        providedMatchId = player:GetAttribute("MatchId")
+    end
+    if providedMatchId ~= nil then
+        providedMatchId = tostring(providedMatchId)
+    end
     local state = self._matchSystem and self._matchSystem.State
     local matches = state and state:Get("matches")
     if type(matches) ~= "table" then
-        return nil
+        return providedMatchId
+    end
+
+    if providedMatchId and matches[providedMatchId] ~= nil then
+        return providedMatchId
     end
 
     for matchId, match in pairs(matches) do

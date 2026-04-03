@@ -15,10 +15,10 @@ Catatan penting: tidak semua controller aktif saat game jalan. Yang aktif ditent
 4. Room dikirim ke sistem matchmaking internal (event `MatchmakingStarted`) lalu dibuat **match baru**.
 5. Server clone map ke `Workspace/ActiveMatches/Match_<id>`, teleport pemain ke spawn map.
 6. Match masuk urutan fase otomatis:
-   - `PreparationPhase` (15 detik)
-   - `InvestigationPhase` (180 detik)
-   - `HuntPhase` (45 detik)
-   - `EndgamePhase` (15 detik)
+   - `PreparationPhase` (30 detik)
+   - `InvestigationPhase` (480 detik)
+   - `HuntPhase` (60 detik)
+   - `EndgamePhase` (30 detik)
 7. Selama match, ghost AI jalan terus: roaming, manifest, interaksi, hunt, spawn evidence.
 8. Jika kondisi akhir terpenuhi (misalnya semua player mati, atau extraction selesai), match ditutup.
 9. Pemain dipulangkan ke lobby, map match dibersihkan, hasil match dikirim ke client.

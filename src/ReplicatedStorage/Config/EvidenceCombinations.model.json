@@ -1,536 +1,485 @@
 {
+  "className": "Folder",
   "children": [
     {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "Banaspati"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        }
-      ],
+      "name": "Kuntilanak",
       "className": "Folder",
-      "properties": {
-        "Name": "Banaspati"
-      }
-    },
-    {
       "children": [
         {
+          "name": "GhostName",
+          "className": "StringValue",
           "properties": {
-            "Name": "GhostName",
-            "Value": "Genderuwo"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Genderuwo"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "HantuTanah"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "HantuTanah"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "Jerangkong"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Jerangkong"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
             "Value": "Kuntilanak"
-          },
-          "className": "StringValue"
+          }
         },
         {
+          "name": "EvidenceTypes",
+          "className": "Folder",
           "children": [
             {
+              "name": "Evidence1",
+              "className": "StringValue",
               "properties": {
-                "Name": "Evidence1",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
+                "Value": "SpiritBoxResponse"
+              }
             },
             {
+              "name": "Evidence2",
+              "className": "StringValue",
               "properties": {
-                "Name": "Evidence2",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
+                "Value": "GhostWriting"
+              }
             },
             {
+              "name": "Evidence3",
+              "className": "StringValue",
               "properties": {
-                "Name": "Evidence3",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
+                "Value": "UVMarks"
+              }
             }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
+          ]
         }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Kuntilanak"
-      }
+      ]
     },
     {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "Leak"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        }
-      ],
+      "name": "Tuyul",
       "className": "Folder",
-      "properties": {
-        "Name": "Leak"
-      }
-    },
-    {
       "children": [
         {
+          "name": "GhostName",
+          "className": "StringValue",
           "properties": {
-            "Name": "GhostName",
-            "Value": "Palasik"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Pengganggu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Palasik"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "Pocong"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Pocong"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "SilumanUlar"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "MEDOK"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "SilumanUlar"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
-            "Value": "SundelBolong"
-          },
-          "className": "StringValue"
-        },
-        {
-          "children": [
-            {
-              "properties": {
-                "Name": "Evidence1",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence2",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
-            },
-            {
-              "properties": {
-                "Name": "Evidence3",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
-            }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
-        }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "SundelBolong"
-      }
-    },
-    {
-      "children": [
-        {
-          "properties": {
-            "Name": "GhostName",
             "Value": "Tuyul"
-          },
-          "className": "StringValue"
+          }
         },
         {
+          "name": "EvidenceTypes",
+          "className": "Folder",
           "children": [
             {
+              "name": "Evidence1",
+              "className": "StringValue",
               "properties": {
-                "Name": "Evidence1",
-                "Value": "To'un"
-              },
-              "className": "StringValue"
+                "Value": "GhostOrb"
+              }
             },
             {
+              "name": "Evidence2",
+              "className": "StringValue",
               "properties": {
-                "Name": "Evidence2",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
+                "Value": "EMFLevel"
+              }
             },
             {
+              "name": "Evidence3",
+              "className": "StringValue",
               "properties": {
-                "Name": "Evidence3",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
+                "Value": "FreezingTemperature"
+              }
             }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
+          ]
         }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Tuyul"
-      }
+      ]
     },
     {
+      "name": "SundelBolong",
+      "className": "Folder",
       "children": [
         {
+          "name": "GhostName",
+          "className": "StringValue",
           "properties": {
-            "Name": "GhostName",
-            "Value": "WeweGombel"
-          },
-          "className": "StringValue"
+            "Value": "SundelBolong"
+          }
         },
         {
+          "name": "EvidenceTypes",
+          "className": "Folder",
           "children": [
             {
+              "name": "Evidence1",
+              "className": "StringValue",
               "properties": {
-                "Name": "Evidence1",
-                "Value": "Suara"
-              },
-              "className": "StringValue"
+                "Value": "GhostOrb"
+              }
             },
             {
+              "name": "Evidence2",
+              "className": "StringValue",
               "properties": {
-                "Name": "Evidence2",
-                "Value": "Suhu"
-              },
-              "className": "StringValue"
+                "Value": "GhostWriting"
+              }
             },
             {
+              "name": "Evidence3",
+              "className": "StringValue",
               "properties": {
-                "Name": "Evidence3",
-                "Value": "BukuTerkutuk"
-              },
-              "className": "StringValue"
+                "Value": "UVMarks"
+              }
             }
-          ],
-          "className": "Folder",
-          "properties": {
-            "Name": "EvidenceTypes"
-          }
+          ]
         }
-      ],
+      ]
+    },
+    {
+      "name": "WeweGombel",
       "className": "Folder",
-      "properties": {
-        "Name": "WeweGombel"
-      }
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "WeweGombel"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pocong",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Pocong"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Genderuwo",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Genderuwo"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Banaspati",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Banaspati"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Jerangkong",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Jerangkong"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "HantuTanah",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "HantuTanah"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Palasik",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Palasik"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "SpiritBoxResponse"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SilumanUlar",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "SilumanUlar"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostOrb"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "GhostWriting"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Leak",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "GhostName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Leak"
+          }
+        },
+        {
+          "name": "EvidenceTypes",
+          "className": "Folder",
+          "children": [
+            {
+              "name": "Evidence1",
+              "className": "StringValue",
+              "properties": {
+                "Value": "EMFLevel"
+              }
+            },
+            {
+              "name": "Evidence2",
+              "className": "StringValue",
+              "properties": {
+                "Value": "UVMarks"
+              }
+            },
+            {
+              "name": "Evidence3",
+              "className": "StringValue",
+              "properties": {
+                "Value": "FreezingTemperature"
+              }
+            }
+          ]
+        }
+      ]
     }
-  ],
-  "className": "Folder",
-  "properties": {
-    "Name": "EvidenceCombinations"
-  }
+  ]
 }

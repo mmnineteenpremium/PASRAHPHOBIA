@@ -1,0 +1,469 @@
+# E2E to Publish Backlog 2026-04-03
+
+## Tujuan
+
+Dokumen ini adalah backlog kerja dari kondisi proyek hari ini sampai:
+
+1. end-to-end test yang stabil
+2. vertical slice yang layak dimainkan
+3. publish readiness
+
+## P0 - Blocker E2E
+
+### 1. Konsolidasi owner client
+
+Status:
+
+- in progress
+- dual-stack paling jelas sudah dipotong
+- legacy remote consumer utama sudah keluar dari surface runtime
+
+Pekerjaan:
+
+- audit semua LocalScript legacy di `src/client`
+- putuskan mana yang dipertahankan, dimigrasi, atau dimatikan
+- pastikan hanya satu jalur HUD, audio, sanity, evidence, dan tool UI
+
+Done jika:
+
+- client boot tidak lagi memuat owner ganda untuk surface utama
+
+### 2. Canonical remote contract
+
+Status:
+
+- done
+- remote legacy utama sudah tidak lagi dipakai oleh consumer client aktif
+- remote runtime penting `SpectatorEvidence` sudah source-controlled
+- gateway server production tidak lagi membuat `RemoteEvent` / `RemoteFunction` fallback di runtime
+- smoke test live setelah patch membuktikan jalur canonical `LobbyEvent -> SelectMode(Ranked) -> CreateRoom -> HostStart` tetap sukses:
+  - `CreateRoomResult.ok = true`
+  - `HostStartResult.ok = true`
+  - `PasrahLastHostStartCommit = commit ok=true err=nil roomId=1`
+  - `room.mode = Ranked`
+  - `room.mapId = EmptyBuilding`
+
+Pekerjaan:
+
+- definisikan daftar remote event/fungsi final
+- hapus dependensi remote lama seperti `SanityUpdate`, `TemperatureUpdate`, `EMFUpdate`
+- source-control remote yang wajib ada sejak boot
+
+Done jika:
+
+- semua consumer client/server memakai daftar remote yang sama
+
+### 3. Fix extraction path
+
+Status:
+
+- done untuk jalur clone runtime
+- room -> countdown -> match clone -> extraction zone clone sudah tervalidasi di Studio
+- extraction tetap butuh `GhostIdentified` pada flow normal
+- tersedia override Studio-only untuk validasi E2E tanpa mengubah perilaku production
+- validasi live terbaru di `Ranked + EmptyBuilding` membuktikan jalur extraction override Studio benar-benar:
+  - menerima `ExtractSelf` hanya saat override Studio aktif
+  - mengakhiri match aktif
+  - mengembalikan player ke lobby spawn
+  - mengosongkan `Workspace.ActiveMatches`
+
+Pekerjaan:
+
+- pastikan extraction zone membaca map clone aktif
+- verifikasi end condition match tidak bergantung ke map template lama
+
+Done jika:
+
+- satu match bisa selesai melalui jalur extraction secara konsisten
+
+### 4. Ganti fallback audio yang rusak
+
+Status:
+
+- done
+- fallback `403` palsu sudah dibuang
+- sound invalid sekarang dimatikan secara eksplisit
+
+Pekerjaan:
+
+- ganti `AudioSanitizer` fallback
+- audit SoundId placeholder dan broken
+- tetapkan asset fallback internal yang valid
+
+Done jika:
+
+- playtest log tidak lagi menunjukkan fallback `403`
+
+### 5. Bersihkan noise runtime yang tidak pantas
+
+Status:
+
+- in progress
+- duplicate telemetry lifecycle log sudah dibersihkan
+- surface runtime client jauh lebih kecil dari baseline awal
+- duplikasi `StarterGui` kosong untuk `LobbyUI`, `MatchUI`, `ShopUI`, `MainMenuUI`, `LeaderboardUI`, `PASRA_UI`, dan `SpectatorUI` sudah dibersihkan
+- `PlayerGui` runtime sekarang hanya punya satu owner untuk surface inti:
+  - `LobbyUI`
+  - `MatchUI`
+  - `ShopUI`
+  - `MainMenuUI`
+  - `PASRA_UI`
+  - `SpectatorUI`
+- scanner audio boot sekarang tidak lagi spam satu warning per sound rusak:
+  - `AudioSanitizer` merangkum invalid sound menjadi summary count + preview
+  - `AudioErrorGuard` melewati sound yang sudah ditandai `PasrahAudioSanitized`
+  - validasi live terbaru menunjukkan boot cukup menulis `Disabled 5 invalid sounds` alih-alih daftar panjang per-instance
+- lima ghost audio broken sekarang sudah dipindahkan ke placeholder kosong source-controlled:
+  - `AmbientLoop_Main`
+  - `EnvironmentalCreak_01`
+  - `GhostManifest_01`
+  - `GhostWhisper_01`
+  - `HuntStart_01`
+- validasi live terbaru menunjukkan boot tidak lagi mengeluarkan warning audio invalid sama sekali
+
+Pekerjaan:
+
+- keluarkan txt contoh dari tree runtime
+- trim registry untuk vertical slice
+- ganti placeholder audio kosong dengan asset final yang sah
+
+Done jika:
+
+- runtime surface hanya memuat asset dan module yang relevan
+
+## P1 - Vertical Slice Playable
+
+### 6. Integrasi satu ghost final
+
+Status:
+
+- done
+- `Pocong` sudah source-controlled sebagai template model di `ReplicatedStorage.Assets.Models.Ghosts`
+- `GhostSystem` sudah clone template runtime untuk `Pocong`, tidak lagi memakai placeholder untuk slice ini
+- spawn final `Ghost_Pocong` sudah tervalidasi di `Workspace.ActiveMatches.Match_match_1`
+- movement visual sudah tersambung ke state AI:
+  - `CurrentRoomId` runtime ikut berubah
+  - `RuntimeGhostState` runtime ikut berubah
+  - `HumanoidRootPart` dan `MeshPart` ikut berpindah ke room anchor
+  - transparansi visual mengikuti state `Idle/Roaming`
+- manifestation dan hunt visual dasar sudah tervalidasi via override Studio-only:
+  - `PasrahForceGhostVisualState = Manifestation` menghasilkan `MeshPart.Transparency = 0`
+  - `PasrahForceGhostVisualState = Hunting` menghasilkan `MeshPart.Transparency = 0.05`
+  - override dibersihkan lagi setelah test
+
+Pekerjaan:
+
+- pilih satu ghost sebagai slice pertama
+- source-control model final dan dependency-nya
+- tentukan scale, anchor, root, dan spawn behavior
+- sambungkan manifestation dan hunt response ke model final
+
+Done jika:
+
+- satu ghost muncul, bergerak, dan menampilkan response visual dasar dari Studio playtest
+
+### 7. Integrasi tool minimum
+
+Status:
+
+- done
+- tool minimum pertama ditetapkan sebagai `JejakEnergi`
+- resolver `matchId` pada jalur `EvidenceGateway` dan `EvidenceSystem.Controller` sudah diperbaiki
+- propagasi reason pada `EvidenceRandomizer` sudah diperbaiki, sehingga kegagalan tool tidak lagi jatuh ke `spawn_failed` generik
+- `JournalUI` sekarang menyegarkan blok `Tool E2E` saat menerima `EvidenceCollected` dari tool yang berhasil
+- validasi deterministik sukses dengan ghost kompatibel `Leak`:
+  - client request `JejakEnergiScan` berhasil untuk `match_1`
+  - response tool kembali `success=true`, `reason=collected`, `evidenceType=MEDOK`
+  - `JournalUI` menampilkan `Discovered Evidence - MEDOK`
+  - `ToolStatusLabel` menampilkan `Evidence berhasil dibaca. / Collected MEDOK`
+
+Pekerjaan:
+
+- tetapkan tool minimum untuk loop investigasi pertama
+- import model/tool visual jika memang dibutuhkan
+- sinkronkan UI tool dengan evidence system
+
+Done jika:
+
+- satu tool minimum bisa dipakai dari awal match sampai evidence terbaca
+
+### 8. Stabilkan satu map playable
+
+Status:
+
+- done untuk baseline blocker/collision map utama
+- `HauntedHouse` ditetapkan sebagai map playable pertama
+- runtime clone sekarang menormalkan `InteractionPoints` ke room anchor yang benar
+- pintu interior clone sekarang memiliki fallback traversal runtime:
+  - `DoorTraversalRuntimePatched = true`
+  - `DoorTraversalMode = AutoOpenToggle`
+  - `Door_DiningRoom.CanCollide = false`
+  - `Door_DiningRoom` memiliki `DoorPathModifier`
+- rute interior yang sebelumnya gagal sekarang lolos setelah karakter ditempatkan di spawn map aktif
+- fallback pintu sekarang digeneralisasi ke semua map playable current:
+  - `HauntedHouse`
+  - `AbandonedPalace`
+  - `EmptyBuilding`
+  - `StudioMMNineteen`
+- validasi live tambahan di `Ranked + EmptyBuilding` membuktikan clone map masih memakai policy yang sama:
+  - `Workspace.ActiveMatches.Match_match_1.EmptyBuilding.DoorTraversalMode = AutoOpenToggle`
+  - `Door_Lobby.DoorTraversalPolicy = AutoOpenToggle`
+  - `Door_Lobby.CanCollide = false`
+- validasi live tambahan setelah fix `DoorRuntime` membuktikan pintu tidak lagi sekadar pass-through:
+  - `Door_Lobby.DoorObjectId = Door_Lobby`
+  - `Door_Lobby` sekarang punya child `DoorPrompt` (`ProximityPrompt`)
+  - `Door_Lobby` benar-benar terbuka secara visual (`Rotation.Y ~= -88`)
+- art pass map masih belum final, tetapi tidak lagi menjadi blocker untuk loop vertical slice
+- pintu sekarang dianggap default auto-open lintas platform, jadi loop playable tidak lagi bergantung pada prompt manual
+
+Pekerjaan:
+
+- pilih satu map utama
+- audit extraction zone, spawn, blocker, collision, dan art pass minimum
+
+Done jika:
+
+- satu map bisa dipakai untuk satu match penuh tanpa blocker besar
+
+### 9. Rapikan HUD inti
+
+Status:
+
+- done
+- phase renderer client tidak lagi bergantung pada `HorrorHUD` legacy yang child-nya tidak ada
+- `UISystem` sekarang menargetkan jalur canonical:
+  - `SensoryHorrorHUD` untuk overlay sanity/vignette
+  - `MatchUX` untuk objective / hunt state
+- `TransitionTo(\"Investigation\")` sekarang menampilkan objective text default pada `MatchUX`
+- `TransitionTo(\"Hunt\")` sekarang menampilkan state `HUNT` di `MatchUX`
+- validasi runtime owner berhasil:
+  - `PlayerGui.MatchUI = 1`
+  - `PlayerGui.LobbyUI = 1`
+  - `PlayerGui.PASRA_UI = 1`
+  - `PlayerGui.SpectatorUI = 1`
+- blocker automation `CreateRoom + HostStart` via MCP direct path sudah tertutup:
+  - client menerima `MatchPreparing`
+  - client menerima `MatchStarted`
+  - client menerima `PhaseChanged`
+  - `MatchPhase` client sekarang mencapai `InGame`
+  - karakter benar-benar berpindah ke map aktif
+  - `InLobby` tidak lagi tertinggal saat teleport sukses
+- validasi full live terhadap state `Hunt/Result` sekarang sudah tertutup via jalur Studio-only E2E harness:
+  - `Ranked + EmptyBuilding` tervalidasi memakai selection canonical `Ranked`
+  - `Hunt` tampil pada HUD dengan state `HUNT`
+  - `Result` tampil pada HUD setelah extraction override Studio
+  - player kembali ke lobby dan `ActiveMatches = 0`
+- drift fase awal client juga sudah dipotong:
+  - setelah `HostStart` pada `Ranked + EmptyBuilding`, client tetap berada di `Preparation/Briefing`
+  - `Player.MatchPhase = Briefing`
+  - `MatchUI.MainPanel.StateBadge = PERSIAPAN`
+  - trace server tetap `phase=PreparationPhase`
+  - jadi client tidak lagi meloncat ke `INVESTIGASI` sebelum server lifecycle benar-benar maju
+- jalur heartbeat sensory sekarang sudah canonical:
+  - `ReplicatedStorage.Assets.Audio.Sensory.Heartbeat` sudah source-controlled
+  - `AudioController` tidak lagi berhenti pada fallback kosong
+  - validasi live pada `Ranked + HuntPhase` menunjukkan runtime heartbeat:
+    - `MissingSourceAsset = false`
+    - `IsPlaying = true`
+    - `Volume = 0.2`
+- owner `SensoryHorrorHUD` sekarang benar-benar boot:
+  - `SoundSystem` meregistrasikan `HorrorHUD`
+  - `PlayerGui.SensoryHorrorHUD` hadir saat playtest
+- bridge `SanitySystem -> RemoteEvents.SanityEvent` sekarang hidup:
+  - update sanity runtime benar-benar sampai ke client
+  - validasi live `DrainSanity` pada `Ranked + EmptyBuilding` menunjukkan:
+    - `PasrahStudioE2ELastResult = match=match_1 sanity=20`
+    - `SensoryHorrorHUD.Vignette.GroupTransparency` turun `0.815 -> 0.29`
+    - `Lighting.SensorySanityGrading.Saturation` berubah `-0.1 -> -0.7`
+    - `Lighting.SensorySanityGrading.Contrast` berubah `0.1 -> 0.4`
+- catatan penting untuk automation:
+  - jalur room browser memakai `player selection` sebagai sumber mode canonical
+  - jadi automation harus memanggil `SelectMode("Ranked")` sebelum `CreateRoom/HostStart`
+  - payload `HostStart(mode = "Ranked")` saja tidak mengganti selection yang tersimpan
+
+Pekerjaan:
+
+- lanjut ke polish asset/audio final bila diperlukan, bukan lagi wiring HUD inti
+
+Done jika:
+
+- HUD inti tampil konsisten tanpa placeholder besar
+
+## P2 - Content dan Presentation
+
+### 10. Lengkapi ghost roster
+
+Pekerjaan:
+
+- tambah model final untuk ghost lain
+- sambungkan animation/audio per ghost
+
+### 11. Lengkapi tool roster
+
+Pekerjaan:
+
+- tool visual
+- icon
+- placement
+- UI state
+
+### 12. Rapikan UI modular
+
+Status:
+
+- in progress
+- `RoyalPassUI` sekarang sudah punya owner canonical aktif di `src/client/UI/Main.lua`
+- `RoyalPassEvent` sekarang source-controlled dan mendorong snapshot runtime ke client
+- validasi live di Studio membuktikan:
+  - tombol float `PASS` muncul di lobby
+  - klik membuka panel `Royal Pass`
+  - hotkey `R` menutup dan membuka kembali panel
+- room browser dan host room sekarang tidak lagi memakai literal `MAP IMAGE` placeholder:
+  - preview map sudah menjadi kartu prosedural source-owned
+  - kartu menampilkan glyph map, atmosfer, ukuran, jumlah room, lantai, dan footer nama map
+  - validasi live membuktikan perubahan muncul di daftar room dan panel host room
+- `ShopUI` item rows sekarang tidak lagi hanya teks + tombol polos:
+  - tiap item punya glyph prosedural, badge kategori/slot, accent rarity, dan pill harga/currency
+  - validasi live membuktikan kartu shop tampil di runtime canonical `ShopUI.MainPanel`
+- panel lobby sekarang punya CTA `ROYAL PASS` langsung:
+  - layout tombol lobby naik menjadi grid yang lebih jelas
+  - tombol baru terbukti membuka `RoyalPassUI.MainPanel` di runtime live
+- panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
+
+Pekerjaan:
+
+- `RoyalPassUI`
+- `ShopUI`
+- `ProfileUI`
+- `JournalUI`
+- `MatchUI`
+- `LobbyUI`
+
+Done jika:
+
+- semua panel utama punya owner file yang jelas
+
+### 13. Polish audio dan visual
+
+Status:
+
+- in progress
+- surface preview map aktif sudah naik dari placeholder generik ke visual prosedural source-owned
+- debt polish yang masih tersisa tetap besar:
+  - ambient loops final
+  - jumpscare cues final
+  - material/lighting pass map
+  - icon dan asset visual konten lain
+
+Pekerjaan:
+
+- map preview
+- ambient loops
+- impact sounds
+- jumpscare cues
+- material and lighting polish
+
+## P3 - Publish Readiness
+
+### 14. Persistence nyata
+
+Pekerjaan:
+
+- validasi di lingkungan non-mock
+- audit schema player data
+- failover dan migration plan
+
+Done jika:
+
+- data session penting tersimpan dan pulih dengan benar
+
+### 15. Monetization bridge Roblox
+
+Status:
+
+- in progress
+- `PurchaseEvent` tidak lagi dianggap final owner transaksi untuk item `Robux`
+- server sekarang punya bridge resmi ke `MarketplaceService` untuk:
+  - `PromptGamePassPurchaseFinished`
+  - `ProcessReceipt`
+  - ownership sync `UserOwnsGamePassAsync`
+- `ShopSystem` sekarang mengenali item katalog dengan metadata:
+  - `currency`
+  - `marketplaceType`
+  - `marketplaceId`
+  - `entitlementKey`
+  - `royalPassPremium`
+- UI shop sekarang siap menerima `PurchasePromptRequested` dan membuka prompt Roblox dari client canonical
+- validasi live memastikan purchase MM lama tidak regress:
+  - request `eq_sanitypill_standard` tetap diproses pada jalur lama
+  - hasil runtime tetap jujur `PurchaseProcessed(success=false, reason=insufficient_currency)`
+- blocker tersisa:
+  - belum ada item source-controlled yang benar-benar punya `gamePassId/productId` nyata
+  - jadi jalur Robux production belum bisa ditutup end-to-end tanpa input manual dari Creator Hub
+
+Pekerjaan:
+
+- sambungkan Robux purchase flow nyata
+- pastikan economy tidak hanya konseptual
+- audit entitlement dan reward grant
+
+Done jika:
+
+- pembelian Roblox benar-benar bekerja end-to-end
+
+### 16. Licensing dan attribution
+
+Status:
+
+- in progress
+- ledger awal sudah dibuat di `reports/ASSET_LICENSE_LEDGER_2026-04-03.md`
+- validasi live `MarketplaceService:GetProductInfo()` sekarang sudah menutup sebagian asset aktif:
+  - `Heartbeat` terverifikasi account-owned (`Creator = ZyraaaVex`)
+  - `Jumpscare_01` terverifikasi `IsPublicDomain = true`
+  - pack animasi aktif terverifikasi sebagai animasi default `Roblox`
+- blocker yang masih nyata sekarang menyempit ke:
+  - `Pocong` masih `user-asserted` sampai bukti lisensinya diarsipkan
+  - lima slot ghost audio kosong masih `replace/remove`
+  - upload asset final ke Roblox account masih perlu langkah manual
+- replacement queue dan helper apply sekarang sudah siap:
+  - `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
+  - `scripts/set-audio-asset-ids.ps1`
+
+Pekerjaan:
+
+- audit seluruh asset eksternal
+- catat lisensi dan atribusi
+- gantikan asset yang tidak aman untuk komersial
+
+Done jika:
+
+- tidak ada asset komersial yang status lisensinya meragukan
+
+### 17. QA dan perf gate
+
+Pekerjaan:
+
+- memory baseline
+- network sanity
+- server log cleanliness
+- multi-player test
+
+Done jika:
+
+- pass gate minimum sebelum publish
+
+## Urutan Praktis
+
+Urutan yang paling masuk akal dari titik sekarang:
+
+1. P0.1 sampai P0.5
+2. P1.6 sampai P1.9
+3. P2.10 sampai P2.13
+4. P3.14 sampai P3.17
+
+## Hal yang Jangan Dilakukan Dulu
+
+- jangan tambah ghost baru sebelum satu ghost vertical slice beres
+- jangan hidupkan kembali `Rojo Two-Way Edit`
+- jangan andalkan state Studio-only tanpa mirror ke repo
+- jangan aktifkan monetization publik sebelum licensing dan commerce bridge benar-benar siap

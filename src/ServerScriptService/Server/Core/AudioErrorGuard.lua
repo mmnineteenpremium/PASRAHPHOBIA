@@ -1,6 +1,7 @@
 local AudioErrorGuard = {}
 
 local PLACEHOLDER_TOKEN = "YOUR_NEW_SOUND"
+local SANITIZED_ATTRIBUTE = "PasrahAudioSanitized"
 
 local function isInvalidSoundId(soundId)
     if type(soundId) ~= "string" then
@@ -22,10 +23,29 @@ local function disableSound(sound)
     sound:Stop()
 end
 
+local function isIntentionalSourcePlaceholder(sound)
+    local replicatedStorage = game:FindFirstChild("ReplicatedStorage")
+    if not replicatedStorage then
+        return false
+    end
+    local assets = replicatedStorage:FindFirstChild("Assets")
+    local audio = assets and assets:FindFirstChild("Audio")
+    if not audio then
+        return false
+    end
+    return sound:IsDescendantOf(audio) and sound.SoundId == ""
+end
+
 function AudioErrorGuard.Scan()
     local contentProvider = game:GetService("ContentProvider")
     for _, instance in ipairs(game:GetDescendants()) do
         if instance:IsA("Sound") then
+            if instance:GetAttribute(SANITIZED_ATTRIBUTE) == true then
+                continue
+            end
+            if isIntentionalSourcePlaceholder(instance) then
+                continue
+            end
             if isInvalidSoundId(instance.SoundId) then
                 disableSound(instance)
             else

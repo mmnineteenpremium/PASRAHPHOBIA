@@ -1,12 +1,12 @@
 {
   "className": "Sound",
   "properties": {
-    "Name": "GhostManifest_01",
-    "SoundId": "rbxassetid://1837829568",
-    "Looped": false,
+    "AudioContent": "rbxassetid://83336813491039",
+    "RollOffMinDistance": 8.0,
     "Volume": 0.75,
-    "RollOffMinDistance": 8,
-    "RollOffMaxDistance": 100,
-    "PlaybackSpeed": 1
+    "RollOffMaxDistance": 100.0,
+    "AcousticSimulationEnabled": {
+      "Bool": true
+    }
   }
 }

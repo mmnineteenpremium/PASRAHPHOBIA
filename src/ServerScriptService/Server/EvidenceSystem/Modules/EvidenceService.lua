@@ -1271,8 +1271,15 @@ function EvidenceService:CollectEvidence(player, matchId, payload)
 		})
 		self:_publish("EvidenceCollected", {
 			player = player,
+			userId = player and player.UserId or nil,
 			matchId = matchId,
 			evidenceType = result.evidenceType,
+			toolType = payload and payload.toolType,
+			activity = payload and payload.activity,
+			roomId = payload and payload.roomId,
+			nearGhostRoom = payload and payload.nearGhostRoom == true,
+			toolNearGhostRoom = payload and payload.toolNearGhostRoom == true,
+			now = payload and payload.now,
 		})
 		self:_publishCombinationResolution(player, matchId, payload and payload.now)
 		local candidates = self:_computeDeductionCandidates(matchId)

@@ -27,34 +27,19 @@ function Controller.new(state, service, deps)
     return self
 end
 
-local function ensureRemoteFolder(replicatedStorage)
-    local remoteFolder = replicatedStorage:FindFirstChild("RemoteEvents")
-    if remoteFolder and remoteFolder:IsA("Folder") then
-        return remoteFolder
-    end
-    if remoteFolder then
-        remoteFolder:Destroy()
-    end
-    remoteFolder = Instance.new("Folder")
-    remoteFolder.Name = "RemoteEvents"
-    remoteFolder.Parent = replicatedStorage
-    return remoteFolder
-end
-
 function Controller:_resolveSpectatorRemote()
     local replicatedStorage = game:GetService("ReplicatedStorage")
-    local remoteFolder = ensureRemoteFolder(replicatedStorage)
+    local remoteFolder = replicatedStorage:FindFirstChild("RemoteEvents")
+    if not (remoteFolder and remoteFolder:IsA("Folder")) then
+        warn("[SpectatorSystem] Missing canonical folder ReplicatedStorage.RemoteEvents")
+        return nil
+    end
     local remote = remoteFolder:FindFirstChild("SpectatorEvidence")
     if remote and remote:IsA("RemoteEvent") then
         return remote
     end
-    if remote then
-        remote:Destroy()
-    end
-    remote = Instance.new("RemoteEvent")
-    remote.Name = "SpectatorEvidence"
-    remote.Parent = remoteFolder
-    return remote
+    warn("[SpectatorSystem] Missing canonical remote ReplicatedStorage.RemoteEvents.SpectatorEvidence")
+    return nil
 end
 
 function Controller:Init()

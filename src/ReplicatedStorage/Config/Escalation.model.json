@@ -1,180 +1,154 @@
 {
+  "className": "Folder",
   "children": [
     {
-      "children": [
-        {
-          "properties": {
-            "Name": "StageName",
-            "Value": "Calm"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "DurationSeconds",
-            "Value": 90.0
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionBoost",
-            "Value": 0.0
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "TensionDelta",
-            "Value": 0.0
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "ForceHunt",
-            "Value": false
-          },
-          "className": "BoolValue"
-        }
-      ],
+      "name": "Tension",
       "className": "Folder",
-      "properties": {
-        "Name": "Calm"
-      }
-    },
-    {
       "children": [
         {
+          "name": "StageName",
+          "className": "StringValue",
           "properties": {
-            "Name": "StageName",
             "Value": "Tension"
-          },
-          "className": "StringValue"
+          }
         },
         {
+          "name": "DurationSeconds",
+          "className": "NumberValue",
           "properties": {
-            "Name": "DurationSeconds",
             "Value": 120.0
-          },
-          "className": "NumberValue"
+          }
         },
         {
+          "name": "AggressionBoost",
+          "className": "NumberValue",
           "properties": {
-            "Name": "AggressionBoost",
             "Value": 6.0
-          },
-          "className": "NumberValue"
+          }
         },
         {
+          "name": "TensionDelta",
+          "className": "NumberValue",
           "properties": {
-            "Name": "TensionDelta",
             "Value": 2.0
-          },
-          "className": "NumberValue"
+          }
         },
         {
-          "properties": {
-            "Name": "ForceHunt",
-            "Value": false
-          },
+          "name": "ForceHunt",
           "className": "BoolValue"
         }
-      ],
-      "className": "Folder",
-      "properties": {
-        "Name": "Tension"
-      }
+      ]
     },
     {
-      "children": [
-        {
-          "properties": {
-            "Name": "StageName",
-            "Value": "Aggressive"
-          },
-          "className": "StringValue"
-        },
-        {
-          "properties": {
-            "Name": "DurationSeconds",
-            "Value": 120.0
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "AggressionBoost",
-            "Value": 12.0
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "TensionDelta",
-            "Value": 4.0
-          },
-          "className": "NumberValue"
-        },
-        {
-          "properties": {
-            "Name": "ForceHunt",
-            "Value": false
-          },
-          "className": "BoolValue"
-        }
-      ],
+      "name": "Hunting",
       "className": "Folder",
-      "properties": {
-        "Name": "Aggressive"
-      }
-    },
-    {
       "children": [
         {
+          "name": "StageName",
+          "className": "StringValue",
           "properties": {
-            "Name": "StageName",
             "Value": "Hunting"
-          },
-          "className": "StringValue"
+          }
         },
         {
+          "name": "DurationSeconds",
+          "className": "NumberValue",
           "properties": {
-            "Name": "DurationSeconds",
             "Value": 999.0
-          },
-          "className": "NumberValue"
+          }
         },
         {
+          "name": "AggressionBoost",
+          "className": "NumberValue",
           "properties": {
-            "Name": "AggressionBoost",
             "Value": 18.0
-          },
-          "className": "NumberValue"
+          }
         },
         {
+          "name": "TensionDelta",
+          "className": "NumberValue",
           "properties": {
-            "Name": "TensionDelta",
             "Value": 6.0
-          },
-          "className": "NumberValue"
+          }
         },
         {
+          "name": "ForceHunt",
+          "className": "BoolValue",
           "properties": {
-            "Name": "ForceHunt",
             "Value": true
-          },
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aggressive",
+      "className": "Folder",
+      "children": [
+        {
+          "name": "StageName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Aggressive"
+          }
+        },
+        {
+          "name": "DurationSeconds",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 120.0
+          }
+        },
+        {
+          "name": "AggressionBoost",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 12.0
+          }
+        },
+        {
+          "name": "TensionDelta",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 4.0
+          }
+        },
+        {
+          "name": "ForceHunt",
           "className": "BoolValue"
         }
-      ],
+      ]
+    },
+    {
+      "name": "Calm",
       "className": "Folder",
-      "properties": {
-        "Name": "Hunting"
-      }
+      "children": [
+        {
+          "name": "StageName",
+          "className": "StringValue",
+          "properties": {
+            "Value": "Calm"
+          }
+        },
+        {
+          "name": "DurationSeconds",
+          "className": "NumberValue",
+          "properties": {
+            "Value": 90.0
+          }
+        },
+        {
+          "name": "AggressionBoost",
+          "className": "NumberValue"
+        },
+        {
+          "name": "TensionDelta",
+          "className": "NumberValue"
+        },
+        {
+          "name": "ForceHunt",
+          "className": "BoolValue"
+        }
+      ]
     }
-  ],
-  "className": "Folder",
-  "properties": {
-    "Name": "Escalation"
-  }
+  ]
 }

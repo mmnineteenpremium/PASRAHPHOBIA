@@ -1,0 +1,70 @@
+{
+  "className": "Model",
+  "properties": {
+    "Name": "Pocong"
+  },
+  "children": [
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "HumanoidRootPart",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 1.0,
+        "Position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "Size": [
+          2.0,
+          2.0,
+          1.0
+        ],
+        "Material": "SmoothPlastic",
+        "Color": [
+          0.31,
+          0.34,
+          0.38
+        ]
+      }
+    },
+    {
+      "className": "MeshPart",
+      "properties": {
+        "Name": "material",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 0.0,
+        "Position": [
+          0.0,
+          10.5,
+          0.0
+        ],
+        "Size": [
+          6.6,
+          23.0,
+          5.35
+        ],
+        "MeshId": "rbxassetid://118360815663860",
+        "TextureID": ""
+      },
+      "children": [
+        {
+          "className": "SurfaceAppearance",
+          "properties": {
+            "Name": "SurfaceAppearance",
+            "ColorMap": "rbxassetid://119582538265133",
+            "NormalMap": "rbxassetid://133491195386808",
+            "RoughnessMap": "rbxassetid://108763420495258",
+            "MetalnessMap": "rbxassetid://112794460017202"
+          }
+        }
+      ]
+    }
+  ]
+}

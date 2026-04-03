@@ -151,15 +151,17 @@ function EvidenceGateway:_resolveRemoteFunction()
 	local ok, replicatedStorage = pcall(function()
 		return game:GetService("ReplicatedStorage")
 	end)
-	if not ok then
+	if not ok or typeof(replicatedStorage) ~= "Instance" then
 		return nil
 	end
 
 	local remoteFunctionsFolder = replicatedStorage:FindFirstChild(REMOTE_FUNCTIONS_FOLDER_NAME)
-	if not remoteFunctionsFolder then
-		remoteFunctionsFolder = Instance.new("Folder")
-		remoteFunctionsFolder.Name = REMOTE_FUNCTIONS_FOLDER_NAME
-		remoteFunctionsFolder.Parent = replicatedStorage
+	if not (remoteFunctionsFolder and remoteFunctionsFolder:IsA("Folder")) then
+		warn(string.format(
+			"[EvidenceGateway] Missing canonical folder ReplicatedStorage.%s",
+			REMOTE_FUNCTIONS_FOLDER_NAME
+		))
+		return nil
 	end
 
 	local requestFunction = remoteFunctionsFolder:FindFirstChild(EVIDENCE_REQUEST_FUNCTION_NAME)
@@ -167,10 +169,12 @@ function EvidenceGateway:_resolveRemoteFunction()
 		return requestFunction
 	end
 
-	local created = Instance.new("RemoteFunction")
-	created.Name = EVIDENCE_REQUEST_FUNCTION_NAME
-	created.Parent = remoteFunctionsFolder
-	return created
+	warn(string.format(
+		"[EvidenceGateway] Missing canonical remote ReplicatedStorage.%s.%s",
+		REMOTE_FUNCTIONS_FOLDER_NAME,
+		EVIDENCE_REQUEST_FUNCTION_NAME
+	))
+	return nil
 end
 
 function EvidenceGateway:Start()
@@ -193,11 +197,21 @@ function EvidenceGateway:Stop()
 end
 
 function EvidenceGateway:_resolveMatchIdForPlayer(player, requestPayload)
-	local providedMatchId = nil
+	local providedMatchId = requestPayload and requestPayload.matchId
+	if player and providedMatchId == nil then
+		providedMatchId = player:GetAttribute("MatchId")
+	end
+	if providedMatchId ~= nil then
+		providedMatchId = tostring(providedMatchId)
+	end
 	local state = self._matchSystem and self._matchSystem.State
 	local matches = state and state:Get("matches")
 	if type(matches) ~= "table" then
-		return nil
+		return providedMatchId
+	end
+
+	if providedMatchId and matches[providedMatchId] ~= nil then
+		return providedMatchId
 	end
 
 	for matchId, match in pairs(matches) do

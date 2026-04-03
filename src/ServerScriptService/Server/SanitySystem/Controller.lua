@@ -1,5 +1,10 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Controller = {}
 Controller.__index = Controller
+
+local SANITY_REMOTE_NAME = "SanityEvent"
 
 local function resolveEventBus(deps)
     local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
@@ -22,11 +27,12 @@ function Controller.new(state, service, deps)
     self._deps = deps or {}
     self._subscriptions = {}
     self._eventBus = resolveEventBus(self._deps)
+    self._sanityRemote = nil
     return self
 end
 
 function Controller:Init()
-    -- Prepare controller-level wiring here.
+    self._sanityRemote = self:_resolveSanityRemote()
 end
 
 function Controller:RegisterEventHandlers()
@@ -40,6 +46,7 @@ function Controller:RegisterEventHandlers()
             return
         end
         self._service:StartMatch(matchId, payload and payload.players or {}, payload and payload.difficultyProfile)
+        self:_sendInitialSanity(matchId, payload and payload.players or {})
     end)
 
     self:_subscribe("MatchEnded", function(payload)
@@ -90,6 +97,10 @@ function Controller:RegisterEventHandlers()
         end
         self._service:RemovePlayer(matchId, playerId)
     end)
+
+    self:_subscribe("SanityChanged", function(payload)
+        self:_sendSanityUpdate(payload)
+    end)
 end
 
 function Controller:UnregisterEventHandlers()
@@ -112,6 +123,73 @@ function Controller:_subscribe(eventName, callback)
         eventName = eventName,
         callback = callback,
     })
+end
+
+function Controller:_resolveSanityRemote()
+    local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+    if not remoteFolder then
+        return nil
+    end
+    local remote = remoteFolder:FindFirstChild(SANITY_REMOTE_NAME)
+    if remote and remote:IsA("RemoteEvent") then
+        return remote
+    end
+    return nil
+end
+
+function Controller:_resolvePlayer(playerOrUserId)
+    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+        return playerOrUserId
+    end
+    if type(playerOrUserId) == "number" then
+        local ok, player = pcall(function()
+            return Players:GetPlayerByUserId(playerOrUserId)
+        end)
+        if ok then
+            return player
+        end
+    end
+    return nil
+end
+
+function Controller:_sendSanityUpdate(payload)
+    if not self._sanityRemote or type(payload) ~= "table" then
+        return
+    end
+    local player = self:_resolvePlayer(payload.player or payload.userId)
+    if not player then
+        return
+    end
+    self._sanityRemote:FireClient(player, {
+        matchId = payload.matchId,
+        userId = payload.userId or player.UserId,
+        newSanity = payload.newSanity,
+        oldSanity = payload.oldSanity,
+        sanity = payload.newSanity,
+        sanityBand = payload.sanityBand,
+        reason = payload.reason,
+        source = "SanitySystem",
+    })
+end
+
+function Controller:_sendInitialSanity(matchId, players)
+    if not self._sanityRemote then
+        return
+    end
+    for _, entry in ipairs(players or {}) do
+        local player = self:_resolvePlayer(entry)
+        if player then
+            self._sanityRemote:FireClient(player, {
+                matchId = matchId,
+                userId = player.UserId,
+                newSanity = self._service:GetSanity(player, matchId),
+                sanity = self._service:GetSanity(player, matchId),
+                sanityBand = "Stable",
+                reason = "match_started",
+                source = "SanitySystem",
+            })
+        end
+    end
 end
 
 return Controller

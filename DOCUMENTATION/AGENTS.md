@@ -208,7 +208,8 @@ Backend systems are active in runtime and mostly stabilized.
 Current focus items:
 
 Robux purchase flow hardening
-Classic difficulty auto-balance parity
+Classic difficulty choices by 4 difficulty
+Ranked mode difficulty by tier and level calculation
 Investigation expansion beyond 6 core evidence tools
 Telemetry and production diagnostics polish
 

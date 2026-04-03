@@ -5,6 +5,8 @@ local DoorRuntime = require(script.Parent.DoorRuntime)
 local MapRuntimePatches = require(script.Parent.MapRuntimePatches)
 
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local SAFE_MIN_SPAWN_Y = 2.5
 local FLOOR_CHECK_DISTANCE = 50
@@ -17,6 +19,8 @@ local FLOOR_RETRY_MAX_ITERATIONS = 6
 local FLOOR_RETRY_EPSILON = 0.05
 local SPAWN_WAIT_TIMEOUT = 5
 local SPAWN_WAIT_STEP = 0.1
+local CHARACTER_WAIT_TIMEOUT = 5
+local CHARACTER_WAIT_STEP = 0.1
 local DEFAULT_FORWARD = Vector3.new(0, 0, -1)
 
 -- Streaming + physics stabilization for in-place teleports (StreamingEnabled = true).
@@ -262,6 +266,54 @@ local function getCharacterRoot(character)
 		return character.PrimaryPart
 	end
 	return character:FindFirstChild("HumanoidRootPart") or character:FindFirstChildWhichIsA("BasePart")
+end
+
+local function waitForCharacterRoot(player, timeoutSeconds)
+	local function resolveCharacterAndRoot()
+		local character = player and player.Character
+		local root = getCharacterRoot(character)
+		if character and root then
+			return character, root
+		end
+
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			local fallbackCharacter = Workspace:FindFirstChild(player.Name)
+			if fallbackCharacter and fallbackCharacter:IsA("Model") then
+				local fallbackRoot = getCharacterRoot(fallbackCharacter)
+				if fallbackRoot then
+					return fallbackCharacter, fallbackRoot
+				end
+			end
+		end
+
+		return character, root
+	end
+
+	local deadline = os.clock() + (tonumber(timeoutSeconds) or CHARACTER_WAIT_TIMEOUT)
+	repeat
+		local character, root = resolveCharacterAndRoot()
+		if character and root then
+			return character, root
+		end
+		task.wait(CHARACTER_WAIT_STEP)
+	until os.clock() >= deadline
+
+	return resolveCharacterAndRoot()
+end
+
+local function setStudioTeleportTrace(summary, count)
+	if not RunService:IsStudio() then
+		return
+	end
+	ReplicatedStorage:SetAttribute("PasrahLastTeleportTrace", summary)
+	ReplicatedStorage:SetAttribute("PasrahLastTeleportedCount", count)
+end
+
+local function updateStudioTeleportTrace(parts, count, segment)
+	if type(segment) == "string" and segment ~= "" then
+		table.insert(parts, segment)
+	end
+	setStudioTeleportTrace(table.concat(parts, " | "), count)
 end
 
 local function resolveHumanoidFloorClearance(character)
@@ -641,24 +693,50 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 		end
 		DoorRuntime.Attach(match, mapClone, self._deps)
 
+		local teleportTrace = {
+			string.format("match=%s", tostring(match and (match.matchId or match.id) or "nil")),
+			string.format("map=%s", tostring(resolvedMapName or resolvedTemplateName)),
+			"status=map_cloned",
+			"status=waiting_spawn_points",
+		}
+		updateStudioTeleportTrace(teleportTrace, #teleported, nil)
+
 		local spawnPoints = waitForSpawnCandidates(mapClone)
 		if #spawnPoints == 0 then
 			warn("[MatchTeleport] SpawnPoints missing/empty after map load:", mapClone:GetFullName())
 		end
 
+		updateStudioTeleportTrace(
+			teleportTrace,
+			#teleported,
+			string.format("status=spawn_points_ready count=%d", #spawnPoints)
+		)
 		for index, player in ipairs(players) do
 			if typeof(player) == "Instance" and player:IsA("Player") then
-				local character = player.Character
-				local root = getCharacterRoot(character)
+				updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=resolve_root", player.Name))
+				local character, root = waitForCharacterRoot(player, CHARACTER_WAIT_TIMEOUT)
 				local floorClearance = resolveHumanoidFloorClearance(character)
+				updateStudioTeleportTrace(
+					teleportTrace,
+					#teleported,
+					string.format(
+						"player=%s status=root_%s",
+						player.Name,
+						root and "ok" or "missing"
+					)
+				)
 				local safeSpawnCFrame = resolveSafeSpawnCFrame(mapClone, spawnPoints, index, floorClearance)
 				if not safeSpawnCFrame then
 					warn("[MatchTeleport] HARD FAIL SAFE SPAWN TRIGGERED")
 					local fallbackPart = mapClone:FindFirstChildWhichIsA("BasePart", true)
 					if fallbackPart then
 						safeSpawnCFrame = fallbackPart.CFrame + Vector3.new(0, 6, 0)
+						table.insert(teleportTrace, string.format("%s:fallbackPart=%s", player.Name, fallbackPart:GetFullName()))
+						updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=fallback_spawn", player.Name))
 					else
 						warn("[MatchTeleport] NO VALID SPAWN, SKIP PLAYER")
+						table.insert(teleportTrace, string.format("%s:skip_no_spawn", player.Name))
+						updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=skip_no_spawn", player.Name))
 						continue
 					end
 				end
@@ -666,27 +744,38 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 				if not root then
 					local playerName = player and player.Name or "Unknown"
 					warn(string.format("[MatchTeleport] Skip teleport for %s (invalid root).", playerName))
+					table.insert(teleportTrace, string.format("%s:skip_invalid_root", playerName))
+					updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=skip_invalid_root", playerName))
 					continue
 				end
 
 				player:SetAttribute("SpawnProtected", true)
 				player:SetAttribute("SpawnProtectedUntil", os.clock() + 3)
 
+				updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=teleporting", player.Name))
 				local teleOk = safeTeleportCharacter(player, safeSpawnCFrame)
 				if not teleOk then
 					-- Fallback: keep legacy behavior if character is in a strange state.
 					root.CFrame = safeSpawnCFrame
 					clearAssemblyVelocities(root)
+					table.insert(teleportTrace, string.format("%s:teleportFallbackDirectCFrame", player.Name))
+					updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=fallback_cframe", player.Name))
+				else
+					table.insert(teleportTrace, string.format("%s:teleportOk", player.Name))
+					updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=teleport_ok", player.Name))
 				end
 
 				player:SetAttribute("InMatch", true)
+				player:SetAttribute("InLobby", nil)
 				if match and (match.matchId or match.id) then
 					player:SetAttribute("MatchId", tostring(match.matchId or match.id))
 				end
 				table.insert(teleported, player)
+				updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=teleported_counted", player.Name))
 			end
 		end
 
+		setStudioTeleportTrace(table.concat(teleportTrace, " | "), #teleported)
 		return teleported
 	end
 

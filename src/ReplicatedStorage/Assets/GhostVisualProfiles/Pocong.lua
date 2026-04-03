@@ -1,0 +1,16 @@
+return {
+	profileType = "SingleMesh",
+	modelName = "Ghost_Pocong",
+	meshPartName = "material",
+	rootSize = { 2, 2, 1 },
+	size = { 6.6, 23.0, 5.35 },
+	visualOffset = { 0, 10.5, 0 },
+	meshId = "rbxassetid://118360815663860",
+	textureId = "",
+	colorMap = "rbxassetid://119582538265133",
+	normalMap = "rbxassetid://133491195386808",
+	roughnessMap = "rbxassetid://108763420495258",
+	metalnessMap = "rbxassetid://112794460017202",
+	transparency = 0,
+	castShadow = false,
+}

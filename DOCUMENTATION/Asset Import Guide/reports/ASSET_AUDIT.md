@@ -5,7 +5,7 @@ Mode: READ ONLY (tanpa perubahan kode/sistem; hanya pembuatan laporan)
 
 Basis audit:
 - Struktur file di `src/`
-- Requirement UI di `DATA TEXT/DOCUMENTATION/PASRAHPHOBIA_UI_REQUIREMENTS.md`
+- Requirement UI di `DOCUMENTATION/PASRAHPHOBIA_UI_REQUIREMENTS.md`
 - Wiring runtime dari script client/server
 
 ## 1) UI

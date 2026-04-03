@@ -69,6 +69,7 @@ local REMOTE_NAMES = {
 	"LobbyEvent",
 	"MatchEvent",
 	"PurchaseEvent",
+	"RoyalPassEvent",
 	"SanityEvent",
 }
 

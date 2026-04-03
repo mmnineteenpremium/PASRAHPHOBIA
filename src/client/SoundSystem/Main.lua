@@ -1,5 +1,6 @@
 local AudioController = require(script.Parent.Parent.Controllers.Sensory.AudioController)
 local VFXController = require(script.Parent.Parent.Controllers.Sensory.VFXController)
+local HorrorHUD = require(script.Parent.Parent.UI.HUD.HorrorHUD)
 
 local SoundSystem = {}
 SoundSystem.__index = SoundSystem
@@ -20,6 +21,7 @@ function SoundSystem:Init(context)
 	self._managedControllers = {}
 	self:_registerSensoryController("AudioController", AudioController, context)
 	self:_registerSensoryController("VFXController", VFXController, context)
+	self:_registerSensoryController("HorrorHUD", HorrorHUD, context)
 end
 
 function SoundSystem:Stop()

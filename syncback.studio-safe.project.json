@@ -1,0 +1,80 @@
+{
+  "name": "PASRAHPHOBIA",
+  "syncbackRules": {
+    "ignoreTrees": [],
+    "ignorePaths": [],
+    "ignoreProperties": {},
+    "syncCurrentCamera": false,
+    "syncUnscriptable": true,
+    "ignoreReferents": false
+  },
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "RemoteEvents": {
+        "$path": "src/ReplicatedStorage/RemoteEvents"
+      },
+      "RemoteFunctions": {
+        "$path": "src/ReplicatedStorage/RemoteFunctions"
+      },
+      "Assets": {
+        "$path": "src/ReplicatedStorage/Assets"
+      },
+      "Config": {
+        "$path": "src/ReplicatedStorage/Config"
+      },
+      "Maps": {
+        "$path": "src/ReplicatedStorage/Maps"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "Maps": {
+        "$path": "src/ServerStorage/Maps"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$path": "src/StarterGui"
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Ambient": [0.04, 0.04, 0.05],
+        "OutdoorAmbient": [0.02, 0.02, 0.03],
+        "Brightness": 1,
+        "ClockTime": 18,
+        "FogStart": 18,
+        "FogEnd": 145,
+        "GlobalShadows": true,
+        "ShadowSoftness": 0.75,
+        "Technology": "Future"
+      },
+      "$path": "src/Lighting"
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "StreamingEnabled": true,
+        "StreamingMinRadius": 64,
+        "StreamingTargetRadius": 192
+      },
+      "Maps": {
+        "$path": "src/Workspace/Maps"
+      }
+    }
+  }
+}

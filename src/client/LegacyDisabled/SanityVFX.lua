@@ -10,6 +10,14 @@
     Based on: CANONICAL_SPECIFICATIONS_v2.md Phase 7.4
 ]]
 
+-- Disabled on 2026-04-03.
+-- This legacy LocalScript listens for the removed "SanityUpdate" remote and
+-- duplicates the modern sensory stack driven by SoundSystem/VFXController.
+return {
+	Disabled = true,
+	Reason = "Legacy Sanity VFX script archived after sensory stack consolidation.",
+}
+
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
