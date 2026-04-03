@@ -131,7 +131,6 @@ function Controller.new(state, service, deps)
     self._purchaseRemote = nil
     self._remoteConnection = nil
     self._marketplaceConnections = {}
-    self._previousProcessReceipt = nil
     self._marketplaceItemsByKey = {}
     self._lastRequestAtByUserId = {}
     return self
@@ -311,7 +310,6 @@ function Controller:_connectMarketplaceSignals()
         self:_onGamePassPurchaseFinished(player, gamePassId, purchaseSuccess)
     end))
 
-    self._previousProcessReceipt = MarketplaceService.ProcessReceipt
     MarketplaceService.ProcessReceipt = function(receiptInfo)
         return self:_processReceipt(receiptInfo)
     end
@@ -328,11 +326,6 @@ function Controller:_disconnectMarketplaceSignals()
         connection:Disconnect()
     end
     table.clear(self._marketplaceConnections)
-
-    if MarketplaceService.ProcessReceipt then
-        MarketplaceService.ProcessReceipt = self._previousProcessReceipt
-    end
-    self._previousProcessReceipt = nil
 end
 
 function Controller:_syncCurrentPlayerEntitlements()
