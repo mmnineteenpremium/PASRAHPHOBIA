@@ -2552,6 +2552,7 @@ function UISystem:_syncAuxiliaryWindowVisibility()
 	if not playerGui then
 		return
 	end
+	local blockLobbyFloatRail = self._roomBrowserVisible == true
 
 	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
 		local widgets = self._uxWidgets
@@ -2565,7 +2566,7 @@ function UISystem:_syncAuxiliaryWindowVisibility()
 				setAnimatedPanelVisible(widgets.Panel, screenEnabled and not dismissed, false)
 			end
 			if widgets.FloatButton then
-				widgets.FloatButton.Visible = screenEnabled and dismissed
+				widgets.FloatButton.Visible = screenEnabled and dismissed and not blockLobbyFloatRail
 			end
 		end
 	end
@@ -2605,6 +2606,7 @@ function UISystem:_syncLobbyAuxiliaryWindowVisibility()
 	local lobbyVisible = self._matchPhase == MATCH_PHASE.LOBBY
 		and self._uiState.LobbyUI
 		and self._uiState.LobbyUI.visible == true
+	local blockLobbyFloatRail = self._roomBrowserVisible == true
 
 	for _, guiName in ipairs({ "MainMenuUI", "LeaderboardUI" }) do
 		local gui, panel, floatButton = self:_getBasicWindowState(guiName)
@@ -2618,7 +2620,7 @@ function UISystem:_syncLobbyAuxiliaryWindowVisibility()
 					floatButton.Visible = false
 				end
 			elseif floatButton and floatButton:IsA("GuiObject") then
-				floatButton.Visible = not (panel and panel.Visible == true)
+				floatButton.Visible = (not blockLobbyFloatRail) and not (panel and panel.Visible == true)
 			end
 		end
 	end
@@ -2641,7 +2643,7 @@ end
 
 function UISystem:_layoutLobbyFloatRail()
 	local profile = self._deviceProfile and self._deviceProfile.profile or {}
-	if self._matchPhase ~= MATCH_PHASE.LOBBY then
+	if self._matchPhase ~= MATCH_PHASE.LOBBY or self._roomBrowserVisible == true then
 		return
 	end
 
@@ -8177,9 +8179,12 @@ function UISystem:_ensureRoomBrowserGui()
 		if camera and typeof(camera.ViewportSize) == "Vector2" then
 			viewport = camera.ViewportSize
 		end
-		local scaleX = (viewport.X - 24) / 920
-		local scaleY = (viewport.Y - 24) / 560
-		panelScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.55, 1)
+		local topLeftInset, bottomRightInset = resolveSafeInsets()
+		local availableWidth = math.max(360, viewport.X - (topLeftInset.X + bottomRightInset.X + 24))
+		local availableHeight = math.max(420, viewport.Y - (topLeftInset.Y + bottomRightInset.Y + 24))
+		local scaleX = availableWidth / 920
+		local scaleY = availableHeight / 560
+		panelScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.48, 1.18)
 	end
 	updateRoomBrowserPanelScale()
 	if Workspace.CurrentCamera then

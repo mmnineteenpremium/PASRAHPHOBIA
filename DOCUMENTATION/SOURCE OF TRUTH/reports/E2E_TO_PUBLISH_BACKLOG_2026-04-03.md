@@ -440,13 +440,17 @@ Status:
   - membuka `RoomBrowserUI` dari float `ROOMS` otomatis menyembunyikan `RoyalPassUI`
   - validasi live terbaru membuktikan `lobbyCollapsed = true`, `royalVisible = false`, `roomBrowserVisible = true` setelah transisi `Lobby -> RoyalPass -> RoomBrowser`
 - review live terbaru juga menandai debt UX baru yang harus diprioritaskan setelah task aktif selesai:
-  - `RoomBrowserUI` masih belum mobile-first dan belum menjadi fullscreen/flexible sheet
-  - `RoomBrowserUI` perlu versi layar penuh/flexible untuk viewport mobile
+  - `RoomBrowserUI` masih belum mobile-first penuh, tetapi overlap antar panel sudah ditutup
+  - versi fullscreen/flexible untuk viewport mobile tetap pending sebagai rework layout yang lebih besar
   - `RoyalPassUI` perlu track 30 hari, track misi 30 hari, dan placeholder reward rarity 5 di hari terakhir
 - pass responsive konservatif terbaru sudah menutup readability dasar dua panel utama:
   - `LobbyUI` sekarang memakai viewport-aware size `396x384` pada viewport desktop sempit saat ini, bukan lagi fixed `340x368`
   - `RoyalPassUI` sekarang memakai viewport-aware size `404x388` pada viewport desktop sempit saat ini, bukan lagi fixed `348x340`
   - `LobbyToggleButton` juga ikut bergeser mengikuti lebar panel aktif (`x=416` pada viewport validasi)
+- pass focus terbaru untuk room browser menutup overlap visual yang paling tidak etis:
+  - saat `RoomBrowserUI` aktif, float kanan lain (`MENU`, `PASS`, `RANK`, dst.) tidak lagi tampil
+  - validasi live terbaru menunjukkan hanya `RoomBrowserFloatButton` yang masih visible secara properti internal screen, sementara `RoomBrowserFloatUI.Enabled = false` dan rail kanan lain tidak tampil di layar
+  - panel room browser juga sekarang memakai skala viewport yang lebih agresif (`UIScale ~= 1.18` pada viewport `1180x942`), sehingga terasa lebih fokus dibanding baseline 920px lama
 - panel modular lain masih perlu dirapikan agar ownership UI sepenuhnya konsisten
 
 Pekerjaan:
