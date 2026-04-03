@@ -1212,3 +1212,16 @@ Urutan yang paling masuk akal dari titik sekarang:
 - dampak:
   - guard `HuntAudio` dedupe `2.25s` terbukti menahan playback duplikat cepat untuk cue yang sama
 
+## Update 2026-04-04 03:09 ICT
+
+- blocker manual lisensi `Pocong` dipersiapkan dengan template arsip bukti siap-isi:
+  - `reports/POCONG_LICENSE_ARCHIVE_CHECKLIST_2026-04-04.md`
+- isi template sudah mencakup:
+  - URL sumber final
+  - author
+  - jenis lisensi
+  - path screenshot bukti
+  - attribution text Roblox-friendly
+- tujuan:
+  - mempercepat penutupan gate compliance tanpa bolak-balik format saat final publish
+
