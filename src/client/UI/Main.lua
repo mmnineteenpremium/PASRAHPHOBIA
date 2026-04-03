@@ -1685,6 +1685,13 @@ local function getNearestHideSpotInfo()
 		if child:IsA("BasePart") then
 			local hideSpotId = tostring(child:GetAttribute("HideSpotId") or "")
 			local hideSpotType = tostring(child:GetAttribute("HideSpotType") or "")
+			if hideSpotId == "" or hideSpotType == "" then
+				local prompt = child:FindFirstChild("HideSpotPrompt")
+				if prompt and prompt:IsA("ProximityPrompt") then
+					hideSpotId = child.Name
+					hideSpotType = "Closet"
+				end
+			end
 			local hideSpotOccupied = child:GetAttribute("HideSpotOccupied") == true
 			if hideSpotId ~= "" and hideSpotType ~= "" and not hideSpotOccupied then
 				local distance = (root.Position - child.Position).Magnitude

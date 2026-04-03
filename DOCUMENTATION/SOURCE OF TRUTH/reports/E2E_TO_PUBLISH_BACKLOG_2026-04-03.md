@@ -464,6 +464,10 @@ Status:
       - `ControlsHintBar = STORAGE • DIAM • TUNGGU HUNT SELESAI`
       - `SummaryFrame.GuessRow/SurvivedRow = Storage`
     - artinya surface UI hunt sekarang sinkron dengan hide spot runtime nyata, bukan wording generik yang membingungkan
+  - lookup refuge client sekarang juga punya fallback ke `HideSpotPrompt` pada room runtime:
+    - jika `HideSpotId/HideSpotType` belum datang tepat waktu, UI masih bisa menginfer hide spot dari prompt aktif
+    - build hardening ini sudah lolos, sehingga race kecil pada state `Exposed` tidak lagi sepenuhnya bergantung pada replication order attribute
+    - proof final untuk preferensi `HideSpot` saat player masih `Exposed` tetap saya anggap `in progress`
 
 Pekerjaan:
 
