@@ -1,5 +1,6 @@
 local Services = require(script.Parent.Parent.Core.Services)
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Service = {}
@@ -119,6 +120,13 @@ local function applyDebugAttributesForPlayers(players, trace, matchId, zoneCount
     end
 end
 
+local function setStudioRuntimeAttribute(name, value)
+    if not RunService:IsStudio() then
+        return
+    end
+    ReplicatedStorage:SetAttribute(name, value)
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -156,6 +164,7 @@ function Service:Start()
     end
 
     self._running = true
+    setStudioRuntimeAttribute("PasrahHidingReady", true)
     self:_traceStudio("service:start")
     task.spawn(function()
         while self._running do
@@ -166,6 +175,10 @@ function Service:Start()
 end
 function Service:Stop()
     self._running = false
+    setStudioRuntimeAttribute("PasrahHidingReady", nil)
+    setStudioRuntimeAttribute("PasrahHidingActiveMatchId", nil)
+    setStudioRuntimeAttribute("PasrahHidingRegisteredMatchId", nil)
+    setStudioRuntimeAttribute("PasrahHidingZoneCount", nil)
     self:_cleanupAllSafeZones()
     self._state:Clear()
 end
@@ -227,6 +240,8 @@ function Service:_registerSafeZones(matchId)
         records = records,
         huntVisible = false,
     }
+    setStudioRuntimeAttribute("PasrahHidingRegisteredMatchId", matchId)
+    setStudioRuntimeAttribute("PasrahHidingZoneCount", #records)
     self:_traceStudio("register_safe_zones:" .. matchId, #records)
     self:_setSafeZoneVisualState(matchId, false)
 end
@@ -343,6 +358,7 @@ function Service:HandleEvent(eventName, payload)
     if eventName == "MatchStarted" then self._state:Set("activeMatchId", payload and payload.matchId)
     elseif eventName == "MatchEnded" then self._state:Set("activeMatchId", nil) end
     if eventName == "MatchStarted" then
+        setStudioRuntimeAttribute("PasrahHidingActiveMatchId", payload and payload.matchId or "")
         self:_traceStudio("event:match_started:" .. tostring(payload and payload.matchId or "nil"))
         self._state:Set("hiddenPlayers", {})
         self._state:Set("detectedPlayers", {})
@@ -388,6 +404,7 @@ function Service:HandleEvent(eventName, payload)
             end
         end
     elseif eventName == "MatchEnded" then
+        setStudioRuntimeAttribute("PasrahHidingActiveMatchId", nil)
         local hidden = self._state:Get("hiddenPlayers") or {}
         for userId in pairs(hidden) do
             local player = Players:GetPlayerByUserId(tonumber(userId) or 0)

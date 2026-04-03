@@ -240,6 +240,11 @@ Status:
 - audit clone `HauntedHouse` terbaru juga mengonfirmasi traversal vertikal dasar tidak lagi diblok lantai dua:
   - `Floor_2_North` runtime sudah terpecah menjadi segmen carved di sekitar `CentralStaircase`
   - tidak ada segmen `Floor_2_*` yang overlap dengan bounds tangga aktif
+  - audit pathfinding live dari spawn match aktif juga sukses ke target lantai dua:
+    - `Interact_Bedroom2`: `Success`, `28` waypoint
+    - `Room_Bedroom2`: `Success`, `28` waypoint
+    - `Room_Attic`: `Success`, `19` waypoint
+  - artinya blocker teknis `tangga tertutup lantai 2` sudah tertutup untuk `HauntedHouse`; sisa pekerjaan berikutnya adalah experiential/layout pass, bukan lubang collision mentah
 - audit runtime clone terbaru sekarang juga menutup feedback layer pintu:
   - semua map aktif membawa pasangan `DoorOpenSound` + `DoorCloseSound` pada setiap pintu clone
   - hasil audit:
@@ -258,6 +263,11 @@ Status:
   - hiding spot dan aturan selamat dari hunt masih perlu didefinisikan secara eksplisit
   - prototipe `SafeZone`/shelter berbasis `HidingSystem` sudah masuk ke source, tetapi validasi live server-side masih blocked:
     - player attr `PasrahHideState` belum terbukti terisi di runtime
+    - probe Studio-only terbaru membuktikan source edit-time sudah memuat:
+      - `ServerScriptService.Server.HidingSystem`
+      - `ServerScriptService.Server.PlayerHealthSystem`
+      - readiness marker `PasrahHidingReady` dan `PasrahHuntPressureReady`
+    - namun saat playtest marker runtime itu tetap `nil`, jadi blocker terbaru ada di aktivasi startup/runtime system, bukan di definisi `SafeZone` source
     - `StudioE2EControl` sekarang sudah source-controlled di `ReplicatedStorage.RemoteEvents`, tetapi listener server/ack masih tidak muncul di runtime terbaru
     - jadi survival loop hunt belum boleh dianggap selesai walau UI objective/hunt guidance sudah mulai disiapkan
 

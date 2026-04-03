@@ -2838,3 +2838,117 @@ Menyelaraskan runtime patch pintu dengan `DoorRuntime`, lalu memvalidasi kembali
    - audit traversal vertikal yang lebih nyata
    - definisi hiding spot / survive hunt
 3. pertahankan `StudioE2EControl` sebagai blocker tooling terpisah sampai listener server pulih atau diganti pendekatan lain
+
+## 2026-04-03 15:41 ICT
+
+### Task
+
+Memvalidasi traversal vertikal `HauntedHouse` lewat runtime match aktif, supaya isu “tangga tidak benar-benar membawa pemain ke atas” diputus dengan bukti pathfinding, bukan asumsi visual.
+
+### Linked Issues
+
+- user menganggap layout tangga/lantai dua terasa palsu dan mungkin masih tertutup
+- sesudah patch pintu manual, perlu bukti apakah runtime clone benar-benar bisa membawa pemain ke lantai dua
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- saya jalankan lagi flow `Ranked -> HauntedHouse -> CreateRoom -> HostStart`
+- fokus audit dipersempit ke tiga target lantai dua yang benar-benar relevan:
+  - `Interact_Bedroom2`
+  - `Room_Bedroom2`
+  - `Room_Attic`
+- hasil audit dipindahkan ke backlog source-of-truth agar truth terbaru soal traversal vertikal tidak tercecer di sesi chat
+
+### Validation Notes
+
+- runtime clone aktif berhasil dibuat lagi via jalur room browser canonical
+- pathfinding live dari posisi spawn match aktif (`1190.999, 3.471, -9.998`) menghasilkan:
+  - `Interact_Bedroom2`: `Enum.PathStatus.Success`, `28` waypoint
+  - `Room_Bedroom2`: `Enum.PathStatus.Success`, `28` waypoint
+  - `Room_Attic`: `Enum.PathStatus.Success`, `19` waypoint
+- ini menguatkan audit sebelumnya bahwa carved floor di sekitar `CentralStaircase` memang menghasilkan jalur upstairs yang valid
+
+### Interpretation
+
+- blocker teknis “lantai dua ketutup / tidak bisa diakses” sekarang tertutup untuk `HauntedHouse`
+- debt yang tersisa berubah bentuk:
+  - bukan lagi collision/path kosong
+  - melainkan experiential pass layout, hiding spot, dan cara survive hunt yang masih perlu didefinisikan
+
+### Next Step
+
+1. checkpoint commit untuk sinkronisasi report traversal vertikal
+2. lanjut ke debt gameplay berikutnya:
+   - definisi hiding spot dan survive hunt
+   - keputusan desain final pintu hybrid radius/manual lintas platform
+3. pertahankan `StudioE2EControl` sebagai blocker tooling terpisah sampai listener server pulih atau diganti pendekatan lain
+
+## 2026-04-03 15:49 ICT
+
+### Task
+
+Menguji jalur shelter `SafeZone` yang sudah ada di source, lalu menambahkan probe Studio-only minimal untuk membedakan antara bug desain hiding dan bug aktivasi runtime system.
+
+### Linked Issues
+
+- user belum tahu cara selamat dari hunt dan apakah shelter benar-benar bekerja
+- backlog sebelumnya sudah menandai `SafeZone` ada di source, tetapi belum ada bukti runtime bahwa player benar-benar menjadi `Hidden`
+
+### Files Changed
+
+- `src/ServerScriptService/Server/HidingSystem/Service.lua`
+- `src/ServerScriptService/Server/PlayerHealthSystem/Service.lua`
+- `src/ServerScriptService/Server/ServerBootstrap.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- saya tambahkan readiness marker Studio-only:
+  - `PasrahHidingReady`
+  - `PasrahHidingActiveMatchId`
+  - `PasrahHidingRegisteredMatchId`
+  - `PasrahHidingZoneCount`
+  - `PasrahHuntPressureReady`
+  - `PasrahHuntPressureActiveMatchId`
+- `ServerBootstrap` sekarang juga punya fallback Studio untuk mencoba menghidupkan:
+  - `HidingSystem`
+  - `PlayerHealthSystem`
+- tujuan patch ini bukan menambah fitur baru, tetapi membuat blocker runtime bisa diukur dengan jelas
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_hiding_debug_build.rbxlx`
+  - `rojo build default.project.json --output .\\_tmp_hiding_bootstrap_build.rbxlx`
+- edit-time scan di Studio mengonfirmasi source terbaru memang ada:
+  - `ServerScriptService.Server.HidingSystem`
+  - `ServerScriptService.Server.PlayerHealthSystem`
+  - `ServerBootstrap` terbaru dengan helper `ensureStudioRuntimeSystem()`
+  - grep live juga menemukan `PasrahHidingReady` di `HidingSystem.Service`
+- tetapi validasi playtest tetap menunjukkan:
+  - `PasrahHidingReady = nil`
+  - `PasrahHuntPressureReady = nil`
+  - `PasrahHideState = nil`
+  - `SafeZone_1.CanTouch` tetap belum berubah ke state hasil register runtime
+
+### Interpretation
+
+- blocker shelter sekarang terlokalisasi dengan cukup jelas:
+  - source dan mapping edit-time bukan masalah utama
+  - yang macet adalah aktivasi startup/runtime untuk `HidingSystem` / `PlayerHealthSystem` saat playtest
+- artinya saya belum boleh mengklaim aturan survive hunt sudah playable, walau data `SafeZone` dan jalur logic dasar sudah ada di source
+
+### Next Step
+
+1. checkpoint commit untuk patch readiness/fallback shelter
+2. minta satu intervensi manual minimum jika perlu:
+   - full restart Studio
+   - reconnect `Rojo`
+   - lalu retest probe runtime
+3. baru sesudah readiness marker hidup, lanjut tutup shelter/hunt behavior end-to-end
