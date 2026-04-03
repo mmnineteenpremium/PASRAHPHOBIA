@@ -170,13 +170,13 @@ Aturan baca:
    - Source in repo:
      - `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
    - Provenance status:
-     - `replace/remove`
+     - `verified (provisional)`
    - Notes:
-     - broken ID lama sudah dibuang dari source aktif
-     - slot ambience loop ini masih kosong secara eksplisit dan tidak boleh dianggap publish-ready
-     - seluruh cue aktif non-ambient yang dipakai runtime modern sekarang sudah punya asset legal/source-controlled atau fallback built-in yang tervalidasi
+     - slot ambience sekarang terisi asset account-owned `138884191945388` (creator `ZyraaaVex`)
+     - ini menutup blocker slot kosong untuk publish baseline
+     - status tetap `provisional` untuk kualitas audio, karena ambience final brand bisa masih diganti pada pass polish
    - Replacement queue:
-     - lihat `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
+     - lihat `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md` bila ingin ambience khusus brand
 
 ## Legacy-Only Assets
 
@@ -199,12 +199,12 @@ Status:
    - screenshot license page
    - nama author
    - syarat attribution
-2. Isi dua slot audio kosong yang masih `replace/remove`.
-3. Upload candidate audio legal ke akun Roblox aktif lalu isi `AudioContent` source dengan asset ID final.
+2. Finalisasi keputusan ambience loop (`AmbientLoop_Main`) apakah dipertahankan sebagai placeholder account-owned atau diganti cue brand final.
+3. Upload candidate audio legal ke akun Roblox aktif lalu isi `AudioContent` source dengan asset ID final jika ingin mengganti placeholder saat ini.
 4. Putuskan nasib asset `LegacyDisabled`:
    - hapus dari source
    - atau dokumentasikan ownership-nya
-5. Jangan aktifkan monetization publik sebelum slot audio kosong mendapat asset final yang benar-benar diunggah ke Roblox account aktif.
+5. Jangan aktifkan monetization publik sebelum keputusan lisensi `Pocong` dan audit legacy asset tersisa ditutup.
 
 ## Update 2026-04-04 02:58 ICT
 
@@ -222,5 +222,5 @@ Audit ulang live `MarketplaceService:GetProductInfo()` untuk paket audio yang us
 Kesimpulan:
 
 - daftar audio yang diaudit di atas tetap `verified` sebagai account-owned untuk workspace ini.
-- blocker lisensi audio tersisa tetap sama: slot ambience loop yang memang masih kosong (`AmbientLoop_Main`), bukan dari daftar ID di atas.
+- blocker lisensi audio bergeser ke dokumentasi `Pocong` dan cleanup legacy, bukan lagi broken ownership batch audio.
 
