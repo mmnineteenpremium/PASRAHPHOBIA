@@ -791,6 +791,12 @@ Done jika:
   - debt berikutnya bukan lagi “apakah closet hiding bekerja”, tetapi:
     - perluasan hiding spot final lintas map
     - aturan survive hunt yang lebih kaya dari hanya safe zone + closet baseline
+- `GameplayTick` canonical juga sudah dipulihkan:
+  - `GameplayLoopController` sekarang benar-benar mempublish tick runtime saat match aktif
+  - validasi live memastikan `SafeZone_1` kembali auto-apply:
+    - masuk zone -> `PasrahHideState = Hidden`, `PasrahHideSpotType = SafeZone`
+    - keluar zone -> `PasrahHideState = Exposed`, `PasrahHideSpotType = None`
+  - artinya loop survival dasar tidak lagi diam-diam bergantung pada publisher yang hilang
 
 ## Urutan Praktis
 
