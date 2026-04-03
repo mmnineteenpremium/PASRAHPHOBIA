@@ -1,0 +1,167 @@
+{
+  "className": "Model",
+  "properties": {
+    "Name": "Dupa"
+  },
+  "children": [
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Stick",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Position": [
+          0.0,
+          0.08,
+          0.0
+        ],
+        "Size": [
+          1.5,
+          0.12,
+          0.18
+        ],
+        "Material": "Wood",
+        "Color": [
+          0.31,
+          0.22,
+          0.16
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Binding",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Position": [
+          -0.34,
+          0.09,
+          0.0
+        ],
+        "Size": [
+          0.12,
+          0.16,
+          0.22
+        ],
+        "Material": "Fabric",
+        "Color": [
+          0.57,
+          0.47,
+          0.33
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Ember",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Position": [
+          0.76,
+          0.1,
+          0.0
+        ],
+        "Size": [
+          0.12,
+          0.12,
+          0.12
+        ],
+        "Material": "Neon",
+        "Color": [
+          1.0,
+          0.49,
+          0.22
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Smoke1",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 0.5,
+        "Position": [
+          0.78,
+          0.44,
+          0.0
+        ],
+        "Size": [
+          0.22,
+          0.24,
+          0.22
+        ],
+        "Material": "Neon",
+        "Color": [
+          0.67,
+          0.7,
+          0.73
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Smoke2",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 0.62,
+        "Position": [
+          0.63,
+          0.68,
+          0.08
+        ],
+        "Size": [
+          0.28,
+          0.26,
+          0.28
+        ],
+        "Material": "Neon",
+        "Color": [
+          0.69,
+          0.72,
+          0.75
+        ]
+      }
+    },
+    {
+      "className": "Part",
+      "properties": {
+        "Name": "Smoke3",
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Transparency": 0.7,
+        "Position": [
+          0.9,
+          0.9,
+          -0.06
+        ],
+        "Size": [
+          0.34,
+          0.28,
+          0.34
+        ],
+        "Material": "Neon",
+        "Color": [
+          0.73,
+          0.75,
+          0.78
+        ]
+      }
+    }
+  ]
+}

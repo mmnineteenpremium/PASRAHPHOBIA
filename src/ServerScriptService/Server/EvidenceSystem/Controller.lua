@@ -8,6 +8,15 @@ local MIN_TENSION_DELTA_FOR_SPAWN = 1
 local TENSION_SPAWN_COOLDOWN_SECONDS = 2.5
 local TOOL_RESULT_EVENT_NAME = "EvidenceToolResult"
 local EVIDENCE_REMOTE_NAME = "EvidenceEvent"
+local UTILITY_BROADCAST_EVENTS = {
+	"SaltPlaced",
+	"SaltTriggered",
+	"CrucifixPlaced",
+	"CrucifixTriggered",
+	"SmudgeActivated",
+	"GhostRepelled",
+	"HuntBlocked",
+}
 
 local TOOL_ALIASES = {
 	jejakenergi = "JejakEnergi",
@@ -405,6 +414,29 @@ function Controller:_broadcastEvidenceFound(matchId, payload)
     end
 end
 
+function Controller:_broadcastUtilityEvidence(eventName, payload)
+	if type(payload) ~= "table" then
+		return
+	end
+
+	local matchId = payload.matchId
+	if not matchId then
+		return
+	end
+
+	local clientPayload = {
+		autoOpenJournal = false,
+		eventName = eventName,
+		matchId = matchId,
+		success = payload.success ~= false,
+	}
+	for key, value in pairs(payload) do
+		clientPayload[key] = value
+	end
+
+	self:_broadcastEvidence(matchId, clientPayload)
+end
+
 function Controller:RegisterEventHandlers()
     if self._handlersRegistered then
         return
@@ -459,6 +491,12 @@ function Controller:RegisterEventHandlers()
         self:_subscribe("SpectatorVisionUpdated", function(payload)
             self:OnSpectatorVisionUpdated(payload)
         end)
+		for _, eventName in ipairs(UTILITY_BROADCAST_EVENTS) do
+			local subscribedEventName = eventName
+			self:_subscribe(subscribedEventName, function(payload)
+				self:_broadcastUtilityEvidence(subscribedEventName, payload or {})
+			end)
+		end
     end
     self:_connectEvidenceRemote()
     if self._gateway then

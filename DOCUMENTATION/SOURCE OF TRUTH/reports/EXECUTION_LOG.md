@@ -2952,3 +2952,82 @@ Menguji jalur shelter `SafeZone` yang sudah ada di source, lalu menambahkan prob
    - reconnect `Rojo`
    - lalu retest probe runtime
 3. baru sesudah readiness marker hidup, lanjut tutup shelter/hunt behavior end-to-end
+
+## 2026-04-03 17:07 ICT
+
+### Task
+
+Menutup gap utility tool yang sebelumnya hanya ada di backend evidence, lalu membuat jalur canonical `Field Kit` di `MatchUI` agar `Garam`, `Salib`, dan `Dupa` benar-benar playable dan punya visual runtime di Studio.
+
+### Linked Issues
+
+- utility tool sudah punya logic server, tetapi pemain belum punya owner UI canonical untuk memakainya
+- event utility sebelumnya selalu terasa seperti side-effect journal, bukan gameplay tool lapangan
+- tool utility client masih memakai default `nearGhostRoom = true`, sehingga perilaku terasa "ajaib" dan tidak representatif sebagai placement tool
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `src/client/EvidenceTools/Garam/Main.lua`
+- `src/client/EvidenceTools/Salib/Main.lua`
+- `src/client/EvidenceTools/Dupa/Main.lua`
+- `src/ServerScriptService/Server/EvidenceSystem/Controller.lua`
+- `src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceService.lua`
+- `src/ServerScriptService/Server/EvidenceSystem/Modules/UtilityToolVisuals.lua`
+- `src/ReplicatedStorage/Assets/Models/Tools/Garam.model.json`
+- `src/ReplicatedStorage/Assets/Models/Tools/Salib.model.json`
+- `src/ReplicatedStorage/Assets/Models/Tools/Dupa.model.json`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- saya tambahkan owner UI canonical `Field Kit` di `MatchUI`:
+  - tombol `SCAN`, `GARAM`, `SALIB`, `DUPA`
+  - shortcut `[1] [2] [3] [4]`
+  - feedback status tool langsung di panel tanpa membuka journal
+- saya ubah jalur client tool utility agar tidak lagi auto mengirim `nearGhostRoom = true`
+- saya tambahkan broadcast utility evidence event ke client dengan `autoOpenJournal = false`
+- saya tambahkan visual runtime utility tool di server:
+  - module baru `UtilityToolVisuals`
+  - asset source-owned untuk `Garam`, `Salib`, `Dupa`
+  - fallback runtime builder kalau template asset tidak terbaca server saat Studio play clone
+- `EvidenceService` sekarang mengelola lifecycle placement id, visual placement, charge update salib, dan cleanup runtime
+- response utility tool sekarang juga mengembalikan metadata `visualPlaced` untuk QA Studio
+
+### Validation Notes
+
+- sinkronisasi source tervalidasi di Studio:
+  - `ReplicatedStorage.Assets.Models.Tools` berisi `Garam`, `Salib`, `Dupa`
+  - `UtilityToolVisuals` bisa di-`require`
+- playtest live Studio tervalidasi dengan jalur canonical:
+  - buat room -> ready -> host start
+  - `MatchUI.FieldKitFrame.Visible = true`
+  - tekan `[2]` melalui input nyata menghasilkan response:
+    - `status = Garam aktif.`
+    - `detail = Menunggu ghost menginjak area ini.`
+    - `Workspace.ActiveMatches.Match_match_1.InvestigationTools` berisi `Garam_*`
+  - lanjut tekan `[3]` dan `[4]` menghasilkan child runtime total `3`:
+    - `Garam_*`
+    - `Salib_*`
+    - `Dupa_*`
+- utility feedback tidak lagi intrusif:
+  - `JournalUI.MainPanel.Visible = false` saat event utility masuk
+  - `Field Kit` tetap menerima status runtime, termasuk saat `SaltTriggered`
+
+### Interpretation
+
+- gap “backend tool ada tapi pemain tidak bisa memakai secara canonical” sekarang tertutup
+- slice investigasi sekarang tidak lagi bergantung hanya pada scan evidence; utility tool sudah masuk ke runtime playable surface
+- debt berikutnya bergeser dari availability menjadi design quality:
+  - placement semantics per-room
+  - hiding/survival rules
+  - asset polish audio/visual final
+
+### Next Step
+
+1. checkpoint commit untuk field kit + utility tool runtime
+2. lanjut ke debt gameplay berikutnya yang masih P0/P2:
+   - hiding/survival clarity
+   - polish `MatchUI`/mobile layout lanjutan
+   - asset audio/ambient final yang masih kosong

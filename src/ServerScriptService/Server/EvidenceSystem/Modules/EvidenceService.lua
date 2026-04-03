@@ -5,6 +5,9 @@ local EvidenceTracker = require(script.Parent.EvidenceTracker)
 local EvidenceDeduction = require(script.Parent.EvidenceDeduction)
 local EvidenceDataTypes = require(script.Parent.EvidenceDataTypes)
 local EvidenceRandomizer = require(script.Parent.Parent.EvidenceRandomizer)
+local UtilityToolVisuals = require(script.Parent.UtilityToolVisuals)
+local HttpService = game:GetService("HttpService")
+local Workspace = game:GetService("Workspace")
 
 local function safeRequire(moduleScript)
     if not moduleScript then
@@ -144,6 +147,21 @@ local UTILITY_TOOL_CONFIG = {
 	},
 }
 
+local UTILITY_TOOL_PLACEMENT = {
+	Dupa = {
+		forwardOffset = 2.2,
+		heightOffset = 0.12,
+	},
+	Garam = {
+		forwardOffset = 3.6,
+		heightOffset = 0.06,
+	},
+	Salib = {
+		forwardOffset = 2.8,
+		heightOffset = 0.12,
+	},
+}
+
 local EVIDENCE_ALIASES = {
 	medok = "MEDOK",
 	jejakenergi = "MEDOK",
@@ -228,6 +246,86 @@ end
 local function isWithinDistance(rawDistance, threshold)
 	local distance = tonumber(rawDistance)
 	return distance ~= nil and distance <= threshold
+end
+
+local function resolveRequestedPosition(rawPosition)
+	if typeof(rawPosition) == "Vector3" then
+		return rawPosition
+	end
+	if type(rawPosition) ~= "table" then
+		return nil
+	end
+
+	local x = tonumber(rawPosition.x or rawPosition.X or rawPosition[1])
+	local y = tonumber(rawPosition.y or rawPosition.Y or rawPosition[2])
+	local z = tonumber(rawPosition.z or rawPosition.Z or rawPosition[3])
+	if x == nil or y == nil or z == nil then
+		return nil
+	end
+	return Vector3.new(x, y, z)
+end
+
+local function resolveCharacterRootPart(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return nil
+	end
+	local character = player.Character
+	if typeof(character) ~= "Instance" then
+		return nil
+	end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if root and root:IsA("BasePart") then
+		return root
+	end
+	if character.PrimaryPart and character.PrimaryPart:IsA("BasePart") then
+		return character.PrimaryPart
+	end
+	local head = character:FindFirstChild("Head")
+	if head and head:IsA("BasePart") then
+		return head
+	end
+	return nil
+end
+
+local function resolveUtilityPlacementCFrame(player, toolType, requestPayload)
+	local config = UTILITY_TOOL_PLACEMENT[toolType] or UTILITY_TOOL_PLACEMENT.Garam
+	local requestedPosition = resolveRequestedPosition(requestPayload and requestPayload.targetPosition)
+	local rootPart = resolveCharacterRootPart(player)
+	local flatLook = Vector3.new(0, 0, -1)
+	if rootPart then
+		local rootLook = rootPart.CFrame.LookVector
+		local horizontalLook = Vector3.new(rootLook.X, 0, rootLook.Z)
+		if horizontalLook.Magnitude > 0.001 then
+			flatLook = horizontalLook.Unit
+		end
+	end
+
+	local basePosition = requestedPosition
+	if not basePosition then
+		if rootPart then
+			basePosition = rootPart.Position + flatLook * (config.forwardOffset or 3)
+		else
+			basePosition = Vector3.new(0, config.heightOffset or 0.12, 0)
+		end
+	end
+
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+	raycastParams.FilterDescendantsInstances = {}
+	if rootPart and rootPart.Parent then
+		table.insert(raycastParams.FilterDescendantsInstances, rootPart.Parent)
+	end
+
+	local rayOrigin = basePosition + Vector3.new(0, 6, 0)
+	local rayResult = Workspace:Raycast(rayOrigin, Vector3.new(0, -20, 0), raycastParams)
+	local groundPosition = rayResult and rayResult.Position or basePosition
+	local finalPosition = Vector3.new(
+		groundPosition.X,
+		groundPosition.Y + (config.heightOffset or 0.12),
+		groundPosition.Z
+	)
+	return CFrame.lookAt(finalPosition, finalPosition + flatLook)
 end
 
 local function resolveEventBus(deps)
@@ -438,6 +536,7 @@ function EvidenceService.new(state, deps)
 		Random = self._deps.Random,
 		EvidenceRandomizerConfig = self._deps.EvidenceRandomizerConfig,
 	})
+	self._utilityVisuals = UtilityToolVisuals.new()
 	self._engine = EvidenceEngine.new({
 		Spawner = self._spawner,
 		Validator = self._validator,
@@ -460,6 +559,7 @@ function EvidenceService:Init()
 	self._state:Set("utilityToolsByMatch", {})
 	self._randomizer:Reset()
 	self._rngByMatchId = {}
+	self._utilityVisuals:ClearAll()
 end
 
 function EvidenceService:Start()
@@ -470,6 +570,7 @@ function EvidenceService:Stop()
 	self._engine:Reset()
 	self._randomizer:Reset()
 	self._rngByMatchId = {}
+	self._utilityVisuals:ClearAll()
 	self._state:Set("evidenceMatches", {})
 	self._state:Set("utilityToolsByMatch", {})
 end
@@ -729,6 +830,39 @@ function EvidenceService:_trimExpiredUtilityState(matchId, now)
 	return utilityState
 end
 
+function EvidenceService:_generatePlacementId(toolType)
+	return string.format("%s_%s", tostring(toolType or "Tool"), HttpService:GenerateGUID(false))
+end
+
+function EvidenceService:_placeUtilityVisual(matchId, toolType, placementId, player, requestPayload)
+	if not self._utilityVisuals or not matchId or not toolType or not placementId then
+		return nil
+	end
+	local worldCFrame = resolveUtilityPlacementCFrame(player, toolType, requestPayload)
+	return self._utilityVisuals:PlaceTool(matchId, toolType, placementId, worldCFrame)
+end
+
+function EvidenceService:_destroyUtilityVisual(matchId, placementId)
+	if self._utilityVisuals and matchId and placementId then
+		self._utilityVisuals:DestroyTool(matchId, placementId)
+	end
+end
+
+function EvidenceService:_destroyUtilityVisualLater(matchId, placementId, delaySeconds)
+	if not matchId or not placementId then
+		return
+	end
+	local delayDuration = tonumber(delaySeconds)
+	if delayDuration == nil or delayDuration <= 0 then
+		self:_destroyUtilityVisual(matchId, placementId)
+		return
+	end
+
+	task.delay(delayDuration, function()
+		self:_destroyUtilityVisual(matchId, placementId)
+	end)
+end
+
 function EvidenceService:_resolveGhostRoom(matchId)
 	local ghostState = self:_getGhostState(matchId) or {}
 	return ghostState.currentRoomId or ghostState.favoriteRoomId, ghostState
@@ -741,9 +875,11 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
+	local placementId = self:_generatePlacementId("Garam")
 
 	local placement = {
 		expiresAt = now + config.durationSeconds,
+		id = placementId,
 		placedAt = now,
 		player = player,
 		roomId = roomId,
@@ -751,9 +887,13 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 	}
 
 	if #utilityState.saltPlacements >= config.maxPlacements then
-		table.remove(utilityState.saltPlacements, 1)
+		local removedPlacement = table.remove(utilityState.saltPlacements, 1)
+		if removedPlacement and removedPlacement.id then
+			self:_destroyUtilityVisual(matchId, removedPlacement.id)
+		end
 	end
 	table.insert(utilityState.saltPlacements, placement)
+	local visualPlaced = self:_placeUtilityVisual(matchId, "Garam", placementId, player, requestPayload) ~= nil
 
 	local shouldTriggerImmediately = requestPayload.nearGhostRoom == true
 		or isWithinDistance(requestPayload.distanceToGhost, config.immediateTriggerDistance)
@@ -762,40 +902,51 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 	if shouldTriggerImmediately then
 		table.remove(utilityState.saltPlacements, #utilityState.saltPlacements)
 		self:_saveUtilityState(matchId, utilityState)
+		self._utilityVisuals:MarkSaltTriggered(matchId, placementId)
+		self:_destroyUtilityVisualLater(matchId, placementId, 8)
 		self:_publish("SaltTriggered", {
 			matchId = matchId,
 			now = now,
+			placementId = placementId,
 			player = player,
 			roomId = roomId or ghostRoomId,
 			source = "salt_placement",
 			toolType = "Garam",
 			userId = userId,
+			visualPlaced = visualPlaced,
 		})
 		return true, "salt_triggered", {
 			ghostRoomId = ghostRoomId,
+			placementId = placementId,
 			placementActive = false,
 			roomId = roomId or ghostRoomId,
 			toolType = "Garam",
 			tracksDetected = true,
+			visualPlaced = visualPlaced,
 		}
 	end
 
 	self:_saveUtilityState(matchId, utilityState)
+	self:_destroyUtilityVisualLater(matchId, placementId, config.durationSeconds)
 	self:_publish("SaltPlaced", {
 		expiresAt = placement.expiresAt,
 		matchId = matchId,
 		now = now,
+		placementId = placementId,
 		player = player,
 		roomId = roomId,
 		toolType = "Garam",
 		userId = userId,
+		visualPlaced = visualPlaced,
 	})
 	return true, "salt_placed", {
 		ghostRoomId = ghostRoomId,
+		placementId = placementId,
 		placementActive = true,
 		roomId = roomId,
 		toolType = "Garam",
 		tracksDetected = false,
+		visualPlaced = visualPlaced,
 	}
 end
 
@@ -806,10 +957,12 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
+	local placementId = self:_generatePlacementId("Salib")
 
 	local placement = {
 		chargesRemaining = config.charges,
 		expiresAt = now + config.durationSeconds,
+		id = placementId,
 		placedAt = now,
 		player = player,
 		roomId = roomId,
@@ -818,25 +971,31 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 
 	table.insert(utilityState.crucifixPlacements, placement)
 	self:_saveUtilityState(matchId, utilityState)
+	local visualPlaced = self:_placeUtilityVisual(matchId, "Salib", placementId, player, requestPayload) ~= nil
+	self:_destroyUtilityVisualLater(matchId, placementId, config.durationSeconds)
 
 	self:_publish("CrucifixPlaced", {
 		chargesRemaining = placement.chargesRemaining,
 		expiresAt = placement.expiresAt,
 		matchId = matchId,
 		now = now,
+		placementId = placementId,
 		player = player,
 		roomId = roomId,
 		toolType = "Salib",
 		userId = userId,
+		visualPlaced = visualPlaced,
 	})
 
 	return true, "crucifix_armed", {
 		chargesRemaining = placement.chargesRemaining,
 		expiresAt = placement.expiresAt,
 		ghostRoomId = ghostRoomId,
+		placementId = placementId,
 		placementActive = true,
 		roomId = roomId,
 		toolType = "Salib",
+		visualPlaced = visualPlaced,
 	}
 end
 
@@ -847,10 +1006,12 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
+	local placementId = self:_generatePlacementId("Dupa")
 
 	local effect = {
 		activatedAt = now,
 		expiresAt = now + config.durationSeconds,
+		id = placementId,
 		player = player,
 		roomId = roomId,
 		userId = userId,
@@ -858,6 +1019,8 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 
 	table.insert(utilityState.smudgeEffects, effect)
 	self:_saveUtilityState(matchId, utilityState)
+	local visualPlaced = self:_placeUtilityVisual(matchId, "Dupa", placementId, player, requestPayload) ~= nil
+	self:_destroyUtilityVisualLater(matchId, placementId, config.durationSeconds)
 
 	local resultingSanity = nil
 	if self._sanityService and type(self._sanityService.RestoreSanity) == "function" then
@@ -879,32 +1042,38 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 		huntRepelled = huntRepelled,
 		matchId = matchId,
 		now = now,
+		placementId = placementId,
 		player = player,
 		repellentUntil = effect.expiresAt,
 		roomId = roomId or ghostRoomId,
 		sanityRestored = config.sanityRestore,
 		toolType = "Dupa",
 		userId = userId,
+		visualPlaced = visualPlaced,
 	})
 
 	if huntRepelled then
 		self:_publish("GhostRepelled", {
 			matchId = matchId,
 			now = now,
+			placementId = placementId,
 			roomId = roomId or ghostRoomId,
 			toolType = "Dupa",
 			userId = userId,
+			visualPlaced = visualPlaced,
 		})
 	end
 
 	return true, "smudge_activated", {
 		ghostRoomId = ghostRoomId,
 		huntRepelled = huntRepelled,
+		placementId = placementId,
 		repellentUntil = effect.expiresAt,
 		resultingSanity = resultingSanity,
 		roomId = roomId or ghostRoomId,
 		sanityRestored = config.sanityRestore,
 		toolType = "Dupa",
+		visualPlaced = visualPlaced,
 	}
 end
 
@@ -958,11 +1127,15 @@ function EvidenceService:TryConsumeHuntProtection(matchId, payload)
 			local remaining = placement.chargesRemaining
 			if remaining <= 0 then
 				table.remove(utilityState.crucifixPlacements, index)
+				self:_destroyUtilityVisual(matchId, placement.id)
+			else
+				self._utilityVisuals:UpdateCrucifixCharges(matchId, placement.id, remaining)
 			end
 			self:_saveUtilityState(matchId, utilityState)
 
 			local result = {
 				chargesRemaining = remaining,
+				placementId = placement.id,
 				roomId = placement.roomId or ghostRoomId,
 				toolType = "Salib",
 			}
@@ -970,6 +1143,7 @@ function EvidenceService:TryConsumeHuntProtection(matchId, payload)
 				chargesRemaining = remaining,
 				matchId = matchId,
 				now = now,
+				placementId = placement.id,
 				roomId = result.roomId,
 				toolType = "Salib",
 				userId = placement.userId,
@@ -978,6 +1152,7 @@ function EvidenceService:TryConsumeHuntProtection(matchId, payload)
 				chargesRemaining = remaining,
 				matchId = matchId,
 				now = now,
+				placementId = placement.id,
 				reason = "crucifix_prevented_hunt",
 				roomId = result.roomId,
 				toolType = "Salib",
@@ -1009,15 +1184,19 @@ function EvidenceService:NotifyGhostPresence(matchId, payload)
 		if placement.roomId == nil or roomsMatch(placement.roomId, roomId) then
 			table.remove(utilityState.saltPlacements, index)
 			self:_saveUtilityState(matchId, utilityState)
+			self._utilityVisuals:MarkSaltTriggered(matchId, placement.id)
+			self:_destroyUtilityVisualLater(matchId, placement.id, 8)
 			self:_publish("SaltTriggered", {
 				matchId = matchId,
 				now = now,
+				placementId = placement.id,
 				roomId = roomId,
 				source = payload and payload.source or "ghost_presence",
 				toolType = "Garam",
 				userId = placement.userId,
 			})
 			return {
+				placementId = placement.id,
 				roomId = roomId,
 				toolType = "Garam",
 				userId = placement.userId,
@@ -1050,6 +1229,7 @@ function EvidenceService:StartMatch(matchId, payload)
 		saltPlacements = {},
 		smudgeEffects = {},
 	})
+	self._utilityVisuals:StartMatch(matchId)
 	local candidates = self:_computeDeductionCandidates(matchId)
 	session.possibleGhosts = candidates
 	self:_publish("DeductionUpdated", { matchId = matchId, candidates = candidates })
@@ -1063,6 +1243,7 @@ function EvidenceService:EndMatch(matchId)
 	local matches = self._state:Get("evidenceMatches") or {}
 	matches[matchId] = nil
 	self._state:Set("evidenceMatches", matches)
+	self._utilityVisuals:ClearMatch(matchId)
 	self:_clearUtilityState(matchId)
 end
 
