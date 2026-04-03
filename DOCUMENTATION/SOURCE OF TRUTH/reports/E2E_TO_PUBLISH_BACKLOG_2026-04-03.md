@@ -812,6 +812,11 @@ Status:
   - total `26` item (`MM=14`, `PP=4`, `Robux=8`)
   - jalur `PP` sudah ada sebagai prestige soft-currency
   - jalur `Robux` sudah source-controlled sebagai slot produksi (`GamePass` + `DeveloperProduct`)
+- harness monetization Studio sekarang punya probe readiness cepat:
+  - action `StudioE2EControl:GetShopReadiness`
+  - validasi live terbaru mengembalikan:
+    - `total=26 MM=14 PP=4 Robux=8 disabled=8 robuxMissingId=8`
+  - ini menutup blind spot “shop terlihat ada item, tapi status readiness Robux tidak terukur”
 - guard transaksi sekarang lebih ketat dan konsisten:
   - validasi saldo mengikuti mata uang item (`MM/PP`), tidak lagi hardcoded `MM`
   - refund pembelian gagal mengikuti mata uang item (`MM/PP`), tidak lagi hardcoded `MM`

@@ -5627,3 +5627,41 @@ Menambah observability persistence mode ke harness Studio E2E agar QA tidak lagi
 
 - gate `TECH-06` sekarang punya probe runtime konkret untuk membedakan mock vs datastore.
 - ini belum menutup validasi non-mock, tetapi menghapus blind spot utama saat menjalankan uji persistence di Studio.
+
+## 2026-04-04 06:01 ICT
+
+### Task
+
+Menambah probe readiness shop di harness Studio E2E untuk mempercepat gate `TECH-07` (commerce).
+
+### Files Changed
+
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `StudioE2EControlSystem` sekarang resolve `ShopSystem`.
+- action baru:
+  - `GetShopReadiness`
+- summary yang dikembalikan:
+  - total item
+  - distribusi currency (`MM/PP/Robux`)
+  - jumlah item disabled
+  - jumlah item Robux yang masih missing `marketplaceId`
+
+### Validation Notes
+
+- build source lokal sukses:
+  - `_tmp_shop_readiness_probe_build.rbxlx`
+- patch identik di-apply ke script Studio aktif:
+  - `game.ServerScriptService.Server.StudioE2EControlSystem.Main`
+- smoke test live MCP:
+  - `StudioE2EControl(action=GetShopReadiness)` -> `ok=true`
+  - hasil: `total=26 MM=14 PP=4 Robux=8 disabled=8 robuxMissingId=8`
+
+### Interpretation
+
+- status readiness shop sekarang bisa dibaca dengan satu action tanpa audit manual katalog.
+- blocker marketplace ID tetap terang: seluruh slot Robux (`8`) masih menunggu input Creator Hub.
