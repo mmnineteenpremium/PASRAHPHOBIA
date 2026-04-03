@@ -10,6 +10,175 @@ local SAFE_ZONE_VISUAL_TRANSPARENCY = 0.82
 local SAFE_ZONE_VISUAL_COLOR = Color3.fromRGB(78, 126, 162)
 local SAFE_ZONE_VISUAL_MATERIAL = Enum.Material.ForceField
 local SAFE_ZONE_TICK_INTERVAL = 0.35
+local SAFE_ZONE_MARKER_FOLDER_NAME = "SafeZoneRuntimeMarker"
+local SAFE_ZONE_MARKER_OUTLINE_NAME = "Outline"
+local SAFE_ZONE_MARKER_LABEL_NAME = "Billboard"
+local SAFE_ZONE_MARKER_OUTLINE_COLOR = Color3.fromRGB(138, 205, 255)
+local SAFE_ZONE_MARKER_PANEL_COLOR = Color3.fromRGB(9, 18, 28)
+local SAFE_ZONE_MARKER_PANEL_STROKE = Color3.fromRGB(110, 186, 244)
+local SAFE_ZONE_MARKER_TITLE_COLOR = Color3.fromRGB(235, 248, 255)
+local SAFE_ZONE_MARKER_SUBTITLE_COLOR = Color3.fromRGB(170, 208, 237)
+local SAFE_ZONE_MARKER_TITLE_TEXT = "SAFE ZONE"
+local SAFE_ZONE_MARKER_SUBTITLE_TEXT = "Diam di sini saat hunt"
+local SAFE_ZONE_MARKER_STUDS_OFFSET = 2.6
+
+local function createMarkerTextLabel(name, font, textSize, textColor, text, height, position)
+    local label = Instance.new("TextLabel")
+    label.Name = name
+    label.BackgroundTransparency = 1
+    label.BorderSizePixel = 0
+    label.Position = position
+    label.Size = UDim2.new(1, -18, 0, height)
+    label.Font = font
+    label.Text = text
+    label.TextColor3 = textColor
+    label.TextSize = textSize
+    label.TextTransparency = 0
+    label.TextStrokeTransparency = 0.82
+    label.TextWrapped = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    return label
+end
+
+local function ensureSafeZoneMarker(record)
+    if type(record) ~= "table" then
+        return
+    end
+
+    local zone = record.part
+    if not zone or zone.Parent == nil then
+        return
+    end
+
+    local markerFolder = record.markerFolder
+    if typeof(markerFolder) ~= "Instance" or markerFolder.Parent ~= zone then
+        markerFolder = zone:FindFirstChild(SAFE_ZONE_MARKER_FOLDER_NAME)
+        if not (markerFolder and markerFolder:IsA("Folder")) then
+            if markerFolder then
+                markerFolder:Destroy()
+            end
+            markerFolder = Instance.new("Folder")
+            markerFolder.Name = SAFE_ZONE_MARKER_FOLDER_NAME
+            markerFolder.Parent = zone
+        end
+        record.markerFolder = markerFolder
+    end
+
+    local outline = markerFolder:FindFirstChild(SAFE_ZONE_MARKER_OUTLINE_NAME)
+    if not (outline and outline:IsA("BoxHandleAdornment")) then
+        if outline then
+            outline:Destroy()
+        end
+        outline = Instance.new("BoxHandleAdornment")
+        outline.Name = SAFE_ZONE_MARKER_OUTLINE_NAME
+        outline.Parent = markerFolder
+    end
+    outline.Adornee = zone
+    outline.AlwaysOnTop = true
+    outline.Color3 = SAFE_ZONE_MARKER_OUTLINE_COLOR
+    outline.Size = zone.Size + Vector3.new(0.18, 0.18, 0.18)
+    outline.Transparency = 0.25
+    outline.ZIndex = 6
+    outline.Visible = false
+    record.markerOutline = outline
+
+    local labelGui = markerFolder:FindFirstChild(SAFE_ZONE_MARKER_LABEL_NAME)
+    if not (labelGui and labelGui:IsA("BillboardGui")) then
+        if labelGui then
+            labelGui:Destroy()
+        end
+        labelGui = Instance.new("BillboardGui")
+        labelGui.Name = SAFE_ZONE_MARKER_LABEL_NAME
+        labelGui.Parent = markerFolder
+    end
+    labelGui.Active = false
+    labelGui.Adornee = zone
+    labelGui.AlwaysOnTop = true
+    labelGui.Brightness = 2
+    labelGui.ClipsDescendants = false
+    labelGui.Enabled = false
+    labelGui.LightInfluence = 0
+    labelGui.MaxDistance = 90
+    labelGui.ResetOnSpawn = false
+    labelGui.Size = UDim2.fromOffset(184, 46)
+    labelGui.StudsOffsetWorldSpace = Vector3.new(0, zone.Size.Y * 0.5 + SAFE_ZONE_MARKER_STUDS_OFFSET, 0)
+    record.markerBillboard = labelGui
+
+    local panel = labelGui:FindFirstChild("Panel")
+    if not (panel and panel:IsA("Frame")) then
+        if panel then
+            panel:Destroy()
+        end
+        panel = Instance.new("Frame")
+        panel.Name = "Panel"
+        panel.Parent = labelGui
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 12)
+        corner.Parent = panel
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Name = "Stroke"
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Color = SAFE_ZONE_MARKER_PANEL_STROKE
+        stroke.Transparency = 0.15
+        stroke.Thickness = 1.4
+        stroke.Parent = panel
+
+        local accent = Instance.new("Frame")
+        accent.Name = "Accent"
+        accent.AnchorPoint = Vector2.new(0, 0.5)
+        accent.BackgroundColor3 = SAFE_ZONE_MARKER_PANEL_STROKE
+        accent.BorderSizePixel = 0
+        accent.Position = UDim2.new(0, 10, 0.5, 0)
+        accent.Size = UDim2.fromOffset(3, 26)
+        accent.Parent = panel
+
+        local accentCorner = Instance.new("UICorner")
+        accentCorner.CornerRadius = UDim.new(1, 0)
+        accentCorner.Parent = accent
+
+        createMarkerTextLabel(
+            "Title",
+            Enum.Font.GothamBold,
+            13,
+            SAFE_ZONE_MARKER_TITLE_COLOR,
+            SAFE_ZONE_MARKER_TITLE_TEXT,
+            18,
+            UDim2.new(0, 20, 0, 7)
+        ).Parent = panel
+
+        createMarkerTextLabel(
+            "Subtitle",
+            Enum.Font.GothamMedium,
+            11,
+            SAFE_ZONE_MARKER_SUBTITLE_COLOR,
+            SAFE_ZONE_MARKER_SUBTITLE_TEXT,
+            16,
+            UDim2.new(0, 20, 0, 23)
+        ).Parent = panel
+    end
+    panel.BackgroundColor3 = SAFE_ZONE_MARKER_PANEL_COLOR
+    panel.BackgroundTransparency = 0.14
+    panel.BorderSizePixel = 0
+    panel.Size = UDim2.fromScale(1, 1)
+    record.markerPanel = panel
+end
+
+local function cleanupSafeZoneMarker(record)
+    if type(record) ~= "table" then
+        return
+    end
+
+    local markerFolder = record.markerFolder
+    if typeof(markerFolder) == "Instance" and markerFolder.Parent ~= nil then
+        markerFolder:Destroy()
+    end
+    record.markerFolder = nil
+    record.markerOutline = nil
+    record.markerBillboard = nil
+    record.markerPanel = nil
+end
 
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
@@ -194,6 +363,7 @@ function Service:_setSafeZoneVisualState(matchId, isVisible)
     for _, record in ipairs(safeZoneState.records or {}) do
         local zone = record.part
         if zone and zone.Parent ~= nil then
+            ensureSafeZoneMarker(record)
             if isVisible then
                 zone.Transparency = SAFE_ZONE_VISUAL_TRANSPARENCY
                 zone.Color = SAFE_ZONE_VISUAL_COLOR
@@ -204,6 +374,13 @@ function Service:_setSafeZoneVisualState(matchId, isVisible)
                 zone.Color = record.originalColor
                 zone.Material = record.originalMaterial
             end
+        end
+
+        if record.markerOutline then
+            record.markerOutline.Visible = isVisible == true
+        end
+        if record.markerBillboard then
+            record.markerBillboard.Enabled = isVisible == true
         end
     end
 end
@@ -231,6 +408,7 @@ function Service:_registerSafeZones(matchId)
             })
             child.CanQuery = true
             child.CanTouch = false
+            ensureSafeZoneMarker(records[#records])
         end
     end
 
@@ -255,6 +433,7 @@ function Service:_cleanupSafeZones(matchId)
                 zone.Color = record.originalColor
                 zone.Material = record.originalMaterial
             end
+            cleanupSafeZoneMarker(record)
         end
     end
     self._safeZonesByMatchId[matchId] = nil

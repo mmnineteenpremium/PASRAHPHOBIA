@@ -132,6 +132,9 @@ Status:
   - `HuntAudioRuntime`
 - hunt/survival clarity sudah naik satu level:
   - `HidingSystem` live tervalidasi mendaftarkan safe zone aktif
+  - safe zone hunt sekarang juga punya affordance world-space runtime:
+    - zone berubah menjadi bidang biru `ForceField`
+    - marker `SafeZoneRuntimeMarker` menampilkan outline + billboard `SAFE ZONE`
   - `MatchUI` hunt sekarang membaca state survive live:
     - `HIDDEN`
     - `SHELTERED`
@@ -280,9 +283,15 @@ Status:
   - validasi live terbaru di `HauntedHouse` membuktikan:
     - pemain didekatkan ke `Door_DiningRoom` -> `DoorIsOpen = true`
     - pemain dijauhkan lagi -> `DoorIsOpen = false`
+- affordance survive dasar sekarang juga tidak lagi buta:
+  - saat hunt aktif, `SafeZone_1` runtime tervalidasi membawa:
+    - `SafeZoneRuntimeMarker`
+    - `Outline.Visible = true`
+    - `Billboard.Enabled = true`
+  - ini memberi target visual yang jujur untuk shelter tanpa mengubah rule `Hidden / Sheltered` yang sudah hidup
 - follow-up deferred yang wajib masuk phase berikutnya:
   - audit tangga, akses lantai 2, dan jalur traversal map harus ditutup agar layout tidak terasa palsu saat investigasi/hunt
-  - hiding spot dan aturan selamat dari hunt masih perlu didefinisikan secara eksplisit
+  - hiding spot final lintas map masih perlu didefinisikan lebih kaya dari sekadar safe zone baseline
 
 Pekerjaan:
 
