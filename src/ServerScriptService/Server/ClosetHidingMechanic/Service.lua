@@ -6,7 +6,9 @@ local Service = {}
 Service.__index = Service
 
 local HIDE_PROMPT_NAME = "HideSpotPrompt"
-local HIDE_PROMPT_DISTANCE = 8
+local HIDE_PROMPT_DISTANCE_MIN = 8
+local HIDE_PROMPT_DISTANCE_MAX = 16
+local HIDE_PROMPT_DISTANCE_SCALE = 0.45
 local HIDE_PROMPT_HOLD_DURATION = 0
 local HIDE_ROOM_VERTICAL_TOLERANCE = 6
 local HIDE_SPOT_MARKER_FOLDER_NAME = "HideSpotRuntimeMarker"
@@ -236,6 +238,15 @@ local function formatClosetLabel(part)
 	return raw:gsub("^%l", string.upper)
 end
 
+local function resolvePromptDistance(part)
+	if not part or not part:IsA("BasePart") then
+		return HIDE_PROMPT_DISTANCE_MIN
+	end
+	local span = (part.Size.X + part.Size.Z) * 0.5
+	local resolved = math.floor((span * HIDE_PROMPT_DISTANCE_SCALE) + 0.5)
+	return math.clamp(resolved, HIDE_PROMPT_DISTANCE_MIN, HIDE_PROMPT_DISTANCE_MAX)
+end
+
 local function ensureHideSpotMarker(record)
 	if type(record) ~= "table" then
 		return
@@ -387,11 +398,12 @@ local function cleanupHideSpotMarker(record)
 end
 
 local function ensurePrompt(part)
+	local activationDistance = resolvePromptDistance(part)
 	local prompt = part:FindFirstChild(HIDE_PROMPT_NAME)
 	if prompt and prompt:IsA("ProximityPrompt") then
 		prompt.KeyboardKeyCode = Enum.KeyCode.E
 		prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
-		prompt.MaxActivationDistance = HIDE_PROMPT_DISTANCE
+		prompt.MaxActivationDistance = activationDistance
 		prompt.HoldDuration = HIDE_PROMPT_HOLD_DURATION
 		prompt.RequiresLineOfSight = false
 		prompt.Style = Enum.ProximityPromptStyle.Default
@@ -406,7 +418,7 @@ local function ensurePrompt(part)
 	prompt.Name = HIDE_PROMPT_NAME
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
-	prompt.MaxActivationDistance = HIDE_PROMPT_DISTANCE
+	prompt.MaxActivationDistance = activationDistance
 	prompt.HoldDuration = HIDE_PROMPT_HOLD_DURATION
 	prompt.RequiresLineOfSight = false
 	prompt.Style = Enum.ProximityPromptStyle.Default
@@ -505,6 +517,7 @@ function Service:_updatePromptState(record)
 	record.part:SetAttribute("HideSpotType", "Closet")
 	record.part:SetAttribute("HideSpotOccupied", occupied)
 	record.part:SetAttribute("HideSpotLabel", record.label)
+	record.part:SetAttribute("HideSpotPromptDistance", resolvePromptDistance(record.part))
 end
 
 function Service:_syncPromptStates(matchId)
@@ -557,6 +570,7 @@ function Service:_cleanupHideSpots(matchId)
 			record.part:SetAttribute("HideSpotType", nil)
 			record.part:SetAttribute("HideSpotOccupied", nil)
 			record.part:SetAttribute("HideSpotLabel", nil)
+			record.part:SetAttribute("HideSpotPromptDistance", nil)
 		end
 	end
 

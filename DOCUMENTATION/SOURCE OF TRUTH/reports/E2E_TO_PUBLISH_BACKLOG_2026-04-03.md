@@ -1123,3 +1123,16 @@ Urutan yang paling masuk akal dari titik sekarang:
   - objective/hint hunt jadi lebih natural dibaca pemain
   - konsistensi bahasa antara marker world-space dan teks UI meningkat
 
+## Update 2026-04-04 02:33 ICT
+
+- fairness akses hide spot kini naik lewat prompt distance adaptif per room:
+  - `HideSpotPrompt.MaxActivationDistance` tidak lagi fixed
+  - server sekarang menghitung jarak prompt dari dimensi room hide spot
+  - range dibatasi aman di `8..16` stud agar tidak overpowered
+- hasil validasi live:
+  - `AbandonedPalace` (`Room_StorageWing`, `Room_ServantRoomA`, `Room_ServantRoomB` ukuran `24x16`) -> `HideSpotPromptDistance = 9`
+  - `StudioMMNineteen` (`Room_StorageRoom`, `Room_Office` ukuran `18x14`) -> `HideSpotPromptDistance = 8`
+- dampak:
+  - room hide spot yang lebih besar tidak lagi terasa “mati” karena prompt terlalu ketat
+  - room kecil tetap ketat agar hunt tidak trivial
+
