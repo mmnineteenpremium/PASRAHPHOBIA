@@ -5070,3 +5070,29 @@ Menyiapkan artefak compliance untuk menutup blocker lisensi `Pocong` secara ters
 
 - task ini menutup gap operasional compliance:
   - blocker masih manual, tetapi format final sudah disiapkan sehingga eksekusi user jadi cepat dan konsisten
+
+## 2026-04-04 03:10 ICT
+
+### Task
+
+Menutup error startup `ShopSystem` terkait callback `MarketplaceService.ProcessReceipt`.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/ShopSystem/Controller.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- menghapus pola read/restore callback lama:
+  - hapus field `_previousProcessReceipt`
+  - hapus assignment `self._previousProcessReceipt = MarketplaceService.ProcessReceipt`
+  - hapus restore callback di `_disconnectMarketplaceSignals()`
+- callback sekarang hanya di-set secara resmi:
+  - `MarketplaceService.ProcessReceipt = function(receiptInfo) ... end`
+
+### Interpretation
+
+- ini menyelaraskan implementasi dengan batasan API Roblox callback member
+- error `ProcessReceipt ... get is not available` tidak lagi dipicu oleh source terbaru
