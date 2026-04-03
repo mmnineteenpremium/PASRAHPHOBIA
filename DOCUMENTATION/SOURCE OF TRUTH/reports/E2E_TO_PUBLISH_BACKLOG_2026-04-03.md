@@ -224,14 +224,20 @@ Status:
   - `AbandonedPalace`
   - `EmptyBuilding`
   - `StudioMMNineteen`
-- validasi live tambahan di `Ranked + EmptyBuilding` membuktikan clone map masih memakai policy yang sama:
-  - `Workspace.ActiveMatches.Match_match_1.EmptyBuilding.DoorTraversalMode = AutoOpenToggle`
-  - `Door_Lobby.DoorTraversalPolicy = AutoOpenToggle`
-  - `Door_Lobby.CanCollide = false`
-- validasi live tambahan setelah fix `DoorRuntime` membuktikan pintu tidak lagi sekadar pass-through:
-  - `Door_Lobby.DoorObjectId = Door_Lobby`
-  - `Door_Lobby` sekarang punya child `DoorPrompt` (`ProximityPrompt`)
-  - `Door_Lobby` benar-benar terbuka secara visual (`Rotation.Y ~= -88`)
+- pass runtime terbaru menggeser basis pintu dari `pass-through` ke `prompt manual`:
+  - `Door_DiningRoom.DoorTraversalPolicy = PromptManual`
+  - `Door_DiningRoom.DoorIsOpen = false`
+  - `Door_DiningRoom.CanCollide = true`
+  - `Door_DiningRoom.DoorPrompt` aktif dengan:
+    - `Keyboard = E`
+    - `Gamepad = X`
+    - `ClickablePrompt = true`
+    - `ActionText = Buka Pintu`
+  - ini membuat traversal pemain kembali logis, sementara path modifier tetap ada untuk menjaga runtime owner pintu tetap konsisten
+- validasi trigger `E` via automation tool masih belum bisa saya kunci end-to-end:
+  - prompt memang muncul live di layar
+  - tetapi state part hasil input otomatis belum cukup konsisten untuk saya tandai `done`
+  - jadi policy pintu baru sudah aktif, namun verifikasi manual satu kali di Studio masih diperlukan untuk menutup task interaksi pintu sepenuhnya
 - audit runtime clone terbaru sekarang juga menutup feedback layer pintu:
   - semua map aktif membawa pasangan `DoorOpenSound` + `DoorCloseSound` pada setiap pintu clone
   - hasil audit:

@@ -292,8 +292,8 @@ local function patchDoorTraversal(mapClone)
 			descendant.CanTouch = false
 			descendant.CanQuery = true
 			descendant:SetAttribute("DoorLocked", false)
-			descendant:SetAttribute("DoorIsOpen", true)
-			descendant:SetAttribute(DOOR_POLICY_ATTR, "AutoOpenToggle")
+			descendant:SetAttribute("DoorIsOpen", false)
+			descendant:SetAttribute(DOOR_POLICY_ATTR, "PromptManual")
 			descendant:SetAttribute(DOOR_OPEN_SOUND_ATTR, DEFAULT_DOOR_OPEN_SOUND_ID)
 			descendant:SetAttribute(DOOR_CLOSE_SOUND_ATTR, DEFAULT_DOOR_CLOSE_SOUND_ID)
 			ensureDoorPathModifier(descendant)
@@ -303,7 +303,7 @@ local function patchDoorTraversal(mapClone)
 
 	if patchedAny then
 		mapClone:SetAttribute(DOOR_PATCH_ATTR, true)
-		mapClone:SetAttribute(DOOR_MODE_ATTR, "AutoOpenToggle")
+		mapClone:SetAttribute(DOOR_MODE_ATTR, "PromptManual")
 	end
 	return patchedAny
 end
