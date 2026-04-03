@@ -4,6 +4,7 @@ local Controller = {}
 Controller.__index = Controller
 
 local SUBSCRIPTIONS = {
+    "MatchCreated",
     "MatchStarted",
     "MatchEnded",
     "PlayerTeleported",

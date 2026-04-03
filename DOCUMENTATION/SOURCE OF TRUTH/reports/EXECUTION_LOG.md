@@ -3786,3 +3786,66 @@ Menutup debt arsitektur `GameplayTick` yang ternyata tidak pernah dipublish, lal
 
 1. checkpoint commit untuk restore publisher `GameplayTick`
 2. lanjut ke slice survival/map berikutnya dengan fondasi tick yang sudah aktif
+
+## 2026-04-04 00:54 ICT
+
+### Task
+
+Memulai ekspansi hiding affordance lintas map dengan pendekatan data-driven (`hideSpotRooms`), lalu memastikan prompt runtime benar-benar muncul di map selain `HauntedHouse`.
+
+### Linked Issues
+
+- baseline closet hiding sudah ada, tetapi masih implicit ke naming `Closet/Locker`
+- untuk map lain, room kandidat hide spot ada (`Storage`, `StorageRoom`, `StorageWing`) tapi belum punya owner data canonical
+- validasi lintas map butuh jalur yang tidak mengandalkan heuristik substring raw
+
+### Files Changed
+
+- `src/shared/GameData/Maps/HauntedHouse.lua`
+- `src/shared/GameData/Maps/EmptyBuilding.lua`
+- `src/shared/GameData/Maps/StudioMMNineteen.lua`
+- `src/shared/GameData/Maps/AbandonedPalace.lua`
+- `src/ServerScriptService/Server/MapConfigSystem/Service.lua`
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Controller.lua`
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- map data sekarang punya field baru `hideSpotRooms`:
+  - `HauntedHouse`: `ClosetA`, `ClosetB`
+  - `EmptyBuilding`: `Storage`
+  - `StudioMMNineteen`: `StorageRoom`
+  - `AbandonedPalace`: `StorageWing`
+- `MapConfigSystem` sekarang menormalisasi `hideSpotRooms` dan memfilter agar tetap subset dari `rooms`
+- `ClosetHidingMechanic` sekarang:
+  - subscribe juga ke `MatchCreated` untuk trigger registrasi awal
+  - membaca map config dari `MapConfigSystem` untuk lookup room hide spot
+  - tetap mempertahankan fallback pattern `Closet/Locker`
+  - punya fallback khusus Studio untuk infer `activeMatchId` dari `Workspace.ActiveMatches` saat state event belum stabil
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_hide_spot_mapdata_build.rbxlx`
+- validasi live yang tertutup:
+  - pada `EmptyBuilding`, room `Room_Storage` runtime sekarang memunculkan `HideSpotPrompt`
+  - payload prompt terbaca:
+    - `ActionText = Bersembunyi`
+    - `ObjectText = Storage`
+- catatan jujur untuk sesi ini:
+  - beberapa run Studio masih tertahan di fase `Preparing`
+  - `HidingDebugSnapshot` pada run tersebut menunjukkan `activeMatchId=nil` dan `hiddenCount=0`
+  - jadi validasi `EnterHide -> Hidden` untuk ekspansi lintas map belum bisa di-close pada run yang stuck ini, meski affordance prompt sudah muncul
+
+### Interpretation
+
+- ownership data hide spot sekarang jauh lebih eksplisit dan sinkron dengan source of truth map, bukan sekadar heuristik
+- progres slice ini valid pada level affordance runtime lintas map
+- blocker berikutnya bergeser ke stabilisasi phase progression/event flow agar validasi state hide penuh bisa ditutup konsisten
+
+### Next Step
+
+1. checkpoint commit untuk ekspansi data-driven hide spot lintas map
+2. lanjut ke stabilisasi `Preparing -> match active` agar validasi full hide-state tidak intermittent

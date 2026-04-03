@@ -80,6 +80,8 @@ local function normalizeMapDefinition(raw, fallbackKey)
     local interactionObjects = normalizeStringList(raw.interactionObjects)
     local ghostCandidatesRaw = normalizeStringList(raw.ghostRoomCandidates or {})
     local ghostCandidates = filterCandidates(rooms, ghostCandidatesRaw)
+    local hideSpotRoomsRaw = normalizeStringList(raw.hideSpotRooms or {})
+    local hideSpotRooms = filterCandidates(rooms, hideSpotRoomsRaw)
 
     if #rooms == 0 then
         return nil, "map_missing_rooms"
@@ -97,6 +99,7 @@ local function normalizeMapDefinition(raw, fallbackKey)
         mapSize = type(raw.mapSize) == "string" and raw.mapSize or "Medium",
         spawnPoints = spawnPoints,
         rooms = rooms,
+        hideSpotRooms = hideSpotRooms,
         ghostRoomCandidates = ghostCandidates,
         evidenceSpawnPoints = evidencePoints,
         interactionObjects = interactionObjects,

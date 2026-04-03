@@ -33,6 +33,9 @@ return {
         "StorageWing",
         "CeremonyRoom",
     },
+    hideSpotRooms = {
+        "StorageWing",
+    },
     ghostRoomCandidates = {
         "Library",
         "GuestRoomA",

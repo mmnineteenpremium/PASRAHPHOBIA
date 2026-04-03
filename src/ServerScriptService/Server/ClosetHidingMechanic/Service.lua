@@ -1,5 +1,6 @@
 local Services = require(script.Parent.Parent.Core.Services)
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local Service = {}
 Service.__index = Service
@@ -33,6 +34,20 @@ local function resolveMatchSystem(deps)
 	end
 	if type(matchSystem.Service) == "table" and type(matchSystem.Service.GetLiveMatch) == "function" then
 		return matchSystem.Service
+	end
+	return nil
+end
+
+local function resolveMapConfigSystem(deps)
+	local mapConfigSystem = Services.Get(deps, "MapConfigSystem")
+	if type(mapConfigSystem) ~= "table" then
+		return nil
+	end
+	if type(mapConfigSystem.GetMapConfig) == "function" then
+		return mapConfigSystem
+	end
+	if type(mapConfigSystem.Service) == "table" and type(mapConfigSystem.Service.GetMapConfig) == "function" then
+		return mapConfigSystem.Service
 	end
 	return nil
 end
@@ -92,6 +107,28 @@ local function getRuntimeMapModel(matchSystem, matchId)
 	return nil
 end
 
+local function inferStudioMatchIdFromWorkspace()
+	if not RunService:IsStudio() then
+		return nil
+	end
+
+	local activeMatches = workspace:FindFirstChild("ActiveMatches")
+	if not activeMatches then
+		return nil
+	end
+
+	for _, child in ipairs(activeMatches:GetChildren()) do
+		if child:IsA("Folder") and child.Name:match("^Match_") then
+			local inferred = child.Name:gsub("^Match_", "")
+			if inferred ~= "" then
+				return inferred
+			end
+		end
+	end
+
+	return nil
+end
+
 local function getCharacterRoot(player)
 	local character = typeof(player) == "Instance" and player:IsA("Player") and player.Character or nil
 	if not character then
@@ -120,6 +157,41 @@ local function isClosetRoom(part)
 
 	local normalized = normalizeToken(part.Name:gsub("^Room_", ""))
 	return normalized ~= nil and (normalized:match("^closet") ~= nil or normalized:match("^locker") ~= nil)
+end
+
+local function buildHideSpotLookup(mapConfig)
+	local lookup = {}
+	if type(mapConfig) ~= "table" then
+		return lookup
+	end
+
+	for _, roomName in ipairs(mapConfig.hideSpotRooms or {}) do
+		if type(roomName) == "string" and roomName ~= "" then
+			local token = normalizeToken(roomName)
+			if token then
+				lookup[token] = true
+			end
+		end
+	end
+
+	return lookup
+end
+
+local function isConfiguredHideSpotRoom(part, lookup)
+	if type(lookup) ~= "table" or next(lookup) == nil then
+		return false
+	end
+	if not part or not part:IsA("BasePart") then
+		return false
+	end
+
+	local roomToken = normalizeToken(part.Name:gsub("^Room_", ""))
+	if roomToken and lookup[roomToken] == true then
+		return true
+	end
+
+	local directToken = normalizeToken(part.Name)
+	return directToken and lookup[directToken] == true or false
 end
 
 local function formatClosetLabel(part)
@@ -172,6 +244,7 @@ function Service:Init()
 		GhostSystem = Services.Get(self._deps, "GhostSystem"),
 		InvestigationSystem = Services.Get(self._deps, "InvestigationSystem"),
 		MatchSystem = resolveMatchSystem(self._deps),
+		MapConfigSystem = resolveMapConfigSystem(self._deps),
 		EconomySystem = Services.Get(self._deps, "EconomySystem"),
 		ProfileSystem = Services.Get(self._deps, "ProfileSystem"),
 	}
@@ -183,6 +256,12 @@ function Service:Start()
 		self._runtimeThread = task.spawn(function()
 			while self._running do
 				local activeMatchId = self._state:Get("activeMatchId")
+				if (type(activeMatchId) ~= "string" or activeMatchId == "") and RunService:IsStudio() then
+					activeMatchId = inferStudioMatchIdFromWorkspace()
+					if type(activeMatchId) == "string" and activeMatchId ~= "" then
+						self._state:Set("activeMatchId", activeMatchId)
+					end
+				end
 				if type(activeMatchId) == "string" and activeMatchId ~= "" then
 					self:_ensureHideSpotsRegistered(activeMatchId)
 					self:_syncHiddenOccupants(activeMatchId)
@@ -286,9 +365,20 @@ function Service:_registerHideSpots(matchId)
 		return
 	end
 
+	local liveMatch = getLiveMatch(self._dependencies.MatchSystem, matchId)
+	local mapId = type(liveMatch) == "table" and (liveMatch.mapId or liveMatch.map) or nil
+	if type(self._dependencies.MapConfigSystem) ~= "table" then
+		self._dependencies.MapConfigSystem = resolveMapConfigSystem(self._deps)
+	end
+	local mapConfig = nil
+	if type(self._dependencies.MapConfigSystem) == "table" and type(mapId) == "string" and mapId ~= "" then
+		mapConfig = self._dependencies.MapConfigSystem:GetMapConfig(mapId)
+	end
+	local hideSpotLookup = buildHideSpotLookup(mapConfig)
+
 	local records = {}
 	for _, room in ipairs(roomsFolder:GetChildren()) do
-		if room:IsA("BasePart") and isClosetRoom(room) then
+		if room:IsA("BasePart") and (isConfiguredHideSpotRoom(room, hideSpotLookup) or isClosetRoom(room)) then
 			local record = {
 				id = room.Name,
 				label = formatClosetLabel(room),
@@ -387,7 +477,9 @@ function Service:_syncHiddenOccupants(matchId)
 end
 
 function Service:HandleEvent(eventName, payload)
-	if eventName == "MatchStarted" then
+	if eventName == "MatchCreated" then
+		self._state:Set("activeMatchId", payload and payload.matchId)
+	elseif eventName == "MatchStarted" then
 		self._state:Set("activeMatchId", payload and payload.matchId)
 	elseif eventName == "MatchEnded" then
 		self._state:Set("activeMatchId", nil)
@@ -395,7 +487,10 @@ function Service:HandleEvent(eventName, payload)
 		self._state:Set("activeMatchId", payload.matchId)
 	end
 
-	if eventName == "MatchStarted" then
+	if eventName == "MatchCreated" then
+		self:_setOccupancy({})
+		self:_ensureHideSpotsRegistered(payload and payload.matchId)
+	elseif eventName == "MatchStarted" then
 		self:_setOccupancy({})
 		self:_registerHideSpots(payload and payload.matchId)
 	elseif eventName == "PlayerTeleported" then
