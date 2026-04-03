@@ -1,4 +1,5 @@
 local Services = require(script.Parent.Parent.Core.Services)
+local Players = game:GetService("Players")
 
 local Service = {}
 Service.__index = Service
@@ -11,6 +12,11 @@ local DEFAULT_CONFIG = {
     ProximityExposureThreshold = 3,
     ProximityExposureStep = 1,
 }
+local HUNT_PRESSURE_TICK_INTERVAL = 0.35
+local HUNT_DISTANCE_KILL = 8
+local HUNT_DISTANCE_CLOSE = 16
+local HUNT_DISTANCE_TRACK = 28
+local HUNT_DISTANCE_WARN = 48
 
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
@@ -78,6 +84,7 @@ function Service.new(state, deps)
     self._eventBus = resolveEventBus(self._deps)
     self._dependencies = {}
     self._config = mergeConfig(DEFAULT_CONFIG, self._deps.PlayerHealthConfig)
+    self._running = false
     return self
 end
 
@@ -91,12 +98,28 @@ function Service:Init()
     self._state:Set("proximityExposureByMatchId", self._state:Get("proximityExposureByMatchId") or {})
     self._state:Set("deadPlayersByMatchId", self._state:Get("deadPlayersByMatchId") or {})
     self._state:Set("huntActiveByMatchId", self._state:Get("huntActiveByMatchId") or {})
+    self._state:Set("hiddenPlayersByMatchId", self._state:Get("hiddenPlayersByMatchId") or {})
 end
 
 function Service:Start()
+    if self._running then
+        return
+    end
+    self._running = true
+    task.spawn(function()
+        local lastTickAt = os.clock()
+        while self._running do
+            local now = os.clock()
+            local dt = now - lastTickAt
+            lastTickAt = now
+            self:_tickHuntPressure(dt)
+            task.wait(HUNT_PRESSURE_TICK_INTERVAL)
+        end
+    end)
 end
 
 function Service:Stop()
+    self._running = false
     self._state:Clear()
 end
 
@@ -169,6 +192,154 @@ end
 function Service:_isHuntActive(matchId)
     local huntActive = self:_getMap("huntActiveByMatchId")
     return huntActive[matchId] == true
+end
+
+function Service:_setHidden(matchId, userId, isHidden)
+    local hiddenByMatch = self:_getMap("hiddenPlayersByMatchId")
+    hiddenByMatch[matchId] = hiddenByMatch[matchId] or {}
+    hiddenByMatch[matchId][userId] = isHidden == true
+    self:_setMap("hiddenPlayersByMatchId", hiddenByMatch)
+end
+
+function Service:_isHidden(matchId, userId)
+    local hiddenByMatch = self:_getMap("hiddenPlayersByMatchId")
+    return hiddenByMatch[matchId] and hiddenByMatch[matchId][userId] == true
+end
+
+local function getLiveMatch(matchSystem, matchId)
+    if type(matchSystem) ~= "table" or type(matchId) ~= "string" or matchId == "" then
+        return nil
+    end
+    if type(matchSystem.GetLiveMatch) == "function" then
+        return matchSystem:GetLiveMatch(matchId)
+    end
+    if type(matchSystem.Service) == "table" and type(matchSystem.Service.GetLiveMatch) == "function" then
+        return matchSystem.Service:GetLiveMatch(matchId)
+    end
+    return nil
+end
+
+local function getCharacterRoot(player)
+    local character = typeof(player) == "Instance" and player:IsA("Player") and player.Character or nil
+    if not character then
+        return nil
+    end
+    return character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+end
+
+local function resolveGhostPosition(liveMatch)
+    if type(liveMatch) ~= "table" then
+        return nil
+    end
+
+    local container = liveMatch.container
+    if typeof(container) ~= "Instance" then
+        return nil
+    end
+
+    for _, child in ipairs(container:GetChildren()) do
+        if child.Name:match("^Ghost_") or child.Name:match("^GhostPlaceholder_") then
+            if child:IsA("BasePart") then
+                return child.Position
+            end
+            if child:IsA("Model") then
+                local root = child.PrimaryPart or child:FindFirstChild("HumanoidRootPart", true) or child:FindFirstChildWhichIsA("BasePart", true)
+                if root and root:IsA("BasePart") then
+                    return root.Position
+                end
+                local ok, pivot = pcall(function()
+                    return child:GetPivot()
+                end)
+                if ok then
+                    return pivot.Position
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+function Service:_setThreatAttributes(player, distance, threatState)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return
+    end
+
+    player:SetAttribute("PasrahHuntThreatState", threatState)
+    if type(distance) == "number" and distance < math.huge then
+        player:SetAttribute("PasrahHuntThreatDistance", math.floor(distance + 0.5))
+    else
+        player:SetAttribute("PasrahHuntThreatDistance", nil)
+    end
+end
+
+function Service:_tickHuntPressure(dt)
+    local huntActiveByMatch = self:_getMap("huntActiveByMatchId")
+    for matchId, isActive in pairs(huntActiveByMatch) do
+        if isActive == true then
+            local liveMatch = getLiveMatch(self._dependencies.MatchSystem, matchId)
+            local ghostPosition = resolveGhostPosition(liveMatch)
+            local playersByUserId = liveMatch and liveMatch.playersByUserId or nil
+            if type(playersByUserId) == "table" then
+                for userId, playerState in pairs(playersByUserId) do
+                    local player = playerState and playerState.player or Players:GetPlayerByUserId(tonumber(userId) or 0)
+                    if playerState and playerState.alive ~= false and not self:_isDead(matchId, userId) then
+                        self:_ensurePlayerHealth(matchId, userId)
+
+                        if self:_isHidden(matchId, userId) then
+                            local exposure = math.max(0, self:_getExposure(matchId, userId) - math.max(0.5, dt * 2.1))
+                            self:_setExposure(matchId, userId, exposure)
+                            self:_setThreatAttributes(player, nil, "Sheltered")
+                        else
+                            local root = getCharacterRoot(player)
+                            local distance = math.huge
+                            if root and ghostPosition then
+                                distance = (root.Position - ghostPosition).Magnitude
+                            end
+
+                            local threatState = "Clear"
+                            local exposureGain = 0
+                            if distance <= HUNT_DISTANCE_KILL then
+                                threatState = "Critical"
+                                exposureGain = math.max(0.85, dt * 2.8)
+                            elseif distance <= HUNT_DISTANCE_CLOSE then
+                                threatState = "Close"
+                                exposureGain = math.max(0.45, dt * 1.75)
+                            elseif distance <= HUNT_DISTANCE_TRACK then
+                                threatState = "Tracked"
+                                exposureGain = math.max(0.22, dt * 0.95)
+                            elseif distance <= HUNT_DISTANCE_WARN then
+                                threatState = "Warn"
+                                exposureGain = math.max(0.1, dt * 0.45)
+                            end
+
+                            local exposure = self:_getExposure(matchId, userId)
+                            if exposureGain > 0 then
+                                exposure = exposure + exposureGain
+                                self:_setExposure(matchId, userId, exposure)
+                            else
+                                exposure = math.max(0, exposure - math.max(0.05, dt * 0.35))
+                                self:_setExposure(matchId, userId, exposure)
+                            end
+
+                            self:_setThreatAttributes(player, distance, threatState)
+                            if exposure >= self._config.ProximityExposureThreshold then
+                                self:_killPlayer(matchId, userId, player, "failed_escape_hunt", {
+                                    matchId = matchId,
+                                    action = "HuntPressure",
+                                    interactionType = "HuntPressure",
+                                    distance = distance,
+                                    exposure = exposure,
+                                })
+                            end
+                        end
+                    else
+                        self:_setThreatAttributes(player, nil, "Clear")
+                    end
+                end
+            end
+        end
+    end
 end
 
 function Service:_registerMatchPlayers(payload)
@@ -268,6 +439,17 @@ function Service:_handleGhostInteraction(payload)
         return
     end
 
+    if action == "HuntPressure" then
+        local step = tonumber(payload and payload.exposureStep) or 0.85
+        local exposure = self:_getExposure(matchId, userId) + math.max(0.15, step)
+        self:_setExposure(matchId, userId, exposure)
+
+        if exposure >= self._config.ProximityExposureThreshold then
+            self:_killPlayer(matchId, userId, player, "failed_escape_hunt", payload)
+        end
+        return
+    end
+
     if action == "EscapedGhost" then
         self:_setExposure(matchId, userId, 0)
     end
@@ -279,6 +461,7 @@ function Service:_clearMatchData(matchId)
         "proximityExposureByMatchId",
         "deadPlayersByMatchId",
         "huntActiveByMatchId",
+        "hiddenPlayersByMatchId",
     }
     for _, key in ipairs(keys) do
         local mapValue = self:_getMap(key)
@@ -296,6 +479,12 @@ function Service:HandleEvent(eventName, payload)
         self._state:Set("activeMatchId", matchId)
         self:_setHuntActive(matchId, false)
         self:_registerMatchPlayers(payload)
+        for _, player in ipairs(payload and payload.players or {}) do
+            if typeof(player) == "Instance" and player:IsA("Player") then
+                player:SetAttribute("PasrahHuntThreatState", "Clear")
+                player:SetAttribute("PasrahHuntThreatDistance", nil)
+            end
+        end
         return
     end
 
@@ -337,6 +526,23 @@ function Service:HandleEvent(eventName, payload)
         return
     end
 
+    if eventName == "PlayerHid" then
+        local userId = toUserId(payload and (payload.player or payload.userId))
+        if userId then
+            self:_setHidden(matchId, userId, true)
+            self:_setExposure(matchId, userId, 0)
+        end
+        return
+    end
+
+    if eventName == "PlayerRevealed" then
+        local userId = toUserId(payload and (payload.player or payload.userId))
+        if userId then
+            self:_setHidden(matchId, userId, false)
+        end
+        return
+    end
+
     if eventName == "GhostInteraction" then
         self:_handleGhostInteraction(payload)
         return
@@ -360,6 +566,9 @@ function Service:HandleEvent(eventName, payload)
                 self:_setMap(key, mapValue)
             end
         end
+
+        local player = payload and payload.player
+        self:_setThreatAttributes(player, nil, "Clear")
     end
 end
 

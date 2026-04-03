@@ -12,6 +12,8 @@ local READY_ATTR = "PasrahStudioE2EReady"
 local TRACE_ATTR = "PasrahStudioE2ELastAction"
 local RESULT_ATTR = "PasrahStudioE2ELastResult"
 local EXTRACTION_OVERRIDE_ATTR = "PasrahAllowStudioExtraction"
+local FORCE_GHOST_TYPE_ATTR = "PasrahForceGhostType"
+local FORCE_GHOST_VISUAL_STATE_ATTR = "PasrahForceGhostVisualState"
 
 local VALID_PHASES = {
 	PreparationPhase = true,
@@ -32,6 +34,14 @@ local function resolveService(deps, name, methodName)
 		return service.Service
 	end
 	return nil
+end
+
+local function resolveSystem(deps, name)
+	local system = Services.Get(deps, name)
+	if type(system) ~= "table" then
+		return nil
+	end
+	return system
 end
 
 local function resolveEventBus(deps)
@@ -243,6 +253,79 @@ function StudioE2EControlSystem:_handleDrainSanity(player, request)
 	return true, string.format("match=%s sanity=%s", matchId, tostring(newSanity))
 end
 
+function StudioE2EControlSystem:_handleSetForcedGhost(player, request)
+	if not RunService:IsStudio() then
+		return false, "studio_only"
+	end
+
+	local ghostType = type(request) == "table" and request.ghostType or nil
+	local visualState = type(request) == "table" and request.visualState or nil
+
+	if ghostType == false or ghostType == "" then
+		ghostType = nil
+	end
+	if visualState == false or visualState == "" then
+		visualState = nil
+	end
+
+	if ghostType ~= nil and type(ghostType) ~= "string" then
+		return false, "invalid_ghost_type"
+	end
+	if visualState ~= nil and type(visualState) ~= "string" then
+		return false, "invalid_visual_state"
+	end
+
+	ReplicatedStorage:SetAttribute(FORCE_GHOST_TYPE_ATTR, ghostType)
+	ReplicatedStorage:SetAttribute(FORCE_GHOST_VISUAL_STATE_ATTR, visualState)
+
+	return true, string.format(
+		"ghostType=%s visualState=%s",
+		tostring(ReplicatedStorage:GetAttribute(FORCE_GHOST_TYPE_ATTR)),
+		tostring(ReplicatedStorage:GetAttribute(FORCE_GHOST_VISUAL_STATE_ATTR))
+	)
+end
+
+function StudioE2EControlSystem:_handleHidingDebugSnapshot(player, request)
+	local hidingSystem = resolveSystem(self._deps, "HidingSystem")
+	if type(hidingSystem) ~= "table" then
+		return false, "missing_hiding_system"
+	end
+
+	local service = hidingSystem.Service
+	local state = hidingSystem.State
+	if type(service) ~= "table" or type(state) ~= "table" then
+		return false, "invalid_hiding_system"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	local hiddenPlayers = type(state.Get) == "function" and (state:Get("hiddenPlayers") or {}) or {}
+	local safeZonesByMatchId = service._safeZonesByMatchId or {}
+	local safeZoneState = type(matchId) == "string" and safeZonesByMatchId[matchId] or nil
+	local zoneCount = type(safeZoneState) == "table" and type(safeZoneState.records) == "table" and #safeZoneState.records or 0
+	local hiddenCount = 0
+	for _ in pairs(hiddenPlayers) do
+		hiddenCount += 1
+	end
+
+	if typeof(player) == "Instance" and player:IsA("Player") then
+		player:SetAttribute("PasrahStudioE2EHidingSnapshotAt", os.clock())
+		player:SetAttribute("PasrahStudioE2EHidingRunning", service._running == true)
+		player:SetAttribute("PasrahStudioE2EHidingStateMatchId", tostring(type(state.Get) == "function" and state:Get("activeMatchId") or ""))
+		player:SetAttribute("PasrahStudioE2EHidingZoneCount", zoneCount)
+		player:SetAttribute("PasrahStudioE2EHidingHiddenCount", hiddenCount)
+	end
+
+	return true, string.format(
+		"running=%s activeMatchId=%s matchId=%s zoneCount=%d hiddenCount=%d eventBus=%s",
+		tostring(service._running == true),
+		tostring(type(state.Get) == "function" and state:Get("activeMatchId") or nil),
+		tostring(matchId),
+		zoneCount,
+		hiddenCount,
+		tostring(service._eventBus ~= nil)
+	)
+end
+
 function StudioE2EControlSystem:_handleRequest(player, request)
 	local action = type(request) == "table" and request.action or nil
 	self:_setTrace({
@@ -262,8 +345,12 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleExtractSelf(player, request)
 	elseif action == "DrainSanity" then
 		ok, result = self:_handleDrainSanity(player, request)
+	elseif action == "SetForcedGhost" then
+		ok, result = self:_handleSetForcedGhost(player, request)
 	elseif action == "EndMatch" then
 		ok, result = self:_handleEndMatch(player, request)
+	elseif action == "HidingDebugSnapshot" then
+		ok, result = self:_handleHidingDebugSnapshot(player, request)
 	else
 		ok, result = false, "unsupported_action"
 	end
