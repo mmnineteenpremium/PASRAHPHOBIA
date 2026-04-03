@@ -7,11 +7,32 @@ local VIGNETTE_TWEEN_TIME = 0.45
 local HorrorHUD = {}
 HorrorHUD.__index = HorrorHUD
 
+local ACTIVE_MATCH_PHASES = {
+	InGame = true,
+	Escalation = true,
+	Hunt = true,
+}
+
 local function findLobbyUI(playerGui)
 	if not playerGui then
 		return nil
 	end
 	return playerGui:FindFirstChild("LobbyUI")
+end
+
+local function isPlayerInMatch(player)
+	if not player then
+		return false
+	end
+	return player:GetAttribute("InMatch") == true
+		or tostring(player:GetAttribute("MatchId") or "") ~= ""
+end
+
+local function isActiveMatchPhase(player)
+	if not player then
+		return false
+	end
+	return ACTIVE_MATCH_PHASES[tostring(player:GetAttribute("MatchPhase") or "")] == true
 end
 
 local function hasConfiguredVignetteImage()
@@ -48,6 +69,7 @@ local function createVignetteGui(playerGui)
 	screenGui.Name = "SensoryHorrorHUD"
 	screenGui.ResetOnSpawn = false
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.Enabled = false
 	screenGui.Parent = playerGui
 
 	if hasConfiguredVignetteImage() then
@@ -97,15 +119,24 @@ function HorrorHUD:Start()
 	end
 
 	self._playerGui = playerGui
-	self._vignetteGui = createVignetteGui(playerGui)
-	self._vignetteImage = self._vignetteGui:FindFirstChild("Vignette")
 	self:_ensureLobbyCanvasGroup()
+	self:_syncHudPresence()
 
-	self._playerGui.ChildAdded:Connect(function(child)
+	table.insert(self._connections, self._playerGui.ChildAdded:Connect(function(child)
 		if child.Name == "LobbyUI" then
 			self:_ensureLobbyCanvasGroup()
 		end
-	end)
+	end))
+
+	table.insert(self._connections, self._player:GetAttributeChangedSignal("InMatch"):Connect(function()
+		self:_syncHudPresence()
+	end))
+	table.insert(self._connections, self._player:GetAttributeChangedSignal("MatchId"):Connect(function()
+		self:_syncHudPresence()
+	end))
+	table.insert(self._connections, self._player:GetAttributeChangedSignal("MatchPhase"):Connect(function()
+		self:_syncHudPresence()
+	end))
 
 	local sanityEvent = self._remotes.SanityEvent
 	if sanityEvent and sanityEvent.OnClientEvent then
@@ -137,7 +168,41 @@ function HorrorHUD:_getPlayerGui()
 	return self._player:FindFirstChildOfClass("PlayerGui") or self._player:WaitForChild("PlayerGui", 5)
 end
 
+function HorrorHUD:_ensureVignetteGui()
+	local playerGui = self._playerGui or self:_getPlayerGui()
+	if not playerGui then
+		return nil
+	end
+
+	self._playerGui = playerGui
+	self._vignetteGui = createVignetteGui(playerGui)
+	self._vignetteImage = self._vignetteGui and self._vignetteGui:FindFirstChild("Vignette") or nil
+	return self._vignetteGui
+end
+
+function HorrorHUD:_syncHudPresence()
+	if not isPlayerInMatch(self._player) then
+		if self._vignetteGui and self._vignetteGui.Parent then
+			self._vignetteGui:Destroy()
+		end
+		self._vignetteGui = nil
+		self._vignetteImage = nil
+		return
+	end
+
+	local gui = self:_ensureVignetteGui()
+	if gui then
+		gui.Enabled = isActiveMatchPhase(self._player)
+	end
+end
+
 function HorrorHUD:_handleSanity(payload)
+	if not isPlayerInMatch(self._player) then
+		return
+	end
+	if not self._vignetteGui or not self._vignetteGui.Parent then
+		self:_syncHudPresence()
+	end
 	local sanity = tonumber((payload and payload.newSanity) or (payload and payload.sanity) or payload) or 100
 	self._currentSanity = math.clamp(sanity, 0, 100)
 	self:_tweenVignette()
@@ -198,6 +263,7 @@ function HorrorHUD:_handleMatchEvent(payload)
 	elseif eventName == "MatchEnded" then
 		self:_fadeLobby(0)
 	end
+	self:_syncHudPresence()
 end
 
 function HorrorHUD:_fadeLobby(target)

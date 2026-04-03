@@ -179,6 +179,10 @@ Status:
     - state live menjadi `Hidden / Sheltered`
     - setelah hunt selesai natural, `LocalPlayer.MatchPhase` kembali ke `InGame`
     - sesi tidak jatuh ke `Result` saat menunggu hunt selesai
+- `SensoryHorrorHUD` sekarang tidak lagi ikut hidup di lobby boot:
+  - `PlayerGui.SensoryHorrorHUD` absen saat `InMatch = false`
+  - HUD baru dibuat saat player masuk match dan `MatchPhase` aktif (`InGame`, `Escalation`, `Hunt`)
+  - HUD kembali hilang saat state kembali ke lobby
 
 Pekerjaan:
 
