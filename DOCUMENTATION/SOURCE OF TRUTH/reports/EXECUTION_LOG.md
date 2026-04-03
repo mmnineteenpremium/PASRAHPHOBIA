@@ -4054,3 +4054,56 @@ Menutup owner client ganda pada surface investigasi dengan mematikan subscriber 
 
 1. checkpoint commit untuk owner cleanup investigasi client
 2. lanjut audit satelit UI yang memang sengaja hidup seperti `FlashlightToggleUI` dan `SensoryHorrorHUD`
+
+## 2026-04-04 00:13 ICT
+
+### Task
+
+Mengubah `SensoryHorrorHUD` menjadi satelit lazy runtime agar tidak ikut memenuhi `PlayerGui` saat boot lobby.
+
+### Linked Issues
+
+- validasi live sebelumnya menunjukkan `PlayerGui.SensoryHorrorHUD` masih hadir di desktop lobby boot walau `Enabled = false`
+- ini bukan bug visual besar, tetapi tetap menambah noise runtime yang tidak perlu pada fase lobby
+- `UISystem` sendiri hanya membutuhkan HUD itu pada phase match aktif
+
+### Files Changed
+
+- `src/client/UI/HUD/HorrorHUD.luau`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `HorrorHUD` tidak lagi membuat `SensoryHorrorHUD` saat `Start()` bila player belum masuk match
+- HUD sekarang dibuat secara lazy ketika:
+  - `InMatch == true`
+  - atau `MatchId` sudah terisi
+- `ScreenGui.Enabled` disinkronkan ke phase aktif:
+  - `InGame`
+  - `Escalation`
+  - `Hunt`
+- saat player kembali ke lobby, `SensoryHorrorHUD` dihancurkan agar `PlayerGui` kembali bersih
+- koneksi `ChildAdded` lobby sekarang juga masuk ke `_connections`, bukan dangling connection
+
+### Validation Notes
+
+- build source sukses:
+  - `rojo build default.project.json --output .\\_tmp_horror_hud_lazy.rbxlx`
+- playtest lobby boot:
+  - `PlayerGui.SensoryHorrorHUD` tidak ada
+- simulasi client attr lokal:
+  - sebelum: `InMatch = false`, HUD tidak ada
+  - selama: `InMatch = true`, `MatchId = debug_match`, `MatchPhase = InGame`, HUD ada dan `Enabled = true`
+  - sesudah rollback ke lobby: HUD hilang lagi
+- console runtime tidak menunjukkan error baru dari patch ini
+
+### Interpretation
+
+- ini membersihkan noise GUI satelit tanpa mengubah owner utama phase match
+- `UISystem` tetap menjadi pengendali phase surface, sementara `HorrorHUD` sekarang lebih disiplin soal lifecycle runtime
+
+### Next Step
+
+1. checkpoint commit untuk lazy `SensoryHorrorHUD`
+2. lanjut ke slice map/door/gameplay atau debt `P0.5` runtime noise berikutnya
