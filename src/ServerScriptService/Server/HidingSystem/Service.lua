@@ -528,6 +528,8 @@ function Service:_tickSafeZones()
                 player = player,
                 matchId = matchId,
             })
+        elseif type(hiddenEntry) == "table" then
+            applyHideAttributes(player, "Hidden", hiddenEntry.spotType or "Unknown", hiddenEntry.zoneId or "")
         else
             applyHideAttributes(player, "Exposed", "None", "")
         end

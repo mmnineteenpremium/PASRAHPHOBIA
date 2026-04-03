@@ -326,6 +326,80 @@ function StudioE2EControlSystem:_handleHidingDebugSnapshot(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleEnterHide(player, request)
+	if not self._eventBus then
+		return false, "missing_event_bus"
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local zoneId = type(request) == "table" and (request.zoneId or request.closetId) or nil
+	if type(zoneId) ~= "string" or zoneId == "" then
+		zoneId = "StudioE2EHide"
+	end
+
+	local spotType = type(request) == "table" and request.spotType or "Closet"
+	if type(spotType) ~= "string" or spotType == "" then
+		spotType = "Closet"
+	end
+
+	self._eventBus:Publish("PlayerAttemptHide", {
+		player = player,
+		userId = player.UserId,
+		matchId = matchId,
+		zoneId = zoneId,
+		closetId = zoneId,
+		spotType = spotType,
+		movementLevel = 0,
+		noiseLevel = 0,
+		source = "StudioE2EControlSystem",
+	})
+
+	return true, string.format("match=%s zone=%s spotType=%s", matchId, zoneId, spotType)
+end
+
+function StudioE2EControlSystem:_handleExitHide(player, request)
+	if not self._eventBus then
+		return false, "missing_event_bus"
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local zoneId = type(request) == "table" and (request.zoneId or request.closetId) or nil
+	if type(zoneId) ~= "string" or zoneId == "" then
+		zoneId = "StudioE2EHide"
+	end
+
+	local spotType = type(request) == "table" and request.spotType or "Closet"
+	if type(spotType) ~= "string" or spotType == "" then
+		spotType = "Closet"
+	end
+
+	self._eventBus:Publish("PlayerExitHide", {
+		player = player,
+		userId = player.UserId,
+		matchId = matchId,
+		zoneId = zoneId,
+		closetId = zoneId,
+		spotType = spotType,
+		source = "StudioE2EControlSystem",
+	})
+
+	return true, string.format("match=%s zone=%s spotType=%s", matchId, zoneId, spotType)
+end
+
 function StudioE2EControlSystem:_handleRequest(player, request)
 	local action = type(request) == "table" and request.action or nil
 	self:_setTrace({
@@ -351,6 +425,10 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleEndMatch(player, request)
 	elseif action == "HidingDebugSnapshot" then
 		ok, result = self:_handleHidingDebugSnapshot(player, request)
+	elseif action == "EnterHide" then
+		ok, result = self:_handleEnterHide(player, request)
+	elseif action == "ExitHide" then
+		ok, result = self:_handleExitHide(player, request)
 	else
 		ok, result = false, "unsupported_action"
 	end

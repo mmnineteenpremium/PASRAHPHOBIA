@@ -3660,3 +3660,73 @@ Membuat guidance survive hunt lebih operasional dengan menunjuk `safe zone` runt
 
 1. checkpoint commit untuk survival readability hint
 2. lanjut ke hiding spot non-safe-zone atau survival affordance berikutnya bila masih dibutuhkan
+
+## 2026-04-03 23:59 ICT
+
+### Task
+
+Menutup hiding spot non-safe-zone baseline dengan membuat `closet hiding` runtime benar-benar hidup di `HauntedHouse`, lalu memvalidasi perilaku `enter hide`, `stay hidden inside closet`, dan `auto-exit when leaving closet`.
+
+### Linked Issues
+
+- source sudah punya `ClosetHidingMechanic`, tetapi sistem ini tidak pernah aktif di runtime karena foldernya tidak ikut auto-discovery `SystemRegistry`
+- setelah sistem aktif, prompt closet masih tidak muncul tepat waktu karena registrasi awal bisa kalah race dengan spawn clone map
+- `HidingSystem` setiap tick hanya mengerti `SafeZone`, sehingga hide state `Closet/Locker` langsung jatuh lagi ke `Exposed`
+- auto-exit closet semula bergantung ke `GameplayTick`, padahal publisher event itu tidak ada di runtime aktif
+- volume check closet semula memakai tinggi part lantai mentah, sehingga `HumanoidRootPart` pemain selalu terbaca “di luar” walau berdiri di atas closet room
+
+### Files Changed
+
+- `src/ServerScriptService/Server/Core/SystemRegistry.lua`
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Controller.lua`
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua`
+- `src/ServerScriptService/Server/HidingSystem/Service.lua`
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `SystemRegistry` sekarang mengenali `ClosetHidingMechanic` sebagai system runtime resmi dan menempatkannya di group `GameplaySystems`
+- `ClosetHidingMechanic` sekarang:
+  - mencari `Room_Closet* / Room_Locker*` pada clone map aktif
+  - menempelkan `HideSpotPrompt` runtime
+  - menjaga occupancy prompt (`Bersembunyi` / `Keluar`)
+  - punya loop internal ringan untuk sync hide spot dan auto-exit occupant tanpa bergantung ke `GameplayTick`
+  - memakai toleransi vertikal room yang cocok untuk `HumanoidRootPart`, bukan tinggi lantai mentah `1 stud`
+- `HidingSystem` sekarang tidak lagi menimpa hide state `Closet/Locker` hanya karena player sedang tidak ada di `SafeZone`
+- `StudioE2EControlSystem` sekarang punya harness resmi:
+  - `EnterHide`
+  - `ExitHide`
+  - ini dipakai untuk validasi server-authoritative hide pipeline tanpa bergantung ke trigger prompt fisik yang flaky di automation MCP
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_closet_registry_build.rbxlx`
+- validasi live final di Studio tertutup pada `HauntedHouse`:
+  - `HideSpotPrompt` muncul di `Workspace.ActiveMatches.Match_match_1.HauntedHouse.HauntedHouse.Rooms.Room_ClosetA`
+  - saat root diposisikan di `ClosetA` lalu `StudioE2EControl(action=EnterHide)` dipicu:
+    - `PasrahHideState = Hidden`
+    - `PasrahHideSpotType = Closet`
+    - `PasrahHideZoneId = Room_ClosetA`
+    - prompt text = `Keluar`
+  - saat root dipindahkan keluar dari volume closet:
+    - `PasrahHideState = Exposed`
+    - `PasrahHideSpotType = None`
+    - `PasrahHideZoneId = ""`
+    - prompt text = `Bersembunyi`
+- validasi ini menutup tiga lapis perilaku yang sebelumnya belum ada:
+  - prompt runtime producer
+  - hide state runtime
+  - auto-exit runtime
+
+### Interpretation
+
+- hiding spot non-safe-zone sekarang bukan lagi placeholder konsep; `HauntedHouse` sudah punya baseline closet hide yang benar-benar bekerja
+- debt survival/hunt berikutnya bergeser dari “apakah bisa bersembunyi di closet” ke “berapa kaya hiding affordance lintas map dan bagaimana teachability survive loop untuk pemain”
+
+### Next Step
+
+1. checkpoint commit untuk baseline closet hiding runtime
+2. lanjut ke perluasan hiding affordance lintas map atau gameplay survival slice berikutnya

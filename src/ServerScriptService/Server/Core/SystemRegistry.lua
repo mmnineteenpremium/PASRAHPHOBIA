@@ -53,6 +53,7 @@ local DISABLED_RUNTIME_SYSTEM_NAMES = {
 }
 
 local EXPLICIT_SYSTEM_NAMES = {
+    ClosetHidingMechanic = true,
     EvidenceDeductionEngine = true,
     HorrorDirector = true,
     LobbySocialHub = true,
@@ -83,6 +84,7 @@ local SYSTEMS_BY_GROUP = {
         "EvidenceSystem",
     },
     GameplaySystems = {
+        "ClosetHidingMechanic",
         "SpectatorSystem",
         "LobbySystem",
     },
