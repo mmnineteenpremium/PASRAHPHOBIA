@@ -99,6 +99,7 @@ function StudioE2EControlSystem.new(deps)
 	self._sanitySystem = nil
 	self._economyService = nil
 	self._persistenceService = nil
+	self._shopService = nil
 	self._eventBus = nil
 	return self
 end
@@ -109,6 +110,7 @@ function StudioE2EControlSystem:Init()
 	self._sanitySystem = resolveService(self._deps, "SanitySystem", "DrainSanity")
 	self._economyService = resolveService(self._deps, "EconomySystem", "GetBalance")
 	self._persistenceService = resolveService(self._deps, "DataPersistenceService", "HasProcessedReceipt")
+	self._shopService = resolveService(self._deps, "ShopSystem", "GetCatalog")
 	self._eventBus = resolveEventBus(self._deps)
 end
 
@@ -370,6 +372,56 @@ function StudioE2EControlSystem:_handleGetPersistenceMode()
 	)
 end
 
+function StudioE2EControlSystem:_handleGetShopReadiness()
+	local shopService = self._shopService
+	if type(shopService) ~= "table" or type(shopService.GetCatalog) ~= "function" then
+		return false, "missing_shop_service"
+	end
+
+	local catalog = shopService:GetCatalog()
+	if type(catalog) ~= "table" then
+		return false, "catalog_unavailable"
+	end
+
+	local total = 0
+	local mm = 0
+	local pp = 0
+	local robux = 0
+	local disabled = 0
+	local robuxMissingId = 0
+
+	for _, item in pairs(catalog) do
+		if type(item) == "table" then
+			total += 1
+			local currency = tostring(item.currency or "MM")
+			if currency == "MM" then
+				mm += 1
+			elseif currency == "PP" then
+				pp += 1
+			elseif currency == "Robux" or currency == "RBX" then
+				robux += 1
+				if tonumber(item.marketplaceId) == nil or tonumber(item.marketplaceId) <= 0 then
+					robuxMissingId += 1
+				end
+			end
+
+			if item.enabled == false then
+				disabled += 1
+			end
+		end
+	end
+
+	return true, string.format(
+		"total=%d MM=%d PP=%d Robux=%d disabled=%d robuxMissingId=%d",
+		total,
+		mm,
+		pp,
+		robux,
+		disabled,
+		robuxMissingId
+	)
+end
+
 function StudioE2EControlSystem:_handleSetForcedGhost(player, request)
 	if not RunService:IsStudio() then
 		return false, "studio_only"
@@ -544,6 +596,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGetWallet(player)
 	elseif action == "GetPersistenceMode" then
 		ok, result = self:_handleGetPersistenceMode()
+	elseif action == "GetShopReadiness" then
+		ok, result = self:_handleGetShopReadiness()
 	elseif action == "HidingDebugSnapshot" then
 		ok, result = self:_handleHidingDebugSnapshot(player, request)
 	elseif action == "EnterHide" then
