@@ -95,3 +95,18 @@ Catatan:
 
 - satu run awal `ExtractSelf` sempat gagal `player_not_alive` saat timing hunt tertentu.
 - rerun extraction pada match aktif menunjukkan jalur extraction override tetap valid untuk gate E2E.
+
+## Update 2026-04-04 06:07 ICT
+
+Pass manifestation ghost untuk slice `Pocong`:
+
+- `E2E-07 Ghost manifestation`: `PASS`
+  - `SetForcedGhost(ghostType=Pocong, visualState=Manifestation)` -> ack `ok=true`
+  - runtime match memunculkan `Ghost_Pocong` pada map aktif
+  - `MeshPart.Transparency = 0` saat override manifestation aktif
+  - cleanup override dilakukan (`ghostType=false, visualState=false`) setelah verifikasi
+
+Status matrix inti saat ini:
+
+- `PASS`: `E2E-01`, `E2E-03`, `E2E-04`, `E2E-07`, `E2E-08`, `E2E-09`, `E2E-10`
+- `PENDING`: `E2E-02`, `E2E-05`, `E2E-06`
