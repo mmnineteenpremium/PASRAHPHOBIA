@@ -174,3 +174,23 @@ Masalah duplikasi dianggap selesai jika:
 - playtest log tidak lagi menunjukkan bootstrap atau listener yang ambigu
 - file repo bisa menjelaskan runtime tanpa bergantung pada state Studio yang tersembunyi
 
+## Update 2026-04-04 03:57 ICT - Drift Nyata yang Terdeteksi
+
+Temuan runtime:
+
+- `ShopCatalog` dan `GlobalOperationsConfig` sempat berbeda antara source lokal dan script yang benar-benar jalan di Studio.
+- gejala langsung:
+  - item termurah `MM/PP` tetap `insufficient_currency` walau source lokal sudah menyiapkan wallet baseline.
+
+Mitigasi yang dipakai:
+
+1. baca script target langsung di Studio (`script_read`) untuk verifikasi source aktual runtime.
+2. sinkronkan patch ekonomi minimum pada script runtime yang aktif.
+3. ulangi smoke test purchase setelah restart play.
+
+Rule operasional tambahan:
+
+- untuk bug runtime kritikal, verifikasi harus berbasis:
+  - source lokal
+  - source yang aktif di Studio
+- jika keduanya tidak sama, status wajib ditandai sebagai drift sampai tervalidasi kembali.

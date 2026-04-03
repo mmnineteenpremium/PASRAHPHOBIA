@@ -5200,3 +5200,47 @@ Menambahkan layer override ID monetization agar aktivasi item `Robux` tidak perl
   - isi ID di satu file
   - build + smoke test
   - tidak perlu sentuh struktur katalog utama
+
+## 2026-04-04 03:57 ICT
+
+### Task
+
+Menutup blocker shop `insufficient_currency` untuk item termurah dan melacak drift runtime Studio terhadap source lokal.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/EconomySystem/Service.lua`
+- `src/shared/GameData/GlobalOperationsConfig.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/DUPLICATION_AND_RUNTIME_DRIFT_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- economy wallet default tidak lagi mulai dari nol untuk user baru/session baru:
+  - `MM=1200`
+  - `PP=12`
+  - `Robux=0`
+- konfigurasi global sekarang eksplisit memuat:
+  - `Economy.StartingWallet`
+  - `Engagement.NewPlayerWelcomeReward` (placeholder nol, agar config surface konsisten)
+- validasi runtime menemukan mismatch penting:
+  - script Studio sempat masih versi lama (wallet nol + config tanpa `Economy`)
+  - patch runtime diselaraskan, lalu playtest diulang
+
+### Validation Notes
+
+- sebelum fix runtime:
+  - request `eq_sanitypill_standard` -> `insufficient_currency`
+  - request `pp_cos_head_nightoracle` -> `insufficient_currency`
+- sesudah fix + restart play:
+  - request `eq_saltbag_reinforced` -> `PurchaseProcessed(success=true)`
+  - request `pp_cos_head_nightoracle` -> `PurchaseProcessed(success=true)`
+  - repeat cepat item yang sama -> `already_owned` / `purchase_cooldown` (expected guard)
+- build source lokal sukses:
+  - `_tmp_shop_wallet_minimal_build.rbxlx`
+
+### Interpretation
+
+- shop sekarang benar-benar bisa menjual item `MM/PP` dari sesi baru, bukan hanya render katalog.
+- drift antara source lokal dan script Studio adalah risiko nyata; perlu disiplin satu koneksi Rojo aktif + verifikasi script target saat gejala runtime tidak sesuai source.
