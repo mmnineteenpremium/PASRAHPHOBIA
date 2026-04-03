@@ -167,3 +167,15 @@ Implikasi matrix:
 
 - `E2E-06` tetap `PASS` dan sekarang lebih aman karena utility branch sudah punya guard stok.
 - `E2E-07` tetap `PASS` dengan kualitas visual lebih proporsional untuk validasi gameplay.
+
+## Update 2026-04-04 06:49 ICT
+
+Tambahan coverage untuk fallback visual ghost type non-dedicated:
+
+- force `Kuntilanak` di StudioE2E menghasilkan model runtime `Ghost_Kuntilanak`.
+- runtime menandai `VisualTemplateName=Pocong` dan `PlaceholderVisual=false`.
+- ghost tetap memiliki mesh/root valid (`hasMesh=true`, `hasRoot=true`), bukan placeholder box.
+
+Implikasi matrix:
+
+- `E2E-07` tetap `PASS` dengan baseline visual ghost yang konsisten lintas tipe meski roster dedicated belum lengkap.

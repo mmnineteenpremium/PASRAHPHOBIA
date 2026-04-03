@@ -154,7 +154,15 @@ local function resolveGhostModelTemplate(ghostType)
 	if not ghosts then
 		return nil
 	end
-	return ghosts:FindFirstChild(ghostType)
+	local exact = ghosts:FindFirstChild(ghostType)
+	if exact and exact:IsA("Model") then
+		return exact
+	end
+	local fallback = ghosts:FindFirstChild("Pocong")
+	if fallback and fallback:IsA("Model") then
+		return fallback
+	end
+	return nil
 end
 
 local function resolveForcedStudioGhostType()

@@ -5926,3 +5926,32 @@ Normalisasi model ghost `Pocong` agar tidak raksasa dan tetap masuk akal untuk e
 
 - gate `E2E-07` tetap `PASS`, dengan skala visual ghost yang lebih proporsional untuk test gameplay.
 - langkah berikutnya tetap ekspansi roster ghost, bukan kembali ke model raksasa placeholder.
+
+## 2026-04-04 06:49 ICT
+
+### Task
+
+Menutup gap “E2E tanpa ghost” untuk ghost type non-Pocong yang belum punya model dedicated.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/GhostSystem/Service.lua`
+
+### Change Summary
+
+- `resolveGhostModelTemplate(ghostType)` sekarang fallback ke template `Pocong` bila model ghost type target belum tersedia.
+- atribut runtime tetap membawa `GhostType` asli (mis. `Kuntilanak`), tetapi visual template ditandai sebagai `Pocong`.
+
+### Validation Notes
+
+- build lokal lolos:
+  - `_tmp_ghost_template_fallback_build.rbxlx`
+- validasi live Studio (forced ghost `Kuntilanak`):
+  - model runtime: `Ghost_Kuntilanak`
+  - atribut: `PlaceholderVisual=false`, `VisualTemplateName=Pocong`
+  - hasil: `hasMesh=true`, `hasRoot=true`, size `~2.59 x 8.5 x 2.2`
+
+### Interpretation
+
+- ghost non-dedicated tidak lagi turun ke rig placeholder box selama template `Pocong` tersedia.
+- ini mengamankan pengalaman visual baseline sambil menunggu impor roster ghost final per tipe.
