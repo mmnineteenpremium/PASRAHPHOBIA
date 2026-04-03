@@ -2530,3 +2530,69 @@ Debt berikutnya yang paling bernilai sekarang:
 1. audit gameplay survival loop: hiding spot, pintu, dan cara selamat dari hunt
 2. audit map traversal vertikal/tangga agar layout tidak terasa palsu
 3. lanjut ke polish asset/audio final yang masih belum legal/final
+
+## 2026-04-03 14:49 ICT
+
+### Task
+
+Menutup debt UX yang masih terlihat setelah teleport ke match, sekaligus menaikkan readability `RoomBrowserUI` dan `RoyalPassUI` untuk viewport sempit.
+
+### Linked Issues
+
+- user melaporkan room panel masih bisa tertinggal setelah teleport ke map match
+- user meminta panel besar tidak tumpang tindih dan tetap nyaman dibaca di mobile/narrow viewport
+- task survival/hunt shelter sempat dicoba lanjut, tetapi validasi server-side masih blocked
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `src/ServerScriptService/Server/HidingSystem/Service.lua`
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `RoomBrowserUI` sekarang dipaksa ikut jalur suppression pada `MatchStarted`, bukan hanya `MatchPreparing`
+- sizing `RoomBrowserUI` compact/mobile dibuat lebih agresif:
+  - margin mobile diperkecil
+  - panel mengisi viewport lebih penuh
+  - title/status text dibesarkan
+  - kartu player di detail room dibesarkan pada layout satu kolom
+- `RoyalPassUI` sekarang punya pass responsive tambahan:
+  - panel mobile/narrow viewport lebih lebar dan lebih tinggi
+  - hero card, progress track, CTA, track tabs, hint, dan track cards ikut dibesarkan
+- untuk debt survival loop, saya juga menambahkan jejak Studio-only di `HidingSystem` dan action debug baru `HidingDebugSnapshot` di `StudioE2EControlSystem`, tetapi jalur debug server itu belum berhasil divalidasi karena remote `StudioE2EControl` tidak muncul di runtime terbaru
+
+### Validation Notes
+
+- build source lolos:
+  - `rojo build default.project.json --output .\\_tmp_roombrowser_mobile_pass_build.rbxlx`
+- validasi live `RoyalPassUI` di lobby:
+  - `RoyalPassUI.Enabled = true`
+  - `MainPanel.Visible = true`
+  - `MainPanel.AbsoluteSize = 436x520`
+- validasi live `RoomBrowserUI` di lobby:
+  - `RoomBrowserUI.Enabled = true`
+  - `Panel.Visible = true`
+  - `Panel.AbsoluteSize = 1080x668`
+- retest dari state browser terbuka -> `HostStart(Ranked, HauntedHouse)`:
+  - `InMatch = true`
+  - `MatchPhase = Briefing`
+  - `RoomBrowserUI.Enabled = false`
+  - `RoomBrowserUI.Panel.Visible = false`
+- capture referensi:
+  - `ScreenCapture_RoomBrowserSuppressed_PostTeleport`
+
+### Blocker Notes
+
+- `HidingSystem` safe-zone/shelter belum bisa saya nyatakan selesai
+- bukti paling jujurnya sekarang:
+  - attr `PasrahHideState` dan `PasrahDebugHidingTrace` masih `nil` di runtime client
+  - `StudioE2EControl` remote tidak tersedia pada retest runtime terbaru, sehingga snapshot server-side belum bisa dipakai untuk mengunci diagnosis
+
+### Next Step
+
+1. kembali ke debt gameplay/runtime: audit pintu hybrid radius/manual, traversal tangga, dan hiding spot
+2. lanjutkan shelter/hunt survival setelah server-side debug bridge stabil lagi
+3. teruskan polish asset/audio final yang masih belum legal/final

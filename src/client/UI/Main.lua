@@ -1530,6 +1530,41 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	}
 end
 
+local function getHuntObjectiveText()
+	local player = Players.LocalPlayer
+	if not player then
+		return "Hunt aktif. Cari Safe Zone biru dan jauhi ghost."
+	end
+
+	local hideState = tostring(player:GetAttribute("PasrahHideState") or "Exposed")
+	local hideZoneId = tostring(player:GetAttribute("PasrahHideZoneId") or "")
+	local threatState = tostring(player:GetAttribute("PasrahHuntThreatState") or "Clear")
+	local threatDistance = tonumber(player:GetAttribute("PasrahHuntThreatDistance"))
+
+	if hideState == "Hidden" then
+		if hideZoneId ~= "" then
+			return string.format("Berlindung di %s. Tunggu hunt selesai sebelum keluar.", hideZoneId)
+		end
+		return "Berlindung di shelter. Tunggu hunt selesai sebelum keluar."
+	end
+
+	if threatState == "Critical" or threatState == "Close" then
+		if threatDistance then
+			return string.format("Ghost dekat (%dst). Buka pintu via prompt dan lari ke Safe Zone biru.", threatDistance)
+		end
+		return "Ghost dekat. Buka pintu via prompt dan lari ke Safe Zone biru."
+	end
+
+	if threatState == "Tracked" or threatState == "Warn" then
+		if threatDistance then
+			return string.format("Ghost melacak (%dst). Putar jalur dan cari Safe Zone biru.", threatDistance)
+		end
+		return "Ghost melacak. Putar jalur dan cari Safe Zone biru."
+	end
+
+	return "Hunt aktif. Cari Safe Zone biru, gunakan prompt pintu, dan jaga jarak dari ghost."
+end
+
 local function bulletList(list, emptyText)
 	if type(list) ~= "table" or #list == 0 then
 		return emptyText or "- Tidak ada"
@@ -2937,9 +2972,11 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		badgeColor = Color3.fromRGB(132, 56, 56)
 		phaseGlyphText = "HU"
 		primaryText = "Ghost sedang memburu."
+		local huntObjective = getHuntObjectiveText()
 		secondaryText = timerVisible
-			and ("Sisa waktu hunt: " .. timerText .. ". Utamakan bertahan hidup.")
-			or "Utamakan bertahan hidup. Panel ini bisa ditutup agar pandangan lebih lega."
+			and ("Sisa waktu hunt: " .. timerText .. ". " .. huntObjective)
+			or huntObjective
+		footerText = "Gunakan prompt pintu E/X/tap untuk rotasi. Safe Zone biru adalah shelter saat hunt."
 	elseif viewState == "Results" then
 		local missionFailed = payload and (
 			payload.success == false
@@ -3020,7 +3057,18 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	end
 	if match.ControlsHintLabel then
 		match.ControlsHintLabel.Visible = self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
-		match.ControlsHintLabel.Text = self._matchControlsHintText
+		match.ControlsHintLabel.Text = viewState == "Hunt"
+			and "PINTU: E/X/TAP  •  TARGET: SAFE ZONE BIRU  •  JOURNAL: J"
+			or self._matchControlsHintText
+	end
+	if match.ObjectiveLabel then
+		if viewState == "Hunt" then
+			match.ObjectiveLabel.Text = getHuntObjectiveText()
+			match.ObjectiveLabel.Visible = true
+		elseif viewState == "Investigation" then
+			match.ObjectiveLabel.Text = DEFAULT_MATCH_OBJECTIVE_TEXT
+			match.ObjectiveLabel.Visible = true
+		end
 	end
 	self:_updateMatchSummaryRows(match.BasicSummaryRows)
 	self:_syncMatchWindowVisibility()
@@ -5352,7 +5400,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		end)
 	end
 
-	local margin = profile.isMobile and 10 or 14
+	local margin = profile.isMobile and 6 or 14
 	local usableWidth = math.max(360, viewportSize.X - (topLeftInset.X + bottomRightInset.X + margin * 2))
 	local usableHeight = math.max(420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + margin * 2))
 	local isCompact = profile.isMobile or viewportSize.X <= 980
@@ -5360,6 +5408,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 	local panelWidth = isCompact and usableWidth or math.min(1080, usableWidth)
 	local panelHeight = isCompact and usableHeight or math.min(668, usableHeight)
+	if profile.isMobile then
+		panelWidth = math.max(320, viewportSize.X - (topLeftInset.X + bottomRightInset.X + 12))
+		panelHeight = math.max(460, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 14))
+	end
 	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
 	panel.Position = UDim2.fromOffset(
 		topLeftInset.X + margin + math.floor(panelWidth * 0.5),
@@ -5383,7 +5435,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 	if title then
 		setOffsetBounds(title, headerPadding, 8, headerWidth, isCompact and 28 or 30)
-		title.TextSize = isCompact and 22 or 25
+		title.TextSize = profile.isMobile and 24 or (isCompact and 22 or 25)
 	end
 	if titleGlow and title then
 		titleGlow.Position = title.Position + UDim2.fromOffset(2, 2)
@@ -5392,7 +5444,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 	if statusLabel then
 		setOffsetBounds(statusLabel, headerPadding, isCompact and 40 or 44, panelWidth - headerPadding * 2, 24)
-		statusLabel.TextSize = isCompact and 13 or 12
+		statusLabel.TextSize = profile.isMobile and 14 or (isCompact and 13 or 12)
 	end
 
 	local controlsY = isCompact and 72 or 74
@@ -5576,7 +5628,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		setOffsetBounds(playersList, headerPadding, playersY, contentWidth, playersHeight)
 		if playersListLayout then
 			playersListLayout.FillDirectionMaxCells = 1
-			playersListLayout.CellSize = UDim2.fromOffset(contentWidth - 16, 108)
+			playersListLayout.CellSize = UDim2.fromOffset(contentWidth - 16, profile.isMobile and 118 or 108)
 		end
 		setOffsetBounds(modeSelector, headerPadding, controlsY, contentWidth, 36)
 		setOffsetBounds(modeDropdown, headerPadding, controlsY + 40, contentWidth, 72)
@@ -5828,14 +5880,19 @@ function UISystem:_applyDeviceSizing()
 			if window then
 				if guiName == "RoyalPassUI" and window.Panel then
 					local width = (profile.isMobile or viewportSize.X <= 1280)
-						and math.min(viewportSize.X - (profile.isMobile and 20 or 28), 436)
+						and math.min(viewportSize.X - (profile.isMobile and 12 or 28), profile.isMobile and 460 or 436)
 						or 364
 					local height = (profile.isMobile or viewportSize.X <= 1280)
-						and math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 36), 520)
+						and math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + (profile.isMobile and 16 or 36)), profile.isMobile and 680 or 520)
 						or 420
-					window.Panel.Size = UDim2.fromOffset(math.max(364, math.floor(width)), math.max(420, math.floor(height)))
-					window.Panel.AnchorPoint = Vector2.new(1, 0.5)
-					window.Panel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0.5, 0)
+					window.Panel.Size = UDim2.fromOffset(math.max(profile.isMobile and 340 or 364, math.floor(width)), math.max(profile.isMobile and 520 or 420, math.floor(height)))
+					if profile.isMobile then
+						window.Panel.AnchorPoint = Vector2.new(0.5, 0.5)
+						window.Panel.Position = UDim2.new(0.5, 0, 0.5, math.floor((topLeftInset.Y - bottomRightInset.Y) * 0.5))
+					else
+						window.Panel.AnchorPoint = Vector2.new(1, 0.5)
+						window.Panel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0.5, 0)
+					end
 				end
 				if window.PrimaryLabel then
 					window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
@@ -5861,6 +5918,80 @@ function UISystem:_applyDeviceSizing()
 				if window.FloatButton then
 					local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
 					window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
+				end
+				if guiName == "RoyalPassUI" and window.RoyalPassWidgets then
+					local widgets = window.RoyalPassWidgets
+					local passMobile = profile.isMobile or viewportSize.X <= 960
+					local heroHeight = passMobile and 156 or 130
+					local scrollerHeight = passMobile and 212 or 178
+					local trackCardWidth = passMobile and 156 or 140
+					local trackCardHeight = passMobile and 172 or 156
+
+					if widgets.HeroCard then
+						widgets.HeroCard.Size = UDim2.new(1, 0, 0, heroHeight)
+					end
+					if widgets.HeroBadge then
+						widgets.HeroBadge.Size = UDim2.fromOffset(passMobile and 120 or 112, 20)
+						widgets.HeroBadge.TextSize = passMobile and 11 or 10
+					end
+					if widgets.HeroTitle then
+						widgets.HeroTitle.Position = UDim2.fromOffset(12, 38)
+						widgets.HeroTitle.Size = UDim2.new(1, -24, 0, passMobile and 28 or 24)
+						widgets.HeroTitle.TextSize = passMobile and 22 or 20
+					end
+					if widgets.HeroMeta then
+						widgets.HeroMeta.Position = UDim2.fromOffset(12, passMobile and 68 or 62)
+						widgets.HeroMeta.Size = UDim2.new(1, -24, 0, 18)
+						widgets.HeroMeta.TextSize = passMobile and 13 or 12
+					end
+					if widgets.ProgressTrack then
+						widgets.ProgressTrack.Position = UDim2.fromOffset(12, passMobile and 94 or 86)
+						widgets.ProgressTrack.Size = UDim2.new(1, -24, 0, passMobile and 16 or 14)
+					end
+					if widgets.ProgressCaption then
+						widgets.ProgressCaption.Position = UDim2.fromOffset(12, passMobile and 116 or 104)
+						widgets.ProgressCaption.Size = UDim2.new(1, -(passMobile and 170 or 148), 0, 18)
+						widgets.ProgressCaption.TextSize = passMobile and 12 or 11
+					end
+					if widgets.PremiumActionButton then
+						widgets.PremiumActionButton.Size = UDim2.fromOffset(passMobile and 140 or 124, passMobile and 38 or 34)
+						widgets.PremiumActionButton.TextSize = passMobile and 13 or 12
+					end
+					if widgets.TrackTabs then
+						widgets.TrackTabs.Size = UDim2.new(1, 0, 0, passMobile and 40 or 34)
+					end
+					if widgets.RewardTab then
+						widgets.RewardTab.TextSize = passMobile and 13 or 12
+					end
+					if widgets.MissionTab then
+						widgets.MissionTab.TextSize = passMobile and 13 or 12
+					end
+					if widgets.TrackHint then
+						widgets.TrackHint.Size = UDim2.new(1, 0, 0, passMobile and 30 or 18)
+						widgets.TrackHint.TextSize = passMobile and 12 or 11
+						widgets.TrackHint.TextWrapped = passMobile
+					end
+					if widgets.TrackScroller then
+						widgets.TrackScroller.Size = UDim2.new(1, 0, 0, scrollerHeight)
+						widgets.TrackScroller.ScrollBarThickness = passMobile and 6 or 5
+					end
+					for _, card in ipairs(widgets.TrackCards or {}) do
+						if card.Root then
+							card.Root.Size = UDim2.fromOffset(trackCardWidth, trackCardHeight)
+						end
+						if card.Title then
+							card.Title.TextSize = passMobile and 15 or 14
+						end
+						if card.Meta then
+							card.Meta.TextSize = passMobile and 12 or 11
+						end
+						if card.RewardPill then
+							card.RewardPill.TextSize = passMobile and 11 or 10
+						end
+						if card.Footer then
+							card.Footer.TextSize = passMobile and 10 or 9
+						end
+					end
 				end
 				if window.ItemRows then
 					for _, row in ipairs(window.ItemRows) do
@@ -6559,6 +6690,8 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		self._awaitingPostTeleportFlow = true
 		self:_setPhase(MATCH_PHASE.PREPARING, payload)
 	elseif eventName == "MatchStarted" then
+		self:_forceCloseAllPanelsForTeleport()
+		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS)
 		self._hasPostTeleportLoaded = false
 		self._awaitingPostTeleportFlow = true
 		self:_runPostTeleportLoadingFlow()
@@ -7138,8 +7271,8 @@ function UISystem:TransitionTo(state, payload)
 	elseif state == "Hunt" then
 		match.MessageLabel.Text = "HUNT"
 		match.MessageLabel.Visible = true
-		match.ObjectiveLabel.Text = ""
-		match.ObjectiveLabel.Visible = false
+		match.ObjectiveLabel.Text = getHuntObjectiveText()
+		match.ObjectiveLabel.Visible = true
 		self:_startHuntPulse()
 	elseif state == "Results" then
 		self:_startResultsCloseLock(payload)

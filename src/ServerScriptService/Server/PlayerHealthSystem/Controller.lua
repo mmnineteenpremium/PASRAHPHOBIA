@@ -9,6 +9,8 @@ local SUBSCRIPTIONS = {
     "HuntStarted",
     "HuntEnded",
     "PlayerEscapedHunt",
+    "PlayerHid",
+    "PlayerRevealed",
     "GhostInteraction",
     "PlayerDisconnected",
 }

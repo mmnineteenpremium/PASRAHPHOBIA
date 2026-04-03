@@ -6,6 +6,8 @@ Controller.__index = Controller
 local SUBSCRIPTIONS = {
     "MatchStarted",
     "MatchEnded",
+    "HuntStarted",
+    "HuntEnded",
     "PlayerAttemptHide",
     "PlayerExitHide",
     "GhostInteraction",

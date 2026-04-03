@@ -248,6 +248,10 @@ Status:
   - pintu harus bereaksi logis terhadap radius atau prompt manual lintas platform, bukan sekadar pass-through
   - audit tangga, akses lantai 2, dan jalur traversal map harus ditutup agar layout tidak terasa palsu saat investigasi/hunt
   - hiding spot dan aturan selamat dari hunt masih perlu didefinisikan secara eksplisit
+  - prototipe `SafeZone`/shelter berbasis `HidingSystem` sudah masuk ke source, tetapi validasi live server-side masih blocked:
+    - player attr `PasrahHideState` belum terbukti terisi di runtime
+    - jalur introspeksi server via `StudioE2EControl` tidak muncul di runtime terbaru
+    - jadi survival loop hunt belum boleh dianggap selesai walau UI objective/hunt guidance sudah mulai disiapkan
 
 Pekerjaan:
 
@@ -474,6 +478,13 @@ Status:
   - browse state sekarang menjadi split-pane fokus dengan daftar room di kiri, preview di kanan, dan action stack yang tidak lagi berhimpitan
   - room detail state sekarang memakai panel kanan-kiri yang lebih logis di desktop, plus `RoomPanel` scrollable agar control host/ready/leave tidak terpotong di viewport pendek
   - jalur compact/mobile sekarang ada di source: browser berubah menjadi fullscreen sheet, daftar room dan preview ditumpuk vertikal, dan detail room pindah ke layout satu kolom
+- pass responsive lanjutan terbaru sudah membuat dua panel besar lebih aman dipakai tanpa overlap state:
+  - `RoomBrowserUI` sekarang juga dipaksa tutup pada `MatchStarted`, bukan hanya mengandalkan `MatchPreparing`
+  - validasi live terbaru dari state browser terbuka -> `HostStart` membuktikan:
+    - `RoomBrowserUI.Enabled = false`
+    - `RoomBrowserUI.Panel.Visible = false`
+    - `MatchPhase = Briefing`
+  - `RoyalPassUI` sekarang punya layout yang lebih lebar/tinggi untuk viewport kecil dan track card lebih besar agar 30-day pass tidak terasa sempit
 - polish lanjutan `RoyalPassUI` juga sudah membuat track 30 hari muncul lebih cepat di viewport aktif:
   - tab `30 DAY REWARD` dan `30 DAY MISSION` sekarang terlihat di atas scroller track
   - screenshot validasi `ScreenCapture_RoyalPass_30Day_Taller` menunjukkan kartu hari awal langsung terlihat tanpa scroll panjang
@@ -491,7 +502,7 @@ Pekerjaan:
 - ubah right rail menjadi stack fixed top-to-bottom dengan affordance mobile yang lebih jelas
 - terapkan aturan single-open untuk panel besar agar lobby/pass/shop/rank tidak terasa tumpang tindih
 - validasi nyata `RoomBrowserUI` compact/mobile pada device emulator atau handset
-- polish responsive `RoyalPassUI` untuk track 30 hari yang lebih nyaman di viewport kecil
+- validasi nyata `RoyalPassUI` compact/mobile pada device emulator atau handset
 
 Done jika:
 
