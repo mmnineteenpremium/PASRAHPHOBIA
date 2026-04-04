@@ -7986,3 +7986,77 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - perilaku reward tidak berubah arah, tetapi implementasi jadi jauh lebih eksplisit
 - ini menurunkan risiko regress/halusinasi engineer berikutnya saat menyentuh jalur Royal Pass
+
+## 2026-04-04 - Cosmetic Monetization Smoke Test Closed Live
+
+### Scope
+
+- memvalidasi bahwa jalur cosmetic shop benar-benar hidup end-to-end di Studio, bukan hanya aman di source
+
+### Live Validation
+
+- harness yang dipakai:
+  - `StudioE2EControl` untuk grant currency dan snapshot wallet/shop
+  - `PurchaseEvent` untuk beli cosmetic
+  - `CosmeticEvent` untuk equip/unequip wardrobe
+- langkah live yang berhasil:
+  - `GrantCurrency(MM, 5000)` -> `MM=10080`
+  - `GrantCurrency(PP, 60)` -> `PP=117`
+  - `PurchaseItem(cos_accessory_wardingcharm)` -> `success=true`
+  - `PurchaseItem(pp_cos_head_nightoracle)` -> `success=true`
+  - `EquipCosmetic(cos_accessory_wardingcharm)` -> slot `accessory`
+  - `EquipCosmetic(pp_cos_head_nightoracle)` -> slot `head`
+  - `UnequipCosmetic(accessory)` -> `success=true`
+  - `UnequipCosmetic(head)` -> `success=true`
+- snapshot live yang terbukti:
+  - sesudah beli:
+    - `MM=9380`
+    - `PP=105`
+    - `ownsCosmetic=true` untuk `pp_cos_head_nightoracle`
+  - sesudah equip:
+    - `equippedCount=2`
+    - `equippedCosmetics.accessory=cos_accessory_wardingcharm`
+    - `equippedCosmetics.head=pp_cos_head_nightoracle`
+  - visual lobby:
+    - `Workspace.ZyraaaVex.LobbyCosmeticVisuals`
+    - `AccessoryVisual=true`
+    - `HeadVisual=true`
+    - `LobbyCosmeticBillboard=true`
+  - sesudah unequip:
+    - `equippedCount=0`
+    - `LobbyCosmeticVisuals` tinggal `0` child
+
+### Interpretation
+
+- jalur cosmetic `MM/PP` sudah lolos smoke test live tanpa indikasi pay-to-win
+- efeknya tetap berada di wardrobe/lobby presentation
+- ini aman dijadikan baseline monetization non-`Robux` sambil menunggu Creator Hub ID production
+
+## 2026-04-04 - Placeholder Entitlement Audit
+
+### Scope
+
+- memastikan entitlement `Robux` yang belum punya sistem gameplay sah tetap tertahan dan tidak dinyalakan prematur
+
+### Audit Result
+
+- pencarian source saat ini hanya menemukan:
+  - `class_dukun_unlock`
+  - `class_detective_unlock`
+  - `lifetime_bonus_pass`
+  - `RoyalPass_Dukun`
+  - `RoyalPass_Detective`
+  - `LifetimePass`
+- lokasi yang ditemukan:
+  - `src/shared/DataTypes/ShopCatalog.lua`
+  - `src/shared/DataTypes/ShopMarketplaceConfig.lua`
+  - state entitlement di `EconomySystem`
+- tidak ditemukan class runtime live yang memakai entitlement itu untuk memberi role/buff/bonus kemenangan
+
+### Interpretation
+
+- status item-item tersebut tetap `safe-disabled`
+- jangan aktifkan sampai:
+  - ada sistem class/benefit yang benar-benar final
+  - benefit-nya lolos audit fairness Ranked
+  - setup Roblox marketplace resminya sudah benar
