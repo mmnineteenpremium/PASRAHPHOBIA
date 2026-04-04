@@ -538,6 +538,28 @@ Pekerjaan:
 
 ### 11. Lengkapi tool roster
 
+Status:
+
+- in progress
+- roster utility world-space sekarang tidak lagi hanya baseline blok lama:
+  - `Garam` template aktif sekarang punya `SaltGlow`, `Satchel`, dan detail spill tambahan
+  - `Salib` template aktif sekarang punya `HaloBack` dan `GroundAura`
+  - `Dupa` template aktif sekarang punya `RepelAura`, `Smoke4`, `Smoke5`, `AshBed`, dan `CharmWrap`
+- state visual runtime juga mulai sinkron dengan event gameplay:
+  - `Dupa` sekarang mengubah `RepelAura` + smoke color/transparency saat repel aktif
+  - `Salib` aura sekarang meredup mengikuti charge yang tersisa
+  - `Garam` sekarang menyalakan `SaltGlow` dan detail bag/seal saat trigger terjadi
+- validasi live Studio terbaru menutup source sync untuk template tool:
+  - `ReplicatedStorage.Assets.Models.Tools.Garam` memuat `SaltGlow`
+  - `ReplicatedStorage.Assets.Models.Tools.Salib` memuat `HaloBack` + `GroundAura`
+  - `ReplicatedStorage.Assets.Models.Tools.Dupa` memuat `RepelAura` + `Smoke4` + `Smoke5`
+- validasi live runtime juga membuktikan state `Dupa` benar-benar bereaksi:
+  - `InvestigationTools` runtime memuat model `Dupa_*`
+  - `RepelAura.Transparency = 0.34`
+  - `Smoke4.Transparency = 0.60`
+  - `Smoke5.Transparency = 0.68`
+  - warna smoke bergeser ke cyan saat repel aktif
+
 Pekerjaan:
 
 - tool visual
