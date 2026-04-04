@@ -14,6 +14,7 @@ local HIDE_ROOM_VERTICAL_TOLERANCE = 6
 local HIDE_SPOT_MARKER_FOLDER_NAME = "HideSpotRuntimeMarker"
 local HIDE_SPOT_MARKER_OUTLINE_NAME = "Outline"
 local HIDE_SPOT_MARKER_LABEL_NAME = "Billboard"
+local HIDE_SPOT_MARKER_HIGHLIGHT_NAME = "Highlight"
 local HIDE_SPOT_MARKER_OUTLINE_COLOR = Color3.fromRGB(214, 184, 122)
 local HIDE_SPOT_MARKER_PANEL_COLOR = Color3.fromRGB(28, 22, 14)
 local HIDE_SPOT_MARKER_PANEL_STROKE = Color3.fromRGB(244, 206, 132)
@@ -289,6 +290,24 @@ local function ensureHideSpotMarker(record)
 	outline.Visible = false
 	record.markerOutline = outline
 
+	local highlight = markerFolder:FindFirstChild(HIDE_SPOT_MARKER_HIGHLIGHT_NAME)
+	if not (highlight and highlight:IsA("Highlight")) then
+		if highlight then
+			highlight:Destroy()
+		end
+		highlight = Instance.new("Highlight")
+		highlight.Name = HIDE_SPOT_MARKER_HIGHLIGHT_NAME
+		highlight.Parent = markerFolder
+	end
+	highlight.Adornee = part
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.FillColor = HIDE_SPOT_MARKER_PANEL_STROKE
+	highlight.FillTransparency = 0.88
+	highlight.OutlineColor = HIDE_SPOT_MARKER_OUTLINE_COLOR
+	highlight.OutlineTransparency = 0.22
+	highlight.Enabled = false
+	record.markerHighlight = highlight
+
 	local labelGui = markerFolder:FindFirstChild(HIDE_SPOT_MARKER_LABEL_NAME)
 	if not (labelGui and labelGui:IsA("BillboardGui")) then
 		if labelGui then
@@ -544,6 +563,9 @@ function Service:_setHideSpotVisualState(matchId, isVisible)
 		ensureHideSpotMarker(record)
 		if record.markerOutline then
 			record.markerOutline.Visible = visible
+		end
+		if record.markerHighlight then
+			record.markerHighlight.Enabled = visible
 		end
 		if record.markerBillboard then
 			record.markerBillboard.Enabled = visible

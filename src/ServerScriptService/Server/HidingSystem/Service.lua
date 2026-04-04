@@ -13,6 +13,7 @@ local SAFE_ZONE_TICK_INTERVAL = 0.35
 local SAFE_ZONE_MARKER_FOLDER_NAME = "SafeZoneRuntimeMarker"
 local SAFE_ZONE_MARKER_OUTLINE_NAME = "Outline"
 local SAFE_ZONE_MARKER_LABEL_NAME = "Billboard"
+local SAFE_ZONE_MARKER_HIGHLIGHT_NAME = "Highlight"
 local SAFE_ZONE_MARKER_OUTLINE_COLOR = Color3.fromRGB(138, 205, 255)
 local SAFE_ZONE_MARKER_PANEL_COLOR = Color3.fromRGB(9, 18, 28)
 local SAFE_ZONE_MARKER_PANEL_STROKE = Color3.fromRGB(110, 186, 244)
@@ -81,6 +82,24 @@ local function ensureSafeZoneMarker(record)
     outline.ZIndex = 6
     outline.Visible = false
     record.markerOutline = outline
+
+    local highlight = markerFolder:FindFirstChild(SAFE_ZONE_MARKER_HIGHLIGHT_NAME)
+    if not (highlight and highlight:IsA("Highlight")) then
+        if highlight then
+            highlight:Destroy()
+        end
+        highlight = Instance.new("Highlight")
+        highlight.Name = SAFE_ZONE_MARKER_HIGHLIGHT_NAME
+        highlight.Parent = markerFolder
+    end
+    highlight.Adornee = zone
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.FillColor = SAFE_ZONE_MARKER_PANEL_STROKE
+    highlight.FillTransparency = 0.9
+    highlight.OutlineColor = SAFE_ZONE_MARKER_OUTLINE_COLOR
+    highlight.OutlineTransparency = 0.16
+    highlight.Enabled = false
+    record.markerHighlight = highlight
 
     local labelGui = markerFolder:FindFirstChild(SAFE_ZONE_MARKER_LABEL_NAME)
     if not (labelGui and labelGui:IsA("BillboardGui")) then
@@ -378,6 +397,9 @@ function Service:_setSafeZoneVisualState(matchId, isVisible)
 
         if record.markerOutline then
             record.markerOutline.Visible = isVisible == true
+        end
+        if record.markerHighlight then
+            record.markerHighlight.Enabled = isVisible == true
         end
         if record.markerBillboard then
             record.markerBillboard.Enabled = isVisible == true

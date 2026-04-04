@@ -9501,3 +9501,33 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - pemain sekarang mendapat guidance survive yang lebih terbaca saat panik, tanpa harus membuka jurnal atau menebak state backend
 - jalur UI hunt sudah cukup eksplisit untuk lanjut ke slice phase 18 berikutnya
+
+## 2026-04-05 - Refuge Marker Highlight Prep
+
+### Scope
+
+- menambah lapisan visual `Highlight` untuk `HideSpotRuntimeMarker` dan `SafeZoneRuntimeMarker`
+- targetnya refuge/hide spot lebih mudah ditangkap mata saat hunt tanpa menggandakan sistem marker
+
+### Source Changes
+
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua`
+  - tambah `Highlight` runtime pada marker closet/hide spot
+  - toggle `Enabled` mengikuti `Service:_setHideSpotVisualState()`
+- `src/ServerScriptService/Server/HidingSystem/Service.lua`
+  - tambah `Highlight` runtime pada marker safe zone
+  - toggle `Enabled` mengikuti `Service:_setSafeZoneVisualState()`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_refuge_marker_polish_build.rbxlx`
+- sesi Studio aktif masih menunjukkan drift server-side:
+  - `script_grep(SAFE_ZONE_MARKER_HIGHLIGHT_NAME) -> noMatch`
+  - `script_grep(HIDE_SPOT_MARKER_HIGHLIGHT_NAME) -> noMatch`
+  - artinya source lokal sudah siap, tetapi sesi Studio ini belum menarik patch server terbaru untuk validasi live marker
+
+### Interpretation
+
+- jalur source untuk affordance refuge sudah siap
+- validasi visual live marker perlu sesi Studio server yang sudah sinkron/reconnect, tetapi ini bukan blocker untuk melanjutkan source slice phase 18

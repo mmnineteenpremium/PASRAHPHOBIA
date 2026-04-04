@@ -1949,6 +1949,19 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (hunt readability HUD baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut slice restruktur akses/traversal visual dan affordance in-map yang masih terasa basic.
 
+## Update 2026-04-05 20:18 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` naik lagi di sisi affordance refuge:
+  - source marker `HideSpotRuntimeMarker` dan `SafeZoneRuntimeMarker` sekarang sudah disiapkan dengan lapisan `Highlight` on-top.
+  - ini tidak mengganti sistem marker lama; hanya memperkuat keterbacaan refuge saat hunt.
+- validasi:
+  - build source sukses:
+    - `_tmp_refuge_marker_polish_build.rbxlx`
+  - sesi Studio aktif masih drift server-side, jadi marker highlight belum bisa divalidasi live pada sesi itu.
+- status:
+  - **SOURCE READY (refuge marker highlight polish)**.
+  - **PENDING LIVE RETEST** setelah sesi Studio server tersinkron lagi.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
