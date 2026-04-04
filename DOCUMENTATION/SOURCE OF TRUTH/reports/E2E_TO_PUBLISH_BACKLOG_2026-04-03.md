@@ -1693,6 +1693,26 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (environment cue VFX baseline)**.
   - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
 
+## Update 2026-04-05 17:55 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi respons visual cue ghost:
+  - `GhostAudioTriggered` sekarang juga punya transient VFX ringan untuk:
+    - `ghost_whisper`
+    - `ghost_manifest`
+    - `ghost_fake_footsteps`
+    - `ghost_object_throw`
+- validasi live MCP:
+  - `TriggerAudioCue(GhostAudio, ghost_manifest, roomId=Kitchen)` menghasilkan:
+    - `PasrahVFXLastEvent = GhostAudioTriggered`
+    - `PasrahVFXLastProfile = ghostmanifest`
+    - `PasrahAudioLastSpatialMode = room_anchor`
+    - `SensoryThreatGrading.Contrast ~= 0.1025`
+    - `Brightness ~= -0.0102`
+    - `Blur ~= 6.15`
+- status:
+  - **SELESAI (ghost cue VFX baseline)**.
+  - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
