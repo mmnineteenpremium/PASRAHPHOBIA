@@ -7072,3 +7072,45 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - shop client sekarang tidak lagi “buta state”.
 - pemain langsung bisa membaca saldo, ownership, dan alasan dasar kenapa sebuah item belum bisa dibeli tanpa harus menebak dari error message generik.
+
+## 2026-04-04 - Shop Filter Pass
+
+### Scope
+
+- menambahkan filter cepat di panel shop:
+  - `ALL`
+  - `MM`
+  - `PP`
+  - `R$`
+  - `OWNED`
+- state filter disimpan di `_shopState.filterKey`
+- refresh row shop sekarang menyaring visibility berdasarkan currency atau ownership
+- tombol filter ikut menampilkan state terpilih melalui warna background/text
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah konstanta `SHOP_FILTERS`
+  - tambah helper:
+    - `_shopItemMatchesFilter`
+    - `_setShopFilter`
+  - `ShopUI` sekarang membangun `ShopFilterBar` di atas `ItemList`
+  - `window.ShopFilterButtons` disimpan supaya `_refreshShopPanel` bisa sinkronkan state visual tombol
+  - row shop sekarang hanya `Visible` bila item cocok dengan filter aktif
+
+### Validation Notes
+
+- build source sukses: `_tmp_shop_filters_build.rbxlx`
+- verifikasi live Studio:
+  - `ShopFilterBar` muncul di `ShopUI`
+  - tombol `ALL`, `MM`, `PP`, `R$`, `OWNED` muncul dengan ukuran dan warna benar
+  - default selected state menyorot `ALL`
+- catatan tool:
+  - `TextButton:Activate()` tidak tersedia untuk objek UI Roblox
+  - `user_mouse_input` MCP tidak memicu `Activated` callback pada tombol shop di sesi ini
+  - karena itu validasi interaksi klik filter lewat MCP masih terbatas ke keberadaan UI + state default, sedangkan logika filter divalidasi lewat source/build path
+
+### Interpretation
+
+- shop sekarang punya navigasi cepat yang lebih layak di mobile dan desktop saat katalog makin padat.
+- keterbatasan yang tersisa ada di automation layer MCP untuk klik UI, bukan di source filter itu sendiri.
