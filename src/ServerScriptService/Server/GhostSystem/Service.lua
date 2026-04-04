@@ -203,6 +203,18 @@ local function resolveGhostVisualStateName(ghostState)
 	return stateName, actualStateName, overrideStateName
 end
 
+local function shouldHideGhostControlPart(part)
+	if typeof(part) ~= "Instance" or not part:IsA("BasePart") then
+		return false
+	end
+
+	local token = normalizeToken(part.Name)
+	return token == "humanoidrootpart"
+		or token == "rootpart"
+		or token == "root"
+		or token == "primarypart"
+end
+
 local function createGhostRigPart(model, name, size, offset, color)
 	local part = Instance.new("Part")
 	part.Name = name
@@ -872,6 +884,57 @@ local function moveTowardsVector3(currentPosition, targetPosition, maxStep)
 	return currentPosition + (delta.Unit * maxStep)
 end
 
+local function resolveGhostBottomOffset(ghostModel)
+	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
+		return nil
+	end
+
+	local pivot = ghostModel:GetPivot()
+	local ok, boundsCFrame, boundsSize = pcall(function()
+		return ghostModel:GetBoundingBox()
+	end)
+	if not ok or typeof(boundsCFrame) ~= "CFrame" or typeof(boundsSize) ~= "Vector3" then
+		return nil
+	end
+
+	local bottomY = boundsCFrame.Position.Y - (boundsSize.Y * 0.5)
+	return pivot.Position.Y - bottomY
+end
+
+local function resolveGhostFloorY(match, ghostModel, position)
+	if typeof(position) ~= "Vector3" then
+		return nil
+	end
+
+	local ignoreInstances = {}
+	if type(match) == "table" and typeof(match.container) == "Instance" then
+		for _, playerState in pairs(match.playersByUserId or {}) do
+			local player = type(playerState) == "table" and playerState.player or nil
+			if typeof(player) == "Instance" and player:IsA("Player") and typeof(player.Character) == "Instance" then
+				table.insert(ignoreInstances, player.Character)
+			end
+		end
+	end
+	if typeof(ghostModel) == "Instance" then
+		table.insert(ignoreInstances, ghostModel)
+	end
+
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+	raycastParams.FilterDescendantsInstances = ignoreInstances
+	raycastParams.IgnoreWater = true
+	local rayResult = Workspace:Raycast(
+		Vector3.new(position.X, position.Y + 2, position.Z),
+		Vector3.new(0, -20, 0),
+		raycastParams
+	)
+	if rayResult then
+		return rayResult.Position.Y
+	end
+
+	return nil
+end
+
 local function resetGhostVisualMotion(match, targetPosition, roomId)
 	if type(match) ~= "table" then
 		return
@@ -890,18 +953,6 @@ local function cloneMotionProfile(baseMotion)
 		clone[key] = value
 	end
 	return clone
-end
-
-local function shouldHideGhostControlPart(part)
-	if typeof(part) ~= "Instance" or not part:IsA("BasePart") then
-		return false
-	end
-
-	local token = normalizeToken(part.Name)
-	return token == "humanoidrootpart"
-		or token == "rootpart"
-		or token == "root"
-		or token == "primarypart"
 end
 
 local function resolveGhostMotionProfile(ghostModel, stateName)
@@ -1022,6 +1073,13 @@ local function computeGhostVisualCFrame(match, ghostModel, targetPosition, ghost
 		+ Vector3.new(0, bobOffset, 0)
 		+ (rightVector * swayOffset)
 		+ (lookVector * forwardOffset)
+
+	local floorY = resolveGhostFloorY(match, ghostModel, position)
+	local bottomOffset = resolveGhostBottomOffset(ghostModel)
+	if type(floorY) == "number" and type(bottomOffset) == "number" then
+		local desiredHover = (ghostTypeName and GHOST_TEMPLATE_GROUNDED[ghostTypeName] == true) and 0 or bobOffset
+		position = Vector3.new(position.X, floorY + desiredHover + bottomOffset, position.Z)
+	end
 
 	local pitch = math.rad((math.sin(bobPhase) * (motion.pitchDegrees or 0)) * math.max(0.35, movementAlpha))
 	local roll = math.rad((math.sin(swayPhase) * (motion.rollDegrees or 0)) * math.max(0.3, movementAlpha))
