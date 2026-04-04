@@ -1,11 +1,14 @@
 local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local MAP_REVERB = {
+	LobbySocialHub = Enum.ReverbType.Room,
 	AbandonedPalace = Enum.ReverbType.StoneRoom,
+	EmptyBuilding = Enum.ReverbType.Hallway,
 	HauntedHouse = Enum.ReverbType.StoneCorridor,
 	StudioMMNineteen = Enum.ReverbType.PaddedCell,
 }
@@ -73,6 +76,13 @@ function AudioController:Start()
 			self:_onMatchEvent(payload)
 		end))
 	end
+
+	local localPlayer = self._player or Players.LocalPlayer
+	if localPlayer and localPlayer:GetAttribute("InMatch") == true then
+		self:_applyMapReverb(tostring(localPlayer:GetAttribute("MapName") or "HauntedHouse"))
+	else
+		self:_applyMapReverb("LobbySocialHub")
+	end
 end
 
 function AudioController:Stop()
@@ -107,10 +117,16 @@ function AudioController:_onMatchEvent(payload)
 	end
 
 	if eventName == "MatchStarted" then
-		local mapName = (payload and payload.mapName) or (payload and payload.map) or payload.mapType or "Unknown"
+		local mapName = (payload and payload.mapName) or (payload and payload.mapId) or (payload and payload.map) or payload.mapType or "Unknown"
 		self:_applyMapReverb(mapName)
 	elseif eventName == "PhaseChanged" then
 		local phaseToken = normalizePhaseToken(payload)
+		local mapName = (payload and payload.mapName) or (payload and payload.mapId) or (payload and payload.map) or payload.mapType or nil
+		if type(mapName) == "string" and mapName ~= "" then
+			self:_applyMapReverb(mapName == "Lobby" and "LobbySocialHub" or mapName)
+		elseif phaseToken == "lobby" then
+			self:_applyMapReverb("LobbySocialHub")
+		end
 		if phaseToken == "hunt" or phaseToken == "huntphase" then
 			self._ghostHuntActive = true
 			self:_updateHeartbeat()
@@ -129,6 +145,7 @@ function AudioController:_onMatchEvent(payload)
 		self:_updateHeartbeat()
 	elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 		self._ghostHuntActive = false
+		self:_applyMapReverb("LobbySocialHub")
 		self:_updateHeartbeat()
 	end
 end

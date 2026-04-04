@@ -8381,3 +8381,40 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - jumpscare tidak lagi terdengar seperti countdown teleport
 - jalur ghost audio sekarang lebih siap untuk polish berikutnya karena cue server dan resolver client sudah lebih spesifik
+
+## 2026-04-05 - Map Reverb Runtime Guard
+
+### Scope
+
+- menutup bug runtime kecil tetapi nyata di jalur audio polish:
+  - `AudioController` memakai `Players.LocalPlayer` tanpa import `Players`
+  - reverb map masih terlalu bergantung pada `MatchStarted`, padahal client canonical sering menerima `mapId` final lewat `PhaseChanged`
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/AudioController.luau`
+  - tambah `local Players = game:GetService("Players")`
+  - tambah baseline `MAP_REVERB`:
+    - `LobbySocialHub -> Room`
+    - `EmptyBuilding -> Hallway`
+  - `Start()` sekarang menerapkan reverb baseline saat boot:
+    - lobby jika belum `InMatch`
+    - map aktif jika player sudah dalam match
+  - `_onMatchEvent()` sekarang membaca `mapId` juga, bukan hanya `mapName/map`
+  - `PhaseChanged` sekarang ikut mengatur reverb berdasarkan map canonical
+  - `MatchEnded/MatchCompleted` sekarang mengembalikan reverb ke lobby baseline
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_audio_reverb_boot_build.rbxlx`
+- validasi live Studio:
+  - setelah boot lobby:
+    - `SoundService.AmbientReverb = Enum.ReverbType.Room`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)` dan phase `Briefing`:
+    - `SoundService.AmbientReverb = Enum.ReverbType.StoneCorridor`
+
+### Interpretation
+
+- jalur audio map sekarang lebih robust karena tidak lagi bergantung pada event yang kurang lengkap
+- ini juga menutup bug import yang berpotensi membuat controller gagal secara diam-diam
