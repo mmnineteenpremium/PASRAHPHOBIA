@@ -7114,3 +7114,56 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - shop sekarang punya navigasi cepat yang lebih layak di mobile dan desktop saat katalog makin padat.
 - keterbatasan yang tersisa ada di automation layer MCP untuk klik UI, bukan di source filter itu sendiri.
+
+## 2026-04-04 - Profile Wardrobe Pass
+
+### Scope
+
+- menutup gap `shop cosmetic bisa dibeli tetapi belum punya jalur equip client yang jelas`
+- menambahkan snapshot wardrobe client-server via `CosmeticEvent`
+- menambahkan list wardrobe di `ProfileUI` untuk:
+  - melihat cosmetic yang dimiliki
+  - melihat slot yang sedang aktif
+  - `PAKAI` / `LEPAS` langsung dari panel profile
+
+### Source Changes
+
+- `src/ServerScriptService/Server/CosmeticSystem/Service.lua`
+  - tambah `BuildClientSnapshot(player)` berisi:
+    - `ownedCosmeticIds`
+    - `equippedCosmetics`
+    - `ownedCount`
+    - `equippedCount`
+- `src/ServerScriptService/Server/CosmeticSystem/Controller.lua`
+  - tambah action `RequestSnapshot`
+  - response `CosmeticRequestProcessed` sekarang ikut membawa snapshot terbaru
+- `src/client/Core/ClientBootstrap.lua`
+  - `CosmeticEvent` sekarang masuk ke daftar remote bootstrap client
+- `src/client/UI/Main.lua`
+  - profile state sekarang menyimpan snapshot wardrobe
+  - `ProfileUI` mendapat section `WARDROBE`
+  - setiap row cosmetic punya aksi `PAKAI` / `LEPAS`
+  - purchase cosmetic sukses dari shop otomatis memicu refresh snapshot wardrobe
+
+### Validation Notes
+
+- build source sukses: `_tmp_profile_wardrobe_build.rbxlx`
+- validasi live Studio:
+  - beli `cos_emote_steadybreath` lewat `PurchaseEvent` -> `PurchaseProcessed.success=true`
+  - request snapshot wardrobe -> `ownedCount=1`
+  - equip `cos_emote_steadybreath` lewat `CosmeticEvent` -> `CosmeticRequestProcessed.success=true`, `slot=emote`, `equippedCount=1`
+  - `ProfileUI` runtime menampilkan:
+    - `WARDROBE • 1 OWNED • 1 EQUIPPED`
+    - row `Steady Breath Emote`
+    - tombol `LEPAS`
+  - lobby character attribute ikut berubah:
+    - `LobbyEquippedEmote = "Emote Steadybreath"`
+  - unequip juga tervalidasi:
+    - `equippedCount=0`
+    - tombol row kembali `PAKAI`
+    - pill row kembali `EMOTE`
+
+### Interpretation
+
+- cosmetic shop sekarang tidak berhenti di inventory; pemain bisa benar-benar memakai item yang dibeli di lobby canonical.
+- jalur `buy -> snapshot -> equip -> apply to lobby` sudah tertutup end-to-end untuk kategori cosmetic.

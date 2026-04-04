@@ -59,6 +59,7 @@ addSystem("SoundSystem", SoundSystem)
 addSystem("UI", UISystem)
 
 local REMOTE_NAMES = {
+	"CosmeticEvent",
 	"EvidenceEvent",
 	"LobbyEvent",
 	"MatchEvent",
