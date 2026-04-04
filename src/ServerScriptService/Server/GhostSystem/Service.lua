@@ -575,17 +575,92 @@ local function resetGhostVisualMotion(match, targetPosition, roomId)
 	match.ghostVisualLastSyncAt = Workspace:GetServerTimeNow()
 end
 
+local function cloneMotionProfile(baseMotion)
+	local clone = {}
+	for key, value in pairs(baseMotion or {}) do
+		clone[key] = value
+	end
+	return clone
+end
+
+local function resolveGhostMotionProfile(ghostModel, stateName)
+	local motion = cloneMotionProfile(GHOST_VISUAL_MOTION_BY_STATE[stateName] or GHOST_VISUAL_MOTION_BY_STATE.Roaming)
+	local ghostTypeToken = normalizeToken(
+		ghostModel:GetAttribute("GhostType")
+			or ghostModel:GetAttribute("VisualTemplateName")
+			or ghostModel.Name
+	)
+
+	if ghostTypeToken == "pocong" then
+		if stateName == "Idle" then
+			motion.bobAmplitude = 0.04
+			motion.bobFrequency = 1.6
+			motion.swayAmplitude = 0.012
+			motion.pitchDegrees = 1.6
+			motion.rollDegrees = 0.5
+			motion.yawDegrees = 1.25
+			motion.motionStyle = "pocong_hop"
+			motion.hopSharpness = 1.4
+		elseif stateName == "Roaming" then
+			motion.bobAmplitude = 0.11
+			motion.bobFrequency = 2.85
+			motion.swayAmplitude = 0.014
+			motion.pitchDegrees = 7.5
+			motion.rollDegrees = 0.75
+			motion.yawDegrees = 1.2
+			motion.motionStyle = "pocong_hop"
+			motion.hopSharpness = 1.85
+			motion.forwardLunge = 0.025
+		elseif stateName == "Manifestation" then
+			motion.bobAmplitude = 0.09
+			motion.bobFrequency = 2.2
+			motion.swayAmplitude = 0.01
+			motion.pitchDegrees = 5
+			motion.rollDegrees = 0.4
+			motion.yawDegrees = 1
+			motion.motionStyle = "pocong_hop"
+			motion.hopSharpness = 1.65
+		elseif stateName == "Hunting" then
+			motion.bobAmplitude = 0.16
+			motion.bobFrequency = 4.8
+			motion.swayAmplitude = 0.012
+			motion.pitchDegrees = 9.5
+			motion.rollDegrees = 0.9
+			motion.yawDegrees = 0.4
+			motion.motionStyle = "pocong_hop"
+			motion.hopSharpness = 2.15
+			motion.forwardLunge = 0.085
+		elseif stateName == "Cooldown" then
+			motion.bobAmplitude = 0.05
+			motion.bobFrequency = 1.45
+			motion.swayAmplitude = 0.01
+			motion.pitchDegrees = 2.5
+			motion.rollDegrees = 0.45
+			motion.yawDegrees = 1
+			motion.motionStyle = "pocong_hop"
+			motion.hopSharpness = 1.3
+		end
+	end
+
+	return motion
+end
+
 local function computeGhostVisualCFrame(ghostModel, targetPosition, ghostState, stateName, seedValue)
 	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") or typeof(targetPosition) ~= "Vector3" then
 		return nil
 	end
 
-	local motion = GHOST_VISUAL_MOTION_BY_STATE[stateName] or GHOST_VISUAL_MOTION_BY_STATE.Roaming
+	local motion = resolveGhostMotionProfile(ghostModel, stateName)
 	local currentPivot = ghostModel:GetPivot()
 	local focusPosition = resolveGhostFocusPosition(ghostState)
 	local lookVector = flattenLookVector(currentPivot.LookVector)
+	local travelVector = targetPosition - currentPivot.Position
+	local travelDirection = flattenLookVector(travelVector)
+	local remainingDistance = tonumber(ghostModel:GetAttribute("VisualTargetDistance")) or 0
 	if typeof(focusPosition) == "Vector3" then
 		lookVector = flattenLookVector(focusPosition - targetPosition)
+	elseif travelVector.Magnitude > 0.02 then
+		lookVector = travelDirection
 	end
 
 	local rightVector = Vector3.new(-lookVector.Z, 0, lookVector.X)
@@ -599,11 +674,19 @@ local function computeGhostVisualCFrame(ghostModel, targetPosition, ghostState, 
 	local bobPhase = (serverTime + phaseOffset) * (motion.bobFrequency or 1)
 	local swayPhase = (serverTime + phaseOffset + 0.6) * (motion.swayFrequency or 1)
 	local yawPhase = (serverTime + phaseOffset + 1.3) * 0.8
-	local bobOffset = math.abs(math.sin(bobPhase)) * (motion.bobAmplitude or 0)
-	local swayOffset = math.sin(swayPhase) * (motion.swayAmplitude or 0)
+	local movementAlpha = math.clamp(math.max(travelVector.Magnitude * 10, remainingDistance * 0.35), 0, 1)
+	local bobWave = math.abs(math.sin(bobPhase))
+	if motion.motionStyle == "pocong_hop" then
+		bobWave = math.max(0, math.sin(bobPhase))
+		bobWave = bobWave ^ (motion.hopSharpness or 1.6)
+	end
+	local bobAmplitude = (motion.bobAmplitude or 0) * math.max(0.3, movementAlpha)
+	local swayAmplitude = (motion.swayAmplitude or 0) * math.max(0.25, movementAlpha)
+	local bobOffset = bobWave * bobAmplitude
+	local swayOffset = math.sin(swayPhase) * swayAmplitude
 	local forwardOffset = 0
 	if motion.forwardLunge then
-		forwardOffset = math.abs(math.sin(bobPhase)) * motion.forwardLunge
+		forwardOffset = bobWave * motion.forwardLunge * math.max(0.35, movementAlpha)
 	end
 
 	local position = targetPosition
@@ -611,9 +694,9 @@ local function computeGhostVisualCFrame(ghostModel, targetPosition, ghostState, 
 		+ (rightVector * swayOffset)
 		+ (lookVector * forwardOffset)
 
-	local pitch = math.rad(math.sin(bobPhase) * (motion.pitchDegrees or 0))
-	local roll = math.rad(math.sin(swayPhase) * (motion.rollDegrees or 0))
-	local yaw = math.rad(math.sin(yawPhase) * (motion.yawDegrees or 0))
+	local pitch = math.rad((math.sin(bobPhase) * (motion.pitchDegrees or 0)) * math.max(0.35, movementAlpha))
+	local roll = math.rad((math.sin(swayPhase) * (motion.rollDegrees or 0)) * math.max(0.3, movementAlpha))
+	local yaw = math.rad((math.sin(yawPhase) * (motion.yawDegrees or 0)) * math.max(0.25, movementAlpha))
 
 	return CFrame.lookAt(position, position + lookVector, Vector3.yAxis) * CFrame.Angles(pitch, yaw, roll)
 end
@@ -922,9 +1005,14 @@ function Service:_syncGhostVisual(match, ghostState)
 		match.ghostVisualTargetPosition = targetPosition
 		match.ghostVisualTargetRoomId = roomId
 
-		local moveSpeed = GHOST_VISUAL_MOVE_SPEED_BY_STATE[stateName] or GHOST_VISUAL_MOVE_SPEED_BY_STATE.Roaming
 		local distanceToTarget = (targetPosition - currentPosition).Magnitude
 		local roomChanged = match.ghostVisualCurrentRoomId ~= roomId
+		local effectiveStateName = stateName
+		if (stateName == "Idle" or stateName == "Cooldown") and (distanceToTarget > 0.75 or roomChanged) then
+			effectiveStateName = "Roaming"
+		end
+
+		local moveSpeed = GHOST_VISUAL_MOVE_SPEED_BY_STATE[effectiveStateName] or GHOST_VISUAL_MOVE_SPEED_BY_STATE.Roaming
 
 		local resolvedPosition = nil
 		if typeof(match.ghostVisualCurrentPosition) ~= "Vector3" then
@@ -945,7 +1033,8 @@ function Service:_syncGhostVisual(match, ghostState)
 
 		match.ghost:SetAttribute("VisualMoveSpeed", moveSpeed)
 		match.ghost:SetAttribute("VisualTargetDistance", math.floor(((targetPosition - resolvedPosition).Magnitude * 100) + 0.5) / 100)
-		local visualCFrame = computeGhostVisualCFrame(match.ghost, resolvedPosition, ghostState, stateName, match.ghostSeed or match.matchId)
+		match.ghost:SetAttribute("VisualMotionState", effectiveStateName)
+		local visualCFrame = computeGhostVisualCFrame(match.ghost, resolvedPosition, ghostState, effectiveStateName, match.ghostSeed or match.matchId)
 		match.ghost:PivotTo(visualCFrame or CFrame.new(resolvedPosition))
 	end
 

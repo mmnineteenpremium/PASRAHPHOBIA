@@ -6178,6 +6178,13 @@ Menurunkan scale `Pocong` dan memisahkan sinkronisasi visual ghost dari tick AI 
 - override ukuran `Pocong` diturunkan ke target visual yang lebih pendek dan sempit agar tidak lagi terlihat raksasa di runtime.
 - sinkronisasi visual ghost sekarang punya loop heartbeat terpisah (`0.1s`) di `GhostSystem.Service`, jadi model ghost tetap bergerak menuju target room walau AI decision tick tetap lebih lambat.
 - state visual ghost sekarang memakai posisi interpolasi yang terus diperbarui, bukan hanya `PivotTo` snap saat event AI tertentu terjadi.
+- profil motion `Pocong` sekarang memakai hop/bounce khusus per state, jadi tidak lagi terasa seperti humanoid glide generik.
+- arah hadap ghost sekarang mengikuti arah gerak saat tidak sedang fokus ke target tertentu, sehingga visual perpindahan lebih terbaca.
+- pacing AI ghost dipercepat:
+  - `IdleMinDuration` turun ke `2.5`
+  - `IdleMaxDuration` turun ke `5.5`
+  - interval shift roam sekarang berbasis helper terkontrol (`3-7s` low pressure, `2-5s` saat aggression lebih tinggi), bukan lagi `8-15s` pada aggression rendah.
+- saat state AI masih `Idle` tetapi ghost masih menempuh target room, visual motion sekarang otomatis memakai `Roaming` sampai jarak target habis.
 - state reset untuk visual motion tetap dibersihkan saat despawn agar tidak bocor ke match berikutnya.
 
 ### Validation Notes
@@ -6194,8 +6201,14 @@ Menurunkan scale `Pocong` dan memisahkan sinkronisasi visual ghost dari tick AI 
   - sample posisi berubah dari `1166.13,2.78,-11.12` ke `1170.03,2.79,-0.04`
   - `VisualTargetDistance` turun bertahap dari `11.8` ke `0`
   - state aktif `Roaming`, speed `3.6`
+- validasi profil hop Pocong saat roam:
+  - sample `Y` berubah dari sekitar `2.76` ke `2.88`
+  - orientasi `LookVector` ikut arah gerak, bukan lagi terkunci pada orientasi lama
+- validasi sinkronisasi state visual:
+  - selama masih berjalan ke room target, runtime bisa `Idle` tetapi `VisualMotionState = Roaming` dan `VisualMoveSpeed = 3.6`
+  - setelah target tercapai, `VisualMotionState` kembali `Idle` dan speed turun ke `1.75`
 
 ### Interpretation
 
 - keluhan ghost teleport valid untuk versi sebelumnya; source aktif sekarang sudah mengubah perilaku itu menjadi pergerakan kontinu.
-- Pocong masih belum memiliki skeleton/bone walk animation. Saat ini geraknya berupa glide/bob yang terkendali, bukan langkah kaki beranimasi. Untuk animasi berjalan yang benar, asset ghost harus rigged/skinned.
+- Pocong masih belum memiliki skeleton/bone walk animation. Saat ini geraknya berupa hop/bob terkendali yang sesuai bentuk aset, bukan langkah kaki beranimasi. Untuk animasi berjalan yang benar, asset ghost harus rigged/skinned.
