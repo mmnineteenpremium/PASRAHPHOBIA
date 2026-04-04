@@ -1799,6 +1799,39 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (radio/shadow local reaction baseline)**.
   - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
 
+## Update 2026-04-05 19:12 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi material map runtime:
+  - `MapRuntimePatches` sekarang juga memoles floors, walls, doors, windows, dan lights pada clone map aktif.
+  - profile material/warna sudah terpasang untuk `HauntedHouse`, `EmptyBuilding`, `AbandonedPalace`, dan `StudioMMNineteen`.
+- validasi MCP:
+  - `HauntedHouse` clone runtime:
+    - `Floor_1_Main -> WoodPlanks / 58,46,38`
+    - `NorthWall -> WoodPlanks / 74,58,48`
+    - `Door -> Wood / 88,60,40`
+    - `Window -> Glass / 164,178,194 / t=0.42`
+  - `EmptyBuilding` clone runtime:
+    - `Floor_1_Main -> Concrete / 58,60,66`
+    - `NorthWall -> Concrete / 78,82,90`
+- status:
+  - **SELESAI (map material polish runtime baseline)**.
+  - **PENDING** tetap pada ambience loop custom/final bila nanti ingin layer loop brand khusus di atas cadence event yang sudah hidup.
+
+## Update 2026-04-05 19:15 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi ambience investigasi:
+  - `AudioSystem` sekarang punya cadence ambience per match yang hidup saat `InvestigationPhase`.
+  - cadence memilih cue ruang per map, bukan memutar loop placeholder yang menipu.
+- validasi MCP:
+  - stub `HauntedHouse InvestigationPhase` menerbitkan pulse nyata:
+    - `GhostAudioTriggered`
+    - `cue = ghost_whisper`
+    - `roomId = Attic`
+    - `intensity = 0.28`
+- status:
+  - **SELESAI (ambient investigation cadence baseline)**.
+  - **PENDING** hanya bila nanti ingin mengganti ke `ambient loop` custom/final yang benar-benar legal dan artistik, bukan karena jalur ambience saat ini kosong.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
