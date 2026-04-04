@@ -1,5 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local LogService = game:GetService("LogService")
+local Players = game:GetService("Players")
+local Stats = game:GetService("Stats")
 
 local Services = require(script.Parent.Parent.Core.Services)
 
@@ -121,6 +124,72 @@ local function coerceVector3(value)
 	return nil
 end
 
+local function compactLogMessage(message)
+	message = tostring(message or "")
+	message = message:gsub("[%c\r\n\t]+", " ")
+	message = message:gsub("%s+", " ")
+	message = message:match("^%s*(.-)%s*$") or ""
+	if #message > 96 then
+		message = string.sub(message, 1, 93) .. "..."
+	end
+	return message
+end
+
+local function collectLogSummary()
+	local warningCount = 0
+	local errorCount = 0
+	local samples = {}
+	local ok, history = pcall(function()
+		return LogService:GetLogHistory()
+	end)
+	if not ok or type(history) ~= "table" then
+		return warningCount, errorCount, "unavailable"
+	end
+	for _, entry in ipairs(history) do
+		local messageType = tostring(entry.messageType or entry.MessageType or "")
+		local isError = string.find(messageType, "Error", 1, true) ~= nil
+		local isWarning = string.find(messageType, "Warning", 1, true) ~= nil
+		if isError then
+			errorCount += 1
+		elseif isWarning then
+			warningCount += 1
+		end
+		if (isError or isWarning) and #samples < 3 then
+			table.insert(samples, compactLogMessage(entry.message or entry.Message))
+		end
+	end
+	return warningCount, errorCount, #samples > 0 and table.concat(samples, " || ") or "clean"
+end
+
+local function resolveLiveMatchPhase(matchSystem, matchId)
+	if type(matchId) ~= "string" or matchId == "" or type(matchSystem) ~= "table" or type(matchSystem.GetLiveMatch) ~= "function" then
+		return "none"
+	end
+	local ok, liveMatch = pcall(function()
+		return matchSystem:GetLiveMatch(matchId)
+	end)
+	if not ok or type(liveMatch) ~= "table" then
+		return "none"
+	end
+	if type(liveMatch.phase) == "string" and liveMatch.phase ~= "" then
+		return liveMatch.phase
+	end
+	if type(liveMatch.GetState) == "function" then
+		local stateOk, state = pcall(function()
+			return liveMatch:GetState()
+		end)
+		if stateOk then
+			if type(state) == "table" then
+				return tostring(state.currentPhase or state.phase or "unknown")
+			end
+			if type(state) == "string" and state ~= "" then
+				return state
+			end
+		end
+	end
+	return "none"
+end
+
 function StudioE2EControlSystem.new(deps)
 	local self = setmetatable({}, StudioE2EControlSystem)
 	self._deps = deps or {}
@@ -195,6 +264,38 @@ function StudioE2EControlSystem:_handleAdvancePhase(player, request)
 	return true, string.format("match=%s nextPhase=%s", matchId, nextPhase)
 end
 
+function StudioE2EControlSystem:_handleStartSoloMatch(player, request)
+	if not self._matchSystem then
+		return false, "missing_match_system"
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local payload = {
+		players = { player },
+		mapId = type(request) == "table" and request.mapId or nil,
+		mode = type(request) == "table" and (request.mode or request.gameMode) or nil,
+		difficulty = type(request) == "table" and request.difficulty or nil,
+	}
+	local createdMatch, createReason = self._matchSystem:CreateMatch(payload)
+	if not createdMatch or not createdMatch.matchId then
+		return false, tostring(createReason or "create_match_failed")
+	end
+	local match, startReason = self._matchSystem:StartMatch(createdMatch.matchId)
+	if not match then
+		return false, tostring(startReason or "start_match_failed")
+	end
+	return true, string.format(
+		"match=%s map=%s mode=%s difficulty=%s players=%d",
+		tostring(match.matchId),
+		tostring(match.mapId),
+		tostring(match.mode or match.gameMode or "Classic"),
+		tostring(match.difficulty or "Mudah"),
+		#(match.players or {})
+	)
+end
+
 function StudioE2EControlSystem:_handleForceHunt(player, request)
 	if not self._eventBus then
 		return false, "missing_event_bus"
@@ -203,6 +304,10 @@ function StudioE2EControlSystem:_handleForceHunt(player, request)
 	local matchId = self:_resolveMatchId(player, request)
 	if not matchId then
 		return false, "missing_match_id"
+	end
+	local currentPhase = resolveLiveMatchPhase(self._matchSystem, matchId)
+	if currentPhase ~= "InvestigationPhase" and currentPhase ~= "HuntPhase" then
+		return false, string.format("match_not_hunt_ready phase=%s", tostring(currentPhase))
 	end
 
 	self._eventBus:Publish("ForceHunt", {
@@ -528,6 +633,61 @@ function StudioE2EControlSystem:_handleGetPersistenceMode()
 		tostring(schemaVersion),
 		tostring(lastLoadSchema),
 		tostring(lastSaveSchema)
+	)
+end
+
+function StudioE2EControlSystem:_handleGetQAGateSnapshot(player, request)
+	local playerCount = #Players:GetPlayers()
+	local activeMatchCount = 0
+	local activeMatchesFolder = workspace:FindFirstChild("ActiveMatches")
+	if activeMatchesFolder and activeMatchesFolder:IsA("Folder") then
+		activeMatchCount = #activeMatchesFolder:GetChildren()
+	end
+
+	local currentMatchId = self:_resolveMatchId(player, request)
+	local currentPhase = resolveLiveMatchPhase(self._matchSystem, currentMatchId)
+
+	local scriptMemoryMb = (collectgarbage("count") or 0) / 1024
+	local totalMemoryMb = 0
+	local memoryOk, memoryValue = pcall(function()
+		return Stats:GetTotalMemoryUsageMb()
+	end)
+	if memoryOk then
+		totalMemoryMb = tonumber(memoryValue) or 0
+	end
+
+	local physicsFps = 0
+	local fpsOk, fpsValue = pcall(function()
+		return workspace:GetRealPhysicsFPS()
+	end)
+	if fpsOk then
+		physicsFps = tonumber(fpsValue) or 0
+	end
+
+	local pingMs = "n/a"
+	if typeof(player) == "Instance" and player:IsA("Player") and type(player.GetNetworkPing) == "function" then
+		local pingOk, pingValue = pcall(function()
+			return player:GetNetworkPing()
+		end)
+		if pingOk and tonumber(pingValue) then
+			pingMs = tostring(math.floor((tonumber(pingValue) * 1000) + 0.5))
+		end
+	end
+
+	local warningCount, errorCount, logSample = collectLogSummary()
+	return true, string.format(
+		"players=%d activeMatches=%d currentMatch=%s phase=%s scriptMemoryMb=%.2f totalMemoryMb=%.2f physicsFps=%.2f pingMs=%s warnings=%d errors=%d logSample=%s",
+		playerCount,
+		activeMatchCount,
+		tostring(currentMatchId or "none"),
+		currentPhase,
+		scriptMemoryMb,
+		totalMemoryMb,
+		physicsFps,
+		pingMs,
+		warningCount,
+		errorCount,
+		logSample
 	)
 end
 
@@ -1033,6 +1193,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 
 	if action == "AdvancePhase" then
 		ok, result = self:_handleAdvancePhase(player, request)
+	elseif action == "StartSoloMatch" then
+		ok, result = self:_handleStartSoloMatch(player, request)
 	elseif action == "ForceHunt" then
 		ok, result = self:_handleForceHunt(player, request)
 	elseif action == "ExtractSelf" then
@@ -1053,6 +1215,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGrantMarketplaceEntitlement(player, request)
 	elseif action == "GetPersistenceMode" then
 		ok, result = self:_handleGetPersistenceMode()
+	elseif action == "GetQAGateSnapshot" then
+		ok, result = self:_handleGetQAGateSnapshot(player, request)
 	elseif action == "GetShopReadiness" then
 		ok, result = self:_handleGetShopReadiness()
 	elseif action == "GetShopPlayerSnapshot" then

@@ -1432,6 +1432,8 @@ local function findShopCatalogItem(catalog, itemId)
 	return nil
 end
 
+local shouldShowShopFilter
+
 local function formatShopWalletSummary(wallet, catalog)
 	if type(wallet) ~= "table" then
 		return "MM 0  •  PP 0"
@@ -1454,7 +1456,7 @@ local SHOP_FILTERS = {
 	{ key = "Owned", label = "OWNED" },
 }
 
-local function shouldShowShopFilter(filterKey, catalog, ownedLookup)
+shouldShowShopFilter = function(filterKey, catalog, ownedLookup)
 	filterKey = tostring(filterKey or "All")
 	if filterKey == "All" or filterKey == "Owned" then
 		return true
