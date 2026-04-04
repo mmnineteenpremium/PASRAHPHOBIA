@@ -1627,6 +1627,9 @@ local function buildShopItemMeta(item)
 		table.insert(parts, "CLASSIC ONLY")
 		table.insert(parts, "NO RANKED BONUS")
 	end
+	if item.visualOnly == true then
+		table.insert(parts, "VISUAL ONLY")
+	end
 	if tostring(item.currency or "MM") == "Robux" then
 		local flow = type(item.marketplaceType) == "string" and string.upper(item.marketplaceType) or "MARKETPLACE"
 		table.insert(parts, flow)

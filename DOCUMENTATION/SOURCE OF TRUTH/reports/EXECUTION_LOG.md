@@ -7915,3 +7915,25 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - pada implementasi saat ini, `UV Flashlight Mk2` masih berada di jalur visual-only
 - item ini belum menunjukkan kebocoran fairness `Ranked`
+
+## 2026-04-04 - UV Flashlight Marked Visual-Only In Shop
+
+### Scope
+
+- membuat sifat non-pay-to-win `UV Flashlight Mk2` lebih jelas langsung di katalog player-facing
+
+### Source Changes
+
+- `src/shared/DataTypes/ShopCatalog.lua`
+  - `eq_flashlight_uv` sekarang diberi `visualOnly = true`
+- `src/client/UI/Main.lua`
+  - item dengan `visualOnly = true` sekarang menampilkan meta `VISUAL ONLY`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_uv_visual_only_build.rbxlx`
+
+### Interpretation
+
+- ini membantu pemain dan reviewer melihat bahwa `UV Flashlight Mk2` bukan helper kemenangan `Ranked`, melainkan variasi visual flashlight

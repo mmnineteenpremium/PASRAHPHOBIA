@@ -94,6 +94,7 @@ local ShopCatalog = {
         price = 1500,
         currency = "MM",
         category = "Equipment",
+        visualOnly = true,
         rarity = "R3",
         rarityLabel = "R3 Lumayan",
         tags = { "tool", "uv" },
