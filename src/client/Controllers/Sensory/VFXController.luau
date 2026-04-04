@@ -123,6 +123,16 @@ local ENVIRONMENTAL_SHOCK_PROFILES = {
 		riseTime = 0.05,
 		releaseTime = 0.18,
 	},
+	radiostatic = {
+		Brightness = -0.018,
+		Contrast = 0.06,
+		Saturation = -0.22,
+		Tint = Color3.fromRGB(208, 222, 238),
+		BlurSize = 3,
+		AtmosphereDensityDelta = 0.012,
+		riseTime = 0.04,
+		releaseTime = 0.14,
+	},
 	temperaturedrop = {
 		Brightness = -0.012,
 		Contrast = 0.1,
@@ -814,6 +824,86 @@ function VFXController:_pulseNearbyProps(centerPosition, radius, tokenSet, trans
 	return affected
 end
 
+function VFXController:_ensureRuntimeVFXFolder()
+	local folder = Workspace:FindFirstChild("RuntimeVFX")
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = "RuntimeVFX"
+		folder.Parent = Workspace
+	end
+	return folder
+end
+
+function VFXController:_spawnShadowApparition(centerPosition)
+	if typeof(centerPosition) ~= "Vector3" then
+		return false
+	end
+
+	local model = Instance.new("Model")
+	model.Name = "ShadowApparitionRuntime"
+	model.Parent = self:_ensureRuntimeVFXFolder()
+
+	local torso = Instance.new("Part")
+	torso.Name = "Torso"
+	torso.Anchored = true
+	torso.CanCollide = false
+	torso.CanQuery = false
+	torso.CanTouch = false
+	torso.Material = Enum.Material.SmoothPlastic
+	torso.Color = Color3.fromRGB(18, 20, 26)
+	torso.Transparency = 1
+	torso.Size = Vector3.new(1.8, 3.6, 0.7)
+	torso.CFrame = CFrame.new(centerPosition + Vector3.new(0, 1.8, 0))
+	model.PrimaryPart = torso
+	torso.Parent = model
+
+	local head = Instance.new("Part")
+	head.Name = "Head"
+	head.Anchored = true
+	head.CanCollide = false
+	head.CanQuery = false
+	head.CanTouch = false
+	head.Material = Enum.Material.SmoothPlastic
+	head.Color = torso.Color
+	head.Transparency = 1
+	head.Shape = Enum.PartType.Ball
+	head.Size = Vector3.new(1.15, 1.15, 1.15)
+	head.CFrame = torso.CFrame * CFrame.new(0, 2.25, 0)
+	head.Parent = model
+
+	local targetTransparency = 0.24
+	local fadeInTorso = TweenService:Create(torso, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Transparency = targetTransparency,
+	})
+	local fadeInHead = TweenService:Create(head, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Transparency = targetTransparency + 0.04,
+	})
+	fadeInTorso:Play()
+	fadeInHead:Play()
+
+	task.delay(0.16, function()
+		if torso.Parent then
+			TweenService:Create(torso, TweenInfo.new(0.22, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+				Transparency = 1,
+				CFrame = torso.CFrame * CFrame.new(0, 0.18, 0),
+			}):Play()
+		end
+		if head.Parent then
+			TweenService:Create(head, TweenInfo.new(0.22, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+				Transparency = 1,
+				CFrame = head.CFrame * CFrame.new(0, 0.22, 0),
+			}):Play()
+		end
+	end)
+
+	Debris:AddItem(model, 0.7)
+	local localPlayer = Players.LocalPlayer
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahVFXLastShadowPosition", tostring(centerPosition))
+	end
+	return true
+end
+
 function VFXController:Stop()
 	for _, conn in ipairs(self._connections) do
 		conn:Disconnect()
@@ -1100,6 +1190,20 @@ function VFXController:_triggerEnvironmentalShock(payload)
 			"PasrahVFXLastPropCount",
 			"Props"
 		)
+	elseif eventToken == "radiostatic" then
+		self:_pulseNearbyProps(
+			self:_resolveEventPosition(payload),
+			24,
+			{ "tv", "radio", "phone" },
+			function(descendant)
+				local signX = descendant.Position.X >= 0 and 1 or -1
+				return CFrame.new(0.08 * signX, 0, 0) * CFrame.Angles(0, math.rad(2 * signX), 0)
+			end,
+			"PasrahVFXLastElectronicCount",
+			"Props"
+		)
+	elseif eventToken == "shadowapparition" then
+		self:_spawnShadowApparition(self:_resolveEventPosition(payload) or Vector3.new())
 	end
 	self:_playTransientShock(cloned)
 end

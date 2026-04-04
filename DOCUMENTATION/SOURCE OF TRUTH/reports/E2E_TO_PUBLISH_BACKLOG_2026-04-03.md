@@ -1782,6 +1782,23 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (object throw local reaction baseline)**.
   - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
 
+## Update 2026-04-05 18:43 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi event ruang khusus:
+  - `RadioStatic` sekarang memukul prop elektronik terdekat di folder `Props`.
+  - `ShadowApparition` sekarang spawn manifest visual transient di ruang, bukan cuma grading/audio.
+- validasi live MCP:
+  - `RadioStatic` pada `Prop_Room_LivingRoom_TV`:
+    - `PasrahVFXLastProfile = radiostatic`
+    - `PasrahVFXLastElectronicCount = 1`
+    - TV kembali ke `CFrame` semula setelah pulse
+  - `ShadowApparition`:
+    - `PasrahVFXLastProfile = shadowapparition`
+    - `RuntimeVFX.ShadowApparitionRuntime` muncul dengan `2` child part
+- status:
+  - **SELESAI (radio/shadow local reaction baseline)**.
+  - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
