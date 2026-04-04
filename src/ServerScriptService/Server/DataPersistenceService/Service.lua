@@ -5,6 +5,8 @@ local RunService = game:GetService("RunService")
 local Service = {}
 Service.__index = Service
 
+local PROFILE_SCHEMA_VERSION = 2
+
 local function toKey(playerId)
     return tostring(playerId)
 end
@@ -109,24 +111,77 @@ local function extractRankPatch(profileData)
 end
 
 local function normalizeProfileRecord(profileData)
+    local function buildMeta(schemaVersion, migratedFromVersion, lastSavedAt)
+        local normalizedSchemaVersion = tonumber(schemaVersion) or PROFILE_SCHEMA_VERSION
+        if normalizedSchemaVersion <= 0 then
+            normalizedSchemaVersion = PROFILE_SCHEMA_VERSION
+        end
+        local meta = {
+            schemaVersion = normalizedSchemaVersion,
+        }
+        if tonumber(migratedFromVersion) and tonumber(migratedFromVersion) < normalizedSchemaVersion then
+            meta.migratedFromVersion = tonumber(migratedFromVersion)
+        end
+        if tonumber(lastSavedAt) then
+            meta.lastSavedAt = tonumber(lastSavedAt)
+        end
+        return meta
+    end
+
     if type(profileData) ~= "table" then
         return {
             profile = {},
             rank = {},
+            meta = buildMeta(PROFILE_SCHEMA_VERSION, nil, nil),
         }
     end
 
     if type(profileData.profile) == "table" or type(profileData.rank) == "table" then
+        local storedMeta = type(profileData.meta) == "table" and profileData.meta or {}
+        local storedSchemaVersion = tonumber(storedMeta.schemaVersion) or tonumber(profileData.schemaVersion) or PROFILE_SCHEMA_VERSION
         return {
             profile = clone(profileData.profile or {}),
             rank = clone(profileData.rank or {}),
+            meta = buildMeta(
+                PROFILE_SCHEMA_VERSION,
+                storedSchemaVersion < PROFILE_SCHEMA_VERSION and storedSchemaVersion or storedMeta.migratedFromVersion,
+                storedMeta.lastSavedAt or profileData.lastSavedAt
+            ),
         }
     end
 
     return {
         profile = clone(extractProfilePatch(profileData)),
         rank = clone(extractRankPatch(profileData) or {}),
+        meta = buildMeta(PROFILE_SCHEMA_VERSION, 1, profileData.lastSavedAt),
     }
+end
+
+local function buildProfileRecord(current, profileData)
+    local record = normalizeProfileRecord(current)
+    local profilePatch = extractProfilePatch(profileData)
+    local rankPatch = extractRankPatch(profileData)
+
+    if next(profilePatch) ~= nil then
+        record.profile = deepMerge(record.profile, profilePatch)
+    end
+    if rankPatch ~= nil then
+        record.rank = deepMerge(record.rank, rankPatch)
+    end
+
+    local previousMeta = type(record.meta) == "table" and record.meta or {}
+    local previousSchemaVersion = tonumber(previousMeta.schemaVersion)
+    record.meta = {
+        schemaVersion = PROFILE_SCHEMA_VERSION,
+        lastSavedAt = os.time(),
+    }
+    if previousSchemaVersion and previousSchemaVersion < PROFILE_SCHEMA_VERSION then
+        record.meta.migratedFromVersion = previousSchemaVersion
+    elseif tonumber(previousMeta.migratedFromVersion) then
+        record.meta.migratedFromVersion = tonumber(previousMeta.migratedFromVersion)
+    end
+
+    return record
 end
 
 local function shouldUseStudioDataStore(state, deps)
@@ -164,6 +219,9 @@ function Service.new(state, deps)
     self._lastAutosave = 0
     self._trackedPlayers = {}
     self._allowStudioDataStore = shouldUseStudioDataStore(self._state, self._deps)
+    self._profileSchemaVersion = tonumber(self._state:Get("profileSchemaVersion")) or PROFILE_SCHEMA_VERSION
+    self._lastProfileLoadInfo = self._state:Get("lastProfileLoadInfo") or nil
+    self._lastProfileSaveInfo = self._state:Get("lastProfileSaveInfo") or nil
 
     if RunService:IsStudio() and not self._allowStudioDataStore then
         self._useMockStore = true
@@ -188,6 +246,7 @@ end
 function Service:Init()
     self._trackedPlayers = {}
     self._lastAutosave = 0
+    self._state:Set("profileSchemaVersion", self._profileSchemaVersion)
     if self._useMockStore then
         self._state:Set("studioMockStore", self._studioMockStore)
     end
@@ -276,19 +335,16 @@ function Service:SaveProfile(playerId, profileData)
     if self._useMockStore then
         local key = toProfileKey(playerId)
         local current = self._studioMockStore.profiles[key]
-        local record = normalizeProfileRecord(current)
-        local profilePatch = extractProfilePatch(profileData)
-        local rankPatch = extractRankPatch(profileData)
-
-        if next(profilePatch) ~= nil then
-            record.profile = deepMerge(record.profile, profilePatch)
-        end
-        if rankPatch ~= nil then
-            record.rank = deepMerge(record.rank, rankPatch)
-        end
-
+        local record = buildProfileRecord(current, profileData)
         self._studioMockStore.profiles[key] = record
         self._state:Set("studioMockStore", self._studioMockStore)
+        self._lastProfileSaveInfo = {
+            userId = playerId,
+            schemaVersion = record.meta and record.meta.schemaVersion or self._profileSchemaVersion,
+            savedAt = record.meta and record.meta.lastSavedAt or os.time(),
+            mode = "mock",
+        }
+        self._state:Set("lastProfileSaveInfo", self._lastProfileSaveInfo)
         return true, "mock_store"
     end
     if not self._dataStore then
@@ -297,23 +353,20 @@ function Service:SaveProfile(playerId, profileData)
     local key = toProfileKey(playerId)
     local success, err = pcall(function()
         self._dataStore:UpdateAsync(key, function(current)
-            local record = normalizeProfileRecord(current)
-            local profilePatch = extractProfilePatch(profileData)
-            local rankPatch = extractRankPatch(profileData)
-
-            if next(profilePatch) ~= nil then
-                record.profile = deepMerge(record.profile, profilePatch)
-            end
-            if rankPatch ~= nil then
-                record.rank = deepMerge(record.rank, rankPatch)
-            end
-
-            return record
+            return buildProfileRecord(current, profileData)
         end)
     end)
     if not success then
         warn("DataPersistenceService: failed to save profile for", playerId, err)
+        return success, err
     end
+    self._lastProfileSaveInfo = {
+        userId = playerId,
+        schemaVersion = self._profileSchemaVersion,
+        savedAt = os.time(),
+        mode = "datastore",
+    }
+    self._state:Set("lastProfileSaveInfo", self._lastProfileSaveInfo)
     return success, err
 end
 
@@ -324,7 +377,16 @@ function Service:LoadProfile(playerId)
         if data == nil then
             return nil
         end
-        return normalizeProfileRecord(clone(data))
+        local record = normalizeProfileRecord(clone(data))
+        self._lastProfileLoadInfo = {
+            userId = playerId,
+            schemaVersion = record.meta and record.meta.schemaVersion or self._profileSchemaVersion,
+            migratedFromVersion = record.meta and record.meta.migratedFromVersion or nil,
+            loadedAt = os.time(),
+            mode = "mock",
+        }
+        self._state:Set("lastProfileLoadInfo", self._lastProfileLoadInfo)
+        return record
     end
     if not self._dataStore then
         return nil, "datastore_disabled"
@@ -340,7 +402,16 @@ function Service:LoadProfile(playerId)
     if data == nil then
         return nil
     end
-    return normalizeProfileRecord(data)
+    local record = normalizeProfileRecord(data)
+    self._lastProfileLoadInfo = {
+        userId = playerId,
+        schemaVersion = record.meta and record.meta.schemaVersion or self._profileSchemaVersion,
+        migratedFromVersion = record.meta and record.meta.migratedFromVersion or nil,
+        loadedAt = os.time(),
+        mode = "datastore",
+    }
+    self._state:Set("lastProfileLoadInfo", self._lastProfileLoadInfo)
+    return record
 end
 
 function Service:HasProcessedReceipt(receiptId)
@@ -414,6 +485,26 @@ function Service:MarkReceiptProcessed(receiptId, metadata)
         warn("DataPersistenceService: failed to persist receipt ledger for", normalizedId, err)
     end
     return success, err
+end
+
+function Service:GetDiagnostics()
+    local trackedPlayers = 0
+    if type(self._trackedPlayers) == "table" then
+        for _ in pairs(self._trackedPlayers) do
+            trackedPlayers += 1
+        end
+    end
+
+    return {
+        mode = self._useMockStore and "mock" or "datastore",
+        hasDataStore = self._dataStore ~= nil,
+        allowStudioDataStore = self._allowStudioDataStore == true,
+        dataStoreName = self._state:Get("dataStoreName") or "InventorySystemStore",
+        profileSchemaVersion = self._profileSchemaVersion,
+        trackedPlayers = trackedPlayers,
+        lastProfileLoad = clone(self._lastProfileLoadInfo),
+        lastProfileSave = clone(self._lastProfileSaveInfo),
+    }
 end
 
 return Service

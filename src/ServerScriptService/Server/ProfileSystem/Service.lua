@@ -725,6 +725,14 @@ function Service:OnPlayerEnteredLobby(player)
     self:LoadProfile(player)
 end
 
+function Service:OnPlayerAdded(player)
+    self:LoadProfile(player)
+end
+
+function Service:OnPlayerRemoving(player)
+    self:SaveProfile(player)
+end
+
 function Service:OnPlayerRewardGranted(payload)
     local player = payload and (payload.player or payload.userId)
     local amount = payload and payload.amount or 0

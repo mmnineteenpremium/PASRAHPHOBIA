@@ -510,22 +510,24 @@ function StudioE2EControlSystem:_handleGetPersistenceMode()
 		return false, "missing_persistence_service"
 	end
 
-	local useMockStore = persistence._useMockStore == true
-	local hasDataStore = persistence._dataStore ~= nil
-	local allowStudioDataStore = persistence._allowStudioDataStore == true
-	local trackedPlayers = 0
-	if type(persistence._trackedPlayers) == "table" then
-		for _ in pairs(persistence._trackedPlayers) do
-			trackedPlayers += 1
-		end
-	end
+	local diagnostics = type(persistence.GetDiagnostics) == "function" and persistence:GetDiagnostics() or nil
+	local useMockStore = diagnostics and diagnostics.mode == "mock" or persistence._useMockStore == true
+	local hasDataStore = diagnostics and diagnostics.hasDataStore or persistence._dataStore ~= nil
+	local allowStudioDataStore = diagnostics and diagnostics.allowStudioDataStore or persistence._allowStudioDataStore == true
+	local trackedPlayers = diagnostics and diagnostics.trackedPlayers or 0
+	local schemaVersion = diagnostics and diagnostics.profileSchemaVersion or "unknown"
+	local lastLoadSchema = diagnostics and diagnostics.lastProfileLoad and diagnostics.lastProfileLoad.schemaVersion or "none"
+	local lastSaveSchema = diagnostics and diagnostics.lastProfileSave and diagnostics.lastProfileSave.schemaVersion or "none"
 
 	return true, string.format(
-		"mode=%s hasDataStore=%s allowStudioDataStore=%s trackedPlayers=%d",
+		"mode=%s hasDataStore=%s allowStudioDataStore=%s trackedPlayers=%d schemaVersion=%s lastLoadSchema=%s lastSaveSchema=%s",
 		useMockStore and "mock" or "datastore",
 		tostring(hasDataStore),
 		tostring(allowStudioDataStore),
-		trackedPlayers
+		trackedPlayers,
+		tostring(schemaVersion),
+		tostring(lastLoadSchema),
+		tostring(lastSaveSchema)
 	)
 end
 

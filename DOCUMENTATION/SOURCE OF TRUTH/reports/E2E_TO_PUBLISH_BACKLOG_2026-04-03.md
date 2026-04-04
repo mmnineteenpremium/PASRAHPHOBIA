@@ -893,6 +893,38 @@ Done jika:
 
 - data session penting tersimpan dan pulih dengan benar
 
+## Update 2026-04-05 19:42 ICT
+
+- `P3.14 Persistence nyata` naik lagi di sisi schema dan lifecycle pemain:
+  - `DataPersistenceService` sekarang punya `profileSchemaVersion = 2` dan metadata record:
+    - `meta.schemaVersion`
+    - `meta.migratedFromVersion`
+    - `meta.lastSavedAt`
+  - diagnostics runtime sekarang expose:
+    - `mode`
+    - `dataStoreName`
+    - `trackedPlayers`
+    - `schemaVersion`
+    - `lastProfileLoad`
+    - `lastProfileSave`
+  - `ProfileSystem` tidak lagi hanya mengandalkan event `PlayerEnteredLobby`:
+    - existing player fallback load saat startup
+    - `Players.PlayerAdded -> LoadProfile`
+    - `Players.PlayerRemoving -> SaveProfile`
+    - `BindToClose -> flush SaveProfile` untuk pemain yang masih ada
+- validasi MCP:
+  - build source sukses: `_tmp_persistence_schema_build.rbxlx`
+  - mock legacy profile `profile:123`:
+    - `loadSchema = 2`
+    - `migratedFrom = 1`
+    - `saveSchema = 2`
+  - lifecycle controller stub:
+    - `added = 2`
+    - `removing = 1`
+- status:
+  - **SELESAI (profile lifecycle + schema diagnostics baseline)**.
+  - **PENDING** tetap pada non-mock validation, schema migration live test lintas versi, dan failover target publish.
+
 ### 15. Monetization bridge Roblox
 
 Status:

@@ -1,6 +1,10 @@
 local Controller = {}
 Controller.__index = Controller
 
+local Players = game:GetService("Players")
+
+local bindToCloseRegistered = false
+
 local function resolveEventBus(deps)
     local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
     if type(eventBus) ~= "table" then
@@ -22,6 +26,8 @@ function Controller.new(state, service, deps)
     self._deps = deps or {}
     self._subscriptions = {}
     self._eventBus = resolveEventBus(self._deps)
+    self._players = self._deps.Players or Players
+    self._connections = {}
     return self
 end
 
@@ -30,7 +36,30 @@ function Controller:Init()
 end
 
 function Controller:RegisterEventHandlers()
+    if self._players then
+        table.insert(self._connections, self._players.PlayerAdded:Connect(function(player)
+            self._service:OnPlayerAdded(player)
+        end))
+        table.insert(self._connections, self._players.PlayerRemoving:Connect(function(player)
+            self._service:OnPlayerRemoving(player)
+        end))
+        for _, player in ipairs(self._players:GetPlayers()) do
+            self._service:OnPlayerAdded(player)
+        end
+    end
+
     if not self._eventBus then
+        if not bindToCloseRegistered then
+            bindToCloseRegistered = true
+            game:BindToClose(function()
+                if not self._players then
+                    return
+                end
+                for _, player in ipairs(self._players:GetPlayers()) do
+                    self._service:OnPlayerRemoving(player)
+                end
+            end)
+        end
         return
     end
 
@@ -43,9 +72,26 @@ function Controller:RegisterEventHandlers()
     self:_subscribe("MatchEnded", function(payload)
         self:OnMatchEnded(payload)
     end)
+
+    if not bindToCloseRegistered then
+        bindToCloseRegistered = true
+        game:BindToClose(function()
+            if not self._players then
+                return
+            end
+            for _, player in ipairs(self._players:GetPlayers()) do
+                self._service:OnPlayerRemoving(player)
+            end
+        end)
+    end
 end
 
 function Controller:UnregisterEventHandlers()
+    for _, connection in ipairs(self._connections) do
+        connection:Disconnect()
+    end
+    table.clear(self._connections)
+
     if not self._eventBus then
         return
     end

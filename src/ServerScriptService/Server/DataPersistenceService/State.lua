@@ -7,6 +7,7 @@ function State.new(initial)
         dataStoreName = initial and initial.dataStoreName or "InventorySystemStore",
         autosaveIntervalSeconds = initial and initial.autosaveIntervalSeconds or 60,
         allowStudioDataStore = initial and initial.allowStudioDataStore or false,
+        profileSchemaVersion = initial and initial.profileSchemaVersion or 2,
     }
     for key, value in pairs(initial or {}) do
         self._data[key] = value

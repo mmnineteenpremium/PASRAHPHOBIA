@@ -9176,3 +9176,60 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - investigasi sekarang punya layer ambience hidup berbasis cue ruang yang sah, bukan hanya menunggu event besar
 - slot `AmbientLoop_Main` masih sengaja boleh tetap kosong sampai nanti ada loop ambience custom/final yang benar-benar cocok dan legal
+
+## 2026-04-05 - Persistence Schema And Lifecycle Hardening
+
+### Scope
+
+- menutup gap persistence yang paling nyata sebelum non-mock publish test:
+  - profile lifecycle load/save pemain
+  - schema/version diagnostics
+  - migration-safe metadata untuk profile record
+
+### Source Changes
+
+- `src/ServerScriptService/Server/DataPersistenceService/State.lua`
+  - tambah default `profileSchemaVersion = 2`
+- `src/ServerScriptService/Server/DataPersistenceService/Service.lua`
+  - profile record sekarang distempel `meta.schemaVersion`
+  - legacy shape lama dimigrasikan ke schema sekarang dengan `meta.migratedFromVersion`
+  - load/save profile sekarang menyimpan diagnostics runtime:
+    - `lastProfileLoadInfo`
+    - `lastProfileSaveInfo`
+  - tambah `GetDiagnostics()` untuk surfacing mode/schema/tracked players
+- `src/ServerScriptService/Server/ProfileSystem/Service.lua`
+  - tambah `OnPlayerAdded()` -> `LoadProfile()`
+  - tambah `OnPlayerRemoving()` -> `SaveProfile()`
+- `src/ServerScriptService/Server/ProfileSystem/Controller.lua`
+  - hook `Players.PlayerAdded`
+  - hook `Players.PlayerRemoving`
+  - flush profile saat `BindToClose`
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+  - `GetPersistenceMode` sekarang juga melaporkan:
+    - `schemaVersion`
+    - `lastLoadSchema`
+    - `lastSaveSchema`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_persistence_schema_build.rbxlx`
+- validasi service-level MCP:
+  - seed legacy mock profile `profile:123 = { playerLevel = 7, playerRank = "Bayi III", bio = "legacy" }`
+  - `LoadProfile(123)` menghasilkan:
+    - `loadSchema = 2`
+    - `migratedFrom = 1`
+  - `SaveProfile(123, ...)` memperbarui diagnostics:
+    - `saveSchema = 2`
+    - `mode = mock`
+    - profile tersimpan dengan `bio = migrated ok`
+- validasi controller-level MCP:
+  - `ProfileSystem.Controller:RegisterEventHandlers()` dengan player signal stub menghasilkan:
+    - `added = 2`
+    - `removing = 1`
+  - artinya existing player load fallback + event `PlayerRemoving` save path benar-benar terpasang
+
+### Interpretation
+
+- persistence sekarang tidak lagi hanya bergantung pada event lobby/rank tertentu untuk memuat atau menyimpan profile
+- QA Studio sekarang bisa melihat schema runtime yang sedang aktif, sehingga uji non-mock nanti tidak buta
