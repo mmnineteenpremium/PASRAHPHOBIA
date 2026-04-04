@@ -368,6 +368,36 @@ function StudioE2EControlSystem:_handleGetWallet(player)
 	)
 end
 
+function StudioE2EControlSystem:_handleGrantCurrency(player, request)
+	if type(self._economyService) ~= "table" or type(self._economyService.AddCurrency) ~= "function" then
+		return false, "missing_economy_service"
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local currency = tostring(type(request) == "table" and request.currency or "MM")
+	local amount = math.max(0, math.floor(tonumber(type(request) == "table" and request.amount) or 0))
+	if amount <= 0 then
+		return false, "invalid_amount"
+	end
+
+	local ok, reason, granted = self._economyService:AddCurrency(player, currency, amount, "studio_e2e_grant")
+	if ok ~= true then
+		return false, tostring(reason or "grant_failed")
+	end
+
+	local wallet = self._economyService:GetBalance(player) or {}
+	return true, string.format(
+		"currency=%s granted=%d MM=%d PP=%d Robux=%d",
+		currency,
+		math.max(0, math.floor(tonumber(granted) or 0)),
+		math.max(0, math.floor(tonumber(wallet.MM) or 0)),
+		math.max(0, math.floor(tonumber(wallet.PP) or 0)),
+		math.max(0, math.floor(tonumber(wallet.Robux) or 0))
+	)
+end
+
 function StudioE2EControlSystem:_handleGetPersistenceMode()
 	local persistence = self._persistenceService
 	if type(persistence) ~= "table" then
@@ -831,6 +861,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleEndMatch(player, request)
 	elseif action == "GetWallet" then
 		ok, result = self:_handleGetWallet(player)
+	elseif action == "GrantCurrency" then
+		ok, result = self:_handleGrantCurrency(player, request)
 	elseif action == "GetPersistenceMode" then
 		ok, result = self:_handleGetPersistenceMode()
 	elseif action == "GetShopReadiness" then

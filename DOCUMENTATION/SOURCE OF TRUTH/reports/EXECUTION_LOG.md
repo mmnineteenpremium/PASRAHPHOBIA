@@ -7220,3 +7220,40 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - `equipment shop` tidak lagi 100% dekoratif; setidaknya satu item (`Reinforced Salt Bag`) sekarang punya efek gameplay nyata dan aman dari sisi authority.
 - fondasi attribute ownership sudah siap dipakai batch berikutnya untuk equipment lain seperti `UV Flashlight` dan `Spirit Box`.
+
+## 2026-04-04 - Studio Wallet Harness + UV Flashlight Live Validation
+
+### Scope
+
+- menambah utility Studio-only untuk top-up currency test agar validasi equipment/monetization tidak terhambat wallet baseline mock
+- menutup live validation `UV Flashlight Mk2` yang sebelumnya pending
+
+### Source Changes
+
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+  - tambah action `GrantCurrency`
+  - action ini memanggil `EconomySystem:AddCurrency` hanya lewat harness Studio
+  - output ack langsung merangkum wallet terbaru setelah grant
+
+### Validation Notes
+
+- build source sukses: `_tmp_uv_wallet_build.rbxlx`
+- validasi live harness:
+  - `GrantCurrency MM 2000` -> ack:
+    - `currency=MM granted=2000 MM=3200 PP=12 Robux=0`
+- validasi live `UV Flashlight Mk2`:
+  - beli `eq_flashlight_uv` lewat `PurchaseEvent` -> `PurchaseProcessed.success=true`
+  - wallet MM turun ke `1700`
+  - attribute pemain terset:
+    - `PasrahOwnsUVFlashlight = true`
+  - masuk match runtime, aktifkan flashlight, lalu inspeksi FPV model:
+    - `FPV_Flashlight` terdeteksi
+    - `Lens.Color = 0.658824, 0.839216, 1`
+    - `SpotLight.Color = 0.729412, 0.878431, 1`
+- interpretasi warna:
+  - tint sudah bergeser ke spektrum UV/biru muda, bukan warna warm default
+
+### Interpretation
+
+- harness Studio sekarang lebih kuat untuk validasi economy/shop tanpa menunggu jalur reward match atau mengutak-atik state manual.
+- `UV Flashlight Mk2` tidak lagi hanya siap di source; jalur `grant MM -> buy -> attribute sync -> visual UV aktif di FPV` sudah tertutup live.
