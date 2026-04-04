@@ -712,6 +712,14 @@ Status:
     - `RoomBrowserUI.Panel.Size = 1080x668`
     - `CloseButton.Size = 34x28`
     - tidak muncul error UI baru di boot/runtime desktop
+- guard sizing terbaru sekarang juga menutup risiko overflow viewport pendek pada jalur compact/mobile:
+  - `RoomBrowserUI` tidak lagi memaksa minimum tinggi yang bisa lebih besar dari safe viewport kecil
+  - `RoyalPassUI` mobile sheet juga tidak lagi memaksa minimum `560px` yang berisiko keluar layar pada viewport pendek
+  - sizing mobile sekarang di-clamp ke `available viewport + safe inset`, bukan hanya memakai minimum absolut
+- status validasi jujur untuk pass ini:
+  - build source sukses untuk guard baru
+  - sesi Studio aktif berhasil memunculkan debt lama (`RoomBrowserUI` dan `RoyalPassUI` sempat overflow/negatif pada override compact)
+  - validasi handset/device emulator nyata tetap **pending**, tetapi akar sizing yang menyebabkan overflow sudah ditutup di source
 - polish lanjutan `RoyalPassUI` juga sudah membuat track 30 hari muncul lebih cepat di viewport aktif:
   - tab `30 DAY REWARD` dan `30 DAY MISSION` sekarang terlihat di atas scroller track
   - screenshot validasi `ScreenCapture_RoyalPass_30Day_Taller` menunjukkan kartu hari awal langsung terlihat tanpa scroll panjang

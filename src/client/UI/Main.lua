@@ -7381,8 +7381,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 
 	local margin = profile.isMobile and 2 or 14
-	local usableWidth = math.max(profile.isMobile and 320 or 360, viewportSize.X - (topLeftInset.X + bottomRightInset.X + margin * 2))
-	local usableHeight = math.max(profile.isMobile and 520 or 420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + margin * 2))
+	local availableWidth = math.max(320, viewportSize.X - (topLeftInset.X + bottomRightInset.X))
+	local availableHeight = math.max(420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y))
+	local usableWidth = math.max(profile.isMobile and 320 or 360, availableWidth - margin * 2)
+	local usableHeight = math.max(profile.isMobile and 460 or 420, availableHeight - margin * 2)
 	local forceCompact = ReplicatedStorage:GetAttribute(UI_FORCE_COMPACT_ATTR) == true
 	-- Force compact layout for short viewports so room controls do not overlap
 	-- host action buttons (Start/Leave) in the room detail panel.
@@ -7392,8 +7394,8 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local panelWidth = isCompact and usableWidth or math.min(1080, usableWidth)
 	local panelHeight = isCompact and usableHeight or math.min(668, usableHeight)
 	if profile.isMobile then
-		panelWidth = math.max(332, viewportSize.X - (topLeftInset.X + bottomRightInset.X))
-		panelHeight = math.max(540, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y))
+		panelWidth = math.min(availableWidth, math.max(332, availableWidth - 8))
+		panelHeight = math.min(availableHeight, math.max(460, availableHeight - 8))
 	end
 	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
 	panel.Position = UDim2.fromOffset(
@@ -7996,21 +7998,26 @@ function UISystem:_applyDeviceSizing()
 				if window.Panel and (guiName == "RoyalPassUI" or guiName == "ProfileUI" or guiName == "ShopUI") then
 					local width = guiName == "ShopUI" and 356 or 364
 					local height = guiName == "ProfileUI" and 320 or 420
+					local availableWindowWidth = math.max(320, viewportSize.X - (topLeftInset.X + bottomRightInset.X))
+					local availableWindowHeight = math.max(320, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y))
 					if profile.isMobile then
-						width = viewportSize.X - (topLeftInset.X + bottomRightInset.X)
-						height = viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y)
+						width = math.min(availableWindowWidth, math.max(320, availableWindowWidth - 8))
+						height = math.min(
+							availableWindowHeight,
+							math.max(guiName == "RoyalPassUI" and 460 or 400, availableWindowHeight - 8)
+						)
 					elseif guiName == "RoyalPassUI" and viewportSize.X <= 1280 then
 						width = math.min(viewportSize.X - 28, 436)
 						height = math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 36), 520)
 					end
 					window.Panel.Size = UDim2.fromOffset(
-						math.max(profile.isMobile and 352 or width, math.floor(width)),
-						math.max(profile.isMobile and 560 or height, math.floor(height))
+						math.max(profile.isMobile and 320 or width, math.floor(width)),
+						math.max(profile.isMobile and (guiName == "RoyalPassUI" and 460 or 400) or height, math.floor(height))
 					)
 					window.Panel.BackgroundTransparency = profile.isMobile and 0.04 or 0.08
 					if profile.isMobile then
 						window.Panel.AnchorPoint = Vector2.new(0, 0)
-						window.Panel.Position = UDim2.fromOffset(topLeftInset.X, topLeftInset.Y)
+						window.Panel.Position = UDim2.fromOffset(topLeftInset.X + 4, topLeftInset.Y + 4)
 					elseif guiName == "RoyalPassUI" then
 						window.Panel.AnchorPoint = Vector2.new(1, 0.5)
 						window.Panel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0.5, 0)
