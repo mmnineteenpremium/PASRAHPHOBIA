@@ -1669,6 +1669,30 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (ghost/environment spatial audio baseline)**.
   - **PENDING** tetap pada ambience legal final dan enrichment cue yang benar-benar berbeda asset-nya.
 
+## Update 2026-04-05 17:48 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi respons visual cue lingkungan:
+  - `EnvironmentalAudioTriggered` sekarang juga bisa memicu transient VFX ringan.
+  - profile yang sudah dipasang:
+    - `DoorSlam`
+    - `LightFlicker`
+    - `SuddenWhisper`
+    - `ShadowApparition`
+    - `ObjectThrow`
+    - `WindowKnock`
+    - `TemperatureDrop`
+- validasi live MCP:
+  - `DoorSlam`:
+    - `PasrahVFXLastProfile = doorslam`
+    - `SensoryThreatGrading.Contrast ~= 0.1179`
+    - `Brightness ~= -0.0126`
+    - `Blur ~= 5.05`
+  - `LightFlicker`:
+    - `PasrahVFXLastProfile = lightflicker`
+- status:
+  - **SELESAI (environment cue VFX baseline)**.
+  - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

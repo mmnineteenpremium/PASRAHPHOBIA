@@ -8807,3 +8807,51 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - ghost dan disturbance map sekarang terasa lebih “datang dari ruang”, bukan selalu menempel di kepala pemain
 - pass ini juga menyiapkan fondasi tuning artistik berikutnya karena sekarang kita punya harness untuk menguji cue spatial secara deterministik
+
+## 2026-04-05 - Environment Cue VFX Response Pass
+
+### Scope
+
+- menutup gap sensori kecil tetapi nyata:
+  - cue lingkungan sudah terdengar, tetapi belum selalu diikuti respons visual
+  - hasilnya beberapa event map terasa datar walau audio sudah benar
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah `ENVIRONMENTAL_SHOCK_PROFILES` untuk:
+    - `doorslam`
+    - `lightflicker`
+    - `suddenwhisper`
+    - `shadowapparition`
+    - `objectthrow`
+    - `windowknock`
+    - `temperaturedrop`
+  - tambah `normalizeCueToken()`
+  - tambah `_recordVFXDebug(eventName, profileName)`:
+    - `PasrahVFXLastEvent`
+    - `PasrahVFXLastProfile`
+    - `PasrahVFXLastAt`
+  - `VFXController` sekarang menangani `EnvironmentalAudioTriggered`
+  - tambah `_triggerEnvironmentalShock(payload)` yang memetakan `eventType/cue` ke transient VFX ringan
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_environment_vfx_build.rbxlx`
+- validasi live Studio:
+  - `CreateRoom -> HostStart(HauntedHouse)` sukses (`matchCount = 1`)
+  - `TriggerAudioCue(EnvironmentalAudio, DoorSlam)` menghasilkan:
+    - `PasrahVFXLastEvent = EnvironmentalAudioTriggered`
+    - `PasrahVFXLastProfile = doorslam`
+    - `SensoryThreatGrading.Contrast ~= 0.1179`
+    - `Brightness ~= -0.0126`
+    - `Saturation ~= -0.0674`
+    - `SensoryGhostBlur.Size ~= 5.05`
+  - `TriggerAudioCue(EnvironmentalAudio, LightFlicker)` menghasilkan:
+    - `PasrahVFXLastProfile = lightflicker`
+
+### Interpretation
+
+- cue lingkungan sekarang tidak hanya didengar, tetapi juga punya jejak visual singkat yang membuat map terasa lebih hidup
+- debug attr ini juga membuat tuning berikutnya tidak lagi bergantung pada pengamatan manual murni
