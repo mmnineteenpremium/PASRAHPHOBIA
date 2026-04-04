@@ -215,7 +215,8 @@ local function resolveGhostTemplate(root, payload)
 		return resolveFootstepTemplate(root, payload)
 	end
 	if string.find(cueToken, "object", 1, true) or string.find(cueToken, "throw", 1, true) then
-		return resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
+		return resolveFolderTemplate(root, "Footsteps", "ConcreteStep_01")
+			or resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
 	end
 	local primaryName = "GhostManifest_01"
 	if string.find(cueToken, "whisper", 1, true) then
@@ -269,6 +270,17 @@ local function resolveEnvironmentalTemplate(root, payload)
 
 	if string.find(cueToken, "footstep", 1, true) then
 		return resolveFootstepTemplate(root, payload)
+	end
+	if string.find(cueToken, "window", 1, true) or string.find(cueToken, "knock", 1, true) then
+		return resolveFolderTemplate(root, "Footsteps", "Woodstep_01")
+			or resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
+	end
+	if string.find(cueToken, "object", 1, true) or string.find(cueToken, "throw", 1, true) then
+		return resolveFolderTemplate(root, "Footsteps", "ConcreteStep_01")
+			or resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
+	end
+	if string.find(cueToken, "door", 1, true) or string.find(cueToken, "slam", 1, true) then
+		return resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
 	end
 	if string.find(cueToken, "whisper", 1, true) then
 		return resolveFolderTemplate(root, "Ghost", "GhostWhisper_01") or resolveGhostTemplate(root, cueToken)
