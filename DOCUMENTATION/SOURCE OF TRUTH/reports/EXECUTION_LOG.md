@@ -7810,3 +7810,25 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - pada production non-Studio, tab `R$` tidak perlu muncul jika semua item Robux masih hidden karena belum compliant/siap
 - ini membuat surface shop lebih jujur dan mengurangi UI kosong yang membingungkan
+
+## 2026-04-04 - Wallet Summary Matches Visible Shop Slots
+
+### Scope
+
+- membuat ringkasan wallet shop mengikuti slot currency yang benar-benar visible untuk player
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `formatShopWalletSummary()` sekarang menerima katalog visible
+  - `R$` hanya ditampilkan bila filter/category `Robux` memang punya item visible
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_shop_wallet_visibility_build.rbxlx`
+
+### Interpretation
+
+- pada production saat semua slot `Robux` masih hidden, pemain tidak lagi melihat `R$ 0` yang tidak punya konteks
+- UI shop jadi lebih konsisten dengan katalog yang benar-benar tersedia
