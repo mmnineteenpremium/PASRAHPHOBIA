@@ -7758,3 +7758,32 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - fix source sudah aman untuk di-commit
 - bila drift Studio dihapus (reconnect/sync script server aktif), jalur match tidak boleh lagi crash hanya karena satu template ghost gagal diparent
+
+## 2026-04-04 - Shop Compliance Copy Hardened
+
+### Scope
+
+- membuat batasan monetization lebih terlihat langsung di `ShopUI`
+- mengurangi risiko UX yang menyesatkan pemain tentang `Robux`, `PP`, `MM`, dan fairness `Ranked`
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - label blok `marketplace_id_missing` sekarang menegaskan bahwa currency pack hanya memberi `MM/PP` di game ini
+  - meta item `ClassicOnly` sekarang juga menampilkan `NO RANKED BONUS`
+  - meta currency pack `Robux` sekarang juga menampilkan `IN-EXPERIENCE ONLY`
+  - footer `ShopUI` kini menjelaskan:
+    - `MM/PP` tetap currency in-game
+    - helper `ClassicOnly` tidak memberi bonus di `Ranked`
+    - tab `Robux` hanya untuk grant yang compliant
+    - tab `Owned` mengingatkan ulang batasan item `ClassicOnly`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_shop_copy_guard_build.rbxlx`
+
+### Interpretation
+
+- backend compliance saja tidak cukup; pemain juga harus melihat batasan monetization dengan bahasa yang jujur di surface shop
+- ini membantu menjaga review Roblox dan ekspektasi pemain tetap sinkron

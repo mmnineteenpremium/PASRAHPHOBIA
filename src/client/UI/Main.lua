@@ -1350,7 +1350,7 @@ local function describeShopPurchaseBlock(item, reason)
 		return "Item belum diaktifkan."
 	end
 	if reason == "marketplace_id_missing" then
-		return "Item Robux belum aktif. Isi marketplaceId valid di ShopMarketplaceConfig lalu publish lewat Creator Hub."
+		return "Item Robux belum aktif. Isi marketplaceId Creator Hub yang valid. Currency pack tetap hanya memberi MM/PP di game ini, bukan lintas game."
 	end
 	return "Item belum bisa dibeli saat ini."
 end
@@ -1601,12 +1601,14 @@ local function buildShopItemMeta(item)
 	end
 	if type(item.modeAccess) == "string" and item.modeAccess == "ClassicOnly" then
 		table.insert(parts, "CLASSIC ONLY")
+		table.insert(parts, "NO RANKED BONUS")
 	end
 	if tostring(item.currency or "MM") == "Robux" then
 		local flow = type(item.marketplaceType) == "string" and string.upper(item.marketplaceType) or "MARKETPLACE"
 		table.insert(parts, flow)
 		if tostring(item.category or "") == "CurrencyPack" and tostring(item.grantCurrency or "") ~= "" then
 			table.insert(parts, "IN-GAME " .. string.upper(tostring(item.grantCurrency)))
+			table.insert(parts, "IN-EXPERIENCE ONLY")
 		end
 		if item.enabled == false or not isShopMarketplaceReady(item) then
 			table.insert(parts, "SETUP")
@@ -6223,17 +6225,27 @@ function UISystem:_refreshShopPanel()
 	end
 
 	local footerText = string.format(
-		"Owned %d item. Klik BELI untuk item aktif. Label KURANG berarti saldo belum cukup, SETUP berarti item Robux belum compliant atau marketplaceId belum diisi di Creator Hub.",
+		"Owned %d item. MM dan PP tetap currency in-game. Item bantuan bertanda CLASSIC ONLY tidak memberi bonus di Ranked. SETUP berarti slot Robux belum siap atau marketplaceId Creator Hub belum valid.",
 		ownedCount
 	)
 	if activeFilter == "PP" then
 		footerText = string.format(
-			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Gunakan tab ini untuk belanja prestige hasil main, bukan top-up langsung.",
+			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Paket Robux PP tetap hanya berlaku di game ini, lalu dipakai untuk prestige/cosmetic/exchange lokal.",
+			ownedCount
+		)
+	elseif activeFilter == "MM" then
+		footerText = string.format(
+			"Owned %d item. MM bisa didapat dari main, dari exchange PP, atau dari pack Robux yang compliant. Semua tetap currency in-game, bukan saldo lintas experience.",
+			ownedCount
+		)
+	elseif activeFilter == "Robux" then
+		footerText = string.format(
+			"Owned %d item. Robux di shop ini hanya boleh memberi currency in-game MM/PP atau entitlement yang compliant. Ranked tetap fair: pembelian tidak boleh memberi keunggulan kemenangan.",
 			ownedCount
 		)
 	elseif activeFilter == "Owned" then
 		footerText = string.format(
-			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini.",
+			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini. Jika item bertanda CLASSIC ONLY, efek bantuannya hanya boleh hidup di Classic.",
 			ownedCount
 		)
 	end
