@@ -7863,3 +7863,55 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - fix ghost parent sekarang tidak hanya aman di source, tetapi juga sudah terbukti menjaga match start tetap hidup di runtime Studio
 - hasil fairness `Ranked` vs `Classic` juga terkunci ulang pada sesi live yang sudah melewati blocker ghost tadi
+
+## 2026-04-04 - Spirit Box Elite Fairness Confirmed Live
+
+### Scope
+
+- membuktikan bahwa `pp_eq_spiritbox_elite` tidak bocor ke `Ranked`, tetapi tetap aktif di `Classic`
+
+### Validation Notes
+
+- validasi live Studio:
+  - `GrantCurrency(PP, 60)` berhasil
+  - `PurchaseItem(pp_eq_spiritbox_elite)` berhasil
+  - snapshot kepemilikan:
+    - `hasItem=true`
+    - `ownedSnapshot=true`
+  - `Ranked` test pada `distanceToGhost = 25`:
+    - `ranked_spirit_success=false`
+    - `ranked_spirit_reason=ghost_out_of_range`
+  - `Classic` test pada `distanceToGhost = 25`:
+    - `classic_spirit_success=false`
+    - `classic_spirit_reason=spawn_roll_failed`
+    - `classic_spirit_tier=elite`
+
+### Interpretation
+
+- hasil `Ranked` membuktikan bonus range elite memang mati di mode fair
+- hasil `Classic` membuktikan tier elite tetap hidup; kegagalan yang muncul berasal dari roll signal/evidence, bukan gate jarak
+- ini menutup validasi fairness untuk dua helper utama:
+  - `Reinforced Salt`
+  - `Spirit Box Elite`
+
+## 2026-04-04 - UV Flashlight Audit
+
+### Scope
+
+- memastikan `eq_flashlight_uv` tidak diam-diam menjadi item pay-to-win di `Ranked`
+
+### Validation Notes
+
+- audit source menunjukkan `eq_flashlight_uv` hanya dipakai pada:
+  - `src/ServerScriptService/Server/ShopSystem/Service.lua` untuk attribute kepemilikan
+  - `src/client/CameraController.client.lua` untuk warna lens dan warna cahaya flashlight
+- tidak ditemukan hook server-authoritative yang memberi:
+  - range tambahan
+  - stock tambahan
+  - reward tambahan
+  - buff investigasi
+
+### Interpretation
+
+- pada implementasi saat ini, `UV Flashlight Mk2` masih berada di jalur visual-only
+- item ini belum menunjukkan kebocoran fairness `Ranked`
