@@ -9060,3 +9060,47 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - `ObjectThrow` sekarang benar-benar terlihat sebagai gangguan fisik di ruang, bukan hanya suara impact
 - ini membuat E2E investigation jauh lebih mudah dibaca secara visual saat kamu test langsung di Studio
+
+## 2026-04-05 - Radio Static And Shadow Apparition Local Pass
+
+### Scope
+
+- menutup dua event ruang yang sebelumnya masih terlalu abstrak:
+  - `RadioStatic` hanya berupa audio/VFX global
+  - `ShadowApparition` hanya berupa audio/grading tanpa manifest visual lokal
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah profile `radiostatic` ke `ENVIRONMENTAL_SHOCK_PROFILES`
+  - tambah `_ensureRuntimeVFXFolder()`
+  - tambah `_spawnShadowApparition(centerPosition)`:
+    - membuat model transient `ShadowApparitionRuntime`
+    - berisi torso + head gelap
+    - fade in/out otomatis
+    - menulis debug attr `PasrahVFXLastShadowPosition`
+  - `_triggerEnvironmentalShock(payload)` sekarang:
+    - `radiostatic` -> pulse prop elektronik (`tv/radio/phone`) di folder `Props`
+    - `shadowapparition` -> spawn manifest visual sementara di posisi event
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_radio_shadow_build.rbxlx`
+  - `_tmp_radiostatic_profile_build.rbxlx`
+- validasi live Studio:
+  - `CreateRoom -> HostStart(HauntedHouse)` sukses (`matchCount = 1`)
+  - `RadioStatic` pada area `LivingRoom`:
+    - `PasrahVFXLastProfile = radiostatic`
+    - `PasrahVFXLastElectronicCount = 1`
+    - `Prop_Room_LivingRoom_TV` kembali ke `CFrame` semula setelah pulse
+  - `ShadowApparition` pada area `LivingRoom`:
+    - `PasrahVFXLastProfile = shadowapparition`
+    - `PasrahVFXLastEvent = EnvironmentalAudioTriggered`
+    - `Workspace.RuntimeVFX.ShadowApparitionRuntime` muncul
+    - model runtime memiliki `2` child part
+
+### Interpretation
+
+- `RadioStatic` sekarang terasa datang dari objek elektronik nyata di ruang
+- `ShadowApparition` sekarang benar-benar bisa dilihat pemain sebagai manifest singkat, bukan sekadar efek layar
