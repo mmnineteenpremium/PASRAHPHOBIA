@@ -7,6 +7,7 @@ local COSMETIC_REMOTE_NAME = "CosmeticEvent"
 local COSMETIC_REQUEST_COOLDOWN_SECONDS = 0.25
 
 local VALID_ACTIONS = {
+    RequestSnapshot = true,
     EquipCosmetic = true,
     UnequipCosmetic = true,
     Equip = true,
@@ -197,6 +198,19 @@ function Controller:_send(player, payload)
     end
 end
 
+function Controller:_buildSnapshot(player)
+    if type(self._service) ~= "table" or type(self._service.BuildClientSnapshot) ~= "function" then
+        return nil
+    end
+    local ok, snapshot = pcall(function()
+        return self._service:BuildClientSnapshot(player)
+    end)
+    if ok and type(snapshot) == "table" then
+        return snapshot
+    end
+    return nil
+end
+
 function Controller:_validateRemoteRequest(player, request)
     if type(request) ~= "table" then
         return false, "invalid_request"
@@ -263,6 +277,15 @@ function Controller:OnCosmeticRemoteRequest(player, request)
         return
     end
 
+    if action == "RequestSnapshot" then
+        self:_send(player, {
+            eventName = "CosmeticSnapshot",
+            requestId = requestId,
+            snapshot = self:_buildSnapshot(player),
+        })
+        return
+    end
+
     local cooldownOk, cooldownErr = self:_validateCooldown(player)
     if not cooldownOk then
         self:_send(player, {
@@ -312,6 +335,7 @@ function Controller:OnCosmeticRemoteRequest(player, request)
         reason = reason,
         cosmeticId = cosmeticId,
         slot = slot,
+        snapshot = self:_buildSnapshot(player),
     })
 end
 

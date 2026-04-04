@@ -23,7 +23,7 @@ local UI_MODULES = {
 	"SpectatorUI",
 }
 
-local REMOTE_NAMES = { "MatchEvent", "LobbyEvent", "EvidenceEvent", "PurchaseEvent", "RoyalPassEvent", "SanityEvent" }
+local REMOTE_NAMES = { "MatchEvent", "LobbyEvent", "EvidenceEvent", "PurchaseEvent", "RoyalPassEvent", "SanityEvent", "CosmeticEvent" }
 local UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
 local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
 local UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
@@ -1316,6 +1316,29 @@ local function buildOwnedItemLookup(ownedItemIds)
 		end
 	end
 	return lookup
+end
+
+local function countLookupEntries(source)
+	if type(source) ~= "table" then
+		return 0
+	end
+	local total = 0
+	for _ in pairs(source) do
+		total += 1
+	end
+	return total
+end
+
+local function findShopCatalogItem(catalog, itemId)
+	if type(itemId) ~= "string" or itemId == "" then
+		return nil
+	end
+	for _, item in ipairs(catalog or {}) do
+		if type(item) == "table" and item.id == itemId then
+			return item
+		end
+	end
+	return nil
 end
 
 local function formatShopWalletSummary(wallet)
@@ -2723,6 +2746,11 @@ function UISystem:Init(context)
 		totalGames = 0,
 		favoriteTool = "-",
 		featuredFlex = nil,
+		ownedCosmeticIds = {},
+		equippedCosmetics = {},
+		lastCosmeticMessage = "Wardrobe belum sinkron.",
+		lastCosmeticSnapshotAt = 0,
+		lastCosmeticRequestAt = 0,
 	}
 	self._shopState = {
 		lastEvent = "Idle",
@@ -2810,6 +2838,7 @@ function UISystem:Start()
 	end
 
 	self:_requestShopSnapshot(true)
+	self:_requestCosmeticSnapshot(true)
 	self:_ensureBasicUIs()
 	self:_ensureRoomBrowserGui()
 	self:_bindRoomBrowserMatchVisibility()
@@ -3149,11 +3178,39 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._shopState.lastMessage = payload and payload.success == true
 				and "Pembelian berhasil diproses."
 				or ("Pembelian gagal: " .. titleCaseToken(payload and payload.reason or "unknown"))
+			local purchasedItem = findShopCatalogItem(self._shopState.catalog, payload and payload.itemId or nil)
+			if payload and payload.success == true and type(purchasedItem) == "table" and purchasedItem.category == "Cosmetic" then
+				self:_requestCosmeticSnapshot(true)
+			end
 		end
 		if eventName ~= "ShopSnapshot" then
 			self._windowDismissed.ShopUI = false
 		end
 		self:_refreshShopPanel()
+	elseif remoteName == "CosmeticEvent" then
+		self._uiState.ProfileUI.lastEvent = eventName
+		self._profileState.lastEvent = eventName
+		if type(payload) == "table" and type(payload.snapshot) == "table" then
+			self:_applyCosmeticSnapshot(payload.snapshot)
+		end
+		if eventName == "CosmeticSnapshot" then
+			self._profileState.lastCosmeticMessage = string.format(
+				"Wardrobe sync %d owned • %d equipped.",
+				countLookupEntries(self._profileState.ownedCosmeticIds),
+				countLookupEntries(self._profileState.equippedCosmetics)
+			)
+		elseif eventName == "CosmeticRequestProcessed" then
+			local success = payload and payload.success == true
+			local action = tostring(payload and payload.action or "Cosmetic")
+			if success then
+				self._profileState.lastCosmeticMessage = action == "Unequip" or action == "UnequipCosmetic"
+					and "Cosmetic dilepas dari slot."
+					or "Cosmetic dipakai ke slot aktif."
+			else
+				self._profileState.lastCosmeticMessage = "Wardrobe gagal: " .. titleCaseToken(payload and payload.reason or "unknown")
+			end
+		end
+		self:_refreshProfilePanel()
 	elseif remoteName == "RoyalPassEvent" then
 		self._uiState.RoyalPassUI.lastEvent = eventName
 		self._uiState.RoyalPassUI.visible = true
@@ -3526,6 +3583,8 @@ function UISystem:_openAuxiliaryWindow(guiName)
 	self:_setAuxiliaryWindowDismissed(guiName, false)
 	if guiName == "ShopUI" then
 		self:_requestShopSnapshot()
+	elseif guiName == "ProfileUI" then
+		self:_requestCosmeticSnapshot()
 	end
 	self:_applyVisibility()
 end
@@ -5458,6 +5517,47 @@ function UISystem:_ensureProfileWidgets(window)
 	statLayout.Padding = UDim.new(0, 6)
 	statLayout.Parent = statList
 
+	local wardrobeHeader = Instance.new("TextLabel")
+	wardrobeHeader.Name = "WardrobeHeader"
+	wardrobeHeader.Size = UDim2.new(1, 0, 0, 18)
+	wardrobeHeader.BackgroundTransparency = 1
+	wardrobeHeader.Font = Enum.Font.GothamBold
+	wardrobeHeader.TextSize = 11
+	wardrobeHeader.TextColor3 = Color3.fromRGB(214, 222, 232)
+	wardrobeHeader.TextXAlignment = Enum.TextXAlignment.Left
+	wardrobeHeader.Text = "WARDROBE"
+	wardrobeHeader.Parent = deck
+
+	local wardrobeEmpty = Instance.new("TextLabel")
+	wardrobeEmpty.Name = "WardrobeEmpty"
+	wardrobeEmpty.Size = UDim2.new(1, 0, 0, 38)
+	wardrobeEmpty.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+	wardrobeEmpty.BackgroundTransparency = 0.08
+	wardrobeEmpty.BorderSizePixel = 0
+	wardrobeEmpty.Font = Enum.Font.Gotham
+	wardrobeEmpty.TextSize = 11
+	wardrobeEmpty.TextColor3 = Color3.fromRGB(184, 196, 208)
+	wardrobeEmpty.TextWrapped = true
+	wardrobeEmpty.Text = "Belum ada cosmetic yang dimiliki. Beli cosmetic di Shop lalu pakai dari sini."
+	wardrobeEmpty.Parent = deck
+
+	local wardrobeEmptyCorner = Instance.new("UICorner")
+	wardrobeEmptyCorner.CornerRadius = UDim.new(0, 8)
+	wardrobeEmptyCorner.Parent = wardrobeEmpty
+
+	local wardrobeList = Instance.new("Frame")
+	wardrobeList.Name = "WardrobeList"
+	wardrobeList.Size = UDim2.new(1, 0, 0, 0)
+	wardrobeList.AutomaticSize = Enum.AutomaticSize.Y
+	wardrobeList.BackgroundTransparency = 1
+	wardrobeList.Parent = deck
+
+	local wardrobeLayout = Instance.new("UIListLayout")
+	wardrobeLayout.FillDirection = Enum.FillDirection.Vertical
+	wardrobeLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	wardrobeLayout.Padding = UDim.new(0, 6)
+	wardrobeLayout.Parent = wardrobeList
+
 	local rows = {
 		sanity = createActionRow(statList, "SanityRow", "SANITY", "-", "LIVE"),
 		match = createActionRow(statList, "MatchRow", "MATCH", "-", "STAT"),
@@ -5487,8 +5587,171 @@ function UISystem:_ensureProfileWidgets(window)
 		Spotlight = spotlight,
 		ActionButton = actionButton,
 		Rows = rows,
+		WardrobeHeader = wardrobeHeader,
+		WardrobeEmpty = wardrobeEmpty,
+		WardrobeList = wardrobeList,
+		WardrobeRows = {},
 	}
 	return window.ProfileWidgets
+end
+
+function UISystem:_applyCosmeticSnapshot(snapshot)
+	if type(snapshot) ~= "table" then
+		return
+	end
+	self._profileState.ownedCosmeticIds = buildOwnedItemLookup(snapshot.ownedCosmeticIds)
+	self._profileState.equippedCosmetics = type(snapshot.equippedCosmetics) == "table" and snapshot.equippedCosmetics or {}
+	self._profileState.lastCosmeticSnapshotAt = tick()
+end
+
+function UISystem:_requestCosmeticSnapshot(force)
+	local remote = self._remotes and self._remotes.CosmeticEvent or nil
+	if not remote then
+		return false
+	end
+	local now = tick()
+	if force ~= true and (now - (self._profileState.lastCosmeticRequestAt or 0)) < 0.4 then
+		return false
+	end
+	self._profileState.lastCosmeticRequestAt = now
+	remote:FireServer({
+		action = "RequestSnapshot",
+	})
+	return true
+end
+
+function UISystem:_requestEquipCosmetic(cosmeticId)
+	local remote = self._remotes and self._remotes.CosmeticEvent or nil
+	if not remote or type(cosmeticId) ~= "string" or cosmeticId == "" then
+		return
+	end
+	self._profileState.lastCosmeticMessage = "Mengirim equip cosmetic..."
+	remote:FireServer({
+		action = "EquipCosmetic",
+		cosmeticId = cosmeticId,
+	})
+end
+
+function UISystem:_requestUnequipCosmetic(slot)
+	local remote = self._remotes and self._remotes.CosmeticEvent or nil
+	if not remote or type(slot) ~= "string" or slot == "" then
+		return
+	end
+	self._profileState.lastCosmeticMessage = "Melepas cosmetic dari slot..."
+	remote:FireServer({
+		action = "UnequipCosmetic",
+		cosmeticSlot = slot,
+	})
+end
+
+function UISystem:_getOwnedCosmeticCatalogEntries()
+	local ownedLookup = self._profileState and self._profileState.ownedCosmeticIds or {}
+	local ownedItems = {}
+	for _, item in ipairs(self._shopState and self._shopState.catalog or {}) do
+		if type(item) == "table" and item.category == "Cosmetic" and ownedLookup[item.id] then
+			table.insert(ownedItems, item)
+		end
+	end
+	return ownedItems
+end
+
+function UISystem:_ensureProfileWardrobeRow(widgets, index)
+	if not widgets or not widgets.WardrobeList then
+		return nil
+	end
+	widgets.WardrobeRows = widgets.WardrobeRows or {}
+	local existing = widgets.WardrobeRows[index]
+	if existing and existing.Root and existing.Root.Parent then
+		return existing
+	end
+
+	local row = createActionRow(widgets.WardrobeList, "WardrobeRow" .. tostring(index), "COSMETIC", "-", "PAKAI")
+	row.Button.Size = UDim2.fromOffset(92, 32)
+	row.PricePill.Size = UDim2.fromOffset(110, 16)
+	row.Root:SetAttribute("CosmeticRowBound", true)
+	if row.Button:GetAttribute("Bound") ~= true then
+		row.Button:SetAttribute("Bound", true)
+		connectButtonPress(row.Button, function()
+			local cosmeticId = row.Root:GetAttribute("CosmeticId")
+			local cosmeticSlot = row.Root:GetAttribute("CosmeticSlot")
+			if type(cosmeticId) ~= "string" or cosmeticId == "" then
+				return
+			end
+			local equipped = self._profileState and self._profileState.equippedCosmetics or {}
+			if type(cosmeticSlot) == "string" and tostring(equipped[cosmeticSlot] or "") == cosmeticId then
+				self:_requestUnequipCosmetic(cosmeticSlot)
+			else
+				self:_requestEquipCosmetic(cosmeticId)
+			end
+		end)
+	end
+
+	widgets.WardrobeRows[index] = row
+	return row
+end
+
+function UISystem:_refreshProfileWardrobe(widgets)
+	if not widgets or not widgets.WardrobeList then
+		return
+	end
+
+	local ownedItems = self:_getOwnedCosmeticCatalogEntries()
+	local equipped = self._profileState and self._profileState.equippedCosmetics or {}
+	local ownedCount = #ownedItems
+	local equippedCount = countLookupEntries(equipped)
+
+	if widgets.WardrobeHeader then
+		widgets.WardrobeHeader.Text = string.format("WARDROBE • %d OWNED • %d EQUIPPED", ownedCount, equippedCount)
+	end
+	if widgets.WardrobeEmpty then
+		widgets.WardrobeEmpty.Visible = ownedCount == 0
+	end
+	if widgets.WardrobeList then
+		widgets.WardrobeList.Visible = ownedCount > 0
+	end
+
+	for index, item in ipairs(ownedItems) do
+		local row = self:_ensureProfileWardrobeRow(widgets, index)
+		if row then
+			local theme = resolveShopCategoryTheme(item)
+			local accent = SHOP_RARITY_COLORS[tostring(item.rarity or "")] or theme.accent
+			local slot = tostring(item.slot or "cosmetic")
+			local isEquipped = tostring(equipped[slot] or "") == tostring(item.id)
+			row.Root.Visible = true
+			row.Root.LayoutOrder = index
+			row.Root.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+			row.Root:SetAttribute("CosmeticId", item.id)
+			row.Root:SetAttribute("CosmeticSlot", slot)
+			row.Accent.BackgroundColor3 = accent
+			row.Preview.BackgroundColor3 = theme.preview
+			row.PreviewBadge.BackgroundColor3 = theme.accent
+			row.PreviewBadge.TextColor3 = theme.text
+			row.PreviewBadge.Text = buildShopItemBadge(item)
+			row.PreviewGlyph.TextColor3 = theme.text
+			row.PreviewGlyph.Text = buildShopItemGlyph(item)
+			row.Title.Text = tostring(item.name or item.id or ("Cosmetic " .. tostring(index)))
+			row.Meta.Text = string.format(
+				"%s • Slot %s • %s",
+				buildShopItemMeta(item),
+				string.upper(humanizeToken(slot)),
+				isEquipped and "Equipped" or "Ready"
+			)
+			applyPricePillVisual(row.PricePill, isEquipped and "AKTIF" or string.upper(humanizeToken(slot)), accent, Color3.fromRGB(247, 243, 236))
+			row.Button.Text = isEquipped and "LEPAS" or "PAKAI"
+			row.Button.BackgroundColor3 = isEquipped and Color3.fromRGB(88, 70, 44) or theme.accent
+			row.Button.TextColor3 = isEquipped and Color3.fromRGB(245, 234, 206) or Color3.fromRGB(244, 244, 240)
+			row.Button.AutoButtonColor = true
+		end
+	end
+
+	for index = ownedCount + 1, #(widgets.WardrobeRows or {}) do
+		local row = widgets.WardrobeRows[index]
+		if row and row.Root then
+			row.Root.Visible = false
+			row.Root:SetAttribute("CosmeticId", nil)
+			row.Root:SetAttribute("CosmeticSlot", nil)
+		end
+	end
 end
 
 function UISystem:_refreshProfilePanel()
@@ -5562,7 +5825,7 @@ function UISystem:_refreshProfilePanel()
 		tostring(featuredFlex.displayName or "Player"),
 		tostring(featuredFlex.winRate or 0),
 		tostring(featuredFlex.totalMatches or 0)
-	) or "Belum ada spotlight. Profile ini memakai snapshot client yang aktif."
+	) or tostring(profile.lastCosmeticMessage or "Belum ada spotlight. Profile ini memakai snapshot client yang aktif.")
 
 	local rows = widgets.Rows or {}
 	local statRows = {
@@ -5591,11 +5854,15 @@ function UISystem:_refreshProfilePanel()
 		{
 			key = "favorite",
 			badge = "TOOL",
-			glyph = "JT",
-			title = "Favorite loadout",
-			meta = string.format("Tool favorit %s • visitors %s", tostring(profile.favoriteTool or "-"), tostring(featuredFlex and featuredFlex.activeVisitorCount or 0)),
-			pill = tostring(featuredFlex and featuredFlex.rank or "BASIC"),
-			button = "SHOW",
+			glyph = "WR",
+			title = "Wardrobe sync",
+			meta = string.format(
+				"%s • visitors %s",
+				tostring(profile.lastCosmeticMessage or "Wardrobe belum sinkron."),
+				tostring(featuredFlex and featuredFlex.activeVisitorCount or 0)
+			),
+			pill = string.format("%d OWNED", countLookupEntries(profile.ownedCosmeticIds)),
+			button = string.format("%d EQ", countLookupEntries(profile.equippedCosmetics)),
 			accent = Color3.fromRGB(118, 88, 52),
 			preview = Color3.fromRGB(54, 44, 32),
 		},
@@ -5620,6 +5887,8 @@ function UISystem:_refreshProfilePanel()
 			row.Button.Text = data.button
 		end
 	end
+
+	self:_refreshProfileWardrobe(widgets)
 end
 
 function UISystem:_applyShopSnapshot(snapshot)

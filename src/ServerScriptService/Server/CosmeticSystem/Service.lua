@@ -126,6 +126,28 @@ local function isNonEmptyMap(value)
     return false
 end
 
+local function cloneMap(source)
+    if type(source) ~= "table" then
+        return {}
+    end
+    local result = {}
+    for key, value in pairs(source) do
+        result[key] = value
+    end
+    return result
+end
+
+local function countEntries(source)
+    if type(source) ~= "table" then
+        return 0
+    end
+    local total = 0
+    for _ in pairs(source) do
+        total += 1
+    end
+    return total
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -313,6 +335,40 @@ function Service:_resolveEquippedForPlayer(player)
     end
 
     return playerEquipped or {}
+end
+
+function Service:BuildClientSnapshot(player)
+    local userId = toUserId(player)
+    if not userId then
+        return {
+            ownedCosmeticIds = {},
+            equippedCosmetics = {},
+            ownedCount = 0,
+            equippedCount = 0,
+        }
+    end
+
+    local ownedCosmeticIds = {}
+    local inventory = self:_getInventory()
+    if type(inventory) == "table" and type(inventory.GetOwnedCosmetics) == "function" then
+        local ok, result = pcall(function()
+            return inventory:GetOwnedCosmetics(player)
+        end)
+        if ok and type(result) == "table" then
+            ownedCosmeticIds = result
+        end
+    end
+    table.sort(ownedCosmeticIds)
+
+    local equippedCosmetics = cloneMap(self:_resolveEquippedForPlayer(player))
+
+    return {
+        ownedCosmeticIds = ownedCosmeticIds,
+        equippedCosmetics = equippedCosmetics,
+        ownedCount = #ownedCosmeticIds,
+        equippedCount = countEntries(equippedCosmetics),
+        updatedAt = os.clock(),
+    }
 end
 
 function Service:_syncInventorySlot(player, slot, cosmeticId)
