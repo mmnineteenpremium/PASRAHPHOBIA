@@ -6,6 +6,11 @@ local REMOTE_FUNCTIONS_FOLDER_NAME = "RemoteFunctions"
 local EVIDENCE_REQUEST_FUNCTION_NAME = "EvidenceRequest"
 local TOOL_REQUEST_COOLDOWN_SECONDS = 0.4
 local MAX_GHOST_SCAN_DISTANCE = 22
+local MODDED_SPIRIT_BOX_RANGE = 26
+local ELITE_SPIRIT_BOX_RANGE = 30
+local MODDED_SPIRIT_BOX_OWNED_ATTR = "PasrahOwnsModdedSpiritBox"
+local ELITE_SPIRIT_BOX_OWNED_ATTR = "PasrahOwnsEliteSpiritBox"
+local MATCH_MODE_ATTR = "MatchMode"
 
 local EVIDENCE_NAME_BY_TOOL = {
 	JejakEnergi = "MEDOK",
@@ -18,6 +23,7 @@ local EVIDENCE_NAME_BY_TOOL = {
 
 local UTILITY_TOOL_TYPES = {
 	Garam = true,
+	PilSanity = true,
 	Salib = true,
 	Dupa = true,
 }
@@ -30,6 +36,7 @@ local REQUEST_TYPE_TO_TOOL = {
 	toundetection = "BolaArwah",
 	pengganggucheck = "GerakanGaib",
 	saltplacement = "Garam",
+	sanitypilluse = "PilSanity",
 	crucifixplacement = "Salib",
 	smudgeignite = "Dupa",
 }
@@ -52,6 +59,8 @@ local TOOL_ALIASES = {
 	salib = "Salib",
 	crucifix = "Salib",
 	dupa = "Dupa",
+	pilsanity = "PilSanity",
+	sanitypill = "PilSanity",
 	smudge = "Dupa",
 	smudgestick = "Dupa",
 }
@@ -270,7 +279,9 @@ function EvidenceGateway:_buildData(toolType, ok, reason, result)
 	elseif toolType == "KotakArwah" then
 		data.requestType = "KotakArwahQuestion"
 		data.ghostResponse = ok == true
-		data.responseText = ok and "Behind you..." or "..."
+		data.responseText = type(result) == "table" and result.responseText or (ok and "Behind you..." or "...")
+		data.responseTier = type(result) == "table" and result.responseTier or "base"
+		data.detectionChance = type(result) == "table" and result.detectionChance or nil
 	elseif toolType == "SuhuMembeku" then
 		data.requestType = "SuhuReading"
 		data.temperatureC = ok and -5 or 9
@@ -312,6 +323,13 @@ function EvidenceGateway:_buildData(toolType, ok, reason, result)
 		data.roomId = type(result) == "table" and result.roomId or nil
 		data.usesRemaining = type(result) == "table" and result.usesRemaining or nil
 		data.visualPlaced = type(result) == "table" and result.visualPlaced == true or false
+	elseif toolType == "PilSanity" then
+		data.requestType = "SanityPillUse"
+		data.utility = true
+		data.sanityRestored = type(result) == "table" and result.sanityRestored or nil
+		data.resultingSanity = type(result) == "table" and result.resultingSanity or nil
+		data.usesRemaining = type(result) == "table" and result.usesRemaining or nil
+		data.tier = type(result) == "table" and result.tier or nil
 	end
 
 	if type(result) == "table" then
@@ -420,7 +438,16 @@ function EvidenceGateway:HandleRequest(player, request)
 
 	local distanceToGhost = tonumber(requestPayload.distanceToGhost)
 	local nearGhostRoom = requestPayload.nearGhostRoom == true
-	if not utilityTool and (type(distanceToGhost) == "number" and distanceToGhost > MAX_GHOST_SCAN_DISTANCE) and not nearGhostRoom then
+	local maxGhostScanDistance = MAX_GHOST_SCAN_DISTANCE
+	if toolType == "KotakArwah" and typeof(player) == "Instance" and player:IsA("Player") then
+		local rankedMode = player:GetAttribute(MATCH_MODE_ATTR) == "Ranked"
+		if not rankedMode and player:GetAttribute(ELITE_SPIRIT_BOX_OWNED_ATTR) == true then
+			maxGhostScanDistance = ELITE_SPIRIT_BOX_RANGE
+		elseif not rankedMode and player:GetAttribute(MODDED_SPIRIT_BOX_OWNED_ATTR) == true then
+			maxGhostScanDistance = MODDED_SPIRIT_BOX_RANGE
+		end
+	end
+	if not utilityTool and (type(distanceToGhost) == "number" and distanceToGhost > maxGhostScanDistance) and not nearGhostRoom then
 		return {
 			success = false,
 			reason = "ghost_out_of_range",

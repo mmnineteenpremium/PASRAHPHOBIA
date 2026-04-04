@@ -24,6 +24,12 @@ local MATCH_PP_THRESHOLD_A = 70
 local MATCH_PP_THRESHOLD_B = 90
 local MATCH_PP_EXTRACT_BONUS = 1
 local MATCH_PP_MAX = 4
+local MM_UNCAPPED_REASONS = {
+    ShopPurchaseRefund = true,
+    GiftPurchaseRefund = true,
+    MarketplacePurchase = true,
+    CurrencyPackPurchase = true,
+}
 
 local CHECKIN_REWARDS = {
     [1] = { currency = "MM", amount = 1000 },
@@ -256,11 +262,7 @@ function Service:_applyWalletCap(userId, currency, amount)
     return math.min(amount, remaining)
 end
 function Service:_capForUser(userId)
-    local passes = self:_ensurePass(userId)
     local cap = BASE_DAILY_MM_CAP
-    if passes.LifetimePass then
-        cap *= LIFETIME_CAP_MULTIPLIER
-    end
     return cap
 end
 
@@ -344,18 +346,22 @@ function Service:AddCurrency(player, currencyOrAmount, amountOrReason, reasonOrN
     end
 
     if currency == "MM" then
-        if reason == "ShopPurchaseRefund" or reason == "GiftPurchaseRefund" then
+        if MM_UNCAPPED_REASONS[reason or ""] == true then
+            local capped = self:_applyWalletCap(userId, "MM", amount)
+            if capped <= 0 then
+                return true, nil, 0
+            end
             local wallet = self:_ensureWallet(userId)
-            wallet.MM += amount
+            wallet.MM += capped
             self:_publish("CurrencyChanged", {
                 player = player,
                 userId = userId,
                 currency = "MM",
-                delta = amount,
+                delta = capped,
                 balance = wallet.MM,
                 reason = reason,
             })
-            return true, nil, amount
+            return true, nil, capped
         end
         local granted = self:_addMMWithCap(player, amount, reason or "manual_add")
         return granted > 0, nil, granted
@@ -490,9 +496,7 @@ function Service:GrantMissionCompleted(player)
         return false, "invalid_player"
     end
 
-    local passes = self:_ensurePass(userId)
-    local multiplier = passes.LifetimePass and 2 or 1
-    local awarded = self:_addMMWithCap(player, MISSION_REWARD * multiplier, "daily_mission")
+    local awarded = self:_addMMWithCap(player, MISSION_REWARD, "daily_mission")
 
     local daily = self:_ensureDaily(userId)
     daily.missionCompletedCount += 1
@@ -526,9 +530,7 @@ function Service:GrantAllMissionsCompleted(player)
         return false, "already_claimed"
     end
 
-    local passes = self:_ensurePass(userId)
-    local multiplier = passes.LifetimePass and 2 or 1
-    local awarded = self:_addMMWithCap(player, ALL_MISSION_BONUS * multiplier, "daily_mission_all")
+    local awarded = self:_addMMWithCap(player, ALL_MISSION_BONUS, "daily_mission_all")
     daily.allMissionsClaimed = true
 
     if awarded > 0 then

@@ -67,6 +67,14 @@ local EvidenceTypesModule = resolveSharedModule({ "DataTypes", "Evidence", "Evid
 local Services = require(script.Parent.Parent.Parent.Core.Services)
 
 local EvidenceService = {}
+local MATCH_MODE_ATTR = "MatchMode"
+local RANKED_NEUTRALIZED_ITEMS = {
+	eq_sanitypill_standard = true,
+	eq_sanitypill_advanced = true,
+	eq_saltbag_reinforced = true,
+	eq_spiritbox_modded = true,
+	pp_eq_spiritbox_elite = true,
+}
 
 local function normalizeToken(value)
     if type(value) ~= "string" then
@@ -127,6 +135,7 @@ local TOOL_TO_EVIDENCE = {
 local UTILITY_TOOL_TYPES = {
 	Dupa = true,
 	Garam = true,
+	PilSanity = true,
 	Salib = true,
 }
 
@@ -142,6 +151,10 @@ local UTILITY_TOOL_CONFIG = {
 		immediateTriggerDistance = 8,
 		maxPlacements = 6,
 		maxUsesPerPlayer = 3,
+	},
+	PilSanity = {
+		maxUsesPerPlayer = 0,
+		restoreAmount = 0,
 	},
 	Salib = {
 		charges = 3,
@@ -386,6 +399,31 @@ local function resolveInventoryService(deps)
 	end
 	return nil
 end
+
+local function clamp01(value)
+	return math.clamp(tonumber(value) or 0, 0, 1)
+end
+
+local SPIRIT_BOX_RESPONSE_LIBRARY = {
+	base = {
+		"...",
+		"Ada yang dengar?",
+		"Jangan dekat.",
+		"Aku di sini.",
+	},
+	modded = {
+		"Pergi sekarang.",
+		"Aku dengar langkahmu.",
+		"Dia melihatmu.",
+		"Jangan panggil lagi.",
+	},
+	elite = {
+		"Dia ada di belakangmu.",
+		"Kami tidak sendiri.",
+		"Ruangan ini milikku.",
+		"Aku mengikuti suaramu.",
+	},
+}
 
 local function resolveEvidenceConfigSystem(deps)
 	local evidenceConfig = Services.Get(deps, "EvidenceConfigSystem")
@@ -863,6 +901,9 @@ function EvidenceService:_playerOwnsItem(player, itemId)
 	if type(itemId) ~= "string" or itemId == "" then
 		return false
 	end
+	if player:GetAttribute(MATCH_MODE_ATTR) == "Ranked" and RANKED_NEUTRALIZED_ITEMS[itemId] == true then
+		return false
+	end
 	if type(self._inventoryService) ~= "table" or type(self._inventoryService.HasItem) ~= "function" then
 		return false
 	end
@@ -872,9 +913,85 @@ function EvidenceService:_playerOwnsItem(player, itemId)
 	return ok and result == true
 end
 
+function EvidenceService:_resolveSpiritBoxTier(player)
+	if self:_playerOwnsItem(player, "pp_eq_spiritbox_elite") then
+		return "elite"
+	end
+	if self:_playerOwnsItem(player, "eq_spiritbox_modded") then
+		return "modded"
+	end
+	return "base"
+end
+
+function EvidenceService:_getSpiritBoxConfig(player)
+	local tier = self:_resolveSpiritBoxTier(player)
+	if tier == "elite" then
+		return {
+			tier = tier,
+			detectionMultiplier = 1.45,
+			minChance = 0.78,
+			responseSet = SPIRIT_BOX_RESPONSE_LIBRARY.elite,
+		}
+	end
+	if tier == "modded" then
+		return {
+			tier = tier,
+			detectionMultiplier = 1.22,
+			minChance = 0.62,
+			responseSet = SPIRIT_BOX_RESPONSE_LIBRARY.modded,
+		}
+	end
+	return {
+		tier = tier,
+		detectionMultiplier = 1.0,
+		minChance = 0.46,
+		responseSet = SPIRIT_BOX_RESPONSE_LIBRARY.base,
+	}
+end
+
+function EvidenceService:_buildSpiritBoxResponse(matchId, player)
+	local config = self:_getSpiritBoxConfig(player)
+	local responses = config.responseSet or SPIRIT_BOX_RESPONSE_LIBRARY.base
+	local responseText = responses[math.random(1, #responses)]
+	local ghostState = self:_getGhostState(matchId)
+	local ghostType = ghostState and ghostState.ghostType or nil
+	if type(ghostType) == "string" and ghostType ~= "" and config.tier ~= "base" then
+		responseText = string.format("%s [%s]", responseText, ghostType)
+	end
+	return {
+		responseText = responseText,
+		responseTier = config.tier,
+	}
+end
+
+function EvidenceService:_resolveSanityPillConfig(player)
+	if self:_playerOwnsItem(player, "eq_sanitypill_advanced") then
+		return {
+			tier = "advanced",
+			maxUsesPerPlayer = 2,
+			restoreAmount = 42,
+		}
+	end
+	if self:_playerOwnsItem(player, "eq_sanitypill_standard") then
+		return {
+			tier = "standard",
+			maxUsesPerPlayer = 1,
+			restoreAmount = 24,
+		}
+	end
+	return {
+		tier = "none",
+		maxUsesPerPlayer = 0,
+		restoreAmount = 0,
+	}
+end
+
 function EvidenceService:_getDefaultToolStock(toolType, player)
 	local config = UTILITY_TOOL_CONFIG[toolType]
 	local stock = config and tonumber(config.maxUsesPerPlayer) or nil
+	if toolType == "PilSanity" then
+		stock = self:_resolveSanityPillConfig(player).maxUsesPerPlayer
+	end
 	if stock == nil then
 		return 0
 	end
@@ -1189,9 +1306,51 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 	}
 end
 
+function EvidenceService:_handleSanityPillUse(player, matchId, requestPayload)
+	local now = requestPayload.now or os.clock()
+	local userId = resolveUserId(player)
+	local pillConfig = self:_resolveSanityPillConfig(player)
+	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, player, userId, "PilSanity")
+	if stockOk ~= true then
+		return false, stockReason or "tool_out_of_stock", {
+			toolType = "PilSanity",
+			usesRemaining = math.max(0, tonumber(usesRemaining) or 0),
+			tier = pillConfig.tier,
+		}
+	end
+
+	local resultingSanity = nil
+	if self._sanityService and type(self._sanityService.RestoreSanity) == "function" then
+		resultingSanity = self._sanityService:RestoreSanity(player, pillConfig.restoreAmount, matchId, "sanity_pill")
+	end
+
+	self:_publish("SanityPillUsed", {
+		matchId = matchId,
+		now = now,
+		player = player,
+		userId = userId,
+		restoreAmount = pillConfig.restoreAmount,
+		resultingSanity = resultingSanity,
+		tier = pillConfig.tier,
+		toolType = "PilSanity",
+		usesRemaining = usesRemaining,
+	})
+
+	return true, "sanity_restored", {
+		resultingSanity = resultingSanity,
+		sanityRestored = pillConfig.restoreAmount,
+		tier = pillConfig.tier,
+		toolType = "PilSanity",
+		usesRemaining = usesRemaining,
+	}
+end
+
 function EvidenceService:_processUtilityToolUse(player, matchId, toolType, requestPayload)
 	if toolType == "Garam" then
 		return self:_handleSaltUse(player, matchId, requestPayload)
+	end
+	if toolType == "PilSanity" then
+		return self:_handleSanityPillUse(player, matchId, requestPayload)
 	end
 	if toolType == "Salib" then
 		return self:_handleCrucifixUse(player, matchId, requestPayload)
@@ -1437,10 +1596,21 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 	if clarity == nil then
 		clarity = tonumber(difficultyProfile.EvidenceClarityMultiplier)
 	end
-	clarity = math.clamp(clarity or 1, 0, 1)
+	clarity = clamp01(clarity or 1)
 
 	local baseChance = tonumber(requestPayload.baseChance) or tonumber(requestPayload.detectionChance) or 1
 	local detectionChance = baseChance * clarity
+	local spiritBoxMeta = nil
+	if toolType == "KotakArwah" then
+		local spiritBoxConfig = self:_getSpiritBoxConfig(player)
+		detectionChance = math.max(detectionChance * spiritBoxConfig.detectionMultiplier, spiritBoxConfig.minChance * clarity)
+		spiritBoxMeta = self:_buildSpiritBoxResponse(matchId, player)
+		spiritBoxMeta.responseTier = spiritBoxConfig.tier
+	end
+	detectionChance = clamp01(detectionChance)
+	if spiritBoxMeta then
+		spiritBoxMeta.detectionChance = detectionChance
+	end
 	local roll = math.random()
 	if roll > detectionChance then
 		return false, "Inconclusive", {
@@ -1448,6 +1618,8 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 			evidenceType = evidenceType,
 			matchId = matchId,
 			result = "Inconclusive",
+			responseText = spiritBoxMeta and spiritBoxMeta.responseText or nil,
+			responseTier = spiritBoxMeta and spiritBoxMeta.responseTier or nil,
 		}
 	end
 
@@ -1469,6 +1641,8 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 			toolType = toolType,
 			evidenceType = evidenceType,
 			matchId = matchId,
+			responseText = spiritBoxMeta and spiritBoxMeta.responseText or nil,
+			responseTier = spiritBoxMeta and spiritBoxMeta.responseTier or nil,
 		}
 	end
 	if spawnReason == "delayed" then
@@ -1476,6 +1650,8 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 			toolType = toolType,
 			evidenceType = evidenceType,
 			matchId = matchId,
+			responseText = spiritBoxMeta and spiritBoxMeta.responseText or nil,
+			responseTier = spiritBoxMeta and spiritBoxMeta.responseTier or nil,
 		}
 	end
 	if spawnReason == "fake_spawned" then
@@ -1484,6 +1660,8 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 			evidenceType = evidenceType,
 			matchId = matchId,
 			isFake = true,
+			responseText = spiritBoxMeta and spiritBoxMeta.responseText or nil,
+			responseTier = spiritBoxMeta and spiritBoxMeta.responseTier or nil,
 		}
 	end
 	if not signal then
@@ -1491,6 +1669,8 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 			toolType = toolType,
 			evidenceType = evidenceType,
 			matchId = matchId,
+			responseText = spiritBoxMeta and spiritBoxMeta.responseText or nil,
+			responseTier = spiritBoxMeta and spiritBoxMeta.responseTier or nil,
 		}
 	end
 
@@ -1510,6 +1690,9 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 			toolType = toolType,
 			evidenceType = evidenceType,
 			matchId = matchId,
+			responseText = spiritBoxMeta and spiritBoxMeta.responseText or nil,
+			responseTier = spiritBoxMeta and spiritBoxMeta.responseTier or nil,
+			detectionChance = spiritBoxMeta and spiritBoxMeta.detectionChance or nil,
 		}
 	end
 
@@ -1518,6 +1701,9 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 		evidenceType = evidenceType,
 		matchId = matchId,
 		result = collectResult,
+		responseText = spiritBoxMeta and spiritBoxMeta.responseText or nil,
+		responseTier = spiritBoxMeta and spiritBoxMeta.responseTier or nil,
+		detectionChance = spiritBoxMeta and spiritBoxMeta.detectionChance or nil,
 	}
 end
 

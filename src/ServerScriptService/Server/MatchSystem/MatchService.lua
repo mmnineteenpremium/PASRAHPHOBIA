@@ -928,6 +928,8 @@ function MatchService:StartMatch(matchId)
 		if typeof(player) == "Instance" and player:IsA("Player") then
 			player:SetAttribute("InMatch", true)
 			player:SetAttribute("MatchId", authoritativeMatchId)
+			player:SetAttribute("MatchMode", tostring(match.mode or match.gameMode or "Classic"))
+			player:SetAttribute("MatchDifficulty", tostring(match.difficulty or "Mudah"))
 		end
 	end
 
@@ -1197,6 +1199,8 @@ function MatchService:EndMatch(matchId, results)
 		if typeof(player) == "Instance" and player:IsA("Player") then
 			player:SetAttribute("InMatch", false)
 			player:SetAttribute("MatchId", nil)
+			player:SetAttribute("MatchMode", nil)
+			player:SetAttribute("MatchDifficulty", nil)
 		end
 		self:_publish("PlayerTeleported", {
 			player = player,

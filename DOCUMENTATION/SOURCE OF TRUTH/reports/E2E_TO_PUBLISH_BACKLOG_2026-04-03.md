@@ -815,13 +815,14 @@ Status:
   - request `eq_sanitypill_standard` tetap diproses pada jalur lama
   - hasil runtime tetap jujur `PurchaseProcessed(success=false, reason=insufficient_currency)`
 - katalog shop aktif sekarang benar-benar terisi:
-  - total `26` item (`MM=14`, `PP=4`, `Robux=8`)
+  - total `31` item (`MM=14`, `PP=7`, `Robux=10`)
   - jalur `PP` sudah ada sebagai prestige soft-currency
+  - jalur `PP -> MM` juga sudah source-controlled sebagai exchange soft-currency in-game
   - jalur `Robux` sudah source-controlled sebagai slot produksi (`GamePass` + `DeveloperProduct`)
 - harness monetization Studio sekarang punya probe readiness cepat:
   - action `StudioE2EControl:GetShopReadiness`
   - validasi live terbaru mengembalikan:
-    - `total=26 MM=14 PP=4 Robux=8 disabled=8 robuxMissingId=8`
+    - `total=31 MM=14 PP=7 Robux=10 disabled=10 robuxMissingId=10`
   - ini menutup blind spot “shop terlihat ada item, tapi status readiness Robux tidak terukur”
 - guard transaksi sekarang lebih ketat dan konsisten:
   - validasi saldo mengikuti mata uang item (`MM/PP`), tidak lagi hardcoded `MM`
@@ -842,6 +843,16 @@ Status:
     - reward summary `ppReward=2`
     - wallet after `PP=39`
   - artinya `PP` bukan lagi mata uang dekoratif di shop
+- validasi monetization live terbaru:
+  - `PurchaseItem(pp_to_mm_medium)` sukses menukar `PP -12` menjadi `MM +4200`
+  - `GrantMarketplacePurchase(pp_pack_small)` sukses memberi `PP +10`
+  - `GrantMarketplacePurchase(mm_pack_small)` sukses memberi `MM +2500`
+- fairness Ranked sekarang dijaga oleh source, bukan hanya kebiasaan desain:
+  - helper item diberi label `ClassicOnly`
+  - runtime Ranked menonaktifkan bonus `Reinforced Salt`, `Spirit Box` modded/elite, dan `Sanity Pill` helper
+  - validasi live yang sudah tembus:
+    - `Ranked`: `Garam` base stock (`usesRemaining = 2` setelah 1 pakai)
+    - `Classic`: `Garam` reinforced stock (`usesRemaining = 3` setelah 1 pakai)
 - UI shop sekarang menandai item yang belum siap:
   - tombol `SETUP` untuk item `Robux` yang `marketplaceId` belum valid
   - klik item yang belum siap tidak mengirim request buta ke server
@@ -1462,4 +1473,10 @@ Urutan yang paling masuk akal dari titik sekarang:
 - status jujur:
   - **SELESAI (slice jumpscare + empty-slot cleanup)**.
   - **PENDING** untuk pass artistik lanjutan (material/lighting, ambience brand final, VFX ambiance detail).
+
+## LAST NOTE - Creator Hub Verification
+
+- `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
+- hasil audit saat ini menunjukkan angka itu tampak seperti `UserId/account id`, bukan `GamePassId/ProductId` Creator Hub yang terverifikasi.
+- blocker publish Robux tetap sama sampai ID marketplace resmi dibuat di Creator Hub lalu diisi ke `src/shared/DataTypes/ShopMarketplaceConfig.lua`.
 
