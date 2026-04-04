@@ -120,6 +120,55 @@
   - `Classic`: `Garam` mendapat bonus reinforced (`usesRemaining = 3` setelah 1 pakai)
 - validasi live lanjutan di sesi ini sempat terganggu oleh drift runtime ghost Studio, bukan oleh jalur monetization
 
+## Update 2026-04-04 - Cosmetic Purchase And Equip Smoke Test
+
+- smoke test live Studio berhasil untuk jalur cosmetic non-`Robux`:
+  - grant wallet:
+    - `MM +5000`
+    - `PP +60`
+  - pembelian:
+    - `cos_accessory_wardingcharm`
+    - `pp_cos_head_nightoracle`
+  - equip:
+    - slot `accessory`
+    - slot `head`
+  - unequip:
+    - slot `accessory`
+    - slot `head`
+- bukti live:
+  - `PurchaseProcessed success=true` untuk kedua cosmetic
+  - `CosmeticRequestProcessed success=true` untuk equip dan unequip
+  - `CosmeticSnapshot` menunjukkan:
+    - `equippedCount = 2` setelah equip
+    - `equippedCount = 0` setelah unequip
+  - visual lobby ikut terpasang saat equip:
+    - `Workspace.ZyraaaVex.LobbyCosmeticVisuals`
+    - `AccessoryVisual = true`
+    - `HeadVisual = true`
+    - `LobbyCosmeticBillboard = true`
+- interpretasi:
+  - jalur cosmetic saat ini sudah aman sebagai monetization non-pay-to-win
+  - pembelian cosmetic terbukti hanya memengaruhi presentasi lobby/wardrobe, bukan helper gameplay
+
+## Update 2026-04-04 - Placeholder Entitlements Must Stay Disabled
+
+- audit source saat ini menunjukkan `class_dukun_unlock`, `class_detective_unlock`, dan `lifetime_bonus_pass` masih berada di status placeholder aman:
+  - ada di `ShopCatalog` dan `ShopMarketplaceConfig`
+  - ada state entitlement di `EconomySystem`
+  - belum ditemukan hook gameplay/class runtime yang sah untuk diaktifkan ke player live
+- konsekuensi implementasi:
+  - jangan isi `marketplaceId` production untuk item ini dulu
+  - jangan set `enabled = true`
+  - jangan pakai item ini sebagai alasan memberi:
+    - buff investigasi
+    - bonus reward
+    - helper Ranked
+    - unlock kelas yang memengaruhi kemenangan
+- jika nanti class system benar-benar dibuat, syarat minimumnya:
+  - cosmetic-only atau presentation-only untuk Ranked
+  - tidak memberi keunggulan investigasi/hunt/economy
+  - lolos review ulang compliance Roblox sebelum GamePass diaktifkan
+
 ## Note Terakhir
 
 - `10576163165` tampak seperti `UserId/account id`, bukan `GamePassId/ProductId` Creator Hub yang terverifikasi. Jangan dipakai sebagai `marketplaceId` production sampai ID marketplace resmi benar-benar dibuat di Creator Hub.

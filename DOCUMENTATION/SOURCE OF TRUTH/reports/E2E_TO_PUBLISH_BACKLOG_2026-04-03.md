@@ -1480,3 +1480,9 @@ Urutan yang paling masuk akal dari titik sekarang:
 - hasil audit saat ini menunjukkan angka itu tampak seperti `UserId/account id`, bukan `GamePassId/ProductId` Creator Hub yang terverifikasi.
 - blocker publish Robux tetap sama sampai ID marketplace resmi dibuat di Creator Hub lalu diisi ke `src/shared/DataTypes/ShopMarketplaceConfig.lua`.
 
+## LAST NOTE - Placeholder Entitlements Stay Disabled
+
+- `class_dukun_unlock`, `class_detective_unlock`, dan `lifetime_bonus_pass` tetap harus `disabled` sampai ada implementasi final yang lolos audit fairness dan compliance Roblox.
+- saat ini source hanya menunjukkan placeholder katalog/config/state, belum ada gameplay class live yang sah untuk diaktifkan.
+- jangan mengisi `marketplaceId` production untuk tiga item ini lebih dulu daripada `MM/PP` pack yang memang sudah jelas klasifikasinya.
+
