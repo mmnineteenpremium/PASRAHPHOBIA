@@ -373,6 +373,20 @@ local function resolveSanityService(deps)
 	return nil
 end
 
+local function resolveInventoryService(deps)
+	local inventory = Services.Get(deps, "InventorySystem")
+	if type(inventory) ~= "table" then
+		return nil
+	end
+	if type(inventory.HasItem) == "function" then
+		return inventory
+	end
+	if type(inventory.Service) == "table" and type(inventory.Service.HasItem) == "function" then
+		return inventory.Service
+	end
+	return nil
+end
+
 local function resolveEvidenceConfigSystem(deps)
 	local evidenceConfig = Services.Get(deps, "EvidenceConfigSystem")
 	if type(evidenceConfig) ~= "table" then
@@ -520,6 +534,7 @@ function EvidenceService.new(state, deps)
 	self._eventBus = resolveEventBus(self._deps)
 	self._ghostService = resolveGhostService(self._deps)
 	self._sanityService = resolveSanityService(self._deps)
+	self._inventoryService = resolveInventoryService(self._deps)
 	self._evidenceSync = resolveEvidenceSync(self._deps)
 	self._evidenceConfigSystem = resolveEvidenceConfigSystem(self._deps)
 
@@ -841,16 +856,35 @@ function EvidenceService:_generatePlacementId(toolType)
 	return string.format("%s_%s", tostring(toolType or "Tool"), HttpService:GenerateGUID(false))
 end
 
-function EvidenceService:_getDefaultToolStock(toolType)
+function EvidenceService:_playerOwnsItem(player, itemId)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false
+	end
+	if type(itemId) ~= "string" or itemId == "" then
+		return false
+	end
+	if type(self._inventoryService) ~= "table" or type(self._inventoryService.HasItem) ~= "function" then
+		return false
+	end
+	local ok, result = pcall(function()
+		return self._inventoryService:HasItem(player, itemId)
+	end)
+	return ok and result == true
+end
+
+function EvidenceService:_getDefaultToolStock(toolType, player)
 	local config = UTILITY_TOOL_CONFIG[toolType]
 	local stock = config and tonumber(config.maxUsesPerPlayer) or nil
 	if stock == nil then
 		return 0
 	end
+	if toolType == "Garam" and self:_playerOwnsItem(player, "eq_saltbag_reinforced") then
+		stock += 1
+	end
 	return math.max(0, math.floor(stock))
 end
 
-function EvidenceService:_consumePlayerToolStock(matchId, userId, toolType)
+function EvidenceService:_consumePlayerToolStock(matchId, player, userId, toolType)
 	if type(userId) ~= "number" or userId <= 0 then
 		return false, "invalid_player", 0
 	end
@@ -865,7 +899,7 @@ function EvidenceService:_consumePlayerToolStock(matchId, userId, toolType)
 	end
 
 	if userStock[toolType] == nil then
-		userStock[toolType] = self:_getDefaultToolStock(toolType)
+		userStock[toolType] = self:_getDefaultToolStock(toolType, player)
 	end
 
 	local current = math.max(0, math.floor(tonumber(userStock[toolType]) or 0))
@@ -924,7 +958,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
-	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, userId, "Garam")
+	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, player, userId, "Garam")
 	if stockOk ~= true then
 		return false, stockReason or "tool_out_of_stock", {
 			toolType = "Garam",
@@ -1017,7 +1051,7 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
-	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, userId, "Salib")
+	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, player, userId, "Salib")
 	if stockOk ~= true then
 		return false, stockReason or "tool_out_of_stock", {
 			toolType = "Salib",
@@ -1075,7 +1109,7 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 	local roomId = resolveRequestedRoomId(requestPayload, ghostState)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
-	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, userId, "Dupa")
+	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, player, userId, "Dupa")
 	if stockOk ~= true then
 		return false, stockReason or "tool_out_of_stock", {
 			toolType = "Dupa",

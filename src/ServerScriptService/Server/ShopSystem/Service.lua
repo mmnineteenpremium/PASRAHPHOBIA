@@ -4,6 +4,12 @@ local Service = {}
 Service.__index = Service
 
 local DEFAULT_PURCHASE_CURRENCY = "MM"
+local OWNED_ITEM_ATTRIBUTES = {
+	eq_flashlight_uv = "PasrahOwnsUVFlashlight",
+	eq_saltbag_reinforced = "PasrahOwnsReinforcedSaltBag",
+	eq_spiritbox_modded = "PasrahOwnsModdedSpiritBox",
+	pp_eq_spiritbox_elite = "PasrahOwnsEliteSpiritBox",
+}
 
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
@@ -171,6 +177,23 @@ function Service:GetCatalog()
     return self._state:Get("shopCatalog") or {}
 end
 
+function Service:_applyOwnedItemAttributes(player, snapshot)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return
+	end
+	local ownedLookup = {}
+	if type(snapshot) == "table" and type(snapshot.ownedItemIds) == "table" then
+		for _, itemId in ipairs(snapshot.ownedItemIds) do
+			if type(itemId) == "string" and itemId ~= "" then
+				ownedLookup[itemId] = true
+			end
+		end
+	end
+	for itemId, attributeName in pairs(OWNED_ITEM_ATTRIBUTES) do
+		player:SetAttribute(attributeName, ownedLookup[itemId] == true)
+	end
+end
+
 function Service:BuildClientSnapshot(player)
     local userId = toUserId(player)
     if not userId then
@@ -208,6 +231,7 @@ function Service:BuildClientSnapshot(player)
 
     table.sort(snapshot.ownedItemIds)
     snapshot.ownedCount = #snapshot.ownedItemIds
+    self:_applyOwnedItemAttributes(player, snapshot)
     return snapshot
 end
 
