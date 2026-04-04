@@ -8735,3 +8735,75 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - tone ruang sekarang lebih terbaca bahkan sebelum pemain sadar akan fog/grade
 - karena nilai color shift dijaga halus, pass ini tetap aman untuk horror readability dan UI overlay
+
+## 2026-04-05 - Ghost And Environment Spatial Audio Pass
+
+### Scope
+
+- menutup debt audio yang masih terlalu “2D”:
+  - `EnvironmentalAudio` dan `GhostAudio` selalu parent ke kamera
+  - padahal payload runtime sudah mulai punya `position` atau minimal `roomId`
+
+### Source Changes
+
+- `src/client/SoundSystem/Main.lua`
+  - tambah debug attrs:
+    - `PasrahAudioLastSpatialMode`
+    - `PasrahAudioLastSourcePosition`
+  - tambah `SPATIAL_SOUND_CATEGORIES` untuk:
+    - `EnvironmentalAudio`
+    - `GhostAudio`
+  - tambah resolver spatial:
+    - `_resolveActiveMatchContainer(matchId)`
+    - `_resolveRoomAnchor(matchId, roomId)`
+    - `_ensureRuntimeAudioEmitterFolder()`
+    - `_createSpatialEmitter(position, category)`
+    - `_resolvePlaybackTarget(category, payload)`
+  - `EnvironmentalAudio/GhostAudio` sekarang:
+    - memakai emitter part transparan jika payload membawa `position`
+    - atau mencari room anchor di `Workspace.ActiveMatches.Match_<id>` jika hanya ada `roomId`
+    - jatuh ke `camera_fallback` jika data ruang belum cukup
+  - runtime sound spatial juga sekarang punya profile rolloff:
+    - `RollOffMode = InverseTapered`
+    - `RollOffMinDistance = 8`
+    - `RollOffMaxDistance` disesuaikan kategori
+  - `_recordAudioDebug()` sekarang merekam mode spatial dan posisi sumber audio
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+  - tambah action `TriggerAudioCue`
+  - kategori uji yang didukung:
+    - `AmbientAudio`
+    - `EnvironmentalAudio`
+    - `GhostAudio`
+    - `FearAudio`
+    - `HuntAudio`
+    - `JumpscareAudio`
+  - action ini menerima:
+    - `matchId`
+    - `cue`
+    - `eventType`
+    - `roomId`
+    - `position`
+    - `intensity`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_spatial_audio_build.rbxlx`
+- validasi live Studio:
+  - `CreateRoom -> HostStart(HauntedHouse)` sukses (`matchCount = 1`)
+  - `TriggerAudioCue(EnvironmentalAudio, env_doorslam, position=1215.25,3.5,-25)` menghasilkan:
+    - `PasrahAudioLastCategory = EnvironmentalAudio`
+    - `PasrahAudioLastCue = env_doorslam`
+    - `PasrahAudioLastSpatialMode = position`
+    - `PasrahAudioLastSourcePosition = 1215.25, 3.50, -25.00`
+    - `Workspace.RuntimeAudioEmitters` berisi emitter runtime
+  - `TriggerAudioCue(GhostAudio, ghost_manifest, roomId=Kitchen)` menghasilkan:
+    - `PasrahAudioLastCategory = GhostAudio`
+    - `PasrahAudioLastCue = ghost_manifest`
+    - `PasrahAudioLastSpatialMode = room_anchor`
+    - `PasrahAudioLastSourcePosition = 1230.00, 0.50, -25.00`
+
+### Interpretation
+
+- ghost dan disturbance map sekarang terasa lebih “datang dari ruang”, bukan selalu menempel di kepala pemain
+- pass ini juga menyiapkan fondasi tuning artistik berikutnya karena sekarang kita punya harness untuk menguji cue spatial secara deterministik
