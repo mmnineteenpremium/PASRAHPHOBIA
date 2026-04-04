@@ -1001,6 +1001,22 @@ Done jika:
 
 - pembelian Roblox benar-benar bekerja end-to-end
 
+## Update 2026-04-05 19:58 ICT
+
+- `P3.15 Monetization bridge Roblox` naik lagi di sisi relog/ownership sync:
+  - server `ShopSystem.Controller` sekarang mengirim `MarketplaceOwnershipSynced` setelah `UserOwnsGamePassAsync` berhasil mensinkron entitlement yang memang dimiliki pemain
+  - payload itu membawa snapshot + `itemIds` yang benar-benar tersinkron
+  - client `ShopUI` sekarang menerima sync ownership ini tanpa membuka shop secara paksa
+  - copy UI juga lebih jujur untuk:
+    - `ownership_synced`
+    - `receipt_granted`
+    - `purchase_cancelled`
+- validasi:
+  - build source sukses: `_tmp_monetization_sync_build.rbxlx`
+- status:
+  - **SELESAI (ownership sync surfacing baseline)**.
+  - **PENDING** tetap pada Creator Hub `marketplaceId` nyata dan smoke test production prompt `cancel/success`.
+
 ### 16. Licensing dan attribution
 
 Status:

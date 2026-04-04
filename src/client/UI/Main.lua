@@ -3312,7 +3312,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 	elseif remoteName == "PurchaseEvent" then
 		self._uiState.ShopUI.lastEvent = eventName
 		self._shopState.lastEvent = eventName
-		if eventName ~= "ShopSnapshot" then
+		if eventName ~= "ShopSnapshot" and eventName ~= "MarketplaceOwnershipSynced" then
 			self._uiState.ShopUI.visible = true
 			self:_closeConflictingWindows("ShopUI")
 		end
@@ -3321,6 +3321,13 @@ function UISystem:_onServerEvent(remoteName, payload)
 		end
 		if eventName == "ShopSnapshot" then
 			self._shopState.lastMessage = "Snapshot shop diperbarui."
+		elseif eventName == "MarketplaceOwnershipSynced" then
+			local syncedCount = type(payload) == "table" and type(payload.itemIds) == "table" and #payload.itemIds or 0
+			if syncedCount > 0 then
+				self._shopState.lastMessage = string.format("Ownership Roblox tersinkron: %d item.", syncedCount)
+			else
+				self._shopState.lastMessage = "Ownership Roblox tersinkron."
+			end
 		elseif eventName == "PurchasePromptRequested" then
 			self:_requestMarketplacePrompt(payload or {})
 		elseif eventName == "PurchaseProcessed" then
@@ -3331,15 +3338,25 @@ function UISystem:_onServerEvent(remoteName, payload)
 				reason = payload and payload.reason or nil,
 				requestId = payload and payload.requestId or nil,
 			}
-			self._shopState.lastMessage = payload and payload.success == true
-				and "Pembelian berhasil diproses."
-				or ("Pembelian gagal: " .. titleCaseToken(payload and payload.reason or "unknown"))
+			if payload and payload.success == true then
+				if payload.reason == "ownership_synced" then
+					self._shopState.lastMessage = "Ownership Roblox berhasil disinkronkan."
+				elseif payload.reason == "receipt_granted" then
+					self._shopState.lastMessage = "Pembelian Roblox berhasil dikreditkan."
+				else
+					self._shopState.lastMessage = "Pembelian berhasil diproses."
+				end
+			elseif payload and payload.reason == "purchase_cancelled" then
+				self._shopState.lastMessage = "Prompt pembelian ditutup."
+			else
+				self._shopState.lastMessage = "Pembelian gagal: " .. titleCaseToken(payload and payload.reason or "unknown")
+			end
 			local purchasedItem = findShopCatalogItem(self._shopState.catalog, payload and payload.itemId or nil)
 			if payload and payload.success == true and type(purchasedItem) == "table" and purchasedItem.category == "Cosmetic" then
 				self:_requestCosmeticSnapshot(true)
 			end
 		end
-		if eventName ~= "ShopSnapshot" then
+		if eventName ~= "ShopSnapshot" and eventName ~= "MarketplaceOwnershipSynced" then
 			self._windowDismissed.ShopUI = false
 		end
 		self:_refreshShopPanel()
