@@ -8981,3 +8981,47 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - `LightFlicker` sekarang benar-benar terlihat sebagai event ruang, bukan sekadar audio atau grading kamera
 - ini mendorong E2E yang lebih jujur karena pemain bisa mendengar dan sekaligus melihat sumber ancaman di lingkungan
+
+## 2026-04-05 - Door And Window Local Reaction Pass
+
+### Scope
+
+- melanjutkan pass local room reaction dari `LightFlicker` ke objek map lain yang pemain benar-benar lihat:
+  - `DoorSlam`
+  - `WindowKnock`
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah `_pulseNearbyProps(centerPosition, radius, tokenSet, transformFactory, attrName, requiredAncestorToken)`
+    - mencari `BasePart` di match aktif
+    - bisa dibatasi ke ancestor tertentu (`Doors` atau `Windows`)
+    - memberi transform singkat lalu restore
+  - `_triggerEnvironmentalShock(payload)` sekarang:
+    - `doorslam` -> pulse part di bawah folder `Doors` dengan rotasi singkat
+    - `windowknock` -> pulse part di bawah folder `Windows` dengan dorongan kecil ke depan/belakang
+  - debug attr yang dipakai:
+    - `PasrahVFXLastProfile`
+    - `PasrahVFXLastPropCount`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_prop_reaction_build.rbxlx`
+  - `_tmp_prop_reaction_filter_build.rbxlx`
+- validasi live Studio:
+  - `CreateRoom -> HostStart(HauntedHouse)` sukses (`matchCount = 1`)
+  - `DoorSlam` pada area `LivingRoom`:
+    - `PasrahVFXLastProfile = doorslam`
+    - `PasrahVFXLastPropCount = 2`
+    - `Door_LivingRoom` kembali ke `CFrame` semula setelah pulse
+  - `WindowKnock` pada `Window_S_1_Mouth`:
+    - `PasrahVFXLastProfile = windowknock`
+    - `PasrahVFXLastPropCount = 2`
+    - `windowMid.Z = 69.22` dari posisi awal `69.40`
+    - lalu kembali ke posisi awal
+
+### Interpretation
+
+- `DoorSlam` dan `WindowKnock` sekarang benar-benar terasa seperti event objek ruang, bukan hanya audio abstrak
+- pembatasan ke folder `Doors/Windows` juga membuat reaksi visual lebih bersih dan tidak ikut memukul frame atau struktur yang salah

@@ -761,6 +761,59 @@ function VFXController:_pulseNearbyLights(centerPosition, radius, profileName)
 	return affected
 end
 
+function VFXController:_pulseNearbyProps(centerPosition, radius, tokenSet, transformFactory, attrName, requiredAncestorToken)
+	if typeof(centerPosition) ~= "Vector3" then
+		return 0
+	end
+
+	local container = self:_resolveActiveMatchContainer()
+	if not container then
+		return 0
+	end
+
+	local affected = 0
+	for _, descendant in ipairs(container:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			local nameToken = normalizeCueToken(descendant.Name)
+			local matched = false
+			for _, token in ipairs(tokenSet or {}) do
+				if string.find(nameToken, normalizeCueToken(token), 1, true) then
+					matched = true
+					break
+				end
+			end
+			local ancestorMatched = requiredAncestorToken == nil
+			if matched and ancestorMatched == false then
+				local cursor = descendant.Parent
+				while cursor do
+					if normalizeCueToken(cursor.Name) == normalizeCueToken(requiredAncestorToken) then
+						ancestorMatched = true
+						break
+					end
+					cursor = cursor.Parent
+				end
+			end
+			if matched and ancestorMatched and (descendant.Position - centerPosition).Magnitude <= (radius or 20) then
+				affected += 1
+				local originalCFrame = descendant.CFrame
+				local bounce = transformFactory and transformFactory(descendant) or CFrame.new()
+				descendant.CFrame = originalCFrame * bounce
+				task.delay(0.09, function()
+					if descendant.Parent then
+						descendant.CFrame = originalCFrame
+					end
+				end)
+			end
+		end
+	end
+
+	local localPlayer = Players.LocalPlayer
+	if localPlayer and type(attrName) == "string" and attrName ~= "" then
+		localPlayer:SetAttribute(attrName, affected)
+	end
+	return affected
+end
+
 function VFXController:Stop()
 	for _, conn in ipairs(self._connections) do
 		conn:Disconnect()
@@ -1010,6 +1063,30 @@ function VFXController:_triggerEnvironmentalShock(payload)
 	self:_recordVFXDebug("EnvironmentalAudioTriggered", eventToken)
 	if eventToken == "lightflicker" then
 		self:_pulseNearbyLights(self:_resolveEventPosition(payload), 30, eventToken)
+	elseif eventToken == "doorslam" then
+		self:_pulseNearbyProps(
+			self:_resolveEventPosition(payload),
+			24,
+			{ "door" },
+			function(descendant)
+				local sign = descendant.Position.X >= 0 and 1 or -1
+				return CFrame.Angles(0, math.rad(11 * sign), 0)
+			end,
+			"PasrahVFXLastPropCount",
+			"Doors"
+		)
+	elseif eventToken == "windowknock" then
+		self:_pulseNearbyProps(
+			self:_resolveEventPosition(payload),
+			26,
+			{ "window" },
+			function(descendant)
+				local sign = descendant.Position.Z >= 0 and -1 or 1
+				return CFrame.new(0, 0, 0.18 * sign)
+			end,
+			"PasrahVFXLastPropCount",
+			"Windows"
+		)
 	end
 	self:_playTransientShock(cloned)
 end
