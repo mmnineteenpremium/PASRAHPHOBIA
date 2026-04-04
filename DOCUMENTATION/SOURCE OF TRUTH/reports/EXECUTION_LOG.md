@@ -6838,3 +6838,52 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - asset footstep yang sebelumnya hanya tersimpan sekarang benar-benar hidup di runtime.
 - kualitas rasa movement naik tanpa menambah dependency server baru atau layer UI baru.
+
+## 2026-04-04 - Environmental Audio Cue Routing
+
+### Scope
+
+- memecah resolver `EnvironmentalAudio` di client agar cue lingkungan tidak selalu jatuh ke satu template generik.
+- menambah atribut debug ringan pada `LocalPlayer` agar pemilihan template bisa divalidasi langsung dari Studio.
+
+### Root Cause
+
+- jalur `SoundSystem` sebelumnya selalu memetakan `EnvironmentalAudio` ke `EnvironmentalCreak_01`.
+- akibatnya event seperti `SuddenWhisper`, `ShadowApparition`, dan `FootstepSound` terdengar salah konteks walau asset yang lebih tepat sebenarnya sudah ada di source.
+
+### Implementation Notes
+
+- `src/client/SoundSystem/Main.lua` sekarang punya resolver khusus untuk `EnvironmentalAudio`.
+- pemetaan baseline yang aktif:
+  - `SuddenWhisper` -> `GhostWhisper_01`
+  - `ShadowApparition` / `TemperatureDrop` -> `GhostManifest_01`
+  - `FootstepSound` -> folder `Footsteps` dengan fallback material-aware (`Woodstep_01`, `MetalStep_01`, `ConcreteStep_01`)
+  - `DoorSlam` / `WindowKnock` / fallback environment -> `EnvironmentalCreak_01`
+- ditambahkan atribut debug:
+  - `PasrahAudioLastCategory`
+  - `PasrahAudioLastTemplate`
+  - `PasrahAudioLastCue`
+  - `PasrahAudioLastEventType`
+  - `PasrahAudioLastSoundId`
+  - `PasrahAudioPlayCount`
+
+### Validation Notes
+
+- build source sukses: `_tmp_environmental_audio_build.rbxlx`
+- sesi client sempat memuat `SoundSystem` lama; saya stop/start play agar `PlayerScripts` reload dari source terbaru.
+- validasi resolver live di Studio menunjukkan:
+  - `SuddenWhisper` -> `GhostWhisper_01`
+  - `FootstepSound` dengan `surfaceMaterial = WoodPlanks` -> `Woodstep_01`
+  - `ShadowApparition` -> `GhostManifest_01`
+  - `DoorSlam` -> `EnvironmentalCreak_01`
+- validasi debug attr setelah dua trigger berurutan menunjukkan:
+  - `PasrahAudioLastCategory = EnvironmentalAudio`
+  - `PasrahAudioLastTemplate = Woodstep_01`
+  - `PasrahAudioLastEventType = FootstepSound`
+  - `PasrahAudioPlayCount = 2`
+  - `PasrahAudioLastSoundId = rbxassetid://104336169985098`
+
+### Interpretation
+
+- audio lingkungan sekarang sudah mengikuti konteks cue, bukan sekadar satu suara creak untuk semua kejadian.
+- jalur validasi teknis untuk audio client sekarang lebih kuat, sehingga pass SFX berikutnya tidak perlu menebak template mana yang benar-benar dipakai runtime.
