@@ -80,6 +80,22 @@ local function createPart(parent, name, size, position, material, color, transpa
 	return part
 end
 
+local function setPartColor(model, partName, color, transparency, material)
+	local part = model and model:FindFirstChild(partName, true)
+	if part and part:IsA("BasePart") then
+		if color then
+			part.Color = color
+		end
+		if transparency ~= nil then
+			part.Transparency = transparency
+		end
+		if material then
+			part.Material = material
+		end
+	end
+	return part
+end
+
 local function buildFallbackModel(toolType)
 	local model = Instance.new("Model")
 	model.Name = toolType
@@ -87,22 +103,33 @@ local function buildFallbackModel(toolType)
 	if toolType == "Garam" then
 		createPart(model, "PileMain", Vector3.new(1.8, 0.14, 1.2), Vector3.new(0, 0.05, 0), Enum.Material.Sand, Color3.fromRGB(245, 245, 238))
 		createPart(model, "PileAccent", Vector3.new(0.88, 0.1, 0.52), Vector3.new(0.28, 0.09, 0.08), Enum.Material.Sand, Color3.fromRGB(250, 250, 244))
+		createPart(model, "PileAccent2", Vector3.new(0.46, 0.08, 0.34), Vector3.new(-0.42, 0.08, 0.18), Enum.Material.Sand, Color3.fromRGB(252, 252, 246))
+		createPart(model, "Satchel", Vector3.new(0.42, 0.28, 0.2), Vector3.new(-0.74, 0.14, 0.32), Enum.Material.Fabric, Color3.fromRGB(148, 126, 92))
+		createPart(model, "Seal", Vector3.new(0.08, 0.08, 0.18), Vector3.new(-0.58, 0.2, 0.32), Enum.Material.Metal, Color3.fromRGB(188, 170, 128))
+		createPart(model, "SaltGlow", Vector3.new(1.52, 0.03, 0.94), Vector3.new(0.04, 0.02, 0.02), Enum.Material.Neon, Color3.fromRGB(224, 236, 255), 0.9)
 		createPart(model, "TrackLeft", Vector3.new(0.22, 0.04, 0.58), Vector3.new(-0.34, 0.02, -0.44), Enum.Material.Slate, Color3.fromRGB(64, 64, 64), 1)
 		createPart(model, "TrackRight", Vector3.new(0.22, 0.04, 0.58), Vector3.new(0.32, 0.02, -0.18), Enum.Material.Slate, Color3.fromRGB(64, 64, 64), 1)
 	elseif toolType == "Salib" then
 		createPart(model, "Stem", Vector3.new(0.26, 2.1, 0.2), Vector3.new(0, 1.05, 0), Enum.Material.Wood, Color3.fromRGB(92, 64, 42))
 		createPart(model, "Crossbar", Vector3.new(1.28, 0.24, 0.2), Vector3.new(0, 1.46, 0), Enum.Material.Wood, Color3.fromRGB(100, 72, 48))
 		createPart(model, "Base", Vector3.new(0.72, 0.24, 0.72), Vector3.new(0, 0.12, 0), Enum.Material.Slate, Color3.fromRGB(38, 38, 42))
+		createPart(model, "HaloBack", Vector3.new(1.48, 1.48, 0.08), Vector3.new(0, 1.46, 0.02), Enum.Material.Neon, Color3.fromRGB(255, 226, 130), 0.78)
+		createPart(model, "GroundAura", Vector3.new(1.46, 0.04, 1.46), Vector3.new(0, 0.02, 0), Enum.Material.Neon, Color3.fromRGB(255, 220, 126), 0.82)
 		createPart(model, "Charge1", Vector3.new(0.18, 0.18, 0.18), Vector3.new(-0.36, 1.86, 0), Enum.Material.Neon, Color3.fromRGB(255, 211, 94))
 		createPart(model, "Charge2", Vector3.new(0.18, 0.18, 0.18), Vector3.new(0, 1.98, 0), Enum.Material.Neon, Color3.fromRGB(255, 211, 94))
 		createPart(model, "Charge3", Vector3.new(0.18, 0.18, 0.18), Vector3.new(0.36, 1.86, 0), Enum.Material.Neon, Color3.fromRGB(255, 211, 94))
 	elseif toolType == "Dupa" then
 		createPart(model, "Stick", Vector3.new(1.5, 0.12, 0.18), Vector3.new(0, 0.08, 0), Enum.Material.Wood, Color3.fromRGB(78, 56, 42))
 		createPart(model, "Binding", Vector3.new(0.12, 0.16, 0.22), Vector3.new(-0.34, 0.09, 0), Enum.Material.Fabric, Color3.fromRGB(146, 120, 86))
+		createPart(model, "AshBed", Vector3.new(0.44, 0.04, 0.28), Vector3.new(0.12, 0.03, 0), Enum.Material.Slate, Color3.fromRGB(76, 72, 66))
+		createPart(model, "CharmWrap", Vector3.new(0.14, 0.18, 0.24), Vector3.new(0.08, 0.11, 0), Enum.Material.Fabric, Color3.fromRGB(124, 76, 54))
 		createPart(model, "Ember", Vector3.new(0.12, 0.12, 0.12), Vector3.new(0.76, 0.1, 0), Enum.Material.Neon, Color3.fromRGB(255, 124, 56))
+		createPart(model, "RepelAura", Vector3.new(0.94, 0.06, 0.94), Vector3.new(0.42, 0.03, 0), Enum.Material.Neon, Color3.fromRGB(106, 186, 196), 0.92)
 		createPart(model, "Smoke1", Vector3.new(0.22, 0.24, 0.22), Vector3.new(0.78, 0.44, 0), Enum.Material.Neon, Color3.fromRGB(172, 178, 186), 0.5)
 		createPart(model, "Smoke2", Vector3.new(0.28, 0.26, 0.28), Vector3.new(0.63, 0.68, 0.08), Enum.Material.Neon, Color3.fromRGB(176, 184, 192), 0.62)
 		createPart(model, "Smoke3", Vector3.new(0.34, 0.28, 0.34), Vector3.new(0.9, 0.9, -0.06), Enum.Material.Neon, Color3.fromRGB(186, 192, 198), 0.7)
+		createPart(model, "Smoke4", Vector3.new(0.26, 0.24, 0.26), Vector3.new(0.52, 0.86, 0.12), Enum.Material.Neon, Color3.fromRGB(178, 186, 192), 0.76)
+		createPart(model, "Smoke5", Vector3.new(0.22, 0.2, 0.22), Vector3.new(1.04, 1.08, -0.04), Enum.Material.Neon, Color3.fromRGB(190, 196, 200), 0.82)
 	else
 		createPart(model, "Core", Vector3.new(1, 1, 1), Vector3.new(), Enum.Material.SmoothPlastic, Color3.fromRGB(200, 200, 200))
 	end
@@ -202,6 +229,9 @@ function UtilityToolVisuals:MarkSaltTriggered(matchId, placementId)
 	if pileAccent and pileAccent:IsA("BasePart") then
 		pileAccent.Color = Color3.fromRGB(248, 248, 242)
 	end
+	setPartColor(model, "SaltGlow", Color3.fromRGB(208, 220, 255), 0.32, Enum.Material.Neon)
+	setPartColor(model, "Satchel", Color3.fromRGB(112, 92, 68), nil, nil)
+	setPartColor(model, "Seal", Color3.fromRGB(222, 206, 160), 0.05, Enum.Material.Metal)
 
 	return true
 end
@@ -222,6 +252,49 @@ function UtilityToolVisuals:UpdateCrucifixCharges(matchId, placementId, chargesR
 			chargePart.Color = active and Color3.fromRGB(255, 211, 94) or Color3.fromRGB(82, 82, 82)
 			chargePart.Material = active and Enum.Material.Neon or Enum.Material.SmoothPlastic
 		end
+	end
+
+	local auraTransparency = 0.9
+	local auraColor = Color3.fromRGB(126, 108, 84)
+	if remaining >= 3 then
+		auraTransparency = 0.48
+		auraColor = Color3.fromRGB(255, 226, 132)
+	elseif remaining == 2 then
+		auraTransparency = 0.62
+		auraColor = Color3.fromRGB(240, 194, 112)
+	elseif remaining == 1 then
+		auraTransparency = 0.76
+		auraColor = Color3.fromRGB(214, 154, 88)
+	end
+	setPartColor(model, "HaloBack", auraColor, auraTransparency, Enum.Material.Neon)
+	setPartColor(model, "GroundAura", auraColor, math.min(0.9, auraTransparency + 0.06), Enum.Material.Neon)
+
+	return true
+end
+
+function UtilityToolVisuals:ActivateSmudge(matchId, placementId, huntRepelled)
+	local placement = self:_getPlacement(matchId, placementId)
+	local model = placement and placement.model
+	if not (model and model.Parent) then
+		return false
+	end
+
+	local auraColor = huntRepelled and Color3.fromRGB(112, 214, 224) or Color3.fromRGB(198, 170, 118)
+	local emberColor = huntRepelled and Color3.fromRGB(120, 234, 242) or Color3.fromRGB(255, 148, 84)
+	setPartColor(model, "Ember", emberColor, 0.02, Enum.Material.Neon)
+	setPartColor(model, "RepelAura", auraColor, huntRepelled and 0.34 or 0.48, Enum.Material.Neon)
+	for smokeIndex = 1, 5 do
+		local transparency = 0.44 + ((smokeIndex - 1) * 0.08)
+		if huntRepelled then
+			transparency -= 0.08
+		end
+		setPartColor(
+			model,
+			"Smoke" .. tostring(smokeIndex),
+			huntRepelled and Color3.fromRGB(188, 236, 240) or Color3.fromRGB(204, 196, 184),
+			math.clamp(transparency, 0.18, 0.88),
+			Enum.Material.Neon
+		)
 	end
 
 	return true

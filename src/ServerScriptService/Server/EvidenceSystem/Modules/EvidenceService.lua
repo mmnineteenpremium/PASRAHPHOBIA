@@ -1247,6 +1247,9 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 	table.insert(utilityState.smudgeEffects, effect)
 	self:_saveUtilityState(matchId, utilityState)
 	local visualPlaced = self:_placeUtilityVisual(matchId, "Dupa", placementId, player, requestPayload) ~= nil
+	if visualPlaced then
+		self._utilityVisuals:ActivateSmudge(matchId, placementId, false)
+	end
 	self:_destroyUtilityVisualLater(matchId, placementId, config.durationSeconds)
 
 	local resultingSanity = nil
@@ -1281,6 +1284,7 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 	})
 
 	if huntRepelled then
+		self._utilityVisuals:ActivateSmudge(matchId, placementId, true)
 		self:_publish("GhostRepelled", {
 			matchId = matchId,
 			now = now,

@@ -8114,3 +8114,46 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - ini mengurangi misleading monetization di jalur `Royal Pass`
 - pemain tidak lagi didorong ke CTA pembelian yang belum seharusnya aktif
+
+## 2026-04-04 - Utility Tool Roster Visual Pass
+
+### Scope
+
+- menaikkan kualitas visual world-space `Garam`, `Salib`, dan `Dupa` tanpa menambah owner sistem baru
+
+### Source Changes
+
+- `src/ReplicatedStorage/Assets/Models/Tools/Garam.model.json`
+  - tambah `PileAccent2`, `Satchel`, `Seal`, `SaltGlow`
+- `src/ReplicatedStorage/Assets/Models/Tools/Salib.model.json`
+  - tambah `HaloBack`, `GroundAura`
+- `src/ReplicatedStorage/Assets/Models/Tools/Dupa.model.json`
+  - tambah `AshBed`, `CharmWrap`, `RepelAura`, `Smoke4`, `Smoke5`
+- `src/ServerScriptService/Server/EvidenceSystem/Modules/UtilityToolVisuals.lua`
+  - `MarkSaltTriggered()` sekarang ikut menyalakan `SaltGlow` dan memoles detail bag
+  - `UpdateCrucifixCharges()` sekarang ikut mengubah aura `HaloBack/GroundAura`
+  - `ActivateSmudge()` baru untuk mengubah `RepelAura` dan smoke state sesuai repel aktif
+- `src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceService.lua`
+  - `Dupa` sekarang memanggil `ActivateSmudge()` saat aktif dan saat repel hunt sukses
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_tool_roster_visuals_build.rbxlx`
+- validasi source sync live:
+  - `ReplicatedStorage.Assets.Models.Tools.Garam` -> `SaltGlow=true`, `descendants=8`
+  - `ReplicatedStorage.Assets.Models.Tools.Salib` -> `HaloBack=true`, `GroundAura=true`, `descendants=8`
+  - `ReplicatedStorage.Assets.Models.Tools.Dupa` -> `RepelAura=true`, `Smoke4=true`, `Smoke5=true`, `descendants=11`
+- validasi runtime live:
+  - `CreateRoom -> HostStart -> ForceHunt -> UseEvidenceTool(Dupa)` sukses
+  - `Workspace.ActiveMatches.Match_match_1.InvestigationTools.Dupa_*` hadir
+  - `RepelAura.Transparency = 0.34`
+  - `Smoke4.Transparency = 0.60`
+  - `Smoke5.Transparency = 0.68`
+  - material aura/smoke runtime terbaca `Enum.Material.Neon`
+
+### Interpretation
+
+- slice utility tool tidak lagi terasa placeholder polos
+- state visual sekarang mulai jujur mengikuti event gameplay yang memang aktif
+- `tool roster` belum selesai penuh karena icon/non-utility presentation masih perlu pass lanjutan
