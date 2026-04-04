@@ -6826,8 +6826,8 @@ function UISystem:_refreshRoyalPassPanel()
 	}, "\n")
 
 	local footerText = premiumOwned
-		and "Premium track aktif. Reward premium mengikuti snapshot server yang sedang berjalan."
-		or "Belum premium. Pembelian premium track tetap harus lewat purchase prompt Roblox resmi."
+		and "Premium track aktif. Bonus currency premium khusus dimatikan; jalur ini harus tetap cosmetic/progression-safe."
+		or "Belum premium. Pembelian premium track tetap harus lewat purchase prompt Roblox resmi dan tidak boleh memberi bonus pay-to-win."
 
 	self:_refreshWindowText(
 		"RoyalPassUI",

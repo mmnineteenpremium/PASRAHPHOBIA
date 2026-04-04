@@ -7937,3 +7937,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - ini membantu pemain dan reviewer melihat bahwa `UV Flashlight Mk2` bukan helper kemenangan `Ranked`, melainkan variasi visual flashlight
+
+## 2026-04-04 - Premium Royal Pass Currency Bonus Removed
+
+### Scope
+
+- memastikan `royalpass_premium_track` tidak menjadi jalur `Robux -> bonus currency` yang bertentangan dengan target non-pay-to-win
+
+### Source Changes
+
+- `src/ServerScriptService/Server/RoyalPassSystem/Service.lua`
+  - `_rewardForTier()` tidak lagi memberi bonus currency ekstra untuk owner premium
+- `src/shared/DataTypes/ShopCatalog.lua`
+  - `royalpass_premium_track.setupHint` diperkeras agar hanya boleh aktif jika jalur premium tetap cosmetic/progression-safe
+- `src/client/UI/Main.lua`
+  - footer `RoyalPassUI` sekarang menjelaskan bahwa bonus currency premium khusus dimatikan
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_royalpass_premium_safe_build.rbxlx`
+
+### Interpretation
+
+- langkah ini menjaga arah monetization tetap konsisten dengan keputusan produk:
+  - `Robux` tidak dipakai untuk membuat game lebih mudah
+  - `Premium Track` tidak boleh diam-diam menjadi top-up advantage melalui reward tier ekstra

@@ -256,7 +256,7 @@ local ShopCatalog = {
         royalPassPremium = true,
         grantItem = false,
         enabled = false,
-        setupHint = "Isi marketplaceId Creator Hub agar item aktif.",
+        setupHint = "Tahan dulu. Premium track Robux hanya boleh aktif jika reward premiumnya tetap cosmetic/progression-safe dan tidak memberi bonus currency khusus.",
     },
     {
         id = "class_dukun_unlock",

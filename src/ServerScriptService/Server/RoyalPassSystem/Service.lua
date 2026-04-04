@@ -111,9 +111,6 @@ function Service:_rewardForTier(tier, premium)
         currency = 100 + (tier * 20),
         xp = 25 + (tier * 5),
     }
-    if premium then
-        reward.currency += 50
-    end
     return reward
 end
 
