@@ -22,11 +22,11 @@ Slot canonical yang **masih kosong** di source aktif sekarang tinggal:
 Slot canonical yang **sudah punya fallback runtime aman** walau asset Roblox final belum di-upload:
 
 1. `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
-   - runtime canonical `UISystem` sekarang memakai fallback built-in `rbxasset://sounds/volume_slider.ogg`
-   - validasi live `2026-04-03` membuktikan klik tombol lobby canonical memang memilih cue itu
+   - runtime canonical `UISystem` sekarang memakai asset source-controlled `rbxassetid://115959318`
+   - validasi live terbaru membuktikan klik tombol lobby canonical memang memilih cue ini
    - status:
-     - cukup untuk micro-feedback runtime saat ini
-     - tetap boleh diganti nanti dengan signature click `PASRAHPHOBIA` setelah asset final di-upload
+     - blocker runtime sudah tertutup
+     - tetap boleh diganti nanti jika direction audio brand berubah
 
 Slot canonical yang **sudah terisi lagi** dan sudah tervalidasi runtime:
 
@@ -159,14 +159,14 @@ Semua kandidat di bawah dipilih karena lisensinya jelas dari halaman sumber dan 
   - klik tombol UI utama
   - dipakai untuk micro-feedback pada lobby, room browser, shop, dan panel auxiliary
 - Current runtime fallback:
-  - `rbxasset://sounds/volume_slider.ogg`
-  - dipakai langsung dari `UISystem` sebagai fallback built-in Roblox
+  - `rbxassetid://115959318`
+  - dipakai langsung dari template canonical `ButtonClick_01`
 - Status:
   - blocker runtime sudah tertutup
-  - blocker brand/audio-direction masih terbuka kalau nanti ingin cue khas sendiri
+  - cue brand baseline sudah hidup; penggantian selanjutnya opsional
 - Candidate final:
   - optional
-  - hanya diperlukan jika ingin mengganti fallback built-in dengan signature click yang lebih khas
+  - hanya diperlukan jika ingin mengganti signature click sekarang dengan versi brand lain
 
 ## Kenapa Belum Langsung Di-apply
 

@@ -27,13 +27,14 @@ Aturan baca:
      - `src/ReplicatedStorage/Assets/Models/Ghosts/Pocong.model.json`
      - `src/ReplicatedStorage/Assets/GhostVisualProfiles/Pocong.lua`
    - Provenance status:
-     - `user-asserted`
+     - `verified`
    - Notes:
-     - user menyatakan asset berasal dari Sketchfab dan memberi short link `https://skfb.ly/pFDOZ`
-     - bukti lisensi final belum diarsipkan ke repo pada batch ini
+     - source diverifikasi langsung pada `2026-04-05` ke halaman final `https://sketchfab.com/3d-models/pocong-d84121c5b6084c72851113afbdbd5b99`
+     - author terverifikasi: `alterego.visual`
+     - lisensi terverifikasi: `CC BY 4.0`
+     - repo sekarang menyimpan katalog attribution runtime di `src/shared/DataTypes/AssetAttributionCatalog.lua`
    - Publish gate:
-     - simpan screenshot halaman lisensi + URL final ke repo sebelum publish
-     - jangan anggap `verified` hanya karena asset sudah masuk ke Roblox account
+     - pastikan attribution text tetap tampil di experience/credits saat layout final sudah dikunci
 
 ### Audio active
 
@@ -127,19 +128,20 @@ Aturan baca:
      - `AssetTypeId = 3`
      - asset ini tidak lagi dianggap abu-abu untuk publish gate
 
-8. `ButtonClick` runtime fallback
+8. `ButtonClick_01`
    - Asset:
-     - `rbxasset://sounds/volume_slider.ogg`
+     - `rbxassetid://115959318`
    - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
      - `src/client/UI/Main.lua`
    - Provenance status:
      - `verified`
    - Notes:
-     - fallback built-in Roblox dipakai langsung oleh `UISystem` saat template `ButtonClick_01` belum punya asset final
-     - validasi live `2026-04-03` membuktikan klik tombol lobby canonical memilih cue built-in ini
+     - `ButtonClick_01` sekarang memakai signature click runtime canonical
+     - validasi live `2026-04-05` membuktikan template source membaca `rbxassetid://115959318`
    - Publish gate:
-     - aman sebagai fallback runtime
-     - tetap boleh diganti nanti jika ingin signature click brand sendiri
+     - aman sebagai cue UI canonical saat ini
+     - tetap boleh diganti nanti jika brand audio final berubah
 
 ### Animation active
 
@@ -196,15 +198,31 @@ Status:
 
 1. Arsipkan bukti lisensi `Pocong` ke repo:
    - URL final
-   - screenshot license page
    - nama author
    - syarat attribution
+   - opsional: screenshot license page bila ingin pack audit manual yang lebih lengkap
 2. Finalisasi keputusan ambience loop (`AmbientLoop_Main`) apakah dipertahankan sebagai placeholder account-owned atau diganti cue brand final.
 3. Upload candidate audio legal ke akun Roblox aktif lalu isi `AudioContent` source dengan asset ID final jika ingin mengganti placeholder saat ini.
 4. Putuskan nasib asset `LegacyDisabled`:
    - hapus dari source
    - atau dokumentasikan ownership-nya
-5. Jangan aktifkan monetization publik sebelum keputusan lisensi `Pocong` dan audit legacy asset tersisa ditutup.
+5. Jangan aktifkan monetization publik sebelum audit legacy asset tersisa ditutup dan attribution runtime final tetap terlihat jelas di experience.
+
+## Update 2026-04-05 17:24 ICT
+
+Validasi source eksternal `Pocong` kini ditutup lebih jauh:
+
+- URL final terverifikasi: `https://sketchfab.com/3d-models/pocong-d84121c5b6084c72851113afbdbd5b99`
+- author terverifikasi: `alterego.visual`
+- lisensi terverifikasi: `CC BY 4.0`
+- attribution runtime sekarang disimpan source-controlled di:
+  - `src/shared/DataTypes/AssetAttributionCatalog.lua`
+  - `src/client/UI/Main.lua`
+
+Kesimpulan:
+
+- `Pocong` tidak lagi diperlakukan sebagai `user-asserted`.
+- blocker lisensi aktif kini bergeser ke cleanup asset legacy dan keputusan ambience final, bukan lagi ke provenance model `Pocong`.
 
 ## Update 2026-04-04 02:58 ICT
 
@@ -232,10 +250,10 @@ Audit live terbaru `MarketplaceService:GetProductInfo()` atas seluruh `Replicate
 - invalid `GetProductInfo` lookup: `0`
 - slot non-asset yang memang sengaja kosong:
   - `AmbientLoop_Main`
-  - `ButtonClick_01` (fallback built-in Roblox tetap aktif di runtime UI)
 
 Catatan:
 
 - `AmbientLoop_Main` sekarang memang disengaja kosong untuk menghindari overlap dengan `Heartbeat`.
 - asset canonical lain tetap valid dan terbaca creator/account sesuai status sebelumnya.
+- `ButtonClick_01` tidak lagi masuk slot kosong; cue ini kini memakai asset canonical final.
 
