@@ -398,6 +398,59 @@ function StudioE2EControlSystem:_handleGrantCurrency(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleGrantMarketplaceEntitlement(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local shopService = self._shopService
+	if type(shopService) ~= "table" or type(shopService.GrantMarketplacePurchase) ~= "function" then
+		return false, "missing_shop_service"
+	end
+
+	local itemId = type(request) == "table" and tostring(request.itemId or "") or ""
+	if itemId == "" then
+		return false, "missing_item_id"
+	end
+
+	local ok, reason = shopService:GrantMarketplacePurchase(player, itemId, {
+		source = "StudioE2EEntitlement",
+	})
+	if ok ~= true then
+		return false, tostring(reason or "grant_failed")
+	end
+
+	local snapshot
+	if type(shopService.BuildClientSnapshot) == "function" then
+		local snapshotOk, snapshotResult = pcall(function()
+			return shopService:BuildClientSnapshot(player)
+		end)
+		if snapshotOk and type(snapshotResult) == "table" then
+			snapshot = snapshotResult
+		end
+	end
+
+	local owned = false
+	local ownedCount = 0
+	if type(snapshot) == "table" then
+		local ownedItemIds = type(snapshot.ownedItemIds) == "table" and snapshot.ownedItemIds or {}
+		ownedCount = #ownedItemIds
+		for _, ownedItemId in ipairs(ownedItemIds) do
+			if ownedItemId == itemId then
+				owned = true
+				break
+			end
+		end
+	end
+
+	return true, string.format(
+		"item=%s owned=%s ownedCount=%d",
+		itemId,
+		tostring(owned),
+		ownedCount
+	)
+end
+
 function StudioE2EControlSystem:_handleGetPersistenceMode()
 	local persistence = self._persistenceService
 	if type(persistence) ~= "table" then
@@ -512,6 +565,8 @@ function StudioE2EControlSystem:_handleGetShopPlayerSnapshot(player, request)
 	local itemId = type(request) == "table" and tostring(request.itemId or "") or ""
 	local hasItem = false
 	local ownsCosmetic = false
+	local ownedSnapshot = false
+	local ownedCount = 0
 	if itemId ~= "" then
 		if type(self._inventoryService.HasItem) == "function" then
 			local ok, result = pcall(function()
@@ -531,16 +586,36 @@ function StudioE2EControlSystem:_handleGetShopPlayerSnapshot(player, request)
 		end
 	end
 
+	if type(self._shopService) == "table" and type(self._shopService.BuildClientSnapshot) == "function" then
+		local ok, snapshot = pcall(function()
+			return self._shopService:BuildClientSnapshot(player)
+		end)
+		if ok and type(snapshot) == "table" then
+			local ownedItemIds = type(snapshot.ownedItemIds) == "table" and snapshot.ownedItemIds or {}
+			ownedCount = #ownedItemIds
+			if itemId ~= "" then
+				for _, ownedItemId in ipairs(ownedItemIds) do
+					if ownedItemId == itemId then
+						ownedSnapshot = true
+						break
+					end
+				end
+			end
+		end
+	end
+
 	return true, string.format(
-		"MM=%d PP=%d Robux=%d inventory=%d cosmetics=%d item=%s hasItem=%s ownsCosmetic=%s",
+		"MM=%d PP=%d Robux=%d inventory=%d cosmetics=%d ownedCount=%d item=%s hasItem=%s ownsCosmetic=%s ownedSnapshot=%s",
 		math.max(0, math.floor(tonumber(wallet.MM) or 0)),
 		math.max(0, math.floor(tonumber(wallet.PP) or 0)),
 		math.max(0, math.floor(tonumber(wallet.Robux) or 0)),
 		inventoryCount,
 		cosmeticCount,
+		ownedCount,
 		itemId ~= "" and itemId or "-",
 		tostring(hasItem),
-		tostring(ownsCosmetic)
+		tostring(ownsCosmetic),
+		tostring(ownedSnapshot)
 	)
 end
 
@@ -863,6 +938,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGetWallet(player)
 	elseif action == "GrantCurrency" then
 		ok, result = self:_handleGrantCurrency(player, request)
+	elseif action == "GrantMarketplaceEntitlement" then
+		ok, result = self:_handleGrantMarketplaceEntitlement(player, request)
 	elseif action == "GetPersistenceMode" then
 		ok, result = self:_handleGetPersistenceMode()
 	elseif action == "GetShopReadiness" then
