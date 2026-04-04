@@ -8470,3 +8470,41 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - jalur audio map sekarang lebih robust karena tidak lagi bergantung pada event yang kurang lengkap
 - ini juga menutup bug import yang berpotensi membuat controller gagal secara diam-diam
+
+## 2026-04-05 - UI Click Signature Pass
+
+### Scope
+
+- mengganti bunyi klik UI dari default Roblox generic menjadi signature click yang masih ringan dan konsisten di seluruh owner `connectButtonPress()`
+
+### Source Changes
+
+- `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+  - `SoundId` dipindah ke `rbxassetid://115959318`
+  - `Volume` ditahan di `0.15` agar tetap lembut untuk spam navigasi UI
+- `src/client/UI/Main.lua`
+  - `playUIButtonClick()` sekarang memanggil `playRuntimeUISound("ButtonClick")` dengan:
+    - `SingleInstance = true`
+    - `VolumeScale = 0.95`
+    - `PlaybackJitter = 0.04`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_ui_click_signature_build.rbxlx`
+- validasi live/source:
+  - template runtime live terbaca:
+    - `ReplicatedStorage.Assets.Audio.UI.ButtonClick_01.SoundId = rbxassetid://115959318`
+    - `Volume = 0.15`
+  - smoke click canonical:
+    - klik `LobbyUI.MainPanel.OpenRoomBrowserButton` tetap membuka `RoomBrowserUI`
+- catatan jujur:
+  - runtime `SoundService.RuntimeButtonClick` terlalu singkat untuk selalu tertangkap probe MCP jika inspeksi dilakukan terlambat beberapa ratus milidetik
+  - jadi bukti utama batch ini adalah:
+    - template live yang benar
+    - jalur click owner canonical yang tetap berfungsi
+
+### Interpretation
+
+- bunyi klik UI sekarang lebih punya identitas sendiri dan tidak lagi terasa seperti fallback editor default
+- perubahan ini aman karena seluruh UI tetap melewati satu owner klik yang sama
