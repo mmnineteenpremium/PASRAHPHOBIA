@@ -1,4 +1,5 @@
 local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
 local VFXController = {}
@@ -61,10 +62,56 @@ local JUMPSCARE_SHOCK_POST = {
 	releaseTime = 0.42,
 }
 
-local MAP_ATMOSPHERE_OFFSETS = {
-	AbandonedPalace = 0.3,
-	HauntedHouse = 0.25,
-	StudioMMNineteen = 0.22,
+local DEFAULT_MAP_ATMOSPHERE = {
+	Density = 0.38,
+	Offset = 0.22,
+	Color = Color3.fromRGB(148, 158, 176),
+	Decay = Color3.fromRGB(96, 106, 124),
+	Glare = 0.16,
+	Haze = 1.85,
+}
+
+local MAP_ATMOSPHERE_PROFILES = {
+	LobbySocialHub = {
+		Density = 0.24,
+		Offset = 0.1,
+		Color = Color3.fromRGB(186, 194, 208),
+		Decay = Color3.fromRGB(138, 146, 160),
+		Glare = 0.08,
+		Haze = 1.2,
+	},
+	AbandonedPalace = {
+		Density = 0.5,
+		Offset = 0.34,
+		Color = Color3.fromRGB(170, 152, 136),
+		Decay = Color3.fromRGB(112, 94, 82),
+		Glare = 0.22,
+		Haze = 2.35,
+	},
+	HauntedHouse = {
+		Density = 0.44,
+		Offset = 0.27,
+		Color = Color3.fromRGB(146, 156, 178),
+		Decay = Color3.fromRGB(88, 96, 118),
+		Glare = 0.14,
+		Haze = 2.1,
+	},
+	EmptyBuilding = {
+		Density = 0.32,
+		Offset = 0.14,
+		Color = Color3.fromRGB(176, 182, 194),
+		Decay = Color3.fromRGB(122, 128, 142),
+		Glare = 0.09,
+		Haze = 1.45,
+	},
+	StudioMMNineteen = {
+		Density = 0.36,
+		Offset = 0.2,
+		Color = Color3.fromRGB(160, 168, 184),
+		Decay = Color3.fromRGB(104, 112, 128),
+		Glare = 0.12,
+		Haze = 1.7,
+	},
 }
 
 local function ensureSanityColorCorrection()
@@ -111,10 +158,12 @@ local function ensureAtmosphere()
 	if not atmosphere then
 		atmosphere = Instance.new("Atmosphere")
 		atmosphere.Name = "HorrorAtmosphere"
-		atmosphere.Density = 0.4
-		atmosphere.Offset = 0.25
-		atmosphere.Color = Color3.fromRGB(150, 160, 180)
-		atmosphere.Decay = Color3.fromRGB(100, 110, 130)
+		atmosphere.Density = DEFAULT_MAP_ATMOSPHERE.Density
+		atmosphere.Offset = DEFAULT_MAP_ATMOSPHERE.Offset
+		atmosphere.Color = DEFAULT_MAP_ATMOSPHERE.Color
+		atmosphere.Decay = DEFAULT_MAP_ATMOSPHERE.Decay
+		atmosphere.Glare = DEFAULT_MAP_ATMOSPHERE.Glare
+		atmosphere.Haze = DEFAULT_MAP_ATMOSPHERE.Haze
 		atmosphere.Parent = Lighting
 	end
 	return atmosphere
@@ -128,8 +177,12 @@ function VFXController:Init(context)
 	self._threatCorrection = ensureThreatColorCorrection()
 	self._ghostBlur = ensureGhostBlur()
 	self._atmosphere = ensureAtmosphere()
-	self._baseAtmosphereDensity = self._atmosphere and self._atmosphere.Density or 0.4
-	self._baseAtmosphereOffset = self._atmosphere and self._atmosphere.Offset or 0.25
+	self._baseAtmosphereDensity = self._atmosphere and self._atmosphere.Density or DEFAULT_MAP_ATMOSPHERE.Density
+	self._baseAtmosphereOffset = self._atmosphere and self._atmosphere.Offset or DEFAULT_MAP_ATMOSPHERE.Offset
+	self._baseAtmosphereColor = self._atmosphere and self._atmosphere.Color or DEFAULT_MAP_ATMOSPHERE.Color
+	self._baseAtmosphereDecay = self._atmosphere and self._atmosphere.Decay or DEFAULT_MAP_ATMOSPHERE.Decay
+	self._baseAtmosphereGlare = self._atmosphere and self._atmosphere.Glare or DEFAULT_MAP_ATMOSPHERE.Glare
+	self._baseAtmosphereHaze = self._atmosphere and self._atmosphere.Haze or DEFAULT_MAP_ATMOSPHERE.Haze
 	self._currentSanity = 100
 	self._huntActive = false
 	self._sanityTween = nil
@@ -151,6 +204,13 @@ function VFXController:Start()
 		table.insert(self._connections, matchEvent.OnClientEvent:Connect(function(payload)
 			self:_handleMatchEvent(payload)
 		end))
+	end
+
+	local localPlayer = Players.LocalPlayer
+	if localPlayer and localPlayer:GetAttribute("InMatch") == true then
+		self:_applyMapAtmosphere(tostring(localPlayer:GetAttribute("MapName") or "HauntedHouse"))
+	else
+		self:_applyMapAtmosphere("LobbySocialHub")
 	end
 end
 
@@ -189,12 +249,21 @@ function VFXController:_handleMatchEvent(payload)
 	elseif eventName == "JumpscareTriggered" then
 		self:_triggerJumpscareShock(payload)
 	elseif eventName == "MatchStarted" then
-		local mapName = (payload and payload.mapName) or (payload and payload.mapType) or "Unknown"
+		local mapName = (payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId) or "Unknown"
 		self:_applyMapAtmosphere(mapName)
 		self._huntActive = false
 		self:_applyThreatBaseline(0)
+	elseif eventName == "PhaseChanged" then
+		local phaseName = tostring((payload and payload.phase) or (payload and payload.phaseName) or (payload and payload.matchPhase) or "")
+		local mapName = (payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId) or (payload and payload.map) or nil
+		if type(mapName) == "string" and mapName ~= "" then
+			self:_applyMapAtmosphere(mapName == "Lobby" and "LobbySocialHub" or mapName)
+		elseif phaseName == "Lobby" then
+			self:_applyMapAtmosphere("LobbySocialHub")
+		end
 	elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 		self._huntActive = false
+		self:_applyMapAtmosphere("LobbySocialHub")
 		self:_applyThreatBaseline(0.35)
 	end
 end
@@ -372,10 +441,20 @@ function VFXController:_triggerJumpscareShock(payload)
 end
 
 function VFXController:_applyMapAtmosphere(mapName)
-	local offset = MAP_ATMOSPHERE_OFFSETS[mapName] or 0.25
+	local profile = MAP_ATMOSPHERE_PROFILES[mapName] or DEFAULT_MAP_ATMOSPHERE
 	if self._atmosphere then
-		self._baseAtmosphereOffset = offset
-		self._atmosphere.Offset = offset
+		self._baseAtmosphereDensity = profile.Density or DEFAULT_MAP_ATMOSPHERE.Density
+		self._baseAtmosphereOffset = profile.Offset or DEFAULT_MAP_ATMOSPHERE.Offset
+		self._baseAtmosphereColor = profile.Color or DEFAULT_MAP_ATMOSPHERE.Color
+		self._baseAtmosphereDecay = profile.Decay or DEFAULT_MAP_ATMOSPHERE.Decay
+		self._baseAtmosphereGlare = profile.Glare or DEFAULT_MAP_ATMOSPHERE.Glare
+		self._baseAtmosphereHaze = profile.Haze or DEFAULT_MAP_ATMOSPHERE.Haze
+		self._atmosphere.Density = self._baseAtmosphereDensity
+		self._atmosphere.Offset = self._baseAtmosphereOffset
+		self._atmosphere.Color = self._baseAtmosphereColor
+		self._atmosphere.Decay = self._baseAtmosphereDecay
+		self._atmosphere.Glare = self._baseAtmosphereGlare
+		self._atmosphere.Haze = self._baseAtmosphereHaze
 	end
 end
 
