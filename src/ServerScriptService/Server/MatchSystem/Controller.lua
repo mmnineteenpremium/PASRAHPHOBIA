@@ -15,6 +15,24 @@ local function resolveEventBus(deps)
     return nil
 end
 
+local function resolveUserId(payload)
+    local player = payload and payload.player
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        return player.UserId
+    end
+
+    local numericUserId = tonumber(payload and payload.userId)
+    if numericUserId then
+        return numericUserId
+    end
+
+    if type(payload and payload.userId) == "number" then
+        return payload.userId
+    end
+
+    return nil
+end
+
 function Controller.new(state, service, deps)
     local self = setmetatable({}, Controller)
     self._state = state
@@ -216,7 +234,7 @@ end
 
 function Controller:OnPlayerDied(payload)
     local matchId = payload and payload.matchId
-    local userId = payload and (payload.userId or (payload.player and payload.player.UserId))
+    local userId = resolveUserId(payload)
     if not matchId or not userId then
         return
     end
@@ -225,7 +243,7 @@ end
 
 function Controller:OnPlayerExtracted(payload)
     local matchId = payload and payload.matchId
-    local userId = payload and (payload.userId or (payload.player and payload.player.UserId))
+    local userId = resolveUserId(payload)
     if not matchId or not userId then
         return
     end
