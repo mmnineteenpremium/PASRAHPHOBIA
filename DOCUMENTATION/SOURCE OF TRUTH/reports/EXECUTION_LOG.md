@@ -8855,3 +8855,42 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - cue lingkungan sekarang tidak hanya didengar, tetapi juga punya jejak visual singkat yang membuat map terasa lebih hidup
 - debug attr ini juga membuat tuning berikutnya tidak lagi bergantung pada pengamatan manual murni
+
+## 2026-04-05 - Ghost Audio VFX Response Pass
+
+### Scope
+
+- melengkapi pass sensori sebelumnya:
+  - `GhostAudio` sudah spatial, tetapi belum selalu memicu jejak visual sendiri
+  - hasilnya manifest/whisper masih terasa kurang “menggigit” jika dilihat dari kamera pemain
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah `GHOST_AUDIO_SHOCK_PROFILES` untuk:
+    - `ghostwhisper`
+    - `ghostmanifest`
+    - `ghostfakefootsteps`
+    - `ghostobjectthrow`
+  - `VFXController` sekarang juga menangani `GhostAudioTriggered`
+  - tambah `_triggerGhostAudioShock(payload)` yang memetakan `cue` ke transient VFX ringan
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_ghost_audio_vfx_build.rbxlx`
+- validasi live Studio:
+  - `CreateRoom -> HostStart(HauntedHouse)` sukses (`matchCount = 1`)
+  - `TriggerAudioCue(GhostAudio, ghost_manifest, roomId=Kitchen)` menghasilkan:
+    - `PasrahVFXLastEvent = GhostAudioTriggered`
+    - `PasrahVFXLastProfile = ghostmanifest`
+    - `PasrahAudioLastSpatialMode = room_anchor`
+    - `SensoryThreatGrading.Contrast ~= 0.1025`
+    - `Brightness ~= -0.0102`
+    - `Saturation ~= -0.1537`
+    - `SensoryGhostBlur.Size ~= 6.15`
+
+### Interpretation
+
+- manifest/whisper cue sekarang punya jejak visual yang lebih koheren dengan audio dan posisi ruang
+- ini memperkuat atmosfer tanpa harus mengubah logika gameplay atau menambah asset eksternal baru

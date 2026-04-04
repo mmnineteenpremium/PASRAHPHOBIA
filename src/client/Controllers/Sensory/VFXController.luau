@@ -135,6 +135,49 @@ local ENVIRONMENTAL_SHOCK_PROFILES = {
 	},
 }
 
+local GHOST_AUDIO_SHOCK_PROFILES = {
+	ghostwhisper = {
+		Brightness = -0.012,
+		Contrast = 0.14,
+		Saturation = -0.2,
+		Tint = Color3.fromRGB(188, 210, 252),
+		BlurSize = 9,
+		AtmosphereDensityDelta = 0.022,
+		riseTime = 0.07,
+		releaseTime = 0.22,
+	},
+	ghostmanifest = {
+		Brightness = -0.02,
+		Contrast = 0.2,
+		Saturation = -0.3,
+		Tint = Color3.fromRGB(172, 196, 248),
+		BlurSize = 12,
+		AtmosphereDensityDelta = 0.03,
+		riseTime = 0.06,
+		releaseTime = 0.24,
+	},
+	ghostfakefootsteps = {
+		Brightness = -0.006,
+		Contrast = 0.08,
+		Saturation = -0.08,
+		Tint = Color3.fromRGB(226, 234, 246),
+		BlurSize = 4,
+		AtmosphereDensityDelta = 0.01,
+		riseTime = 0.05,
+		releaseTime = 0.18,
+	},
+	ghostobjectthrow = {
+		Brightness = -0.01,
+		Contrast = 0.1,
+		Saturation = -0.1,
+		Tint = Color3.fromRGB(214, 226, 242),
+		BlurSize = 5,
+		AtmosphereDensityDelta = 0.014,
+		riseTime = 0.05,
+		releaseTime = 0.18,
+	},
+}
+
 local DEFAULT_MAP_ATMOSPHERE = {
 	Density = 0.38,
 	Offset = 0.22,
@@ -628,6 +671,8 @@ function VFXController:_handleMatchEvent(payload)
 		self:_triggerJumpscareShock(payload)
 	elseif eventName == "EnvironmentalAudioTriggered" then
 		self:_triggerEnvironmentalShock(payload)
+	elseif eventName == "GhostAudioTriggered" then
+		self:_triggerGhostAudioShock(payload)
 	elseif eventName == "MatchStarted" then
 		local mapName = (payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId) or "Unknown"
 		self:_applyMapVisualProfile(mapName)
@@ -837,6 +882,26 @@ function VFXController:_triggerEnvironmentalShock(payload)
 	cloned.Brightness = (cloned.Brightness or 0) * math.clamp(intensity, 0.8, 1.15)
 	cloned.AtmosphereDensityDelta = (cloned.AtmosphereDensityDelta or 0) * math.clamp(intensity, 0.85, 1.2)
 	self:_recordVFXDebug("EnvironmentalAudioTriggered", eventToken)
+	self:_playTransientShock(cloned)
+end
+
+function VFXController:_triggerGhostAudioShock(payload)
+	local cueToken = normalizeCueToken((payload and payload.cue) or (payload and payload.eventType))
+	local profile = GHOST_AUDIO_SHOCK_PROFILES[cueToken]
+	if not profile then
+		return
+	end
+
+	local cloned = {}
+	for key, value in pairs(profile) do
+		cloned[key] = value
+	end
+	local intensity = math.clamp(tonumber(payload and payload.intensity) or 1, 0.45, 1.35)
+	cloned.BlurSize = math.max(0, math.floor(((cloned.BlurSize or 0) * intensity) + 0.5))
+	cloned.Contrast = (cloned.Contrast or 0) * intensity
+	cloned.Brightness = (cloned.Brightness or 0) * math.clamp(intensity, 0.8, 1.2)
+	cloned.AtmosphereDensityDelta = (cloned.AtmosphereDensityDelta or 0) * math.clamp(intensity, 0.85, 1.2)
+	self:_recordVFXDebug("GhostAudioTriggered", cueToken)
 	self:_playTransientShock(cloned)
 end
 
