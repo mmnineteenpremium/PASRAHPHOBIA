@@ -1765,6 +1765,23 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (door/window local reaction baseline)**.
   - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
 
+## Update 2026-04-05 18:34 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi reaksi prop lokal:
+  - `ObjectThrow` sekarang benar-benar menggeser prop di folder `Props` sekitar sumber event, lalu restore.
+- validasi live MCP:
+  - `TriggerAudioCue(EnvironmentalAudio, ObjectThrow)` pada area `Kitchen`:
+    - `PasrahVFXLastProfile = objectthrow`
+    - `PasrahVFXLastPropCount = 4`
+    - prop yang terkonfirmasi bergeser:
+      - `Prop_Room_Kitchen_Counter`
+      - `Prop_Room_Kitchen_Fridge`
+      - `Prop_Kitchen`
+      - `Prop_Room_HallwayMain_CoatRack`
+- status:
+  - **SELESAI (object throw local reaction baseline)**.
+  - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

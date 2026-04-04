@@ -9025,3 +9025,38 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - `DoorSlam` dan `WindowKnock` sekarang benar-benar terasa seperti event objek ruang, bukan hanya audio abstrak
 - pembatasan ke folder `Doors/Windows` juga membuat reaksi visual lebih bersih dan tidak ikut memukul frame atau struktur yang salah
+
+## 2026-04-05 - Object Throw Local Prop Reaction Pass
+
+### Scope
+
+- melanjutkan local room reaction ke event `ObjectThrow`, supaya prop ruang benar-benar tampak “terlempar” saat cue aktif
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - `_triggerEnvironmentalShock(payload)` sekarang juga menangani `objectthrow`
+  - `objectthrow` memakai `_pulseNearbyProps()` dengan:
+    - target token `prop`
+    - ancestor wajib `Props`
+    - offset translasi + rotasi kecil agar prop terlihat terdorong, bukan sekadar berkedip
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_object_throw_prop_build.rbxlx`
+- validasi live Studio:
+  - `CreateRoom -> HostStart(HauntedHouse)` sukses (`matchCount = 1`)
+  - `TriggerAudioCue(EnvironmentalAudio, ObjectThrow)` pada area `Kitchen` menghasilkan:
+    - `PasrahVFXLastProfile = objectthrow`
+    - `PasrahVFXLastPropCount = 4`
+  - prop yang terkonfirmasi berubah `CFrame` saat pulse:
+    - `Prop_Room_Kitchen_Counter`
+    - `Prop_Room_Kitchen_Fridge`
+    - `Prop_Kitchen`
+    - `Prop_Room_HallwayMain_CoatRack`
+
+### Interpretation
+
+- `ObjectThrow` sekarang benar-benar terlihat sebagai gangguan fisik di ruang, bukan hanya suara impact
+- ini membuat E2E investigation jauh lebih mudah dibaca secara visual saat kamu test langsung di Studio
