@@ -7603,3 +7603,56 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - pemain sekarang bisa memahami mengapa `PP` bertambah, sehingga prestige loop tidak terasa arbitrar.
 - race condition UI reward sudah ditutup; hasil match tidak lagi jatuh kembali ke `0 PP` hanya karena event `MatchCompleted` datang belakangan.
+
+## 2026-04-04 - Extraction Reward Path Validated With Studio Override
+
+### Scope
+
+- memverifikasi bahwa jalur extraction override Studio benar-benar melewati reward pipeline final
+- membuktikan footer result membaca kombinasi `team success + survive + extract`
+
+### Validation Notes
+
+- validasi live Studio:
+  - wallet before: `MM=1506 PP=14 Robux=0`
+  - `ExtractSelf(allowStudioOverride=true)` sukses:
+    - `match=match_2 zone=StudioOverrideZone`
+  - `MatchRewardSummary`:
+    - `currencyReward=324`
+    - `ppReward=3`
+    - `ppBreakdown = Misi selesai +1 / Selamat hidup +1 / Ekstraksi +1`
+  - wallet after: `MM=1830 PP=17 Robux=0`
+  - `RewardRow.Value = 324 MM | 3 PP`
+  - `ResultsFooter = PP: Misi selesai +1 • Selamat hidup +1 • Ekstraksi +1 Tekan tombol lanjut untuk kembali ke lobby flow.`
+
+### Interpretation
+
+- jalur extraction E2E sekarang terbukti memberi reward sesuai perilaku yang diharapkan pemain, bukan hanya berhasil memindahkan state keluar match.
+- ini juga memvalidasi bahwa surfacing `PP` di results tetap benar pada flow extraction, bukan hanya pada `EndMatch` paksa.
+
+## 2026-04-04 - Shop PP Filter Now Explains Prestige Source
+
+### Scope
+
+- membuat pemain memahami asal `PP` langsung dari `ShopUI`, bukan hanya setelah match selesai
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - footer `ShopUI` sekarang berubah dinamis saat filter `PP` aktif
+  - teks baru menjelaskan bahwa `PP` datang dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_shop_pp_footer_build.rbxlx`
+- validasi live Studio:
+  - `ShopUI.Enabled = true`
+  - `FilterPP` aktif (`BackgroundColor3 = 0.360784, 0.462745, 0.611765`)
+  - `ShopUI.MainPanel.FooterLabel` menampilkan:
+    - `Owned 0 item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Gunakan tab ini untuk belanja prestige hasil main, bukan top-up langsung.`
+
+### Interpretation
+
+- jalur prestige sekarang tidak cuma benar secara backend, tetapi juga dijelaskan di surface shop yang relevan.
+- ini menutup blind spot UX “PP ada di toko, tapi pemain tidak tahu cara mendapatkannya”.
