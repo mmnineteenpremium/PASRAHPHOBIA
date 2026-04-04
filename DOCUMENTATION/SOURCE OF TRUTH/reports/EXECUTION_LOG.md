@@ -6364,3 +6364,49 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - kotak root part tidak lagi boleh muncul sebagai bagian dari siluet ghost.
 - aturan melayang sekarang lebih dekat dengan identitas visual masing-masing ghost.
 - preview lobby tetap tersedia untuk debugging, tetapi tidak lagi menyala otomatis.
+
+## 2026-04-04 19:01 ICT - Ghost Runtime Spawn Recovery And Floor Alignment
+
+### Scope
+
+- memperbaiki regresi `ghost_spawn_failed` yang membuat match langsung berakhir ke `Result`.
+- memvalidasi lagi root part transparency dan grounding ghost di runtime match asli, bukan preview lobby.
+- mengikat posisi vertikal ghost ke lantai aktual berdasarkan bounding box bawah model.
+
+### Root Cause
+
+- `createGhostFromTemplate()` sempat memanggil `shouldHideGhostControlPart()` sebelum helper itu masuk scope lokal.
+- efeknya `InitGhost` bisa gagal saat spawn model runtime, lalu `GhostSystem` meminta `MatchEnded` dengan alasan `ghost_spawn_failed`.
+
+### Implementation Notes
+
+- helper `shouldHideGhostControlPart()` dipindah ke scope yang valid sebelum dipakai oleh `createGhostFromTemplate()`.
+- ditambahkan helper runtime:
+  - `resolveGhostBottomOffset()`
+  - `resolveGhostFloorY()`
+- `computeGhostVisualCFrame()` sekarang:
+  - mencari lantai di bawah ghost
+  - menghitung offset pivot-ke-bawah dari bounding box
+  - menyusun ulang `position.Y` agar bottom model menempel ke lantai + hover yang diizinkan
+
+### Validation Notes
+
+- setelah fix scope helper, match tidak lagi auto-end dengan:
+  - `reason = ghost_spawn_failed`
+- validasi runtime `Kuntilanak` di `HauntedHouse`:
+  - `Ghost_Kuntilanak` berhasil spawn di `Workspace.ActiveMatches.Match_match_1`
+  - `HumanoidRootPart.Transparency = 1`
+  - `RootPart.Transparency = 1`
+  - delta bawah model ke lantai: `0.0031`
+- validasi runtime grounded ghost:
+  - `Pocong`: delta `0`
+  - `Genderuwo`: delta `0.0000038`
+  - `Leak`: delta `-0.0000031`
+- validasi lanjutan `Leak` setelah masuk `Briefing`:
+  - delta `-0.0000012`
+
+### Interpretation
+
+- spawn ghost runtime kembali sehat.
+- kotak root part yang merusak siluet `Kuntilanak` sudah hilang di match nyata.
+- ghost hover sekarang benar-benar dikontrol oleh aturan per ghost, bukan sekadar animasi bob yang kebetulan kecil.
