@@ -289,20 +289,29 @@ function EvidenceGateway:_buildData(toolType, ok, reason, result)
 		data.utility = true
 		data.tracksDetected = type(result) == "table" and result.tracksDetected == true or false
 		data.placementActive = type(result) == "table" and result.placementActive == true or false
+		data.placementId = type(result) == "table" and result.placementId or nil
 		data.roomId = type(result) == "table" and result.roomId or nil
+		data.usesRemaining = type(result) == "table" and result.usesRemaining or nil
+		data.visualPlaced = type(result) == "table" and result.visualPlaced == true or false
 	elseif toolType == "Salib" then
 		data.requestType = "CrucifixPlacement"
 		data.utility = true
 		data.chargesRemaining = type(result) == "table" and result.chargesRemaining or nil
 		data.placementActive = type(result) == "table" and result.placementActive == true or false
+		data.placementId = type(result) == "table" and result.placementId or nil
 		data.roomId = type(result) == "table" and result.roomId or nil
+		data.usesRemaining = type(result) == "table" and result.usesRemaining or nil
+		data.visualPlaced = type(result) == "table" and result.visualPlaced == true or false
 	elseif toolType == "Dupa" then
 		data.requestType = "SmudgeIgnite"
 		data.utility = true
+		data.placementId = type(result) == "table" and result.placementId or nil
 		data.repellentUntil = type(result) == "table" and result.repellentUntil or nil
 		data.sanityRestored = type(result) == "table" and result.sanityRestored or nil
 		data.huntRepelled = type(result) == "table" and result.huntRepelled == true or false
 		data.roomId = type(result) == "table" and result.roomId or nil
+		data.usesRemaining = type(result) == "table" and result.usesRemaining or nil
+		data.visualPlaced = type(result) == "table" and result.visualPlaced == true or false
 	end
 
 	if type(result) == "table" then

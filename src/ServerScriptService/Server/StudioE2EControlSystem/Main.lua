@@ -521,6 +521,33 @@ function StudioE2EControlSystem:_handleUseEvidenceTool(player, request)
 	return true, string.format("match=%s tool=%s evidence=%s", matchId, toolType, evidenceType)
 end
 
+function StudioE2EControlSystem:_handleConsumeHuntProtection(player, request)
+	local evidenceService = self._evidenceService
+	if type(evidenceService) ~= "table" or type(evidenceService.TryConsumeHuntProtection) ~= "function" then
+		return false, "missing_evidence_service"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local payload = {
+		now = os.clock(),
+		roomId = type(request) == "table" and request.roomId or nil,
+	}
+	local ok, reason, result = evidenceService:TryConsumeHuntProtection(matchId, payload)
+	if ok ~= true then
+		return false, tostring(reason or "consume_failed")
+	end
+
+	return true, HttpService:JSONEncode({
+		matchId = matchId,
+		reason = reason,
+		result = result,
+	})
+end
+
 function StudioE2EControlSystem:_handleSetForcedGhost(player, request)
 	if not RunService:IsStudio() then
 		return false, "studio_only"
@@ -726,6 +753,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGetShopReadiness()
 	elseif action == "UseEvidenceTool" then
 		ok, result = self:_handleUseEvidenceTool(player, request)
+	elseif action == "ConsumeHuntProtection" then
+		ok, result = self:_handleConsumeHuntProtection(player, request)
 	elseif action == "TriggerJumpscare" then
 		ok, result = self:_handleTriggerJumpscare(player, request)
 	elseif action == "HidingDebugSnapshot" then
