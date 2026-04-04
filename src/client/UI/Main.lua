@@ -1330,6 +1330,14 @@ local function formatShopWalletSummary(wallet)
 	)
 end
 
+local SHOP_FILTERS = {
+	{ key = "All", label = "ALL" },
+	{ key = "MM", label = "MM" },
+	{ key = "PP", label = "PP" },
+	{ key = "Robux", label = "R$" },
+	{ key = "Owned", label = "OWNED" },
+}
+
 local function parseCurrencyPillValue(rawText)
 	local amount, currency = tostring(rawText or ""):match("^([%+%-]?%d+)%s+([%a$]+)$")
 	if amount and (currency == "MM" or currency == "PP" or currency == "Robux" or currency == "R$") then
@@ -2730,6 +2738,7 @@ function UISystem:Init(context)
 		ownedItemIds = {},
 		lastSnapshotAt = 0,
 		lastSnapshotRequestedAt = 0,
+		filterKey = "All",
 	}
 	self._royalPassState = {
 		lastEvent = "Idle",
@@ -5693,6 +5702,27 @@ function UISystem:_getShopItemPurchaseAvailability(item)
 	return true, nil
 end
 
+function UISystem:_shopItemMatchesFilter(item)
+	local filterKey = tostring(self._shopState and self._shopState.filterKey or "All")
+	if filterKey == "All" then
+		return true
+	end
+	if filterKey == "Owned" then
+		return self:_isShopItemOwned(item)
+	end
+
+	local currency = tostring(item and item.currency or "MM")
+	if currency == "RBX" then
+		currency = "Robux"
+	end
+	return currency == filterKey
+end
+
+function UISystem:_setShopFilter(filterKey)
+	self._shopState.filterKey = tostring(filterKey or "All")
+	self:_refreshShopPanel()
+end
+
 function UISystem:_requestShopPurchase(itemId)
 	local remote = self._remotes and self._remotes.PurchaseEvent or nil
 	if not remote or not itemId then
@@ -5848,13 +5878,25 @@ function UISystem:_refreshShopPanel()
 		badgeColor
 	)
 
+	if type(window.ShopFilterButtons) == "table" then
+		local activeFilter = tostring(self._shopState.filterKey or "All")
+		for _, filter in ipairs(SHOP_FILTERS) do
+			local button = window.ShopFilterButtons[filter.key]
+			if button then
+				local selected = activeFilter == filter.key
+				button.BackgroundColor3 = selected and Color3.fromRGB(92, 118, 156) or Color3.fromRGB(42, 54, 72)
+				button.TextColor3 = selected and Color3.fromRGB(248, 248, 244) or Color3.fromRGB(224, 232, 240)
+			end
+		end
+	end
+
 	if window.ItemRows and type(window.ItemRows) == "table" then
 		for index, row in ipairs(window.ItemRows) do
 			local item = self._shopState.catalog[index]
 			if row.Root then
-				row.Root.Visible = item ~= nil
+				row.Root.Visible = item ~= nil and self:_shopItemMatchesFilter(item)
 			end
-			if item then
+			if item and self:_shopItemMatchesFilter(item) then
 				self:_applyShopRowVisual(row, item, index)
 			end
 		end
@@ -9719,8 +9761,28 @@ function UISystem:_ensureBasicUIs()
 			makeFloatingButtonDraggable(floatBtn)
 
 			local itemRows = nil
+			local shopFilterButtons = nil
 			if guiName == "ShopUI" then
 				contentText.Visible = false
+				local filterBar = contentFrame:FindFirstChild("ShopFilterBar")
+				if filterBar and not filterBar:IsA("Frame") then
+					filterBar:Destroy()
+					filterBar = nil
+				end
+				if not filterBar then
+					filterBar = Instance.new("Frame")
+					filterBar.Name = "ShopFilterBar"
+					filterBar.Position = UDim2.fromOffset(0, 0)
+					filterBar.Size = UDim2.new(1, -4, 0, 34)
+					filterBar.BackgroundTransparency = 1
+					filterBar.Parent = contentFrame
+
+					local filterLayout = Instance.new("UIListLayout")
+					filterLayout.FillDirection = Enum.FillDirection.Horizontal
+					filterLayout.SortOrder = Enum.SortOrder.LayoutOrder
+					filterLayout.Padding = UDim.new(0, 6)
+					filterLayout.Parent = filterBar
+				end
 				local itemList = contentFrame:FindFirstChild("ItemList")
 				if itemList and not itemList:IsA("Frame") then
 					itemList:Destroy()
@@ -9729,6 +9791,7 @@ function UISystem:_ensureBasicUIs()
 				if not itemList then
 					itemList = Instance.new("Frame")
 					itemList.Name = "ItemList"
+					itemList.Position = UDim2.fromOffset(0, 40)
 					itemList.Size = UDim2.new(1, -4, 0, 0)
 					itemList.BackgroundTransparency = 1
 					itemList.AutomaticSize = Enum.AutomaticSize.Y
@@ -9739,6 +9802,43 @@ function UISystem:_ensureBasicUIs()
 					itemLayout.SortOrder = Enum.SortOrder.LayoutOrder
 					itemLayout.Padding = UDim.new(0, 6)
 					itemLayout.Parent = itemList
+				end
+				shopFilterButtons = {}
+				for _, filter in ipairs(SHOP_FILTERS) do
+					local existingButton = filterBar:FindFirstChild("Filter" .. filter.key)
+					if existingButton then
+						existingButton:Destroy()
+					end
+					local filterButton = Instance.new("TextButton")
+					filterButton.Name = "Filter" .. filter.key
+					filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
+					filterButton.BackgroundColor3 = Color3.fromRGB(42, 54, 72)
+					filterButton.BorderSizePixel = 0
+					filterButton.Text = filter.label
+					filterButton.TextColor3 = Color3.fromRGB(236, 240, 244)
+					filterButton.Font = Enum.Font.GothamBold
+					filterButton.TextSize = 10
+					filterButton.Parent = filterBar
+					self:_setSelectableStyle(filterButton)
+
+					local filterCorner = Instance.new("UICorner")
+					filterCorner.CornerRadius = UDim.new(1, 0)
+					filterCorner.Parent = filterButton
+
+					local filterStroke = Instance.new("UIStroke")
+					filterStroke.Thickness = 1
+					filterStroke.Transparency = 0.18
+					filterStroke.Color = Color3.fromRGB(92, 116, 150)
+					filterStroke.Parent = filterButton
+
+					if filterButton:GetAttribute("Bound") ~= true then
+						filterButton:SetAttribute("Bound", true)
+						connectButtonPress(filterButton, function()
+							self:_setShopFilter(filter.key)
+						end)
+					end
+
+					shopFilterButtons[filter.key] = filterButton
 				end
 				itemRows = {}
 				local displayCount = #self._shopState.catalog
@@ -9808,6 +9908,7 @@ function UISystem:_ensureBasicUIs()
 				FooterLabel = footerLabel,
 				FloatButton = floatBtn,
 				CloseButton = closeBtn,
+				ShopFilterButtons = shopFilterButtons,
 				ItemRows = itemRows,
 				ToolActionButton = toolActionButton,
 				ToolStatusLabel = toolStatusLabel,
