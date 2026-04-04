@@ -1411,6 +1411,28 @@ local SHOP_FILTERS = {
 	{ key = "Owned", label = "OWNED" },
 }
 
+local function shouldShowShopFilter(filterKey, catalog, ownedLookup)
+	filterKey = tostring(filterKey or "All")
+	if filterKey == "All" or filterKey == "Owned" then
+		return true
+	end
+	if type(catalog) ~= "table" then
+		return false
+	end
+	for _, item in ipairs(catalog) do
+		if type(item) == "table" then
+			local currency = tostring(item.currency or "MM")
+			if currency == "RBX" then
+				currency = "Robux"
+			end
+			if currency == filterKey then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 local function parseCurrencyPillValue(rawText)
 	local amount, currency = tostring(rawText or ""):match("^([%+%-]?%d+)%s+([%a$]+)$")
 	if amount and (currency == "MM" or currency == "PP" or currency == "Robux" or currency == "R$") then
@@ -6204,6 +6226,10 @@ function UISystem:_refreshShopPanel()
 	for _ in pairs(self._shopState.ownedItemIds or {}) do
 		ownedCount += 1
 	end
+	if not shouldShowShopFilter(activeFilter, self._shopState.catalog, self._shopState.ownedItemIds) then
+		activeFilter = "All"
+		self._shopState.filterKey = activeFilter
+	end
 	if lastPurchase and lastPurchase.success == true then
 		statusText = "PURCHASE OK"
 		badgeColor = Color3.fromRGB(58, 116, 90)
@@ -10191,6 +10217,11 @@ function UISystem:_ensureBasicUIs()
 					local existingButton = filterBar:FindFirstChild("Filter" .. filter.key)
 					if existingButton then
 						existingButton:Destroy()
+					end
+				end
+				for _, filter in ipairs(SHOP_FILTERS) do
+					if not shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
+						continue
 					end
 					local filterButton = Instance.new("TextButton")
 					filterButton.Name = "Filter" .. filter.key

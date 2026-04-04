@@ -7787,3 +7787,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - backend compliance saja tidak cukup; pemain juga harus melihat batasan monetization dengan bahasa yang jujur di surface shop
 - ini membantu menjaga review Roblox dan ekspektasi pemain tetap sinkron
+
+## 2026-04-04 - Hidden Empty Shop Filters
+
+### Scope
+
+- menghindari tab filter shop yang kosong/menyesatkan saat kategori tertentu tidak punya item visible
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah `shouldShowShopFilter()`
+  - filter yang tidak punya item visible sekarang tidak dibuat
+  - jika filter aktif tiba-tiba tidak relevan, state otomatis kembali ke `All`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_shop_filter_visibility_build.rbxlx`
+
+### Interpretation
+
+- pada production non-Studio, tab `R$` tidak perlu muncul jika semua item Robux masih hidden karena belum compliant/siap
+- ini membuat surface shop lebih jujur dan mengurangi UI kosong yang membingungkan
