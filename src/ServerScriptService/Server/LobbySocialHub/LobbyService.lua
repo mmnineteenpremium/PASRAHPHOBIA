@@ -38,6 +38,32 @@ local Services = require(script.Parent.Parent.Core.Services)
 local LOBBY_COSMETIC_FOLDER_NAME = "LobbyCosmeticVisuals"
 local LOBBY_COSMETIC_GUI_NAME = "LobbyCosmeticBillboard"
 local FLEX_SPOTLIGHT_PARTICIPANT_LIMIT = 4
+local LOBBY_ZONE_FEEDBACK = {
+    SpawnPlaza = {
+        title = "Lobby plaza aktif.",
+        hint = "Semua panel utama tetap bisa diakses dari quick menu tanpa harus menyentuh bangunan tertentu.",
+    },
+    MatchmakingZone = {
+        title = "Area matchmaking aktif.",
+        hint = "Gunakan PLAY atau Room Browser untuk membuat room, pilih mode, dan start dengan sadar; area ini tidak lagi auto-queue.",
+    },
+    ShopZone = {
+        title = "Area shop aktif.",
+        hint = "Buka SHOP untuk melihat item MM/PP/Robux yang memang visible dan compliant.",
+    },
+    PartyZone = {
+        title = "Area party aktif.",
+        hint = "Gunakan Room Browser untuk invite, ready, dan kontrol room tanpa sentuhan UI yang membingungkan.",
+    },
+    FlexZone = {
+        title = "Area flex aktif.",
+        hint = "Spotlight flex tetap hidup untuk kosmetik lobby, tetapi tidak memaksa panel lain terbuka.",
+    },
+    DailyRewardZone = {
+        title = "Area social garden aktif.",
+        hint = "Zona ini dipakai sebagai anchor reward/social sampai pass restruktur visual final selesai.",
+    },
+}
 
 local SLOT_DISPLAY_ORDER = {
     outfit = 1,
@@ -1004,16 +1030,19 @@ function LobbyService:OnPlayerEnteredZone(player, zoneName)
     end
 
     self._interaction:HandleZoneEntry(player, zoneName)
+    local zoneFeedback = LOBBY_ZONE_FEEDBACK[zoneName]
+    if type(zoneFeedback) == "table" then
+        self:_publish("LobbyZoneFocused", {
+            eventName = "LobbyZoneFocused",
+            zoneName = zoneName,
+            title = zoneFeedback.title,
+            hint = zoneFeedback.hint,
+            recipients = { player },
+        })
+    end
 
     if zoneName == "FlexZone" then
         self:_activateFlexSpotlight(player, "zone_entered")
-    end
-
-    if zoneName == "MatchmakingZone" then
-        self:_publish("PlayerEnteredMatchmaking", {
-            player = player,
-        })
-        self:StartMatchmaking(player)
     end
 end
 

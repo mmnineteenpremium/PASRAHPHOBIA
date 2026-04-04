@@ -203,6 +203,7 @@ function StudioE2EControlSystem.new(deps)
 	self._shopService = nil
 	self._inventoryService = nil
 	self._evidenceService = nil
+	self._lobbyHubService = nil
 	self._eventBus = nil
 	return self
 end
@@ -216,6 +217,7 @@ function StudioE2EControlSystem:Init()
 	self._shopService = resolveService(self._deps, "ShopSystem", "GetCatalog")
 	self._inventoryService = resolveService(self._deps, "InventorySystem", "HasItem")
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
+	self._lobbyHubService = resolveService(self._deps, "LobbySocialHub", "OnPlayerEnteredZone")
 	self._eventBus = resolveEventBus(self._deps)
 end
 
@@ -294,6 +296,21 @@ function StudioE2EControlSystem:_handleStartSoloMatch(player, request)
 		tostring(match.difficulty or "Mudah"),
 		#(match.players or {})
 	)
+end
+
+function StudioE2EControlSystem:_handleSimulateLobbyZone(player, request)
+	if type(self._lobbyHubService) ~= "table" or type(self._lobbyHubService.OnPlayerEnteredZone) ~= "function" then
+		return false, "missing_lobby_hub_service"
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+	local zoneName = type(request) == "table" and tostring(request.zoneName or "") or ""
+	if zoneName == "" then
+		return false, "missing_zone_name"
+	end
+	self._lobbyHubService:OnPlayerEnteredZone(player, zoneName)
+	return true, string.format("zone=%s simulated", zoneName)
 end
 
 function StudioE2EControlSystem:_handleForceHunt(player, request)
@@ -1195,6 +1212,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleAdvancePhase(player, request)
 	elseif action == "StartSoloMatch" then
 		ok, result = self:_handleStartSoloMatch(player, request)
+	elseif action == "SimulateLobbyZone" then
+		ok, result = self:_handleSimulateLobbyZone(player, request)
 	elseif action == "ForceHunt" then
 		ok, result = self:_handleForceHunt(player, request)
 	elseif action == "ExtractSelf" then
