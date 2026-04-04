@@ -6054,3 +6054,68 @@ Menaikkan baseline SFX runtime dengan jalur jumpscare event-driven end-to-end da
 
 - jalur SFX jumpscare kini benar-benar aktif end-to-end (server event -> relay -> client audio runtime).
 - debt VFX/SFX tidak selesai total, tetapi area jumpscare + slot audio kosong sudah naik dari placeholder ke runtime owner yang jelas.
+
+## 2026-04-04 08:43 ICT
+
+### Task
+
+Menyelaraskan utility toolkit evidence antara source lokal dan runtime Studio, lalu memvalidasi stok, event feedback, placeholder visual, dan konsumsi charge salib secara deterministik.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/EvidenceSystem/EvidenceGateway.lua`
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+
+### Studio Runtime Synced
+
+- `ServerScriptService.Server.EvidenceSystem.Controller`
+- `ServerScriptService.Server.EvidenceSystem.EvidenceGateway`
+- `ServerScriptService.Server.EvidenceSystem.Modules.EvidenceService`
+- `ServerScriptService.Server.EvidenceSystem.Modules.UtilityToolVisuals`
+- `ServerScriptService.Server.StudioE2EControlSystem.Main`
+
+### Change Summary
+
+- `EvidenceGateway` sekarang mengembalikan payload utility yang lengkap:
+  - `usesRemaining`
+  - `placementId`
+  - `visualPlaced`
+- drift Studio pada `EvidenceSystem` ditutup:
+  - utility event broadcast ke `EvidenceEvent` aktif lagi
+  - stock per-player (`Garam=3`, `Dupa=2`, `Salib=2`) kembali enforced
+  - placement ID + metadata utility kembali mengalir ke client
+  - placeholder visual utility kembali muncul di `Workspace.ActiveMatches.Match_<id>.InvestigationTools`
+- `StudioE2EControlSystem` ditambah action `ConsumeHuntProtection` untuk verifikasi deterministic charge salib tanpa bergantung ke jalur `ForceHunt` yang tidak stabil.
+
+### Validation Notes
+
+- Garam runtime:
+  - use #1 -> sukses, `usesRemaining=2`, `visualPlaced=true`
+  - use #2 -> sukses, `usesRemaining=1`
+  - use #3 -> sukses, `usesRemaining=0`
+  - use #4 -> gagal, `reason=tool_out_of_stock`
+- Dupa runtime:
+  - use #1 -> sukses, `usesRemaining=1`, `visualPlaced=true`
+  - use #2 -> sukses, `usesRemaining=0`
+  - use #3 -> gagal, `reason=tool_out_of_stock`
+- Salib runtime:
+  - place #1 -> sukses, `usesRemaining=1`, `chargesRemaining=3`, `visualPlaced=true`
+  - place #2 -> sukses, `usesRemaining=0`
+  - place #3 -> gagal, `reason=tool_out_of_stock`
+- event relay client sekarang tervalidasi lagi via `EvidenceEvent`:
+  - `SaltPlaced`
+  - `SmudgeActivated`
+  - `CrucifixPlaced`
+  - `CrucifixTriggered`
+  - `HuntBlocked`
+- deterministic crucifix charge test via `ConsumeHuntProtection`:
+  - tick #1 -> `chargesRemaining=2`
+  - tick #2 -> `chargesRemaining=1`
+  - tick #3 -> `chargesRemaining=0`
+  - model salib hilang dari `InvestigationTools` setelah charge habis
+
+### Interpretation
+
+- utility toolkit tidak lagi unlimited di runtime Studio.
+- UI/client kini menerima feedback utility yang cukup untuk menampilkan status stok/charge secara kredibel.
+- placeholder visual utility sudah cukup untuk membaca state di playtest sambil menunggu asset final item/tool.
