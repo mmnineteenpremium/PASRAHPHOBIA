@@ -7167,3 +7167,56 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - cosmetic shop sekarang tidak berhenti di inventory; pemain bisa benar-benar memakai item yang dibeli di lobby canonical.
 - jalur `buy -> snapshot -> equip -> apply to lobby` sudah tertutup end-to-end untuk kategori cosmetic.
+
+## 2026-04-04 - Equipment Runtime Hook Pass (Salt + UV ownership sync)
+
+### Scope
+
+- mulai menutup gap `equipment shop` yang sebelumnya hanya hidup di katalog/inventory
+- target batch ini:
+  - `Reinforced Salt Bag` memberi bonus stock nyata dan server-authoritative
+  - ownership equipment penting disinkronkan ke player attributes untuk dipakai sistem runtime lain
+  - `UV Flashlight Mk2` disiapkan lewat jalur attribute + client visual tint
+
+### Source Changes
+
+- `src/ServerScriptService/Server/ShopSystem/Service.lua`
+  - tambah sinkronisasi attribute ownership item:
+    - `PasrahOwnsReinforcedSaltBag`
+    - `PasrahOwnsUVFlashlight`
+    - `PasrahOwnsModdedSpiritBox`
+    - `PasrahOwnsEliteSpiritBox`
+  - sinkronisasi dilakukan saat `BuildClientSnapshot(player)` sehingga snapshot shop sekarang juga memperbarui state runtime pemain
+- `src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceService.lua`
+  - `Garam` sekarang cek ownership `eq_saltbag_reinforced`
+  - jika dimiliki, stock default `Garam` naik `+1`
+- `src/client/UI/Main.lua`
+  - state default field kit `Garam` sekarang membaca `PasrahOwnsReinforcedSaltBag`
+- `src/client/CameraController.client.lua`
+  - jalur `UV Flashlight Mk2` sekarang siap membaca `PasrahOwnsUVFlashlight`
+  - lens/light lokal akan memakai tint UV saat item dimiliki
+
+### Validation Notes
+
+- build source sukses: `_tmp_equipment_pass_build.rbxlx`
+- validasi live Studio untuk `Reinforced Salt Bag`:
+  - beli `eq_saltbag_reinforced` lewat `PurchaseEvent` -> `PurchaseProcessed.success=true`
+  - wallet MM turun ke `550`
+  - attribute pemain terset:
+    - `PasrahOwnsReinforcedSaltBag = true`
+  - buat match runtime lalu gunakan `Garam` sekali lewat `StudioE2EControl`
+  - result evidence live:
+    - `eventName = SaltTriggered`
+    - `usesRemaining = 3`
+- interpretasi stock:
+  - baseline lama `Garam` adalah `3 total`, jadi sekali pakai normalnya sisa `2`
+  - hasil `usesRemaining = 3` membuktikan total stock baru `4`, artinya bonus item benar-benar aktif server-side
+- status `UV Flashlight Mk2`:
+  - source path sudah aktif
+  - live purchase belum ditutup pada batch ini karena wallet Studio baseline tidak cukup membeli `eq_flashlight_uv`
+  - attribute runtime terbaca `PasrahOwnsUVFlashlight = false` pada sesi validasi ini, sesuai kondisi ownership nyata
+
+### Interpretation
+
+- `equipment shop` tidak lagi 100% dekoratif; setidaknya satu item (`Reinforced Salt Bag`) sekarang punya efek gameplay nyata dan aman dari sisi authority.
+- fondasi attribute ownership sudah siap dipakai batch berikutnya untuk equipment lain seperti `UV Flashlight` dan `Spirit Box`.

@@ -28,6 +28,7 @@ local UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
 local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
 local UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
 local UI_VIEWPORT_OVERRIDE_Y_ATTR = "PasrahUIViewportOverrideY"
+local REINFORCED_SALT_OWNED_ATTR = "PasrahOwnsReinforcedSaltBag"
 local ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
 local MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
 local BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
@@ -181,6 +182,10 @@ local FIELD_KIT_TOOL_CONFIG = {
 local function createDefaultFieldKitToolState(toolType)
 	local config = FIELD_KIT_TOOL_CONFIG[toolType] or {}
 	local usesRemaining = tonumber(config.maxUses)
+	local localPlayer = Players.LocalPlayer
+	if toolType == "Garam" and localPlayer and localPlayer:GetAttribute(REINFORCED_SALT_OWNED_ATTR) == true then
+		usesRemaining = (usesRemaining or 0) + 1
+	end
 	return {
 		usesRemaining = usesRemaining and math.max(0, math.floor(usesRemaining)) or nil,
 		chargesRemaining = nil,

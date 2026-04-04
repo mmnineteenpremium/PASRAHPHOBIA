@@ -29,6 +29,7 @@ local FPV_ARMS_MODEL_NAME = "FPV_Arms"
 local FPV_VIEW_ROOT_NAME = "FPV_ViewRoot"
 local FPV_FLASHLIGHT_MODEL_NAME = "FPV_Flashlight"
 local FLASHLIGHT_ATTRIBUTE = "FlashlightEnabled"
+local UV_FLASHLIGHT_OWNED_ATTR = "PasrahOwnsUVFlashlight"
 local CURSOR_TOGGLE_KEY = Enum.KeyCode.LeftAlt
 local CURSOR_TOGGLE_FALLBACK_KEY = Enum.KeyCode.Backquote
 local CURSOR_UNLOCK_REQUEST_ATTR = "PasrahCursorUnlockRequested"
@@ -76,6 +77,10 @@ local LOCAL_LIGHT_OFF_RANGE = tonumber(LOCAL_LIGHT_CONFIG.offRange) or 2
 local LOCAL_LIGHT_OFF_ANGLE = tonumber(LOCAL_LIGHT_CONFIG.offAngle) or 12
 local LOCAL_LIGHT_FADE_IN_SPEED = tonumber(LOCAL_LIGHT_CONFIG.fadeInSpeed) or 10
 local LOCAL_LIGHT_FADE_OUT_SPEED = tonumber(LOCAL_LIGHT_CONFIG.fadeOutSpeed) or 7
+local LOCAL_LIGHT_DEFAULT_COLOR = LOCAL_LIGHT_CONFIG.color or Color3.fromRGB(255, 244, 214)
+local UV_FLASHLIGHT_ON_COLOR = Color3.fromRGB(168, 214, 255)
+local UV_FLASHLIGHT_OFF_COLOR = Color3.fromRGB(98, 116, 136)
+local UV_FLASHLIGHT_LIGHT_COLOR = Color3.fromRGB(186, 224, 255)
 local fpvArmsModel = nil
 local fpvFlashlightModel = nil
 local fpvFlashlightHandle = nil
@@ -459,6 +464,7 @@ local function updateFpvFlashlightVisual(deltaTime)
 	end
 
 	local enabled = player:GetAttribute(FLASHLIGHT_ATTRIBUTE) == true
+	local ownsUvFlashlight = player:GetAttribute(UV_FLASHLIGHT_OWNED_ATTR) == true
 	local targetAlpha = enabled and 1 or 0
 	local fadeSpeed = enabled and LOCAL_LIGHT_FADE_IN_SPEED or LOCAL_LIGHT_FADE_OUT_SPEED
 	local stepAlpha = math.clamp((tonumber(deltaTime) or (1 / 60)) * fadeSpeed, 0, 1)
@@ -467,13 +473,14 @@ local function updateFpvFlashlightVisual(deltaTime)
 		fpvFlashlightVisualAlpha = targetAlpha
 	end
 
-	local onColor = LENS_CONFIG.onColor or Color3.fromRGB(255, 232, 186)
-	local offColor = LENS_CONFIG.offColor or Color3.fromRGB(120, 132, 148)
+	local onColor = ownsUvFlashlight and UV_FLASHLIGHT_ON_COLOR or (LENS_CONFIG.onColor or Color3.fromRGB(255, 232, 186))
+	local offColor = ownsUvFlashlight and UV_FLASHLIGHT_OFF_COLOR or (LENS_CONFIG.offColor or Color3.fromRGB(120, 132, 148))
 	local onTransparency = LENS_CONFIG.onTransparency or 0.04
 	local offTransparency = LENS_CONFIG.offTransparency or 0.36
 	fpvFlashlightLens.Color = offColor:Lerp(onColor, fpvFlashlightVisualAlpha)
 	fpvFlashlightLens.Transparency = lerpNumber(offTransparency, onTransparency, fpvFlashlightVisualAlpha)
 	if fpvFlashlightLight then
+		fpvFlashlightLight.Color = ownsUvFlashlight and UV_FLASHLIGHT_LIGHT_COLOR or LOCAL_LIGHT_DEFAULT_COLOR
 		fpvFlashlightLight.Brightness = lerpNumber(LOCAL_LIGHT_OFF_BRIGHTNESS, LOCAL_LIGHT_ON_BRIGHTNESS, fpvFlashlightVisualAlpha)
 		fpvFlashlightLight.Range = lerpNumber(LOCAL_LIGHT_OFF_RANGE, LOCAL_LIGHT_ON_RANGE, fpvFlashlightVisualAlpha)
 		fpvFlashlightLight.Angle = lerpNumber(LOCAL_LIGHT_OFF_ANGLE, LOCAL_LIGHT_ON_ANGLE, fpvFlashlightVisualAlpha)
