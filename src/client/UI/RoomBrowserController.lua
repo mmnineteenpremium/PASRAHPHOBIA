@@ -435,4 +435,19 @@ function RoomBrowserController:GetState()
 	return self._state
 end
 
+function RoomBrowserController:ResetForMatchStart()
+	self:_setPendingRoomTransition(false)
+	self._state.queue = nil
+	self._state.matchStarting = false
+	self._state.countdownSecondsLeft = nil
+	self._state.countdownTotal = nil
+	self._state.countdownEndsAt = nil
+	self._state.currentRoom = nil
+	self._state.lastRoomId = nil
+	self._state.isHost = false
+	self._state.isReady = false
+	self._state.allReady = false
+	self._state.lastError = nil
+end
+
 return RoomBrowserController

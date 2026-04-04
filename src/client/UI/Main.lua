@@ -3041,7 +3041,10 @@ function UISystem:_onServerEvent(remoteName, payload)
 		elseif eventName == "MatchStarted" then
 			self._matchResult = createDefaultMatchResult()
 			self._roomBrowserSuppressed = true
-			self:_setRoomBrowserVisible(false)
+			if self._roomBrowser and type(self._roomBrowser.ResetForMatchStart) == "function" then
+				self._roomBrowser:ResetForMatchStart()
+			end
+			self:_forceCloseAllPanelsForTeleport()
 			self._uiState.PASRA_UI.visible = false
 			self._uiState.MatchUI.visible = true
 			self._uiState.SpectatorUI.visible = false
@@ -13051,18 +13054,21 @@ function UISystem:_updateCountdownOverlay(state)
 		end
 	end
 	label.Text = showCountdown and tostring(displayCountdown) or ""
+	if not showCountdown then
+		stopRuntimeUISound("CountdownTick")
+	end
 
 	if displayCountdown > 0 and self._countdownDisplaySecond ~= displayCountdown then
 		self._countdownDisplaySecond = displayCountdown
-		self._lastCountdownAudioSecond = displayCountdown
 		if showCountdown then
+			self._lastCountdownAudioSecond = displayCountdown
 			pulseCountdownLabel(label)
+			playRuntimeUISound("CountdownTick", {
+				VolumeScale = 1,
+				PlaybackSpeed = 1,
+				SingleInstance = true,
+			})
 		end
-		playRuntimeUISound("CountdownTick", {
-			VolumeScale = 1,
-			PlaybackSpeed = 1,
-			SingleInstance = true,
-		})
 	elseif displayCountdown <= 0 then
 		self._countdownDisplaySecond = displayCountdown
 		stopRuntimeUISound("CountdownTick")
