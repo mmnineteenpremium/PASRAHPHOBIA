@@ -29,6 +29,7 @@ local UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
 local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
 local UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
 local UI_VIEWPORT_OVERRIDE_Y_ATTR = "PasrahUIViewportOverrideY"
+local SHOP_SHOW_DISABLED_DEBUG_ATTR = "PasrahShowDisabledShopItems"
 local REINFORCED_SALT_OWNED_ATTR = "PasrahOwnsReinforcedSaltBag"
 local MATCH_MODE_ATTR = "MatchMode"
 local ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
@@ -2441,10 +2442,13 @@ local function loadShopCatalog()
 	local ok, result = pcall(require, moduleScript)
 	if ok and type(result) == "table" then
 		local filtered = {}
+		local showDisabledItems = ReplicatedStorage:GetAttribute(SHOP_SHOW_DISABLED_DEBUG_ATTR) == true
 		for _, item in ipairs(result) do
 			local currency = type(item) == "table" and tostring(item.currency or "MM") or "MM"
 			local shouldHide = false
-			if currency == "Robux" and RunService:IsStudio() ~= true then
+			if showDisabledItems ~= true and type(item) == "table" and item.enabled == false then
+				shouldHide = true
+			elseif showDisabledItems ~= true and currency == "Robux" then
 				local enabled = type(item) == "table" and item.enabled ~= false
 				local marketplaceReady = isShopMarketplaceReady(item)
 				shouldHide = enabled ~= true or marketplaceReady ~= true
@@ -6023,6 +6027,17 @@ function UISystem:_applyShopSnapshot(snapshot)
 	self:_refreshShopPanel()
 end
 
+function UISystem:_reloadShopCatalog()
+	if type(self._shopState) ~= "table" then
+		return
+	end
+	self._shopState.catalog = loadShopCatalog()
+	if not shouldShowShopFilter(self._shopState.filterKey, self._shopState.catalog, self._shopState.ownedItemIds) then
+		self._shopState.filterKey = "All"
+	end
+	self:_refreshShopPanel()
+end
+
 function UISystem:_requestShopSnapshot(force)
 	local remote = self._remotes and self._remotes.PurchaseEvent or nil
 	if not remote then
@@ -8912,6 +8927,10 @@ function UISystem:_bindInputProfileUpdates()
 
 	table.insert(self._uxConnections, ReplicatedStorage:GetAttributeChangedSignal(UI_VIEWPORT_OVERRIDE_Y_ATTR):Connect(function()
 		self:_applyDeviceSizing()
+	end))
+
+	table.insert(self._uxConnections, ReplicatedStorage:GetAttributeChangedSignal(SHOP_SHOW_DISABLED_DEBUG_ATTR):Connect(function()
+		self:_reloadShopCatalog()
 	end))
 end
 

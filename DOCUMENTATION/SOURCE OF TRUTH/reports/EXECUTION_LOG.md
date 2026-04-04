@@ -8060,3 +8060,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - ada sistem class/benefit yang benar-benar final
   - benefit-nya lolos audit fairness Ranked
   - setup Roblox marketplace resminya sudah benar
+
+## 2026-04-04 - Hide Disabled Shop Items By Default
+
+### Scope
+
+- mencegah item shop placeholder/disabled terlihat misleading di UI player-facing, termasuk saat Studio playtest biasa
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `loadShopCatalog()` sekarang menyembunyikan item `enabled=false` secara default
+  - item `Robux` yang `marketplaceId` belum valid juga tetap disembunyikan
+  - attr debug baru:
+    - `PasrahShowDisabledShopItems = true`
+    - hanya untuk menampilkan kembali item disabled saat audit internal
+  - `_reloadShopCatalog()` ditambahkan agar toggle debug bisa refresh katalog tanpa reload penuh
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_shop_hidden_disabled_build.rbxlx`
+
+### Interpretation
+
+- placeholder seperti class unlock/lifetime pass tidak lagi ikut mengotori shop umum
+- dev masih bisa membukanya kembali secara sadar lewat attribute debug, tetapi default pemain dan tester melihat katalog yang lebih jujur
