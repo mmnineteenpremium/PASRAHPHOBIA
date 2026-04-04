@@ -9104,3 +9104,75 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - `RadioStatic` sekarang terasa datang dari objek elektronik nyata di ruang
 - `ShadowApparition` sekarang benar-benar bisa dilihat pemain sebagai manifest singkat, bukan sekadar efek layar
+
+## 2026-04-05 - Match Material Polish Runtime Pass
+
+### Scope
+
+- menutup bagian `material polish map` di jalur owner runtime clone, tanpa menyentuh model JSON map besar secara manual
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+  - tambah `patchMapMaterials(mapId, mapClone)`
+  - tambah profile warna/material per map:
+    - `HauntedHouse`
+    - `EmptyBuilding`
+    - `AbandonedPalace`
+    - `StudioMMNineteen`
+  - floors, walls, doors, windows, dan light instances sekarang ikut dituning saat clone map aktif dibuat
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_item13_ambient_material_build.rbxlx`
+- validasi edit-time MCP pada clone runtime:
+  - `HauntedHouse`:
+    - `Floor_1_Main -> WoodPlanks / 58,46,38`
+    - `NorthWall -> WoodPlanks / 74,58,48`
+    - `Door -> Wood / 88,60,40`
+    - `Window -> Glass / 164,178,194 / Transparency 0.42`
+  - `EmptyBuilding`:
+    - `Floor_1_Main -> Concrete / 58,60,66`
+    - `NorthWall -> Concrete / 78,82,90`
+
+### Interpretation
+
+- pass artistik map sekarang tidak lagi hanya bergantung pada `Lighting/Atmosphere` global
+- clone map aktif punya karakter material yang lebih kuat dan lebih jujur terhadap tema ruang
+
+## 2026-04-05 - Ambient Investigation Cadence Pass
+
+### Scope
+
+- menutup kekosongan ambience investigasi tanpa memaksakan loop palsu dari asset yang tidak cocok
+
+### Source Changes
+
+- `src/ServerScriptService/Server/AudioSystem/Service.lua`
+  - tambah scheduler cadence ambience per match session
+  - cadence hanya hidup saat `InvestigationPhase`
+  - event ambience dipilih per map dan room:
+    - `HauntedHouse`: whisper, window knock, light flicker, temperature drop
+    - `EmptyBuilding`: radio static, object throw, fake footsteps, light flicker
+    - `AbandonedPalace`: door slam, manifest, shadow apparition, temperature drop
+    - `StudioMMNineteen`: radio static, fake footsteps, object throw
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_item13_ambient_material_build.rbxlx`
+- validasi service-level MCP dengan stub `MatchSystem/EventBus`:
+  - `matchId = probe_1`
+  - `mapId = HauntedHouse`
+  - `phase = InvestigationPhase`
+  - pulse yang terbit:
+    - `GhostAudioTriggered`
+    - `cue = ghost_whisper`
+    - `roomId = Attic`
+    - `intensity = 0.28`
+
+### Interpretation
+
+- investigasi sekarang punya layer ambience hidup berbasis cue ruang yang sah, bukan hanya menunggu event besar
+- slot `AmbientLoop_Main` masih sengaja boleh tetap kosong sampai nanti ada loop ambience custom/final yang benar-benar cocok dan legal

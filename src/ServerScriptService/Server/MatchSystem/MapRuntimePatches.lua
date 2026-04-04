@@ -4,6 +4,7 @@ local FLOOR_PATCH_ATTR = "SecondFloorRuntimePatched"
 local INTERACTION_PATCH_ATTR = "InteractionPointsRuntimePatched"
 local DOOR_PATCH_ATTR = "DoorTraversalRuntimePatched"
 local SAFE_ZONE_PATCH_ATTR = "SafeZoneRuntimePatched"
+local MATERIAL_PATCH_ATTR = "MapMaterialRuntimePatched"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
@@ -55,6 +56,65 @@ local SAFE_ZONE_POSITION_OVERRIDES = {
 	},
 }
 
+local MAP_MATERIAL_POLISH = {
+	hauntedhouse = {
+		floorMaterial = Enum.Material.WoodPlanks,
+		floorColor = Color3.fromRGB(58, 46, 38),
+		wallMaterial = Enum.Material.WoodPlanks,
+		wallColor = Color3.fromRGB(74, 58, 48),
+		doorMaterial = Enum.Material.Wood,
+		doorColor = Color3.fromRGB(88, 60, 40),
+		windowMaterial = Enum.Material.Glass,
+		windowColor = Color3.fromRGB(164, 178, 194),
+		windowTransparency = 0.42,
+		windowReflectance = 0.03,
+		lightColor = Color3.fromRGB(255, 214, 170),
+		lightBrightnessScale = 0.88,
+	},
+	emptybuilding = {
+		floorMaterial = Enum.Material.Concrete,
+		floorColor = Color3.fromRGB(58, 60, 66),
+		wallMaterial = Enum.Material.Concrete,
+		wallColor = Color3.fromRGB(78, 82, 90),
+		doorMaterial = Enum.Material.Metal,
+		doorColor = Color3.fromRGB(78, 82, 88),
+		windowMaterial = Enum.Material.Glass,
+		windowColor = Color3.fromRGB(170, 186, 202),
+		windowTransparency = 0.4,
+		windowReflectance = 0.02,
+		lightColor = Color3.fromRGB(214, 226, 255),
+		lightBrightnessScale = 0.9,
+	},
+	abandonedpalace = {
+		floorMaterial = Enum.Material.Slate,
+		floorColor = Color3.fromRGB(54, 50, 58),
+		wallMaterial = Enum.Material.Marble,
+		wallColor = Color3.fromRGB(96, 86, 80),
+		doorMaterial = Enum.Material.Wood,
+		doorColor = Color3.fromRGB(102, 76, 58),
+		windowMaterial = Enum.Material.Glass,
+		windowColor = Color3.fromRGB(182, 174, 168),
+		windowTransparency = 0.36,
+		windowReflectance = 0.04,
+		lightColor = Color3.fromRGB(255, 208, 164),
+		lightBrightnessScale = 0.92,
+	},
+	studiommnineteen = {
+		floorMaterial = Enum.Material.Concrete,
+		floorColor = Color3.fromRGB(68, 72, 80),
+		wallMaterial = Enum.Material.SmoothPlastic,
+		wallColor = Color3.fromRGB(86, 92, 104),
+		doorMaterial = Enum.Material.Metal,
+		doorColor = Color3.fromRGB(92, 98, 108),
+		windowMaterial = Enum.Material.Glass,
+		windowColor = Color3.fromRGB(176, 192, 208),
+		windowTransparency = 0.34,
+		windowReflectance = 0.03,
+		lightColor = Color3.fromRGB(228, 234, 255),
+		lightBrightnessScale = 0.96,
+	},
+}
+
 local function normalizeToken(value)
 	if type(value) ~= "string" then
 		return nil
@@ -71,6 +131,24 @@ local function resolveMapOverrideToken(mapId, mapClone)
 		return normalizeToken(mapClone.Name)
 	end
 	return nil
+end
+
+local function hasNamedAncestor(instance, ancestorToken)
+	if typeof(instance) ~= "Instance" then
+		return false
+	end
+	local targetToken = normalizeToken(ancestorToken)
+	if not targetToken then
+		return false
+	end
+	local current = instance.Parent
+	while current do
+		if normalizeToken(current.Name) == targetToken then
+			return true
+		end
+		current = current.Parent
+	end
+	return false
 end
 
 local function flattenDirection(vector)
@@ -458,6 +536,56 @@ local function patchSafeZones(mapId, mapClone)
 	return patchedAny
 end
 
+local function patchMapMaterials(mapId, mapClone)
+	if not mapClone or mapClone:GetAttribute(MATERIAL_PATCH_ATTR) == true then
+		return false
+	end
+
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if token and MAP_MATERIAL_POLISH[token] == nil then
+		token = resolveMapOverrideToken(nil, mapClone)
+	end
+	local profile = token and MAP_MATERIAL_POLISH[token] or nil
+	if not profile then
+		return false
+	end
+
+	local patchedAny = false
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			local nameToken = normalizeToken(descendant.Name) or ""
+			if string.find(nameToken, "floor", 1, true) then
+				descendant.Material = profile.floorMaterial or descendant.Material
+				descendant.Color = profile.floorColor or descendant.Color
+				patchedAny = true
+			elseif string.find(nameToken, "wall", 1, true) or string.find(nameToken, "ceiling", 1, true) then
+				descendant.Material = profile.wallMaterial or descendant.Material
+				descendant.Color = profile.wallColor or descendant.Color
+				patchedAny = true
+			elseif string.find(nameToken, "door", 1, true) or hasNamedAncestor(descendant, "Doors") then
+				descendant.Material = profile.doorMaterial or descendant.Material
+				descendant.Color = profile.doorColor or descendant.Color
+				patchedAny = true
+			elseif string.find(nameToken, "window", 1, true) or hasNamedAncestor(descendant, "Windows") then
+				descendant.Material = profile.windowMaterial or descendant.Material
+				descendant.Color = profile.windowColor or descendant.Color
+				descendant.Transparency = profile.windowTransparency or descendant.Transparency
+				descendant.Reflectance = profile.windowReflectance or descendant.Reflectance
+				patchedAny = true
+			end
+		elseif descendant:IsA("PointLight") or descendant:IsA("SurfaceLight") or descendant:IsA("SpotLight") then
+			descendant.Color = profile.lightColor or descendant.Color
+			descendant.Brightness = math.max(0.05, descendant.Brightness * (profile.lightBrightnessScale or 1))
+			patchedAny = true
+		end
+	end
+
+	if patchedAny then
+		mapClone:SetAttribute(MATERIAL_PATCH_ATTR, true)
+	end
+	return patchedAny
+end
+
 function MapRuntimePatches.Apply(mapId, mapClone)
 	local token = resolveMapOverrideToken(mapId, mapClone)
 	if token == nil or mapClone == nil then
@@ -466,6 +594,7 @@ function MapRuntimePatches.Apply(mapId, mapClone)
 
 	local didPatch = false
 	didPatch = patchSecondFloor(mapClone) or didPatch
+	didPatch = patchMapMaterials(mapId, mapClone) or didPatch
 	didPatch = patchDoorTraversal(mapClone) or didPatch
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
