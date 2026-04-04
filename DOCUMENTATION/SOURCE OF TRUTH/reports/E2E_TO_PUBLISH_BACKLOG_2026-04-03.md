@@ -789,6 +789,22 @@ Status:
   - `AmbientLoop_Main.SoundId = ""`
   - `GhostManifest_01.SoundId = rbxassetid://139204195403262`
   - `GhostWhisper_01.SoundId = rbxassetid://83336813491039`
+- routing cue audio terbaru sekarang lebih jujur terhadap konteks:
+  - `GhostInteraction` server tidak lagi selalu memaksa `ghost_interaction`
+  - `WhisperSound/FakeGhostSound -> ghost_whisper`
+  - `FakeFootsteps -> ghost_fake_footsteps`
+  - `FakeManifestation -> ghost_manifest`
+  - `ObjectThrow -> ghost_object_throw`
+  - client `SoundSystem` sekarang membaca cue itu untuk memilih template ghost/environment yang lebih masuk akal
+- `Jumpscare_01` juga tidak lagi memakai asset countdown:
+  - sekarang memakai `rbxassetid://138329686293368`
+  - client `JumpscareAudio` punya resolver khusus sendiri, tidak lagi hanya mengandalkan path default generik
+- validasi live Studio terbaru membuktikan:
+  - `TriggerJumpscare` menghasilkan debug runtime:
+    - `PasrahAudioLastCategory = JumpscareAudio`
+    - `PasrahAudioLastTemplate = Jumpscare_01`
+    - `PasrahAudioLastCue = jumpscare_stinger`
+    - `PasrahAudioLastSoundId = rbxassetid://138329686293368`
 - pass map atmosphere sekarang tidak lagi hanya offset tunggal:
   - `LobbySocialHub`, `HauntedHouse`, `EmptyBuilding`, `AbandonedPalace`, dan `StudioMMNineteen` punya profile `Density/Offset/Color/Decay/Glare/Haze` sendiri
   - `VFXController` juga sekarang membaca `PhaseChanged.mapId`, bukan hanya `MatchStarted`, sehingga profile map benar-benar applied pada jalur runtime client yang canonical

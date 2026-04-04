@@ -89,8 +89,14 @@ local function resolveFolderTemplate(root, folderName, templateName)
 	return nil
 end
 
-local function resolveGhostTemplate(root, cue)
-	local cueToken = normalizeCue(cue)
+local function resolveGhostTemplate(root, payload)
+	local cueToken = normalizeCue((payload and payload.cue) or payload)
+	if string.find(cueToken, "footstep", 1, true) then
+		return resolveFootstepTemplate(root, payload)
+	end
+	if string.find(cueToken, "object", 1, true) or string.find(cueToken, "throw", 1, true) then
+		return resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
+	end
 	local primaryName = "GhostManifest_01"
 	if string.find(cueToken, "whisper", 1, true) then
 		primaryName = "GhostWhisper_01"
@@ -106,6 +112,18 @@ local function resolveGhostTemplate(root, cue)
 	end
 
 	return resolveFolderTemplate(root, "Ghost", "GhostManifest_01")
+end
+
+local function resolveJumpscareTemplate(root, payload)
+	local cueToken = normalizeCue((payload and payload.cue) or payload)
+	if string.find(cueToken, "manifest", 1, true) then
+		return resolveFolderTemplate(root, "Ghost", "GhostManifest_01")
+	end
+	local template = resolveFolderTemplate(root, "Jumpscare", "Jumpscare_01")
+	if template then
+		return template
+	end
+	return resolveFolderTemplate(root, "Ghost", "HuntStart_01")
 end
 
 local function resolveFootstepTemplate(root, payload)
@@ -247,10 +265,13 @@ end
 
 function SoundSystem:_getTemplateForCategory(category, payload)
 	if category == "GhostAudio" then
-		return resolveGhostTemplate(self._audioRoot, payload and payload.cue)
+		return resolveGhostTemplate(self._audioRoot, payload)
 	end
 	if category == "EnvironmentalAudio" then
 		return resolveEnvironmentalTemplate(self._audioRoot, payload)
+	end
+	if category == "JumpscareAudio" then
+		return resolveJumpscareTemplate(self._audioRoot, payload)
 	end
 
 	local cached = self._audioTemplates[category]
@@ -294,6 +315,8 @@ function SoundSystem:_applySoundProfile(sound, category, payload)
 		sound.PlaybackSpeed = math.clamp(0.92 + intensity * 0.4, 0.92, 1.45)
 	elseif category == "HuntAudio" then
 		sound.PlaybackSpeed = math.clamp(0.96 + intensity * 0.14, 0.96, 1.18)
+	elseif category == "JumpscareAudio" then
+		sound.PlaybackSpeed = math.clamp(0.98 + intensity * 0.18, 0.98, 1.24)
 	elseif category == "GhostAudio" then
 		sound.PlaybackSpeed = math.clamp(0.98 + intensity * 0.1, 0.95, 1.18)
 	else
