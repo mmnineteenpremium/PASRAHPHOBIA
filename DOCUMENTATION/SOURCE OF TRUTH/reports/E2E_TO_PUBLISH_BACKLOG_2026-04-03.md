@@ -1596,6 +1596,26 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (runtime cue cadence baseline)** untuk `Jumpscare/Hunt`.
   - **PENDING** tetap pada ambience legal final dan kekayaan cue lingkungan/ghost lanjutan.
 
+## Update 2026-04-05 17:02 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi framing visual map:
+  - `VFXController` sekarang punya `SensoryMapDepthOfField` dengan profile per map.
+  - tujuan pass ini bukan blur berat, tetapi pemisahan fokus ruang yang lebih terasa antara lobby dan map horror.
+- validasi live MCP:
+  - lobby boot:
+    - `FarIntensity ~= 0.06`
+    - `FocusDistance = 52`
+    - `InFocusRadius = 34`
+    - `NearIntensity = 0`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)`:
+    - `FarIntensity ~= 0.14`
+    - `FocusDistance = 18`
+    - `InFocusRadius = 9`
+    - `NearIntensity ~= 0.03`
+- status:
+  - **SELESAI (map depth-of-field baseline)**.
+  - **PENDING** tetap pada ambience legal final, polish material map, dan enrichment cue lingkungan/ghost.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
