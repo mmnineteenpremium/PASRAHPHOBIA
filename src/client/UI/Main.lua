@@ -1286,6 +1286,12 @@ local function isShopItemPurchasable(item)
 end
 
 local function describeShopPurchaseBlock(item, reason)
+	if reason == "already_owned" then
+		return "Item ini sudah kamu miliki."
+	end
+	if reason == "insufficient_currency" then
+		return "Saldo currency belum cukup untuk item ini."
+	end
 	if reason == "item_disabled" then
 		local setupHint = type(item) == "table" and item.setupHint or nil
 		if type(setupHint) == "string" and setupHint ~= "" then
@@ -1297,6 +1303,31 @@ local function describeShopPurchaseBlock(item, reason)
 		return "Item Robux belum aktif. Isi marketplaceId di ShopCatalog."
 	end
 	return "Item belum bisa dibeli saat ini."
+end
+
+local function buildOwnedItemLookup(ownedItemIds)
+	local lookup = {}
+	if type(ownedItemIds) ~= "table" then
+		return lookup
+	end
+	for _, itemId in ipairs(ownedItemIds) do
+		if type(itemId) == "string" and itemId ~= "" then
+			lookup[itemId] = true
+		end
+	end
+	return lookup
+end
+
+local function formatShopWalletSummary(wallet)
+	if type(wallet) ~= "table" then
+		return "MM 0  •  PP 0  •  R$ 0"
+	end
+	return string.format(
+		"MM %d  •  PP %d  •  R$ %d",
+		math.max(0, math.floor(tonumber(wallet.MM) or 0)),
+		math.max(0, math.floor(tonumber(wallet.PP) or 0)),
+		math.max(0, math.floor(tonumber(wallet.Robux) or 0))
+	)
 end
 
 local function parseCurrencyPillValue(rawText)
@@ -2691,6 +2722,14 @@ function UISystem:Init(context)
 		lastPurchase = nil,
 		lastMessage = "Pilih item untuk dibeli.",
 		pendingMarketplacePrompt = nil,
+		wallet = {
+			MM = 0,
+			PP = 0,
+			Robux = 0,
+		},
+		ownedItemIds = {},
+		lastSnapshotAt = 0,
+		lastSnapshotRequestedAt = 0,
 	}
 	self._royalPassState = {
 		lastEvent = "Idle",
@@ -2761,6 +2800,7 @@ function UISystem:Start()
 		self._roomBrowser:Start()
 	end
 
+	self:_requestShopSnapshot(true)
 	self:_ensureBasicUIs()
 	self:_ensureRoomBrowserGui()
 	self:_bindRoomBrowserMatchVisibility()
@@ -3077,10 +3117,17 @@ function UISystem:_onServerEvent(remoteName, payload)
 		end
 	elseif remoteName == "PurchaseEvent" then
 		self._uiState.ShopUI.lastEvent = eventName
-		self._uiState.ShopUI.visible = true
-		self:_closeConflictingWindows("ShopUI")
 		self._shopState.lastEvent = eventName
-		if eventName == "PurchasePromptRequested" then
+		if eventName ~= "ShopSnapshot" then
+			self._uiState.ShopUI.visible = true
+			self:_closeConflictingWindows("ShopUI")
+		end
+		if type(payload) == "table" and type(payload.snapshot) == "table" then
+			self:_applyShopSnapshot(payload.snapshot)
+		end
+		if eventName == "ShopSnapshot" then
+			self._shopState.lastMessage = "Snapshot shop diperbarui."
+		elseif eventName == "PurchasePromptRequested" then
 			self:_requestMarketplacePrompt(payload or {})
 		elseif eventName == "PurchaseProcessed" then
 			self._shopState.pendingMarketplacePrompt = nil
@@ -3094,7 +3141,10 @@ function UISystem:_onServerEvent(remoteName, payload)
 				and "Pembelian berhasil diproses."
 				or ("Pembelian gagal: " .. titleCaseToken(payload and payload.reason or "unknown"))
 		end
-		self._windowDismissed.ShopUI = false
+		if eventName ~= "ShopSnapshot" then
+			self._windowDismissed.ShopUI = false
+		end
+		self:_refreshShopPanel()
 	elseif remoteName == "RoyalPassEvent" then
 		self._uiState.RoyalPassUI.lastEvent = eventName
 		self._uiState.RoyalPassUI.visible = true
@@ -3465,6 +3515,9 @@ function UISystem:_openAuxiliaryWindow(guiName)
 	self:_closeConflictingWindows(guiName)
 	self._uiState[guiName].visible = true
 	self:_setAuxiliaryWindowDismissed(guiName, false)
+	if guiName == "ShopUI" then
+		self:_requestShopSnapshot()
+	end
 	self:_applyVisibility()
 end
 
@@ -5560,6 +5613,86 @@ function UISystem:_refreshProfilePanel()
 	end
 end
 
+function UISystem:_applyShopSnapshot(snapshot)
+	if type(snapshot) ~= "table" then
+		return
+	end
+
+	local wallet = type(snapshot.wallet) == "table" and snapshot.wallet or {}
+	self._shopState.wallet = {
+		MM = math.max(0, math.floor(tonumber(wallet.MM) or 0)),
+		PP = math.max(0, math.floor(tonumber(wallet.PP) or 0)),
+		Robux = math.max(0, math.floor(tonumber(wallet.Robux) or 0)),
+	}
+	self._shopState.ownedItemIds = buildOwnedItemLookup(snapshot.ownedItemIds)
+	self._shopState.lastSnapshotAt = tick()
+	self:_refreshShopPanel()
+end
+
+function UISystem:_requestShopSnapshot(force)
+	local remote = self._remotes and self._remotes.PurchaseEvent or nil
+	if not remote then
+		return
+	end
+
+	local now = tick()
+	if force ~= true and (now - (self._shopState.lastSnapshotRequestedAt or 0)) < 1.2 then
+		return
+	end
+
+	local player = Players.LocalPlayer
+	self._shopRequestSeq += 1
+	self._shopState.lastSnapshotRequestedAt = now
+	remote:FireServer({
+		action = "RequestSnapshot",
+		requestId = string.format(
+			"shop-snapshot:%s:%d",
+			tostring(player and player.UserId or 0),
+			self._shopRequestSeq
+		),
+	})
+end
+
+function UISystem:_getShopCurrencyBalance(currency)
+	local wallet = self._shopState and self._shopState.wallet or nil
+	if type(wallet) ~= "table" then
+		return 0
+	end
+	local key = tostring(currency or "MM")
+	if key == "RBX" then
+		key = "Robux"
+	end
+	return math.max(0, math.floor(tonumber(wallet[key]) or 0))
+end
+
+function UISystem:_isShopItemOwned(item)
+	local itemId = type(item) == "table" and tostring(item.id or "") or ""
+	if itemId == "" then
+		return false
+	end
+	return self._shopState
+		and type(self._shopState.ownedItemIds) == "table"
+		and self._shopState.ownedItemIds[itemId] == true
+end
+
+function UISystem:_getShopItemPurchaseAvailability(item)
+	if self:_isShopItemOwned(item) then
+		return false, "already_owned"
+	end
+
+	local purchasable, blockedReason = isShopItemPurchasable(item)
+	if not purchasable then
+		return false, blockedReason
+	end
+
+	local currency = tostring(item and item.currency or "MM")
+	if currency ~= "Robux" and self:_getShopCurrencyBalance(currency) < math.max(0, math.floor(tonumber(item and item.price) or 0)) then
+		return false, "insufficient_currency"
+	end
+
+	return true, nil
+end
+
 function UISystem:_requestShopPurchase(itemId)
 	local remote = self._remotes and self._remotes.PurchaseEvent or nil
 	if not remote or not itemId then
@@ -5597,7 +5730,9 @@ function UISystem:_applyShopRowVisual(row, item, index)
 	local rarityColor = SHOP_RARITY_COLORS[tostring(item and item.rarity or "")] or theme.accent
 	local currency = tostring(item and item.currency or "MM")
 	local currencyTheme = resolveShopCurrencyTheme(currency)
-	local purchasable, blockedReason = isShopItemPurchasable(item)
+	local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(item)
+	local owned = self:_isShopItemOwned(item)
+	local walletBalance = self:_getShopCurrencyBalance(currency)
 
 	if row.Root then
 		row.Root.BackgroundColor3 = theme.background
@@ -5621,7 +5756,13 @@ function UISystem:_applyShopRowVisual(row, item, index)
 		row.Title.Text = item and tostring(item.name or item.id or ("Item " .. tostring(index))) or ("Item " .. tostring(index))
 	end
 	if row.Meta then
-		row.Meta.Text = buildShopItemMeta(item)
+		local metaText = buildShopItemMeta(item)
+		if owned then
+			metaText = string.format("%s • Owned", tostring(metaText))
+		elseif currency ~= "Robux" then
+			metaText = string.format("%s • Wallet %d %s", tostring(metaText), walletBalance, currency)
+		end
+		row.Meta.Text = metaText
 	end
 	if row.PricePill then
 		applyPricePillVisual(
@@ -5635,10 +5776,18 @@ function UISystem:_applyShopRowVisual(row, item, index)
 		row.Button.AutoButtonColor = purchasable == true
 		row.Button:SetAttribute("ShopPurchasable", purchasable == true)
 		row.Button:SetAttribute("ShopDisabledReason", blockedReason or "")
-		if purchasable == true then
+		if owned then
+			row.Button.Text = "OWNED"
+			row.Button.BackgroundColor3 = Color3.fromRGB(62, 98, 80)
+			row.Button.TextColor3 = Color3.fromRGB(235, 245, 240)
+		elseif purchasable == true then
 			row.Button.Text = "BELI"
 			row.Button.BackgroundColor3 = theme.accent
 			row.Button.TextColor3 = Color3.fromRGB(245, 245, 245)
+		elseif blockedReason == "insufficient_currency" then
+			row.Button.Text = "KURANG"
+			row.Button.BackgroundColor3 = Color3.fromRGB(86, 70, 44)
+			row.Button.TextColor3 = Color3.fromRGB(242, 232, 204)
 		elseif blockedReason == "marketplace_id_missing" then
 			row.Button.Text = "SETUP"
 			row.Button.BackgroundColor3 = Color3.fromRGB(78, 72, 48)
@@ -5661,6 +5810,11 @@ function UISystem:_refreshShopPanel()
 	local statusText = "STORE"
 	local badgeColor = Color3.fromRGB(124, 92, 48)
 	local secondaryText = self._shopState.lastMessage or "Pilih item untuk test shop."
+	local walletSummary = formatShopWalletSummary(self._shopState.wallet)
+	local ownedCount = 0
+	for _ in pairs(self._shopState.ownedItemIds or {}) do
+		ownedCount += 1
+	end
 	if lastPurchase and lastPurchase.success == true then
 		statusText = "PURCHASE OK"
 		badgeColor = Color3.fromRGB(58, 116, 90)
@@ -5684,10 +5838,13 @@ function UISystem:_refreshShopPanel()
 	self:_refreshWindowText(
 		"ShopUI",
 		statusText,
-		"Shop aktif untuk MM/PP dan prompt Roblox.",
+		walletSummary,
 		secondaryText,
 		nil,
-		"Klik BELI untuk item aktif. Label SETUP berarti item Robux belum diisi marketplaceId.",
+		string.format(
+			"Owned %d item. Klik BELI untuk item aktif. Label KURANG berarti saldo belum cukup, SETUP berarti item Robux belum diisi marketplaceId.",
+			ownedCount
+		),
 		badgeColor
 	)
 
@@ -9601,7 +9758,7 @@ function UISystem:_ensureBasicUIs()
 						connectButtonPress(row.Button, function()
 							local catalogItem = self._shopState.catalog[index]
 							if catalogItem then
-								local purchasable, blockedReason = isShopItemPurchasable(catalogItem)
+								local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(catalogItem)
 								if not purchasable then
 									self._shopState.lastPurchase = {
 										itemId = catalogItem.id,

@@ -12,6 +12,7 @@ local VALID_ACTIONS = {
     PurchaseItem = true,
     RequestPurchase = true,
     BuyItem = true,
+    RequestSnapshot = true,
 }
 
 local function resolveEventBus(deps)
@@ -412,7 +413,7 @@ function Controller:_onGamePassPurchaseFinished(player, gamePassId, purchaseSucc
     end
 
     if purchaseSuccess ~= true then
-        self:_sendPurchaseResponse(player, {
+        self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchaseProcessed",
             success = false,
             reason = "purchase_cancelled",
@@ -425,7 +426,7 @@ function Controller:_onGamePassPurchaseFinished(player, gamePassId, purchaseSucc
         source = "GamePassPurchaseFinished",
         marketplaceId = marketplaceId,
     })
-    self:_sendPurchaseResponse(player, {
+    self:_sendPurchaseResponseWithSnapshot(player, {
         eventName = "PurchaseProcessed",
         success = ok == true,
         reason = reason,
@@ -459,7 +460,7 @@ function Controller:_processReceipt(receiptInfo)
         marketplaceId = marketplaceId,
     })
     if ok ~= true then
-        self:_sendPurchaseResponse(player, {
+        self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchaseProcessed",
             success = false,
             reason = reason or "receipt_grant_failed",
@@ -470,7 +471,7 @@ function Controller:_processReceipt(receiptInfo)
 
     self:_markReceiptProcessed(purchaseId)
     self:_clearMarketplacePrompt(player)
-    self:_sendPurchaseResponse(player, {
+    self:_sendPurchaseResponseWithSnapshot(player, {
         eventName = "PurchaseProcessed",
         success = true,
         reason = "receipt_granted",
@@ -484,6 +485,48 @@ function Controller:_sendPurchaseResponse(player, payload)
         return
     end
     self._purchaseRemote:FireClient(player, payload)
+end
+
+function Controller:_attachSnapshot(player, payload)
+    if not player or type(payload) ~= "table" then
+        return payload
+    end
+    if not self._service or type(self._service.BuildClientSnapshot) ~= "function" then
+        return payload
+    end
+
+    local snapshot = self._service:BuildClientSnapshot(player)
+    if type(snapshot) == "table" then
+        payload.snapshot = snapshot
+    end
+    return payload
+end
+
+function Controller:_sendPurchaseResponseWithSnapshot(player, payload)
+    self:_sendPurchaseResponse(player, self:_attachSnapshot(player, payload or {}))
+end
+
+function Controller:_sendShopSnapshot(player, requestId)
+    local payload = {
+        eventName = "ShopSnapshot",
+        requestId = requestId,
+        success = true,
+    }
+    if not self._service or type(self._service.BuildClientSnapshot) ~= "function" then
+        payload.success = false
+        payload.reason = "snapshot_unavailable"
+        self:_sendPurchaseResponse(player, payload)
+        return
+    end
+
+    local snapshot, err = self._service:BuildClientSnapshot(player)
+    if type(snapshot) == "table" then
+        payload.snapshot = snapshot
+    else
+        payload.success = false
+        payload.reason = err or "snapshot_unavailable"
+    end
+    self:_sendPurchaseResponse(player, payload)
 end
 
 function Controller:_validateRemoteRequest(player, request)
@@ -532,7 +575,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
     local requestId = type(request) == "table" and request.requestId or nil
     local validRequest, requestErr = self:_validateRemoteRequest(player, request)
     if not validRequest then
-        self:_sendPurchaseResponse(player, {
+        self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchaseProcessed",
             requestId = requestId,
             success = false,
@@ -543,7 +586,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
 
     local action = request.action
     if type(action) ~= "string" or not VALID_ACTIONS[action] then
-        self:_sendPurchaseResponse(player, {
+        self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchaseProcessed",
             requestId = requestId,
             success = false,
@@ -552,9 +595,14 @@ function Controller:OnPurchaseRemoteRequest(player, request)
         return
     end
 
+    if action == "RequestSnapshot" then
+        self:_sendShopSnapshot(player, requestId)
+        return
+    end
+
     local cooldownOk, cooldownErr = self:_validateCooldown(player)
     if not cooldownOk then
-        self:_sendPurchaseResponse(player, {
+        self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchaseProcessed",
             requestId = requestId,
             success = false,
@@ -565,7 +613,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
 
     local itemId = resolveItemIdFromRequest(request)
     if not itemId then
-        self:_sendPurchaseResponse(player, {
+        self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchaseProcessed",
             requestId = requestId,
             success = false,
@@ -578,7 +626,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
     if recipientUserId and recipientUserId ~= toUserId(player) then
         local purchaseIntentOk, purchaseIntentErr, purchaseIntent = self._service:ResolvePurchaseIntent(player, itemId)
         if not purchaseIntentOk then
-            self:_sendPurchaseResponse(player, {
+            self:_sendPurchaseResponseWithSnapshot(player, {
                 eventName = "PurchaseProcessed",
                 requestId = requestId,
                 success = false,
@@ -589,7 +637,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
             return
         end
         if purchaseIntent.flow == "Marketplace" then
-            self:_sendPurchaseResponse(player, {
+            self:_sendPurchaseResponseWithSnapshot(player, {
                 eventName = "PurchaseProcessed",
                 requestId = requestId,
                 success = false,
@@ -602,7 +650,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
 
         local socialCommerce = resolveSocialCommerceService(self._deps)
         if not socialCommerce then
-            self:_sendPurchaseResponse(player, {
+            self:_sendPurchaseResponseWithSnapshot(player, {
                 eventName = "PurchaseProcessed",
                 requestId = requestId,
                 success = false,
@@ -619,7 +667,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
             recipientUserId = recipientUserId,
             itemId = itemId,
         })
-        self:_sendPurchaseResponse(player, {
+        self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchaseProcessed",
             requestId = requestId,
             success = ok == true,
@@ -638,7 +686,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
 
     local intentOk, intentErr, intent = self._service:ResolvePurchaseIntent(player, itemId)
     if not intentOk then
-        self:_sendPurchaseResponse(player, {
+        self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchaseProcessed",
             requestId = requestId,
             success = false,
@@ -650,7 +698,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
 
     if intent.flow == "Marketplace" then
         self:_trackMarketplacePrompt(player, itemId, intent.item)
-        self:_sendPurchaseResponse(player, {
+        self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchasePromptRequested",
             requestId = requestId,
             success = true,
@@ -663,7 +711,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
     end
 
     local ok, reason = self._service:ProcessPurchase(player, itemId)
-    self:_sendPurchaseResponse(player, {
+    self:_sendPurchaseResponseWithSnapshot(player, {
         eventName = "PurchaseProcessed",
         requestId = requestId,
         success = ok == true,

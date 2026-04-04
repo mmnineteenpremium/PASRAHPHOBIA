@@ -7012,3 +7012,63 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - equipment grant
   - cosmetic ownership grant
 - jalur verifikasi shop sekarang tidak lagi buta; batch shop berikutnya bisa fokus ke presentasi katalog, PP path, dan nanti Robux activation tanpa menebak apakah soft-currency flow dasarnya sehat.
+
+## 2026-04-04 - Shop Snapshot Wiring For Client UI
+
+### Scope
+
+- menghubungkan `ShopUI` ke snapshot server resmi untuk wallet dan ownership.
+- membuat row shop benar-benar tahu kapan item sudah dimiliki atau saldo tidak cukup.
+
+### Root Cause
+
+- panel shop sebelumnya hanya tahu katalog statis.
+- akibatnya client tidak tahu:
+  - saldo `MM/PP/Robux`
+  - item mana yang sudah owned
+  - apakah sebuah item gagal dibeli karena memang sudah dimiliki atau karena saldo tidak cukup
+
+### Implementation Notes
+
+- `ShopSystem.Service` sekarang punya `BuildClientSnapshot(player)` yang merangkum:
+  - wallet `MM / PP / Robux`
+  - `ownedItemIds`
+  - `ownedCount`
+- `ShopSystem.Controller` sekarang menerima action `RequestSnapshot` lewat `PurchaseEvent`.
+- response `PurchaseProcessed` dan `PurchasePromptRequested` sekarang ikut membawa snapshot terbaru saat tersedia.
+- `UISystem` shop sekarang:
+  - request snapshot saat start dan saat window shop dibuka
+  - menyimpan `wallet` + `ownedItemIds` di `_shopState`
+  - menampilkan header wallet dalam format `MM / PP / R$`
+  - mengubah tombol row menjadi:
+    - `OWNED` bila item sudah dimiliki
+    - `KURANG` bila saldo soft-currency tidak cukup
+    - `SETUP` bila item Robux belum punya `marketplaceId`
+
+### Validation Notes
+
+- build source sukses: `_tmp_shop_snapshot_ui_build.rbxlx`
+- snapshot awal sesudah reload Studio:
+  - header shop: `MM 1200 • PP 12 • R$ 0`
+  - footer: `Owned 0 item...`
+  - row MM awal menampilkan meta wallet seperti `Wallet 1200 MM`
+- verifikasi live purchase UI-aware:
+  - beli `eq_sanitypill_standard`
+    - response sukses membawa snapshot `MM=900 PP=12`
+    - row berubah menjadi `OWNED`
+  - beli `pp_cos_head_nightoracle`
+    - response sukses membawa snapshot `MM=900 PP=0`
+    - row berubah menjadi `OWNED`
+  - footer sesudah dua pembelian:
+    - `Owned 2 item...`
+  - header sesudah dua pembelian:
+    - `MM 900 • PP 0 • R$ 0`
+- verifikasi insufficient PP:
+  - `Void Priest Robe` menampilkan:
+    - meta `Wallet 0 PP`
+    - tombol `KURANG`
+
+### Interpretation
+
+- shop client sekarang tidak lagi “buta state”.
+- pemain langsung bisa membaca saldo, ownership, dan alasan dasar kenapa sebuah item belum bisa dibeli tanpa harus menebak dari error message generik.
