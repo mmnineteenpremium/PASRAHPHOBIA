@@ -62,6 +62,79 @@ local JUMPSCARE_SHOCK_POST = {
 	releaseTime = 0.42,
 }
 
+local ENVIRONMENTAL_SHOCK_PROFILES = {
+	doorslam = {
+		Brightness = -0.015,
+		Contrast = 0.14,
+		Saturation = -0.08,
+		Tint = Color3.fromRGB(224, 232, 248),
+		BlurSize = 6,
+		AtmosphereDensityDelta = 0.018,
+		riseTime = 0.06,
+		releaseTime = 0.2,
+	},
+	lightflicker = {
+		Brightness = -0.04,
+		Contrast = 0.05,
+		Saturation = -0.02,
+		Tint = Color3.fromRGB(255, 248, 232),
+		BlurSize = 1,
+		AtmosphereDensityDelta = 0.008,
+		riseTime = 0.03,
+		releaseTime = 0.12,
+	},
+	suddenwhisper = {
+		Brightness = -0.01,
+		Contrast = 0.12,
+		Saturation = -0.18,
+		Tint = Color3.fromRGB(192, 210, 248),
+		BlurSize = 8,
+		AtmosphereDensityDelta = 0.02,
+		riseTime = 0.08,
+		releaseTime = 0.22,
+	},
+	shadowapparition = {
+		Brightness = -0.02,
+		Contrast = 0.18,
+		Saturation = -0.24,
+		Tint = Color3.fromRGB(180, 198, 242),
+		BlurSize = 10,
+		AtmosphereDensityDelta = 0.028,
+		riseTime = 0.07,
+		releaseTime = 0.24,
+	},
+	objectthrow = {
+		Brightness = -0.012,
+		Contrast = 0.1,
+		Saturation = -0.06,
+		Tint = Color3.fromRGB(236, 238, 244),
+		BlurSize = 4,
+		AtmosphereDensityDelta = 0.012,
+		riseTime = 0.05,
+		releaseTime = 0.18,
+	},
+	windowknock = {
+		Brightness = -0.008,
+		Contrast = 0.08,
+		Saturation = -0.08,
+		Tint = Color3.fromRGB(226, 234, 244),
+		BlurSize = 3,
+		AtmosphereDensityDelta = 0.01,
+		riseTime = 0.05,
+		releaseTime = 0.18,
+	},
+	temperaturedrop = {
+		Brightness = -0.012,
+		Contrast = 0.1,
+		Saturation = -0.12,
+		Tint = Color3.fromRGB(206, 222, 248),
+		BlurSize = 5,
+		AtmosphereDensityDelta = 0.018,
+		riseTime = 0.07,
+		releaseTime = 0.26,
+	},
+}
+
 local DEFAULT_MAP_ATMOSPHERE = {
 	Density = 0.38,
 	Offset = 0.22,
@@ -434,6 +507,10 @@ local function ensureAtmosphere()
 	return atmosphere
 end
 
+local function normalizeCueToken(value)
+	return tostring(value or ""):gsub("[%s_%-_]+", ""):lower()
+end
+
 function VFXController:Init(context)
 	self._context = context or {}
 	self._remotes = self._context.Remotes or {}
@@ -505,6 +582,16 @@ function VFXController:Start()
 	end
 end
 
+function VFXController:_recordVFXDebug(eventName, profileName)
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
+		return
+	end
+	localPlayer:SetAttribute("PasrahVFXLastEvent", tostring(eventName or ""))
+	localPlayer:SetAttribute("PasrahVFXLastProfile", tostring(profileName or ""))
+	localPlayer:SetAttribute("PasrahVFXLastAt", os.clock())
+end
+
 function VFXController:Stop()
 	for _, conn in ipairs(self._connections) do
 		conn:Disconnect()
@@ -539,6 +626,8 @@ function VFXController:_handleMatchEvent(payload)
 		self:_applyThreatBaseline(0.35)
 	elseif eventName == "JumpscareTriggered" then
 		self:_triggerJumpscareShock(payload)
+	elseif eventName == "EnvironmentalAudioTriggered" then
+		self:_triggerEnvironmentalShock(payload)
 	elseif eventName == "MatchStarted" then
 		local mapName = (payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId) or "Unknown"
 		self:_applyMapVisualProfile(mapName)
@@ -729,6 +818,26 @@ function VFXController:_triggerJumpscareShock(payload)
 	profile.Brightness = (profile.Brightness or 0) * math.clamp(intensity, 0.75, 1.2)
 	profile.AtmosphereDensityDelta = (profile.AtmosphereDensityDelta or 0) * math.clamp(intensity, 0.8, 1.25)
 	self:_playTransientShock(profile)
+end
+
+function VFXController:_triggerEnvironmentalShock(payload)
+	local eventToken = normalizeCueToken((payload and payload.eventType) or (payload and payload.cue))
+	local profile = ENVIRONMENTAL_SHOCK_PROFILES[eventToken]
+	if not profile then
+		return
+	end
+
+	local cloned = {}
+	for key, value in pairs(profile) do
+		cloned[key] = value
+	end
+	local intensity = math.clamp(tonumber(payload and payload.intensity) or 1, 0.45, 1.3)
+	cloned.BlurSize = math.max(0, math.floor(((cloned.BlurSize or 0) * intensity) + 0.5))
+	cloned.Contrast = (cloned.Contrast or 0) * intensity
+	cloned.Brightness = (cloned.Brightness or 0) * math.clamp(intensity, 0.8, 1.15)
+	cloned.AtmosphereDensityDelta = (cloned.AtmosphereDensityDelta or 0) * math.clamp(intensity, 0.85, 1.2)
+	self:_recordVFXDebug("EnvironmentalAudioTriggered", eventToken)
+	self:_playTransientShock(cloned)
 end
 
 function VFXController:_applyMapAtmosphere(mapName)
