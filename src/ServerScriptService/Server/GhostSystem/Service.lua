@@ -446,6 +446,19 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 	return ghostModel
 end
 
+local function tryParentGhostModel(ghostModel, container)
+	if typeof(ghostModel) ~= "Instance" or typeof(container) ~= "Instance" then
+		return false, "invalid_parent_target"
+	end
+	local ok, err = pcall(function()
+		ghostModel.Parent = container
+	end)
+	if ok then
+		return true
+	end
+	return false, tostring(err)
+end
+
 local function resolveSharedGameDataModule(moduleName)
 	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
 	if not shared then
@@ -1656,7 +1669,25 @@ function Service:InitializeMatch(match)
 
 	local ghostModel = createGhostFromTemplate(spawnCFrame, ghostType)
 		or createVisibleGhostPlaceholder(spawnCFrame, ghostType)
-	ghostModel.Parent = container
+	local parentOk, parentErr = tryParentGhostModel(ghostModel, container)
+	if not parentOk then
+		if ghostModel and ghostModel.Parent == nil then
+			pcall(function()
+				ghostModel:Destroy()
+			end)
+		end
+		ghostModel = createVisibleGhostPlaceholder(spawnCFrame, ghostType)
+		local fallbackOk, fallbackErr = tryParentGhostModel(ghostModel, container)
+		if not fallbackOk then
+			return nil, string.format("ghost_parent_failed:%s|fallback=%s", tostring(parentErr), tostring(fallbackErr))
+		end
+		setGhostTraceState("InitializeMatchFallback", string.format(
+			"match=%s;ghostType=%s;reason=%s",
+			tostring(matchId),
+			tostring(ghostType),
+			tostring(parentErr)
+		))
+	end
 	setGhostTraceState("InitializeMatch", string.format(
 		"match=%s;ghostType=%s;model=%s;placeholder=%s",
 		tostring(matchId),

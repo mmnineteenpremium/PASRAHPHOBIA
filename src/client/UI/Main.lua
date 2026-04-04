@@ -30,6 +30,7 @@ local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
 local UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
 local UI_VIEWPORT_OVERRIDE_Y_ATTR = "PasrahUIViewportOverrideY"
 local REINFORCED_SALT_OWNED_ATTR = "PasrahOwnsReinforcedSaltBag"
+local MATCH_MODE_ATTR = "MatchMode"
 local ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
 local MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
 local BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
@@ -193,7 +194,11 @@ local function createDefaultFieldKitToolState(toolType)
 	local config = FIELD_KIT_TOOL_CONFIG[toolType] or {}
 	local usesRemaining = tonumber(config.maxUses)
 	local localPlayer = Players.LocalPlayer
-	if toolType == "Garam" and localPlayer and localPlayer:GetAttribute(REINFORCED_SALT_OWNED_ATTR) == true then
+	if toolType == "Garam"
+		and localPlayer
+		and localPlayer:GetAttribute(MATCH_MODE_ATTR) ~= "Ranked"
+		and localPlayer:GetAttribute(REINFORCED_SALT_OWNED_ATTR) == true
+	then
 		usesRemaining = (usesRemaining or 0) + 1
 	end
 	return {
@@ -1594,9 +1599,15 @@ local function buildShopItemMeta(item)
 		end
 		table.insert(parts, table.concat(tagParts, ", "))
 	end
+	if type(item.modeAccess) == "string" and item.modeAccess == "ClassicOnly" then
+		table.insert(parts, "CLASSIC ONLY")
+	end
 	if tostring(item.currency or "MM") == "Robux" then
 		local flow = type(item.marketplaceType) == "string" and string.upper(item.marketplaceType) or "MARKETPLACE"
 		table.insert(parts, flow)
+		if tostring(item.category or "") == "CurrencyPack" and tostring(item.grantCurrency or "") ~= "" then
+			table.insert(parts, "IN-GAME " .. string.upper(tostring(item.grantCurrency)))
+		end
 		if item.enabled == false or not isShopMarketplaceReady(item) then
 			table.insert(parts, "SETUP")
 		end

@@ -23,12 +23,6 @@ end
 
 function Service:ApplyPassBonuses(player, reward)
     local multiplier = 1
-    if self._state:Get("LifetimePass") then
-        multiplier = multiplier * 2
-    end
-    if reward and reward.context == "DailyMissions" then
-        multiplier = multiplier * (self._state:Get("LifetimePass") and 2 or 1)
-    end
     local eventBus = Services.Get(self._deps, "EventBus")
     if eventBus and reward then
         eventBus:Publish("RewardGranted", { player = player, amount = reward.amount * multiplier, context = "RoyalPass" })

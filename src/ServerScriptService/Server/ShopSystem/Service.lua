@@ -12,6 +12,10 @@ local OWNED_ITEM_ATTRIBUTES = {
 	eq_spiritbox_modded = "PasrahOwnsModdedSpiritBox",
 	pp_eq_spiritbox_elite = "PasrahOwnsEliteSpiritBox",
 }
+local VALID_GRANT_CURRENCIES = {
+    MM = true,
+    PP = true,
+}
 
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
@@ -120,6 +124,7 @@ local function normalizeMarketplaceCompliance(item)
 
     local category = tostring(item.category or "")
     local grantsCurrency = type(item.grantCurrency) == "string" and item.grantCurrency ~= ""
+    local grantCurrency = type(item.grantCurrency) == "string" and item.grantCurrency or nil
     local grantCurrencyAmount = tonumber(item.grantCurrencyAmount) or 0
     local grantsEntitlement = item.royalPassPremium == true
         or (type(item.entitlementKey) == "string" and item.entitlementKey ~= "")
@@ -139,6 +144,12 @@ local function normalizeMarketplaceCompliance(item)
     if marketplaceType == "DeveloperProduct" and category == "CurrencyPack" and (not grantsCurrency or grantCurrencyAmount <= 0) then
         item.enabled = false
         item.setupHint = "Currency pack DeveloperProduct wajib menentukan grantCurrency dan grantCurrencyAmount."
+        return item
+    end
+
+    if marketplaceType == "DeveloperProduct" and category == "CurrencyPack" and not VALID_GRANT_CURRENCIES[tostring(grantCurrency or "")] then
+        item.enabled = false
+        item.setupHint = "Currency pack Robux hanya boleh memberi currency in-game MM atau PP."
         return item
     end
 
@@ -213,6 +224,7 @@ function Service:LoadShopCatalog()
                 grantItem = item.grantItem ~= false,
                 grantCurrency = item.grantCurrency,
                 grantCurrencyAmount = tonumber(item.grantCurrencyAmount) or nil,
+                modeAccess = item.modeAccess,
                 setupHint = item.setupHint,
             })
         end
@@ -590,6 +602,28 @@ function Service:GrantItem(player, itemId, itemData)
     return false, "grant_item_failed"
 end
 
+function Service:_grantCurrencyBenefit(player, item, reason)
+    if type(item) ~= "table" then
+        return false
+    end
+
+    local grantCurrency = tostring(item.grantCurrency or "")
+    local grantAmount = math.max(0, math.floor(tonumber(item.grantCurrencyAmount) or 0))
+    if grantAmount <= 0 or not VALID_GRANT_CURRENCIES[grantCurrency] then
+        return false
+    end
+
+    local economy = self:_getEconomyService()
+    if type(economy) ~= "table" or type(economy.AddCurrency) ~= "function" then
+        return false
+    end
+
+    local ok = pcall(function()
+        economy:AddCurrency(player, grantCurrency, grantAmount, reason or "CurrencyPackPurchase")
+    end)
+    return ok
+end
+
 function Service:ProcessPurchase(player, itemId)
     local ok, err, item, userId = self:ValidatePurchase(player, itemId)
     if not ok then
@@ -644,8 +678,17 @@ function Service:ProcessPurchase(player, itemId)
         return false, spendErr
     end
 
-    local granted, grantErr = self:GrantItem(player, itemId, item)
-    if not granted then
+    local grantedCurrency = self:_grantCurrencyBenefit(player, item, "CurrencyPackPurchase")
+    local grantedInventory = true
+    local grantErr = nil
+    if item.grantItem ~= false then
+        grantedInventory, grantErr = self:GrantItem(player, itemId, item)
+    else
+        grantedInventory = false
+    end
+
+    local softGrantOk = grantedCurrency == true or (item.grantItem ~= false and grantedInventory == true)
+    if not softGrantOk then
         self:_refundCurrency(player, userId, item.price, itemId, grantErr, purchaseCurrency)
         activeTransactions[userId] = nil
         self._state:Set("activeTransactions", activeTransactions)
@@ -653,9 +696,9 @@ function Service:ProcessPurchase(player, itemId)
             player = player,
             userId = userId,
             itemId = itemId,
-            reason = grantErr,
+            reason = grantErr or "grant_item_failed",
         })
-        return false, grantErr
+        return false, grantErr or "grant_item_failed"
     end
 
     self:_persistInventorySnapshot(player, userId)
@@ -732,16 +775,7 @@ function Service:GrantMarketplacePurchase(player, itemId, context)
         grantedInventory, _ = self:GrantItem(player, itemId, item)
     end
 
-    local grantedCurrency = false
-    if type(item.grantCurrency) == "string" and type(item.grantCurrencyAmount) == "number" and item.grantCurrencyAmount > 0 then
-        local economy = self:_getEconomyService()
-        if type(economy) == "table" and type(economy.AddCurrency) == "function" then
-            local ok = pcall(function()
-                economy:AddCurrency(player, item.grantCurrency, item.grantCurrencyAmount, "MarketplacePurchase")
-            end)
-            grantedCurrency = ok or grantedCurrency
-        end
-    end
+    local grantedCurrency = self:_grantCurrencyBenefit(player, item, "MarketplacePurchase")
 
     if item.grantItem ~= false and grantedInventory == false and grantedEntitlements ~= true and grantedCurrency ~= true then
         return false, "grant_item_failed"

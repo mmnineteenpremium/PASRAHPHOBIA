@@ -7656,3 +7656,105 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - jalur prestige sekarang tidak cuma benar secara backend, tetapi juga dijelaskan di surface shop yang relevan.
 - ini menutup blind spot UX “PP ada di toko, tapi pemain tidak tahu cara mendapatkannya”.
+
+## 2026-04-04 - Robux PP Packs And Ranked Fairness Guard
+
+### Scope
+
+- menambah paket `PP` berbasis `Robux`
+- menambah exchange `PP -> MM` yang tetap lokal ke experience ini
+- memastikan monetization tidak membuka `Pay To Win` di `Ranked`
+
+### Source Changes
+
+- `src/shared/DataTypes/ShopCatalog.lua`
+  - tambah `pp_pack_small`
+  - rename `pp_pack_standard`
+  - tambah `pp_pack_large`
+  - tambah `pp_to_mm_small`
+  - tambah `pp_to_mm_medium`
+  - tambah `pp_to_mm_large`
+  - tandai helper item sebagai `ClassicOnly`
+- `src/shared/DataTypes/ShopMarketplaceConfig.lua`
+  - tambah slot config `pp_pack_small` dan `pp_pack_large`
+  - simpan note bahwa `10576163165` bukan ID marketplace terverifikasi
+- `src/ServerScriptService/Server/ShopSystem/Service.lua`
+  - currency pack sekarang hanya boleh grant `MM/PP`
+  - purchase soft-currency kini mendukung `grantItem=false` + `grantCurrency`
+- `src/ServerScriptService/Server/EconomySystem/Service.lua`
+  - top-up `MM` dari marketplace / exchange tidak lagi tertabrak cap harian earn
+  - bonus `LifetimePass` yang memengaruhi ekonomi dihapus
+- `src/ServerScriptService/Server/EconomySystem/Rewards/RoyalPass/Service.lua`
+  - bonus reward `LifetimePass` dihapus
+- `src/ServerScriptService/Server/MatchSystem/MatchService.lua`
+  - player sekarang menerima attribute `MatchMode` dan `MatchDifficulty`
+- `src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceService.lua`
+  - helper item dineutralisasi saat `MatchMode == Ranked`
+- `src/ServerScriptService/Server/EvidenceSystem/EvidenceGateway.lua`
+  - buff jarak `Spirit Box` modded/elite dimatikan di `Ranked`
+- `src/client/UI/Main.lua`
+  - UI shop menandai item `CLASSIC ONLY`
+  - row Robux currency pack menandai `IN-GAME MM/PP`
+  - state tool lokal tidak lagi memberi reinforced salt bonus saat `Ranked`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_shop_ranked_fairness_build.rbxlx`
+  - `_tmp_robux_pp_ranked_guard_build.rbxlx`
+- validasi live Studio yang sukses:
+  - `GrantCurrency(PP, 80)` berhasil
+  - `GrantCurrency(MM, 5000)` berhasil
+  - `PurchaseItem(pp_eq_spiritbox_elite)` berhasil
+  - `PurchaseItem(pp_to_mm_medium)` berhasil
+  - wallet berubah dari:
+    - `MM=10550 PP=176 Robux=0`
+    - menjadi `MM=14750 PP=139 Robux=0`
+  - `GetShopPlayerSnapshot(pp_eq_spiritbox_elite)`:
+    - `hasItem=true`
+    - `ownedSnapshot=true`
+  - `GrantMarketplacePurchase(pp_pack_small)`:
+    - `PP +10`
+  - `GrantMarketplacePurchase(mm_pack_small)`:
+    - `MM +2500`
+- validasi fairness live yang sudah terbukti:
+  - `Ranked`: `SaltPlacement` pertama memberi `usesRemaining=2`
+  - `Classic`: `SaltPlacement` pertama memberi `usesRemaining=3`
+- validasi fairness live lanjutan pada sesi ini sempat terganggu bug runtime ghost Studio:
+  - `The Parent property of Ghost_* is locked`
+  - issue ini memblok playtest lanjutan, tetapi tidak mengubah hasil validasi monetization yang sudah sukses
+
+### Interpretation
+
+- `PP` sekarang punya loop lengkap:
+  - earned in-game
+  - topped up by `Robux`
+  - spent langsung untuk cosmetics / prestige / exchange lokal
+- `MM` bisa dibeli lewat `Robux` atau ditukar dari `PP`, tetapi tetap currency in-game dan tidak lintas experience
+- jalur Ranked sekarang lebih fair karena helper item tetap dibatasi ke `Classic`
+
+## 2026-04-04 - Ghost Parent Guard Added In Source
+
+### Scope
+
+- menutup crash match saat visual ghost gagal diparent ke container runtime
+
+### Source Changes
+
+- `src/ServerScriptService/Server/GhostSystem/Service.lua`
+  - tambah `tryParentGhostModel()`
+  - `InitializeMatch()` sekarang:
+    - mencoba parent ghost template secara protected
+    - fallback ke placeholder bila parent gagal
+    - mengembalikan error terstruktur bila bahkan fallback gagal
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_robux_pp_ranked_guard_build.rbxlx`
+- sesi Studio aktif masih menunjukkan drift runtime pada copy script server lama, sehingga crash `Ghost_* parent locked` belum hilang pada playtest itu
+
+### Interpretation
+
+- fix source sudah aman untuk di-commit
+- bila drift Studio dihapus (reconnect/sync script server aktif), jalur match tidak boleh lagi crash hanya karena satu template ghost gagal diparent
