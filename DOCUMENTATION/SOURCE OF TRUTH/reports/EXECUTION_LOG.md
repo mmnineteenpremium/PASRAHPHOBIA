@@ -7384,3 +7384,32 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - jalur `Robux` sekarang lebih tahan terhadap human error saat nanti ID marketplace mulai diisi.
 - prioritas aturan resmi Roblox sudah dipindahkan ke source code level, bukan cuma catatan manual.
+
+## 2026-04-04 - Publish-Safe Shop Visibility For Robux
+
+### Scope
+
+- mencegah item `Robux` placeholder yang belum compliant tampil ke player saat publish
+- tetap mempertahankan visibilitas item placeholder di Studio untuk setup/testing
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `loadShopCatalog()` sekarang memfilter item `Robux` yang:
+    - `enabled == false`, atau
+    - `marketplaceId` belum valid
+  - filter ini hanya aktif di runtime non-Studio
+  - Studio tetap melihat item placeholder agar proses setup Creator Hub masih nyaman
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_shop_publish_visibility_build.rbxlx`
+- verifikasi live script sinkron di Studio:
+  - `Client.UI.Main` memuat filter:
+    - `if currency == "Robux" and RunService:IsStudio() ~= true then ... shouldHide = enabled ~= true or marketplaceReady ~= true`
+
+### Interpretation
+
+- player publish tidak lagi melihat etalase `Robux` yang masih bertuliskan `SETUP` atau belum siap.
+- developer tetap bisa melihat placeholder di Studio sampai `marketplaceId` Creator Hub selesai diisi.

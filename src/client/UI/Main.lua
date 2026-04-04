@@ -4,6 +4,7 @@ local TweenService = game:GetService("TweenService")
 local GuiService = game:GetService("GuiService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 local Workspace = game:GetService("Workspace")
 
@@ -2369,7 +2370,20 @@ local function loadShopCatalog()
 	end
 	local ok, result = pcall(require, moduleScript)
 	if ok and type(result) == "table" then
-		return result
+		local filtered = {}
+		for _, item in ipairs(result) do
+			local currency = type(item) == "table" and tostring(item.currency or "MM") or "MM"
+			local shouldHide = false
+			if currency == "Robux" and RunService:IsStudio() ~= true then
+				local enabled = type(item) == "table" and item.enabled ~= false
+				local marketplaceReady = isShopMarketplaceReady(item)
+				shouldHide = enabled ~= true or marketplaceReady ~= true
+			end
+			if shouldHide ~= true then
+				table.insert(filtered, item)
+			end
+		end
+		return filtered
 	end
 	return {}
 end
