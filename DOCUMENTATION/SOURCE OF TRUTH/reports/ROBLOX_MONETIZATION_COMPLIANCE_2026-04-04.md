@@ -96,6 +96,16 @@
   - `Sanity Pill` helper tidak aktif
 - ini menjaga Ranked tetap fair; pembelian `Robux/MM/PP` tidak boleh memberi keunggulan kemenangan di Ranked
 
+## Update 2026-04-04 - Royal Pass Premium Safety
+
+- `royalpass_premium_track` tetap ditahan `disabled`
+- bonus currency premium khusus dari `RoyalPassSystem` sudah dimatikan di source
+- artinya jika premium track nanti diaktifkan, jalurnya harus tetap:
+  - cosmetic
+  - visual
+  - progression-safe
+- premium track tidak boleh menambah currency ekstra hanya karena player membayar `Robux`
+
 ## Update 2026-04-04 - Validation Snapshot
 
 - build source sukses:
