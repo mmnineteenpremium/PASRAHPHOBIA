@@ -8247,3 +8247,38 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - backlog item `Rapikan UI modular` bergerak maju secara teknis karena akar sizing overflow sudah dipotong
 - namun statusnya tetap jujur: panel compact/mobile masih butuh validasi emulator/handset nyata sebelum dinyatakan final
+
+## 2026-04-04 - Audio Slot Honesty Pass
+
+### Scope
+
+- menutup debt audio yang menipu diagnosis:
+  - `AmbientLoop_Main` diam-diam memakai heartbeat
+  - `GhostManifest_01` dan `GhostWhisper_01` masih memakai ID yang sama
+
+### Source Changes
+
+- `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
+  - `AudioContent` dikosongkan lagi
+- `src/ReplicatedStorage/Assets/Audio/Ghost/GhostManifest_01.model.json`
+  - manifest dipindah ke `rbxassetid://139204195403262`
+- hasil akhirnya:
+  - `AmbientLoop_Main` tetap placeholder jujur sampai ambience final legal siap
+  - `GhostWhisper_01` dan `GhostManifest_01` sekarang punya template berbeda
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_audio_slot_polish_build.rbxlx`
+- sesi Studio awal masih drift dan memuat slot lama:
+  - `AmbientLoop_Main = rbxassetid://138884191945388`
+  - `GhostManifest_01 = rbxassetid://83336813491039`
+- setelah restart play:
+  - `AmbientLoop_Main = ""`
+  - `GhostManifest_01 = rbxassetid://139204195403262`
+  - `GhostWhisper_01 = rbxassetid://83336813491039`
+
+### Interpretation
+
+- ambience sekarang kembali jujur sebagai placeholder, bukan heartbeat tersamar
+- manifest dan whisper akhirnya terpisah, sehingga pass audio berikutnya punya baseline yang lebih bersih untuk di-tune

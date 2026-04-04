@@ -782,6 +782,13 @@ Status:
   - jumpscare cues final
   - material/lighting pass map
   - icon dan asset visual konten lain
+- hygiene audio terbaru menutup dua debt yang paling menipu debugging:
+  - `AmbientLoop_Main` dikosongkan lagi supaya ambience tidak diam-diam memakai asset heartbeat
+  - `GhostManifest_01` sekarang dibedakan dari `GhostWhisper_01`, jadi manifest dan whisper tidak lagi memakai template yang sama
+- validasi live Studio terbaru setelah restart play membuktikan:
+  - `AmbientLoop_Main.SoundId = ""`
+  - `GhostManifest_01.SoundId = rbxassetid://139204195403262`
+  - `GhostWhisper_01.SoundId = rbxassetid://83336813491039`
 - catatan kandidat ambience:
   - kandidat Roblox `Cloudy Space (7399811837)` dan `No Light (7399814871)` sudah dicek lewat `MarketplaceService:GetProductInfo()`
   - keduanya `IsPublicDomain = false`, jadi tidak dipakai sebagai solusi publish-safe
