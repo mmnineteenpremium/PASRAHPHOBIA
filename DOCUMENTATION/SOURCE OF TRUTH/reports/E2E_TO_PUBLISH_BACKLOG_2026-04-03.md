@@ -1059,6 +1059,19 @@ Done jika:
 
 ### 17. QA dan perf gate
 
+Status:
+
+- **IN PROGRESS**.
+- baseline Studio single-client sekarang sudah tersedia lewat harness `StudioE2EControl`:
+  - `GetQAGateSnapshot`
+  - `StartSoloMatch`
+- baseline yang sudah tertutup:
+  - memory baseline
+  - network sanity untuk Studio single-client
+  - server log cleanliness baseline
+- pending yang masih jujur:
+  - multi-player test nyata dengan client kedua
+
 Pekerjaan:
 
 - memory baseline
@@ -1066,9 +1079,32 @@ Pekerjaan:
 - server log cleanliness
 - multi-player test
 
+Catatan reality scan:
+
+- snapshot lobby clean:
+  - `players=1`
+  - `activeMatches=0`
+  - `totalMemoryMb≈2096.96`
+  - `physicsFps≈59.90`
+  - `warnings=0`
+  - `errors=0`
+- snapshot match solo clean:
+  - `players=1`
+  - `activeMatches=1`
+  - `phase=PreparationPhase`
+  - `totalMemoryMb≈2150.98`
+  - `physicsFps≈60.04`
+  - `warnings=0`
+  - `errors=0`
+- bug runtime yang ditemukan QA dan sudah ditutup:
+  - `Client.UI.Main` sempat gagal start karena `shouldShowShopFilter()` dipanggil sebelum ter-bind
+- `ForceHunt` harness sekarang menolak phase yang belum siap dengan hasil jujur `match_not_hunt_ready`, jadi tidak lagi menambah warning palsu ke log runtime.
+- raw Studio console masih menampilkan info bootstrap berulang, tetapi snapshot `LogService` untuk warning/error saat baseline ini tetap bersih.
+
 Done jika:
 
 - pass gate minimum sebelum publish
+- smoke test multi-player nyata dengan client kedua selesai atau jelas dipindah ke checklist manual pra-publish
 
 ### 18. Final pass perubahan dan restruktur LOBBY + MAP IN GAME
 

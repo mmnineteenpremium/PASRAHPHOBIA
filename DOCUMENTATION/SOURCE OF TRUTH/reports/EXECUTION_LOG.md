@@ -9299,3 +9299,67 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - attribution legal sekarang tidak lagi bergantung pada catatan markdown atau ingatan sesi
 - provenance `Pocong` tidak lagi menjadi blocker utama roadmap
 - blocker lisensi yang masih tersisa bergeser ke cleanup asset legacy dan keputusan ambience final
+
+## 2026-04-05 - QA Gate Baseline Harness + UI Start Fix
+
+### Scope
+
+- menutup baseline item `17. QA dan perf gate` dengan snapshot runtime yang repeatable di Studio
+- menutup bug nyata yang ditemukan saat snapshot QA pertama
+
+### Source Changes
+
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+  - tambah action `GetQAGateSnapshot`
+  - tambah action `StartSoloMatch`
+  - snapshot sekarang melaporkan:
+    - player count
+    - active match count
+    - current match phase
+    - script memory
+    - total memory
+    - physics FPS
+    - player ping
+    - warning/error count dari `LogService`
+  - `ForceHunt` harness sekarang menolak phase yang belum siap dengan hasil `match_not_hunt_ready`, bukan menembak warning palsu ke runtime
+- `src/client/UI/Main.lua`
+  - perbaiki forward declaration `shouldShowShopFilter`
+  - bug runtime `attempt to call a nil value` di wallet summary shop kini tertutup
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+  - item `17` sekarang punya status reality-based, bukan daftar umum
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_qa_gate_snapshot_build.rbxlx`
+  - `_tmp_qa_gate_ui_fix_build.rbxlx`
+  - `_tmp_qa_gate_match_build.rbxlx`
+  - `_tmp_qa_gate_phase_fix_build.rbxlx`
+  - `_tmp_qa_gate_force_guard_build.rbxlx`
+- snapshot lobby clean:
+  - `players=1`
+  - `activeMatches=0`
+  - `totalMemoryMb=2096.96`
+  - `physicsFps=59.90`
+  - `warnings=0`
+  - `errors=0`
+- snapshot match solo clean:
+  - `players=1`
+  - `activeMatches=1`
+  - `phase=PreparationPhase`
+  - `totalMemoryMb=2150.98`
+  - `physicsFps=60.04`
+  - `warnings=0`
+  - `errors=0`
+- snapshot QA pertama sempat menemukan error runtime nyata:
+  - `Players.ZyraaaVex.PlayerScripts.Client.UI.Main:1443: attempt to call a nil value`
+  - setelah fix forward declaration, snapshot ulang kembali `warnings=0 errors=0`
+- validasi guard `ForceHunt`:
+  - hasil sekarang `ok=false result=match_not_hunt_ready phase=PreparationPhase`
+  - snapshot sesudahnya tetap `warnings=0 errors=0`
+
+### Interpretation
+
+- item `17` kini punya harness QA repeatable untuk Studio single-client
+- baseline memory/log/perf saat idle lobby dan match solo sudah tertutup
+- multi-player test nyata tetap belum bisa diklaim selesai dari sesi ini karena current tooling hanya memberi satu client Studio aktif
