@@ -33,6 +33,14 @@ local GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {
 	Pocong = Vector3.new(1.4, 5.2, 1.2),
 }
 
+local GHOST_TEMPLATE_TARGET_BOUNDS = {
+	Pocong = Vector3.new(1.8, 5.2, 1.6),
+	Kuntilanak = Vector3.new(2.2, 4.8, 1.7),
+	KuntilanakAggressive = Vector3.new(2.2, 5.4, 1.8),
+	Genderuwo = Vector3.new(3.0, 5.6, 2.4),
+	Leak = Vector3.new(2.4, 4.8, 2.0),
+}
+
 local GHOST_VISUAL_TRANSPARENCY_BY_STATE = {
 	Idle = 0.75,
 	Roaming = 0.35,
@@ -209,6 +217,41 @@ local function setGhostTraceState(stage, details)
 	ReplicatedStorage:SetAttribute("PasrahGhostTraceDetails", details)
 end
 
+local function clampGhostTemplateScale(ghostModel, ghostType)
+	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
+		return
+	end
+
+	local targetBounds = GHOST_TEMPLATE_TARGET_BOUNDS[ghostType] or Vector3.new(2.8, 5.6, 2.4)
+	local ok, _, currentBounds = pcall(function()
+		return ghostModel:GetBoundingBox()
+	end)
+	if not ok or typeof(currentBounds) ~= "Vector3" then
+		return
+	end
+
+	local currentX = math.max(currentBounds.X, 0.001)
+	local currentY = math.max(currentBounds.Y, 0.001)
+	local currentZ = math.max(currentBounds.Z, 0.001)
+	local factor = math.min(targetBounds.X / currentX, targetBounds.Y / currentY, targetBounds.Z / currentZ)
+	factor = math.min(1, factor)
+	if factor >= 0.98 and factor <= 1.02 then
+		return
+	end
+
+	local currentScale = 1
+	local okScale, value = pcall(function()
+		return ghostModel:GetScale()
+	end)
+	if okScale and type(value) == "number" and value > 0 then
+		currentScale = value
+	end
+
+	pcall(function()
+		ghostModel:ScaleTo(currentScale * factor)
+	end)
+end
+
 local function createGhostFromTemplate(spawnCFrame, ghostType)
 	local template = resolveGhostModelTemplate(ghostType)
 	if typeof(template) ~= "Instance" or not template:IsA("Model") then
@@ -230,8 +273,16 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 		end
 	end
 
+	clampGhostTemplateScale(ghostModel, ghostType)
+
 	local root = ghostModel:FindFirstChild("HumanoidRootPart", true)
 	if root and root:IsA("BasePart") then
+		root.Size = Vector3.new(2, 2, 1)
+		root.Transparency = 1
+		root.CanCollide = false
+		root.CanTouch = false
+		root.CanQuery = false
+		root.Anchored = true
 		ghostModel.PrimaryPart = root
 		ghostModel:SetPrimaryPartCFrame(spawnCFrame)
 	else
