@@ -805,6 +805,13 @@ Status:
     - `PasrahAudioLastTemplate = Jumpscare_01`
     - `PasrahAudioLastCue = jumpscare_stinger`
     - `PasrahAudioLastSoundId = rbxassetid://138329686293368`
+- `AudioController` sekarang juga tidak lagi membawa bug service import tersembunyi:
+  - `Players` kini di-resolve eksplisit
+  - reverb map sekarang diterapkan di boot lobby dan ikut membaca `PhaseChanged.mapId`
+  - baseline:
+    - lobby `LobbySocialHub -> Enum.ReverbType.Room`
+    - `HauntedHouse -> Enum.ReverbType.StoneCorridor`
+    - `EmptyBuilding -> Enum.ReverbType.Hallway`
 - pass map atmosphere sekarang tidak lagi hanya offset tunggal:
   - `LobbySocialHub`, `HauntedHouse`, `EmptyBuilding`, `AbandonedPalace`, dan `StudioMMNineteen` punya profile `Density/Offset/Color/Decay/Glare/Haze` sendiri
   - `VFXController` juga sekarang membaca `PhaseChanged.mapId`, bukan hanya `MatchStarted`, sehingga profile map benar-benar applied pada jalur runtime client yang canonical
