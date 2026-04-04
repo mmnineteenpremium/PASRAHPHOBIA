@@ -1,15 +1,27 @@
 local RoamingState = {}
 
+local function resolveRoamShiftInterval(context)
+	local difficultyProfile = context.difficultyProfile or {}
+	local aggressionValue = tonumber(difficultyProfile.GhostAggression) or 0
+	local configuredBase = tonumber(context.config.RoamShiftInterval) or 5
+	local baseInterval = math.max(3, configuredBase)
+
+	if aggressionValue >= 75 then
+		return context.rng:NextInteger(2, 4)
+	end
+	if aggressionValue >= 50 then
+		return context.rng:NextInteger(3, 5)
+	end
+	return context.rng:NextInteger(math.max(3, baseInterval - 1), baseInterval + 2)
+end
+
 function RoamingState.Enter(session, context)
 	local nextRoom = context.roaming:SelectNextRoom(session, context.snapshot)
 	if nextRoom then
 		session.currentRoomId = nextRoom
 	end
 
-	local difficultyProfile = context.difficultyProfile or {}
-	local aggressionValue = tonumber(difficultyProfile.GhostAggression) or 0
-	local roomShiftInterval = aggressionValue < 50 and math.random(8, 15) or math.random(3, 8)
-	session.stateData.nextRoamShiftAt = context.now + roomShiftInterval
+	session.stateData.nextRoamShiftAt = context.now + resolveRoamShiftInterval(context)
 end
 
 function RoamingState.Update(session, context)
@@ -33,10 +45,7 @@ function RoamingState.Update(session, context)
 		if nextRoom then
 			session.currentRoomId = nextRoom
 		end
-		local difficultyProfile = context.difficultyProfile or {}
-		local aggressionValue = tonumber(difficultyProfile.GhostAggression) or 0
-		local roomShiftInterval = aggressionValue < 50 and math.random(8, 15) or math.random(3, 8)
-		session.stateData.nextRoamShiftAt = context.now + roomShiftInterval
+		session.stateData.nextRoamShiftAt = context.now + resolveRoamShiftInterval(context)
 	end
 
 	local aggression = session.aggression or 0
