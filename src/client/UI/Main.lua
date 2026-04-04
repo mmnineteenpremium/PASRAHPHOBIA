@@ -6187,6 +6187,7 @@ function UISystem:_refreshShopPanel()
 	local secondaryText = self._shopState.lastMessage or "Pilih item untuk test shop."
 	local walletSummary = formatShopWalletSummary(self._shopState.wallet)
 	local ownedCount = 0
+	local activeFilter = tostring(self._shopState.filterKey or "All")
 	for _ in pairs(self._shopState.ownedItemIds or {}) do
 		ownedCount += 1
 	end
@@ -6210,21 +6211,33 @@ function UISystem:_refreshShopPanel()
 		badgeColor = Color3.fromRGB(82, 94, 126)
 	end
 
+	local footerText = string.format(
+		"Owned %d item. Klik BELI untuk item aktif. Label KURANG berarti saldo belum cukup, SETUP berarti item Robux belum compliant atau marketplaceId belum diisi di Creator Hub.",
+		ownedCount
+	)
+	if activeFilter == "PP" then
+		footerText = string.format(
+			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Gunakan tab ini untuk belanja prestige hasil main, bukan top-up langsung.",
+			ownedCount
+		)
+	elseif activeFilter == "Owned" then
+		footerText = string.format(
+			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini.",
+			ownedCount
+		)
+	end
+
 	self:_refreshWindowText(
 		"ShopUI",
 		statusText,
 		walletSummary,
 		secondaryText,
 		nil,
-		string.format(
-			"Owned %d item. Klik BELI untuk item aktif. Label KURANG berarti saldo belum cukup, SETUP berarti item Robux belum compliant atau marketplaceId belum diisi di Creator Hub.",
-			ownedCount
-		),
+		footerText,
 		badgeColor
 	)
 
 	if type(window.ShopFilterButtons) == "table" then
-		local activeFilter = tostring(self._shopState.filterKey or "All")
 		for _, filter in ipairs(SHOP_FILTERS) do
 			local button = window.ShopFilterButtons[filter.key]
 			if button then
