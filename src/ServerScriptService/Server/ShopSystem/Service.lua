@@ -5,6 +5,8 @@ Service.__index = Service
 
 local DEFAULT_PURCHASE_CURRENCY = "MM"
 local OWNED_ITEM_ATTRIBUTES = {
+	eq_sanitypill_standard = "PasrahOwnsSanityPillStandard",
+	eq_sanitypill_advanced = "PasrahOwnsSanityPillAdvanced",
 	eq_flashlight_uv = "PasrahOwnsUVFlashlight",
 	eq_saltbag_reinforced = "PasrahOwnsReinforcedSaltBag",
 	eq_spiritbox_modded = "PasrahOwnsModdedSpiritBox",
@@ -98,6 +100,51 @@ local function nowClock()
     return os.clock()
 end
 
+local function normalizeMarketplaceCompliance(item)
+    if type(item) ~= "table" then
+        return item
+    end
+
+    local purchaseCurrency = tostring(item.currency or DEFAULT_PURCHASE_CURRENCY)
+    if purchaseCurrency ~= "Robux" then
+        return item
+    end
+
+    local marketplaceType = tostring(item.marketplaceType or "")
+    local marketplaceId = tonumber(item.marketplaceId) or 0
+    if (marketplaceType ~= "GamePass" and marketplaceType ~= "DeveloperProduct") or marketplaceId <= 0 then
+        item.enabled = false
+        item.setupHint = "Isi marketplaceId valid di ShopMarketplaceConfig/Creator Hub agar item Robux aktif."
+        return item
+    end
+
+    local category = tostring(item.category or "")
+    local grantsCurrency = type(item.grantCurrency) == "string" and item.grantCurrency ~= ""
+    local grantCurrencyAmount = tonumber(item.grantCurrencyAmount) or 0
+    local grantsEntitlement = item.royalPassPremium == true
+        or (type(item.entitlementKey) == "string" and item.entitlementKey ~= "")
+
+    if marketplaceType == "GamePass" and (category == "CurrencyPack" or grantsCurrency or grantCurrencyAmount > 0) then
+        item.enabled = false
+        item.setupHint = "Currency pack Robux harus memakai DeveloperProduct, bukan GamePass."
+        return item
+    end
+
+    if marketplaceType == "DeveloperProduct" and grantsEntitlement then
+        item.enabled = false
+        item.setupHint = "Unlock permanen/entitlement Robux harus memakai GamePass."
+        return item
+    end
+
+    if marketplaceType == "DeveloperProduct" and category == "CurrencyPack" and (not grantsCurrency or grantCurrencyAmount <= 0) then
+        item.enabled = false
+        item.setupHint = "Currency pack DeveloperProduct wajib menentukan grantCurrency dan grantCurrencyAmount."
+        return item
+    end
+
+    return item
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -148,7 +195,7 @@ function Service:LoadShopCatalog()
     local normalized = {}
     for _, item in pairs(loadedCatalog) do
         if type(item) == "table" and type(item.id) == "string" and item.id ~= "" then
-            normalized[item.id] = {
+            normalized[item.id] = normalizeMarketplaceCompliance({
                 id = item.id,
                 name = item.name or item.id,
                 price = tonumber(item.price) or 0,
@@ -167,7 +214,7 @@ function Service:LoadShopCatalog()
                 grantCurrency = item.grantCurrency,
                 grantCurrencyAmount = tonumber(item.grantCurrencyAmount) or nil,
                 setupHint = item.setupHint,
-            }
+            })
         end
     end
     return normalized

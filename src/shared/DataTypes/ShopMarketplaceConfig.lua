@@ -1,5 +1,8 @@
 local ShopMarketplaceConfig = {
     -- Jika true: item Robux otomatis enabled saat marketplaceId > 0.
+    -- Tetap isi sesuai jenis resmi Roblox:
+    -- GamePass -> entitlement/unlock permanen
+    -- DeveloperProduct -> pembelian berulang seperti currency pack
     autoEnableWhenIdPresent = true,
     items = {
         -- GamePass
