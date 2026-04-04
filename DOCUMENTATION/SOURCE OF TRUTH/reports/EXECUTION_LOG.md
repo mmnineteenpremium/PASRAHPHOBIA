@@ -7257,3 +7257,130 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - harness Studio sekarang lebih kuat untuk validasi economy/shop tanpa menunggu jalur reward match atau mengutak-atik state manual.
 - `UV Flashlight Mk2` tidak lagi hanya siap di source; jalur `grant MM -> buy -> attribute sync -> visual UV aktif di FPV` sudah tertutup live.
+
+## 2026-04-04 - Spirit Box Upgrade + Sanity Pill Runtime Hook
+
+### Scope
+
+- mengubah `Spirit Box` dari item shop dekoratif menjadi upgrade nyata untuk tool `KotakArwah`
+- menambah runtime consumable `Sanity Pill` yang tetap server-authoritative dan tidak bocor jadi unlimited
+- menampilkan `KotakArwah` langsung di `Field Kit` agar jalur player-facing tidak tersembunyi
+
+### Source Changes
+
+- `src/ServerScriptService/Server/ShopSystem/Service.lua`
+  - tambah attribute ownership client-facing:
+    - `PasrahOwnsSanityPillStandard`
+    - `PasrahOwnsSanityPillAdvanced`
+- `src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceService.lua`
+  - tambah utility runtime `PilSanity`
+  - tier sanity pill:
+    - `standard` -> `1` use per match, restore `24`
+    - `advanced` -> `2` uses per match, restore `42`
+  - tambah tier `Spirit Box`:
+    - `base`
+    - `modded`
+    - `elite`
+  - upgrade tier sekarang mempengaruhi `detectionChance` dan `responseText`
+  - payload fail path untuk `KotakArwah` sekarang tetap membawa `responseTier/responseText`, jadi upgrade tidak “hilang” saat spawn roll gagal
+- `src/ServerScriptService/Server/EvidenceSystem/EvidenceGateway.lua`
+  - tambah request alias `SanityPillUse`
+  - tambah response payload `PilSanity`
+  - `KotakArwah` sekarang punya range bonus:
+    - modded -> `26`
+    - elite -> `30`
+- `src/ServerScriptService/Server/EvidenceSystem/Controller.lua`
+  - broadcast `SanityPillUsed` ke client
+- `src/client/EvidenceTools/Main.lua`
+  - register tool client `PilSanity`
+- `src/client/EvidenceTools/PilSanity/Main.lua`
+  - adapter client baru untuk jalur request pill
+- `src/client/UI/Main.lua`
+  - `Field Kit` sekarang punya tombol kelima:
+    - `SPIRIT`
+    - shortcut `[5]`
+    - glyph `KA`
+  - layout grid disesuaikan agar 5 tombol tetap muat
+  - tool feedback sekarang menampilkan konteks `responseText/responseTier`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_equipment_hook_build.rbxlx`
+- verifikasi live script sinkron di Studio:
+  - `EvidenceService` memuat `_resolveSpiritBoxTier`, `_resolveSanityPillConfig`, dan payload fail-path baru
+  - `StarterPlayerScripts.Client.UI.Main` memuat `FIELD_KIT_TOOL_ORDER = { \"JejakEnergi\", \"Garam\", \"Salib\", \"Dupa\", \"KotakArwah\" }`
+- verifikasi live purchase + ownership:
+  - `eq_spiritbox_modded` -> `PurchaseProcessed.success=true`
+  - `eq_sanitypill_advanced` -> `PurchaseProcessed.success=true`
+  - attribute pemain terset:
+    - `PasrahOwnsModdedSpiritBox = true`
+    - `PasrahOwnsSanityPillAdvanced = true`
+- verifikasi live `Spirit Box`:
+  - payload request `KotakArwahQuestion` sekarang mengembalikan:
+    - `responseTier = modded`
+    - contoh `responseText = \"Dia melihatmu.\"`
+  - contoh fail reason yang tervalidasi tetap membawa tier:
+    - `spawn_roll_failed`
+    - `ghost_cannot_emit_evidence`
+    - `tool_throttled`
+- verifikasi live `Sanity Pill`:
+  - request `SanityPillUse` sukses:
+    - `reason = sanity_restored`
+    - `tier = advanced`
+    - `sanityRestored = 42`
+    - `usesRemaining = 1`
+- verifikasi live UI:
+  - `MatchUI.FieldKitFrame` ada
+  - `KotakArwahButton` ada
+  - `TitleLabel = SPIRIT`
+  - `ShortcutLabel = [5]`
+  - `Glyph = KA`
+- console Studio bersih dari error baru yang berkaitan dengan patch ini
+
+### Interpretation
+
+- `Spirit Box` sekarang punya nilai progression yang benar: upgrade shop langsung terasa di runtime tool, bukan sekadar ownership flag pasif.
+- `Sanity Pill` sekarang masuk ke gameplay dengan stok per-match yang dijaga server, jadi tidak membuka celah unlimited-use dari sisi client.
+- `Field Kit` akhirnya menampilkan `Spirit Box` secara eksplisit, sehingga pemain dan tester tidak perlu menebak tool ini hidup di mana.
+
+## 2026-04-04 - Robux Compliance Guard Audit
+
+### Scope
+
+- mengunci flow `Robux` agar selalu tunduk ke klasifikasi resmi Roblox sebelum source-of-truth lokal
+- menutup risiko salah setup `GamePass` vs `DeveloperProduct`
+- memperjelas pesan UI agar setup marketplace dilakukan lewat `Creator Hub` + `ShopMarketplaceConfig`, bukan asal edit katalog
+
+### Source Changes
+
+- `src/ServerScriptService/Server/ShopSystem/Service.lua`
+  - tambah `normalizeMarketplaceCompliance(item)`
+  - guard baru:
+    - item `Robux` auto-`disabled` jika `marketplaceType` invalid atau `marketplaceId <= 0`
+    - `GamePass` auto-`disabled` jika dipakai untuk `CurrencyPack`
+    - `DeveloperProduct` auto-`disabled` jika dipakai untuk entitlement permanen
+    - `DeveloperProduct` `CurrencyPack` auto-`disabled` jika belum punya `grantCurrency/grantCurrencyAmount`
+- `src/client/UI/Main.lua`
+  - pesan `SETUP` sekarang menunjuk ke `ShopMarketplaceConfig` + `Creator Hub`
+  - footer shop sekarang menjelaskan bahwa `SETUP` juga berarti item belum compliant
+- `src/shared/DataTypes/ShopMarketplaceConfig.lua`
+  - tambah komentar guard jenis resmi Roblox:
+    - `GamePass` -> unlock permanen
+    - `DeveloperProduct` -> pembelian berulang
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/ROBLOX_MONETIZATION_COMPLIANCE_2026-04-04.md`
+  - audit checklist monetization Roblox untuk fase publish nanti
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_robux_compliance_build.rbxlx`
+- verifikasi live script sinkron di Studio:
+  - `ShopSystem.Service` memuat `normalizeMarketplaceCompliance`
+  - `Client.UI.Main` memuat pesan setup baru:
+    - `Isi marketplaceId valid di ShopMarketplaceConfig lalu publish lewat Creator Hub.`
+
+### Interpretation
+
+- jalur `Robux` sekarang lebih tahan terhadap human error saat nanti ID marketplace mulai diisi.
+- prioritas aturan resmi Roblox sudah dipindahkan ke source code level, bukan cuma catatan manual.

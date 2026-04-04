@@ -135,7 +135,7 @@ local CLOSE_KEYBOARD_KEY = Enum.KeyCode.Escape
 local CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
 local CLOSE_HINT_TEXT = "[Esc] / [B] / [X] untuk tutup"
 local JOURNAL_TOOL_TYPE = "JejakEnergi"
-local FIELD_KIT_TOOL_ORDER = { "JejakEnergi", "Garam", "Salib", "Dupa" }
+local FIELD_KIT_TOOL_ORDER = { "JejakEnergi", "Garam", "Salib", "Dupa", "KotakArwah" }
 local FIELD_KIT_TOOL_CONFIG = {
 	JejakEnergi = {
 		accent = Color3.fromRGB(66, 104, 146),
@@ -176,6 +176,15 @@ local FIELD_KIT_TOOL_CONFIG = {
 		role = "Repel",
 		shortcut = "4",
 		keyCode = Enum.KeyCode.Four,
+	},
+	KotakArwah = {
+		accent = Color3.fromRGB(84, 120, 120),
+		glyph = "KA",
+		label = "SPIRIT",
+		openJournal = false,
+		role = "Voice",
+		shortcut = "5",
+		keyCode = Enum.KeyCode.Five,
 	},
 }
 
@@ -1305,7 +1314,7 @@ local function describeShopPurchaseBlock(item, reason)
 		return "Item belum diaktifkan."
 	end
 	if reason == "marketplace_id_missing" then
-		return "Item Robux belum aktif. Isi marketplaceId di ShopCatalog."
+		return "Item Robux belum aktif. Isi marketplaceId valid di ShopMarketplaceConfig lalu publish lewat Creator Hub."
 	end
 	return "Item belum bisa dibeli saat ini."
 end
@@ -2248,6 +2257,12 @@ local function buildToolContextSummary(data)
 	if data.repellentUntil ~= nil then
 		table.insert(fragments, "Repellent aktif")
 	end
+	if type(data.responseText) == "string" and data.responseText ~= "" then
+		table.insert(fragments, data.responseText)
+	end
+	if type(data.responseTier) == "string" and data.responseTier ~= "" then
+		table.insert(fragments, string.format("Tier %s", string.upper(data.responseTier)))
+	end
 
 	if #fragments == 0 then
 		return nil
@@ -2303,6 +2318,11 @@ local function resolveToolFeedback(toolType, success, reason, data, eventName)
 		detail = data and data.huntRepelled == true
 			and "Ghost terdorong dan sanity dipulihkan."
 			or "Repellent menyala di area target."
+	elseif reason == "sanity_restored" then
+		status = "Sanity pulih."
+		detail = data and data.resultingSanity ~= nil
+			and string.format("Sanity sekarang %d.", math.floor(tonumber(data.resultingSanity) or 0))
+			or "Pil dipakai untuk stabilisasi."
 	elseif reason == "tool_local_cooldown" or reason == "tool_cooldown" then
 		status = toolLabel .. " cooldown."
 		detail = "Tunggu sebentar sebelum memakai tool lagi."
@@ -2713,7 +2733,7 @@ function UISystem:Init(context)
 	self._teleportOverlayTween = nil
 	self._lastCountdownAudioSecond = nil
 	self._matchWindowDismissed = false
-	self._matchControlsHintText = "[1] Scan   [2] Garam   [3] Salib   [4] Dupa   [J] Journal   [F] Flashlight   [K] Match   [Esc] Tutup UI"
+	self._matchControlsHintText = "[1] Scan   [2] Garam   [3] Salib   [4] Dupa   [5] Spirit   [J] Journal   [F] Flashlight   [K] Match   [Esc] Tutup UI"
 	self._uxWidgets = {
 		match = {},
 		lobby = {},
@@ -6146,7 +6166,7 @@ function UISystem:_refreshShopPanel()
 		secondaryText,
 		nil,
 		string.format(
-			"Owned %d item. Klik BELI untuk item aktif. Label KURANG berarti saldo belum cukup, SETUP berarti item Robux belum diisi marketplaceId.",
+			"Owned %d item. Klik BELI untuk item aktif. Label KURANG berarti saldo belum cukup, SETUP berarti item Robux belum compliant atau marketplaceId belum diisi di Creator Hub.",
 			ownedCount
 		),
 		badgeColor
@@ -7710,10 +7730,12 @@ function UISystem:_applyDeviceSizing()
 	end
 	if match and match.FieldKitGrid and match.FieldKitFrame then
 		local availableWidth = math.max(280, match.FieldKitFrame.Size.X.Offset - 24)
+		local toolCount = math.max(1, #FIELD_KIT_TOOL_ORDER)
 		local cellPadding = profile.isMobile and 6 or 6
-		local cellWidth = math.floor((availableWidth - (cellPadding * 3)) / 4)
+		local cellWidth = math.floor((availableWidth - (cellPadding * math.max(0, toolCount - 1))) / toolCount)
+		local minCellWidth = toolCount >= 5 and 56 or (profile.isMobile and 72 or 76)
 		match.FieldKitGrid.CellPadding = UDim2.fromOffset(cellPadding, 0)
-		match.FieldKitGrid.CellSize = UDim2.fromOffset(math.max(profile.isMobile and 72 or 76, cellWidth), profile.isMobile and 58 or 56)
+		match.FieldKitGrid.CellSize = UDim2.fromOffset(math.max(minCellWidth, cellWidth), profile.isMobile and 58 or 56)
 	end
 	if match and match.FieldKitStatusLabel then
 		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, profile.isMobile and 100 or 98)
