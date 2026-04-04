@@ -15,6 +15,10 @@ local function trim(value)
     return (value:gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
+local function isAllowedBuiltInSoundId(soundId)
+    return soundId:sub(1, #"rbxasset://sounds/") == "rbxasset://sounds/"
+end
+
 local function shouldReplace(soundId)
     if type(soundId) ~= "string" then
         return true
@@ -27,6 +31,10 @@ local function shouldReplace(soundId)
 
     if string.find(string.upper(raw), PLACEHOLDER_TOKEN, 1, true) then
         return true
+    end
+
+    if isAllowedBuiltInSoundId(raw) then
+        return false
     end
 
     local prefix = "rbxassetid://"

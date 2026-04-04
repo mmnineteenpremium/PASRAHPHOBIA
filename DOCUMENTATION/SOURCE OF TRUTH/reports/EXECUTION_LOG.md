@@ -111,6 +111,62 @@ Bersihkan dua LocalScript legacy tambahan yang masih menambah owner visual/audio
 
 Lanjut audit script top-level client yang masih aktif, lalu tentukan apakah `CameraController`, `MovementController`, dan `FlashlightController` dipertahankan sebagai owner canonical sementara atau perlu dimigrasi.
 
+## 2026-04-04 09:18 ICT
+
+### Task
+
+Stabilkan runtime boot Studio, sinkronkan visual ghost terbaru ke Studio, dan aktifkan template audio UI yang sebelumnya kosong di runtime.
+
+### Linked Issues
+
+- ghost visual drift antara local source dan Studio
+- boot blocker `ShopSystem`
+- imported asset residue di `Workspace`
+- template audio UI kosong saat runtime
+
+### Files Changed
+
+- `src/ServerScriptService/Server/Core/AudioSanitizer.lua`
+- `src/ServerScriptService/Server/GhostSystem/Service.lua`
+- `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+- `src/ReplicatedStorage/Assets/Audio/UI/CountdownTick_01.model.json`
+- `src/ReplicatedStorage/Assets/Audio/UI/TeleportDrop_01.model.json`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `AudioSanitizer` sekarang mengizinkan built-in sound `rbxasset://sounds/...` sehingga template UI tidak otomatis dinonaktifkan
+- `GhostSystem.Service` diperkuat untuk:
+  - clamp ukuran template ghost imported
+  - snap ghost ke ground berdasarkan bounding box
+  - orientasi visual ke target hunt jika tersedia
+  - motion idle/roaming/manifest/hunt berbasis tick runtime
+- runtime Studio yang stale disamakan kembali untuk:
+  - `AudioSanitizer`
+  - `GhostSystem.Service`
+  - `ShopSystem.Controller` agar tidak membaca `MarketplaceService.ProcessReceipt`
+- residu model `129878813436863` di `Workspace` dihapus karena membawa script/tool yang mencemari boot runtime
+- template audio UI source sekarang memakai `SoundId` alih-alih `AudioContent` supaya runtime Roblox benar-benar mengisi ID sound
+
+### Validation
+
+- boot Studio playtest sekarang selesai tanpa blocker `ShopSystem Start failed`
+- warning script liar dari `Workspace.129878813436863.Kawaii Charge.*` hilang setelah residu dihapus
+- forced ghost `Kuntilanak` berhasil spawn di `Workspace.ActiveMatches`
+- bounding box runtime `Kuntilanak` tervalidasi sekitar `3.48 x 4.80 x 1.75`
+- motion visual ghost tervalidasi bergerak antar sampel runtime (`delta ~= 0.10`) pada cadence tick sistem saat ini
+- template audio runtime sekarang terisi:
+  - `ButtonClick_01 = rbxasset://sounds/electronicpingshort.wav`
+  - `CountdownTick_01 = rbxassetid://101202336513383`
+  - `TeleportDrop_01 = rbxassetid://138329686293368`
+- build source lokal sukses:
+  - `_tmp_ghost_motion_build.rbxlx`
+  - `_tmp_ui_audio_soundid_build.rbxlx`
+
+### Next Step
+
+Lanjut ke polish vertical slice berikutnya: validasi ghost tipe lain (`Genderuwo`, `Leak`, `Pocong`) pada runtime aktual, lalu pindah ke blok asset/gameplay yang masih placeholder atau belum punya perilaku production.
+
 ## 2026-04-04 00:34 ICT
 
 ### Task
