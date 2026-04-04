@@ -3218,9 +3218,41 @@ function UISystem:_setBasicWindowPanelVisible(guiName, visible)
 		setAnimatedPanelVisible(panel, shouldShow, false)
 	end
 	if floatButton and floatButton:IsA("GuiObject") then
-		floatButton.Visible = self._matchPhase == MATCH_PHASE.LOBBY and not shouldShow
+		floatButton.Visible = self._matchPhase == MATCH_PHASE.LOBBY and not shouldShow and not self:_isLobbyFloatRailBlocked()
 	end
 	return true
+end
+
+function UISystem:_isLobbyFloatRailBlocked()
+	if self._matchPhase ~= MATCH_PHASE.LOBBY then
+		return true
+	end
+	if self._roomBrowserVisible == true then
+		return true
+	end
+	local lobby = self._uxWidgets and self._uxWidgets.lobby or nil
+	local lobbyPanelVisible = lobby and lobby.BasicPanel and lobby.BasicPanel.Visible == true
+	if self._lobbyPanelCollapsed ~= true or lobbyPanelVisible then
+		return true
+	end
+
+	for _, guiName in ipairs(CONFLICT_BASIC_GUI_NAMES) do
+		local _, panel = self:_getBasicWindowState(guiName)
+		if panel and panel.Visible == true then
+			return true
+		end
+	end
+
+	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
+		local widgets = self._uxWidgets
+			and self._uxWidgets.windows
+			and self._uxWidgets.windows[guiName]
+		if widgets and widgets.Panel and widgets.Panel.Visible == true then
+			return true
+		end
+	end
+
+	return false
 end
 
 function UISystem:_closeConflictingWindows(activeWindowName)
@@ -3384,7 +3416,7 @@ function UISystem:_syncAuxiliaryWindowVisibility()
 	if not playerGui then
 		return
 	end
-	local blockLobbyFloatRail = self._roomBrowserVisible == true
+	local blockLobbyFloatRail = self:_isLobbyFloatRailBlocked()
 
 	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
 		local widgets = self._uxWidgets
@@ -3394,11 +3426,12 @@ function UISystem:_syncAuxiliaryWindowVisibility()
 		if widgets and gui and gui:IsA("ScreenGui") then
 			local screenEnabled = gui.Enabled == true
 			local dismissed = self._windowDismissed[guiName] == true
+			local panelVisible = widgets.Panel and widgets.Panel.Visible == true
 			if widgets.Panel then
 				setAnimatedPanelVisible(widgets.Panel, screenEnabled and not dismissed, false)
 			end
 			if widgets.FloatButton then
-				widgets.FloatButton.Visible = screenEnabled and dismissed and not blockLobbyFloatRail
+				widgets.FloatButton.Visible = screenEnabled and (dismissed or not panelVisible) and not blockLobbyFloatRail
 			end
 		end
 	end
@@ -3407,6 +3440,19 @@ end
 function UISystem:_setAuxiliaryWindowDismissed(guiName, dismissed)
 	self._windowDismissed[guiName] = dismissed == true
 	self:_syncAuxiliaryWindowVisibility()
+	self:_syncLobbyAuxiliaryWindowVisibility()
+	self:_updateRoomBrowserVisibility()
+	self:_refreshBasicLobbyPanel()
+	self:_refreshBasicWindows()
+	if dismissed == true then
+		local widgets = self._uxWidgets
+			and self._uxWidgets.windows
+			and self._uxWidgets.windows[guiName]
+		if widgets and widgets.FloatButton then
+			widgets.FloatButton.Visible = not self:_isLobbyFloatRailBlocked()
+		end
+		self:_layoutLobbyFloatRail()
+	end
 end
 
 function UISystem:_openAuxiliaryWindow(guiName)
@@ -3438,7 +3484,7 @@ function UISystem:_syncLobbyAuxiliaryWindowVisibility()
 	local lobbyVisible = self._matchPhase == MATCH_PHASE.LOBBY
 		and self._uiState.LobbyUI
 		and self._uiState.LobbyUI.visible == true
-	local blockLobbyFloatRail = self._roomBrowserVisible == true
+	local blockLobbyFloatRail = self:_isLobbyFloatRailBlocked()
 
 	for _, guiName in ipairs({ "MainMenuUI", "LeaderboardUI" }) do
 		local gui, panel, floatButton = self:_getBasicWindowState(guiName)
@@ -3474,8 +3520,8 @@ function UISystem:_syncLobbyPanelVisibility()
 end
 
 function UISystem:_layoutLobbyFloatRail()
-	local profile = self._deviceProfile and self._deviceProfile.profile or {}
-	if self._matchPhase ~= MATCH_PHASE.LOBBY or self._roomBrowserVisible == true then
+	local profile = self._deviceProfile or {}
+	if self:_isLobbyFloatRailBlocked() then
 		return
 	end
 
@@ -3538,6 +3584,10 @@ function UISystem:_setLobbyPanelCollapsed(collapsed)
 	end
 	self:_syncLobbyPanelVisibility()
 	self:_refreshBasicLobbyPanel()
+	self:_syncAuxiliaryWindowVisibility()
+	self:_syncLobbyAuxiliaryWindowVisibility()
+	self:_updateRoomBrowserVisibility()
+	self:_layoutLobbyFloatRail()
 end
 
 function UISystem:_toggleLobbyPanelCollapsed()
@@ -6591,8 +6641,8 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 
 	local margin = profile.isMobile and 2 or 14
-	local usableWidth = math.max(360, viewportSize.X - (topLeftInset.X + bottomRightInset.X + margin * 2))
-	local usableHeight = math.max(420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + margin * 2))
+	local usableWidth = math.max(profile.isMobile and 320 or 360, viewportSize.X - (topLeftInset.X + bottomRightInset.X + margin * 2))
+	local usableHeight = math.max(profile.isMobile and 520 or 420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + margin * 2))
 	local forceCompact = ReplicatedStorage:GetAttribute(UI_FORCE_COMPACT_ATTR) == true
 	-- Force compact layout for short viewports so room controls do not overlap
 	-- host action buttons (Start/Leave) in the room detail panel.
@@ -6602,15 +6652,15 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local panelWidth = isCompact and usableWidth or math.min(1080, usableWidth)
 	local panelHeight = isCompact and usableHeight or math.min(668, usableHeight)
 	if profile.isMobile then
-		panelWidth = math.max(336, viewportSize.X - (topLeftInset.X + bottomRightInset.X + 2))
-		panelHeight = math.max(500, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 2))
+		panelWidth = math.max(332, viewportSize.X - (topLeftInset.X + bottomRightInset.X))
+		panelHeight = math.max(540, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y))
 	end
 	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
 	panel.Position = UDim2.fromOffset(
 		topLeftInset.X + margin + math.floor(panelWidth * 0.5),
 		topLeftInset.Y + margin + math.floor(panelHeight * 0.5)
 	)
-	panel.BackgroundTransparency = profile.isMobile and 0.08 or (isCompact and 0.14 or 0.18)
+	panel.BackgroundTransparency = profile.isMobile and 0.04 or (isCompact and 0.14 or 0.18)
 	panel.ClipsDescendants = true
 	if panelScale then
 		panelScale.Scale = 1
@@ -6640,8 +6690,8 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		statusLabel.TextSize = profile.isMobile and 14 or (isCompact and 13 or 12)
 	end
 
-	local controlsY = isCompact and 72 or 74
-	local tabHeight = isCompact and 36 or 30
+	local controlsY = profile.isMobile and 78 or (isCompact and 72 or 74)
+	local tabHeight = profile.isMobile and 40 or (isCompact and 36 or 30)
 	local tabGap = 6
 	local tabWidth = math.floor((panelWidth - headerPadding * 2 - (tabGap * 2)) / 3)
 	setOffsetBounds(widgets.ClassicButton, headerPadding, controlsY, tabWidth, tabHeight)
@@ -6665,50 +6715,50 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local previewMapGradient = roomPreviewMap and roomPreviewMap:FindFirstChild("PreviewGradient")
 
 	local contentTop = controlsY + tabHeight + 12
-	local actionStackHeight = isCompact and 130 or 128
+	local actionStackHeight = profile.isMobile and 154 or (isCompact and 130 or 128)
 	if isCompact then
 		local previewWidth = panelWidth - headerPadding * 2
-		local previewHeight = math.clamp(math.floor(panelHeight * 0.36), 254, 320)
+		local previewHeight = math.clamp(math.floor(panelHeight * (profile.isMobile and 0.33 or 0.36)), profile.isMobile and 236 or 254, profile.isMobile and 304 or 320)
 		local actionY = panelHeight - actionStackHeight
 		local roomListY = contentTop + previewHeight + 12
 		local roomListHeight = actionY - roomListY - 10
-		if roomListHeight < 140 then
-			local deficit = 140 - roomListHeight
-			previewHeight = math.max(224, previewHeight - deficit)
+		if roomListHeight < (profile.isMobile and 156 or 140) then
+			local deficit = (profile.isMobile and 156 or 140) - roomListHeight
+			previewHeight = math.max(profile.isMobile and 212 or 224, previewHeight - deficit)
 			roomListY = contentTop + previewHeight + 12
-			roomListHeight = math.max(140, actionY - roomListY - 10)
+			roomListHeight = math.max(profile.isMobile and 156 or 140, actionY - roomListY - 10)
 		end
 
 		setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, previewWidth, previewHeight)
 		setOffsetBounds(roomList, headerPadding, roomListY, previewWidth, roomListHeight)
-		setOffsetBounds(joinPassword, headerPadding, actionY - 42, previewWidth, 34)
-		setOffsetBounds(queueButton, headerPadding, actionY, previewWidth, 42)
-		setOffsetBounds(quickClassicButton, headerPadding, actionY + 46, math.floor((previewWidth - 6) * 0.5), 36)
-		setOffsetBounds(quickRankedButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, actionY + 46, math.floor((previewWidth - 6) * 0.5), 36)
-		setOffsetBounds(refreshButton, headerPadding, actionY + 86, math.floor((previewWidth - 6) * 0.5), 36)
-		setOffsetBounds(createRoomButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, actionY + 86, math.floor((previewWidth - 6) * 0.5), 36)
+		setOffsetBounds(joinPassword, headerPadding, actionY - (profile.isMobile and 46 or 42), previewWidth, profile.isMobile and 38 or 34)
+		setOffsetBounds(queueButton, headerPadding, actionY, previewWidth, profile.isMobile and 46 or 42)
+		setOffsetBounds(quickClassicButton, headerPadding, actionY + (profile.isMobile and 50 or 46), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
+		setOffsetBounds(quickRankedButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, actionY + (profile.isMobile and 50 or 46), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
+		setOffsetBounds(refreshButton, headerPadding, actionY + (profile.isMobile and 94 or 86), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
+		setOffsetBounds(createRoomButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, actionY + (profile.isMobile and 94 or 86), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
 
-		local previewMapHeight = math.clamp(math.floor(previewHeight * 0.45), 112, 136)
-		setOffsetBounds(roomPreviewTitle, 12, 10, previewWidth - 24, 18)
-		setOffsetBounds(roomPreviewInfo, 12, 30, previewWidth - 24, 30)
-		setOffsetBounds(roomPreviewMap, 12, 66, previewWidth - 24, previewMapHeight)
-		setOffsetBounds(roomPreviewPlayersTitle, 12, 66 + previewMapHeight + 10, previewWidth - 24, 16)
-		setOffsetBounds(roomPreviewPlayersList, 12, 66 + previewMapHeight + 30, previewWidth - 24, previewHeight - (66 + previewMapHeight + 40))
+		local previewMapHeight = math.clamp(math.floor(previewHeight * (profile.isMobile and 0.43 or 0.45)), profile.isMobile and 120 or 112, profile.isMobile and 144 or 136)
+		setOffsetBounds(roomPreviewTitle, 12, 10, previewWidth - 24, profile.isMobile and 20 or 18)
+		setOffsetBounds(roomPreviewInfo, 12, profile.isMobile and 32 or 30, previewWidth - 24, profile.isMobile and 34 or 30)
+		setOffsetBounds(roomPreviewMap, 12, profile.isMobile and 72 or 66, previewWidth - 24, previewMapHeight)
+		setOffsetBounds(roomPreviewPlayersTitle, 12, (profile.isMobile and 72 or 66) + previewMapHeight + 10, previewWidth - 24, 16)
+		setOffsetBounds(roomPreviewPlayersList, 12, (profile.isMobile and 72 or 66) + previewMapHeight + 30, previewWidth - 24, previewHeight - ((profile.isMobile and 72 or 66) + previewMapHeight + 40))
 		if previewMapTitle then
 			setOffsetBounds(previewMapTitle, 16, 8, previewWidth - 48, 14)
-			previewMapTitle.TextSize = 10
+			previewMapTitle.TextSize = profile.isMobile and 11 or 10
 		end
 		if previewMapMood then
 			setOffsetBounds(previewMapMood, previewWidth - 24 - 144, 8, 144, 18)
-			previewMapMood.TextSize = 10
+			previewMapMood.TextSize = profile.isMobile and 11 or 10
 		end
 		if previewMapFooter then
 			setOffsetBounds(previewMapFooter, 16, 30, previewWidth - 48, 44)
-			previewMapFooter.TextSize = 13
+			previewMapFooter.TextSize = profile.isMobile and 14 or 13
 		end
 		if previewMapStats then
 			setOffsetBounds(previewMapStats, 16, previewMapHeight - 24, previewWidth - 48, 16)
-			previewMapStats.TextSize = 10
+			previewMapStats.TextSize = profile.isMobile and 11 or 10
 		end
 		if previewMapAccent then
 			setOffsetBounds(previewMapAccent, 0, 0, 6, previewMapHeight)
@@ -6719,7 +6769,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 		if roomPreviewPlayersLayout then
 			roomPreviewPlayersLayout.FillDirectionMaxCells = 1
-			roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(previewWidth - 36, 74)
+			roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(previewWidth - 36, profile.isMobile and 82 or 74)
 		end
 	else
 		local listWidth = math.clamp(math.floor(panelWidth * 0.39), 380, 432)
@@ -6773,22 +6823,22 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		roomList.ScrollBarThickness = isCompact and 6 or 4
 	end
 	if joinPassword then
-		joinPassword.TextSize = isCompact and 14 or 12
+		joinPassword.TextSize = profile.isMobile and 15 or (isCompact and 14 or 12)
 	end
 	if refreshButton then
-		refreshButton.TextSize = isCompact and 13 or 12
+		refreshButton.TextSize = profile.isMobile and 14 or (isCompact and 13 or 12)
 	end
 	if createRoomButton then
-		createRoomButton.TextSize = isCompact and 13 or 12
+		createRoomButton.TextSize = profile.isMobile and 14 or (isCompact and 13 or 12)
 	end
 	if queueButton then
-		queueButton.TextSize = isCompact and 14 or 12
+		queueButton.TextSize = profile.isMobile and 15 or (isCompact and 14 or 12)
 	end
 	if quickClassicButton then
-		quickClassicButton.TextSize = isCompact and 13 or 11
+		quickClassicButton.TextSize = profile.isMobile and 14 or (isCompact and 13 or 11)
 	end
 	if quickRankedButton then
-		quickRankedButton.TextSize = isCompact and 13 or 11
+		quickRankedButton.TextSize = profile.isMobile and 14 or (isCompact and 13 or 11)
 	end
 
 	if roomPanel then
@@ -6799,16 +6849,16 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 	if isCompact then
 		local contentWidth = panelWidth - headerPadding * 2
-		local mapPreviewHeight = 176
+		local mapPreviewHeight = profile.isMobile and 188 or 176
 		local playersY = 72 + mapPreviewHeight + 30
-		local playersHeight = math.clamp(math.floor(panelHeight * 0.24), 150, 196)
+		local playersHeight = math.clamp(math.floor(panelHeight * (profile.isMobile and 0.25 or 0.24)), profile.isMobile and 160 or 150, profile.isMobile and 210 or 196)
 		local controlsY = playersY + playersHeight + 12
-		local mapSelectorY = controlsY + 122
-		local setPasswordY = mapSelectorY + 162
-		local kickRowY = setPasswordY + 42
-		local inviteY = kickRowY + 42
-		local readyY = inviteY + 46
-		local leaveY = readyY + 48
+		local mapSelectorY = controlsY + (profile.isMobile and 132 or 122)
+		local setPasswordY = mapSelectorY + (profile.isMobile and 182 or 162)
+		local kickRowY = setPasswordY + (profile.isMobile and 46 or 42)
+		local inviteY = kickRowY + (profile.isMobile and 46 or 42)
+		local readyY = inviteY + (profile.isMobile and 50 or 46)
+		local leaveY = readyY + (profile.isMobile and 52 or 48)
 		local roomCanvasHeight = leaveY + 54
 
 		setOffsetBounds(roomTitle, headerPadding, 12, contentWidth, 24)
@@ -6821,10 +6871,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		setOffsetBounds(playersList, headerPadding, playersY, contentWidth, playersHeight)
 		if playersListLayout then
 			playersListLayout.FillDirectionMaxCells = 1
-			playersListLayout.CellSize = UDim2.fromOffset(contentWidth - 16, profile.isMobile and 118 or 108)
+			playersListLayout.CellSize = UDim2.fromOffset(contentWidth - 16, profile.isMobile and 124 or 108)
 		end
-		setOffsetBounds(modeSelector, headerPadding, controlsY, contentWidth, 36)
-		setOffsetBounds(modeDropdown, headerPadding, controlsY + 40, contentWidth, 72)
+		setOffsetBounds(modeSelector, headerPadding, controlsY, contentWidth, profile.isMobile and 40 or 36)
+		setOffsetBounds(modeDropdown, headerPadding, controlsY + (profile.isMobile and 44 or 40), contentWidth, profile.isMobile and 80 or 72)
 		if modeClassicOption then
 			setOffsetBounds(modeClassicOption, 8, 8, contentWidth - 16, 26)
 			modeClassicOption.TextSize = 12
@@ -6833,24 +6883,24 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			setOffsetBounds(modeRankedOption, 8, 38, contentWidth - 16, 26)
 			modeRankedOption.TextSize = 12
 		end
-		setOffsetBounds(mapSelector, headerPadding, mapSelectorY, contentWidth, 36)
-		setOffsetBounds(rankedTierLabel, headerPadding, mapSelectorY, contentWidth, 36)
-		setOffsetBounds(mapDropdown, headerPadding, mapSelectorY + 40, contentWidth, 112)
+		setOffsetBounds(mapSelector, headerPadding, mapSelectorY, contentWidth, profile.isMobile and 40 or 36)
+		setOffsetBounds(rankedTierLabel, headerPadding, mapSelectorY, contentWidth, profile.isMobile and 40 or 36)
+		setOffsetBounds(mapDropdown, headerPadding, mapSelectorY + (profile.isMobile and 44 or 40), contentWidth, profile.isMobile and 132 or 112)
 		for index, option in ipairs(mapOptions) do
-			setOffsetBounds(option, 8, 8 + (index - 1) * 26, contentWidth - 16, 22)
-			option.TextSize = 12
+			setOffsetBounds(option, 8, 8 + (index - 1) * (profile.isMobile and 30 or 26), contentWidth - 16, profile.isMobile and 26 or 22)
+			option.TextSize = profile.isMobile and 13 or 12
 		end
-		setOffsetBounds(setPasswordBox, headerPadding, setPasswordY, contentWidth - 122, 34)
-		setOffsetBounds(setPasswordButton, headerPadding + contentWidth - 116, setPasswordY, 116, 34)
-		setOffsetBounds(kickNameBox, headerPadding, kickRowY, contentWidth - 122, 34)
-		setOffsetBounds(kickButton, headerPadding + contentWidth - 116, kickRowY, 116, 34)
-		setOffsetBounds(inviteButton, headerPadding, inviteY, contentWidth, 36)
-		setOffsetBounds(inviteDropdown, headerPadding, inviteY + 40, contentWidth, 156)
-		setOffsetBounds(readyButton, headerPadding, readyY, contentWidth, 42)
-		setOffsetBounds(startButton, headerPadding, readyY, contentWidth, 42)
-		setOffsetBounds(cancelStartButton, headerPadding, readyY + 46, contentWidth, 34)
-		setOffsetBounds(panel:FindFirstChild("RoomPanel"):FindFirstChild("LeaveRoomButton"), headerPadding, leaveY, contentWidth, 36)
-		roomCanvasHeight = math.max(roomCanvasHeight, inviteY + 204)
+		setOffsetBounds(setPasswordBox, headerPadding, setPasswordY, contentWidth - 122, profile.isMobile and 38 or 34)
+		setOffsetBounds(setPasswordButton, headerPadding + contentWidth - 116, setPasswordY, 116, profile.isMobile and 38 or 34)
+		setOffsetBounds(kickNameBox, headerPadding, kickRowY, contentWidth - 122, profile.isMobile and 38 or 34)
+		setOffsetBounds(kickButton, headerPadding + contentWidth - 116, kickRowY, 116, profile.isMobile and 38 or 34)
+		setOffsetBounds(inviteButton, headerPadding, inviteY, contentWidth, profile.isMobile and 40 or 36)
+		setOffsetBounds(inviteDropdown, headerPadding, inviteY + (profile.isMobile and 44 or 40), contentWidth, profile.isMobile and 176 or 156)
+		setOffsetBounds(readyButton, headerPadding, readyY, contentWidth, profile.isMobile and 46 or 42)
+		setOffsetBounds(startButton, headerPadding, readyY, contentWidth, profile.isMobile and 46 or 42)
+		setOffsetBounds(cancelStartButton, headerPadding, readyY + (profile.isMobile and 50 or 46), contentWidth, profile.isMobile and 38 or 34)
+		setOffsetBounds(panel:FindFirstChild("RoomPanel"):FindFirstChild("LeaveRoomButton"), headerPadding, leaveY, contentWidth, profile.isMobile and 40 or 36)
+		roomCanvasHeight = math.max(roomCanvasHeight, inviteY + (profile.isMobile and 224 or 204))
 		local compactCanvasHeight = roomCanvasHeight + (profile.isMobile and (bottomRightInset.Y + 36) or 0)
 		roomPanel.CanvasSize = UDim2.fromOffset(0, compactCanvasHeight)
 	end
@@ -6972,11 +7022,11 @@ function UISystem:_applyDeviceSizing()
 	end
 	if lobby and lobby.BasicOpenRoomBrowserButton and lobby.BasicPrimaryLabel then
 		local lobbyWidth = (profile.isMobile or viewportSize.X <= 1280)
-			and math.min(viewportSize.X - (profile.isMobile and 20 or 28), 396)
+			and math.min(viewportSize.X - (profile.isMobile and 12 or 28), profile.isMobile and 408 or 396)
 			or 340
-		local lobbyHeight = (profile.isMobile or viewportSize.X <= 1280) and 384 or 368
-		local panelWidth = math.max(340, math.floor(lobbyWidth))
-		local panelHeight = math.max(368, math.floor(lobbyHeight))
+		local lobbyHeight = profile.isMobile and 424 or ((viewportSize.X <= 1280) and 384 or 368)
+		local panelWidth = math.max(profile.isMobile and 348 or 340, math.floor(lobbyWidth))
+		local panelHeight = math.max(profile.isMobile and 404 or 368, math.floor(lobbyHeight))
 		if lobby.BasicPanel then
 			lobby.BasicPanel.Position = UDim2.fromOffset(12 + topLeftInset.X, 12 + topLeftInset.Y)
 			lobby.BasicPanel.Size = UDim2.fromOffset(panelWidth, panelHeight)
@@ -6985,50 +7035,50 @@ function UISystem:_applyDeviceSizing()
 			lobby.ToggleButton.Position = UDim2.fromOffset(12 + topLeftInset.X + panelWidth + 8, 120 + topLeftInset.Y)
 		end
 		if lobby.BasicHeaderCard then
-			lobby.BasicHeaderCard.Size = UDim2.new(1, -24, 0, 112)
+			lobby.BasicHeaderCard.Size = UDim2.new(1, -24, 0, profile.isMobile and 120 or 112)
 		end
 		local halfButtonWidth = math.floor((panelWidth - 36) * 0.5)
 		local rightButtonX = 12 + halfButtonWidth + 12
-		lobby.BasicOpenRoomBrowserButton.Size = UDim2.new(1, -24, 0, profile.isMobile and 46 or 42)
+		lobby.BasicOpenRoomBrowserButton.Size = UDim2.new(1, -24, 0, profile.isMobile and 50 or 42)
 		if lobby.BasicProfileButton then
-			lobby.BasicProfileButton.Position = UDim2.fromOffset(12, 214)
-			lobby.BasicProfileButton.Size = UDim2.fromOffset(halfButtonWidth, 36)
+			lobby.BasicProfileButton.Position = UDim2.fromOffset(12, profile.isMobile and 222 or 214)
+			lobby.BasicProfileButton.Size = UDim2.fromOffset(halfButtonWidth, profile.isMobile and 40 or 36)
 		end
 		if lobby.BasicShopButton then
-			lobby.BasicShopButton.Position = UDim2.fromOffset(rightButtonX, 214)
-			lobby.BasicShopButton.Size = UDim2.fromOffset(halfButtonWidth, 36)
+			lobby.BasicShopButton.Position = UDim2.fromOffset(rightButtonX, profile.isMobile and 222 or 214)
+			lobby.BasicShopButton.Size = UDim2.fromOffset(halfButtonWidth, profile.isMobile and 40 or 36)
 		end
 		if lobby.BasicRoyalPassButton then
-			lobby.BasicRoyalPassButton.Position = UDim2.fromOffset(12, 262)
-			lobby.BasicRoyalPassButton.Size = UDim2.new(1, -24, 0, 36)
+			lobby.BasicRoyalPassButton.Position = UDim2.fromOffset(12, profile.isMobile and 272 or 262)
+			lobby.BasicRoyalPassButton.Size = UDim2.new(1, -24, 0, profile.isMobile and 40 or 36)
 		end
 		if lobby.BasicMenuButton then
-			lobby.BasicMenuButton.Position = UDim2.fromOffset(12, 304)
-			lobby.BasicMenuButton.Size = UDim2.fromOffset(halfButtonWidth, 36)
+			lobby.BasicMenuButton.Position = UDim2.fromOffset(12, profile.isMobile and 320 or 304)
+			lobby.BasicMenuButton.Size = UDim2.fromOffset(halfButtonWidth, profile.isMobile and 40 or 36)
 		end
 		if lobby.BasicRankButton then
-			lobby.BasicRankButton.Position = UDim2.fromOffset(rightButtonX, 304)
-			lobby.BasicRankButton.Size = UDim2.fromOffset(halfButtonWidth, 36)
+			lobby.BasicRankButton.Position = UDim2.fromOffset(rightButtonX, profile.isMobile and 320 or 304)
+			lobby.BasicRankButton.Size = UDim2.fromOffset(halfButtonWidth, profile.isMobile and 40 or 36)
 		end
 		if lobby.BasicHintLabel then
-			lobby.BasicHintLabel.Position = UDim2.fromOffset(12, 348)
-			lobby.BasicHintLabel.Size = UDim2.new(1, -24, 0, 22)
+			lobby.BasicHintLabel.Position = UDim2.fromOffset(12, profile.isMobile and 370 or 348)
+			lobby.BasicHintLabel.Size = UDim2.new(1, -24, 0, profile.isMobile and 28 or 22)
 		end
-		lobby.BasicOpenRoomBrowserButton.TextSize = math.max(14, profile:GetTextSize() - 2)
+		lobby.BasicOpenRoomBrowserButton.TextSize = profile.isMobile and math.max(15, profile:GetTextSize() - 1) or math.max(14, profile:GetTextSize() - 2)
 		if lobby.BasicProfileButton then
-			lobby.BasicProfileButton.TextSize = math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicProfileButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicShopButton then
-			lobby.BasicShopButton.TextSize = math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicShopButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicRoyalPassButton then
-			lobby.BasicRoyalPassButton.TextSize = math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicRoyalPassButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicMenuButton then
-			lobby.BasicMenuButton.TextSize = math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicMenuButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicRankButton then
-			lobby.BasicRankButton.TextSize = math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicRankButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicPrimaryLabel then
 			lobby.BasicPrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 2)
@@ -7205,19 +7255,20 @@ function UISystem:_applyDeviceSizing()
 					local width = 364
 					local height = 420
 					if profile.isMobile then
-						width = viewportSize.X - (topLeftInset.X + bottomRightInset.X + 8)
-						height = viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 12)
+						width = viewportSize.X - (topLeftInset.X + bottomRightInset.X)
+						height = viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y)
 					elseif viewportSize.X <= 1280 then
 						width = math.min(viewportSize.X - 28, 436)
 						height = math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 36), 520)
 					end
 					window.Panel.Size = UDim2.fromOffset(
 						math.max(profile.isMobile and 352 or 364, math.floor(width)),
-						math.max(profile.isMobile and 540 or 420, math.floor(height))
+						math.max(profile.isMobile and 560 or 420, math.floor(height))
 					)
+					window.Panel.BackgroundTransparency = profile.isMobile and 0.04 or 0.08
 					if profile.isMobile then
-						window.Panel.AnchorPoint = Vector2.new(0.5, 0.5)
-						window.Panel.Position = UDim2.new(0.5, 0, 0.5, math.floor((topLeftInset.Y - bottomRightInset.Y) * 0.5))
+						window.Panel.AnchorPoint = Vector2.new(0, 0)
+						window.Panel.Position = UDim2.fromOffset(topLeftInset.X, topLeftInset.Y)
 					else
 						window.Panel.AnchorPoint = Vector2.new(1, 0.5)
 						window.Panel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0.5, 0)
@@ -7251,58 +7302,58 @@ function UISystem:_applyDeviceSizing()
 				if guiName == "RoyalPassUI" and window.RoyalPassWidgets then
 					local widgets = window.RoyalPassWidgets
 					local passMobile = profile.isMobile or viewportSize.X <= 960
-					local heroHeight = passMobile and 156 or 130
-					local scrollerHeight = passMobile and 212 or 178
-					local trackCardWidth = passMobile and 156 or 140
-					local trackCardHeight = passMobile and 172 or 156
+					local heroHeight = passMobile and 168 or 130
+					local scrollerHeight = passMobile and 236 or 178
+					local trackCardWidth = passMobile and 172 or 140
+					local trackCardHeight = passMobile and 184 or 156
 
 					if widgets.HeroCard then
 						widgets.HeroCard.Size = UDim2.new(1, 0, 0, heroHeight)
 					end
 					if widgets.HeroBadge then
-						widgets.HeroBadge.Size = UDim2.fromOffset(passMobile and 120 or 112, 20)
-						widgets.HeroBadge.TextSize = passMobile and 11 or 10
+						widgets.HeroBadge.Size = UDim2.fromOffset(passMobile and 128 or 112, passMobile and 22 or 20)
+						widgets.HeroBadge.TextSize = passMobile and 12 or 10
 					end
 					if widgets.HeroTitle then
 						widgets.HeroTitle.Position = UDim2.fromOffset(12, 38)
-						widgets.HeroTitle.Size = UDim2.new(1, -24, 0, passMobile and 28 or 24)
-						widgets.HeroTitle.TextSize = passMobile and 22 or 20
+						widgets.HeroTitle.Size = UDim2.new(1, -24, 0, passMobile and 32 or 24)
+						widgets.HeroTitle.TextSize = passMobile and 24 or 20
 					end
 					if widgets.HeroMeta then
-						widgets.HeroMeta.Position = UDim2.fromOffset(12, passMobile and 68 or 62)
-						widgets.HeroMeta.Size = UDim2.new(1, -24, 0, 18)
+						widgets.HeroMeta.Position = UDim2.fromOffset(12, passMobile and 72 or 62)
+						widgets.HeroMeta.Size = UDim2.new(1, -24, 0, passMobile and 22 or 18)
 						widgets.HeroMeta.TextSize = passMobile and 13 or 12
 					end
 					if widgets.ProgressTrack then
-						widgets.ProgressTrack.Position = UDim2.fromOffset(12, passMobile and 94 or 86)
-						widgets.ProgressTrack.Size = UDim2.new(1, -24, 0, passMobile and 16 or 14)
+						widgets.ProgressTrack.Position = UDim2.fromOffset(12, passMobile and 102 or 86)
+						widgets.ProgressTrack.Size = UDim2.new(1, -24, 0, passMobile and 18 or 14)
 					end
 					if widgets.ProgressCaption then
-						widgets.ProgressCaption.Position = UDim2.fromOffset(12, passMobile and 116 or 104)
-						widgets.ProgressCaption.Size = UDim2.new(1, -(passMobile and 170 or 148), 0, 18)
-						widgets.ProgressCaption.TextSize = passMobile and 12 or 11
+						widgets.ProgressCaption.Position = UDim2.fromOffset(12, passMobile and 126 or 104)
+						widgets.ProgressCaption.Size = UDim2.new(1, -(passMobile and 176 or 148), 0, passMobile and 22 or 18)
+						widgets.ProgressCaption.TextSize = passMobile and 13 or 11
 					end
 					if widgets.PremiumActionButton then
-						widgets.PremiumActionButton.Size = UDim2.fromOffset(passMobile and 140 or 124, passMobile and 38 or 34)
-						widgets.PremiumActionButton.TextSize = passMobile and 13 or 12
+						widgets.PremiumActionButton.Size = UDim2.fromOffset(passMobile and 148 or 124, passMobile and 40 or 34)
+						widgets.PremiumActionButton.TextSize = passMobile and 14 or 12
 					end
 					if widgets.TrackTabs then
-						widgets.TrackTabs.Size = UDim2.new(1, 0, 0, passMobile and 40 or 34)
+						widgets.TrackTabs.Size = UDim2.new(1, 0, 0, passMobile and 44 or 34)
 					end
 					if widgets.RewardTab then
-						widgets.RewardTab.TextSize = passMobile and 13 or 12
+						widgets.RewardTab.TextSize = passMobile and 14 or 12
 					end
 					if widgets.MissionTab then
-						widgets.MissionTab.TextSize = passMobile and 13 or 12
+						widgets.MissionTab.TextSize = passMobile and 14 or 12
 					end
 					if widgets.TrackHint then
-						widgets.TrackHint.Size = UDim2.new(1, 0, 0, passMobile and 30 or 18)
+						widgets.TrackHint.Size = UDim2.new(1, 0, 0, passMobile and 34 or 18)
 						widgets.TrackHint.TextSize = passMobile and 12 or 11
 						widgets.TrackHint.TextWrapped = passMobile
 					end
 					if widgets.TrackScroller then
 						widgets.TrackScroller.Size = UDim2.new(1, 0, 0, scrollerHeight)
-						widgets.TrackScroller.ScrollBarThickness = passMobile and 6 or 5
+						widgets.TrackScroller.ScrollBarThickness = passMobile and 8 or 5
 					end
 					local totalCards = #(widgets.TrackCards or {})
 					for index, card in ipairs(widgets.TrackCards or {}) do
@@ -7313,7 +7364,7 @@ function UISystem:_applyDeviceSizing()
 							card.Root.Size = UDim2.fromOffset(cardWidth, trackCardHeight)
 						end
 						if card.Title then
-							card.Title.TextSize = passMobile and 15 or 14
+							card.Title.TextSize = passMobile and 16 or 14
 						end
 						if card.Meta then
 							card.Meta.TextSize = passMobile and 12 or 11
@@ -12515,6 +12566,7 @@ function UISystem:_updateRoomBrowserVisibility()
 	end
 
 	local suppressed = self._roomBrowserSuppressed == true
+	local blockLobbyFloatRail = self:_isLobbyFloatRailBlocked()
 	local roomBrowserEnabled = (not suppressed) and self._roomBrowserVisible
 	if self._roomBrowserGui then
 		self._roomBrowserGui.Enabled = roomBrowserEnabled
@@ -12536,7 +12588,7 @@ function UISystem:_updateRoomBrowserVisibility()
 		end
 	end
 	if self._roomBrowserFloatGui then
-		self._roomBrowserFloatGui.Enabled = (not suppressed) and (not self._roomBrowserVisible)
+		self._roomBrowserFloatGui.Enabled = (not suppressed) and (not self._roomBrowserVisible) and (not blockLobbyFloatRail)
 	end
 	self:_layoutLobbyFloatRail()
 end

@@ -6549,3 +6549,63 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - countdown sekarang tidak lagi lanjut diam-diam setelah transisi ke match.
 - room panel tidak lagi punya alasan tertinggal terbuka saat player sudah di map.
 - jalur host-start menjadi lebih deterministik untuk playtest audio/UI berikutnya.
+
+## 2026-04-04 - Lobby Float Rail + Mobile Sheet Pass
+
+### Scope
+
+- merapikan rail tombol lobby kanan agar benar-benar fixed top-to-bottom dalam mode compact/mobile.
+- membuat `RoomBrowser` dan `RoyalPass` tampil sebagai full-sheet mobile, bukan panel desktop yang dipaksa kecil.
+- memastikan saat satu window besar terbuka, rail tidak tetap bocor di belakangnya.
+- memastikan rail pulih lagi setelah window auxiliary seperti `RoyalPass` ditutup.
+
+### Root Cause
+
+- `_layoutLobbyFloatRail()` membaca `self._deviceProfile.profile`, padahal objek profil aktif berada langsung di `self._deviceProfile`.
+- akibatnya rail selalu jatuh ke branch desktop, walau sesi live memakai override mobile/compact.
+- dismiss auxiliary window hanya menyinkronkan panelnya sendiri; jalur refresh global rail belum ikut dipanggil.
+- tombol float auxiliary juga terlalu bergantung pada flag `dismissed`, sehingga mudah drift saat panel sudah tertutup tetapi rail belum di-refresh penuh.
+
+### Implementation Notes
+
+- `_layoutLobbyFloatRail()` sekarang membaca `self._deviceProfile` langsung.
+- `_setLobbyPanelCollapsed()` dan `_setAuxiliaryWindowDismissed()` sekarang memicu refresh rail/global visibility yang lebih lengkap.
+- `_syncAuxiliaryWindowVisibility()` sekarang memperbolehkan float button muncul bila panel memang sudah tertutup, meski state dismissed sempat tertinggal.
+- sizing mobile diperbesar untuk:
+  - `LobbyUI.MainPanel`
+  - `RoomBrowserUI.Panel`
+  - `RoyalPassUI.MainPanel`
+- `RoomBrowser` mobile sekarang memakai full viewport efektif (`390 x 844` pada probe override), dan `RoyalPass` mengikuti pola sheet yang sama.
+
+### Validation Notes
+
+- live probe memakai override:
+  - `PasrahUIInputProfileOverride = mobile`
+  - `PasrahUIForceCompact = true`
+  - `PasrahUIViewportOverrideX = 390`
+  - `PasrahUIViewportOverrideY = 844`
+- saat lobby masih terbuka:
+  - `RoomBrowserFloatUI.Enabled = false`
+  - rail tidak tampil bocor di atas panel lobby.
+- setelah `LobbyToggleButton` ditekan:
+  - rail kanan tersusun ulang:
+    - `ROOMS` di `{0, 96}`
+    - `PASS` di `{0, 180}`
+    - `MENU` di `{0, 256}`
+    - `RANK` di `{0, 332}`
+- saat `RoomBrowser` dibuka dari rail:
+  - `RoomBrowserUI.Panel` terukur `390 x 844`
+  - seluruh float rail kembali disembunyikan.
+- saat `RoyalPass` dibuka dari rail:
+  - `RoyalPassUI.MainPanel` terukur `390 x 844`
+  - float rail kembali disembunyikan.
+- setelah `RoyalPass` ditutup:
+  - `RoyalPassUI.MainPanel.Visible = false`
+  - rail pulih lengkap:
+    - `ROOMS`, `PASS`, `MENU`, `RANK` semuanya `Visible = true`
+
+### Interpretation
+
+- lobby compact sekarang lebih dekat ke target mobile-friendly yang konsisten dan tidak saling tumpang tindih.
+- window besar sudah berperilaku seperti sheet mobile yang dominan, bukan overlay desktop kecil.
+- rail kanan sekarang deterministik untuk playtest phone layout dan tidak lagi kehilangan tombol `PASS` setelah close/open cycle.
