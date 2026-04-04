@@ -6410,3 +6410,99 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - spawn ghost runtime kembali sehat.
 - kotak root part yang merusak siluet `Kuntilanak` sudah hilang di match nyata.
 - ghost hover sekarang benar-benar dikontrol oleh aturan per ghost, bukan sekadar animasi bob yang kebetulan kecil.
+
+## 2026-04-04 19:18 ICT - Hunt Pressure Runtime Recovery
+
+### Scope
+
+- memulihkan deteksi jarak hunt di `PlayerHealthSystem` agar player tidak selalu terbaca `Clear` saat ghost sudah mengejar.
+- membersihkan state grace hunt antar start/end match.
+- memvalidasi ulang flow `ForceHunt` langsung di Studio runtime.
+
+### Root Cause
+
+- `_tickHuntPressure()` memakai variabel `now` tanpa deklarasi lokal.
+- patch source sempat terlihat "tidak bekerja" karena sesi `Play` lama masih memakai hasil `require()` lama dari server module yang belum direstart.
+
+### Implementation Notes
+
+- menambahkan `local now = os.clock()` di awal `_tickHuntPressure()`.
+- menambahkan pembersihan `huntStartedAtByMatchId` di `_clearMatchData()`.
+- saat `MatchStarted`, atribut player berikut direset:
+  - `PasrahHuntThreatState`
+  - `PasrahHuntThreatDistance`
+  - `PasrahHuntGraceRemaining`
+- saat `HuntEnded`, grace dibersihkan dan threat state player pada match aktif dikembalikan ke `Clear`.
+
+### Validation Notes
+
+- source build lolos:
+  - `rojo build default.project.json --output _tmp_player_health_probe_build.rbxlx`
+- setelah restart `Play` dan memaksa hunt pada `match_1`, atribut player berubah sesuai jarak ghost:
+  - tick awal: `Warn`, `grace = 2.2`, `distance = 46`
+  - tengah: `Tracked`, `distance = 24`
+  - dekat: `Close`, `distance = 15`
+- `PasrahHuntPressureActiveMatchId = match_1`
+- `PasrahHuntPressureReady = true`
+
+### Interpretation
+
+- hunt proximity sekarang benar-benar aktif di runtime.
+- blocker lama "ghost sudah hunting tapi player tetap `Clear`" sudah lewat.
+- setiap verifikasi server module sesudah patch tetap perlu restart `Play` agar hasil source benar-benar termuat.
+
+## 2026-04-04 19:46 ICT - Hunt Death Flow Recovery
+
+### Scope
+
+- memastikan exposure hunt yang sudah mencapai threshold benar-benar membunuh player.
+- memastikan `MatchSystem` menandai player `alive = false`.
+- memastikan atribut threat client bersih lagi setelah `MatchEnded`.
+
+### Root Cause
+
+- `PlayerHealthSystem` memang sudah sampai `PlayerDied`, tetapi `MatchSystem.Controller:OnPlayerDied()` memilih `payload.userId` lebih dulu.
+- pada jalur ini `payload.userId` bisa berupa string dari key `playersByUserId`.
+- `MatchService:MarkPlayerDeath()` hanya menerima `number` atau `Player`, sehingga `alive` tidak pernah terbalik ke `false`.
+
+### Implementation Notes
+
+- `MatchSystem.Controller` sekarang memakai helper `resolveUserId(payload)` yang:
+  - memprioritaskan `payload.player.UserId`
+  - menerima numeric string via `tonumber`
+- `PlayerHealthSystem` tetap menyimpan state internal dengan key yang dinormalisasi.
+- ditambahkan atribut runtime:
+  - `PasrahHuntExposure`
+- ditambahkan probe Studio-only:
+  - `PasrahHuntKillStage`
+  - `PasrahHuntPressureLastTickAt`
+  - `PasrahHuntPressureLastExposure`
+  - `PasrahHuntPressureLastThreatState`
+- `HandleEvent("MatchEnded")` sekarang juga membersihkan:
+  - `PasrahHuntThreatState`
+  - `PasrahHuntThreatDistance`
+  - `PasrahHuntGraceRemaining`
+  - `PasrahHuntExposure`
+
+### Validation Notes
+
+- probe runtime menunjukkan exposure naik sampai threshold dan kill benar-benar publish:
+  - `PasrahHuntKillStage = death_published:match_1:failed_escape_hunt`
+- setelah fix `MatchSystem.Controller`, event client live menunjukkan:
+  - `HuntStarted`
+  - `MatchEnded` dengan `reason = team_eliminated`
+  - `MatchCompleted`
+  - `playerOutcome[10576163165].deathReason = failed_escape_hunt`
+- retest akhir menunjukkan cleanup client benar:
+  - saat `InMatch = false`, `PasrahHuntThreatState = Clear`
+  - `PasrahHuntExposure = nil`
+
+### Interpretation
+
+- flow hunt sekarang lengkap dari awal sampai akhir:
+  - threat naik
+  - exposure naik
+  - player mati
+  - match selesai
+  - client bersih kembali
+- blocker E2E untuk jalur kematian hunt sudah tertutup.
