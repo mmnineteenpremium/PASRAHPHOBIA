@@ -1116,6 +1116,11 @@ Status:
   - lobby zone taxonomy sekarang disejajarkan ke geometri lobby aktif
   - masuk area matchmaking tidak lagi auto-queue
   - UI lobby sekarang menerima `LobbyZoneFocused` feedback yang lebih jujur untuk `MatchmakingZone` dan `ShopZone`
+- slice map yang baru tertutup:
+  - runtime sekarang mensintesis `InteractionPoints` yang hilang dari `Rooms`, jadi coverage interaksi tidak lagi timpang di map besar
+  - validasi live:
+    - `EmptyBuilding` dari `8 -> 14` interaction points (`synthetic=6`)
+    - `AbandonedPalace` dari `8 -> 18` interaction points (`synthetic=10`)
 
 Pekerjaan:
 
