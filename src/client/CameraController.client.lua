@@ -32,6 +32,8 @@ local FLASHLIGHT_ATTRIBUTE = "FlashlightEnabled"
 local CURSOR_TOGGLE_KEY = Enum.KeyCode.LeftAlt
 local CURSOR_TOGGLE_FALLBACK_KEY = Enum.KeyCode.Backquote
 local CURSOR_UNLOCK_REQUEST_ATTR = "PasrahCursorUnlockRequested"
+local HEAD_BOB_PROBE_ATTR = "PasrahHeadBobProbeActive"
+local HEAD_BOB_OFFSET_ATTR = "PasrahHeadBobOffset"
 local CURSOR_TOGGLE_GUI_NAME = "FPVCursorToggleUI"
 local CURSOR_TOGGLE_BUTTON_NAME = "CursorToggleButton"
 local function safeRequire(moduleScript)
@@ -728,6 +730,7 @@ player.CharacterAdded:Connect(function(character)
 		camera = workspace.CurrentCamera or camera
 	end
 	ensureCameraAuthority(humanoid)
+	humanoid.CameraOffset = Vector3.zero
 
 	lastArmCamCF = nil
 	clearFpvArms()
@@ -798,17 +801,29 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 		setFpvLocked(false)
 	end
 
-	if humanoid.MoveDirection.Magnitude > 0 and FPV_LOCKED then
+	local cameraBobTarget = Vector3.zero
+	local headBobProbeActive = player:GetAttribute(HEAD_BOB_PROBE_ATTR) == true
+	local shouldApplyHeadBob = FPV_LOCKED and (humanoid.MoveDirection.Magnitude > 0 or headBobProbeActive)
+	if shouldApplyHeadBob then
 		-- Walking - apply bob
 		local time = tick()
 		local verticalBob = math.sin(time * bobFrequency * 2 * math.pi) * bobAmplitude
 		local horizontalSway = math.sin(time * bobFrequency * math.pi) * swayAmplitude
 
 		bobOffset = Vector3.new(horizontalSway, verticalBob, 0)
+		cameraBobTarget = Vector3.new(horizontalSway * 0.22, verticalBob * 0.3, 0)
 	else
 		-- Standing still or not in FPV - reduce bob
 		bobOffset = bobOffset:Lerp(Vector3.new(0, 0, 0), deltaTime * 5)
 	end
+	if FPV_LOCKED then
+		humanoid.CameraOffset = humanoid.CameraOffset:Lerp(cameraBobTarget, math.clamp(deltaTime * 10, 0, 1))
+	elseif humanoid.CameraOffset.Magnitude > 0.0005 then
+		humanoid.CameraOffset = humanoid.CameraOffset:Lerp(Vector3.zero, math.clamp(deltaTime * 10, 0, 1))
+	else
+		humanoid.CameraOffset = Vector3.zero
+	end
+	player:SetAttribute(HEAD_BOB_OFFSET_ATTR, humanoid.CameraOffset)
 
 	if FPV_LOCKED and camera and ensureFpvArms(character) and fpvArmsModel and fpvArmsModel.PrimaryPart then
 		updateFpvFlashlightVisual()

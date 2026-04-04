@@ -6744,3 +6744,45 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - pemain desktop sekarang punya baseline mekanisme untuk keluar dari cursor lock FPV tanpa memecah alur match.
 - debt “UI sudah besar tapi mouse tetap terkunci” tidak lagi menjadi blocker arsitektural.
+
+## 2026-04-04 - Camera Head Bob Baseline Restored
+
+### Scope
+
+- mengembalikan head bob yang benar-benar terasa di kamera player FPV, bukan hanya di arms viewmodel.
+- menyediakan probe debug ringan agar bob bisa divalidasi lewat MCP tanpa harus mengandalkan “rasa visual” semata.
+
+### Root Cause
+
+- implementation lama memang masih punya bob/sway, tetapi efek utamanya hanya mendorong `fpvArmsModel`.
+- akibatnya arms terasa bergerak, tetapi kamera pemain sendiri hampir tidak memberi feedback gerak; dari sudut pandang user, head bob tampak “hilang”.
+
+### Implementation Notes
+
+- `CameraController.client.lua` sekarang menulis bob ringan ke `Humanoid.CameraOffset` selama FPV aktif.
+- target bob kamera dibuat konservatif:
+  - sway horizontal memakai skala `0.22`
+  - bob vertikal memakai skala `0.30`
+- saat player berhenti atau keluar FPV, `CameraOffset` dilerp kembali ke nol.
+- ditambahkan attribute debug `PasrahHeadBobProbeActive` dan `PasrahHeadBobOffset` untuk validasi teknis Studio.
+
+### Validation Notes
+
+- build source sukses: `_tmp_headbob_camera_build.rbxlx`
+- probe runtime via attribute menunjukkan:
+  - saat `PasrahHeadBobProbeActive = true` dan FPV lock aktif:
+    - `PasrahHeadBobOffset = 0.0100,0.0311,0.0000`
+  - setelah probe dimatikan:
+    - `PasrahHeadBobOffset = 0.0004,0.0012,0.0000`
+- interpretasi teknis:
+  - offset benar-benar naik dari nol saat bob dipaksa aktif
+  - offset turun kembali mendekati nol saat bob dihentikan
+
+### Caveat
+
+- kualitas rasa akhir tetap perlu uji mata langsung di sesi playtest normal.
+- pass ini menutup bukti teknis bahwa bob kamera hidup lagi; pass artistik final tetap bisa dilakukan nanti bila amplitudonya ingin lebih kuat/lembut.
+
+### Interpretation
+
+- baseline “head bobbing sebelumnya hilang” sekarang tertutup di source dan punya jejak verifikasi runtime.
