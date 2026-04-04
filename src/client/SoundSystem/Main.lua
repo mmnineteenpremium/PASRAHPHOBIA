@@ -4,6 +4,7 @@ local SoundService = game:GetService("SoundService")
 local Workspace = game:GetService("Workspace")
 
 local AudioController = require(script.Parent.Parent.Controllers.Sensory.AudioController)
+local FootstepController = require(script.Parent.Parent.Controllers.Sensory.FootstepController)
 local VFXController = require(script.Parent.Parent.Controllers.Sensory.VFXController)
 local HorrorHUD = require(script.Parent.Parent.UI.HUD.HorrorHUD)
 
@@ -104,6 +105,7 @@ function SoundSystem:Init(context)
 	self._audioTemplates = {}
 	self._audioRoot = ReplicatedStorage
 	self:_registerSensoryController("AudioController", AudioController, context)
+	self:_registerSensoryController("FootstepController", FootstepController, context)
 	self:_registerSensoryController("VFXController", VFXController, context)
 	self:_registerSensoryController("HorrorHUD", HorrorHUD, context)
 end

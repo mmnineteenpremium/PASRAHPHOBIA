@@ -6786,3 +6786,55 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - baseline “head bobbing sebelumnya hilang” sekarang tertutup di source dan punya jejak verifikasi runtime.
+
+## 2026-04-04 - Material Footstep Audio Baseline
+
+### Scope
+
+- menambahkan footstep audio lokal berbasis material lantai untuk player saat match aktif.
+- memakai asset yang memang sudah tersedia di source:
+  - `Woodstep_01`
+  - `ConcreteStep_01`
+  - `MetalStep_01`
+
+### Root Cause
+
+- walau asset footstep sudah ada di repo, belum ada controller client yang benar-benar memainkannya saat player bergerak.
+- akibatnya movement terasa “sunyi” dan salah satu batch asset audio yang sudah diupload belum memberi dampak nyata ke gameplay.
+
+### Implementation Notes
+
+- ditambahkan `FootstepController.luau` di jalur sensory client dan didaftarkan lewat `SoundSystem`.
+- controller membaca:
+  - `Humanoid.FloorMaterial`
+  - `Humanoid.MoveDirection`
+  - `Humanoid.WalkSpeed`
+- step cadence dibatasi waktu agar tidak spam, lalu memilih template berdasarkan material:
+  - wood -> `Woodstep_01`
+  - metal -> `MetalStep_01`
+  - default keras/batu/beton -> `ConcreteStep_01`
+- footstep diputar sebagai one-shot lokal pada `HumanoidRootPart`.
+- ditambahkan probe runtime:
+  - `PasrahFootstepProbeRequested`
+  - `PasrahFootstepProbePlayCount`
+  - `PasrahFootstepProbeLastTemplate`
+  - `PasrahFootstepProbeLastMaterial`
+
+### Validation Notes
+
+- build source sukses: `_tmp_footstep_controller_build.rbxlx`
+- probe manual runtime menunjukkan:
+  - sebelum probe: `PlayCount = 0`
+  - sesudah probe: `PlayCount = 1`
+  - template terpilih: `ConcreteStep_01`
+  - material terbaca: `Concrete`
+  - `HumanoidRootPart` punya `LocalFootstepRuntime = 1`
+- probe auto cadence via `Humanoid:Move()` terkontrol menunjukkan:
+  - `delta play count = 2`
+  - template tetap `ConcreteStep_01`
+  - material tetap `Concrete`
+
+### Interpretation
+
+- asset footstep yang sebelumnya hanya tersimpan sekarang benar-benar hidup di runtime.
+- kualitas rasa movement naik tanpa menambah dependency server baru atau layer UI baru.
