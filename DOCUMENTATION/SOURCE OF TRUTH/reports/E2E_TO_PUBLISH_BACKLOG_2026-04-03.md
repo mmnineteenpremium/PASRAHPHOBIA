@@ -1730,6 +1730,23 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (event-audio semantic baseline)**.
   - **PENDING** tetap pada ambience legal final dan kemungkinan asset tambahan yang benar-benar baru bila nanti kamu ingin mengganti library suara yang sekarang.
 
+## Update 2026-04-05 18:15 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi reaksi map nyata:
+  - `LightFlicker` sekarang tidak hanya memicu grading/VFX global.
+  - lampu di sekitar sumber event benar-benar padam lalu menyala lagi singkat di runtime.
+- validasi live MCP:
+  - `TriggerAudioCue(EnvironmentalAudio, LightFlicker)` di area `LivingRoom`:
+    - `PasrahVFXLastProfile = lightflicker`
+    - `PasrahVFXLastLightCount = 3`
+    - lampu contoh `Light_LivingRoom.PointLight`:
+      - sebelum: `Enabled = true`, `Brightness = 1.6`
+      - saat pulse: `Enabled = false`, `Brightness = 0.128`
+      - setelah pulse: kembali `Enabled = true`, `Brightness = 1.6`
+- status:
+  - **SELESAI (light flicker room reaction baseline)**.
+  - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

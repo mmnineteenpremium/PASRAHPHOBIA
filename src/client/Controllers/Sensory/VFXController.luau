@@ -554,6 +554,21 @@ local function normalizeCueToken(value)
 	return tostring(value or ""):gsub("[%s_%-_]+", ""):lower()
 end
 
+local function coerceVector3(value)
+	if typeof(value) == "Vector3" then
+		return value
+	end
+	if type(value) == "table" then
+		local x = tonumber(value.x or value.X)
+		local y = tonumber(value.y or value.Y)
+		local z = tonumber(value.z or value.Z)
+		if x and y and z then
+			return Vector3.new(x, y, z)
+		end
+	end
+	return nil
+end
+
 function VFXController:Init(context)
 	self._context = context or {}
 	self._remotes = self._context.Remotes or {}
@@ -633,6 +648,117 @@ function VFXController:_recordVFXDebug(eventName, profileName)
 	localPlayer:SetAttribute("PasrahVFXLastEvent", tostring(eventName or ""))
 	localPlayer:SetAttribute("PasrahVFXLastProfile", tostring(profileName or ""))
 	localPlayer:SetAttribute("PasrahVFXLastAt", os.clock())
+end
+
+function VFXController:_resolveActiveMatchContainer(matchId)
+	local activeMatches = Workspace:FindFirstChild("ActiveMatches")
+	if not activeMatches then
+		return nil
+	end
+
+	local resolvedMatchId = type(matchId) == "string" and matchId or nil
+	if not resolvedMatchId or resolvedMatchId == "" then
+		local localPlayer = Players.LocalPlayer
+		if localPlayer then
+			resolvedMatchId = localPlayer:GetAttribute("PasrahMatchId")
+				or localPlayer:GetAttribute("MatchId")
+		end
+	end
+
+	if type(resolvedMatchId) == "string" and resolvedMatchId ~= "" then
+		local named = activeMatches:FindFirstChild("Match_" .. resolvedMatchId)
+		if named then
+			return named
+		end
+	end
+
+	return activeMatches:GetChildren()[1]
+end
+
+function VFXController:_resolveRoomAnchor(matchId, roomId)
+	if type(roomId) ~= "string" or roomId == "" then
+		return nil
+	end
+
+	local container = self:_resolveActiveMatchContainer(matchId)
+	if not container then
+		return nil
+	end
+
+	local targetToken = normalizeCueToken(roomId)
+	for _, descendant in ipairs(container:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			local token = normalizeCueToken(descendant.Name)
+			if token == targetToken or token == normalizeCueToken("Room_" .. roomId) then
+				return descendant
+			end
+		end
+	end
+
+	return nil
+end
+
+function VFXController:_resolveEventPosition(payload)
+	local position = coerceVector3(payload and payload.position)
+	if position then
+		return position
+	end
+
+	local roomAnchor = self:_resolveRoomAnchor(payload and payload.matchId, payload and payload.roomId)
+	if roomAnchor then
+		return roomAnchor.Position
+	end
+
+	return nil
+end
+
+function VFXController:_pulseNearbyLights(centerPosition, radius, profileName)
+	if typeof(centerPosition) ~= "Vector3" then
+		return 0
+	end
+
+	local container = self:_resolveActiveMatchContainer()
+	if not container then
+		return 0
+	end
+
+	local affected = 0
+	for _, descendant in ipairs(container:GetDescendants()) do
+		if descendant:IsA("PointLight") or descendant:IsA("SpotLight") or descendant:IsA("SurfaceLight") then
+			local parentPart = descendant.Parent
+			local lightPosition = parentPart and parentPart:IsA("BasePart") and parentPart.Position or nil
+			if lightPosition and (lightPosition - centerPosition).Magnitude <= (radius or 28) then
+				affected += 1
+				local originalBrightness = descendant.Brightness
+				local originalEnabled = descendant.Enabled
+				descendant.Enabled = true
+				descendant.Brightness = math.max(0.05, originalBrightness * 0.08)
+				task.delay(0.04, function()
+					if descendant.Parent then
+						descendant.Enabled = false
+					end
+				end)
+				task.delay(0.09, function()
+					if descendant.Parent then
+						descendant.Enabled = true
+						descendant.Brightness = math.max(0.05, originalBrightness * 1.35)
+					end
+				end)
+				task.delay(0.18, function()
+					if descendant.Parent then
+						descendant.Enabled = originalEnabled
+						descendant.Brightness = originalBrightness
+					end
+				end)
+			end
+		end
+	end
+
+	local localPlayer = Players.LocalPlayer
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahVFXLastLightCount", affected)
+	end
+	return affected
 end
 
 function VFXController:Stop()
@@ -882,6 +1008,9 @@ function VFXController:_triggerEnvironmentalShock(payload)
 	cloned.Brightness = (cloned.Brightness or 0) * math.clamp(intensity, 0.8, 1.15)
 	cloned.AtmosphereDensityDelta = (cloned.AtmosphereDensityDelta or 0) * math.clamp(intensity, 0.85, 1.2)
 	self:_recordVFXDebug("EnvironmentalAudioTriggered", eventToken)
+	if eventToken == "lightflicker" then
+		self:_pulseNearbyLights(self:_resolveEventPosition(payload), 30, eventToken)
+	end
 	self:_playTransientShock(cloned)
 end
 
