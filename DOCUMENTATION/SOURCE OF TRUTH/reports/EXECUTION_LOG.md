@@ -9233,3 +9233,34 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - persistence sekarang tidak lagi hanya bergantung pada event lobby/rank tertentu untuk memuat atau menyimpan profile
 - QA Studio sekarang bisa melihat schema runtime yang sedang aktif, sehingga uji non-mock nanti tidak buta
+
+## 2026-04-05 - Marketplace Ownership Sync Surfacing Pass
+
+### Scope
+
+- menutup gap relog/join untuk entitlement `GamePass`, tanpa menunggu `marketplaceId` production baru
+
+### Source Changes
+
+- `src/ServerScriptService/Server/ShopSystem/Controller.lua`
+  - `_syncOwnedGamePassesForPlayer()` sekarang mengumpulkan item yang benar-benar tersinkron
+  - setelah sync berhasil, client menerima `PurchaseEvent` baru:
+    - `eventName = MarketplaceOwnershipSynced`
+    - `reason = ownership_synced`
+    - `itemIds = { ... }`
+- `src/client/UI/Main.lua`
+  - `MarketplaceOwnershipSynced` sekarang memperbarui snapshot shop tanpa memaksa membuka `ShopUI`
+  - copy status purchase sekarang lebih jujur untuk:
+    - `ownership_synced`
+    - `receipt_granted`
+    - `purchase_cancelled`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_monetization_sync_build.rbxlx`
+
+### Interpretation
+
+- entitlement GamePass yang sudah dimiliki pemain sekarang bisa disurfacing lebih bersih saat join/relog
+- sinkronisasi ownership tidak lagi berisiko membuka panel shop secara liar hanya karena snapshot entitlement masuk dari server

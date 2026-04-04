@@ -387,18 +387,32 @@ function Controller:_syncOwnedGamePassesForPlayer(player)
         return
     end
 
+    local syncedItemIds = {}
     for itemId, item in pairs(self._service:GetCatalog()) do
         if type(item) == "table" and item.marketplaceType == "GamePass" and tonumber(item.marketplaceId) and tonumber(item.marketplaceId) > 0 then
             local ok, ownsPass = pcall(function()
                 return MarketplaceService:UserOwnsGamePassAsync(player.UserId, item.marketplaceId)
             end)
             if ok and ownsPass == true then
-                self._service:GrantMarketplacePurchase(player, itemId, {
+                local grantOk = self._service:GrantMarketplacePurchase(player, itemId, {
                     source = "GamePassOwnershipSync",
                     marketplaceId = item.marketplaceId,
                 })
+                if grantOk == true then
+                    table.insert(syncedItemIds, itemId)
+                end
             end
         end
+    end
+
+    if #syncedItemIds > 0 then
+        self:_sendPurchaseResponseWithSnapshot(player, {
+            eventName = "MarketplaceOwnershipSynced",
+            success = true,
+            reason = "ownership_synced",
+            itemIds = syncedItemIds,
+            source = "GamePassOwnershipSync",
+        })
     end
 end
 
