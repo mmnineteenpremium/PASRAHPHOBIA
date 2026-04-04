@@ -144,7 +144,10 @@ local FIELD_KIT_TOOL_CONFIG = {
 		accent = Color3.fromRGB(66, 104, 146),
 		glyph = "JN",
 		label = "SCAN",
+		hint = "EMF sweep",
 		openJournal = true,
+		readyMeta = "LIVE",
+		readyFooter = "SCAN ARC",
 		role = "Sensor",
 		shortcut = "1",
 		keyCode = Enum.KeyCode.One,
@@ -153,8 +156,10 @@ local FIELD_KIT_TOOL_CONFIG = {
 		accent = Color3.fromRGB(122, 110, 68),
 		glyph = "GR",
 		label = "GARAM",
+		hint = "Lure trap",
 		maxUses = 3,
 		openJournal = false,
+		readyFooter = "TRAP LINE",
 		role = "Trap",
 		shortcut = "2",
 		keyCode = Enum.KeyCode.Two,
@@ -163,9 +168,11 @@ local FIELD_KIT_TOOL_CONFIG = {
 		accent = Color3.fromRGB(110, 84, 58),
 		glyph = "SL",
 		label = "SALIB",
+		hint = "Hunt block",
 		maxCharges = 3,
 		maxUses = 2,
 		openJournal = false,
+		readyFooter = "WARD GRID",
 		role = "Guard",
 		shortcut = "3",
 		keyCode = Enum.KeyCode.Three,
@@ -174,8 +181,10 @@ local FIELD_KIT_TOOL_CONFIG = {
 		accent = Color3.fromRGB(132, 78, 52),
 		glyph = "DP",
 		label = "DUPA",
+		hint = "Repel cloud",
 		maxUses = 2,
 		openJournal = false,
+		readyFooter = "REPULSE",
 		role = "Repel",
 		shortcut = "4",
 		keyCode = Enum.KeyCode.Four,
@@ -184,7 +193,10 @@ local FIELD_KIT_TOOL_CONFIG = {
 		accent = Color3.fromRGB(84, 120, 120),
 		glyph = "KA",
 		label = "SPIRIT",
+		hint = "Voice bait",
 		openJournal = false,
+		readyMeta = "LISTEN",
+		readyFooter = "VOICE LINK",
 		role = "Voice",
 		shortcut = "5",
 		keyCode = Enum.KeyCode.Five,
@@ -802,11 +814,35 @@ local function ensureFieldKitButtonVisuals(button, definition)
 		footerLabel.Parent = button
 	end
 
+	local hintLabel = button:FindFirstChild("HintLabel")
+	if not hintLabel or not hintLabel:IsA("TextLabel") then
+		hintLabel = Instance.new("TextLabel")
+		hintLabel.Name = "HintLabel"
+		hintLabel.BackgroundTransparency = 1
+		hintLabel.Font = Enum.Font.GothamMedium
+		hintLabel.TextSize = 8
+		hintLabel.TextXAlignment = Enum.TextXAlignment.Left
+		hintLabel.TextYAlignment = Enum.TextYAlignment.Center
+		hintLabel.ZIndex = button.ZIndex + 1
+		hintLabel.Parent = button
+	end
+
+	local accentBar = button:FindFirstChild("AccentBar")
+	if not accentBar or not accentBar:IsA("Frame") then
+		accentBar = Instance.new("Frame")
+		accentBar.Name = "AccentBar"
+		accentBar.BorderSizePixel = 0
+		accentBar.ZIndex = button.ZIndex + 1
+		accentBar.Parent = button
+	end
+	ensureCorner(accentBar, "AccentBarCorner", UDim.new(1, 0))
+
 	glyphLabel.Text = tostring((definition and definition.glyph) or "?")
 	titleLabel.Text = tostring((definition and definition.label) or "TOOL")
 	shortcutLabel.Text = string.format("[%s]", tostring((definition and definition.shortcut) or "?"))
-	metaLabel.Text = "READY"
-	footerLabel.Text = string.upper(tostring((definition and definition.role) or "UTILITY"))
+	metaLabel.Text = tostring((definition and definition.readyMeta) or "READY")
+	hintLabel.Text = string.upper(tostring((definition and definition.hint) or (definition and definition.role) or "UTILITY"))
+	footerLabel.Text = string.upper(tostring((definition and definition.readyFooter) or (definition and definition.role) or "UTILITY"))
 
 	return {
 		Button = button,
@@ -815,7 +851,9 @@ local function ensureFieldKitButtonVisuals(button, definition)
 		ShortcutLabel = shortcutLabel,
 		TitleLabel = titleLabel,
 		MetaLabel = metaLabel,
+		HintLabel = hintLabel,
 		FooterLabel = footerLabel,
+		AccentBar = accentBar,
 	}
 end
 
@@ -3865,7 +3903,7 @@ function UISystem:_resetFieldKitToolStates()
 	journalState.toolStates = createDefaultFieldKitToolStates()
 	journalState.toolType = JOURNAL_TOOL_TYPE
 	journalState.toolStatus = "Field kit siap."
-	journalState.toolReason = "Scan jejak atau pasang utility sesuai situasi."
+	journalState.toolReason = "Scan jejak, dengar respons, atau pasang utility sesuai situasi."
 	journalState.toolSuccess = nil
 	journalState.toolLastUsedAt = 0
 	self._journalState = journalState
@@ -3928,12 +3966,14 @@ end
 function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	local config = FIELD_KIT_TOOL_CONFIG[toolType] or {}
 	if not toolState then
-		return "READY", false, string.upper(tostring(config.role or "UTILITY"))
+		return tostring(config.readyMeta or "READY"), false, string.upper(tostring(config.readyFooter or config.role or "UTILITY"))
 	end
 
 	local tools = self:_getEvidenceToolsService()
 	local clientState = tools and type(tools.GetToolState) == "function" and tools:GetToolState(toolType) or nil
 	local cooldownActive = clientState and tonumber(clientState.cooldownUntil) and clientState.cooldownUntil > os.clock()
+	local feedback = clientState and type(clientState.lastFeedback) == "table" and clientState.lastFeedback or nil
+	local feedbackData = feedback and type(feedback.data) == "table" and feedback.data or feedback
 	local usesRemaining = tonumber(toolState.usesRemaining)
 	local chargesRemaining = tonumber(toolState.chargesRemaining)
 
@@ -3962,9 +4002,25 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 		return string.format("x%d", math.max(0, math.floor(usesRemaining))), false, string.format("STOK %d", math.max(0, math.floor(usesRemaining)))
 	end
 	if toolType == JOURNAL_TOOL_TYPE then
-		return "LIVE", false, "SCAN LOOP"
+		local emfLevel = tonumber(feedbackData and feedbackData.emfLevel)
+		if toolState.lastSuccess ~= false and emfLevel ~= nil then
+			return string.format("EMF %d", math.max(0, math.floor(emfLevel))), false, "MEDOK LOCK"
+		end
+		if toolState.lastSuccess == false and toolState.lastReason == "ghost_out_of_range" then
+			return "NO SIG", false, "SCAN ARC"
+		end
+		return tostring(config.readyMeta or "LIVE"), false, tostring(config.readyFooter or "SCAN LOOP")
 	end
-	return "READY", false, string.upper(tostring(config.role or "UTILITY"))
+	if toolType == "KotakArwah" then
+		if feedbackData and feedbackData.ghostResponse == true then
+			return "RESPON", false, string.format("VOICE %s", string.upper(tostring(feedbackData.responseTier or "BASE")))
+		end
+		if toolState.lastSuccess == false and toolState.lastReason == "ghost_out_of_range" then
+			return "SENYAP", false, "VOICE NULL"
+		end
+		return tostring(config.readyMeta or "READY"), false, tostring(config.readyFooter or config.role or "UTILITY")
+	end
+	return tostring(config.readyMeta or "READY"), false, string.upper(tostring(config.readyFooter or config.role or "UTILITY"))
 end
 
 function UISystem:_useInvestigationTool(toolType, options)
@@ -4105,15 +4161,24 @@ function UISystem:_refreshFieldKitPanel()
 					widget.ShortcutLabel.TextColor3 = Color3.fromRGB(208, 214, 226)
 				end
 				if widget.TitleLabel then
-					widget.TitleLabel.Position = UDim2.fromOffset(8, 28)
+					widget.TitleLabel.Position = UDim2.fromOffset(8, 26)
 					widget.TitleLabel.Size = UDim2.new(1, -16, 0, 14)
 					widget.TitleLabel.Text = tostring(toolConfig.label)
 					widget.TitleLabel.TextColor3 = Color3.fromRGB(246, 246, 244)
 					widget.TitleLabel.TextSize = self._deviceProfile and self._deviceProfile.isMobile and 11 or 10
 				end
+				if widget.HintLabel then
+					widget.HintLabel.Position = UDim2.fromOffset(8, 39)
+					widget.HintLabel.Size = UDim2.new(1, -16, 0, 10)
+					widget.HintLabel.Text = string.upper(tostring(toolConfig.hint or toolConfig.role or "UTILITY"))
+					widget.HintLabel.TextColor3 = selected
+						and Color3.fromRGB(34, 42, 56)
+						or toolConfig.accent:Lerp(Color3.fromRGB(214, 220, 230), 0.34)
+					widget.HintLabel.TextSize = 8
+				end
 				if widget.MetaLabel then
-					widget.MetaLabel.Position = UDim2.new(1, -54, 1, -18)
-					widget.MetaLabel.Size = UDim2.fromOffset(48, 14)
+					widget.MetaLabel.Position = UDim2.new(1, -58, 1, -20)
+					widget.MetaLabel.Size = UDim2.fromOffset(52, 14)
 					widget.MetaLabel.BackgroundColor3 = metaDanger
 						and Color3.fromRGB(102, 58, 58)
 						or toolConfig.accent:Lerp(Color3.fromRGB(20, 26, 36), 0.22)
@@ -4124,13 +4189,21 @@ function UISystem:_refreshFieldKitPanel()
 						or Color3.fromRGB(250, 246, 236)
 				end
 				if widget.FooterLabel then
-					widget.FooterLabel.Position = UDim2.fromOffset(8, 43)
-					widget.FooterLabel.Size = UDim2.new(1, -70, 0, 10)
+					widget.FooterLabel.Position = UDim2.fromOffset(8, 52)
+					widget.FooterLabel.Size = UDim2.new(1, -74, 0, 10)
 					widget.FooterLabel.Text = footerText
 					widget.FooterLabel.TextColor3 = metaDanger
 						and Color3.fromRGB(244, 208, 208)
 						or Color3.fromRGB(196, 206, 218)
 					widget.FooterLabel.TextSize = self._deviceProfile and self._deviceProfile.isMobile and 9 or 8
+				end
+				if widget.AccentBar then
+					widget.AccentBar.Position = UDim2.new(0, 8, 1, -7)
+					widget.AccentBar.Size = UDim2.new(selected and 0.72 or 0.46, 0, 0, 3)
+					widget.AccentBar.BackgroundColor3 = metaDanger
+						and Color3.fromRGB(176, 96, 96)
+						or toolConfig.accent:Lerp(Color3.fromRGB(248, 242, 232), selected and 0.06 or 0.28)
+					widget.AccentBar.BackgroundTransparency = selected and 0.02 or 0.16
 				end
 			end
 		end
@@ -7883,7 +7956,7 @@ function UISystem:_applyDeviceSizing()
 	end
 	if match and match.FieldKitFrame then
 		local kitWidth = profile.isMobile and math.min(viewportSize.X - 20, 420) or 356
-		local kitHeight = profile.isMobile and 154 or 146
+		local kitHeight = profile.isMobile and 164 or 156
 		match.FieldKitFrame.Size = UDim2.fromOffset(math.max(profile.isMobile and 316 or 332, math.floor(kitWidth)), kitHeight)
 		if profile.isMobile then
 			match.FieldKitFrame.AnchorPoint = Vector2.new(0.5, 1)
@@ -7900,7 +7973,7 @@ function UISystem:_applyDeviceSizing()
 	end
 	if match and match.FieldKitButtonsFrame then
 		match.FieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
-		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, profile.isMobile and 58 or 56)
+		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, profile.isMobile and 66 or 64)
 	end
 	if match and match.FieldKitGrid and match.FieldKitFrame then
 		local availableWidth = math.max(280, match.FieldKitFrame.Size.X.Offset - 24)
@@ -7909,10 +7982,10 @@ function UISystem:_applyDeviceSizing()
 		local cellWidth = math.floor((availableWidth - (cellPadding * math.max(0, toolCount - 1))) / toolCount)
 		local minCellWidth = toolCount >= 5 and 56 or (profile.isMobile and 72 or 76)
 		match.FieldKitGrid.CellPadding = UDim2.fromOffset(cellPadding, 0)
-		match.FieldKitGrid.CellSize = UDim2.fromOffset(math.max(minCellWidth, cellWidth), profile.isMobile and 58 or 56)
+		match.FieldKitGrid.CellSize = UDim2.fromOffset(math.max(minCellWidth, cellWidth), profile.isMobile and 66 or 64)
 	end
 	if match and match.FieldKitStatusLabel then
-		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, profile.isMobile and 100 or 98)
+		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, profile.isMobile and 108 or 106)
 		match.FieldKitStatusLabel.Size = UDim2.new(1, -24, 0, profile.isMobile and 40 or 36)
 		match.FieldKitStatusLabel.TextSize = profile.isMobile and 12 or 11
 	end
