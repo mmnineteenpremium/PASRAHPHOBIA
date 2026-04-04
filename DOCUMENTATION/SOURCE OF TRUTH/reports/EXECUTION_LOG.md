@@ -8086,3 +8086,31 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - placeholder seperti class unlock/lifetime pass tidak lagi ikut mengotori shop umum
 - dev masih bisa membukanya kembali secara sadar lewat attribute debug, tetapi default pemain dan tester melihat katalog yang lebih jujur
+
+## 2026-04-04 - Royal Pass Premium CTA Hardened
+
+### Scope
+
+- mencegah `RoyalPassUI` terlihat seolah-olah premium track siap dibeli padahal entitlement-nya masih disabled/pending compliance
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `RoyalPassUI` sekarang mengecek apakah `royalpass_premium_track` benar-benar visible/ready di katalog
+  - jika belum ready:
+    - tombol premium berubah ke `PENDING`
+    - footer menjelaskan status pending compliance/setup
+    - track hint menjelaskan view premium masih preview
+    - CTA tidak lagi mengarahkan pemain ke shop seolah-olah live
+  - jika nanti ready:
+    - CTA kembali membuka `ShopUI` filter `Robux`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_royalpass_pending_ui_build.rbxlx`
+
+### Interpretation
+
+- ini mengurangi misleading monetization di jalur `Royal Pass`
+- pemain tidak lagi didorong ke CTA pembelian yang belum seharusnya aktif

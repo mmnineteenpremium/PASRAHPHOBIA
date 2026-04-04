@@ -6038,6 +6038,15 @@ function UISystem:_reloadShopCatalog()
 	self:_refreshShopPanel()
 end
 
+function UISystem:_getRoyalPassPremiumOffer()
+	local catalog = self._shopState and self._shopState.catalog or nil
+	local item = findShopCatalogItem(catalog, "royalpass_premium_track")
+	if type(item) ~= "table" then
+		return nil, false
+	end
+	return item, true
+end
+
 function UISystem:_requestShopSnapshot(force)
 	local remote = self._remotes and self._remotes.PurchaseEvent or nil
 	if not remote then
@@ -6748,6 +6757,26 @@ function UISystem:_ensureRoyalPassWidgets(window)
 			self:_refreshRoyalPassPanel()
 		end)
 	end
+	if premiumActionButton:GetAttribute("Bound") ~= true then
+		premiumActionButton:SetAttribute("Bound", true)
+		connectButtonPress(premiumActionButton, function()
+			local premiumItem, premiumOfferReady = self:_getRoyalPassPremiumOffer()
+			if self._royalPassState and self._royalPassState.premiumOwned == true then
+				self._royalPassState.lastSource = "premium_already_owned"
+				self._royalPassState.lastAmount = 0
+				self:_refreshRoyalPassPanel()
+				return
+			end
+			if premiumOfferReady ~= true then
+				self._royalPassState.lastSource = premiumItem and "premium_offer_pending" or "premium_offer_hidden"
+				self._royalPassState.lastAmount = 0
+				self:_refreshRoyalPassPanel()
+				return
+			end
+			self:_setShopFilter("Robux")
+			self:_openAuxiliaryWindow("ShopUI")
+		end)
+	end
 
 	window.RoyalPassWidgets = {
 		Deck = deck,
@@ -6786,6 +6815,7 @@ function UISystem:_refreshRoyalPassPanel()
 	local remainingXP = math.max(0, math.floor(tonumber(state.remainingXP or 0) or 0))
 	local premiumOwned = state.premiumOwned == true
 	local progressPercent = math.clamp(tonumber(state.progressPercent or 0) or 0, 0, 1)
+	local _, premiumOfferReady = self:_getRoyalPassPremiumOffer()
 
 	local badgeText = premiumOwned and "PREMIUM" or "FREE TRACK"
 	local badgeColor = premiumOwned and Color3.fromRGB(136, 102, 48) or Color3.fromRGB(78, 92, 118)
@@ -6842,7 +6872,9 @@ function UISystem:_refreshRoyalPassPanel()
 
 	local footerText = premiumOwned
 		and "Premium track aktif. Bonus currency premium khusus dimatikan; jalur ini harus tetap cosmetic/progression-safe."
-		or "Belum premium. Pembelian premium track tetap harus lewat purchase prompt Roblox resmi dan tidak boleh memberi bonus pay-to-win."
+		or (premiumOfferReady
+			and "Premium track tersedia lewat purchase prompt Roblox resmi dan tidak boleh memberi bonus pay-to-win."
+			or "Premium track masih pending compliance/setup. Jangan anggap siap jual sampai track cosmetic-safe dan Creator Hub benar-benar siap.")
 
 	self:_refreshWindowText(
 		"RoyalPassUI",
@@ -6881,8 +6913,11 @@ function UISystem:_refreshRoyalPassPanel()
 		remainingXP,
 		math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0))
 	)
-	widgets.PremiumActionButton.BackgroundColor3 = premiumOwned and Color3.fromRGB(74, 108, 70) or heroAccent
-	widgets.PremiumActionButton.Text = premiumOwned and "PREMIUM AKTIF" or "LIHAT SHOP"
+	widgets.PremiumActionButton.BackgroundColor3 = premiumOwned
+		and Color3.fromRGB(74, 108, 70)
+		or (premiumOfferReady and heroAccent or Color3.fromRGB(72, 70, 76))
+	widgets.PremiumActionButton.Text = premiumOwned and "PREMIUM AKTIF" or (premiumOfferReady and "LIHAT SHOP" or "PENDING")
+	widgets.PremiumActionButton.AutoButtonColor = premiumOwned ~= true and premiumOfferReady == true
 
 	local unlockedPreview = "-"
 	if type(state.unlockedTiers) == "table" and #state.unlockedTiers > 0 then
@@ -6929,9 +6964,11 @@ function UISystem:_refreshRoyalPassPanel()
 			badge = "TRACK",
 			glyph = premiumOwned and "RP" or "FT",
 			title = premiumOwned and "Premium trajectory" or "Free trajectory",
-			meta = string.format("Unlocked %d tier • preview %s", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0)), unlockedPreview),
+			meta = premiumOfferReady
+				and string.format("Unlocked %d tier • preview %s", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0)), unlockedPreview)
+				or "Premium track belum dijual. Jalur ini tetap pending sampai compliant.",
 			pill = string.format("%d LEFT", remainingXP),
-			button = premiumOwned and "OWNED" or "SHOP",
+			button = premiumOwned and "OWNED" or (premiumOfferReady and "SHOP" or "PENDING"),
 			accent = premiumOwned and Color3.fromRGB(90, 126, 88) or Color3.fromRGB(74, 92, 118),
 			preview = premiumOwned and Color3.fromRGB(42, 58, 40) or Color3.fromRGB(38, 48, 62),
 		},
@@ -6965,9 +7002,13 @@ function UISystem:_refreshRoyalPassPanel()
 		widgets.MissionTab.TextColor3 = rewardsActive and Color3.fromRGB(194, 204, 216) or Color3.fromRGB(246, 242, 234)
 	end
 	if widgets.TrackHint then
-		widgets.TrackHint.Text = state.viewMode == "Missions"
-			and "Geser horizontal untuk melihat 30 hari misi. Hari ke-30 menjaga placeholder hadiah karakter rarity 5."
-			or "Geser horizontal untuk melihat 30 hari reward. Hari ke-30 menampilkan placeholder hadiah karakter rarity 5."
+		if premiumOfferReady ~= true and premiumOwned ~= true then
+			widgets.TrackHint.Text = "Premium track masih pending. Reward view ini hanya preview sampai entitlement Roblox benar-benar siap."
+		else
+			widgets.TrackHint.Text = state.viewMode == "Missions"
+				and "Geser horizontal untuk melihat 30 hari misi. Hari ke-30 menjaga placeholder hadiah karakter rarity 5."
+				or "Geser horizontal untuk melihat 30 hari reward. Hari ke-30 menampilkan placeholder hadiah karakter rarity 5."
+		end
 	end
 
 	local trackCards = widgets.TrackCards or {}
