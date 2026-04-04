@@ -7832,3 +7832,34 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - pada production saat semua slot `Robux` masih hidden, pemain tidak lagi melihat `R$ 0` yang tidak punya konteks
 - UI shop jadi lebih konsisten dengan katalog yang benar-benar tersedia
+
+## 2026-04-04 - Ghost Parent Guard Confirmed Live
+
+### Scope
+
+- menutup sisa jalur parent ghost yang masih bisa memunculkan error `The Parent property of Ghost_* is locked`
+
+### Source Changes
+
+- `src/ServerScriptService/Server/GhostSystem/Service.lua`
+  - `ensureGhostPlacement()` sekarang juga memakai `tryParentGhostModel()`
+  - jika re-parent ghost gagal, fungsi sekarang keluar aman tanpa melempar runtime error mentah
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_ghost_guard_retest_build.rbxlx`
+- validasi live Studio:
+  - setelah stop/play ulang, `CreateRoom -> HostStart` kembali berhasil:
+    - `started=true matchId=match_1 mode=Classic`
+  - flow `Ranked` juga berhasil start lagi tanpa membatalkan match:
+    - `ranked_started=true`
+    - `ranked_salt_remaining=2`
+  - flow `Classic` pembanding juga berhasil:
+    - `classic_started=true`
+    - `classic_salt_remaining=3`
+
+### Interpretation
+
+- fix ghost parent sekarang tidak hanya aman di source, tetapi juga sudah terbukti menjaga match start tetap hidup di runtime Studio
+- hasil fairness `Ranked` vs `Classic` juga terkunci ulang pada sesi live yang sudah melewati blocker ghost tadi

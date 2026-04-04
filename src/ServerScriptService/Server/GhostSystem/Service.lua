@@ -1203,7 +1203,10 @@ local function ensureGhostPlacement(match)
 		return false
 	end
 	if match.ghost.Parent ~= container then
-		match.ghost.Parent = container
+		local parentOk = tryParentGhostModel(match.ghost, container)
+		if not parentOk then
+			return false
+		end
 	end
 	return true
 end
