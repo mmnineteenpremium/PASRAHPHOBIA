@@ -7492,3 +7492,46 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - jalur entitlement sekarang tidak cuma siap di source, tetapi juga sudah terbukti hidup di Studio playtest.
 - ini menurunkan risiko publish untuk item `GamePass` permanen karena snapshot UI/shop tidak lagi tertinggal dari state entitlement server.
+
+## 2026-04-04 - Studio DeveloperProduct Harness Verified
+
+### Scope
+
+- menambah harness Studio-only untuk grant `DeveloperProduct` style purchase
+- memvalidasi aturan Roblox bahwa currency pack `Robux` harus repeatable dan tidak boleh tampil sebagai entitlement permanen
+
+### Source Changes
+
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+  - tambah action `GrantMarketplacePurchase`
+  - `GrantMarketplaceEntitlement` sekarang dibatasi khusus item kategori `Entitlement`
+  - ack grant marketplace sekarang juga melaporkan:
+    - `category`
+    - `currency`
+    - `owned`
+    - `ownedCount`
+    - `MM/PP/Robux` sesudah grant
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_marketplace_purchase_harness_build.rbxlx`
+- validasi live Studio sukses:
+  - baseline wallet: `MM=1200 PP=12 Robux=0`
+  - `mm_pack_small`
+    - before: `ownedSnapshot=false`
+    - grant 1: `MM=3700`, `owned=false`, `ownedCount=0`
+    - grant 2: `MM=6200`, `owned=false`, `ownedCount=0`
+    - after kedua grant: tetap `ownedSnapshot=false`
+  - `pp_pack_standard`
+    - before: `PP=12`, `ownedSnapshot=false`
+    - grant 1: `PP=37`, `owned=false`, `ownedCount=0`
+    - after: tetap `ownedSnapshot=false`
+
+### Interpretation
+
+- jalur `DeveloperProduct` sekarang terbukti mengikuti pola yang benar untuk pack currency:
+  - grant bisa diulang
+  - wallet bertambah setiap kali purchase
+  - item tidak salah dibekukan sebagai ownership permanen
+- ini menurunkan risiko bug monetization saat nanti `ProcessReceipt` Creator Hub dihubungkan ke item `CurrencyPack`.

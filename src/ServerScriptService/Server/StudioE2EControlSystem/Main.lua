@@ -398,13 +398,16 @@ function StudioE2EControlSystem:_handleGrantCurrency(player, request)
 	)
 end
 
-function StudioE2EControlSystem:_handleGrantMarketplaceEntitlement(player, request)
+function StudioE2EControlSystem:_handleGrantMarketplacePurchase(player, request)
 	if typeof(player) ~= "Instance" or not player:IsA("Player") then
 		return false, "invalid_player"
 	end
 
 	local shopService = self._shopService
-	if type(shopService) ~= "table" or type(shopService.GrantMarketplacePurchase) ~= "function" then
+	if type(shopService) ~= "table"
+		or type(shopService.GrantMarketplacePurchase) ~= "function"
+		or type(shopService.GetCatalog) ~= "function"
+	then
 		return false, "missing_shop_service"
 	end
 
@@ -413,8 +416,15 @@ function StudioE2EControlSystem:_handleGrantMarketplaceEntitlement(player, reque
 		return false, "missing_item_id"
 	end
 
+	local catalog = shopService:GetCatalog()
+	local item = type(catalog) == "table" and catalog[itemId] or nil
+	if type(item) ~= "table" then
+		return false, "item_not_found"
+	end
+
 	local ok, reason = shopService:GrantMarketplacePurchase(player, itemId, {
-		source = "StudioE2EEntitlement",
+		source = type(request) == "table" and tostring(request.source or "StudioE2EMarketplacePurchase")
+			or "StudioE2EMarketplacePurchase",
 	})
 	if ok ~= true then
 		return false, tostring(reason or "grant_failed")
@@ -443,12 +453,40 @@ function StudioE2EControlSystem:_handleGrantMarketplaceEntitlement(player, reque
 		end
 	end
 
+	local wallet = type(self._economyService) == "table" and self._economyService:GetBalance(player) or {}
+
 	return true, string.format(
-		"item=%s owned=%s ownedCount=%d",
+		"item=%s category=%s currency=%s owned=%s ownedCount=%d MM=%d PP=%d Robux=%d",
 		itemId,
+		tostring(item.category or ""),
+		tostring(item.currency or ""),
 		tostring(owned),
-		ownedCount
+		ownedCount,
+		math.max(0, math.floor(tonumber(wallet.MM) or 0)),
+		math.max(0, math.floor(tonumber(wallet.PP) or 0)),
+		math.max(0, math.floor(tonumber(wallet.Robux) or 0))
 	)
+end
+
+function StudioE2EControlSystem:_handleGrantMarketplaceEntitlement(player, request)
+	local shopService = self._shopService
+	if type(shopService) ~= "table" or type(shopService.GetCatalog) ~= "function" then
+		return false, "missing_shop_service"
+	end
+
+	local itemId = type(request) == "table" and tostring(request.itemId or "") or ""
+	local catalog = shopService:GetCatalog()
+	local item = type(catalog) == "table" and catalog[itemId] or nil
+	if type(item) ~= "table" then
+		return false, "item_not_found"
+	end
+	if tostring(item.category or "") ~= "Entitlement" then
+		return false, "not_entitlement_item"
+	end
+
+	request = type(request) == "table" and request or {}
+	request.source = "StudioE2EEntitlement"
+	return self:_handleGrantMarketplacePurchase(player, request)
 end
 
 function StudioE2EControlSystem:_handleGetPersistenceMode()
@@ -938,6 +976,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGetWallet(player)
 	elseif action == "GrantCurrency" then
 		ok, result = self:_handleGrantCurrency(player, request)
+	elseif action == "GrantMarketplacePurchase" then
+		ok, result = self:_handleGrantMarketplacePurchase(player, request)
 	elseif action == "GrantMarketplaceEntitlement" then
 		ok, result = self:_handleGrantMarketplaceEntitlement(player, request)
 	elseif action == "GetPersistenceMode" then
