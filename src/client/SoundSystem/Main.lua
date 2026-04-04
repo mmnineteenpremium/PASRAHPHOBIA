@@ -53,7 +53,44 @@ local AUDIO_DEBUG_ATTRS = {
 	cue = "PasrahAudioLastCue",
 	eventType = "PasrahAudioLastEventType",
 	soundId = "PasrahAudioLastSoundId",
+	volume = "PasrahAudioLastVolume",
+	playbackSpeed = "PasrahAudioLastPlaybackSpeed",
 	playCount = "PasrahAudioPlayCount",
+}
+
+local CUE_AUDIO_PROFILES = {
+	AmbientAudio = {
+		ambient_investigation = { volumeScale = 0.9, playbackSpeed = 0.97 },
+		post_hunt_calm = { volumeScale = 0.78, playbackSpeed = 0.94 },
+	},
+	EnvironmentalAudio = {
+		env_doorslam = { volumeScale = 1.06, playbackSpeed = 0.92 },
+		env_objectthrow = { volumeScale = 1.0, playbackSpeed = 0.96 },
+		env_windowknock = { volumeScale = 0.86, playbackSpeed = 0.98 },
+		env_lightflicker = { volumeScale = 0.72, playbackSpeed = 1.04 },
+		env_radiostatic = { volumeScale = 0.68, playbackSpeed = 0.9 },
+		env_shadowapparition = { volumeScale = 0.94, playbackSpeed = 0.9 },
+		env_footstepsound = { volumeScale = 0.82, playbackSpeed = 1.03 },
+		env_suddenwhisper = { volumeScale = 0.88, playbackSpeed = 0.92 },
+		env_temperaturedrop = { volumeScale = 0.8, playbackSpeed = 0.88 },
+	},
+	GhostAudio = {
+		ghost_whisper = { volumeScale = 0.84, playbackSpeed = 0.9 },
+		ghost_fake_footsteps = { volumeScale = 0.74, playbackSpeed = 1.04 },
+		ghost_manifest = { volumeScale = 0.98, playbackSpeed = 0.88 },
+		ghost_object_throw = { volumeScale = 0.82, playbackSpeed = 0.95 },
+	},
+	HuntAudio = {
+		hunt_start = { volumeScale = 1.04, playbackSpeed = 1.02 },
+		hunt_phase_loop = { volumeScale = 0.96, playbackSpeed = 0.99 },
+	},
+	FearAudio = {
+		fear_rise = { volumeScale = 0.86, playbackSpeed = 1.0 },
+		fear_critical = { volumeScale = 1.0, playbackSpeed = 1.08 },
+	},
+	JumpscareAudio = {
+		jumpscare_stinger = { volumeScale = 1.0, playbackSpeed = 1.06 },
+	},
 }
 
 local function resolveTemplate(root, pathSegments)
@@ -77,6 +114,31 @@ end
 
 local function normalizeCue(cue)
 	return tostring(cue or ""):gsub("[%s_%-]+", "_"):lower()
+end
+
+local function resolveCueProfile(category, payload)
+	local profiles = CUE_AUDIO_PROFILES[category]
+	if type(profiles) ~= "table" then
+		return nil
+	end
+
+	local cueToken = normalizeCue(payload and payload.cue)
+	if cueToken ~= "" and profiles[cueToken] then
+		return profiles[cueToken]
+	end
+
+	local eventToken = normalizeCue(payload and payload.eventType)
+	if eventToken ~= "" then
+		local prefixed = "env_" .. eventToken
+		if profiles[prefixed] then
+			return profiles[prefixed]
+		end
+		if profiles[eventToken] then
+			return profiles[eventToken]
+		end
+	end
+
+	return nil
 end
 
 local function resolveFolderTemplate(root, folderName, templateName)
@@ -297,6 +359,8 @@ function SoundSystem:_recordAudioDebug(category, template, payload)
 	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.cue, tostring(payload and payload.cue or ""))
 	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.eventType, tostring(payload and payload.eventType or ""))
 	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.soundId, tostring(template and template.SoundId or ""))
+	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.volume, tonumber(template and template.Volume) or 0)
+	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.playbackSpeed, tonumber(template and template.PlaybackSpeed) or 1)
 	self._player:SetAttribute(
 		AUDIO_DEBUG_ATTRS.playCount,
 		(tonumber(self._player:GetAttribute(AUDIO_DEBUG_ATTRS.playCount)) or 0) + 1
@@ -307,7 +371,8 @@ function SoundSystem:_applySoundProfile(sound, category, payload)
 	local intensity = math.clamp(tonumber(payload and payload.intensity) or 1, 0.15, 1.5)
 	local baseVolume = CATEGORY_BASE_VOLUME[category] or 0.7
 	local templateVolume = tonumber(sound.Volume) or baseVolume
-	sound.Volume = math.clamp(templateVolume * intensity, 0, 1)
+	local cueProfile = resolveCueProfile(category, payload)
+	sound.Volume = math.clamp(templateVolume * intensity * (tonumber(cueProfile and cueProfile.volumeScale) or 1), 0, 1)
 	sound:SetAttribute("PasrahAudioCategory", category)
 	sound:SetAttribute("PasrahAudioCue", tostring(payload and payload.cue or ""))
 
@@ -321,6 +386,9 @@ function SoundSystem:_applySoundProfile(sound, category, payload)
 		sound.PlaybackSpeed = math.clamp(0.98 + intensity * 0.1, 0.95, 1.18)
 	else
 		sound.PlaybackSpeed = math.clamp(0.98 + intensity * 0.06, 0.92, 1.1)
+	end
+	if cueProfile and tonumber(cueProfile.playbackSpeed) then
+		sound.PlaybackSpeed = math.clamp(sound.PlaybackSpeed * tonumber(cueProfile.playbackSpeed), 0.82, 1.28)
 	end
 end
 
@@ -343,6 +411,7 @@ function SoundSystem:_playLoopedCategory(category, template, payload)
 	local active = self._activeSounds[category]
 	if active and active.Parent and active.SoundId == template.SoundId then
 		self:_applySoundProfile(active, category, payload)
+		self:_recordAudioDebug(category, active, payload)
 		if not active.IsPlaying then
 			active:Play()
 		end
@@ -356,6 +425,7 @@ function SoundSystem:_playLoopedCategory(category, template, payload)
 	runtimeSound.Looped = true
 	runtimeSound.Parent = self:_getParentForCategory(category)
 	self:_applySoundProfile(runtimeSound, category, payload)
+	self:_recordAudioDebug(category, runtimeSound, payload)
 	runtimeSound:Play()
 	self._activeSounds[category] = runtimeSound
 end
@@ -378,6 +448,7 @@ function SoundSystem:_playOneShotCategory(category, template, payload)
 	runtimeSound.Looped = false
 	runtimeSound.Parent = self:_getParentForCategory(category)
 	self:_applySoundProfile(runtimeSound, category, payload)
+	self:_recordAudioDebug(category, runtimeSound, payload)
 	runtimeSound.Ended:Connect(function()
 		if runtimeSound.Parent then
 			runtimeSound:Destroy()
@@ -392,7 +463,6 @@ function SoundSystem:_playCategoryAudio(category, payload)
 	if not template then
 		return
 	end
-	self:_recordAudioDebug(category, template, payload)
 	if LOOPED_CATEGORIES[category] then
 		self:_playLoopedCategory(category, template, payload)
 		return

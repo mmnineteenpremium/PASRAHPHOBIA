@@ -1573,6 +1573,29 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (slice jumpscare + empty-slot cleanup)**.
   - **PENDING** untuk pass artistik lanjutan (material/lighting, ambience brand final, VFX ambiance detail).
 
+## Update 2026-04-05 16:42 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi cadence/runtime honesty:
+  - `SoundSystem` sekarang punya `CUE_AUDIO_PROFILES` per kategori agar cue tidak semuanya berbunyi dengan intensitas/pitch yang seragam.
+  - debug runtime pemain sekarang menyimpan nilai akhir setelah profile diterapkan:
+    - `PasrahAudioLastVolume`
+    - `PasrahAudioLastPlaybackSpeed`
+- validasi live MCP:
+  - `StudioE2EControl.TriggerJumpscare(match_1)` menghasilkan:
+    - `PasrahAudioLastCategory = JumpscareAudio`
+    - `PasrahAudioLastCue = jumpscare_stinger`
+    - `PasrahAudioLastSoundId = rbxassetid://138329686293368`
+    - `PasrahAudioLastVolume ~= 0.90`
+    - `PasrahAudioLastPlaybackSpeed ~= 1.2296`
+  - `StudioE2EControl.ForceHunt(match_1)` menghasilkan:
+    - `PasrahAudioLastCategory = HuntAudio`
+    - `PasrahAudioLastCue = hunt_start`
+    - `PasrahAudioLastVolume ~= 0.884`
+    - `PasrahAudioLastPlaybackSpeed ~= 1.122`
+- status:
+  - **SELESAI (runtime cue cadence baseline)** untuk `Jumpscare/Hunt`.
+  - **PENDING** tetap pada ambience legal final dan kekayaan cue lingkungan/ghost lanjutan.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

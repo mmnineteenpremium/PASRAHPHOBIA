@@ -8559,3 +8559,57 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - bunyi klik UI sekarang lebih punya identitas sendiri dan tidak lagi terasa seperti fallback editor default
 - perubahan ini aman karena seluruh UI tetap melewati satu owner klik yang sama
+
+## 2026-04-05 - Runtime Cue Cadence Profile Pass
+
+### Scope
+
+- menutup gap kecil tetapi penting pada pass audio polish:
+  - cue berbeda masih berbagi volume/pitch yang terlalu seragam walau template sudah benar
+  - attribute debug pemain masih merekam nilai template mentah, bukan nilai runtime setelah shaping
+
+### Source Changes
+
+- `src/client/SoundSystem/Main.lua`
+  - tambah `CUE_AUDIO_PROFILES` per kategori:
+    - `AmbientAudio`
+    - `EnvironmentalAudio`
+    - `GhostAudio`
+    - `HuntAudio`
+    - `FearAudio`
+    - `JumpscareAudio`
+  - tambah `resolveCueProfile(category, payload)` untuk memilih shaping berdasarkan `cue/eventType`
+  - `_applySoundProfile()` sekarang mengalikan `Volume` dan `PlaybackSpeed` dengan profile cue bila tersedia
+  - `AUDIO_DEBUG_ATTRS` ditambah:
+    - `PasrahAudioLastVolume`
+    - `PasrahAudioLastPlaybackSpeed`
+  - `_recordAudioDebug()` sekarang merekam nilai runtime sound setelah profile diterapkan
+  - `_playOneShotCategory()` dan `_playLoopedCategory()` sekarang menjadi owner pencatatan debug, sehingga debug tidak lagi tersesat ke template mentah
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_cue_profile_audio_build.rbxlx`
+- validasi live Studio:
+  - `Workspace.ActiveMatches.Match_match_1` terdeteksi aktif
+  - `StudioE2EControl.TriggerJumpscare(match_1)` menghasilkan:
+    - `PasrahAudioLastCategory = JumpscareAudio`
+    - `PasrahAudioLastTemplate = JumpscareAudioRuntime`
+    - `PasrahAudioLastCue = jumpscare_stinger`
+    - `PasrahAudioLastSoundId = rbxassetid://138329686293368`
+    - `PasrahAudioLastVolume ~= 0.90`
+    - `PasrahAudioLastPlaybackSpeed ~= 1.2296`
+    - `PasrahAudioPlayCount = 1`
+  - `StudioE2EControl.ForceHunt(match_1)` menghasilkan:
+    - `PasrahAudioLastCategory = HuntAudio`
+    - `PasrahAudioLastTemplate = HuntAudioRuntime`
+    - `PasrahAudioLastCue = hunt_start`
+    - `PasrahAudioLastSoundId = rbxassetid://138329686293368`
+    - `PasrahAudioLastVolume ~= 0.884`
+    - `PasrahAudioLastPlaybackSpeed ~= 1.122`
+    - `PasrahAudioPlayCount = 2`
+
+### Interpretation
+
+- pass ini membuat cue runtime terasa kurang datar tanpa harus mengganti semua asset audio lagi
+- debug audio sekarang jujur terhadap hasil akhir yang benar-benar didengar pemain, sehingga batch polish berikutnya tidak lagi buta saat tuning
