@@ -9440,3 +9440,27 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - logic map sekarang tidak lagi terlalu bergantung pada authoring manual interaction point yang tidak lengkap
 - ini membantu ghost/event/traversal affordance tetap konsisten pada map besar, sambil menunggu restruktur visual final
+
+## 2026-04-05 - Lobby Feedback Visibility Fix
+
+### Scope
+
+- memastikan feedback lobby hasil `LobbyZoneFocused` benar-benar terlihat oleh pemain
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `FeedbackLabel.Visible` kini disetel `true` setelah lobby event diproses
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_lobby_feedback_visible_build.rbxlx`
+- validasi live Studio:
+  - `SimulateLobbyZone(ShopZone)` menghasilkan:
+    - `visible=true`
+    - `text=Area shop aktif. Buka SHOP untuk melihat item MM/PP/Robux yang memang visible dan compliant.`
+
+### Interpretation
+
+- feedback zona lobby sekarang tidak lagi “benar di state, hilang di layar”

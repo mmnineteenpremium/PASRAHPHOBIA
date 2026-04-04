@@ -9707,7 +9707,7 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 		lobby.FeedbackLabel.Text = "Lobby event: " .. tostring(eventName)
 	end
 
-	lobby.FeedbackLabel.Visible = false
+	lobby.FeedbackLabel.Visible = true
 	if lobby.PlayButton then
 		lobby.PlayButton.Visible = false
 	end

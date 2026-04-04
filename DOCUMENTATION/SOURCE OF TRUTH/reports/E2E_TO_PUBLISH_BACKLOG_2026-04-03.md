@@ -1116,6 +1116,7 @@ Status:
   - lobby zone taxonomy sekarang disejajarkan ke geometri lobby aktif
   - masuk area matchmaking tidak lagi auto-queue
   - UI lobby sekarang menerima `LobbyZoneFocused` feedback yang lebih jujur untuk `MatchmakingZone` dan `ShopZone`
+  - feedback lobby tersebut sekarang benar-benar visible di layar, bukan hanya terisi text-nya
 - slice map yang baru tertutup:
   - runtime sekarang mensintesis `InteractionPoints` yang hilang dari `Rooms`, jadi coverage interaksi tidak lagi timpang di map besar
   - validasi live:
