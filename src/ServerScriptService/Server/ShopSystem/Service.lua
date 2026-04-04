@@ -171,6 +171,46 @@ function Service:GetCatalog()
     return self._state:Get("shopCatalog") or {}
 end
 
+function Service:BuildClientSnapshot(player)
+    local userId = toUserId(player)
+    if not userId then
+        return nil, "invalid_player"
+    end
+
+    local snapshot = {
+        wallet = {
+            MM = 0,
+            PP = 0,
+            Robux = 0,
+        },
+        ownedItemIds = {},
+        ownedCount = 0,
+        updatedAt = os.clock(),
+    }
+
+    local economy = self:_getEconomyService()
+    if type(economy) == "table" and type(economy.GetBalance) == "function" then
+        local ok, result = pcall(function()
+            return economy:GetBalance(player)
+        end)
+        if ok and type(result) == "table" then
+            snapshot.wallet.MM = math.max(0, math.floor(tonumber(result.MM) or 0))
+            snapshot.wallet.PP = math.max(0, math.floor(tonumber(result.PP) or 0))
+            snapshot.wallet.Robux = math.max(0, math.floor(tonumber(result.Robux) or 0))
+        end
+    end
+
+    for itemId, item in pairs(self:GetCatalog()) do
+        if type(item) == "table" and self:_alreadyOwned(player, itemId, item.category) then
+            table.insert(snapshot.ownedItemIds, itemId)
+        end
+    end
+
+    table.sort(snapshot.ownedItemIds)
+    snapshot.ownedCount = #snapshot.ownedItemIds
+    return snapshot
+end
+
 function Service:_getCatalogItem(itemId)
     local catalog = self._state:Get("shopCatalog") or {}
     return catalog[itemId]
