@@ -9688,6 +9688,14 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 		lobby.FeedbackLabel.Text = "Invite kadaluarsa."
 	elseif eventName == "MatchStarting" or eventName == "RoomMatchStarting" then
 		lobby.FeedbackLabel.Text = "Match akan dimulai..."
+	elseif eventName == "LobbyZoneFocused" then
+		local title = tostring(payload and payload.title or "Area lobby aktif.")
+		local hint = tostring(payload and payload.hint or "")
+		if hint ~= "" then
+			lobby.FeedbackLabel.Text = title .. " " .. hint
+		else
+			lobby.FeedbackLabel.Text = title
+		end
 	elseif eventName == "LobbyFlexSpotlightUpdated" then
 		local spotlight = payload and payload.spotlight or {}
 		local spotlightName = spotlight.displayName or spotlight.playerName or "Player"

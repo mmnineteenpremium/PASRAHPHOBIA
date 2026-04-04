@@ -1110,9 +1110,12 @@ Done jika:
 
 Status:
 
-- deferred
-- dikerjakan paling akhir setelah blocker E2E, vertical slice, content fill utama, dan publish gate inti tertutup
-- task ini sengaja tidak ditarik ke depan agar tidak membuka drift UI/layout besar di tengah hardening runtime
+- **IN PROGRESS**.
+- fase ini memang baru disentuh setelah blocker E2E, vertical slice, content fill utama, dan publish gate inti tertutup
+- slice pertama yang sudah masuk:
+  - lobby zone taxonomy sekarang disejajarkan ke geometri lobby aktif
+  - masuk area matchmaking tidak lagi auto-queue
+  - UI lobby sekarang menerima `LobbyZoneFocused` feedback yang lebih jujur untuk `MatchmakingZone` dan `ShopZone`
 
 Pekerjaan:
 
@@ -1129,7 +1132,7 @@ Done jika:
 Catatan:
 
 - ingatkan user secara eksplisit saat backlog sudah sampai tahap ini
-- jangan eksekusi lebih awal kecuali user mengubah prioritas
+- sudah sampai tahap ini; eksekusi boleh lanjut bertahap tanpa melompat ke retention/final discussion dulu
 
 ### 19. Final discussion: Reason to return (retention loop)
 

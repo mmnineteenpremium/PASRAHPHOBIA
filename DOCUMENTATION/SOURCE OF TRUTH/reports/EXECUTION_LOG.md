@@ -9363,3 +9363,48 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - item `17` kini punya harness QA repeatable untuk Studio single-client
 - baseline memory/log/perf saat idle lobby dan match solo sudah tertutup
 - multi-player test nyata tetap belum bisa diklaim selesai dari sesi ini karena current tooling hanya memberi satu client Studio aktif
+
+## 2026-04-05 - Lobby Zone Focus And Matchmaking Affordance Pass
+
+### Scope
+
+- memulai item `18` dari sisi lobby affordance paling mendasar: area/zona, feedback, dan anti-auto-queue
+
+### Source Changes
+
+- `src/ServerScriptService/Server/LobbySocialHub/LobbyZoneManager.lua`
+  - bila `workspace.LobbyZones` tidak ada, manager sekarang fallback ke geometri lobby aktif via `LobbyLocator`
+  - mapping zona sekarang membaca landmark nyata di lobby source:
+    - `SpawnPlaza -> Room_MainHubPlaza`
+    - `MatchmakingZone -> NorthEvidenceBuilding`
+    - `ShopZone -> EastShopBuilding`
+    - `PartyZone -> WestPartyZone`
+    - `DailyRewardZone -> SouthSocialGarden`
+    - `FlexZone -> SouthEastFlexZone`
+- `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+  - tambah event `LobbyZoneFocused` dengan copy UX yang lebih jujur per zona
+  - hapus auto-start matchmaking saat sekadar masuk `MatchmakingZone`
+- `src/ServerScriptService/Server/LobbySystem/Controller.lua`
+  - relay `LobbyZoneFocused` ke client lewat `LobbyEvent`
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+  - tambah harness `SimulateLobbyZone`
+- `src/client/UI/Main.lua`
+  - lobby feedback label sekarang memahami `LobbyZoneFocused`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_lobby_zone_focus_build.rbxlx`
+  - `_tmp_lobby_zone_relay_build.rbxlx`
+- validasi live Studio:
+  - `SimulateLobbyZone(MatchmakingZone)` menghasilkan feedback:
+    - `Area matchmaking aktif. Gunakan PLAY atau Room Browser untuk membuat room, pilih mode, dan start dengan sadar; area ini tidak lagi auto-queue.`
+  - `MatchId` player tetap `nil`, jadi area matchmaking tidak lagi memicu queue otomatis
+  - `SimulateLobbyZone(ShopZone)` menghasilkan feedback:
+    - `Area shop aktif. Buka SHOP untuk melihat item MM/PP/Robux yang memang visible dan compliant.`
+
+### Interpretation
+
+- lobby sekarang tidak lagi memaksa transisi penting hanya karena pemain menyentuh area
+- affordance zona mulai selaras dengan geometri lobby aktif, bukan taxonomy lama yang tidak cocok dengan source sekarang
+- ini baru slice pertama dari item `18`; restruktur visual/layout besar lobby-map masih lanjut sesudahnya

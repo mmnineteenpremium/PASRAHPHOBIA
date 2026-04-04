@@ -1,3 +1,5 @@
+local LobbyLocator = require(script.Parent.Parent.Core.LobbyLocator)
+
 local LobbyZoneManager = {}
 LobbyZoneManager.__index = LobbyZoneManager
 
@@ -10,6 +12,30 @@ local SUPPORTED_ZONES = {
     "DailyRewardZone",
     "MatchmakingZone",
     "PartyZone",
+}
+
+local LOBBY_ZONE_CANDIDATES = {
+    SpawnPlaza = { "Room_MainHubPlaza", "Interact_MainHubPlaza", "Prop_MainHubPlaza", "PlayerSpawn_1" },
+    MatchmakingZone = {
+        "Room_NorthEvidenceBuilding",
+        "Interact_NorthEvidenceBuilding",
+        "Door_NorthEvidenceBuilding",
+        "Prop_NorthEvidenceBuilding",
+    },
+    ShopZone = { "Room_EastShopBuilding", "Interact_EastShopBuilding", "Door_EastShopBuilding", "Prop_EastShopBuilding" },
+    PartyZone = { "Room_WestPartyZone", "Interact_WestPartyZone", "Door_WestPartyZone", "Prop_WestPartyZone" },
+    DailyRewardZone = {
+        "Room_SouthSocialGarden",
+        "Interact_SouthSocialGarden",
+        "Door_SouthSocialGarden",
+        "Prop_SouthSocialGarden",
+    },
+    FlexZone = {
+        "Room_SouthEastFlexZone",
+        "Interact_SouthEastFlexZone",
+        "Door_SouthEastFlexZone",
+        "Prop_SouthEastFlexZone",
+    },
 }
 
 local function resolvePlayersService(deps)
@@ -55,14 +81,32 @@ end
 
 function LobbyZoneManager:Init()
     table.clear(self._zoneParts)
-    if not self._zonesFolder then
+    if self._zonesFolder then
+        for _, zoneName in ipairs(SUPPORTED_ZONES) do
+            local zonePart = self._zonesFolder:FindFirstChild(zoneName)
+            if zonePart and zonePart:IsA("BasePart") then
+                self._zoneParts[zoneName] = zonePart
+            end
+        end
+    end
+
+    if next(self._zoneParts) ~= nil then
+        return
+    end
+
+    local lobbyRoot = LobbyLocator.ResolveRoot("LobbySocialHub", workspace)
+    if not lobbyRoot then
         return
     end
 
     for _, zoneName in ipairs(SUPPORTED_ZONES) do
-        local zonePart = self._zonesFolder:FindFirstChild(zoneName)
-        if zonePart and zonePart:IsA("BasePart") then
-            self._zoneParts[zoneName] = zonePart
+        local candidates = LOBBY_ZONE_CANDIDATES[zoneName] or {}
+        for _, candidateName in ipairs(candidates) do
+            local candidate = lobbyRoot:FindFirstChild(candidateName, true)
+            if candidate and candidate:IsA("BasePart") then
+                self._zoneParts[zoneName] = candidate
+                break
+            end
         end
     end
 end

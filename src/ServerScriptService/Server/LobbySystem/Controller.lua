@@ -264,6 +264,9 @@ function Controller:RegisterEventHandlers()
 		self:_subscribe("LobbyFlexSpotlightCleared", function(payload)
 			self:_relayLobbyRuntimeEvent(payload)
 		end)
+		self:_subscribe("LobbyZoneFocused", function(payload)
+			self:_relayLobbyRuntimeEvent(payload)
+		end)
 	end
 
 	self._handlersRegistered = true
