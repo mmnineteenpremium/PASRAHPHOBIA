@@ -6506,3 +6506,46 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - match selesai
   - client bersih kembali
 - blocker E2E untuk jalur kematian hunt sudah tertutup.
+
+## 2026-04-04 20:04 ICT - Room Countdown And Match Transition Cleanup
+
+### Scope
+
+- menutup bug `RoomBrowser` yang masih tertinggal setelah teleport ke match.
+- menghentikan audio countdown ketika overlay countdown sebenarnya sudah disuppress.
+- mereset state room browser saat match benar-benar mulai.
+
+### Root Cause
+
+- `MatchStarted` hanya menyembunyikan GUI room browser, tetapi tidak mereset state internal `RoomBrowserController`.
+- akibatnya `matchStarting` / `countdownSecondsLeft` bisa tetap hidup sesaat walau player sudah teleport.
+- `_updateCountdownOverlay()` juga tetap memutar `CountdownTick` meski `showCountdown == false`.
+
+### Implementation Notes
+
+- `RoomBrowserController` sekarang punya `ResetForMatchStart()`.
+- `UISystem` pada `MatchStarted` sekarang:
+  - memanggil `ResetForMatchStart()`
+  - memakai `_forceCloseAllPanelsForTeleport()` alih-alih hanya `_setRoomBrowserVisible(false)`
+- `_updateCountdownOverlay()` sekarang hanya memutar `CountdownTick` bila overlay countdown benar-benar sedang tampil.
+- bila overlay disuppress, runtime sound `CountdownTick` dihentikan secara eksplisit.
+
+### Validation Notes
+
+- probe live `CreateRoom -> HostStart` menunjukkan event countdown canonical:
+  - `RoomMatchStarting`
+  - `RoomMatchCountdown` untuk detik `5 -> 1`
+  - `RoomMatchCountdownCompleted`
+- selama countdown, jumlah instance `SoundService.RuntimeCountdownTick` tidak pernah lebih dari `1`.
+- sesudah `MatchStarted`:
+  - `LocalPlayer.InMatch = true`
+  - `RoomBrowserUI.Enabled = false`
+  - `RoomBrowserUI.Panel.Visible = false`
+  - `CountdownOverlay.Visible = false`
+  - `RuntimeCountdownTick = 0`
+
+### Interpretation
+
+- countdown sekarang tidak lagi lanjut diam-diam setelah transisi ke match.
+- room panel tidak lagi punya alasan tertinggal terbuka saat player sudah di map.
+- jalur host-start menjadi lebih deterministik untuk playtest audio/UI berikutnya.
