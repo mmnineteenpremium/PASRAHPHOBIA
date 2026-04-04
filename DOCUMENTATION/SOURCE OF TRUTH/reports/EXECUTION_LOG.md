@@ -7449,3 +7449,46 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - saat nanti `GamePass` resmi diaktifkan, shop snapshot tidak lagi bohong dengan terus menampilkan item entitlement sebagai belum dimiliki.
 - ini penting untuk `royalpass_premium_track`, `class_dukun_unlock`, `class_detective_unlock`, dan `lifetime_bonus_pass`.
+
+## 2026-04-04 - Studio Entitlement Harness Verified
+
+### Scope
+
+- menambah harness Studio-only untuk grant entitlement `GamePass` style tanpa menunggu `marketplaceId` Creator Hub real
+- menutup validasi live bahwa `BuildClientSnapshot()` benar-benar menandai entitlement sebagai `owned`
+
+### Source Changes
+
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+  - tambah action `GrantMarketplaceEntitlement`
+  - `GetShopPlayerSnapshot` sekarang juga melaporkan:
+    - `ownedCount`
+    - `ownedSnapshot`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_entitlement_harness_build.rbxlx`
+- validasi live Studio sukses setelah restart `Play` untuk memuat script server terbaru
+- hasil runtime:
+  - `royalpass_premium_track`
+    - before: `ownedCount=0`, `ownedSnapshot=false`
+    - grant: `owned=true`, `ownedCount=1`
+    - after: `ownedCount=1`, `ownedSnapshot=true`
+  - `class_dukun_unlock`
+    - before: `ownedCount=1`, `ownedSnapshot=false`
+    - grant: `owned=true`, `ownedCount=2`
+    - after: `ownedCount=2`, `ownedSnapshot=true`
+  - `class_detective_unlock`
+    - before: `ownedCount=2`, `ownedSnapshot=false`
+    - grant: `owned=true`, `ownedCount=3`
+    - after: `ownedCount=3`, `ownedSnapshot=true`
+  - `lifetime_bonus_pass`
+    - before: `ownedCount=3`, `ownedSnapshot=false`
+    - grant: `owned=true`, `ownedCount=4`
+    - after: `ownedCount=4`, `ownedSnapshot=true`
+
+### Interpretation
+
+- jalur entitlement sekarang tidak cuma siap di source, tetapi juga sudah terbukti hidup di Studio playtest.
+- ini menurunkan risiko publish untuk item `GamePass` permanen karena snapshot UI/shop tidak lagi tertinggal dari state entitlement server.
