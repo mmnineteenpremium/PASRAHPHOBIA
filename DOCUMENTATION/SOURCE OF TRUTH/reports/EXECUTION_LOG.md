@@ -9408,3 +9408,35 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - lobby sekarang tidak lagi memaksa transisi penting hanya karena pemain menyentuh area
 - affordance zona mulai selaras dengan geometri lobby aktif, bukan taxonomy lama yang tidak cocok dengan source sekarang
 - ini baru slice pertama dari item `18`; restruktur visual/layout besar lobby-map masih lanjut sesudahnya
+
+## 2026-04-05 - Map Interaction Coverage Synthesis Pass
+
+### Scope
+
+- menutup gap interaction anchor di map besar tanpa menunggu pass art/layout final
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+  - `patchInteractionPoints()` sekarang tidak hanya memindahkan point yang sudah ada
+  - bila suatu room belum punya `Interact_<RoomName>`, runtime akan membuat interaction point sintetis di posisi room/door anchor
+  - synthetic point diberi attribute `SyntheticInteractionPoint = true`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_map_interaction_synthesis_build.rbxlx`
+- validasi live Studio:
+  - `EmptyBuilding`:
+    - `rooms=14`
+    - `interactions=14`
+    - `synthetic=6`
+  - `AbandonedPalace`:
+    - `rooms=18`
+    - `interactions=18`
+    - `synthetic=10`
+
+### Interpretation
+
+- logic map sekarang tidak lagi terlalu bergantung pada authoring manual interaction point yang tidak lengkap
+- ini membantu ghost/event/traversal affordance tetap konsisten pada map besar, sambil menunggu restruktur visual final

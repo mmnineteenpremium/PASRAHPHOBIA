@@ -186,6 +186,32 @@ local function resolveDoorAnchoredInteractionPosition(room, door, insideOffset)
 	) + (directionToRoom * resolvedOffset)
 end
 
+local function ensureInteractionPointPart(folder, interactionName, targetPosition)
+	if typeof(folder) ~= "Instance" or not folder:IsA("Folder") or typeof(targetPosition) ~= "Vector3" then
+		return nil
+	end
+
+	local interactionPoint = folder:FindFirstChild(interactionName)
+	if interactionPoint and interactionPoint:IsA("BasePart") then
+		return interactionPoint
+	end
+	if interactionPoint then
+		interactionPoint:Destroy()
+	end
+
+	interactionPoint = Instance.new("Part")
+	interactionPoint.Name = interactionName
+	interactionPoint.Anchored = true
+	interactionPoint.CanCollide = false
+	interactionPoint.CanTouch = false
+	interactionPoint.CanQuery = false
+	interactionPoint.Transparency = 1
+	interactionPoint.Size = Vector3.new(1, 1, 1)
+	interactionPoint.CFrame = CFrame.new(targetPosition)
+	interactionPoint.Parent = folder
+	return interactionPoint
+end
+
 local function getXZBounds(part)
 	local halfSize = part.Size * 0.5
 	return {
@@ -399,9 +425,13 @@ local function patchInteractionPoints(mapId, mapClone)
 	end
 
 	local movedAny = false
+	local existingInteractionsByToken = {}
 	for _, interactionPoint in ipairs(interactionPointsFolder:GetChildren()) do
 		if interactionPoint:IsA("BasePart") then
 			local token = normalizeToken(interactionPoint.Name:gsub("^Interact_", ""))
+			if token then
+				existingInteractionsByToken[token] = interactionPoint
+			end
 			local room = token and roomsByToken[token] or nil
 			if room then
 				local targetPosition = room.Position + Vector3.new(0, INTERACTION_HEIGHT_OFFSET, 0)
@@ -427,6 +457,25 @@ local function patchInteractionPoints(mapId, mapClone)
 					interactionPoint.CFrame = CFrame.new(targetPosition)
 					movedAny = true
 				end
+			end
+		end
+	end
+
+	for token, room in pairs(roomsByToken) do
+		if existingInteractionsByToken[token] == nil then
+			local interactionName = "Interact_" .. tostring(room.Name:gsub("^Room_", ""))
+			local targetPosition = room.Position + Vector3.new(0, INTERACTION_HEIGHT_OFFSET, 0)
+			if doorsFolder then
+				local exactDoor = doorsFolder:FindFirstChild("Door_" .. room.Name:gsub("^Room_", ""))
+				local anchoredTarget = resolveDoorAnchoredInteractionPosition(room, exactDoor, nil)
+				if anchoredTarget then
+					targetPosition = anchoredTarget
+				end
+			end
+			local syntheticPoint = ensureInteractionPointPart(interactionPointsFolder, interactionName, targetPosition)
+			if syntheticPoint then
+				syntheticPoint:SetAttribute("SyntheticInteractionPoint", true)
+				movedAny = true
 			end
 		end
 	end
