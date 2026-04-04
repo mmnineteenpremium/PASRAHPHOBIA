@@ -3,8 +3,8 @@ return {
 	modelName = "Ghost_Pocong",
 	meshPartName = "material",
 	rootSize = { 2, 2, 1 },
-	size = { 2.6, 8.5, 2.2 },
-	visualOffset = { 0, 0.4, 0 },
+	size = { 1.4, 5.2, 1.2 },
+	visualOffset = { 0, 0.1, 0 },
 	meshId = "rbxassetid://118360815663860",
 	textureId = "",
 	colorMap = "rbxassetid://119582538265133",
@@ -14,3 +14,4 @@ return {
 	transparency = 0,
 	castShadow = false,
 }
+
