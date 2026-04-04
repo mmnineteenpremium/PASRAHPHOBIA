@@ -6946,3 +6946,69 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - flashlight sekarang tidak lagi “meledak hidup” atau “mati putus” secara instan.
 - feel nyala/mati menjadi lebih natural, tetapi tetap menjaga readability karena state penuh masih mencapai parameter visibilitas yang sama dengan baseline sebelumnya.
+
+## 2026-04-04 - Shop MM Purchase Snapshot Harness
+
+### Scope
+
+- menutup blind spot verifikasi shop dengan harness Studio khusus untuk snapshot wallet + ownership player.
+- memakai jalur `PurchaseEvent` client yang sama seperti UI asli untuk membuktikan pembelian MM benar-benar bekerja.
+
+### Root Cause
+
+- `GetShopReadiness` hanya memberi angka katalog global, tetapi tidak bisa menjawab pertanyaan yang lebih penting:
+  - apakah wallet pemain benar-benar berkurang?
+  - apakah inventory/cosmetic ownership benar-benar bertambah?
+- tanpa snapshot per-player, verifikasi shop selalu rawan jadi “UI bilang sukses, tapi grant tidak jelas”.
+
+### Implementation Notes
+
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua` sekarang menambah action:
+  - `GetShopPlayerSnapshot`
+- snapshot baru mengembalikan ringkasan:
+  - `MM`
+  - `PP`
+  - `Robux`
+  - `inventory`
+  - `cosmetics`
+  - `item`
+  - `hasItem`
+  - `ownsCosmetic`
+- action ini Studio-only dan tidak mengubah flow produksi.
+
+### Validation Notes
+
+- build source sukses: `_tmp_shop_snapshot_build.rbxlx`
+- wallet awal test:
+  - `MM=1200 PP=12 Robux=0`
+- verifikasi equipment MM via `PurchaseEvent` client:
+  - item: `eq_sanitypill_standard`
+  - sebelum:
+    - `MM=1200`
+    - `inventory=0`
+    - `hasItem=false`
+  - sesudah:
+    - `MM=900`
+    - `inventory=1`
+    - `hasItem=true`
+  - `PurchaseProcessed.success = true`
+- verifikasi cosmetic MM via `PurchaseEvent` client:
+  - item: `cos_emote_steadybreath`
+  - sebelum:
+    - `MM=900`
+    - `inventory=1`
+    - `cosmetics=0`
+    - `ownsCosmetic=false`
+  - sesudah:
+    - `MM=400`
+    - `inventory=2`
+    - `cosmetics=1`
+    - `ownsCosmetic=true`
+  - `PurchaseProcessed.success = true`
+
+### Interpretation
+
+- shop MM aktif benar-benar bekerja end-to-end untuk dua jalur penting:
+  - equipment grant
+  - cosmetic ownership grant
+- jalur verifikasi shop sekarang tidak lagi buta; batch shop berikutnya bisa fokus ke presentasi katalog, PP path, dan nanti Robux activation tanpa menebak apakah soft-currency flow dasarnya sehat.

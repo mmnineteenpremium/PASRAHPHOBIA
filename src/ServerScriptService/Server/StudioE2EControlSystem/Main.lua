@@ -95,6 +95,17 @@ local function encodeSummary(parts)
 	return table.concat(buffer, " | ")
 end
 
+local function countEntries(source)
+	if type(source) ~= "table" then
+		return 0
+	end
+	local total = 0
+	for _ in pairs(source) do
+		total += 1
+	end
+	return total
+end
+
 function StudioE2EControlSystem.new(deps)
 	local self = setmetatable({}, StudioE2EControlSystem)
 	self._deps = deps or {}
@@ -106,6 +117,7 @@ function StudioE2EControlSystem.new(deps)
 	self._economyService = nil
 	self._persistenceService = nil
 	self._shopService = nil
+	self._inventoryService = nil
 	self._evidenceService = nil
 	self._eventBus = nil
 	return self
@@ -118,6 +130,7 @@ function StudioE2EControlSystem:Init()
 	self._economyService = resolveService(self._deps, "EconomySystem", "GetBalance")
 	self._persistenceService = resolveService(self._deps, "DataPersistenceService", "HasProcessedReceipt")
 	self._shopService = resolveService(self._deps, "ShopSystem", "GetCatalog")
+	self._inventoryService = resolveService(self._deps, "InventorySystem", "HasItem")
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._eventBus = resolveEventBus(self._deps)
 end
@@ -427,6 +440,77 @@ function StudioE2EControlSystem:_handleGetShopReadiness()
 		robux,
 		disabled,
 		robuxMissingId
+	)
+end
+
+function StudioE2EControlSystem:_handleGetShopPlayerSnapshot(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+	if type(self._economyService) ~= "table" or type(self._economyService.GetBalance) ~= "function" then
+		return false, "missing_economy_service"
+	end
+	if type(self._inventoryService) ~= "table" then
+		return false, "missing_inventory_service"
+	end
+
+	local wallet = self._economyService:GetBalance(player)
+	if type(wallet) ~= "table" then
+		return false, "wallet_unavailable"
+	end
+
+	local inventoryCount = 0
+	if type(self._inventoryService.GetInventory) == "function" then
+		local ok, inventory = pcall(function()
+			return self._inventoryService:GetInventory(player)
+		end)
+		if ok then
+			inventoryCount = countEntries(inventory)
+		end
+	end
+
+	local cosmeticCount = 0
+	if type(self._inventoryService.GetOwnedCosmetics) == "function" then
+		local ok, cosmetics = pcall(function()
+			return self._inventoryService:GetOwnedCosmetics(player)
+		end)
+		if ok and type(cosmetics) == "table" then
+			cosmeticCount = #cosmetics
+		end
+	end
+
+	local itemId = type(request) == "table" and tostring(request.itemId or "") or ""
+	local hasItem = false
+	local ownsCosmetic = false
+	if itemId ~= "" then
+		if type(self._inventoryService.HasItem) == "function" then
+			local ok, result = pcall(function()
+				return self._inventoryService:HasItem(player, itemId)
+			end)
+			if ok then
+				hasItem = result == true
+			end
+		end
+		if type(self._inventoryService.OwnsCosmetic) == "function" then
+			local ok, result = pcall(function()
+				return self._inventoryService:OwnsCosmetic(player, itemId)
+			end)
+			if ok then
+				ownsCosmetic = result == true
+			end
+		end
+	end
+
+	return true, string.format(
+		"MM=%d PP=%d Robux=%d inventory=%d cosmetics=%d item=%s hasItem=%s ownsCosmetic=%s",
+		math.max(0, math.floor(tonumber(wallet.MM) or 0)),
+		math.max(0, math.floor(tonumber(wallet.PP) or 0)),
+		math.max(0, math.floor(tonumber(wallet.Robux) or 0)),
+		inventoryCount,
+		cosmeticCount,
+		itemId ~= "" and itemId or "-",
+		tostring(hasItem),
+		tostring(ownsCosmetic)
 	)
 end
 
@@ -751,6 +835,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGetPersistenceMode()
 	elseif action == "GetShopReadiness" then
 		ok, result = self:_handleGetShopReadiness()
+	elseif action == "GetShopPlayerSnapshot" then
+		ok, result = self:_handleGetShopPlayerSnapshot(player, request)
 	elseif action == "UseEvidenceTool" then
 		ok, result = self:_handleUseEvidenceTool(player, request)
 	elseif action == "ConsumeHuntProtection" then
