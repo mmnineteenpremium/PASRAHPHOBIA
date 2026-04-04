@@ -831,6 +831,14 @@ Status:
   - validasi live Studio terbaru:
     - lobby `LobbySocialHub`: `ClockTime=14.6`, `Brightness=2.25`, `Exposure=0`
     - `HauntedHouse` briefing: `ClockTime=1.35`, `Brightness=1.72`, `Exposure=-0.28`
+- pass post-grade map sekarang juga sudah naik:
+  - `SensoryMapGrading` dan `SensoryMapBloom` sekarang source-owned di `VFXController`
+  - tiap map punya baseline `grade` dan `bloom` sendiri, sehingga karakter visual tidak hanya mengandalkan fog + lighting
+  - validasi live Studio terbaru:
+    - lobby:
+      - `grade contrast=0.04`, `saturation=-0.02`, `bloom intensity=0.18`
+    - `HauntedHouse` briefing:
+      - `grade contrast=0.10`, `saturation=-0.16`, `bloom intensity=0.07`
 - catatan kandidat ambience:
   - kandidat Roblox `Cloudy Space (7399811837)` dan `No Light (7399814871)` sudah dicek lewat `MarketplaceService:GetProductInfo()`
   - keduanya `IsPublicDomain = false`, jadi tidak dipakai sebagai solusi publish-safe
