@@ -6682,3 +6682,65 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - jalur lobby auxiliary sekarang jauh lebih konsisten: `PASS`, `SHOP`, dan `PROFILE` tidak lagi terasa campuran desktop-mobile pada viewport sempit.
+
+## 2026-04-04 - FPV Cursor Unlock Toggle Baseline
+
+### Scope
+
+- menambahkan escape hatch untuk pemain Windows/keyboard saat FPV lock aktif agar cursor bisa dikeluarkan tanpa keluar match.
+- menyediakan dua jalur input:
+  - hotkey `Alt`
+  - hotkey cadangan `` ` `` / `Backquote`
+- menambahkan tombol runtime kecil `FREE CURSOR [ALT/~]` saat match FPV aktif.
+
+### Root Cause
+
+- `CameraController` sebelumnya selalu memaksa `MouseBehavior = LockCenter` selama `InMatch=true`.
+- bahkan ketika state unlock diperkenalkan, render-step camera masih memaksa balik `LockFirstPerson` setiap frame.
+- branch keluar match juga belum mengembalikan cursor secara penuh bila `CameraMode` sudah telanjur `Classic` tapi `MouseBehavior` masih `LockCenter`.
+
+### Implementation Notes
+
+- `CameraController.client.lua` sekarang punya state `fpvCursorUnlocked`.
+- saat unlock aktif:
+  - `CameraMode = Classic`
+  - `CameraMinZoomDistance = 0.5`
+  - `CameraMaxZoomDistance = 0.5`
+  - `MouseBehavior = Default`
+  - `MouseIconEnabled = true`
+- saat relock:
+  - `CameraMode = LockFirstPerson`
+  - `MouseBehavior = LockCenter`
+  - `MouseIconEnabled = false`
+- render-step camera sekarang menjaga state unlock/relock ini secara eksplisit, bukan hanya memeriksa `CameraMode`.
+- ditambahkan juga harness runtime `PasrahCursorUnlockRequested` untuk verifikasi Studio/MCP tanpa harus mengandalkan injeksi keyboard tool.
+
+### Validation Notes
+
+- build source sukses: `_tmp_cursor_unlock_build.rbxlx`
+- probe runtime terkontrol via `LocalPlayer` attribute menunjukkan:
+  - unlock:
+    - `PasrahCursorUnlocked = true`
+    - `MouseBehavior = Default`
+    - `MouseIconEnabled = true`
+    - `CameraMode = Classic`
+  - relock:
+    - `PasrahCursorUnlocked = false`
+    - `MouseBehavior = LockCenter`
+    - `MouseIconEnabled = false`
+    - `CameraMode = LockFirstPerson`
+  - keluar ke lobby (`InMatch=false`):
+    - `FPVCursorToggleUI.Enabled = false`
+    - `MouseBehavior = Default`
+    - `MouseIconEnabled = true`
+    - `CameraMode = Classic`
+
+### Caveat
+
+- input fisik `Alt` / `Backquote` belum bisa dibuktikan langsung lewat injector MCP keyboard yang dipakai sesi ini.
+- namun jalur aksi tombol/hotkey dan harness runtime sekarang menuju fungsi yang sama, sehingga core state machine kamera sudah tervalidasi.
+
+### Interpretation
+
+- pemain desktop sekarang punya baseline mekanisme untuk keluar dari cursor lock FPV tanpa memecah alur match.
+- debt “UI sudah besar tapi mouse tetap terkunci” tidak lagi menjadi blocker arsitektural.
