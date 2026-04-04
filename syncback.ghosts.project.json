@@ -13,10 +13,16 @@
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
       "Assets": {
-        "$path": "src/ReplicatedStorage/Assets"
-      },
-      "Config": {
-        "$path": "src/ReplicatedStorage/Config"
+        "$className": "Folder",
+        "GhostVisualProfiles": {
+          "$path": "src/ReplicatedStorage/Assets/GhostVisualProfiles"
+        },
+        "Models": {
+          "$className": "Folder",
+          "Ghosts": {
+            "$path": "src/ReplicatedStorage/Assets/Models/Ghosts"
+          }
+        }
       }
     }
   }
