@@ -969,6 +969,7 @@ local function createDefaultMatchResult()
 		matchDuration = 0,
 		currencyReward = 0,
 		ppReward = 0,
+		ppBreakdown = {},
 		xpReward = 0,
 	}
 end
@@ -994,6 +995,35 @@ local function formatCurrencyAndPrestigeReward(currencyReward, ppReward)
 		return string.format("%d MM | %d PP", mm, pp)
 	end
 	return tostring(mm)
+end
+
+local function formatPPBreakdown(ppReward, ppBreakdown)
+	local totalPP = math.max(0, math.floor(tonumber(ppReward or 0) or 0))
+	if totalPP <= 0 then
+		return "PP belum bertambah di match ini."
+	end
+
+	local entries = type(ppBreakdown) == "table" and ppBreakdown or nil
+	if not entries or #entries == 0 then
+		return string.format("PP naik %d dari reward match.", totalPP)
+	end
+
+	local parts = {}
+	for _, entry in ipairs(entries) do
+		if type(entry) == "table" then
+			local label = tostring(entry.label or "")
+			local amount = math.floor(tonumber(entry.amount) or 0)
+			if label ~= "" and amount ~= 0 then
+				table.insert(parts, string.format("%s %s%d", label, amount > 0 and "+" or "", amount))
+			end
+		end
+	end
+
+	if #parts == 0 then
+		return string.format("PP naik %d dari reward match.", totalPP)
+	end
+
+	return "PP: " .. table.concat(parts, " • ")
 end
 
 local function formatJoinedValues(values, fallback)
@@ -3108,6 +3138,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			end)
 		elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 			if payload and type(payload) == "table" then
+				local previousResult = self._matchResult or createDefaultMatchResult()
 				self._matchResult = {
 					ghostType = payload.ghostType or "Unknown",
 					correctGuess = payload.correctGuess == true,
@@ -3115,9 +3146,10 @@ function UISystem:_onServerEvent(remoteName, payload)
 					playersSurvived = payload.playersSurvived or 0,
 					playersDead = payload.playersDead or 0,
 					matchDuration = payload.matchDuration or 0,
-					currencyReward = payload.currencyReward or 0,
-					ppReward = payload.ppReward or payload.ppAmount or 0,
-					xpReward = payload.xpReward or 0,
+					currencyReward = payload.currencyReward or previousResult.currencyReward or 0,
+					ppReward = payload.ppReward or payload.ppAmount or previousResult.ppReward or 0,
+					ppBreakdown = payload.ppBreakdown or previousResult.ppBreakdown or {},
+					xpReward = payload.xpReward or previousResult.xpReward or 0,
 				}
 			end
 			self._profileState.totalGames = (tonumber(self._profileState.totalGames) or 0) + 1
@@ -3138,6 +3170,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			if payload and type(payload) == "table" then
 				self._matchResult.currencyReward = payload.currencyReward or self._matchResult.currencyReward
 				self._matchResult.ppReward = payload.ppReward or payload.ppAmount or self._matchResult.ppReward
+				self._matchResult.ppBreakdown = payload.ppBreakdown or self._matchResult.ppBreakdown or {}
 				self._matchResult.xpReward = payload.xpReward or self._matchResult.xpReward
 			end
 			self._uiState.PASRA_UI.lastEvent = eventName
@@ -4449,8 +4482,12 @@ function UISystem:_renderResultsPanel(payload)
 			or string.format("Lanjut tersedia dalam %ds", remainingLock)
 	end
 	if match.ResultsFooter then
+		local ppFooter = formatPPBreakdown(
+			self._matchResult and self._matchResult.ppReward or 0,
+			self._matchResult and self._matchResult.ppBreakdown or nil
+		)
 		match.ResultsFooter.Text = closeUnlocked
-			and "Tekan tombol lanjut untuk kembali ke lobby flow. Ringkasan ini dipertahankan untuk E2E."
+			and (ppFooter .. " Tekan tombol lanjut untuk kembali ke lobby flow.")
 			or "Hasil match fullscreen dikunci 5 detik agar semua pemain sempat membaca hasil."
 	end
 	self:_updateMatchSummaryRows(match.ResultsSummaryRows, "Results")

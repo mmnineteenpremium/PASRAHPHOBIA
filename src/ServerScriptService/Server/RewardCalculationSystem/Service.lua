@@ -136,6 +136,7 @@ function Service:_fireMatchRewardSummary(player, matchId, reward)
         matchId = matchId,
         currencyReward = reward.amount,
         ppReward = reward.ppReward,
+        ppBreakdown = reward.ppBreakdown,
         xpReward = reward.xp,
         royalPassXP = reward.royalPassXP,
         dailyProgress = reward.dailyProgress,
@@ -286,23 +287,48 @@ function Service:_calculateReward(payload, entry)
     end
 
     local ppReward = 0
+    local ppBreakdown = {}
     if teamSuccess then
         ppReward += 1
+        table.insert(ppBreakdown, {
+            label = "Misi selesai",
+            amount = 1,
+        })
     end
     if correctGuess then
         ppReward += 1
+        table.insert(ppBreakdown, {
+            label = "Tebakan benar",
+            amount = 1,
+        })
     end
     if entry.survived then
         ppReward += 1
+        table.insert(ppBreakdown, {
+            label = "Selamat hidup",
+            amount = 1,
+        })
     end
     if entry.extracted then
         ppReward += 1
+        table.insert(ppBreakdown, {
+            label = "Ekstraksi",
+            amount = 1,
+        })
     end
     if multiplier >= 1.45 then
         ppReward += 1
+        table.insert(ppBreakdown, {
+            label = "Bonus difficulty",
+            amount = 1,
+        })
     end
     if (not entry.survived) and (not teamSuccess) then
         ppReward = math.max(ppReward - 1, 0)
+        table.insert(ppBreakdown, {
+            label = "Penalty gagal total",
+            amount = -1,
+        })
     end
 
     currency = math.max(0, math.floor(currency * multiplier))
@@ -315,6 +341,7 @@ function Service:_calculateReward(payload, entry)
         currency = "MM",
         amount = currency,
         ppReward = ppReward,
+        ppBreakdown = ppBreakdown,
         xp = xp,
         royalPassXP = royalPassXP,
         dailyProgress = dailyProgress,

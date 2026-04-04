@@ -7535,3 +7535,71 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - wallet bertambah setiap kali purchase
   - item tidak salah dibekukan sebagai ownership permanen
 - ini menurunkan risiko bug monetization saat nanti `ProcessReceipt` Creator Hub dihubungkan ke item `CurrencyPack`.
+
+## 2026-04-04 - PP Match Reward Validated Live
+
+### Scope
+
+- memverifikasi apakah `PP` prestige currency benar-benar punya sumber live atau hanya berhenti di UI/shop
+- membuktikan jalur result panel membaca reward `PP` dari server, bukan angka dummy
+
+### Validation Notes
+
+- source scan menunjukkan `RewardCalculationSystem` memang sudah menghitung `ppReward` pada `MatchCompleted`
+- validasi live Studio dilakukan lewat:
+  - `CreateRoom`
+  - `HostStart`
+  - `MatchStarted`
+  - `StudioE2E EndMatch`
+- hasil runtime:
+  - wallet before: `MM=6200 PP=37 Robux=0`
+  - `MatchRewardSummary`:
+    - `currencyReward=306`
+    - `ppReward=2`
+    - `xpReward=222`
+    - `royalPassXP=99`
+  - wallet after: `MM=6506 PP=39 Robux=0`
+
+### Interpretation
+
+- `PP` sekarang terbukti punya sumber live dari endgame reward, bukan sekadar mata uang dekoratif di shop.
+- backlog monetization perlu dibaca ulang secara reality-based: yang tersisa bukan “PP belum punya sumber”, tetapi memastikan balancing, surfacing, dan jalur earn lain cukup jelas untuk pemain.
+
+## 2026-04-04 - PP Result Breakdown Surfaced To Players
+
+### Scope
+
+- membuat hasil match menjelaskan sumber `PP`, bukan hanya angka total
+- menutup bug urutan event client: `MatchRewardSummary` datang dulu lalu ditimpa `MatchCompleted` yang tidak membawa reward fields
+
+### Source Changes
+
+- `src/ServerScriptService/Server/RewardCalculationSystem/Service.lua`
+  - `MatchRewardSummary` sekarang mengirim `ppBreakdown`
+  - reward calc sekarang menyusun breakdown `PP`:
+    - `Misi selesai`
+    - `Tebakan benar`
+    - `Selamat hidup`
+    - `Ekstraksi`
+    - `Bonus difficulty`
+    - `Penalty gagal total`
+- `src/client/UI/Main.lua`
+  - `MatchResult` sekarang menyimpan `ppBreakdown`
+  - footer result kini menjelaskan alasan `PP`
+  - handler `MatchCompleted/MatchEnded` sekarang mempertahankan reward yang sudah lebih dulu datang dari `MatchRewardSummary`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_pp_breakdown_fix_build.rbxlx`
+- validasi live Studio:
+  - `MatchRewardSummary.ppBreakdown` terkirim:
+    - `Tebakan benar +1`
+    - `Selamat hidup +1`
+  - `RewardRow.Value = 306 MM | 2 PP`
+  - `ResultsFooter = PP: Tebakan benar +1 • Selamat hidup +1 Tekan tombol lanjut untuk kembali ke lobby flow.`
+
+### Interpretation
+
+- pemain sekarang bisa memahami mengapa `PP` bertambah, sehingga prestige loop tidak terasa arbitrar.
+- race condition UI reward sudah ditutup; hasil match tidak lagi jatuh kembali ke `0 PP` hanya karena event `MatchCompleted` datang belakangan.

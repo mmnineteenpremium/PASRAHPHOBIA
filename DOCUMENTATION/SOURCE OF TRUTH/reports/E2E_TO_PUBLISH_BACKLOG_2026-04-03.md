@@ -835,6 +835,13 @@ Status:
 - validasi live terbaru:
   - jalur shop `MM` tetap sehat (`eq_saltbag_reinforced -> success=true`)
   - tidak muncul error startup baru pada jalur `ShopSystem` sesudah hardening receipt ledger
+- jalur prestige `PP` sekarang juga sudah tervalidasi live sebagai reward endgame:
+  - `RewardCalculationSystem` mengirim `ppReward` ke `MatchRewardSummary`
+  - playtest Studio terbaru menghasilkan:
+    - wallet before `PP=37`
+    - reward summary `ppReward=2`
+    - wallet after `PP=39`
+  - artinya `PP` bukan lagi mata uang dekoratif di shop
 - UI shop sekarang menandai item yang belum siap:
   - tombol `SETUP` untuk item `Robux` yang `marketplaceId` belum valid
   - klik item yang belum siap tidak mengirim request buta ke server
@@ -846,7 +853,7 @@ Pekerjaan:
 
 - isi `marketplaceId` nyata pada `shared/DataTypes/ShopMarketplaceConfig.lua` (override utama)
 - jalankan smoke test `cancel / success / relog ownership sync / duplicate receipt`
-- tetapkan sumber `PP` live yang jelas (match reward, mission, atau top-up gating) agar jalur prestige tidak hanya UI
+- rapikan surfacing `PP` earn di UI/flow pemain agar jalur prestige tidak terasa tersembunyi walau reward servernya sudah hidup
 
 Done jika:
 
