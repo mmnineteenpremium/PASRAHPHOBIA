@@ -468,6 +468,22 @@ function Service:SetPassOwnership(player, passState)
     return true
 end
 
+function Service:GetPassOwnership(player)
+    local userId = toUserId(player)
+    if not userId then
+        return {}
+    end
+    return cloneTable(self:_ensurePass(userId))
+end
+
+function Service:HasPass(player, passKey)
+    if type(passKey) ~= "string" or passKey == "" then
+        return false
+    end
+    local passes = self:GetPassOwnership(player)
+    return passes[passKey] == true
+end
+
 function Service:GrantMissionCompleted(player)
     local userId = toUserId(player)
     if not userId then

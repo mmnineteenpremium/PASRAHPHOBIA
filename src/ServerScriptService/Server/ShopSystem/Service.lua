@@ -271,7 +271,7 @@ function Service:BuildClientSnapshot(player)
     end
 
     for itemId, item in pairs(self:GetCatalog()) do
-        if type(item) == "table" and self:_alreadyOwned(player, itemId, item.category) then
+        if type(item) == "table" and self:_alreadyOwned(player, itemId, item.category, item) then
             table.insert(snapshot.ownedItemIds, itemId)
         end
     end
@@ -336,6 +336,42 @@ function Service:_getRoyalPassService()
     return royalPass
 end
 
+function Service:_ownsRoyalPassPremium(player)
+    local royalPass = self:_getRoyalPassService()
+    if type(royalPass) ~= "table" or type(royalPass.GetPlayerSnapshot) ~= "function" then
+        return false
+    end
+    local ok, snapshot = pcall(function()
+        return royalPass:GetPlayerSnapshot(player)
+    end)
+    return ok and type(snapshot) == "table" and snapshot.premiumOwned == true
+end
+
+function Service:_ownsEntitlement(player, item)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") or type(item) ~= "table" then
+        return false
+    end
+
+    if item.royalPassPremium == true and self:_ownsRoyalPassPremium(player) then
+        return true
+    end
+
+    local entitlementKey = type(item.entitlementKey) == "string" and item.entitlementKey or nil
+    if entitlementKey and entitlementKey ~= "" then
+        local economy = self:_getEconomyService()
+        if type(economy) == "table" and type(economy.HasPass) == "function" then
+            local ok, owned = pcall(function()
+                return economy:HasPass(player, entitlementKey)
+            end)
+            if ok and owned == true then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 function Service:_persistInventorySnapshot(player, userId)
     local persistence = self:_getPersistenceService()
     if type(persistence) ~= "table" or type(persistence.SaveInventory) ~= "function" then
@@ -387,8 +423,11 @@ function Service:_refundCurrency(player, userId, amount, itemId, reason, currenc
     end
 end
 
-function Service:_alreadyOwned(player, itemId, category)
+function Service:_alreadyOwned(player, itemId, category, item)
     local inventory = self:_getInventoryService()
+    if type(item) == "table" and self:_ownsEntitlement(player, item) then
+        return true
+    end
     if type(inventory) ~= "table" then
         return false
     end
@@ -453,7 +492,7 @@ function Service:ValidatePurchase(player, itemId)
         return false, "transaction_in_progress"
     end
 
-    if self:_alreadyOwned(player, itemId, item.category) then
+    if self:_alreadyOwned(player, itemId, item.category, item) then
         return false, "already_owned"
     end
 
@@ -689,7 +728,7 @@ function Service:GrantMarketplacePurchase(player, itemId, context)
 
     local grantedEntitlements = self:_grantEntitlements(player, item)
     local grantedInventory = true
-    if item.grantItem ~= false and not self:_alreadyOwned(player, itemId, item.category) then
+    if item.grantItem ~= false and not self:_alreadyOwned(player, itemId, item.category, item) then
         grantedInventory, _ = self:GrantItem(player, itemId, item)
     end
 
