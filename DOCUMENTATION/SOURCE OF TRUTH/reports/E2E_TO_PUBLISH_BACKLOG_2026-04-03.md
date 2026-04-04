@@ -1747,6 +1747,24 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (light flicker room reaction baseline)**.
   - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
 
+## Update 2026-04-05 18:28 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi reaksi objek lokal:
+  - `DoorSlam` sekarang memukul pintu aktual di folder `Doors`, bukan frame-frame sekitarnya.
+  - `WindowKnock` sekarang mendorong panel jendela aktual di folder `Windows`, lalu kembali ke posisi semula.
+- validasi live MCP:
+  - `DoorSlam` pada `Door_LivingRoom`:
+    - `PasrahVFXLastProfile = doorslam`
+    - `PasrahVFXLastPropCount = 2`
+    - `Door_LivingRoom` kembali ke `CFrame` semula setelah pulse
+  - `WindowKnock` pada `Window_S_1_Mouth`:
+    - `PasrahVFXLastProfile = windowknock`
+    - `PasrahVFXLastPropCount = 2`
+    - `windowMid.Z = 69.22` dari `69.40`, lalu kembali normal
+- status:
+  - **SELESAI (door/window local reaction baseline)**.
+  - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
