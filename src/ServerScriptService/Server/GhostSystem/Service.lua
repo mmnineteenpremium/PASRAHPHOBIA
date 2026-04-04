@@ -26,7 +26,11 @@ local DEFAULT_GHOST_TYPES = {
 }
 
 local GHOST_TEMPLATE_VISUAL_OFFSETS = {
-	Pocong = Vector3.new(0, 0.4, 0),
+	Pocong = Vector3.new(0, 0.1, 0),
+}
+
+local GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {
+	Pocong = Vector3.new(1.4, 5.2, 1.2),
 }
 
 local GHOST_VISUAL_TRANSPARENCY_BY_STATE = {
@@ -242,6 +246,10 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 	if visualOffset and ghostModel.PrimaryPart then
 		local visualMesh = ghostModel:FindFirstChildWhichIsA("MeshPart", true)
 		if visualMesh then
+			local forcedSize = GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES[ghostType]
+			if typeof(forcedSize) == "Vector3" then
+				visualMesh.Size = forcedSize
+			end
 			visualMesh.CFrame = ghostModel.PrimaryPart.CFrame * CFrame.new(visualOffset)
 		end
 	end
@@ -326,6 +334,41 @@ local function collectSpawnParts(root)
 		end
 	end
 	return parts
+end
+
+local function resolveGhostGroundPosition(match, targetAnchor)
+	if type(match) ~= "table" or typeof(match.ghost) ~= "Instance" then
+		return nil
+	end
+
+	local targetPosition = nil
+	local targetGroundY = nil
+	if typeof(targetAnchor) == "Instance" and targetAnchor:IsA("BasePart") then
+		targetPosition = targetAnchor.Position
+		targetGroundY = targetAnchor.Position.Y + (targetAnchor.Size.Y * 0.5)
+	elseif typeof(targetAnchor) == "Vector3" then
+		targetPosition = targetAnchor
+	else
+		return nil
+	end
+
+	local ghostPivot = match.ghost:GetPivot()
+	local ok, ghostBoundsCFrame, ghostBoundsSize = pcall(function()
+		return match.ghost:GetBoundingBox()
+	end)
+	if not ok or typeof(ghostBoundsCFrame) ~= "CFrame" or typeof(ghostBoundsSize) ~= "Vector3" then
+		return targetPosition
+	end
+
+	local pivotToBoundsOffset = ghostBoundsCFrame.Position - ghostPivot.Position
+	local groundY = targetGroundY
+	if groundY == nil then
+		groundY = targetPosition.Y
+	end
+	local boundsCenterY = groundY + (ghostBoundsSize.Y * 0.5) + 0.04
+	local boundsCenter = Vector3.new(targetPosition.X, boundsCenterY, targetPosition.Z)
+	local resolvedPivot = boundsCenter - pivotToBoundsOffset
+	return resolvedPivot
 end
 
 local function findNamedBasePart(root, ...)
@@ -603,8 +646,8 @@ function Service:_syncGhostVisual(match, ghostState)
 	match.ghost:SetAttribute("FavoriteRoomId", ghostState.favoriteRoomId)
 	local roomAnchor = self:_resolveRoomAnchor(match, roomId)
 	if roomAnchor and match.ghost.PrimaryPart then
-		local targetPosition = roomAnchor.Position
-		match.ghost:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+		local targetPosition = resolveGhostGroundPosition(match, roomAnchor)
+		match.ghost:PivotTo(CFrame.new(targetPosition))
 	end
 
 	self:_applyGhostVisualState(match, ghostState)
@@ -714,7 +757,8 @@ function Service:SelectGhostRoom(match)
 	match.ghostRoom = ghostRoom
 	match.ghostSpawnPart = selectedPart
 	if match.ghost.PrimaryPart then
-		match.ghost:SetPrimaryPartCFrame(selectedPart.CFrame)
+		local targetPosition = resolveGhostGroundPosition(match, selectedPart)
+		match.ghost:PivotTo(CFrame.new(targetPosition))
 	end
 	return selectedPart
 end
