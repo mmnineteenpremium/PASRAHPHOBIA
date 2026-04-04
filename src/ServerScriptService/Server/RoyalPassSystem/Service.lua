@@ -176,8 +176,7 @@ function Service:_grantTierReward(player, tier)
     local economy = self._dependencies.EconomySystem
 
     local granted = false
-    granted = safeCall(economy, "GrantCurrency", player, reward.currency, "RoyalPass") == true or granted
-    granted = safeCall(economy, "AddCurrency", player, reward.currency, "RoyalPass") == true or granted
+    granted = safeCall(economy, "AddCurrency", player, "MM", reward.currency, "RoyalPass") == true or granted
 
     if not granted then
         self:_publish("CurrencyEarned", {

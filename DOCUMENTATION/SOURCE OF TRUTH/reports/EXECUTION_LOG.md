@@ -7963,3 +7963,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - langkah ini menjaga arah monetization tetap konsisten dengan keputusan produk:
   - `Robux` tidak dipakai untuk membuat game lebih mudah
   - `Premium Track` tidak boleh diam-diam menjadi top-up advantage melalui reward tier ekstra
+
+## 2026-04-04 - Royal Pass Reward Grant Made Explicit
+
+### Scope
+
+- menghilangkan panggilan reward currency yang terlalu implisit / rawan salah baca di `RoyalPassSystem`
+
+### Source Changes
+
+- `src/ServerScriptService/Server/RoyalPassSystem/Service.lua`
+  - `_grantTierReward()` sekarang memanggil:
+    - `AddCurrency(player, "MM", reward.currency, "RoyalPass")`
+  - panggilan lama yang mengandalkan overload implisit dan stub `GrantCurrency` dibuang
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_royalpass_currency_explicit_build.rbxlx`
+
+### Interpretation
+
+- perilaku reward tidak berubah arah, tetapi implementasi jadi jauh lebih eksplisit
+- ini menurunkan risiko regress/halusinasi engineer berikutnya saat menyentuh jalur Royal Pass
