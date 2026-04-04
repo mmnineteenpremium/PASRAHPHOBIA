@@ -1616,6 +1616,22 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (map depth-of-field baseline)**.
   - **PENDING** tetap pada ambience legal final, polish material map, dan enrichment cue lingkungan/ghost.
 
+## Update 2026-04-05 17:11 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi pencahayaan atmosfer:
+  - `VFXController` sekarang punya `SensoryMapSunRays` dengan profile per map.
+  - lobby dibuat sedikit lebih hidup, sedangkan map horror malam dijaga tetap minim agar tidak absurd.
+- validasi live MCP:
+  - lobby boot:
+    - `Intensity ~= 0.068`
+    - `Spread ~= 0.88`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)`:
+    - `Intensity ~= 0.012`
+    - `Spread ~= 0.72`
+- status:
+  - **SELESAI (map sun rays baseline)**.
+  - **PENDING** tetap pada ambience legal final, polish material map, dan enrichment cue lingkungan/ghost.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

@@ -8658,3 +8658,44 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - lobby dan match sekarang tidak hanya beda fog/light/grade, tetapi juga punya framing ruang yang lebih terasa
 - pass ini tetap aman untuk readability karena intensitas DOF dijaga rendah dan masih berbasis profile per map
+
+## 2026-04-05 - Map Sun Rays Profile Pass
+
+### Scope
+
+- menambah aksen pencahayaan ruang yang masih ringan:
+  - lobby siang perlu sedikit rasa udara/volume cahaya
+  - map horror malam tetap harus ditahan agar tidak terasa seperti siang berkabut
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah `DEFAULT_MAP_SUNRAYS`
+  - tambah `MAP_SUNRAYS_PROFILES` untuk:
+    - `LobbySocialHub`
+    - `AbandonedPalace`
+    - `HauntedHouse`
+    - `EmptyBuilding`
+    - `StudioMMNineteen`
+  - tambah `ensureMapSunRays()` yang membuat `Lighting.SensoryMapSunRays`
+  - `Init()` sekarang menyimpan baseline `Intensity/Spread`
+  - tambah `_applyMapSunRays(mapName)`
+  - `_applyMapVisualProfile()` sekarang juga menerapkan sun rays per map
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_map_sunrays_profile_build.rbxlx`
+- validasi live Studio:
+  - boot lobby:
+    - `SensoryMapSunRays.Intensity ~= 0.068`
+    - `Spread ~= 0.88`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)`:
+    - `Workspace.ActiveMatches` aktif (`count = 1`)
+    - `SensoryMapSunRays.Intensity ~= 0.012`
+    - `Spread ~= 0.72`
+
+### Interpretation
+
+- pass ini membuat lobby lebih hidup tanpa mendorong map horror jadi terlalu terang
+- karena profile tetap per map dan nilainya rendah, perubahan ini aman untuk style horror dan tidak mengganggu UI

@@ -101,6 +101,11 @@ local DEFAULT_MAP_DOF = {
 	NearIntensity = 0,
 }
 
+local DEFAULT_MAP_SUNRAYS = {
+	Intensity = 0.03,
+	Spread = 0.82,
+}
+
 local MAP_ATMOSPHERE_PROFILES = {
 	LobbySocialHub = {
 		Density = 0.24,
@@ -286,6 +291,29 @@ local MAP_DOF_PROFILES = {
 	},
 }
 
+local MAP_SUNRAYS_PROFILES = {
+	LobbySocialHub = {
+		Intensity = 0.068,
+		Spread = 0.88,
+	},
+	AbandonedPalace = {
+		Intensity = 0.018,
+		Spread = 0.76,
+	},
+	HauntedHouse = {
+		Intensity = 0.012,
+		Spread = 0.72,
+	},
+	EmptyBuilding = {
+		Intensity = 0.034,
+		Spread = 0.8,
+	},
+	StudioMMNineteen = {
+		Intensity = 0.026,
+		Spread = 0.78,
+	},
+}
+
 local function ensureSanityColorCorrection()
 	local effect = Lighting:FindFirstChild("SensorySanityGrading")
 	if not effect then
@@ -366,6 +394,18 @@ local function ensureMapDepthOfField()
 	return effect
 end
 
+local function ensureMapSunRays()
+	local effect = Lighting:FindFirstChild("SensoryMapSunRays")
+	if not effect then
+		effect = Instance.new("SunRaysEffect")
+		effect.Name = "SensoryMapSunRays"
+		effect.Intensity = DEFAULT_MAP_SUNRAYS.Intensity
+		effect.Spread = DEFAULT_MAP_SUNRAYS.Spread
+		effect.Parent = Lighting
+	end
+	return effect
+end
+
 local function ensureAtmosphere()
 	local atmosphere = Lighting:FindFirstChild("HorrorAtmosphere")
 	if not atmosphere then
@@ -392,6 +432,7 @@ function VFXController:Init(context)
 	self._ghostBlur = ensureGhostBlur()
 	self._mapBloom = ensureMapBloom()
 	self._mapDepthOfField = ensureMapDepthOfField()
+	self._mapSunRays = ensureMapSunRays()
 	self._atmosphere = ensureAtmosphere()
 	self._baseAtmosphereDensity = self._atmosphere and self._atmosphere.Density or DEFAULT_MAP_ATMOSPHERE.Density
 	self._baseAtmosphereOffset = self._atmosphere and self._atmosphere.Offset or DEFAULT_MAP_ATMOSPHERE.Offset
@@ -417,6 +458,8 @@ function VFXController:Init(context)
 	self._baseMapDOFFocusDistance = self._mapDepthOfField and self._mapDepthOfField.FocusDistance or DEFAULT_MAP_DOF.FocusDistance
 	self._baseMapDOFInFocusRadius = self._mapDepthOfField and self._mapDepthOfField.InFocusRadius or DEFAULT_MAP_DOF.InFocusRadius
 	self._baseMapDOFNearIntensity = self._mapDepthOfField and self._mapDepthOfField.NearIntensity or DEFAULT_MAP_DOF.NearIntensity
+	self._baseMapSunRaysIntensity = self._mapSunRays and self._mapSunRays.Intensity or DEFAULT_MAP_SUNRAYS.Intensity
+	self._baseMapSunRaysSpread = self._mapSunRays and self._mapSunRays.Spread or DEFAULT_MAP_SUNRAYS.Spread
 	self._currentSanity = 100
 	self._huntActive = false
 	self._sanityTween = nil
@@ -743,12 +786,23 @@ function VFXController:_applyMapDepthOfField(mapName)
 	end
 end
 
+function VFXController:_applyMapSunRays(mapName)
+	local profile = MAP_SUNRAYS_PROFILES[mapName] or DEFAULT_MAP_SUNRAYS
+	if self._mapSunRays then
+		self._baseMapSunRaysIntensity = profile.Intensity or DEFAULT_MAP_SUNRAYS.Intensity
+		self._baseMapSunRaysSpread = profile.Spread or DEFAULT_MAP_SUNRAYS.Spread
+		self._mapSunRays.Intensity = self._baseMapSunRaysIntensity
+		self._mapSunRays.Spread = self._baseMapSunRaysSpread
+	end
+end
+
 function VFXController:_applyMapVisualProfile(mapName)
 	self:_applyMapAtmosphere(mapName)
 	self:_applyMapLighting(mapName)
 	self:_applyMapGrade(mapName)
 	self:_applyMapBloom(mapName)
 	self:_applyMapDepthOfField(mapName)
+	self:_applyMapSunRays(mapName)
 end
 
 return setmetatable({}, VFXController)
