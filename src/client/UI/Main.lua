@@ -7251,27 +7251,31 @@ function UISystem:_applyDeviceSizing()
 		for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
 			local window = self._uxWidgets.windows[guiName]
 			if window then
-				if guiName == "RoyalPassUI" and window.Panel then
-					local width = 364
-					local height = 420
+				if window.Panel and (guiName == "RoyalPassUI" or guiName == "ProfileUI" or guiName == "ShopUI") then
+					local width = guiName == "ShopUI" and 356 or 364
+					local height = guiName == "ProfileUI" and 320 or 420
 					if profile.isMobile then
 						width = viewportSize.X - (topLeftInset.X + bottomRightInset.X)
 						height = viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y)
-					elseif viewportSize.X <= 1280 then
+					elseif guiName == "RoyalPassUI" and viewportSize.X <= 1280 then
 						width = math.min(viewportSize.X - 28, 436)
 						height = math.min(viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y + 36), 520)
 					end
 					window.Panel.Size = UDim2.fromOffset(
-						math.max(profile.isMobile and 352 or 364, math.floor(width)),
-						math.max(profile.isMobile and 560 or 420, math.floor(height))
+						math.max(profile.isMobile and 352 or width, math.floor(width)),
+						math.max(profile.isMobile and 560 or height, math.floor(height))
 					)
 					window.Panel.BackgroundTransparency = profile.isMobile and 0.04 or 0.08
 					if profile.isMobile then
 						window.Panel.AnchorPoint = Vector2.new(0, 0)
 						window.Panel.Position = UDim2.fromOffset(topLeftInset.X, topLeftInset.Y)
-					else
+					elseif guiName == "RoyalPassUI" then
 						window.Panel.AnchorPoint = Vector2.new(1, 0.5)
 						window.Panel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0.5, 0)
+					end
+					if profile.isMobile and window.FooterLabel then
+						window.FooterLabel.Position = UDim2.fromOffset(12, window.Panel.Size.Y.Offset - 48)
+						window.FooterLabel.Size = UDim2.new(1, -24, 0, 36)
 					end
 				end
 				if window.PrimaryLabel then
