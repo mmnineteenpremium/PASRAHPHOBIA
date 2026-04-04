@@ -8335,6 +8335,58 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - lighting client sekarang punya pemisahan atmosfer lobby vs map yang benar-benar terbukti di runtime
 - ini menutup sebagian debt `material and lighting polish` pada level sensory baseline, meski pass artistik penuh map masih tersisa
 
+## 2026-04-05 - Map Lighting Profile Pass
+
+### Scope
+
+- menaikkan polish visual dari baseline fog/post-process menjadi lighting profile per map yang benar-benar berpindah saat runtime
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah import eksplisit `Lighting`
+  - tambah `DEFAULT_MAP_LIGHTING`
+  - tambah `MAP_LIGHTING_PROFILES` untuk:
+    - `LobbySocialHub`
+    - `HauntedHouse`
+    - `EmptyBuilding`
+    - `AbandonedPalace`
+    - `StudioMMNineteen`
+  - `Init()` sekarang menyimpan baseline lighting utama:
+    - `ClockTime`
+    - `Brightness`
+    - `ExposureCompensation`
+    - `Ambient`
+    - `OutdoorAmbient`
+    - `EnvironmentDiffuseScale`
+    - `EnvironmentSpecularScale`
+  - tambah `_applyMapLighting()` dan `_applyMapVisualProfile()`
+  - jalur `Start()`, `MatchStarted`, `PhaseChanged`, dan `MatchEnded` sekarang memakai profile visual penuh, bukan hanya atmosphere
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_map_lighting_profiles_build.rbxlx`
+  - `_tmp_map_lighting_profiles_clean_build.rbxlx`
+- validasi live Studio:
+  - saat boot lobby:
+    - `ClockTime = 14.6`
+    - `Brightness = 2.25`
+    - `ExposureCompensation = 0`
+    - `EnvironmentDiffuseScale = 0.34`
+    - `EnvironmentSpecularScale = 0.22`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)` dan phase `Briefing`:
+    - `ClockTime = 1.35`
+    - `Brightness = 1.72`
+    - `ExposureCompensation = -0.28`
+    - `EnvironmentDiffuseScale = 0.20`
+    - `EnvironmentSpecularScale = 0.10`
+
+### Interpretation
+
+- lobby dan match sekarang punya tone lighting yang benar-benar berbeda di runtime, bukan hanya ilusi dari post-process
+- ini menutup bagian `material and lighting polish` pada level baseline sistemik sebelum masuk ke pass artistik map yang lebih berat
+
 ## 2026-04-05 - Cue-Aware Ghost And Jumpscare Audio Pass
 
 ### Scope

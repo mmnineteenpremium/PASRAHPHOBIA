@@ -71,6 +71,16 @@ local DEFAULT_MAP_ATMOSPHERE = {
 	Haze = 1.85,
 }
 
+local DEFAULT_MAP_LIGHTING = {
+	ClockTime = 14.2,
+	Brightness = 2.1,
+	ExposureCompensation = -0.08,
+	Ambient = Color3.fromRGB(108, 116, 132),
+	OutdoorAmbient = Color3.fromRGB(122, 128, 144),
+	EnvironmentDiffuseScale = 0.26,
+	EnvironmentSpecularScale = 0.18,
+}
+
 local MAP_ATMOSPHERE_PROFILES = {
 	LobbySocialHub = {
 		Density = 0.24,
@@ -111,6 +121,54 @@ local MAP_ATMOSPHERE_PROFILES = {
 		Decay = Color3.fromRGB(104, 112, 128),
 		Glare = 0.12,
 		Haze = 1.7,
+	},
+}
+
+local MAP_LIGHTING_PROFILES = {
+	LobbySocialHub = {
+		ClockTime = 14.6,
+		Brightness = 2.25,
+		ExposureCompensation = 0,
+		Ambient = Color3.fromRGB(128, 136, 150),
+		OutdoorAmbient = Color3.fromRGB(146, 152, 166),
+		EnvironmentDiffuseScale = 0.34,
+		EnvironmentSpecularScale = 0.22,
+	},
+	AbandonedPalace = {
+		ClockTime = 19.2,
+		Brightness = 1.65,
+		ExposureCompensation = -0.34,
+		Ambient = Color3.fromRGB(88, 76, 70),
+		OutdoorAmbient = Color3.fromRGB(104, 90, 82),
+		EnvironmentDiffuseScale = 0.18,
+		EnvironmentSpecularScale = 0.08,
+	},
+	HauntedHouse = {
+		ClockTime = 1.35,
+		Brightness = 1.72,
+		ExposureCompensation = -0.28,
+		Ambient = Color3.fromRGB(82, 92, 108),
+		OutdoorAmbient = Color3.fromRGB(96, 106, 122),
+		EnvironmentDiffuseScale = 0.2,
+		EnvironmentSpecularScale = 0.1,
+	},
+	EmptyBuilding = {
+		ClockTime = 16.8,
+		Brightness = 1.95,
+		ExposureCompensation = -0.16,
+		Ambient = Color3.fromRGB(118, 122, 134),
+		OutdoorAmbient = Color3.fromRGB(132, 136, 148),
+		EnvironmentDiffuseScale = 0.24,
+		EnvironmentSpecularScale = 0.14,
+	},
+	StudioMMNineteen = {
+		ClockTime = 18.1,
+		Brightness = 1.82,
+		ExposureCompensation = -0.22,
+		Ambient = Color3.fromRGB(98, 104, 116),
+		OutdoorAmbient = Color3.fromRGB(112, 118, 130),
+		EnvironmentDiffuseScale = 0.22,
+		EnvironmentSpecularScale = 0.12,
 	},
 }
 
@@ -183,6 +241,13 @@ function VFXController:Init(context)
 	self._baseAtmosphereDecay = self._atmosphere and self._atmosphere.Decay or DEFAULT_MAP_ATMOSPHERE.Decay
 	self._baseAtmosphereGlare = self._atmosphere and self._atmosphere.Glare or DEFAULT_MAP_ATMOSPHERE.Glare
 	self._baseAtmosphereHaze = self._atmosphere and self._atmosphere.Haze or DEFAULT_MAP_ATMOSPHERE.Haze
+	self._baseLightingClockTime = Lighting.ClockTime
+	self._baseLightingBrightness = Lighting.Brightness
+	self._baseLightingExposure = Lighting.ExposureCompensation
+	self._baseLightingAmbient = Lighting.Ambient
+	self._baseLightingOutdoorAmbient = Lighting.OutdoorAmbient
+	self._baseLightingDiffuseScale = Lighting.EnvironmentDiffuseScale
+	self._baseLightingSpecularScale = Lighting.EnvironmentSpecularScale
 	self._currentSanity = 100
 	self._huntActive = false
 	self._sanityTween = nil
@@ -208,9 +273,9 @@ function VFXController:Start()
 
 	local localPlayer = Players.LocalPlayer
 	if localPlayer and localPlayer:GetAttribute("InMatch") == true then
-		self:_applyMapAtmosphere(tostring(localPlayer:GetAttribute("MapName") or "HauntedHouse"))
+		self:_applyMapVisualProfile(tostring(localPlayer:GetAttribute("MapName") or "HauntedHouse"))
 	else
-		self:_applyMapAtmosphere("LobbySocialHub")
+		self:_applyMapVisualProfile("LobbySocialHub")
 	end
 end
 
@@ -250,20 +315,20 @@ function VFXController:_handleMatchEvent(payload)
 		self:_triggerJumpscareShock(payload)
 	elseif eventName == "MatchStarted" then
 		local mapName = (payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId) or "Unknown"
-		self:_applyMapAtmosphere(mapName)
+		self:_applyMapVisualProfile(mapName)
 		self._huntActive = false
 		self:_applyThreatBaseline(0)
 	elseif eventName == "PhaseChanged" then
 		local phaseName = tostring((payload and payload.phase) or (payload and payload.phaseName) or (payload and payload.matchPhase) or "")
 		local mapName = (payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId) or (payload and payload.map) or nil
 		if type(mapName) == "string" and mapName ~= "" then
-			self:_applyMapAtmosphere(mapName == "Lobby" and "LobbySocialHub" or mapName)
+			self:_applyMapVisualProfile(mapName == "Lobby" and "LobbySocialHub" or mapName)
 		elseif phaseName == "Lobby" then
-			self:_applyMapAtmosphere("LobbySocialHub")
+			self:_applyMapVisualProfile("LobbySocialHub")
 		end
 	elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 		self._huntActive = false
-		self:_applyMapAtmosphere("LobbySocialHub")
+		self:_applyMapVisualProfile("LobbySocialHub")
 		self:_applyThreatBaseline(0.35)
 	end
 end
@@ -456,6 +521,22 @@ function VFXController:_applyMapAtmosphere(mapName)
 		self._atmosphere.Glare = self._baseAtmosphereGlare
 		self._atmosphere.Haze = self._baseAtmosphereHaze
 	end
+end
+
+function VFXController:_applyMapLighting(mapName)
+	local profile = MAP_LIGHTING_PROFILES[mapName] or DEFAULT_MAP_LIGHTING
+	Lighting.ClockTime = profile.ClockTime or self._baseLightingClockTime or DEFAULT_MAP_LIGHTING.ClockTime
+	Lighting.Brightness = profile.Brightness or self._baseLightingBrightness or DEFAULT_MAP_LIGHTING.Brightness
+	Lighting.ExposureCompensation = profile.ExposureCompensation or self._baseLightingExposure or DEFAULT_MAP_LIGHTING.ExposureCompensation
+	Lighting.Ambient = profile.Ambient or self._baseLightingAmbient or DEFAULT_MAP_LIGHTING.Ambient
+	Lighting.OutdoorAmbient = profile.OutdoorAmbient or self._baseLightingOutdoorAmbient or DEFAULT_MAP_LIGHTING.OutdoorAmbient
+	Lighting.EnvironmentDiffuseScale = profile.EnvironmentDiffuseScale or self._baseLightingDiffuseScale or DEFAULT_MAP_LIGHTING.EnvironmentDiffuseScale
+	Lighting.EnvironmentSpecularScale = profile.EnvironmentSpecularScale or self._baseLightingSpecularScale or DEFAULT_MAP_LIGHTING.EnvironmentSpecularScale
+end
+
+function VFXController:_applyMapVisualProfile(mapName)
+	self:_applyMapAtmosphere(mapName)
+	self:_applyMapLighting(mapName)
 end
 
 return setmetatable({}, VFXController)
