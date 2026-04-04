@@ -26,21 +26,38 @@ local DEFAULT_GHOST_TYPES = {
 	"HantuTanah",
 }
 
-local GHOST_TEMPLATE_VISUAL_OFFSETS = {
+local DEFAULT_GHOST_TEMPLATE_VISUAL_OFFSETS = {
 	Pocong = Vector3.new(0, 0.1, 0),
 }
 
-local GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {
+local DEFAULT_GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {
 	Pocong = Vector3.new(1.08, 3.65, 0.96),
 }
 
-local GHOST_TEMPLATE_TARGET_BOUNDS = {
+local DEFAULT_GHOST_TEMPLATE_TARGET_BOUNDS = {
 	Pocong = Vector3.new(1.6, 3.75, 1.18),
 	Kuntilanak = Vector3.new(3.5, 4.8, 1.8),
 	KuntilanakAggressive = Vector3.new(2.2, 5.4, 1.8),
 	Genderuwo = Vector3.new(3.4, 5.8, 2.6),
 	Leak = Vector3.new(2.0, 4.8, 2.35),
 }
+
+local DEFAULT_GHOST_TEMPLATE_MAX_HOVER_HEIGHT = {
+	Kuntilanak = 0.05,
+	KuntilanakAggressive = 0.05,
+}
+
+local DEFAULT_GHOST_TEMPLATE_GROUNDED = {
+	Pocong = true,
+	Genderuwo = true,
+	Leak = true,
+}
+
+local GHOST_TEMPLATE_VISUAL_OFFSETS = {}
+local GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {}
+local GHOST_TEMPLATE_TARGET_BOUNDS = {}
+local GHOST_TEMPLATE_MAX_HOVER_HEIGHT = {}
+local GHOST_TEMPLATE_GROUNDED = {}
 
 local GHOST_VISUAL_MOVE_SPEED_BY_STATE = {
 	Idle = 1.75,
@@ -107,6 +124,16 @@ local GHOST_VISUAL_MOTION_BY_STATE = {
 	},
 }
 
+local STUDIO_GHOST_PREVIEW_FOLDER_NAME = "StudioGhostPreviewGallery"
+local STUDIO_GHOST_PREVIEW_ENABLED_ATTRIBUTE = "PasrahStudioLobbyGhostPreview"
+local STUDIO_GHOST_PREVIEW_ORDER = {
+	Pocong = 1,
+	Kuntilanak = 2,
+	KuntilanakAggressive = 3,
+	Genderuwo = 4,
+	Leak = 5,
+}
+
 local function normalizeToken(value)
 	if type(value) ~= "string" then
 		return nil
@@ -116,6 +143,24 @@ local function normalizeToken(value)
 		return nil
 	end
 	return trimmed:gsub("[%s_%-_%.]+", ""):lower()
+end
+
+local function resolveGhostVisualTypeName(ghostModel)
+	if typeof(ghostModel) ~= "Instance" then
+		return nil
+	end
+
+	for _, candidate in ipairs({
+		ghostModel:GetAttribute("GhostType"),
+		ghostModel:GetAttribute("VisualTemplateName"),
+		ghostModel.Name,
+	}) do
+		if type(candidate) == "string" and candidate ~= "" then
+			return candidate
+		end
+	end
+
+	return nil
 end
 
 local function normalizeGhostVisualState(stateName)
@@ -343,6 +388,9 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 			descendant.CanTouch = false
 			descendant.CanQuery = false
 			descendant.Anchored = true
+			if shouldHideGhostControlPart(descendant) then
+				descendant.Transparency = 1
+			end
 		end
 	end
 
@@ -366,15 +414,17 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 		end
 	end
 
-	local visualOffset = GHOST_TEMPLATE_VISUAL_OFFSETS[ghostType]
-	if visualOffset and ghostModel.PrimaryPart then
+	if ghostModel.PrimaryPart then
+		local visualOffset = GHOST_TEMPLATE_VISUAL_OFFSETS[ghostType]
 		local visualMesh = ghostModel:FindFirstChildWhichIsA("MeshPart", true)
 		if visualMesh then
 			local forcedSize = GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES[ghostType]
 			if typeof(forcedSize) == "Vector3" then
 				visualMesh.Size = forcedSize
 			end
-			visualMesh.CFrame = ghostModel.PrimaryPart.CFrame * CFrame.new(visualOffset)
+			if typeof(visualOffset) == "Vector3" then
+				visualMesh.CFrame = ghostModel.PrimaryPart.CFrame * CFrame.new(visualOffset)
+			end
 		end
 	end
 
@@ -395,6 +445,77 @@ local function resolveSharedGameDataModule(moduleName)
 	end
 	return gameData:FindFirstChild(moduleName)
 end
+
+local function copyGhostVisualVectorMap(source)
+	local out = {}
+	for ghostType, vector in pairs(source or {}) do
+		if type(ghostType) == "string" and typeof(vector) == "Vector3" then
+			out[ghostType] = vector
+		end
+	end
+	return out
+end
+
+local function copyGhostVisualNumberMap(source)
+	local out = {}
+	for ghostType, value in pairs(source or {}) do
+		if type(ghostType) == "string" and type(value) == "number" then
+			out[ghostType] = value
+		end
+	end
+	return out
+end
+
+local function copyGhostVisualBooleanMap(source)
+	local out = {}
+	for ghostType, value in pairs(source or {}) do
+		if type(ghostType) == "string" and type(value) == "boolean" then
+			out[ghostType] = value
+		end
+	end
+	return out
+end
+
+local function loadGhostVisualTuning()
+	local offsets = copyGhostVisualVectorMap(DEFAULT_GHOST_TEMPLATE_VISUAL_OFFSETS)
+	local meshSizes = copyGhostVisualVectorMap(DEFAULT_GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES)
+	local bounds = copyGhostVisualVectorMap(DEFAULT_GHOST_TEMPLATE_TARGET_BOUNDS)
+	local maxHoverHeights = copyGhostVisualNumberMap(DEFAULT_GHOST_TEMPLATE_MAX_HOVER_HEIGHT)
+	local grounded = copyGhostVisualBooleanMap(DEFAULT_GHOST_TEMPLATE_GROUNDED)
+	local tuning = safeRequire(resolveSharedGameDataModule("GhostVisualTuning"))
+	local ghosts = type(tuning) == "table" and tuning.ghosts or nil
+	if type(ghosts) ~= "table" then
+		return offsets, meshSizes, bounds, maxHoverHeights, grounded
+	end
+
+	for ghostType, config in pairs(ghosts) do
+		if type(ghostType) == "string" and type(config) == "table" then
+			if typeof(config.meshOffset) == "Vector3" then
+				offsets[ghostType] = config.meshOffset
+			end
+			if typeof(config.meshSize) == "Vector3" then
+				meshSizes[ghostType] = config.meshSize
+			end
+			if typeof(config.targetBounds) == "Vector3" then
+				bounds[ghostType] = config.targetBounds
+			end
+			if type(config.maxHoverHeight) == "number" then
+				maxHoverHeights[ghostType] = math.max(0, config.maxHoverHeight)
+			end
+			if type(config.grounded) == "boolean" then
+				grounded[ghostType] = config.grounded
+			end
+		end
+	end
+
+	return offsets, meshSizes, bounds, maxHoverHeights, grounded
+end
+
+GHOST_TEMPLATE_VISUAL_OFFSETS,
+	GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES,
+	GHOST_TEMPLATE_TARGET_BOUNDS,
+	GHOST_TEMPLATE_MAX_HOVER_HEIGHT,
+	GHOST_TEMPLATE_GROUNDED = loadGhostVisualTuning()
 
 local function loadMapDatabase()
 	local database = safeRequire(resolveSharedGameDataModule("MapConfig"))
@@ -460,6 +581,123 @@ local function collectSpawnParts(root)
 	return parts
 end
 
+local function resolveStudioLobbyPreviewRoot()
+	local maps = Workspace:FindFirstChild("Maps")
+	if not maps then
+		return nil
+	end
+
+	local lobbyContainer = maps:FindFirstChild("LobbySocialHub")
+	if not lobbyContainer then
+		return nil
+	end
+
+	local nested = lobbyContainer:FindFirstChild("LobbySocialHub")
+	if nested and nested:IsA("Model") then
+		return nested
+	end
+
+	if lobbyContainer:IsA("Model") or lobbyContainer:IsA("Folder") then
+		return lobbyContainer
+	end
+
+	return nil
+end
+
+local function resolveStudioLobbyPreviewSpawnParts()
+	local lobbyRoot = resolveStudioLobbyPreviewRoot()
+	if not lobbyRoot then
+		return nil, {}
+	end
+
+	local spawnFolder = lobbyRoot:FindFirstChild("SpawnPoints", true)
+	local spawnParts = collectSpawnParts(spawnFolder)
+	table.sort(spawnParts, function(left, right)
+		return left.Name < right.Name
+	end)
+	return lobbyRoot, spawnParts
+end
+
+local function resolveStudioLobbyPreviewGhostTypes()
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local models = assets and assets:FindFirstChild("Models")
+	local ghosts = models and models:FindFirstChild("Ghosts")
+	if not ghosts then
+		return {}
+	end
+
+	local ghostTypes = {}
+	for _, child in ipairs(ghosts:GetChildren()) do
+		if child:IsA("Model") then
+			table.insert(ghostTypes, child.Name)
+		end
+	end
+
+	table.sort(ghostTypes, function(left, right)
+		local leftOrder = STUDIO_GHOST_PREVIEW_ORDER[left] or 1000
+		local rightOrder = STUDIO_GHOST_PREVIEW_ORDER[right] or 1000
+		if leftOrder == rightOrder then
+			return left < right
+		end
+		return leftOrder < rightOrder
+	end)
+
+	return ghostTypes
+end
+
+local function resolveStudioLobbyPreviewCenter(spawnParts)
+	if #spawnParts == 0 then
+		return nil
+	end
+
+	local sum = Vector3.zero
+	for _, part in ipairs(spawnParts) do
+		sum += part.Position
+	end
+	return sum / #spawnParts
+end
+
+local function resolveStudioLobbyPreviewFloorY(spawnParts)
+	if #spawnParts == 0 then
+		return nil
+	end
+
+	local sum = 0
+	for _, part in ipairs(spawnParts) do
+		sum += part.Position.Y + (part.Size.Y * 0.5)
+	end
+	return sum / #spawnParts
+end
+
+local function attachStudioGhostPreviewLabel(model, ghostType)
+	if typeof(model) ~= "Instance" or not model:IsA("Model") or not model.PrimaryPart then
+		return
+	end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "PreviewLabel"
+	billboard.AlwaysOnTop = true
+	billboard.LightInfluence = 0
+	billboard.MaxDistance = 100
+	billboard.Size = UDim2.fromOffset(180, 40)
+	billboard.StudsOffsetWorldSpace = Vector3.new(0, 4.5, 0)
+	billboard.Adornee = model.PrimaryPart
+	billboard.Parent = model.PrimaryPart
+
+	local label = Instance.new("TextLabel")
+	label.Name = "Text"
+	label.BackgroundTransparency = 0.2
+	label.BackgroundColor3 = Color3.fromRGB(12, 16, 22)
+	label.BorderSizePixel = 0
+	label.Text = tostring(ghostType)
+	label.TextColor3 = Color3.fromRGB(237, 240, 244)
+	label.TextStrokeTransparency = 0.6
+	label.TextScaled = true
+	label.Font = Enum.Font.GothamBold
+	label.Size = UDim2.fromScale(1, 1)
+	label.Parent = billboard
+end
+
 local function resolveGhostGroundPosition(match, targetAnchor)
 	if type(match) ~= "table" or typeof(match.ghost) ~= "Instance" then
 		return nil
@@ -513,23 +751,94 @@ local function resolvePlayerRootPart(player)
 	return character.PrimaryPart
 end
 
-local function resolveGhostFocusPosition(ghostState)
-	if type(ghostState) ~= "table" then
-		return nil
+local function resolveHuntTargetPlayer(match, ghostState)
+	local preferredUserId = type(ghostState) == "table" and tonumber(ghostState.huntTargetUserId) or nil
+	if preferredUserId then
+		local preferredPlayer = Players:GetPlayerByUserId(preferredUserId)
+		local preferredRoot = resolvePlayerRootPart(preferredPlayer)
+		if preferredRoot and preferredRoot:IsA("BasePart") then
+			return preferredPlayer, preferredRoot, preferredUserId
+		end
 	end
 
-	local targetUserId = tonumber(ghostState.huntTargetUserId)
-	if not targetUserId then
-		return nil
+	if type(match) ~= "table" then
+		return nil, nil, nil
 	end
 
-	local player = Players:GetPlayerByUserId(targetUserId)
-	local root = resolvePlayerRootPart(player)
+	local bestPlayer = nil
+	local bestRoot = nil
+	local bestUserId = nil
+	local bestDistance = math.huge
+	local ghostPosition = nil
+	if typeof(match.ghost) == "Instance" then
+		local ok, pivot = pcall(function()
+			return match.ghost:GetPivot()
+		end)
+		if ok and typeof(pivot) == "CFrame" then
+			ghostPosition = pivot.Position
+		end
+	end
+
+	for userId, playerState in pairs(match.playersByUserId or {}) do
+		if type(playerState) == "table" and playerState.alive ~= false then
+			local candidatePlayer = playerState.player or Players:GetPlayerByUserId(tonumber(userId) or 0)
+			local candidateRoot = resolvePlayerRootPart(candidatePlayer)
+			if candidateRoot and candidateRoot:IsA("BasePart") then
+				local distance = ghostPosition and (candidateRoot.Position - ghostPosition).Magnitude or 0
+				if not bestRoot or distance < bestDistance then
+					bestPlayer = candidatePlayer
+					bestRoot = candidateRoot
+					bestUserId = tonumber(userId) or (candidatePlayer and candidatePlayer.UserId) or nil
+					bestDistance = distance
+				end
+			end
+		end
+	end
+
+	return bestPlayer, bestRoot, bestUserId
+end
+
+local function resolveGhostFocusPosition(match, ghostState)
+	local _, root = resolveHuntTargetPlayer(match, ghostState)
 	if root and root:IsA("BasePart") then
 		return root.Position
 	end
-
 	return nil
+end
+
+local function resolveGhostChasePosition(match, ghostState)
+	if type(ghostState) ~= "table" or ghostState.huntActive ~= true then
+		return nil, nil
+	end
+
+	local player, root, userId = resolveHuntTargetPlayer(match, ghostState)
+	if not (root and root:IsA("BasePart")) then
+		return nil, nil
+	end
+
+	local ignoreInstances = {}
+	if typeof(player) == "Instance" and player:IsA("Player") and typeof(player.Character) == "Instance" then
+		table.insert(ignoreInstances, player.Character)
+	end
+	if type(match) == "table" and typeof(match.ghost) == "Instance" then
+		table.insert(ignoreInstances, match.ghost)
+	end
+
+	local groundY = root.Position.Y - ((root.Size.Y * 0.5) + 1)
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+	raycastParams.FilterDescendantsInstances = ignoreInstances
+	raycastParams.IgnoreWater = true
+	local rayResult = Workspace:Raycast(
+		root.Position + Vector3.new(0, 6, 0),
+		Vector3.new(0, -24, 0),
+		raycastParams
+	)
+	if rayResult then
+		groundY = rayResult.Position.Y
+	end
+
+	return Vector3.new(root.Position.X, groundY, root.Position.Z), userId
 end
 
 local function flattenLookVector(vector)
@@ -583,61 +892,74 @@ local function cloneMotionProfile(baseMotion)
 	return clone
 end
 
+local function shouldHideGhostControlPart(part)
+	if typeof(part) ~= "Instance" or not part:IsA("BasePart") then
+		return false
+	end
+
+	local token = normalizeToken(part.Name)
+	return token == "humanoidrootpart"
+		or token == "rootpart"
+		or token == "root"
+		or token == "primarypart"
+end
+
 local function resolveGhostMotionProfile(ghostModel, stateName)
 	local motion = cloneMotionProfile(GHOST_VISUAL_MOTION_BY_STATE[stateName] or GHOST_VISUAL_MOTION_BY_STATE.Roaming)
-	local ghostTypeToken = normalizeToken(
-		ghostModel:GetAttribute("GhostType")
-			or ghostModel:GetAttribute("VisualTemplateName")
-			or ghostModel.Name
-	)
+	local ghostTypeName = resolveGhostVisualTypeName(ghostModel)
+	local ghostTypeToken = normalizeToken(ghostTypeName)
+
+	if ghostTypeName and GHOST_TEMPLATE_GROUNDED[ghostTypeName] == true then
+		motion.bobAmplitude = 0
+	end
 
 	if ghostTypeToken == "pocong" then
 		if stateName == "Idle" then
-			motion.bobAmplitude = 0.04
+			motion.bobAmplitude = 0
 			motion.bobFrequency = 1.6
 			motion.swayAmplitude = 0.012
 			motion.pitchDegrees = 1.6
 			motion.rollDegrees = 0.5
 			motion.yawDegrees = 1.25
-			motion.motionStyle = "pocong_hop"
+			motion.motionStyle = nil
 			motion.hopSharpness = 1.4
 		elseif stateName == "Roaming" then
-			motion.bobAmplitude = 0.11
+			motion.bobAmplitude = 0
 			motion.bobFrequency = 2.85
 			motion.swayAmplitude = 0.014
 			motion.pitchDegrees = 7.5
 			motion.rollDegrees = 0.75
 			motion.yawDegrees = 1.2
-			motion.motionStyle = "pocong_hop"
+			motion.motionStyle = nil
 			motion.hopSharpness = 1.85
 			motion.forwardLunge = 0.025
 		elseif stateName == "Manifestation" then
-			motion.bobAmplitude = 0.09
+			motion.bobAmplitude = 0
 			motion.bobFrequency = 2.2
 			motion.swayAmplitude = 0.01
 			motion.pitchDegrees = 5
 			motion.rollDegrees = 0.4
 			motion.yawDegrees = 1
-			motion.motionStyle = "pocong_hop"
+			motion.motionStyle = nil
 			motion.hopSharpness = 1.65
 		elseif stateName == "Hunting" then
-			motion.bobAmplitude = 0.16
+			motion.bobAmplitude = 0
 			motion.bobFrequency = 4.8
 			motion.swayAmplitude = 0.012
 			motion.pitchDegrees = 9.5
 			motion.rollDegrees = 0.9
 			motion.yawDegrees = 0.4
-			motion.motionStyle = "pocong_hop"
+			motion.motionStyle = nil
 			motion.hopSharpness = 2.15
 			motion.forwardLunge = 0.085
 		elseif stateName == "Cooldown" then
-			motion.bobAmplitude = 0.05
+			motion.bobAmplitude = 0
 			motion.bobFrequency = 1.45
 			motion.swayAmplitude = 0.01
 			motion.pitchDegrees = 2.5
 			motion.rollDegrees = 0.45
 			motion.yawDegrees = 1
-			motion.motionStyle = "pocong_hop"
+			motion.motionStyle = nil
 			motion.hopSharpness = 1.3
 		end
 	end
@@ -645,14 +967,15 @@ local function resolveGhostMotionProfile(ghostModel, stateName)
 	return motion
 end
 
-local function computeGhostVisualCFrame(ghostModel, targetPosition, ghostState, stateName, seedValue)
+local function computeGhostVisualCFrame(match, ghostModel, targetPosition, ghostState, stateName, seedValue)
 	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") or typeof(targetPosition) ~= "Vector3" then
 		return nil
 	end
 
 	local motion = resolveGhostMotionProfile(ghostModel, stateName)
+	local ghostTypeName = resolveGhostVisualTypeName(ghostModel)
 	local currentPivot = ghostModel:GetPivot()
-	local focusPosition = resolveGhostFocusPosition(ghostState)
+	local focusPosition = resolveGhostFocusPosition(match, ghostState)
 	local lookVector = flattenLookVector(currentPivot.LookVector)
 	local travelVector = targetPosition - currentPivot.Position
 	local travelDirection = flattenLookVector(travelVector)
@@ -683,6 +1006,12 @@ local function computeGhostVisualCFrame(ghostModel, targetPosition, ghostState, 
 	local bobAmplitude = (motion.bobAmplitude or 0) * math.max(0.3, movementAlpha)
 	local swayAmplitude = (motion.swayAmplitude or 0) * math.max(0.25, movementAlpha)
 	local bobOffset = bobWave * bobAmplitude
+	local maxHoverHeight = ghostTypeName and GHOST_TEMPLATE_MAX_HOVER_HEIGHT[ghostTypeName] or 0.05
+	if ghostTypeName and GHOST_TEMPLATE_GROUNDED[ghostTypeName] == true then
+		bobOffset = 0
+	else
+		bobOffset = math.clamp(bobOffset, 0, math.max(0, maxHoverHeight or 0.05))
+	end
 	local swayOffset = math.sin(swayPhase) * swayAmplitude
 	local forwardOffset = 0
 	if motion.forwardLunge then
@@ -817,6 +1146,7 @@ function Service.new(state, deps)
 	self._matchSystem = Services.Get(self._deps, "MatchSystem")
 	self._mapDatabase = loadMapDatabase()
 	self._ghostDatabase = loadGhostDatabase()
+	self._studioGhostPreviewFolder = nil
 	self._visualSyncConnection = nil
 	self._visualSyncAccumulator = 0
 	return self
@@ -826,8 +1156,79 @@ function Service:Init()
 	self._ghostService:Init()
 end
 
+function Service:_destroyStudioLobbyGhostPreview()
+	if self._studioGhostPreviewFolder and self._studioGhostPreviewFolder.Parent then
+		self._studioGhostPreviewFolder:Destroy()
+	end
+	self._studioGhostPreviewFolder = nil
+end
+
+function Service:_ensureStudioLobbyGhostPreview()
+	if not RunService:IsStudio() then
+		return
+	end
+	if ReplicatedStorage:GetAttribute(STUDIO_GHOST_PREVIEW_ENABLED_ATTRIBUTE) ~= true then
+		self:_destroyStudioLobbyGhostPreview()
+		return
+	end
+
+	local lobbyRoot, spawnParts = resolveStudioLobbyPreviewSpawnParts()
+	if not lobbyRoot or #spawnParts == 0 then
+		return
+	end
+
+	local ghostTypes = resolveStudioLobbyPreviewGhostTypes()
+	if #ghostTypes == 0 then
+		return
+	end
+
+	self:_destroyStudioLobbyGhostPreview()
+
+	local folder = Instance.new("Folder")
+	folder.Name = STUDIO_GHOST_PREVIEW_FOLDER_NAME
+	folder.Parent = lobbyRoot
+	self._studioGhostPreviewFolder = folder
+
+	local spawnCenter = resolveStudioLobbyPreviewCenter(spawnParts)
+	local previewFloorY = resolveStudioLobbyPreviewFloorY(spawnParts)
+	if typeof(spawnCenter) ~= "Vector3" or type(previewFloorY) ~= "number" then
+		return
+	end
+
+	local origin = Vector3.new(spawnCenter.X, previewFloorY, spawnCenter.Z)
+	local columns = math.min(3, #ghostTypes)
+	local rowCount = math.ceil(#ghostTypes / columns)
+	local lookTarget = origin + Vector3.new(0, 2.5, 0)
+
+	for index, ghostType in ipairs(ghostTypes) do
+		local row = math.floor((index - 1) / columns)
+		local column = (index - 1) % columns
+		local ghostsRemaining = #ghostTypes - (row * columns)
+		local itemsInRow = math.min(columns, ghostsRemaining)
+		local offsetX = (row - ((rowCount - 1) * 0.5)) * 10
+		local offsetZ = (column - ((itemsInRow - 1) * 0.5)) * 10
+		local previewPosition = origin + Vector3.new(offsetX, 0, offsetZ)
+		local previewCFrame = CFrame.lookAt(previewPosition, lookTarget)
+		local ghostModel = createGhostFromTemplate(previewCFrame, ghostType)
+		if not ghostModel then
+			ghostModel = createVisibleGhostPlaceholder(previewCFrame, ghostType)
+		end
+
+		ghostModel.Name = string.format("Preview_%s", tostring(ghostType))
+		ghostModel:SetAttribute("StudioGhostPreview", true)
+		ghostModel.Parent = folder
+		if ghostModel.PrimaryPart then
+			local groundedPosition = resolveGhostGroundPosition({ ghost = ghostModel }, previewPosition) or previewPosition
+			ghostModel:PivotTo(CFrame.lookAt(groundedPosition, lookTarget))
+		end
+		self:_applyGhostVisualState({ ghost = ghostModel }, { state = "Manifestation" })
+		attachStudioGhostPreviewLabel(ghostModel, ghostType)
+	end
+end
+
 function Service:Start()
 	self._ghostService:Start()
+	self:_ensureStudioLobbyGhostPreview()
 	if self._visualSyncConnection then
 		self._visualSyncConnection:Disconnect()
 	end
@@ -847,6 +1248,7 @@ function Service:Start()
 end
 
 function Service:Stop()
+	self:_destroyStudioLobbyGhostPreview()
 	if self._visualSyncConnection then
 		self._visualSyncConnection:Disconnect()
 		self._visualSyncConnection = nil
@@ -970,7 +1372,7 @@ function Service:_applyGhostVisualState(match, ghostState)
 
 	for _, descendant in ipairs(match.ghost:GetDescendants()) do
 		if descendant:IsA("BasePart") then
-			if descendant.Name == "HumanoidRootPart" then
+			if shouldHideGhostControlPart(descendant) then
 				descendant.Transparency = 1
 			else
 				descendant.Transparency = transparency
@@ -989,8 +1391,23 @@ function Service:_syncGhostVisual(match, ghostState)
 	match.ghost:SetAttribute("CurrentRoomId", ghostState.currentRoomId)
 	match.ghost:SetAttribute("FavoriteRoomId", ghostState.favoriteRoomId)
 	local roomAnchor = self:_resolveRoomAnchor(match, roomId)
-	if roomAnchor and match.ghost.PrimaryPart then
-		local targetPosition = resolveGhostGroundPosition(match, roomAnchor)
+	if match.ghost.PrimaryPart then
+		local chasePosition, chaseTargetUserId = resolveGhostChasePosition(match, ghostState)
+		local targetPosition = nil
+		if typeof(chasePosition) == "Vector3" then
+			targetPosition = resolveGhostGroundPosition(match, chasePosition) or chasePosition
+		elseif roomAnchor then
+			targetPosition = resolveGhostGroundPosition(match, roomAnchor)
+		end
+
+		match.ghost:SetAttribute("VisualTargetMode", chasePosition and "Player" or "Room")
+		match.ghost:SetAttribute("ChaseTargetUserId", chaseTargetUserId)
+
+		if typeof(targetPosition) ~= "Vector3" then
+			self:_applyGhostVisualState(match, ghostState)
+			return true
+		end
+
 		local stateName = select(1, resolveGhostVisualStateName(ghostState)) or "Roaming"
 		local now = Workspace:GetServerTimeNow()
 		local lastSyncAt = tonumber(match.ghostVisualLastSyncAt) or now
@@ -1034,7 +1451,7 @@ function Service:_syncGhostVisual(match, ghostState)
 		match.ghost:SetAttribute("VisualMoveSpeed", moveSpeed)
 		match.ghost:SetAttribute("VisualTargetDistance", math.floor(((targetPosition - resolvedPosition).Magnitude * 100) + 0.5) / 100)
 		match.ghost:SetAttribute("VisualMotionState", effectiveStateName)
-		local visualCFrame = computeGhostVisualCFrame(match.ghost, resolvedPosition, ghostState, effectiveStateName, match.ghostSeed or match.matchId)
+		local visualCFrame = computeGhostVisualCFrame(match, match.ghost, resolvedPosition, ghostState, effectiveStateName, match.ghostSeed or match.matchId)
 		match.ghost:PivotTo(visualCFrame or CFrame.new(resolvedPosition))
 	end
 

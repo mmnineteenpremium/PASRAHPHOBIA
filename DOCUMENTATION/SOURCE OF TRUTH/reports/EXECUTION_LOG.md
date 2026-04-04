@@ -6274,3 +6274,93 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - sebelumnya hunt/jumpscare memang terasa lemah karena client tidak menerima semua event penting.
 - jalur event sekarang sudah utuh: AI/server event -> `MatchEvent` -> sensory client.
 - manifest event sekarang juga menjadi lebih jujur untuk sistem lain yang sebelumnya menunggu sinyal yang nyaris tidak pernah dipublish.
+
+## 2026-04-04 17:32 ICT - Ghost Visual Tuning Access
+
+### Scope
+
+- membuka jalur edit manual untuk ukuran ghost tanpa menyentuh AI atau runtime hunt.
+- memindahkan angka visual ghost ke satu module config yang pendek dan mudah diubah.
+
+### Implementation Notes
+
+- file baru:
+  - `src/shared/GameData/GhostVisualTuning.lua`
+- `GhostSystem/Service.lua` sekarang membaca:
+  - `meshSize`
+  - `meshOffset`
+  - `targetBounds`
+- `meshSize` sekarang tetap diterapkan walau ghost tidak memakai `meshOffset`, supaya tuning per asset tidak tergantung offset.
+
+### Manual Workflow
+
+- edit `src/shared/GameData/GhostVisualTuning.lua`
+- simpan file
+- bila ghost sudah telanjur spawn di sesi play, lakukan:
+  - `Stop`
+  - `Play` lagi
+- ulangi sampai ukuran visual sesuai secara kasat mata
+
+### Interpretation
+
+- tuning visual ghost sekarang punya satu titik edit yang jelas untuk manusia.
+- ini mengurangi risiko salah sentuh `Service.lua` saat yang ingin diubah hanya skala atau posisi mesh.
+
+## 2026-04-04 18:06 ICT - Lobby Ghost Preview Grounding Fix
+
+### Scope
+
+- memperbaiki preview ghost di `LobbySocialHub` yang sempat muncul di ketinggian salah karena raycast preview menangkap atap/permukaan di atas plaza.
+- menyamakan grounding preview dengan logika grounding ghost runtime agar referensi visual tinggi ghost lebih jujur.
+
+### Implementation Notes
+
+- preview gallery sekarang memakai rata-rata `top surface` dari `SpawnPoints` lobby sebagai lantai referensi.
+- preview ghost tidak lagi memakai raycast vertikal untuk memilih lantai.
+- setiap ghost preview sekarang diposisikan ulang dengan `resolveGhostGroundPosition`, sama seperti ghost runtime di match.
+
+### Validation Notes
+
+- `StudioGhostPreviewGallery` tetap muncul dengan `5` ghost.
+- lantai referensi plaza terukur di `Y = 4.5`.
+- selisih bawah model ke lantai sekarang kecil dan konsisten:
+  - `Pocong`: `+0.04`
+  - `Leak`: `+0.04`
+  - `KuntilanakAggressive`: `+0.07`
+  - `Kuntilanak`: `+0.11`
+  - `Genderuwo`: `+0.12`
+
+### Interpretation
+
+- preview tidak lagi menipu karena tampil di atap.
+- referensi visual melayang ghost sekarang dekat dengan logika pemain menyentuh lantai.
+
+## 2026-04-04 18:22 ICT - Ghost Control Part Cleanup And Hover Clamp
+
+### Scope
+
+- menyembunyikan `RootPart`/part kontrol tambahan yang sempat terlihat pada model `Kuntilanak`.
+- membatasi ghost yang memang melayang ke tinggi visual maksimum `0.05`.
+- meng-grounded ghost yang tidak cocok melayang: `Pocong`, `Genderuwo`, `Leak`.
+- mematikan preview ghost lobby secara default setelah tahap tuning selesai.
+
+### Implementation Notes
+
+- `GhostSystem/Service.lua` sekarang punya helper untuk mendeteksi part kontrol ghost seperti:
+  - `HumanoidRootPart`
+  - `RootPart`
+  - `Root`
+  - `PrimaryPart`
+- part kontrol itu dipaksa `Transparency = 1` saat clone template dan saat visual state diterapkan.
+- `GhostVisualTuning.lua` sekarang memuat:
+  - `grounded`
+  - `maxHoverHeight`
+- `Kuntilanak` dan `KuntilanakAggressive` dibatasi `maxHoverHeight = 0.05`.
+- `Pocong`, `Genderuwo`, `Leak` diberi `grounded = true` dan `maxHoverHeight = 0`.
+- preview gallery Studio sekarang hanya muncul bila attribute `PasrahStudioLobbyGhostPreview == true`.
+
+### Interpretation
+
+- kotak root part tidak lagi boleh muncul sebagai bagian dari siluet ghost.
+- aturan melayang sekarang lebih dekat dengan identitas visual masing-masing ghost.
+- preview lobby tetap tersedia untuk debugging, tetapi tidak lagi menyala otomatis.
