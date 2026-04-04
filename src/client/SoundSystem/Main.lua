@@ -1,4 +1,5 @@
 local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 local Workspace = game:GetService("Workspace")
@@ -46,6 +47,15 @@ local ONESHOT_DEDUPE_WINDOW_SECONDS = {
 	JumpscareAudio = 1.5,
 }
 
+local AUDIO_DEBUG_ATTRS = {
+	category = "PasrahAudioLastCategory",
+	template = "PasrahAudioLastTemplate",
+	cue = "PasrahAudioLastCue",
+	eventType = "PasrahAudioLastEventType",
+	soundId = "PasrahAudioLastSoundId",
+	playCount = "PasrahAudioPlayCount",
+}
+
 local function resolveTemplate(root, pathSegments)
 	local cursor = root
 	for _, segment in ipairs(pathSegments or {}) do
@@ -60,18 +70,26 @@ local function resolveTemplate(root, pathSegments)
 	return nil
 end
 
+local function resolveAudioFolder(root)
+	local assets = root and root:FindFirstChild("Assets")
+	return assets and assets:FindFirstChild("Audio")
+end
+
 local function normalizeCue(cue)
 	return tostring(cue or ""):gsub("[%s_%-]+", "_"):lower()
 end
 
-local function resolveGhostTemplate(root, cue)
-	local audioRoot = root and root:FindFirstChild("Assets")
-	local audioFolder = audioRoot and audioRoot:FindFirstChild("Audio")
-	local ghostFolder = audioFolder and audioFolder:FindFirstChild("Ghost")
-	if not ghostFolder then
-		return nil
+local function resolveFolderTemplate(root, folderName, templateName)
+	local audioFolder = resolveAudioFolder(root)
+	local targetFolder = audioFolder and audioFolder:FindFirstChild(folderName)
+	local template = targetFolder and targetFolder:FindFirstChild(templateName)
+	if template and template:IsA("Sound") and tostring(template.SoundId or "") ~= "" then
+		return template
 	end
+	return nil
+end
 
+local function resolveGhostTemplate(root, cue)
 	local cueToken = normalizeCue(cue)
 	local primaryName = "GhostManifest_01"
 	if string.find(cueToken, "whisper", 1, true) then
@@ -82,16 +100,49 @@ local function resolveGhostTemplate(root, cue)
 		primaryName = "GhostManifest_01"
 	end
 
-	local primary = ghostFolder:FindFirstChild(primaryName)
-	if primary and primary:IsA("Sound") and tostring(primary.SoundId or "") ~= "" then
+	local primary = resolveFolderTemplate(root, "Ghost", primaryName)
+	if primary then
 		return primary
 	end
 
-	local fallback = ghostFolder:FindFirstChild("GhostManifest_01")
-	if fallback and fallback:IsA("Sound") and tostring(fallback.SoundId or "") ~= "" then
-		return fallback
+	return resolveFolderTemplate(root, "Ghost", "GhostManifest_01")
+end
+
+local function resolveFootstepTemplate(root, payload)
+	local cueToken = normalizeCue(
+		(payload and payload.surfaceMaterial)
+			or (payload and payload.material)
+			or (payload and payload.floorMaterial)
+			or (payload and payload.eventType)
+			or (payload and payload.cue)
+	)
+	local templateName = "ConcreteStep_01"
+	if string.find(cueToken, "wood", 1, true) then
+		templateName = "Woodstep_01"
+	elseif string.find(cueToken, "metal", 1, true) or string.find(cueToken, "diamondplate", 1, true) then
+		templateName = "MetalStep_01"
 	end
-	return nil
+	return resolveFolderTemplate(root, "Footsteps", templateName)
+		or resolveFolderTemplate(root, "Footsteps", "ConcreteStep_01")
+end
+
+local function resolveEnvironmentalTemplate(root, payload)
+	local cueToken = normalizeCue((payload and payload.eventType) or (payload and payload.cue))
+
+	if string.find(cueToken, "footstep", 1, true) then
+		return resolveFootstepTemplate(root, payload)
+	end
+	if string.find(cueToken, "whisper", 1, true) then
+		return resolveFolderTemplate(root, "Ghost", "GhostWhisper_01") or resolveGhostTemplate(root, cueToken)
+	end
+	if string.find(cueToken, "shadow", 1, true)
+		or string.find(cueToken, "apparition", 1, true)
+		or string.find(cueToken, "manifest", 1, true)
+		or string.find(cueToken, "temperature", 1, true) then
+		return resolveFolderTemplate(root, "Ghost", "GhostManifest_01") or resolveGhostTemplate(root, cueToken)
+	end
+
+	return resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
 end
 
 function SoundSystem:Init(context)
@@ -104,6 +155,15 @@ function SoundSystem:Init(context)
 	self._activeSounds = {}
 	self._audioTemplates = {}
 	self._audioRoot = ReplicatedStorage
+	self._player = Players.LocalPlayer
+	if self._player then
+		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.category, "")
+		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.template, "")
+		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.cue, "")
+		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.eventType, "")
+		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.soundId, "")
+		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.playCount, 0)
+	end
 	self:_registerSensoryController("AudioController", AudioController, context)
 	self:_registerSensoryController("FootstepController", FootstepController, context)
 	self:_registerSensoryController("VFXController", VFXController, context)
@@ -189,6 +249,9 @@ function SoundSystem:_getTemplateForCategory(category, payload)
 	if category == "GhostAudio" then
 		return resolveGhostTemplate(self._audioRoot, payload and payload.cue)
 	end
+	if category == "EnvironmentalAudio" then
+		return resolveEnvironmentalTemplate(self._audioRoot, payload)
+	end
 
 	local cached = self._audioTemplates[category]
 	if cached and cached.Parent then
@@ -201,6 +264,22 @@ function SoundSystem:_getTemplateForCategory(category, payload)
 		self._audioTemplates[category] = template
 	end
 	return template
+end
+
+function SoundSystem:_recordAudioDebug(category, template, payload)
+	if not self._player then
+		return
+	end
+
+	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.category, tostring(category or ""))
+	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.template, tostring(template and template.Name or ""))
+	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.cue, tostring(payload and payload.cue or ""))
+	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.eventType, tostring(payload and payload.eventType or ""))
+	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.soundId, tostring(template and template.SoundId or ""))
+	self._player:SetAttribute(
+		AUDIO_DEBUG_ATTRS.playCount,
+		(tonumber(self._player:GetAttribute(AUDIO_DEBUG_ATTRS.playCount)) or 0) + 1
+	)
 end
 
 function SoundSystem:_applySoundProfile(sound, category, payload)
@@ -290,6 +369,7 @@ function SoundSystem:_playCategoryAudio(category, payload)
 	if not template then
 		return
 	end
+	self:_recordAudioDebug(category, template, payload)
 	if LOOPED_CATEGORIES[category] then
 		self:_playLoopedCategory(category, template, payload)
 		return
