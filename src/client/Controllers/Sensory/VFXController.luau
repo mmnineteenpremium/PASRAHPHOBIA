@@ -81,6 +81,19 @@ local DEFAULT_MAP_LIGHTING = {
 	EnvironmentSpecularScale = 0.18,
 }
 
+local DEFAULT_MAP_GRADE = {
+	Brightness = 0,
+	Contrast = 0.02,
+	Saturation = -0.04,
+	TintColor = Color3.fromRGB(248, 248, 252),
+}
+
+local DEFAULT_MAP_BLOOM = {
+	Intensity = 0.14,
+	Size = 18,
+	Threshold = 1.12,
+}
+
 local MAP_ATMOSPHERE_PROFILES = {
 	LobbySocialHub = {
 		Density = 0.24,
@@ -172,6 +185,67 @@ local MAP_LIGHTING_PROFILES = {
 	},
 }
 
+local MAP_GRADE_PROFILES = {
+	LobbySocialHub = {
+		Brightness = 0.01,
+		Contrast = 0.04,
+		Saturation = -0.02,
+		TintColor = Color3.fromRGB(248, 246, 240),
+	},
+	AbandonedPalace = {
+		Brightness = -0.02,
+		Contrast = 0.08,
+		Saturation = -0.12,
+		TintColor = Color3.fromRGB(236, 220, 204),
+	},
+	HauntedHouse = {
+		Brightness = -0.01,
+		Contrast = 0.1,
+		Saturation = -0.16,
+		TintColor = Color3.fromRGB(220, 232, 250),
+	},
+	EmptyBuilding = {
+		Brightness = 0,
+		Contrast = 0.06,
+		Saturation = -0.1,
+		TintColor = Color3.fromRGB(238, 240, 246),
+	},
+	StudioMMNineteen = {
+		Brightness = -0.01,
+		Contrast = 0.07,
+		Saturation = -0.08,
+		TintColor = Color3.fromRGB(232, 238, 248),
+	},
+}
+
+local MAP_BLOOM_PROFILES = {
+	LobbySocialHub = {
+		Intensity = 0.18,
+		Size = 20,
+		Threshold = 1.18,
+	},
+	AbandonedPalace = {
+		Intensity = 0.08,
+		Size = 14,
+		Threshold = 1.42,
+	},
+	HauntedHouse = {
+		Intensity = 0.07,
+		Size = 12,
+		Threshold = 1.48,
+	},
+	EmptyBuilding = {
+		Intensity = 0.1,
+		Size = 16,
+		Threshold = 1.34,
+	},
+	StudioMMNineteen = {
+		Intensity = 0.09,
+		Size = 15,
+		Threshold = 1.38,
+	},
+}
+
 local function ensureSanityColorCorrection()
 	local effect = Lighting:FindFirstChild("SensorySanityGrading")
 	if not effect then
@@ -200,6 +274,20 @@ local function ensureThreatColorCorrection()
 	return effect
 end
 
+local function ensureMapColorCorrection()
+	local effect = Lighting:FindFirstChild("SensoryMapGrading")
+	if not effect then
+		effect = Instance.new("ColorCorrectionEffect")
+		effect.Name = "SensoryMapGrading"
+		effect.Brightness = DEFAULT_MAP_GRADE.Brightness
+		effect.Contrast = DEFAULT_MAP_GRADE.Contrast
+		effect.Saturation = DEFAULT_MAP_GRADE.Saturation
+		effect.TintColor = DEFAULT_MAP_GRADE.TintColor
+		effect.Parent = Lighting
+	end
+	return effect
+end
+
 local function ensureGhostBlur()
 	local blur = Lighting:FindFirstChild("SensoryGhostBlur")
 	if not blur then
@@ -209,6 +297,19 @@ local function ensureGhostBlur()
 		blur.Parent = Lighting
 	end
 	return blur
+end
+
+local function ensureMapBloom()
+	local bloom = Lighting:FindFirstChild("SensoryMapBloom")
+	if not bloom then
+		bloom = Instance.new("BloomEffect")
+		bloom.Name = "SensoryMapBloom"
+		bloom.Intensity = DEFAULT_MAP_BLOOM.Intensity
+		bloom.Size = DEFAULT_MAP_BLOOM.Size
+		bloom.Threshold = DEFAULT_MAP_BLOOM.Threshold
+		bloom.Parent = Lighting
+	end
+	return bloom
 end
 
 local function ensureAtmosphere()
@@ -233,7 +334,9 @@ function VFXController:Init(context)
 	self._connections = {}
 	self._sanityCorrection = ensureSanityColorCorrection()
 	self._threatCorrection = ensureThreatColorCorrection()
+	self._mapCorrection = ensureMapColorCorrection()
 	self._ghostBlur = ensureGhostBlur()
+	self._mapBloom = ensureMapBloom()
 	self._atmosphere = ensureAtmosphere()
 	self._baseAtmosphereDensity = self._atmosphere and self._atmosphere.Density or DEFAULT_MAP_ATMOSPHERE.Density
 	self._baseAtmosphereOffset = self._atmosphere and self._atmosphere.Offset or DEFAULT_MAP_ATMOSPHERE.Offset
@@ -248,6 +351,13 @@ function VFXController:Init(context)
 	self._baseLightingOutdoorAmbient = Lighting.OutdoorAmbient
 	self._baseLightingDiffuseScale = Lighting.EnvironmentDiffuseScale
 	self._baseLightingSpecularScale = Lighting.EnvironmentSpecularScale
+	self._baseMapGradeBrightness = self._mapCorrection and self._mapCorrection.Brightness or DEFAULT_MAP_GRADE.Brightness
+	self._baseMapGradeContrast = self._mapCorrection and self._mapCorrection.Contrast or DEFAULT_MAP_GRADE.Contrast
+	self._baseMapGradeSaturation = self._mapCorrection and self._mapCorrection.Saturation or DEFAULT_MAP_GRADE.Saturation
+	self._baseMapGradeTint = self._mapCorrection and self._mapCorrection.TintColor or DEFAULT_MAP_GRADE.TintColor
+	self._baseMapBloomIntensity = self._mapBloom and self._mapBloom.Intensity or DEFAULT_MAP_BLOOM.Intensity
+	self._baseMapBloomSize = self._mapBloom and self._mapBloom.Size or DEFAULT_MAP_BLOOM.Size
+	self._baseMapBloomThreshold = self._mapBloom and self._mapBloom.Threshold or DEFAULT_MAP_BLOOM.Threshold
 	self._currentSanity = 100
 	self._huntActive = false
 	self._sanityTween = nil
@@ -534,9 +644,37 @@ function VFXController:_applyMapLighting(mapName)
 	Lighting.EnvironmentSpecularScale = profile.EnvironmentSpecularScale or self._baseLightingSpecularScale or DEFAULT_MAP_LIGHTING.EnvironmentSpecularScale
 end
 
+function VFXController:_applyMapGrade(mapName)
+	local profile = MAP_GRADE_PROFILES[mapName] or DEFAULT_MAP_GRADE
+	if self._mapCorrection then
+		self._baseMapGradeBrightness = profile.Brightness or DEFAULT_MAP_GRADE.Brightness
+		self._baseMapGradeContrast = profile.Contrast or DEFAULT_MAP_GRADE.Contrast
+		self._baseMapGradeSaturation = profile.Saturation or DEFAULT_MAP_GRADE.Saturation
+		self._baseMapGradeTint = profile.TintColor or DEFAULT_MAP_GRADE.TintColor
+		self._mapCorrection.Brightness = self._baseMapGradeBrightness
+		self._mapCorrection.Contrast = self._baseMapGradeContrast
+		self._mapCorrection.Saturation = self._baseMapGradeSaturation
+		self._mapCorrection.TintColor = self._baseMapGradeTint
+	end
+end
+
+function VFXController:_applyMapBloom(mapName)
+	local profile = MAP_BLOOM_PROFILES[mapName] or DEFAULT_MAP_BLOOM
+	if self._mapBloom then
+		self._baseMapBloomIntensity = profile.Intensity or DEFAULT_MAP_BLOOM.Intensity
+		self._baseMapBloomSize = profile.Size or DEFAULT_MAP_BLOOM.Size
+		self._baseMapBloomThreshold = profile.Threshold or DEFAULT_MAP_BLOOM.Threshold
+		self._mapBloom.Intensity = self._baseMapBloomIntensity
+		self._mapBloom.Size = self._baseMapBloomSize
+		self._mapBloom.Threshold = self._baseMapBloomThreshold
+	end
+end
+
 function VFXController:_applyMapVisualProfile(mapName)
 	self:_applyMapAtmosphere(mapName)
 	self:_applyMapLighting(mapName)
+	self:_applyMapGrade(mapName)
+	self:_applyMapBloom(mapName)
 end
 
 return setmetatable({}, VFXController)

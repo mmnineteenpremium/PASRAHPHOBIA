@@ -8387,6 +8387,57 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - lobby dan match sekarang punya tone lighting yang benar-benar berbeda di runtime, bukan hanya ilusi dari post-process
 - ini menutup bagian `material and lighting polish` pada level baseline sistemik sebelum masuk ke pass artistik map yang lebih berat
 
+## 2026-04-05 - Map Grade And Bloom Pass
+
+### Scope
+
+- melengkapi polish visual map dengan owner `grade` dan `bloom` yang tetap ringan, source-owned, dan satu jalur dengan `VFXController`
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah `DEFAULT_MAP_GRADE`
+  - tambah `DEFAULT_MAP_BLOOM`
+  - tambah `MAP_GRADE_PROFILES` untuk:
+    - `LobbySocialHub`
+    - `HauntedHouse`
+    - `EmptyBuilding`
+    - `AbandonedPalace`
+    - `StudioMMNineteen`
+  - tambah `MAP_BLOOM_PROFILES` untuk map yang sama
+  - tambah owner effect:
+    - `SensoryMapGrading` (`ColorCorrectionEffect`)
+    - `SensoryMapBloom` (`BloomEffect`)
+  - `Init()` sekarang menyimpan baseline grade/bloom
+  - `_applyMapVisualProfile()` sekarang mencakup:
+    - atmosphere
+    - lighting
+    - map grade
+    - bloom
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_map_grade_bloom_build.rbxlx`
+- validasi live Studio:
+  - saat boot lobby:
+    - `SensoryMapGrading.Brightness = 0.01`
+    - `Contrast = 0.04`
+    - `Saturation = -0.02`
+    - `Bloom.Intensity = 0.18`
+    - `Bloom.Size = 20`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)` dan phase `Briefing`:
+    - `SensoryMapGrading.Brightness = -0.01`
+    - `Contrast = 0.10`
+    - `Saturation = -0.16`
+    - `Bloom.Intensity = 0.07`
+    - `Bloom.Size = 12`
+
+### Interpretation
+
+- map sekarang punya karakter visual yang lebih terbedakan bahkan sebelum asset/material final diganti
+- ini menutup satu lapisan lagi dari item `material and lighting polish` tanpa membuka sistem visual baru di luar owner yang sudah ada
+
 ## 2026-04-05 - Cue-Aware Ghost And Jumpscare Audio Pass
 
 ### Scope
