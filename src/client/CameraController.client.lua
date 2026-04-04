@@ -34,6 +34,8 @@ local CURSOR_TOGGLE_FALLBACK_KEY = Enum.KeyCode.Backquote
 local CURSOR_UNLOCK_REQUEST_ATTR = "PasrahCursorUnlockRequested"
 local HEAD_BOB_PROBE_ATTR = "PasrahHeadBobProbeActive"
 local HEAD_BOB_OFFSET_ATTR = "PasrahHeadBobOffset"
+local FLASHLIGHT_VISUAL_ALPHA_ATTR = "PasrahFlashlightVisualAlpha"
+local FLASHLIGHT_LIGHT_ENABLED_ATTR = "PasrahFlashlightLightEnabled"
 local CURSOR_TOGGLE_GUI_NAME = "FPVCursorToggleUI"
 local CURSOR_TOGGLE_BUTTON_NAME = "CursorToggleButton"
 local function safeRequire(moduleScript)
@@ -66,6 +68,14 @@ local VIEWMODEL_ARM_BRIGHTNESS_SCALE = tonumber(VIEWMODEL_CONFIG.armBrightnessSc
 local VIEWMODEL_HAND_BRIGHTNESS_SCALE = tonumber(VIEWMODEL_CONFIG.handBrightnessScale) or 0.52
 local VIEWMODEL_ARM_MIN_CHANNEL = tonumber(VIEWMODEL_CONFIG.armMinChannel) or 0.12
 local VIEWMODEL_ARM_MAX_CHANNEL = tonumber(VIEWMODEL_CONFIG.armMaxChannel) or 0.62
+local LOCAL_LIGHT_ON_BRIGHTNESS = tonumber(LOCAL_LIGHT_CONFIG.brightness) or 1.35
+local LOCAL_LIGHT_ON_RANGE = tonumber(LOCAL_LIGHT_CONFIG.range) or 12
+local LOCAL_LIGHT_ON_ANGLE = tonumber(LOCAL_LIGHT_CONFIG.angle) or 24
+local LOCAL_LIGHT_OFF_BRIGHTNESS = tonumber(LOCAL_LIGHT_CONFIG.offBrightness) or 0
+local LOCAL_LIGHT_OFF_RANGE = tonumber(LOCAL_LIGHT_CONFIG.offRange) or 2
+local LOCAL_LIGHT_OFF_ANGLE = tonumber(LOCAL_LIGHT_CONFIG.offAngle) or 12
+local LOCAL_LIGHT_FADE_IN_SPEED = tonumber(LOCAL_LIGHT_CONFIG.fadeInSpeed) or 10
+local LOCAL_LIGHT_FADE_OUT_SPEED = tonumber(LOCAL_LIGHT_CONFIG.fadeOutSpeed) or 7
 local fpvArmsModel = nil
 local fpvFlashlightModel = nil
 local fpvFlashlightHandle = nil
@@ -77,7 +87,15 @@ local _fpvJustActivated = false
 local fpvCursorUnlocked = false
 local fpvCursorToggleGui = nil
 local fpvCursorToggleButton = nil
+local fpvFlashlightVisualAlpha = 0
 local setCursorUnlocked
+
+local function lerpNumber(a, b, alpha)
+	return a + ((b - a) * math.clamp(alpha, 0, 1))
+end
+
+player:SetAttribute(FLASHLIGHT_VISUAL_ALPHA_ATTR, 0)
+player:SetAttribute(FLASHLIGHT_LIGHT_ENABLED_ATTR, false)
 
 local function toneMapArmChannel(value)
 	return math.clamp(value, VIEWMODEL_ARM_MIN_CHANNEL, VIEWMODEL_ARM_MAX_CHANNEL)
@@ -227,6 +245,9 @@ local function clearFpvArms()
 	fpvFlashlightHandle = nil
 	fpvFlashlightLens = nil
 	fpvFlashlightLight = nil
+	fpvFlashlightVisualAlpha = 0
+	player:SetAttribute(FLASHLIGHT_VISUAL_ALPHA_ATTR, 0)
+	player:SetAttribute(FLASHLIGHT_LIGHT_ENABLED_ATTR, false)
 
 	for _, info in ipairs(fpvArmsSourceParts) do
 		local sourcePart = info.part
@@ -374,9 +395,9 @@ local function ensureLocalFlashlightLight(parent)
 	local spotlight = Instance.new("SpotLight")
 	spotlight.Name = "FPV_LocalSpotLight"
 	spotlight.Face = Enum.NormalId.Front
-	spotlight.Brightness = tonumber(LOCAL_LIGHT_CONFIG.brightness) or 1.35
-	spotlight.Range = tonumber(LOCAL_LIGHT_CONFIG.range) or 12
-	spotlight.Angle = tonumber(LOCAL_LIGHT_CONFIG.angle) or 24
+	spotlight.Brightness = LOCAL_LIGHT_OFF_BRIGHTNESS
+	spotlight.Range = LOCAL_LIGHT_OFF_RANGE
+	spotlight.Angle = LOCAL_LIGHT_OFF_ANGLE
 	spotlight.Color = LOCAL_LIGHT_CONFIG.color or Color3.fromRGB(255, 244, 214)
 	spotlight.Enabled = false
 	spotlight.Shadows = false
@@ -432,17 +453,34 @@ local function ensureFpvFlashlight(model, handPart)
 	return flashlightModel
 end
 
-local function updateFpvFlashlightVisual()
+local function updateFpvFlashlightVisual(deltaTime)
 	if not fpvFlashlightLens or not fpvFlashlightLens:IsA("BasePart") then
 		return
 	end
 
 	local enabled = player:GetAttribute(FLASHLIGHT_ATTRIBUTE) == true
-	fpvFlashlightLens.Color = enabled and (LENS_CONFIG.onColor or Color3.fromRGB(255, 232, 186)) or (LENS_CONFIG.offColor or Color3.fromRGB(120, 132, 148))
-	fpvFlashlightLens.Transparency = enabled and (LENS_CONFIG.onTransparency or 0.04) or (LENS_CONFIG.offTransparency or 0.36)
-	if fpvFlashlightLight then
-		fpvFlashlightLight.Enabled = enabled
+	local targetAlpha = enabled and 1 or 0
+	local fadeSpeed = enabled and LOCAL_LIGHT_FADE_IN_SPEED or LOCAL_LIGHT_FADE_OUT_SPEED
+	local stepAlpha = math.clamp((tonumber(deltaTime) or (1 / 60)) * fadeSpeed, 0, 1)
+	fpvFlashlightVisualAlpha = fpvFlashlightVisualAlpha + ((targetAlpha - fpvFlashlightVisualAlpha) * stepAlpha)
+	if math.abs(targetAlpha - fpvFlashlightVisualAlpha) <= 0.01 then
+		fpvFlashlightVisualAlpha = targetAlpha
 	end
+
+	local onColor = LENS_CONFIG.onColor or Color3.fromRGB(255, 232, 186)
+	local offColor = LENS_CONFIG.offColor or Color3.fromRGB(120, 132, 148)
+	local onTransparency = LENS_CONFIG.onTransparency or 0.04
+	local offTransparency = LENS_CONFIG.offTransparency or 0.36
+	fpvFlashlightLens.Color = offColor:Lerp(onColor, fpvFlashlightVisualAlpha)
+	fpvFlashlightLens.Transparency = lerpNumber(offTransparency, onTransparency, fpvFlashlightVisualAlpha)
+	if fpvFlashlightLight then
+		fpvFlashlightLight.Brightness = lerpNumber(LOCAL_LIGHT_OFF_BRIGHTNESS, LOCAL_LIGHT_ON_BRIGHTNESS, fpvFlashlightVisualAlpha)
+		fpvFlashlightLight.Range = lerpNumber(LOCAL_LIGHT_OFF_RANGE, LOCAL_LIGHT_ON_RANGE, fpvFlashlightVisualAlpha)
+		fpvFlashlightLight.Angle = lerpNumber(LOCAL_LIGHT_OFF_ANGLE, LOCAL_LIGHT_ON_ANGLE, fpvFlashlightVisualAlpha)
+		fpvFlashlightLight.Enabled = fpvFlashlightVisualAlpha > 0.02
+	end
+	player:SetAttribute(FLASHLIGHT_VISUAL_ALPHA_ATTR, fpvFlashlightVisualAlpha)
+	player:SetAttribute(FLASHLIGHT_LIGHT_ENABLED_ATTR, fpvFlashlightVisualAlpha > 0.02)
 end
 
 local function sanitizeFpvClonePart(clonePart, sourcePart, cloneName)
@@ -826,7 +864,7 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 	player:SetAttribute(HEAD_BOB_OFFSET_ATTR, humanoid.CameraOffset)
 
 	if FPV_LOCKED and camera and ensureFpvArms(character) and fpvArmsModel and fpvArmsModel.PrimaryPart then
-		updateFpvFlashlightVisual()
+		updateFpvFlashlightVisual(deltaTime)
 		local currentCamCF = camera.CFrame
 		if _fpvJustActivated then
 			_fpvJustActivated = false

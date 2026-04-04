@@ -6887,3 +6887,62 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - audio lingkungan sekarang sudah mengikuti konteks cue, bukan sekadar satu suara creak untuk semua kejadian.
 - jalur validasi teknis untuk audio client sekarang lebih kuat, sehingga pass SFX berikutnya tidak perlu menebak template mana yang benar-benar dipakai runtime.
+
+## 2026-04-04 - Flashlight Transition Realism Pass
+
+### Scope
+
+- memoles rasa flashlight FPV tanpa mengubah arsitektur sync existing.
+- fokus pada transisi nyala/mati yang halus agar flashlight tidak terasa seperti toggle instan yang “pop”.
+
+### Root Cause
+
+- setelah slice flashlight asset/hands-only selesai, local spotlight FPV masih hidup/mati secara instan.
+- hasilnya bentuk flashlight sudah benar, tetapi feel cahaya masih terasa mekanis dan kurang natural.
+
+### Implementation Notes
+
+- `src/shared/GameData/FlashlightConfig.lua` sekarang punya baseline transition untuk local light:
+  - `offBrightness = 0`
+  - `offRange = 2`
+  - `offAngle = 12`
+  - `fadeInSpeed = 10`
+  - `fadeOutSpeed = 7`
+- `src/client/CameraController.client.lua` sekarang:
+  - melacak `fpvFlashlightVisualAlpha`
+  - meng-lerp lens color/transparency antara state off/on
+  - meng-lerp `SpotLight.Brightness`, `Range`, dan `Angle`
+  - menulis atribut debug:
+    - `PasrahFlashlightVisualAlpha`
+    - `PasrahFlashlightLightEnabled`
+- reset `clearFpvArms()` sekarang juga membersihkan state visual alpha agar tidak mewariskan glow sisa antar state.
+
+### Validation Notes
+
+- build source sukses: `_tmp_flashlight_realism_build.rbxlx`
+- validasi live Studio via attribute harness menunjukkan:
+  - state off:
+    - `alpha = 0`
+    - `brightness = 0`
+    - `range = 2`
+    - `angle = 12`
+  - warm-up setelah toggle on:
+    - `alpha = 0.8651`
+    - `brightness = 1.1679`
+    - `range = 10.6511`
+    - `angle = 22.3814`
+  - state on penuh:
+    - `alpha = 1`
+    - `brightness = 1.35`
+    - `range = 12`
+    - `angle = 24`
+  - cooldown sesudah toggle off:
+    - tail glow turun bertahap, lalu setelah `0.65s` kembali:
+      - `alpha = 0`
+      - `brightness = 0`
+      - `PasrahFlashlightLightEnabled = false`
+
+### Interpretation
+
+- flashlight sekarang tidak lagi “meledak hidup” atau “mati putus” secara instan.
+- feel nyala/mati menjadi lebih natural, tetapi tetap menjaga readability karena state penuh masih mencapai parameter visibilitas yang sama dengan baseline sebelumnya.

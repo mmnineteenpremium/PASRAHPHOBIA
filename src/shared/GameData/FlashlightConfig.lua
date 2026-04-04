@@ -29,6 +29,11 @@ local FlashlightConfig = {
 		brightness = 1.35,
 		range = 12,
 		angle = 24,
+		offBrightness = 0,
+		offRange = 2,
+		offAngle = 12,
+		fadeInSpeed = 10,
+		fadeOutSpeed = 7,
 		color = Color3.fromRGB(255, 244, 214),
 	},
 	remoteLight = {
