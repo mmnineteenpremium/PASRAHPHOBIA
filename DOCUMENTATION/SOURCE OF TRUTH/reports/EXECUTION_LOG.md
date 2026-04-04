@@ -8699,3 +8699,39 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - pass ini membuat lobby lebih hidup tanpa mendorong map horror jadi terlalu terang
 - karena profile tetap per map dan nilainya rendah, perubahan ini aman untuk style horror dan tidak mengganggu UI
+
+## 2026-04-05 - Map Lighting Color Shift Pass
+
+### Scope
+
+- menambah lapisan tone pencahayaan yang lebih halus daripada grade:
+  - lobby butuh sedikit kehangatan agar terasa aman dan sosial
+  - map horror butuh sedikit dorongan biru-dingin tanpa merusak readability
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - `DEFAULT_MAP_LIGHTING` sekarang juga punya:
+    - `ColorShift_Top`
+    - `ColorShift_Bottom`
+  - `MAP_LIGHTING_PROFILES` untuk semua map aktif sekarang menetapkan tone atas/bawah masing-masing
+  - `Init()` sekarang menyimpan baseline `Lighting.ColorShift_Top/Bottom`
+  - `_applyMapLighting()` sekarang juga menerapkan `ColorShift_Top/Bottom`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_map_colorshift_profile_build.rbxlx`
+- validasi live Studio:
+  - boot lobby:
+    - `Lighting.ColorShift_Top ~= (0.039, 0.031, 0.016)`
+    - `Lighting.ColorShift_Bottom ~= (0.024, 0.016, 0.008)`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)`:
+    - `Workspace.ActiveMatches` aktif (`count = 1`)
+    - `Lighting.ColorShift_Top ~= (0, 0.024, 0.055)`
+    - `Lighting.ColorShift_Bottom ~= (0, 0.016, 0.039)`
+
+### Interpretation
+
+- tone ruang sekarang lebih terbaca bahkan sebelum pemain sadar akan fog/grade
+- karena nilai color shift dijaga halus, pass ini tetap aman untuk horror readability dan UI overlay
