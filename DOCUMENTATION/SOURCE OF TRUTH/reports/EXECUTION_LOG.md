@@ -8282,3 +8282,55 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - ambience sekarang kembali jujur sebagai placeholder, bukan heartbeat tersamar
 - manifest dan whisper akhirnya terpisah, sehingga pass audio berikutnya punya baseline yang lebih bersih untuk di-tune
+
+## 2026-04-04 - Map Atmosphere Profile Pass
+
+### Scope
+
+- menaikkan polish visual dari satu offset atmosfer global menjadi profile per map, lalu memastikan runtime client benar-benar berpindah profile saat phase match berubah
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah `DEFAULT_MAP_ATMOSPHERE`
+  - tambah `MAP_ATMOSPHERE_PROFILES` untuk:
+    - `LobbySocialHub`
+    - `HauntedHouse`
+    - `EmptyBuilding`
+    - `AbandonedPalace`
+    - `StudioMMNineteen`
+  - `ensureAtmosphere()` sekarang membuat `Atmosphere` dengan baseline yang lebih eksplisit:
+    - `Density`
+    - `Offset`
+    - `Color`
+    - `Decay`
+    - `Glare`
+    - `Haze`
+  - `Start()` sekarang menerapkan baseline lobby saat boot jika player belum `InMatch`
+  - `_handleMatchEvent()` sekarang juga membaca `PhaseChanged` supaya `mapId` canonical dari runtime client benar-benar dipakai
+  - `_applyMapAtmosphere()` sekarang memindahkan seluruh profile visual, bukan hanya `Offset`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_map_atmosphere_profiles_build.rbxlx`
+  - `_tmp_map_atmosphere_boot_guard_build.rbxlx`
+  - `_tmp_map_atmosphere_players_fix_build.rbxlx`
+  - `_tmp_map_atmosphere_matchid_fix_build.rbxlx`
+  - `_tmp_map_atmosphere_phasechange_fix_build.rbxlx`
+- validasi live Studio terbaru:
+  - setelah boot lobby:
+    - `density = 0.24`
+    - `offset = 0.10`
+    - `glare = 0.08`
+    - `haze = 1.2`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)` dan phase `Briefing`:
+    - `density = 0.44`
+    - `offset = 0.27`
+    - `glare = 0.14`
+    - `haze = 2.1`
+
+### Interpretation
+
+- lighting client sekarang punya pemisahan atmosfer lobby vs map yang benar-benar terbukti di runtime
+- ini menutup sebagian debt `material and lighting polish` pada level sensory baseline, meski pass artistik penuh map masih tersisa

@@ -789,6 +789,12 @@ Status:
   - `AmbientLoop_Main.SoundId = ""`
   - `GhostManifest_01.SoundId = rbxassetid://139204195403262`
   - `GhostWhisper_01.SoundId = rbxassetid://83336813491039`
+- pass map atmosphere sekarang tidak lagi hanya offset tunggal:
+  - `LobbySocialHub`, `HauntedHouse`, `EmptyBuilding`, `AbandonedPalace`, dan `StudioMMNineteen` punya profile `Density/Offset/Color/Decay/Glare/Haze` sendiri
+  - `VFXController` juga sekarang membaca `PhaseChanged.mapId`, bukan hanya `MatchStarted`, sehingga profile map benar-benar applied pada jalur runtime client yang canonical
+- validasi live Studio terbaru membuktikan perpindahan atmosfer:
+  - lobby baseline: `density=0.24`, `offset=0.10`, `glare=0.08`, `haze=1.2`
+  - setelah `HostStart(HauntedHouse)` dan phase `Briefing`: `density=0.44`, `offset=0.27`, `glare=0.14`, `haze=2.1`
 - catatan kandidat ambience:
   - kandidat Roblox `Cloudy Space (7399811837)` dan `No Light (7399814871)` sudah dicek lewat `MarketplaceService:GetProductInfo()`
   - keduanya `IsPublicDomain = false`, jadi tidak dipakai sebagai solusi publish-safe
