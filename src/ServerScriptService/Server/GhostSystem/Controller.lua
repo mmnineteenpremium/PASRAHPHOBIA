@@ -29,6 +29,34 @@ local function resolveEventBus(deps)
 	return nil
 end
 
+local function resolveMatchSystem(deps)
+	local matchSystem = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("MatchSystem"))
+		or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("MatchSystem"))
+		or (deps and deps.MatchSystem or nil)
+	if type(matchSystem) ~= "table" then
+		return nil
+	end
+	if type(matchSystem.GetLiveMatch) == "function" then
+		return matchSystem
+	end
+	if type(matchSystem.Service) == "table" and type(matchSystem.Service.GetLiveMatch) == "function" then
+		return matchSystem.Service
+	end
+	return nil
+end
+
+local function resolveMatchRemote()
+	local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	if not remoteFolder then
+		return nil
+	end
+	local remote = remoteFolder:FindFirstChild("MatchEvent")
+	if remote and remote:IsA("RemoteEvent") then
+		return remote
+	end
+	return nil
+end
+
 local function shouldTraceGhost()
 	return RunService:IsStudio() and ReplicatedStorage:GetAttribute(GHOST_TRACE_ATTRIBUTE) == true
 end
@@ -65,6 +93,8 @@ function Controller.new(state, service, deps)
 	self._deps = deps or {}
 	self._subscriptions = {}
 	self._eventBus = resolveEventBus(self._deps)
+	self._matchSystem = resolveMatchSystem(self._deps)
+	self._matchRemote = resolveMatchRemote()
 	self._handlersRegistered = false
 	self._gateway = nil
 	self._lastAggressionByMatch = {}
@@ -122,6 +152,12 @@ function Controller:RegisterEventHandlers()
 	self:_subscribe("EscalationStageChanged", function(payload)
 		self:OnEscalationStageChanged(payload)
 	end)
+	self:_subscribe("GhostManifest", function(payload)
+		self:OnGhostManifest(payload)
+	end)
+	self:_subscribe("GhostManifestEnd", function(payload)
+		self:OnGhostManifestEnd(payload)
+	end)
 
 	self._handlersRegistered = true
 end
@@ -152,6 +188,41 @@ end
 function Controller:_publish(eventName, payload)
 	if self._eventBus then
 		self._eventBus:Publish(eventName, payload)
+	end
+end
+
+function Controller:_forwardMatchEvent(eventName, payload)
+	local matchId = payload and payload.matchId
+	if not matchId then
+		return
+	end
+
+	local matchSystem = self._matchSystem or resolveMatchSystem(self._deps)
+	local remote = self._matchRemote or resolveMatchRemote()
+	if not matchSystem or not remote then
+		return
+	end
+
+	self._matchSystem = matchSystem
+	self._matchRemote = remote
+
+	local match = matchSystem:GetLiveMatch(matchId)
+	local players = type(match) == "table" and match.players or nil
+	if type(players) ~= "table" then
+		return
+	end
+
+	local clientPayload = {}
+	for key, value in pairs(payload or {}) do
+		clientPayload[key] = value
+	end
+	clientPayload.eventName = eventName
+	clientPayload.source = clientPayload.source or "GhostSystem"
+
+	for _, player in ipairs(players) do
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			remote:FireClient(player, clientPayload)
+		end
 	end
 end
 
@@ -355,6 +426,14 @@ function Controller:OnEscalationStageChanged(payload)
 	elseif stage == "Hunting" then
 		self._service:StartHunt(matchId, payload.snapshot, now)
 	end
+end
+
+function Controller:OnGhostManifest(payload)
+	self:_forwardMatchEvent("GhostManifest", payload)
+end
+
+function Controller:OnGhostManifestEnd(payload)
+	self:_forwardMatchEvent("GhostManifestEnd", payload)
 end
 
 return Controller

@@ -7,10 +7,12 @@ GhostAnimationPipeline.__index = GhostAnimationPipeline
 local EVENT_TO_ANIMATION = {
 	GhostSpawned = "GhostIdle",
 	GhostManifest = "GhostManifest",
+	GhostManifestEnd = "GhostIdle",
 	HuntStarted = "GhostHunt",
 	HuntEnded = "GhostIdle",
 	GhostAttack = "GhostAttack",
 	GhostJumpscare = "GhostJumpscare",
+	JumpscareTriggered = "GhostJumpscare",
 	MatchStarted = "GhostIdle",
 }
 
