@@ -1648,6 +1648,27 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (map color shift baseline)**.
   - **PENDING** tetap pada ambience legal final, polish material map, dan enrichment cue lingkungan/ghost.
 
+## Update 2026-04-05 17:37 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi spatial feel:
+  - `GhostAudio` dan `EnvironmentalAudio` tidak lagi selalu nempel ke kamera.
+  - client sekarang bisa memilih sumber suara dari:
+    - `position` payload eksplisit
+    - `room_anchor` jika hanya `roomId` yang tersedia
+    - `camera_fallback` jika data posisi belum ada
+- `StudioE2EControl` ditambah action `TriggerAudioCue` agar tuning spatial tidak lagi menunggu event ghost acak.
+- validasi live MCP:
+  - `EnvironmentalAudio` dengan `position = (1215.25, 3.5, -25)`:
+    - `PasrahAudioLastSpatialMode = position`
+    - `PasrahAudioLastSourcePosition = 1215.25, 3.50, -25.00`
+    - folder `Workspace.RuntimeAudioEmitters` terisi emitter runtime
+  - `GhostAudio` dengan `roomId = Kitchen`:
+    - `PasrahAudioLastSpatialMode = room_anchor`
+    - `PasrahAudioLastSourcePosition = 1230.00, 0.50, -25.00`
+- status:
+  - **SELESAI (ghost/environment spatial audio baseline)**.
+  - **PENDING** tetap pada ambience legal final dan enrichment cue yang benar-benar berbeda asset-nya.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

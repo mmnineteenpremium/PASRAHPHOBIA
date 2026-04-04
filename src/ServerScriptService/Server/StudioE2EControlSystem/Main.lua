@@ -106,6 +106,21 @@ local function countEntries(source)
 	return total
 end
 
+local function coerceVector3(value)
+	if typeof(value) == "Vector3" then
+		return value
+	end
+	if type(value) == "table" then
+		local x = tonumber(value.x or value.X)
+		local y = tonumber(value.y or value.Y)
+		local z = tonumber(value.z or value.Z)
+		if x and y and z then
+			return Vector3.new(x, y, z)
+		end
+	end
+	return nil
+end
+
 function StudioE2EControlSystem.new(deps)
 	local self = setmetatable({}, StudioE2EControlSystem)
 	self._deps = deps or {}
@@ -834,6 +849,60 @@ function StudioE2EControlSystem:_handleTriggerJumpscare(player, request)
 	return true, string.format("match=%s jumpscare=triggered", tostring(matchId))
 end
 
+function StudioE2EControlSystem:_handleTriggerAudioCue(player, request)
+	if not self._eventBus then
+		return false, "missing_event_bus"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local category = type(request) == "table" and tostring(request.category or "") or ""
+	local eventName = nil
+	if category == "AmbientAudio" then
+		eventName = "AmbientAudioTriggered"
+	elseif category == "EnvironmentalAudio" then
+		eventName = "EnvironmentalAudioTriggered"
+	elseif category == "GhostAudio" then
+		eventName = "GhostAudioTriggered"
+	elseif category == "FearAudio" then
+		eventName = "FearAudioTriggered"
+	elseif category == "HuntAudio" then
+		eventName = "HuntAudioTriggered"
+	elseif category == "JumpscareAudio" then
+		eventName = "JumpscareAudioTriggered"
+	else
+		return false, "invalid_audio_category"
+	end
+
+	local payload = {
+		matchId = matchId,
+		category = category,
+		cue = type(request) == "table" and request.cue or nil,
+		eventType = type(request) == "table" and request.eventType or nil,
+		roomId = type(request) == "table" and request.roomId or nil,
+		intensity = tonumber(type(request) == "table" and request.intensity) or 1.0,
+		now = os.clock(),
+		source = "StudioE2EControlSystem",
+	}
+	local position = coerceVector3(type(request) == "table" and request.position or nil)
+	if position then
+		payload.position = position
+	end
+
+	self._eventBus:Publish(eventName, payload)
+	return true, string.format(
+		"match=%s category=%s cue=%s roomId=%s position=%s",
+		tostring(matchId),
+		tostring(category),
+		tostring(payload.cue),
+		tostring(payload.roomId),
+		tostring(position)
+	)
+end
+
 function StudioE2EControlSystem:_handleHidingDebugSnapshot(player, request)
 	local hidingSystem = resolveSystem(self._deps, "HidingSystem")
 	if type(hidingSystem) ~= "table" then
@@ -992,6 +1061,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleConsumeHuntProtection(player, request)
 	elseif action == "TriggerJumpscare" then
 		ok, result = self:_handleTriggerJumpscare(player, request)
+	elseif action == "TriggerAudioCue" then
+		ok, result = self:_handleTriggerAudioCue(player, request)
 	elseif action == "HidingDebugSnapshot" then
 		ok, result = self:_handleHidingDebugSnapshot(player, request)
 	elseif action == "EnterHide" then

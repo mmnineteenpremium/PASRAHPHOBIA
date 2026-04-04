@@ -55,6 +55,8 @@ local AUDIO_DEBUG_ATTRS = {
 	soundId = "PasrahAudioLastSoundId",
 	volume = "PasrahAudioLastVolume",
 	playbackSpeed = "PasrahAudioLastPlaybackSpeed",
+	spatialMode = "PasrahAudioLastSpatialMode",
+	sourcePosition = "PasrahAudioLastSourcePosition",
 	playCount = "PasrahAudioPlayCount",
 }
 
@@ -93,6 +95,11 @@ local CUE_AUDIO_PROFILES = {
 	},
 }
 
+local SPATIAL_SOUND_CATEGORIES = {
+	EnvironmentalAudio = true,
+	GhostAudio = true,
+}
+
 local function resolveTemplate(root, pathSegments)
 	local cursor = root
 	for _, segment in ipairs(pathSegments or {}) do
@@ -116,6 +123,28 @@ local function normalizeCue(cue)
 	return tostring(cue or ""):gsub("[%s_%-]+", "_"):lower()
 end
 
+local function stringifyVector3(value)
+	if typeof(value) ~= "Vector3" then
+		return ""
+	end
+	return string.format("%.2f, %.2f, %.2f", value.X, value.Y, value.Z)
+end
+
+local function coerceVector3(value)
+	if typeof(value) == "Vector3" then
+		return value
+	end
+	if type(value) == "table" then
+		local x = tonumber(value.x or value.X)
+		local y = tonumber(value.y or value.Y)
+		local z = tonumber(value.z or value.Z)
+		if x and y and z then
+			return Vector3.new(x, y, z)
+		end
+	end
+	return nil
+end
+
 local function resolveCueProfile(category, payload)
 	local profiles = CUE_AUDIO_PROFILES[category]
 	if type(profiles) ~= "table" then
@@ -135,6 +164,35 @@ local function resolveCueProfile(category, payload)
 		end
 		if profiles[eventToken] then
 			return profiles[eventToken]
+		end
+	end
+
+	return nil
+end
+
+local function findNamedBasePart(root, ...)
+	if typeof(root) ~= "Instance" then
+		return nil
+	end
+
+	local tokens = {}
+	for _, value in ipairs({ ... }) do
+		local token = tostring(value or ""):gsub("[%s_%-]+", ""):lower()
+		if token ~= "" then
+			tokens[token] = true
+		end
+	end
+
+	if next(tokens) == nil then
+		return nil
+	end
+
+	for _, descendant in ipairs(root:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			local token = tostring(descendant.Name):gsub("[%s_%-]+", ""):lower()
+			if tokens[token] then
+				return descendant
+			end
 		end
 	end
 
@@ -233,6 +291,7 @@ function SoundSystem:Init(context)
 	self._lastOneShotAtByKey = {}
 	self._managedControllers = {}
 	self._activeSounds = {}
+	self._activeSpatialEmitters = {}
 	self._audioTemplates = {}
 	self._audioRoot = ReplicatedStorage
 	self._player = Players.LocalPlayer
@@ -242,12 +301,122 @@ function SoundSystem:Init(context)
 		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.cue, "")
 		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.eventType, "")
 		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.soundId, "")
+		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.spatialMode, "")
+		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.sourcePosition, "")
 		self._player:SetAttribute(AUDIO_DEBUG_ATTRS.playCount, 0)
 	end
 	self:_registerSensoryController("AudioController", AudioController, context)
 	self:_registerSensoryController("FootstepController", FootstepController, context)
 	self:_registerSensoryController("VFXController", VFXController, context)
 	self:_registerSensoryController("HorrorHUD", HorrorHUD, context)
+end
+
+function SoundSystem:_resolveActiveMatchContainer(matchId)
+	local activeMatches = Workspace:FindFirstChild("ActiveMatches")
+	if not activeMatches then
+		return nil
+	end
+
+	local resolvedMatchId = type(matchId) == "string" and matchId or nil
+	if not resolvedMatchId or resolvedMatchId == "" then
+		if self._player then
+			resolvedMatchId = self._player:GetAttribute("PasrahMatchId")
+				or self._player:GetAttribute("MatchId")
+		end
+	end
+
+	if type(resolvedMatchId) == "string" and resolvedMatchId ~= "" then
+		local named = activeMatches:FindFirstChild("Match_" .. resolvedMatchId)
+		if named then
+			return named
+		end
+	end
+
+	return activeMatches:GetChildren()[1]
+end
+
+function SoundSystem:_resolveRoomAnchor(matchId, roomId)
+	if type(roomId) ~= "string" or roomId == "" then
+		return nil
+	end
+
+	local container = self:_resolveActiveMatchContainer(matchId)
+	if not container then
+		return nil
+	end
+
+	local roomsRoot = container:FindFirstChild("Rooms", true) or container
+	return findNamedBasePart(roomsRoot, roomId, "Room_" .. roomId)
+		or findNamedBasePart(container, roomId, "Room_" .. roomId)
+end
+
+function SoundSystem:_ensureRuntimeAudioEmitterFolder()
+	local folder = Workspace:FindFirstChild("RuntimeAudioEmitters")
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = "RuntimeAudioEmitters"
+		folder.Parent = Workspace
+	end
+	return folder
+end
+
+function SoundSystem:_createSpatialEmitter(position, category)
+	if typeof(position) ~= "Vector3" then
+		return nil
+	end
+
+	local part = Instance.new("Part")
+	part.Name = tostring(category or "Audio") .. "Emitter"
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.Transparency = 1
+	part.Size = Vector3.new(0.2, 0.2, 0.2)
+	part.CFrame = CFrame.new(position)
+	part.Parent = self:_ensureRuntimeAudioEmitterFolder()
+	return part
+end
+
+function SoundSystem:_resolvePlaybackTarget(category, payload)
+	if SPATIAL_SOUND_CATEGORIES[category] ~= true then
+		return {
+			parent = self:_getParentForCategory(category),
+			spatialMode = "camera",
+			sourcePosition = "",
+			emitterPart = nil,
+		}
+	end
+
+	local position = coerceVector3(payload and payload.position)
+	if position then
+		local emitterPart = self:_createSpatialEmitter(position, category)
+		if emitterPart then
+			return {
+				parent = emitterPart,
+				spatialMode = "position",
+				sourcePosition = stringifyVector3(position),
+				emitterPart = emitterPart,
+			}
+		end
+	end
+
+	local roomAnchor = self:_resolveRoomAnchor(payload and payload.matchId, payload and payload.roomId)
+	if roomAnchor then
+		return {
+			parent = roomAnchor,
+			spatialMode = "room_anchor",
+			sourcePosition = stringifyVector3(roomAnchor.Position),
+			emitterPart = nil,
+		}
+	end
+
+	return {
+		parent = self:_getParentForCategory(category),
+		spatialMode = "camera_fallback",
+		sourcePosition = "",
+		emitterPart = nil,
+	}
 end
 
 function SoundSystem:Stop()
@@ -361,6 +530,8 @@ function SoundSystem:_recordAudioDebug(category, template, payload)
 	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.soundId, tostring(template and template.SoundId or ""))
 	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.volume, tonumber(template and template.Volume) or 0)
 	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.playbackSpeed, tonumber(template and template.PlaybackSpeed) or 1)
+	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.spatialMode, tostring(template and template:GetAttribute("PasrahSpatialMode") or ""))
+	self._player:SetAttribute(AUDIO_DEBUG_ATTRS.sourcePosition, tostring(template and template:GetAttribute("PasrahAudioSourcePosition") or ""))
 	self._player:SetAttribute(
 		AUDIO_DEBUG_ATTRS.playCount,
 		(tonumber(self._player:GetAttribute(AUDIO_DEBUG_ATTRS.playCount)) or 0) + 1
@@ -390,6 +561,12 @@ function SoundSystem:_applySoundProfile(sound, category, payload)
 	if cueProfile and tonumber(cueProfile.playbackSpeed) then
 		sound.PlaybackSpeed = math.clamp(sound.PlaybackSpeed * tonumber(cueProfile.playbackSpeed), 0.82, 1.28)
 	end
+	if SPATIAL_SOUND_CATEGORIES[category] == true then
+		sound.RollOffMode = Enum.RollOffMode.InverseTapered
+		sound.RollOffMinDistance = 8
+		sound.RollOffMaxDistance = category == "GhostAudio" and 55 or 48
+		sound.EmitterSize = category == "GhostAudio" and 7 or 5
+	end
 end
 
 function SoundSystem:_stopActiveSound(category)
@@ -399,6 +576,11 @@ function SoundSystem:_stopActiveSound(category)
 		sound:Destroy()
 	end
 	self._activeSounds[category] = nil
+	local emitterPart = self._activeSpatialEmitters[category]
+	if emitterPart and emitterPart.Parent then
+		emitterPart:Destroy()
+	end
+	self._activeSpatialEmitters[category] = nil
 end
 
 function SoundSystem:_stopAllAudio()
@@ -420,14 +602,18 @@ function SoundSystem:_playLoopedCategory(category, template, payload)
 
 	self:_stopActiveSound(category)
 
+	local playbackTarget = self:_resolvePlaybackTarget(category, payload)
 	local runtimeSound = template:Clone()
 	runtimeSound.Name = category .. "Runtime"
 	runtimeSound.Looped = true
-	runtimeSound.Parent = self:_getParentForCategory(category)
+	runtimeSound.Parent = playbackTarget.parent
+	runtimeSound:SetAttribute("PasrahSpatialMode", playbackTarget.spatialMode)
+	runtimeSound:SetAttribute("PasrahAudioSourcePosition", playbackTarget.sourcePosition)
 	self:_applySoundProfile(runtimeSound, category, payload)
 	self:_recordAudioDebug(category, runtimeSound, payload)
 	runtimeSound:Play()
 	self._activeSounds[category] = runtimeSound
+	self._activeSpatialEmitters[category] = playbackTarget.emitterPart
 end
 
 function SoundSystem:_playOneShotCategory(category, template, payload)
@@ -446,15 +632,24 @@ function SoundSystem:_playOneShotCategory(category, template, payload)
 	local runtimeSound = template:Clone()
 	runtimeSound.Name = category .. "Runtime"
 	runtimeSound.Looped = false
-	runtimeSound.Parent = self:_getParentForCategory(category)
+	local playbackTarget = self:_resolvePlaybackTarget(category, payload)
+	runtimeSound.Parent = playbackTarget.parent
+	runtimeSound:SetAttribute("PasrahSpatialMode", playbackTarget.spatialMode)
+	runtimeSound:SetAttribute("PasrahAudioSourcePosition", playbackTarget.sourcePosition)
 	self:_applySoundProfile(runtimeSound, category, payload)
 	self:_recordAudioDebug(category, runtimeSound, payload)
 	runtimeSound.Ended:Connect(function()
 		if runtimeSound.Parent then
 			runtimeSound:Destroy()
 		end
+		if playbackTarget.emitterPart and playbackTarget.emitterPart.Parent then
+			playbackTarget.emitterPart:Destroy()
+		end
 	end)
 	runtimeSound:Play()
+	if playbackTarget.emitterPart then
+		Debris:AddItem(playbackTarget.emitterPart, math.max(runtimeSound.TimeLength + 1, 6))
+	end
 	Debris:AddItem(runtimeSound, math.max(runtimeSound.TimeLength + 1, 6))
 end
 
