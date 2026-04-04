@@ -7413,3 +7413,39 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - player publish tidak lagi melihat etalase `Robux` yang masih bertuliskan `SETUP` atau belum siap.
 - developer tetap bisa melihat placeholder di Studio sampai `marketplaceId` Creator Hub selesai diisi.
+
+## 2026-04-04 - Entitlement Ownership Ready For Shop Snapshot
+
+### Scope
+
+- memastikan item entitlement `Robux` dengan `grantItem = false` tetap bisa tampil `OWNED` setelah grant
+- menutup bug snapshot shop yang sebelumnya hanya membaca inventory/cosmetic ownership
+
+### Source Changes
+
+- `src/ServerScriptService/Server/EconomySystem/Service.lua`
+  - tambah:
+    - `GetPassOwnership(player)`
+    - `HasPass(player, passKey)`
+- `src/ServerScriptService/Server/ShopSystem/Service.lua`
+  - tambah resolver entitlement:
+    - `_ownsRoyalPassPremium(player)`
+    - `_ownsEntitlement(player, item)`
+  - `_alreadyOwned(...)` sekarang juga mengecek:
+    - `RoyalPass premium`
+    - `entitlementKey` yang tersimpan di `EconomySystem`
+  - `BuildClientSnapshot()` sekarang memasukkan entitlement yang sudah aktif ke `ownedItemIds`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_entitlement_ownership_build.rbxlx`
+- validasi live marketplace entitlement belum bisa ditutup karena `marketplaceId` Creator Hub masih `0`
+- interpretasi status:
+  - ini adalah `source-hardening`
+  - live `GamePass` prompt + ownership sync tetap pending sampai ID resmi diisi
+
+### Interpretation
+
+- saat nanti `GamePass` resmi diaktifkan, shop snapshot tidak lagi bohong dengan terus menampilkan item entitlement sebagai belum dimiliki.
+- ini penting untuk `royalpass_premium_track`, `class_dukun_unlock`, `class_detective_unlock`, dan `lifetime_bonus_pass`.
