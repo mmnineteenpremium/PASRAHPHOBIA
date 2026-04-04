@@ -2322,6 +2322,75 @@ local function getHuntControlsHintText()
 	return string.format("PINTU: E/X/TAP  •  TARGET: %s  •  JANGAN LARI LURUS", refugeHint)
 end
 
+local function getHuntAssistSnapshot()
+	local snapshot = getHuntStatusSnapshot()
+	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
+	local refugeHint = getRefugeHintText(nearestRefuge)
+	local alternateHint = getRefugeHintText(alternateRefuge)
+	local zoneLabel = snapshot.hideZoneId ~= ""
+		and (resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType) or snapshot.hideZoneId)
+		or refugeHint
+	local distanceText = type(snapshot.threatDistance) == "number"
+		and string.format("%dst", math.max(0, math.floor(snapshot.threatDistance + 0.5)))
+		or "?"
+
+	if snapshot.hideState == "Hidden" then
+		return {
+			badgeText = "HIDDEN",
+			badgeColor = Color3.fromRGB(62, 128, 94),
+			overlayColor = Color3.fromRGB(8, 24, 16),
+			routeText = "POSISI: " .. string.upper(zoneLabel),
+			supportText = "DIAM  •  TUNGGU HUNT SELESAI  •  JANGAN KELUAR",
+		}
+	end
+
+	if snapshot.threatState == "Sheltered" then
+		return {
+			badgeText = "SHELTERED",
+			badgeColor = Color3.fromRGB(78, 116, 152),
+			overlayColor = Color3.fromRGB(10, 18, 30),
+			routeText = "AMAN DI: " .. string.upper(refugeHint),
+			supportText = "HOLD POSISI  •  MINIM GERAK  •  TUNGGU WINDOW HUNT",
+		}
+	end
+
+	if snapshot.threatState == "Critical" or snapshot.threatState == "Close" then
+		local supportText = "PUTUS LOS  •  PINTU: E/X/TAP  •  TARGET " .. string.upper(refugeHint)
+		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
+			supportText ..= "  •  ALT " .. string.upper(alternateHint)
+		end
+		return {
+			badgeText = "CRITICAL",
+			badgeColor = Color3.fromRGB(164, 62, 62),
+			overlayColor = Color3.fromRGB(26, 6, 8),
+			routeText = "GHOST " .. distanceText .. "  •  ROTASI SEKARANG",
+			supportText = supportText,
+		}
+	end
+
+	if snapshot.threatState == "Tracked" or snapshot.threatState == "Warn" then
+		local supportText = "PUTAR JALUR  •  JAGA JARAK  •  TARGET " .. string.upper(refugeHint)
+		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
+			supportText ..= "  •  ALT " .. string.upper(alternateHint)
+		end
+		return {
+			badgeText = "TRACKED",
+			badgeColor = Color3.fromRGB(168, 112, 54),
+			overlayColor = Color3.fromRGB(26, 16, 6),
+			routeText = "GHOST " .. distanceText .. "  •  PAKSA PUTUS LOS",
+			supportText = supportText,
+		}
+	end
+
+	return {
+		badgeText = "HUNT",
+		badgeColor = Color3.fromRGB(112, 74, 74),
+		overlayColor = Color3.fromRGB(12, 8, 10),
+		routeText = "TARGET: " .. string.upper(refugeHint),
+		supportText = "PINTU: E/X/TAP  •  JANGAN LARI LURUS  •  SIAP ROTASI",
+	}
+end
+
 local function bulletList(list, emptyText)
 	if type(list) ~= "table" or #list == 0 then
 		return emptyText or "- Tidak ada"
@@ -4483,6 +4552,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		or "Lobby"
 	)
 	payload = payload or self._phasePayload
+	local huntAssistSnapshot = viewState == "Hunt" and getHuntAssistSnapshot() or nil
 
 	local badgeText = "STATUS MATCH"
 	local badgeColor = Color3.fromRGB(62, 80, 104)
@@ -4609,6 +4679,23 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			and getHuntControlsHintText()
 			or self._matchControlsHintText
 	end
+	if match.HuntStatusBadge then
+		match.HuntStatusBadge.Visible = viewState == "Hunt" and huntAssistSnapshot ~= nil
+		if huntAssistSnapshot then
+			match.HuntStatusBadge.Text = huntAssistSnapshot.badgeText
+			match.HuntStatusBadge.BackgroundColor3 = huntAssistSnapshot.badgeColor
+		end
+	end
+	if match.HuntAssistLabel then
+		match.HuntAssistLabel.Visible = viewState == "Hunt" and huntAssistSnapshot ~= nil
+		if huntAssistSnapshot then
+			match.HuntAssistLabel.Text = huntAssistSnapshot.routeText .. "\n" .. huntAssistSnapshot.supportText
+			match.HuntAssistLabel.BackgroundColor3 = huntAssistSnapshot.badgeColor:Lerp(Color3.fromRGB(14, 18, 26), 0.7)
+		end
+	end
+	if match.HuntOverlay and huntAssistSnapshot then
+		match.HuntOverlay.BackgroundColor3 = huntAssistSnapshot.overlayColor
+	end
 	if match.ObjectiveLabel then
 		if viewState == "Hunt" then
 			match.ObjectiveLabel.Text = getHuntObjectiveText()
@@ -4616,6 +4703,9 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		elseif viewState == "Investigation" then
 			match.ObjectiveLabel.Text = DEFAULT_MATCH_OBJECTIVE_TEXT
 			match.ObjectiveLabel.Visible = true
+		else
+			match.ObjectiveLabel.Text = ""
+			match.ObjectiveLabel.Visible = false
 		end
 	end
 	self:_updateMatchSummaryRows(match.BasicSummaryRows, viewState)
@@ -7908,6 +7998,12 @@ function UISystem:_applyDeviceSizing()
 	if match and match.MessageLabel and match.ObjectiveLabel then
 		match.MessageLabel.TextSize = profile:GetTextSize() + 8
 		match.ObjectiveLabel.TextSize = profile:GetTextSize()
+		if match.HuntStatusBadge then
+			match.HuntStatusBadge.TextSize = math.max(11, profile:GetTextSize() - 2)
+		end
+		if match.HuntAssistLabel then
+			match.HuntAssistLabel.TextSize = math.max(12, profile:GetTextSize() - 1)
+		end
 	end
 	if match and match.BasicPrimaryLabel and match.BasicSecondaryLabel then
 		local matchCompact = profile.isMobile or viewportSize.X <= 960
@@ -7924,6 +8020,8 @@ function UISystem:_applyDeviceSizing()
 		local footerWidth = matchCompact and (resolvedPanelWidth - 24) or (resolvedPanelWidth - 178)
 		local summaryY = matchCompact and 182 or 168
 		local summaryHeight = resolvedPanelHeight - summaryY - (matchCompact and 86 or 76)
+		local huntObjectiveWidth = matchCompact and math.max(280, math.floor(viewportSize.X - 48)) or 360
+		local huntAssistWidth = matchCompact and math.max(280, math.floor(viewportSize.X - 48)) or 500
 
 		if match.BasicPanel then
 			if matchCompact then
@@ -7934,6 +8032,22 @@ function UISystem:_applyDeviceSizing()
 				match.BasicPanel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0, 16 + topLeftInset.Y)
 			end
 			match.BasicPanel.Size = UDim2.fromOffset(resolvedPanelWidth, resolvedPanelHeight)
+		end
+		if match.ObjectiveLabel then
+			match.ObjectiveLabel.Position = UDim2.fromOffset(24, 24 + topLeftInset.Y)
+			match.ObjectiveLabel.Size = UDim2.fromOffset(huntObjectiveWidth, matchCompact and 62 or 54)
+		end
+		if match.HuntStatusBadge then
+			if matchCompact then
+				match.HuntStatusBadge.Position = UDim2.fromOffset(24, 94 + topLeftInset.Y)
+			else
+				match.HuntStatusBadge.Position = UDim2.fromOffset(392, 24 + topLeftInset.Y)
+			end
+			match.HuntStatusBadge.Size = UDim2.fromOffset(matchCompact and 118 or 132, 26)
+		end
+		if match.HuntAssistLabel then
+			match.HuntAssistLabel.Position = UDim2.fromOffset(24, (matchCompact and 128 or 88) + topLeftInset.Y)
+			match.HuntAssistLabel.Size = UDim2.fromOffset(huntAssistWidth, matchCompact and 58 or 46)
 		end
 		if match.HeaderCard then
 			match.HeaderCard.Position = UDim2.fromOffset(12, 42)
@@ -9255,7 +9369,7 @@ function UISystem:_ensureUXLayers()
 		objective.Name = "ObjectiveLabel"
 		objective.Active = false
 		objective.Selectable = false
-		objective.ZIndex = 1
+		objective.ZIndex = 2
 		objective.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
 		objective.BackgroundTransparency = 0.2
 		objective.Position = UDim2.fromOffset(24, 24)
@@ -9266,6 +9380,61 @@ function UISystem:_ensureUXLayers()
 		objective.TextWrapped = true
 		objective.Visible = false
 		objective.Parent = matchLayer
+	end
+
+	local huntStatusBadge = matchLayer:FindFirstChild("HuntStatusBadge")
+	if not huntStatusBadge then
+		huntStatusBadge = Instance.new("TextLabel")
+		huntStatusBadge.Name = "HuntStatusBadge"
+		huntStatusBadge.Active = false
+		huntStatusBadge.Selectable = false
+		huntStatusBadge.ZIndex = 3
+		huntStatusBadge.BackgroundColor3 = Color3.fromRGB(164, 62, 62)
+		huntStatusBadge.BackgroundTransparency = 0.1
+		huntStatusBadge.Position = UDim2.fromOffset(392, 24)
+		huntStatusBadge.Size = UDim2.fromOffset(132, 26)
+		huntStatusBadge.Font = Enum.Font.GothamBold
+		huntStatusBadge.Text = "HUNT"
+		huntStatusBadge.TextColor3 = Color3.fromRGB(248, 240, 232)
+		huntStatusBadge.TextSize = 13
+		huntStatusBadge.Visible = false
+		huntStatusBadge.Parent = matchLayer
+
+		local huntStatusCorner = Instance.new("UICorner")
+		huntStatusCorner.CornerRadius = UDim.new(0, 999)
+		huntStatusCorner.Parent = huntStatusBadge
+	end
+
+	local huntAssistLabel = matchLayer:FindFirstChild("HuntAssistLabel")
+	if not huntAssistLabel then
+		huntAssistLabel = Instance.new("TextLabel")
+		huntAssistLabel.Name = "HuntAssistLabel"
+		huntAssistLabel.Active = false
+		huntAssistLabel.Selectable = false
+		huntAssistLabel.ZIndex = 2
+		huntAssistLabel.BackgroundColor3 = Color3.fromRGB(16, 20, 28)
+		huntAssistLabel.BackgroundTransparency = 0.16
+		huntAssistLabel.Position = UDim2.fromOffset(24, 88)
+		huntAssistLabel.Size = UDim2.fromOffset(500, 46)
+		huntAssistLabel.Font = Enum.Font.GothamSemibold
+		huntAssistLabel.Text = ""
+		huntAssistLabel.TextColor3 = Color3.fromRGB(236, 240, 246)
+		huntAssistLabel.TextSize = 14
+		huntAssistLabel.TextWrapped = true
+		huntAssistLabel.TextXAlignment = Enum.TextXAlignment.Left
+		huntAssistLabel.TextYAlignment = Enum.TextYAlignment.Center
+		huntAssistLabel.Visible = false
+		huntAssistLabel.Parent = matchLayer
+
+		local huntAssistCorner = Instance.new("UICorner")
+		huntAssistCorner.CornerRadius = UDim.new(0, 10)
+		huntAssistCorner.Parent = huntAssistLabel
+
+		local huntAssistStroke = Instance.new("UIStroke")
+		huntAssistStroke.Thickness = 1
+		huntAssistStroke.Color = Color3.fromRGB(78, 86, 102)
+		huntAssistStroke.Transparency = 0.26
+		huntAssistStroke.Parent = huntAssistLabel
 	end
 
 	local overlay = matchLayer:FindFirstChild("HuntOverlay")
@@ -9496,6 +9665,8 @@ function UISystem:_ensureUXLayers()
 	self._uxWidgets.lobby.Layer = lobbyLayer
 	self._uxWidgets.match.MessageLabel = matchMessage
 	self._uxWidgets.match.ObjectiveLabel = objective
+	self._uxWidgets.match.HuntStatusBadge = huntStatusBadge
+	self._uxWidgets.match.HuntAssistLabel = huntAssistLabel
 	self._uxWidgets.match.HuntOverlay = overlay
 	self._uxWidgets.match.ResultsPanel = results
 	self._uxWidgets.match.ResultsCard = resultsCard
@@ -9536,8 +9707,17 @@ function UISystem:_clearMatchUX()
 		match.ObjectiveLabel.Visible = false
 		match.ObjectiveLabel.Text = ""
 	end
+	if match.HuntStatusBadge then
+		match.HuntStatusBadge.Visible = false
+		match.HuntStatusBadge.Text = ""
+	end
+	if match.HuntAssistLabel then
+		match.HuntAssistLabel.Visible = false
+		match.HuntAssistLabel.Text = ""
+	end
 	if match.HuntOverlay then
 		match.HuntOverlay.Visible = false
+		match.HuntOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 		match.HuntOverlay.BackgroundTransparency = 0.6
 	end
 	if match.ResultsPanel then
