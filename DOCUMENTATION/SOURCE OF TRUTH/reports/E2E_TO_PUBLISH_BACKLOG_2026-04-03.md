@@ -1930,6 +1930,25 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (ambient investigation cadence baseline)**.
   - **PENDING** hanya bila nanti ingin mengganti ke `ambient loop` custom/final yang benar-benar legal dan artistik, bukan karena jalur ambience saat ini kosong.
 
+## Update 2026-04-05 20:06 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju di sisi readability survival:
+  - `MatchUX` sekarang menampilkan `HuntStatusBadge` dan `HuntAssistLabel` yang berubah mengikuti state `hunt/tracked/hidden/sheltered`.
+  - objective hunt kini lebih sinkron dengan status survive, bukan hanya paragraf generik.
+  - overlay hunt ikut mengambil warna berdasar intensitas ancaman.
+- validasi live MCP:
+  - baseline hunt:
+    - `badge=HUNT`
+    - `assist=TARGET: CLOSET B 46ST`
+    - `assistLine2=PINTU: E/X/TAP  •  JANGAN LARI LURUS  •  SIAP ROTASI`
+  - smoke `hidden` untuk jalur HUD:
+    - `badge=HIDDEN`
+    - `assist=POSISI: CLOSETB`
+    - `objective=Berlindung di ClosetB. Diam dan tunggu hunt selesai sebelum keluar.`
+- status:
+  - **SELESAI (hunt readability HUD baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut slice restruktur akses/traversal visual dan affordance in-map yang masih terasa basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

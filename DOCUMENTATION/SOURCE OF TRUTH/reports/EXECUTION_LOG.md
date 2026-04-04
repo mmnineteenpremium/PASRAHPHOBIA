@@ -9464,3 +9464,40 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - feedback zona lobby sekarang tidak lagi “benar di state, hilang di layar”
+
+## 2026-04-05 - Hunt Readability HUD Pass
+
+### Scope
+
+- memperjelas instruksi survive saat hunt langsung di `MatchUX`
+- menampilkan badge ancaman, route singkat, dan assist line yang berubah mengikuti state pemain
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah `getHuntAssistSnapshot()` untuk merangkum state `hunt/tracked/hidden/sheltered`
+  - tambah widget `HuntStatusBadge` dan `HuntAssistLabel` di `MatchUX`
+  - overlay hunt kini ikut mengambil warna berdasarkan ancaman
+  - objective hunt kini disembunyikan di luar phase yang relevan
+  - sizing mobile/compact untuk objective + hunt assist ikut diperbarui
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_hunt_readability_build.rbxlx`
+- validasi live Studio:
+  - hunt baseline:
+    - `badgeVisible=true`
+    - `badge=HUNT`
+    - `assist=TARGET: CLOSET B 46ST`
+    - `assistLine2=PINTU: E/X/TAP  •  JANGAN LARI LURUS  •  SIAP ROTASI`
+  - hidden smoke untuk HUD:
+    - `badge=HIDDEN`
+    - `assist=POSISI: CLOSETB`
+    - `assistLine2=DIAM  •  TUNGGU HUNT SELESAI  •  JANGAN KELUAR`
+    - `objective=Berlindung di ClosetB. Diam dan tunggu hunt selesai sebelum keluar.`
+
+### Interpretation
+
+- pemain sekarang mendapat guidance survive yang lebih terbaca saat panik, tanpa harus membuka jurnal atau menebak state backend
+- jalur UI hunt sudah cukup eksplisit untuk lanjut ke slice phase 18 berikutnya
