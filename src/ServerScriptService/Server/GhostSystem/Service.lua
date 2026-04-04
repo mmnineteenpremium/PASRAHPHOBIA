@@ -31,15 +31,23 @@ local GHOST_TEMPLATE_VISUAL_OFFSETS = {
 }
 
 local GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {
-	Pocong = Vector3.new(1.4, 5.2, 1.2),
+	Pocong = Vector3.new(1.08, 3.65, 0.96),
 }
 
 local GHOST_TEMPLATE_TARGET_BOUNDS = {
-	Pocong = Vector3.new(2.0, 5.2, 1.6),
+	Pocong = Vector3.new(1.6, 3.75, 1.18),
 	Kuntilanak = Vector3.new(3.5, 4.8, 1.8),
 	KuntilanakAggressive = Vector3.new(2.2, 5.4, 1.8),
 	Genderuwo = Vector3.new(3.4, 5.8, 2.6),
 	Leak = Vector3.new(2.0, 4.8, 2.35),
+}
+
+local GHOST_VISUAL_MOVE_SPEED_BY_STATE = {
+	Idle = 1.75,
+	Roaming = 3.6,
+	Manifestation = 4.4,
+	Hunting = 7.8,
+	Cooldown = 2.1,
 }
 
 local GHOST_VISUAL_TRANSPARENCY_BY_STATE = {
@@ -203,6 +211,7 @@ end
 
 local GHOST_RETRY_COUNT = 3
 local GHOST_RETRY_WAIT = 0.05
+local GHOST_VISUAL_SYNC_INTERVAL = 0.1
 
 local function safeRequire(moduleScript)
 	if not moduleScript then
@@ -535,6 +544,37 @@ local function flattenLookVector(vector)
 	return flat.Unit
 end
 
+local function moveTowardsVector3(currentPosition, targetPosition, maxStep)
+	if typeof(currentPosition) ~= "Vector3" then
+		return targetPosition
+	end
+	if typeof(targetPosition) ~= "Vector3" then
+		return currentPosition
+	end
+
+	local delta = targetPosition - currentPosition
+	local distance = delta.Magnitude
+	if distance <= 0.001 or maxStep <= 0 then
+		return targetPosition
+	end
+	if distance <= maxStep then
+		return targetPosition
+	end
+	return currentPosition + (delta.Unit * maxStep)
+end
+
+local function resetGhostVisualMotion(match, targetPosition, roomId)
+	if type(match) ~= "table" then
+		return
+	end
+
+	match.ghostVisualCurrentPosition = targetPosition
+	match.ghostVisualTargetPosition = targetPosition
+	match.ghostVisualCurrentRoomId = roomId
+	match.ghostVisualTargetRoomId = roomId
+	match.ghostVisualLastSyncAt = Workspace:GetServerTimeNow()
+end
+
 local function computeGhostVisualCFrame(ghostModel, targetPosition, ghostState, stateName, seedValue)
 	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") or typeof(targetPosition) ~= "Vector3" then
 		return nil
@@ -694,6 +734,8 @@ function Service.new(state, deps)
 	self._matchSystem = Services.Get(self._deps, "MatchSystem")
 	self._mapDatabase = loadMapDatabase()
 	self._ghostDatabase = loadGhostDatabase()
+	self._visualSyncConnection = nil
+	self._visualSyncAccumulator = 0
 	return self
 end
 
@@ -703,9 +745,30 @@ end
 
 function Service:Start()
 	self._ghostService:Start()
+	if self._visualSyncConnection then
+		self._visualSyncConnection:Disconnect()
+	end
+	self._visualSyncAccumulator = 0
+	self._visualSyncConnection = RunService.Heartbeat:Connect(function(deltaTime)
+		self._visualSyncAccumulator += deltaTime
+		if self._visualSyncAccumulator < GHOST_VISUAL_SYNC_INTERVAL then
+			return
+		end
+
+		self._visualSyncAccumulator = 0
+		local sessions = self._state:Get("sessions") or {}
+		for matchId in pairs(sessions) do
+			self:_syncGhostVisualByMatch(matchId)
+		end
+	end)
 end
 
 function Service:Stop()
+	if self._visualSyncConnection then
+		self._visualSyncConnection:Disconnect()
+		self._visualSyncConnection = nil
+	end
+	self._visualSyncAccumulator = 0
 	self._ghostService:Stop()
 end
 
@@ -845,9 +908,45 @@ function Service:_syncGhostVisual(match, ghostState)
 	local roomAnchor = self:_resolveRoomAnchor(match, roomId)
 	if roomAnchor and match.ghost.PrimaryPart then
 		local targetPosition = resolveGhostGroundPosition(match, roomAnchor)
-		local stateName = select(1, resolveGhostVisualStateName(ghostState))
-		local visualCFrame = computeGhostVisualCFrame(match.ghost, targetPosition, ghostState, stateName, match.ghostSeed or match.matchId)
-		match.ghost:PivotTo(visualCFrame or CFrame.new(targetPosition))
+		local stateName = select(1, resolveGhostVisualStateName(ghostState)) or "Roaming"
+		local now = Workspace:GetServerTimeNow()
+		local lastSyncAt = tonumber(match.ghostVisualLastSyncAt) or now
+		local deltaTime = math.clamp(now - lastSyncAt, 1 / 60, 0.25)
+		match.ghostVisualLastSyncAt = now
+
+		local currentPosition = match.ghostVisualCurrentPosition
+		if typeof(currentPosition) ~= "Vector3" then
+			currentPosition = match.ghost:GetPivot().Position
+		end
+
+		match.ghostVisualTargetPosition = targetPosition
+		match.ghostVisualTargetRoomId = roomId
+
+		local moveSpeed = GHOST_VISUAL_MOVE_SPEED_BY_STATE[stateName] or GHOST_VISUAL_MOVE_SPEED_BY_STATE.Roaming
+		local distanceToTarget = (targetPosition - currentPosition).Magnitude
+		local roomChanged = match.ghostVisualCurrentRoomId ~= roomId
+
+		local resolvedPosition = nil
+		if typeof(match.ghostVisualCurrentPosition) ~= "Vector3" then
+			resolvedPosition = targetPosition
+		else
+			local maxStep = moveSpeed * deltaTime
+			if roomChanged and distanceToTarget > 0.1 then
+				resolvedPosition = moveTowardsVector3(currentPosition, targetPosition, maxStep)
+			else
+				resolvedPosition = moveTowardsVector3(currentPosition, targetPosition, maxStep)
+			end
+		end
+
+		match.ghostVisualCurrentPosition = resolvedPosition
+		if (targetPosition - resolvedPosition).Magnitude <= 0.15 then
+			match.ghostVisualCurrentRoomId = roomId
+		end
+
+		match.ghost:SetAttribute("VisualMoveSpeed", moveSpeed)
+		match.ghost:SetAttribute("VisualTargetDistance", math.floor(((targetPosition - resolvedPosition).Magnitude * 100) + 0.5) / 100)
+		local visualCFrame = computeGhostVisualCFrame(match.ghost, resolvedPosition, ghostState, stateName, match.ghostSeed or match.matchId)
+		match.ghost:PivotTo(visualCFrame or CFrame.new(resolvedPosition))
 	end
 
 	self:_applyGhostVisualState(match, ghostState)
@@ -959,6 +1058,7 @@ function Service:SelectGhostRoom(match)
 	if match.ghost.PrimaryPart then
 		local targetPosition = resolveGhostGroundPosition(match, selectedPart)
 		match.ghost:PivotTo(CFrame.new(targetPosition))
+		resetGhostVisualMotion(match, targetPosition, ghostRoom and ghostRoom.Name or nil)
 	end
 	return selectedPart
 end
@@ -1131,6 +1231,11 @@ function Service:DespawnGhost(match)
 		matchData.ghost = nil
 		matchData.ghostRoom = nil
 		matchData.ghostSpawnPart = nil
+		matchData.ghostVisualCurrentPosition = nil
+		matchData.ghostVisualTargetPosition = nil
+		matchData.ghostVisualCurrentRoomId = nil
+		matchData.ghostVisualTargetRoomId = nil
+		matchData.ghostVisualLastSyncAt = nil
 		if ghostModel and ghostModel.Parent then
 			for _, part in ipairs(ghostModel:GetDescendants()) do
 				if part:IsA("BasePart") then
