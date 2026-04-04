@@ -8613,3 +8613,48 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - pass ini membuat cue runtime terasa kurang datar tanpa harus mengganti semua asset audio lagi
 - debug audio sekarang jujur terhadap hasil akhir yang benar-benar didengar pemain, sehingga batch polish berikutnya tidak lagi buta saat tuning
+
+## 2026-04-05 - Map Depth Of Field Profile Pass
+
+### Scope
+
+- menambah satu layer framing visual yang masih ringan:
+  - lobby perlu terasa lebih lega dan bersih
+  - map horror perlu sedikit pemisahan fokus tanpa mengaburkan UI atau membuat FPV terlalu berat
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah `DEFAULT_MAP_DOF`
+  - tambah `MAP_DOF_PROFILES` untuk:
+    - `LobbySocialHub`
+    - `AbandonedPalace`
+    - `HauntedHouse`
+    - `EmptyBuilding`
+    - `StudioMMNineteen`
+  - tambah `ensureMapDepthOfField()` yang membuat `Lighting.SensoryMapDepthOfField`
+  - `Init()` sekarang menyimpan baseline DOF runtime
+  - tambah `_applyMapDepthOfField(mapName)`
+  - `_applyMapVisualProfile()` sekarang juga menerapkan DOF per map
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_map_dof_profile_build.rbxlx`
+- validasi live Studio:
+  - boot lobby:
+    - `SensoryMapDepthOfField.FarIntensity ~= 0.06`
+    - `FocusDistance = 52`
+    - `InFocusRadius = 34`
+    - `NearIntensity = 0`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)`:
+    - `Workspace.ActiveMatches` aktif (`count = 1`)
+    - `SensoryMapDepthOfField.FarIntensity ~= 0.14`
+    - `FocusDistance = 18`
+    - `InFocusRadius = 9`
+    - `NearIntensity ~= 0.03`
+
+### Interpretation
+
+- lobby dan match sekarang tidak hanya beda fog/light/grade, tetapi juga punya framing ruang yang lebih terasa
+- pass ini tetap aman untuk readability karena intensitas DOF dijaga rendah dan masih berbasis profile per map

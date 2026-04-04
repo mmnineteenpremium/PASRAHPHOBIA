@@ -94,6 +94,13 @@ local DEFAULT_MAP_BLOOM = {
 	Threshold = 1.12,
 }
 
+local DEFAULT_MAP_DOF = {
+	FarIntensity = 0.08,
+	FocusDistance = 40,
+	InFocusRadius = 24,
+	NearIntensity = 0,
+}
+
 local MAP_ATMOSPHERE_PROFILES = {
 	LobbySocialHub = {
 		Density = 0.24,
@@ -246,6 +253,39 @@ local MAP_BLOOM_PROFILES = {
 	},
 }
 
+local MAP_DOF_PROFILES = {
+	LobbySocialHub = {
+		FarIntensity = 0.06,
+		FocusDistance = 52,
+		InFocusRadius = 34,
+		NearIntensity = 0,
+	},
+	AbandonedPalace = {
+		FarIntensity = 0.16,
+		FocusDistance = 22,
+		InFocusRadius = 10,
+		NearIntensity = 0.04,
+	},
+	HauntedHouse = {
+		FarIntensity = 0.14,
+		FocusDistance = 18,
+		InFocusRadius = 9,
+		NearIntensity = 0.03,
+	},
+	EmptyBuilding = {
+		FarIntensity = 0.1,
+		FocusDistance = 28,
+		InFocusRadius = 16,
+		NearIntensity = 0.02,
+	},
+	StudioMMNineteen = {
+		FarIntensity = 0.11,
+		FocusDistance = 24,
+		InFocusRadius = 14,
+		NearIntensity = 0.02,
+	},
+}
+
 local function ensureSanityColorCorrection()
 	local effect = Lighting:FindFirstChild("SensorySanityGrading")
 	if not effect then
@@ -312,6 +352,20 @@ local function ensureMapBloom()
 	return bloom
 end
 
+local function ensureMapDepthOfField()
+	local effect = Lighting:FindFirstChild("SensoryMapDepthOfField")
+	if not effect then
+		effect = Instance.new("DepthOfFieldEffect")
+		effect.Name = "SensoryMapDepthOfField"
+		effect.FarIntensity = DEFAULT_MAP_DOF.FarIntensity
+		effect.FocusDistance = DEFAULT_MAP_DOF.FocusDistance
+		effect.InFocusRadius = DEFAULT_MAP_DOF.InFocusRadius
+		effect.NearIntensity = DEFAULT_MAP_DOF.NearIntensity
+		effect.Parent = Lighting
+	end
+	return effect
+end
+
 local function ensureAtmosphere()
 	local atmosphere = Lighting:FindFirstChild("HorrorAtmosphere")
 	if not atmosphere then
@@ -337,6 +391,7 @@ function VFXController:Init(context)
 	self._mapCorrection = ensureMapColorCorrection()
 	self._ghostBlur = ensureGhostBlur()
 	self._mapBloom = ensureMapBloom()
+	self._mapDepthOfField = ensureMapDepthOfField()
 	self._atmosphere = ensureAtmosphere()
 	self._baseAtmosphereDensity = self._atmosphere and self._atmosphere.Density or DEFAULT_MAP_ATMOSPHERE.Density
 	self._baseAtmosphereOffset = self._atmosphere and self._atmosphere.Offset or DEFAULT_MAP_ATMOSPHERE.Offset
@@ -358,6 +413,10 @@ function VFXController:Init(context)
 	self._baseMapBloomIntensity = self._mapBloom and self._mapBloom.Intensity or DEFAULT_MAP_BLOOM.Intensity
 	self._baseMapBloomSize = self._mapBloom and self._mapBloom.Size or DEFAULT_MAP_BLOOM.Size
 	self._baseMapBloomThreshold = self._mapBloom and self._mapBloom.Threshold or DEFAULT_MAP_BLOOM.Threshold
+	self._baseMapDOFFarIntensity = self._mapDepthOfField and self._mapDepthOfField.FarIntensity or DEFAULT_MAP_DOF.FarIntensity
+	self._baseMapDOFFocusDistance = self._mapDepthOfField and self._mapDepthOfField.FocusDistance or DEFAULT_MAP_DOF.FocusDistance
+	self._baseMapDOFInFocusRadius = self._mapDepthOfField and self._mapDepthOfField.InFocusRadius or DEFAULT_MAP_DOF.InFocusRadius
+	self._baseMapDOFNearIntensity = self._mapDepthOfField and self._mapDepthOfField.NearIntensity or DEFAULT_MAP_DOF.NearIntensity
 	self._currentSanity = 100
 	self._huntActive = false
 	self._sanityTween = nil
@@ -670,11 +729,26 @@ function VFXController:_applyMapBloom(mapName)
 	end
 end
 
+function VFXController:_applyMapDepthOfField(mapName)
+	local profile = MAP_DOF_PROFILES[mapName] or DEFAULT_MAP_DOF
+	if self._mapDepthOfField then
+		self._baseMapDOFFarIntensity = profile.FarIntensity or DEFAULT_MAP_DOF.FarIntensity
+		self._baseMapDOFFocusDistance = profile.FocusDistance or DEFAULT_MAP_DOF.FocusDistance
+		self._baseMapDOFInFocusRadius = profile.InFocusRadius or DEFAULT_MAP_DOF.InFocusRadius
+		self._baseMapDOFNearIntensity = profile.NearIntensity or DEFAULT_MAP_DOF.NearIntensity
+		self._mapDepthOfField.FarIntensity = self._baseMapDOFFarIntensity
+		self._mapDepthOfField.FocusDistance = self._baseMapDOFFocusDistance
+		self._mapDepthOfField.InFocusRadius = self._baseMapDOFInFocusRadius
+		self._mapDepthOfField.NearIntensity = self._baseMapDOFNearIntensity
+	end
+end
+
 function VFXController:_applyMapVisualProfile(mapName)
 	self:_applyMapAtmosphere(mapName)
 	self:_applyMapLighting(mapName)
 	self:_applyMapGrade(mapName)
 	self:_applyMapBloom(mapName)
+	self:_applyMapDepthOfField(mapName)
 end
 
 return setmetatable({}, VFXController)
