@@ -818,6 +818,12 @@ Status:
 - validasi live Studio terbaru membuktikan perpindahan atmosfer:
   - lobby baseline: `density=0.24`, `offset=0.10`, `glare=0.08`, `haze=1.2`
   - setelah `HostStart(HauntedHouse)` dan phase `Briefing`: `density=0.44`, `offset=0.27`, `glare=0.14`, `haze=2.1`
+- pass lighting baseline sekarang juga tidak lagi netral tunggal:
+  - `VFXController` kini memegang profile `ClockTime/Brightness/ExposureCompensation/Ambient/OutdoorAmbient/Diffuse/Specular` per map
+  - lobby dan map aktif sekarang beda bukan hanya lewat fog, tetapi juga tone lighting
+  - validasi live Studio terbaru:
+    - lobby `LobbySocialHub`: `ClockTime=14.6`, `Brightness=2.25`, `Exposure=0`
+    - `HauntedHouse` briefing: `ClockTime=1.35`, `Brightness=1.72`, `Exposure=-0.28`
 - catatan kandidat ambience:
   - kandidat Roblox `Cloudy Space (7399811837)` dan `No Light (7399814871)` sudah dicek lewat `MarketplaceService:GetProductInfo()`
   - keduanya `IsPublicDomain = false`, jadi tidak dipakai sebagai solusi publish-safe
