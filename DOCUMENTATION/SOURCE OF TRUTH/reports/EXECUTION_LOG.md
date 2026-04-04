@@ -6164,3 +6164,38 @@ Merapikan roster `Field Kit` di `MatchUI` agar tool utility tidak lagi tampil se
 
 - backlog `P2.11` untuk `tool icon` + `tool UI state` naik nyata di source utama.
 - blocker yang tersisa pada pass ini bukan implementasi client lagi, melainkan drift sync Studio terhadap `src/client/UI/Main.lua`.
+
+## 2026-04-04 - Pocong Scale + Ghost Roaming Motion
+
+Menurunkan scale `Pocong` dan memisahkan sinkronisasi visual ghost dari tick AI agar roaming tidak lagi terlihat teleport/snap antar room anchor.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/GhostSystem/Service.lua`
+
+### Change Summary
+
+- override ukuran `Pocong` diturunkan ke target visual yang lebih pendek dan sempit agar tidak lagi terlihat raksasa di runtime.
+- sinkronisasi visual ghost sekarang punya loop heartbeat terpisah (`0.1s`) di `GhostSystem.Service`, jadi model ghost tetap bergerak menuju target room walau AI decision tick tetap lebih lambat.
+- state visual ghost sekarang memakai posisi interpolasi yang terus diperbarui, bukan hanya `PivotTo` snap saat event AI tertentu terjadi.
+- state reset untuk visual motion tetap dibersihkan saat despawn agar tidak bocor ke match berikutnya.
+
+### Validation Notes
+
+- build lokal lolos:
+  - `_tmp_ghost_motion_build.rbxlx`
+- source Studio aktif terverifikasi sudah memuat:
+  - clamp ukuran `Pocong`
+  - `GHOST_VISUAL_SYNC_INTERVAL`
+  - `_visualSyncConnection`
+- runtime Pocong di Studio terukur sekitar:
+  - `2.00 x 3.65 x 1.00`
+- runtime roam Pocong terverifikasi bergerak kontinu:
+  - sample posisi berubah dari `1166.13,2.78,-11.12` ke `1170.03,2.79,-0.04`
+  - `VisualTargetDistance` turun bertahap dari `11.8` ke `0`
+  - state aktif `Roaming`, speed `3.6`
+
+### Interpretation
+
+- keluhan ghost teleport valid untuk versi sebelumnya; source aktif sekarang sudah mengubah perilaku itu menjadi pergerakan kontinu.
+- Pocong masih belum memiliki skeleton/bone walk animation. Saat ini geraknya berupa glide/bob yang terkendali, bukan langkah kaki beranimasi. Untuk animasi berjalan yang benar, asset ghost harus rigged/skinned.
