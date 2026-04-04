@@ -8208,3 +8208,42 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - roster tool di HUD sekarang punya identitas yang lebih cepat dibaca tanpa menunggu pemain membuka jurnal atau mencoba tool satu per satu
 - ini menutup bagian `icon/UI state` dari item `tool roster` dengan perubahan yang tetap satu-owner dan aman terhadap drift arsitektur
+
+## 2026-04-04 - Compact Sheet Overflow Guard
+
+### Scope
+
+- menutup debt nyata pada item `Rapikan UI modular`: `RoomBrowserUI` dan `RoyalPassUI` masih bisa keluar layar pada viewport pendek/compact
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `_applyRoomBrowserSizing()` sekarang menghitung:
+    - `availableWidth`
+    - `availableHeight`
+    - lalu clamp panel mobile ke safe viewport, bukan lagi memaksa minimum tinggi tetap
+  - sizing `RoomBrowserUI` mobile diubah dari minimum kaku (`540`) menjadi guard yang tetap menjaga tinggi minimal wajar tetapi tidak melebihi safe viewport
+  - sizing auxiliary sheet `RoyalPassUI/ProfileUI/ShopUI` sekarang juga memakai:
+    - `availableWindowWidth`
+    - `availableWindowHeight`
+  - `RoyalPassUI` mobile tidak lagi memaksa tinggi minimum `560` tanpa mempedulikan viewport pendek
+  - posisi sheet mobile auxiliary digeser sedikit ke `safe inset + 4` agar edge tidak menempel langsung ke batas layar
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_ui_mobile_sheet_guard_build.rbxlx`
+- probe Studio sebelum guard menunjukkan debt compact yang nyata:
+  - `RoomBrowserUI.Panel.Size = 513x507`, `posY = -44.5`
+  - `RoyalPassUI.MainPanel.Size = 436x499`, `posY = -11`
+- interpretasi validasi:
+  - ini menunjukkan source sebelumnya masih bisa overflow pada viewport pendek
+  - sesi override mobile/compact Studio di MCP belum cukup jujur untuk menutup handset validation penuh
+  - karena itu pass ini dicatat sebagai:
+    - **source fix applied**
+    - **device/emulator validation tetap pending**
+
+### Interpretation
+
+- backlog item `Rapikan UI modular` bergerak maju secara teknis karena akar sizing overflow sudah dipotong
+- namun statusnya tetap jujur: panel compact/mobile masih butuh validasi emulator/handset nyata sebelum dinyatakan final
