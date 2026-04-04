@@ -6212,3 +6212,65 @@ Menurunkan scale `Pocong` dan memisahkan sinkronisasi visual ghost dari tick AI 
 
 - keluhan ghost teleport valid untuk versi sebelumnya; source aktif sekarang sudah mengubah perilaku itu menjadi pergerakan kontinu.
 - Pocong masih belum memiliki skeleton/bone walk animation. Saat ini geraknya berupa hop/bob terkendali yang sesuai bentuk aset, bukan langkah kaki beranimasi. Untuk animasi berjalan yang benar, asset ghost harus rigged/skinned.
+
+## 2026-04-04 - Hunt + Jumpscare Event Bridge
+
+Menutup gap antara event ancaman server dan respons sensory client, sehingga hunt/jumpscare tidak lagi bergantung pada audio saja.
+
+### Files Changed
+
+- `src/ServerScriptService/Server/GhostSystem/GhostService.lua`
+- `src/ServerScriptService/Server/GhostSystem/Controller.lua`
+- `src/ServerScriptService/Server/RandomJumpscareSystem/Controller.lua`
+- `src/client/Controllers/Sensory/VFXController.luau`
+- `src/client/GhostAnimationPipeline/Main.lua`
+
+### Change Summary
+
+- `GhostService` sekarang mem-publish event eksplisit:
+  - `GhostManifest`
+  - `GhostManifested`
+  - `GhostManifestEnd`
+- `GhostSystem.Controller` sekarang meneruskan `GhostManifest` dan `GhostManifestEnd` ke `MatchEvent` client.
+- `RandomJumpscareSystem.Controller` sekarang meneruskan `JumpscareTriggered` ke `MatchEvent` client.
+- `GhostAnimationPipeline` sekarang mengenali:
+  - `GhostManifestEnd -> GhostIdle`
+  - `JumpscareTriggered -> GhostJumpscare`
+- `VFXController` sekarang punya layer threat terpisah dari sanity grading:
+  - baseline hunt pressure
+  - manifest flicker transient
+  - jumpscare shock transient
+- efek hunt/jumpscare tidak lagi menimpa grading sanity secara destruktif karena sekarang memakai `SensoryThreatGrading` terpisah.
+
+### Validation Notes
+
+- build lokal lolos:
+  - `_tmp_hunt_jumpscare_build.rbxlx`
+- validasi live Studio menggunakan `StudioE2EControl`:
+  - `ForceHunt`
+  - `TriggerJumpscare`
+- hasil client Lighting terukur:
+  - sebelum hunt:
+    - `Brightness = 0`
+    - `Contrast = 0`
+    - `Saturation = 0`
+    - `Blur = 0`
+  - saat hunt:
+    - `Brightness = -0.03`
+    - `Contrast = 0.18`
+    - `Saturation = -0.22`
+    - `Blur = 7`
+  - saat jumpscare:
+    - `Brightness = -0.08`
+    - `Contrast = 0.52`
+    - `Saturation = -0.95`
+    - `Blur = 26`
+- validasi client event bridge:
+  - `MatchEvent` menerima `JumpscareTriggered`
+  - source payload terbaca dari `StudioE2EControlSystem`
+
+### Interpretation
+
+- sebelumnya hunt/jumpscare memang terasa lemah karena client tidak menerima semua event penting.
+- jalur event sekarang sudah utuh: AI/server event -> `MatchEvent` -> sensory client.
+- manifest event sekarang juga menjadi lebih jujur untuk sistem lain yang sebelumnya menunggu sinyal yang nyaris tidak pernah dipublish.

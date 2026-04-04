@@ -226,11 +226,38 @@ function GhostService:TickGhost(matchId, snapshot, dt, now)
 		end
 
 		if runtimeEvent.type == "state_changed" then
+			local previousState = runtimeEvent.previousState
+			local currentState = runtimeEvent.currentState
 			self:_publish("GhostStateChanged", {
 				matchId = matchId,
-				previousState = runtimeEvent.previousState,
-				currentState = runtimeEvent.currentState,
+				previousState = previousState,
+				currentState = currentState,
 			})
+			local previousToken = tostring(previousState or "")
+			local currentToken = tostring(currentState or "")
+			local isManifestState = currentToken == "Manifest" or currentToken == "Manifestation"
+			local wasManifestState = previousToken == "Manifest" or previousToken == "Manifestation"
+			if isManifestState then
+				local manifestPayload = {
+					matchId = matchId,
+					roomId = session.currentRoomId,
+					ghostType = session.ghostType,
+					previousState = previousState,
+					currentState = currentState,
+					now = currentNow,
+				}
+				self:_publish("GhostManifest", manifestPayload)
+				self:_publish("GhostManifested", manifestPayload)
+			elseif wasManifestState then
+				self:_publish("GhostManifestEnd", {
+					matchId = matchId,
+					roomId = session.currentRoomId,
+					ghostType = session.ghostType,
+					previousState = previousState,
+					currentState = currentState,
+					now = currentNow,
+				})
+			end
 		elseif runtimeEvent.type == "interaction" then
 			local payload = runtimeEvent.payload or {}
 			self:_publishThrottled(matchId, "GhostInteraction", {
