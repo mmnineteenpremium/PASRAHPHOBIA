@@ -1087,6 +1087,19 @@ function VFXController:_triggerEnvironmentalShock(payload)
 			"PasrahVFXLastPropCount",
 			"Windows"
 		)
+	elseif eventToken == "objectthrow" then
+		self:_pulseNearbyProps(
+			self:_resolveEventPosition(payload),
+			28,
+			{ "prop" },
+			function(descendant)
+				local signX = descendant.Position.X >= 0 and 1 or -1
+				local signZ = descendant.Position.Z >= 0 and -1 or 1
+				return CFrame.new(0.35 * signX, 0.08, 0.22 * signZ) * CFrame.Angles(0, math.rad(6 * signX), math.rad(3 * signZ))
+			end,
+			"PasrahVFXLastPropCount",
+			"Props"
+		)
 	end
 	self:_playTransientShock(cloned)
 end
