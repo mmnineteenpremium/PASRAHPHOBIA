@@ -4,6 +4,7 @@ local Services = require(script.Parent.Parent.Core.Services)
 local Service = {}
 Service.__index = Service
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -34,11 +35,11 @@ local GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {
 }
 
 local GHOST_TEMPLATE_TARGET_BOUNDS = {
-	Pocong = Vector3.new(1.8, 5.2, 1.6),
-	Kuntilanak = Vector3.new(2.2, 4.8, 1.7),
+	Pocong = Vector3.new(2.0, 5.2, 1.6),
+	Kuntilanak = Vector3.new(3.5, 4.8, 1.8),
 	KuntilanakAggressive = Vector3.new(2.2, 5.4, 1.8),
-	Genderuwo = Vector3.new(3.0, 5.6, 2.4),
-	Leak = Vector3.new(2.4, 4.8, 2.0),
+	Genderuwo = Vector3.new(3.4, 5.8, 2.6),
+	Leak = Vector3.new(2.0, 4.8, 2.35),
 }
 
 local GHOST_VISUAL_TRANSPARENCY_BY_STATE = {
@@ -47,6 +48,55 @@ local GHOST_VISUAL_TRANSPARENCY_BY_STATE = {
 	Manifestation = 0.0,
 	Hunting = 0.05,
 	Cooldown = 0.55,
+}
+
+local GHOST_VISUAL_MOTION_BY_STATE = {
+	Idle = {
+		bobAmplitude = 0.015,
+		bobFrequency = 1.2,
+		swayAmplitude = 0.02,
+		swayFrequency = 0.7,
+		pitchDegrees = 0.8,
+		rollDegrees = 1.6,
+		yawDegrees = 2.5,
+	},
+	Roaming = {
+		bobAmplitude = 0.03,
+		bobFrequency = 1.8,
+		swayAmplitude = 0.045,
+		swayFrequency = 1.2,
+		pitchDegrees = 1.8,
+		rollDegrees = 2.6,
+		yawDegrees = 4,
+	},
+	Manifestation = {
+		bobAmplitude = 0.055,
+		bobFrequency = 1.35,
+		swayAmplitude = 0.035,
+		swayFrequency = 0.9,
+		pitchDegrees = 3.6,
+		rollDegrees = 5,
+		yawDegrees = 6,
+	},
+	Hunting = {
+		bobAmplitude = 0.028,
+		bobFrequency = 3.6,
+		swayAmplitude = 0.02,
+		swayFrequency = 2.2,
+		pitchDegrees = 5.2,
+		rollDegrees = 1.8,
+		yawDegrees = 0,
+		forwardLunge = 0.1,
+	},
+	Cooldown = {
+		bobAmplitude = 0.018,
+		bobFrequency = 1.1,
+		swayAmplitude = 0.018,
+		swayFrequency = 0.65,
+		pitchDegrees = 1.2,
+		rollDegrees = 1.4,
+		yawDegrees = 2,
+	},
 }
 
 local function normalizeToken(value)
@@ -83,6 +133,21 @@ local function normalizeGhostVisualState(stateName)
 		return trimmed
 	end
 	return nil
+end
+
+local function resolveGhostVisualStateName(ghostState)
+	local actualStateName = ghostState and ghostState.state or nil
+	local overrideStateName = nil
+	if RunService:IsStudio() then
+		overrideStateName = normalizeGhostVisualState(ReplicatedStorage:GetAttribute(GHOST_FORCE_VISUAL_STATE_ATTRIBUTE))
+	end
+
+	local stateName = overrideStateName or actualStateName
+	if not overrideStateName and ghostState and ghostState.huntActive == true then
+		stateName = "Hunting"
+	end
+
+	return stateName, actualStateName, overrideStateName
 end
 
 local function createGhostRigPart(model, name, size, offset, color)
@@ -234,7 +299,6 @@ local function clampGhostTemplateScale(ghostModel, ghostType)
 	local currentY = math.max(currentBounds.Y, 0.001)
 	local currentZ = math.max(currentBounds.Z, 0.001)
 	local factor = math.min(targetBounds.X / currentX, targetBounds.Y / currentY, targetBounds.Z / currentZ)
-	factor = math.min(1, factor)
 	if factor >= 0.98 and factor <= 1.02 then
 		return
 	end
@@ -420,6 +484,98 @@ local function resolveGhostGroundPosition(match, targetAnchor)
 	local boundsCenter = Vector3.new(targetPosition.X, boundsCenterY, targetPosition.Z)
 	local resolvedPivot = boundsCenter - pivotToBoundsOffset
 	return resolvedPivot
+end
+
+local function resolvePlayerRootPart(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return nil
+	end
+
+	local character = player.Character
+	if typeof(character) ~= "Instance" then
+		return nil
+	end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if root and root:IsA("BasePart") then
+		return root
+	end
+
+	return character.PrimaryPart
+end
+
+local function resolveGhostFocusPosition(ghostState)
+	if type(ghostState) ~= "table" then
+		return nil
+	end
+
+	local targetUserId = tonumber(ghostState.huntTargetUserId)
+	if not targetUserId then
+		return nil
+	end
+
+	local player = Players:GetPlayerByUserId(targetUserId)
+	local root = resolvePlayerRootPart(player)
+	if root and root:IsA("BasePart") then
+		return root.Position
+	end
+
+	return nil
+end
+
+local function flattenLookVector(vector)
+	if typeof(vector) ~= "Vector3" then
+		return Vector3.zAxis
+	end
+
+	local flat = Vector3.new(vector.X, 0, vector.Z)
+	if flat.Magnitude < 0.001 then
+		return Vector3.zAxis
+	end
+	return flat.Unit
+end
+
+local function computeGhostVisualCFrame(ghostModel, targetPosition, ghostState, stateName, seedValue)
+	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") or typeof(targetPosition) ~= "Vector3" then
+		return nil
+	end
+
+	local motion = GHOST_VISUAL_MOTION_BY_STATE[stateName] or GHOST_VISUAL_MOTION_BY_STATE.Roaming
+	local currentPivot = ghostModel:GetPivot()
+	local focusPosition = resolveGhostFocusPosition(ghostState)
+	local lookVector = flattenLookVector(currentPivot.LookVector)
+	if typeof(focusPosition) == "Vector3" then
+		lookVector = flattenLookVector(focusPosition - targetPosition)
+	end
+
+	local rightVector = Vector3.new(-lookVector.Z, 0, lookVector.X)
+	if rightVector.Magnitude < 0.001 then
+		rightVector = Vector3.xAxis
+	end
+	rightVector = rightVector.Unit
+
+	local serverTime = Workspace:GetServerTimeNow()
+	local phaseOffset = (tonumber(seedValue) or 0) * 0.037
+	local bobPhase = (serverTime + phaseOffset) * (motion.bobFrequency or 1)
+	local swayPhase = (serverTime + phaseOffset + 0.6) * (motion.swayFrequency or 1)
+	local yawPhase = (serverTime + phaseOffset + 1.3) * 0.8
+	local bobOffset = math.abs(math.sin(bobPhase)) * (motion.bobAmplitude or 0)
+	local swayOffset = math.sin(swayPhase) * (motion.swayAmplitude or 0)
+	local forwardOffset = 0
+	if motion.forwardLunge then
+		forwardOffset = math.abs(math.sin(bobPhase)) * motion.forwardLunge
+	end
+
+	local position = targetPosition
+		+ Vector3.new(0, bobOffset, 0)
+		+ (rightVector * swayOffset)
+		+ (lookVector * forwardOffset)
+
+	local pitch = math.rad(math.sin(bobPhase) * (motion.pitchDegrees or 0))
+	local roll = math.rad(math.sin(swayPhase) * (motion.rollDegrees or 0))
+	local yaw = math.rad(math.sin(yawPhase) * (motion.yawDegrees or 0))
+
+	return CFrame.lookAt(position, position + lookVector, Vector3.yAxis) * CFrame.Angles(pitch, yaw, roll)
 end
 
 local function findNamedBasePart(root, ...)
@@ -655,17 +811,8 @@ function Service:_applyGhostVisualState(match, ghostState)
 		return
 	end
 
-	local actualStateName = ghostState and ghostState.state or nil
-	local overrideStateName = nil
-	if RunService:IsStudio() then
-		overrideStateName = normalizeGhostVisualState(ReplicatedStorage:GetAttribute(GHOST_FORCE_VISUAL_STATE_ATTRIBUTE))
-	end
-
-	local stateName = overrideStateName or actualStateName
+	local stateName, actualStateName, overrideStateName = resolveGhostVisualStateName(ghostState)
 	local transparency = GHOST_VISUAL_TRANSPARENCY_BY_STATE[stateName] or 0.35
-	if not overrideStateName and ghostState and ghostState.huntActive == true then
-		transparency = GHOST_VISUAL_TRANSPARENCY_BY_STATE.Hunting
-	end
 
 	match.ghost:SetAttribute("RuntimeGhostState", tostring(stateName or "Unknown"))
 	match.ghost:SetAttribute("RuntimeGhostStateActual", tostring(actualStateName or "Unknown"))
@@ -698,7 +845,9 @@ function Service:_syncGhostVisual(match, ghostState)
 	local roomAnchor = self:_resolveRoomAnchor(match, roomId)
 	if roomAnchor and match.ghost.PrimaryPart then
 		local targetPosition = resolveGhostGroundPosition(match, roomAnchor)
-		match.ghost:PivotTo(CFrame.new(targetPosition))
+		local stateName = select(1, resolveGhostVisualStateName(ghostState))
+		local visualCFrame = computeGhostVisualCFrame(match.ghost, targetPosition, ghostState, stateName, match.ghostSeed or match.matchId)
+		match.ghost:PivotTo(visualCFrame or CFrame.new(targetPosition))
 	end
 
 	self:_applyGhostVisualState(match, ghostState)
