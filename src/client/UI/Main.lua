@@ -138,33 +138,69 @@ local FIELD_KIT_TOOL_ORDER = { "JejakEnergi", "Garam", "Salib", "Dupa" }
 local FIELD_KIT_TOOL_CONFIG = {
 	JejakEnergi = {
 		accent = Color3.fromRGB(66, 104, 146),
+		glyph = "JN",
 		label = "SCAN",
 		openJournal = true,
+		role = "Sensor",
 		shortcut = "1",
 		keyCode = Enum.KeyCode.One,
 	},
 	Garam = {
 		accent = Color3.fromRGB(122, 110, 68),
+		glyph = "GR",
 		label = "GARAM",
+		maxUses = 3,
 		openJournal = false,
+		role = "Trap",
 		shortcut = "2",
 		keyCode = Enum.KeyCode.Two,
 	},
 	Salib = {
 		accent = Color3.fromRGB(110, 84, 58),
+		glyph = "SL",
 		label = "SALIB",
+		maxCharges = 3,
+		maxUses = 2,
 		openJournal = false,
+		role = "Guard",
 		shortcut = "3",
 		keyCode = Enum.KeyCode.Three,
 	},
 	Dupa = {
 		accent = Color3.fromRGB(132, 78, 52),
+		glyph = "DP",
 		label = "DUPA",
+		maxUses = 2,
 		openJournal = false,
+		role = "Repel",
 		shortcut = "4",
 		keyCode = Enum.KeyCode.Four,
 	},
 }
+
+local function createDefaultFieldKitToolState(toolType)
+	local config = FIELD_KIT_TOOL_CONFIG[toolType] or {}
+	local usesRemaining = tonumber(config.maxUses)
+	return {
+		usesRemaining = usesRemaining and math.max(0, math.floor(usesRemaining)) or nil,
+		chargesRemaining = nil,
+		visualPlaced = false,
+		placementId = nil,
+		pending = false,
+		lastEvent = "Idle",
+		lastReason = nil,
+		lastSuccess = nil,
+		lastUpdatedAt = 0,
+	}
+end
+
+local function createDefaultFieldKitToolStates()
+	local states = {}
+	for _, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+		states[toolType] = createDefaultFieldKitToolState(toolType)
+	end
+	return states
+end
 local RESULTS_LOCK_SECONDS = 5
 local DEFAULT_MATCH_OBJECTIVE_TEXT = "Investigate the location\nFind evidence\nIdentify the ghost"
 local TELEPORT_OVERLAY_GUI_NAME = "TeleportScreen"
@@ -658,6 +694,108 @@ local function styleButton(button, text)
 	button.TextStrokeColor3 = UI_BRAND.ink
 	bindButtonPolish(button)
 	refreshButtonPolish(button, true)
+end
+
+local function ensureFieldKitButtonVisuals(button, definition)
+	if not button then
+		return nil
+	end
+
+	button.Text = ""
+	button.TextTransparency = 1
+	button.ClipsDescendants = true
+
+	local glyphPlate = button:FindFirstChild("GlyphPlate")
+	if not glyphPlate or not glyphPlate:IsA("Frame") then
+		glyphPlate = Instance.new("Frame")
+		glyphPlate.Name = "GlyphPlate"
+		glyphPlate.BorderSizePixel = 0
+		glyphPlate.ZIndex = button.ZIndex + 1
+		glyphPlate.Parent = button
+	end
+	ensureCorner(glyphPlate, "GlyphCorner", UDim.new(0, 10))
+
+	local glyphLabel = glyphPlate:FindFirstChild("Glyph")
+	if not glyphLabel or not glyphLabel:IsA("TextLabel") then
+		glyphLabel = Instance.new("TextLabel")
+		glyphLabel.Name = "Glyph"
+		glyphLabel.BackgroundTransparency = 1
+		glyphLabel.Font = Enum.Font.GothamBlack
+		glyphLabel.TextSize = 12
+		glyphLabel.TextXAlignment = Enum.TextXAlignment.Center
+		glyphLabel.TextYAlignment = Enum.TextYAlignment.Center
+		glyphLabel.ZIndex = glyphPlate.ZIndex + 1
+		glyphLabel.Parent = glyphPlate
+	end
+
+	local shortcutLabel = button:FindFirstChild("ShortcutLabel")
+	if not shortcutLabel or not shortcutLabel:IsA("TextLabel") then
+		shortcutLabel = Instance.new("TextLabel")
+		shortcutLabel.Name = "ShortcutLabel"
+		shortcutLabel.BackgroundTransparency = 1
+		shortcutLabel.Font = Enum.Font.GothamBlack
+		shortcutLabel.TextSize = 8
+		shortcutLabel.TextXAlignment = Enum.TextXAlignment.Right
+		shortcutLabel.TextYAlignment = Enum.TextYAlignment.Center
+		shortcutLabel.ZIndex = button.ZIndex + 1
+		shortcutLabel.Parent = button
+	end
+
+	local titleLabel = button:FindFirstChild("TitleLabel")
+	if not titleLabel or not titleLabel:IsA("TextLabel") then
+		titleLabel = Instance.new("TextLabel")
+		titleLabel.Name = "TitleLabel"
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Font = Enum.Font.GothamBold
+		titleLabel.TextSize = 11
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+		titleLabel.ZIndex = button.ZIndex + 1
+		titleLabel.Parent = button
+	end
+
+	local metaLabel = button:FindFirstChild("MetaLabel")
+	if not metaLabel or not metaLabel:IsA("TextLabel") then
+		metaLabel = Instance.new("TextLabel")
+		metaLabel.Name = "MetaLabel"
+		metaLabel.BorderSizePixel = 0
+		metaLabel.Font = Enum.Font.GothamBlack
+		metaLabel.TextSize = 8
+		metaLabel.TextXAlignment = Enum.TextXAlignment.Center
+		metaLabel.TextYAlignment = Enum.TextYAlignment.Center
+		metaLabel.ZIndex = button.ZIndex + 1
+		metaLabel.Parent = button
+	end
+	ensureCorner(metaLabel, "MetaCorner", UDim.new(1, 0))
+
+	local footerLabel = button:FindFirstChild("FooterLabel")
+	if not footerLabel or not footerLabel:IsA("TextLabel") then
+		footerLabel = Instance.new("TextLabel")
+		footerLabel.Name = "FooterLabel"
+		footerLabel.BackgroundTransparency = 1
+		footerLabel.Font = Enum.Font.GothamMedium
+		footerLabel.TextSize = 8
+		footerLabel.TextXAlignment = Enum.TextXAlignment.Left
+		footerLabel.TextYAlignment = Enum.TextYAlignment.Center
+		footerLabel.ZIndex = button.ZIndex + 1
+		footerLabel.Parent = button
+	end
+
+	glyphLabel.Text = tostring((definition and definition.glyph) or "?")
+	titleLabel.Text = tostring((definition and definition.label) or "TOOL")
+	shortcutLabel.Text = string.format("[%s]", tostring((definition and definition.shortcut) or "?"))
+	metaLabel.Text = "READY"
+	footerLabel.Text = string.upper(tostring((definition and definition.role) or "UTILITY"))
+
+	return {
+		Button = button,
+		GlyphPlate = glyphPlate,
+		GlyphLabel = glyphLabel,
+		ShortcutLabel = shortcutLabel,
+		TitleLabel = titleLabel,
+		MetaLabel = metaLabel,
+		FooterLabel = footerLabel,
+	}
 end
 
 local function deriveFloatGlyph(labelText)
@@ -2530,6 +2668,7 @@ function UISystem:Init(context)
 		confirmedEvidence = {},
 		candidates = {},
 		toolType = JOURNAL_TOOL_TYPE,
+		toolStates = createDefaultFieldKitToolStates(),
 		toolStatus = "Tool belum dipakai.",
 		toolReason = "Buka panel Evidence lalu tekan SCAN untuk uji E2E.",
 		toolSuccess = nil,
@@ -2735,6 +2874,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 				toolData,
 				eventName
 			)
+			self:_applyFieldKitToolUpdate(payload.toolType, payload.success ~= false, payload.reason, toolData, eventName)
 			self._journalState.toolType = payload.toolType
 			self._journalState.toolStatus = statusText
 			self._journalState.toolReason = detailText
@@ -2754,6 +2894,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._uiState.RoyalPassUI.visible = true
 			self._uiState.PASRA_UI.visible = false
 			self._uiState.SpectatorUI.visible = false
+			self:_resetFieldKitToolStates()
 			self:_setMatchWindowDismissed(false)
 			self:_refreshBasicMatchPanel("Lobby")
 		end
@@ -2914,6 +3055,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._journalState.discoveredEvidence = {}
 			self._journalState.confirmedEvidence = {}
 			self._journalState.candidates = {}
+			self:_resetFieldKitToolStates()
 			self._pasraState.lastEvent = eventName
 			self._pasraState.status = "Match aktif."
 			self._pasraState.subtitle = "Menunggu hasil akhir dan reward."
@@ -2926,6 +3068,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._uiState.PASRA_UI.visible = false
 			self._uiState.SpectatorUI.visible = false
 			self._spectatorState.mode = "none"
+			self:_resetFieldKitToolStates()
 			self:_setMatchWindowDismissed(false)
 			self:_refreshBasicMatchPanel(keepResultsVisible and "Results" or "Lobby", payload)
 		end
@@ -3406,6 +3549,134 @@ function UISystem:_getEvidenceToolsService()
 	return registry:Get("EvidenceTools")
 end
 
+function UISystem:_ensureFieldKitToolStates()
+	local journalState = self._journalState or {}
+	local toolStates = journalState.toolStates
+	if type(toolStates) ~= "table" then
+		toolStates = createDefaultFieldKitToolStates()
+		journalState.toolStates = toolStates
+		self._journalState = journalState
+	end
+	for _, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+		if type(toolStates[toolType]) ~= "table" then
+			toolStates[toolType] = createDefaultFieldKitToolState(toolType)
+		end
+	end
+	return toolStates
+end
+
+function UISystem:_getFieldKitToolState(toolType)
+	local states = self:_ensureFieldKitToolStates()
+	return states and states[toolType] or nil
+end
+
+function UISystem:_resetFieldKitToolStates()
+	local journalState = self._journalState or {}
+	journalState.toolStates = createDefaultFieldKitToolStates()
+	journalState.toolType = JOURNAL_TOOL_TYPE
+	journalState.toolStatus = "Field kit siap."
+	journalState.toolReason = "Scan jejak atau pasang utility sesuai situasi."
+	journalState.toolSuccess = nil
+	journalState.toolLastUsedAt = 0
+	self._journalState = journalState
+end
+
+function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, eventName)
+	local toolState = self:_getFieldKitToolState(toolType)
+	if not toolState then
+		return
+	end
+
+	toolState.pending = false
+	toolState.lastEvent = eventName or toolState.lastEvent
+	toolState.lastReason = reason or toolState.lastReason
+	toolState.lastSuccess = success ~= false
+	toolState.lastUpdatedAt = os.clock()
+
+	if type(data) == "table" then
+		local usesRemaining = tonumber(data.usesRemaining)
+		if usesRemaining ~= nil then
+			toolState.usesRemaining = math.max(0, math.floor(usesRemaining))
+		end
+
+		local chargesRemaining = tonumber(data.chargesRemaining)
+		if chargesRemaining ~= nil then
+			toolState.chargesRemaining = math.max(0, math.floor(chargesRemaining))
+		end
+
+		local placementId = data.placementId
+		if type(placementId) == "string" and placementId ~= "" then
+			toolState.placementId = placementId
+		end
+		if data.visualPlaced ~= nil then
+			toolState.visualPlaced = data.visualPlaced == true
+		end
+	end
+
+	if eventName == "SaltPlaced" or eventName == "CrucifixPlaced" or eventName == "SmudgeActivated" then
+		toolState.visualPlaced = true
+	end
+
+	if eventName == "CrucifixTriggered" then
+		local chargesRemaining = tonumber(toolState.chargesRemaining)
+		if chargesRemaining ~= nil and chargesRemaining <= 0 then
+			toolState.visualPlaced = false
+		end
+	end
+
+	if reason == "tool_out_of_stock" then
+		toolState.usesRemaining = 0
+	end
+
+	if toolType == JOURNAL_TOOL_TYPE then
+		toolState.visualPlaced = false
+		toolState.placementId = nil
+		toolState.chargesRemaining = nil
+	end
+end
+
+function UISystem:_resolveFieldKitMeta(toolType, toolState)
+	local config = FIELD_KIT_TOOL_CONFIG[toolType] or {}
+	if not toolState then
+		return "READY", false, string.upper(tostring(config.role or "UTILITY"))
+	end
+
+	local tools = self:_getEvidenceToolsService()
+	local clientState = tools and type(tools.GetToolState) == "function" and tools:GetToolState(toolType) or nil
+	local cooldownActive = clientState and tonumber(clientState.cooldownUntil) and clientState.cooldownUntil > os.clock()
+	local usesRemaining = tonumber(toolState.usesRemaining)
+	local chargesRemaining = tonumber(toolState.chargesRemaining)
+
+	if toolState.pending then
+		return "WAIT", false, "REQUEST"
+	end
+	if cooldownActive or toolState.lastReason == "tool_local_cooldown" or toolState.lastReason == "tool_cooldown" then
+		return "COOLDOWN", false, "HOLD"
+	end
+	if toolType == "Salib" and chargesRemaining ~= nil and toolState.visualPlaced == true then
+		return string.format("C%d", math.max(0, math.floor(chargesRemaining))), false, chargesRemaining > 0 and "GUARD" or "BURNT"
+	end
+	if toolState.visualPlaced == true then
+		if toolType == "Garam" then
+			return "AKTIF", false, "TRAP ON"
+		elseif toolType == "Dupa" then
+			return "AKTIF", false, "SMOKE ON"
+		elseif toolType == "Salib" then
+			return "AKTIF", false, "GUARD"
+		end
+	end
+	if usesRemaining ~= nil and usesRemaining <= 0 then
+		return "HABIS", true, "STOK 0"
+	end
+	if usesRemaining ~= nil then
+		return string.format("x%d", math.max(0, math.floor(usesRemaining))), false, string.format("STOK %d", math.max(0, math.floor(usesRemaining)))
+	end
+	if toolType == JOURNAL_TOOL_TYPE then
+		return "LIVE", false, "SCAN LOOP"
+	end
+	return "READY", false, string.upper(tostring(config.role or "UTILITY"))
+end
+
 function UISystem:_useInvestigationTool(toolType, options)
 	local tools = self:_getEvidenceToolsService()
 	local settings = options or {}
@@ -3414,11 +3685,24 @@ function UISystem:_useInvestigationTool(toolType, options)
 	local state = self._journalState or {}
 	state.toolType = toolType
 	state.toolLastUsedAt = os.clock()
+	self._journalState = state
+
+	local toolState = self:_getFieldKitToolState(toolType)
+	if toolState then
+		toolState.pending = true
+		toolState.lastUpdatedAt = os.clock()
+	end
 
 	if not tools or type(tools.UseTool) ~= "function" then
 		state.toolStatus = "Tool client tidak siap."
 		state.toolReason = "EvidenceTools belum terdaftar di registry client."
 		state.toolSuccess = false
+		if toolState then
+			toolState.pending = false
+			toolState.lastSuccess = false
+			toolState.lastReason = "client_not_ready"
+			toolState.lastUpdatedAt = os.clock()
+		end
 		self._journalState = state
 		self:_refreshJournalPanel()
 		self:_refreshFieldKitPanel()
@@ -3433,12 +3717,14 @@ function UISystem:_useInvestigationTool(toolType, options)
 		state.toolStatus = (FIELD_KIT_TOOL_CONFIG[toolType] and FIELD_KIT_TOOL_CONFIG[toolType].label or "Tool") .. " gagal."
 		state.toolReason = tostring(success)
 		state.toolSuccess = false
+		self:_applyFieldKitToolUpdate(toolType, false, tostring(success), nil, nil)
 	else
 		local responseData = type(response) == "table" and ((type(response.data) == "table" and response.data.result) or response.result or response.data) or nil
 		local statusText, detailText = resolveToolFeedback(toolType, success == true, reason or (response and response.reason), responseData, nil)
 		state.toolSuccess = success == true
 		state.toolStatus = statusText
 		state.toolReason = detailText
+		self:_applyFieldKitToolUpdate(toolType, success == true, reason or (response and response.reason), responseData, nil)
 	end
 
 	self._journalState = state
@@ -3475,6 +3761,7 @@ function UISystem:_refreshFieldKitPanel()
 	local detailText = tostring(state.toolReason or "Pilih tool untuk lanjut investigasi.")
 	local statusText = tostring(state.toolStatus or "Field kit siap.")
 	local isRecent = (os.clock() - (tonumber(state.toolLastUsedAt) or 0)) <= 4
+	local toolStates = self:_ensureFieldKitToolStates()
 
 	if match.FieldKitFrame then
 		match.FieldKitFrame.BackgroundColor3 = activeConfig.accent:Lerp(Color3.fromRGB(14, 18, 26), 0.78)
@@ -3490,16 +3777,71 @@ function UISystem:_refreshFieldKitPanel()
 			or Color3.fromRGB(214, 222, 234)
 	end
 	if match.FieldKitButtons then
-		for toolName, button in pairs(match.FieldKitButtons) do
+		for toolName, widget in pairs(match.FieldKitButtons) do
 			local toolConfig = FIELD_KIT_TOOL_CONFIG[toolName]
-			if button and toolConfig then
-				local selected = isRecent and activeTool == toolName
-				button.BackgroundColor3 = selected
-					and toolConfig.accent
-					or toolConfig.accent:Lerp(Color3.fromRGB(34, 42, 56), 0.44)
-				button.Text = self._deviceProfile and self._deviceProfile.isMobile
-					and toolConfig.label
-					or string.format("%s [%s]", toolConfig.label, toolConfig.shortcut)
+			local button = widget and (widget.Button or widget) or nil
+			local toolState = toolStates[toolName]
+			if button and toolConfig and toolState then
+				local metaText, metaDanger, footerText = self:_resolveFieldKitMeta(toolName, toolState)
+				local selected = activeTool == toolName and (isRecent or toolState.pending or toolState.visualPlaced == true)
+				local idleColor = toolConfig.accent:Lerp(Color3.fromRGB(34, 42, 56), 0.44)
+				local fillColor = selected and toolConfig.accent or idleColor
+				button.BackgroundColor3 = fillColor
+				button.Text = ""
+
+				local buttonStroke = button:FindFirstChildOfClass("UIStroke")
+				if buttonStroke then
+					buttonStroke.Color = metaDanger
+						and Color3.fromRGB(184, 102, 102)
+						or toolConfig.accent:Lerp(Color3.fromRGB(236, 232, 224), selected and 0.18 or 0.04)
+					buttonStroke.Transparency = selected and 0.08 or 0.22
+					buttonStroke.Thickness = selected and 1.6 or 1.2
+				end
+				if widget.GlyphPlate then
+					widget.GlyphPlate.Position = UDim2.fromOffset(7, 6)
+					widget.GlyphPlate.Size = UDim2.fromOffset(26, 20)
+					widget.GlyphPlate.BackgroundColor3 = toolConfig.accent:Lerp(Color3.fromRGB(248, 244, 236), selected and 0.12 or 0.2)
+					widget.GlyphPlate.BackgroundTransparency = selected and 0.08 or 0.18
+				end
+				if widget.GlyphLabel then
+					widget.GlyphLabel.Size = UDim2.fromScale(1, 1)
+					widget.GlyphLabel.Text = tostring(toolConfig.glyph or toolConfig.label)
+					widget.GlyphLabel.TextColor3 = selected and Color3.fromRGB(18, 24, 30) or Color3.fromRGB(242, 238, 228)
+				end
+				if widget.ShortcutLabel then
+					widget.ShortcutLabel.Position = UDim2.new(1, -32, 0, 6)
+					widget.ShortcutLabel.Size = UDim2.fromOffset(26, 12)
+					widget.ShortcutLabel.Text = string.format("[%s]", tostring(toolConfig.shortcut or "?"))
+					widget.ShortcutLabel.TextColor3 = Color3.fromRGB(208, 214, 226)
+				end
+				if widget.TitleLabel then
+					widget.TitleLabel.Position = UDim2.fromOffset(8, 28)
+					widget.TitleLabel.Size = UDim2.new(1, -16, 0, 14)
+					widget.TitleLabel.Text = tostring(toolConfig.label)
+					widget.TitleLabel.TextColor3 = Color3.fromRGB(246, 246, 244)
+					widget.TitleLabel.TextSize = self._deviceProfile and self._deviceProfile.isMobile and 11 or 10
+				end
+				if widget.MetaLabel then
+					widget.MetaLabel.Position = UDim2.new(1, -54, 1, -18)
+					widget.MetaLabel.Size = UDim2.fromOffset(48, 14)
+					widget.MetaLabel.BackgroundColor3 = metaDanger
+						and Color3.fromRGB(102, 58, 58)
+						or toolConfig.accent:Lerp(Color3.fromRGB(20, 26, 36), 0.22)
+					widget.MetaLabel.BackgroundTransparency = metaDanger and 0.04 or 0.08
+					widget.MetaLabel.Text = metaText
+					widget.MetaLabel.TextColor3 = metaDanger
+						and Color3.fromRGB(252, 226, 226)
+						or Color3.fromRGB(250, 246, 236)
+				end
+				if widget.FooterLabel then
+					widget.FooterLabel.Position = UDim2.fromOffset(8, 43)
+					widget.FooterLabel.Size = UDim2.new(1, -70, 0, 10)
+					widget.FooterLabel.Text = footerText
+					widget.FooterLabel.TextColor3 = metaDanger
+						and Color3.fromRGB(244, 208, 208)
+						or Color3.fromRGB(196, 206, 218)
+					widget.FooterLabel.TextSize = self._deviceProfile and self._deviceProfile.isMobile and 9 or 8
+				end
 			end
 		end
 	end
@@ -6820,9 +7162,9 @@ function UISystem:_applyDeviceSizing()
 		match.ControlsHintLabel.TextSize = profile.isMobile and 13 or 12
 	end
 	if match and match.FieldKitFrame then
-		local kitWidth = profile.isMobile and math.min(viewportSize.X - 20, 420) or 334
-		local kitHeight = profile.isMobile and 132 or 118
-		match.FieldKitFrame.Size = UDim2.fromOffset(math.max(profile.isMobile and 316 or 300, math.floor(kitWidth)), kitHeight)
+		local kitWidth = profile.isMobile and math.min(viewportSize.X - 20, 420) or 356
+		local kitHeight = profile.isMobile and 154 or 146
+		match.FieldKitFrame.Size = UDim2.fromOffset(math.max(profile.isMobile and 316 or 332, math.floor(kitWidth)), kitHeight)
 		if profile.isMobile then
 			match.FieldKitFrame.AnchorPoint = Vector2.new(0.5, 1)
 			match.FieldKitFrame.Position = UDim2.new(0.5, 0, 1, -(60 + bottomRightInset.Y))
@@ -6838,18 +7180,18 @@ function UISystem:_applyDeviceSizing()
 	end
 	if match and match.FieldKitButtonsFrame then
 		match.FieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
-		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, profile.isMobile and 44 or 40)
+		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, profile.isMobile and 58 or 56)
 	end
 	if match and match.FieldKitGrid and match.FieldKitFrame then
 		local availableWidth = math.max(280, match.FieldKitFrame.Size.X.Offset - 24)
 		local cellPadding = profile.isMobile and 6 or 6
 		local cellWidth = math.floor((availableWidth - (cellPadding * 3)) / 4)
 		match.FieldKitGrid.CellPadding = UDim2.fromOffset(cellPadding, 0)
-		match.FieldKitGrid.CellSize = UDim2.fromOffset(math.max(profile.isMobile and 72 or 66, cellWidth), profile.isMobile and 44 or 40)
+		match.FieldKitGrid.CellSize = UDim2.fromOffset(math.max(profile.isMobile and 72 or 76, cellWidth), profile.isMobile and 58 or 56)
 	end
 	if match and match.FieldKitStatusLabel then
-		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, profile.isMobile and 84 or 80)
-		match.FieldKitStatusLabel.Size = UDim2.new(1, -24, 0, profile.isMobile and 38 or 30)
+		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, profile.isMobile and 100 or 98)
+		match.FieldKitStatusLabel.Size = UDim2.new(1, -24, 0, profile.isMobile and 40 or 36)
 		match.FieldKitStatusLabel.TextSize = profile.isMobile and 12 or 11
 	end
 	if self._uxWidgets and self._uxWidgets.windows then
@@ -9506,7 +9848,7 @@ function UISystem:_ensureBasicUIs()
 				fieldKitFrame.Name = "FieldKitFrame"
 				fieldKitFrame.AnchorPoint = Vector2.new(0, 1)
 				fieldKitFrame.Position = UDim2.new(0, 16, 1, -60)
-				fieldKitFrame.Size = UDim2.fromOffset(334, 118)
+				fieldKitFrame.Size = UDim2.fromOffset(356, 146)
 				fieldKitFrame.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
 				fieldKitFrame.BackgroundTransparency = 0.08
 				fieldKitFrame.BorderSizePixel = 0
@@ -9545,14 +9887,14 @@ function UISystem:_ensureBasicUIs()
 				fieldKitButtonsFrame = Instance.new("Frame")
 				fieldKitButtonsFrame.Name = "Buttons"
 				fieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
-				fieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, 40)
+				fieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, 58)
 				fieldKitButtonsFrame.BackgroundTransparency = 1
 				fieldKitButtonsFrame.Parent = fieldKitFrame
 
 				local fieldKitGrid = Instance.new("UIGridLayout")
 				fieldKitGrid.Name = "Grid"
 				fieldKitGrid.CellPadding = UDim2.fromOffset(6, 0)
-				fieldKitGrid.CellSize = UDim2.fromOffset(73, 40)
+				fieldKitGrid.CellSize = UDim2.fromOffset(79, 56)
 				fieldKitGrid.FillDirection = Enum.FillDirection.Horizontal
 				fieldKitGrid.FillDirectionMaxCells = 4
 				fieldKitGrid.HorizontalAlignment = Enum.HorizontalAlignment.Left
@@ -9565,8 +9907,8 @@ function UISystem:_ensureBasicUIs()
 			if not fieldKitStatusLabel then
 				fieldKitStatusLabel = Instance.new("TextLabel")
 				fieldKitStatusLabel.Name = "StatusLabel"
-				fieldKitStatusLabel.Position = UDim2.fromOffset(12, 80)
-				fieldKitStatusLabel.Size = UDim2.new(1, -24, 0, 30)
+				fieldKitStatusLabel.Position = UDim2.fromOffset(12, 98)
+				fieldKitStatusLabel.Size = UDim2.new(1, -24, 0, 36)
 				fieldKitStatusLabel.BackgroundTransparency = 1
 				fieldKitStatusLabel.Font = Enum.Font.Gotham
 				fieldKitStatusLabel.TextSize = 11
@@ -9587,13 +9929,14 @@ function UISystem:_ensureBasicUIs()
 					toolButton = Instance.new("TextButton")
 					toolButton.Name = buttonName
 					toolButton.LayoutOrder = order
-					toolButton.Size = UDim2.fromOffset(73, 40)
+					toolButton.Size = UDim2.fromOffset(79, 56)
 					styleButton(toolButton, definition.label)
 					toolButton.TextWrapped = true
 					toolButton.BackgroundColor3 = definition.accent:Lerp(Color3.fromRGB(34, 42, 56), 0.44)
 					toolButton.Parent = fieldKitButtonsFrame
 					self:_setSelectableStyle(toolButton)
 				end
+				local fieldKitWidget = ensureFieldKitButtonVisuals(toolButton, definition)
 				if toolButton:GetAttribute("Bound") ~= true then
 					local boundToolType = toolType
 					local boundOpenJournal = definition.openJournal == true
@@ -9604,7 +9947,7 @@ function UISystem:_ensureBasicUIs()
 						})
 					end)
 				end
-				fieldKitButtons[toolType] = toolButton
+				fieldKitButtons[toolType] = fieldKitWidget
 			end
 
 			local floatBtn = gui:FindFirstChild("MatchFloatButton")

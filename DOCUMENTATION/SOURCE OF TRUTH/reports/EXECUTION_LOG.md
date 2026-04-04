@@ -6119,3 +6119,48 @@ Menyelaraskan utility toolkit evidence antara source lokal dan runtime Studio, l
 - utility toolkit tidak lagi unlimited di runtime Studio.
 - UI/client kini menerima feedback utility yang cukup untuk menampilkan status stok/charge secara kredibel.
 - placeholder visual utility sudah cukup untuk membaca state di playtest sambil menunggu asset final item/tool.
+
+## 2026-04-04 16:54 ICT
+
+### Task
+
+Merapikan roster `Field Kit` di `MatchUI` agar tool utility tidak lagi tampil sebagai tombol polos, tetapi sebagai kartu ringkas yang membawa glyph, stok/charge, dan state runtime per tool.
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+
+### Change Summary
+
+- `Field Kit` sekarang punya metadata source-controlled per tool:
+  - glyph ringkas (`JN`, `GR`, `SL`, `DP`)
+  - role label (`Sensor`, `Trap`, `Guard`, `Repel`)
+  - stok default per match untuk `Garam`, `Salib`, `Dupa`
+- client sekarang menyimpan state runtime per tool, bukan hanya status global terakhir:
+  - `usesRemaining`
+  - `chargesRemaining`
+  - `visualPlaced`
+  - `placementId`
+  - `pending / cooldown / out_of_stock`
+- tombol `Field Kit` di `MatchUI` naik menjadi card compact:
+  - glyph plate
+  - shortcut badge
+  - meta pill (`LIVE`, `x3`, `C3`, `AKTIF`, `HABIS`, `COOLDOWN`)
+  - footer role/state
+- reset antar match/lobby sekarang membersihkan stok + pesan global `Field Kit`, jadi state lama tidak bocor ke match berikutnya.
+- layout `Field Kit` diperlebar dan ditinggikan agar kartu tool tetap terbaca di desktop/compact viewport.
+
+### Validation Notes
+
+- build lokal lolos:
+  - `_tmp_fieldkit_ui_build.rbxlx`
+- sesi Studio aktif masih memuat `StarterPlayerScripts.Client.UI.Main` yang lebih lama:
+  - `MatchUI` aktif di runtime
+  - `FieldKitFrame` belum hadir di `PlayerGui.MatchUI`
+  - inspeksi source Studio menunjukkan Rojo belum mendorong blok `Field Kit` terbaru ke sesi itu
+- artinya source lokal sudah valid, tetapi validasi visual live untuk pass ini masih menunggu Studio menarik script `Main.lua` terbaru.
+
+### Interpretation
+
+- backlog `P2.11` untuk `tool icon` + `tool UI state` naik nyata di source utama.
+- blocker yang tersisa pada pass ini bukan implementasi client lagi, melainkan drift sync Studio terhadap `src/client/UI/Main.lua`.
