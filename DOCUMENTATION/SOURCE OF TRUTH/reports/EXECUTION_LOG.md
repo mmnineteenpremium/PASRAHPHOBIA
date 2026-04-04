@@ -6648,3 +6648,37 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - jalur popup lobby utama sekarang jauh lebih konsisten di layar mobile.
 - `MainMenuUI` tidak lagi terasa cramped, dan `LeaderboardUI` sudah cukup besar untuk data scroll/live test berikutnya.
+
+## 2026-04-04 - Shop + Profile Mobile Sheet Pass
+
+### Scope
+
+- menyamakan `ShopUI` dan `ProfileUI` dengan pola sheet mobile yang sudah dipakai `RoyalPassUI`.
+- menutup gap agar surface shop/profile tidak tertinggal sebagai panel desktop kecil saat viewport override mobile aktif.
+
+### Root Cause
+
+- sizing mobile fullscreen sebelumnya hanya diterapkan khusus untuk `RoyalPassUI`.
+- `ProfileUI` dan `ShopUI` tetap memakai ukuran config lama (`340/356px`) walau device profile sudah `mobile`.
+
+### Implementation Notes
+
+- jalur sizing auxiliary diperluas untuk `ProfileUI` dan `ShopUI`, bukan lagi `RoyalPassUI` saja.
+- pada mode mobile, ketiga panel ini sekarang:
+  - anchor ke kiri atas
+  - pakai lebar viewport efektif penuh
+  - pakai tinggi viewport efektif penuh
+  - background sedikit lebih solid (`0.04`)
+- footer label auxiliary ikut ditarik ke bawah agar tidak menggantung di posisi config lama saat panel memanjang.
+
+### Validation Notes
+
+- probe mobile override (`390 x 844`) menunjukkan:
+  - `ShopUI.MainPanel = 390 x 844`
+  - `ProfileUI.MainPanel = 390 x 844`
+- `ShopUI` terbukti terbuka dari `LobbyUI.MainPanel.ShopButton`.
+- `ProfileUI` terbukti terbuka dari `MainMenuUI.MainPanel.ProfileButton`, sekaligus menutup `MainMenuUI` seperti yang diharapkan.
+
+### Interpretation
+
+- jalur lobby auxiliary sekarang jauh lebih konsisten: `PASS`, `SHOP`, dan `PROFILE` tidak lagi terasa campuran desktop-mobile pada viewport sempit.
