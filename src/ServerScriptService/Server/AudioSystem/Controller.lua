@@ -182,10 +182,23 @@ end
 function Controller:OnGhostInteraction(payload)
 	local matchId = payload and payload.matchId
 	if matchId then
+		local interactionToken = tostring(payload and (payload.interactionType or payload.deceptionType) or "ghost_interaction")
+			:gsub("[%s_%-]+", "")
+			:lower()
+		local cue = "ghost_interaction"
+		if interactionToken == "whispersound" or interactionToken == "fakeghostsound" then
+			cue = "ghost_whisper"
+		elseif interactionToken == "fakefootsteps" then
+			cue = "ghost_fake_footsteps"
+		elseif interactionToken == "fakemanifestation" then
+			cue = "ghost_manifest"
+		elseif interactionToken == "objectthrow" then
+			cue = "ghost_object_throw"
+		end
 		self._service:TriggerGhostAudio(matchId, {
 			roomId = payload.room,
-			cue = "ghost_interaction",
-			intensity = 0.7,
+			cue = cue,
+			intensity = payload and payload.intensity or 0.7,
 			now = payload.now,
 		})
 	end

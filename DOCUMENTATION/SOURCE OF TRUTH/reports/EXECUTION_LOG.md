@@ -8334,3 +8334,50 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - lighting client sekarang punya pemisahan atmosfer lobby vs map yang benar-benar terbukti di runtime
 - ini menutup sebagian debt `material and lighting polish` pada level sensory baseline, meski pass artistik penuh map masih tersisa
+
+## 2026-04-05 - Cue-Aware Ghost And Jumpscare Audio Pass
+
+### Scope
+
+- menutup debt audio yang masih terlalu generik:
+  - `GhostInteraction` server selalu mengirim cue yang sama
+  - `Jumpscare_01` masih memakai asset countdown
+
+### Source Changes
+
+- `src/ServerScriptService/Server/AudioSystem/Controller.lua`
+  - `OnGhostInteraction()` sekarang memetakan cue berdasarkan `interactionType/deceptionType`:
+    - `WhisperSound/FakeGhostSound -> ghost_whisper`
+    - `FakeFootsteps -> ghost_fake_footsteps`
+    - `FakeManifestation -> ghost_manifest`
+    - `ObjectThrow -> ghost_object_throw`
+- `src/client/SoundSystem/Main.lua`
+  - `resolveGhostTemplate()` sekarang membaca payload penuh, bukan cuma string cue
+  - cue `footstep` sekarang diarahkan ke bank `Footsteps`
+  - cue `object/throw` sekarang diarahkan ke `EnvironmentalCreak_01`
+  - tambah `resolveJumpscareTemplate()` agar `JumpscareAudio` punya resolver sendiri
+  - `JumpscareAudio` sekarang juga punya shaping playback speed terpisah
+- `src/ReplicatedStorage/Assets/Audio/Jumpscare/Jumpscare_01.model.json`
+  - `AudioContent` dipindah ke `rbxassetid://138329686293368`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_cue_audio_routing_build.rbxlx`
+- validasi live Studio:
+  - `CreateRoom -> HostStart(HauntedHouse)` sukses
+  - `StudioE2EControl.TriggerJumpscare` sukses
+  - debug runtime pemain setelah trigger:
+    - `PasrahAudioLastCategory = JumpscareAudio`
+    - `PasrahAudioLastTemplate = Jumpscare_01`
+    - `PasrahAudioLastCue = jumpscare_stinger`
+    - `PasrahAudioLastSoundId = rbxassetid://138329686293368`
+    - `PasrahAudioPlayCount = 1`
+- status validasi jujur:
+  - routing `GhostInteraction` baru sudah masuk source
+  - harness Studio untuk memaksa tiap deception cue belum ada, jadi validasi live jalur `fake_footsteps/object_throw` masih source-side pada batch ini
+
+### Interpretation
+
+- jumpscare tidak lagi terdengar seperti countdown teleport
+- jalur ghost audio sekarang lebih siap untuk polish berikutnya karena cue server dan resolver client sudah lebih spesifik
