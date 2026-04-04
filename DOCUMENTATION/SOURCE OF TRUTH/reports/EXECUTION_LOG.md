@@ -8157,3 +8157,54 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - slice utility tool tidak lagi terasa placeholder polos
 - state visual sekarang mulai jujur mengikuti event gameplay yang memang aktif
 - `tool roster` belum selesai penuh karena icon/non-utility presentation masih perlu pass lanjutan
+
+## 2026-04-04 - Field Kit HUD Identity Pass
+
+### Scope
+
+- menutup bagian HUD dari item `tool roster` tanpa membuka owner UI baru atau memecah jalur `UI/Main`
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `FIELD_KIT_TOOL_CONFIG` sekarang punya mikrocopy identitas per tool:
+    - `hint`
+    - `readyMeta`
+    - `readyFooter`
+  - `ensureFieldKitButtonVisuals()` sekarang membangun:
+    - `HintLabel`
+    - `AccentBar`
+  - `_resolveFieldKitMeta()` sekarang memberi idle state yang lebih jujur untuk tool non-placement:
+    - `JejakEnergi -> LIVE / SCAN ARC`
+    - `KotakArwah -> LISTEN / VOICE LINK`
+    - jika signal sudah ada:
+      - `JejakEnergi -> EMF n / MEDOK LOCK`
+      - `KotakArwah -> RESPON / VOICE <tier>`
+    - jika target terlalu jauh:
+      - `JejakEnergi -> NO SIG / SCAN ARC`
+      - `KotakArwah -> SENYAP / VOICE NULL`
+  - sizing `FieldKitFrame`, grid, dan status label dinaikkan sedikit agar kartu tetap terbaca setelah tambahan hint line
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_fieldkit_hud_polish_build.rbxlx`
+- sesi Studio awal masih drift dan memuat `Field Kit` lama:
+  - `frameSize = 356x146`
+  - `HintLabel = false`
+  - `AccentBar = false`
+- setelah `Stop Play -> Start Play` lalu masuk match lagi, runtime baru terbaca benar:
+  - `FieldKitFrame.Size = 356x156`
+  - semua tombol tool runtime punya `HintLabel = true`
+  - semua tombol tool runtime punya `AccentBar = true`
+  - sample runtime:
+    - `JejakEnergiButton -> hint = EMF SWEEP, meta = LIVE, footer = SCAN ARC`
+    - `KotakArwahButton -> hint = VOICE BAIT, meta = LISTEN, footer = VOICE LINK`
+    - `GaramButton -> hint = LURE TRAP`
+    - `SalibButton -> hint = HUNT BLOCK`
+    - `DupaButton -> hint = REPEL CLOUD`
+
+### Interpretation
+
+- roster tool di HUD sekarang punya identitas yang lebih cepat dibaca tanpa menunggu pemain membuka jurnal atau mencoba tool satu per satu
+- ini menutup bagian `icon/UI state` dari item `tool roster` dengan perubahan yang tetap satu-owner dan aman terhadap drift arsitektur

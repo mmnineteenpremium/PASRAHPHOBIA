@@ -559,6 +559,18 @@ Status:
   - `Smoke4.Transparency = 0.60`
   - `Smoke5.Transparency = 0.68`
   - warna smoke bergeser ke cyan saat repel aktif
+- `Field Kit` HUD sekarang tidak lagi hanya kartu teks tipis:
+  - setiap tool punya `hint` mikro yang membedakan fungsi (`EMF sweep`, `Voice bait`, `Lure trap`, dst.)
+  - kartu sekarang punya `accent bar` dan ruang vertikal lebih lega sehingga lebih terbaca di desktop/mobile
+  - `JejakEnergi` dan `KotakArwah` tidak lagi tampil generik saat idle:
+    - `JejakEnergi -> LIVE / SCAN ARC`
+    - `KotakArwah -> LISTEN / VOICE LINK`
+- validasi live Studio terbaru membuktikan HUD baru benar-benar masuk ke runtime:
+  - `FieldKitFrame.Size = 356x156`
+  - seluruh tombol tool runtime sekarang punya `HintLabel = true`
+  - seluruh tombol tool runtime sekarang punya `AccentBar = true`
+  - `JejakEnergiButton -> hint EMF SWEEP`
+  - `KotakArwahButton -> hint VOICE BAIT`
 
 Pekerjaan:
 
@@ -1501,6 +1513,7 @@ Urutan yang paling masuk akal dari titik sekarang:
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
 - hasil audit saat ini menunjukkan angka itu tampak seperti `UserId/account id`, bukan `GamePassId/ProductId` Creator Hub yang terverifikasi.
 - blocker publish Robux tetap sama sampai ID marketplace resmi dibuat di Creator Hub lalu diisi ke `src/shared/DataTypes/ShopMarketplaceConfig.lua`.
+- catatan ini bukan blocker eksekusi roadmap harian; kerjakan paling akhir tepat sebelum publish/compliance final.
 
 ## LAST NOTE - Placeholder Entitlements Stay Disabled
 
