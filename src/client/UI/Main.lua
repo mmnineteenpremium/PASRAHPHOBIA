@@ -1391,16 +1391,18 @@ local function findShopCatalogItem(catalog, itemId)
 	return nil
 end
 
-local function formatShopWalletSummary(wallet)
+local function formatShopWalletSummary(wallet, catalog)
 	if type(wallet) ~= "table" then
-		return "MM 0  •  PP 0  •  R$ 0"
+		return "MM 0  •  PP 0"
 	end
-	return string.format(
-		"MM %d  •  PP %d  •  R$ %d",
-		math.max(0, math.floor(tonumber(wallet.MM) or 0)),
-		math.max(0, math.floor(tonumber(wallet.PP) or 0)),
-		math.max(0, math.floor(tonumber(wallet.Robux) or 0))
-	)
+	local parts = {
+		string.format("MM %d", math.max(0, math.floor(tonumber(wallet.MM) or 0))),
+		string.format("PP %d", math.max(0, math.floor(tonumber(wallet.PP) or 0))),
+	}
+	if shouldShowShopFilter("Robux", catalog, nil) then
+		table.insert(parts, string.format("R$ %d", math.max(0, math.floor(tonumber(wallet.Robux) or 0))))
+	end
+	return table.concat(parts, "  •  ")
 end
 
 local SHOP_FILTERS = {
@@ -6220,7 +6222,7 @@ function UISystem:_refreshShopPanel()
 	local statusText = "STORE"
 	local badgeColor = Color3.fromRGB(124, 92, 48)
 	local secondaryText = self._shopState.lastMessage or "Pilih item untuk test shop."
-	local walletSummary = formatShopWalletSummary(self._shopState.wallet)
+	local walletSummary = formatShopWalletSummary(self._shopState.wallet, self._shopState.catalog)
 	local ownedCount = 0
 	local activeFilter = tostring(self._shopState.filterKey or "All")
 	for _ in pairs(self._shopState.ownedItemIds or {}) do
