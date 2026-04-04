@@ -8936,3 +8936,48 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - `WindowKnock` sekarang lebih terasa seperti ketukan kayu daripada pintu berdecit
 - `ObjectThrow` sekarang lebih dekat ke impact keras daripada creak yang sama untuk semua event
 - `Jumpscare` sekarang punya stinger yang lebih pantas untuk beat shock
+
+## 2026-04-05 - Local Light Flicker Runtime Pass
+
+### Scope
+
+- membuat `LightFlicker` benar-benar terlihat di map, bukan hanya terasa lewat grading global
+
+### Source Changes
+
+- `src/client/Controllers/Sensory/VFXController.luau`
+  - tambah resolver utilitas:
+    - `coerceVector3()`
+    - `_resolveActiveMatchContainer(matchId)`
+    - `_resolveRoomAnchor(matchId, roomId)`
+    - `_resolveEventPosition(payload)`
+  - tambah `_pulseNearbyLights(centerPosition, radius, profileName)`:
+    - mencari `PointLight/SpotLight/SurfaceLight` di match aktif
+    - mematikan lalu menyalakan ulang brightness di sekitar sumber event
+    - menulis debug attr `PasrahVFXLastLightCount`
+  - `_triggerEnvironmentalShock(payload)` sekarang memanggil `_pulseNearbyLights()` khusus untuk profile `lightflicker`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_light_flicker_runtime_build.rbxlx`
+- validasi live Studio:
+  - `CreateRoom -> HostStart(HauntedHouse)` sukses (`matchCount = 1`)
+  - `TriggerAudioCue(EnvironmentalAudio, LightFlicker)` pada area `LivingRoom` menghasilkan:
+    - `PasrahVFXLastProfile = lightflicker`
+    - `PasrahVFXLastLightCount = 3`
+  - lampu contoh `Light_LivingRoom.PointLight`:
+    - sebelum pulse:
+      - `Enabled = true`
+      - `Brightness = 1.6`
+    - saat pulse:
+      - `Enabled = false`
+      - `Brightness = 0.128`
+    - setelah pulse:
+      - `Enabled = true`
+      - `Brightness = 1.6`
+
+### Interpretation
+
+- `LightFlicker` sekarang benar-benar terlihat sebagai event ruang, bukan sekadar audio atau grading kamera
+- ini mendorong E2E yang lebih jujur karena pemain bisa mendengar dan sekaligus melihat sumber ancaman di lingkungan
