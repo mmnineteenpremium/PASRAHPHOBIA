@@ -506,6 +506,8 @@ local function playUIButtonClick()
 	end
 
 	playRuntimeUISound("ButtonClick", {
+		SingleInstance = true,
+		VolumeScale = 0.95,
 		PlaybackJitter = 0.04,
 	})
 end

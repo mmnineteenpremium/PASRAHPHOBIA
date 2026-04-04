@@ -812,6 +812,13 @@ Status:
     - lobby `LobbySocialHub -> Enum.ReverbType.Room`
     - `HauntedHouse -> Enum.ReverbType.StoneCorridor`
     - `EmptyBuilding -> Enum.ReverbType.Hallway`
+- `ButtonClick_01` sekarang tidak lagi memakai bunyi UI default Roblox yang terlalu generik:
+  - slot canonical dipindah ke `rbxassetid://115959318`
+  - playback UI sekarang `SingleInstance` agar spam klik tidak menumpuk berantakan
+  - jitter kecil tetap dipertahankan supaya bunyinya tidak terasa datar
+- validasi live/source terbaru:
+  - template runtime live `ReplicatedStorage.Assets.Audio.UI.ButtonClick_01.SoundId = rbxassetid://115959318`
+  - klik tombol lobby canonical tetap berhasil membuka `RoomBrowserUI`, jadi jalur owner `connectButtonPress()` tetap sehat setelah pass ini
 - pass map atmosphere sekarang tidak lagi hanya offset tunggal:
   - `LobbySocialHub`, `HauntedHouse`, `EmptyBuilding`, `AbandonedPalace`, dan `StudioMMNineteen` punya profile `Density/Offset/Color/Decay/Glare/Haze` sendiri
   - `VFXController` juga sekarang membaca `PhaseChanged.mapId`, bukan hanya `MatchStarted`, sehingga profile map benar-benar applied pada jalur runtime client yang canonical
