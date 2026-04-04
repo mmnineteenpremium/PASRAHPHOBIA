@@ -7394,7 +7394,7 @@ function UISystem:_applyDeviceSizing()
 		end
 	end
 	if self._uxWidgets and self._uxWidgets.basicWindows then
-		for _, window in pairs(self._uxWidgets.basicWindows) do
+		for guiName, window in pairs(self._uxWidgets.basicWindows) do
 			if window.PrimaryLabel then
 				window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
 			end
@@ -7414,10 +7414,80 @@ function UISystem:_applyDeviceSizing()
 				local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
 				window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
 			end
+			if window.Panel and (guiName == "MainMenuUI" or guiName == "LeaderboardUI") and profile.isMobile then
+				local isMenu = guiName == "MainMenuUI"
+				local availableWidth = viewportSize.X - (topLeftInset.X + bottomRightInset.X)
+				local availableHeight = viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y)
+				local panelWidth = math.max(352, math.floor(availableWidth))
+				local panelHeight = isMenu and math.min(428, math.max(404, availableHeight)) or math.max(560, math.floor(availableHeight))
+				window.Panel.AnchorPoint = Vector2.new(0, 0)
+				window.Panel.Position = UDim2.fromOffset(topLeftInset.X, topLeftInset.Y)
+				window.Panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
+				window.Panel.BackgroundTransparency = 0.04
+
+				if window.Title then
+					setOffsetBounds(window.Title, 12, 10, panelWidth - 60, 26)
+					window.Title.TextSize = 20
+				end
+				if window.CloseButton then
+					setOffsetBounds(window.CloseButton, panelWidth - 46, 10, 34, 30)
+					window.CloseButton.TextSize = 16
+				end
+				if window.StatusBadge then
+					setOffsetBounds(window.StatusBadge, 12, 44, 140, 24)
+					window.StatusBadge.TextSize = 12
+				end
+				if window.PrimaryLabel then
+					setOffsetBounds(window.PrimaryLabel, 12, 76, panelWidth - 24, 38)
+				end
+				if window.SecondaryLabel then
+					setOffsetBounds(window.SecondaryLabel, 12, 118, panelWidth - 24, 34)
+				end
+				if isMenu then
+					local buttonWidth = math.floor((panelWidth - 36) * 0.5)
+					local buttonHeight = 54
+					local rightX = 12 + buttonWidth + 12
+					if window.RoomBrowserButton then
+						setOffsetBounds(window.RoomBrowserButton, 12, 168, buttonWidth, buttonHeight)
+					end
+					if window.ProfileButton then
+						setOffsetBounds(window.ProfileButton, rightX, 168, buttonWidth, buttonHeight)
+					end
+					if window.ShopButton then
+						setOffsetBounds(window.ShopButton, 12, 232, buttonWidth, buttonHeight)
+					end
+					if window.RankButton then
+						setOffsetBounds(window.RankButton, rightX, 232, buttonWidth, buttonHeight)
+					end
+					if window.FooterLabel then
+						setOffsetBounds(window.FooterLabel, 12, panelHeight - 44, panelWidth - 24, 28)
+					end
+				else
+					local contentHeight = math.max(260, panelHeight - 256)
+					local actionY = panelHeight - 74
+					local buttonWidth = math.floor((panelWidth - 36) / 3)
+					if window.ContentFrame then
+						setOffsetBounds(window.ContentFrame, 12, 156, panelWidth - 24, contentHeight)
+						window.ContentFrame.ScrollBarThickness = 8
+					end
+					if window.ProfileButton then
+						setOffsetBounds(window.ProfileButton, 12, actionY, buttonWidth, 42)
+					end
+					if window.RoomBrowserButton then
+						setOffsetBounds(window.RoomBrowserButton, 18 + buttonWidth, actionY, buttonWidth, 42)
+					end
+					if window.MenuButton then
+						setOffsetBounds(window.MenuButton, 24 + buttonWidth * 2, actionY, buttonWidth, 42)
+					end
+					if window.FooterLabel then
+						setOffsetBounds(window.FooterLabel, 12, panelHeight - 26, panelWidth - 24, 18)
+					end
+				end
+			end
 			if window.ActionButtons then
 				for _, button in ipairs(window.ActionButtons) do
 					if button then
-						button.TextSize = math.max(12, profile:GetTextSize() - 5)
+						button.TextSize = profile.isMobile and math.max(13, profile:GetTextSize() - 4) or math.max(12, profile:GetTextSize() - 5)
 					end
 				end
 			end

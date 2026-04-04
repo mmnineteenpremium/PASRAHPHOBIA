@@ -6609,3 +6609,42 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - lobby compact sekarang lebih dekat ke target mobile-friendly yang konsisten dan tidak saling tumpang tindih.
 - window besar sudah berperilaku seperti sheet mobile yang dominan, bukan overlay desktop kecil.
 - rail kanan sekarang deterministik untuk playtest phone layout dan tidak lagi kehilangan tombol `PASS` setelah close/open cycle.
+
+## 2026-04-04 - Main Menu + Rank Mobile Resize Pass
+
+### Scope
+
+- membesarkan `MainMenuUI` agar tidak terasa seperti popup desktop kecil pada viewport mobile.
+- mengubah `LeaderboardUI` menjadi sheet mobile yang benar-benar lega untuk konten scroll dan tombol aksi bawah.
+- menjaga agar rail kanan tetap pulih sesudah `MENU` / `RANK` ditutup.
+
+### Root Cause
+
+- `MainMenuUI` dan `LeaderboardUI` masih memakai config panel dasar `340px` lebar dengan posisi desktop.
+- `_applyDeviceSizing()` sebelumnya hanya mengganti ukuran font dan float button untuk basic windows, bukan ukuran panel dan layout internalnya.
+
+### Implementation Notes
+
+- di jalur mobile, `MainMenuUI.MainPanel` sekarang di-anchor ke kiri atas dan memakai lebar viewport efektif penuh.
+- tombol inti `OPEN ROOM BROWSER`, `OPEN PROFILE`, `OPEN SHOP`, `OPEN RANK BOARD` diperbesar menjadi grid `2 x 2` yang lebih mudah disentuh.
+- `LeaderboardUI.MainPanel` sekarang juga memakai full-sheet mobile.
+- `LeaderboardUI.ContentFrame` dan tiga tombol bawah (`PROFILE`, `OPEN ROOMS`, `OPEN MENU`) ikut direlayout agar tidak mepet.
+
+### Validation Notes
+
+- pada override mobile yang sama (`390 x 844`):
+  - `MainMenuUI.MainPanel` terukur `390 x 428`
+  - empat tombol aksi menu terukur `177 x 54`
+  - `LeaderboardUI.MainPanel` terukur `390 x 844`
+  - `LeaderboardUI.ContentFrame` terukur `366 x 588`
+  - tiga tombol aksi bawah leaderboard terukur `118 x 42`
+- setelah `LeaderboardUI` ditutup kembali, rail kanan pulih lengkap:
+  - `ROOMS = true`
+  - `PASS = true`
+  - `MENU = true`
+  - `RANK = true`
+
+### Interpretation
+
+- jalur popup lobby utama sekarang jauh lebih konsisten di layar mobile.
+- `MainMenuUI` tidak lagi terasa cramped, dan `LeaderboardUI` sudah cukup besar untuk data scroll/live test berikutnya.
