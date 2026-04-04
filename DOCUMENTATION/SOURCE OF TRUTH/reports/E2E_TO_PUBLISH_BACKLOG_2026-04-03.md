@@ -1713,6 +1713,23 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (ghost cue VFX baseline)**.
   - **PENDING** tetap pada ambience legal final dan material polish map yang lebih artistik.
 
+## Update 2026-04-05 18:06 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi relevansi asset audio:
+  - `WindowKnock` tidak lagi jatuh ke creak generik; sekarang memakai `Woodstep_01`.
+  - `ObjectThrow` tidak lagi jatuh ke creak generik; sekarang memakai `ConcreteStep_01`.
+  - `Jumpscare_01` dipindah ke stinger yang lebih cocok (`hard horror hit drum`).
+- validasi live MCP:
+  - `TriggerAudioCue(EnvironmentalAudio, WindowKnock)`:
+    - `SoundId = rbxassetid://104336169985098`
+  - `TriggerAudioCue(EnvironmentalAudio, ObjectThrow)`:
+    - `SoundId = rbxassetid://79900103772577`
+  - `TriggerJumpscare`:
+    - `SoundId = rbxassetid://101202336513383`
+- status:
+  - **SELESAI (event-audio semantic baseline)**.
+  - **PENDING** tetap pada ambience legal final dan kemungkinan asset tambahan yang benar-benar baru bila nanti kamu ingin mengganti library suara yang sekarang.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

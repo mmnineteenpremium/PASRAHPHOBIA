@@ -8894,3 +8894,45 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - manifest/whisper cue sekarang punya jejak visual yang lebih koheren dengan audio dan posisi ruang
 - ini memperkuat atmosfer tanpa harus mengubah logika gameplay atau menambah asset eksternal baru
+
+## 2026-04-05 - Event Audio Semantic Mapping Pass
+
+### Scope
+
+- menutup keluhan E2E yang paling valid:
+  - beberapa event memang sudah berbunyi, tetapi bunyinya masih tidak “terasa seperti event-nya”
+  - target pass ini adalah membuat `WindowKnock/ObjectThrow/Jumpscare` memakai asset yang lebih mendekati arti event tersebut
+
+### Source Changes
+
+- `src/client/SoundSystem/Main.lua`
+  - `resolveEnvironmentalTemplate()` sekarang:
+    - `window/knock -> Footsteps.Woodstep_01`
+    - `object/throw -> Footsteps.ConcreteStep_01`
+    - `door/slam -> Environment.EnvironmentalCreak_01`
+  - `resolveGhostTemplate()` untuk `object/throw` juga sekarang lebih dulu memakai `Footsteps.ConcreteStep_01`
+- `src/ReplicatedStorage/Assets/Audio/Jumpscare/Jumpscare_01.model.json`
+  - `AudioContent` dipindah ke `rbxassetid://101202336513383`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_audio_event_asset_mapping_build.rbxlx`
+- validasi live Studio:
+  - `CreateRoom -> HostStart(HauntedHouse)` sukses (`matchCount = 1`)
+  - `TriggerAudioCue(EnvironmentalAudio, WindowKnock)` menghasilkan:
+    - `PasrahAudioLastCategory = EnvironmentalAudio`
+    - `PasrahAudioLastCue = env_windowknock`
+    - `PasrahAudioLastSoundId = rbxassetid://104336169985098`
+  - `TriggerAudioCue(EnvironmentalAudio, ObjectThrow)` menghasilkan:
+    - `PasrahAudioLastCue = env_objectthrow`
+    - `PasrahAudioLastSoundId = rbxassetid://79900103772577`
+  - `TriggerJumpscare` menghasilkan:
+    - `PasrahAudioLastCategory = JumpscareAudio`
+    - `PasrahAudioLastSoundId = rbxassetid://101202336513383`
+
+### Interpretation
+
+- `WindowKnock` sekarang lebih terasa seperti ketukan kayu daripada pintu berdecit
+- `ObjectThrow` sekarang lebih dekat ke impact keras daripada creak yang sama untuk semua event
+- `Jumpscare` sekarang punya stinger yang lebih pantas untuk beat shock
