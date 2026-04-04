@@ -1632,6 +1632,22 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (map sun rays baseline)**.
   - **PENDING** tetap pada ambience legal final, polish material map, dan enrichment cue lingkungan/ghost.
 
+## Update 2026-04-05 17:19 ICT
+
+- `P2.13 Polish audio dan visual` naik lagi di sisi tone pencahayaan:
+  - profile lighting map sekarang juga mengatur `ColorShift_Top/Bottom`.
+  - lobby diarahkan sedikit hangat, sedangkan `HauntedHouse` diarahkan biru-dingin agar tone ruang lebih terasa.
+- validasi live MCP:
+  - lobby boot:
+    - `ColorShift_Top ~= (0.039, 0.031, 0.016)`
+    - `ColorShift_Bottom ~= (0.024, 0.016, 0.008)`
+  - setelah `CreateRoom -> HostStart(HauntedHouse)`:
+    - `ColorShift_Top ~= (0, 0.024, 0.055)`
+    - `ColorShift_Bottom ~= (0, 0.016, 0.039)`
+- status:
+  - **SELESAI (map color shift baseline)**.
+  - **PENDING** tetap pada ambience legal final, polish material map, dan enrichment cue lingkungan/ghost.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

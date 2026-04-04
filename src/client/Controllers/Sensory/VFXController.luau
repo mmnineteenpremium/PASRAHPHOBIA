@@ -79,6 +79,8 @@ local DEFAULT_MAP_LIGHTING = {
 	OutdoorAmbient = Color3.fromRGB(122, 128, 144),
 	EnvironmentDiffuseScale = 0.26,
 	EnvironmentSpecularScale = 0.18,
+	ColorShift_Top = Color3.fromRGB(0, 0, 0),
+	ColorShift_Bottom = Color3.fromRGB(0, 0, 0),
 }
 
 local DEFAULT_MAP_GRADE = {
@@ -158,6 +160,8 @@ local MAP_LIGHTING_PROFILES = {
 		OutdoorAmbient = Color3.fromRGB(146, 152, 166),
 		EnvironmentDiffuseScale = 0.34,
 		EnvironmentSpecularScale = 0.22,
+		ColorShift_Top = Color3.fromRGB(10, 8, 4),
+		ColorShift_Bottom = Color3.fromRGB(6, 4, 2),
 	},
 	AbandonedPalace = {
 		ClockTime = 19.2,
@@ -167,6 +171,8 @@ local MAP_LIGHTING_PROFILES = {
 		OutdoorAmbient = Color3.fromRGB(104, 90, 82),
 		EnvironmentDiffuseScale = 0.18,
 		EnvironmentSpecularScale = 0.08,
+		ColorShift_Top = Color3.fromRGB(18, 8, 2),
+		ColorShift_Bottom = Color3.fromRGB(10, 4, 0),
 	},
 	HauntedHouse = {
 		ClockTime = 1.35,
@@ -176,6 +182,8 @@ local MAP_LIGHTING_PROFILES = {
 		OutdoorAmbient = Color3.fromRGB(96, 106, 122),
 		EnvironmentDiffuseScale = 0.2,
 		EnvironmentSpecularScale = 0.1,
+		ColorShift_Top = Color3.fromRGB(0, 6, 14),
+		ColorShift_Bottom = Color3.fromRGB(0, 4, 10),
 	},
 	EmptyBuilding = {
 		ClockTime = 16.8,
@@ -185,6 +193,8 @@ local MAP_LIGHTING_PROFILES = {
 		OutdoorAmbient = Color3.fromRGB(132, 136, 148),
 		EnvironmentDiffuseScale = 0.24,
 		EnvironmentSpecularScale = 0.14,
+		ColorShift_Top = Color3.fromRGB(4, 6, 10),
+		ColorShift_Bottom = Color3.fromRGB(2, 4, 8),
 	},
 	StudioMMNineteen = {
 		ClockTime = 18.1,
@@ -194,6 +204,8 @@ local MAP_LIGHTING_PROFILES = {
 		OutdoorAmbient = Color3.fromRGB(112, 118, 130),
 		EnvironmentDiffuseScale = 0.22,
 		EnvironmentSpecularScale = 0.12,
+		ColorShift_Top = Color3.fromRGB(6, 6, 12),
+		ColorShift_Bottom = Color3.fromRGB(4, 4, 8),
 	},
 }
 
@@ -447,6 +459,8 @@ function VFXController:Init(context)
 	self._baseLightingOutdoorAmbient = Lighting.OutdoorAmbient
 	self._baseLightingDiffuseScale = Lighting.EnvironmentDiffuseScale
 	self._baseLightingSpecularScale = Lighting.EnvironmentSpecularScale
+	self._baseLightingColorShiftTop = Lighting.ColorShift_Top
+	self._baseLightingColorShiftBottom = Lighting.ColorShift_Bottom
 	self._baseMapGradeBrightness = self._mapCorrection and self._mapCorrection.Brightness or DEFAULT_MAP_GRADE.Brightness
 	self._baseMapGradeContrast = self._mapCorrection and self._mapCorrection.Contrast or DEFAULT_MAP_GRADE.Contrast
 	self._baseMapGradeSaturation = self._mapCorrection and self._mapCorrection.Saturation or DEFAULT_MAP_GRADE.Saturation
@@ -744,6 +758,8 @@ function VFXController:_applyMapLighting(mapName)
 	Lighting.OutdoorAmbient = profile.OutdoorAmbient or self._baseLightingOutdoorAmbient or DEFAULT_MAP_LIGHTING.OutdoorAmbient
 	Lighting.EnvironmentDiffuseScale = profile.EnvironmentDiffuseScale or self._baseLightingDiffuseScale or DEFAULT_MAP_LIGHTING.EnvironmentDiffuseScale
 	Lighting.EnvironmentSpecularScale = profile.EnvironmentSpecularScale or self._baseLightingSpecularScale or DEFAULT_MAP_LIGHTING.EnvironmentSpecularScale
+	Lighting.ColorShift_Top = profile.ColorShift_Top or self._baseLightingColorShiftTop or DEFAULT_MAP_LIGHTING.ColorShift_Top
+	Lighting.ColorShift_Bottom = profile.ColorShift_Bottom or self._baseLightingColorShiftBottom or DEFAULT_MAP_LIGHTING.ColorShift_Bottom
 end
 
 function VFXController:_applyMapGrade(mapName)
