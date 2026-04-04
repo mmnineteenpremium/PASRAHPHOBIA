@@ -13,6 +13,9 @@ local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
+local DEFAULT_CAMERA_MIN_ZOOM = player.CameraMinZoomDistance
+local DEFAULT_CAMERA_MAX_ZOOM = player.CameraMaxZoomDistance
+local UNLOCKED_CURSOR_FPV_ZOOM = 0.5
 
 -- Head bobbing parameters
 local bobFrequency = 2.4 -- Bob cycles per second
@@ -26,6 +29,11 @@ local FPV_ARMS_MODEL_NAME = "FPV_Arms"
 local FPV_VIEW_ROOT_NAME = "FPV_ViewRoot"
 local FPV_FLASHLIGHT_MODEL_NAME = "FPV_Flashlight"
 local FLASHLIGHT_ATTRIBUTE = "FlashlightEnabled"
+local CURSOR_TOGGLE_KEY = Enum.KeyCode.LeftAlt
+local CURSOR_TOGGLE_FALLBACK_KEY = Enum.KeyCode.Backquote
+local CURSOR_UNLOCK_REQUEST_ATTR = "PasrahCursorUnlockRequested"
+local CURSOR_TOGGLE_GUI_NAME = "FPVCursorToggleUI"
+local CURSOR_TOGGLE_BUTTON_NAME = "CursorToggleButton"
 local function safeRequire(moduleScript)
 	if not moduleScript then
 		return nil
@@ -64,6 +72,10 @@ local fpvFlashlightLight = nil
 local fpvArmsSourceParts = {}
 local lastArmCamCF = nil
 local _fpvJustActivated = false
+local fpvCursorUnlocked = false
+local fpvCursorToggleGui = nil
+local fpvCursorToggleButton = nil
+local setCursorUnlocked
 
 local function toneMapArmChannel(value)
 	return math.clamp(value, VIEWMODEL_ARM_MIN_CHANNEL, VIEWMODEL_ARM_MAX_CHANNEL)
@@ -77,6 +89,121 @@ local function buildArmColor(sourceColor, brightnessScale)
 		toneMapArmChannel(color.G * scale),
 		toneMapArmChannel(color.B * scale)
 	)
+end
+
+local function getPlayerGui()
+	return player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui", 5)
+end
+
+local function ensureCursorToggleUi()
+	local playerGui = getPlayerGui()
+	if not playerGui then
+		return nil
+	end
+	if fpvCursorToggleGui and fpvCursorToggleGui.Parent ~= playerGui then
+		fpvCursorToggleGui = nil
+		fpvCursorToggleButton = nil
+	end
+	if fpvCursorToggleGui and fpvCursorToggleButton then
+		return fpvCursorToggleButton
+	end
+
+	local existingGui = playerGui:FindFirstChild(CURSOR_TOGGLE_GUI_NAME)
+	if existingGui and existingGui:IsA("ScreenGui") then
+		fpvCursorToggleGui = existingGui
+		fpvCursorToggleButton = existingGui:FindFirstChild(CURSOR_TOGGLE_BUTTON_NAME)
+		if fpvCursorToggleButton and fpvCursorToggleButton:IsA("TextButton") then
+			return fpvCursorToggleButton
+		end
+		existingGui:Destroy()
+		fpvCursorToggleGui = nil
+		fpvCursorToggleButton = nil
+	end
+
+	local gui = Instance.new("ScreenGui")
+	gui.Name = CURSOR_TOGGLE_GUI_NAME
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.DisplayOrder = 260
+	gui.Enabled = false
+	gui.Parent = playerGui
+
+	local button = Instance.new("TextButton")
+	button.Name = CURSOR_TOGGLE_BUTTON_NAME
+	button.AnchorPoint = Vector2.new(1, 0)
+	button.Position = UDim2.new(1, -16, 0, 112)
+	button.Size = UDim2.fromOffset(154, 38)
+	button.BackgroundColor3 = Color3.fromRGB(48, 64, 84)
+	button.BorderSizePixel = 0
+	button.AutoButtonColor = true
+	button.Font = Enum.Font.GothamBold
+	button.TextColor3 = Color3.fromRGB(245, 245, 245)
+	button.TextSize = 13
+	button.Text = "FREE CURSOR [ALT/~]"
+	button.Parent = gui
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = button
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 1.5
+	stroke.Transparency = 0.2
+	stroke.Color = Color3.fromRGB(124, 150, 186)
+	stroke.Parent = button
+
+	button.MouseButton1Click:Connect(function()
+		if setCursorUnlocked then
+			setCursorUnlocked(not fpvCursorUnlocked)
+		end
+	end)
+
+	fpvCursorToggleGui = gui
+	fpvCursorToggleButton = button
+	return button
+end
+
+local function updateCursorToggleUi()
+	local button = ensureCursorToggleUi()
+	if not fpvCursorToggleGui or not button then
+		return
+	end
+	local show = FPV_LOCKED and UserInputService.KeyboardEnabled
+	fpvCursorToggleGui.Enabled = show
+	button.Visible = show
+	button.Text = fpvCursorUnlocked and "LOCK CURSOR [ALT/~]" or "FREE CURSOR [ALT/~]"
+	button.BackgroundColor3 = fpvCursorUnlocked and Color3.fromRGB(82, 98, 58) or Color3.fromRGB(48, 64, 84)
+end
+
+local function applyFpvMouseMode()
+	if FPV_LOCKED then
+		if fpvCursorUnlocked then
+			player.CameraMode = Enum.CameraMode.Classic
+			player.CameraMinZoomDistance = UNLOCKED_CURSOR_FPV_ZOOM
+			player.CameraMaxZoomDistance = UNLOCKED_CURSOR_FPV_ZOOM
+			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+			UserInputService.MouseIconEnabled = true
+		else
+			player.CameraMode = Enum.CameraMode.LockFirstPerson
+			player.CameraMinZoomDistance = DEFAULT_CAMERA_MIN_ZOOM
+			player.CameraMaxZoomDistance = DEFAULT_CAMERA_MAX_ZOOM
+			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+			UserInputService.MouseIconEnabled = false
+		end
+	else
+		player.CameraMode = Enum.CameraMode.Classic
+		player.CameraMinZoomDistance = DEFAULT_CAMERA_MIN_ZOOM
+		player.CameraMaxZoomDistance = DEFAULT_CAMERA_MAX_ZOOM
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		UserInputService.MouseIconEnabled = true
+	end
+	player:SetAttribute("PasrahCursorUnlocked", FPV_LOCKED and fpvCursorUnlocked or false)
+	updateCursorToggleUi()
+end
+
+setCursorUnlocked = function(unlocked)
+	fpvCursorUnlocked = unlocked == true
+	applyFpvMouseMode()
 end
 
 local function ensureCameraAuthority(humanoid)
@@ -533,13 +660,16 @@ camera = resolveCamera()
 local function setFpvLocked(enabled)
 	FPV_LOCKED = enabled == true
 	if FPV_LOCKED then
+		fpvCursorUnlocked = false
 		local character = player.Character
 		if not character then
+			applyFpvMouseMode()
 			return
 		end
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 		local head = character:FindFirstChild("Head")
 		if not humanoid or not head then
+			applyFpvMouseMode()
 			return
 		end
 
@@ -548,16 +678,15 @@ local function setFpvLocked(enabled)
 		ensureCameraAuthority(humanoid)
 		_fpvJustActivated = true
 		lastArmCamCF = nil
-		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
-		UserInputService.MouseIconEnabled = false
+		applyFpvMouseMode()
 		print("[CameraController] FPV LOCKED (Match)")
 	else
+		fpvCursorUnlocked = false
 		player.CameraMode = Enum.CameraMode.Classic
-		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-		UserInputService.MouseIconEnabled = true
 		_fpvJustActivated = false
 		lastArmCamCF = nil
 		clearFpvArms()
+		applyFpvMouseMode()
 		print("[CameraController] TPV ALLOWED (Lobby)")
 	end
 end
@@ -606,6 +735,28 @@ player.CharacterAdded:Connect(function(character)
 	bindMatchAttribute()
 end)
 
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then
+		return
+	end
+	if UserInputService:GetFocusedTextBox() then
+		return
+	end
+	if (input.KeyCode == CURSOR_TOGGLE_KEY or input.KeyCode == CURSOR_TOGGLE_FALLBACK_KEY)
+		and FPV_LOCKED
+		and UserInputService.KeyboardEnabled
+	then
+		setCursorUnlocked(not fpvCursorUnlocked)
+	end
+end)
+
+player:GetAttributeChangedSignal(CURSOR_UNLOCK_REQUEST_ATTR):Connect(function()
+	local requested = player:GetAttribute(CURSOR_UNLOCK_REQUEST_ATTR)
+	if type(requested) == "boolean" and FPV_LOCKED then
+		setCursorUnlocked(requested)
+	end
+end)
+
 -- Head bobbing effect
 RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
 	local character = player.Character
@@ -626,9 +777,24 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 	local shouldLockFromState = player:GetAttribute("InMatch") == true
 	if shouldLockFromState ~= FPV_LOCKED then
 		setFpvLocked(shouldLockFromState)
-	elseif shouldLockFromState and player.CameraMode ~= Enum.CameraMode.LockFirstPerson then
+	elseif shouldLockFromState
+		and (not fpvCursorUnlocked)
+		and (player.CameraMode ~= Enum.CameraMode.LockFirstPerson
+			or UserInputService.MouseBehavior ~= Enum.MouseBehavior.LockCenter)
+	then
 		setFpvLocked(true)
-	elseif (not shouldLockFromState) and player.CameraMode ~= Enum.CameraMode.Classic then
+	elseif shouldLockFromState
+		and fpvCursorUnlocked
+		and (player.CameraMode ~= Enum.CameraMode.Classic
+			or UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default
+			or UserInputService.MouseIconEnabled ~= true)
+	then
+		applyFpvMouseMode()
+	elseif (not shouldLockFromState)
+		and (player.CameraMode ~= Enum.CameraMode.Classic
+			or UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default
+			or UserInputService.MouseIconEnabled ~= true)
+	then
 		setFpvLocked(false)
 	end
 
