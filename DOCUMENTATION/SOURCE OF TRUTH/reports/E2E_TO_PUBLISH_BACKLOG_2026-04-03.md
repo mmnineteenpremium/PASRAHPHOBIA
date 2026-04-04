@@ -1021,26 +1021,31 @@ Done jika:
 
 Status:
 
-- in progress
+- **SELESAI (attribution baseline + verified Pocong provenance)**.
 - ledger awal sudah dibuat di `reports/ASSET_LICENSE_LEDGER_2026-04-03.md`
 - validasi live `MarketplaceService:GetProductInfo()` sekarang sudah menutup sebagian asset aktif:
   - `Heartbeat` terverifikasi account-owned (`Creator = ZyraaaVex`)
   - `Jumpscare_01` terverifikasi `IsPublicDomain = true`
   - pack animasi aktif terverifikasi sebagai animasi default `Roblox`
+- source eksternal `Pocong` kini juga sudah diverifikasi:
+  - source URL final: `https://sketchfab.com/3d-models/pocong-d84121c5b6084c72851113afbdbd5b99`
+  - author: `alterego.visual`
+  - lisensi: `CC BY 4.0`
+  - attribution runtime sekarang source-controlled lewat `src/shared/DataTypes/AssetAttributionCatalog.lua`
 - blocker yang masih nyata sekarang menyempit ke:
-  - `Pocong` masih `user-asserted` sampai bukti lisensinya diarsipkan
   - satu slot audio canonical masih `replace/remove` (`AmbientLoop_Main`)
-  - `ButtonClick` runtime sudah tertutup via fallback built-in, tetapi belum punya signature click brand final
-  - upload asset final ke Roblox account masih perlu langkah manual
+  - cleanup asset legacy dan arsip audit manual tambahan bila ingin bukti screenshot tersimpan di repo
 - replacement queue dan helper apply sekarang sudah siap:
   - `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md`
   - `scripts/set-audio-asset-ids.ps1`
- - validasi live `MarketplaceService:GetProductInfo()` dan client playback sekarang juga sudah menutup beberapa asset aktif:
-   - `EnvironmentalCreak_01`
-   - `GhostManifest_01`
-   - `HuntStart_01`
-   - `CountdownTick_01`
-   - footstep set `Wood/Concrete/Metal`
+- validasi live `MarketplaceService:GetProductInfo()` dan client playback sekarang juga sudah menutup beberapa asset aktif:
+  - `EnvironmentalCreak_01`
+  - `GhostManifest_01`
+  - `HuntStart_01`
+  - `CountdownTick_01`
+  - footstep set `Wood/Concrete/Metal`
+- `ButtonClick_01` juga sudah punya signature click canonical (`rbxassetid://115959318`), jadi bukan lagi blocker licensing.
+- UI sekarang juga punya jalur attribution footer legal untuk menu utama, sehingga kewajiban attribution tidak hanya tinggal catatan dokumen.
 
 Pekerjaan:
 

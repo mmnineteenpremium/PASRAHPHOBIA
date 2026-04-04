@@ -9264,3 +9264,38 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - entitlement GamePass yang sudah dimiliki pemain sekarang bisa disurfacing lebih bersih saat join/relog
 - sinkronisasi ownership tidak lagi berisiko membuka panel shop secara liar hanya karena snapshot entitlement masuk dari server
+
+## 2026-04-05 - Licensing Attribution Baseline Closed
+
+### Scope
+
+- menutup provenance legal `Pocong` dan memindahkan attribution wajib ke source runtime
+
+### Source Changes
+
+- `src/shared/DataTypes/AssetAttributionCatalog.lua`
+  - tambah katalog attribution source-controlled untuk asset eksternal yang wajib disebut di experience
+- `src/client/UI/Main.lua`
+  - `MainMenuUI` sekarang memuat footer attribution bila katalog legal berisi entri `requiredInExperience`
+  - footer menu utama diberi ruang multiline agar text legal tidak terpotong
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/ASSET_LICENSE_LEDGER_2026-04-03.md`
+  - `Pocong` dinaikkan ke `verified`
+  - author dikoreksi ke `alterego.visual`
+  - provenance sekarang menunjuk ke URL final Sketchfab
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/POCONG_LICENSE_ARCHIVE_CHECKLIST_2026-04-04.md`
+  - attribution text disinkronkan ke author yang benar
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+  - item `16. Licensing dan attribution` dinaikkan ke selesai baseline
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_attribution_catalog_build.rbxlx`
+- validasi edit-time katalog legal membaca entry:
+  - `Pocong | alterego.visual | CC BY 4.0 | https://sketchfab.com/3d-models/pocong-d84121c5b6084c72851113afbdbd5b99`
+
+### Interpretation
+
+- attribution legal sekarang tidak lagi bergantung pada catatan markdown atau ingatan sesi
+- provenance `Pocong` tidak lagi menjadi blocker utama roadmap
+- blocker lisensi yang masih tersisa bergeser ke cleanup asset legacy dan keputusan ambience final

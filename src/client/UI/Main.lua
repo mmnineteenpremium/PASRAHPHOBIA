@@ -2502,6 +2502,45 @@ local function loadShopCatalog()
 	return {}
 end
 
+local function loadAssetAttributionCatalog()
+	local shared = ReplicatedStorage:FindFirstChild("Shared")
+	if not shared then
+		return {}
+	end
+	local dataTypes = shared:FindFirstChild("DataTypes")
+	if not dataTypes then
+		return {}
+	end
+	local moduleScript = dataTypes:FindFirstChild("AssetAttributionCatalog")
+	if not moduleScript then
+		return {}
+	end
+	local ok, result = pcall(require, moduleScript)
+	if ok and type(result) == "table" then
+		return result
+	end
+	return {}
+end
+
+local function buildAttributionFooterText(entries)
+	if type(entries) ~= "table" then
+		return ""
+	end
+	local lines = {}
+	for _, entry in ipairs(entries) do
+		if type(entry) == "table" and entry.requiredInExperience == true then
+			local summary = tostring(entry.summaryText or "")
+			if summary ~= "" then
+				table.insert(lines, summary)
+			end
+		end
+		if #lines >= 2 then
+			break
+		end
+	end
+	return table.concat(lines, " | ")
+end
+
 local function findPlayerByUserId(userId)
 	local target = tonumber(userId)
 	if not target then
@@ -2920,6 +2959,9 @@ function UISystem:Init(context)
 		lastSnapshotAt = 0,
 		lastSnapshotRequestedAt = 0,
 		filterKey = "All",
+	}
+	self._legalState = {
+		attributions = loadAssetAttributionCatalog(),
 	}
 	self._royalPassState = {
 		lastEvent = "Idle",
@@ -4769,6 +4811,7 @@ function UISystem:_refreshMainMenuPanel()
 	local badgeColor = Color3.fromRGB(60, 92, 132)
 	local primaryText = "Panel navigasi cepat untuk test lobby flow tanpa mengandalkan hotkey."
 	local secondaryText = string.format("Mode %s | Map %s | %d room aktif", selectedMode, selectedMap, #rooms)
+	local attributionFooter = buildAttributionFooterText(self._legalState and self._legalState.attributions)
 
 	if currentRoom and currentRoom.roomId then
 		local playerCount = type(currentRoom.players) == "table" and #currentRoom.players or 0
@@ -4797,7 +4840,11 @@ function UISystem:_refreshMainMenuPanel()
 		window.SecondaryLabel.Text = secondaryText
 	end
 	if window.FooterLabel then
-		window.FooterLabel.Text = "Tombol di bawah benar-benar menggerakkan UI terkait. X untuk minimize ke float MENU."
+		if attributionFooter ~= "" then
+			window.FooterLabel.Text = attributionFooter .. "\nTombol di bawah benar-benar menggerakkan UI terkait. X untuk minimize ke float MENU."
+		else
+			window.FooterLabel.Text = "Tombol di bawah benar-benar menggerakkan UI terkait. X untuk minimize ke float MENU."
+		end
 	end
 
 	local profileOpen = self._uiState.ProfileUI and self._uiState.ProfileUI.visible == true and self._windowDismissed.ProfileUI ~= true
@@ -8232,7 +8279,7 @@ function UISystem:_applyDeviceSizing()
 						setOffsetBounds(window.RankButton, rightX, 232, buttonWidth, buttonHeight)
 					end
 					if window.FooterLabel then
-						setOffsetBounds(window.FooterLabel, 12, panelHeight - 44, panelWidth - 24, 28)
+						setOffsetBounds(window.FooterLabel, 12, panelHeight - 60, panelWidth - 24, 44)
 					end
 				else
 					local contentHeight = math.max(260, panelHeight - 256)
@@ -11252,7 +11299,7 @@ function UISystem:_ensureBasicUIs()
 				end
 
 				footerLabel.Position = UDim2.fromOffset(12, 284)
-				footerLabel.Size = UDim2.new(1, -24, 0, 24)
+				footerLabel.Size = UDim2.new(1, -24, 0, 44)
 			else
 				local contentFrameHeight = guiName == "LeaderboardUI" and 214 or 112
 				local actionRowY = guiName == "LeaderboardUI" and 378 or 276

@@ -30,7 +30,7 @@ Menutup blocker lisensi asset `Pocong` secara audit-ready untuk publish.
 
 Gunakan teks ini pada description game / credits panel:
 
-`Model Pocong oleh Tirto Suwondo (Sketchfab), digunakan di PASRAHPHOBIA. Lisensi: CC BY 4.0. Adaptasi untuk PASRAHPHOBIA.`
+`Model Pocong oleh alterego.visual (Sketchfab), digunakan di PASRAHPHOBIA. Lisensi: CC BY 4.0. Adaptasi untuk PASRAHPHOBIA.`
 
 ## Fill Form
 
@@ -48,3 +48,14 @@ Gunakan teks ini pada description game / credits panel:
 - dua screenshot tersedia dan bisa dibuka
 - attribution text sudah dipasang di metadata/game credits
 - status ledger `Pocong` bisa dinaikkan dari `user-asserted` -> `verified`
+
+## Update 2026-04-05 17:24 ICT
+
+Batch legal terbaru sudah menutup bagian berikut:
+
+- source URL final terverifikasi ke halaman Sketchfab final
+- author terverifikasi sebagai `alterego.visual`
+- lisensi terverifikasi sebagai `CC BY 4.0`
+- attribution text sekarang sudah punya katalog source-controlled di `src/shared/DataTypes/AssetAttributionCatalog.lua`
+
+Sisa checklist ini sekarang lebih cocok dianggap sebagai pack audit opsional, bukan blocker provenance utama.
