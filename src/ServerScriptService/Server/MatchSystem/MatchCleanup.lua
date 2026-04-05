@@ -20,6 +20,12 @@ local LOBBY_SPAWN_OFFSET = Vector3.new(0, 3, 0)
 local LOBBY_SPAWN_MAX_DELTA_XZ = 350
 local LOBBY_MIN_Y = -50
 local LOBBY_MAX_SPAWN_Y = 15
+local LOBBY_VISUAL_SPAWN_OFFSETS = {
+	Vector3.new(-8, 0, 18),
+	Vector3.new(8, 0, 18),
+	Vector3.new(-8, 0, 30),
+	Vector3.new(8, 0, 30),
+}
 
 local function collectSpawnParts(root, out)
 	out = out or {}
@@ -96,6 +102,50 @@ local function buildUprightPartCFrame(part, offset)
 	return CFrame.lookAt(position, position + flatLook, Vector3.yAxis)
 end
 
+local function resolveLobbyLookTarget(lobbyRoot)
+	if not lobbyRoot then
+		return nil
+	end
+
+	local matchmakingDoor = lobbyRoot:FindFirstChild("Door_NorthEvidenceBuilding", true)
+	if matchmakingDoor and matchmakingDoor:IsA("BasePart") then
+		return matchmakingDoor.Position
+	end
+
+	local matchmakingInteract = lobbyRoot:FindFirstChild("Interact_NorthEvidenceBuilding", true)
+	if matchmakingInteract and matchmakingInteract:IsA("BasePart") then
+		return matchmakingInteract.Position
+	end
+
+	local mainHubRoom = lobbyRoot:FindFirstChild("Room_MainHubPlaza", true)
+	if mainHubRoom and mainHubRoom:IsA("BasePart") then
+		return mainHubRoom.Position
+	end
+
+	local mainHubProp = lobbyRoot:FindFirstChild("Prop_MainHubPlaza", true)
+	if mainHubProp and mainHubProp:IsA("BasePart") then
+		return mainHubProp.Position
+	end
+
+	return nil
+end
+
+local function resolveLobbyVisualSpawnPosition(lobbyRoot, spawnPart)
+	if not (lobbyRoot and spawnPart and spawnPart:IsA("BasePart")) then
+		return nil
+	end
+
+	local matchmakingDoor = lobbyRoot:FindFirstChild("Door_NorthEvidenceBuilding", true)
+	if not (matchmakingDoor and matchmakingDoor:IsA("BasePart")) then
+		return nil
+	end
+
+	local spawnIndex = tonumber(string.match(spawnPart.Name, "PlayerSpawn_(%d+)")) or 1
+	local offset = LOBBY_VISUAL_SPAWN_OFFSETS[((spawnIndex - 1) % #LOBBY_VISUAL_SPAWN_OFFSETS) + 1]
+	local targetXZ = matchmakingDoor.Position + Vector3.new(offset.X, 0, offset.Z)
+	return Vector3.new(targetXZ.X, spawnPart.Position.Y, targetXZ.Z)
+end
+
 local function resolveLobbySpawnParts()
 	local lobby = resolveLobbyRoot()
 	if lobby then
@@ -146,6 +196,7 @@ function MatchCleanup.TeleportPlayersToLobby(matchId)
 	end
 
 	local lobbySpawns, spawnReason = resolveLobbySpawnParts()
+	local lobbyRoot = resolveLobbyRoot()
 	if not lobbySpawns or #lobbySpawns == 0 then
 		warn(string.format("[MatchCleanup] Lobby spawn unresolved (%s). Players will be flagged out-of-match only.", tostring(spawnReason)))
 	end
@@ -170,7 +221,27 @@ function MatchCleanup.TeleportPlayersToLobby(matchId)
 				local lobbySpawn = lobbySpawns[spawnIndex]
 				hrp.AssemblyLinearVelocity = Vector3.zero
 				hrp.AssemblyAngularVelocity = Vector3.zero
-				hrp.CFrame = buildUprightPartCFrame(lobbySpawn, LOBBY_SPAWN_OFFSET) or (lobbySpawn.CFrame + LOBBY_SPAWN_OFFSET)
+				local spawnCFrame = nil
+				local visualSpawnPosition = resolveLobbyVisualSpawnPosition(lobbyRoot, lobbySpawn)
+				local lookTarget = resolveLobbyLookTarget(lobbyRoot)
+				if typeof(visualSpawnPosition) == "Vector3" then
+					local position = visualSpawnPosition + LOBBY_SPAWN_OFFSET
+					local flatLook = typeof(lookTarget) == "Vector3"
+						and Vector3.new(lookTarget.X - position.X, 0, lookTarget.Z - position.Z)
+						or Vector3.zero
+					if flatLook.Magnitude <= 1e-4 then
+						flatLook = Vector3.new(lobbySpawn.CFrame.LookVector.X, 0, lobbySpawn.CFrame.LookVector.Z)
+					end
+					if flatLook.Magnitude <= 1e-4 then
+						flatLook = Vector3.new(0, 0, -1)
+					else
+						flatLook = flatLook.Unit
+					end
+					spawnCFrame = CFrame.new(position, position + flatLook)
+				else
+					spawnCFrame = buildUprightPartCFrame(lobbySpawn, LOBBY_SPAWN_OFFSET)
+				end
+				hrp.CFrame = spawnCFrame or (lobbySpawn.CFrame + LOBBY_SPAWN_OFFSET)
 				teleportCount = teleportCount + 1
 			end
 		end
