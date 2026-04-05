@@ -10551,3 +10551,35 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - lane Creator Hub sekarang tidak lagi abstrak
 - item `Robux` yang boleh aktif segera sudah dipisah dari item yang harus tetap mati demi fairness/compliance
+
+## 2026-04-06 - Creator Hub Audit Helper
+
+### Scope
+
+- menambah validator lokal untuk mapping `Creator Hub marketplaceId`
+
+### Source Changes
+
+- `scripts/audit-marketplace-mapping.ps1`
+  - audit cepat daftar item `Robux`
+  - memisahkan `safe_enable_now` dan `keep_disabled`
+  - bisa dipakai lagi setelah ID Creator Hub diisi
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/CREATOR_HUB_MARKETPLACE_MAPPING_2026-04-06.md`
+  - menautkan helper terminal opsional
+
+### Runtime Notes
+
+- output helper saat ini:
+  - `Catalog Robux items: 10`
+  - `Safe enable now: 6`
+  - `Keep disabled: 4`
+  - `Safe items missing marketplaceId: 6`
+  - `Hold items accidentally enabled: 0`
+  - `Unclassified items: 0`
+
+### Interpretation
+
+- lane Creator Hub sekarang bisa diaudit cepat dari terminal lokal
+- state saat ini konsisten dengan report:
+  - 6 currency pack aman masih menunggu ID resmi
+  - 4 offer yang harus ditahan masih tetap disabled
