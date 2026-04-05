@@ -2181,6 +2181,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (match semantic accent baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 22:47 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi beacon dunia:
+  - warna `DoorRouteGuideRuntime` dan `InteractionGuideRuntime` sekarang ikut semantik route, tidak lagi satu palette untuk semua ruang.
+  - refuge, vertikal, evidence sweep, dan investigasi area kini punya sinyal warna yang lebih cepat dibaca.
+- validasi:
+  - build source sukses:
+    - `_tmp_semantic_world_guides_build.rbxlx`
+- status:
+  - **SELESAI (semantic world guide palette baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

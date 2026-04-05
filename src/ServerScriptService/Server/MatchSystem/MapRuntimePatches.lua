@@ -243,6 +243,42 @@ local function resolveInteractionGuideSubtitle(roomLabel)
 	return "Anchor ruang"
 end
 
+local function getInteractionGuidePalette(subtitle)
+	if subtitle == "Refuge route" then
+		return {
+			accent = Color3.fromRGB(132, 186, 154),
+			title = Color3.fromRGB(244, 250, 246),
+			subtitle = Color3.fromRGB(184, 222, 196),
+		}
+	end
+	if subtitle == "Transisi vertikal" then
+		return {
+			accent = Color3.fromRGB(142, 168, 236),
+			title = Color3.fromRGB(242, 246, 252),
+			subtitle = Color3.fromRGB(188, 204, 236),
+		}
+	end
+	if subtitle == "Sweep evidence" then
+		return {
+			accent = Color3.fromRGB(214, 160, 104),
+			title = Color3.fromRGB(250, 246, 238),
+			subtitle = Color3.fromRGB(228, 196, 154),
+		}
+	end
+	if subtitle == "Area investigasi" then
+		return {
+			accent = Color3.fromRGB(110, 188, 172),
+			title = Color3.fromRGB(240, 250, 248),
+			subtitle = Color3.fromRGB(180, 224, 216),
+		}
+	end
+	return {
+		accent = Color3.fromRGB(158, 190, 222),
+		title = Color3.fromRGB(238, 244, 250),
+		subtitle = Color3.fromRGB(176, 198, 218),
+	}
+end
+
 local function ensureInteractionPointPart(folder, interactionName, targetPosition)
 	if typeof(folder) ~= "Instance" or not folder:IsA("Folder") or typeof(targetPosition) ~= "Vector3" then
 		return nil
@@ -273,6 +309,8 @@ local function ensureInteractionGuide(interactionPoint, roomLabel)
 	if not (interactionPoint and interactionPoint:IsA("BasePart") and interactionPoint.Parent ~= nil) then
 		return nil
 	end
+	local guideSubtitle = resolveInteractionGuideSubtitle(roomLabel)
+	local palette = getInteractionGuidePalette(guideSubtitle)
 
 	local folder = interactionPoint:FindFirstChild(INTERACTION_GUIDE_FOLDER_NAME)
 	if not (folder and folder:IsA("Folder")) then
@@ -321,7 +359,7 @@ local function ensureInteractionGuide(interactionPoint, roomLabel)
 		local stroke = Instance.new("UIStroke")
 		stroke.Name = "Stroke"
 		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Color = Color3.fromRGB(158, 190, 222)
+		stroke.Color = palette.accent
 		stroke.Transparency = 0.2
 		stroke.Thickness = 1.2
 		stroke.Parent = panel
@@ -333,7 +371,7 @@ local function ensureInteractionGuide(interactionPoint, roomLabel)
 		title.Position = UDim2.new(0, 14, 0, 5)
 		title.Size = UDim2.new(1, -28, 0, 16)
 		title.Font = Enum.Font.GothamBold
-		title.TextColor3 = Color3.fromRGB(238, 244, 250)
+		title.TextColor3 = palette.title
 		title.TextSize = 12
 		title.TextWrapped = true
 		title.TextXAlignment = Enum.TextXAlignment.Left
@@ -346,8 +384,8 @@ local function ensureInteractionGuide(interactionPoint, roomLabel)
 		subtitle.Position = UDim2.new(0, 14, 0, 20)
 		subtitle.Size = UDim2.new(1, -28, 0, 14)
 		subtitle.Font = Enum.Font.GothamMedium
-		subtitle.Text = resolveInteractionGuideSubtitle(roomLabel)
-		subtitle.TextColor3 = Color3.fromRGB(176, 198, 218)
+		subtitle.Text = guideSubtitle
+		subtitle.TextColor3 = palette.subtitle
 		subtitle.TextSize = 10
 		subtitle.TextWrapped = true
 		subtitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -362,10 +400,16 @@ local function ensureInteractionGuide(interactionPoint, roomLabel)
 	local title = panel:FindFirstChild("Title")
 	if title and title:IsA("TextLabel") then
 		title.Text = roomLabel
+		title.TextColor3 = palette.title
 	end
 	local subtitle = panel:FindFirstChild("Subtitle")
 	if subtitle and subtitle:IsA("TextLabel") then
-		subtitle.Text = resolveInteractionGuideSubtitle(roomLabel)
+		subtitle.Text = guideSubtitle
+		subtitle.TextColor3 = palette.subtitle
+	end
+	local stroke = panel:FindFirstChild("Stroke")
+	if stroke and stroke:IsA("UIStroke") then
+		stroke.Color = palette.accent
 	end
 
 	return folder

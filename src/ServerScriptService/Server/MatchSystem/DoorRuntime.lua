@@ -95,11 +95,54 @@ local function resolveDoorGuideSubtitle(doorLabel)
 	return "Akses ruang"
 end
 
+local function getDoorGuidePalette(subtitle)
+	if subtitle == "Refuge route" then
+		return {
+			accent = Color3.fromRGB(132, 186, 154),
+			outline = Color3.fromRGB(188, 232, 204),
+			title = Color3.fromRGB(244, 250, 246),
+			subtitle = Color3.fromRGB(184, 222, 196),
+		}
+	end
+	if subtitle == "Akses vertikal" then
+		return {
+			accent = Color3.fromRGB(142, 168, 236),
+			outline = Color3.fromRGB(206, 220, 255),
+			title = Color3.fromRGB(242, 246, 252),
+			subtitle = Color3.fromRGB(188, 204, 236),
+		}
+	end
+	if subtitle == "Sweep evidence" then
+		return {
+			accent = Color3.fromRGB(214, 160, 104),
+			outline = Color3.fromRGB(244, 214, 172),
+			title = Color3.fromRGB(250, 246, 238),
+			subtitle = Color3.fromRGB(228, 196, 154),
+		}
+	end
+	if subtitle == "Area investigasi" then
+		return {
+			accent = Color3.fromRGB(110, 188, 172),
+			outline = Color3.fromRGB(176, 232, 220),
+			title = Color3.fromRGB(240, 250, 248),
+			subtitle = Color3.fromRGB(180, 224, 216),
+		}
+	end
+	return {
+		accent = Color3.fromRGB(148, 194, 240),
+		outline = Color3.fromRGB(198, 224, 255),
+		title = Color3.fromRGB(242, 246, 252),
+		subtitle = Color3.fromRGB(178, 204, 228),
+	}
+end
+
 local function ensureDoorRouteGuide(doorRecord)
 	local part = type(doorRecord) == "table" and doorRecord.part or nil
 	if not (part and part:IsA("BasePart") and part.Parent ~= nil) then
 		return nil
 	end
+	local guideSubtitle = resolveDoorGuideSubtitle(doorRecord.label)
+	local palette = getDoorGuidePalette(guideSubtitle)
 
 	local folder = part:FindFirstChild(GUIDE_FOLDER_NAME)
 	if not (folder and folder:IsA("Folder")) then
@@ -122,9 +165,9 @@ local function ensureDoorRouteGuide(doorRecord)
 	end
 	highlight.Adornee = part
 	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-	highlight.FillColor = Color3.fromRGB(148, 194, 240)
+	highlight.FillColor = palette.accent
 	highlight.FillTransparency = 0.97
-	highlight.OutlineColor = Color3.fromRGB(198, 224, 255)
+	highlight.OutlineColor = palette.outline
 	highlight.OutlineTransparency = 0.32
 	highlight.Enabled = true
 	doorRecord.guideHighlight = highlight
@@ -167,7 +210,7 @@ local function ensureDoorRouteGuide(doorRecord)
 		local stroke = Instance.new("UIStroke")
 		stroke.Name = "Stroke"
 		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Color = Color3.fromRGB(148, 194, 240)
+		stroke.Color = palette.accent
 		stroke.Transparency = 0.18
 		stroke.Thickness = 1.2
 		stroke.Parent = panel
@@ -175,7 +218,7 @@ local function ensureDoorRouteGuide(doorRecord)
 		local accent = Instance.new("Frame")
 		accent.Name = "Accent"
 		accent.AnchorPoint = Vector2.new(0, 0.5)
-		accent.BackgroundColor3 = Color3.fromRGB(148, 194, 240)
+		accent.BackgroundColor3 = palette.accent
 		accent.BorderSizePixel = 0
 		accent.Position = UDim2.new(0, 10, 0.5, 0)
 		accent.Size = UDim2.fromOffset(3, 22)
@@ -189,7 +232,7 @@ local function ensureDoorRouteGuide(doorRecord)
 			"Title",
 			Enum.Font.GothamBold,
 			12,
-			Color3.fromRGB(242, 246, 252),
+			palette.title,
 			doorRecord.label or "Pintu",
 			16,
 			UDim2.new(0, 20, 0, 5)
@@ -199,8 +242,8 @@ local function ensureDoorRouteGuide(doorRecord)
 			"Subtitle",
 			Enum.Font.GothamMedium,
 			10,
-			Color3.fromRGB(178, 204, 228),
-			resolveDoorGuideSubtitle(doorRecord.label),
+			palette.subtitle,
+			guideSubtitle,
 			14,
 			UDim2.new(0, 20, 0, 20)
 		).Parent = panel
@@ -219,10 +262,26 @@ local function updateDoorRouteGuide(doorRecord, isOpen, isLocked)
 	if not guide then
 		return
 	end
+	local guideSubtitle = resolveDoorGuideSubtitle(doorRecord.label)
+	local palette = getDoorGuidePalette(guideSubtitle)
 
 	local title = doorRecord.guidePanel and doorRecord.guidePanel:FindFirstChild("Title")
 	if title and title:IsA("TextLabel") then
 		title.Text = doorRecord.label or "Pintu"
+		title.TextColor3 = palette.title
+	end
+
+	local stroke = doorRecord.guidePanel and doorRecord.guidePanel:FindFirstChild("Stroke")
+	if stroke and stroke:IsA("UIStroke") then
+		stroke.Color = palette.accent
+	end
+	local accent = doorRecord.guidePanel and doorRecord.guidePanel:FindFirstChild("Accent")
+	if accent and accent:IsA("Frame") then
+		accent.BackgroundColor3 = palette.accent
+	end
+	if doorRecord.guideHighlight then
+		doorRecord.guideHighlight.FillColor = palette.accent
+		doorRecord.guideHighlight.OutlineColor = palette.outline
 	end
 
 	local subtitle = doorRecord.guidePanel and doorRecord.guidePanel:FindFirstChild("Subtitle")
@@ -234,8 +293,8 @@ local function updateDoorRouteGuide(doorRecord, isOpen, isLocked)
 			subtitle.Text = "Terbuka"
 			subtitle.TextColor3 = Color3.fromRGB(170, 218, 190)
 		else
-			subtitle.Text = resolveDoorGuideSubtitle(doorRecord.label)
-			subtitle.TextColor3 = Color3.fromRGB(178, 204, 228)
+			subtitle.Text = guideSubtitle
+			subtitle.TextColor3 = palette.subtitle
 		end
 	end
 end
