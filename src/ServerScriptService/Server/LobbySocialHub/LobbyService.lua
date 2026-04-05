@@ -45,6 +45,15 @@ local LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME = "Highlight"
 local LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME = "LobbyZoneEntryGuideRuntime"
 local LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME = "Billboard"
 local LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME = "Highlight"
+local LOBBY_GUIDE_VISUALS_ENABLED = false
+local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
+local LOBBY_LOGIC_VOLUME_FOLDER_NAMES = {
+	"Rooms",
+	"SafeZones",
+	"InteractionPoints",
+	"NavigationNodes",
+	"SpawnPoints",
+}
 local LOBBY_ZONE_FEEDBACK = {
     SpawnPlaza = {
         title = "Lobby plaza aktif.",
@@ -399,6 +408,55 @@ local function createGuideTextLabel(name, font, textSize, textColor, text, heigh
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextYAlignment = Enum.TextYAlignment.Top
     return label
+end
+
+local function sanitizeLobbyLogicPart(part)
+	if not (part and part:IsA("BasePart")) then
+		return false
+	end
+
+	local changed = false
+	if part.Transparency ~= LOBBY_LOGIC_VOLUME_TRANSPARENCY then
+		part.Transparency = LOBBY_LOGIC_VOLUME_TRANSPARENCY
+		changed = true
+	end
+	if part.CanCollide then
+		part.CanCollide = false
+		changed = true
+	end
+	if part.CanTouch then
+		part.CanTouch = false
+		changed = true
+	end
+	if part.CanQuery ~= true then
+		part.CanQuery = true
+		changed = true
+	end
+	if part.CastShadow then
+		part.CastShadow = false
+		changed = true
+	end
+	return changed
+end
+
+local function sanitizeLobbyLogicVolumes()
+	local lobbyRoot = LobbyLocator.ResolveRoot("LobbySocialHub", workspace)
+	if not lobbyRoot then
+		return false
+	end
+
+	local changed = false
+	for _, folderName in ipairs(LOBBY_LOGIC_VOLUME_FOLDER_NAMES) do
+		local folder = lobbyRoot:FindFirstChild(folderName, true)
+		if folder then
+			for _, descendant in ipairs(folder:GetDescendants()) do
+				if descendant:IsA("BasePart") then
+					changed = sanitizeLobbyLogicPart(descendant) or changed
+				end
+			end
+		end
+	end
+	return changed
 end
 
 function LobbyService.new(state, deps)
@@ -996,11 +1054,18 @@ function LobbyService:_clearZoneEntryGuides()
 end
 
 function LobbyService:_ensureZoneGuide(zoneName, zonePart)
-    if typeof(zonePart) ~= "Instance" or not zonePart:IsA("BasePart") or zonePart.Parent == nil then
-        return false
-    end
+	if typeof(zonePart) ~= "Instance" or not zonePart:IsA("BasePart") or zonePart.Parent == nil then
+		return false
+	end
+	if LOBBY_GUIDE_VISUALS_ENABLED ~= true then
+		local existingFolder = zonePart:FindFirstChild(LOBBY_ZONE_GUIDE_FOLDER_NAME)
+		if existingFolder then
+			existingFolder:Destroy()
+		end
+		return false
+	end
 
-    local feedback = LOBBY_ZONE_FEEDBACK[zoneName]
+	local feedback = LOBBY_ZONE_FEEDBACK[zoneName]
     local style = LOBBY_ZONE_GUIDE_STYLE[zoneName]
     if type(feedback) ~= "table" or type(style) ~= "table" then
         return false
@@ -1145,6 +1210,13 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     if not anchorPart then
         return false
     end
+    if LOBBY_GUIDE_VISUALS_ENABLED ~= true then
+        local existingFolder = anchorPart:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME)
+        if existingFolder then
+            existingFolder:Destroy()
+        end
+        return false
+    end
 
     local style = LOBBY_ZONE_GUIDE_STYLE[zoneName]
     local copy = LOBBY_ZONE_ENTRY_COPY[zoneName]
@@ -1265,6 +1337,9 @@ end
 function LobbyService:_syncZoneGuides()
     self:_clearZoneGuides()
     self:_clearZoneEntryGuides()
+    if LOBBY_GUIDE_VISUALS_ENABLED ~= true then
+        return
+    end
     local zoneParts = self._zoneManager and self._zoneManager:GetZoneParts() or {}
     for zoneName, zonePart in pairs(zoneParts) do
         self:_ensureZoneGuide(zoneName, zonePart)
@@ -1302,6 +1377,7 @@ function LobbyService:Start()
     self._state:Set("lobbyStatus", "running")
     self._playerManager:Start()
     self._zoneManager:Start()
+    sanitizeLobbyLogicVolumes()
     self:_syncZoneGuides()
     self._interaction:Start()
     self._partySystem:Start()

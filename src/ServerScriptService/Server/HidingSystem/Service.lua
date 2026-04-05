@@ -22,6 +22,7 @@ local SAFE_ZONE_MARKER_SUBTITLE_COLOR = Color3.fromRGB(184, 222, 196)
 local SAFE_ZONE_MARKER_TITLE_TEXT = "SAFE ZONE"
 local SAFE_ZONE_MARKER_SUBTITLE_TEXT = "Diam di sini saat hunt"
 local SAFE_ZONE_MARKER_STUDS_OFFSET = 2.6
+local SAFE_ZONE_WORLD_MARKERS_ENABLED = false
 
 local function createMarkerTextLabel(name, font, textSize, textColor, text, height, position)
     local label = Instance.new("TextLabel")
@@ -48,6 +49,21 @@ local function ensureSafeZoneMarker(record)
 
     local zone = record.part
     if not zone or zone.Parent == nil then
+        return
+    end
+    if SAFE_ZONE_WORLD_MARKERS_ENABLED ~= true then
+        local markerFolder = record.markerFolder
+        if typeof(markerFolder) ~= "Instance" then
+            markerFolder = zone:FindFirstChild(SAFE_ZONE_MARKER_FOLDER_NAME)
+        end
+        if typeof(markerFolder) == "Instance" and markerFolder.Parent ~= nil then
+            markerFolder:Destroy()
+        end
+        record.markerFolder = nil
+        record.markerOutline = nil
+        record.markerHighlight = nil
+        record.markerBillboard = nil
+        record.markerPanel = nil
         return
     end
 
@@ -387,32 +403,32 @@ function Service:_setSafeZoneVisualState(matchId, isVisible)
         return
     end
 
-    for _, record in ipairs(safeZoneState.records or {}) do
-        local zone = record.part
-        if zone and zone.Parent ~= nil then
-            ensureSafeZoneMarker(record)
-            if isVisible then
-                zone.Transparency = SAFE_ZONE_VISUAL_TRANSPARENCY
-                zone.Color = SAFE_ZONE_VISUAL_COLOR
-                zone.Material = SAFE_ZONE_VISUAL_MATERIAL
-                zone.CanTouch = false
-            else
-                zone.Transparency = record.originalTransparency
-                zone.Color = record.originalColor
-                zone.Material = record.originalMaterial
-            end
-        end
+	for _, record in ipairs(safeZoneState.records or {}) do
+		local zone = record.part
+		if zone and zone.Parent ~= nil then
+			ensureSafeZoneMarker(record)
+			if SAFE_ZONE_WORLD_MARKERS_ENABLED == true and isVisible then
+				zone.Transparency = SAFE_ZONE_VISUAL_TRANSPARENCY
+				zone.Color = SAFE_ZONE_VISUAL_COLOR
+				zone.Material = SAFE_ZONE_VISUAL_MATERIAL
+				zone.CanTouch = false
+			else
+				zone.Transparency = record.originalTransparency
+				zone.Color = record.originalColor
+				zone.Material = record.originalMaterial
+			end
+		end
 
-        if record.markerOutline then
-            record.markerOutline.Visible = isVisible == true
-        end
-        if record.markerHighlight then
-            record.markerHighlight.Enabled = isVisible == true
-        end
-        if record.markerBillboard then
-            record.markerBillboard.Enabled = isVisible == true
-        end
-    end
+		if record.markerOutline then
+			record.markerOutline.Visible = SAFE_ZONE_WORLD_MARKERS_ENABLED == true and isVisible == true
+		end
+		if record.markerHighlight then
+			record.markerHighlight.Enabled = SAFE_ZONE_WORLD_MARKERS_ENABLED == true and isVisible == true
+		end
+		if record.markerBillboard then
+			record.markerBillboard.Enabled = SAFE_ZONE_WORLD_MARKERS_ENABLED == true and isVisible == true
+		end
+	end
 end
 function Service:_registerSafeZones(matchId)
     if type(matchId) ~= "string" or matchId == "" then

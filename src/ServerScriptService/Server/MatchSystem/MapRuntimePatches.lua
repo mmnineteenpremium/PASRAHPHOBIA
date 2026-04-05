@@ -6,6 +6,7 @@ local DOOR_PATCH_ATTR = "DoorTraversalRuntimePatched"
 local SAFE_ZONE_PATCH_ATTR = "SafeZoneRuntimePatched"
 local MATERIAL_PATCH_ATTR = "MapMaterialRuntimePatched"
 local TRAVERSAL_GUIDE_PATCH_ATTR = "TraversalGuideRuntimePatched"
+local LOGIC_VOLUME_PATCH_ATTR = "LogicVolumesRuntimeHidden"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
@@ -21,6 +22,17 @@ local TRAVERSAL_GUIDE_HIGHLIGHT_NAME = "Highlight"
 local TRAVERSAL_GUIDE_BILLBOARD_NAME = "Billboard"
 local INTERACTION_GUIDE_FOLDER_NAME = "InteractionGuideRuntime"
 local INTERACTION_GUIDE_BILLBOARD_NAME = "Billboard"
+local PLAYER_FACING_GUIDE_VISUALS_ENABLED = false
+local LOGIC_VOLUME_VISUAL_TRANSPARENCY = 1
+local LOGIC_VOLUME_FOLDER_NAMES = {
+	"Rooms",
+	"SafeZones",
+	"InteractionPoints",
+	"NavigationNodes",
+	"EvidenceSpawnNodes",
+	"EvidenceSpawns",
+	"SpawnPoints",
+}
 local INTERACTION_POSITION_OVERRIDES = {
 }
 local INTERACTION_DOOR_OVERRIDES = {
@@ -314,8 +326,67 @@ local function ensureInteractionPointPart(folder, interactionName, targetPositio
 	return interactionPoint
 end
 
+local function sanitizeLogicVolumePart(part)
+	if not (part and part:IsA("BasePart")) then
+		return false
+	end
+
+	local changed = false
+	if part.Transparency ~= LOGIC_VOLUME_VISUAL_TRANSPARENCY then
+		part.Transparency = LOGIC_VOLUME_VISUAL_TRANSPARENCY
+		changed = true
+	end
+	if part.CanCollide then
+		part.CanCollide = false
+		changed = true
+	end
+	if part.CanTouch then
+		part.CanTouch = false
+		changed = true
+	end
+	if part.CanQuery ~= true then
+		part.CanQuery = true
+		changed = true
+	end
+	if part.CastShadow then
+		part.CastShadow = false
+		changed = true
+	end
+	return changed
+end
+
+local function patchLogicVolumes(mapClone)
+	if not mapClone or mapClone:GetAttribute(LOGIC_VOLUME_PATCH_ATTR) == true then
+		return false
+	end
+
+	local patchedAny = false
+	for _, folderName in ipairs(LOGIC_VOLUME_FOLDER_NAMES) do
+		local folder = mapClone:FindFirstChild(folderName, true)
+		if folder then
+			for _, descendant in ipairs(folder:GetDescendants()) do
+				if descendant:IsA("BasePart") then
+					patchedAny = sanitizeLogicVolumePart(descendant) or patchedAny
+				end
+			end
+		end
+	end
+
+	if patchedAny then
+		mapClone:SetAttribute(LOGIC_VOLUME_PATCH_ATTR, true)
+	end
+	return patchedAny
+end
+
 local function ensureInteractionGuide(interactionPoint, roomLabel)
 	if not (interactionPoint and interactionPoint:IsA("BasePart") and interactionPoint.Parent ~= nil) then
+		return nil
+	end
+	if PLAYER_FACING_GUIDE_VISUALS_ENABLED ~= true then
+		local existingFolder = interactionPoint:FindFirstChild(INTERACTION_GUIDE_FOLDER_NAME)
+		if existingFolder then
+			existingFolder:Destroy()
+		end
 		return nil
 	end
 	local guideSubtitle = resolveInteractionGuideSubtitle(roomLabel)
@@ -626,6 +697,13 @@ end
 
 local function ensureTraversalGuide(part)
 	if not (part and part:IsA("BasePart") and part.Parent ~= nil) then
+		return nil
+	end
+	if PLAYER_FACING_GUIDE_VISUALS_ENABLED ~= true then
+		local existingFolder = part:FindFirstChild(TRAVERSAL_GUIDE_FOLDER_NAME)
+		if existingFolder then
+			existingFolder:Destroy()
+		end
 		return nil
 	end
 	local palette = getTraversalGuidePalette()
@@ -1043,6 +1121,7 @@ function MapRuntimePatches.Apply(mapId, mapClone)
 
 	local didPatch = false
 	didPatch = patchSecondFloor(mapClone) or didPatch
+	didPatch = patchLogicVolumes(mapClone) or didPatch
 	didPatch = patchMapMaterials(mapId, mapClone) or didPatch
 	didPatch = patchDoorTraversal(mapClone) or didPatch
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch

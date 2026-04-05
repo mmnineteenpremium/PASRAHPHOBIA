@@ -13,6 +13,7 @@ local CLOSE_SOUND_NAME = "DoorCloseSound"
 local GUIDE_FOLDER_NAME = "DoorRouteGuideRuntime"
 local GUIDE_HIGHLIGHT_NAME = "Highlight"
 local GUIDE_BILLBOARD_NAME = "Billboard"
+local DOOR_ROUTE_GUIDES_ENABLED = false
 local OPEN_ANGLE = math.rad(88)
 local INTERACTION_DISTANCE = 10
 local PROMPT_HOLD_DURATION = 0
@@ -141,6 +142,16 @@ local function ensureDoorRouteGuide(doorRecord)
 	if not (part and part:IsA("BasePart") and part.Parent ~= nil) then
 		return nil
 	end
+	if DOOR_ROUTE_GUIDES_ENABLED ~= true then
+		local existingFolder = part:FindFirstChild(GUIDE_FOLDER_NAME)
+		if existingFolder then
+			existingFolder:Destroy()
+		end
+		doorRecord.guideHighlight = nil
+		doorRecord.guideBillboard = nil
+		doorRecord.guidePanel = nil
+		return nil
+	end
 	local guideSubtitle = resolveDoorGuideSubtitle(doorRecord.label)
 	local palette = getDoorGuidePalette(guideSubtitle)
 
@@ -258,10 +269,6 @@ local function ensureDoorRouteGuide(doorRecord)
 end
 
 local function updateDoorRouteGuide(doorRecord, isOpen, isLocked)
-	local guide = ensureDoorRouteGuide(doorRecord)
-	if not guide then
-		return
-	end
 	local guideSubtitle = resolveDoorGuideSubtitle(doorRecord.label)
 	local palette = getDoorGuidePalette(guideSubtitle)
 	local doorPart = type(doorRecord) == "table" and doorRecord.part or nil
@@ -271,6 +278,10 @@ local function updateDoorRouteGuide(doorRecord, isOpen, isLocked)
 			"DoorRouteStateText",
 			isLocked and "Akses terkunci" or (isOpen and "Terbuka" or "Tertutup")
 		)
+	end
+	local guide = ensureDoorRouteGuide(doorRecord)
+	if not guide then
+		return
 	end
 
 	local title = doorRecord.guidePanel and doorRecord.guidePanel:FindFirstChild("Title")
