@@ -10403,3 +10403,31 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - backlog utama sekarang selesai dan sisa pekerjaan terkonsentrasi di lane manual/compliance sebelum publish final
+
+## 2026-04-06 - Publish Readiness Aggregation Pass
+
+### Scope
+
+- menyatukan gate teknis publish ke satu action harness dan menutup checklist manual terakhir untuk persistence target
+
+### Source Changes
+
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+  - tambah action `GetPublishReadiness`
+  - readiness sekarang merangkum:
+    - QA solo gate
+    - persistence mode
+    - commerce visibility / marketplace id readiness
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/PERSISTENCE_MANUAL_CHECKLIST_2026-04-06.md`
+  - checklist persistence target di luar Studio mock
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/PUBLISH_REVIEW_FINAL_2026-04-06.md`
+  - tambah referensi resmi Roblox
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_publish_readiness_build.rbxlx`
+
+### Interpretation
+
+- publish verification sekarang punya satu surface teknis yang lebih tegas, dan sisa manual lane terkonsentrasi di multiplayer + persistence target + Creator Hub ID final

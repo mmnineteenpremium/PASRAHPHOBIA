@@ -35,6 +35,8 @@ Status proyek sekarang:
 
 3. final check persistence non-mock
    - validasi environment target di luar Studio mock
+   - gunakan:
+     - `PERSISTENCE_MANUAL_CHECKLIST_2026-04-06.md`
 
 4. final asset/legal review
    - cek attribution dan ledger asset eksternal
@@ -64,3 +66,12 @@ Status proyek sekarang:
 
 - ini bukan tanda proyek gagal publish
 - ini hanya berarti pekerjaan coding/arsitektur utama sudah sangat jauh, dan sisa risiko sekarang terkonsentrasi di lane manual/compliance/publish ops
+
+## Referensi Resmi Roblox
+
+- Passes:
+  - https://create.roblox.com/docs/production/monetization/passes
+- Developer Products / MarketplaceService:
+  - https://create.roblox.com/docs/reference/engine/classes/MarketplaceService
+- Regional pricing dan dynamic pricing check:
+  - https://create.roblox.com/docs/production/monetization/regional-pricing
