@@ -33,6 +33,8 @@ Status proyek sekarang:
 1. `Creator Hub marketplaceId` final yang valid
    - isi hanya `GamePassId / ProductId` nyata
    - jangan pakai `UserId/account id`
+   - gunakan:
+     - `CREATOR_HUB_MARKETPLACE_MAPPING_2026-04-06.md`
 
 2. smoke test `2 client` nyata
    - gunakan:
