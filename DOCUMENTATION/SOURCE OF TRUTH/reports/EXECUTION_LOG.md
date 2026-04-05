@@ -10244,3 +10244,25 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - bias navigasi, semantic accent, dan affordance pintu sekarang tidak lagi runtuh hanya karena pintu sedang terbuka; state operasional tetap terlihat tanpa menghapus fungsi ruangnya
+
+## 2026-04-06 - Lobby Zone Proximity Fallback Pass
+
+### Scope
+
+- menambah fallback orientasi lobby berbasis proximity agar panel lobby tetap punya konteks area terdekat meski event `LobbyZoneFocused` belum masuk
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah `LOBBY_ZONE_CLIENT_META`
+  - tambah helper `getNearestLobbyZoneInfo()`
+  - `BasicLobbyPanel` sekarang memakai zona lobby terdekat sebagai fallback saat belum ada focus aktif dari server
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_lobby_zone_proximity_fallback_build.rbxlx`
+
+### Interpretation
+
+- orientasi lobby sekarang lebih stabil; panel tidak lagi kosong konteks hanya karena pemain belum menyentuh trigger zona
