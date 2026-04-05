@@ -205,6 +205,27 @@ local function resolveDoorAnchoredInteractionPosition(room, door, insideOffset)
 	) + (directionToRoom * resolvedOffset)
 end
 
+local function findNearestRoomLabel(roomsFolder, worldPosition)
+	if not (typeof(roomsFolder) == "Instance" and typeof(worldPosition) == "Vector3") then
+		return nil
+	end
+
+	local bestLabel = nil
+	local bestDistance = math.huge
+	for _, room in ipairs(roomsFolder:GetChildren()) do
+		if room:IsA("BasePart") then
+			local roomLabel = titleCaseToken(room.Name:gsub("^Room_", ""))
+			local distance = (Vector3.new(room.Position.X, 0, room.Position.Z) - Vector3.new(worldPosition.X, 0, worldPosition.Z)).Magnitude
+			if distance < bestDistance then
+				bestDistance = distance
+				bestLabel = roomLabel
+			end
+		end
+	end
+
+	return bestLabel
+end
+
 local function ensureInteractionPointPart(folder, interactionName, targetPosition)
 	if typeof(folder) ~= "Instance" or not folder:IsA("Folder") or typeof(targetPosition) ~= "Vector3" then
 		return nil
@@ -837,6 +858,7 @@ local function patchSafeZones(mapId, mapClone)
 	end
 
 	local safeZonesFolder = mapClone:FindFirstChild("SafeZones", true)
+	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
 	if not safeZonesFolder then
 		return false
 	end
@@ -853,6 +875,14 @@ local function patchSafeZones(mapId, mapClone)
 			zone.CanCollide = false
 			zone.CanTouch = false
 			zone.CanQuery = true
+
+			local roomLabel = findNearestRoomLabel(roomsFolder, zone.Position)
+			local routeLabel = roomLabel and ("Anchor aman: " .. roomLabel) or "Diam di sini saat hunt"
+			zone:SetAttribute("SafeZoneLabel", "SAFE ZONE")
+			zone:SetAttribute("SafeZoneSubtitle", routeLabel)
+			zone:SetAttribute("SafeZoneRoomLabel", roomLabel)
+			zone:SetAttribute("RefugeRouteLabel", roomLabel or zoneName)
+			patchedAny = true
 		end
 	end
 

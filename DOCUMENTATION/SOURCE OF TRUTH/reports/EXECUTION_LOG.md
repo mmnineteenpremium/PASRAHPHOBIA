@@ -9714,3 +9714,38 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - source lobby sekarang lebih jujur terhadap geometry aktif, sehingga AI/tool berikutnya tidak mengejar zona fiktif
+
+## 2026-04-05 - Refuge Route Label Alignment Pass
+
+### Scope
+
+- menyamakan bahasa visual refuge dengan guide tangga, pintu, dan room yang sudah masuk di phase 18
+- targetnya safe zone dan hide spot tidak lagi terasa seperti sistem marker terpisah yang tidak nyambung dengan orientasi map
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+  - safe zone runtime sekarang diberi metadata:
+    - `SafeZoneLabel`
+    - `SafeZoneSubtitle`
+    - `SafeZoneRoomLabel`
+    - `RefugeRouteLabel`
+  - subtitle safe zone diturunkan dari room terdekat secara XZ agar anchor refuge lebih kontekstual
+- `src/ServerScriptService/Server/HidingSystem/Service.lua`
+  - marker `SafeZoneRuntimeMarker` sekarang membaca title/subtitle dari attribute runtime di part
+  - cleanup match juga membersihkan attribute refuge runtime
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua`
+  - hide spot runtime sekarang menulis:
+    - `HideSpotSubtitle`
+    - `RefugeRouteLabel`
+  - marker hide spot membaca subtitle dari attribute runtime
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_refuge_route_alignment_build.rbxlx`
+- pass ini sengaja ditutup di level source/build karena sesi Studio server masih drift untuk validasi marker server-side yang konsisten
+
+### Interpretation
+
+- refuge sekarang punya metadata orientasi yang lebih seragam untuk dipakai marker, HUD assist, dan hook phase 18 berikutnya

@@ -2047,6 +2047,19 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (room guide consistency baseline)**.
   - **NEXT** tetap lanjut restruktur visual/runtime yang masih terlalu basic.
 
+## Update 2026-04-05 21:24 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi refuge alignment:
+  - safe zone runtime sekarang punya subtitle kontekstual berbasis room terdekat (`SafeZoneSubtitle`, `SafeZoneRoomLabel`, `RefugeRouteLabel`).
+  - hide spot runtime sekarang menyimpan subtitle dan route label yang seragam dengan sistem refuge lain.
+  - marker refuge membaca attribute runtime ini, sehingga bahasa visual refuge tidak lagi sepenuhnya hardcoded dan terpisah dari guide phase 18 lainnya.
+- validasi:
+  - build source sukses:
+    - `_tmp_refuge_route_alignment_build.rbxlx`
+- status:
+  - **SELESAI (refuge route label baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut slice restruktur visual/runtime map-lobby yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
