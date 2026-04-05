@@ -803,6 +803,68 @@ function StudioE2EControlSystem:_handleGetShopReadiness()
 	)
 end
 
+function StudioE2EControlSystem:_handleGetPublishReadiness(player, request)
+	local metrics = buildQAGateMetrics(self, player, request)
+	local qaMemoryOk = metrics.totalMemoryMb > 0 and metrics.totalMemoryMb <= QA_GATE_MAX_TOTAL_MEMORY_MB
+	local qaFpsOk = metrics.physicsFps >= QA_GATE_MIN_PHYSICS_FPS
+	local qaLogOk = metrics.warningCount == 0 and metrics.errorCount == 0
+	local qaSoloOk = metrics.playerCount >= 1 and qaMemoryOk and qaFpsOk and qaLogOk
+
+	local persistenceMode = "unknown"
+	local persistenceReady = false
+	if type(self._persistenceService) == "table" then
+		local diagnostics = type(self._persistenceService.GetDiagnostics) == "function" and self._persistenceService:GetDiagnostics() or nil
+		local useMockStore = diagnostics and diagnostics.mode == "mock" or self._persistenceService._useMockStore == true
+		persistenceMode = useMockStore and "mock" or "datastore"
+		persistenceReady = useMockStore ~= true
+	end
+
+	local robuxMissingId = 0
+	local robuxVisible = 0
+	if type(self._shopService) == "table" and type(self._shopService.GetCatalog) == "function" then
+		local catalog = self._shopService:GetCatalog()
+		if type(catalog) == "table" then
+			for _, item in pairs(catalog) do
+				if type(item) == "table" then
+					local currency = tostring(item.currency or "MM")
+					if currency == "Robux" or currency == "RBX" then
+						if item.enabled ~= false then
+							robuxVisible += 1
+						end
+						if tonumber(item.marketplaceId) == nil or tonumber(item.marketplaceId) <= 0 then
+							robuxMissingId += 1
+						end
+					end
+				end
+			end
+		end
+	end
+
+	local commerceReady = robuxVisible == 0 or robuxMissingId == 0
+	local multiplayerGate = "manual_check_required"
+	local overall = (qaSoloOk and persistenceReady and commerceReady)
+		and "pass_with_manual_multiplayer"
+		or "fail"
+
+	return true, string.format(
+		"overall=%s qaSolo=%s multiplayer=%s persistence=%s persistenceReady=%s commerceReady=%s robuxVisible=%d robuxMissingId=%d totalMemoryMb=%.2f physicsFps=%.2f warnings=%d errors=%d phase=%s currentMatch=%s",
+		overall,
+		tostring(qaSoloOk),
+		multiplayerGate,
+		persistenceMode,
+		tostring(persistenceReady),
+		tostring(commerceReady),
+		robuxVisible,
+		robuxMissingId,
+		metrics.totalMemoryMb,
+		metrics.physicsFps,
+		metrics.warningCount,
+		metrics.errorCount,
+		metrics.currentPhase,
+		tostring(metrics.currentMatchId or "none")
+	)
+end
+
 function StudioE2EControlSystem:_handleGetShopPlayerSnapshot(player, request)
 	if typeof(player) ~= "Instance" or not player:IsA("Player") then
 		return false, "invalid_player"
@@ -1283,6 +1345,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGetQAGateSnapshot(player, request)
 	elseif action == "GetQAGateReadiness" then
 		ok, result = self:_handleGetQAGateReadiness(player, request)
+	elseif action == "GetPublishReadiness" then
+		ok, result = self:_handleGetPublishReadiness(player, request)
 	elseif action == "GetShopReadiness" then
 		ok, result = self:_handleGetShopReadiness()
 	elseif action == "GetShopPlayerSnapshot" then

@@ -69,6 +69,12 @@ Untuk setiap sesi uji penting, simpan:
   - `DOCUMENTATION/SOURCE OF TRUTH/reports/QA_MULTIPLAYER_MANUAL_CHECKLIST_2026-04-06.md`
 - sampai checklist itu dijalankan, status QA publish adalah `pass_with_manual_multiplayer`, bukan `full_pass`
 
+## Gate Persistence Manual
+
+- persistence target di luar Studio mock wajib diverifikasi manual
+- gunakan checklist:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/PERSISTENCE_MANUAL_CHECKLIST_2026-04-06.md`
+
 ## Update 2026-04-04 06:03 ICT
 
 Smoke run live terbaru (`Ranked -> CreateRoom -> HostStart -> EndMatch`) menghasilkan status berikut:
