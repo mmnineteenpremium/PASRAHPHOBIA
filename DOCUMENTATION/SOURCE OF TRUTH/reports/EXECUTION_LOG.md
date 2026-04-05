@@ -10076,3 +10076,25 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - jalur vertikal sekarang masuk ke sistem route yang sama; HUD non-hunt bisa mempertimbangkan tangga pusat sebagai anchor navigasi yang sah
+
+## 2026-04-05 - Phase-Aware Navigation Anchor Pass
+
+### Scope
+
+- membuat pemilihan anchor navigasi non-hunt lebih cerdas per fase agar HUD tidak asal memilih titik terdekat yang kebetulan paling dekat
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah `getNavigationAnchorBias(contextTag, info)`
+  - `getNearestNavigationAnchorInfo(contextTag)` sekarang memakai `distance + bias`
+  - `Preparation` dan `Investigation` sekarang meminta anchor dengan konteks fase masing-masing
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_phase_aware_navigation_build.rbxlx`
+
+### Interpretation
+
+- HUD non-hunt sekarang lebih mungkin memilih anchor yang relevan untuk fase aktif, bukan hanya objek terdekat secara buta
