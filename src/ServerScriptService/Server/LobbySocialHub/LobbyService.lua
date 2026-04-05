@@ -841,6 +841,39 @@ local function applyMainHubVisualPatch()
         ensureGuideBoardSurface(node, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, title, subtitle, color)
     end
 
+    local function applyBeaconPart(namePrefix, position, lookTarget, color, title, subtitle)
+        local post = ensureDecorPart(namePrefix .. "Post")
+        local panel = ensureDecorPart(namePrefix .. "Panel")
+        local cap = ensureDecorPart(namePrefix .. "Cap")
+
+        applyPartProps(post, {
+            size = Vector3.new(0.48, 2.8, 0.48),
+            cframe = CFrame.new(position + Vector3.new(0, 1.4, 0)),
+            color = Color3.fromRGB(24, 34, 48),
+            material = Enum.Material.Metal,
+            transparency = 0.03,
+        })
+
+        applyPartProps(cap, {
+            size = Vector3.new(1.9, 0.18, 0.18),
+            cframe = CFrame.lookAt(position + Vector3.new(0, 2.95, 0), lookTarget + Vector3.new(0, 2.95, 0)),
+            color = color:Lerp(Color3.fromRGB(255, 255, 255), 0.18),
+            material = Enum.Material.Neon,
+            transparency = 0.08,
+        })
+
+        applyPartProps(panel, {
+            size = Vector3.new(2.8, 3.0, 0.28),
+            cframe = CFrame.lookAt(position + Vector3.new(0, 2.1, 0), lookTarget + Vector3.new(0, 2.1, 0)),
+            color = Color3.fromRGB(14, 22, 34),
+            material = Enum.Material.SmoothPlastic,
+            transparency = 0.02,
+        })
+
+        ensureGuideBoardSurface(panel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, title, subtitle, color)
+        ensureGuideBoardSurface(panel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, title, subtitle, color)
+    end
+
     local hubCenter = Vector3.new(1600, 0.18, -44)
     local northNodePos = Vector3.new(1600, 0.2, -92)
     local eastNodePos = Vector3.new(1658, 0.2, -44)
@@ -902,6 +935,12 @@ local function applyMainHubVisualPatch()
     applyNodePart(LOBBY_MAINHUB_NODE_WEST_NAME, westNodePos, LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, "PARTY", "Room • Invite")
     applyNodePart(LOBBY_MAINHUB_NODE_SOUTH_NAME, southNodePos, LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, "GARDEN", "Reward • Social")
     applyNodePart(LOBBY_MAINHUB_NODE_FLEX_NAME, flexNodePos, LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, "FLEX", "Cosmetic • Spotlight")
+
+    applyBeaconPart("BeaconNorth", northNodePos + Vector3.new(0, 0, 3.4), hubCenter, LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, "PLAY", "Contract")
+    applyBeaconPart("BeaconEast", eastNodePos + Vector3.new(-3.4, 0, 0), hubCenter, LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, "SHOP", "MM • PP • R$")
+    applyBeaconPart("BeaconWest", westNodePos + Vector3.new(3.4, 0, 0), hubCenter, LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, "PARTY", "Invite")
+    applyBeaconPart("BeaconSouth", southNodePos + Vector3.new(0, 0, -3.4), hubCenter, LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, "GARDEN", "Reward")
+    applyBeaconPart("BeaconFlex", flexNodePos + Vector3.new(-2.8, 0, -2.8), southNodePos, LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, "FLEX", "Spotlight")
 
 	return changed
 end

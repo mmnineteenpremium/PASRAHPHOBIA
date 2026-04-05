@@ -2396,3 +2396,10 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - shell bangunan dan interior final masih belum selesai, tetapi lobby sekarang sudah jauh lebih layak untuk visual QA manusia dibanding baseline sebelumnya.
 
+## Update 2026-04-06 10:10 ICT
+
+- wayfinding plaza diperbesar lagi dengan beacon vertikal per arah utama agar orientasi lobby tidak hanya bergantung pada façade entrance.
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - baseline world-space lobby sekarang sudah jauh lebih terbaca, tetapi final art/interior masih tersisa.
+
