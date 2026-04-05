@@ -10898,3 +10898,108 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - forecourt mass
   - bay/counter sederhana yang mencerminkan fungsi ruang
 - baseline world-space lobby sekarang jauh lebih dekat ke `hub functional`, bukan cuma shell besar dengan label di dinding
+
+### Follow-up 2026-04-06 13:00 ICT
+
+- pass lanjutan lobby sekarang mulai mengikuti blueprint objek dunia secara lebih eksplisit:
+  - `North / Evidence`
+    - `Table_Tools_1..6` ditambahkan sebagai training table world-space:
+      - `EMF`
+      - `UV`
+      - `THERMO`
+      - `BOX`
+      - `WRITING`
+      - `CAM`
+  - `Shop`
+    - `EquipmentRack`
+    - `DisplayTable_A`
+    - `DisplayTable_B`
+  - `Party`
+    - `PartyPlatform`
+    - `PartyBoard`
+    - `PartyTerminal`
+  - `Garden`
+    - `DailyRewardTerminal`
+    - `NPCSpot_A`
+    - `NPCSpot_B`
+  - `Flex`
+    - `FlexStage`
+    - `AnnouncementBoard`
+    - `SpotlightPedestalLeft`
+    - `SpotlightPedestalRight`
+
+### Validation 2026-04-06 13:00 ICT
+
+- build source sukses:
+  - `_tmp_lobby_zone_features_build.rbxlx`
+- verifikasi live runtime:
+  - `Table_Tools_1 = 3.1 x 1.02 x 1.82`
+  - `Table_Tools_6 = 3.1 x 1.02 x 1.82`
+  - `EquipmentRack = 0.78 x 3.1 x 6.8`
+  - `PartyPlatform = 5.8 x 0.18 x 5.8`
+  - `PartyTerminal = 1.12 x 1.4 x 1.12`
+  - `DailyRewardTerminal = 2.4 x 1.46 x 1.84`
+  - `FlexStage = 5.8 x 0.22 x 5.8`
+  - `AnnouncementBoard = 0.42 x 3.6 x 5.6`
+- capture live:
+  - `North` training tables tembus
+  - `Party` shot tidak bagus secara framing, jadi validasi utama batch ini tetap saya pegang dari runtime proof
+
+### Follow-up 2026-04-06 13:20 ICT
+
+- pass berikutnya mempertebal `pseudo interior shell` untuk semua bangunan utama:
+  - `InteriorFloor`
+  - `InteriorBackWall`
+  - `InteriorSideLeft`
+  - `InteriorSideRight`
+  - `InteriorCeiling`
+- tujuan:
+  - mengurangi rasa `prop ditempel di dinding telanjang`
+  - memberi kedalaman dangkal pada bangunan agar façade, counter, dan prop punya ruang visual sendiri
+
+### Validation 2026-04-06 13:20 ICT
+
+- build source sukses:
+  - `_tmp_lobby_pseudo_interiors_build.rbxlx`
+- verifikasi live runtime:
+  - `North InteriorFloor = 20.8 x 0.16 x 19.5`
+  - `North InteriorBackWall = 20.8 x 5.8 x 0.28`
+  - `Party InteriorFloor = 14.8 x 0.16 x 16.4`
+  - `Party InteriorBackWall = 0.28 x 5.2 x 16.4`
+  - `Flex InteriorFloor = 14.8 x 0.16 x 16.4`
+  - `Flex InteriorBackWall = 0.28 x 5.2 x 16.4`
+- catatan jujur:
+  - screenshot pseudo interior masih sulit bagus karena shell editor aktif sangat sempit dan kamera sering mentok
+  - runtime proof jauh lebih jujur daripada capture untuk batch ini
+
+### Follow-up 2026-04-06 13:35 ICT
+
+- fresh spawn lobby dan jalur `return-to-lobby` digeser lagi ke luar forecourt:
+  - sebelumnya spawn masih terlalu dekat ke `North` back wall setelah interior shell ditambah
+  - offset baru sekarang mendaratkan pemain di sekitar `x +/-10, z 30/40` relatif terhadap pintu utara
+- file:
+  - `src/ServerScriptService/Server/LobbySocialHub/LobbyPlayerManager.lua`
+  - `src/ServerScriptService/Server/MatchSystem/MatchCleanup.lua`
+
+### Validation 2026-04-06 13:35 ICT
+
+- build source sukses:
+  - `_tmp_lobby_spawn_forecourt_fix_build.rbxlx`
+  - `_tmp_lobby_spawn_forecourt_final_build.rbxlx`
+- verifikasi live runtime:
+  - fresh spawn terbaru: `1610, 3.47, -90.25`
+  - ini sudah keluar dari interior shell dan jatuh ke forecourt luar, bukan lagi mepet `North InteriorBackWall`
+
+### Interpretation 2026-04-06 13:35 ICT
+
+- lobby sekarang sudah sampai tahap:
+  - world-space readable
+  - semua sayap utama punya fungsi visual
+  - pusat plaza punya orientasi
+  - entrance utama punya massa
+  - utara punya bay + training table
+  - shell dangkal bangunan sudah ada
+- yang masih tersisa sebelum benar-benar `final-final`:
+  - asset final non-primitive
+  - interior bangunan yang benar-benar kaya, bukan pseudo shell dangkal
+  - world interaction final pada beberapa board/terminal agar tidak hanya visual

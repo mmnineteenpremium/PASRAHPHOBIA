@@ -1978,6 +1978,50 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local zoneSecondaryProp = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ZONE_SECONDARY_PROP_NAME)
     local useFacadeSign = FACADE_SIGN_ZONE_FLAGS[zoneName] == true
 
+    local function applyInteriorShell(shellWidth, shellDepth, shellHeight, forwardOffset)
+        local floorPart = ensureGuidePanelPart(folder, "InteriorFloor")
+        local backWall = ensureGuidePanelPart(folder, "InteriorBackWall")
+        local sideLeft = ensureGuidePanelPart(folder, "InteriorSideLeft")
+        local sideRight = ensureGuidePanelPart(folder, "InteriorSideRight")
+        local ceiling = ensureGuidePanelPart(folder, "InteriorCeiling")
+
+        for _, shellPart in ipairs({ floorPart, backWall, sideLeft, sideRight, ceiling }) do
+            shellPart.Color = Color3.fromRGB(18, 26, 38)
+            shellPart.Material = Enum.Material.SmoothPlastic
+            shellPart.Transparency = 0.03
+        end
+        floorPart.Color = Color3.fromRGB(24, 34, 48)
+        floorPart.Material = Enum.Material.Slate
+        ceiling.Color = Color3.fromRGB(28, 38, 54)
+        ceiling.Material = Enum.Material.Metal
+        sideLeft.Color = Color3.fromRGB(28, 38, 54)
+        sideRight.Color = Color3.fromRGB(28, 38, 54)
+
+        if isWideOnX then
+            floorPart.Size = Vector3.new(shellWidth, 0.16, shellDepth)
+            floorPart.CFrame = anchorPart.CFrame * CFrame.new(0, (-anchorPart.Size.Y * 0.5) + 0.17, forwardOffset)
+            backWall.Size = Vector3.new(shellWidth, shellHeight, 0.28)
+            backWall.CFrame = anchorPart.CFrame * CFrame.new(0, (-anchorPart.Size.Y * 0.5) + (shellHeight * 0.5), forwardOffset + (shellDepth * 0.5) - 0.14)
+            sideLeft.Size = Vector3.new(0.28, shellHeight, shellDepth)
+            sideLeft.CFrame = anchorPart.CFrame * CFrame.new(-(shellWidth * 0.5) + 0.14, (-anchorPart.Size.Y * 0.5) + (shellHeight * 0.5), forwardOffset)
+            sideRight.Size = Vector3.new(0.28, shellHeight, shellDepth)
+            sideRight.CFrame = anchorPart.CFrame * CFrame.new((shellWidth * 0.5) - 0.14, (-anchorPart.Size.Y * 0.5) + (shellHeight * 0.5), forwardOffset)
+            ceiling.Size = Vector3.new(shellWidth, 0.18, shellDepth)
+            ceiling.CFrame = anchorPart.CFrame * CFrame.new(0, (-anchorPart.Size.Y * 0.5) + shellHeight - 0.09, forwardOffset)
+        else
+            floorPart.Size = Vector3.new(shellDepth, 0.16, shellWidth)
+            floorPart.CFrame = anchorPart.CFrame * CFrame.new(forwardOffset, (-anchorPart.Size.Y * 0.5) + 0.17, 0)
+            backWall.Size = Vector3.new(0.28, shellHeight, shellWidth)
+            backWall.CFrame = anchorPart.CFrame * CFrame.new(forwardOffset + (shellDepth * 0.5) - 0.14, (-anchorPart.Size.Y * 0.5) + (shellHeight * 0.5), 0)
+            sideLeft.Size = Vector3.new(shellDepth, shellHeight, 0.28)
+            sideLeft.CFrame = anchorPart.CFrame * CFrame.new(forwardOffset, (-anchorPart.Size.Y * 0.5) + (shellHeight * 0.5), -(shellWidth * 0.5) + 0.14)
+            sideRight.Size = Vector3.new(shellDepth, shellHeight, 0.28)
+            sideRight.CFrame = anchorPart.CFrame * CFrame.new(forwardOffset, (-anchorPart.Size.Y * 0.5) + (shellHeight * 0.5), (shellWidth * 0.5) - 0.14)
+            ceiling.Size = Vector3.new(shellDepth, 0.18, shellWidth)
+            ceiling.CFrame = anchorPart.CFrame * CFrame.new(forwardOffset, (-anchorPart.Size.Y * 0.5) + shellHeight - 0.09, 0)
+        end
+    end
+
     if useFacadeSign then
         local backFace = isWideOnX and Enum.NormalId.Back or Enum.NormalId.Right
         local frontFace = isWideOnX and Enum.NormalId.Front or Enum.NormalId.Left
@@ -2144,6 +2188,7 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             planterTopPart.Material = Enum.Material.Grass
             planterTopPart.Transparency = 0.04
         end
+        applyInteriorShell(anchorPart.Size.X + 16.8, 19.5, 5.8, 10.5)
         if isWideOnX then
             contractBoard.Size = Vector3.new(4.4, 3.4, frameDepth + 0.06)
             contractBoard.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 5.2, -0.05, 0.3)
@@ -2296,6 +2341,30 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         ensureGuideBoardSurface(deskModePlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "MODE", "Classic", style.color)
         ensureGuideBoardSurface(deskStartPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "START", "Room Browser", style.color)
         ensureGuideBoardSurface(deskStartPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "START", "Room Browser", style.color)
+
+        local trainingStations = {
+            { "Table_Tools_1", "EMF", -10.6 },
+            { "Table_Tools_2", "UV", -6.4 },
+            { "Table_Tools_3", "THERMO", -2.2 },
+            { "Table_Tools_4", "BOX", 2.2 },
+            { "Table_Tools_5", "WRITING", 6.4 },
+            { "Table_Tools_6", "CAM", 10.6 },
+        }
+        for _, station in ipairs(trainingStations) do
+            local tablePart = ensureGuidePanelPart(folder, station[1])
+            tablePart.Color = Color3.fromRGB(24, 34, 48)
+            tablePart.Material = Enum.Material.Slate
+            tablePart.Transparency = 0.03
+            if isWideOnX then
+                tablePart.Size = Vector3.new(3.1, 1.02, 1.82)
+                tablePart.CFrame = anchorPart.CFrame * CFrame.new(station[3], -1.85, 12.65)
+            else
+                tablePart.Size = Vector3.new(1.82, 1.02, 3.1)
+                tablePart.CFrame = anchorPart.CFrame * CFrame.new(12.65, -1.85, station[3])
+            end
+            ensureGuideBoardSurface(tablePart, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, station[2], "Training", style.color)
+            ensureGuideBoardSurface(tablePart, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, station[2], "Training", style.color)
+        end
     elseif zoneName == "ShopZone" or zoneName == "PartyZone" or zoneName == "DailyRewardZone" or zoneName == "FlexZone" then
         local kioskCopy = LOBBY_ZONE_ENTRY_KIOSK_COPY[zoneName]
         local secondaryCopy = LOBBY_ZONE_ENTRY_SECONDARY_COPY[zoneName]
@@ -2357,6 +2426,11 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             planterTopPart.Color = style.color:Lerp(Color3.fromRGB(112, 176, 116), 0.65)
             planterTopPart.Material = Enum.Material.Grass
             planterTopPart.Transparency = 0.04
+        end
+        if isWideOnX then
+            applyInteriorShell(anchorPart.Size.X + 12.4, 14.8, 5.2, 7.8)
+        else
+            applyInteriorShell(anchorPart.Size.Z + 12.4, 14.8, 5.2, 7.8)
         end
         for _, propPart in ipairs({ zoneCounter, zoneLeftDisplay, zoneRightDisplay }) do
             propPart.Color = Color3.fromRGB(24, 34, 48)
@@ -2466,6 +2540,102 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         ensureGuideBoardSurface(zoneLeftDisplay, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, secondaryCopy.leftTitle, secondaryCopy.leftSubtitle, style.color)
         ensureGuideBoardSurface(zoneRightDisplay, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, secondaryCopy.rightTitle, secondaryCopy.rightSubtitle, style.color)
         ensureGuideBoardSurface(zoneRightDisplay, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, secondaryCopy.rightTitle, secondaryCopy.rightSubtitle, style.color)
+
+        if zoneName == "ShopZone" then
+            local rack = ensureGuidePanelPart(folder, "EquipmentRack")
+            local tableA = ensureGuidePanelPart(folder, "DisplayTable_A")
+            local tableB = ensureGuidePanelPart(folder, "DisplayTable_B")
+            rack.Color = Color3.fromRGB(34, 44, 58)
+            rack.Material = Enum.Material.Metal
+            rack.Transparency = 0.03
+            tableA.Color = Color3.fromRGB(26, 36, 50)
+            tableA.Material = Enum.Material.Slate
+            tableA.Transparency = 0.03
+            tableB.Color = Color3.fromRGB(26, 36, 50)
+            tableB.Material = Enum.Material.Slate
+            tableB.Transparency = 0.03
+            rack.Size = Vector3.new(0.78, 3.1, 6.8)
+            rack.CFrame = anchorPart.CFrame * CFrame.new(10.65, 0.92, 0)
+            tableA.Size = Vector3.new(1.8, 1.02, 2.3)
+            tableA.CFrame = anchorPart.CFrame * CFrame.new(8.95, -1.86, -4.6)
+            tableB.Size = Vector3.new(1.8, 1.02, 2.3)
+            tableB.CFrame = anchorPart.CFrame * CFrame.new(8.95, -1.86, 4.6)
+            ensureGuideBoardSurface(tableA, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, "MM", "Starter • Pack", style.color)
+            ensureGuideBoardSurface(tableA, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, "MM", "Starter • Pack", style.color)
+            ensureGuideBoardSurface(tableB, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, "PP", "Bonus • Bundle", style.color)
+            ensureGuideBoardSurface(tableB, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, "PP", "Bonus • Bundle", style.color)
+            ensureGuideBoardSurface(rack, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, "RACK", "Utility • Equip", style.color)
+            ensureGuideBoardSurface(rack, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, "RACK", "Utility • Equip", style.color)
+        elseif zoneName == "PartyZone" then
+            local platform = ensureGuidePanelPart(folder, "PartyPlatform")
+            local board = ensureGuidePanelPart(folder, "PartyBoard")
+            local terminal = ensureGuidePanelPart(folder, "PartyTerminal")
+            platform.Color = Color3.fromRGB(26, 36, 50)
+            platform.Material = Enum.Material.Slate
+            platform.Transparency = 0.03
+            board.Color = Color3.fromRGB(16, 24, 36)
+            board.Material = Enum.Material.SmoothPlastic
+            board.Transparency = 0.02
+            terminal.Color = Color3.fromRGB(34, 44, 58)
+            terminal.Material = Enum.Material.Metal
+            terminal.Transparency = 0.03
+            platform.Size = Vector3.new(5.8, 0.18, 5.8)
+            platform.CFrame = anchorPart.CFrame * CFrame.new(8.25, -2.47, 0)
+            board.Size = Vector3.new(0.42, 3.5, 5.4)
+            board.CFrame = anchorPart.CFrame * CFrame.new(10.55, -0.08, -2.9)
+            terminal.Size = Vector3.new(1.12, 1.4, 1.12)
+            terminal.CFrame = anchorPart.CFrame * CFrame.new(9.8, -1.72, 2.85)
+            ensureGuideBoardSurface(board, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, "PARTY BOARD", "Create • Invite • Room", style.color)
+            ensureGuideBoardSurface(board, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, "PARTY BOARD", "Create • Invite • Room", style.color)
+            ensureGuideBoardSurface(terminal, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, "TERMINAL", "Ready • Confirm", style.color)
+            ensureGuideBoardSurface(terminal, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, "TERMINAL", "Ready • Confirm", style.color)
+        elseif zoneName == "DailyRewardZone" then
+            local terminal = ensureGuidePanelPart(folder, "DailyRewardTerminal")
+            local npcSpotA = ensureNeonGuidePart(folder, "NPCSpot_A")
+            local npcSpotB = ensureNeonGuidePart(folder, "NPCSpot_B")
+            terminal.Color = Color3.fromRGB(24, 34, 48)
+            terminal.Material = Enum.Material.SmoothPlastic
+            terminal.Transparency = 0.03
+            terminal.Size = Vector3.new(2.4, 1.46, 1.84)
+            terminal.CFrame = anchorPart.CFrame * CFrame.new(0, -1.78, 8.95)
+            npcSpotA.Color = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.22)
+            npcSpotA.Transparency = 0.12
+            npcSpotA.Size = Vector3.new(2.8, 0.1, 2.8)
+            npcSpotA.CFrame = anchorPart.CFrame * CFrame.new(-5.1, -2.43, 9.8)
+            npcSpotB.Color = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.22)
+            npcSpotB.Transparency = 0.12
+            npcSpotB.Size = Vector3.new(2.8, 0.1, 2.8)
+            npcSpotB.CFrame = anchorPart.CFrame * CFrame.new(5.1, -2.43, 9.8)
+            ensureGuideBoardSurface(terminal, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, "CLAIM", "Daily • Reward", style.color)
+            ensureGuideBoardSurface(terminal, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, "CLAIM", "Daily • Reward", style.color)
+        elseif zoneName == "FlexZone" then
+            local stage = ensureGuidePanelPart(folder, "FlexStage")
+            local board = ensureGuidePanelPart(folder, "AnnouncementBoard")
+            local pedestalLeft = ensureGuidePanelPart(folder, "SpotlightPedestalLeft")
+            local pedestalRight = ensureGuidePanelPart(folder, "SpotlightPedestalRight")
+            stage.Color = Color3.fromRGB(26, 36, 50)
+            stage.Material = Enum.Material.Slate
+            stage.Transparency = 0.03
+            board.Color = Color3.fromRGB(16, 24, 36)
+            board.Material = Enum.Material.SmoothPlastic
+            board.Transparency = 0.02
+            pedestalLeft.Color = Color3.fromRGB(34, 44, 58)
+            pedestalLeft.Material = Enum.Material.Metal
+            pedestalLeft.Transparency = 0.03
+            pedestalRight.Color = Color3.fromRGB(34, 44, 58)
+            pedestalRight.Material = Enum.Material.Metal
+            pedestalRight.Transparency = 0.03
+            stage.Size = Vector3.new(5.8, 0.22, 5.8)
+            stage.CFrame = anchorPart.CFrame * CFrame.new(8.45, -2.45, 0)
+            board.Size = Vector3.new(0.42, 3.6, 5.6)
+            board.CFrame = anchorPart.CFrame * CFrame.new(10.7, 0.0, 0)
+            pedestalLeft.Size = Vector3.new(1.26, 1.18, 1.26)
+            pedestalLeft.CFrame = anchorPart.CFrame * CFrame.new(8.4, -1.96, -4.0)
+            pedestalRight.Size = Vector3.new(1.26, 1.18, 1.26)
+            pedestalRight.CFrame = anchorPart.CFrame * CFrame.new(8.4, -1.96, 4.0)
+            ensureGuideBoardSurface(board, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, "ANNOUNCEMENT", "Featured • Event", style.color)
+            ensureGuideBoardSurface(board, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, "ANNOUNCEMENT", "Featured • Event", style.color)
+        end
 
         if contractBoard then
             contractBoard:Destroy()

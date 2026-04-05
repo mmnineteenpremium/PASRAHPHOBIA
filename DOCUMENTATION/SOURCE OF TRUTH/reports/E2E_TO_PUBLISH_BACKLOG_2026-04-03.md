@@ -2440,3 +2440,30 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby sekarang sudah jauh lebih mendekati `functional hub`, tetapi interior bangunan, asset final, dan interaksi dunia final masih tersisa.
 
+## Update 2026-04-06 13:35 ICT
+
+- `Lobby UX visual` menerima tiga pass besar lanjutan:
+  - tambah object blueprint dunia:
+    - `Table_Tools_1..6`
+    - `EquipmentRack`
+    - `PartyPlatform / PartyBoard / PartyTerminal`
+    - `DailyRewardTerminal`
+    - `FlexStage / AnnouncementBoard`
+  - tambah `pseudo interior shell` untuk bangunan utama:
+    - `InteriorFloor / BackWall / SideLeft / SideRight / Ceiling`
+  - geser fresh spawn dan return-to-lobby ke luar forecourt supaya view awal tidak lagi lahir di dalam shell gelap
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_zone_features_build.rbxlx`
+    - `_tmp_lobby_pseudo_interiors_build.rbxlx`
+    - `_tmp_lobby_spawn_forecourt_fix_build.rbxlx`
+    - `_tmp_lobby_spawn_forecourt_final_build.rbxlx`
+  - runtime live tembus untuk:
+    - training tables utara
+    - shop/party/garden/flex world objects
+    - interior shell parts
+    - fresh spawn baru `1610, 3.47, -90.25`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby sekarang sudah cukup jauh naik sebagai `functional world-space hub`, tetapi asset final dan interior kaya masih tersisa sebelum bisa dinyatakan selesai total.
+
