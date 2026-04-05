@@ -9749,3 +9749,32 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - refuge sekarang punya metadata orientasi yang lebih seragam untuk dipakai marker, HUD assist, dan hook phase 18 berikutnya
+
+## 2026-04-05 - Hunt HUD Refuge Route Sync Pass
+
+### Scope
+
+- menyambungkan metadata refuge runtime baru ke `Field/Hunt HUD` agar assist hunt tidak tetap memakai label generik lama
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah resolver runtime:
+    - `getRuntimeRefugeRouteLabel`
+    - `getRuntimeSafeZoneLabel`
+    - `getRuntimeSafeZoneSubtitle`
+    - `getRuntimeHideSpotPart`
+  - nearest refuge scan sekarang menyimpan:
+    - `label`
+    - `subtitle`
+    - `routeLabel`
+  - `getHuntControlsHintText()` dan `getHuntAssistSnapshot()` sekarang memakai `routeLabel` refuge bila tersedia
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_hunt_refuge_route_hud_build.rbxlx`
+
+### Interpretation
+
+- jalur readability hunt sekarang lebih nyambung dengan metadata refuge runtime server, bukan hanya hasil formatting nama part
