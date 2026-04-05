@@ -25,6 +25,7 @@ Jalankan lewat harness Studio / assistant:
 
 1. isi `GamePassId / ProductId` resmi ke:
    - `src/shared/DataTypes/ShopMarketplaceConfig.lua`
+   - `CREATOR_HUB_MARKETPLACE_MAPPING_2026-04-06.md`
 2. jangan isi placeholder dengan `UserId`
 3. setelah diisi, cek ulang:
    - `GetShopReadiness`

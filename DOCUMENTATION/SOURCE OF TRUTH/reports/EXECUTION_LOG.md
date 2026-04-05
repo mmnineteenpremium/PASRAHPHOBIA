@@ -10528,3 +10528,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - persistence masih `mock`
   - multiplayer tetap manual
   - `marketplaceId` Creator Hub resmi tetap lane terakhir sebelum publish
+
+## 2026-04-06 - Creator Hub Mapping Manifest
+
+### Scope
+
+- memecah lane `Creator Hub marketplaceId` menjadi daftar item yang eksplisit dan siap diisi manual
+
+### Source Changes
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/CREATOR_HUB_MARKETPLACE_MAPPING_2026-04-06.md`
+  - manifest item `Robux` yang aman diaktifkan sekarang
+  - daftar item yang harus tetap disabled
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/FINAL_RELEASE_CHECKLIST_2026-04-06.md`
+  - Stage 2 sekarang langsung menunjuk ke manifest Creator Hub
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/PUBLISH_REVIEW_FINAL_2026-04-06.md`
+  - lane `marketplaceId` sekarang punya referensi operasional
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/README.md`
+  - report baru masuk ke entrypoint utama
+
+### Interpretation
+
+- lane Creator Hub sekarang tidak lagi abstrak
+- item `Robux` yang boleh aktif segera sudah dipisah dari item yang harus tetap mati demi fairness/compliance
