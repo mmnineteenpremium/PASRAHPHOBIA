@@ -1184,7 +1184,7 @@ Done jika:
 
 Status:
 
-- deferred (task tambahan user, dikerjakan di akhir setelah blocker inti tertutup)
+- **SELESAI**.
 
 Pekerjaan:
 
@@ -1202,6 +1202,19 @@ Done jika:
 - pemain Windows di FPV bisa switch lock/unlock cursor dengan cepat untuk interaksi UI
 - head bobbing aktif kembali dan tervalidasi nyaman dipakai
 - flashlight terasa lebih natural tanpa merusak visibilitas/hunt readability
+
+## Update 2026-04-06 00:40 ICT
+
+- `Phase 20 Final polish tambahan` resmi ditutup:
+  - FPV sekarang punya state cursor mode yang lebih eksplisit (`Default`, `LockedFPV`, `UnlockedUI`).
+  - head bob sekarang adaptif terhadap kecepatan gerak dan turun drastis saat cursor UI dilepas.
+  - flashlight carry/viewmodel sekarang punya breath, look sway, carry offset, dan motion tuning yang lebih natural.
+- validasi:
+  - build source sukses:
+    - `_tmp_phase20_completion_build.rbxlx`
+- status:
+  - **SELESAI (phase 20 complete)**.
+  - **NEXT**: tinggal phase diskusi final yang memang deferred by design.
 
 ## Update 2026-04-03 23:59 ICT
 

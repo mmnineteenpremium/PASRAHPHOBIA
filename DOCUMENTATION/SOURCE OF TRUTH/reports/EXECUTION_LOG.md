@@ -10337,3 +10337,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - `Phase 17` tidak lagi menggantung pada status “pending client kedua”; single-client gate sekarang punya output readiness yang tegas dan multiplayer gate dipindah jelas ke checklist manual pra-publish
+
+## 2026-04-06 - Phase 20 Completion Pass
+
+### Scope
+
+- menutup polish tambahan `Windows FPV + Camera realism` setelah blocker inti dan restruktur lobby/map selesai
+
+### Source Changes
+
+- `src/client/CameraController.client.lua`
+  - tambah `PasrahCursorMode`
+  - cursor toggle sekarang lebih eksplisit untuk mode UI vs kembali ke FPV
+  - head bob sekarang adaptif terhadap kecepatan dan ditekan turun saat cursor UI dilepas
+  - viewmodel flashlight sekarang punya carry offset, look sway, breath sway, dan motion debug attr `PasrahFlashlightAimOffset`
+- `src/shared/GameData/FlashlightConfig.lua`
+  - tambah blok `motion` untuk tuning camera/viewmodel flashlight
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_phase20_completion_build.rbxlx`
+
+### Interpretation
+
+- `Phase 20` cukup kuat untuk ditutup; polish FPV/camera/flashlight sekarang sudah berada di jalur yang lebih natural tanpa merusak readability gameplay
