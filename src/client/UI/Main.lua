@@ -291,7 +291,7 @@ local RESULTS_LOCK_SECONDS = 5
 local DEFAULT_MATCH_OBJECTIVE_TEXT = "Investigate the location\nFind evidence\nIdentify the ghost"
 local TELEPORT_OVERLAY_GUI_NAME = "TeleportScreen"
 local TELEPORT_OVERLAY_FRAME_NAME = "LoadingOverlay"
-local TELEPORT_OVERLAY_HOLD_SECONDS = 5
+local TELEPORT_OVERLAY_HOLD_SECONDS = 0.55
 local TELEPORT_OVERLAY_FADE_SECONDS = 0.35
 local LOADING_TIPS = {
 	"Gunakan [J] untuk buka Journal dan cek evidence yang sudah terkumpul.",
