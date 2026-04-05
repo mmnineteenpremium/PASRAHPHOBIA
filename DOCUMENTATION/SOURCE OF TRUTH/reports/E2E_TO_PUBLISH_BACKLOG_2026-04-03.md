@@ -1061,16 +1061,17 @@ Done jika:
 
 Status:
 
-- **IN PROGRESS**.
+- **SELESAI**.
 - baseline Studio single-client sekarang sudah tersedia lewat harness `StudioE2EControl`:
   - `GetQAGateSnapshot`
+  - `GetQAGateReadiness`
   - `StartSoloMatch`
 - baseline yang sudah tertutup:
   - memory baseline
   - network sanity untuk Studio single-client
   - server log cleanliness baseline
-- pending yang masih jujur:
-  - multi-player test nyata dengan client kedua
+- multi-player test nyata dipindah jelas ke checklist manual pra-publish:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/QA_MULTIPLAYER_MANUAL_CHECKLIST_2026-04-06.md`
 
 Pekerjaan:
 
@@ -1105,6 +1106,18 @@ Done jika:
 
 - pass gate minimum sebelum publish
 - smoke test multi-player nyata dengan client kedua selesai atau jelas dipindah ke checklist manual pra-publish
+
+## Update 2026-04-06 00:28 ICT
+
+- `Phase 17 QA dan perf gate` resmi ditutup:
+  - harness Studio sekarang punya `GetQAGateReadiness` selain `GetQAGateSnapshot`.
+  - multi-player smoke test dua client dipindah tegas ke checklist manual pra-publish, bukan dibiarkan menggantung sebagai pending abstrak.
+- validasi:
+  - build source sukses:
+    - `_tmp_phase17_completion_build.rbxlx`
+- status:
+  - **SELESAI (phase 17 complete)**.
+  - **NEXT**: lanjut ke phase penutup berikutnya yang masih actionable.
 
 ### 18. Final pass perubahan dan restruktur LOBBY + MAP IN GAME
 

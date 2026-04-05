@@ -62,6 +62,13 @@ Untuk setiap sesi uji penting, simpan:
 - gunakan MCP untuk start/stop playtest dan ambil bukti runtime
 - jika perubahan dilakukan di Studio untuk tuning visual, mirror hasil final ke repo sebelum test berikutnya
 
+## Gate QA Multiplayer Manual
+
+- smoke test dua client nyata tidak dipaksa lewat harness tunggal Studio
+- gunakan checklist:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/QA_MULTIPLAYER_MANUAL_CHECKLIST_2026-04-06.md`
+- sampai checklist itu dijalankan, status QA publish adalah `pass_with_manual_multiplayer`, bukan `full_pass`
+
 ## Update 2026-04-04 06:03 ICT
 
 Smoke run live terbaru (`Ranked -> CreateRoom -> HostStart -> EndMatch`) menghasilkan status berikut:
