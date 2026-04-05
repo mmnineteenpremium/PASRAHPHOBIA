@@ -11,11 +11,11 @@ local DEFAULT_CONFIG = {
     DefaultAttackDamage = 50,
     MinAttackDamage = 20,
     MaxAttackDamage = 100,
-    ProximityExposureThreshold = 4.5,
-    ProximityExposureStep = 1,
+    ProximityExposureThreshold = 5.4,
+    ProximityExposureStep = 0.55,
     HuntStartGraceSeconds = 6.0,
     MaxHuntPressureTickDelta = 0.5,
-    HuntPressureBurstStep = 0.35,
+    HuntPressureBurstStep = 0.22,
     HuntPressureBurstDuringGraceStep = 0.15,
 }
 local HUNT_PRESSURE_TICK_INTERVAL = 0.35
@@ -414,6 +414,9 @@ function Service:_tickHuntPressure(dt)
                             local exposure = math.max(0, self:_getExposure(matchId, userId) - math.max(0.5, dt * 2.1))
                             self:_setExposure(matchId, userId, exposure)
                             self:_setExposureAttribute(player, exposure)
+                            if typeof(player) == "Instance" and player:IsA("Player") then
+                                player:SetAttribute("PasrahHuntGraceRemaining", nil)
+                            end
                             self:_setThreatAttributes(player, nil, "Sheltered")
                         else
                             local root = getCharacterRoot(player)
@@ -428,16 +431,16 @@ function Service:_tickHuntPressure(dt)
                             local exposureGain = 0
                             if distance <= HUNT_DISTANCE_KILL then
                                 threatState = "Critical"
-                                exposureGain = math.max(0.55, effectiveDt * 1.8)
+                                exposureGain = math.max(0.32, effectiveDt * 0.95)
                             elseif distance <= HUNT_DISTANCE_CLOSE then
                                 threatState = "Close"
-                                exposureGain = math.max(0.28, effectiveDt * 1.1)
+                                exposureGain = math.max(0.18, effectiveDt * 0.58)
                             elseif distance <= HUNT_DISTANCE_TRACK then
                                 threatState = "Tracked"
-                                exposureGain = math.max(0.14, effectiveDt * 0.6)
+                                exposureGain = math.max(0.09, effectiveDt * 0.34)
                             elseif distance <= HUNT_DISTANCE_WARN then
                                 threatState = "Warn"
-                                exposureGain = math.max(0.06, effectiveDt * 0.3)
+                                exposureGain = math.max(0.03, effectiveDt * 0.14)
                             end
 
                             local exposure = self:_getExposure(matchId, userId)
