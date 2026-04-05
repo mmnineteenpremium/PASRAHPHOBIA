@@ -10023,3 +10023,31 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - panel match non-hunt sekarang memberi sinyal visual yang lebih konsisten dengan fungsi route aktif, bukan hanya beda wording
+
+## 2026-04-05 - Semantic World Guide Palette Pass
+
+### Scope
+
+- menyelaraskan warna beacon pintu dan interaction guide dengan semantik route aktif
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua`
+  - tambah `getDoorGuidePalette()`
+  - `DoorRouteGuideRuntime` sekarang memakai palette berbeda untuk:
+    - `Refuge route`
+    - `Akses vertikal`
+    - `Sweep evidence`
+    - `Area investigasi`
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+  - tambah `getInteractionGuidePalette()`
+  - `InteractionGuideRuntime` sekarang juga memakai palette semantik yang serasi
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_semantic_world_guides_build.rbxlx`
+
+### Interpretation
+
+- world guide sekarang tidak hanya berbeda subtitle; warna beacon juga ikut memberi sinyal fungsi area secara lebih cepat
