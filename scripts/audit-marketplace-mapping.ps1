@@ -1,5 +1,6 @@
 param(
-    [switch]$Strict
+    [switch]$Strict,
+    [switch]$Json
 )
 
 $ErrorActionPreference = 'Stop'
@@ -145,6 +146,33 @@ $safeMissing = @($rows | Where-Object { $_.Group -eq 'safe_enable_now' -and $_.C
 $safeDisabled = @($rows | Where-Object { $_.Group -eq 'safe_enable_now' -and -not $_.ConfigEnabled })
 $holdEnabled = @($rows | Where-Object { $_.Group -eq 'keep_disabled' -and $_.ConfigEnabled })
 $unknown = @($rows | Where-Object { $_.Group -eq 'unclassified' })
+
+if ($Json) {
+    $payload = [pscustomobject]@{
+        summary = [pscustomobject]@{
+            catalogRobuxItems              = $rows.Count
+            safeEnableNow                  = @($rows | Where-Object Group -eq 'safe_enable_now').Count
+            keepDisabled                   = @($rows | Where-Object Group -eq 'keep_disabled').Count
+            safeItemsMissingMarketplaceId  = $safeMissing.Count
+            safeItemsStillDisabled         = $safeDisabled.Count
+            holdItemsAccidentallyEnabled   = $holdEnabled.Count
+            unclassifiedItems              = $unknown.Count
+        }
+        rows = @($rows)
+        safeMissing = @($safeMissing | Select-Object -ExpandProperty ItemId)
+        safeDisabled = @($safeDisabled | Select-Object -ExpandProperty ItemId)
+        holdEnabled = @($holdEnabled | Select-Object -ExpandProperty ItemId)
+        unknown = @($unknown | Select-Object -ExpandProperty ItemId)
+    }
+
+    $payload | ConvertTo-Json -Depth 6
+
+    if ($Strict -and (($safeMissing.Count -gt 0) -or ($holdEnabled.Count -gt 0) -or ($unknown.Count -gt 0))) {
+        exit 1
+    }
+
+    exit 0
+}
 
 Write-Host '== Creator Hub Marketplace Mapping Audit ==' -ForegroundColor Cyan
 Write-Host ("Catalog Robux items: {0}" -f $rows.Count)

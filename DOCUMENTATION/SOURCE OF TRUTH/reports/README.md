@@ -29,6 +29,7 @@ Catatan penting:
 
 ## Cara Pakai
 
+- Jalankan `pwsh ./scripts/release-preflight.ps1` jika ingin satu ringkasan lokal cepat sebelum masuk lane publish manual.
 - Baca `REALITY_SCAN_2026-04-03.md` dulu untuk status aktual proyek.
 - Baca `DUPLICATION_AND_RUNTIME_DRIFT_2026-04-03.md` untuk blocker struktural dan prioritas perbaikan.
 - Baca `E2E_TO_PUBLISH_BACKLOG_2026-04-03.md` untuk daftar pekerjaan yang belum selesai.

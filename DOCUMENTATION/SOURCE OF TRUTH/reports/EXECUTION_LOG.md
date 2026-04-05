@@ -10600,3 +10600,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - lane manual terakhir sekarang bukan hanya punya checklist, tetapi juga wadah hasil run yang konsisten
 - ini mengurangi risiko test manual selesai tetapi tidak terdokumentasi untuk keputusan `GO / NO-GO`
+
+## 2026-04-06 - Release Preflight Helper
+
+### Scope
+
+- menambah satu command lokal untuk merangkum readiness sebelum masuk lane publish manual
+
+### Source Changes
+
+- `scripts/release-preflight.ps1`
+  - menjalankan build Rojo
+  - memeriksa report final wajib
+  - menarik ringkasan `Robux` mapping dari `audit-marketplace-mapping.ps1`
+- `scripts/audit-marketplace-mapping.ps1`
+  - menambah mode `-Json` agar bisa dipakai script lain
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/FINAL_RELEASE_CHECKLIST_2026-04-06.md`
+  - menambah `Stage 0 - Local Preflight`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/README.md`
+  - entrypoint script preflight ditambahkan
+
+### Interpretation
+
+- sebelum lane manual Roblox dijalankan, sekarang ada satu command lokal untuk mengecek readiness repositori secara cepat dan konsisten
