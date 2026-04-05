@@ -66,6 +66,10 @@ local LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_NAME = "CenterDesk"
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME = "CenterDeskTop"
 local LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME = "LeftDisplayCase"
 local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME = "RightDisplayCase"
+local LOBBY_ZONE_ENTRY_GUIDE_CENTER_BACKDROP_NAME = "CenterBackdrop"
+local LOBBY_ZONE_ENTRY_GUIDE_FLOOR_RUNNER_NAME = "FloorRunner"
+local LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_STRIP_NAME = "LeftCaseAccentStrip"
+local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_STRIP_NAME = "RightCaseAccentStrip"
 local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_CLIPBOARD_NAME = "ContractClipboard"
 local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_PAPER_NAME = "ContractPaper"
 local LOBBY_ZONE_ENTRY_GUIDE_ROOM_LEDGER_NAME = "RoomLedger"
@@ -1633,6 +1637,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local centerDeskTop = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME)
     local leftCase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME)
     local rightCase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME)
+    local centerBackdrop = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_BACKDROP_NAME)
+    local floorRunner = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_FLOOR_RUNNER_NAME)
+    local leftCaseStrip = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_STRIP_NAME)
+    local rightCaseStrip = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_STRIP_NAME)
     local contractClipboard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_CLIPBOARD_NAME)
     local contractPaper = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_PAPER_NAME)
     local roomLedger = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ROOM_LEDGER_NAME)
@@ -1708,6 +1716,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         centerDeskTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME)
         leftCase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME)
         rightCase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME)
+        centerBackdrop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_BACKDROP_NAME)
+        floorRunner = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_FLOOR_RUNNER_NAME)
+        leftCaseStrip = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_STRIP_NAME)
+        rightCaseStrip = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_STRIP_NAME)
         contractClipboard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_CLIPBOARD_NAME)
         contractPaper = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_PAPER_NAME)
         roomLedger = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_ROOM_LEDGER_NAME)
@@ -1742,6 +1754,18 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         centerDeskTop.Material = Enum.Material.Metal
         leftCase.Color = Color3.fromRGB(28, 36, 50)
         rightCase.Color = Color3.fromRGB(28, 36, 50)
+        centerBackdrop.Color = Color3.fromRGB(16, 24, 36)
+        centerBackdrop.Material = Enum.Material.SmoothPlastic
+        centerBackdrop.Transparency = 0.04
+        floorRunner.Color = Color3.fromRGB(24, 36, 54)
+        floorRunner.Material = Enum.Material.Slate
+        floorRunner.Transparency = 0.05
+        leftCaseStrip.Color = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.2)
+        leftCaseStrip.Material = Enum.Material.Neon
+        leftCaseStrip.Transparency = 0.18
+        rightCaseStrip.Color = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.2)
+        rightCaseStrip.Material = Enum.Material.Neon
+        rightCaseStrip.Transparency = 0.18
         contractClipboard.Color = Color3.fromRGB(32, 42, 58)
         contractClipboard.Material = Enum.Material.Metal
         contractPaper.Color = Color3.fromRGB(224, 230, 236)
@@ -1791,6 +1815,14 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             leftCase.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 3.8, -1.35, 3.85)
             rightCase.Size = Vector3.new(2.4, 1.55, 1.7)
             rightCase.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 3.8, -1.35, 3.85)
+            centerBackdrop.Size = Vector3.new(7.6, 5.3, 0.32)
+            centerBackdrop.CFrame = anchorPart.CFrame * CFrame.new(0, -0.1, 1.86)
+            floorRunner.Size = Vector3.new(5.2, 0.06, 5.8)
+            floorRunner.CFrame = anchorPart.CFrame * CFrame.new(0, (-anchorPart.Size.Y * 0.5) + 0.19, 5.15)
+            leftCaseStrip.Size = Vector3.new(2.1, 0.12, 0.12)
+            leftCaseStrip.CFrame = leftCase.CFrame * CFrame.new(0, leftCase.Size.Y * 0.5 + 0.08, -0.52)
+            rightCaseStrip.Size = Vector3.new(2.1, 0.12, 0.12)
+            rightCaseStrip.CFrame = rightCase.CFrame * CFrame.new(0, rightCase.Size.Y * 0.5 + 0.08, -0.52)
             contractClipboard.Size = Vector3.new(1.45, 0.1, 1.0)
             contractClipboard.CFrame = centerDeskTop.CFrame * CFrame.new(0, 0.16, -0.28) * CFrame.Angles(math.rad(-12), 0, 0)
             contractPaper.Size = Vector3.new(1.12, 0.04, 0.72)
@@ -1974,6 +2006,18 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         end
         if rightCase then
             rightCase:Destroy()
+        end
+        if centerBackdrop then
+            centerBackdrop:Destroy()
+        end
+        if floorRunner then
+            floorRunner:Destroy()
+        end
+        if leftCaseStrip then
+            leftCaseStrip:Destroy()
+        end
+        if rightCaseStrip then
+            rightCaseStrip:Destroy()
         end
         if contractClipboard then
             contractClipboard:Destroy()
