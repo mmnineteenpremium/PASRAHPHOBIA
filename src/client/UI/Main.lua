@@ -47,9 +47,9 @@ local LOBBY_ZONE_CLIENT_META = {
 	},
 	MatchmakingZone = {
 		badge = "PLAY",
-		title = "Area matchmaking aktif.",
-		hint = "Gunakan PLAY atau Room Browser untuk membuat room, pilih mode, dan start dengan sadar; area ini tidak lagi auto-queue.",
-		subtitle = "Play, room browser, start match",
+		title = "Area contract & evidence aktif.",
+		hint = "Gunakan PLAY atau Room Browser untuk membuat room, lalu pakai bangunan utara sebagai anchor contract board dan training evidence.",
+		subtitle = "Contract board, evidence training, start match",
 		accentColor = Color3.fromRGB(132, 186, 255),
 	},
 	ShopZone = {
