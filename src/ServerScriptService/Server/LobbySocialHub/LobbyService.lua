@@ -62,6 +62,7 @@ local LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BASE_NAME = "ToolsBase"
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME = "CenterBoard"
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME = "CenterStand"
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME = "CenterBase"
+local LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME = "EntrySignPanel"
 local LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME = "FacadeCanopy"
 local LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME = "FacadeApron"
 local LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME = "FacadeWingLeft"
@@ -1591,6 +1592,7 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local centerBoard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME)
     local centerStand = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME)
     local centerBase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME)
+    local signPanel = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME)
     local facadeCanopy = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
     local facadeApron = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
     local facadeWingLeft = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
@@ -1605,6 +1607,7 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         centerBoard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME)
         centerStand = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME)
         centerBase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME)
+        signPanel = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME)
         facadeCanopy = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
         facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
         facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
@@ -1627,6 +1630,9 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadePart.Color = Color3.fromRGB(24, 32, 46)
             facadePart.Transparency = 0.02
         end
+        signPanel.Color = Color3.fromRGB(14, 22, 34)
+        signPanel.Transparency = 0.02
+        signPanel.Material = Enum.Material.SmoothPlastic
         facadeCanopy.Material = Enum.Material.Metal
         facadeApron.Material = Enum.Material.Slate
         facadeWingLeft.Material = Enum.Material.SmoothPlastic
@@ -1650,6 +1656,8 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             centerStand.CFrame = centerBoard.CFrame * CFrame.new(0, -3.18, 0)
             centerBase.Size = Vector3.new(2.8, 0.3, 2.2)
             centerBase.CFrame = centerStand.CFrame * CFrame.new(0, -1.4, 0.2)
+            signPanel.Size = Vector3.new(anchorPart.Size.X + 5.8, 2.5, 0.35)
+            signPanel.CFrame = anchorPart.CFrame * CFrame.new(0, topY + 1.5, 1.95)
             facadeCanopy.Size = Vector3.new(anchorPart.Size.X + 6.8, 0.62, 3.8)
             facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.1, 1.9)
             facadeApron.Size = Vector3.new(anchorPart.Size.X + 9.4, 0.28, 8.8)
@@ -1677,6 +1685,8 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             centerStand.CFrame = centerBoard.CFrame * CFrame.new(0, -3.18, 0)
             centerBase.Size = Vector3.new(2.2, 0.3, 2.8)
             centerBase.CFrame = centerStand.CFrame * CFrame.new(0.2, -1.4, 0)
+            signPanel.Size = Vector3.new(0.35, 2.5, anchorPart.Size.Z + 5.8)
+            signPanel.CFrame = anchorPart.CFrame * CFrame.new(1.95, topY + 1.5, 0)
             facadeCanopy.Size = Vector3.new(3.8, 0.62, anchorPart.Size.Z + 6.8)
             facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(1.9, topY - 0.1, 0)
             facadeApron.Size = Vector3.new(8.8, 0.28, anchorPart.Size.Z + 9.4)
@@ -1689,13 +1699,23 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         clearLegacyBoardGui(contractBoard)
         clearLegacyBoardGui(toolsBoard)
         clearLegacyBoardGui(centerBoard)
+        if billboard then
+            billboard.Enabled = false
+            billboard.Adornee = nil
+        end
         ensureGuideBoardSurface(contractBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "ROOM", "Create • Join • Ready", style.color)
         ensureGuideBoardSurface(contractBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "ROOM", "Create • Join • Ready", style.color)
         ensureGuideBoardSurface(toolsBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "TOOLS", "EMF • UV • BOX", style.color)
         ensureGuideBoardSurface(toolsBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "TOOLS", "EMF • UV • BOX", style.color)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "CONTRACT BOARD", "Map • Mode • Start", style.color)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "CONTRACT BOARD", "Map • Mode • Start", style.color)
+        ensureGuideBoardSurface(signPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "PLAY", "Contract board • Start match\nTools training • Contract", style.color)
+        ensureGuideBoardSurface(signPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "PLAY", "Contract board • Start match\nTools training • Contract", style.color)
     else
+        if billboard then
+            billboard.Enabled = true
+            billboard.Adornee = anchorPart
+        end
         if contractBoard then
             contractBoard:Destroy()
         end
@@ -1722,6 +1742,9 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         end
         if centerBase then
             centerBase:Destroy()
+        end
+        if signPanel then
+            signPanel:Destroy()
         end
         if facadeCanopy then
             facadeCanopy:Destroy()
