@@ -10649,3 +10649,42 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - readiness lokal repositori sekarang bersih di sisi build dan dokumentasi
 - blocker publish yang tersisa memang sudah murni lane manual/platform
+
+## 2026-04-05 - LobbySocialHub Scale Compression
+
+### Scope
+
+- mengecilkan `LobbySocialHub` menjadi sekitar setengah skala sebelumnya agar footprint lobby lebih masuk akal untuk populasi server Roblox yang realistis
+
+### Source Changes
+
+- `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json`
+  - geometry lobby diskalakan `0.5x` terhadap origin plaza utama
+  - `Position` dan `Size` part ikut diperkecil
+  - `Range` light ikut diperkecil agar densitas ruang tetap proporsional
+- `src/shared/GameData/Maps/LobbySocialHub.lua`
+  - `mapDimensions.width: 420 -> 210`
+  - `mapDimensions.depth: 420 -> 210`
+  - `pathWidth: 12 -> 6`
+
+### Runtime Notes
+
+- build source sukses:
+  - `_tmp_lobby_halfsize_build.rbxlx`
+- bounding box lobby aktif di Studio sesudah patch:
+  - sebelum: `422 x 40.5 x 422`
+  - sesudah: `211 x 20.25 x 211`
+- sample runtime:
+  - `Door_NorthEvidenceBuilding` sekarang di sekitar `1600, 1.75, -60.125`
+  - `Door_EastShopBuilding` sekarang di sekitar `1655.125, 1.75, -10`
+  - `PlayerSpawn_1` sekarang di sekitar `1595, 2, -5`
+  - range lampu utama turun `26 -> 13`
+- smoke playtest lobby sesudah scale:
+  - player tetap spawn normal di plaza
+  - `LobbyUI` tetap tampil
+  - surface lobby dasar tidak patah oleh perubahan skala
+
+### Interpretation
+
+- lobby sekarang lebih cocok diperlakukan sebagai hub Roblox standar, bukan plaza raksasa
+- perubahan ini mempermudah visual QA manusia karena jarak antar bangunan/zona menjadi lebih padat dan lebih mudah dibaca
