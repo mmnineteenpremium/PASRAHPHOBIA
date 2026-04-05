@@ -2097,6 +2097,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (door route guide baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 21:57 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi konsistensi lobby:
+  - event `LobbyZoneFocused` kini memakai badge/subtitle/accent yang selaras dengan guide dunia.
+  - feedback label lobby tidak lagi terasa generik dibanding beacon zona/pintu masuk.
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_zone_feedback_sync_build.rbxlx`
+- status:
+  - **SELESAI (lobby feedback sync baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
