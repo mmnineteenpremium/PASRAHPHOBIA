@@ -124,6 +124,10 @@ local LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME = "FacadeCanopy"
 local LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME = "FacadeApron"
 local LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME = "FacadeWingLeft"
 local LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME = "FacadeWingRight"
+local LOBBY_ZONE_ENTRY_GUIDE_WINDOW_LEFT_NAME = "FacadeWindowLeft"
+local LOBBY_ZONE_ENTRY_GUIDE_WINDOW_RIGHT_NAME = "FacadeWindowRight"
+local LOBBY_ZONE_ENTRY_GUIDE_LAMP_LEFT_NAME = "FacadeLampLeft"
+local LOBBY_ZONE_ENTRY_GUIDE_LAMP_RIGHT_NAME = "FacadeLampRight"
 local FACADE_SIGN_ZONE_FLAGS = {
     MatchmakingZone = true,
     ShopZone = true,
@@ -132,7 +136,7 @@ local FACADE_SIGN_ZONE_FLAGS = {
     FlexZone = true,
 }
 local LOBBY_ZONE_GUIDES_ENABLED = false
-local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = true
+local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = false
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
 local LOBBY_LOGIC_VOLUME_FOLDER_NAMES = {
 	"Rooms",
@@ -143,24 +147,340 @@ local LOBBY_LOGIC_VOLUME_FOLDER_NAMES = {
 }
 local LOBBY_MAINHUB_VISUAL_PATCH = {
 	Roof_MainHubPlaza = {
-		transparency = 0.72,
+		transparency = 0.52,
 		color = Color3.fromRGB(88, 96, 108),
 		castShadow = false,
 	},
 	Floor_1_Main = {
-		color = Color3.fromRGB(68, 78, 92),
+		color = Color3.fromRGB(84, 94, 108),
 	},
 	Wall_MainHubPlaza_North = {
-		color = Color3.fromRGB(92, 102, 116),
+		transparency = 1,
+		castShadow = false,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
 	},
 	Wall_MainHubPlaza_South = {
-		color = Color3.fromRGB(92, 102, 116),
+		transparency = 1,
+		castShadow = false,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
 	},
 	Wall_MainHubPlaza_East = {
-		color = Color3.fromRGB(92, 102, 116),
+		transparency = 1,
+		castShadow = false,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
 	},
 	Wall_MainHubPlaza_West = {
-		color = Color3.fromRGB(92, 102, 116),
+		transparency = 1,
+		castShadow = false,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
+	},
+}
+local LOBBY_EXTERIOR_VISUAL_PATCH = {
+	Door_NorthEvidenceBuilding = {
+		color = Color3.fromRGB(102, 132, 168),
+		material = Enum.Material.Metal,
+		transparency = 0.04,
+	},
+	Door_NorthEvidenceBuilding_FrameL = {
+		color = Color3.fromRGB(148, 188, 255),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_NorthEvidenceBuilding_FrameTop = {
+		color = Color3.fromRGB(148, 188, 255),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_NorthEvidenceBuilding_FrameR = {
+		color = Color3.fromRGB(148, 188, 255),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Wall_NorthEvidenceBuilding_South_R = {
+		transparency = 1,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
+		castShadow = false,
+	},
+	Wall_NorthEvidenceBuilding_South_L = {
+		transparency = 1,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
+		castShadow = false,
+	},
+	Wall_NorthEvidenceBuilding_West = {
+		color = Color3.fromRGB(64, 76, 94),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_NorthEvidenceBuilding_East = {
+		color = Color3.fromRGB(64, 76, 94),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_NorthEvidenceBuilding_North = {
+		color = Color3.fromRGB(56, 68, 84),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Roof_NorthEvidenceBuilding = {
+		color = Color3.fromRGB(42, 54, 72),
+		material = Enum.Material.Metal,
+		transparency = 0.08,
+		castShadow = false,
+	},
+	Door_EastShopBuilding = {
+		color = Color3.fromRGB(158, 120, 76),
+		material = Enum.Material.Metal,
+		transparency = 0.04,
+	},
+	Door_EastShopBuilding_FrameTop = {
+		color = Color3.fromRGB(255, 201, 120),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_EastShopBuilding_FrameR = {
+		color = Color3.fromRGB(255, 201, 120),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_EastShopBuilding_FrameL = {
+		color = Color3.fromRGB(255, 201, 120),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Wall_EastShopBuilding_West_R = {
+		color = Color3.fromRGB(108, 92, 72),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_EastShopBuilding_West_L = {
+		color = Color3.fromRGB(108, 92, 72),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_EastShopBuilding_North = {
+		color = Color3.fromRGB(96, 82, 64),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_EastShopBuilding_East = {
+		color = Color3.fromRGB(88, 74, 58),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_EastShopBuilding_South = {
+		color = Color3.fromRGB(96, 82, 64),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Roof_EastShopBuilding = {
+		color = Color3.fromRGB(70, 56, 42),
+		material = Enum.Material.Metal,
+		transparency = 0.08,
+		castShadow = false,
+	},
+	Door_WestPartyZone = {
+		color = Color3.fromRGB(90, 132, 132),
+		material = Enum.Material.Metal,
+		transparency = 0.04,
+	},
+	Door_WestPartyZone_FrameL = {
+		color = Color3.fromRGB(132, 224, 212),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_WestPartyZone_FrameTop = {
+		color = Color3.fromRGB(132, 224, 212),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_WestPartyZone_FrameR = {
+		color = Color3.fromRGB(132, 224, 212),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Wall_WestPartyZone_South = {
+		color = Color3.fromRGB(78, 102, 106),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_WestPartyZone_East_L = {
+		color = Color3.fromRGB(70, 94, 96),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_WestPartyZone_North = {
+		color = Color3.fromRGB(78, 102, 106),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_WestPartyZone_East_R = {
+		color = Color3.fromRGB(70, 94, 96),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_WestPartyZone_West = {
+		color = Color3.fromRGB(60, 82, 84),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Roof_WestPartyZone = {
+		color = Color3.fromRGB(46, 66, 68),
+		material = Enum.Material.Metal,
+		transparency = 0.08,
+		castShadow = false,
+	},
+	Door_SouthSocialGarden = {
+		color = Color3.fromRGB(118, 148, 110),
+		material = Enum.Material.Metal,
+		transparency = 0.04,
+	},
+	Door_SouthSocialGarden_FrameTop = {
+		color = Color3.fromRGB(152, 228, 166),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_SouthSocialGarden_FrameR = {
+		color = Color3.fromRGB(152, 228, 166),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_SouthSocialGarden_FrameL = {
+		color = Color3.fromRGB(152, 228, 166),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Wall_SouthSocialGarden_North_L = {
+		color = Color3.fromRGB(82, 104, 82),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_SouthSocialGarden_West = {
+		color = Color3.fromRGB(72, 94, 74),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_SouthSocialGarden_East = {
+		color = Color3.fromRGB(72, 94, 74),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_SouthSocialGarden_North_R = {
+		color = Color3.fromRGB(82, 104, 82),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_SouthSocialGarden_South = {
+		color = Color3.fromRGB(64, 82, 64),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Roof_SouthSocialGarden = {
+		color = Color3.fromRGB(50, 68, 52),
+		material = Enum.Material.Metal,
+		transparency = 0.08,
+		castShadow = false,
+	},
+	Door_SouthEastFlexZone = {
+		color = Color3.fromRGB(126, 118, 168),
+		material = Enum.Material.Metal,
+		transparency = 0.04,
+	},
+	Door_SouthEastFlexZone_FrameR = {
+		color = Color3.fromRGB(204, 164, 255),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_SouthEastFlexZone_FrameTop = {
+		color = Color3.fromRGB(204, 164, 255),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Door_SouthEastFlexZone_FrameL = {
+		color = Color3.fromRGB(204, 164, 255),
+		material = Enum.Material.Neon,
+		transparency = 0.16,
+	},
+	Wall_SouthEastFlexZone_West_L = {
+		color = Color3.fromRGB(88, 82, 118),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_SouthEastFlexZone_East = {
+		color = Color3.fromRGB(74, 68, 106),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_SouthEastFlexZone_North = {
+		color = Color3.fromRGB(88, 82, 118),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_SouthEastFlexZone_West_R = {
+		color = Color3.fromRGB(88, 82, 118),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Wall_SouthEastFlexZone_South = {
+		color = Color3.fromRGB(74, 68, 106),
+		material = Enum.Material.SmoothPlastic,
+	},
+	Roof_SouthEastFlexZone = {
+		color = Color3.fromRGB(58, 54, 84),
+		material = Enum.Material.Metal,
+		transparency = 0.08,
+		castShadow = false,
+	},
+}
+local LOBBY_LIGHT_FIXTURE_PATCH = {
+	Light_MainHubPlaza = {
+		color = Color3.fromRGB(198, 220, 255),
+		brightness = 2.2,
+		range = 52,
+	},
+	LightSource_MainHubPlaza = {
+		color = Color3.fromRGB(188, 216, 255),
+		brightness = 1.5,
+		range = 42,
+	},
+	Light_NorthEvidenceBuilding = {
+		color = Color3.fromRGB(176, 208, 255),
+		brightness = 2,
+		range = 42,
+	},
+	LightSource_NorthEvidenceBuilding = {
+		color = Color3.fromRGB(176, 208, 255),
+		brightness = 1.4,
+		range = 30,
+	},
+	Light_EastShopBuilding = {
+		color = Color3.fromRGB(255, 214, 158),
+		brightness = 1.9,
+		range = 38,
+	},
+	LightSource_EastShopBuilding = {
+		color = Color3.fromRGB(255, 214, 158),
+		brightness = 1.3,
+		range = 28,
+	},
+	Light_WestPartyZone = {
+		color = Color3.fromRGB(170, 238, 226),
+		brightness = 1.9,
+		range = 38,
+	},
+	LightSource_WestPartyZone = {
+		color = Color3.fromRGB(170, 238, 226),
+		brightness = 1.3,
+		range = 28,
+	},
+	Light_SouthSocialGarden = {
+		color = Color3.fromRGB(182, 238, 188),
+		brightness = 2,
+		range = 42,
+	},
+	LightSource_SouthSocialGarden = {
+		color = Color3.fromRGB(182, 238, 188),
+		brightness = 1.4,
+		range = 30,
+	},
+	Light_SouthEastFlexZone = {
+		color = Color3.fromRGB(214, 182, 255),
+		brightness = 1.9,
+		range = 38,
+	},
+	LightSource_SouthEastFlexZone = {
+		color = Color3.fromRGB(214, 182, 255),
+		brightness = 1.3,
+		range = 28,
 	},
 }
 local LOBBY_ZONE_FEEDBACK = {
@@ -596,6 +916,19 @@ local function ensureGuidePanelPart(parent, name)
     return part
 end
 
+local function ensurePointLight(parent, name)
+    local light = parent:FindFirstChild(name)
+    if not (light and light:IsA("PointLight")) then
+        if light then
+            light:Destroy()
+        end
+        light = Instance.new("PointLight")
+        light.Name = name
+        light.Parent = parent
+    end
+    return light
+end
+
 local function clearLegacyBoardGui(parent)
     if not parent then
         return
@@ -794,19 +1127,83 @@ local function applyMainHubVisualPatch()
 	end
 
 	local changed = false
-	for partName, patch in pairs(LOBBY_MAINHUB_VISUAL_PATCH) do
+	local function applyStaticVisualPatch(patchTable)
+		for partName, patch in pairs(patchTable) do
+			local part = lobbyRoot:FindFirstChild(partName, true)
+			if part and part:IsA("BasePart") then
+				if patch.color and part.Color ~= patch.color then
+					part.Color = patch.color
+					changed = true
+				end
+				if patch.material and part.Material ~= patch.material then
+					part.Material = patch.material
+					changed = true
+				end
+				if type(patch.transparency) == "number" and part.Transparency ~= patch.transparency then
+					part.Transparency = patch.transparency
+					changed = true
+				end
+				if type(patch.castShadow) == "boolean" and part.CastShadow ~= patch.castShadow then
+					part.CastShadow = patch.castShadow
+					changed = true
+				end
+				if type(patch.canCollide) == "boolean" and part.CanCollide ~= patch.canCollide then
+					part.CanCollide = patch.canCollide
+					changed = true
+				end
+				if type(patch.canQuery) == "boolean" and part.CanQuery ~= patch.canQuery then
+					part.CanQuery = patch.canQuery
+					changed = true
+				end
+				if type(patch.canTouch) == "boolean" and part.CanTouch ~= patch.canTouch then
+					part.CanTouch = patch.canTouch
+					changed = true
+				end
+			end
+		end
+	end
+
+	applyStaticVisualPatch(LOBBY_MAINHUB_VISUAL_PATCH)
+	applyStaticVisualPatch(LOBBY_EXTERIOR_VISUAL_PATCH)
+
+	for partName, profile in pairs(LOBBY_LIGHT_FIXTURE_PATCH) do
 		local part = lobbyRoot:FindFirstChild(partName, true)
 		if part and part:IsA("BasePart") then
-			if patch.color and part.Color ~= patch.color then
-				part.Color = patch.color
+			if part.Transparency ~= 1 then
+				part.Transparency = 1
 				changed = true
 			end
-			if type(patch.transparency) == "number" and part.Transparency ~= patch.transparency then
-				part.Transparency = patch.transparency
+			if part.CanCollide then
+				part.CanCollide = false
 				changed = true
 			end
-			if type(patch.castShadow) == "boolean" and part.CastShadow ~= patch.castShadow then
-				part.CastShadow = patch.castShadow
+			if part.CanQuery then
+				part.CanQuery = false
+				changed = true
+			end
+			if part.CanTouch then
+				part.CanTouch = false
+				changed = true
+			end
+			local light = ensurePointLight(part, "LobbyRuntimePointLight")
+			if light.Color ~= profile.color then
+				light.Color = profile.color
+				changed = true
+			end
+			if light.Brightness ~= profile.brightness then
+				light.Brightness = profile.brightness
+				changed = true
+			end
+			if light.Range ~= profile.range then
+				light.Range = profile.range
+				changed = true
+			end
+			if light.Shadows ~= false then
+				light.Shadows = false
+				changed = true
+			end
+			if light.Enabled ~= true then
+				light.Enabled = true
 				changed = true
 			end
 		end
@@ -875,6 +1272,30 @@ local function applyMainHubVisualPatch()
         end
     end
 
+    local function applyDecorPointLight(part, name, props)
+        local light = ensurePointLight(part, name)
+        if light.Color ~= props.color then
+            light.Color = props.color
+            changed = true
+        end
+        if light.Brightness ~= props.brightness then
+            light.Brightness = props.brightness
+            changed = true
+        end
+        if light.Range ~= props.range then
+            light.Range = props.range
+            changed = true
+        end
+        if light.Enabled ~= true then
+            light.Enabled = true
+            changed = true
+        end
+        if light.Shadows ~= (props.shadows == true) then
+            light.Shadows = props.shadows == true
+            changed = true
+        end
+    end
+
     local function applyRoutePart(name, startPos, endPos, color)
         local route = ensureDecorPart(name)
         local delta = endPos - startPos
@@ -885,6 +1306,36 @@ local function applyMainHubVisualPatch()
             color = color,
             material = Enum.Material.Neon,
             transparency = 0.08,
+        })
+    end
+
+    local function applyWalkway(namePrefix, startPos, endPos, width, accentColor)
+        local slab = ensureDecorPart(namePrefix .. "Slab")
+        local edgeLeft = ensureDecorPart(namePrefix .. "EdgeLeft")
+        local edgeRight = ensureDecorPart(namePrefix .. "EdgeRight")
+        local delta = endPos - startPos
+        local length = delta.Magnitude + 6
+        local cframe = CFrame.lookAt((startPos + endPos) * 0.5, endPos)
+        applyPartProps(slab, {
+            size = Vector3.new(width, 0.16, length),
+            cframe = cframe * CFrame.new(0, 0.04, 0),
+            color = Color3.fromRGB(30, 42, 58),
+            material = Enum.Material.Slate,
+            transparency = 0.02,
+        })
+        applyPartProps(edgeLeft, {
+            size = Vector3.new(0.24, 0.18, length),
+            cframe = cframe * CFrame.new((width * 0.5) - 0.12, 0.07, 0),
+            color = accentColor,
+            material = Enum.Material.Neon,
+            transparency = 0.16,
+        })
+        applyPartProps(edgeRight, {
+            size = Vector3.new(0.24, 0.18, length),
+            cframe = cframe * CFrame.new(-(width * 0.5) + 0.12, 0.07, 0),
+            color = accentColor,
+            material = Enum.Material.Neon,
+            transparency = 0.16,
         })
     end
 
@@ -934,6 +1385,282 @@ local function applyMainHubVisualPatch()
         ensureGuideBoardSurface(panel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, title, subtitle, color)
     end
 
+    local function applyHubLamp(namePrefix, position, facing, color)
+        local base = ensureDecorPart(namePrefix .. "Base")
+        local post = ensureDecorPart(namePrefix .. "Post")
+        local lantern = ensureDecorPart(namePrefix .. "Lantern")
+        local brace = ensureDecorPart(namePrefix .. "Brace")
+        applyPartProps(base, {
+            size = Vector3.new(1.5, 0.18, 1.5),
+            cframe = CFrame.new(position + Vector3.new(0, 0.09, 0)),
+            color = Color3.fromRGB(24, 34, 48),
+            material = Enum.Material.Slate,
+            transparency = 0.02,
+        })
+        applyPartProps(post, {
+            size = Vector3.new(0.36, 5.8, 0.36),
+            cframe = CFrame.new(position + Vector3.new(0, 2.99, 0)),
+            color = Color3.fromRGB(34, 44, 58),
+            material = Enum.Material.Metal,
+            transparency = 0.02,
+        })
+        applyPartProps(lantern, {
+            size = Vector3.new(1.2, 1.2, 1.2),
+            cframe = CFrame.new(position + Vector3.new(0, 5.6, 0)),
+            color = color:Lerp(Color3.fromRGB(255, 255, 255), 0.18),
+            material = Enum.Material.Glass,
+            transparency = 0.18,
+        })
+        applyPartProps(brace, {
+            size = Vector3.new(0.18, 0.18, 1.2),
+            cframe = CFrame.lookAt(position + Vector3.new(0, 5.05, 0), facing + Vector3.new(0, 5.05, 0)),
+            color = color,
+            material = Enum.Material.Neon,
+            transparency = 0.12,
+        })
+        applyDecorPointLight(lantern, "Glow", {
+            color = color,
+            brightness = 1.6,
+            range = 24,
+        })
+    end
+
+    local function applyGatewayWall(name, size, cframe)
+        local part = ensureDecorPart(name)
+        applyPartProps(part, {
+            size = size,
+            cframe = cframe,
+            color = Color3.fromRGB(74, 88, 108),
+            material = Enum.Material.SmoothPlastic,
+            transparency = 0.02,
+        })
+    end
+
+    local function applyGatewayAccent(name, size, cframe, color)
+        local part = ensureDecorPart(name)
+        applyPartProps(part, {
+            size = size,
+            cframe = cframe,
+            color = color,
+            material = Enum.Material.Neon,
+            transparency = 0.16,
+        })
+    end
+
+    local function applyWingLight(name, position, color, range)
+        local lamp = ensureDecorPart(name)
+        applyPartProps(lamp, {
+            size = Vector3.new(0.72, 0.72, 0.72),
+            cframe = CFrame.new(position),
+            color = color:Lerp(Color3.fromRGB(255, 255, 255), 0.18),
+            material = Enum.Material.Glass,
+            transparency = 0.1,
+        })
+        applyDecorPointLight(lamp, "Glow", {
+            color = color,
+            brightness = 2.3,
+            range = range or 24,
+        })
+    end
+
+    local function applyTree(namePrefix, trunkPos, canopyColor)
+        local trunk = ensureDecorPart(namePrefix .. "Trunk")
+        local canopy = ensureDecorPart(namePrefix .. "Canopy")
+        applyPartProps(trunk, {
+            size = Vector3.new(0.9, 4.8, 0.9),
+            cframe = CFrame.new(trunkPos + Vector3.new(0, 2.4, 0)),
+            color = Color3.fromRGB(84, 64, 46),
+            material = Enum.Material.WoodPlanks,
+            transparency = 0.02,
+        })
+        applyPartProps(canopy, {
+            size = Vector3.new(4.8, 3.8, 4.8),
+            cframe = CFrame.new(trunkPos + Vector3.new(0, 5.7, 0)),
+            color = canopyColor,
+            material = Enum.Material.Grass,
+            transparency = 0.06,
+            shape = Enum.PartType.Ball,
+        })
+    end
+
+    local function applyWingShell(namePrefix, center, width, depth, height, rightVector, forwardVector, palette)
+        local floor = ensureDecorPart(namePrefix .. "Floor")
+        local backWall = ensureDecorPart(namePrefix .. "BackWall")
+        local sideLeft = ensureDecorPart(namePrefix .. "SideLeft")
+        local sideRight = ensureDecorPart(namePrefix .. "SideRight")
+        local ceiling = ensureDecorPart(namePrefix .. "Ceiling")
+        local threshold = ensureDecorPart(namePrefix .. "Threshold")
+        local accent = ensureDecorPart(namePrefix .. "Accent")
+        local frame = CFrame.fromMatrix(center, rightVector, Vector3.yAxis, forwardVector)
+
+        applyPartProps(floor, {
+            size = Vector3.new(width, 0.16, depth),
+            cframe = frame * CFrame.new(0, 0.08, 0),
+            color = palette.floorColor,
+            material = Enum.Material.Slate,
+            transparency = 0.02,
+        })
+        applyPartProps(backWall, {
+            size = Vector3.new(width, height, 0.32),
+            cframe = frame * CFrame.new(0, height * 0.5, -(depth * 0.5) + 0.16),
+            color = palette.wallColor,
+            material = Enum.Material.SmoothPlastic,
+            transparency = 0.02,
+        })
+        applyPartProps(sideLeft, {
+            size = Vector3.new(0.32, height, depth),
+            cframe = frame * CFrame.new(-(width * 0.5) + 0.16, height * 0.5, 0),
+            color = palette.sideColor or palette.wallColor,
+            material = Enum.Material.SmoothPlastic,
+            transparency = 0.02,
+        })
+        applyPartProps(sideRight, {
+            size = Vector3.new(0.32, height, depth),
+            cframe = frame * CFrame.new((width * 0.5) - 0.16, height * 0.5, 0),
+            color = palette.sideColor or palette.wallColor,
+            material = Enum.Material.SmoothPlastic,
+            transparency = 0.02,
+        })
+        applyPartProps(ceiling, {
+            size = Vector3.new(width, 0.18, depth),
+            cframe = frame * CFrame.new(0, height + 0.09, 0),
+            color = palette.ceilingColor or palette.wallColor,
+            material = Enum.Material.Metal,
+            transparency = 0.08,
+        })
+        applyPartProps(threshold, {
+            size = Vector3.new(width * 0.74, 0.12, 2.2),
+            cframe = frame * CFrame.new(0, 0.11, (depth * 0.5) - 1.1),
+            color = palette.thresholdColor or palette.floorColor,
+            material = Enum.Material.Slate,
+            transparency = 0.02,
+        })
+        applyPartProps(accent, {
+            size = Vector3.new(width * 0.76, 0.18, 0.26),
+            cframe = frame * CFrame.new(0, height - 0.72, (depth * 0.5) - 0.18),
+            color = palette.accentColor,
+            material = Enum.Material.Neon,
+            transparency = 0.16,
+        })
+    end
+
+    local function applyWingFrontage(namePrefix, center, width, depth, height, rightVector, forwardVector, accentColor, title, subtitle)
+        local frame = CFrame.fromMatrix(center, rightVector, Vector3.yAxis, forwardVector)
+        local frontZ = (depth * 0.5) - 0.18
+        local openingWidth = math.min(width * 0.42, 18)
+        local signWidth = math.min(width * 0.46, 16)
+        local sideWallWidth = math.max(((width - openingWidth) * 0.5) - 0.6, 2.4)
+        local wallLeft = ensureDecorPart(namePrefix .. "FrontWallLeft")
+        local wallRight = ensureDecorPart(namePrefix .. "FrontWallRight")
+        local jambLeft = ensureDecorPart(namePrefix .. "EntryJambLeft")
+        local jambRight = ensureDecorPart(namePrefix .. "EntryJambRight")
+        local header = ensureDecorPart(namePrefix .. "EntryHeader")
+        local accent = ensureDecorPart(namePrefix .. "EntryAccent")
+        local canopy = ensureDecorPart(namePrefix .. "EntryCanopy")
+        local signPanel = ensureDecorPart(namePrefix .. "EntrySignPanel")
+        local windowLeft = ensureDecorPart(namePrefix .. "EntryWindowLeft")
+        local windowRight = ensureDecorPart(namePrefix .. "EntryWindowRight")
+        local lampLeft = ensureDecorPart(namePrefix .. "EntryLampLeft")
+        local lampRight = ensureDecorPart(namePrefix .. "EntryLampRight")
+
+        applyPartProps(wallLeft, {
+            size = Vector3.new(sideWallWidth, height, 0.34),
+            cframe = frame * CFrame.new(-((openingWidth * 0.5) + (sideWallWidth * 0.5) + 0.3), height * 0.5, frontZ),
+            color = Color3.fromRGB(58, 70, 88),
+            material = Enum.Material.SmoothPlastic,
+            transparency = 0.02,
+        })
+        applyPartProps(wallRight, {
+            size = Vector3.new(sideWallWidth, height, 0.34),
+            cframe = frame * CFrame.new(((openingWidth * 0.5) + (sideWallWidth * 0.5) + 0.3), height * 0.5, frontZ),
+            color = Color3.fromRGB(58, 70, 88),
+            material = Enum.Material.SmoothPlastic,
+            transparency = 0.02,
+        })
+        applyPartProps(jambLeft, {
+            size = Vector3.new(0.42, height - 0.7, 0.42),
+            cframe = frame * CFrame.new(-(openingWidth * 0.5), (height - 0.7) * 0.5, frontZ),
+            color = Color3.fromRGB(78, 92, 112),
+            material = Enum.Material.Metal,
+            transparency = 0.02,
+        })
+        applyPartProps(jambRight, {
+            size = Vector3.new(0.42, height - 0.7, 0.42),
+            cframe = frame * CFrame.new(openingWidth * 0.5, (height - 0.7) * 0.5, frontZ),
+            color = Color3.fromRGB(78, 92, 112),
+            material = Enum.Material.Metal,
+            transparency = 0.02,
+        })
+        applyPartProps(header, {
+            size = Vector3.new(openingWidth + 0.9, 0.96, 0.42),
+            cframe = frame * CFrame.new(0, height - 0.62, frontZ),
+            color = Color3.fromRGB(56, 68, 86),
+            material = Enum.Material.Metal,
+            transparency = 0.02,
+        })
+        applyPartProps(accent, {
+            size = Vector3.new(openingWidth + 1.6, 0.18, 0.5),
+            cframe = frame * CFrame.new(0, height - 0.06, frontZ + 0.02),
+            color = accentColor,
+            material = Enum.Material.Neon,
+            transparency = 0.14,
+        })
+        applyPartProps(canopy, {
+            size = Vector3.new(signWidth + 3.2, 0.2, 3.8),
+            cframe = frame * CFrame.new(0, height - 1.86, frontZ + 1.72),
+            color = Color3.fromRGB(26, 38, 52),
+            material = Enum.Material.Metal,
+            transparency = 0.03,
+        })
+        applyPartProps(signPanel, {
+            size = Vector3.new(signWidth, 2.8, 0.24),
+            cframe = frame * CFrame.new(0, height - 2.88, frontZ + 0.22),
+            color = Color3.fromRGB(12, 20, 32),
+            material = Enum.Material.SmoothPlastic,
+            transparency = 0.02,
+        })
+        ensureGuideBoardSurface(signPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, title, subtitle, accentColor)
+        ensureGuideBoardSurface(signPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, title, subtitle, accentColor)
+        applyPartProps(windowLeft, {
+            size = Vector3.new(3.4, 2.3, 0.18),
+            cframe = frame * CFrame.new(-(openingWidth * 0.5) - 4.2, 1.52, frontZ + 0.08),
+            color = accentColor:Lerp(Color3.fromRGB(255, 255, 255), 0.12),
+            material = Enum.Material.Glass,
+            transparency = 0.34,
+        })
+        applyPartProps(windowRight, {
+            size = Vector3.new(3.4, 2.3, 0.18),
+            cframe = frame * CFrame.new((openingWidth * 0.5) + 4.2, 1.52, frontZ + 0.08),
+            color = accentColor:Lerp(Color3.fromRGB(255, 255, 255), 0.12),
+            material = Enum.Material.Glass,
+            transparency = 0.34,
+        })
+        applyPartProps(lampLeft, {
+            size = Vector3.new(0.3, 2.8, 0.3),
+            cframe = frame * CFrame.new(-(openingWidth * 0.5) - 1.6, 1.5, frontZ + 0.56),
+            color = accentColor:Lerp(Color3.fromRGB(255, 255, 255), 0.16),
+            material = Enum.Material.Neon,
+            transparency = 0.1,
+        })
+        applyPartProps(lampRight, {
+            size = Vector3.new(0.3, 2.8, 0.3),
+            cframe = frame * CFrame.new((openingWidth * 0.5) + 1.6, 1.5, frontZ + 0.56),
+            color = accentColor:Lerp(Color3.fromRGB(255, 255, 255), 0.16),
+            material = Enum.Material.Neon,
+            transparency = 0.1,
+        })
+        applyDecorPointLight(lampLeft, "Glow", {
+            color = accentColor,
+            brightness = 1.4,
+            range = 18,
+        })
+        applyDecorPointLight(lampRight, "Glow", {
+            color = accentColor,
+            brightness = 1.4,
+            range = 18,
+        })
+    end
+
     local function applyHubPlanter(name, topName, position)
         local planter = ensureDecorPart(name)
         local top = ensureDecorPart(topName)
@@ -980,6 +1707,33 @@ local function applyMainHubVisualPatch()
         transparency = 0.03,
     })
 
+    local queuePlatform = ensureDecorPart("QueuePlatform")
+    applyPartProps(queuePlatform, {
+        size = Vector3.new(11.6, 0.22, 11.6),
+        cframe = CFrame.new(hubCenter + Vector3.new(0, 0.21, 0)),
+        color = Color3.fromRGB(24, 38, 58),
+        material = Enum.Material.Slate,
+        transparency = 0.02,
+    })
+    local queueRing = ensureDecorPart("QueueRing")
+    applyPartProps(queueRing, {
+        size = Vector3.new(12.8, 0.1, 12.8),
+        cframe = CFrame.new(hubCenter + Vector3.new(0, 0.35, 0)),
+        color = Color3.fromRGB(150, 196, 255),
+        material = Enum.Material.Neon,
+        transparency = 0.18,
+    })
+    local queueSign = ensureDecorPart("QueueSign")
+    applyPartProps(queueSign, {
+        size = Vector3.new(7.6, 3.4, 0.32),
+        cframe = CFrame.lookAt(hubCenter + Vector3.new(0, 2.4, -10.6), hubCenter + Vector3.new(0, 2.4, 0)),
+        color = Color3.fromRGB(14, 22, 34),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(queueSign, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "QUEUE HUB", "Match • Party • Start", Color3.fromRGB(150, 196, 255))
+    ensureGuideBoardSurface(queueSign, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "QUEUE HUB", "Match • Party • Start", Color3.fromRGB(150, 196, 255))
+
     local pillar = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME)
     applyPartProps(pillar, {
         size = Vector3.new(2.6, 6.8, 2.6),
@@ -1023,6 +1777,288 @@ local function applyMainHubVisualPatch()
     applyHubWall(LOBBY_MAINHUB_WALL_NE_NAME, hubCenter + Vector3.new(4.6, 0.72, -7.8), Vector3.new(6.2, 1.44, 0.52), hubCenter + Vector3.new(10.2, 0.72, -2.6))
     applyHubWall(LOBBY_MAINHUB_WALL_SW_NAME, hubCenter + Vector3.new(-4.6, 0.72, 7.8), Vector3.new(6.2, 1.44, 0.52), hubCenter + Vector3.new(-10.2, 0.72, 2.6))
     applyHubWall(LOBBY_MAINHUB_WALL_SE_NAME, hubCenter + Vector3.new(4.6, 0.72, 7.8), Vector3.new(6.2, 1.44, 0.52), hubCenter + Vector3.new(10.2, 0.72, 2.6))
+
+    applyWalkway("PathNorth", hubCenter + Vector3.new(0, 0, -11), northNodePos + Vector3.new(0, 0, 9), 13.4, LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+    applyWalkway("PathEast", hubCenter + Vector3.new(11, 0, 0), eastNodePos + Vector3.new(-9, 0, 0), 13.4, LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
+    applyWalkway("PathWest", hubCenter + Vector3.new(-11, 0, 0), westNodePos + Vector3.new(9, 0, 0), 13.4, LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+    applyWalkway("PathSouth", hubCenter + Vector3.new(0, 0, 11), southNodePos + Vector3.new(0, 0, -9), 13.4, LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color)
+    applyWalkway("PathFlex", southNodePos + Vector3.new(5, 0, 5), flexNodePos + Vector3.new(-7, 0, -7), 11.8, LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
+
+    applyHubLamp("HubLampNorthWest", hubCenter + Vector3.new(-15.6, 0, -12.8), hubCenter, Color3.fromRGB(188, 216, 255))
+    applyHubLamp("HubLampNorthEast", hubCenter + Vector3.new(15.6, 0, -12.8), hubCenter, Color3.fromRGB(188, 216, 255))
+    applyHubLamp("HubLampSouthWest", hubCenter + Vector3.new(-15.6, 0, 12.8), hubCenter, Color3.fromRGB(182, 238, 188))
+    applyHubLamp("HubLampSouthEast", hubCenter + Vector3.new(15.6, 0, 12.8), hubCenter, Color3.fromRGB(214, 182, 255))
+    applyHubLamp("HubLampNorth", hubCenter + Vector3.new(0, 0, -17.6), hubCenter, Color3.fromRGB(150, 196, 255))
+    applyHubLamp("HubLampSouth", hubCenter + Vector3.new(0, 0, 17.6), hubCenter, Color3.fromRGB(182, 238, 188))
+
+    applyGatewayWall("MainHubNorthWallLeft", Vector3.new(52, 10, 0.9), CFrame.new(1557, 5, -69.5))
+    applyGatewayWall("MainHubNorthWallRight", Vector3.new(52, 10, 0.9), CFrame.new(1643, 5, -69.5))
+    applyGatewayWall("MainHubNorthHeader", Vector3.new(35.2, 1.2, 0.9), CFrame.new(1600, 8.4, -69.5))
+    applyGatewayWall("MainHubNorthJambLeft", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1582.4, 4.4, -69.5))
+    applyGatewayWall("MainHubNorthJambRight", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1617.6, 4.4, -69.5))
+    applyGatewayAccent("MainHubNorthAccent", Vector3.new(36, 0.22, 1.02), CFrame.new(1600, 8.98, -69.5), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+
+    applyGatewayWall("MainHubSouthWallLeft", Vector3.new(52, 10, 0.9), CFrame.new(1557, 5, 69.5))
+    applyGatewayWall("MainHubSouthWallRight", Vector3.new(52, 10, 0.9), CFrame.new(1643, 5, 69.5))
+    applyGatewayWall("MainHubSouthHeader", Vector3.new(35.2, 1.2, 0.9), CFrame.new(1600, 8.4, 69.5))
+    applyGatewayWall("MainHubSouthJambLeft", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1582.4, 4.4, 69.5))
+    applyGatewayWall("MainHubSouthJambRight", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1617.6, 4.4, 69.5))
+    applyGatewayAccent("MainHubSouthAccent", Vector3.new(36, 0.22, 1.02), CFrame.new(1600, 8.98, 69.5), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color)
+
+    applyGatewayWall("MainHubEastWallTop", Vector3.new(0.9, 10, 52), CFrame.new(1669.5, 5, -43))
+    applyGatewayWall("MainHubEastWallBottom", Vector3.new(0.9, 10, 52), CFrame.new(1669.5, 5, 43))
+    applyGatewayWall("MainHubEastHeader", Vector3.new(0.9, 1.2, 35.2), CFrame.new(1669.5, 8.4, 0))
+    applyGatewayWall("MainHubEastJambTop", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1669.5, 4.4, -17.6))
+    applyGatewayWall("MainHubEastJambBottom", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1669.5, 4.4, 17.6))
+    applyGatewayAccent("MainHubEastAccent", Vector3.new(1.02, 0.22, 36), CFrame.new(1669.5, 8.98, 0), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
+
+    applyGatewayWall("MainHubWestWallTop", Vector3.new(0.9, 10, 52), CFrame.new(1530.5, 5, -43))
+    applyGatewayWall("MainHubWestWallBottom", Vector3.new(0.9, 10, 52), CFrame.new(1530.5, 5, 43))
+    applyGatewayWall("MainHubWestHeader", Vector3.new(0.9, 1.2, 35.2), CFrame.new(1530.5, 8.4, 0))
+    applyGatewayWall("MainHubWestJambTop", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1530.5, 4.4, -17.6))
+    applyGatewayWall("MainHubWestJambBottom", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1530.5, 4.4, 17.6))
+    applyGatewayAccent("MainHubWestAccent", Vector3.new(1.02, 0.22, 36), CFrame.new(1530.5, 8.98, 0), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+
+    applyWingShell("NorthBay", Vector3.new(1600, 0, -152), 58, 36, 8.6, Vector3.new(1, 0, 0), Vector3.new(0, 0, 1), {
+        floorColor = Color3.fromRGB(24, 34, 48),
+        wallColor = Color3.fromRGB(42, 54, 72),
+        sideColor = Color3.fromRGB(48, 62, 82),
+        ceilingColor = Color3.fromRGB(34, 46, 62),
+        thresholdColor = Color3.fromRGB(28, 40, 58),
+        accentColor = LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color,
+    })
+    applyWingShell("ShopBay", Vector3.new(1748, 0, -20), 42, 38, 8.4, Vector3.new(0, 0, 1), Vector3.new(-1, 0, 0), {
+        floorColor = Color3.fromRGB(34, 26, 20),
+        wallColor = Color3.fromRGB(76, 60, 44),
+        sideColor = Color3.fromRGB(88, 70, 54),
+        ceilingColor = Color3.fromRGB(54, 42, 30),
+        thresholdColor = Color3.fromRGB(42, 32, 24),
+        accentColor = LOBBY_ZONE_GUIDE_STYLE.ShopZone.color,
+    })
+    applyWingShell("PartyBay", Vector3.new(1452, 0, -20), 42, 38, 8.4, Vector3.new(0, 0, 1), Vector3.new(1, 0, 0), {
+        floorColor = Color3.fromRGB(20, 34, 34),
+        wallColor = Color3.fromRGB(52, 76, 78),
+        sideColor = Color3.fromRGB(60, 88, 90),
+        ceilingColor = Color3.fromRGB(40, 60, 62),
+        thresholdColor = Color3.fromRGB(24, 42, 42),
+        accentColor = LOBBY_ZONE_GUIDE_STYLE.PartyZone.color,
+    })
+    applyWingShell("GardenBay", Vector3.new(1600, 0, 160), 54, 34, 8.4, Vector3.new(1, 0, 0), Vector3.new(0, 0, -1), {
+        floorColor = Color3.fromRGB(26, 38, 28),
+        wallColor = Color3.fromRGB(58, 82, 60),
+        sideColor = Color3.fromRGB(64, 92, 68),
+        ceilingColor = Color3.fromRGB(40, 60, 44),
+        thresholdColor = Color3.fromRGB(30, 44, 32),
+        accentColor = LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color,
+    })
+    applyWingShell("FlexBay", Vector3.new(1748, 0, 140), 38, 34, 8.4, Vector3.new(0, 0, 1), Vector3.new(-1, 0, 0), {
+        floorColor = Color3.fromRGB(24, 20, 38),
+        wallColor = Color3.fromRGB(62, 56, 92),
+        sideColor = Color3.fromRGB(72, 64, 106),
+        ceilingColor = Color3.fromRGB(40, 34, 62),
+        thresholdColor = Color3.fromRGB(28, 24, 44),
+        accentColor = LOBBY_ZONE_GUIDE_STYLE.FlexZone.color,
+    })
+    applyWingFrontage("NorthBay", Vector3.new(1600, 0, -152), 58, 36, 8.6, Vector3.new(1, 0, 0), Vector3.new(0, 0, 1), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, "PLAY", "Contract • Tools • Start")
+    applyWingFrontage("ShopBay", Vector3.new(1748, 0, -20), 42, 38, 8.4, Vector3.new(0, 0, 1), Vector3.new(-1, 0, 0), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, "SHOP", "Loadout • Currency • Utility")
+    applyWingFrontage("PartyBay", Vector3.new(1452, 0, -20), 42, 38, 8.4, Vector3.new(0, 0, 1), Vector3.new(1, 0, 0), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, "PARTY", "Invite • Ready • Join")
+    applyWingFrontage("GardenBay", Vector3.new(1600, 0, 160), 54, 34, 8.4, Vector3.new(1, 0, 0), Vector3.new(0, 0, -1), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, "GARDEN", "Daily • Social • Claim")
+    applyWingFrontage("FlexBay", Vector3.new(1748, 0, 140), 38, 34, 8.4, Vector3.new(0, 0, 1), Vector3.new(-1, 0, 0), LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, "FLEX", "Spotlight • Cosmetic • News")
+
+    -- North contract / evidence bay
+    for index, data in ipairs({
+        { name = "NorthTrainingTable_1", pos = Vector3.new(1587, 1.02, -138), label = "EMF", color = Color3.fromRGB(132, 186, 255) },
+        { name = "NorthTrainingTable_2", pos = Vector3.new(1600, 1.02, -138), label = "UV", color = Color3.fromRGB(214, 146, 255) },
+        { name = "NorthTrainingTable_3", pos = Vector3.new(1613, 1.02, -138), label = "THERMO", color = Color3.fromRGB(142, 214, 198) },
+        { name = "NorthTrainingTable_4", pos = Vector3.new(1587, 1.02, -151), label = "BOX", color = Color3.fromRGB(255, 196, 118) },
+        { name = "NorthTrainingTable_5", pos = Vector3.new(1600, 1.02, -151), label = "WRITING", color = Color3.fromRGB(150, 189, 255) },
+        { name = "NorthTrainingTable_6", pos = Vector3.new(1613, 1.02, -151), label = "CAM", color = Color3.fromRGB(255, 130, 130) },
+    }) do
+        local tablePart = ensureDecorPart(data.name)
+        applyPartProps(tablePart, {
+            size = Vector3.new(3.2, 1.02, 2.0),
+            cframe = CFrame.new(data.pos),
+            color = Color3.fromRGB(28, 40, 56),
+            material = Enum.Material.Slate,
+            transparency = 0.03,
+        })
+        ensureGuideBoardSurface(tablePart, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, data.label, "Test Table", data.color)
+    end
+    local northContractWall = ensureDecorPart("NorthContractWall")
+    applyPartProps(northContractWall, {
+        size = Vector3.new(18, 4.8, 0.28),
+        cframe = CFrame.new(1600, 4.1, -170.5),
+        color = Color3.fromRGB(14, 22, 34),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(northContractWall, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "CONTRACT BAY", "Map • Mode • Briefing", LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+    local northRoomStand = ensureDecorPart("NorthRoomStand")
+    applyPartProps(northRoomStand, {
+        size = Vector3.new(2.2, 3.4, 2.2),
+        cframe = CFrame.new(1575, 2.0, -144),
+        color = Color3.fromRGB(24, 34, 48),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    ensureGuideBoardSurface(northRoomStand, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "ROOM", "Create • Join • Ready", LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+    local northToolsStand = ensureDecorPart("NorthToolsStand")
+    applyPartProps(northToolsStand, {
+        size = Vector3.new(2.2, 3.4, 2.2),
+        cframe = CFrame.new(1625, 2.0, -144),
+        color = Color3.fromRGB(24, 34, 48),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    ensureGuideBoardSurface(northToolsStand, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "TOOLS", "Train • Equip • Read", LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+    applyWingLight("NorthWingLight_A", Vector3.new(1588, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
+    applyWingLight("NorthWingLight_B", Vector3.new(1600, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
+    applyWingLight("NorthWingLight_C", Vector3.new(1612, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
+    applyWingLight("NorthWingLight_D", Vector3.new(1588, 7.2, -160), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 22)
+    applyWingLight("NorthWingLight_E", Vector3.new(1600, 7.2, -160), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 22)
+    applyWingLight("NorthWingLight_F", Vector3.new(1612, 7.2, -160), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 22)
+
+    -- Shop wing
+    local shopCounter = ensureDecorPart("ShopWingCounter")
+    applyPartProps(shopCounter, {
+        size = Vector3.new(8.8, 1.4, 2.6),
+        cframe = CFrame.new(1727, 1.1, -20),
+        color = Color3.fromRGB(34, 28, 22),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+    ensureGuideBoardSurface(shopCounter, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "SHOP", "MM • PP • Utility", LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
+    local shopRack = ensureDecorPart("ShopWingRack")
+    applyPartProps(shopRack, {
+        size = Vector3.new(1.0, 3.8, 8.4),
+        cframe = CFrame.new(1766, 2.0, -20),
+        color = Color3.fromRGB(54, 42, 30),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    local shopDisplayA = ensureDecorPart("ShopWingDisplayA")
+    applyPartProps(shopDisplayA, {
+        size = Vector3.new(2.2, 1.0, 2.4),
+        cframe = CFrame.new(1739, 1.0, -33),
+        color = Color3.fromRGB(56, 44, 34),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+    local shopDisplayB = ensureDecorPart("ShopWingDisplayB")
+    applyPartProps(shopDisplayB, {
+        size = Vector3.new(2.2, 1.0, 2.4),
+        cframe = CFrame.new(1739, 1.0, -7),
+        color = Color3.fromRGB(56, 44, 34),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+    applyWingLight("ShopWingLight_A", Vector3.new(1736, 7.0, -28), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, 22)
+    applyWingLight("ShopWingLight_B", Vector3.new(1736, 7.0, -12), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, 22)
+    applyWingLight("ShopWingLight_C", Vector3.new(1758, 7.0, -28), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, 20)
+    applyWingLight("ShopWingLight_D", Vector3.new(1758, 7.0, -12), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, 20)
+
+    -- Party wing
+    local partyPlatform = ensureDecorPart("PartyWingPlatform")
+    applyPartProps(partyPlatform, {
+        size = Vector3.new(6.2, 0.18, 6.2),
+        cframe = CFrame.new(1456, 0.19, -20),
+        color = Color3.fromRGB(24, 40, 40),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+    local partyBoard = ensureDecorPart("PartyWingBoard")
+    applyPartProps(partyBoard, {
+        size = Vector3.new(0.42, 3.8, 6.0),
+        cframe = CFrame.new(1469, 2.1, -23),
+        color = Color3.fromRGB(16, 26, 34),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(partyBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Left, "PARTY", "Invite • Room • Ready", LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+    local partyTerminal = ensureDecorPart("PartyWingTerminal")
+    applyPartProps(partyTerminal, {
+        size = Vector3.new(1.2, 1.5, 1.2),
+        cframe = CFrame.new(1458, 1.2, -12),
+        color = Color3.fromRGB(32, 48, 52),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    applyWingLight("PartyWingLight_A", Vector3.new(1458, 7.0, -28), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, 22)
+    applyWingLight("PartyWingLight_B", Vector3.new(1458, 7.0, -12), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, 22)
+    applyWingLight("PartyWingLight_C", Vector3.new(1440, 7.0, -28), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, 20)
+    applyWingLight("PartyWingLight_D", Vector3.new(1440, 7.0, -12), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, 20)
+
+    -- Garden wing
+    local gardenTerminal = ensureDecorPart("GardenWingTerminal")
+    applyPartProps(gardenTerminal, {
+        size = Vector3.new(2.4, 1.46, 1.84),
+        cframe = CFrame.new(1600, 1.18, 149),
+        color = Color3.fromRGB(28, 40, 30),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.03,
+    })
+    ensureGuideBoardSurface(gardenTerminal, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "DAILY", "Reward • Claim", LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color)
+    applyTree("GardenTreeA", Vector3.new(1572, 0, 152), Color3.fromRGB(98, 150, 104))
+    applyTree("GardenTreeB", Vector3.new(1628, 0, 170), Color3.fromRGB(98, 150, 104))
+    local gardenBenchA = ensureDecorPart("GardenBenchA")
+    applyPartProps(gardenBenchA, {
+        size = Vector3.new(4.4, 0.62, 1.32),
+        cframe = CFrame.new(1578, 0.64, 171),
+        color = Color3.fromRGB(84, 64, 46),
+        material = Enum.Material.WoodPlanks,
+        transparency = 0.02,
+    })
+    local gardenBenchB = ensureDecorPart("GardenBenchB")
+    applyPartProps(gardenBenchB, {
+        size = Vector3.new(4.4, 0.62, 1.32),
+        cframe = CFrame.new(1622, 0.64, 149),
+        color = Color3.fromRGB(84, 64, 46),
+        material = Enum.Material.WoodPlanks,
+        transparency = 0.02,
+    })
+    applyWingLight("GardenWingLight_A", Vector3.new(1572, 6.8, 152), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, 22)
+    applyWingLight("GardenWingLight_B", Vector3.new(1628, 6.8, 170), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, 22)
+    applyWingLight("GardenWingLight_C", Vector3.new(1578, 6.8, 166), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, 20)
+    applyWingLight("GardenWingLight_D", Vector3.new(1622, 6.8, 154), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, 20)
+
+    -- Flex wing
+    local flexStage = ensureDecorPart("FlexWingStage")
+    applyPartProps(flexStage, {
+        size = Vector3.new(6.2, 0.22, 6.2),
+        cframe = CFrame.new(1748, 0.22, 140),
+        color = Color3.fromRGB(28, 24, 44),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+    local flexBoard = ensureDecorPart("FlexWingBoard")
+    applyPartProps(flexBoard, {
+        size = Vector3.new(0.42, 3.8, 6.0),
+        cframe = CFrame.new(1764, 2.1, 140),
+        color = Color3.fromRGB(18, 16, 34),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(flexBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Left, "FLEX", "Spotlight • Event", LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
+    local flexPedestalA = ensureDecorPart("FlexWingPedestalA")
+    applyPartProps(flexPedestalA, {
+        size = Vector3.new(1.3, 1.2, 1.3),
+        cframe = CFrame.new(1746, 1.2, 134),
+        color = Color3.fromRGB(52, 44, 78),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    local flexPedestalB = ensureDecorPart("FlexWingPedestalB")
+    applyPartProps(flexPedestalB, {
+        size = Vector3.new(1.3, 1.2, 1.3),
+        cframe = CFrame.new(1746, 1.2, 146),
+        color = Color3.fromRGB(52, 44, 78),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    applyWingLight("FlexWingLight_A", Vector3.new(1748, 7.0, 134), LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, 22)
+    applyWingLight("FlexWingLight_B", Vector3.new(1748, 7.0, 146), LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, 22)
+    applyWingLight("FlexWingLight_C", Vector3.new(1760, 7.0, 134), LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, 20)
+    applyWingLight("FlexWingLight_D", Vector3.new(1760, 7.0, 146), LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, 20)
 
     applyRoutePart(LOBBY_MAINHUB_ROUTE_NORTH_NAME, hubCenter, northNodePos, LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
     applyRoutePart(LOBBY_MAINHUB_ROUTE_EAST_NAME, hubCenter, eastNodePos, LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
@@ -1963,6 +2999,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local facadeApron = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
     local facadeWingLeft = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
     local facadeWingRight = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME)
+    local facadeWindowLeft = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WINDOW_LEFT_NAME)
+    local facadeWindowRight = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WINDOW_RIGHT_NAME)
+    local facadeLampLeft = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LAMP_LEFT_NAME)
+    local facadeLampRight = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LAMP_RIGHT_NAME)
     local forecourtPad = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_FORECOURT_PAD_NAME)
     local leftBench = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_BENCH_NAME)
     local rightBench = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_BENCH_NAME)
@@ -2101,6 +3141,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
         facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
         facadeWingRight = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME)
+        facadeWindowLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WINDOW_LEFT_NAME)
+        facadeWindowRight = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WINDOW_RIGHT_NAME)
+        facadeLampLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LAMP_LEFT_NAME)
+        facadeLampRight = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LAMP_RIGHT_NAME)
         forecourtPad = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_FORECOURT_PAD_NAME)
         leftBench = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_BENCH_NAME)
         rightBench = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_BENCH_NAME)
@@ -2108,6 +3152,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         rightPlanter = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_NAME)
         leftPlanterTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_TOP_NAME)
         rightPlanterTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_TOP_NAME)
+        local facadeFrontWallLeft = ensureGuidePanelPart(folder, "FacadeFrontWallLeft")
+        local facadeFrontWallRight = ensureGuidePanelPart(folder, "FacadeFrontWallRight")
+        local facadeFrontHeader = ensureGuidePanelPart(folder, "FacadeFrontHeader")
+        local facadeFrontAccent = ensureGuidePanelPart(folder, "FacadeFrontAccent")
         for _, board in ipairs({ contractBoard, toolsBoard, centerBoard }) do
             board.Color = Color3.fromRGB(18, 26, 38)
             board.Transparency = 0.08
@@ -2170,6 +3218,34 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         facadeApron.Material = Enum.Material.Slate
         facadeWingLeft.Material = Enum.Material.SmoothPlastic
         facadeWingRight.Material = Enum.Material.SmoothPlastic
+        facadeFrontWallLeft.Color = Color3.fromRGB(80, 92, 112)
+        facadeFrontWallLeft.Material = Enum.Material.SmoothPlastic
+        facadeFrontWallLeft.Transparency = 0.02
+        facadeFrontWallRight.Color = Color3.fromRGB(80, 92, 112)
+        facadeFrontWallRight.Material = Enum.Material.SmoothPlastic
+        facadeFrontWallRight.Transparency = 0.02
+        facadeFrontHeader.Color = Color3.fromRGB(64, 76, 94)
+        facadeFrontHeader.Material = Enum.Material.Metal
+        facadeFrontHeader.Transparency = 0.02
+        facadeFrontAccent.Color = style.color
+        facadeFrontAccent.Material = Enum.Material.Neon
+        facadeFrontAccent.Transparency = 0.14
+        for _, windowPart in ipairs({ facadeWindowLeft, facadeWindowRight }) do
+            windowPart.Color = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.12)
+            windowPart.Material = Enum.Material.Glass
+            windowPart.Transparency = 0.34
+        end
+        for _, lampPart in ipairs({ facadeLampLeft, facadeLampRight }) do
+            lampPart.Color = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.22)
+            lampPart.Material = Enum.Material.Neon
+            lampPart.Transparency = 0.12
+            local lampLight = ensurePointLight(lampPart, "Glow")
+            lampLight.Color = style.color
+            lampLight.Brightness = 1.35
+            lampLight.Range = 18
+            lampLight.Shadows = false
+            lampLight.Enabled = true
+        end
         forecourtPad.Color = Color3.fromRGB(20, 30, 44)
         forecourtPad.Material = Enum.Material.Slate
         forecourtPad.Transparency = 0.04
@@ -2462,6 +3538,22 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 1.2, 0, 1.28)
             facadeWingRight.Size = Vector3.new(1.05, anchorPart.Size.Y + 0.9, 2.5)
             facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 1.2, 0, 1.28)
+            facadeFrontWallLeft.Size = Vector3.new(28, 9.8, 0.9)
+            facadeFrontWallLeft.CFrame = anchorPart.CFrame * CFrame.new(-25.2, 0.02, -0.16)
+            facadeFrontWallRight.Size = Vector3.new(28, 9.8, 0.9)
+            facadeFrontWallRight.CFrame = anchorPart.CFrame * CFrame.new(25.2, 0.02, -0.16)
+            facadeFrontHeader.Size = Vector3.new(21.2, 1.24, 0.92)
+            facadeFrontHeader.CFrame = anchorPart.CFrame * CFrame.new(0, 4.36, -0.16)
+            facadeFrontAccent.Size = Vector3.new(22.2, 0.18, 0.98)
+            facadeFrontAccent.CFrame = anchorPart.CFrame * CFrame.new(0, 4.95, -0.16)
+            facadeWindowLeft.Size = Vector3.new(4.1, 2.4, 0.22)
+            facadeWindowLeft.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 6.0, 1.0, 1.42)
+            facadeWindowRight.Size = Vector3.new(4.1, 2.4, 0.22)
+            facadeWindowRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 6.0, 1.0, 1.42)
+            facadeLampLeft.Size = Vector3.new(0.24, 3.0, 0.24)
+            facadeLampLeft.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 2.95, 1.16, 1.48)
+            facadeLampRight.Size = Vector3.new(0.24, 3.0, 0.24)
+            facadeLampRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 2.95, 1.16, 1.48)
             forecourtPad.Size = Vector3.new(anchorPart.Size.X + 10.8, 0.16, 12.8)
             forecourtPad.CFrame = anchorPart.CFrame * CFrame.new(0, (-anchorPart.Size.Y * 0.5) + 0.17, 6.1)
             leftBench.Size = Vector3.new(3.8, 0.64, 1.28)
@@ -2489,6 +3581,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             zoneSecondaryProp.Size = Vector3.new(0.38, 0.96, 0.38)
             zoneSecondaryProp.CFrame = zoneCounterTop.CFrame * CFrame.new(0.86, 0.54, 0.02)
         else
+            facadeFrontWallLeft:Destroy()
+            facadeFrontWallRight:Destroy()
+            facadeFrontHeader:Destroy()
+            facadeFrontAccent:Destroy()
             centerBoard.Size = Vector3.new(frameDepth + 0.08, 3.6, 4.9)
             centerBoard.CFrame = anchorPart.CFrame * CFrame.new(4.45, 0.38, 0)
             centerStand.Size = Vector3.new(0.52, 2.35, 0.52)
@@ -2503,6 +3599,14 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(1.28, 0, -sideOffset - 1.2)
             facadeWingRight.Size = Vector3.new(2.5, anchorPart.Size.Y + 0.9, 1.05)
             facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(1.28, 0, sideOffset + 1.2)
+            facadeWindowLeft.Size = Vector3.new(0.22, 2.4, 4.1)
+            facadeWindowLeft.CFrame = anchorPart.CFrame * CFrame.new(1.42, 1.0, -sideOffset - 6.0)
+            facadeWindowRight.Size = Vector3.new(0.22, 2.4, 4.1)
+            facadeWindowRight.CFrame = anchorPart.CFrame * CFrame.new(1.42, 1.0, sideOffset + 6.0)
+            facadeLampLeft.Size = Vector3.new(0.24, 3.0, 0.24)
+            facadeLampLeft.CFrame = anchorPart.CFrame * CFrame.new(1.48, 1.16, -sideOffset - 2.95)
+            facadeLampRight.Size = Vector3.new(0.24, 3.0, 0.24)
+            facadeLampRight.CFrame = anchorPart.CFrame * CFrame.new(1.48, 1.16, sideOffset + 2.95)
             forecourtPad.Size = Vector3.new(12.8, 0.16, anchorPart.Size.Z + 10.8)
             forecourtPad.CFrame = anchorPart.CFrame * CFrame.new(6.15, (-anchorPart.Size.Y * 0.5) + 0.17, 0)
             leftBench.Size = Vector3.new(1.28, 0.64, 3.8)
@@ -2749,6 +3853,34 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         if facadeWingRight then
             facadeWingRight:Destroy()
         end
+        local facadeFrontWallLeft = folder:FindFirstChild("FacadeFrontWallLeft")
+        local facadeFrontWallRight = folder:FindFirstChild("FacadeFrontWallRight")
+        local facadeFrontHeader = folder:FindFirstChild("FacadeFrontHeader")
+        local facadeFrontAccent = folder:FindFirstChild("FacadeFrontAccent")
+        if facadeFrontWallLeft then
+            facadeFrontWallLeft:Destroy()
+        end
+        if facadeFrontWallRight then
+            facadeFrontWallRight:Destroy()
+        end
+        if facadeFrontHeader then
+            facadeFrontHeader:Destroy()
+        end
+        if facadeFrontAccent then
+            facadeFrontAccent:Destroy()
+        end
+        if facadeWindowLeft then
+            facadeWindowLeft:Destroy()
+        end
+        if facadeWindowRight then
+            facadeWindowRight:Destroy()
+        end
+        if facadeLampLeft then
+            facadeLampLeft:Destroy()
+        end
+        if facadeLampRight then
+            facadeLampRight:Destroy()
+        end
         if forecourtPad then
             forecourtPad:Destroy()
         end
@@ -2871,12 +4003,21 @@ function LobbyService:_syncZoneGuides()
         return
     end
     local zoneParts = self._zoneManager and self._zoneManager:GetZoneParts() or {}
+    local processedEntryZones = {}
     for zoneName, zonePart in pairs(zoneParts) do
         if LOBBY_ZONE_GUIDES_ENABLED == true then
             self:_ensureZoneGuide(zoneName, zonePart)
         end
         if LOBBY_ZONE_ENTRY_GUIDES_ENABLED == true then
             self:_ensureZoneEntryGuide(zoneName)
+            processedEntryZones[zoneName] = true
+        end
+    end
+    if LOBBY_ZONE_ENTRY_GUIDES_ENABLED == true then
+        for zoneName in pairs(LOBBY_ZONE_ENTRY_ANCHORS) do
+            if not processedEntryZones[zoneName] then
+                self:_ensureZoneEntryGuide(zoneName)
+            end
         end
     end
 end

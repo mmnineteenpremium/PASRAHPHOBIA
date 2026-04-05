@@ -2467,3 +2467,30 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby sekarang sudah cukup jauh naik sebagai `functional world-space hub`, tetapi asset final dan interior kaya masih tersisa sebelum bisa dinyatakan selesai total.
 
+## Update 2026-04-06
+
+- `Lobby UX visual` menerima pass façade dan shell deterministik baru:
+  - jalur `LobbyZoneEntryGuideRuntime` tidak lagi diandalkan untuk façade utama karena drift pada `North`
+  - façade world-space semua sayap sekarang dibangun langsung dari `MainHubDecorRuntime`
+  - `North / Shop / Party / Garden / Flex` sekarang minimal punya:
+    - shell interior ringan
+    - frontage / jamb / canopy
+    - sign panel menempel ke façade
+    - window + lamp langsung di façade
+- spawn lobby dan return-to-lobby juga disetel ulang lagi agar jatuh di forecourt kompromi yang lebih cocok untuk baca `North`.
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_facade_direct_build.rbxlx`
+    - `_tmp_lobby_forecourt_readability_build.rbxlx`
+    - `_tmp_lobby_spawn_offset_compromise_build.rbxlx`
+  - verifikasi live:
+    - `NorthBayEntrySignPanel`
+    - `ShopBayEntrySignPanel`
+    - `PartyBayEntrySignPanel`
+    - `GardenBayEntrySignPanel`
+    - `FlexBayEntrySignPanel`
+    - `partyGuide = nil` sehingga façade aktif sekarang benar-benar datang dari décor runtime baru
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - baseline lobby sekarang sudah kuat sebagai `blockout world-space yang terbaca`, tetapi masih tersisa art pass, asset final, dan interaksi dunia final sebelum bisa saya sebut selesai penuh.
+
