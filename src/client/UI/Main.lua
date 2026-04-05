@@ -2109,6 +2109,84 @@ local function getRuntimeHideSpotPart(zoneId)
 	return nil
 end
 
+local navigationAnchorCache = setmetatable({}, { __mode = "k" })
+
+local function collectNavigationAnchors(mapModel)
+	if typeof(mapModel) ~= "Instance" then
+		return nil
+	end
+
+	local cached = navigationAnchorCache[mapModel]
+	if cached then
+		local validCount = 0
+		for _, item in ipairs(cached.items or {}) do
+			if type(item) == "table" and typeof(item.part) == "Instance" and item.part.Parent ~= nil then
+				validCount += 1
+			end
+		end
+		if validCount > 0 then
+			return cached.items
+		end
+	end
+
+	local items = {}
+
+	local doorsFolder = mapModel:FindFirstChild("Doors", true)
+	if doorsFolder then
+		for _, child in ipairs(doorsFolder:GetChildren()) do
+			if child:IsA("BasePart") then
+				local routeLabel = tostring(child:GetAttribute("DoorRouteLabel") or "")
+				if routeLabel ~= "" then
+					table.insert(items, {
+						part = child,
+						kind = "Door",
+						label = routeLabel,
+						subtitle = function(part)
+							return part:GetAttribute("DoorIsOpen") == true and "Terbuka" or "Akses ruang"
+						end,
+					})
+				end
+			end
+		end
+	end
+
+	local interactionPointsFolder = mapModel:FindFirstChild("InteractionPoints", true)
+	if interactionPointsFolder then
+		for _, child in ipairs(interactionPointsFolder:GetChildren()) do
+			if child:IsA("BasePart") then
+				local routeLabel = tostring(child:GetAttribute("InteractionGuideLabel") or "")
+				if routeLabel ~= "" then
+					table.insert(items, {
+						part = child,
+						kind = "RoomAnchor",
+						label = routeLabel,
+						subtitle = "Anchor ruang",
+					})
+				end
+			end
+		end
+	end
+
+	for _, child in ipairs(mapModel:GetDescendants()) do
+		if child:IsA("BasePart") then
+			local traversalLabel = tostring(child:GetAttribute("TraversalGuideLabel") or "")
+			if traversalLabel ~= "" then
+				table.insert(items, {
+					part = child,
+					kind = "TraversalGuide",
+					label = traversalLabel,
+					subtitle = tostring(child:GetAttribute("TraversalGuideSubtitle") or "Transisi vertikal"),
+				})
+			end
+		end
+	end
+
+	navigationAnchorCache[mapModel] = {
+		items = items,
+	}
+	return items
+end
+
 local function getNavigationAnchorBias(contextTag, info)
 	local subtitle = type(info) == "table" and tostring(info.subtitle or "") or ""
 	local context = tostring(contextTag or "Default")
@@ -2159,6 +2237,10 @@ local function getNearestNavigationAnchorInfo(contextTag)
 	if not mapModel then
 		return nil
 	end
+	local anchorItems = collectNavigationAnchors(mapModel)
+	if type(anchorItems) ~= "table" or #anchorItems == 0 then
+		return nil
+	end
 
 	local nearest = nil
 	local function consider(part, info)
@@ -2175,48 +2257,17 @@ local function getNearestNavigationAnchorInfo(contextTag)
 		end
 	end
 
-	local doorsFolder = mapModel:FindFirstChild("Doors", true)
-	if doorsFolder then
-		for _, child in ipairs(doorsFolder:GetChildren()) do
-			if child:IsA("BasePart") then
-				local routeLabel = tostring(child:GetAttribute("DoorRouteLabel") or "")
-				if routeLabel ~= "" then
-					consider(child, {
-						kind = "Door",
-						label = routeLabel,
-						subtitle = child:GetAttribute("DoorIsOpen") == true and "Terbuka" or "Akses ruang",
-					})
-				end
+	for _, item in ipairs(anchorItems) do
+		if type(item) == "table" and typeof(item.part) == "Instance" and item.part.Parent ~= nil then
+			local subtitleValue = item.subtitle
+			if type(subtitleValue) == "function" then
+				subtitleValue = subtitleValue(item.part)
 			end
-		end
-	end
-
-	local interactionPointsFolder = mapModel:FindFirstChild("InteractionPoints", true)
-	if interactionPointsFolder then
-		for _, child in ipairs(interactionPointsFolder:GetChildren()) do
-			if child:IsA("BasePart") then
-				local routeLabel = tostring(child:GetAttribute("InteractionGuideLabel") or "")
-				if routeLabel ~= "" then
-					consider(child, {
-						kind = "RoomAnchor",
-						label = routeLabel,
-						subtitle = "Anchor ruang",
-					})
-				end
-			end
-		end
-	end
-
-	for _, child in ipairs(mapModel:GetDescendants()) do
-		if child:IsA("BasePart") then
-			local traversalLabel = tostring(child:GetAttribute("TraversalGuideLabel") or "")
-			if traversalLabel ~= "" then
-				consider(child, {
-					kind = "TraversalGuide",
-					label = traversalLabel,
-					subtitle = tostring(child:GetAttribute("TraversalGuideSubtitle") or "Transisi vertikal"),
-				})
-			end
+			consider(item.part, {
+				kind = item.kind,
+				label = item.label,
+				subtitle = subtitleValue,
+			})
 		end
 	end
 

@@ -2217,6 +2217,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (phase-aware navigation anchor baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 23:08 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi runtime hygiene:
+  - helper navigasi client sekarang memakai cache anchor per map runtime, tidak lagi scan struktur penuh pada tiap refresh panel.
+  - subtitle pintu tetap dinamis, jadi efisiensi naik tanpa kehilangan state visual `Terbuka`.
+- validasi:
+  - build source sukses:
+    - `_tmp_navigation_anchor_cache_build.rbxlx`
+- status:
+  - **SELESAI (navigation anchor cache baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

@@ -10098,3 +10098,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - HUD non-hunt sekarang lebih mungkin memilih anchor yang relevan untuk fase aktif, bukan hanya objek terdekat secara buta
+
+## 2026-04-05 - Navigation Anchor Cache Pass
+
+### Scope
+
+- merapikan helper navigasi client agar tidak scan struktur map penuh setiap refresh panel match
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah `navigationAnchorCache`
+  - tambah `collectNavigationAnchors(mapModel)`
+  - `getNearestNavigationAnchorInfo()` sekarang memakai cache anchor yang dikumpulkan sekali per map runtime
+  - subtitle pintu tetap dinamis lewat resolver fungsi agar state `Terbuka` tidak hilang
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_navigation_anchor_cache_build.rbxlx`
+
+### Interpretation
+
+- slice navigasi non-hunt sekarang lebih siap ke publish bukan hanya dari sisi UX, tetapi juga lebih rapi dari sisi biaya scan runtime client
