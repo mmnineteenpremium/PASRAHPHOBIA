@@ -2422,3 +2422,21 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby sekarang sudah jauh lebih terbaca sebagai ruang, tetapi interior bangunan dan asset final masih tersisa sebelum layak disebut selesai penuh.
 
+## Update 2026-04-06 12:05 ICT
+
+- `Lobby UX visual` maju lagi di sisi fungsi world-space semua sayap:
+  - `SHOP / PARTY / GARDEN / FLEX` sekarang tidak lagi hanya façade + forecourt
+  - masing-masing sudah punya `mini bay` berupa `ZoneCounter` dan `ZoneDisplay`
+  - copy world-space sekarang mengarah lebih jelas ke fungsi:
+    - `SHOP COUNTER / LOADOUT / COSMETIC`
+    - `READY DESK / CREATE / INVITE`
+    - `GARDEN DESK / DAILY / SOCIAL`
+    - `FLEX DESK / SPOTLIGHT / NEWS`
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_zone_bays_build.rbxlx`
+  - runtime live tembus untuk semua `ZoneCounter` utama
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby sekarang sudah jauh lebih mendekati `functional hub`, tetapi interior bangunan, asset final, dan interaksi dunia final masih tersisa.
+
