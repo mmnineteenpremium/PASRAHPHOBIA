@@ -1270,6 +1270,70 @@ local function applyMainHubVisualPatch()
             part.Shape = props.shape
             changed = true
         end
+        if type(props.canCollide) == "boolean" and part.CanCollide ~= props.canCollide then
+            part.CanCollide = props.canCollide
+            changed = true
+        end
+        if type(props.canQuery) == "boolean" and part.CanQuery ~= props.canQuery then
+            part.CanQuery = props.canQuery
+            changed = true
+        end
+        if type(props.canTouch) == "boolean" and part.CanTouch ~= props.canTouch then
+            part.CanTouch = props.canTouch
+            changed = true
+        end
+        if type(props.castShadow) == "boolean" and part.CastShadow ~= props.castShadow then
+            part.CastShadow = props.castShadow
+            changed = true
+        end
+    end
+
+    local function ensurePrompt(parent, name)
+        local prompt = parent and parent:FindFirstChild(name)
+        if not (prompt and prompt:IsA("ProximityPrompt")) then
+            if prompt then
+                prompt:Destroy()
+            end
+            prompt = Instance.new("ProximityPrompt")
+            prompt.Name = name
+            prompt.Parent = parent
+            changed = true
+        end
+        return prompt
+    end
+
+    local function applyPrompt(prompt, objectText, actionText, maxDistance)
+        if not prompt then
+            return
+        end
+        if prompt.ObjectText ~= objectText then
+            prompt.ObjectText = objectText
+            changed = true
+        end
+        if prompt.ActionText ~= actionText then
+            prompt.ActionText = actionText
+            changed = true
+        end
+        if prompt.HoldDuration ~= 0 then
+            prompt.HoldDuration = 0
+            changed = true
+        end
+        if prompt.MaxActivationDistance ~= maxDistance then
+            prompt.MaxActivationDistance = maxDistance
+            changed = true
+        end
+        if prompt.RequiresLineOfSight ~= false then
+            prompt.RequiresLineOfSight = false
+            changed = true
+        end
+        if prompt.Enabled ~= true then
+            prompt.Enabled = true
+            changed = true
+        end
+        if prompt.KeyboardKeyCode ~= Enum.KeyCode.E then
+            prompt.KeyboardKeyCode = Enum.KeyCode.E
+            changed = true
+        end
     end
 
     local function applyDecorPointLight(part, name, props)
@@ -1733,6 +1797,27 @@ local function applyMainHubVisualPatch()
     })
     ensureGuideBoardSurface(queueSign, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "QUEUE HUB", "Match • Party • Start", Color3.fromRGB(150, 196, 255))
     ensureGuideBoardSurface(queueSign, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "QUEUE HUB", "Match • Party • Start", Color3.fromRGB(150, 196, 255))
+    local matchQueuePlatform = ensureDecorPart("MatchQueuePlatform")
+    applyPartProps(matchQueuePlatform, {
+        size = queuePlatform.Size,
+        cframe = queuePlatform.CFrame,
+        color = queuePlatform.Color,
+        material = queuePlatform.Material,
+        transparency = 0.04,
+    })
+    local queueTrigger = ensureDecorPart("QueueTrigger")
+    applyPartProps(queueTrigger, {
+        size = Vector3.new(11.6, 5.2, 11.6),
+        cframe = CFrame.new(hubCenter + Vector3.new(0, 2.6, 0)),
+        color = Color3.fromRGB(150, 196, 255),
+        material = Enum.Material.ForceField,
+        transparency = 1,
+        canCollide = false,
+        canQuery = true,
+        canTouch = true,
+        castShadow = false,
+    })
+    applyPrompt(ensurePrompt(queueTrigger, "InteractPrompt"), "Queue Hub", "Join Queue", 14)
 
     local pillar = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME)
     applyPartProps(pillar, {
@@ -1866,13 +1951,13 @@ local function applyMainHubVisualPatch()
     applyWingFrontage("FlexBay", Vector3.new(1748, 0, 140), 38, 34, 8.4, Vector3.new(0, 0, 1), Vector3.new(-1, 0, 0), LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, "FLEX", "Spotlight • Cosmetic • News")
 
     -- North contract / evidence bay
-    for index, data in ipairs({
-        { name = "NorthTrainingTable_1", pos = Vector3.new(1587, 1.02, -138), label = "EMF", color = Color3.fromRGB(132, 186, 255) },
-        { name = "NorthTrainingTable_2", pos = Vector3.new(1600, 1.02, -138), label = "UV", color = Color3.fromRGB(214, 146, 255) },
-        { name = "NorthTrainingTable_3", pos = Vector3.new(1613, 1.02, -138), label = "THERMO", color = Color3.fromRGB(142, 214, 198) },
-        { name = "NorthTrainingTable_4", pos = Vector3.new(1587, 1.02, -151), label = "BOX", color = Color3.fromRGB(255, 196, 118) },
-        { name = "NorthTrainingTable_5", pos = Vector3.new(1600, 1.02, -151), label = "WRITING", color = Color3.fromRGB(150, 189, 255) },
-        { name = "NorthTrainingTable_6", pos = Vector3.new(1613, 1.02, -151), label = "CAM", color = Color3.fromRGB(255, 130, 130) },
+    for _, data in ipairs({
+        { name = "Table_Tools_1", pos = Vector3.new(1587, 1.02, -138), label = "EMF", color = Color3.fromRGB(132, 186, 255) },
+        { name = "Table_Tools_2", pos = Vector3.new(1600, 1.02, -138), label = "UV", color = Color3.fromRGB(214, 146, 255) },
+        { name = "Table_Tools_3", pos = Vector3.new(1613, 1.02, -138), label = "THERMO", color = Color3.fromRGB(142, 214, 198) },
+        { name = "Table_Tools_4", pos = Vector3.new(1587, 1.02, -151), label = "BOX", color = Color3.fromRGB(255, 196, 118) },
+        { name = "Table_Tools_5", pos = Vector3.new(1600, 1.02, -151), label = "WRITING", color = Color3.fromRGB(150, 189, 255) },
+        { name = "Table_Tools_6", pos = Vector3.new(1613, 1.02, -151), label = "CAM", color = Color3.fromRGB(255, 130, 130) },
     }) do
         local tablePart = ensureDecorPart(data.name)
         applyPartProps(tablePart, {
@@ -1883,8 +1968,9 @@ local function applyMainHubVisualPatch()
             transparency = 0.03,
         })
         ensureGuideBoardSurface(tablePart, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, data.label, "Test Table", data.color)
+        applyPrompt(ensurePrompt(tablePart, "InteractPrompt"), data.label .. " Table", "Test Tool", 10)
     end
-    local northContractWall = ensureDecorPart("NorthContractWall")
+    local northContractWall = ensureDecorPart("ContractBoard")
     applyPartProps(northContractWall, {
         size = Vector3.new(18, 4.8, 0.28),
         cframe = CFrame.new(1600, 4.1, -170.5),
@@ -1893,7 +1979,8 @@ local function applyMainHubVisualPatch()
         transparency = 0.02,
     })
     ensureGuideBoardSurface(northContractWall, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "CONTRACT BAY", "Map • Mode • Briefing", LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
-    local northRoomStand = ensureDecorPart("NorthRoomStand")
+    applyPrompt(ensurePrompt(northContractWall, "InteractPrompt"), "Contract Board", "Open Board", 12)
+    local northRoomStand = ensureDecorPart("RoomBoard")
     applyPartProps(northRoomStand, {
         size = Vector3.new(2.2, 3.4, 2.2),
         cframe = CFrame.new(1575, 2.0, -144),
@@ -1902,7 +1989,7 @@ local function applyMainHubVisualPatch()
         transparency = 0.03,
     })
     ensureGuideBoardSurface(northRoomStand, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "ROOM", "Create • Join • Ready", LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
-    local northToolsStand = ensureDecorPart("NorthToolsStand")
+    local northToolsStand = ensureDecorPart("ToolsBoard")
     applyPartProps(northToolsStand, {
         size = Vector3.new(2.2, 3.4, 2.2),
         cframe = CFrame.new(1625, 2.0, -144),
@@ -1919,7 +2006,7 @@ local function applyMainHubVisualPatch()
     applyWingLight("NorthWingLight_F", Vector3.new(1612, 7.2, -160), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 22)
 
     -- Shop wing
-    local shopCounter = ensureDecorPart("ShopWingCounter")
+    local shopCounter = ensureDecorPart("ShopCounter")
     applyPartProps(shopCounter, {
         size = Vector3.new(8.8, 1.4, 2.6),
         cframe = CFrame.new(1727, 1.1, -20),
@@ -1928,7 +2015,21 @@ local function applyMainHubVisualPatch()
         transparency = 0.03,
     })
     ensureGuideBoardSurface(shopCounter, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "SHOP", "MM • PP • Utility", LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
-    local shopRack = ensureDecorPart("ShopWingRack")
+    applyPrompt(ensurePrompt(shopCounter, "InteractPrompt"), "Shop Counter", "Open Shop", 12)
+    local interactShop = ensureDecorPart("Interact_Shop")
+    applyPartProps(interactShop, {
+        size = Vector3.new(3.4, 3.2, 2.8),
+        cframe = CFrame.new(1727, 1.8, -16.6),
+        color = LOBBY_ZONE_GUIDE_STYLE.ShopZone.color,
+        material = Enum.Material.ForceField,
+        transparency = 1,
+        canCollide = false,
+        canQuery = true,
+        canTouch = true,
+        castShadow = false,
+    })
+    applyPrompt(ensurePrompt(interactShop, "InteractPrompt"), "Shop", "Browse", 12)
+    local shopRack = ensureDecorPart("EquipmentRack")
     applyPartProps(shopRack, {
         size = Vector3.new(1.0, 3.8, 8.4),
         cframe = CFrame.new(1766, 2.0, -20),
@@ -1936,7 +2037,7 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.Metal,
         transparency = 0.03,
     })
-    local shopDisplayA = ensureDecorPart("ShopWingDisplayA")
+    local shopDisplayA = ensureDecorPart("DisplayTable_A")
     applyPartProps(shopDisplayA, {
         size = Vector3.new(2.2, 1.0, 2.4),
         cframe = CFrame.new(1739, 1.0, -33),
@@ -1944,7 +2045,7 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.Slate,
         transparency = 0.03,
     })
-    local shopDisplayB = ensureDecorPart("ShopWingDisplayB")
+    local shopDisplayB = ensureDecorPart("DisplayTable_B")
     applyPartProps(shopDisplayB, {
         size = Vector3.new(2.2, 1.0, 2.4),
         cframe = CFrame.new(1739, 1.0, -7),
@@ -1958,7 +2059,7 @@ local function applyMainHubVisualPatch()
     applyWingLight("ShopWingLight_D", Vector3.new(1758, 7.0, -12), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, 20)
 
     -- Party wing
-    local partyPlatform = ensureDecorPart("PartyWingPlatform")
+    local partyPlatform = ensureDecorPart("PartyPlatform")
     applyPartProps(partyPlatform, {
         size = Vector3.new(6.2, 0.18, 6.2),
         cframe = CFrame.new(1456, 0.19, -20),
@@ -1966,7 +2067,7 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.Slate,
         transparency = 0.03,
     })
-    local partyBoard = ensureDecorPart("PartyWingBoard")
+    local partyBoard = ensureDecorPart("PartyBoard")
     applyPartProps(partyBoard, {
         size = Vector3.new(0.42, 3.8, 6.0),
         cframe = CFrame.new(1469, 2.1, -23),
@@ -1975,7 +2076,8 @@ local function applyMainHubVisualPatch()
         transparency = 0.02,
     })
     ensureGuideBoardSurface(partyBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Left, "PARTY", "Invite • Room • Ready", LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
-    local partyTerminal = ensureDecorPart("PartyWingTerminal")
+    applyPrompt(ensurePrompt(partyBoard, "InteractPrompt"), "Party Board", "Open Party", 12)
+    local partyTerminal = ensureDecorPart("PartyTerminal")
     applyPartProps(partyTerminal, {
         size = Vector3.new(1.2, 1.5, 1.2),
         cframe = CFrame.new(1458, 1.2, -12),
@@ -1989,7 +2091,7 @@ local function applyMainHubVisualPatch()
     applyWingLight("PartyWingLight_D", Vector3.new(1440, 7.0, -12), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, 20)
 
     -- Garden wing
-    local gardenTerminal = ensureDecorPart("GardenWingTerminal")
+    local gardenTerminal = ensureDecorPart("DailyRewardTerminal")
     applyPartProps(gardenTerminal, {
         size = Vector3.new(2.4, 1.46, 1.84),
         cframe = CFrame.new(1600, 1.18, 149),
@@ -1998,6 +2100,7 @@ local function applyMainHubVisualPatch()
         transparency = 0.03,
     })
     ensureGuideBoardSurface(gardenTerminal, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "DAILY", "Reward • Claim", LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color)
+    applyPrompt(ensurePrompt(gardenTerminal, "InteractPrompt"), "Daily Reward", "Claim", 12)
     applyTree("GardenTreeA", Vector3.new(1572, 0, 152), Color3.fromRGB(98, 150, 104))
     applyTree("GardenTreeB", Vector3.new(1628, 0, 170), Color3.fromRGB(98, 150, 104))
     local gardenBenchA = ensureDecorPart("GardenBenchA")
@@ -2022,7 +2125,7 @@ local function applyMainHubVisualPatch()
     applyWingLight("GardenWingLight_D", Vector3.new(1622, 6.8, 154), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, 20)
 
     -- Flex wing
-    local flexStage = ensureDecorPart("FlexWingStage")
+    local flexStage = ensureDecorPart("FlexStage")
     applyPartProps(flexStage, {
         size = Vector3.new(6.2, 0.22, 6.2),
         cframe = CFrame.new(1748, 0.22, 140),
@@ -2030,7 +2133,7 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.Slate,
         transparency = 0.03,
     })
-    local flexBoard = ensureDecorPart("FlexWingBoard")
+    local flexBoard = ensureDecorPart("AnnouncementBoard")
     applyPartProps(flexBoard, {
         size = Vector3.new(0.42, 3.8, 6.0),
         cframe = CFrame.new(1764, 2.1, 140),
