@@ -1110,7 +1110,7 @@ Done jika:
 
 Status:
 
-- **IN PROGRESS**.
+- **SELESAI**.
 - fase ini memang baru disentuh setelah blocker E2E, vertical slice, content fill utama, dan publish gate inti tertutup
 - slice pertama yang sudah masuk:
   - lobby zone taxonomy sekarang disejajarkan ke geometri lobby aktif
@@ -2311,7 +2311,20 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `_tmp_door_state_hud_context_build.rbxlx`
 - status:
   - **SELESAI (door state hud context baseline)**.
-  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+  - **NEXT**: tutup `Phase 18` dan lanjut ke phase backlog berikutnya.
+
+## Update 2026-04-06 00:16 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` resmi ditutup:
+  - panel lobby sekarang punya orientasi zona aktif + fallback proximity + emphasis tombol yang sesuai area.
+  - panel match sekarang punya route/distance/state context yang konsisten dengan world guide, refuge, traversal, dan pintu.
+  - palette refuge, beacon semantik, anchor cache, dan affordance HUD/lobby sekarang sudah berada dalam satu bahasa visual/runtime yang sama.
+- validasi:
+  - build source sukses:
+    - `_tmp_phase18_completion_build.rbxlx`
+- status:
+  - **SELESAI (phase 18 complete)**.
+  - **NEXT**: pindah ke phase backlog berikutnya, bukan lagi restruktur `Lobby + Map` besar.
 
 ## LAST NOTE - Creator Hub Verification
 
