@@ -11061,3 +11061,58 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - catatan jujur:
   - shot spawn sekarang lebih stabil dan jatuh di forecourt, tapi visual bangunan masih jelas berada pada tahap `strong blockout / proto art`
   - direct façade runtime jauh lebih jujur dan stabil dibanding jalur guide lama, jadi itu yang saya pegang sebagai baseline lanjut berikutnya
+
+### Follow-up 2026-04-06
+
+- pass berikutnya mengubah lobby dari `visual blockout` ke `canonical world-space objects` yang benar-benar dicari codebase:
+  - `MatchQueuePlatform`
+  - `QueueTrigger`
+  - `ShopCounter`
+  - `Interact_Shop`
+  - `PartyPlatform`
+  - `PartyBoard`
+  - `PartyTerminal`
+  - `DailyRewardTerminal`
+  - `FlexStage`
+  - `AnnouncementBoard`
+  - `Table_Tools_1..6`
+- object-object ini sekarang dibangun langsung lewat `MainHubDecorRuntime`, bukan lagi bergantung pada jalur guide lama.
+- saya juga tambahkan `ProximityPrompt` dasar pada titik dunia yang paling relevan:
+  - `QueueTrigger`
+  - `ShopCounter`
+  - `Interact_Shop`
+  - `PartyBoard`
+  - `ContractBoard`
+  - `DailyRewardTerminal`
+  - `Table_Tools_1..6`
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_canonical_objects_build.rbxlx`
+- verifikasi live runtime:
+  - `MatchQueuePlatform = present`
+  - `QueueTrigger = present`
+  - `queueTouch = true`
+  - `ShopCounter = present`
+  - `Interact_Shop = present`
+  - `PartyPlatform = present`
+  - `PartyBoard = present`
+  - `PartyTerminal = present`
+  - `DailyRewardTerminal = present`
+  - `FlexStage = present`
+  - `AnnouncementBoard = present`
+  - `Table_Tools_1 = present`
+  - `Table_Tools_6 = present`
+  - prompt yang benar-benar terbaca:
+    - `QueueTrigger -> Join Queue`
+    - `ShopCounter -> Open Shop`
+    - `Interact_Shop -> Browse`
+    - `PartyBoard -> Open Party`
+    - `DailyRewardTerminal -> Claim`
+    - `Table_Tools_* -> Test Tool`
+- capture live:
+  - `LobbyCanonicalObjects_Spawn_1`
+- catatan jujur:
+  - visual masih berada pada fase `proto art / structured blockout`
+  - tetapi sekarang lobby bukan cuma readable secara visual; object dunia inti juga sudah sinkron dengan nama canonical yang dicari logic/codebase

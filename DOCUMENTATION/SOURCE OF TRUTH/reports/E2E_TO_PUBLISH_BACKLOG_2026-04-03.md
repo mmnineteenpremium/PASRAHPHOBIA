@@ -2494,3 +2494,26 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - baseline lobby sekarang sudah kuat sebagai `blockout world-space yang terbaca`, tetapi masih tersisa art pass, asset final, dan interaksi dunia final sebelum bisa saya sebut selesai penuh.
 
+## Update 2026-04-06
+
+- `Lobby UX visual` naik satu level lagi dari `readable blockout` ke `canonical world-space object pass`:
+  - object yang dicari codebase sekarang ada nyata di runtime:
+    - `MatchQueuePlatform`
+    - `QueueTrigger`
+    - `ShopCounter`
+    - `Interact_Shop`
+    - `PartyPlatform / PartyBoard / PartyTerminal`
+    - `DailyRewardTerminal`
+    - `FlexStage / AnnouncementBoard`
+    - `Table_Tools_1..6`
+  - prompt world-space dasar juga sudah dipasang pada object inti agar lobby lebih terasa sebagai ruang fungsi, bukan sekadar bentuk
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_canonical_objects_build.rbxlx`
+  - runtime live tembus:
+    - `queueTouch = true`
+    - semua object canonical di atas hadir di `MainHubDecorRuntime`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby sekarang sudah lebih dekat ke `functional hub yang bisa dihubungkan logic`, tetapi art pass, asset final, dan interaction flow final masih tersisa sebelum saya bisa menyebut lobby selesai penuh.
+
