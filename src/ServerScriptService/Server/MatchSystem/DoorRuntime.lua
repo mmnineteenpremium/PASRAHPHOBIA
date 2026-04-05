@@ -28,6 +28,35 @@ local DEFAULT_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
 local DEFAULT_SOUND_VOLUME = 0.45
 local DEFAULT_SOUND_MAX_DISTANCE = 42
 
+local function titleCaseToken(token)
+	local raw = tostring(token or ""):gsub("(%d+)", " %1"):gsub("[_%-.]+", " ")
+	raw = raw:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+	if raw == "" then
+		return "Pintu"
+	end
+	local words = {}
+	for word in raw:gmatch("%S+") do
+		words[#words + 1] = string.upper(word:sub(1, 1)) .. string.lower(word:sub(2))
+	end
+	return table.concat(words, " ")
+end
+
+local function resolveDoorLabel(part)
+	if not (part and part:IsA("BasePart")) then
+		return "Pintu"
+	end
+	local explicit = tostring(part:GetAttribute("DoorLabel") or "")
+	if explicit ~= "" then
+		return explicit
+	end
+	local token = tostring(part.Name or ""):gsub("^Door_", "")
+	local label = titleCaseToken(token)
+	if label == "" or label == "Door" then
+		return "Pintu"
+	end
+	return "Pintu " .. label
+end
+
 local function resolveEventBus(deps)
 	local eventBus = Services.Get(deps, "EventBus")
 	if type(eventBus) ~= "table" then
@@ -100,10 +129,11 @@ local function buildOpenCFrame(part, closedCFrame)
 	return hingeWorld * CFrame.Angles(0, -OPEN_ANGLE, 0) * CFrame.new(-hingeLocal)
 end
 
-local function setPromptState(prompt, isOpen, isLocked)
+local function setPromptState(prompt, isOpen, isLocked, doorLabel)
 	if not prompt then
 		return
 	end
+	prompt.ObjectText = doorLabel or "Pintu"
 	if isLocked then
 		prompt.ActionText = "Pintu Terkunci"
 		prompt.Enabled = false
@@ -210,7 +240,12 @@ local function applyDoorState(doorRecord, interactionType, suppressSound)
 		end
 	end
 
-	setPromptState(doorRecord.prompt, part:GetAttribute("DoorIsOpen") == true, part:GetAttribute("DoorLocked") == true)
+	setPromptState(
+		doorRecord.prompt,
+		part:GetAttribute("DoorIsOpen") == true,
+		part:GetAttribute("DoorLocked") == true,
+		doorRecord.label
+	)
 end
 
 local function getPlayerDoorApproachDistance(doorRecord, player, depthThreshold, widthPadding)
@@ -310,12 +345,12 @@ local function executeDoorInteraction(doorRecord, interactionType, interactionSo
 	return true
 end
 
-local function ensurePrompt(part)
+local function ensurePrompt(part, doorLabel)
 	local prompt = part:FindFirstChild(PROMPT_NAME)
 	if prompt and prompt:IsA("ProximityPrompt") then
 		prompt.KeyboardKeyCode = Enum.KeyCode.E
 		prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
-		prompt.ObjectText = "Pintu"
+		prompt.ObjectText = doorLabel or "Pintu"
 		prompt.MaxActivationDistance = INTERACTION_DISTANCE
 		prompt.RequiresLineOfSight = false
 		prompt.HoldDuration = PROMPT_HOLD_DURATION
@@ -328,7 +363,7 @@ local function ensurePrompt(part)
 
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
-	prompt.ObjectText = "Pintu"
+	prompt.ObjectText = doorLabel or "Pintu"
 	prompt.ActionText = "Buka Pintu"
 	prompt.MaxActivationDistance = INTERACTION_DISTANCE
 	prompt.RequiresLineOfSight = false
@@ -382,12 +417,14 @@ function DoorRuntime.Attach(match, mapClone, deps)
 
 	for _, descendant in ipairs(scanRoot:GetDescendants()) do
 		if isDoorPart(descendant) then
-			local prompt = ensurePrompt(descendant)
+			local doorLabel = resolveDoorLabel(descendant)
+			local prompt = ensurePrompt(descendant, doorLabel)
 			local closedCFrame = descendant.CFrame
 			local initialState = readInitialDoorState(descendant)
 			local record = {
 				part = descendant,
 				prompt = prompt,
+				label = doorLabel,
 				closedCFrame = closedCFrame,
 				openCFrame = buildOpenCFrame(descendant, closedCFrame),
 				policy = normalizePolicy(initialState.policy),
@@ -404,13 +441,14 @@ function DoorRuntime.Attach(match, mapClone, deps)
 			descendant.Anchored = true
 			descendant.CanQuery = true
 			descendant:SetAttribute("DoorObjectId", descendant.Name)
+			descendant:SetAttribute("DoorRouteLabel", doorLabel)
 			descendant:SetAttribute(POLICY_ATTR_NAME, record.policy)
 			descendant:SetAttribute("DoorLocked", initialState.isLocked)
 			descendant:SetAttribute("DoorIsOpen", initialState.isOpen)
 			registerDoorInteraction(mapInteractionSystem, descendant.Name, descendant.Position)
 			ensurePathfindingModifier(descendant)
 			applyDoorState(record, initialState.isOpen and "Open" or "Close", true)
-			setPromptState(prompt, initialState.isOpen, initialState.isLocked)
+			setPromptState(prompt, initialState.isOpen, initialState.isLocked, doorLabel)
 
 			prompt.Triggered:Connect(function()
 				if descendant:GetAttribute("DoorLocked") == true then

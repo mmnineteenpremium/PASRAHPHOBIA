@@ -1984,6 +1984,21 @@ Urutan yang paling masuk akal dari titik sekarang:
 - status:
   - **SELESAI (camera log noise guard)**.
 
+## Update 2026-04-05 20:43 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` naik lagi di sisi affordance pintu:
+  - prompt pintu sekarang memakai label tujuan yang lebih manusiawi, bukan `Pintu` generik.
+  - runtime juga menyimpan `DoorRouteLabel` attribute untuk hook UX berikutnya bila dibutuhkan.
+- validasi:
+  - build source sukses:
+    - `_tmp_door_prompt_labels_build.rbxlx`
+  - contoh derivasi label:
+    - `Door_Kitchen -> Pintu Kitchen`
+    - `Door_Bedroom1 -> Pintu Bedroom 1`
+- status:
+  - **SELESAI (door prompt label baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut slice restruktur visual/lobby-map yang masih belum layak final.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

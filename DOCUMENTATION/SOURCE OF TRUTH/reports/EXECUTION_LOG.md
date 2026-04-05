@@ -9582,3 +9582,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - console Studio dan snapshot QA berikutnya jadi lebih bersih untuk observasi bug nyata
+
+## 2026-04-05 - Door Prompt Label Pass
+
+### Scope
+
+- membuat traversal pintu lebih terbaca lewat prompt yang menunjuk tujuan/ruang, bukan label generik
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua`
+  - tambah `resolveDoorLabel()` untuk menurunkan label dari `DoorLabel` atau nama part `Door_*`
+  - `ProximityPrompt.ObjectText` sekarang mengikuti label pintu
+  - runtime door menyimpan `DoorRouteLabel` attribute untuk pemakaian lanjutan
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_door_prompt_labels_build.rbxlx`
+- contoh label yang sekarang akan terbentuk:
+  - `Door_Kitchen -> Pintu Kitchen`
+  - `Door_Bedroom1 -> Pintu Bedroom 1`
+
+### Interpretation
+
+- traversal pintu sekarang lebih manusiawi dan membantu orientasi pemain saat map masih dalam fase restruktur
