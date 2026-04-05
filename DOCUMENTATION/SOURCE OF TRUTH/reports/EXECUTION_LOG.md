@@ -10843,3 +10843,58 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - interior bangunan
   - prop final berbasis asset, bukan masih dominan primitive runtime
   - kontrak / tools / shop / party world interaction yang lebih nyata dan tidak hanya visual
+
+### Follow-up 2026-04-06 12:05 ICT
+
+- pass lanjutan `Lobby UX visual` memperdalam sayap non-utara menjadi `mini bay`, bukan lagi façade + forecourt saja:
+  - `ShopZone`
+    - `ZoneCounter`
+    - `ZoneLeftDisplay`
+    - `ZoneRightDisplay`
+    - copy world-space:
+      - `SHOP COUNTER`
+      - `LOADOUT`
+      - `COSMETIC`
+  - `PartyZone`
+    - `READY DESK`
+    - `CREATE`
+    - `INVITE`
+  - `DailyRewardZone`
+    - `GARDEN DESK`
+    - `DAILY`
+    - `SOCIAL`
+  - `FlexZone`
+    - `FLEX DESK`
+    - `SPOTLIGHT`
+    - `NEWS`
+- tujuan batch ini:
+  - membuat `SHOP / PARTY / GARDEN / FLEX` mulai terbaca sebagai ruang yang punya fungsi
+  - tidak lagi tertinggal jauh dari `North` yang sudah lebih maju
+
+### Validation 2026-04-06 12:05 ICT
+
+- build source sukses:
+  - `_tmp_lobby_zone_bays_build.rbxlx`
+- verifikasi live runtime:
+  - `Shop`
+    - `ZoneCounter = 2.2 x 1.36 x 5.4`
+    - `ZoneLeftDisplay = 1.54 x 1.28 x 1.96`
+    - `ZoneRightDisplay = 1.54 x 1.28 x 1.96`
+  - `Party`
+    - `ZoneCounter = 2.2 x 1.36 x 5.4`
+  - `Garden`
+    - `ZoneCounter = 5.4 x 1.36 x 2.2`
+  - `Flex`
+    - `ZoneCounter = 2.2 x 1.36 x 5.4`
+- catatan jujur:
+  - capture `North` dan `MainHub` masih cukup representatif
+  - capture `Shop` wing masih kalah oleh shell/camera angle, jadi batch ini saya nyatakan valid terutama lewat runtime proof, bukan karena screenshot yang indah
+
+### Interpretation 2026-04-06 12:05 ICT
+
+- semua bangunan utama lobby sekarang minimal sudah punya:
+  - façade sign
+  - board/kiosk
+  - forecourt mass
+  - bay/counter sederhana yang mencerminkan fungsi ruang
+- baseline world-space lobby sekarang jauh lebih dekat ke `hub functional`, bukan cuma shell besar dengan label di dinding

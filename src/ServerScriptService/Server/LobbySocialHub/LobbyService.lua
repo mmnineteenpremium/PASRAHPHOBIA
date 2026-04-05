@@ -87,6 +87,12 @@ local LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_NAME = "LeftPlanter"
 local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_NAME = "RightPlanter"
 local LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_TOP_NAME = "LeftPlanterTop"
 local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_TOP_NAME = "RightPlanterTop"
+local LOBBY_ZONE_ENTRY_GUIDE_ZONE_COUNTER_NAME = "ZoneCounter"
+local LOBBY_ZONE_ENTRY_GUIDE_ZONE_COUNTER_TOP_NAME = "ZoneCounterTop"
+local LOBBY_ZONE_ENTRY_GUIDE_ZONE_LEFT_DISPLAY_NAME = "ZoneLeftDisplay"
+local LOBBY_ZONE_ENTRY_GUIDE_ZONE_RIGHT_DISPLAY_NAME = "ZoneRightDisplay"
+local LOBBY_ZONE_ENTRY_GUIDE_ZONE_PRIMARY_PROP_NAME = "ZonePrimaryProp"
+local LOBBY_ZONE_ENTRY_GUIDE_ZONE_SECONDARY_PROP_NAME = "ZoneSecondaryProp"
 local LOBBY_MAINHUB_DECOR_FOLDER_NAME = "MainHubDecorRuntime"
 local LOBBY_MAINHUB_DIRECTORY_PAD_NAME = "DirectoryPad"
 local LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME = "DirectoryPillar"
@@ -251,6 +257,41 @@ local LOBBY_ZONE_ENTRY_KIOSK_COPY = {
     FlexZone = {
         title = "FLEX BOARD",
         subtitle = "Spotlight • Cosmetics",
+    },
+}
+
+local LOBBY_ZONE_ENTRY_SECONDARY_COPY = {
+    ShopZone = {
+        centerTitle = "SHOP COUNTER",
+        centerSubtitle = "Bundle • Utility",
+        leftTitle = "LOADOUT",
+        leftSubtitle = "MM • PP",
+        rightTitle = "COSMETIC",
+        rightSubtitle = "Preview • Equip",
+    },
+    PartyZone = {
+        centerTitle = "READY DESK",
+        centerSubtitle = "Party • Room",
+        leftTitle = "CREATE",
+        leftSubtitle = "Host • Private",
+        rightTitle = "INVITE",
+        rightSubtitle = "Join • Friend",
+    },
+    DailyRewardZone = {
+        centerTitle = "GARDEN DESK",
+        centerSubtitle = "Reward • Event",
+        leftTitle = "DAILY",
+        leftSubtitle = "Claim • Reset",
+        rightTitle = "SOCIAL",
+        rightSubtitle = "Bench • NPC",
+    },
+    FlexZone = {
+        centerTitle = "FLEX DESK",
+        centerSubtitle = "Showcase • Promo",
+        leftTitle = "SPOTLIGHT",
+        leftSubtitle = "Featured • Cosmetic",
+        rightTitle = "NEWS",
+        rightSubtitle = "Update • Event",
     },
 }
 
@@ -1929,6 +1970,12 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local rightPlanter = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_NAME)
     local leftPlanterTop = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_TOP_NAME)
     local rightPlanterTop = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_TOP_NAME)
+    local zoneCounter = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ZONE_COUNTER_NAME)
+    local zoneCounterTop = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ZONE_COUNTER_TOP_NAME)
+    local zoneLeftDisplay = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ZONE_LEFT_DISPLAY_NAME)
+    local zoneRightDisplay = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ZONE_RIGHT_DISPLAY_NAME)
+    local zonePrimaryProp = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ZONE_PRIMARY_PROP_NAME)
+    local zoneSecondaryProp = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ZONE_SECONDARY_PROP_NAME)
     local useFacadeSign = FACADE_SIGN_ZONE_FLAGS[zoneName] == true
 
     if useFacadeSign then
@@ -2216,6 +2263,24 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             rightPlanterTop.Size = Vector3.new(1.62, 0.34, 2.02)
             rightPlanterTop.CFrame = rightPlanter.CFrame * CFrame.new(0, 0.56, 0)
         end
+        if zoneCounter then
+            zoneCounter:Destroy()
+        end
+        if zoneCounterTop then
+            zoneCounterTop:Destroy()
+        end
+        if zoneLeftDisplay then
+            zoneLeftDisplay:Destroy()
+        end
+        if zoneRightDisplay then
+            zoneRightDisplay:Destroy()
+        end
+        if zonePrimaryProp then
+            zonePrimaryProp:Destroy()
+        end
+        if zoneSecondaryProp then
+            zoneSecondaryProp:Destroy()
+        end
         clearLegacyBoardGui(contractBoard)
         clearLegacyBoardGui(toolsBoard)
         clearLegacyBoardGui(centerBoard)
@@ -2233,6 +2298,7 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         ensureGuideBoardSurface(deskStartPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "START", "Room Browser", style.color)
     elseif zoneName == "ShopZone" or zoneName == "PartyZone" or zoneName == "DailyRewardZone" or zoneName == "FlexZone" then
         local kioskCopy = LOBBY_ZONE_ENTRY_KIOSK_COPY[zoneName]
+        local secondaryCopy = LOBBY_ZONE_ENTRY_SECONDARY_COPY[zoneName]
         local boardBackFace = isWideOnX and Enum.NormalId.Back or Enum.NormalId.Right
         local boardFrontFace = isWideOnX and Enum.NormalId.Front or Enum.NormalId.Left
 
@@ -2250,6 +2316,12 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         rightPlanter = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_NAME)
         leftPlanterTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_TOP_NAME)
         rightPlanterTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_TOP_NAME)
+        zoneCounter = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_ZONE_COUNTER_NAME)
+        zoneCounterTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_ZONE_COUNTER_TOP_NAME)
+        zoneLeftDisplay = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_ZONE_LEFT_DISPLAY_NAME)
+        zoneRightDisplay = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_ZONE_RIGHT_DISPLAY_NAME)
+        zonePrimaryProp = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_ZONE_PRIMARY_PROP_NAME)
+        zoneSecondaryProp = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_ZONE_SECONDARY_PROP_NAME)
 
         centerBoard.Color = Color3.fromRGB(18, 26, 38)
         centerBoard.Transparency = 0.08
@@ -2286,6 +2358,20 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             planterTopPart.Material = Enum.Material.Grass
             planterTopPart.Transparency = 0.04
         end
+        for _, propPart in ipairs({ zoneCounter, zoneLeftDisplay, zoneRightDisplay }) do
+            propPart.Color = Color3.fromRGB(24, 34, 48)
+            propPart.Material = Enum.Material.SmoothPlastic
+            propPart.Transparency = 0.03
+        end
+        zoneCounterTop.Color = Color3.fromRGB(46, 58, 78)
+        zoneCounterTop.Material = Enum.Material.Metal
+        zoneCounterTop.Transparency = 0.02
+        zonePrimaryProp.Color = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.18)
+        zonePrimaryProp.Material = Enum.Material.Metal
+        zonePrimaryProp.Transparency = 0.04
+        zoneSecondaryProp.Color = style.color:Lerp(Color3.fromRGB(36, 44, 58), 0.42)
+        zoneSecondaryProp.Material = Enum.Material.Neon
+        zoneSecondaryProp.Transparency = 0.1
 
         if isWideOnX then
             centerBoard.Size = Vector3.new(4.8, 3.7, frameDepth + 0.08)
@@ -2316,6 +2402,18 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             leftPlanterTop.CFrame = leftPlanter.CFrame * CFrame.new(0, 0.52, 0)
             rightPlanterTop.Size = Vector3.new(1.74, 0.32, 1.42)
             rightPlanterTop.CFrame = rightPlanter.CFrame * CFrame.new(0, 0.52, 0)
+            zoneCounter.Size = Vector3.new(5.4, 1.36, 2.2)
+            zoneCounter.CFrame = anchorPart.CFrame * CFrame.new(0, -1.52, 4.2)
+            zoneCounterTop.Size = Vector3.new(5.8, 0.18, 2.34)
+            zoneCounterTop.CFrame = zoneCounter.CFrame * CFrame.new(0, 0.77, 0)
+            zoneLeftDisplay.Size = Vector3.new(1.96, 1.28, 1.54)
+            zoneLeftDisplay.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 3.3, -1.52, 4.35)
+            zoneRightDisplay.Size = Vector3.new(1.96, 1.28, 1.54)
+            zoneRightDisplay.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 3.3, -1.52, 4.35)
+            zonePrimaryProp.Size = Vector3.new(1.0, 0.56, 0.76)
+            zonePrimaryProp.CFrame = zoneCounterTop.CFrame * CFrame.new(-0.72, 0.38, -0.18)
+            zoneSecondaryProp.Size = Vector3.new(0.38, 0.96, 0.38)
+            zoneSecondaryProp.CFrame = zoneCounterTop.CFrame * CFrame.new(0.86, 0.54, 0.02)
         else
             centerBoard.Size = Vector3.new(frameDepth + 0.08, 3.6, 4.9)
             centerBoard.CFrame = anchorPart.CFrame * CFrame.new(4.45, 0.38, 0)
@@ -2345,11 +2443,29 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             leftPlanterTop.CFrame = leftPlanter.CFrame * CFrame.new(0, 0.52, 0)
             rightPlanterTop.Size = Vector3.new(1.42, 0.32, 1.74)
             rightPlanterTop.CFrame = rightPlanter.CFrame * CFrame.new(0, 0.52, 0)
+            zoneCounter.Size = Vector3.new(2.2, 1.36, 5.4)
+            zoneCounter.CFrame = anchorPart.CFrame * CFrame.new(4.18, -1.52, 0)
+            zoneCounterTop.Size = Vector3.new(2.34, 0.18, 5.8)
+            zoneCounterTop.CFrame = zoneCounter.CFrame * CFrame.new(0, 0.77, 0)
+            zoneLeftDisplay.Size = Vector3.new(1.54, 1.28, 1.96)
+            zoneLeftDisplay.CFrame = anchorPart.CFrame * CFrame.new(4.35, -1.52, -sideOffset - 3.3)
+            zoneRightDisplay.Size = Vector3.new(1.54, 1.28, 1.96)
+            zoneRightDisplay.CFrame = anchorPart.CFrame * CFrame.new(4.35, -1.52, sideOffset + 3.3)
+            zonePrimaryProp.Size = Vector3.new(0.76, 0.56, 1.0)
+            zonePrimaryProp.CFrame = zoneCounterTop.CFrame * CFrame.new(-0.18, 0.38, -0.72)
+            zoneSecondaryProp.Size = Vector3.new(0.38, 0.96, 0.38)
+            zoneSecondaryProp.CFrame = zoneCounterTop.CFrame * CFrame.new(0.02, 0.54, 0.86)
         end
 
         clearLegacyBoardGui(centerBoard)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, kioskCopy.title, kioskCopy.subtitle, style.color)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, kioskCopy.title, kioskCopy.subtitle, style.color)
+        ensureGuideBoardSurface(zoneCounter, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, secondaryCopy.centerTitle, secondaryCopy.centerSubtitle, style.color)
+        ensureGuideBoardSurface(zoneCounter, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, secondaryCopy.centerTitle, secondaryCopy.centerSubtitle, style.color)
+        ensureGuideBoardSurface(zoneLeftDisplay, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, secondaryCopy.leftTitle, secondaryCopy.leftSubtitle, style.color)
+        ensureGuideBoardSurface(zoneLeftDisplay, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, secondaryCopy.leftTitle, secondaryCopy.leftSubtitle, style.color)
+        ensureGuideBoardSurface(zoneRightDisplay, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, secondaryCopy.rightTitle, secondaryCopy.rightSubtitle, style.color)
+        ensureGuideBoardSurface(zoneRightDisplay, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, secondaryCopy.rightTitle, secondaryCopy.rightSubtitle, style.color)
 
         if contractBoard then
             contractBoard:Destroy()
@@ -2483,6 +2599,24 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         end
         if rightPlanterTop then
             rightPlanterTop:Destroy()
+        end
+        if zoneCounter then
+            zoneCounter:Destroy()
+        end
+        if zoneCounterTop then
+            zoneCounterTop:Destroy()
+        end
+        if zoneLeftDisplay then
+            zoneLeftDisplay:Destroy()
+        end
+        if zoneRightDisplay then
+            zoneRightDisplay:Destroy()
+        end
+        if zonePrimaryProp then
+            zonePrimaryProp:Destroy()
+        end
+        if zoneSecondaryProp then
+            zoneSecondaryProp:Destroy()
         end
     end
 
