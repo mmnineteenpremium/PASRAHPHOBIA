@@ -10688,3 +10688,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - lobby sekarang lebih cocok diperlakukan sebagai hub Roblox standar, bukan plaza raksasa
 - perubahan ini mempermudah visual QA manusia karena jarak antar bangunan/zona menjadi lebih padat dan lebih mudah dibaca
+
+## 2026-04-05 - LobbySocialHub Scale Compression Reverted
+
+### Scope
+
+- membatalkan compression `0.5x` pada `LobbySocialHub` karena skala ruang membuat player terasa terlalu besar terhadap atap/interior
+
+### Source Changes
+
+- `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json`
+  - dikembalikan ke geometri semula
+- `src/shared/GameData/Maps/LobbySocialHub.lua`
+  - `mapDimensions.width: 210 -> 420`
+  - `mapDimensions.depth: 210 -> 420`
+  - `pathWidth: 6 -> 12`
+
+### Runtime Notes
+
+- bounding box lobby aktif di Studio kembali ke:
+  - `422 x 40.5 x 422`
+- patch runtime Studio mendeteksi lobby sudah kembali normal, sehingga tidak perlu scale ulang tambahan
+
+### Interpretation
+
+- compression setengah skala dinyatakan tidak layak untuk lobby ini
+- perubahan ukuran berikutnya harus memakai pass desain/layout yang lebih terarah, bukan sekadar kompres global seluruh geometri
