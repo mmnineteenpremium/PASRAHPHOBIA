@@ -80,6 +80,13 @@ local LOBBY_ZONE_ENTRY_GUIDE_TOOL_BOX_NAME = "ToolDisplayBox"
 local LOBBY_ZONE_ENTRY_GUIDE_DESK_MAP_PLATE_NAME = "DeskMapPlate"
 local LOBBY_ZONE_ENTRY_GUIDE_DESK_MODE_PLATE_NAME = "DeskModePlate"
 local LOBBY_ZONE_ENTRY_GUIDE_DESK_START_PLATE_NAME = "DeskStartPlate"
+local LOBBY_ZONE_ENTRY_GUIDE_FORECOURT_PAD_NAME = "ForecourtPad"
+local LOBBY_ZONE_ENTRY_GUIDE_LEFT_BENCH_NAME = "LeftBench"
+local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_BENCH_NAME = "RightBench"
+local LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_NAME = "LeftPlanter"
+local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_NAME = "RightPlanter"
+local LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_TOP_NAME = "LeftPlanterTop"
+local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_TOP_NAME = "RightPlanterTop"
 local LOBBY_MAINHUB_DECOR_FOLDER_NAME = "MainHubDecorRuntime"
 local LOBBY_MAINHUB_DIRECTORY_PAD_NAME = "DirectoryPad"
 local LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME = "DirectoryPillar"
@@ -94,6 +101,18 @@ local LOBBY_MAINHUB_NODE_EAST_NAME = "NodeEast"
 local LOBBY_MAINHUB_NODE_WEST_NAME = "NodeWest"
 local LOBBY_MAINHUB_NODE_SOUTH_NAME = "NodeSouth"
 local LOBBY_MAINHUB_NODE_FLEX_NAME = "NodeFlex"
+local LOBBY_MAINHUB_PLANTER_NW_NAME = "HubPlanterNorthWest"
+local LOBBY_MAINHUB_PLANTER_NE_NAME = "HubPlanterNorthEast"
+local LOBBY_MAINHUB_PLANTER_SW_NAME = "HubPlanterSouthWest"
+local LOBBY_MAINHUB_PLANTER_SE_NAME = "HubPlanterSouthEast"
+local LOBBY_MAINHUB_PLANTER_NW_TOP_NAME = "HubPlanterNorthWestTop"
+local LOBBY_MAINHUB_PLANTER_NE_TOP_NAME = "HubPlanterNorthEastTop"
+local LOBBY_MAINHUB_PLANTER_SW_TOP_NAME = "HubPlanterSouthWestTop"
+local LOBBY_MAINHUB_PLANTER_SE_TOP_NAME = "HubPlanterSouthEastTop"
+local LOBBY_MAINHUB_WALL_NW_NAME = "HubWallNorthWest"
+local LOBBY_MAINHUB_WALL_NE_NAME = "HubWallNorthEast"
+local LOBBY_MAINHUB_WALL_SW_NAME = "HubWallSouthWest"
+local LOBBY_MAINHUB_WALL_SE_NAME = "HubWallSouthEast"
 local LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME = "EntrySignPanel"
 local LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME = "FacadeCanopy"
 local LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME = "FacadeApron"
@@ -874,6 +893,36 @@ local function applyMainHubVisualPatch()
         ensureGuideBoardSurface(panel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, title, subtitle, color)
     end
 
+    local function applyHubPlanter(name, topName, position)
+        local planter = ensureDecorPart(name)
+        local top = ensureDecorPart(topName)
+        applyPartProps(planter, {
+            size = Vector3.new(4.2, 1.18, 2.9),
+            cframe = CFrame.new(position + Vector3.new(0, 0.59, 0)),
+            color = Color3.fromRGB(30, 42, 58),
+            material = Enum.Material.Slate,
+            transparency = 0.02,
+        })
+        applyPartProps(top, {
+            size = Vector3.new(3.4, 0.38, 2.1),
+            cframe = CFrame.new(position + Vector3.new(0, 1.17, 0)),
+            color = Color3.fromRGB(98, 138, 102),
+            material = Enum.Material.Grass,
+            transparency = 0.04,
+        })
+    end
+
+    local function applyHubWall(name, position, size, lookTarget)
+        local wall = ensureDecorPart(name)
+        applyPartProps(wall, {
+            size = size,
+            cframe = CFrame.lookAt(position, lookTarget),
+            color = Color3.fromRGB(28, 40, 56),
+            material = Enum.Material.Slate,
+            transparency = 0.04,
+        })
+    end
+
     local hubCenter = Vector3.new(1600, 0.18, -44)
     local northNodePos = Vector3.new(1600, 0.2, -92)
     local eastNodePos = Vector3.new(1658, 0.2, -44)
@@ -883,7 +932,7 @@ local function applyMainHubVisualPatch()
 
     local pad = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PAD_NAME)
     applyPartProps(pad, {
-        size = Vector3.new(18, 0.18, 18),
+        size = Vector3.new(24, 0.18, 24),
         cframe = CFrame.new(hubCenter),
         color = Color3.fromRGB(18, 28, 42),
         material = Enum.Material.Slate,
@@ -892,7 +941,7 @@ local function applyMainHubVisualPatch()
 
     local pillar = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME)
     applyPartProps(pillar, {
-        size = Vector3.new(2.2, 6.4, 2.2),
+        size = Vector3.new(2.6, 6.8, 2.6),
         cframe = CFrame.new(hubCenter + Vector3.new(0, 3.3, 0)),
         color = Color3.fromRGB(26, 38, 54),
         material = Enum.Material.Metal,
@@ -901,8 +950,8 @@ local function applyMainHubVisualPatch()
 
     local directoryPanel = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PANEL_NAME)
     applyPartProps(directoryPanel, {
-        size = Vector3.new(12.4, 5.0, 0.35),
-        cframe = CFrame.new(hubCenter + Vector3.new(0, 4.95, 1.6)),
+        size = Vector3.new(15.8, 5.8, 0.35),
+        cframe = CFrame.new(hubCenter + Vector3.new(0, 5.1, 2.3)),
         color = Color3.fromRGB(12, 20, 32),
         material = Enum.Material.SmoothPlastic,
         transparency = 0.02,
@@ -923,6 +972,16 @@ local function applyMainHubVisualPatch()
         "PLAY • NORTH\nSHOP • EAST • PARTY • WEST\nGARDEN • SOUTH • FLEX • SE",
         Color3.fromRGB(150, 196, 255)
     )
+
+    applyHubPlanter(LOBBY_MAINHUB_PLANTER_NW_NAME, LOBBY_MAINHUB_PLANTER_NW_TOP_NAME, hubCenter + Vector3.new(-9.2, 0, -8.6))
+    applyHubPlanter(LOBBY_MAINHUB_PLANTER_NE_NAME, LOBBY_MAINHUB_PLANTER_NE_TOP_NAME, hubCenter + Vector3.new(9.2, 0, -8.6))
+    applyHubPlanter(LOBBY_MAINHUB_PLANTER_SW_NAME, LOBBY_MAINHUB_PLANTER_SW_TOP_NAME, hubCenter + Vector3.new(-9.2, 0, 8.6))
+    applyHubPlanter(LOBBY_MAINHUB_PLANTER_SE_NAME, LOBBY_MAINHUB_PLANTER_SE_TOP_NAME, hubCenter + Vector3.new(9.2, 0, 8.6))
+
+    applyHubWall(LOBBY_MAINHUB_WALL_NW_NAME, hubCenter + Vector3.new(-4.6, 0.72, -7.8), Vector3.new(6.2, 1.44, 0.52), hubCenter + Vector3.new(-10.2, 0.72, -2.6))
+    applyHubWall(LOBBY_MAINHUB_WALL_NE_NAME, hubCenter + Vector3.new(4.6, 0.72, -7.8), Vector3.new(6.2, 1.44, 0.52), hubCenter + Vector3.new(10.2, 0.72, -2.6))
+    applyHubWall(LOBBY_MAINHUB_WALL_SW_NAME, hubCenter + Vector3.new(-4.6, 0.72, 7.8), Vector3.new(6.2, 1.44, 0.52), hubCenter + Vector3.new(-10.2, 0.72, 2.6))
+    applyHubWall(LOBBY_MAINHUB_WALL_SE_NAME, hubCenter + Vector3.new(4.6, 0.72, 7.8), Vector3.new(6.2, 1.44, 0.52), hubCenter + Vector3.new(10.2, 0.72, 2.6))
 
     applyRoutePart(LOBBY_MAINHUB_ROUTE_NORTH_NAME, hubCenter, northNodePos, LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
     applyRoutePart(LOBBY_MAINHUB_ROUTE_EAST_NAME, hubCenter, eastNodePos, LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
@@ -1863,6 +1922,13 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local facadeApron = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
     local facadeWingLeft = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
     local facadeWingRight = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME)
+    local forecourtPad = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_FORECOURT_PAD_NAME)
+    local leftBench = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_BENCH_NAME)
+    local rightBench = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_BENCH_NAME)
+    local leftPlanter = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_NAME)
+    local rightPlanter = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_NAME)
+    local leftPlanterTop = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_TOP_NAME)
+    local rightPlanterTop = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_TOP_NAME)
     local useFacadeSign = FACADE_SIGN_ZONE_FLAGS[zoneName] == true
 
     if useFacadeSign then
@@ -1944,6 +2010,13 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
         facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
         facadeWingRight = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME)
+        forecourtPad = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_FORECOURT_PAD_NAME)
+        leftBench = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_BENCH_NAME)
+        rightBench = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_BENCH_NAME)
+        leftPlanter = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_NAME)
+        rightPlanter = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_NAME)
+        leftPlanterTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_TOP_NAME)
+        rightPlanterTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_TOP_NAME)
         for _, board in ipairs({ contractBoard, toolsBoard, centerBoard }) do
             board.Color = Color3.fromRGB(18, 26, 38)
             board.Transparency = 0.08
@@ -2006,6 +2079,24 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         facadeApron.Material = Enum.Material.Slate
         facadeWingLeft.Material = Enum.Material.SmoothPlastic
         facadeWingRight.Material = Enum.Material.SmoothPlastic
+        forecourtPad.Color = Color3.fromRGB(20, 30, 44)
+        forecourtPad.Material = Enum.Material.Slate
+        forecourtPad.Transparency = 0.04
+        for _, benchPart in ipairs({ leftBench, rightBench }) do
+            benchPart.Color = Color3.fromRGB(42, 54, 72)
+            benchPart.Material = Enum.Material.Metal
+            benchPart.Transparency = 0.03
+        end
+        for _, planterPart in ipairs({ leftPlanter, rightPlanter }) do
+            planterPart.Color = Color3.fromRGB(32, 42, 58)
+            planterPart.Material = Enum.Material.Slate
+            planterPart.Transparency = 0.02
+        end
+        for _, planterTopPart in ipairs({ leftPlanterTop, rightPlanterTop }) do
+            planterTopPart.Color = Color3.fromRGB(96, 138, 102)
+            planterTopPart.Material = Enum.Material.Grass
+            planterTopPart.Transparency = 0.04
+        end
         if isWideOnX then
             contractBoard.Size = Vector3.new(4.4, 3.4, frameDepth + 0.06)
             contractBoard.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 5.2, -0.05, 0.3)
@@ -2069,6 +2160,20 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 1.7, 0, 1.55)
             facadeWingRight.Size = Vector3.new(1.25, anchorPart.Size.Y + 1.2, 3.2)
             facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 1.7, 0, 1.55)
+            forecourtPad.Size = Vector3.new(anchorPart.Size.X + 13.6, 0.16, 16)
+            forecourtPad.CFrame = anchorPart.CFrame * CFrame.new(0, (-anchorPart.Size.Y * 0.5) + 0.18, 8.45)
+            leftBench.Size = Vector3.new(4.4, 0.68, 1.42)
+            leftBench.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 6.2, -2.16, 8.15)
+            rightBench.Size = Vector3.new(4.4, 0.68, 1.42)
+            rightBench.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 6.2, -2.16, 8.15)
+            leftPlanter.Size = Vector3.new(2.6, 1.08, 2.2)
+            leftPlanter.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 2.5, -1.96, 10.1)
+            rightPlanter.Size = Vector3.new(2.6, 1.08, 2.2)
+            rightPlanter.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 2.5, -1.96, 10.1)
+            leftPlanterTop.Size = Vector3.new(2.02, 0.34, 1.62)
+            leftPlanterTop.CFrame = leftPlanter.CFrame * CFrame.new(0, 0.56, 0)
+            rightPlanterTop.Size = Vector3.new(2.02, 0.34, 1.62)
+            rightPlanterTop.CFrame = rightPlanter.CFrame * CFrame.new(0, 0.56, 0)
         else
             contractBoard.Size = Vector3.new(frameDepth + 0.06, 3.4, 4.4)
             contractBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.2, -sideOffset - 3.8)
@@ -2096,6 +2201,20 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(1.55, 0, -sideOffset - 1.7)
             facadeWingRight.Size = Vector3.new(3.2, anchorPart.Size.Y + 1.2, 1.25)
             facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(1.55, 0, sideOffset + 1.7)
+            forecourtPad.Size = Vector3.new(15.2, 0.16, anchorPart.Size.Z + 13.6)
+            forecourtPad.CFrame = anchorPart.CFrame * CFrame.new(8.25, (-anchorPart.Size.Y * 0.5) + 0.18, 0)
+            leftBench.Size = Vector3.new(1.42, 0.68, 4.4)
+            leftBench.CFrame = anchorPart.CFrame * CFrame.new(8.02, -2.16, -sideOffset - 6.2)
+            rightBench.Size = Vector3.new(1.42, 0.68, 4.4)
+            rightBench.CFrame = anchorPart.CFrame * CFrame.new(8.02, -2.16, sideOffset + 6.2)
+            leftPlanter.Size = Vector3.new(2.2, 1.08, 2.6)
+            leftPlanter.CFrame = anchorPart.CFrame * CFrame.new(9.95, -1.96, -sideOffset - 2.5)
+            rightPlanter.Size = Vector3.new(2.2, 1.08, 2.6)
+            rightPlanter.CFrame = anchorPart.CFrame * CFrame.new(9.95, -1.96, sideOffset + 2.5)
+            leftPlanterTop.Size = Vector3.new(1.62, 0.34, 2.02)
+            leftPlanterTop.CFrame = leftPlanter.CFrame * CFrame.new(0, 0.56, 0)
+            rightPlanterTop.Size = Vector3.new(1.62, 0.34, 2.02)
+            rightPlanterTop.CFrame = rightPlanter.CFrame * CFrame.new(0, 0.56, 0)
         end
         clearLegacyBoardGui(contractBoard)
         clearLegacyBoardGui(toolsBoard)
@@ -2124,6 +2243,13 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
         facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
         facadeWingRight = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME)
+        forecourtPad = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_FORECOURT_PAD_NAME)
+        leftBench = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_BENCH_NAME)
+        rightBench = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_BENCH_NAME)
+        leftPlanter = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_NAME)
+        rightPlanter = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_NAME)
+        leftPlanterTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_PLANTER_TOP_NAME)
+        rightPlanterTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_PLANTER_TOP_NAME)
 
         centerBoard.Color = Color3.fromRGB(18, 26, 38)
         centerBoard.Transparency = 0.08
@@ -2142,6 +2268,24 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         facadeApron.Material = Enum.Material.Slate
         facadeWingLeft.Material = Enum.Material.SmoothPlastic
         facadeWingRight.Material = Enum.Material.SmoothPlastic
+        forecourtPad.Color = Color3.fromRGB(20, 30, 44)
+        forecourtPad.Material = Enum.Material.Slate
+        forecourtPad.Transparency = 0.04
+        for _, benchPart in ipairs({ leftBench, rightBench }) do
+            benchPart.Color = Color3.fromRGB(42, 54, 72)
+            benchPart.Material = Enum.Material.Metal
+            benchPart.Transparency = 0.03
+        end
+        for _, planterPart in ipairs({ leftPlanter, rightPlanter }) do
+            planterPart.Color = Color3.fromRGB(32, 42, 58)
+            planterPart.Material = Enum.Material.Slate
+            planterPart.Transparency = 0.02
+        end
+        for _, planterTopPart in ipairs({ leftPlanterTop, rightPlanterTop }) do
+            planterTopPart.Color = style.color:Lerp(Color3.fromRGB(112, 176, 116), 0.65)
+            planterTopPart.Material = Enum.Material.Grass
+            planterTopPart.Transparency = 0.04
+        end
 
         if isWideOnX then
             centerBoard.Size = Vector3.new(4.8, 3.7, frameDepth + 0.08)
@@ -2158,6 +2302,20 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 1.2, 0, 1.28)
             facadeWingRight.Size = Vector3.new(1.05, anchorPart.Size.Y + 0.9, 2.5)
             facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 1.2, 0, 1.28)
+            forecourtPad.Size = Vector3.new(anchorPart.Size.X + 10.8, 0.16, 12.8)
+            forecourtPad.CFrame = anchorPart.CFrame * CFrame.new(0, (-anchorPart.Size.Y * 0.5) + 0.17, 6.1)
+            leftBench.Size = Vector3.new(3.8, 0.64, 1.28)
+            leftBench.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 4.4, -2.2, 6.05)
+            rightBench.Size = Vector3.new(3.8, 0.64, 1.28)
+            rightBench.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 4.4, -2.2, 6.05)
+            leftPlanter.Size = Vector3.new(2.28, 1.0, 1.96)
+            leftPlanter.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 1.9, -2.0, 7.6)
+            rightPlanter.Size = Vector3.new(2.28, 1.0, 1.96)
+            rightPlanter.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 1.9, -2.0, 7.6)
+            leftPlanterTop.Size = Vector3.new(1.74, 0.32, 1.42)
+            leftPlanterTop.CFrame = leftPlanter.CFrame * CFrame.new(0, 0.52, 0)
+            rightPlanterTop.Size = Vector3.new(1.74, 0.32, 1.42)
+            rightPlanterTop.CFrame = rightPlanter.CFrame * CFrame.new(0, 0.52, 0)
         else
             centerBoard.Size = Vector3.new(frameDepth + 0.08, 3.6, 4.9)
             centerBoard.CFrame = anchorPart.CFrame * CFrame.new(4.45, 0.38, 0)
@@ -2173,6 +2331,20 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(1.28, 0, -sideOffset - 1.2)
             facadeWingRight.Size = Vector3.new(2.5, anchorPart.Size.Y + 0.9, 1.05)
             facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(1.28, 0, sideOffset + 1.2)
+            forecourtPad.Size = Vector3.new(12.8, 0.16, anchorPart.Size.Z + 10.8)
+            forecourtPad.CFrame = anchorPart.CFrame * CFrame.new(6.15, (-anchorPart.Size.Y * 0.5) + 0.17, 0)
+            leftBench.Size = Vector3.new(1.28, 0.64, 3.8)
+            leftBench.CFrame = anchorPart.CFrame * CFrame.new(5.95, -2.2, -sideOffset - 4.4)
+            rightBench.Size = Vector3.new(1.28, 0.64, 3.8)
+            rightBench.CFrame = anchorPart.CFrame * CFrame.new(5.95, -2.2, sideOffset + 4.4)
+            leftPlanter.Size = Vector3.new(1.96, 1.0, 2.28)
+            leftPlanter.CFrame = anchorPart.CFrame * CFrame.new(7.55, -2.0, -sideOffset - 1.9)
+            rightPlanter.Size = Vector3.new(1.96, 1.0, 2.28)
+            rightPlanter.CFrame = anchorPart.CFrame * CFrame.new(7.55, -2.0, sideOffset + 1.9)
+            leftPlanterTop.Size = Vector3.new(1.42, 0.32, 1.74)
+            leftPlanterTop.CFrame = leftPlanter.CFrame * CFrame.new(0, 0.52, 0)
+            rightPlanterTop.Size = Vector3.new(1.42, 0.32, 1.74)
+            rightPlanterTop.CFrame = rightPlanter.CFrame * CFrame.new(0, 0.52, 0)
         end
 
         clearLegacyBoardGui(centerBoard)
@@ -2290,6 +2462,27 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         end
         if facadeWingRight then
             facadeWingRight:Destroy()
+        end
+        if forecourtPad then
+            forecourtPad:Destroy()
+        end
+        if leftBench then
+            leftBench:Destroy()
+        end
+        if rightBench then
+            rightBench:Destroy()
+        end
+        if leftPlanter then
+            leftPlanter:Destroy()
+        end
+        if rightPlanter then
+            rightPlanter:Destroy()
+        end
+        if leftPlanterTop then
+            leftPlanterTop:Destroy()
+        end
+        if rightPlanterTop then
+            rightPlanterTop:Destroy()
         end
     end
 
