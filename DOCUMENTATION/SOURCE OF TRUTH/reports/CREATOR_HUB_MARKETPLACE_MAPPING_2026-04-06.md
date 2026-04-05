@@ -66,6 +66,8 @@ royalpass_premium_track = {
 6. Jalankan ulang:
    - `GetShopReadiness`
    - `GetPublishReadiness`
+7. Opsional dari terminal lokal:
+   - `pwsh ./scripts/audit-marketplace-mapping.ps1`
 
 ## PASS Criteria
 
