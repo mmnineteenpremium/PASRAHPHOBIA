@@ -62,6 +62,16 @@ local INTERACTION_DOOR_OVERRIDES = {
 	},
 }
 local SAFE_ZONE_POSITION_OVERRIDES = {
+	hauntedhouse = {
+		SafeZone_1 = {
+			roomName = "Room_LivingRoom",
+			offset = Vector3.new(9.5, 3.5, -9),
+		},
+		SafeZone_2 = {
+			roomName = "Room_LivingRoom",
+			offset = Vector3.new(-6, 3.5, 7),
+		},
+	},
 	abandonedpalace = {
 		SafeZone_1 = Vector3.new(-63.2, 4, 32.4),
 	},
@@ -1035,7 +1045,25 @@ local function patchSafeZones(mapId, mapClone)
 	end
 
 	local patchedAny = false
-	for zoneName, targetPosition in pairs(overrides) do
+	for zoneName, overrideValue in pairs(overrides) do
+		local targetPosition = nil
+		if typeof(overrideValue) == "Vector3" then
+			targetPosition = overrideValue
+		elseif type(overrideValue) == "table" then
+			local roomName = type(overrideValue.roomName) == "string" and overrideValue.roomName or nil
+			local roomPart = roomName and roomsFolder and roomsFolder:FindFirstChild(roomName)
+			local offset = typeof(overrideValue.offset) == "Vector3" and overrideValue.offset or nil
+			if roomPart and roomPart:IsA("BasePart") and offset then
+				targetPosition = roomPart.Position + offset
+			elseif typeof(overrideValue.position) == "Vector3" then
+				targetPosition = overrideValue.position
+			end
+		end
+
+		if typeof(targetPosition) ~= "Vector3" then
+			continue
+		end
+
 		local zone = safeZonesFolder:FindFirstChild(zoneName)
 		if zone and zone:IsA("BasePart") then
 			if (zone.Position - targetPosition).Magnitude > 0.05 then

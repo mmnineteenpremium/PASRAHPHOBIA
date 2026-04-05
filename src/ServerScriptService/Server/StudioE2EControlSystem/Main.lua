@@ -1207,6 +1207,36 @@ function StudioE2EControlSystem:_handleHidingDebugSnapshot(player, request)
 	local safeZoneState = type(matchId) == "string" and safeZonesByMatchId[matchId] or nil
 	local zoneCount = type(safeZoneState) == "table" and type(safeZoneState.records) == "table" and #safeZoneState.records or 0
 	local hiddenCount = 0
+	local zoneSummary = {}
+	local safeZoneFolderPath = "nil"
+	local safeZoneFolderChildCount = 0
+	if type(safeZoneState) == "table" then
+		local folder = safeZoneState.folder
+		if typeof(folder) == "Instance" then
+			safeZoneFolderPath = folder:GetFullName()
+			safeZoneFolderChildCount = #folder:GetChildren()
+		end
+		if type(safeZoneState.records) == "table" then
+			for index, record in ipairs(safeZoneState.records) do
+				if index > 4 then
+					break
+				end
+				local part = type(record) == "table" and record.part or nil
+				local position = typeof(part) == "Instance" and part:IsA("BasePart") and part.Position or nil
+				local parentPath = typeof(part) == "Instance" and part.Parent and part.Parent:GetFullName() or "nil"
+				table.insert(
+					zoneSummary,
+					string.format(
+						"%s@%s parent=%s alive=%s",
+						tostring(type(record) == "table" and record.id or ("zone_" .. tostring(index))),
+						position and string.format("%.1f,%.1f,%.1f", position.X, position.Y, position.Z) or "nil",
+						parentPath,
+						tostring(typeof(part) == "Instance" and part.Parent ~= nil)
+					)
+				)
+			end
+		end
+	end
 	for _ in pairs(hiddenPlayers) do
 		hiddenCount += 1
 	end
@@ -1217,16 +1247,22 @@ function StudioE2EControlSystem:_handleHidingDebugSnapshot(player, request)
 		player:SetAttribute("PasrahStudioE2EHidingStateMatchId", tostring(type(state.Get) == "function" and state:Get("activeMatchId") or ""))
 		player:SetAttribute("PasrahStudioE2EHidingZoneCount", zoneCount)
 		player:SetAttribute("PasrahStudioE2EHidingHiddenCount", hiddenCount)
+		player:SetAttribute("PasrahStudioE2EHidingZoneSummary", table.concat(zoneSummary, " | "))
+		player:SetAttribute("PasrahStudioE2EHidingZoneFolder", safeZoneFolderPath)
+		player:SetAttribute("PasrahStudioE2EHidingZoneFolderChildCount", safeZoneFolderChildCount)
 	end
 
 	return true, string.format(
-		"running=%s activeMatchId=%s matchId=%s zoneCount=%d hiddenCount=%d eventBus=%s",
+		"running=%s activeMatchId=%s matchId=%s zoneCount=%d hiddenCount=%d folderChildren=%d eventBus=%s zones=%s",
 		tostring(service._running == true),
 		tostring(type(state.Get) == "function" and state:Get("activeMatchId") or nil),
 		tostring(matchId),
 		zoneCount,
 		hiddenCount,
+		safeZoneFolderChildCount,
 		tostring(service._eventBus ~= nil)
+		,
+		#zoneSummary > 0 and table.concat(zoneSummary, " || ") or "none"
 	)
 end
 
