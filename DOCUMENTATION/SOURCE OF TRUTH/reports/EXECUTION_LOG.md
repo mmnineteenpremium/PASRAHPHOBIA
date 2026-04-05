@@ -9531,3 +9531,54 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - jalur source untuk affordance refuge sudah siap
 - validasi visual live marker perlu sesi Studio server yang sudah sinkron/reconnect, tetapi ini bukan blocker untuk melanjutkan source slice phase 18
+
+## 2026-04-05 - Traversal Guide Runtime Pass
+
+### Scope
+
+- memperkuat akses lantai dua pada map bertangga
+- menambah affordance visual pada `CentralStaircase`
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+  - `patchSecondFloor()` kini mencoba carve semua segmen `Floor_2_*` yang overlap dengan bounds tangga, bukan hanya `Floor_2_North`
+  - tambah `patchTraversalGuides()` untuk menaruh `Highlight` + `BillboardGui` pada `CentralStaircase`
+  - guide text:
+    - `AKSES LANTAI 2`
+    - `Naik lewat tangga pusat`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_traversal_guides_build.rbxlx`
+- validasi asset/static:
+  - `HauntedHouse`, `EmptyBuilding`, dan `StudioMMNineteen` semua punya:
+    - `CentralStaircase`
+    - `StairStep_1..6`
+    - `Floor_2_North/South/West/East`
+- sesi Studio aktif saat slice ini belum memberi ack harness server, jadi validasi live traversal guide tetap pending
+
+### Interpretation
+
+- akses lantai dua sekarang lebih robust di jalur source
+- pemain juga akan punya anchor visual yang lebih jelas untuk menemukan tangga pusat saat restruktur map masih bertahap
+
+## 2026-04-05 - Camera Log Noise Guard
+
+### Scope
+
+- menurunkan spam log kamera yang mengotori console dan QA snapshot
+
+### Source Changes
+
+- `src/client/CameraController.client.lua`
+  - tambah `logCameraMode()` agar log `FPV LOCKED` / `TPV ALLOWED` hanya keluar saat mode benar-benar berubah
+
+### Validation Notes
+
+- perubahan ini source-safe dan tidak mengubah perilaku kamera, hanya menahan log duplikat
+
+### Interpretation
+
+- console Studio dan snapshot QA berikutnya jadi lebih bersih untuk observasi bug nyata

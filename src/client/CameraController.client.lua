@@ -93,6 +93,7 @@ local fpvCursorUnlocked = false
 local fpvCursorToggleGui = nil
 local fpvCursorToggleButton = nil
 local fpvFlashlightVisualAlpha = 0
+local lastLoggedCameraMode = nil
 local setCursorUnlocked
 
 local function lerpNumber(a, b, alpha)
@@ -704,6 +705,14 @@ end
 
 camera = resolveCamera()
 
+local function logCameraMode(modeLabel, message)
+	if lastLoggedCameraMode == modeLabel then
+		return
+	end
+	lastLoggedCameraMode = modeLabel
+	print(message)
+end
+
 local function setFpvLocked(enabled)
 	FPV_LOCKED = enabled == true
 	if FPV_LOCKED then
@@ -726,7 +735,7 @@ local function setFpvLocked(enabled)
 		_fpvJustActivated = true
 		lastArmCamCF = nil
 		applyFpvMouseMode()
-		print("[CameraController] FPV LOCKED (Match)")
+		logCameraMode("FPV", "[CameraController] FPV LOCKED (Match)")
 	else
 		fpvCursorUnlocked = false
 		player.CameraMode = Enum.CameraMode.Classic
@@ -734,7 +743,7 @@ local function setFpvLocked(enabled)
 		lastArmCamCF = nil
 		clearFpvArms()
 		applyFpvMouseMode()
-		print("[CameraController] TPV ALLOWED (Lobby)")
+		logCameraMode("TPV", "[CameraController] TPV ALLOWED (Lobby)")
 	end
 end
 
