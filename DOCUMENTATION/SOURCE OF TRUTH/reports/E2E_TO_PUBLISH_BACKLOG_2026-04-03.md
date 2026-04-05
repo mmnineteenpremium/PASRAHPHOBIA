@@ -2121,6 +2121,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (match navigation readability baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 22:12 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi affordance semantik:
+  - subtitle beacon pintu dan interaction guide sekarang dibedakan menurut fungsi area, bukan lagi satu copy generik untuk semua ruang.
+  - closet/refuge, transisi vertikal, dan area investigasi sekarang punya copy yang lebih jujur.
+- validasi:
+  - build source sukses:
+    - `_tmp_semantic_route_guides_build.rbxlx`
+- status:
+  - **SELESAI (semantic route guide baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

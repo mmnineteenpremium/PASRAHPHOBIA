@@ -9893,3 +9893,35 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - phase non-hunt sekarang lebih informatif terhadap struktur map aktif; panel match tidak lagi sepenuhnya generik saat pemain sedang orientasi area
+
+## 2026-04-05 - Semantic Route Guide Pass
+
+### Scope
+
+- membuat subtitle guide pintu dan interaction point lebih semantik agar affordance ruang tidak terasa seragam
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua`
+  - subtitle beacon pintu sekarang dibedakan menurut konteks:
+    - `Refuge route`
+    - `Akses vertikal`
+    - `Sweep evidence`
+    - `Area investigasi`
+    - fallback `Akses ruang`
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+  - subtitle `InteractionGuideRuntime` sekarang juga semantik:
+    - `Refuge route`
+    - `Transisi vertikal`
+    - `Sweep evidence`
+    - `Area investigasi`
+    - fallback `Anchor ruang`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_semantic_route_guides_build.rbxlx`
+
+### Interpretation
+
+- world guide sekarang terasa lebih informatif dan kurang placeholder; pemain mendapat petunjuk fungsi area, bukan hanya nama ruang

@@ -78,6 +78,23 @@ local function resolveDoorLabel(part)
 	return "Pintu " .. label
 end
 
+local function resolveDoorGuideSubtitle(doorLabel)
+	local token = tostring(doorLabel or ""):lower()
+	if token:find("closet", 1, true) or token:find("locker", 1, true) then
+		return "Refuge route"
+	end
+	if token:find("basement", 1, true) or token:find("attic", 1, true) or token:find("stair", 1, true) then
+		return "Akses vertikal"
+	end
+	if token:find("bathroom", 1, true) or token:find("bedroom", 1, true) then
+		return "Sweep evidence"
+	end
+	if token:find("kitchen", 1, true) or token:find("living", 1, true) or token:find("dining", 1, true) then
+		return "Area investigasi"
+	end
+	return "Akses ruang"
+end
+
 local function ensureDoorRouteGuide(doorRecord)
 	local part = type(doorRecord) == "table" and doorRecord.part or nil
 	if not (part and part:IsA("BasePart") and part.Parent ~= nil) then
@@ -183,7 +200,7 @@ local function ensureDoorRouteGuide(doorRecord)
 			Enum.Font.GothamMedium,
 			10,
 			Color3.fromRGB(178, 204, 228),
-			"Akses ruang",
+			resolveDoorGuideSubtitle(doorRecord.label),
 			14,
 			UDim2.new(0, 20, 0, 20)
 		).Parent = panel
@@ -217,7 +234,7 @@ local function updateDoorRouteGuide(doorRecord, isOpen, isLocked)
 			subtitle.Text = "Terbuka"
 			subtitle.TextColor3 = Color3.fromRGB(170, 218, 190)
 		else
-			subtitle.Text = "Akses ruang"
+			subtitle.Text = resolveDoorGuideSubtitle(doorRecord.label)
 			subtitle.TextColor3 = Color3.fromRGB(178, 204, 228)
 		end
 	end
