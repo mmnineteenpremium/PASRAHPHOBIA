@@ -14,6 +14,12 @@ local SPAWN_OFFSETS = {
     Vector3.new(-10, 0, 10),
     Vector3.new(10, 0, 10),
 }
+local LOBBY_VISUAL_SPAWN_OFFSETS = {
+    Vector3.new(-8, 0, 18),
+    Vector3.new(8, 0, 18),
+    Vector3.new(-8, 0, 30),
+    Vector3.new(8, 0, 30),
+}
 
 local function resolvePlayersService(deps)
     local players = deps.Players
@@ -147,6 +153,16 @@ local function resolveLobbyLookTarget(lobbyRoot)
         return nil
     end
 
+    local matchmakingDoor = lobbyRoot:FindFirstChild("Door_NorthEvidenceBuilding", true)
+    if matchmakingDoor and matchmakingDoor:IsA("BasePart") then
+        return matchmakingDoor.Position
+    end
+
+    local matchmakingInteract = lobbyRoot:FindFirstChild("Interact_NorthEvidenceBuilding", true)
+    if matchmakingInteract and matchmakingInteract:IsA("BasePart") then
+        return matchmakingInteract.Position
+    end
+
     local mainHubRoom = lobbyRoot:FindFirstChild("Room_MainHubPlaza", true)
     if mainHubRoom and mainHubRoom:IsA("BasePart") then
         return mainHubRoom.Position
@@ -158,6 +174,22 @@ local function resolveLobbyLookTarget(lobbyRoot)
     end
 
     return resolveLobbyReferencePosition(lobbyRoot)
+end
+
+local function resolveLobbyVisualSpawnPosition(lobbyRoot, spawnPart)
+    if not (lobbyRoot and spawnPart and spawnPart:IsA("BasePart")) then
+        return nil
+    end
+
+    local matchmakingDoor = lobbyRoot:FindFirstChild("Door_NorthEvidenceBuilding", true)
+    if not (matchmakingDoor and matchmakingDoor:IsA("BasePart")) then
+        return nil
+    end
+
+    local spawnIndex = tonumber(string.match(spawnPart.Name, "PlayerSpawn_(%d+)")) or 1
+    local offset = LOBBY_VISUAL_SPAWN_OFFSETS[((spawnIndex - 1) % #LOBBY_VISUAL_SPAWN_OFFSETS) + 1]
+    local targetXZ = matchmakingDoor.Position + Vector3.new(offset.X, 0, offset.Z)
+    return Vector3.new(targetXZ.X, spawnPart.Position.Y, targetXZ.Z)
 end
 
 local function raycastSpawnY(lobbyRoot, targetXZ, fallbackY)
@@ -421,7 +453,26 @@ function LobbyPlayerManager:_spawnPlayer(player, character)
     root.AssemblyLinearVelocity = Vector3.zero
     root.AssemblyAngularVelocity = Vector3.zero
     local lobbyRoot = resolveLobbyRoot()
-    local spawnCFrame = buildUprightPartCFrame(spawnPart, LOBBY_SPAWN_OFFSET, resolveLobbyLookTarget(lobbyRoot))
+    local lookTarget = resolveLobbyLookTarget(lobbyRoot)
+    local visualSpawnPosition = resolveLobbyVisualSpawnPosition(lobbyRoot, spawnPart)
+    local spawnCFrame = nil
+    if typeof(visualSpawnPosition) == "Vector3" then
+        local position = visualSpawnPosition + LOBBY_SPAWN_OFFSET
+        local flatLook = typeof(lookTarget) == "Vector3"
+            and Vector3.new(lookTarget.X - position.X, 0, lookTarget.Z - position.Z)
+            or Vector3.zero
+        if flatLook.Magnitude <= 1e-4 then
+            flatLook = Vector3.new(spawnPart.CFrame.LookVector.X, 0, spawnPart.CFrame.LookVector.Z)
+        end
+        if flatLook.Magnitude <= 1e-4 then
+            flatLook = Vector3.new(0, 0, -1)
+        else
+            flatLook = flatLook.Unit
+        end
+        spawnCFrame = CFrame.new(position, position + flatLook)
+    else
+        spawnCFrame = buildUprightPartCFrame(spawnPart, LOBBY_SPAWN_OFFSET, lookTarget)
+    end
     root.CFrame = spawnCFrame or (spawnPart.CFrame + LOBBY_SPAWN_OFFSET)
     applyLobbySpawnState(player)
     print(string.format("[LobbyPlayerManager] Spawned %s at %s", player.Name, tostring(spawnPart.Position)))
