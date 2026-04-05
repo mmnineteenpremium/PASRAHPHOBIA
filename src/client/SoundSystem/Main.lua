@@ -209,6 +209,8 @@ local function resolveFolderTemplate(root, folderName, templateName)
 	return nil
 end
 
+local resolveFootstepTemplate
+
 local function resolveGhostTemplate(root, payload)
 	local cueToken = normalizeCue((payload and payload.cue) or payload)
 	if string.find(cueToken, "footstep", 1, true) then
@@ -247,7 +249,7 @@ local function resolveJumpscareTemplate(root, payload)
 	return resolveFolderTemplate(root, "Ghost", "HuntStart_01")
 end
 
-local function resolveFootstepTemplate(root, payload)
+resolveFootstepTemplate = function(root, payload)
 	local cueToken = normalizeCue(
 		(payload and payload.surfaceMaterial)
 			or (payload and payload.material)
