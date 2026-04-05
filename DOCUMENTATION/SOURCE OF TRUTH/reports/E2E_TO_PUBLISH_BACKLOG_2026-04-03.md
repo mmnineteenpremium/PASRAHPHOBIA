@@ -2035,6 +2035,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (lobby zone reality alignment)**.
   - **NEXT** tetap lanjut restruktur visual/runtime yang masih terlalu basic.
 
+## Update 2026-04-05 21:12 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` naik lagi di sisi konsistensi orientasi ruang:
+  - guide ruang sekarang dipasang untuk interaction point existing maupun synthetic.
+  - semua interaction point room-aware sekarang punya `InteractionGuideLabel`.
+- validasi:
+  - build source sukses:
+    - `_tmp_room_guides_consistent_build.rbxlx`
+- status:
+  - **SELESAI (room guide consistency baseline)**.
+  - **NEXT** tetap lanjut restruktur visual/runtime yang masih terlalu basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

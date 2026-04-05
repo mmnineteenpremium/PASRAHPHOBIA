@@ -9669,6 +9669,27 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - ruang yang sebelumnya “hidup di data tapi mati secara visual” sekarang punya jalur affordance runtime yang lebih jelas
 
+## 2026-04-05 - Room Guide Consistency Pass
+
+### Scope
+
+- menyamakan label ruang pada interaction point existing dan synthetic
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+  - `InteractionGuideRuntime` kini dipasang juga pada interaction point yang memang sudah ada, bukan hanya synthetic
+  - semua interaction point terkait room sekarang menyimpan `InteractionGuideLabel`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_room_guides_consistent_build.rbxlx`
+
+### Interpretation
+
+- orientasi ruang sekarang lebih konsisten; pemain tidak lagi hanya mendapat label pada area yang “kebetulan sintetis”
+
 ## 2026-04-05 - Lobby Zone Reality Alignment
 
 ### Scope

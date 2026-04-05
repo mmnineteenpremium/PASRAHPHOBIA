@@ -693,6 +693,7 @@ local function patchInteractionPoints(mapId, mapClone)
 	end
 
 	local movedAny = false
+	local guidedAny = false
 	local existingInteractionsByToken = {}
 	for _, interactionPoint in ipairs(interactionPointsFolder:GetChildren()) do
 		if interactionPoint:IsA("BasePart") then
@@ -702,6 +703,7 @@ local function patchInteractionPoints(mapId, mapClone)
 			end
 			local room = token and roomsByToken[token] or nil
 			if room then
+				local roomLabel = titleCaseToken(room.Name:gsub("^Room_", ""))
 				local targetPosition = room.Position + Vector3.new(0, INTERACTION_HEIGHT_OFFSET, 0)
 				local doorOverride = interactionDoorOverrides and interactionDoorOverrides[interactionPoint.Name]
 				if type(doorOverride) == "table" and doorsFolder then
@@ -721,6 +723,9 @@ local function patchInteractionPoints(mapId, mapClone)
 				if typeof(explicitOverride) == "Vector3" then
 					targetPosition = explicitOverride
 				end
+				interactionPoint:SetAttribute("InteractionGuideLabel", roomLabel)
+				ensureInteractionGuide(interactionPoint, roomLabel)
+				guidedAny = true
 				if (interactionPoint.Position - targetPosition).Magnitude > 0.5 then
 					interactionPoint.CFrame = CFrame.new(targetPosition)
 					movedAny = true
@@ -732,6 +737,7 @@ local function patchInteractionPoints(mapId, mapClone)
 	for token, room in pairs(roomsByToken) do
 		if existingInteractionsByToken[token] == nil then
 			local interactionName = "Interact_" .. tostring(room.Name:gsub("^Room_", ""))
+			local roomLabel = titleCaseToken(room.Name:gsub("^Room_", ""))
 			local targetPosition = room.Position + Vector3.new(0, INTERACTION_HEIGHT_OFFSET, 0)
 			if doorsFolder then
 				local exactDoor = doorsFolder:FindFirstChild("Door_" .. room.Name:gsub("^Room_", ""))
@@ -743,17 +749,18 @@ local function patchInteractionPoints(mapId, mapClone)
 			local syntheticPoint = ensureInteractionPointPart(interactionPointsFolder, interactionName, targetPosition)
 			if syntheticPoint then
 				syntheticPoint:SetAttribute("SyntheticInteractionPoint", true)
-				syntheticPoint:SetAttribute("InteractionGuideLabel", titleCaseToken(room.Name:gsub("^Room_", "")))
-				ensureInteractionGuide(syntheticPoint, titleCaseToken(room.Name:gsub("^Room_", "")))
+				syntheticPoint:SetAttribute("InteractionGuideLabel", roomLabel)
+				ensureInteractionGuide(syntheticPoint, roomLabel)
 				movedAny = true
+				guidedAny = true
 			end
 		end
 	end
 
-	if movedAny then
+	if movedAny or guidedAny then
 		mapClone:SetAttribute(INTERACTION_PATCH_ATTR, true)
 	end
-	return movedAny
+	return movedAny or guidedAny
 end
 
 local function ensureDoorPathModifier(part)
