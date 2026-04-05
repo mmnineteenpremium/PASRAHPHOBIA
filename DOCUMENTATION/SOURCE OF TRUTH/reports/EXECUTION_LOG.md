@@ -10583,3 +10583,20 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - state saat ini konsisten dengan report:
   - 6 currency pack aman masih menunggu ID resmi
   - 4 offer yang harus ditahan masih tetap disabled
+
+## 2026-04-06 - Manual Result Templates
+
+### Scope
+
+- membuat template hasil untuk dua lane manual terakhir: multiplayer dan persistence
+
+### Source Changes
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/QA_MULTIPLAYER_RESULT_TEMPLATE_2026-04-06.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/PERSISTENCE_RESULT_TEMPLATE_2026-04-06.md`
+- checklist dan entrypoint report diperbarui agar langsung menunjuk ke template hasil
+
+### Interpretation
+
+- lane manual terakhir sekarang bukan hanya punya checklist, tetapi juga wadah hasil run yang konsisten
+- ini mengurangi risiko test manual selesai tetapi tidak terdokumentasi untuk keputusan `GO / NO-GO`

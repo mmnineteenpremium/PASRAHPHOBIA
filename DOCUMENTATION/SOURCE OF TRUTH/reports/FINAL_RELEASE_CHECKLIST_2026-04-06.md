@@ -36,6 +36,7 @@ Jalankan lewat harness Studio / assistant:
 Ikuti:
 
 - `QA_MULTIPLAYER_MANUAL_CHECKLIST_2026-04-06.md`
+- `QA_MULTIPLAYER_RESULT_TEMPLATE_2026-04-06.md`
 
 Hasil akhir yang dicatat:
 
@@ -48,6 +49,7 @@ Hasil akhir yang dicatat:
 Ikuti:
 
 - `PERSISTENCE_MANUAL_CHECKLIST_2026-04-06.md`
+- `PERSISTENCE_RESULT_TEMPLATE_2026-04-06.md`
 
 Hasil akhir yang dicatat:
 
