@@ -182,6 +182,17 @@ local LOBBY_ZONE_ENTRY_COPY = {
     },
 }
 
+local LOBBY_ZONE_ENTRY_KIOSK_COPY = {
+    ShopZone = {
+        title = "SHOP BOARD",
+        subtitle = "MM • PP • R$",
+    },
+    PartyZone = {
+        title = "ROOM BOARD",
+        subtitle = "Invite • Ready • Join",
+    },
+}
+
 local LOBBY_ZONE_ENTRY_ANCHORS = {
     MatchmakingZone = { "Door_NorthEvidenceBuilding", "Interact_NorthEvidenceBuilding" },
     ShopZone = { "Door_EastShopBuilding", "Interact_EastShopBuilding" },
@@ -1751,6 +1762,91 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         ensureGuideBoardSurface(toolsBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "TOOLS", "EMF • UV • BOX", style.color)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "CONTRACT BOARD", "Map • Mode • Start", style.color)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "CONTRACT BOARD", "Map • Mode • Start", style.color)
+    elseif zoneName == "ShopZone" or zoneName == "PartyZone" then
+        local kioskCopy = LOBBY_ZONE_ENTRY_KIOSK_COPY[zoneName]
+        local boardBackFace = isWideOnX and Enum.NormalId.Back or Enum.NormalId.Right
+        local boardFrontFace = isWideOnX and Enum.NormalId.Front or Enum.NormalId.Left
+
+        centerBoard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME)
+        centerStand = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME)
+        centerBase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME)
+        facadeCanopy = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
+        facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
+        facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
+        facadeWingRight = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME)
+
+        centerBoard.Color = Color3.fromRGB(18, 26, 38)
+        centerBoard.Transparency = 0.08
+        centerStand.Color = Color3.fromRGB(26, 34, 48)
+        centerStand.Transparency = 0.04
+        centerStand.Material = Enum.Material.Metal
+        centerBase.Color = Color3.fromRGB(38, 48, 64)
+        centerBase.Transparency = 0.02
+        centerBase.Material = Enum.Material.Slate
+
+        for _, facadePart in ipairs({ facadeCanopy, facadeApron, facadeWingLeft, facadeWingRight }) do
+            facadePart.Color = Color3.fromRGB(24, 32, 46)
+            facadePart.Transparency = 0.02
+        end
+        facadeCanopy.Material = Enum.Material.Metal
+        facadeApron.Material = Enum.Material.Slate
+        facadeWingLeft.Material = Enum.Material.SmoothPlastic
+        facadeWingRight.Material = Enum.Material.SmoothPlastic
+
+        if isWideOnX then
+            centerBoard.Size = Vector3.new(4.8, 3.7, frameDepth + 0.08)
+            centerBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.35, 2.25)
+            centerStand.Size = Vector3.new(0.52, 2.35, 0.52)
+            centerStand.CFrame = centerBoard.CFrame * CFrame.new(0, -3.02, 0)
+            centerBase.Size = Vector3.new(2.5, 0.3, 2)
+            centerBase.CFrame = centerStand.CFrame * CFrame.new(0, -1.32, 0.18)
+            facadeCanopy.Size = Vector3.new(anchorPart.Size.X + 4.8, 0.56, 3.2)
+            facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.08, 1.7)
+            facadeApron.Size = Vector3.new(anchorPart.Size.X + 6.8, 0.24, 6.6)
+            facadeApron.CFrame = anchorPart.CFrame * CFrame.new(0, (-anchorPart.Size.Y * 0.5) + 0.13, 3.2)
+            facadeWingLeft.Size = Vector3.new(1.05, anchorPart.Size.Y + 0.9, 2.5)
+            facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 1.2, 0, 1.28)
+            facadeWingRight.Size = Vector3.new(1.05, anchorPart.Size.Y + 0.9, 2.5)
+            facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 1.2, 0, 1.28)
+        else
+            centerBoard.Size = Vector3.new(frameDepth + 0.08, 3.6, 4.9)
+            centerBoard.CFrame = anchorPart.CFrame * CFrame.new(4.45, 0.38, 0)
+            centerStand.Size = Vector3.new(0.52, 2.35, 0.52)
+            centerStand.CFrame = centerBoard.CFrame * CFrame.new(0, -2.98, 0)
+            centerBase.Size = Vector3.new(2.0, 0.3, 2.5)
+            centerBase.CFrame = centerStand.CFrame * CFrame.new(0.18, -1.34, 0)
+            facadeCanopy.Size = Vector3.new(3.2, 0.56, anchorPart.Size.Z + 4.8)
+            facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(1.7, topY - 0.08, 0)
+            facadeApron.Size = Vector3.new(6.6, 0.24, anchorPart.Size.Z + 6.8)
+            facadeApron.CFrame = anchorPart.CFrame * CFrame.new(3.2, (-anchorPart.Size.Y * 0.5) + 0.13, 0)
+            facadeWingLeft.Size = Vector3.new(2.5, anchorPart.Size.Y + 0.9, 1.05)
+            facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(1.28, 0, -sideOffset - 1.2)
+            facadeWingRight.Size = Vector3.new(2.5, anchorPart.Size.Y + 0.9, 1.05)
+            facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(1.28, 0, sideOffset + 1.2)
+        end
+
+        clearLegacyBoardGui(centerBoard)
+        ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, boardBackFace, kioskCopy.title, kioskCopy.subtitle, style.color)
+        ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, boardFrontFace, kioskCopy.title, kioskCopy.subtitle, style.color)
+
+        if contractBoard then
+            contractBoard:Destroy()
+        end
+        if toolsBoard then
+            toolsBoard:Destroy()
+        end
+        if contractStand then
+            contractStand:Destroy()
+        end
+        if toolsStand then
+            toolsStand:Destroy()
+        end
+        if contractBase then
+            contractBase:Destroy()
+        end
+        if toolsBase then
+            toolsBase:Destroy()
+        end
     else
         if contractBoard then
             contractBoard:Destroy()
