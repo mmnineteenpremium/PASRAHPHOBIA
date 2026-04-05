@@ -2072,6 +2072,19 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (hunt HUD refuge route sync baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 21:42 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi orientasi lobby:
+  - zona lobby aktif sekarang tidak hanya punya guide di area, tetapi juga beacon kecil di pintu masuk bangunan aktif.
+  - anchor yang dipakai mengikuti geometry nyata (`Door_*` / `Interact_*`) sehingga titik baca pemain lebih intuitif.
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_entry_guides_build.rbxlx`
+  - static scan `LobbySocialHub.model.json` mengonfirmasi anchor target memang ada.
+- status:
+  - **SELESAI (lobby entry guide baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

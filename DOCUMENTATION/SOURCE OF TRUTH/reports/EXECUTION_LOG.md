@@ -9778,3 +9778,36 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - jalur readability hunt sekarang lebih nyambung dengan metadata refuge runtime server, bukan hanya hasil formatting nama part
+
+## 2026-04-05 - Lobby Entry Guide Pass
+
+### Scope
+
+- memperjelas orientasi lobby lewat pintu masuk bangunan aktif, bukan hanya marker pada part zona
+
+### Source Changes
+
+- `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+  - tambah `LobbyZoneEntryGuideRuntime`
+  - tambah anchor map:
+    - `Door_NorthEvidenceBuilding`
+    - `Door_EastShopBuilding`
+    - `Door_WestPartyZone`
+    - `Door_SouthSocialGarden`
+    - `Door_SouthEastFlexZone`
+  - tiap anchor mendapat beacon kecil dengan copy singkat:
+    - `PLAY`
+    - `SHOP`
+    - `PARTY`
+    - `GARDEN`
+    - `FLEX`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_lobby_entry_guides_build.rbxlx`
+- static scan `LobbySocialHub.model.json` mengonfirmasi semua door/interact anchor target memang ada di geometry aktif
+
+### Interpretation
+
+- orientasi lobby sekarang tidak hanya bergantung pada zone part; pintu masuk bangunan aktif juga punya anchor visual yang lebih intuitif

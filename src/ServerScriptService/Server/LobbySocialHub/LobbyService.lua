@@ -33,6 +33,7 @@ local LobbyZoneManager = requireNamedModule(script.Parent, "LobbyZoneManager")
 local LobbyInteraction = requireNamedModule(script.Parent, "LobbyInteraction")
 local PartySystem = requireNamedModule(script.Parent, "PartySystem")
 local LobbyPopulationController = requireNamedModule(script.Parent, "LobbyPopulationController")
+local LobbyLocator = require(script.Parent.Parent.Core.LobbyLocator)
 local Services = require(script.Parent.Parent.Core.Services)
 
 local LOBBY_COSMETIC_FOLDER_NAME = "LobbyCosmeticVisuals"
@@ -41,6 +42,9 @@ local FLEX_SPOTLIGHT_PARTICIPANT_LIMIT = 4
 local LOBBY_ZONE_GUIDE_FOLDER_NAME = "LobbyZoneGuideRuntime"
 local LOBBY_ZONE_GUIDE_BILLBOARD_NAME = "Billboard"
 local LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME = "Highlight"
+local LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME = "LobbyZoneEntryGuideRuntime"
+local LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME = "Billboard"
+local LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME = "Highlight"
 local LOBBY_ZONE_FEEDBACK = {
     SpawnPlaza = {
         title = "Lobby plaza aktif.",
@@ -93,6 +97,37 @@ local LOBBY_ZONE_GUIDE_STYLE = {
         color = Color3.fromRGB(138, 228, 178),
         subtitle = "Reward dan social anchor",
     },
+}
+
+local LOBBY_ZONE_ENTRY_COPY = {
+    MatchmakingZone = {
+        title = "PLAY",
+        subtitle = "Masuk ke matchmaking",
+    },
+    ShopZone = {
+        title = "SHOP",
+        subtitle = "Masuk ke toko",
+    },
+    PartyZone = {
+        title = "PARTY",
+        subtitle = "Masuk ke room party",
+    },
+    DailyRewardZone = {
+        title = "GARDEN",
+        subtitle = "Masuk ke social garden",
+    },
+    FlexZone = {
+        title = "FLEX",
+        subtitle = "Masuk ke spotlight kosmetik",
+    },
+}
+
+local LOBBY_ZONE_ENTRY_ANCHORS = {
+    MatchmakingZone = { "Door_NorthEvidenceBuilding", "Interact_NorthEvidenceBuilding" },
+    ShopZone = { "Door_EastShopBuilding", "Interact_EastShopBuilding" },
+    PartyZone = { "Door_WestPartyZone", "Interact_WestPartyZone" },
+    DailyRewardZone = { "Door_SouthSocialGarden", "Interact_SouthSocialGarden" },
+    FlexZone = { "Door_SouthEastFlexZone", "Interact_SouthEastFlexZone" },
 }
 
 local SLOT_DISPLAY_ORDER = {
@@ -944,6 +979,22 @@ function LobbyService:_clearZoneGuides()
     end
 end
 
+function LobbyService:_clearZoneEntryGuides()
+    local lobbyRoot = LobbyLocator.ResolveRoot("LobbySocialHub", workspace)
+    if not lobbyRoot then
+        return
+    end
+
+    for _, descendant in ipairs(lobbyRoot:GetDescendants()) do
+        if descendant:IsA("BasePart") then
+            local folder = descendant:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME)
+            if folder then
+                folder:Destroy()
+            end
+        end
+    end
+end
+
 function LobbyService:_ensureZoneGuide(zoneName, zonePart)
     if typeof(zonePart) ~= "Instance" or not zonePart:IsA("BasePart") or zonePart.Parent == nil then
         return false
@@ -1068,11 +1119,156 @@ function LobbyService:_ensureZoneGuide(zoneName, zonePart)
     return true
 end
 
+function LobbyService:_resolveZoneEntryAnchor(zoneName)
+    local candidates = LOBBY_ZONE_ENTRY_ANCHORS[zoneName]
+    if type(candidates) ~= "table" or #candidates == 0 then
+        return nil
+    end
+
+    local lobbyRoot = LobbyLocator.ResolveRoot("LobbySocialHub", workspace)
+    if not lobbyRoot then
+        return nil
+    end
+
+    for _, candidateName in ipairs(candidates) do
+        local candidate = lobbyRoot:FindFirstChild(candidateName, true)
+        if candidate and candidate:IsA("BasePart") then
+            return candidate
+        end
+    end
+
+    return nil
+end
+
+function LobbyService:_ensureZoneEntryGuide(zoneName)
+    local anchorPart = self:_resolveZoneEntryAnchor(zoneName)
+    if not anchorPart then
+        return false
+    end
+
+    local style = LOBBY_ZONE_GUIDE_STYLE[zoneName]
+    local copy = LOBBY_ZONE_ENTRY_COPY[zoneName]
+    if type(style) ~= "table" or type(copy) ~= "table" then
+        return false
+    end
+
+    local folder = anchorPart:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME)
+    if not (folder and folder:IsA("Folder")) then
+        if folder then
+            folder:Destroy()
+        end
+        folder = Instance.new("Folder")
+        folder.Name = LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME
+        folder.Parent = anchorPart
+    end
+
+    local highlight = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME)
+    if not (highlight and highlight:IsA("Highlight")) then
+        if highlight then
+            highlight:Destroy()
+        end
+        highlight = Instance.new("Highlight")
+        highlight.Name = LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME
+        highlight.Parent = folder
+    end
+    highlight.Adornee = anchorPart
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.FillColor = style.color
+    highlight.FillTransparency = 0.96
+    highlight.OutlineColor = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.18)
+    highlight.OutlineTransparency = 0.24
+    highlight.Enabled = true
+
+    local billboard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME)
+    if not (billboard and billboard:IsA("BillboardGui")) then
+        if billboard then
+            billboard:Destroy()
+        end
+        billboard = Instance.new("BillboardGui")
+        billboard.Name = LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME
+        billboard.Parent = folder
+    end
+    billboard.Active = false
+    billboard.Adornee = anchorPart
+    billboard.AlwaysOnTop = true
+    billboard.Brightness = 2
+    billboard.ClipsDescendants = false
+    billboard.Enabled = true
+    billboard.LightInfluence = 0
+    billboard.MaxDistance = 100
+    billboard.ResetOnSpawn = false
+    billboard.Size = UDim2.fromOffset(184, 46)
+    billboard.StudsOffsetWorldSpace = Vector3.new(0, anchorPart.Size.Y * 0.5 + 2.8, 0)
+
+    local panel = billboard:FindFirstChild("Panel")
+    if not (panel and panel:IsA("Frame")) then
+        if panel then
+            panel:Destroy()
+        end
+        panel = Instance.new("Frame")
+        panel.Name = "Panel"
+        panel.Parent = billboard
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 12)
+        corner.Parent = panel
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Name = "Stroke"
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Color = style.color
+        stroke.Transparency = 0.18
+        stroke.Thickness = 1.2
+        stroke.Parent = panel
+
+        local accent = Instance.new("Frame")
+        accent.Name = "Accent"
+        accent.AnchorPoint = Vector2.new(0, 0.5)
+        accent.BackgroundColor3 = style.color
+        accent.BorderSizePixel = 0
+        accent.Position = UDim2.new(0, 10, 0.5, 0)
+        accent.Size = UDim2.fromOffset(3, 24)
+        accent.Parent = panel
+
+        local accentCorner = Instance.new("UICorner")
+        accentCorner.CornerRadius = UDim.new(1, 0)
+        accentCorner.Parent = accent
+
+        createGuideTextLabel(
+            "Title",
+            Enum.Font.GothamBold,
+            13,
+            Color3.fromRGB(245, 248, 252),
+            copy.title,
+            18,
+            UDim2.new(0, 20, 0, 6)
+        ).Parent = panel
+
+        createGuideTextLabel(
+            "Subtitle",
+            Enum.Font.GothamMedium,
+            10,
+            style.color:Lerp(Color3.fromRGB(240, 244, 248), 0.25),
+            copy.subtitle,
+            16,
+            UDim2.new(0, 20, 0, 23)
+        ).Parent = panel
+    end
+
+    panel.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
+    panel.BackgroundTransparency = 0.14
+    panel.BorderSizePixel = 0
+    panel.Size = UDim2.fromScale(1, 1)
+    return true
+end
+
 function LobbyService:_syncZoneGuides()
     self:_clearZoneGuides()
+    self:_clearZoneEntryGuides()
     local zoneParts = self._zoneManager and self._zoneManager:GetZoneParts() or {}
     for zoneName, zonePart in pairs(zoneParts) do
         self:_ensureZoneGuide(zoneName, zonePart)
+        self:_ensureZoneEntryGuide(zoneName)
     end
 end
 
@@ -1115,6 +1311,7 @@ end
 function LobbyService:Stop()
     self._state:Set("lobbyStatus", "stopped")
     self:_clearZoneGuides()
+    self:_clearZoneEntryGuides()
     self._zoneManager:Stop()
     self._interaction:Stop()
     self._partySystem:Stop()
