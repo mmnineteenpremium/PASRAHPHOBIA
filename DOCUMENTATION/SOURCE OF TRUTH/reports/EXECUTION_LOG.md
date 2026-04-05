@@ -11003,3 +11003,61 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - asset final non-primitive
   - interior bangunan yang benar-benar kaya, bukan pseudo shell dangkal
   - world interaction final pada beberapa board/terminal agar tidak hanya visual
+
+### Follow-up 2026-04-06
+
+- saya hentikan ketergantungan pada `LobbyZoneEntryGuideRuntime` untuk façade utama karena jalur itu drift dan tidak konsisten muncul di `North`.
+- pengganti yang sekarang dipakai adalah `MainHubDecorRuntime` langsung, sehingga façade dan shell semua sayap dibangun dari satu jalur yang deterministik.
+- pass baru yang masuk:
+  - `NorthBay / ShopBay / PartyBay / GardenBay / FlexBay` shell langsung:
+    - `Floor`
+    - `BackWall`
+    - `SideLeft`
+    - `SideRight`
+    - `Ceiling`
+    - `Threshold`
+    - `Accent`
+  - façade langsung per sayap:
+    - `FrontWallLeft`
+    - `FrontWallRight`
+    - `EntryJambLeft`
+    - `EntryJambRight`
+    - `EntryHeader`
+    - `EntryAccent`
+    - `EntryCanopy`
+    - `EntrySignPanel`
+    - `EntryWindowLeft`
+    - `EntryWindowRight`
+    - `EntryLampLeft`
+    - `EntryLampRight`
+  - lampu sayap dinaikkan agar shell tidak lagi tenggelam terlalu gelap
+  - fresh spawn/return-to-lobby disetel ulang lagi untuk mendarat di forecourt kompromi, bukan terlalu jauh atau terlalu masuk ke bawah roof
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_facade_direct_build.rbxlx`
+  - `_tmp_lobby_forecourt_readability_build.rbxlx`
+  - `_tmp_lobby_spawn_offset_final_build.rbxlx`
+  - `_tmp_lobby_spawn_offset_compromise_build.rbxlx`
+- verifikasi live runtime:
+  - `NorthBayFloor = 58 x 0.16 x 36`
+  - `NorthBayBackWall = 58 x 8.6 x 0.32`
+  - `ShopBayFloor = 42 x 0.16 x 38`
+  - `PartyBayFloor = 42 x 0.16 x 38`
+  - `GardenBayFloor = 54 x 0.16 x 34`
+  - `FlexBayFloor = 38 x 0.16 x 34`
+  - `NorthBayEntrySignPanel = 16 x 2.8 x 0.24`
+  - `ShopBayEntrySignPanel = 16 x 2.8 x 0.24`
+  - `PartyBayEntrySignPanel = 16 x 2.8 x 0.24`
+  - `GardenBayEntrySignPanel = 16 x 2.8 x 0.24`
+  - `FlexBayEntrySignPanel = 16 x 2.8 x 0.24`
+  - `partyGuide = nil`
+    - artinya runtime sign lama memang sudah tidak lagi menjadi sumber visual aktif
+  - `NorthWingLight` live sekarang `brightness = 2.3`
+- capture live:
+  - `LobbyLargePass_Spawn_5`
+  - `LobbyLargePass_NorthScriptable_1`
+- catatan jujur:
+  - shot spawn sekarang lebih stabil dan jatuh di forecourt, tapi visual bangunan masih jelas berada pada tahap `strong blockout / proto art`
+  - direct façade runtime jauh lebih jujur dan stabil dibanding jalur guide lama, jadi itu yang saya pegang sebagai baseline lanjut berikutnya
