@@ -2060,6 +2060,16 @@ local function getRuntimeSafeZoneLabel(part)
 	return nil
 end
 
+local function resolvePhaseFromLifecycleAttribute(phaseToken)
+	if type(phaseToken) ~= "string" or phaseToken == "" then
+		return nil
+	end
+
+	return resolvePhaseFromPayload("PhaseChanged", {
+		lifecyclePhase = phaseToken,
+	})
+end
+
 local function getRuntimeSafeZoneSubtitle(part)
 	if not (typeof(part) == "Instance" and part:IsA("BasePart")) then
 		return nil
@@ -9188,6 +9198,7 @@ function UISystem:_runPostTeleportLoadingFlow(initialPayload)
 				self._hasPostTeleportLoaded = false
 				self._awaitingPostTeleportFlow = true
 				self:_setPhase(MATCH_PHASE.BRIEFING, self._phasePayload or initialPayload)
+				self:_syncPhaseFromAuthoritativeLifecycle()
 			end
 		end
 
@@ -9296,6 +9307,55 @@ function UISystem:_bindPostTeleportLoading()
 			self:_runPostTeleportLoadingFlow()
 		end
 	end))
+
+	table.insert(self._connections, player:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
+		self:_syncPhaseFromAuthoritativeLifecycle()
+	end))
+end
+
+function UISystem:_syncPhaseFromAuthoritativeLifecycle()
+	local player = Players.LocalPlayer
+	if not player then
+		return false
+	end
+
+	local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+	local resolvedPhase = resolvePhaseFromLifecycleAttribute(lifecyclePhase)
+	if not resolvedPhase then
+		return false
+	end
+
+	if resolvedPhase == MATCH_PHASE.INGAME then
+		if self._matchPhase == MATCH_PHASE.BRIEFING or self._matchPhase == MATCH_PHASE.LOADING or self._awaitingPostTeleportFlow then
+			self._pendingInGamePayload = nil
+			self._hasPostTeleportLoaded = true
+			self._awaitingPostTeleportFlow = false
+			self:_setPhase(MATCH_PHASE.INGAME, {
+				lifecyclePhase = lifecyclePhase,
+				phase = MATCH_PHASE.INGAME,
+				phaseName = MATCH_PHASE.INGAME,
+			})
+			return true
+		end
+	elseif resolvedPhase == MATCH_PHASE.HUNT then
+		self:_cancelPostTeleportLoadingFlow(true)
+		self:_setPhase(MATCH_PHASE.HUNT, {
+			lifecyclePhase = lifecyclePhase,
+			phase = MATCH_PHASE.HUNT,
+			phaseName = MATCH_PHASE.HUNT,
+		})
+		return true
+	elseif resolvedPhase == MATCH_PHASE.RESULT then
+		self:_cancelPostTeleportLoadingFlow(true)
+		self:_setPhase(MATCH_PHASE.RESULT, {
+			lifecyclePhase = lifecyclePhase,
+			phase = MATCH_PHASE.RESULT,
+			phaseName = MATCH_PHASE.RESULT,
+		})
+		return true
+	end
+
+	return false
 end
 
 function UISystem:_setPhase(newPhase, payload)

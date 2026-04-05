@@ -930,6 +930,7 @@ function MatchService:StartMatch(matchId)
 			player:SetAttribute("MatchId", authoritativeMatchId)
 			player:SetAttribute("MatchMode", tostring(match.mode or match.gameMode or "Classic"))
 			player:SetAttribute("MatchDifficulty", tostring(match.difficulty or "Mudah"))
+			player:SetAttribute("MatchLifecyclePhase", tostring(match.phase or "PreparationPhase"))
 		end
 	end
 
@@ -1029,6 +1030,12 @@ function MatchService:AdvanceMatchPhase(matchId, nextPhase)
 	local phase, reason = self._lifecycle:Advance(match, nextPhase, now)
 	if not phase then
 		return nil, reason
+	end
+
+	for _, player in ipairs(match.players or {}) do
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			player:SetAttribute("MatchLifecyclePhase", tostring(phase))
+		end
 	end
 
 	self:_fireMatchEventToPlayers(match.players, self:_buildPhasePayload(match, phase, now))
@@ -1201,6 +1208,7 @@ function MatchService:EndMatch(matchId, results)
 			player:SetAttribute("MatchId", nil)
 			player:SetAttribute("MatchMode", nil)
 			player:SetAttribute("MatchDifficulty", nil)
+			player:SetAttribute("MatchLifecyclePhase", nil)
 		end
 		self:_publish("PlayerTeleported", {
 			player = player,
