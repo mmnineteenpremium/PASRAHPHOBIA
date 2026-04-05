@@ -21,6 +21,10 @@ Status proyek sekarang:
 - visual runtime verification untuk surface utama lobby / room / shop / royal pass / match prep
 - monetization guard dan fairness `Ranked`
 - QA single-client baseline
+- live publish gate verification:
+  - `qaSolo=true`
+  - `overall=pass_with_manual_multiplayer` untuk QA gate
+  - publish tetap `fail` hanya karena `persistence=mock`
 - blueprint retention final
 - polish FPV / camera / flashlight baseline
 
@@ -48,6 +52,12 @@ Status proyek sekarang:
 6. visual runtime spot-check
    - gunakan:
      - `VISUAL_RUNTIME_VERIFICATION_2026-04-06.md`
+
+7. live publish gate spot-check
+   - status terakhir:
+     - `GetQAGateReadiness => overall=pass_with_manual_multiplayer`
+     - `GetPublishReadiness => fail` karena `persistence=mock`
+   - ini berarti blocker publish live saat ini bukan crash/runtime baru, tetapi lane environment/compliance yang memang sudah diketahui
 
 ## Go / No-Go Saat Ini
 

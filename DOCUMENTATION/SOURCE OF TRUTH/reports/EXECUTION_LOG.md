@@ -10486,3 +10486,45 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - surface visual/GUI/UX utama sekarang bukan hanya ada di source, tetapi juga sudah terbukti muncul live di Studio
+
+## 2026-04-06 - Live Publish Gate Verification Pass
+
+### Scope
+
+- memverifikasi gate QA/publish langsung dari sesi Studio aktif memakai `StudioE2EControl`
+
+### Runtime Notes
+
+- sesi Studio aktif sempat memuat `StudioE2EControlSystem.Main` versi lama:
+  - `GetQAGateReadiness` -> `unsupported_action`
+  - `GetPublishReadiness` -> `unsupported_action`
+- script Studio kemudian disamakan ke source terbaru pada path:
+  - `ServerScriptService.Server.StudioE2EControlSystem.Main`
+
+- hasil gate live sesudah patch session:
+  - `GetQAGateSnapshot`
+    - `players=1 activeMatches=0 currentMatch=none phase=none`
+    - `scriptMemoryMb=7.17 totalMemoryMb=2022.81 physicsFps=59.89`
+    - `warnings=0 errors=0 logSample=clean`
+  - `GetQAGateReadiness`
+    - `overall=pass_with_manual_multiplayer`
+    - `solo=true`
+    - `memoryOk=true fpsOk=true logOk=true`
+  - `GetPublishReadiness`
+    - `overall=fail`
+    - `qaSolo=true`
+    - `persistence=mock persistenceReady=false`
+    - `commerceReady=true`
+    - `robuxVisible=0 robuxMissingId=10`
+  - `GetShopReadiness`
+    - `total=31 MM=14 PP=7 Robux=10 disabled=10 robuxMissingId=10`
+  - `GetPersistenceMode`
+    - `mode=mock hasDataStore=false allowStudioDataStore=false trackedPlayers=1 schemaVersion=2`
+
+### Interpretation
+
+- gate QA solo live sekarang benar-benar terbaca `pass`
+- blocker publish live yang tersisa tetap konsisten dengan report:
+  - persistence masih `mock`
+  - multiplayer tetap manual
+  - `marketplaceId` Creator Hub resmi tetap lane terakhir sebelum publish
