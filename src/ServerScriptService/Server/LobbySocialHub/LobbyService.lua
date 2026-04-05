@@ -51,6 +51,9 @@ local LOBBY_ZONE_ENTRY_GUIDE_FRAME_TOP_NAME = "FrameTop"
 local LOBBY_ZONE_ENTRY_GUIDE_FRAME_LEFT_NAME = "FrameLeft"
 local LOBBY_ZONE_ENTRY_GUIDE_FRAME_RIGHT_NAME = "FrameRight"
 local LOBBY_ZONE_ENTRY_GUIDE_HEADER_NAME = "HeaderBand"
+local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BOARD_NAME = "ContractBoard"
+local LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BOARD_NAME = "ToolsBoard"
+local LOBBY_ZONE_ENTRY_GUIDE_BOARD_BILLBOARD_NAME = "BoardBillboard"
 local LOBBY_ZONE_GUIDES_ENABLED = false
 local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = true
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
@@ -440,6 +443,137 @@ local function ensureNeonGuidePart(parent, name)
         part.Parent = parent
     end
     return part
+end
+
+local function ensureGuidePanelPart(parent, name)
+    local part = parent:FindFirstChild(name)
+    if not (part and part:IsA("Part")) then
+        if part then
+            part:Destroy()
+        end
+        part = Instance.new("Part")
+        part.Name = name
+        part.Anchored = true
+        part.CanCollide = false
+        part.CanQuery = false
+        part.CanTouch = false
+        part.CastShadow = false
+        part.Locked = true
+        part.Material = Enum.Material.SmoothPlastic
+        part.Parent = parent
+    end
+    return part
+end
+
+local function ensureGuideBoardBillboard(parent, titleText, subtitleText, accentColor)
+    local billboard = parent:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_BOARD_BILLBOARD_NAME)
+    if not (billboard and billboard:IsA("BillboardGui")) then
+        if billboard then
+            billboard:Destroy()
+        end
+        billboard = Instance.new("BillboardGui")
+        billboard.Name = LOBBY_ZONE_ENTRY_GUIDE_BOARD_BILLBOARD_NAME
+        billboard.Parent = parent
+    end
+
+    billboard.Active = false
+    billboard.Adornee = parent
+    billboard.AlwaysOnTop = true
+    billboard.Brightness = 2
+    billboard.LightInfluence = 0
+    billboard.MaxDistance = 90
+    billboard.ResetOnSpawn = false
+    billboard.Size = UDim2.fromOffset(148, 70)
+    billboard.StudsOffsetWorldSpace = Vector3.new(0, 0.1, 0)
+
+    local panel = billboard:FindFirstChild("Panel")
+    if not (panel and panel:IsA("Frame")) then
+        if panel then
+            panel:Destroy()
+        end
+        panel = Instance.new("Frame")
+        panel.Name = "Panel"
+        panel.Parent = billboard
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 10)
+        corner.Parent = panel
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Name = "Stroke"
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Thickness = 1
+        stroke.Parent = panel
+
+        local accent = Instance.new("Frame")
+        accent.Name = "Accent"
+        accent.AnchorPoint = Vector2.new(0, 0.5)
+        accent.BorderSizePixel = 0
+        accent.Position = UDim2.new(0, 8, 0.5, 0)
+        accent.Size = UDim2.fromOffset(3, 36)
+        accent.Parent = panel
+
+        local accentCorner = Instance.new("UICorner")
+        accentCorner.CornerRadius = UDim.new(1, 0)
+        accentCorner.Parent = accent
+
+        local title = Instance.new("TextLabel")
+        title.Name = "Title"
+        title.BackgroundTransparency = 1
+        title.BorderSizePixel = 0
+        title.Font = Enum.Font.GothamBold
+        title.Text = titleText
+        title.TextColor3 = Color3.fromRGB(245, 248, 252)
+        title.TextSize = 11
+        title.TextTransparency = 0
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.TextYAlignment = Enum.TextYAlignment.Center
+        title.Position = UDim2.new(0, 18, 0, 10)
+        title.Size = UDim2.new(1, -28, 0, 16)
+        title.Parent = panel
+
+        local subtitle = Instance.new("TextLabel")
+        subtitle.Name = "Subtitle"
+        subtitle.BackgroundTransparency = 1
+        subtitle.BorderSizePixel = 0
+        subtitle.Font = Enum.Font.GothamMedium
+        subtitle.Text = subtitleText
+        subtitle.TextColor3 = accentColor:Lerp(Color3.fromRGB(245, 248, 252), 0.25)
+        subtitle.TextSize = 9
+        subtitle.TextTransparency = 0
+        subtitle.TextWrapped = true
+        subtitle.TextXAlignment = Enum.TextXAlignment.Left
+        subtitle.TextYAlignment = Enum.TextYAlignment.Top
+        subtitle.Position = UDim2.new(0, 18, 0, 28)
+        subtitle.Size = UDim2.new(1, -28, 0, 32)
+        subtitle.Parent = panel
+    end
+
+    panel.Size = UDim2.fromScale(1, 1)
+    panel.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
+    panel.BackgroundTransparency = 0.12
+    panel.BorderSizePixel = 0
+
+    local stroke = panel:FindFirstChild("Stroke")
+    if stroke and stroke:IsA("UIStroke") then
+        stroke.Color = accentColor
+        stroke.Transparency = 0.22
+    end
+    local accent = panel:FindFirstChild("Accent")
+    if accent and accent:IsA("Frame") then
+        accent.BackgroundColor3 = accentColor
+    end
+    local title = panel:FindFirstChild("Title")
+    if title and title:IsA("TextLabel") then
+        title.Text = titleText
+    end
+    local subtitle = panel:FindFirstChild("Subtitle")
+    if subtitle and subtitle:IsA("TextLabel") then
+        subtitle.Text = subtitleText
+        subtitle.TextColor3 = accentColor:Lerp(Color3.fromRGB(245, 248, 252), 0.25)
+    end
+
+    return billboard
 end
 
 local function createGuideTextLabel(name, font, textSize, textColor, text, height, position)
@@ -1421,6 +1555,37 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         frameRight.CFrame = anchorPart.CFrame * CFrame.new(0, 0, sideOffset)
         headerBand.Size = Vector3.new(frameDepth + 0.12, 1.55, anchorPart.Size.Z + 2.2)
         headerBand.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.48, 0)
+    end
+
+    local contractBoard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BOARD_NAME)
+    local toolsBoard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BOARD_NAME)
+    if zoneName == "MatchmakingZone" then
+        contractBoard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BOARD_NAME)
+        toolsBoard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BOARD_NAME)
+        for _, board in ipairs({ contractBoard, toolsBoard }) do
+            board.Color = Color3.fromRGB(18, 26, 38)
+            board.Transparency = 0.08
+        end
+        if isWideOnX then
+            contractBoard.Size = Vector3.new(4.4, 3.4, frameDepth + 0.06)
+            contractBoard.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 3.2, 0.2, 0)
+            toolsBoard.Size = Vector3.new(4.4, 3.4, frameDepth + 0.06)
+            toolsBoard.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 3.2, 0.2, 0)
+        else
+            contractBoard.Size = Vector3.new(frameDepth + 0.06, 3.4, 4.4)
+            contractBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.2, -sideOffset - 3.2)
+            toolsBoard.Size = Vector3.new(frameDepth + 0.06, 3.4, 4.4)
+            toolsBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.2, sideOffset + 3.2)
+        end
+        ensureGuideBoardBillboard(contractBoard, "CONTRACT", "Room • Mode • Start", style.color)
+        ensureGuideBoardBillboard(toolsBoard, "TOOLS", "EMF • UV • BOX", style.color)
+    else
+        if contractBoard then
+            contractBoard:Destroy()
+        end
+        if toolsBoard then
+            toolsBoard:Destroy()
+        end
     end
 
     local panel = billboard:FindFirstChild("Panel")
