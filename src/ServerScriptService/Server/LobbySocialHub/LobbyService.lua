@@ -38,6 +38,9 @@ local Services = require(script.Parent.Parent.Core.Services)
 local LOBBY_COSMETIC_FOLDER_NAME = "LobbyCosmeticVisuals"
 local LOBBY_COSMETIC_GUI_NAME = "LobbyCosmeticBillboard"
 local FLEX_SPOTLIGHT_PARTICIPANT_LIMIT = 4
+local LOBBY_ZONE_GUIDE_FOLDER_NAME = "LobbyZoneGuideRuntime"
+local LOBBY_ZONE_GUIDE_BILLBOARD_NAME = "Billboard"
+local LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME = "Highlight"
 local LOBBY_ZONE_FEEDBACK = {
     SpawnPlaza = {
         title = "Lobby plaza aktif.",
@@ -62,6 +65,33 @@ local LOBBY_ZONE_FEEDBACK = {
     DailyRewardZone = {
         title = "Area social garden aktif.",
         hint = "Zona ini dipakai sebagai anchor reward/social sampai pass restruktur visual final selesai.",
+    },
+}
+
+local LOBBY_ZONE_GUIDE_STYLE = {
+    SpawnPlaza = {
+        color = Color3.fromRGB(110, 186, 244),
+        subtitle = "Hub utama dan quick access",
+    },
+    MatchmakingZone = {
+        color = Color3.fromRGB(132, 186, 255),
+        subtitle = "Play, room browser, start match",
+    },
+    ShopZone = {
+        color = Color3.fromRGB(255, 196, 118),
+        subtitle = "MM / PP / Robux yang visible",
+    },
+    PartyZone = {
+        color = Color3.fromRGB(142, 214, 198),
+        subtitle = "Invite, ready, dan kontrol room",
+    },
+    FlexZone = {
+        color = Color3.fromRGB(214, 146, 255),
+        subtitle = "Spotlight kosmetik lobby",
+    },
+    DailyRewardZone = {
+        color = Color3.fromRGB(138, 228, 178),
+        subtitle = "Reward dan social anchor",
     },
 }
 
@@ -316,6 +346,24 @@ local function clampDisplayNames(entries)
         end
     end
     return names
+end
+
+local function createGuideTextLabel(name, font, textSize, textColor, text, height, position)
+    local label = Instance.new("TextLabel")
+    label.Name = name
+    label.BackgroundTransparency = 1
+    label.BorderSizePixel = 0
+    label.Position = position
+    label.Size = UDim2.new(1, -18, 0, height)
+    label.Font = font
+    label.Text = text
+    label.TextColor3 = textColor
+    label.TextSize = textSize
+    label.TextStrokeTransparency = 0.84
+    label.TextWrapped = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextYAlignment = Enum.TextYAlignment.Top
+    return label
 end
 
 function LobbyService.new(state, deps)
@@ -884,6 +932,150 @@ function LobbyService:_refreshPopulation()
     self._population:OnLobbyPlayerCountChanged(playerCount)
 end
 
+function LobbyService:_clearZoneGuides()
+    local zoneParts = self._zoneManager and self._zoneManager:GetZoneParts() or {}
+    for _, zonePart in pairs(zoneParts) do
+        if typeof(zonePart) == "Instance" and zonePart:IsA("BasePart") then
+            local folder = zonePart:FindFirstChild(LOBBY_ZONE_GUIDE_FOLDER_NAME)
+            if folder then
+                folder:Destroy()
+            end
+        end
+    end
+end
+
+function LobbyService:_ensureZoneGuide(zoneName, zonePart)
+    if typeof(zonePart) ~= "Instance" or not zonePart:IsA("BasePart") or zonePart.Parent == nil then
+        return false
+    end
+
+    local feedback = LOBBY_ZONE_FEEDBACK[zoneName]
+    local style = LOBBY_ZONE_GUIDE_STYLE[zoneName]
+    if type(feedback) ~= "table" or type(style) ~= "table" then
+        return false
+    end
+
+    local titleText = tostring(feedback.title or zoneName):gsub("%.$", "")
+    local subtitleText = tostring(style.subtitle or feedback.hint or "")
+
+    local folder = zonePart:FindFirstChild(LOBBY_ZONE_GUIDE_FOLDER_NAME)
+    if not (folder and folder:IsA("Folder")) then
+        if folder then
+            folder:Destroy()
+        end
+        folder = Instance.new("Folder")
+        folder.Name = LOBBY_ZONE_GUIDE_FOLDER_NAME
+        folder.Parent = zonePart
+    end
+
+    local highlight = folder:FindFirstChild(LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME)
+    if not (highlight and highlight:IsA("Highlight")) then
+        if highlight then
+            highlight:Destroy()
+        end
+        highlight = Instance.new("Highlight")
+        highlight.Name = LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME
+        highlight.Parent = folder
+    end
+    highlight.Adornee = zonePart
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.FillColor = style.color
+    highlight.FillTransparency = 0.92
+    highlight.OutlineColor = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.24)
+    highlight.OutlineTransparency = 0.18
+    highlight.Enabled = true
+
+    local billboard = folder:FindFirstChild(LOBBY_ZONE_GUIDE_BILLBOARD_NAME)
+    if not (billboard and billboard:IsA("BillboardGui")) then
+        if billboard then
+            billboard:Destroy()
+        end
+        billboard = Instance.new("BillboardGui")
+        billboard.Name = LOBBY_ZONE_GUIDE_BILLBOARD_NAME
+        billboard.Parent = folder
+    end
+    billboard.Active = false
+    billboard.Adornee = zonePart
+    billboard.AlwaysOnTop = true
+    billboard.Brightness = 2
+    billboard.ClipsDescendants = false
+    billboard.Enabled = true
+    billboard.LightInfluence = 0
+    billboard.MaxDistance = 120
+    billboard.ResetOnSpawn = false
+    billboard.Size = UDim2.fromOffset(228, 58)
+    billboard.StudsOffsetWorldSpace = Vector3.new(0, zonePart.Size.Y * 0.5 + 3.2, 0)
+
+    local panel = billboard:FindFirstChild("Panel")
+    if not (panel and panel:IsA("Frame")) then
+        if panel then
+            panel:Destroy()
+        end
+        panel = Instance.new("Frame")
+        panel.Name = "Panel"
+        panel.Parent = billboard
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 12)
+        corner.Parent = panel
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Name = "Stroke"
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Color = style.color
+        stroke.Transparency = 0.14
+        stroke.Thickness = 1.4
+        stroke.Parent = panel
+
+        local accent = Instance.new("Frame")
+        accent.Name = "Accent"
+        accent.AnchorPoint = Vector2.new(0, 0.5)
+        accent.BackgroundColor3 = style.color
+        accent.BorderSizePixel = 0
+        accent.Position = UDim2.new(0, 10, 0.5, 0)
+        accent.Size = UDim2.fromOffset(3, 30)
+        accent.Parent = panel
+
+        local accentCorner = Instance.new("UICorner")
+        accentCorner.CornerRadius = UDim.new(1, 0)
+        accentCorner.Parent = accent
+
+        createGuideTextLabel(
+            "Title",
+            Enum.Font.GothamBold,
+            13,
+            Color3.fromRGB(245, 248, 252),
+            titleText,
+            18,
+            UDim2.new(0, 20, 0, 6)
+        ).Parent = panel
+
+        createGuideTextLabel(
+            "Subtitle",
+            Enum.Font.GothamMedium,
+            11,
+            style.color:Lerp(Color3.fromRGB(240, 244, 248), 0.25),
+            subtitleText,
+            18,
+            UDim2.new(0, 20, 0, 24)
+        ).Parent = panel
+    end
+
+    panel.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
+    panel.BackgroundTransparency = 0.12
+    panel.BorderSizePixel = 0
+    panel.Size = UDim2.fromScale(1, 1)
+    return true
+end
+
+function LobbyService:_syncZoneGuides()
+    self:_clearZoneGuides()
+    local zoneParts = self._zoneManager and self._zoneManager:GetZoneParts() or {}
+    for zoneName, zonePart in pairs(zoneParts) do
+        self:_ensureZoneGuide(zoneName, zonePart)
+    end
+end
+
 function LobbyService:Init()
     self._state:Set("lobbyStatus", "initialized")
     self._dependencies.PlayerProfileSystem = Services.Get(self._deps, "PlayerProfileSystem")
@@ -914,6 +1106,7 @@ function LobbyService:Start()
     self._state:Set("lobbyStatus", "running")
     self._playerManager:Start()
     self._zoneManager:Start()
+    self:_syncZoneGuides()
     self._interaction:Start()
     self._partySystem:Start()
     self._population:Start()
@@ -921,6 +1114,7 @@ end
 
 function LobbyService:Stop()
     self._state:Set("lobbyStatus", "stopped")
+    self:_clearZoneGuides()
     self._zoneManager:Stop()
     self._interaction:Stop()
     self._partySystem:Stop()

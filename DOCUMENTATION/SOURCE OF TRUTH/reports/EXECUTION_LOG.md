@@ -9607,3 +9607,38 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - traversal pintu sekarang lebih manusiawi dan membantu orientasi pemain saat map masih dalam fase restruktur
+
+## 2026-04-05 - Lobby Zone Guide Runtime Pass
+
+### Scope
+
+- memberi anchor visual permanen pada zona lobby aktif
+- targetnya pemain bisa mengenali `shop / matchmaking / party / flex / social garden` dari dunia 3D, bukan hanya panel teks
+
+### Source Changes
+
+- `src/ServerScriptService/Server/LobbySocialHub/LobbyZoneManager.lua`
+  - tambah `GetZoneParts()` untuk expose snapshot zona aktif hasil resolve runtime
+- `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+  - tambah `LobbyZoneGuideRuntime` per zona
+  - tiap guide punya `Highlight` + `BillboardGui`
+  - style khusus untuk:
+    - `SpawnPlaza`
+    - `MatchmakingZone`
+    - `ShopZone`
+    - `PartyZone`
+    - `FlexZone`
+    - `DailyRewardZone`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_lobby_zone_guides_build.rbxlx`
+- sesi Studio aktif masih drift server-side:
+  - `search_game_tree(LobbyZoneGuideRuntime) -> tidak muncul`
+  - `script_grep(LOBBY_ZONE_GUIDE_FOLDER_NAME) -> noMatch`
+
+### Interpretation
+
+- source untuk anchor visual lobby sudah siap
+- validasi live di Studio perlu sesi server yang sinkron, tetapi jalur implementasi tidak lagi bergantung pada panel UI saja

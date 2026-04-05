@@ -1999,6 +1999,21 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (door prompt label baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut slice restruktur visual/lobby-map yang masih belum layak final.
 
+## Update 2026-04-05 20:52 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju di sisi anchor visual lobby:
+  - zona lobby aktif sekarang punya guide runtime terencana:
+    - `Highlight`
+    - `BillboardGui`
+  - mencakup `SpawnPlaza`, `MatchmakingZone`, `ShopZone`, `PartyZone`, `FlexZone`, `DailyRewardZone`.
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_zone_guides_build.rbxlx`
+  - sesi Studio aktif masih drift server-side, jadi guide lobby belum bisa divalidasi live pada sesi itu.
+- status:
+  - **SOURCE READY (lobby zone guide runtime)**.
+  - **PENDING LIVE RETEST** saat sesi Studio server sudah sinkron.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
