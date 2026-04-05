@@ -10121,3 +10121,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - slice navigasi non-hunt sekarang lebih siap ke publish bukan hanya dari sisi UX, tetapi juga lebih rapi dari sisi biaya scan runtime client
+
+## 2026-04-05 - Refuge Anchor Unification Pass
+
+### Scope
+
+- menyatukan `SafeZone` dan `HideSpot` ke cache anchor navigasi client agar refuge tidak lagi hidup di sistem marker terpisah
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `collectNavigationAnchors(mapModel)` sekarang juga mengumpulkan:
+    - `SafeZone`
+    - `HideSpot`
+  - keduanya masuk sebagai anchor `subtitle = "Refuge route"`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_refuge_anchor_cache_build.rbxlx`
+
+### Interpretation
+
+- route ecosystem sekarang lebih utuh; refuge ikut masuk ke jalur navigasi yang sama dengan door, room anchor, dan traversal guide
