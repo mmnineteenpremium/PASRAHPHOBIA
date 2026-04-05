@@ -9976,3 +9976,24 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - panel match non-hunt sekarang memberi arahan yang lebih relevan terhadap fungsi area, bukan hanya “target terdekat” secara buta
+
+## 2026-04-05 - Lobby Focus Pills Pass
+
+### Scope
+
+- memperkuat sinkronisasi panel lobby dengan zona aktif lewat pill dan hint, bukan hanya badge/header
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `BasicHintLabel`, `BasicModePill`, `BasicMapPill`, dan `BasicRoomPill` sekarang bisa ikut accent zona saat ada `self._lobbyZoneFocus`
+  - saat belum masuk room, `MapPill` dan `RoomPill` dapat memantulkan context focus aktif
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_lobby_focus_pills_build.rbxlx`
+
+### Interpretation
+
+- panel lobby sekarang terasa lebih sadar konteks, bukan hanya header yang berubah sementara pill/hint tetap generic
