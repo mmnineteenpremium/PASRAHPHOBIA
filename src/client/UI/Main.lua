@@ -37,6 +37,50 @@ local MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
 local BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
 local CONFLICT_BASIC_GUI_NAMES = { "MainMenuUI", "LeaderboardUI" }
 local MAPS = { "HauntedHouse", "AbandonedPalace", "EmptyBuilding", "StudioMMNineteen" }
+local LOBBY_ZONE_CLIENT_META = {
+	SpawnPlaza = {
+		badge = "LOBBY",
+		title = "Lobby plaza aktif.",
+		hint = "Semua panel utama tetap bisa diakses dari quick menu tanpa harus menyentuh bangunan tertentu.",
+		subtitle = "Hub utama dan quick access",
+		accentColor = Color3.fromRGB(110, 186, 244),
+	},
+	MatchmakingZone = {
+		badge = "PLAY",
+		title = "Area matchmaking aktif.",
+		hint = "Gunakan PLAY atau Room Browser untuk membuat room, pilih mode, dan start dengan sadar; area ini tidak lagi auto-queue.",
+		subtitle = "Play, room browser, start match",
+		accentColor = Color3.fromRGB(132, 186, 255),
+	},
+	ShopZone = {
+		badge = "SHOP",
+		title = "Area shop aktif.",
+		hint = "Buka SHOP untuk melihat item MM/PP/Robux yang memang visible dan compliant.",
+		subtitle = "MM / PP / Robux yang visible",
+		accentColor = Color3.fromRGB(255, 196, 118),
+	},
+	PartyZone = {
+		badge = "PARTY",
+		title = "Area party aktif.",
+		hint = "Gunakan Room Browser untuk invite, ready, dan kontrol room tanpa sentuhan UI yang membingungkan.",
+		subtitle = "Invite, ready, dan kontrol room",
+		accentColor = Color3.fromRGB(142, 214, 198),
+	},
+	FlexZone = {
+		badge = "FLEX",
+		title = "Area flex aktif.",
+		hint = "Spotlight flex tetap hidup untuk kosmetik lobby, tetapi tidak memaksa panel lain terbuka.",
+		subtitle = "Spotlight kosmetik lobby",
+		accentColor = Color3.fromRGB(214, 146, 255),
+	},
+	DailyRewardZone = {
+		badge = "GARDEN",
+		title = "Area social garden aktif.",
+		hint = "Zona ini dipakai sebagai anchor reward/social sampai pass restruktur visual final selesai.",
+		subtitle = "Reward dan social anchor",
+		accentColor = Color3.fromRGB(138, 228, 178),
+	},
+}
 local LOBBY_ZONE_CLIENT_CANDIDATES = {
 	SpawnPlaza = { "SpawnPlaza", "Room_MainHubPlaza", "Interact_MainHubPlaza", "Prop_MainHubPlaza", "PlayerSpawn_1" },
 	MatchmakingZone = { "MatchmakingZone", "Room_NorthEvidenceBuilding", "Interact_NorthEvidenceBuilding", "Door_NorthEvidenceBuilding", "Prop_NorthEvidenceBuilding" },
@@ -2390,6 +2434,36 @@ local function getLobbyZoneDistanceText(zoneName)
 	local distance = (root.Position - zonePart.Position).Magnitude
 	local rounded = math.max(1, math.floor(distance + 0.5))
 	return string.format("%dm", rounded)
+end
+
+local function getNearestLobbyZoneInfo()
+	local player = Players.LocalPlayer
+	local character = player and player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+
+	local nearest = nil
+	for zoneName, meta in pairs(LOBBY_ZONE_CLIENT_META) do
+		local zonePart = resolveLobbyZonePart(zoneName)
+		if zonePart and zonePart:IsA("BasePart") then
+			local distance = (root.Position - zonePart.Position).Magnitude
+			if nearest == nil or distance < nearest.distance then
+				nearest = {
+					zoneName = zoneName,
+					badge = meta.badge,
+					title = meta.title,
+					hint = meta.hint,
+					subtitle = meta.subtitle,
+					accentColor = meta.accentColor,
+					distance = distance,
+				}
+			end
+		end
+	end
+
+	return nearest
 end
 
 local function getInvestigationObjectiveText(contextTag)
@@ -5256,6 +5330,10 @@ function UISystem:_refreshBasicLobbyPanel()
 	local secondaryText = string.format("Mode %s | Map %s | %d room aktif", selectedMode, selectedMap, #rooms)
 	local hintText = "Shortcut: tekan M untuk Room Browser dan R untuk Royal Pass."
 	local zoneFocus = self._lobbyZoneFocus
+	local zoneFocusFallback = (not currentRoom and not state.lastError) and getNearestLobbyZoneInfo() or nil
+	if type(zoneFocus) ~= "table" or tostring(zoneFocus.badge or "") == "" then
+		zoneFocus = zoneFocusFallback
+	end
 
 	if currentRoom and currentRoom.roomId then
 		local playerCount = type(currentRoom.players) == "table" and #currentRoom.players or 0
