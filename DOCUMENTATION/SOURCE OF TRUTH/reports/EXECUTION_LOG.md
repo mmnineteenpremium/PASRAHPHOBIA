@@ -9865,3 +9865,31 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - feedback lobby sekarang lebih konsisten dengan beacon world-space; UI dan world guide tidak lagi terasa seperti dua sistem copy yang berbeda
+
+## 2026-04-05 - Match Navigation Readability Pass
+
+### Scope
+
+- memakai anchor runtime map pada HUD `Preparation/Investigation` agar panel match tidak terlalu generik saat pemain baru masuk map
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah resolver `getNearestNavigationAnchorInfo()` yang membaca:
+    - `DoorRouteLabel`
+    - `InteractionGuideLabel`
+  - `Preparation/Investigation` panel sekarang menurunkan:
+    - `primaryText`
+    - `secondaryText`
+    - `ObjectiveLabel`
+    - `ControlsHintLabel`
+    dari anchor terdekat bila tersedia
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_match_navigation_readability_build.rbxlx`
+
+### Interpretation
+
+- phase non-hunt sekarang lebih informatif terhadap struktur map aktif; panel match tidak lagi sepenuhnya generik saat pemain sedang orientasi area

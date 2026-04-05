@@ -2109,6 +2109,92 @@ local function getRuntimeHideSpotPart(zoneId)
 	return nil
 end
 
+local function getNearestNavigationAnchorInfo()
+	local player = Players.LocalPlayer
+	local character = player and player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+
+	local mapModel = getActiveMatchMapModel()
+	if not mapModel then
+		return nil
+	end
+
+	local nearest = nil
+	local function consider(part, info)
+		if not (part and part:IsA("BasePart")) then
+			return
+		end
+		local distance = (root.Position - part.Position).Magnitude
+		if nearest == nil or distance < nearest.distance then
+			info.distance = distance
+			nearest = info
+		end
+	end
+
+	local doorsFolder = mapModel:FindFirstChild("Doors", true)
+	if doorsFolder then
+		for _, child in ipairs(doorsFolder:GetChildren()) do
+			if child:IsA("BasePart") then
+				local routeLabel = tostring(child:GetAttribute("DoorRouteLabel") or "")
+				if routeLabel ~= "" then
+					consider(child, {
+						kind = "Door",
+						label = routeLabel,
+						subtitle = child:GetAttribute("DoorIsOpen") == true and "Terbuka" or "Akses ruang",
+					})
+				end
+			end
+		end
+	end
+
+	local interactionPointsFolder = mapModel:FindFirstChild("InteractionPoints", true)
+	if interactionPointsFolder then
+		for _, child in ipairs(interactionPointsFolder:GetChildren()) do
+			if child:IsA("BasePart") then
+				local routeLabel = tostring(child:GetAttribute("InteractionGuideLabel") or "")
+				if routeLabel ~= "" then
+					consider(child, {
+						kind = "RoomAnchor",
+						label = routeLabel,
+						subtitle = "Anchor ruang",
+					})
+				end
+			end
+		end
+	end
+
+	return nearest
+end
+
+local function getInvestigationObjectiveText()
+	local anchor = getNearestNavigationAnchorInfo()
+	if type(anchor) ~= "table" then
+		return DEFAULT_MATCH_OBJECTIVE_TEXT
+	end
+
+	local label = tostring(anchor.label or "ruang target")
+	if anchor.kind == "Door" then
+		return string.format("Dekati %s\nMasuk ke area terkait\nCari evidence lalu isi jurnal", label)
+	end
+	return string.format("Gunakan anchor %s\nSweep area terdekat\nCari evidence lalu isi jurnal", label)
+end
+
+local function getInvestigationControlsHintText()
+	local anchor = getNearestNavigationAnchorInfo()
+	if type(anchor) ~= "table" then
+		return "[1] Scan  •  [2] Garam  •  [3] Salib  •  [4] Dupa  •  [5] Spirit  •  [J] Journal"
+	end
+
+	local anchorLabel = string.upper(tostring(anchor.label or "AREA TARGET"))
+	if anchor.kind == "Door" then
+		return string.format("TARGET: %s  •  PINTU: E/X/TAP  •  [J] JOURNAL  •  [F] FLASHLIGHT", anchorLabel)
+	end
+	return string.format("ANCHOR: %s  •  SWEEP EVIDENCE  •  [1-5] TOOL  •  [J] JOURNAL", anchorLabel)
+end
+
 local function resolveHideZoneLabel(zoneId, spotType)
 	if type(zoneId) ~= "string" or zoneId == "" then
 		return nil
@@ -4652,21 +4738,23 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	end
 
 	if viewState == "Preparation" or viewState == "Loading" then
+		local navigationAnchor = getNearestNavigationAnchorInfo()
 		badgeText = "PERSIAPAN"
 		badgeColor = Color3.fromRGB(70, 96, 132)
 		phaseGlyphText = "PR"
-		primaryText = "Masuk ke lokasi..."
+		primaryText = navigationAnchor and ("Menuju " .. tostring(navigationAnchor.label or "titik masuk") .. "...") or "Masuk ke lokasi..."
 		secondaryText = timerVisible
 			and ("Loading dan briefing aktif. Waktu fase: " .. timerText .. ".")
 			or "Tunggu loading selesai, lalu mulai cari evidence."
 	elseif viewState == "Investigation" then
+		local navigationAnchor = getNearestNavigationAnchorInfo()
 		badgeText = "INVESTIGASI"
 		badgeColor = Color3.fromRGB(58, 112, 90)
 		phaseGlyphText = "IN"
-		primaryText = "Investigasi aktif."
+		primaryText = navigationAnchor and ("Investigasi aktif di sekitar " .. tostring(navigationAnchor.label or "area target") .. ".") or "Investigasi aktif."
 		secondaryText = timerVisible
-			and ("Sisa waktu investigasi: " .. timerText .. ". Cari evidence, cek jurnal, dan tentukan ghost.")
-			or "Cari evidence, cek jurnal, dan tentukan ghost yang benar."
+			and ("Sisa waktu investigasi: " .. timerText .. ". " .. getInvestigationObjectiveText():gsub("\n", " • "))
+			or getInvestigationObjectiveText():gsub("\n", " • ")
 		footerText = CLOSE_HINT_TEXT .. ". Gunakan Field Kit [1-4] untuk tool cepat dan EVIDENCE [J] untuk jurnal."
 	elseif viewState == "Hunt" then
 		badgeText = "HUNT"
@@ -4760,7 +4848,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		match.ControlsHintLabel.Visible = self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
 		match.ControlsHintLabel.Text = viewState == "Hunt"
 			and getHuntControlsHintText()
-			or self._matchControlsHintText
+			or ((viewState == "Preparation" or viewState == "Investigation") and getInvestigationControlsHintText() or self._matchControlsHintText)
 	end
 	if match.HuntStatusBadge then
 		match.HuntStatusBadge.Visible = viewState == "Hunt" and huntAssistSnapshot ~= nil
@@ -4784,7 +4872,10 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			match.ObjectiveLabel.Text = getHuntObjectiveText()
 			match.ObjectiveLabel.Visible = true
 		elseif viewState == "Investigation" then
-			match.ObjectiveLabel.Text = DEFAULT_MATCH_OBJECTIVE_TEXT
+			match.ObjectiveLabel.Text = getInvestigationObjectiveText()
+			match.ObjectiveLabel.Visible = true
+		elseif viewState == "Preparation" or viewState == "Loading" then
+			match.ObjectiveLabel.Text = getInvestigationObjectiveText()
 			match.ObjectiveLabel.Visible = true
 		else
 			match.ObjectiveLabel.Text = ""
