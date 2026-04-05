@@ -2026,6 +2026,15 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (synthetic interaction anchor baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut slice restruktur visual/runtime yang masih terlalu basic.
 
+## Update 2026-04-05 21:06 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` dirapikan lagi di sisi lobby reality scan:
+  - `SUPPORTED_ZONES` sekarang hanya memuat zona yang benar-benar punya geometry aktif.
+  - `TrainingZone` dan `LeaderboardZone` dihapus dari daftar karena tidak ada anchor nyata di `LobbySocialHub`.
+- status:
+  - **SELESAI (lobby zone reality alignment)**.
+  - **NEXT** tetap lanjut restruktur visual/runtime yang masih terlalu basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

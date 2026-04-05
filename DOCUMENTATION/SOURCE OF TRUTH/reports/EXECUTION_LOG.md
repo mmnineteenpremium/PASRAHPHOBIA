@@ -9668,3 +9668,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - ruang yang sebelumnya “hidup di data tapi mati secara visual” sekarang punya jalur affordance runtime yang lebih jelas
+
+## 2026-04-05 - Lobby Zone Reality Alignment
+
+### Scope
+
+- merapikan daftar zona lobby agar sesuai geometry yang benar-benar ada
+
+### Source Changes
+
+- `src/ServerScriptService/Server/LobbySocialHub/LobbyZoneManager.lua`
+  - hapus `TrainingZone` dan `LeaderboardZone` dari `SUPPORTED_ZONES`
+
+### Validation Notes
+
+- audit `LobbySocialHub.model.json` menunjukkan anchor yang benar-benar ada hanya:
+  - `SpawnPlaza`
+  - `MatchmakingZone`
+  - `ShopZone`
+  - `PartyZone`
+  - `DailyRewardZone`
+  - `FlexZone`
+
+### Interpretation
+
+- source lobby sekarang lebih jujur terhadap geometry aktif, sehingga AI/tool berikutnya tidak mengejar zona fiktif
