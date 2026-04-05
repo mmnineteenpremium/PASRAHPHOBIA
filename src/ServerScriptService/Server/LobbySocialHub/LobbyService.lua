@@ -77,6 +77,9 @@ local LOBBY_ZONE_ENTRY_GUIDE_ROOM_CARDS_NAME = "RoomCards"
 local LOBBY_ZONE_ENTRY_GUIDE_TOOL_EMF_NAME = "ToolDisplayEMF"
 local LOBBY_ZONE_ENTRY_GUIDE_TOOL_UV_NAME = "ToolDisplayUV"
 local LOBBY_ZONE_ENTRY_GUIDE_TOOL_BOX_NAME = "ToolDisplayBox"
+local LOBBY_ZONE_ENTRY_GUIDE_DESK_MAP_PLATE_NAME = "DeskMapPlate"
+local LOBBY_ZONE_ENTRY_GUIDE_DESK_MODE_PLATE_NAME = "DeskModePlate"
+local LOBBY_ZONE_ENTRY_GUIDE_DESK_START_PLATE_NAME = "DeskStartPlate"
 local LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME = "EntrySignPanel"
 local LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME = "FacadeCanopy"
 local LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME = "FacadeApron"
@@ -1648,6 +1651,9 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local toolDisplayEMF = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOL_EMF_NAME)
     local toolDisplayUV = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOL_UV_NAME)
     local toolDisplayBox = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOL_BOX_NAME)
+    local deskMapPlate = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_DESK_MAP_PLATE_NAME)
+    local deskModePlate = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_DESK_MODE_PLATE_NAME)
+    local deskStartPlate = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_DESK_START_PLATE_NAME)
     local signPanel = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME)
     local facadeCanopy = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
     local facadeApron = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
@@ -1727,6 +1733,9 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         toolDisplayEMF = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOL_EMF_NAME)
         toolDisplayUV = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOL_UV_NAME)
         toolDisplayBox = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOL_BOX_NAME)
+        deskMapPlate = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_DESK_MAP_PLATE_NAME)
+        deskModePlate = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_DESK_MODE_PLATE_NAME)
+        deskStartPlate = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_DESK_START_PLATE_NAME)
         facadeCanopy = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
         facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
         facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
@@ -1780,6 +1789,11 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         toolDisplayUV.Material = Enum.Material.Neon
         toolDisplayBox.Color = Color3.fromRGB(72, 82, 98)
         toolDisplayBox.Material = Enum.Material.SmoothPlastic
+        for _, plate in ipairs({ deskMapPlate, deskModePlate, deskStartPlate }) do
+            plate.Color = Color3.fromRGB(22, 30, 42)
+            plate.Material = Enum.Material.SmoothPlastic
+            plate.Transparency = 0.03
+        end
         for _, facadePart in ipairs({ facadeCanopy, facadeApron, facadeWingLeft, facadeWingRight }) do
             facadePart.Color = Color3.fromRGB(24, 32, 46)
             facadePart.Transparency = 0.02
@@ -1837,6 +1851,12 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             toolDisplayUV.CFrame = rightCase.CFrame * CFrame.new(0.0, rightCase.Size.Y * 0.5 + 0.14, 0.08)
             toolDisplayBox.Size = Vector3.new(0.74, 0.52, 0.42)
             toolDisplayBox.CFrame = rightCase.CFrame * CFrame.new(0.58, rightCase.Size.Y * 0.5 + 0.3, 0.02)
+            deskMapPlate.Size = Vector3.new(1.48, 0.16, 0.72)
+            deskMapPlate.CFrame = centerDeskTop.CFrame * CFrame.new(-1.74, 0.18, 0.72)
+            deskModePlate.Size = Vector3.new(1.48, 0.16, 0.72)
+            deskModePlate.CFrame = centerDeskTop.CFrame * CFrame.new(0, 0.18, 0.72)
+            deskStartPlate.Size = Vector3.new(1.48, 0.16, 0.72)
+            deskStartPlate.CFrame = centerDeskTop.CFrame * CFrame.new(1.74, 0.18, 0.72)
             facadeCanopy.Size = Vector3.new(anchorPart.Size.X + 6.8, 0.62, 3.8)
             facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.1, 1.9)
             facadeApron.Size = Vector3.new(anchorPart.Size.X + 9.4, 0.28, 8.8)
@@ -1882,6 +1902,12 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         ensureGuideBoardSurface(toolsBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "TOOLS", "EMF • UV • BOX", style.color)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "CONTRACT BOARD", "Map • Mode • Start", style.color)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "CONTRACT BOARD", "Map • Mode • Start", style.color)
+        ensureGuideBoardSurface(deskMapPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "MAP", "Haunted House", style.color)
+        ensureGuideBoardSurface(deskMapPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "MAP", "Haunted House", style.color)
+        ensureGuideBoardSurface(deskModePlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "MODE", "Classic", style.color)
+        ensureGuideBoardSurface(deskModePlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "MODE", "Classic", style.color)
+        ensureGuideBoardSurface(deskStartPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "START", "Room Browser", style.color)
+        ensureGuideBoardSurface(deskStartPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "START", "Room Browser", style.color)
     elseif zoneName == "ShopZone" or zoneName == "PartyZone" or zoneName == "DailyRewardZone" or zoneName == "FlexZone" then
         local kioskCopy = LOBBY_ZONE_ENTRY_KIOSK_COPY[zoneName]
         local boardBackFace = isWideOnX and Enum.NormalId.Back or Enum.NormalId.Right
@@ -2039,6 +2065,15 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         end
         if toolDisplayBox then
             toolDisplayBox:Destroy()
+        end
+        if deskMapPlate then
+            deskMapPlate:Destroy()
+        end
+        if deskModePlate then
+            deskModePlate:Destroy()
+        end
+        if deskStartPlate then
+            deskStartPlate:Destroy()
         end
         if facadeCanopy then
             facadeCanopy:Destroy()
