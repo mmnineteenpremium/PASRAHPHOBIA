@@ -38,6 +38,11 @@ Catatan penting:
 - Baca `AUDIO_REPLACEMENT_PLAN_2026-04-03.md` untuk slot audio kosong yang masih perlu diganti dan jalur apply setelah upload asset.
 - Baca `CREATOR_HUB_ID_TEMPLATE_2026-04-03.md` untuk blocker manual yang masih diperlukan agar bridge monetization bisa ditutup end-to-end.
 - Baca `EXECUTION_LOG.md` untuk progres task yang sudah dikerjakan selama fase eksekusi.
+- Baca `PUBLISH_REVIEW_FINAL_2026-04-06.md` untuk status publish saat ini.
+- Baca `FINAL_RELEASE_CHECKLIST_2026-04-06.md` untuk urutan final sebelum publish.
+- Baca `QA_MULTIPLAYER_MANUAL_CHECKLIST_2026-04-06.md` dan `PERSISTENCE_MANUAL_CHECKLIST_2026-04-06.md` untuk gate manual terakhir.
+- Baca `VISUAL_RUNTIME_VERIFICATION_2026-04-06.md` untuk bukti visual live terbaru dari Studio.
+- Baca `RETENTION_LOOP_BLUEPRINT_2026-04-06.md` untuk blueprint retention pasca backlog teknis utama selesai.
 
 ## Aturan Kerja yang Berlaku
 
@@ -47,3 +52,12 @@ Catatan penting:
 - `MCP` dipakai untuk inspect state live, playtest, input simulation, dan operasi Studio-only
 - setiap perubahan Studio yang dianggap final harus dimirror kembali ke source lokal sebelum dianggap selesai
 - jangan menambah sistem baru sebelum drift dan duplikasi owner utama dibersihkan
+
+## Status Saat Ini
+
+- backlog engineering utama sudah tertutup
+- lane yang tersisa sebelum publish bersifat manual/compliance:
+  - Creator Hub ID resmi
+  - multiplayer smoke dua client nyata
+  - persistence target non-mock
+  - legal/licensing final review
