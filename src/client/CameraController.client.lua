@@ -113,12 +113,15 @@ local fpvArmsSourceParts = {}
 local fpvHiddenCharacterParts = {}
 local lastArmCamCF = nil
 local _fpvJustActivated = false
+local _fpvPendingRootRealignUntil = nil
+local _fpvManualLookPrimed = false
 local fpvCursorUnlocked = false
 local fpvCursorToggleGui = nil
 local fpvCursorToggleButton = nil
 local fpvFlashlightVisualAlpha = 0
 local lastLoggedCameraMode = nil
 local setCursorUnlocked
+local getManualLookVector
 local manualCameraYaw = 0
 local manualCameraPitch = 0
 local manualLobbyOrbitActive = false
@@ -171,7 +174,54 @@ local function syncManualFromCamera(focusPosition)
 	end
 end
 
-local function getManualLookVector()
+local function syncManualFromRootFacing(rootPart)
+	if not (rootPart and rootPart:IsA("BasePart")) then
+		return
+	end
+
+	local rootLook = rootPart.CFrame.LookVector
+	local flatMagnitude = math.sqrt((rootLook.X * rootLook.X) + (rootLook.Z * rootLook.Z))
+	if flatMagnitude > 1e-4 then
+		manualCameraYaw = math.atan2(-rootLook.X, -rootLook.Z)
+	end
+
+	if camera then
+		local cameraLook = camera.CFrame.LookVector
+		local cameraFlatMagnitude = math.sqrt((cameraLook.X * cameraLook.X) + (cameraLook.Z * cameraLook.Z))
+		manualCameraPitch = clampManualPitch(math.atan2(cameraLook.Y, math.max(1e-4, cameraFlatMagnitude)))
+	else
+		manualCameraPitch = 0
+	end
+end
+
+local function realignManualFpvFromRootIfPending(rootPart)
+	if not _fpvPendingRootRealignUntil then
+		return
+	end
+	if tick() > _fpvPendingRootRealignUntil then
+		_fpvPendingRootRealignUntil = nil
+		return
+	end
+	if not (rootPart and rootPart:IsA("BasePart")) then
+		return
+	end
+
+	local desired = Vector3.new(rootPart.CFrame.LookVector.X, 0, rootPart.CFrame.LookVector.Z)
+	local current = getManualLookVector()
+	current = Vector3.new(current.X, 0, current.Z)
+	if desired.Magnitude <= 1e-4 or current.Magnitude <= 1e-4 then
+		syncManualFromRootFacing(rootPart)
+		return
+	end
+
+	if desired.Unit:Dot(current.Unit) < 0.98 then
+		syncManualFromRootFacing(rootPart)
+	else
+		_fpvPendingRootRealignUntil = nil
+	end
+end
+
+getManualLookVector = function()
 	local pitchCFrame = CFrame.Angles(manualCameraPitch, 0, 0)
 	local yawCFrame = CFrame.Angles(0, manualCameraYaw, 0)
 	return (yawCFrame * pitchCFrame).LookVector
@@ -826,14 +876,21 @@ local function setFpvLocked(enabled)
 		end
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 		local head = character:FindFirstChild("Head")
+		local rootPart = character:FindFirstChild("HumanoidRootPart")
 		if not humanoid or not head then
 			applyFpvMouseMode()
 			return
 		end
 
-		syncManualFromCamera(head.Position + MANUAL_CAMERA_FPV_HEAD_OFFSET)
+		if rootPart then
+			syncManualFromRootFacing(rootPart)
+		else
+			syncManualFromCamera(head.Position + MANUAL_CAMERA_FPV_HEAD_OFFSET)
+		end
 		ensureCameraAuthority(humanoid)
 		_fpvJustActivated = true
+		_fpvPendingRootRealignUntil = tick() + 0.75
+		_fpvManualLookPrimed = false
 		lastArmCamCF = nil
 		applyFpvMouseMode()
 		logCameraMode("FPV", "[CameraController] FPV LOCKED (Match)")
@@ -842,6 +899,8 @@ local function setFpvLocked(enabled)
 		player.CameraMode = Enum.CameraMode.Classic
 		manualLobbyOrbitActive = false
 		_fpvJustActivated = false
+		_fpvPendingRootRealignUntil = nil
+		_fpvManualLookPrimed = true
 		lastArmCamCF = nil
 		clearFpvArms()
 		applyFpvMouseMode()
@@ -973,12 +1032,18 @@ UserInputService.InputChanged:Connect(function(input, gameProcessed)
 	if input.UserInputType ~= Enum.UserInputType.MouseMovement then
 		return
 	end
+	if FPV_LOCKED and _fpvPendingRootRealignUntil and tick() <= _fpvPendingRootRealignUntil then
+		return
+	end
 	if not (manualLobbyOrbitActive or isLobbyManualFirstPerson() or (FPV_LOCKED and not fpvCursorUnlocked)) then
 		return
 	end
 	local delta = input.Delta
 	if delta.Magnitude <= 0 then
 		return
+	end
+	if FPV_LOCKED and not fpvCursorUnlocked then
+		_fpvManualLookPrimed = true
 	end
 	manualCameraYaw -= delta.X * MANUAL_CAMERA_SENSITIVITY
 	manualCameraPitch = clampManualPitch(manualCameraPitch - (delta.Y * MANUAL_CAMERA_SENSITIVITY))
@@ -1081,6 +1146,10 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 	updateFirstPersonCharacterVisibility(character, shouldHideRealCharacter)
 
 	if FPV_LOCKED and not fpvCursorUnlocked and rootPart then
+		if not _fpvManualLookPrimed then
+			syncManualFromRootFacing(rootPart)
+		end
+		realignManualFpvFromRootIfPending(rootPart)
 		applyManualFpvCamera(character, rootPart, cameraBobTarget)
 		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 		UserInputService.MouseIconEnabled = false
