@@ -181,6 +181,14 @@ local function ensureSafeZoneMarker(record)
     panel.BackgroundTransparency = 0.14
     panel.BorderSizePixel = 0
     panel.Size = UDim2.fromScale(1, 1)
+    local title = panel:FindFirstChild("Title")
+    if title and title:IsA("TextLabel") then
+        title.Text = tostring(zone:GetAttribute("SafeZoneLabel") or SAFE_ZONE_MARKER_TITLE_TEXT)
+    end
+    local subtitle = panel:FindFirstChild("Subtitle")
+    if subtitle and subtitle:IsA("TextLabel") then
+        subtitle.Text = tostring(zone:GetAttribute("SafeZoneSubtitle") or SAFE_ZONE_MARKER_SUBTITLE_TEXT)
+    end
     record.markerPanel = panel
 end
 
@@ -421,15 +429,21 @@ function Service:_registerSafeZones(matchId)
     local records = {}
     for _, child in ipairs(safeZonesFolder:GetChildren()) do
         if child:IsA("BasePart") then
+            local routeLabel = child:GetAttribute("RefugeRouteLabel")
             table.insert(records, {
                 id = child.Name,
                 part = child,
+                label = tostring(child:GetAttribute("SafeZoneLabel") or SAFE_ZONE_MARKER_TITLE_TEXT),
+                subtitle = tostring(child:GetAttribute("SafeZoneSubtitle") or SAFE_ZONE_MARKER_SUBTITLE_TEXT),
+                routeLabel = type(routeLabel) == "string" and routeLabel ~= "" and routeLabel or child.Name,
                 originalTransparency = child.Transparency,
                 originalColor = child.Color,
                 originalMaterial = child.Material,
             })
             child.CanQuery = true
             child.CanTouch = false
+            child:SetAttribute("SafeZoneLabel", tostring(child:GetAttribute("SafeZoneLabel") or SAFE_ZONE_MARKER_TITLE_TEXT))
+            child:SetAttribute("SafeZoneSubtitle", tostring(child:GetAttribute("SafeZoneSubtitle") or SAFE_ZONE_MARKER_SUBTITLE_TEXT))
             ensureSafeZoneMarker(records[#records])
         end
     end
@@ -454,6 +468,10 @@ function Service:_cleanupSafeZones(matchId)
                 zone.Transparency = record.originalTransparency
                 zone.Color = record.originalColor
                 zone.Material = record.originalMaterial
+                zone:SetAttribute("SafeZoneLabel", nil)
+                zone:SetAttribute("SafeZoneSubtitle", nil)
+                zone:SetAttribute("SafeZoneRoomLabel", nil)
+                zone:SetAttribute("RefugeRouteLabel", nil)
             end
             cleanupSafeZoneMarker(record)
         end

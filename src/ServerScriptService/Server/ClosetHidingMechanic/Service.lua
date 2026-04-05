@@ -392,11 +392,11 @@ local function ensureHideSpotMarker(record)
 
 	local title = panel:FindFirstChild("Title")
 	if title and title:IsA("TextLabel") then
-		title.Text = record.label or "Hide Spot"
+		title.Text = tostring(part:GetAttribute("HideSpotLabel") or record.label or "Hide Spot")
 	end
 	local subtitle = panel:FindFirstChild("Subtitle")
 	if subtitle and subtitle:IsA("TextLabel") then
-		subtitle.Text = HIDE_SPOT_MARKER_SUBTITLE_TEXT
+		subtitle.Text = tostring(part:GetAttribute("HideSpotSubtitle") or HIDE_SPOT_MARKER_SUBTITLE_TEXT)
 	end
 	record.markerPanel = panel
 end
@@ -536,6 +536,8 @@ function Service:_updatePromptState(record)
 	record.part:SetAttribute("HideSpotType", "Closet")
 	record.part:SetAttribute("HideSpotOccupied", occupied)
 	record.part:SetAttribute("HideSpotLabel", record.label)
+	record.part:SetAttribute("HideSpotSubtitle", "Masuk lalu diam saat hunt")
+	record.part:SetAttribute("RefugeRouteLabel", record.label)
 	record.part:SetAttribute("HideSpotPromptDistance", resolvePromptDistance(record.part))
 end
 
@@ -592,6 +594,8 @@ function Service:_cleanupHideSpots(matchId)
 			record.part:SetAttribute("HideSpotType", nil)
 			record.part:SetAttribute("HideSpotOccupied", nil)
 			record.part:SetAttribute("HideSpotLabel", nil)
+			record.part:SetAttribute("HideSpotSubtitle", nil)
+			record.part:SetAttribute("RefugeRouteLabel", nil)
 			record.part:SetAttribute("HideSpotPromptDistance", nil)
 		end
 	end
