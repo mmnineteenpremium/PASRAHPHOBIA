@@ -9115,7 +9115,7 @@ function UISystem:_applyDeviceSizing()
 	self:_layoutLobbyFloatRail()
 end
 
-function UISystem:_runPostTeleportLoadingFlow()
+function UISystem:_runPostTeleportLoadingFlow(initialPayload)
 	if self._postTeleportFlowRunning then
 		return
 	end
@@ -9133,14 +9133,16 @@ function UISystem:_runPostTeleportLoadingFlow()
 		return
 	end
 
+	self:_setPhase(MATCH_PHASE.LOADING, initialPayload)
+
 	self._postTeleportFlowToken += 1
 	local flowToken = self._postTeleportFlowToken
 	self._postTeleportFlowRunning = true
+	local fallbackInGamePayload = initialPayload
 	task.spawn(function()
 		if self._postTeleportFlowToken ~= flowToken then
 			return
 		end
-		self:_setPhase(MATCH_PHASE.LOADING)
 		task.wait(2)
 
 		if self._postTeleportFlowToken ~= flowToken then
@@ -9164,10 +9166,9 @@ function UISystem:_runPostTeleportLoadingFlow()
 		if currentPlayer and currentPlayer:GetAttribute("InMatch") == true then
 			self._hasPostTeleportLoaded = true
 			self._awaitingPostTeleportFlow = false
-			if self._pendingInGamePayload then
-				self:_setPhase(MATCH_PHASE.INGAME, self._pendingInGamePayload)
-				self._pendingInGamePayload = nil
-			end
+			local nextPayload = self._pendingInGamePayload or fallbackInGamePayload or self._phasePayload
+			self._pendingInGamePayload = nil
+			self:_setPhase(MATCH_PHASE.INGAME, nextPayload)
 		end
 
 		self._postTeleportFlowRunning = false
@@ -9627,7 +9628,7 @@ function UISystem:_renderPhase(phase, payload)
 	local lobbyUI = playerGui:FindFirstChild("LobbyUI")
 	local roomUI = playerGui:FindFirstChild("RoomBrowserUI")
 	local hud = playerGui:FindFirstChild("SensoryHorrorHUD") or playerGui:FindFirstChild("HorrorHUD")
-	local loadingUI = playerGui:FindFirstChild("MatchLoadingUI")
+	local loadingUI = self:_ensureLoadingScreen()
 	local matchUX = self._uxWidgets and self._uxWidgets.match or nil
 
 	if not lobbyUI then
@@ -9816,7 +9817,7 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		self._matchStartTransitionAudioArmed = false
 		self._hasPostTeleportLoaded = false
 		self._awaitingPostTeleportFlow = true
-		self:_runPostTeleportLoadingFlow()
+		self:_runPostTeleportLoadingFlow(payload)
 	elseif eventName == "PhaseChanged" then
 		local resolvedPhase = resolvePhaseFromPayload(eventName, payload)
 		if resolvedPhase == MATCH_PHASE.INGAME and (self._awaitingPostTeleportFlow or self._postTeleportFlowRunning) then
