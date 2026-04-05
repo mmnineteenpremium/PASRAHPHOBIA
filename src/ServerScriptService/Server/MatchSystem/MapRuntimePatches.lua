@@ -226,6 +226,23 @@ local function findNearestRoomLabel(roomsFolder, worldPosition)
 	return bestLabel
 end
 
+local function resolveInteractionGuideSubtitle(roomLabel)
+	local token = tostring(roomLabel or ""):lower()
+	if token:find("closet", 1, true) or token:find("locker", 1, true) then
+		return "Refuge route"
+	end
+	if token:find("basement", 1, true) or token:find("attic", 1, true) or token:find("stair", 1, true) then
+		return "Transisi vertikal"
+	end
+	if token:find("bathroom", 1, true) or token:find("bedroom", 1, true) then
+		return "Sweep evidence"
+	end
+	if token:find("kitchen", 1, true) or token:find("living", 1, true) or token:find("dining", 1, true) then
+		return "Area investigasi"
+	end
+	return "Anchor ruang"
+end
+
 local function ensureInteractionPointPart(folder, interactionName, targetPosition)
 	if typeof(folder) ~= "Instance" or not folder:IsA("Folder") or typeof(targetPosition) ~= "Vector3" then
 		return nil
@@ -329,7 +346,7 @@ local function ensureInteractionGuide(interactionPoint, roomLabel)
 		subtitle.Position = UDim2.new(0, 14, 0, 20)
 		subtitle.Size = UDim2.new(1, -28, 0, 14)
 		subtitle.Font = Enum.Font.GothamMedium
-		subtitle.Text = "Anchor ruang"
+		subtitle.Text = resolveInteractionGuideSubtitle(roomLabel)
 		subtitle.TextColor3 = Color3.fromRGB(176, 198, 218)
 		subtitle.TextSize = 10
 		subtitle.TextWrapped = true
@@ -345,6 +362,10 @@ local function ensureInteractionGuide(interactionPoint, roomLabel)
 	local title = panel:FindFirstChild("Title")
 	if title and title:IsA("TextLabel") then
 		title.Text = roomLabel
+	end
+	local subtitle = panel:FindFirstChild("Subtitle")
+	if subtitle and subtitle:IsA("TextLabel") then
+		subtitle.Text = resolveInteractionGuideSubtitle(roomLabel)
 	end
 
 	return folder
