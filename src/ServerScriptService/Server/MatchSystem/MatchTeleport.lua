@@ -22,6 +22,10 @@ local SPAWN_WAIT_STEP = 0.1
 local CHARACTER_WAIT_TIMEOUT = 5
 local CHARACTER_WAIT_STEP = 0.1
 local DEFAULT_FORWARD = Vector3.new(0, 0, -1)
+local SPAWN_FORWARD_CLEARANCE_CHECK_DISTANCE = 8
+local SPAWN_FORWARD_OFFSET_MAX = 2
+local SPAWN_FORWARD_OFFSET_MIN_CLEARANCE = 2.5
+local SPAWN_FORWARD_RAY_HEIGHT = 1.9
 
 -- Streaming + physics stabilization for in-place teleports (StreamingEnabled = true).
 -- Without this, clients can briefly have no colliders at the destination and the character can drift/fling.
@@ -550,32 +554,6 @@ local function resolveSpawnFacingForward(mapClone, position, rawCFrame)
 		return resolveUprightForward(rawCFrame)
 	end
 
-	local roomsFolder = mapClone and mapClone:FindFirstChild("Rooms", true)
-	local containingRoom = nil
-	local containingDistance = math.huge
-	if roomsFolder then
-		for _, room in ipairs(roomsFolder:GetChildren()) do
-			if room:IsA("BasePart") and isPointInsideRoomPart(room, position) then
-				local offset = Vector3.new(room.Position.X - position.X, 0, room.Position.Z - position.Z)
-				local distance = offset.Magnitude
-				if distance > 4 and distance < containingDistance then
-					containingRoom = room
-					containingDistance = distance
-				end
-			end
-		end
-	end
-	if containingRoom then
-		local towardRoomCenter = Vector3.new(
-			containingRoom.Position.X - position.X,
-			0,
-			containingRoom.Position.Z - position.Z
-		)
-		if towardRoomCenter.Magnitude > 1e-4 then
-			return towardRoomCenter.Unit
-		end
-	end
-
 	local interactionPointsFolder = mapClone and mapClone:FindFirstChild("InteractionPoints", true)
 	local nearestInteraction = nil
 	local nearestDistance = math.huge
@@ -602,6 +580,32 @@ local function resolveSpawnFacingForward(mapClone, position, rawCFrame)
 		end
 	end
 
+	local roomsFolder = mapClone and mapClone:FindFirstChild("Rooms", true)
+	local containingRoom = nil
+	local containingDistance = math.huge
+	if roomsFolder then
+		for _, room in ipairs(roomsFolder:GetChildren()) do
+			if room:IsA("BasePart") and isPointInsideRoomPart(room, position) then
+				local offset = Vector3.new(room.Position.X - position.X, 0, room.Position.Z - position.Z)
+				local distance = offset.Magnitude
+				if distance > 4 and distance < containingDistance then
+					containingRoom = room
+					containingDistance = distance
+				end
+			end
+		end
+	end
+	if containingRoom then
+		local towardRoomCenter = Vector3.new(
+			containingRoom.Position.X - position.X,
+			0,
+			containingRoom.Position.Z - position.Z
+		)
+		if towardRoomCenter.Magnitude > 1e-4 then
+			return towardRoomCenter.Unit
+		end
+	end
+
 	local mapPivot = mapClone and mapClone:GetPivot()
 	if typeof(mapPivot) == "CFrame" then
 		local towardPivot = Vector3.new(mapPivot.Position.X - position.X, 0, mapPivot.Position.Z - position.Z)
@@ -616,6 +620,28 @@ end
 local function buildUprightFacingCFrame(mapClone, position, rawCFrame)
 	local forward = resolveSpawnFacingForward(mapClone, position, rawCFrame)
 	return CFrame.lookAt(position, position + forward, Vector3.yAxis)
+end
+
+local function resolveSpawnForwardOffset(mapClone, position, forward)
+	if not mapClone or typeof(position) ~= "Vector3" or typeof(forward) ~= "Vector3" or forward.Magnitude <= 1e-4 then
+		return 0
+	end
+
+	local rayParams = RaycastParams.new()
+	rayParams.FilterType = Enum.RaycastFilterType.Include
+	rayParams.FilterDescendantsInstances = { mapClone }
+	rayParams.IgnoreWater = true
+	rayParams.RespectCanCollide = true
+
+	local rayOrigin = position + Vector3.new(0, SPAWN_FORWARD_RAY_HEIGHT, 0)
+	local rayDirection = forward.Unit * SPAWN_FORWARD_CLEARANCE_CHECK_DISTANCE
+	local hit = Workspace:Raycast(rayOrigin, rayDirection, rayParams)
+	local clearance = hit and (hit.Position - rayOrigin).Magnitude or SPAWN_FORWARD_CLEARANCE_CHECK_DISTANCE
+	if clearance <= SPAWN_FORWARD_OFFSET_MIN_CLEARANCE then
+		return 0
+	end
+
+	return math.clamp(clearance - SPAWN_FORWARD_OFFSET_MIN_CLEARANCE, 0, SPAWN_FORWARD_OFFSET_MAX)
 end
 
 local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance)
@@ -675,7 +701,13 @@ local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance)
 		correctedPosition.Z
 	)
 
-	return buildUprightFacingCFrame(mapClone, finalPosition, rawCFrame), nil
+	local forward = resolveSpawnFacingForward(mapClone, finalPosition, rawCFrame)
+	local forwardOffset = resolveSpawnForwardOffset(mapClone, finalPosition, forward)
+	if forwardOffset > 0 then
+		finalPosition += (forward * forwardOffset)
+	end
+
+	return CFrame.lookAt(finalPosition, finalPosition + forward, Vector3.yAxis), nil
 end
 
 local function resolveSafeSpawnCFrame(mapClone, spawnCandidates, preferredIndex, floorClearance)
