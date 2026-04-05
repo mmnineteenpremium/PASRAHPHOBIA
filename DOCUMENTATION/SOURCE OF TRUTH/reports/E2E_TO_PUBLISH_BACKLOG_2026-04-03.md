@@ -2085,6 +2085,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (lobby entry guide baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 21:50 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi traversal map:
+  - pintu runtime sekarang punya beacon ringan di world-space, bukan hanya label prompt saat didekati.
+  - `DoorRouteLabel` kini benar-benar dipakai sebagai anchor visual tujuan ruang.
+- validasi:
+  - build source sukses:
+    - `_tmp_door_route_guides_build.rbxlx`
+- status:
+  - **SELESAI (door route guide baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
