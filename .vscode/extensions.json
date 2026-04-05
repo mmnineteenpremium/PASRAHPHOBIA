@@ -1,6 +1,27 @@
 {
   "recommendations": [
     "evaera.vscode-rojo",
-    "JohnnyMorganz.luau-lsp"
+    "JohnnyMorganz.luau-lsp",
+    "corecii.roblox-output-sync",
+    "evaera.roblox-api-explorer",
+    "dekkonot.vscode-luau",
+    "kampfkarren.roblox-lua-autofills",
+    "waterbottlebag.copyrobloxpath",
+    "filiptibell.roblox-ui",
+    "figma.figma-vscode-extension",
+    "sssooonnnggg.luau-debugger",
+    "vascosoares.roblox-epic-snippets"
+  ],
+  "unwantedRecommendations": [
+    "adamfoster.roblox-editor",
+    "crishoux.join-roblox-game",
+    "danielayecodesense.roblox-lsp-plus-knit",
+    "muoshuu.rojo-ui",
+    "nightrains.robloxlsp",
+    "roblox-ts.vscode-roblox-ts",
+    "snipcola.roblox-execute",
+    "spoorloos.rbxexecute",
+    "thornhall.roblox-studio-like-syntax-highlighting",
+    "vladmarica.roblox-vscode-icon-theme"
   ]
 }
