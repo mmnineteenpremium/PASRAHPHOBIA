@@ -5056,19 +5056,38 @@ function UISystem:_refreshBasicLobbyPanel()
 	end
 	if lobby.BasicHintLabel then
 		lobby.BasicHintLabel.Text = hintText
+		lobby.BasicHintLabel.TextColor3 = (type(zoneFocus) == "table" and not currentRoom and not state.lastError and typeof(zoneFocus.accentColor) == "Color3")
+			and zoneFocus.accentColor:Lerp(Color3.fromRGB(240, 244, 248), 0.4)
+			or Color3.fromRGB(156, 170, 192)
 	end
 	if lobby.BasicModePill then
 		lobby.BasicModePill.Text = string.upper(selectedMode)
-		lobby.BasicModePill.BackgroundColor3 = Color3.fromRGB(58, 92, 126)
+		lobby.BasicModePill.BackgroundColor3 = (type(zoneFocus) == "table" and not currentRoom and not state.lastError and typeof(zoneFocus.accentColor) == "Color3")
+			and zoneFocus.accentColor:Lerp(Color3.fromRGB(58, 92, 126), 0.52)
+			or Color3.fromRGB(58, 92, 126)
 	end
 	if lobby.BasicMapPill then
-		lobby.BasicMapPill.Text = tostring(currentRoom and currentRoom.mapId or selectedMap)
-		lobby.BasicMapPill.BackgroundColor3 = Color3.fromRGB(70, 86, 64)
+		if type(zoneFocus) == "table" and not currentRoom and not state.lastError and tostring(zoneFocus.badge or "") ~= "" then
+			lobby.BasicMapPill.Text = tostring(zoneFocus.badge or "FOCUS")
+			lobby.BasicMapPill.BackgroundColor3 = typeof(zoneFocus.accentColor) == "Color3"
+				and zoneFocus.accentColor:Lerp(Color3.fromRGB(70, 86, 64), 0.46)
+				or Color3.fromRGB(70, 86, 64)
+		else
+			lobby.BasicMapPill.Text = tostring(currentRoom and currentRoom.mapId or selectedMap)
+			lobby.BasicMapPill.BackgroundColor3 = Color3.fromRGB(70, 86, 64)
+		end
 	end
 	if lobby.BasicRoomPill then
 		local roomText = currentRoom and string.format("ROOM #%s", tostring(currentRoom.roomId)) or string.format("%d ROOM", #rooms)
-		lobby.BasicRoomPill.Text = roomText
-		lobby.BasicRoomPill.BackgroundColor3 = Color3.fromRGB(96, 76, 48)
+		if type(zoneFocus) == "table" and not currentRoom and not state.lastError and tostring(zoneFocus.subtitle or "") ~= "" then
+			lobby.BasicRoomPill.Text = "FOCUS ACTIVE"
+			lobby.BasicRoomPill.BackgroundColor3 = typeof(zoneFocus.accentColor) == "Color3"
+				and zoneFocus.accentColor:Lerp(Color3.fromRGB(96, 76, 48), 0.58)
+				or Color3.fromRGB(96, 76, 48)
+		else
+			lobby.BasicRoomPill.Text = roomText
+			lobby.BasicRoomPill.BackgroundColor3 = Color3.fromRGB(96, 76, 48)
+		end
 	end
 	if lobby.BasicOpenRoomBrowserButton then
 		lobby.BasicOpenRoomBrowserButton.Text = self._roomBrowserVisible and "TUTUP ROOM BROWSER" or "OPEN ROOM BROWSER"

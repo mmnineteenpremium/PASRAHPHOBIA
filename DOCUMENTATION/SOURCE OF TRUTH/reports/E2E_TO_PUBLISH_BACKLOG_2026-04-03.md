@@ -2157,6 +2157,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (semantic investigation HUD baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 22:33 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi panel lobby:
+  - pill dan hint panel lobby sekarang ikut memantulkan focus zona aktif, tidak hanya header dan feedback toast.
+  - context zona terasa lebih persisten saat pemain belum masuk room.
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_focus_pills_build.rbxlx`
+- status:
+  - **SELESAI (lobby focus pills baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
