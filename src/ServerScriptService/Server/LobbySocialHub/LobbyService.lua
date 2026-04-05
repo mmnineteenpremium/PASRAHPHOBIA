@@ -89,8 +89,8 @@ local LOBBY_ZONE_FEEDBACK = {
         hint = "Semua panel utama tetap bisa diakses dari quick menu tanpa harus menyentuh bangunan tertentu.",
     },
     MatchmakingZone = {
-        title = "Area matchmaking aktif.",
-        hint = "Gunakan PLAY atau Room Browser untuk membuat room, pilih mode, dan start dengan sadar; area ini tidak lagi auto-queue.",
+        title = "Area contract & evidence aktif.",
+        hint = "Gunakan PLAY atau Room Browser untuk membuat room, lalu pakai bangunan utara sebagai anchor contract board dan training evidence.",
     },
     ShopZone = {
         title = "Area shop aktif.",
@@ -117,7 +117,7 @@ local LOBBY_ZONE_GUIDE_STYLE = {
     },
     MatchmakingZone = {
         color = Color3.fromRGB(132, 186, 255),
-        subtitle = "Play, room browser, start match",
+        subtitle = "Contract board, evidence training, start match",
     },
     ShopZone = {
         color = Color3.fromRGB(255, 196, 118),
@@ -140,7 +140,8 @@ local LOBBY_ZONE_GUIDE_STYLE = {
 local LOBBY_ZONE_ENTRY_COPY = {
     MatchmakingZone = {
         title = "PLAY",
-        subtitle = "Masuk ke matchmaking",
+        subtitle = "Contract board & start match",
+        meta = "TOOLS TRAINING • CONTRACT",
     },
     ShopZone = {
         title = "SHOP",
@@ -1346,7 +1347,7 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     billboard.LightInfluence = 0
     billboard.MaxDistance = 100
     billboard.ResetOnSpawn = false
-    billboard.Size = UDim2.fromOffset(184, 46)
+    billboard.Size = UDim2.fromOffset(184, type(copy.meta) == "string" and copy.meta ~= "" and 64 or 46)
     billboard.StudsOffsetWorldSpace = Vector3.new(0, anchorPart.Size.Y * 0.5 + 2.8, 0)
 
     local accentBar = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ACCENT_NAME)
@@ -1475,6 +1476,18 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             16,
             UDim2.new(0, 20, 0, 23)
         ).Parent = panel
+
+        if type(copy.meta) == "string" and copy.meta ~= "" then
+            createGuideTextLabel(
+                "Meta",
+                Enum.Font.GothamBold,
+                9,
+                style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.45),
+                copy.meta,
+                14,
+                UDim2.new(0, 20, 0, 39)
+            ).Parent = panel
+        end
     end
 
     panel.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
