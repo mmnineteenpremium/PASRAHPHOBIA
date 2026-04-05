@@ -532,8 +532,89 @@ local function resolveUprightForward(rawCFrame)
 	return DEFAULT_FORWARD
 end
 
-local function buildUprightFacingCFrame(position, rawCFrame)
-	local forward = resolveUprightForward(rawCFrame)
+local function isPointInsideRoomPart(part, worldPosition)
+	if not (part and part:IsA("BasePart") and typeof(worldPosition) == "Vector3") then
+		return false
+	end
+
+	local localPosition = part.CFrame:PointToObjectSpace(worldPosition)
+	local half = part.Size * 0.5
+	local verticalTolerance = math.max(half.Y, 8)
+	return math.abs(localPosition.X) <= (half.X + 2)
+		and math.abs(localPosition.Y) <= verticalTolerance
+		and math.abs(localPosition.Z) <= (half.Z + 2)
+end
+
+local function resolveSpawnFacingForward(mapClone, position, rawCFrame)
+	if typeof(position) ~= "Vector3" then
+		return resolveUprightForward(rawCFrame)
+	end
+
+	local roomsFolder = mapClone and mapClone:FindFirstChild("Rooms", true)
+	local containingRoom = nil
+	local containingDistance = math.huge
+	if roomsFolder then
+		for _, room in ipairs(roomsFolder:GetChildren()) do
+			if room:IsA("BasePart") and isPointInsideRoomPart(room, position) then
+				local offset = Vector3.new(room.Position.X - position.X, 0, room.Position.Z - position.Z)
+				local distance = offset.Magnitude
+				if distance > 4 and distance < containingDistance then
+					containingRoom = room
+					containingDistance = distance
+				end
+			end
+		end
+	end
+	if containingRoom then
+		local towardRoomCenter = Vector3.new(
+			containingRoom.Position.X - position.X,
+			0,
+			containingRoom.Position.Z - position.Z
+		)
+		if towardRoomCenter.Magnitude > 1e-4 then
+			return towardRoomCenter.Unit
+		end
+	end
+
+	local interactionPointsFolder = mapClone and mapClone:FindFirstChild("InteractionPoints", true)
+	local nearestInteraction = nil
+	local nearestDistance = math.huge
+	if interactionPointsFolder then
+		for _, point in ipairs(interactionPointsFolder:GetChildren()) do
+			if point:IsA("BasePart") then
+				local offset = Vector3.new(point.Position.X - position.X, 0, point.Position.Z - position.Z)
+				local distance = offset.Magnitude
+				if distance >= 6 and distance <= 32 and distance < nearestDistance then
+					nearestInteraction = point
+					nearestDistance = distance
+				end
+			end
+		end
+	end
+	if nearestInteraction then
+		local towardInteraction = Vector3.new(
+			nearestInteraction.Position.X - position.X,
+			0,
+			nearestInteraction.Position.Z - position.Z
+		)
+		if towardInteraction.Magnitude > 1e-4 then
+			return towardInteraction.Unit
+		end
+	end
+
+	local mapPivot = mapClone and mapClone:GetPivot()
+	if typeof(mapPivot) == "CFrame" then
+		local towardPivot = Vector3.new(mapPivot.Position.X - position.X, 0, mapPivot.Position.Z - position.Z)
+		if towardPivot.Magnitude > 8 then
+			return towardPivot.Unit
+		end
+	end
+
+	return resolveUprightForward(rawCFrame)
+end
+
+local function buildUprightFacingCFrame(mapClone, position, rawCFrame)
+	local forward = resolveSpawnFacingForward(mapClone, position, rawCFrame)
 	return CFrame.lookAt(position, position + forward, Vector3.yAxis)
 end
 
@@ -594,7 +675,7 @@ local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance)
 		correctedPosition.Z
 	)
 
-	return buildUprightFacingCFrame(finalPosition, rawCFrame), nil
+	return buildUprightFacingCFrame(mapClone, finalPosition, rawCFrame), nil
 end
 
 local function resolveSafeSpawnCFrame(mapClone, spawnCandidates, preferredIndex, floorClearance)
