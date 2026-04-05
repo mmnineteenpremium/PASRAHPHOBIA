@@ -9614,14 +9614,17 @@ function UISystem:_startLoadingScreenLoop(payload)
 	end)
 end
 
-function UISystem:_stopLoadingScreenLoop()
+function UISystem:_stopLoadingScreenLoop(showCompletionMessage)
 	self._loadingLoopRunning = false
-	self:_setLoadingScreenContent("Memulai investigasi...", self._phasePayload, 1, "Selesai dimuat.")
-	task.wait(0.12)
 	local screen = self:_ensureLoadingScreen()
-	if screen then
-		screen.Enabled = false
+	if not screen then
+		return
 	end
+	if showCompletionMessage == true and screen.Enabled then
+		self:_setLoadingScreenContent("Memulai investigasi...", self._phasePayload, 1, "Selesai dimuat.")
+		task.wait(0.12)
+	end
+	screen.Enabled = false
 end
 
 function UISystem:_renderPhase(phase, payload)
@@ -9642,7 +9645,7 @@ function UISystem:_renderPhase(phase, payload)
 
 	-- Reset transient overlays before rendering a new phase.
 	if loadingUI and loadingUI:IsA("ScreenGui") and phase ~= MATCH_PHASE.PREPARING and phase ~= MATCH_PHASE.LOADING and phase ~= MATCH_PHASE.INGAME then
-		self:_stopLoadingScreenLoop()
+		self:_stopLoadingScreenLoop(false)
 	end
 	if roomUI then
 		local loadingLabel = roomUI:FindFirstChild("LoadingLabel")
@@ -9742,7 +9745,7 @@ function UISystem:_renderPhase(phase, payload)
 			task.wait(waitTime)
 		end
 
-		self:_stopLoadingScreenLoop()
+		self:_stopLoadingScreenLoop(true)
 		if matchUX and matchUX.MessageLabel then
 			matchUX.MessageLabel.Visible = false
 			matchUX.MessageLabel.Text = ""
