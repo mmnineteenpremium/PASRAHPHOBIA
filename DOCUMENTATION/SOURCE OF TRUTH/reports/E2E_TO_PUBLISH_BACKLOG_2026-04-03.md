@@ -2109,6 +2109,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (lobby feedback sync baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 22:05 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi readability match:
+  - HUD `Preparation/Investigation` sekarang membaca anchor navigasi runtime terdekat dari pintu atau interaction guide.
+  - objective dan controls hint pada phase non-hunt tidak lagi sepenuhnya generik.
+- validasi:
+  - build source sukses:
+    - `_tmp_match_navigation_readability_build.rbxlx`
+- status:
+  - **SELESAI (match navigation readability baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
