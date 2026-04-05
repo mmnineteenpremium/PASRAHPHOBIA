@@ -579,6 +579,20 @@ local function coerceVector3(value)
 	return nil
 end
 
+local function normalizeMapProfileName(mapName)
+	if type(mapName) ~= "string" then
+		return nil
+	end
+	local normalized = tostring(mapName)
+	if normalized == "" then
+		return nil
+	end
+	if normalized == "Lobby" then
+		return "LobbySocialHub"
+	end
+	return normalized
+end
+
 function VFXController:Init(context)
 	self._context = context or {}
 	self._remotes = self._context.Remotes or {}
@@ -643,11 +657,18 @@ function VFXController:Start()
 	end
 
 	local localPlayer = Players.LocalPlayer
-	if localPlayer and localPlayer:GetAttribute("InMatch") == true then
-		self:_applyMapVisualProfile(tostring(localPlayer:GetAttribute("MapName") or "HauntedHouse"))
-	else
-		self:_applyMapVisualProfile("LobbySocialHub")
+	if localPlayer then
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("InMatch"):Connect(function()
+			self:_syncMapVisualProfileFromPlayerState()
+		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchMapId"):Connect(function()
+			self:_syncMapVisualProfileFromPlayerState()
+		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MapName"):Connect(function()
+			self:_syncMapVisualProfileFromPlayerState()
+		end))
 	end
+	self:_syncMapVisualProfileFromPlayerState()
 end
 
 function VFXController:_recordVFXDebug(eventName, profileName)
@@ -943,21 +964,23 @@ function VFXController:_handleMatchEvent(payload)
 	elseif eventName == "GhostAudioTriggered" then
 		self:_triggerGhostAudioShock(payload)
 	elseif eventName == "MatchStarted" then
-		local mapName = (payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId) or "Unknown"
-		self:_applyMapVisualProfile(mapName)
+		local mapName = normalizeMapProfileName((payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId))
+		self:_applyMapVisualProfile(mapName or self:_resolveAuthoritativeMapProfile())
 		self._huntActive = false
 		self:_applyThreatBaseline(0)
 	elseif eventName == "PhaseChanged" then
 		local phaseName = tostring((payload and payload.phase) or (payload and payload.phaseName) or (payload and payload.matchPhase) or "")
-		local mapName = (payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId) or (payload and payload.map) or nil
-		if type(mapName) == "string" and mapName ~= "" then
-			self:_applyMapVisualProfile(mapName == "Lobby" and "LobbySocialHub" or mapName)
+		local mapName = normalizeMapProfileName((payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId) or (payload and payload.map))
+		if mapName then
+			self:_applyMapVisualProfile(mapName)
 		elseif phaseName == "Lobby" then
 			self:_applyMapVisualProfile("LobbySocialHub")
+		else
+			self:_syncMapVisualProfileFromPlayerState()
 		end
 	elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 		self._huntActive = false
-		self:_applyMapVisualProfile("LobbySocialHub")
+		self:_syncMapVisualProfileFromPlayerState()
 		self:_applyThreatBaseline(0.35)
 	end
 end
@@ -1310,12 +1333,33 @@ function VFXController:_applyMapSunRays(mapName)
 end
 
 function VFXController:_applyMapVisualProfile(mapName)
-	self:_applyMapAtmosphere(mapName)
-	self:_applyMapLighting(mapName)
-	self:_applyMapGrade(mapName)
-	self:_applyMapBloom(mapName)
-	self:_applyMapDepthOfField(mapName)
-	self:_applyMapSunRays(mapName)
+	local resolvedMapName = normalizeMapProfileName(mapName) or "LobbySocialHub"
+	self._activeMapProfileName = resolvedMapName
+	self:_applyMapAtmosphere(resolvedMapName)
+	self:_applyMapLighting(resolvedMapName)
+	self:_applyMapGrade(resolvedMapName)
+	self:_applyMapBloom(resolvedMapName)
+	self:_applyMapDepthOfField(resolvedMapName)
+	self:_applyMapSunRays(resolvedMapName)
+	local localPlayer = Players.LocalPlayer
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahVFXMapProfile", resolvedMapName)
+	end
+end
+
+function VFXController:_resolveAuthoritativeMapProfile()
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer or localPlayer:GetAttribute("InMatch") ~= true then
+		return "LobbySocialHub"
+	end
+
+	local mapName = normalizeMapProfileName(localPlayer:GetAttribute("MatchMapId"))
+		or normalizeMapProfileName(localPlayer:GetAttribute("MapName"))
+	return mapName or self._activeMapProfileName or "HauntedHouse"
+end
+
+function VFXController:_syncMapVisualProfileFromPlayerState()
+	self:_applyMapVisualProfile(self:_resolveAuthoritativeMapProfile())
 end
 
 return setmetatable({}, VFXController)

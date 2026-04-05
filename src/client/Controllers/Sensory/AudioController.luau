@@ -1,5 +1,4 @@
 local Players = game:GetService("Players")
-local Players = game:GetService("Players")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -30,6 +29,20 @@ local function normalizePhaseToken(payload)
 			or ""
 	)
 	return token:gsub("[%s_%-_]+", ""):lower()
+end
+
+local function normalizeMapProfileName(mapName)
+	if type(mapName) ~= "string" then
+		return nil
+	end
+	local normalized = tostring(mapName)
+	if normalized == "" then
+		return nil
+	end
+	if normalized == "Lobby" then
+		return "LobbySocialHub"
+	end
+	return normalized
 end
 
 local function lookupHeartbeatSound()
@@ -78,11 +91,18 @@ function AudioController:Start()
 	end
 
 	local localPlayer = self._player or Players.LocalPlayer
-	if localPlayer and localPlayer:GetAttribute("InMatch") == true then
-		self:_applyMapReverb(tostring(localPlayer:GetAttribute("MapName") or "HauntedHouse"))
-	else
-		self:_applyMapReverb("LobbySocialHub")
+	if localPlayer then
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("InMatch"):Connect(function()
+			self:_syncMapReverbFromPlayerState()
+		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchMapId"):Connect(function()
+			self:_syncMapReverbFromPlayerState()
+		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MapName"):Connect(function()
+			self:_syncMapReverbFromPlayerState()
+		end))
 	end
+	self:_syncMapReverbFromPlayerState()
 end
 
 function AudioController:Stop()
@@ -102,6 +122,26 @@ function AudioController:_applyMapReverb(mapName)
 	if SoundService.AmbientReverb ~= desired then
 		SoundService.AmbientReverb = desired
 	end
+	local localPlayer = self._player or Players.LocalPlayer
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahAudioMapProfile", tostring(mapName or ""))
+		localPlayer:SetAttribute("PasrahAudioReverb", tostring(desired))
+	end
+end
+
+function AudioController:_resolveAuthoritativeMapProfile()
+	local localPlayer = self._player or Players.LocalPlayer
+	if not localPlayer or localPlayer:GetAttribute("InMatch") ~= true then
+		return "LobbySocialHub"
+	end
+
+	local mapName = normalizeMapProfileName(localPlayer:GetAttribute("MatchMapId"))
+		or normalizeMapProfileName(localPlayer:GetAttribute("MapName"))
+	return mapName or "HauntedHouse"
+end
+
+function AudioController:_syncMapReverbFromPlayerState()
+	self:_applyMapReverb(self:_resolveAuthoritativeMapProfile())
 end
 
 function AudioController:_onSanityEvent(payload)
@@ -117,15 +157,17 @@ function AudioController:_onMatchEvent(payload)
 	end
 
 	if eventName == "MatchStarted" then
-		local mapName = (payload and payload.mapName) or (payload and payload.mapId) or (payload and payload.map) or payload.mapType or "Unknown"
-		self:_applyMapReverb(mapName)
+		local mapName = normalizeMapProfileName((payload and payload.mapName) or (payload and payload.mapId) or (payload and payload.map) or payload.mapType)
+		self:_applyMapReverb(mapName or self:_resolveAuthoritativeMapProfile())
 	elseif eventName == "PhaseChanged" then
 		local phaseToken = normalizePhaseToken(payload)
-		local mapName = (payload and payload.mapName) or (payload and payload.mapId) or (payload and payload.map) or payload.mapType or nil
-		if type(mapName) == "string" and mapName ~= "" then
-			self:_applyMapReverb(mapName == "Lobby" and "LobbySocialHub" or mapName)
+		local mapName = normalizeMapProfileName((payload and payload.mapName) or (payload and payload.mapId) or (payload and payload.map) or payload.mapType)
+		if mapName then
+			self:_applyMapReverb(mapName)
 		elseif phaseToken == "lobby" then
 			self:_applyMapReverb("LobbySocialHub")
+		else
+			self:_syncMapReverbFromPlayerState()
 		end
 		if phaseToken == "hunt" or phaseToken == "huntphase" then
 			self._ghostHuntActive = true
@@ -145,7 +187,7 @@ function AudioController:_onMatchEvent(payload)
 		self:_updateHeartbeat()
 	elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 		self._ghostHuntActive = false
-		self:_applyMapReverb("LobbySocialHub")
+		self:_syncMapReverbFromPlayerState()
 		self:_updateHeartbeat()
 	end
 end
