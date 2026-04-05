@@ -2127,11 +2127,20 @@ local function getRuntimeHideSpotLabel(zoneId)
 	for _, child in ipairs(roomsFolder:GetChildren()) do
 		if child:IsA("BasePart") then
 			local childHideSpotId = tostring(child:GetAttribute("HideSpotId") or "")
-			if childHideSpotId == zoneId or child.Name == zoneId then
+			if childHideSpotId == zoneId then
 				local label = tostring(child:GetAttribute("HideSpotLabel") or "")
 				if label ~= "" then
 					return label
 				end
+			end
+		end
+	end
+
+	for _, child in ipairs(roomsFolder:GetChildren()) do
+		if child:IsA("BasePart") and child.Name == zoneId then
+			local label = tostring(child:GetAttribute("HideSpotLabel") or "")
+			if label ~= "" then
+				return label
 			end
 		end
 	end
@@ -2153,9 +2162,15 @@ local function getRuntimeHideSpotPart(zoneId)
 	for _, child in ipairs(roomsFolder:GetChildren()) do
 		if child:IsA("BasePart") then
 			local childHideSpotId = tostring(child:GetAttribute("HideSpotId") or "")
-			if childHideSpotId == zoneId or child.Name == zoneId then
+			if childHideSpotId == zoneId then
 				return child
 			end
+		end
+	end
+
+	for _, child in ipairs(roomsFolder:GetChildren()) do
+		if child:IsA("BasePart") and child.Name == zoneId then
+			return child
 		end
 	end
 

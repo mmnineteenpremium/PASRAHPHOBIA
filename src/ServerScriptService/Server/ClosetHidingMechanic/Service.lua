@@ -11,6 +11,21 @@ local HIDE_PROMPT_DISTANCE_MAX = 16
 local HIDE_PROMPT_DISTANCE_SCALE = 0.45
 local HIDE_PROMPT_HOLD_DURATION = 0
 local HIDE_ROOM_VERTICAL_TOLERANCE = 6
+local HIDE_PROXY_NAME_PREFIX = "HideSpotProxy_"
+local HIDE_PROXY_OUTWARD_OFFSET = 4
+local HIDE_PROXY_HEIGHT_OFFSET = 3.5
+local HIDE_PROXY_POSITION_OVERRIDES = {
+	hauntedhouse = {
+		Room_ClosetA = {
+			roomName = "Room_LivingRoom",
+			offset = Vector3.new(8, 3.5, 12),
+		},
+		Room_ClosetB = {
+			roomName = "Room_LivingRoom",
+			offset = Vector3.new(-8, 3.5, -12),
+		},
+	},
+}
 local HIDE_SPOT_MARKER_FOLDER_NAME = "HideSpotRuntimeMarker"
 local HIDE_SPOT_MARKER_OUTLINE_NAME = "Outline"
 local HIDE_SPOT_MARKER_LABEL_NAME = "Billboard"
@@ -247,6 +262,93 @@ local function resolvePromptDistance(part)
 	local span = (part.Size.X + part.Size.Z) * 0.5
 	local resolved = math.floor((span * HIDE_PROMPT_DISTANCE_SCALE) + 0.5)
 	return math.clamp(resolved, HIDE_PROMPT_DISTANCE_MIN, HIDE_PROMPT_DISTANCE_MAX)
+end
+
+local function resolveClosetDoor(mapModel, room)
+	if not (mapModel and room and room:IsA("BasePart")) then
+		return nil
+	end
+
+	local suffix = tostring(room.Name):gsub("^Room_", "")
+	local expected = mapModel:FindFirstChild("Door_" .. suffix, true)
+	if expected and expected:IsA("BasePart") then
+		return expected
+	end
+
+	return nil
+end
+
+local function ensureHideSpotPart(mapId, mapModel, room)
+	if not (room and room:IsA("BasePart")) then
+		return nil, nil
+	end
+
+	if not isClosetRoom(room) then
+		return room, nil
+	end
+
+	local roomsFolder = room.Parent
+	local door = resolveClosetDoor(mapModel, room)
+	if not (roomsFolder and door) then
+		return room, nil
+	end
+
+	local proxyName = HIDE_PROXY_NAME_PREFIX .. tostring(room.Name):gsub("^Room_", "")
+	local proxy = roomsFolder:FindFirstChild(proxyName)
+	if proxy and not proxy:IsA("BasePart") then
+		proxy:Destroy()
+		proxy = nil
+	end
+	if not proxy then
+		proxy = Instance.new("Part")
+		proxy.Name = proxyName
+		proxy.Parent = roomsFolder
+	end
+
+	local targetPosition = nil
+	local mapToken = normalizeToken(mapId)
+	local override = mapToken and HIDE_PROXY_POSITION_OVERRIDES[mapToken] and HIDE_PROXY_POSITION_OVERRIDES[mapToken][room.Name] or nil
+	if type(override) == "table" then
+		local anchorName = type(override.roomName) == "string" and override.roomName or nil
+		local anchorRoom = anchorName and mapModel and mapModel:FindFirstChild(anchorName, true)
+		local offset = typeof(override.offset) == "Vector3" and override.offset or nil
+		if anchorRoom and anchorRoom:IsA("BasePart") and offset then
+			targetPosition = anchorRoom.Position + offset
+		end
+	end
+
+	local proxySize = Vector3.new(6, 8, 8)
+	if not targetPosition then
+		local outward = Vector3.new(door.Position.X - room.Position.X, 0, door.Position.Z - room.Position.Z)
+		if outward.Magnitude <= 1e-4 then
+			return room, nil
+		end
+		outward = outward.Unit
+
+		local doorSpan = math.max(door.Size.X, door.Size.Z)
+		proxySize = if math.abs(outward.X) > math.abs(outward.Z)
+			then Vector3.new(6, 8, math.max(6, doorSpan + 4))
+			else Vector3.new(math.max(6, doorSpan + 4), 8, 6)
+		targetPosition = Vector3.new(
+			door.Position.X + (outward.X * HIDE_PROXY_OUTWARD_OFFSET),
+			room.Position.Y + HIDE_PROXY_HEIGHT_OFFSET,
+			door.Position.Z + (outward.Z * HIDE_PROXY_OUTWARD_OFFSET)
+		)
+	end
+
+	proxy.Anchored = true
+	proxy.CanCollide = false
+	proxy.CanTouch = false
+	proxy.CanQuery = true
+	proxy.CastShadow = false
+	proxy.Material = Enum.Material.ForceField
+	proxy.Transparency = 1
+	proxy.Size = proxySize
+	proxy.CFrame = CFrame.new(targetPosition)
+	proxy:SetAttribute("HideSpotRuntimeProxy", true)
+	proxy:SetAttribute("HideSpotSourceRoom", room.Name)
+
+	return proxy, proxy
 end
 
 local function ensureHideSpotMarker(record)
@@ -600,11 +702,13 @@ function Service:_cleanupHideSpots(matchId)
 		if record.connection then
 			record.connection:Disconnect()
 		end
-		if record.prompt and record.prompt.Parent then
+		if record.prompt and record.prompt.Parent and record.prompt.Parent ~= record.runtimeProxy then
 			record.prompt:Destroy()
 		end
 		cleanupHideSpotMarker(record)
-		if record.part and record.part.Parent then
+		if record.runtimeProxy and record.runtimeProxy.Parent then
+			record.runtimeProxy:Destroy()
+		elseif record.part and record.part.Parent then
 			record.part:SetAttribute("HideSpotId", nil)
 			record.part:SetAttribute("HideSpotType", nil)
 			record.part:SetAttribute("HideSpotOccupied", nil)
@@ -646,11 +750,14 @@ function Service:_registerHideSpots(matchId)
 	local records = {}
 	for _, room in ipairs(roomsFolder:GetChildren()) do
 		if room:IsA("BasePart") and (isConfiguredHideSpotRoom(room, hideSpotLookup) or isClosetRoom(room)) then
+			local hidePart, runtimeProxy = ensureHideSpotPart(mapId, mapModel, room)
 			local record = {
 				id = room.Name,
 				label = formatClosetLabel(room),
-				part = room,
-				prompt = ensurePrompt(room),
+				part = hidePart or room,
+				sourceRoom = room,
+				runtimeProxy = runtimeProxy,
+				prompt = ensurePrompt(hidePart or room),
 			}
 
 			record.connection = record.prompt.Triggered:Connect(function(player)

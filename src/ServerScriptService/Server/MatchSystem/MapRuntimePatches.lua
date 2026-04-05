@@ -87,20 +87,16 @@ local SAFE_ZONE_POSITION_OVERRIDES = {
 local SPAWN_POINT_OVERRIDES = {
 	hauntedhouse = {
 		PlayerSpawn_1 = {
-			roomName = "Room_LivingRoom",
-			offset = Vector3.new(6, 3.5, -6),
+			position = Vector3.new(1178, 4, 4),
 		},
 		PlayerSpawn_2 = {
-			roomName = "Room_LivingRoom",
-			offset = Vector3.new(6, 3.5, 6),
+			position = Vector3.new(1174, 4, 8),
 		},
 		PlayerSpawn_3 = {
-			roomName = "Room_LivingRoom",
-			offset = Vector3.new(-4, 3.5, -6),
+			position = Vector3.new(1166, 4, -4),
 		},
 		PlayerSpawn_4 = {
-			roomName = "Room_LivingRoom",
-			offset = Vector3.new(-4, 3.5, 6),
+			position = Vector3.new(1166, 4, -8),
 		},
 	},
 }
