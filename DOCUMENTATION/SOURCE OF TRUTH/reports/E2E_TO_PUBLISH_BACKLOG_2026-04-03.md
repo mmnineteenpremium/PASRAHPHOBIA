@@ -2193,6 +2193,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (semantic world guide palette baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 22:54 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi jalur vertikal:
+  - `CentralStaircase` sekarang punya metadata route runtime yang bisa dibaca client HUD, bukan hanya billboard lokal di world.
+  - guide tangga pusat juga sudah memakai palette vertikal yang konsisten.
+- validasi:
+  - build source sukses:
+    - `_tmp_traversal_metadata_sync_build.rbxlx`
+- status:
+  - **SELESAI (traversal metadata sync baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

@@ -243,6 +243,15 @@ local function resolveInteractionGuideSubtitle(roomLabel)
 	return "Anchor ruang"
 end
 
+local function getTraversalGuidePalette()
+	return {
+		accent = Color3.fromRGB(142, 168, 236),
+		outline = Color3.fromRGB(206, 220, 255),
+		title = Color3.fromRGB(242, 246, 252),
+		subtitle = Color3.fromRGB(188, 204, 236),
+	}
+end
+
 local function getInteractionGuidePalette(subtitle)
 	if subtitle == "Refuge route" then
 		return {
@@ -619,6 +628,9 @@ local function ensureTraversalGuide(part)
 	if not (part and part:IsA("BasePart") and part.Parent ~= nil) then
 		return nil
 	end
+	local palette = getTraversalGuidePalette()
+	part:SetAttribute("TraversalGuideLabel", "AKSES LANTAI 2")
+	part:SetAttribute("TraversalGuideSubtitle", "Transisi vertikal")
 
 	local folder = part:FindFirstChild(TRAVERSAL_GUIDE_FOLDER_NAME)
 	if not (folder and folder:IsA("Folder")) then
@@ -641,9 +653,9 @@ local function ensureTraversalGuide(part)
 	end
 	highlight.Adornee = part
 	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-	highlight.FillColor = Color3.fromRGB(132, 186, 255)
+	highlight.FillColor = palette.accent
 	highlight.FillTransparency = 0.9
-	highlight.OutlineColor = Color3.fromRGB(214, 232, 255)
+	highlight.OutlineColor = palette.outline
 	highlight.OutlineTransparency = 0.1
 	highlight.Enabled = true
 
@@ -684,7 +696,7 @@ local function ensureTraversalGuide(part)
 		local stroke = Instance.new("UIStroke")
 		stroke.Name = "Stroke"
 		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Color = Color3.fromRGB(138, 198, 255)
+		stroke.Color = palette.accent
 		stroke.Transparency = 0.12
 		stroke.Thickness = 1.4
 		stroke.Parent = panel
@@ -692,7 +704,7 @@ local function ensureTraversalGuide(part)
 		local accent = Instance.new("Frame")
 		accent.Name = "Accent"
 		accent.AnchorPoint = Vector2.new(0, 0.5)
-		accent.BackgroundColor3 = Color3.fromRGB(138, 198, 255)
+		accent.BackgroundColor3 = palette.accent
 		accent.BorderSizePixel = 0
 		accent.Position = UDim2.new(0, 10, 0.5, 0)
 		accent.Size = UDim2.fromOffset(3, 28)
@@ -706,7 +718,7 @@ local function ensureTraversalGuide(part)
 			"Title",
 			Enum.Font.GothamBold,
 			13,
-			Color3.fromRGB(240, 248, 255),
+			palette.title,
 			"AKSES LANTAI 2",
 			18,
 			UDim2.new(0, 20, 0, 6)
@@ -716,7 +728,7 @@ local function ensureTraversalGuide(part)
 			"Subtitle",
 			Enum.Font.GothamMedium,
 			11,
-			Color3.fromRGB(188, 218, 248),
+			palette.subtitle,
 			"Naik lewat tangga pusat",
 			16,
 			UDim2.new(0, 20, 0, 23)
@@ -727,6 +739,22 @@ local function ensureTraversalGuide(part)
 	panel.BackgroundTransparency = 0.14
 	panel.BorderSizePixel = 0
 	panel.Size = UDim2.fromScale(1, 1)
+	local title = panel:FindFirstChild("Title")
+	if title and title:IsA("TextLabel") then
+		title.TextColor3 = palette.title
+	end
+	local subtitle = panel:FindFirstChild("Subtitle")
+	if subtitle and subtitle:IsA("TextLabel") then
+		subtitle.TextColor3 = palette.subtitle
+	end
+	local stroke = panel:FindFirstChild("Stroke")
+	if stroke and stroke:IsA("UIStroke") then
+		stroke.Color = palette.accent
+	end
+	local accent = panel:FindFirstChild("Accent")
+	if accent and accent:IsA("Frame") then
+		accent.BackgroundColor3 = palette.accent
+	end
 	return folder
 end
 

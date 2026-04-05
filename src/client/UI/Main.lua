@@ -2166,6 +2166,19 @@ local function getNearestNavigationAnchorInfo()
 		end
 	end
 
+	for _, child in ipairs(mapModel:GetDescendants()) do
+		if child:IsA("BasePart") then
+			local traversalLabel = tostring(child:GetAttribute("TraversalGuideLabel") or "")
+			if traversalLabel ~= "" then
+				consider(child, {
+					kind = "TraversalGuide",
+					label = traversalLabel,
+					subtitle = tostring(child:GetAttribute("TraversalGuideSubtitle") or "Transisi vertikal"),
+				})
+			end
+		end
+	end
+
 	return nearest
 end
 
