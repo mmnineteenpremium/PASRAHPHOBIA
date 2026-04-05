@@ -142,6 +142,24 @@ local function resolveLobbyReferencePosition(lobbyRoot)
     return nil
 end
 
+local function resolveLobbyLookTarget(lobbyRoot)
+    if not lobbyRoot then
+        return nil
+    end
+
+    local mainHubRoom = lobbyRoot:FindFirstChild("Room_MainHubPlaza", true)
+    if mainHubRoom and mainHubRoom:IsA("BasePart") then
+        return mainHubRoom.Position
+    end
+
+    local mainHubProp = lobbyRoot:FindFirstChild("Prop_MainHubPlaza", true)
+    if mainHubProp and mainHubProp:IsA("BasePart") then
+        return mainHubProp.Position
+    end
+
+    return resolveLobbyReferencePosition(lobbyRoot)
+end
+
 local function raycastSpawnY(lobbyRoot, targetXZ, fallbackY)
     local floorTopY = resolvePrimaryFloorTopY(lobbyRoot)
     if floorTopY then
@@ -243,13 +261,19 @@ local function resolveSpawnPart(deps, config, player)
     return nil
 end
 
-local function buildUprightPartCFrame(part, offset)
+local function buildUprightPartCFrame(part, offset, lookTarget)
     if not (part and part:IsA("BasePart")) then
         return nil
     end
 
     local position = part.Position + (offset or Vector3.zero)
-    local flatLook = Vector3.new(part.CFrame.LookVector.X, 0, part.CFrame.LookVector.Z)
+    local flatLook
+    if typeof(lookTarget) == "Vector3" then
+        flatLook = Vector3.new(lookTarget.X - position.X, 0, lookTarget.Z - position.Z)
+    end
+    if not flatLook or flatLook.Magnitude <= 1e-4 then
+        flatLook = Vector3.new(part.CFrame.LookVector.X, 0, part.CFrame.LookVector.Z)
+    end
     if flatLook.Magnitude <= 1e-4 then
         flatLook = Vector3.new(0, 0, -1)
     else
@@ -396,7 +420,8 @@ function LobbyPlayerManager:_spawnPlayer(player, character)
 
     root.AssemblyLinearVelocity = Vector3.zero
     root.AssemblyAngularVelocity = Vector3.zero
-    local spawnCFrame = buildUprightPartCFrame(spawnPart, LOBBY_SPAWN_OFFSET)
+    local lobbyRoot = resolveLobbyRoot()
+    local spawnCFrame = buildUprightPartCFrame(spawnPart, LOBBY_SPAWN_OFFSET, resolveLobbyLookTarget(lobbyRoot))
     root.CFrame = spawnCFrame or (spawnPart.CFrame + LOBBY_SPAWN_OFFSET)
     applyLobbySpawnState(player)
     print(string.format("[LobbyPlayerManager] Spawned %s at %s", player.Name, tostring(spawnPart.Position)))

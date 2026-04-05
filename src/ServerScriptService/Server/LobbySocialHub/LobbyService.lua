@@ -54,6 +54,28 @@ local LOBBY_LOGIC_VOLUME_FOLDER_NAMES = {
 	"NavigationNodes",
 	"SpawnPoints",
 }
+local LOBBY_MAINHUB_VISUAL_PATCH = {
+	Roof_MainHubPlaza = {
+		transparency = 0.72,
+		color = Color3.fromRGB(88, 96, 108),
+		castShadow = false,
+	},
+	Floor_1_Main = {
+		color = Color3.fromRGB(68, 78, 92),
+	},
+	Wall_MainHubPlaza_North = {
+		color = Color3.fromRGB(92, 102, 116),
+	},
+	Wall_MainHubPlaza_South = {
+		color = Color3.fromRGB(92, 102, 116),
+	},
+	Wall_MainHubPlaza_East = {
+		color = Color3.fromRGB(92, 102, 116),
+	},
+	Wall_MainHubPlaza_West = {
+		color = Color3.fromRGB(92, 102, 116),
+	},
+}
 local LOBBY_ZONE_FEEDBACK = {
     SpawnPlaza = {
         title = "Lobby plaza aktif.",
@@ -456,6 +478,34 @@ local function sanitizeLobbyLogicVolumes()
 			end
 		end
 	end
+	return changed
+end
+
+local function applyMainHubVisualPatch()
+	local lobbyRoot = LobbyLocator.ResolveRoot("LobbySocialHub", workspace)
+	if not lobbyRoot then
+		return false
+	end
+
+	local changed = false
+	for partName, patch in pairs(LOBBY_MAINHUB_VISUAL_PATCH) do
+		local part = lobbyRoot:FindFirstChild(partName, true)
+		if part and part:IsA("BasePart") then
+			if patch.color and part.Color ~= patch.color then
+				part.Color = patch.color
+				changed = true
+			end
+			if type(patch.transparency) == "number" and part.Transparency ~= patch.transparency then
+				part.Transparency = patch.transparency
+				changed = true
+			end
+			if type(patch.castShadow) == "boolean" and part.CastShadow ~= patch.castShadow then
+				part.CastShadow = patch.castShadow
+				changed = true
+			end
+		end
+	end
+
 	return changed
 end
 
@@ -1378,6 +1428,7 @@ function LobbyService:Start()
     self._playerManager:Start()
     self._zoneManager:Start()
     sanitizeLobbyLogicVolumes()
+    applyMainHubVisualPatch()
     self:_syncZoneGuides()
     self._interaction:Start()
     self._partySystem:Start()
