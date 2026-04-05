@@ -13,7 +13,10 @@ local DEFAULT_CONFIG = {
     MaxAttackDamage = 100,
     ProximityExposureThreshold = 4.5,
     ProximityExposureStep = 1,
-    HuntStartGraceSeconds = 2.25,
+    HuntStartGraceSeconds = 6.0,
+    MaxHuntPressureTickDelta = 0.5,
+    HuntPressureBurstStep = 0.35,
+    HuntPressureBurstDuringGraceStep = 0.15,
 }
 local HUNT_PRESSURE_TICK_INTERVAL = 0.35
 local HUNT_DISTANCE_KILL = 8
@@ -261,6 +264,14 @@ function Service:_getHuntStartedAt(matchId)
     return huntStartedAt[matchId]
 end
 
+function Service:_getHuntGraceRemaining(matchId, now)
+    local startedAt = self:_getHuntStartedAt(matchId)
+    if type(startedAt) ~= "number" then
+        return 0
+    end
+    return math.max(0, (self._config.HuntStartGraceSeconds or 0) - ((now or os.clock()) - startedAt))
+end
+
 function Service:_setHidden(matchId, userId, isHidden)
     local userKey = normalizeUserKey(userId)
     if userKey == nil then
@@ -385,6 +396,7 @@ end
 
 function Service:_tickHuntPressure(dt)
     local now = os.clock()
+    local effectiveDt = math.min(math.max(dt or 0, 0), self._config.MaxHuntPressureTickDelta or HUNT_PRESSURE_TICK_INTERVAL)
     setStudioProbe("PasrahHuntPressureLastTickAt", math.floor(now * 100 + 0.5) / 100)
     local huntActiveByMatch = self:_getMap("huntActiveByMatchId")
     for matchId, isActive in pairs(huntActiveByMatch) do
@@ -409,43 +421,68 @@ function Service:_tickHuntPressure(dt)
                             if root and ghostPosition then
                                 distance = (root.Position - ghostPosition).Magnitude
                             end
-                            local huntStartedAt = self:_getHuntStartedAt(matchId) or now
-                            local huntGraceRemaining = math.max(0, (self._config.HuntStartGraceSeconds or 0) - (now - huntStartedAt))
+                            local huntGraceRemaining = self:_getHuntGraceRemaining(matchId, now)
                             player:SetAttribute("PasrahHuntGraceRemaining", huntGraceRemaining > 0 and math.floor(huntGraceRemaining * 10 + 0.5) / 10 or nil)
 
                             local threatState = "Clear"
                             local exposureGain = 0
                             if distance <= HUNT_DISTANCE_KILL then
                                 threatState = "Critical"
-                                exposureGain = math.max(0.55, dt * 1.8)
+                                exposureGain = math.max(0.55, effectiveDt * 1.8)
                             elseif distance <= HUNT_DISTANCE_CLOSE then
                                 threatState = "Close"
-                                exposureGain = math.max(0.28, dt * 1.1)
+                                exposureGain = math.max(0.28, effectiveDt * 1.1)
                             elseif distance <= HUNT_DISTANCE_TRACK then
                                 threatState = "Tracked"
-                                exposureGain = math.max(0.14, dt * 0.6)
+                                exposureGain = math.max(0.14, effectiveDt * 0.6)
                             elseif distance <= HUNT_DISTANCE_WARN then
                                 threatState = "Warn"
-                                exposureGain = math.max(0.06, dt * 0.3)
+                                exposureGain = math.max(0.06, effectiveDt * 0.3)
                             end
 
                             local exposure = self:_getExposure(matchId, userId)
+                            local lethalExposure = self._config.ProximityExposureThreshold or 4.5
                             if huntGraceRemaining > 0 then
-                                exposure = math.max(0, exposure - math.max(0.08, dt * 0.45))
+                                exposure = math.max(0, exposure - math.max(0.08, effectiveDt * 0.45))
+                                exposure = math.min(exposure, math.max(0, lethalExposure - 0.25))
                                 self:_setExposure(matchId, userId, exposure)
                             elseif exposureGain > 0 then
                                 exposure = exposure + exposureGain
                                 self:_setExposure(matchId, userId, exposure)
                             else
-                                exposure = math.max(0, exposure - math.max(0.05, dt * 0.35))
+                                exposure = math.max(0, exposure - math.max(0.05, effectiveDt * 0.35))
                                 self:_setExposure(matchId, userId, exposure)
                             end
 
                             self:_setExposureAttribute(player, exposure)
                             setStudioProbe("PasrahHuntPressureLastExposure", math.floor(exposure * 100 + 0.5) / 100)
                             setStudioProbe("PasrahHuntPressureLastThreatState", threatState)
+                            setStudioProbe(
+                                "PasrahHuntDebugLastTick",
+                                string.format(
+                                    "match=%s threat=%s distance=%.2f exposure=%.2f grace=%.2f dt=%.2f",
+                                    tostring(matchId),
+                                    tostring(threatState),
+                                    tonumber(distance) or -1,
+                                    tonumber(exposure) or -1,
+                                    tonumber(huntGraceRemaining) or -1,
+                                    tonumber(effectiveDt) or -1
+                                )
+                            )
                             self:_setThreatAttributes(player, distance, threatState)
-                            if exposure >= self._config.ProximityExposureThreshold then
+                            if huntGraceRemaining <= 0 and exposure >= lethalExposure then
+                                setStudioProbe(
+                                    "PasrahHuntKillCause",
+                                    string.format(
+                                        "tick match=%s threat=%s distance=%.2f exposure=%.2f grace=%.2f dt=%.2f",
+                                        tostring(matchId),
+                                        tostring(threatState),
+                                        tonumber(distance) or -1,
+                                        tonumber(exposure) or -1,
+                                        tonumber(huntGraceRemaining) or -1,
+                                        tonumber(effectiveDt) or -1
+                                    )
+                                )
                                 setStudioProbe("PasrahHuntKillStage", string.format("attempt:%s:%.2f", tostring(matchId), exposure))
                                 self:_killPlayer(matchId, userId, player, "failed_escape_hunt", {
                                     matchId = matchId,
@@ -558,22 +595,81 @@ function Service:_handleGhostInteraction(payload)
     end
 
     if action == "GhostNear" or action == "ProximityPressure" or action == "GhostProximity" then
+        local graceRemaining = self:_getHuntGraceRemaining(matchId)
+        local lethalExposure = self._config.ProximityExposureThreshold or 4.5
         local step = tonumber(payload and payload.exposureStep) or self._config.ProximityExposureStep
         local exposure = self:_getExposure(matchId, userId) + math.max(0.1, step)
+        if graceRemaining > 0 then
+            exposure = math.min(exposure, math.max(0, lethalExposure - 0.25))
+        end
         self:_setExposure(matchId, userId, exposure)
+        setStudioProbe(
+            "PasrahHuntDebugLastInteraction",
+            string.format(
+                "action=%s match=%s exposure=%.2f grace=%.2f step=%.2f",
+                tostring(action),
+                tostring(matchId),
+                tonumber(exposure) or -1,
+                tonumber(graceRemaining) or -1,
+                tonumber(step) or -1
+            )
+        )
 
-        if exposure >= self._config.ProximityExposureThreshold then
+        if graceRemaining <= 0 and exposure >= lethalExposure then
+            setStudioProbe(
+                "PasrahHuntKillCause",
+                string.format(
+                    "interaction action=%s match=%s exposure=%.2f grace=%.2f step=%.2f",
+                    tostring(action),
+                    tostring(matchId),
+                    tonumber(exposure) or -1,
+                    tonumber(graceRemaining) or -1,
+                    tonumber(step) or -1
+                )
+            )
             self:_killPlayer(matchId, userId, player, "failed_escape_proximity", payload)
         end
         return
     end
 
     if action == "HuntPressure" then
-        local step = tonumber(payload and payload.exposureStep) or 0.85
+        local graceRemaining = self:_getHuntGraceRemaining(matchId)
+        local lethalExposure = self._config.ProximityExposureThreshold or 4.5
+        local step = tonumber(payload and payload.exposureStep)
+        if graceRemaining > 0 then
+            step = step or self._config.HuntPressureBurstDuringGraceStep or 0.15
+        else
+            step = step or self._config.HuntPressureBurstStep or 0.35
+        end
         local exposure = self:_getExposure(matchId, userId) + math.max(0.15, step)
+        if graceRemaining > 0 then
+            exposure = math.min(exposure, math.max(0, lethalExposure - 0.25))
+        end
         self:_setExposure(matchId, userId, exposure)
+        setStudioProbe(
+            "PasrahHuntDebugLastInteraction",
+            string.format(
+                "action=%s match=%s exposure=%.2f grace=%.2f step=%.2f",
+                tostring(action),
+                tostring(matchId),
+                tonumber(exposure) or -1,
+                tonumber(graceRemaining) or -1,
+                tonumber(step) or -1
+            )
+        )
 
-        if exposure >= self._config.ProximityExposureThreshold then
+        if graceRemaining <= 0 and exposure >= lethalExposure then
+            setStudioProbe(
+                "PasrahHuntKillCause",
+                string.format(
+                    "interaction action=%s match=%s exposure=%.2f grace=%.2f step=%.2f",
+                    tostring(action),
+                    tostring(matchId),
+                    tonumber(exposure) or -1,
+                    tonumber(graceRemaining) or -1,
+                    tonumber(step) or -1
+                )
+            )
             self:_killPlayer(matchId, userId, player, "failed_escape_hunt", payload)
         end
         return
@@ -610,6 +706,9 @@ function Service:HandleEvent(eventName, payload)
         setStudioRuntimeAttribute("PasrahHuntPressureActiveMatchId", matchId)
         self:_setHuntActive(matchId, false)
         self:_registerMatchPlayers(payload)
+        setStudioProbe("PasrahHuntPressureLastExposure", nil)
+        setStudioProbe("PasrahHuntPressureLastThreatState", nil)
+        setStudioProbe("PasrahHuntKillStage", nil)
         for _, player in ipairs(payload and payload.players or {}) do
             if typeof(player) == "Instance" and player:IsA("Player") then
                 player:SetAttribute("PasrahHuntThreatState", "Clear")
@@ -648,6 +747,9 @@ function Service:HandleEvent(eventName, payload)
         if self._state:Get("activeMatchId") == matchId then
             self._state:Set("activeMatchId", nil)
         end
+        setStudioProbe("PasrahHuntPressureLastExposure", nil)
+        setStudioProbe("PasrahHuntPressureLastThreatState", nil)
+        setStudioProbe("PasrahHuntKillStage", nil)
         setStudioRuntimeAttribute("PasrahHuntPressureActiveMatchId", nil)
         return
     end
@@ -660,6 +762,20 @@ function Service:HandleEvent(eventName, payload)
     if eventName == "HuntStarted" then
         self:_setHuntActive(matchId, true)
         self:_setHuntStartedAt(matchId, os.clock())
+        setStudioProbe("PasrahHuntKillStage", nil)
+        local liveMatch = getLiveMatch(self._dependencies.MatchSystem, matchId)
+        local playersByUserId = liveMatch and liveMatch.playersByUserId or nil
+        if type(playersByUserId) == "table" then
+            for _, playerState in pairs(playersByUserId) do
+                local player = playerState and playerState.player
+                if typeof(player) == "Instance" and player:IsA("Player") and playerState.alive ~= false then
+                    player:SetAttribute("PasrahHuntThreatState", "Warn")
+                    player:SetAttribute("PasrahHuntThreatDistance", nil)
+                    player:SetAttribute("PasrahHuntGraceRemaining", math.floor((self._config.HuntStartGraceSeconds or 0) * 10 + 0.5) / 10)
+                    player:SetAttribute("PasrahHuntExposure", nil)
+                end
+            end
+        end
         return
     end
 
