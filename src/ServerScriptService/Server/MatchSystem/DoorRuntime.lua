@@ -264,6 +264,14 @@ local function updateDoorRouteGuide(doorRecord, isOpen, isLocked)
 	end
 	local guideSubtitle = resolveDoorGuideSubtitle(doorRecord.label)
 	local palette = getDoorGuidePalette(guideSubtitle)
+	local doorPart = type(doorRecord) == "table" and doorRecord.part or nil
+	if doorPart and doorPart:IsA("BasePart") then
+		doorPart:SetAttribute("DoorRouteSubtitle", guideSubtitle)
+		doorPart:SetAttribute(
+			"DoorRouteStateText",
+			isLocked and "Akses terkunci" or (isOpen and "Terbuka" or "Tertutup")
+		)
+	end
 
 	local title = doorRecord.guidePanel and doorRecord.guidePanel:FindFirstChild("Title")
 	if title and title:IsA("TextLabel") then
@@ -287,13 +295,13 @@ local function updateDoorRouteGuide(doorRecord, isOpen, isLocked)
 	local subtitle = doorRecord.guidePanel and doorRecord.guidePanel:FindFirstChild("Subtitle")
 	if subtitle and subtitle:IsA("TextLabel") then
 		if isLocked then
-			subtitle.Text = "Akses terkunci"
+			subtitle.Text = guideSubtitle .. " • Akses terkunci"
 			subtitle.TextColor3 = Color3.fromRGB(228, 170, 170)
 		elseif isOpen then
-			subtitle.Text = "Terbuka"
+			subtitle.Text = guideSubtitle .. " • Terbuka"
 			subtitle.TextColor3 = Color3.fromRGB(170, 218, 190)
 		else
-			subtitle.Text = guideSubtitle
+			subtitle.Text = guideSubtitle .. " • Tertutup"
 			subtitle.TextColor3 = palette.subtitle
 		end
 	end
@@ -689,6 +697,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 			descendant.CanQuery = true
 			descendant:SetAttribute("DoorObjectId", descendant.Name)
 			descendant:SetAttribute("DoorRouteLabel", doorLabel)
+			descendant:SetAttribute("DoorRouteSubtitle", resolveDoorGuideSubtitle(doorLabel))
 			descendant:SetAttribute(POLICY_ATTR_NAME, record.policy)
 			descendant:SetAttribute("DoorLocked", initialState.isLocked)
 			descendant:SetAttribute("DoorIsOpen", initialState.isOpen)

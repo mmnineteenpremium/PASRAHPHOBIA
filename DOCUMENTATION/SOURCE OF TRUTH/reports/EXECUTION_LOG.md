@@ -10219,3 +10219,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - orientasi lobby sekarang lebih praktis; focus zona tidak lagi terasa abstrak karena pemain mendapat konteks seberapa dekat area aktif tersebut dari posisi mereka
+
+## 2026-04-05 - Door Semantic State Split Pass
+
+### Scope
+
+- memisahkan semantik route pintu dari state buka/tutup agar client HUD tetap bisa membaca fungsi ruang pintu tanpa kehilangan info status operasionalnya
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua`
+  - pintu sekarang menyimpan:
+    - `DoorRouteSubtitle`
+    - `DoorRouteStateText`
+  - subtitle billboard pintu sekarang dirender sebagai `semantik • state`
+- `src/client/UI/Main.lua`
+  - cache anchor pintu sekarang membaca `DoorRouteSubtitle`, bukan menurunkan subtitle langsung dari `DoorIsOpen`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_door_semantic_state_split_build.rbxlx`
+
+### Interpretation
+
+- bias navigasi, semantic accent, dan affordance pintu sekarang tidak lagi runtuh hanya karena pintu sedang terbuka; state operasional tetap terlihat tanpa menghapus fungsi ruangnya
