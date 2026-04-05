@@ -368,6 +368,32 @@ local function ensureCameraAuthority(humanoid)
 	end
 end
 
+local function resetLobbyCameraBehindCharacter(character)
+	if not (camera and character) then
+		return
+	end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not humanoid or not rootPart then
+		return
+	end
+
+	ensureCameraAuthority(humanoid)
+	local flatLook = Vector3.new(rootPart.CFrame.LookVector.X, 0, rootPart.CFrame.LookVector.Z)
+	if flatLook.Magnitude <= 1e-4 then
+		flatLook = Vector3.new(0, 0, -1)
+	else
+		flatLook = flatLook.Unit
+	end
+
+	local focus = rootPart.Position + Vector3.new(0, MANUAL_CAMERA_LOBBY_HEIGHT, 0)
+	manualLobbyOrbitDistance = math.clamp(10, MANUAL_CAMERA_LOBBY_MIN_DISTANCE, MANUAL_CAMERA_LOBBY_MAX_DISTANCE)
+	syncManualFromRootFacing(rootPart)
+	camera.CFrame = CFrame.lookAt(focus - (flatLook * manualLobbyOrbitDistance), focus)
+	camera.Focus = CFrame.new(focus)
+end
+
 local function clearFpvArms()
 	if fpvArmsModel and fpvArmsModel.Parent then
 		fpvArmsModel:Destroy()
@@ -903,6 +929,10 @@ local function setFpvLocked(enabled)
 		_fpvManualLookPrimed = true
 		lastArmCamCF = nil
 		clearFpvArms()
+		local character = player.Character
+		if character then
+			resetLobbyCameraBehindCharacter(character)
+		end
 		applyFpvMouseMode()
 		logCameraMode("TPV", "[CameraController] TPV ALLOWED (Lobby)")
 	end

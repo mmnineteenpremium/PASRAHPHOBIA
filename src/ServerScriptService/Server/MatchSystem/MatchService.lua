@@ -942,6 +942,13 @@ function MatchService:StartMatch(matchId)
 
 	task.delay(1.5, function()
 		local ok, err = pcall(function()
+			local currentMatch = self:_matches()[matchId]
+			if currentMatch ~= match then
+				setStudioMatchStartStage(string.format("match=%s stage=deferred_cancelled", tostring(matchId)))
+				setStudioMatchStartTrace(string.format("match=%s cancelled=match_missing_or_replaced", tostring(matchId)))
+				return
+			end
+
 			setStudioMatchStartStage(string.format("match=%s stage=preparing_wait_complete", tostring(matchId)))
 
 			setStudioMatchStartStage(string.format("match=%s stage=teleport_begin", tostring(matchId)))
@@ -952,6 +959,13 @@ function MatchService:StartMatch(matchId)
 				local teleportErr = tostring(teleportedPlayersOrErr)
 				setStudioMatchStartStage(string.format("match=%s stage=teleport_error err=%s", tostring(matchId), teleportErr))
 				setStudioMatchStartTrace(string.format("match=%s error=teleport_failed err=%s", tostring(matchId), teleportErr))
+				return
+			end
+
+			currentMatch = self:_matches()[matchId]
+			if currentMatch ~= match then
+				setStudioMatchStartStage(string.format("match=%s stage=post_teleport_cancelled", tostring(matchId)))
+				setStudioMatchStartTrace(string.format("match=%s cancelled=match_missing_or_replaced_after_teleport", tostring(matchId)))
 				return
 			end
 
