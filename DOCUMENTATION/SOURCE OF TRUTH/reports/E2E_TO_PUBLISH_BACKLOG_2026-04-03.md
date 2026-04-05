@@ -2277,6 +2277,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (lobby focus distance baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 23:51 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi konsistensi pintu:
+  - semantik route pintu sekarang dipisah dari state `Terbuka/Tertutup/Terkunci`.
+  - HUD/navigasi client tetap bisa mengerti fungsi ruang pintu meski state pintunya berubah.
+- validasi:
+  - build source sukses:
+    - `_tmp_door_semantic_state_split_build.rbxlx`
+- status:
+  - **SELESAI (door semantic state split baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

@@ -2151,7 +2151,7 @@ local function collectNavigationAnchors(mapModel)
 						kind = "Door",
 						label = routeLabel,
 						subtitle = function(part)
-							return part:GetAttribute("DoorIsOpen") == true and "Terbuka" or "Akses ruang"
+							return tostring(part:GetAttribute("DoorRouteSubtitle") or "Akses ruang")
 						end,
 					})
 				end
