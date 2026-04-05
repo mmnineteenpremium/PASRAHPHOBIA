@@ -11,12 +11,13 @@ local DEFAULT_CONFIG = {
     DefaultAttackDamage = 50,
     MinAttackDamage = 20,
     MaxAttackDamage = 100,
-    ProximityExposureThreshold = 5.4,
-    ProximityExposureStep = 0.55,
+    ProximityExposureThreshold = 6.2,
+    ProximityExposureStep = 0.45,
     HuntStartGraceSeconds = 6.0,
     MaxHuntPressureTickDelta = 0.5,
-    HuntPressureBurstStep = 0.22,
-    HuntPressureBurstDuringGraceStep = 0.15,
+    HuntPressureBurstStep = 0.16,
+    HuntPressureBurstDuringGraceStep = 0.08,
+    HuntGraceExposureBuffer = 1.8,
 }
 local HUNT_PRESSURE_TICK_INTERVAL = 0.35
 local HUNT_DISTANCE_KILL = 8
@@ -81,6 +82,11 @@ local function clamp(value, minValue, maxValue)
         return maxValue
     end
     return value
+end
+
+local function resolveGraceExposureCap(config, lethalExposure)
+    local buffer = tonumber(config and config.HuntGraceExposureBuffer) or 1.8
+    return math.max(0, lethalExposure - math.max(0.5, buffer))
 end
 
 local function normalizeUserKey(userId)
@@ -431,23 +437,23 @@ function Service:_tickHuntPressure(dt)
                             local exposureGain = 0
                             if distance <= HUNT_DISTANCE_KILL then
                                 threatState = "Critical"
-                                exposureGain = math.max(0.32, effectiveDt * 0.95)
+                                exposureGain = math.max(0.22, effectiveDt * 0.72)
                             elseif distance <= HUNT_DISTANCE_CLOSE then
                                 threatState = "Close"
-                                exposureGain = math.max(0.18, effectiveDt * 0.58)
+                                exposureGain = math.max(0.14, effectiveDt * 0.44)
                             elseif distance <= HUNT_DISTANCE_TRACK then
                                 threatState = "Tracked"
-                                exposureGain = math.max(0.09, effectiveDt * 0.34)
+                                exposureGain = math.max(0.06, effectiveDt * 0.24)
                             elseif distance <= HUNT_DISTANCE_WARN then
                                 threatState = "Warn"
-                                exposureGain = math.max(0.03, effectiveDt * 0.14)
+                                exposureGain = math.max(0.02, effectiveDt * 0.1)
                             end
 
                             local exposure = self:_getExposure(matchId, userId)
                             local lethalExposure = self._config.ProximityExposureThreshold or 4.5
                             if huntGraceRemaining > 0 then
                                 exposure = math.max(0, exposure - math.max(0.08, effectiveDt * 0.45))
-                                exposure = math.min(exposure, math.max(0, lethalExposure - 0.25))
+                                exposure = math.min(exposure, resolveGraceExposureCap(self._config, lethalExposure))
                                 self:_setExposure(matchId, userId, exposure)
                             elseif exposureGain > 0 then
                                 exposure = exposure + exposureGain
@@ -603,7 +609,7 @@ function Service:_handleGhostInteraction(payload)
         local step = tonumber(payload and payload.exposureStep) or self._config.ProximityExposureStep
         local exposure = self:_getExposure(matchId, userId) + math.max(0.1, step)
         if graceRemaining > 0 then
-            exposure = math.min(exposure, math.max(0, lethalExposure - 0.25))
+            exposure = math.min(exposure, resolveGraceExposureCap(self._config, lethalExposure))
         end
         self:_setExposure(matchId, userId, exposure)
         setStudioProbe(
@@ -646,7 +652,7 @@ function Service:_handleGhostInteraction(payload)
         end
         local exposure = self:_getExposure(matchId, userId) + math.max(0.15, step)
         if graceRemaining > 0 then
-            exposure = math.min(exposure, math.max(0, lethalExposure - 0.25))
+            exposure = math.min(exposure, resolveGraceExposureCap(self._config, lethalExposure))
         end
         self:_setExposure(matchId, userId, exposure)
         setStudioProbe(
@@ -711,6 +717,9 @@ function Service:HandleEvent(eventName, payload)
         self:_registerMatchPlayers(payload)
         setStudioProbe("PasrahHuntPressureLastExposure", nil)
         setStudioProbe("PasrahHuntPressureLastThreatState", nil)
+        setStudioProbe("PasrahHuntDebugLastTick", nil)
+        setStudioProbe("PasrahHuntDebugLastInteraction", nil)
+        setStudioProbe("PasrahHuntKillCause", nil)
         setStudioProbe("PasrahHuntKillStage", nil)
         for _, player in ipairs(payload and payload.players or {}) do
             if typeof(player) == "Instance" and player:IsA("Player") then
@@ -752,6 +761,9 @@ function Service:HandleEvent(eventName, payload)
         end
         setStudioProbe("PasrahHuntPressureLastExposure", nil)
         setStudioProbe("PasrahHuntPressureLastThreatState", nil)
+        setStudioProbe("PasrahHuntDebugLastTick", nil)
+        setStudioProbe("PasrahHuntDebugLastInteraction", nil)
+        setStudioProbe("PasrahHuntKillCause", nil)
         setStudioProbe("PasrahHuntKillStage", nil)
         setStudioRuntimeAttribute("PasrahHuntPressureActiveMatchId", nil)
         return
@@ -765,6 +777,9 @@ function Service:HandleEvent(eventName, payload)
     if eventName == "HuntStarted" then
         self:_setHuntActive(matchId, true)
         self:_setHuntStartedAt(matchId, os.clock())
+        setStudioProbe("PasrahHuntDebugLastTick", nil)
+        setStudioProbe("PasrahHuntDebugLastInteraction", nil)
+        setStudioProbe("PasrahHuntKillCause", nil)
         setStudioProbe("PasrahHuntKillStage", nil)
         local liveMatch = getLiveMatch(self._dependencies.MatchSystem, matchId)
         local playersByUserId = liveMatch and liveMatch.playersByUserId or nil
