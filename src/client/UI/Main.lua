@@ -1742,9 +1742,17 @@ end
 
 local function resolveMapDisplayName(payload)
 	if type(payload) ~= "table" then
-		return "Lokasi Tidak Diketahui"
+		local localPlayer = Players.LocalPlayer
+		return getMapDisplayName(localPlayer and localPlayer:GetAttribute("MatchMapId") or nil)
 	end
-	return getMapDisplayName(payload.mapName or payload.mapId or payload.selectedMap or payload.map)
+	local localPlayer = Players.LocalPlayer
+	return getMapDisplayName(
+		payload.mapName
+			or payload.mapId
+			or payload.selectedMap
+			or payload.map
+			or (localPlayer and localPlayer:GetAttribute("MatchMapId"))
+	)
 end
 
 local function buildRoomBrowserRenderKey(state)
