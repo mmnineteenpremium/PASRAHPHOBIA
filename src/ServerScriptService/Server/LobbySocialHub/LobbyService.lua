@@ -66,6 +66,13 @@ local LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_NAME = "CenterDesk"
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME = "CenterDeskTop"
 local LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME = "LeftDisplayCase"
 local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME = "RightDisplayCase"
+local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_CLIPBOARD_NAME = "ContractClipboard"
+local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_PAPER_NAME = "ContractPaper"
+local LOBBY_ZONE_ENTRY_GUIDE_ROOM_LEDGER_NAME = "RoomLedger"
+local LOBBY_ZONE_ENTRY_GUIDE_ROOM_CARDS_NAME = "RoomCards"
+local LOBBY_ZONE_ENTRY_GUIDE_TOOL_EMF_NAME = "ToolDisplayEMF"
+local LOBBY_ZONE_ENTRY_GUIDE_TOOL_UV_NAME = "ToolDisplayUV"
+local LOBBY_ZONE_ENTRY_GUIDE_TOOL_BOX_NAME = "ToolDisplayBox"
 local LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME = "EntrySignPanel"
 local LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME = "FacadeCanopy"
 local LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME = "FacadeApron"
@@ -1626,6 +1633,13 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local centerDeskTop = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME)
     local leftCase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME)
     local rightCase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME)
+    local contractClipboard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_CLIPBOARD_NAME)
+    local contractPaper = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_PAPER_NAME)
+    local roomLedger = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ROOM_LEDGER_NAME)
+    local roomCards = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ROOM_CARDS_NAME)
+    local toolDisplayEMF = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOL_EMF_NAME)
+    local toolDisplayUV = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOL_UV_NAME)
+    local toolDisplayBox = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOL_BOX_NAME)
     local signPanel = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME)
     local facadeCanopy = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
     local facadeApron = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
@@ -1694,6 +1708,13 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         centerDeskTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME)
         leftCase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME)
         rightCase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME)
+        contractClipboard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_CLIPBOARD_NAME)
+        contractPaper = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_PAPER_NAME)
+        roomLedger = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_ROOM_LEDGER_NAME)
+        roomCards = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_ROOM_CARDS_NAME)
+        toolDisplayEMF = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOL_EMF_NAME)
+        toolDisplayUV = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOL_UV_NAME)
+        toolDisplayBox = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOL_BOX_NAME)
         facadeCanopy = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
         facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
         facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
@@ -1721,6 +1742,20 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         centerDeskTop.Material = Enum.Material.Metal
         leftCase.Color = Color3.fromRGB(28, 36, 50)
         rightCase.Color = Color3.fromRGB(28, 36, 50)
+        contractClipboard.Color = Color3.fromRGB(32, 42, 58)
+        contractClipboard.Material = Enum.Material.Metal
+        contractPaper.Color = Color3.fromRGB(224, 230, 236)
+        contractPaper.Material = Enum.Material.SmoothPlastic
+        roomLedger.Color = Color3.fromRGB(52, 64, 84)
+        roomLedger.Material = Enum.Material.Slate
+        roomCards.Color = Color3.fromRGB(150, 189, 255)
+        roomCards.Material = Enum.Material.SmoothPlastic
+        toolDisplayEMF.Color = Color3.fromRGB(48, 58, 72)
+        toolDisplayEMF.Material = Enum.Material.Metal
+        toolDisplayUV.Color = Color3.fromRGB(214, 146, 255)
+        toolDisplayUV.Material = Enum.Material.Neon
+        toolDisplayBox.Color = Color3.fromRGB(72, 82, 98)
+        toolDisplayBox.Material = Enum.Material.SmoothPlastic
         for _, facadePart in ipairs({ facadeCanopy, facadeApron, facadeWingLeft, facadeWingRight }) do
             facadePart.Color = Color3.fromRGB(24, 32, 46)
             facadePart.Transparency = 0.02
@@ -1756,6 +1791,20 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             leftCase.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 3.8, -1.35, 3.85)
             rightCase.Size = Vector3.new(2.4, 1.55, 1.7)
             rightCase.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 3.8, -1.35, 3.85)
+            contractClipboard.Size = Vector3.new(1.45, 0.1, 1.0)
+            contractClipboard.CFrame = centerDeskTop.CFrame * CFrame.new(0, 0.16, -0.28) * CFrame.Angles(math.rad(-12), 0, 0)
+            contractPaper.Size = Vector3.new(1.12, 0.04, 0.72)
+            contractPaper.CFrame = contractClipboard.CFrame * CFrame.new(0, 0.08, -0.02)
+            roomLedger.Size = Vector3.new(1.2, 0.14, 0.82)
+            roomLedger.CFrame = leftCase.CFrame * CFrame.new(0, leftCase.Size.Y * 0.5 + 0.12, 0) * CFrame.Angles(math.rad(-10), 0, 0)
+            roomCards.Size = Vector3.new(0.74, 0.08, 0.46)
+            roomCards.CFrame = leftCase.CFrame * CFrame.new(0.52, leftCase.Size.Y * 0.5 + 0.18, 0.1) * CFrame.Angles(0, math.rad(18), 0)
+            toolDisplayEMF.Size = Vector3.new(0.42, 0.92, 0.42)
+            toolDisplayEMF.CFrame = rightCase.CFrame * CFrame.new(-0.52, rightCase.Size.Y * 0.5 + 0.46, -0.18)
+            toolDisplayUV.Size = Vector3.new(0.24, 0.24, 1.08)
+            toolDisplayUV.CFrame = rightCase.CFrame * CFrame.new(0.0, rightCase.Size.Y * 0.5 + 0.14, 0.08)
+            toolDisplayBox.Size = Vector3.new(0.74, 0.52, 0.42)
+            toolDisplayBox.CFrame = rightCase.CFrame * CFrame.new(0.58, rightCase.Size.Y * 0.5 + 0.3, 0.02)
             facadeCanopy.Size = Vector3.new(anchorPart.Size.X + 6.8, 0.62, 3.8)
             facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.1, 1.9)
             facadeApron.Size = Vector3.new(anchorPart.Size.X + 9.4, 0.28, 8.8)
@@ -1925,6 +1974,27 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         end
         if rightCase then
             rightCase:Destroy()
+        end
+        if contractClipboard then
+            contractClipboard:Destroy()
+        end
+        if contractPaper then
+            contractPaper:Destroy()
+        end
+        if roomLedger then
+            roomLedger:Destroy()
+        end
+        if roomCards then
+            roomCards:Destroy()
+        end
+        if toolDisplayEMF then
+            toolDisplayEMF:Destroy()
+        end
+        if toolDisplayUV then
+            toolDisplayUV:Destroy()
+        end
+        if toolDisplayBox then
+            toolDisplayBox:Destroy()
         end
         if facadeCanopy then
             facadeCanopy:Destroy()
