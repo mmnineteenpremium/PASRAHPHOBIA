@@ -5,6 +5,7 @@ local INTERACTION_PATCH_ATTR = "InteractionPointsRuntimePatched"
 local DOOR_PATCH_ATTR = "DoorTraversalRuntimePatched"
 local SAFE_ZONE_PATCH_ATTR = "SafeZoneRuntimePatched"
 local MATERIAL_PATCH_ATTR = "MapMaterialRuntimePatched"
+local TRAVERSAL_GUIDE_PATCH_ATTR = "TraversalGuideRuntimePatched"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
@@ -15,6 +16,9 @@ local DEFAULT_DOOR_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
 local MIN_SEGMENT_SIZE = 0.25
 local STAIR_MARGIN = 0.75
 local INTERACTION_HEIGHT_OFFSET = 1.5
+local TRAVERSAL_GUIDE_FOLDER_NAME = "TraversalGuideRuntime"
+local TRAVERSAL_GUIDE_HIGHLIGHT_NAME = "Highlight"
+local TRAVERSAL_GUIDE_BILLBOARD_NAME = "Billboard"
 local INTERACTION_POSITION_OVERRIDES = {
 }
 local INTERACTION_DOOR_OVERRIDES = {
@@ -255,6 +259,24 @@ local function createFloorSegment(source, parent, name, bounds)
 	return segment
 end
 
+local function createGuideTextLabel(name, font, textSize, textColor, text, height, position)
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.BackgroundTransparency = 1
+	label.BorderSizePixel = 0
+	label.Position = position
+	label.Size = UDim2.new(1, -18, 0, height)
+	label.Font = font
+	label.Text = text
+	label.TextColor3 = textColor
+	label.TextSize = textSize
+	label.TextStrokeTransparency = 0.82
+	label.TextWrapped = true
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Top
+	return label
+end
+
 local function collectStairBounds(mapClone)
 	local bounds = nil
 
@@ -380,8 +402,7 @@ local function patchSecondFloor(mapClone)
 	local carvedAnyFloor = false
 	if stairBounds ~= nil then
 		for _, floorPart in ipairs(segmentedFloors) do
-			local isNorthFloor = string.match(floorPart.Name, "North") ~= nil
-			if floorPart.Parent ~= nil and isNorthFloor then
+			if floorPart.Parent ~= nil then
 				local carved = carveFloorAroundStairs(floorPart, stairBounds)
 				carvedAnyFloor = carvedAnyFloor or carved
 			end
@@ -393,6 +414,140 @@ local function patchSecondFloor(mapClone)
 		mapClone:SetAttribute(FLOOR_PATCH_ATTR, true)
 	end
 	return didPatch
+end
+
+local function ensureTraversalGuide(part)
+	if not (part and part:IsA("BasePart") and part.Parent ~= nil) then
+		return nil
+	end
+
+	local folder = part:FindFirstChild(TRAVERSAL_GUIDE_FOLDER_NAME)
+	if not (folder and folder:IsA("Folder")) then
+		if folder then
+			folder:Destroy()
+		end
+		folder = Instance.new("Folder")
+		folder.Name = TRAVERSAL_GUIDE_FOLDER_NAME
+		folder.Parent = part
+	end
+
+	local highlight = folder:FindFirstChild(TRAVERSAL_GUIDE_HIGHLIGHT_NAME)
+	if not (highlight and highlight:IsA("Highlight")) then
+		if highlight then
+			highlight:Destroy()
+		end
+		highlight = Instance.new("Highlight")
+		highlight.Name = TRAVERSAL_GUIDE_HIGHLIGHT_NAME
+		highlight.Parent = folder
+	end
+	highlight.Adornee = part
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.FillColor = Color3.fromRGB(132, 186, 255)
+	highlight.FillTransparency = 0.9
+	highlight.OutlineColor = Color3.fromRGB(214, 232, 255)
+	highlight.OutlineTransparency = 0.1
+	highlight.Enabled = true
+
+	local labelGui = folder:FindFirstChild(TRAVERSAL_GUIDE_BILLBOARD_NAME)
+	if not (labelGui and labelGui:IsA("BillboardGui")) then
+		if labelGui then
+			labelGui:Destroy()
+		end
+		labelGui = Instance.new("BillboardGui")
+		labelGui.Name = TRAVERSAL_GUIDE_BILLBOARD_NAME
+		labelGui.Parent = folder
+	end
+	labelGui.Active = false
+	labelGui.Adornee = part
+	labelGui.AlwaysOnTop = true
+	labelGui.Brightness = 2
+	labelGui.ClipsDescendants = false
+	labelGui.Enabled = true
+	labelGui.LightInfluence = 0
+	labelGui.MaxDistance = 120
+	labelGui.ResetOnSpawn = false
+	labelGui.Size = UDim2.fromOffset(210, 54)
+	labelGui.StudsOffsetWorldSpace = Vector3.new(0, part.Size.Y * 0.5 + 2.8, 0)
+
+	local panel = labelGui:FindFirstChild("Panel")
+	if not (panel and panel:IsA("Frame")) then
+		if panel then
+			panel:Destroy()
+		end
+		panel = Instance.new("Frame")
+		panel.Name = "Panel"
+		panel.Parent = labelGui
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 12)
+		corner.Parent = panel
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Name = "Stroke"
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke.Color = Color3.fromRGB(138, 198, 255)
+		stroke.Transparency = 0.12
+		stroke.Thickness = 1.4
+		stroke.Parent = panel
+
+		local accent = Instance.new("Frame")
+		accent.Name = "Accent"
+		accent.AnchorPoint = Vector2.new(0, 0.5)
+		accent.BackgroundColor3 = Color3.fromRGB(138, 198, 255)
+		accent.BorderSizePixel = 0
+		accent.Position = UDim2.new(0, 10, 0.5, 0)
+		accent.Size = UDim2.fromOffset(3, 28)
+		accent.Parent = panel
+
+		local accentCorner = Instance.new("UICorner")
+		accentCorner.CornerRadius = UDim.new(1, 0)
+		accentCorner.Parent = accent
+
+		createGuideTextLabel(
+			"Title",
+			Enum.Font.GothamBold,
+			13,
+			Color3.fromRGB(240, 248, 255),
+			"AKSES LANTAI 2",
+			18,
+			UDim2.new(0, 20, 0, 6)
+		).Parent = panel
+
+		createGuideTextLabel(
+			"Subtitle",
+			Enum.Font.GothamMedium,
+			11,
+			Color3.fromRGB(188, 218, 248),
+			"Naik lewat tangga pusat",
+			16,
+			UDim2.new(0, 20, 0, 23)
+		).Parent = panel
+	end
+
+	panel.BackgroundColor3 = Color3.fromRGB(10, 18, 30)
+	panel.BackgroundTransparency = 0.14
+	panel.BorderSizePixel = 0
+	panel.Size = UDim2.fromScale(1, 1)
+	return folder
+end
+
+local function patchTraversalGuides(mapClone)
+	if not mapClone or mapClone:GetAttribute(TRAVERSAL_GUIDE_PATCH_ATTR) == true then
+		return false
+	end
+
+	local patchedAny = false
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("BasePart") and descendant.Name == "CentralStaircase" then
+			ensureTraversalGuide(descendant)
+			patchedAny = true
+		end
+	end
+
+	if patchedAny then
+		mapClone:SetAttribute(TRAVERSAL_GUIDE_PATCH_ATTR, true)
+	end
+	return patchedAny
 end
 
 local function patchInteractionPoints(mapId, mapClone)
@@ -647,6 +802,7 @@ function MapRuntimePatches.Apply(mapId, mapClone)
 	didPatch = patchDoorTraversal(mapClone) or didPatch
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
+	didPatch = patchTraversalGuides(mapClone) or didPatch
 	return didPatch
 end
 

@@ -1962,6 +1962,28 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SOURCE READY (refuge marker highlight polish)**.
   - **PENDING LIVE RETEST** setelah sesi Studio server tersinkron lagi.
 
+## Update 2026-04-05 20:34 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi traversal:
+  - patch lantai dua kini mencoba carve semua segmen `Floor_2_*` yang overlap dengan tangga pusat, bukan hanya segmen utara.
+  - runtime guide baru ditambahkan pada `CentralStaircase`:
+    - `AKSES LANTAI 2`
+    - `Naik lewat tangga pusat`
+- validasi:
+  - build source sukses:
+    - `_tmp_traversal_guides_build.rbxlx`
+  - asset/static audit menunjukkan `HauntedHouse`, `EmptyBuilding`, dan `StudioMMNineteen` memang punya struktur tangga yang sesuai untuk patch ini.
+- status:
+  - **SOURCE READY (second-floor robustness + traversal guide)**.
+  - **PENDING LIVE RETEST** saat harness Studio server kembali stabil.
+
+## Update 2026-04-05 20:36 ICT
+
+- cleanup runtime support:
+  - spam log `TPV ALLOWED (Lobby)` dari `CameraController` sekarang ditahan agar hanya muncul saat mode kamera benar-benar berubah.
+- status:
+  - **SELESAI (camera log noise guard)**.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
