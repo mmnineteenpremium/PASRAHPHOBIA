@@ -10144,3 +10144,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - route ecosystem sekarang lebih utuh; refuge ikut masuk ke jalur navigasi yang sama dengan door, room anchor, dan traversal guide
+
+## 2026-04-05 - Refuge Marker Palette Alignment Pass
+
+### Scope
+
+- menyamakan palette `SafeZoneRuntimeMarker` dan `HideSpotRuntimeMarker` dengan semantic refuge route agar refuge tidak lagi berbicara dengan warna yang berbeda dari world guide/hud
+
+### Source Changes
+
+- `src/ServerScriptService/Server/HidingSystem/Service.lua`
+  - `SAFE_ZONE_VISUAL_COLOR` dipindah ke aksen refuge
+  - outline/panel/stroke/title/subtitle marker aman sekarang memakai keluarga warna refuge hijau
+- `src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua`
+  - marker `HideSpot` sekarang memakai palette refuge yang sama dengan `SafeZone` dan route guide
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_refuge_marker_palette_build.rbxlx`
+
+### Interpretation
+
+- refuge marker sekarang lebih konsisten secara visual; pemain tidak perlu menebak apakah `SafeZone`, `HideSpot`, dan refuge route adalah sistem yang berbeda
