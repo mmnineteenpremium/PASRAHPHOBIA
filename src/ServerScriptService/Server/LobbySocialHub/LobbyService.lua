@@ -47,6 +47,9 @@ local LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME = "Billboard"
 local LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME = "Highlight"
 local LOBBY_ZONE_ENTRY_GUIDE_ACCENT_NAME = "AccentBar"
 local LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME = "AccentLight"
+local LOBBY_ZONE_ENTRY_GUIDE_FRAME_TOP_NAME = "FrameTop"
+local LOBBY_ZONE_ENTRY_GUIDE_FRAME_LEFT_NAME = "FrameLeft"
+local LOBBY_ZONE_ENTRY_GUIDE_FRAME_RIGHT_NAME = "FrameRight"
 local LOBBY_ZONE_GUIDES_ENABLED = false
 local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = true
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
@@ -415,6 +418,26 @@ local function clampDisplayNames(entries)
         end
     end
     return names
+end
+
+local function ensureNeonGuidePart(parent, name)
+    local part = parent:FindFirstChild(name)
+    if not (part and part:IsA("Part")) then
+        if part then
+            part:Destroy()
+        end
+        part = Instance.new("Part")
+        part.Name = name
+        part.Anchored = true
+        part.CanCollide = false
+        part.CanQuery = false
+        part.CanTouch = false
+        part.CastShadow = false
+        part.Locked = true
+        part.Material = Enum.Material.Neon
+        part.Parent = parent
+    end
+    return part
 end
 
 local function createGuideTextLabel(name, font, textSize, textColor, text, height, position)
@@ -1359,6 +1382,36 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     accentLight.Brightness = 0.8
     accentLight.Range = 10
     accentLight.Shadows = false
+
+    local doorWidth = math.max(anchorPart.Size.X, anchorPart.Size.Z)
+    local frameDepth = math.min(anchorPart.Size.X, anchorPart.Size.Z) + 0.14
+    local isWideOnX = anchorPart.Size.X >= anchorPart.Size.Z
+    local sideOffset = (doorWidth * 0.5) + 0.42
+    local topY = anchorPart.Size.Y * 0.5 + 0.42
+
+    local frameTop = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_FRAME_TOP_NAME)
+    local frameLeft = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_FRAME_LEFT_NAME)
+    local frameRight = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_FRAME_RIGHT_NAME)
+    for _, framePart in ipairs({ frameTop, frameLeft, frameRight }) do
+        framePart.Color = style.color
+        framePart.Transparency = 0.2
+    end
+
+    if isWideOnX then
+        frameTop.Size = Vector3.new(anchorPart.Size.X + 0.9, 0.18, frameDepth)
+        frameTop.CFrame = anchorPart.CFrame * CFrame.new(0, topY, 0)
+        frameLeft.Size = Vector3.new(0.18, anchorPart.Size.Y + 0.2, frameDepth)
+        frameLeft.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset, 0, 0)
+        frameRight.Size = Vector3.new(0.18, anchorPart.Size.Y + 0.2, frameDepth)
+        frameRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset, 0, 0)
+    else
+        frameTop.Size = Vector3.new(frameDepth, 0.18, anchorPart.Size.Z + 0.9)
+        frameTop.CFrame = anchorPart.CFrame * CFrame.new(0, topY, 0)
+        frameLeft.Size = Vector3.new(frameDepth, anchorPart.Size.Y + 0.2, 0.18)
+        frameLeft.CFrame = anchorPart.CFrame * CFrame.new(0, 0, -sideOffset)
+        frameRight.Size = Vector3.new(frameDepth, anchorPart.Size.Y + 0.2, 0.18)
+        frameRight.CFrame = anchorPart.CFrame * CFrame.new(0, 0, sideOffset)
+    end
 
     local panel = billboard:FindFirstChild("Panel")
     if not (panel and panel:IsA("Frame")) then
