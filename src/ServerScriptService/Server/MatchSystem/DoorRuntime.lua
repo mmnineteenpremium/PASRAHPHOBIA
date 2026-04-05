@@ -10,6 +10,9 @@ local OPEN_SOUND_ATTR_NAME = "DoorOpenSoundId"
 local CLOSE_SOUND_ATTR_NAME = "DoorCloseSoundId"
 local OPEN_SOUND_NAME = "DoorOpenSound"
 local CLOSE_SOUND_NAME = "DoorCloseSound"
+local GUIDE_FOLDER_NAME = "DoorRouteGuideRuntime"
+local GUIDE_HIGHLIGHT_NAME = "Highlight"
+local GUIDE_BILLBOARD_NAME = "Billboard"
 local OPEN_ANGLE = math.rad(88)
 local INTERACTION_DISTANCE = 10
 local PROMPT_HOLD_DURATION = 0
@@ -27,6 +30,24 @@ local DEFAULT_OPEN_SOUND_ID = "rbxassetid://139204195403262"
 local DEFAULT_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
 local DEFAULT_SOUND_VOLUME = 0.45
 local DEFAULT_SOUND_MAX_DISTANCE = 42
+
+local function createGuideTextLabel(name, font, textSize, textColor, text, height, position)
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.BackgroundTransparency = 1
+	label.BorderSizePixel = 0
+	label.Position = position
+	label.Size = UDim2.new(1, -18, 0, height)
+	label.Font = font
+	label.Text = text
+	label.TextColor3 = textColor
+	label.TextSize = textSize
+	label.TextStrokeTransparency = 0.82
+	label.TextWrapped = true
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Top
+	return label
+end
 
 local function titleCaseToken(token)
 	local raw = tostring(token or ""):gsub("(%d+)", " %1"):gsub("[_%-.]+", " ")
@@ -55,6 +76,151 @@ local function resolveDoorLabel(part)
 		return "Pintu"
 	end
 	return "Pintu " .. label
+end
+
+local function ensureDoorRouteGuide(doorRecord)
+	local part = type(doorRecord) == "table" and doorRecord.part or nil
+	if not (part and part:IsA("BasePart") and part.Parent ~= nil) then
+		return nil
+	end
+
+	local folder = part:FindFirstChild(GUIDE_FOLDER_NAME)
+	if not (folder and folder:IsA("Folder")) then
+		if folder then
+			folder:Destroy()
+		end
+		folder = Instance.new("Folder")
+		folder.Name = GUIDE_FOLDER_NAME
+		folder.Parent = part
+	end
+
+	local highlight = folder:FindFirstChild(GUIDE_HIGHLIGHT_NAME)
+	if not (highlight and highlight:IsA("Highlight")) then
+		if highlight then
+			highlight:Destroy()
+		end
+		highlight = Instance.new("Highlight")
+		highlight.Name = GUIDE_HIGHLIGHT_NAME
+		highlight.Parent = folder
+	end
+	highlight.Adornee = part
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.FillColor = Color3.fromRGB(148, 194, 240)
+	highlight.FillTransparency = 0.97
+	highlight.OutlineColor = Color3.fromRGB(198, 224, 255)
+	highlight.OutlineTransparency = 0.32
+	highlight.Enabled = true
+	doorRecord.guideHighlight = highlight
+
+	local billboard = folder:FindFirstChild(GUIDE_BILLBOARD_NAME)
+	if not (billboard and billboard:IsA("BillboardGui")) then
+		if billboard then
+			billboard:Destroy()
+		end
+		billboard = Instance.new("BillboardGui")
+		billboard.Name = GUIDE_BILLBOARD_NAME
+		billboard.Parent = folder
+	end
+	billboard.Active = false
+	billboard.Adornee = part
+	billboard.AlwaysOnTop = true
+	billboard.Brightness = 2
+	billboard.ClipsDescendants = false
+	billboard.Enabled = true
+	billboard.LightInfluence = 0
+	billboard.MaxDistance = 68
+	billboard.ResetOnSpawn = false
+	billboard.Size = UDim2.fromOffset(186, 42)
+	billboard.StudsOffsetWorldSpace = Vector3.new(0, part.Size.Y * 0.5 + 2.4, 0)
+	doorRecord.guideBillboard = billboard
+
+	local panel = billboard:FindFirstChild("Panel")
+	if not (panel and panel:IsA("Frame")) then
+		if panel then
+			panel:Destroy()
+		end
+		panel = Instance.new("Frame")
+		panel.Name = "Panel"
+		panel.Parent = billboard
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = panel
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Name = "Stroke"
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke.Color = Color3.fromRGB(148, 194, 240)
+		stroke.Transparency = 0.18
+		stroke.Thickness = 1.2
+		stroke.Parent = panel
+
+		local accent = Instance.new("Frame")
+		accent.Name = "Accent"
+		accent.AnchorPoint = Vector2.new(0, 0.5)
+		accent.BackgroundColor3 = Color3.fromRGB(148, 194, 240)
+		accent.BorderSizePixel = 0
+		accent.Position = UDim2.new(0, 10, 0.5, 0)
+		accent.Size = UDim2.fromOffset(3, 22)
+		accent.Parent = panel
+
+		local accentCorner = Instance.new("UICorner")
+		accentCorner.CornerRadius = UDim.new(1, 0)
+		accentCorner.Parent = accent
+
+		createGuideTextLabel(
+			"Title",
+			Enum.Font.GothamBold,
+			12,
+			Color3.fromRGB(242, 246, 252),
+			doorRecord.label or "Pintu",
+			16,
+			UDim2.new(0, 20, 0, 5)
+		).Parent = panel
+
+		createGuideTextLabel(
+			"Subtitle",
+			Enum.Font.GothamMedium,
+			10,
+			Color3.fromRGB(178, 204, 228),
+			"Akses ruang",
+			14,
+			UDim2.new(0, 20, 0, 20)
+		).Parent = panel
+	end
+
+	panel.BackgroundColor3 = Color3.fromRGB(10, 18, 28)
+	panel.BackgroundTransparency = 0.16
+	panel.BorderSizePixel = 0
+	panel.Size = UDim2.fromScale(1, 1)
+	doorRecord.guidePanel = panel
+	return folder
+end
+
+local function updateDoorRouteGuide(doorRecord, isOpen, isLocked)
+	local guide = ensureDoorRouteGuide(doorRecord)
+	if not guide then
+		return
+	end
+
+	local title = doorRecord.guidePanel and doorRecord.guidePanel:FindFirstChild("Title")
+	if title and title:IsA("TextLabel") then
+		title.Text = doorRecord.label or "Pintu"
+	end
+
+	local subtitle = doorRecord.guidePanel and doorRecord.guidePanel:FindFirstChild("Subtitle")
+	if subtitle and subtitle:IsA("TextLabel") then
+		if isLocked then
+			subtitle.Text = "Akses terkunci"
+			subtitle.TextColor3 = Color3.fromRGB(228, 170, 170)
+		elseif isOpen then
+			subtitle.Text = "Terbuka"
+			subtitle.TextColor3 = Color3.fromRGB(170, 218, 190)
+		else
+			subtitle.Text = "Akses ruang"
+			subtitle.TextColor3 = Color3.fromRGB(178, 204, 228)
+		end
+	end
 end
 
 local function resolveEventBus(deps)
@@ -245,6 +411,11 @@ local function applyDoorState(doorRecord, interactionType, suppressSound)
 		part:GetAttribute("DoorIsOpen") == true,
 		part:GetAttribute("DoorLocked") == true,
 		doorRecord.label
+	)
+	updateDoorRouteGuide(
+		doorRecord,
+		part:GetAttribute("DoorIsOpen") == true,
+		part:GetAttribute("DoorLocked") == true
 	)
 end
 
@@ -447,6 +618,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 			descendant:SetAttribute("DoorIsOpen", initialState.isOpen)
 			registerDoorInteraction(mapInteractionSystem, descendant.Name, descendant.Position)
 			ensurePathfindingModifier(descendant)
+			ensureDoorRouteGuide(record)
 			applyDoorState(record, initialState.isOpen and "Open" or "Close", true)
 			setPromptState(prompt, initialState.isOpen, initialState.isLocked, doorLabel)
 

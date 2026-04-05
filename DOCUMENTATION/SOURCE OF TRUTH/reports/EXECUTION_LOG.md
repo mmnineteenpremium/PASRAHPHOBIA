@@ -9811,3 +9811,31 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - orientasi lobby sekarang tidak hanya bergantung pada zone part; pintu masuk bangunan aktif juga punya anchor visual yang lebih intuitif
+
+## 2026-04-05 - Door Route Guide Pass
+
+### Scope
+
+- mengangkat label tujuan pintu dari level `prompt` ke level world-space agar orientasi map lebih mudah dibaca dari jarak wajar
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua`
+  - tambah `DoorRouteGuideRuntime`
+  - setiap pintu runtime sekarang punya:
+    - `Highlight` tipis
+    - `BillboardGui` kecil
+  - title memakai `DoorRouteLabel`
+  - subtitle berubah sesuai state:
+    - `Akses ruang`
+    - `Terbuka`
+    - `Akses terkunci`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_door_route_guides_build.rbxlx`
+
+### Interpretation
+
+- affordance pintu sekarang tidak hanya hidup saat prompt aktif; pemain bisa membaca tujuan ruang lebih awal dari world-space beacon ringan
