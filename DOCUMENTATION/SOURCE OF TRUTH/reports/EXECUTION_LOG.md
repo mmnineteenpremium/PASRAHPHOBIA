@@ -10623,3 +10623,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - sebelum lane manual Roblox dijalankan, sekarang ada satu command lokal untuk mengecek readiness repositori secara cepat dan konsisten
+
+## 2026-04-06 - Release Preflight Run
+
+### Scope
+
+- menjalankan `pwsh ./scripts/release-preflight.ps1` untuk snapshot readiness lokal terbaru
+
+### Runtime Notes
+
+- hasil run:
+  - `Build ok: True`
+  - `Missing reports: 0`
+  - `Robux items: 10`
+  - `Safe items missing ID: 6`
+  - `Safe items disabled: 6`
+  - `Hold items enabled: 0`
+- manual blockers yang masih tersisa:
+  - `Creator Hub marketplaceId` resmi belum diisi
+  - `2 client smoke` belum dijalankan
+  - persistence non-mock belum divalidasi
+  - legal/licensing final review belum dikonfirmasi
+
+### Interpretation
+
+- readiness lokal repositori sekarang bersih di sisi build dan dokumentasi
+- blocker publish yang tersisa memang sudah murni lane manual/platform

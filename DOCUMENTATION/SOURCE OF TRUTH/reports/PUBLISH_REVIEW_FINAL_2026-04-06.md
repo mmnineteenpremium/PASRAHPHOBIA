@@ -25,6 +25,12 @@ Status proyek sekarang:
   - `qaSolo=true`
   - `overall=pass_with_manual_multiplayer` untuk QA gate
   - publish tetap `fail` hanya karena `persistence=mock`
+- local preflight terbaru:
+  - `pwsh ./scripts/release-preflight.ps1`
+  - `buildOk=true`
+  - `missingReports=0`
+  - `safeItemsMissingMarketplaceId=6`
+  - `holdItemsEnabled=0`
 - blueprint retention final
 - polish FPV / camera / flashlight baseline
 
@@ -87,6 +93,7 @@ Checklist operasional final:
 
 - ini bukan tanda proyek gagal publish
 - ini hanya berarti pekerjaan coding/arsitektur utama sudah sangat jauh, dan sisa risiko sekarang terkonsentrasi di lane manual/compliance/publish ops
+- preflight lokal terbaru sudah bersih di sisi build/report; blocker yang tersisa memang manual platform Roblox
 
 ## Referensi Resmi Roblox
 
