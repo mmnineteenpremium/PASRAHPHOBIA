@@ -10714,3 +10714,70 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - compression setengah skala dinyatakan tidak layak untuk lobby ini
 - perubahan ukuran berikutnya harus memakai pass desain/layout yang lebih terarah, bukan sekadar kompres global seluruh geometri
+
+## 2026-04-06 - Lobby UX World-Space Identity Pass
+
+### Scope
+
+- mendorong `LobbySocialHub` dari state signage prototype menjadi hub world-space yang lebih terbaca manusia
+- fokus tetap di lobby, terutama:
+  - identity entrance semua zona utama
+  - pendalaman `North` sebagai `contract / evidence` staging bay
+  - penambahan wayfinding plaza agar lobby terasa sebagai hub utuh, bukan shell kosong
+
+### Source Changes
+
+- `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+  - `SHOP`, `PARTY`, `GARDEN`, dan `FLEX` sekarang memakai facade sign world-space yang menempel ke bangunan
+  - `SHOP` dan `PARTY` punya kiosk cue ringan:
+    - `SHOP BOARD`
+    - `ROOM BOARD`
+  - `GARDEN` dan `FLEX` punya identity cue setara:
+    - `GARDEN BOARD`
+    - `FLEX BOARD`
+  - `North` (`PLAY`) diperdalam menjadi staging bay:
+    - foyer props
+    - desk / display case
+    - clipboard / paper / room ledger / room cards
+    - tool display sederhana
+    - backdrop, runner lantai, accent strips
+    - desk plates `MAP / MODE / START`
+  - `MainHubDecorRuntime` ditambahkan untuk orientasi plaza:
+    - `DirectoryPad`
+    - `DirectoryPillar`
+    - `DirectoryPanel`
+    - route runner `North / East / West / South / Flex`
+    - node marker `PLAY / SHOP / PARTY / GARDEN / FLEX`
+
+### Runtime Notes
+
+- `North` sekarang tampil sebagai area `contract bay` yang lebih konkret, bukan lagi façade dengan panel tempel saja
+- `SHOP / PARTY / GARDEN / FLEX` sekarang masing-masing minimal punya identity cue fisik yang terbaca langsung di world-space
+- plaza tengah sekarang punya `Lobby Directory` dan jalur orientasi berwarna antar-zona
+
+### Validation
+
+- build source sukses:
+  - `_tmp_lobby_shop_party_facade_signs_build.rbxlx`
+  - `_tmp_lobby_shop_party_kiosk_build.rbxlx`
+  - `_tmp_lobby_garden_flex_identity_build.rbxlx`
+  - `_tmp_lobby_north_staging_props_build.rbxlx`
+  - `_tmp_lobby_north_semantic_props_build.rbxlx`
+  - `_tmp_lobby_north_depth_dressing_build.rbxlx`
+  - `_tmp_lobby_north_contract_bay_build.rbxlx`
+  - `_tmp_lobby_mainhub_directory_build.rbxlx`
+  - `_tmp_lobby_mainhub_directory_scaleup_build.rbxlx`
+- commit terkait:
+  - `ce6686b` `Mount shop and party signs onto facades`
+  - `a4a43a8` `Add shop and party entry kiosks`
+  - `83bc8c4` `Add garden and flex entry identities`
+  - `9c394aa` `Add north staging foyer props`
+  - `5f32c3c` `Add north semantic staging props`
+  - `56dfe7a` `Add north foyer depth dressing`
+  - `8df973c` `Add north contract bay desk plates`
+
+### Interpretation
+
+- lobby sekarang mulai terbaca sebagai kumpulan bangunan/zona dengan fungsi nyata, bukan hanya shell besar dengan UI overlay
+- `North` sudah naik dari prototype signage menjadi `contract / evidence staging bay`
+- area plaza juga mulai punya peran orientasi, walau art direction akhir dan interior final masih belum selesai

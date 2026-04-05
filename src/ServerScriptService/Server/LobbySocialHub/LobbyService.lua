@@ -80,6 +80,20 @@ local LOBBY_ZONE_ENTRY_GUIDE_TOOL_BOX_NAME = "ToolDisplayBox"
 local LOBBY_ZONE_ENTRY_GUIDE_DESK_MAP_PLATE_NAME = "DeskMapPlate"
 local LOBBY_ZONE_ENTRY_GUIDE_DESK_MODE_PLATE_NAME = "DeskModePlate"
 local LOBBY_ZONE_ENTRY_GUIDE_DESK_START_PLATE_NAME = "DeskStartPlate"
+local LOBBY_MAINHUB_DECOR_FOLDER_NAME = "MainHubDecorRuntime"
+local LOBBY_MAINHUB_DIRECTORY_PAD_NAME = "DirectoryPad"
+local LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME = "DirectoryPillar"
+local LOBBY_MAINHUB_DIRECTORY_PANEL_NAME = "DirectoryPanel"
+local LOBBY_MAINHUB_ROUTE_NORTH_NAME = "RouteNorth"
+local LOBBY_MAINHUB_ROUTE_EAST_NAME = "RouteEast"
+local LOBBY_MAINHUB_ROUTE_WEST_NAME = "RouteWest"
+local LOBBY_MAINHUB_ROUTE_SOUTH_NAME = "RouteSouth"
+local LOBBY_MAINHUB_ROUTE_FLEX_NAME = "RouteFlex"
+local LOBBY_MAINHUB_NODE_NORTH_NAME = "NodeNorth"
+local LOBBY_MAINHUB_NODE_EAST_NAME = "NodeEast"
+local LOBBY_MAINHUB_NODE_WEST_NAME = "NodeWest"
+local LOBBY_MAINHUB_NODE_SOUTH_NAME = "NodeSouth"
+local LOBBY_MAINHUB_NODE_FLEX_NAME = "NodeFlex"
 local LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME = "EntrySignPanel"
 local LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME = "FacadeCanopy"
 local LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME = "FacadeApron"
@@ -737,6 +751,157 @@ local function applyMainHubVisualPatch()
 			end
 		end
 	end
+
+    local decorFolder = lobbyRoot:FindFirstChild(LOBBY_MAINHUB_DECOR_FOLDER_NAME)
+    if not (decorFolder and decorFolder:IsA("Folder")) then
+        if decorFolder then
+            decorFolder:Destroy()
+        end
+        decorFolder = Instance.new("Folder")
+        decorFolder.Name = LOBBY_MAINHUB_DECOR_FOLDER_NAME
+        decorFolder.Parent = lobbyRoot
+        changed = true
+    end
+
+    local function ensureDecorPart(name)
+        local part = decorFolder:FindFirstChild(name)
+        if not (part and part:IsA("Part")) then
+            if part then
+                part:Destroy()
+            end
+            part = Instance.new("Part")
+            part.Name = name
+            part.Anchored = true
+            part.CanCollide = false
+            part.CanQuery = false
+            part.CanTouch = false
+            part.CastShadow = false
+            part.Locked = true
+            part.TopSurface = Enum.SurfaceType.Smooth
+            part.BottomSurface = Enum.SurfaceType.Smooth
+            part.Parent = decorFolder
+            changed = true
+        end
+        return part
+    end
+
+    local function applyPartProps(part, props)
+        if not part then
+            return
+        end
+        if part.Size ~= props.size then
+            part.Size = props.size
+            changed = true
+        end
+        if part.CFrame ~= props.cframe then
+            part.CFrame = props.cframe
+            changed = true
+        end
+        if part.Color ~= props.color then
+            part.Color = props.color
+            changed = true
+        end
+        if part.Material ~= (props.material or Enum.Material.SmoothPlastic) then
+            part.Material = props.material or Enum.Material.SmoothPlastic
+            changed = true
+        end
+        if part.Transparency ~= (props.transparency or 0) then
+            part.Transparency = props.transparency or 0
+            changed = true
+        end
+        if props.shape and part.Shape ~= props.shape then
+            part.Shape = props.shape
+            changed = true
+        end
+    end
+
+    local function applyRoutePart(name, startPos, endPos, color)
+        local route = ensureDecorPart(name)
+        local delta = endPos - startPos
+        local length = delta.Magnitude
+        applyPartProps(route, {
+            size = Vector3.new(6.8, 0.1, length),
+            cframe = CFrame.lookAt((startPos + endPos) * 0.5, endPos),
+            color = color,
+            material = Enum.Material.Neon,
+            transparency = 0.08,
+        })
+    end
+
+    local function applyNodePart(name, position, color, title, subtitle)
+        local node = ensureDecorPart(name)
+        applyPartProps(node, {
+            size = Vector3.new(4.6, 0.16, 4.6),
+            cframe = CFrame.new(position),
+            color = color:Lerp(Color3.fromRGB(255, 255, 255), 0.18),
+            material = Enum.Material.Neon,
+            transparency = 0.12,
+        })
+        ensureGuideBoardSurface(node, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, title, subtitle, color)
+        ensureGuideBoardSurface(node, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, title, subtitle, color)
+    end
+
+    local hubCenter = Vector3.new(1600, 0.18, -44)
+    local northNodePos = Vector3.new(1600, 0.2, -92)
+    local eastNodePos = Vector3.new(1658, 0.2, -44)
+    local westNodePos = Vector3.new(1542, 0.2, -44)
+    local southNodePos = Vector3.new(1600, 0.2, 36)
+    local flexNodePos = Vector3.new(1668, 0.2, 84)
+
+    local pad = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PAD_NAME)
+    applyPartProps(pad, {
+        size = Vector3.new(18, 0.18, 18),
+        cframe = CFrame.new(hubCenter),
+        color = Color3.fromRGB(18, 28, 42),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+
+    local pillar = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME)
+    applyPartProps(pillar, {
+        size = Vector3.new(2.2, 6.4, 2.2),
+        cframe = CFrame.new(hubCenter + Vector3.new(0, 3.3, 0)),
+        color = Color3.fromRGB(26, 38, 54),
+        material = Enum.Material.Metal,
+        transparency = 0.02,
+    })
+
+    local directoryPanel = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PANEL_NAME)
+    applyPartProps(directoryPanel, {
+        size = Vector3.new(12.4, 5.0, 0.35),
+        cframe = CFrame.new(hubCenter + Vector3.new(0, 4.95, 1.6)),
+        color = Color3.fromRGB(12, 20, 32),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(
+        directoryPanel,
+        LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME,
+        Enum.NormalId.Back,
+        "LOBBY DIRECTORY",
+        "PLAY • NORTH\nSHOP • EAST • PARTY • WEST\nGARDEN • SOUTH • FLEX • SE",
+        Color3.fromRGB(150, 196, 255)
+    )
+    ensureGuideBoardSurface(
+        directoryPanel,
+        LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME,
+        Enum.NormalId.Front,
+        "LOBBY DIRECTORY",
+        "PLAY • NORTH\nSHOP • EAST • PARTY • WEST\nGARDEN • SOUTH • FLEX • SE",
+        Color3.fromRGB(150, 196, 255)
+    )
+
+    applyRoutePart(LOBBY_MAINHUB_ROUTE_NORTH_NAME, hubCenter, northNodePos, LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+    applyRoutePart(LOBBY_MAINHUB_ROUTE_EAST_NAME, hubCenter, eastNodePos, LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
+    applyRoutePart(LOBBY_MAINHUB_ROUTE_WEST_NAME, hubCenter, westNodePos, LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+    applyRoutePart(LOBBY_MAINHUB_ROUTE_SOUTH_NAME, hubCenter, southNodePos, LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color)
+    applyRoutePart(LOBBY_MAINHUB_ROUTE_FLEX_NAME, southNodePos, flexNodePos, LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
+
+    applyNodePart(LOBBY_MAINHUB_NODE_NORTH_NAME, northNodePos, LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, "PLAY", "Contract • Evidence")
+    applyNodePart(LOBBY_MAINHUB_NODE_EAST_NAME, eastNodePos, LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, "SHOP", "MM • PP • R$")
+    applyNodePart(LOBBY_MAINHUB_NODE_WEST_NAME, westNodePos, LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, "PARTY", "Room • Invite")
+    applyNodePart(LOBBY_MAINHUB_NODE_SOUTH_NAME, southNodePos, LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, "GARDEN", "Reward • Social")
+    applyNodePart(LOBBY_MAINHUB_NODE_FLEX_NAME, flexNodePos, LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, "FLEX", "Cosmetic • Spotlight")
 
 	return changed
 end

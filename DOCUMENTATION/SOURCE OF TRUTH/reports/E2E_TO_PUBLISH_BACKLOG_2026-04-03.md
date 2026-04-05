@@ -2386,3 +2386,13 @@ Urutan yang paling masuk akal dari titik sekarang:
 - objective investigasi utama, daftar misi, dan pemilihan/pergantian tool harus dipindahkan ke surface dunia seperti papan briefing / investigation board, bukan bertumpu pada UI player sebagai surface utama.
 - task ini terhubung langsung dengan rekonstruksi map berikutnya, karena membutuhkan area exterior staging yang jelas dan bisa diuji visual/audio secara live.
 
+## Update 2026-04-06 09:35 ICT
+
+- `Lobby UX visual` menerima pass world-space identity besar:
+  - semua entrance utama (`PLAY / SHOP / PARTY / GARDEN / FLEX`) sekarang punya cue fisik yang konsisten
+  - `North` sudah naik menjadi `contract / evidence staging bay` dengan foyer props, semantic props, dan desk plates
+  - plaza tengah sekarang punya `Lobby Directory` + route runner antar-zona
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - shell bangunan dan interior final masih belum selesai, tetapi lobby sekarang sudah jauh lebih layak untuk visual QA manusia dibanding baseline sebelumnya.
+
