@@ -62,6 +62,10 @@ local LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BASE_NAME = "ToolsBase"
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME = "CenterBoard"
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME = "CenterStand"
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME = "CenterBase"
+local LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_NAME = "CenterDesk"
+local LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME = "CenterDeskTop"
+local LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME = "LeftDisplayCase"
+local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME = "RightDisplayCase"
 local LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME = "EntrySignPanel"
 local LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME = "FacadeCanopy"
 local LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME = "FacadeApron"
@@ -1618,6 +1622,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local centerBoard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME)
     local centerStand = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME)
     local centerBase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME)
+    local centerDesk = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_NAME)
+    local centerDeskTop = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME)
+    local leftCase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME)
+    local rightCase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME)
     local signPanel = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_SIGN_PANEL_NAME)
     local facadeCanopy = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
     local facadeApron = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
@@ -1682,6 +1690,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         centerBoard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME)
         centerStand = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME)
         centerBase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME)
+        centerDesk = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_NAME)
+        centerDeskTop = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME)
+        leftCase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME)
+        rightCase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME)
         facadeCanopy = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
         facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
         facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
@@ -1700,6 +1712,15 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             basePart.Transparency = 0.02
             basePart.Material = Enum.Material.Slate
         end
+        for _, propPart in ipairs({ centerDesk, centerDeskTop, leftCase, rightCase }) do
+            propPart.Color = Color3.fromRGB(20, 28, 40)
+            propPart.Transparency = 0.03
+            propPart.Material = Enum.Material.SmoothPlastic
+        end
+        centerDeskTop.Color = Color3.fromRGB(42, 54, 72)
+        centerDeskTop.Material = Enum.Material.Metal
+        leftCase.Color = Color3.fromRGB(28, 36, 50)
+        rightCase.Color = Color3.fromRGB(28, 36, 50)
         for _, facadePart in ipairs({ facadeCanopy, facadeApron, facadeWingLeft, facadeWingRight }) do
             facadePart.Color = Color3.fromRGB(24, 32, 46)
             facadePart.Transparency = 0.02
@@ -1727,6 +1748,14 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             centerStand.CFrame = centerBoard.CFrame * CFrame.new(0, -3.18, 0)
             centerBase.Size = Vector3.new(2.8, 0.3, 2.2)
             centerBase.CFrame = centerStand.CFrame * CFrame.new(0, -1.4, 0.2)
+            centerDesk.Size = Vector3.new(6.4, 1.9, 2.8)
+            centerDesk.CFrame = anchorPart.CFrame * CFrame.new(0, -1.25, 4.55)
+            centerDeskTop.Size = Vector3.new(6.8, 0.2, 3.0)
+            centerDeskTop.CFrame = centerDesk.CFrame * CFrame.new(0, 1.04, 0)
+            leftCase.Size = Vector3.new(2.4, 1.55, 1.7)
+            leftCase.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 3.8, -1.35, 3.85)
+            rightCase.Size = Vector3.new(2.4, 1.55, 1.7)
+            rightCase.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 3.8, -1.35, 3.85)
             facadeCanopy.Size = Vector3.new(anchorPart.Size.X + 6.8, 0.62, 3.8)
             facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.1, 1.9)
             facadeApron.Size = Vector3.new(anchorPart.Size.X + 9.4, 0.28, 8.8)
@@ -1884,6 +1913,18 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         end
         if centerBase then
             centerBase:Destroy()
+        end
+        if centerDesk then
+            centerDesk:Destroy()
+        end
+        if centerDeskTop then
+            centerDeskTop:Destroy()
+        end
+        if leftCase then
+            leftCase:Destroy()
+        end
+        if rightCase then
+            rightCase:Destroy()
         end
         if facadeCanopy then
             facadeCanopy:Destroy()
