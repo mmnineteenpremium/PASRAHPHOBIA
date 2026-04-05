@@ -58,6 +58,9 @@ local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_STAND_NAME = "ContractStand"
 local LOBBY_ZONE_ENTRY_GUIDE_TOOLS_STAND_NAME = "ToolsStand"
 local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BASE_NAME = "ContractBase"
 local LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BASE_NAME = "ToolsBase"
+local LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME = "CenterBoard"
+local LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME = "CenterStand"
+local LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME = "CenterBase"
 local LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME = "FacadeCanopy"
 local LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME = "FacadeApron"
 local LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME = "FacadeWingLeft"
@@ -1571,6 +1574,9 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local toolsStand = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOLS_STAND_NAME)
     local contractBase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BASE_NAME)
     local toolsBase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BASE_NAME)
+    local centerBoard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME)
+    local centerStand = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME)
+    local centerBase = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME)
     local facadeCanopy = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
     local facadeApron = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
     local facadeWingLeft = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
@@ -1582,20 +1588,23 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         toolsStand = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOLS_STAND_NAME)
         contractBase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BASE_NAME)
         toolsBase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BASE_NAME)
+        centerBoard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_BOARD_NAME)
+        centerStand = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_STAND_NAME)
+        centerBase = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CENTER_BASE_NAME)
         facadeCanopy = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
         facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
         facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
         facadeWingRight = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME)
-        for _, board in ipairs({ contractBoard, toolsBoard }) do
+        for _, board in ipairs({ contractBoard, toolsBoard, centerBoard }) do
             board.Color = Color3.fromRGB(18, 26, 38)
             board.Transparency = 0.08
         end
-        for _, standPart in ipairs({ contractStand, toolsStand }) do
+        for _, standPart in ipairs({ contractStand, toolsStand, centerStand }) do
             standPart.Color = Color3.fromRGB(26, 34, 48)
             standPart.Transparency = 0.04
             standPart.Material = Enum.Material.Metal
         end
-        for _, basePart in ipairs({ contractBase, toolsBase }) do
+        for _, basePart in ipairs({ contractBase, toolsBase, centerBase }) do
             basePart.Color = Color3.fromRGB(38, 48, 64)
             basePart.Transparency = 0.02
             basePart.Material = Enum.Material.Slate
@@ -1610,9 +1619,9 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         facadeWingRight.Material = Enum.Material.SmoothPlastic
         if isWideOnX then
             contractBoard.Size = Vector3.new(4.4, 3.4, frameDepth + 0.06)
-            contractBoard.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 3.2, 0.2, 0)
+            contractBoard.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 3.8, 0.2, 0)
             toolsBoard.Size = Vector3.new(4.4, 3.4, frameDepth + 0.06)
-            toolsBoard.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 3.2, 0.2, 0)
+            toolsBoard.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 3.8, 0.2, 0)
             contractStand.Size = Vector3.new(0.48, 2.3, 0.48)
             contractStand.CFrame = contractBoard.CFrame * CFrame.new(0, -2.75, 0)
             toolsStand.Size = Vector3.new(0.48, 2.3, 0.48)
@@ -1621,6 +1630,12 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             contractBase.CFrame = contractStand.CFrame * CFrame.new(0, -1.28, 0.15)
             toolsBase.Size = Vector3.new(2.4, 0.28, 1.8)
             toolsBase.CFrame = toolsStand.CFrame * CFrame.new(0, -1.28, 0.15)
+            centerBoard.Size = Vector3.new(5.6, 3.9, frameDepth + 0.08)
+            centerBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.45, 2.25)
+            centerStand.Size = Vector3.new(0.56, 2.5, 0.56)
+            centerStand.CFrame = centerBoard.CFrame * CFrame.new(0, -3.18, 0)
+            centerBase.Size = Vector3.new(2.8, 0.3, 2.2)
+            centerBase.CFrame = centerStand.CFrame * CFrame.new(0, -1.4, 0.2)
             facadeCanopy.Size = Vector3.new(anchorPart.Size.X + 6.8, 0.62, 3.8)
             facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.1, 1.9)
             facadeApron.Size = Vector3.new(anchorPart.Size.X + 9.4, 0.28, 8.8)
@@ -1631,9 +1646,9 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 1.7, 0, 1.55)
         else
             contractBoard.Size = Vector3.new(frameDepth + 0.06, 3.4, 4.4)
-            contractBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.2, -sideOffset - 3.2)
+            contractBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.2, -sideOffset - 3.8)
             toolsBoard.Size = Vector3.new(frameDepth + 0.06, 3.4, 4.4)
-            toolsBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.2, sideOffset + 3.2)
+            toolsBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.2, sideOffset + 3.8)
             contractStand.Size = Vector3.new(0.48, 2.3, 0.48)
             contractStand.CFrame = contractBoard.CFrame * CFrame.new(0, -2.75, 0)
             toolsStand.Size = Vector3.new(0.48, 2.3, 0.48)
@@ -1642,6 +1657,12 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             contractBase.CFrame = contractStand.CFrame * CFrame.new(0.15, -1.28, 0)
             toolsBase.Size = Vector3.new(1.8, 0.28, 2.4)
             toolsBase.CFrame = toolsStand.CFrame * CFrame.new(0.15, -1.28, 0)
+            centerBoard.Size = Vector3.new(frameDepth + 0.08, 3.9, 5.6)
+            centerBoard.CFrame = anchorPart.CFrame * CFrame.new(2.25, 0.45, 0)
+            centerStand.Size = Vector3.new(0.56, 2.5, 0.56)
+            centerStand.CFrame = centerBoard.CFrame * CFrame.new(0, -3.18, 0)
+            centerBase.Size = Vector3.new(2.2, 0.3, 2.8)
+            centerBase.CFrame = centerStand.CFrame * CFrame.new(0.2, -1.4, 0)
             facadeCanopy.Size = Vector3.new(3.8, 0.62, anchorPart.Size.Z + 6.8)
             facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(1.9, topY - 0.1, 0)
             facadeApron.Size = Vector3.new(8.8, 0.28, anchorPart.Size.Z + 9.4)
@@ -1651,8 +1672,9 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadeWingRight.Size = Vector3.new(3.2, anchorPart.Size.Y + 1.2, 1.25)
             facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(1.55, 0, sideOffset + 1.7)
         end
-        ensureGuideBoardBillboard(contractBoard, "CONTRACT", "Room • Mode • Start", style.color)
+        ensureGuideBoardBillboard(contractBoard, "ROOM", "Create • Join • Ready", style.color)
         ensureGuideBoardBillboard(toolsBoard, "TOOLS", "EMF • UV • BOX", style.color)
+        ensureGuideBoardBillboard(centerBoard, "CONTRACT BOARD", "Map • Mode • Start", style.color)
     else
         if contractBoard then
             contractBoard:Destroy()
@@ -1660,17 +1682,26 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         if toolsBoard then
             toolsBoard:Destroy()
         end
+        if centerBoard then
+            centerBoard:Destroy()
+        end
         if contractStand then
             contractStand:Destroy()
         end
         if toolsStand then
             toolsStand:Destroy()
         end
+        if centerStand then
+            centerStand:Destroy()
+        end
         if contractBase then
             contractBase:Destroy()
         end
         if toolsBase then
             toolsBase:Destroy()
+        end
+        if centerBase then
+            centerBase:Destroy()
         end
         if facadeCanopy then
             facadeCanopy:Destroy()
