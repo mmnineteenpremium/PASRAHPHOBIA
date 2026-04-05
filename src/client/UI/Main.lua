@@ -3593,7 +3593,6 @@ function UISystem:Init(context)
 		self._uiState[moduleName] = { lastEvent = nil, visible = false }
 	end
 	self._uiState.LobbyUI.visible = true
-	self._uiState.RoyalPassUI.visible = true
 
 	self._matchResult = createDefaultMatchResult()
 end
@@ -3875,14 +3874,15 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._roomBrowserSuppressed = false
 			self:_setRoomBrowserVisible(false)
 			self._uiState.PASRA_UI.lastEvent = eventName
-			self._uiState.PASRA_UI.visible = true
+			self._uiState.PASRA_UI.visible = false
 			self._uiState.SpectatorUI.visible = false
 			self._uiState.MatchUI.visible = true
 			self._pasraState.lastEvent = eventName
 			self._pasraState.status = payload and payload.missionFailed == true and "Misi berakhir dengan gagal." or "Misi selesai. Hasil dan reward siap dibaca."
-			self._pasraState.subtitle = "Panel PASRA tetap tersedia, tetapi hasil utama sekarang diprioritaskan di MATCH agar tidak overlap."
+			self._pasraState.subtitle = "Hasil utama sekarang diprioritaskan di MATCH."
 			self._windowDismissed.PASRA_UI = true
 			self:_setMatchWindowDismissed(false)
+			self:_hideTeleportOverlay()
 			self:_refreshBasicMatchPanel("Results", payload)
 			self:_renderResultsPanel(payload)
 		elseif eventName == "MatchRewardSummary" then
@@ -3893,7 +3893,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 				self._matchResult.xpReward = payload.xpReward or self._matchResult.xpReward
 			end
 			self._uiState.PASRA_UI.lastEvent = eventName
-			self._uiState.PASRA_UI.visible = true
+			self._uiState.PASRA_UI.visible = false
 			self._uiState.SpectatorUI.visible = false
 			self._uiState.MatchUI.visible = true
 			self._pasraState.lastEvent = eventName
@@ -3905,6 +3905,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			)
 			self._windowDismissed.PASRA_UI = true
 			self:_setMatchWindowDismissed(false)
+			self:_hideTeleportOverlay()
 			self:_refreshBasicMatchPanel("Results", payload)
 			self:_renderResultsPanel(payload)
 		elseif eventName == "MatchStarted" then
@@ -4873,6 +4874,30 @@ function UISystem:_isMatchResultsPhase()
 	return self._matchPhase == MATCH_PHASE.RESULT or self._matchPhase == MATCH_PHASE.END
 end
 
+function UISystem:_isLocalPlayerStillInMatch()
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
+		return false
+	end
+
+	return localPlayer:GetAttribute("InMatch") == true or localPlayer:GetAttribute("MatchId") ~= nil
+end
+
+function UISystem:_returnFromResultsToLobby()
+	self._resultsCloseUnlockAt = nil
+	self._roomBrowserSuppressed = false
+	self._uiState.MatchUI.visible = false
+	self._uiState.JournalUI.visible = false
+	self._uiState.PASRA_UI.visible = false
+	self._uiState.SpectatorUI.visible = false
+	self._spectatorState.mode = "none"
+	self._matchWindowDismissed = false
+	self:_setRoomBrowserVisible(false)
+	self:_hideTeleportOverlay()
+	self:_setPhase(MATCH_PHASE.LOBBY)
+	self:_applyVisibility()
+end
+
 function UISystem:_syncMatchWindowVisibility()
 	local match = self._uxWidgets and self._uxWidgets.match or nil
 	if not match then
@@ -4882,26 +4907,33 @@ function UISystem:_syncMatchWindowVisibility()
 	local screenEnabled = (match.BasicGui and match.BasicGui.Enabled == true)
 		or (self._uiState.MatchUI and self._uiState.MatchUI.visible == true)
 	local showWindow = screenEnabled and not self._matchWindowDismissed
-	local showResults = showWindow and self:_isMatchResultsPhase()
+	local isResultsPhase = self:_isMatchResultsPhase()
+	local hasDedicatedResultsPanel = match.ResultsPanel ~= nil
+	local showResults = showWindow and isResultsPhase and hasDedicatedResultsPanel
+	local showBasicPanel = showWindow and (not isResultsPhase or not hasDedicatedResultsPanel)
 
 	if match.BasicPanel then
-		match.BasicPanel.Visible = showWindow
+		match.BasicPanel.Visible = showBasicPanel
 	end
 	if match.BasicFloatButton then
-		match.BasicFloatButton.Visible = screenEnabled and self._matchWindowDismissed
+		match.BasicFloatButton.Visible = screenEnabled and self._matchWindowDismissed and not isResultsPhase
 	end
 	if match.ResultsPanel then
 		match.ResultsPanel.Visible = showResults
 	end
-	if self:_isMatchResultsPhase() and match.Gui then
+	if isResultsPhase and match.Gui then
 		match.Gui.Enabled = screenEnabled
 	end
-	if self:_isMatchResultsPhase() and match.Layer then
+	if isResultsPhase and match.Layer then
 		match.Layer.Visible = showResults
 	end
 end
 
 function UISystem:_setMatchWindowDismissed(dismissed)
+	if dismissed == true and self:_isMatchResultsPhase() and not self:_isLocalPlayerStillInMatch() then
+		self:_returnFromResultsToLobby()
+		return
+	end
 	if dismissed ~= true then
 		self:_closeConflictingWindows("MatchUI")
 	end
@@ -9428,6 +9460,23 @@ function UISystem:_ensureTeleportOverlay()
 	return screen, overlay
 end
 
+function UISystem:_hideTeleportOverlay()
+	local screen, overlay = self:_ensureTeleportOverlay()
+	if not screen or not overlay then
+		return
+	end
+
+	self._teleportOverlayToken = (self._teleportOverlayToken or 0) + 1
+	if self._teleportOverlayTween then
+		self._teleportOverlayTween:Cancel()
+		self._teleportOverlayTween = nil
+	end
+
+	screen.Enabled = false
+	overlay.Visible = false
+	overlay.BackgroundTransparency = 0
+end
+
 function UISystem:_showTeleportOverlay(durationSeconds, options)
 	local screen, overlay = self:_ensureTeleportOverlay()
 	if not screen or not overlay then
@@ -9457,6 +9506,7 @@ function UISystem:_showTeleportOverlay(durationSeconds, options)
 		})
 		self._lastTeleportOverlaySoundAt = now
 	end
+	overlay.Visible = true
 	overlay.BackgroundTransparency = 0
 	screen.Enabled = true
 
@@ -9479,6 +9529,7 @@ function UISystem:_showTeleportOverlay(durationSeconds, options)
 			end
 			self._teleportOverlayTween = nil
 			screen.Enabled = false
+			overlay.Visible = false
 			overlay.BackgroundTransparency = 0
 		end)
 	end)
@@ -9732,14 +9783,14 @@ function UISystem:_renderPhase(phase, payload)
 			hud.Enabled = false
 		end
 
-		roomUI.Enabled = true
+		roomUI.Enabled = false
 		local result = roomUI:FindFirstChild("ResultLabel")
 		if result and result:IsA("TextLabel") then
-			result.Visible = true
-			local failed = payload and payload.missionFailed == true
-			result.Text = failed and "MISSION FAILED" or "MISSION COMPLETE"
+			result.Visible = false
 		end
+		self:_hideTeleportOverlay()
 		self:_refreshBasicMatchPanel("Results", payload)
+		return
 	end
 end
 
@@ -10112,7 +10163,7 @@ function UISystem:_ensureUXLayers()
 		results.Position = UDim2.fromScale(0, 0)
 		results.Size = UDim2.fromScale(1, 1)
 		results.BackgroundColor3 = Color3.fromRGB(8, 10, 16)
-		results.BackgroundTransparency = 0.08
+		results.BackgroundTransparency = 0.22
 		results.Visible = false
 		results.Parent = matchLayer
 
@@ -10127,7 +10178,7 @@ function UISystem:_ensureUXLayers()
 		resultsCard = Instance.new("Frame")
 		resultsCard.Name = "ResultsCard"
 		resultsCard.AnchorPoint = Vector2.new(0.5, 0.5)
-		resultsCard.Position = UDim2.fromScale(0.5, 0.52)
+		resultsCard.Position = UDim2.fromScale(0.5, 0.5)
 		resultsCard.Size = UDim2.new(0.74, 0, 0, 438)
 		resultsCard.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
 		resultsCard.BackgroundTransparency = 0.02
@@ -10305,7 +10356,11 @@ function UISystem:_ensureUXLayers()
 			if (self._resultsCloseUnlockAt or 0) > tick() then
 				return
 			end
-			self:_setMatchWindowDismissed(true)
+			if self:_isLocalPlayerStillInMatch() then
+				self:_setMatchWindowDismissed(true)
+				return
+			end
+			self:_returnFromResultsToLobby()
 		end)
 	end
 

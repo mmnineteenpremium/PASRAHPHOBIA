@@ -41,6 +41,16 @@ local FLASHLIGHT_LIGHT_ENABLED_ATTR = "PasrahFlashlightLightEnabled"
 local FLASHLIGHT_AIM_OFFSET_ATTR = "PasrahFlashlightAimOffset"
 local CURSOR_TOGGLE_GUI_NAME = "FPVCursorToggleUI"
 local CURSOR_TOGGLE_BUTTON_NAME = "CursorToggleButton"
+local MANUAL_CAMERA_SENSITIVITY = 0.0032
+local MANUAL_CAMERA_MIN_PITCH = math.rad(-80)
+local MANUAL_CAMERA_MAX_PITCH = math.rad(80)
+local MANUAL_CAMERA_LOBBY_HEIGHT = 2.6
+local MANUAL_CAMERA_LOBBY_MIN_DISTANCE = 0.5
+local MANUAL_CAMERA_LOBBY_MAX_DISTANCE = 128
+local MANUAL_CAMERA_LOBBY_FPV_THRESHOLD = 2
+local MANUAL_CAMERA_FPV_HEAD_OFFSET = Vector3.new(0, 0.5, 0)
+local MANUAL_CAMERA_FPV_FOCUS_DISTANCE = 10
+local MANUAL_CAMERA_FPV_FORWARD_OFFSET = 0.14
 local function safeRequire(moduleScript)
 	if not moduleScript then
 		return nil
@@ -100,6 +110,7 @@ local fpvFlashlightHandle = nil
 local fpvFlashlightLens = nil
 local fpvFlashlightLight = nil
 local fpvArmsSourceParts = {}
+local fpvHiddenCharacterParts = {}
 local lastArmCamCF = nil
 local _fpvJustActivated = false
 local fpvCursorUnlocked = false
@@ -108,6 +119,10 @@ local fpvCursorToggleButton = nil
 local fpvFlashlightVisualAlpha = 0
 local lastLoggedCameraMode = nil
 local setCursorUnlocked
+local manualCameraYaw = 0
+local manualCameraPitch = 0
+local manualLobbyOrbitActive = false
+local manualLobbyOrbitDistance = 10
 
 local function lerpNumber(a, b, alpha)
 	return a + ((b - a) * math.clamp(alpha, 0, 1))
@@ -130,6 +145,40 @@ local function buildArmColor(sourceColor, brightnessScale)
 		toneMapArmChannel(color.G * scale),
 		toneMapArmChannel(color.B * scale)
 	)
+end
+
+local function clampManualPitch(value)
+	return math.clamp(value, MANUAL_CAMERA_MIN_PITCH, MANUAL_CAMERA_MAX_PITCH)
+end
+
+local function syncManualAnglesFromLookVector(lookVector)
+	local flatMagnitude = math.sqrt((lookVector.X * lookVector.X) + (lookVector.Z * lookVector.Z))
+	manualCameraYaw = math.atan2(-lookVector.X, -lookVector.Z)
+	manualCameraPitch = clampManualPitch(math.atan2(lookVector.Y, math.max(1e-4, flatMagnitude)))
+end
+
+local function syncManualFromCamera(focusPosition)
+	if not camera then
+		return
+	end
+	syncManualAnglesFromLookVector(camera.CFrame.LookVector)
+	if focusPosition then
+		manualLobbyOrbitDistance = math.clamp(
+			(camera.CFrame.Position - focusPosition).Magnitude,
+			MANUAL_CAMERA_LOBBY_MIN_DISTANCE,
+			MANUAL_CAMERA_LOBBY_MAX_DISTANCE
+		)
+	end
+end
+
+local function getManualLookVector()
+	local pitchCFrame = CFrame.Angles(manualCameraPitch, 0, 0)
+	local yawCFrame = CFrame.Angles(0, manualCameraYaw, 0)
+	return (yawCFrame * pitchCFrame).LookVector
+end
+
+local function isLobbyManualFirstPerson()
+	return (not FPV_LOCKED) and manualLobbyOrbitDistance <= MANUAL_CAMERA_LOBBY_FPV_THRESHOLD
 end
 
 local function getPlayerGui()
@@ -222,11 +271,17 @@ local function applyFpvMouseMode()
 			player.CameraMode = Enum.CameraMode.Classic
 			player.CameraMinZoomDistance = UNLOCKED_CURSOR_FPV_ZOOM
 			player.CameraMaxZoomDistance = UNLOCKED_CURSOR_FPV_ZOOM
+			if camera then
+				camera.CameraType = Enum.CameraType.Custom
+			end
 			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 			UserInputService.MouseIconEnabled = true
 			player:SetAttribute(CURSOR_MODE_ATTR, "UnlockedUI")
 		else
-			player.CameraMode = Enum.CameraMode.LockFirstPerson
+			player.CameraMode = Enum.CameraMode.Classic
+			if camera then
+				camera.CameraType = Enum.CameraType.Scriptable
+			end
 			player.CameraMinZoomDistance = DEFAULT_CAMERA_MIN_ZOOM
 			player.CameraMaxZoomDistance = DEFAULT_CAMERA_MAX_ZOOM
 			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
@@ -235,6 +290,9 @@ local function applyFpvMouseMode()
 		end
 	else
 		player.CameraMode = Enum.CameraMode.Classic
+		if camera then
+			camera.CameraType = manualLobbyOrbitActive and Enum.CameraType.Scriptable or Enum.CameraType.Custom
+		end
 		player.CameraMinZoomDistance = DEFAULT_CAMERA_MIN_ZOOM
 		player.CameraMaxZoomDistance = DEFAULT_CAMERA_MAX_ZOOM
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
@@ -280,6 +338,32 @@ local function clearFpvArms()
 		end
 	end
 	table.clear(fpvArmsSourceParts)
+end
+
+local function restoreHiddenCharacterParts()
+	for _, info in ipairs(fpvHiddenCharacterParts) do
+		local part = info.part
+		if part and part.Parent and part:IsA("BasePart") then
+			part.LocalTransparencyModifier = info.originalTransparency or 0
+		end
+	end
+	table.clear(fpvHiddenCharacterParts)
+end
+
+local function updateFirstPersonCharacterVisibility(character, shouldHide)
+	restoreHiddenCharacterParts()
+	if not (shouldHide and character) then
+		return
+	end
+	for _, descendant in ipairs(character:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			table.insert(fpvHiddenCharacterParts, {
+				part = descendant,
+				originalTransparency = descendant.LocalTransparencyModifier,
+			})
+			descendant.LocalTransparencyModifier = 1
+		end
+	end
 end
 
 local function appendCloneDefinition(definitions, sourcePart, cloneName, isPrimary)
@@ -747,8 +831,7 @@ local function setFpvLocked(enabled)
 			return
 		end
 
-		player.CameraMode = Enum.CameraMode.LockFirstPerson
-		camera.CameraType = Enum.CameraType.Custom
+		syncManualFromCamera(head.Position + MANUAL_CAMERA_FPV_HEAD_OFFSET)
 		ensureCameraAuthority(humanoid)
 		_fpvJustActivated = true
 		lastArmCamCF = nil
@@ -757,12 +840,41 @@ local function setFpvLocked(enabled)
 	else
 		fpvCursorUnlocked = false
 		player.CameraMode = Enum.CameraMode.Classic
+		manualLobbyOrbitActive = false
 		_fpvJustActivated = false
 		lastArmCamCF = nil
 		clearFpvArms()
 		applyFpvMouseMode()
 		logCameraMode("TPV", "[CameraController] TPV ALLOWED (Lobby)")
 	end
+end
+
+local function applyManualLobbyOrbit(rootPart)
+	if not (camera and rootPart) then
+		return
+	end
+	local focus = rootPart.Position + Vector3.new(0, MANUAL_CAMERA_LOBBY_HEIGHT, 0)
+	local lookVector = getManualLookVector()
+	local cameraPosition = focus - (lookVector * manualLobbyOrbitDistance)
+	camera.CameraType = Enum.CameraType.Scriptable
+	camera.CFrame = CFrame.lookAt(cameraPosition, focus)
+	camera.Focus = CFrame.new(focus)
+end
+
+local function applyManualFpvCamera(character, rootPart, cameraBobTarget)
+	if not (camera and character and rootPart) then
+		return
+	end
+	local head = character:FindFirstChild("Head")
+	local headPosition = head and head.Position or (rootPart.Position + Vector3.new(0, 1.6, 0))
+	local lookVector = getManualLookVector()
+	local origin = headPosition
+		+ MANUAL_CAMERA_FPV_HEAD_OFFSET
+		+ cameraBobTarget
+		+ (lookVector * MANUAL_CAMERA_FPV_FORWARD_OFFSET)
+	camera.CameraType = Enum.CameraType.Scriptable
+	camera.CFrame = CFrame.lookAt(origin, origin + lookVector)
+	camera.Focus = CFrame.lookAt(origin + (lookVector * MANUAL_CAMERA_FPV_FOCUS_DISTANCE), origin + (lookVector * (MANUAL_CAMERA_FPV_FOCUS_DISTANCE + 1)))
 end
 
 local matchAttributeConnection = nil
@@ -803,6 +915,8 @@ player.CharacterAdded:Connect(function(character)
 	end
 	ensureCameraAuthority(humanoid)
 	humanoid.CameraOffset = Vector3.zero
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	syncManualFromCamera(rootPart and rootPart.Position or nil)
 
 	lastArmCamCF = nil
 	clearFpvArms()
@@ -817,12 +931,57 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if UserInputService:GetFocusedTextBox() then
 		return
 	end
+	if input.UserInputType == Enum.UserInputType.MouseButton2 and not FPV_LOCKED and not isLobbyManualFirstPerson() then
+		local character = player.Character
+		local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+		if rootPart then
+			manualLobbyOrbitActive = true
+			syncManualFromCamera(rootPart.Position + Vector3.new(0, MANUAL_CAMERA_LOBBY_HEIGHT, 0))
+			camera.CameraType = Enum.CameraType.Scriptable
+			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
+			UserInputService.MouseIconEnabled = false
+		end
+		return
+	end
 	if (input.KeyCode == CURSOR_TOGGLE_KEY or input.KeyCode == CURSOR_TOGGLE_FALLBACK_KEY)
 		and FPV_LOCKED
 		and UserInputService.KeyboardEnabled
 	then
 		setCursorUnlocked(not fpvCursorUnlocked)
 	end
+end)
+
+UserInputService.InputEnded:Connect(function(input, _gameProcessed)
+	if input.UserInputType == Enum.UserInputType.MouseButton2 and manualLobbyOrbitActive then
+		manualLobbyOrbitActive = false
+		if camera then
+			camera.CameraType = Enum.CameraType.Custom
+		end
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		UserInputService.MouseIconEnabled = true
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input, gameProcessed)
+	if gameProcessed then
+		return
+	end
+	if input.UserInputType == Enum.UserInputType.MouseWheel and (manualLobbyOrbitActive or isLobbyManualFirstPerson()) then
+		manualLobbyOrbitDistance = math.clamp(manualLobbyOrbitDistance - (input.Position.Z * 0.8), MANUAL_CAMERA_LOBBY_MIN_DISTANCE, MANUAL_CAMERA_LOBBY_MAX_DISTANCE)
+		return
+	end
+	if input.UserInputType ~= Enum.UserInputType.MouseMovement then
+		return
+	end
+	if not (manualLobbyOrbitActive or isLobbyManualFirstPerson() or (FPV_LOCKED and not fpvCursorUnlocked)) then
+		return
+	end
+	local delta = input.Delta
+	if delta.Magnitude <= 0 then
+		return
+	end
+	manualCameraYaw -= delta.X * MANUAL_CAMERA_SENSITIVITY
+	manualCameraPitch = clampManualPitch(manualCameraPitch - (delta.Y * MANUAL_CAMERA_SENSITIVITY))
 end)
 
 player:GetAttributeChangedSignal(CURSOR_UNLOCK_REQUEST_ATTR):Connect(function()
@@ -837,16 +996,22 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 	local character = player.Character
 	if not character then
 		clearFpvArms()
+		restoreHiddenCharacterParts()
 		return
 	end
 
 	local humanoid = character:FindFirstChild("Humanoid")
 	if not humanoid then
+		restoreHiddenCharacterParts()
 		return
 	end
 
 	if camera ~= workspace.CurrentCamera then
 		camera = workspace.CurrentCamera or camera
+	end
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if rootPart and not manualLobbyOrbitActive and not FPV_LOCKED then
+		syncManualFromCamera(rootPart.Position + Vector3.new(0, MANUAL_CAMERA_LOBBY_HEIGHT, 0))
 	end
 
 	local shouldLockFromState = player:GetAttribute("InMatch") == true
@@ -855,6 +1020,7 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 	elseif shouldLockFromState
 		and (not fpvCursorUnlocked)
 		and (player.CameraMode ~= Enum.CameraMode.LockFirstPerson
+			and player.CameraMode ~= Enum.CameraMode.Classic
 			or UserInputService.MouseBehavior ~= Enum.MouseBehavior.LockCenter)
 	then
 		setFpvLocked(true)
@@ -866,6 +1032,8 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 	then
 		applyFpvMouseMode()
 	elseif (not shouldLockFromState)
+		and (not manualLobbyOrbitActive)
+		and (not isLobbyManualFirstPerson())
 		and (player.CameraMode ~= Enum.CameraMode.Classic
 			or UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default
 			or UserInputService.MouseIconEnabled ~= true)
@@ -875,7 +1043,6 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 
 	local cameraBobTarget = Vector3.zero
 	local headBobProbeActive = player:GetAttribute(HEAD_BOB_PROBE_ATTR) == true
-	local rootPart = character:FindFirstChild("HumanoidRootPart")
 	local planarVelocity = Vector3.zero
 	if rootPart and rootPart:IsA("BasePart") then
 		planarVelocity = Vector3.new(rootPart.AssemblyLinearVelocity.X, 0, rootPart.AssemblyLinearVelocity.Z)
@@ -899,7 +1066,9 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 	else
 		bobOffset = bobOffset:Lerp(Vector3.new(0, 0, 0), deltaTime * 5)
 	end
-	if FPV_LOCKED then
+	if FPV_LOCKED and not fpvCursorUnlocked then
+		humanoid.CameraOffset = Vector3.zero
+	elseif FPV_LOCKED then
 		humanoid.CameraOffset = humanoid.CameraOffset:Lerp(cameraBobTarget, math.clamp(deltaTime * 10, 0, 1))
 	elseif humanoid.CameraOffset.Magnitude > 0.0005 then
 		humanoid.CameraOffset = humanoid.CameraOffset:Lerp(Vector3.zero, math.clamp(deltaTime * 10, 0, 1))
@@ -907,6 +1076,31 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 		humanoid.CameraOffset = Vector3.zero
 	end
 	player:SetAttribute(HEAD_BOB_OFFSET_ATTR, humanoid.CameraOffset)
+
+	local shouldHideRealCharacter = (FPV_LOCKED and not fpvCursorUnlocked) or isLobbyManualFirstPerson()
+	updateFirstPersonCharacterVisibility(character, shouldHideRealCharacter)
+
+	if FPV_LOCKED and not fpvCursorUnlocked and rootPart then
+		applyManualFpvCamera(character, rootPart, cameraBobTarget)
+		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+		UserInputService.MouseIconEnabled = false
+	elseif isLobbyManualFirstPerson() and rootPart then
+		applyManualFpvCamera(character, rootPart, Vector3.zero)
+		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+		UserInputService.MouseIconEnabled = false
+		player.CameraMode = Enum.CameraMode.Classic
+	elseif manualLobbyOrbitActive and rootPart then
+		applyManualLobbyOrbit(rootPart)
+		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
+		UserInputService.MouseIconEnabled = false
+	elseif not FPV_LOCKED then
+		if camera then
+			camera.CameraType = Enum.CameraType.Custom
+		end
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		UserInputService.MouseIconEnabled = true
+		player.CameraMode = Enum.CameraMode.Classic
+	end
 
 	if FPV_LOCKED and camera and ensureFpvArms(character) and fpvArmsModel and fpvArmsModel.PrimaryPart then
 		updateFpvFlashlightVisual(deltaTime)
