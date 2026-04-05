@@ -21,10 +21,10 @@ local LOBBY_SPAWN_MAX_DELTA_XZ = 350
 local LOBBY_MIN_Y = -50
 local LOBBY_MAX_SPAWN_Y = 15
 local LOBBY_VISUAL_SPAWN_OFFSETS = {
-	Vector3.new(-6, 0, 12),
-	Vector3.new(6, 0, 12),
-	Vector3.new(-6, 0, 22),
-	Vector3.new(6, 0, 22),
+	Vector3.new(-10, 0, 30),
+	Vector3.new(10, 0, 30),
+	Vector3.new(-10, 0, 40),
+	Vector3.new(10, 0, 40),
 }
 
 local function collectSpawnParts(root, out)
