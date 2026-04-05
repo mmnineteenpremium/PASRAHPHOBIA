@@ -62,6 +62,10 @@ Status proyek sekarang:
 4. cek legal/licensing final
 5. baru publish review terakhir
 
+Checklist operasional final:
+
+- `FINAL_RELEASE_CHECKLIST_2026-04-06.md`
+
 ## Catatan
 
 - ini bukan tanda proyek gagal publish
