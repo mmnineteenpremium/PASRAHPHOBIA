@@ -2060,6 +2060,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (refuge route label baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut slice restruktur visual/runtime map-lobby yang masih basic.
 
+## Update 2026-04-05 21:33 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` naik lagi di sisi sinkronisasi HUD:
+  - hunt/refuge HUD sekarang membaca `routeLabel` refuge runtime, bukan hanya label generik hasil formatting nama part.
+  - nearest safe zone dan hide spot menyimpan metadata label/subtitle/route yang siap dipakai di assist hunt.
+- validasi:
+  - build source sukses:
+    - `_tmp_hunt_refuge_route_hud_build.rbxlx`
+- status:
+  - **SELESAI (hunt HUD refuge route sync baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

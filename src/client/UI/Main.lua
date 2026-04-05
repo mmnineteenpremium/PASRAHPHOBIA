@@ -1976,6 +1976,50 @@ local function formatHideSpotLabel(zoneId)
 	return formatRuntimeAreaLabel(zoneId:gsub("^Room_", ""))
 end
 
+local function getRuntimeRefugeRouteLabel(part, fallbackLabel)
+	if not (typeof(part) == "Instance" and part:IsA("BasePart")) then
+		return fallbackLabel
+	end
+
+	local routeLabel = tostring(part:GetAttribute("RefugeRouteLabel") or "")
+	if routeLabel ~= "" then
+		return routeLabel
+	end
+
+	local roomLabel = tostring(part:GetAttribute("SafeZoneRoomLabel") or "")
+	if roomLabel ~= "" then
+		return roomLabel
+	end
+
+	return fallbackLabel
+end
+
+local function getRuntimeSafeZoneLabel(part)
+	if not (typeof(part) == "Instance" and part:IsA("BasePart")) then
+		return nil
+	end
+
+	local label = tostring(part:GetAttribute("SafeZoneLabel") or "")
+	if label ~= "" then
+		return label
+	end
+
+	return nil
+end
+
+local function getRuntimeSafeZoneSubtitle(part)
+	if not (typeof(part) == "Instance" and part:IsA("BasePart")) then
+		return nil
+	end
+
+	local subtitle = tostring(part:GetAttribute("SafeZoneSubtitle") or "")
+	if subtitle ~= "" then
+		return subtitle
+	end
+
+	return nil
+end
+
 local function getActiveMatchMapModel()
 	local player = Players.LocalPlayer
 	if not player then
@@ -2042,6 +2086,29 @@ local function getRuntimeHideSpotLabel(zoneId)
 	return nil
 end
 
+local function getRuntimeHideSpotPart(zoneId)
+	if type(zoneId) ~= "string" or zoneId == "" then
+		return nil
+	end
+
+	local mapModel = getActiveMatchMapModel()
+	local roomsFolder = mapModel and mapModel:FindFirstChild("Rooms", true)
+	if not roomsFolder then
+		return nil
+	end
+
+	for _, child in ipairs(roomsFolder:GetChildren()) do
+		if child:IsA("BasePart") then
+			local childHideSpotId = tostring(child:GetAttribute("HideSpotId") or "")
+			if childHideSpotId == zoneId or child.Name == zoneId then
+				return child
+			end
+		end
+	end
+
+	return nil
+end
+
 local function resolveHideZoneLabel(zoneId, spotType)
 	if type(zoneId) ~= "string" or zoneId == "" then
 		return nil
@@ -2071,9 +2138,12 @@ local function getNearestSafeZoneInfo()
 		if child:IsA("BasePart") then
 			local distance = (root.Position - child.Position).Magnitude
 			if nearest == nil or distance < nearest.distance then
+				local fallbackLabel = formatSafeZoneLabel(child.Name) or child.Name
 				nearest = {
 					zoneId = child.Name,
-					label = formatSafeZoneLabel(child.Name) or child.Name,
+					label = getRuntimeSafeZoneLabel(child) or fallbackLabel,
+					subtitle = getRuntimeSafeZoneSubtitle(child),
+					routeLabel = getRuntimeRefugeRouteLabel(child, fallbackLabel),
 					distance = distance,
 				}
 			end
@@ -2113,11 +2183,14 @@ local function getNearestHideSpotInfo()
 			if hideSpotId ~= "" and hideSpotType ~= "" and not hideSpotOccupied then
 				local distance = (root.Position - child.Position).Magnitude
 				if nearest == nil or distance < nearest.distance then
+					local fallbackLabel = resolveHideZoneLabel(hideSpotId, hideSpotType) or hideSpotId
 					nearest = {
 						kind = "HideSpot",
 						zoneId = hideSpotId,
 						spotType = hideSpotType,
-						label = resolveHideZoneLabel(hideSpotId, hideSpotType) or hideSpotId,
+						label = fallbackLabel,
+						subtitle = tostring(child:GetAttribute("HideSpotSubtitle") or ""),
+						routeLabel = getRuntimeRefugeRouteLabel(child, fallbackLabel),
 						distance = distance,
 					}
 				end
@@ -2300,26 +2373,31 @@ local function getHuntControlsHintText()
 	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
 	local refugeHint = getRefugeHintText(nearestRefuge)
 	local alternateHint = getRefugeHintText(alternateRefuge)
+	local refugeRoute = type(nearestRefuge) == "table" and (nearestRefuge.routeLabel or nearestRefuge.label) or refugeHint
+	local alternateRoute = type(alternateRefuge) == "table" and (alternateRefuge.routeLabel or alternateRefuge.label) or alternateHint
 	if snapshot.hideState == "Hidden" then
-		local hiddenLabel = resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType) or refugeHint
+		local hiddenPart = getRuntimeHideSpotPart(snapshot.hideZoneId)
+		local hiddenLabel = hiddenPart and getRuntimeRefugeRouteLabel(hiddenPart, resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType))
+			or resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType)
+			or refugeHint
 		return string.upper(hiddenLabel) .. "  •  DIAM  •  TUNGGU HUNT SELESAI"
 	end
 	if snapshot.threatState == "Sheltered" then
-		return string.format("%s  •  JAGA POSISI  •  TUNGGU HUNT", refugeHint)
+		return string.format("%s  •  JAGA POSISI  •  TUNGGU HUNT", refugeRoute)
 	end
 	if snapshot.threatState == "Critical" or snapshot.threatState == "Close" then
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
-			return string.format("PUTUS LOS  •  PINTU: E/X/TAP  •  %s  •  ALT %s", refugeHint, alternateHint)
+			return string.format("PUTUS LOS  •  PINTU: E/X/TAP  •  %s  •  ALT %s", refugeRoute, alternateRoute)
 		end
-		return string.format("PUTUS LINE-OF-SIGHT  •  PINTU: E/X/TAP  •  %s", refugeHint)
+		return string.format("PUTUS LINE-OF-SIGHT  •  PINTU: E/X/TAP  •  %s", refugeRoute)
 	end
 	if snapshot.threatState == "Tracked" or snapshot.threatState == "Warn" then
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
-			return string.format("PUTAR JALUR  •  %s  •  ALT %s", refugeHint, alternateHint)
+			return string.format("PUTAR JALUR  •  %s  •  ALT %s", refugeRoute, alternateRoute)
 		end
-		return string.format("PUTAR JALUR  •  JAGA JARAK  •  %s", refugeHint)
+		return string.format("PUTAR JALUR  •  JAGA JARAK  •  %s", refugeRoute)
 	end
-	return string.format("PINTU: E/X/TAP  •  TARGET: %s  •  JANGAN LARI LURUS", refugeHint)
+	return string.format("PINTU: E/X/TAP  •  TARGET: %s  •  JANGAN LARI LURUS", refugeRoute)
 end
 
 local function getHuntAssistSnapshot()
@@ -2327,8 +2405,13 @@ local function getHuntAssistSnapshot()
 	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
 	local refugeHint = getRefugeHintText(nearestRefuge)
 	local alternateHint = getRefugeHintText(alternateRefuge)
+	local refugeRoute = type(nearestRefuge) == "table" and (nearestRefuge.routeLabel or nearestRefuge.label) or refugeHint
+	local alternateRoute = type(alternateRefuge) == "table" and (alternateRefuge.routeLabel or alternateRefuge.label) or alternateHint
+	local hiddenPart = snapshot.hideZoneId ~= "" and getRuntimeHideSpotPart(snapshot.hideZoneId) or nil
 	local zoneLabel = snapshot.hideZoneId ~= ""
-		and (resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType) or snapshot.hideZoneId)
+		and ((hiddenPart and getRuntimeRefugeRouteLabel(hiddenPart, resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType)))
+			or resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType)
+			or snapshot.hideZoneId)
 		or refugeHint
 	local distanceText = type(snapshot.threatDistance) == "number"
 		and string.format("%dst", math.max(0, math.floor(snapshot.threatDistance + 0.5)))
@@ -2349,15 +2432,15 @@ local function getHuntAssistSnapshot()
 			badgeText = "SHELTERED",
 			badgeColor = Color3.fromRGB(78, 116, 152),
 			overlayColor = Color3.fromRGB(10, 18, 30),
-			routeText = "AMAN DI: " .. string.upper(refugeHint),
+			routeText = "AMAN DI: " .. string.upper(refugeRoute),
 			supportText = "HOLD POSISI  •  MINIM GERAK  •  TUNGGU WINDOW HUNT",
 		}
 	end
 
 	if snapshot.threatState == "Critical" or snapshot.threatState == "Close" then
-		local supportText = "PUTUS LOS  •  PINTU: E/X/TAP  •  TARGET " .. string.upper(refugeHint)
+		local supportText = "PUTUS LOS  •  PINTU: E/X/TAP  •  TARGET " .. string.upper(refugeRoute)
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
-			supportText ..= "  •  ALT " .. string.upper(alternateHint)
+			supportText ..= "  •  ALT " .. string.upper(alternateRoute)
 		end
 		return {
 			badgeText = "CRITICAL",
@@ -2369,9 +2452,9 @@ local function getHuntAssistSnapshot()
 	end
 
 	if snapshot.threatState == "Tracked" or snapshot.threatState == "Warn" then
-		local supportText = "PUTAR JALUR  •  JAGA JARAK  •  TARGET " .. string.upper(refugeHint)
+		local supportText = "PUTAR JALUR  •  JAGA JARAK  •  TARGET " .. string.upper(refugeRoute)
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
-			supportText ..= "  •  ALT " .. string.upper(alternateHint)
+			supportText ..= "  •  ALT " .. string.upper(alternateRoute)
 		end
 		return {
 			badgeText = "TRACKED",
@@ -2386,7 +2469,7 @@ local function getHuntAssistSnapshot()
 		badgeText = "HUNT",
 		badgeColor = Color3.fromRGB(112, 74, 74),
 		overlayColor = Color3.fromRGB(12, 8, 10),
-		routeText = "TARGET: " .. string.upper(refugeHint),
+		routeText = "TARGET: " .. string.upper(refugeRoute),
 		supportText = "PINTU: E/X/TAP  •  JANGAN LARI LURUS  •  SIAP ROTASI",
 	}
 end
