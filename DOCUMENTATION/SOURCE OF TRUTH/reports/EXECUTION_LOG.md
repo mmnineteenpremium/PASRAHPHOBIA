@@ -9642,3 +9642,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 
 - source untuk anchor visual lobby sudah siap
 - validasi live di Studio perlu sesi server yang sinkron, tetapi jalur implementasi tidak lagi bergantung pada panel UI saja
+
+## 2026-04-05 - Synthetic Interaction Anchor Guide Pass
+
+### Scope
+
+- memberi label ruang pada interaction point sintetis yang sebelumnya benar-benar tak terlihat
+- targetnya pemain punya anchor orientasi tambahan pada map yang interaction authoring-nya belum lengkap
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+  - tambah `InteractionGuideRuntime` untuk `SyntheticInteractionPoint`
+  - guide muncul sebagai `BillboardGui` kecil dengan:
+    - title = nama ruang (`Kitchen`, `Office B`, dst)
+    - subtitle = `Anchor ruang`
+  - synthetic point juga menyimpan attribute `InteractionGuideLabel`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_interaction_anchor_guides_build.rbxlx`
+- guide ini hanya dipasang pada interaction point sintetis, bukan semua room, agar tidak terlalu ramai
+
+### Interpretation
+
+- ruang yang sebelumnya “hidup di data tapi mati secara visual” sekarang punya jalur affordance runtime yang lebih jelas

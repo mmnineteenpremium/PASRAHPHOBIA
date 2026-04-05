@@ -2014,6 +2014,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SOURCE READY (lobby zone guide runtime)**.
   - **PENDING LIVE RETEST** saat sesi Studio server sudah sinkron.
 
+## Update 2026-04-05 21:01 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` naik lagi di sisi orientasi ruang:
+  - interaction point sintetis sekarang punya `BillboardGui` kecil sebagai `Anchor ruang`.
+  - label ruang diturunkan dari nama `Room_*`, jadi area yang sebelumnya hanya ada di data sekarang punya affordance visual minimal.
+- validasi:
+  - build source sukses:
+    - `_tmp_interaction_anchor_guides_build.rbxlx`
+- status:
+  - **SELESAI (synthetic interaction anchor baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut slice restruktur visual/runtime yang masih terlalu basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

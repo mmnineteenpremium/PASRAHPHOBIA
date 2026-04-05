@@ -19,6 +19,8 @@ local INTERACTION_HEIGHT_OFFSET = 1.5
 local TRAVERSAL_GUIDE_FOLDER_NAME = "TraversalGuideRuntime"
 local TRAVERSAL_GUIDE_HIGHLIGHT_NAME = "Highlight"
 local TRAVERSAL_GUIDE_BILLBOARD_NAME = "Billboard"
+local INTERACTION_GUIDE_FOLDER_NAME = "InteractionGuideRuntime"
+local INTERACTION_GUIDE_BILLBOARD_NAME = "Billboard"
 local INTERACTION_POSITION_OVERRIDES = {
 }
 local INTERACTION_DOOR_OVERRIDES = {
@@ -126,6 +128,19 @@ local function normalizeToken(value)
 	return value:gsub("[%s_%-%.]+", ""):lower()
 end
 
+local function titleCaseToken(token)
+	local raw = tostring(token or ""):gsub("(%d+)", " %1"):gsub("[_%-.]+", " ")
+	raw = raw:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+	if raw == "" then
+		return "-"
+	end
+	local words = {}
+	for word in raw:gmatch("%S+") do
+		words[#words + 1] = string.upper(word:sub(1, 1)) .. string.lower(word:sub(2))
+	end
+	return table.concat(words, " ")
+end
+
 local function resolveMapOverrideToken(mapId, mapClone)
 	local primaryToken = normalizeToken(mapId)
 	if primaryToken then
@@ -214,6 +229,104 @@ local function ensureInteractionPointPart(folder, interactionName, targetPositio
 	interactionPoint.CFrame = CFrame.new(targetPosition)
 	interactionPoint.Parent = folder
 	return interactionPoint
+end
+
+local function ensureInteractionGuide(interactionPoint, roomLabel)
+	if not (interactionPoint and interactionPoint:IsA("BasePart") and interactionPoint.Parent ~= nil) then
+		return nil
+	end
+
+	local folder = interactionPoint:FindFirstChild(INTERACTION_GUIDE_FOLDER_NAME)
+	if not (folder and folder:IsA("Folder")) then
+		if folder then
+			folder:Destroy()
+		end
+		folder = Instance.new("Folder")
+		folder.Name = INTERACTION_GUIDE_FOLDER_NAME
+		folder.Parent = interactionPoint
+	end
+
+	local billboard = folder:FindFirstChild(INTERACTION_GUIDE_BILLBOARD_NAME)
+	if not (billboard and billboard:IsA("BillboardGui")) then
+		if billboard then
+			billboard:Destroy()
+		end
+		billboard = Instance.new("BillboardGui")
+		billboard.Name = INTERACTION_GUIDE_BILLBOARD_NAME
+		billboard.Parent = folder
+	end
+	billboard.Active = false
+	billboard.Adornee = interactionPoint
+	billboard.AlwaysOnTop = true
+	billboard.Brightness = 2
+	billboard.ClipsDescendants = false
+	billboard.Enabled = true
+	billboard.LightInfluence = 0
+	billboard.MaxDistance = 85
+	billboard.ResetOnSpawn = false
+	billboard.Size = UDim2.fromOffset(186, 42)
+	billboard.StudsOffsetWorldSpace = Vector3.new(0, 2.4, 0)
+
+	local panel = billboard:FindFirstChild("Panel")
+	if not (panel and panel:IsA("Frame")) then
+		if panel then
+			panel:Destroy()
+		end
+		panel = Instance.new("Frame")
+		panel.Name = "Panel"
+		panel.Parent = billboard
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = panel
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Name = "Stroke"
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke.Color = Color3.fromRGB(158, 190, 222)
+		stroke.Transparency = 0.2
+		stroke.Thickness = 1.2
+		stroke.Parent = panel
+
+		local title = Instance.new("TextLabel")
+		title.Name = "Title"
+		title.BackgroundTransparency = 1
+		title.BorderSizePixel = 0
+		title.Position = UDim2.new(0, 14, 0, 5)
+		title.Size = UDim2.new(1, -28, 0, 16)
+		title.Font = Enum.Font.GothamBold
+		title.TextColor3 = Color3.fromRGB(238, 244, 250)
+		title.TextSize = 12
+		title.TextWrapped = true
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.Parent = panel
+
+		local subtitle = Instance.new("TextLabel")
+		subtitle.Name = "Subtitle"
+		subtitle.BackgroundTransparency = 1
+		subtitle.BorderSizePixel = 0
+		subtitle.Position = UDim2.new(0, 14, 0, 20)
+		subtitle.Size = UDim2.new(1, -28, 0, 14)
+		subtitle.Font = Enum.Font.GothamMedium
+		subtitle.Text = "Anchor ruang"
+		subtitle.TextColor3 = Color3.fromRGB(176, 198, 218)
+		subtitle.TextSize = 10
+		subtitle.TextWrapped = true
+		subtitle.TextXAlignment = Enum.TextXAlignment.Left
+		subtitle.Parent = panel
+	end
+
+	panel.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
+	panel.BackgroundTransparency = 0.16
+	panel.BorderSizePixel = 0
+	panel.Size = UDim2.fromScale(1, 1)
+
+	local title = panel:FindFirstChild("Title")
+	if title and title:IsA("TextLabel") then
+		title.Text = roomLabel
+	end
+
+	return folder
 end
 
 local function getXZBounds(part)
@@ -630,6 +743,8 @@ local function patchInteractionPoints(mapId, mapClone)
 			local syntheticPoint = ensureInteractionPointPart(interactionPointsFolder, interactionName, targetPosition)
 			if syntheticPoint then
 				syntheticPoint:SetAttribute("SyntheticInteractionPoint", true)
+				syntheticPoint:SetAttribute("InteractionGuideLabel", titleCaseToken(room.Name:gsub("^Room_", "")))
+				ensureInteractionGuide(syntheticPoint, titleCaseToken(room.Name:gsub("^Room_", "")))
 				movedAny = true
 			end
 		end
