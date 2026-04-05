@@ -128,6 +128,14 @@ function LobbyZoneManager:Stop()
     table.clear(self._recentTouches)
 end
 
+function LobbyZoneManager:GetZoneParts()
+    local snapshot = {}
+    for zoneName, zonePart in pairs(self._zoneParts) do
+        snapshot[zoneName] = zonePart
+    end
+    return snapshot
+end
+
 function LobbyZoneManager:_buildTouchKey(player, zoneName)
     return tostring(player.UserId) .. ":" .. zoneName
 end
