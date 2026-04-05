@@ -2743,63 +2743,60 @@ local function getHuntObjectiveText()
 
 	if hideState == "Hidden" then
 		if hideZoneId ~= "" then
-			return string.format(
-				"Berlindung di %s. Diam dan tunggu hunt selesai sebelum keluar.",
-				resolveHideZoneLabel(hideZoneId, hideSpotType) or hideZoneId
-			)
+			return string.format("Tetap diam di %s sampai hunt selesai.", resolveHideZoneLabel(hideZoneId, hideSpotType) or hideZoneId)
 		end
-		return "Kamu sedang bersembunyi. Tunggu hunt selesai sebelum keluar."
+		return "Tetap diam. Tunggu hunt selesai sebelum keluar."
 	end
 
 	if threatState == "Sheltered" then
-		return string.format("Kamu sudah dekat %s. Jaga posisi dan jangan keluar saat hunt masih aktif.", refugeHint)
+		return string.format("Sudah dekat %s. Tahan posisi sampai hunt selesai.", refugeHint)
 	end
 
 	if threatState == "Critical" or threatState == "Close" then
 		if threatDistance then
 			if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
 				return string.format(
-					"Ghost dekat (%dst). Putus line-of-sight, rotasi lewat pintu, lalu %s. Jika tertutup, menuju %s.",
+					"Ghost %dm. Putus LOS, lalu %s. ALT %s.",
 					threatDistance,
 					refugeAction,
 					alternateHint
 				)
 			end
-			return string.format("Ghost dekat (%dst). Putus line-of-sight, rotasi lewat pintu, lalu %s.", threatDistance, refugeAction)
+			return string.format("Ghost %dm. Putus LOS, lalu %s.", threatDistance, refugeAction)
 		end
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
 			return string.format(
-				"Ghost dekat. Putus line-of-sight, rotasi lewat pintu, lalu %s. Jika tertutup, menuju %s.",
+				"Ghost dekat. Putus LOS, lalu %s. ALT %s.",
 				refugeAction,
 				alternateHint
 			)
 		end
-		return string.format("Ghost dekat. Putus line-of-sight, rotasi lewat pintu, lalu %s.", refugeAction)
+		return string.format("Ghost dekat. Putus LOS, lalu %s.", refugeAction)
 	end
 
 	if threatState == "Tracked" or threatState == "Warn" then
 		if threatDistance then
 			if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
 				return string.format(
-					"Ghost melacak (%dst). Putar jalur, jaga jarak, lalu %s. Jika gagal, menuju %s.",
+					"Ghost %dm. Rotasi dulu, lalu %s. ALT %s.",
 					threatDistance,
 					refugeAction,
 					alternateHint
 				)
 			end
-			return string.format("Ghost melacak (%dst). Putar jalur, jaga jarak, lalu %s.", threatDistance, refugeAction)
+			return string.format("Ghost %dm. Rotasi dulu, lalu %s.", threatDistance, refugeAction)
 		end
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
 			return string.format(
-				"Ghost melacak. Putar jalur, jaga jarak, lalu %s. Jika gagal, menuju %s.",
+				"Ghost melacak. Rotasi dulu, lalu %s. ALT %s.",
 				refugeAction,
 				alternateHint
 			)
 		end
-		return string.format("Ghost melacak. Putar jalur, jaga jarak, lalu %s.", refugeAction)
+		return string.format("Ghost melacak. Rotasi dulu, lalu %s.", refugeAction)
 	end
 
-	return string.format("Hunt aktif. Gunakan prompt pintu, putus line-of-sight, lalu %s.", refugeAction)
+	return string.format("Hunt aktif. Pakai pintu untuk putus LOS, lalu %s.", refugeAction)
 end
 
 local function getHuntStatusSnapshot()
@@ -2851,24 +2848,24 @@ local function getHuntControlsHintText()
 		local hiddenLabel = hiddenPart and getRuntimeRefugeRouteLabel(hiddenPart, resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType))
 			or resolveHideZoneLabel(snapshot.hideZoneId, snapshot.hideSpotType)
 			or refugeHint
-		return string.upper(hiddenLabel) .. "  •  DIAM  •  TUNGGU HUNT SELESAI"
+		return string.upper(hiddenLabel) .. "  •  DIAM  •  TUNGGU"
 	end
 	if snapshot.threatState == "Sheltered" then
-		return string.format("%s  •  JAGA POSISI  •  TUNGGU HUNT", refugeRoute)
+		return string.format("%s  •  HOLD  •  TUNGGU", refugeRoute)
 	end
 	if snapshot.threatState == "Critical" or snapshot.threatState == "Close" then
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
-			return string.format("PUTUS LOS  •  PINTU: E/X/TAP  •  %s  •  ALT %s", refugeRoute, alternateRoute)
+			return string.format("PINTU E/X/TAP  •  LOS PUTUS  •  %s  •  ALT %s", refugeRoute, alternateRoute)
 		end
-		return string.format("PUTUS LINE-OF-SIGHT  •  PINTU: E/X/TAP  •  %s", refugeRoute)
+		return string.format("PINTU E/X/TAP  •  LOS PUTUS  •  %s", refugeRoute)
 	end
 	if snapshot.threatState == "Tracked" or snapshot.threatState == "Warn" then
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
-			return string.format("PUTAR JALUR  •  %s  •  ALT %s", refugeRoute, alternateRoute)
+			return string.format("ROTASI  •  %s  •  ALT %s", refugeRoute, alternateRoute)
 		end
-		return string.format("PUTAR JALUR  •  JAGA JARAK  •  %s", refugeRoute)
+		return string.format("ROTASI  •  JAGA JARAK  •  %s", refugeRoute)
 	end
-	return string.format("PINTU: E/X/TAP  •  TARGET: %s  •  JANGAN LARI LURUS", refugeRoute)
+	return string.format("PINTU E/X/TAP  •  %s  •  JANGAN LURUS", refugeRoute)
 end
 
 local function getHuntAssistSnapshot()
@@ -2893,8 +2890,8 @@ local function getHuntAssistSnapshot()
 			badgeText = "HIDDEN",
 			badgeColor = Color3.fromRGB(62, 128, 94),
 			overlayColor = Color3.fromRGB(8, 24, 16),
-			routeText = "POSISI: " .. string.upper(zoneLabel),
-			supportText = "DIAM  •  TUNGGU HUNT SELESAI  •  JANGAN KELUAR",
+			routeText = "POSISI AMAN: " .. string.upper(zoneLabel),
+			supportText = "DIAM  •  TUNGGU  •  JANGAN KELUAR",
 		}
 	end
 
@@ -2903,13 +2900,13 @@ local function getHuntAssistSnapshot()
 			badgeText = "SHELTERED",
 			badgeColor = Color3.fromRGB(78, 116, 152),
 			overlayColor = Color3.fromRGB(10, 18, 30),
-			routeText = "AMAN DI: " .. string.upper(refugeRoute),
-			supportText = "HOLD POSISI  •  MINIM GERAK  •  TUNGGU WINDOW HUNT",
+			routeText = "AMAN: " .. string.upper(refugeRoute),
+			supportText = "HOLD  •  MINIM GERAK  •  TUNGGU",
 		}
 	end
 
 	if snapshot.threatState == "Critical" or snapshot.threatState == "Close" then
-		local supportText = "PUTUS LOS  •  PINTU: E/X/TAP  •  TARGET " .. string.upper(refugeRoute)
+		local supportText = "PINTU E/X/TAP  •  LOS PUTUS  •  " .. string.upper(refugeRoute)
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
 			supportText ..= "  •  ALT " .. string.upper(alternateRoute)
 		end
@@ -2917,13 +2914,13 @@ local function getHuntAssistSnapshot()
 			badgeText = "CRITICAL",
 			badgeColor = Color3.fromRGB(164, 62, 62),
 			overlayColor = Color3.fromRGB(26, 6, 8),
-			routeText = "GHOST " .. distanceText .. "  •  ROTASI SEKARANG",
+			routeText = "GHOST " .. distanceText .. "  •  ROTASI",
 			supportText = supportText,
 		}
 	end
 
 	if snapshot.threatState == "Tracked" or snapshot.threatState == "Warn" then
-		local supportText = "PUTAR JALUR  •  JAGA JARAK  •  TARGET " .. string.upper(refugeRoute)
+		local supportText = "ROTASI  •  JAGA JARAK  •  " .. string.upper(refugeRoute)
 		if type(nearestRefuge) == "table" and nearestRefuge.kind == "HideSpot" and type(alternateRefuge) == "table" then
 			supportText ..= "  •  ALT " .. string.upper(alternateRoute)
 		end
@@ -2931,7 +2928,7 @@ local function getHuntAssistSnapshot()
 			badgeText = "TRACKED",
 			badgeColor = Color3.fromRGB(168, 112, 54),
 			overlayColor = Color3.fromRGB(26, 16, 6),
-			routeText = "GHOST " .. distanceText .. "  •  PAKSA PUTUS LOS",
+			routeText = "GHOST " .. distanceText .. "  •  PUTUS LOS",
 			supportText = supportText,
 		}
 	end
@@ -2941,7 +2938,7 @@ local function getHuntAssistSnapshot()
 		badgeColor = Color3.fromRGB(112, 74, 74),
 		overlayColor = Color3.fromRGB(12, 8, 10),
 		routeText = "TARGET: " .. string.upper(refugeRoute),
-		supportText = "PINTU: E/X/TAP  •  JANGAN LARI LURUS  •  SIAP ROTASI",
+		supportText = "PINTU E/X/TAP  •  JANGAN LURUS  •  SIAP ROTASI",
 	}
 end
 
@@ -9407,7 +9404,7 @@ function UISystem:_ensureLoadingScreen()
 	bg.Name = "Background"
 	bg.Size = UDim2.fromScale(1, 1)
 	bg.BackgroundColor3 = Color3.fromRGB(6, 9, 14)
-	bg.BackgroundTransparency = 0.14
+	bg.BackgroundTransparency = 0.34
 	bg.BorderSizePixel = 0
 	bg.Parent = screen
 
@@ -9415,7 +9412,7 @@ function UISystem:_ensureLoadingScreen()
 	shade.Name = "Shade"
 	shade.Size = UDim2.fromScale(1, 1)
 	shade.BackgroundColor3 = Color3.new(0, 0, 0)
-	shade.BackgroundTransparency = 0.38
+	shade.BackgroundTransparency = 0.7
 	shade.BorderSizePixel = 0
 	shade.Parent = bg
 
