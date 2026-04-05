@@ -276,9 +276,14 @@ function StudioE2EControlSystem:_handleStartSoloMatch(player, request)
 		return false, "invalid_player"
 	end
 
+	local requestedMapId = type(request) == "table" and request.mapId or nil
+	if type(requestedMapId) ~= "string" or requestedMapId == "" then
+		requestedMapId = "HauntedHouse"
+	end
+
 	local payload = {
 		players = { player },
-		mapId = type(request) == "table" and request.mapId or nil,
+		mapId = requestedMapId,
 		mode = type(request) == "table" and (request.mode or request.gameMode) or nil,
 		difficulty = type(request) == "table" and request.difficulty or nil,
 	}
