@@ -3,10 +3,10 @@ return {
     mapCategory = "Lobby",
     mapSize = "Hub",
     mapDimensions = {
-        width = 420,
-        depth = 420,
+        width = 210,
+        depth = 210,
         floors = 1,
-        pathWidth = 12,
+        pathWidth = 6,
     },
     spawnPoints = {
         "PlayerSpawn_1",
