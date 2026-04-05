@@ -9138,7 +9138,6 @@ function UISystem:_runPostTeleportLoadingFlow(initialPayload)
 	self._postTeleportFlowToken += 1
 	local flowToken = self._postTeleportFlowToken
 	self._postTeleportFlowRunning = true
-	local fallbackInGamePayload = initialPayload
 	task.spawn(function()
 		if self._postTeleportFlowToken ~= flowToken then
 			return
@@ -9164,11 +9163,17 @@ function UISystem:_runPostTeleportLoadingFlow(initialPayload)
 
 		currentPlayer = Players.LocalPlayer
 		if currentPlayer and currentPlayer:GetAttribute("InMatch") == true then
-			self._hasPostTeleportLoaded = true
-			self._awaitingPostTeleportFlow = false
-			local nextPayload = self._pendingInGamePayload or fallbackInGamePayload or self._phasePayload
+			local nextPayload = self._pendingInGamePayload
 			self._pendingInGamePayload = nil
-			self:_setPhase(MATCH_PHASE.INGAME, nextPayload)
+			if nextPayload then
+				self._hasPostTeleportLoaded = true
+				self._awaitingPostTeleportFlow = false
+				self:_setPhase(MATCH_PHASE.INGAME, nextPayload)
+			else
+				self._hasPostTeleportLoaded = false
+				self._awaitingPostTeleportFlow = true
+				self:_setPhase(MATCH_PHASE.BRIEFING, self._phasePayload or initialPayload)
+			end
 		end
 
 		self._postTeleportFlowRunning = false
@@ -9820,8 +9825,15 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		self:_runPostTeleportLoadingFlow(payload)
 	elseif eventName == "PhaseChanged" then
 		local resolvedPhase = resolvePhaseFromPayload(eventName, payload)
-		if resolvedPhase == MATCH_PHASE.INGAME and (self._awaitingPostTeleportFlow or self._postTeleportFlowRunning) then
+		if resolvedPhase == MATCH_PHASE.INGAME and self._postTeleportFlowRunning then
 			self._pendingInGamePayload = payload
+			return
+		end
+		if resolvedPhase == MATCH_PHASE.INGAME and self._awaitingPostTeleportFlow then
+			self._pendingInGamePayload = nil
+			self._hasPostTeleportLoaded = true
+			self._awaitingPostTeleportFlow = false
+			self:_setPhase(MATCH_PHASE.INGAME, payload)
 			return
 		end
 		if resolvedPhase then
@@ -9883,7 +9895,15 @@ function UISystem:_startPhaseTimer()
 			end
 
 			if self._matchPhase == MATCH_PHASE.BRIEFING then
-				self:_setPhase(MATCH_PHASE.INGAME)
+				local nextPayload = self._pendingInGamePayload
+				self._pendingInGamePayload = nil
+				if nextPayload then
+					self._hasPostTeleportLoaded = true
+					self._awaitingPostTeleportFlow = false
+					self:_setPhase(MATCH_PHASE.INGAME, nextPayload)
+				else
+					self._phaseDuration = nil
+				end
 			elseif self._matchPhase == MATCH_PHASE.HUNT then
 				-- Server should end hunt; this only prevents repeated fallback transitions.
 				self._phaseDuration = nil
