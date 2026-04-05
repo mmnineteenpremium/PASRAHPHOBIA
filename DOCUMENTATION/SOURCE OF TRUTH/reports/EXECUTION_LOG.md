@@ -10454,3 +10454,35 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - publish ops sekarang punya satu entrypoint praktis; sisa pekerjaan terakhir tidak lagi perlu dirakit manual dari banyak report terpisah
+
+## 2026-04-06 - Live Visual Verification Pass
+
+### Scope
+
+- mengambil bukti visual live langsung dari Studio play session untuk surface publish-facing utama
+
+### Source Changes
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_RUNTIME_VERIFICATION_2026-04-06.md`
+  - bukti visual live untuk:
+    - lobby panel
+    - room browser
+    - room created
+    - shop
+    - royal pass
+    - match preparation
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/PUBLISH_REVIEW_FINAL_2026-04-06.md`
+  - menandai visual runtime verification sebagai lane yang sudah tertutup
+
+### Runtime Notes
+
+- `StartSoloMatch` live berhasil dari play session:
+  - `inMatch=true`
+  - `matchId=match_1`
+  - `phase=Preparing/Briefing`
+- panel `PERSIAPAN` + `Field Kit` + `FREE CURSOR [ALT/~]` tampil normal di layar
+- `get_console_output` masih membawa histori log yang sangat duplikatif; jangan dipakai sendiri sebagai blocker tanpa cross-check runtime current state
+
+### Interpretation
+
+- surface visual/GUI/UX utama sekarang bukan hanya ada di source, tetapi juga sudah terbukti muncul live di Studio
