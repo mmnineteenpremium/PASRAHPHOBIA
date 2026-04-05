@@ -4930,6 +4930,10 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 	local discoveredEvidence = type(journalState.discoveredEvidence) == "table" and journalState.discoveredEvidence or {}
 	local confirmedEvidence = type(journalState.confirmedEvidence) == "table" and journalState.confirmedEvidence or {}
 	local candidateGhosts = type(journalState.candidates) == "table" and journalState.candidates or {}
+	local navigationContext = (viewState == "Preparation" or viewState == "Loading")
+			and getNearestNavigationAnchorInfo("Preparation")
+		or ((viewState == "Investigation" or viewState == "Hunt") and getNearestNavigationAnchorInfo("Investigation"))
+		or nil
 	local hasResults = result.ghostType ~= "Unknown"
 		or tonumber(result.matchDuration or 0) > 0
 		or tonumber(result.evidenceCollected or 0) > 0
@@ -4946,6 +4950,8 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 		self:_setSummaryValue(rowWidgets.matchDuration, formatMatchDuration(result.matchDuration))
 		self:_setSummaryValue(rowWidgets.currencyReward, formatCurrencyAndPrestigeReward(result.currencyReward, result.ppReward))
 		self:_setSummaryValue(rowWidgets.xpReward, tostring(math.floor(tonumber(result.xpReward or 0) or 0)))
+		self:_setSummaryValue(rowWidgets.routeFocus, "-")
+		self:_setSummaryValue(rowWidgets.accessState, "-")
 	else
 		local phaseSummary = {
 			Lobby = "MENUNGGU",
@@ -4962,6 +4968,20 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 		local deathSummary = viewState == "Hunt" and "Hindari contact" or "Belum ada"
 		local durationSummary = remaining and formatCountdown(remaining) or "Live"
 		local rewardSummary = viewState == "Lobby" and "-" or "Pending"
+		local routeSummary = type(navigationContext) == "table"
+			and string.format(
+				"%s • %s",
+				tostring(navigationContext.subtitle or navigationContext.kind or "Route"),
+				formatNavigationAnchorDistance(navigationContext) or "-"
+			)
+			or (viewState == "Lobby" and "Lobby flow" or "Belum terkunci")
+		local accessSummary = type(navigationContext) == "table"
+			and (
+				tostring(navigationContext.stateText or "") ~= ""
+					and tostring(navigationContext.stateText)
+					or tostring(navigationContext.label or "-")
+			)
+			or (viewState == "Lobby" and "Quick access" or "-")
 		if viewState == "Hunt" then
 			local huntSnapshot = getHuntStatusSnapshot()
 			local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
@@ -5003,6 +5023,8 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 			self:_setSummaryValue(rowWidgets.matchDuration, durationSummary)
 			self:_setSummaryValue(rowWidgets.currencyReward, rewardSummary)
 			self:_setSummaryValue(rowWidgets.xpReward, rewardSummary)
+			self:_setSummaryValue(rowWidgets.routeFocus, routeSummary)
+			self:_setSummaryValue(rowWidgets.accessState, accessSummary)
 			survivalSummary = guidance
 		else
 			self:_setSummaryValue(rowWidgets.status, phaseSummary[viewState or "Lobby"] or "LIVE")
@@ -5014,6 +5036,8 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 			self:_setSummaryValue(rowWidgets.matchDuration, durationSummary)
 			self:_setSummaryValue(rowWidgets.currencyReward, rewardSummary)
 			self:_setSummaryValue(rowWidgets.xpReward, rewardSummary)
+			self:_setSummaryValue(rowWidgets.routeFocus, routeSummary)
+			self:_setSummaryValue(rowWidgets.accessState, accessSummary)
 		end
 	end
 
@@ -5054,6 +5078,20 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 	local xpRow = rowWidgets.xpReward and rowWidgets.xpReward.Parent or nil
 	if xpRow and xpRow:IsA("Frame") then
 		xpRow.BackgroundColor3 = hasResults and Color3.fromRGB(32, 48, 60) or Color3.fromRGB(24, 30, 40)
+	end
+
+	local routeRow = rowWidgets.routeFocus and rowWidgets.routeFocus.Parent or nil
+	if routeRow and routeRow:IsA("Frame") then
+		routeRow.BackgroundColor3 = type(navigationContext) == "table"
+			and Color3.fromRGB(26, 44, 58)
+			or Color3.fromRGB(24, 30, 40)
+	end
+
+	local accessRow = rowWidgets.accessState and rowWidgets.accessState.Parent or nil
+	if accessRow and accessRow:IsA("Frame") then
+		accessRow.BackgroundColor3 = type(navigationContext) == "table"
+			and Color3.fromRGB(28, 40, 34)
+			or Color3.fromRGB(24, 30, 40)
 	end
 end
 
@@ -5450,32 +5488,53 @@ function UISystem:_refreshBasicLobbyPanel()
 		end
 	end
 	if lobby.BasicOpenRoomBrowserButton then
-		lobby.BasicOpenRoomBrowserButton.Text = self._roomBrowserVisible and "TUTUP ROOM BROWSER" or "OPEN ROOM BROWSER"
-		lobby.BasicOpenRoomBrowserButton.BackgroundColor3 = self._roomBrowserVisible
+		local focusedZoneName = type(zoneFocus) == "table" and tostring(zoneFocus.zoneName or "") or ""
+		local roomButtonText = self._roomBrowserVisible and "TUTUP ROOM BROWSER" or "OPEN ROOM BROWSER"
+		local roomButtonColor = self._roomBrowserVisible
 			and badgeColor:Lerp(Color3.fromRGB(72, 118, 160), 0.24)
 			or actionFill
+		if focusedZoneName == "MatchmakingZone" then
+			roomButtonText = self._roomBrowserVisible and "TUTUP PLAY / ROOM" or "PLAY / ROOM BROWSER"
+			roomButtonColor = Color3.fromRGB(58, 98, 142)
+		elseif focusedZoneName == "PartyZone" then
+			roomButtonText = self._roomBrowserVisible and "TUTUP PARTY / ROOM" or "PARTY / ROOM BROWSER"
+			roomButtonColor = Color3.fromRGB(64, 110, 96)
+		end
+		lobby.BasicOpenRoomBrowserButton.Text = roomButtonText
+		lobby.BasicOpenRoomBrowserButton.BackgroundColor3 = roomButtonColor
 	end
 	if lobby.BasicProfileButton then
 		local profileOpen = self._uiState.ProfileUI and self._uiState.ProfileUI.visible == true and self._windowDismissed.ProfileUI ~= true
 		lobby.BasicProfileButton.Text = profileOpen and "TUTUP PROFILE" or "PROFILE"
+		lobby.BasicProfileButton.BackgroundColor3 = (type(zoneFocus) == "table" and zoneFocus.zoneName == "FlexZone")
+			and Color3.fromRGB(98, 74, 132)
+			or Color3.fromRGB(62, 88, 66)
 	end
 	if lobby.BasicShopButton then
 		local shopOpen = self._uiState.ShopUI and self._uiState.ShopUI.visible == true and self._windowDismissed.ShopUI ~= true
-		lobby.BasicShopButton.Text = shopOpen and "TUTUP SHOP" or "SHOP"
+		lobby.BasicShopButton.Text = shopOpen and "TUTUP SHOP" or ((type(zoneFocus) == "table" and zoneFocus.zoneName == "ShopZone") and "SHOP ACTIVE" or "SHOP")
+		lobby.BasicShopButton.BackgroundColor3 = (type(zoneFocus) == "table" and zoneFocus.zoneName == "ShopZone")
+			and Color3.fromRGB(132, 96, 54)
+			or Color3.fromRGB(108, 82, 48)
 	end
 	if lobby.BasicRoyalPassButton then
 		local royalPassOpen = self._uiState.RoyalPassUI and self._uiState.RoyalPassUI.visible == true and self._windowDismissed.RoyalPassUI ~= true
 		lobby.BasicRoyalPassButton.Text = royalPassOpen and "TUTUP ROYAL PASS" or "ROYAL PASS"
+		lobby.BasicRoyalPassButton.BackgroundColor3 = (type(zoneFocus) == "table" and zoneFocus.zoneName == "DailyRewardZone")
+			and Color3.fromRGB(124, 98, 52)
+			or Color3.fromRGB(116, 88, 44)
 	end
 	if lobby.BasicMenuButton then
 		local _, menuPanel = self:_getBasicWindowState("MainMenuUI")
 		local menuOpen = menuPanel and menuPanel.Visible == true
 		lobby.BasicMenuButton.Text = menuOpen and "TUTUP MENU" or "MENU"
+		lobby.BasicMenuButton.BackgroundColor3 = Color3.fromRGB(58, 66, 84)
 	end
 	if lobby.BasicRankButton then
 		local _, rankPanel = self:_getBasicWindowState("LeaderboardUI")
 		local rankOpen = rankPanel and rankPanel.Visible == true
 		lobby.BasicRankButton.Text = rankOpen and "TUTUP RANK" or "RANK"
+		lobby.BasicRankButton.BackgroundColor3 = Color3.fromRGB(74, 82, 58)
 	end
 end
 
@@ -11819,6 +11878,8 @@ function UISystem:_ensureBasicUIs()
 				playersSurvived = ensureSummaryValue("SurvivedRow", "Pemain Selamat"),
 				playersDead = ensureSummaryValue("DeadRow", "Pemain Mati"),
 				matchDuration = ensureSummaryValue("DurationRow", "Durasi"),
+				routeFocus = ensureSummaryValue("RouteRow", "Route Aktif"),
+				accessState = ensureSummaryValue("AccessRow", "Akses"),
 				currencyReward = ensureSummaryValue("RewardRow", "Hadiah MM / PP"),
 				xpReward = ensureSummaryValue("XpRow", "Hadiah XP"),
 			}

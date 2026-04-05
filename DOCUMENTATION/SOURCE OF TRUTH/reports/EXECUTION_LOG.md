@@ -10288,3 +10288,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - navigasi match sekarang lebih taktis; pemain tidak hanya tahu pintu mana yang relevan, tetapi juga apakah pintu itu sedang siap dilalui
+
+## 2026-04-06 - Phase 18 Completion Pass
+
+### Scope
+
+- menutup final pass `Lobby + Map in-game` setelah orientasi zona, semantik route, refuge alignment, door/traversal readability, dan fallback proximity terkonsolidasi
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - summary rows match sekarang punya `Route Aktif` dan `Akses`
+  - tombol lobby sekarang memberi emphasis yang selaras dengan zona aktif/fokus
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+  - `Phase 18` ditandai selesai
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_phase18_completion_build.rbxlx`
+
+### Interpretation
+
+- `Phase 18` sekarang cukup kuat untuk ditutup; restruktur besar lobby/map tidak lagi menjadi backlog aktif, dan pekerjaan bisa pindah ke phase berikutnya tanpa meninggalkan tech debt layout utama yang disengaja
