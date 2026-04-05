@@ -131,3 +131,32 @@ Interpretation:
   - royal pass
   - match preparation
 - ini tidak berarti semua visual sudah final artistik, tetapi cukup membuktikan bahwa E2E visual/GUI/UX tidak lagi kosong atau hanya hidup di code
+
+## Tambahan: Live Gate Readiness
+
+Status:
+
+- `PASS` untuk QA solo gate
+- `EXPECTED FAIL` untuk publish gate penuh
+
+Observed:
+
+- sesi Studio awal memuat `StudioE2EControl` versi lama, lalu disamakan ke source terbaru pada session aktif
+- sesudah itu gate live terbaca:
+  - `GetQAGateReadiness`
+    - `overall=pass_with_manual_multiplayer`
+    - `solo=true`
+    - `memoryOk=true fpsOk=true logOk=true`
+  - `GetPublishReadiness`
+    - `overall=fail`
+    - `qaSolo=true`
+    - `persistence=mock persistenceReady=false`
+    - `commerceReady=true`
+
+Interpretation:
+
+- baseline runtime live saat ini sehat untuk solo QA
+- publish penuh masih tertahan oleh lane yang memang manual/environmental:
+  - multiplayer nyata
+  - persistence non-mock
+  - Creator Hub marketplace mapping final
