@@ -4,6 +4,18 @@
 
 Checklist ini adalah jalur terakhir sebelum publish. Gunakan dokumen ini sebagai urutan eksekusi praktis, bukan sekadar referensi.
 
+## Stage 0 - Local Preflight
+
+Jalankan dari terminal repo:
+
+- `pwsh ./scripts/release-preflight.ps1`
+
+Tujuan:
+
+- memastikan build masih hijau
+- memastikan report final yang wajib ada memang tersedia
+- memastikan mapping `Robux` masih konsisten sebelum lanjut ke lane manual Roblox
+
 ## Stage 1 - Gate Otomatis
 
 Jalankan lewat harness Studio / assistant:
