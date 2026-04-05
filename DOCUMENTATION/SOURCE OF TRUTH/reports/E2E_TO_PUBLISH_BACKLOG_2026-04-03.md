@@ -2133,6 +2133,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (semantic route guide baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 22:19 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi panel lobby:
+  - panel lobby utama sekarang menyimpan dan memakai focus zona terakhir, bukan hanya bergantung pada feedback label sementara.
+  - badge/header/hint panel lobby kini bisa mengikuti konteks zona aktif.
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_panel_zone_focus_build.rbxlx`
+- status:
+  - **SELESAI (lobby panel zone focus baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

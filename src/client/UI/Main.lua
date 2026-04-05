@@ -3120,6 +3120,7 @@ function UISystem:Init(context)
 	self._inviteDropdownOpen = false
 	self._roomModeDropdownOpen = false
 	self._roomMapDropdownOpen = false
+	self._lobbyZoneFocus = nil
 	self._activeInviteId = nil
 	self._uxReady = false
 	self._deviceProfile = createDeviceProfile()
@@ -4969,6 +4970,7 @@ function UISystem:_refreshBasicLobbyPanel()
 	local selectedMap = tostring(state.selectedMap or MAPS[1] or "HauntedHouse")
 	local secondaryText = string.format("Mode %s | Map %s | %d room aktif", selectedMode, selectedMap, #rooms)
 	local hintText = "Shortcut: tekan M untuk Room Browser dan R untuk Royal Pass."
+	local zoneFocus = self._lobbyZoneFocus
 
 	if currentRoom and currentRoom.roomId then
 		local playerCount = type(currentRoom.players) == "table" and #currentRoom.players or 0
@@ -4988,6 +4990,19 @@ function UISystem:_refreshBasicLobbyPanel()
 		badgeColor = Color3.fromRGB(118, 74, 48)
 		glyphText = "ER"
 		hintText = "Status terakhir: " .. tostring(state.lastError)
+	elseif type(zoneFocus) == "table" and tostring(zoneFocus.badge or "") ~= "" then
+		badgeText = tostring(zoneFocus.badge or "LOBBY")
+		badgeColor = typeof(zoneFocus.accentColor) == "Color3" and zoneFocus.accentColor or Color3.fromRGB(54, 116, 82)
+		glyphText = string.sub(string.upper(tostring(zoneFocus.badge or "LO")), 1, 2)
+		primaryText = tostring(zoneFocus.title or primaryText)
+		local subtitle = tostring(zoneFocus.subtitle or "")
+		if subtitle ~= "" then
+			secondaryText = subtitle .. " | " .. string.format("%d room aktif", #rooms)
+		end
+		local hint = tostring(zoneFocus.hint or "")
+		if hint ~= "" then
+			hintText = hint
+		end
 	end
 
 	local headerFill = badgeColor:Lerp(Color3.fromRGB(18, 26, 34), 0.72)
@@ -10048,6 +10063,14 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 		local badge = tostring(payload and payload.badge or "")
 		local subtitle = tostring(payload and payload.subtitle or "")
 		local color = payload and payload.accentColor
+		self._lobbyZoneFocus = {
+			zoneName = tostring(payload and payload.zoneName or ""),
+			title = title,
+			hint = hint,
+			badge = badge,
+			subtitle = subtitle,
+			accentColor = typeof(color) == "Color3" and color or nil,
+		}
 		if typeof(color) == "Color3" then
 			lobby.FeedbackLabel.TextColor3 = color:Lerp(Color3.fromRGB(240, 244, 248), 0.55)
 		else
@@ -10066,6 +10089,7 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 			message ..= " • " .. hint
 		end
 		lobby.FeedbackLabel.Text = message
+		self:_refreshBasicLobbyPanel()
 	elseif eventName == "LobbyFlexSpotlightUpdated" then
 		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
 		local spotlight = payload and payload.spotlight or {}

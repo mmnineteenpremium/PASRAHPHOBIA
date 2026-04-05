@@ -9925,3 +9925,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - world guide sekarang terasa lebih informatif dan kurang placeholder; pemain mendapat petunjuk fungsi area, bukan hanya nama ruang
+
+## 2026-04-05 - Lobby Panel Zone Focus Sync Pass
+
+### Scope
+
+- membuat panel lobby utama ikut membaca focus zona terakhir agar orientasi lobby tidak hanya hidup di label transient
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - simpan `self._lobbyZoneFocus` saat menerima event `LobbyZoneFocused`
+  - `_refreshBasicLobbyPanel()` sekarang memakai focus itu untuk:
+    - `badge`
+    - `header color`
+    - `primary text`
+    - `secondary text`
+    - `hint text`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_lobby_panel_zone_focus_build.rbxlx`
+
+### Interpretation
+
+- panel lobby sekarang lebih sinkron dengan feedback zona dan world beacons; pemain tidak hanya melihat satu toast singkat lalu kembali ke copy generik
