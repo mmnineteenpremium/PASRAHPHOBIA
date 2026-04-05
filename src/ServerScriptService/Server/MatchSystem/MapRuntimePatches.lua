@@ -84,6 +84,27 @@ local SAFE_ZONE_POSITION_OVERRIDES = {
 	},
 }
 
+local SPAWN_POINT_OVERRIDES = {
+	hauntedhouse = {
+		PlayerSpawn_1 = {
+			roomName = "Room_LivingRoom",
+			offset = Vector3.new(6, 3.5, -6),
+		},
+		PlayerSpawn_2 = {
+			roomName = "Room_LivingRoom",
+			offset = Vector3.new(6, 3.5, 6),
+		},
+		PlayerSpawn_3 = {
+			roomName = "Room_LivingRoom",
+			offset = Vector3.new(-4, 3.5, -6),
+		},
+		PlayerSpawn_4 = {
+			roomName = "Room_LivingRoom",
+			offset = Vector3.new(-4, 3.5, 6),
+		},
+	},
+}
+
 local MAP_MATERIAL_POLISH = {
 	hauntedhouse = {
 		floorMaterial = Enum.Material.WoodPlanks,
@@ -1091,6 +1112,50 @@ local function patchSafeZones(mapId, mapClone)
 	return patchedAny
 end
 
+local function patchSpawnPoints(mapId, mapClone)
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if token and SPAWN_POINT_OVERRIDES[token] == nil then
+		token = resolveMapOverrideToken(nil, mapClone)
+	end
+	local overrides = token and SPAWN_POINT_OVERRIDES[token]
+	if not mapClone or not overrides then
+		return false
+	end
+
+	local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
+	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
+	if not spawnFolder then
+		return false
+	end
+
+	local patchedAny = false
+	for spawnName, overrideValue in pairs(overrides) do
+		local spawnPart = spawnFolder:FindFirstChild(spawnName)
+		if spawnPart and spawnPart:IsA("BasePart") then
+			local targetPosition = nil
+			if typeof(overrideValue) == "Vector3" then
+				targetPosition = overrideValue
+			elseif type(overrideValue) == "table" then
+				local roomName = type(overrideValue.roomName) == "string" and overrideValue.roomName or nil
+				local roomPart = roomName and roomsFolder and roomsFolder:FindFirstChild(roomName)
+				local offset = typeof(overrideValue.offset) == "Vector3" and overrideValue.offset or nil
+				if roomPart and roomPart:IsA("BasePart") and offset then
+					targetPosition = roomPart.Position + offset
+				elseif typeof(overrideValue.position) == "Vector3" then
+					targetPosition = overrideValue.position
+				end
+			end
+
+			if typeof(targetPosition) == "Vector3" and (spawnPart.Position - targetPosition).Magnitude > 0.05 then
+				spawnPart.CFrame = CFrame.new(targetPosition)
+				patchedAny = true
+			end
+		end
+	end
+
+	return patchedAny
+end
+
 local function patchMapMaterials(mapId, mapClone)
 	if not mapClone or mapClone:GetAttribute(MATERIAL_PATCH_ATTR) == true then
 		return false
@@ -1154,6 +1219,7 @@ function MapRuntimePatches.Apply(mapId, mapClone)
 	didPatch = patchDoorTraversal(mapClone) or didPatch
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
+	didPatch = patchSpawnPoints(mapId, mapClone) or didPatch
 	didPatch = patchTraversalGuides(mapClone) or didPatch
 	return didPatch
 end
