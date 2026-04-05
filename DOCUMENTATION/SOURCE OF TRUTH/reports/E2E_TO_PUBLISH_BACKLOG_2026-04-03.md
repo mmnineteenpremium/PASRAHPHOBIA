@@ -2265,6 +2265,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (navigation distance readability baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 23:42 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi orientasi lobby:
+  - panel lobby sekarang menampilkan jarak ke zona aktif/fokus.
+  - konteks `LobbyZoneFocused` tidak lagi hanya badge + nama, tetapi juga estimasi kedekatan area.
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_focus_distance_build.rbxlx`
+- status:
+  - **SELESAI (lobby focus distance baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

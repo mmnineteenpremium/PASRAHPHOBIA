@@ -37,6 +37,14 @@ local MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
 local BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
 local CONFLICT_BASIC_GUI_NAMES = { "MainMenuUI", "LeaderboardUI" }
 local MAPS = { "HauntedHouse", "AbandonedPalace", "EmptyBuilding", "StudioMMNineteen" }
+local LOBBY_ZONE_CLIENT_CANDIDATES = {
+	SpawnPlaza = { "SpawnPlaza", "Room_MainHubPlaza", "Interact_MainHubPlaza", "Prop_MainHubPlaza", "PlayerSpawn_1" },
+	MatchmakingZone = { "MatchmakingZone", "Room_NorthEvidenceBuilding", "Interact_NorthEvidenceBuilding", "Door_NorthEvidenceBuilding", "Prop_NorthEvidenceBuilding" },
+	ShopZone = { "ShopZone", "Room_EastShopBuilding", "Interact_EastShopBuilding", "Door_EastShopBuilding", "Prop_EastShopBuilding" },
+	PartyZone = { "PartyZone", "Room_WestPartyZone", "Interact_WestPartyZone", "Door_WestPartyZone", "Prop_WestPartyZone" },
+	DailyRewardZone = { "DailyRewardZone", "Room_SouthSocialGarden", "Interact_SouthSocialGarden", "Door_SouthSocialGarden", "Prop_SouthSocialGarden" },
+	FlexZone = { "FlexZone", "Room_SouthEastFlexZone", "Interact_SouthEastFlexZone", "Door_SouthEastFlexZone", "Prop_SouthEastFlexZone" },
+}
 local LOBBY_ONLY_GUI_NAMES = {
 	LobbyUI = true,
 	ProfileUI = true,
@@ -202,6 +210,7 @@ local FIELD_KIT_TOOL_CONFIG = {
 		keyCode = Enum.KeyCode.Five,
 	},
 }
+local lobbyZonePartCache = {}
 
 local function createDefaultFieldKitToolState(toolType)
 	local config = FIELD_KIT_TOOL_CONFIG[toolType] or {}
@@ -2332,6 +2341,55 @@ local function formatNavigationAnchorLabel(anchor, fallbackLabel)
 		return string.format("%s (%s)", label, distanceText)
 	end
 	return label
+end
+
+local function resolveLobbyZonePart(zoneName)
+	if type(zoneName) ~= "string" or zoneName == "" then
+		return nil
+	end
+
+	local cached = lobbyZonePartCache[zoneName]
+	if typeof(cached) == "Instance" and cached.Parent ~= nil then
+		return cached
+	end
+
+	local lobbyZones = Workspace:FindFirstChild("LobbyZones")
+	if lobbyZones then
+		local exact = lobbyZones:FindFirstChild(zoneName)
+		if exact and exact:IsA("BasePart") then
+			lobbyZonePartCache[zoneName] = exact
+			return exact
+		end
+	end
+
+	local searchRoot = Workspace:FindFirstChild("Maps") or Workspace
+	for _, candidateName in ipairs(LOBBY_ZONE_CLIENT_CANDIDATES[zoneName] or {}) do
+		local candidate = searchRoot:FindFirstChild(candidateName, true)
+		if candidate and candidate:IsA("BasePart") then
+			lobbyZonePartCache[zoneName] = candidate
+			return candidate
+		end
+	end
+
+	return nil
+end
+
+local function getLobbyZoneDistanceText(zoneName)
+	local player = Players.LocalPlayer
+	local character = player and player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+
+	local zonePart = resolveLobbyZonePart(zoneName)
+	if not (zonePart and zonePart:IsA("BasePart")) then
+		return nil
+	end
+
+	local distance = (root.Position - zonePart.Position).Magnitude
+	local rounded = math.max(1, math.floor(distance + 0.5))
+	return string.format("%dm", rounded)
 end
 
 local function getInvestigationObjectiveText(contextTag)
@@ -5223,12 +5281,16 @@ function UISystem:_refreshBasicLobbyPanel()
 		glyphText = string.sub(string.upper(tostring(zoneFocus.badge or "LO")), 1, 2)
 		primaryText = tostring(zoneFocus.title or primaryText)
 		local subtitle = tostring(zoneFocus.subtitle or "")
+		local distanceText = getLobbyZoneDistanceText(zoneFocus.zoneName)
 		if subtitle ~= "" then
-			secondaryText = subtitle .. " | " .. string.format("%d room aktif", #rooms)
+			secondaryText = subtitle
+				.. (distanceText and (" | " .. distanceText) or "")
+				.. " | "
+				.. string.format("%d room aktif", #rooms)
 		end
 		local hint = tostring(zoneFocus.hint or "")
 		if hint ~= "" then
-			hintText = hint
+			hintText = distanceText and (hint .. " • " .. distanceText) or hint
 		end
 	end
 
@@ -5284,7 +5346,8 @@ function UISystem:_refreshBasicLobbyPanel()
 	if lobby.BasicRoomPill then
 		local roomText = currentRoom and string.format("ROOM #%s", tostring(currentRoom.roomId)) or string.format("%d ROOM", #rooms)
 		if type(zoneFocus) == "table" and not currentRoom and not state.lastError and tostring(zoneFocus.subtitle or "") ~= "" then
-			lobby.BasicRoomPill.Text = "FOCUS ACTIVE"
+			local distanceText = getLobbyZoneDistanceText(zoneFocus.zoneName)
+			lobby.BasicRoomPill.Text = distanceText and ("FOCUS " .. string.upper(distanceText)) or "FOCUS ACTIVE"
 			lobby.BasicRoomPill.BackgroundColor3 = typeof(zoneFocus.accentColor) == "Color3"
 				and zoneFocus.accentColor:Lerp(Color3.fromRGB(96, 76, 48), 0.58)
 				or Color3.fromRGB(96, 76, 48)
