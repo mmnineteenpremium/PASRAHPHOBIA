@@ -9997,3 +9997,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - panel lobby sekarang terasa lebih sadar konteks, bukan hanya header yang berubah sementara pill/hint tetap generic
+
+## 2026-04-05 - Match Semantic Accent Pass
+
+### Scope
+
+- menyelaraskan accent visual panel `Preparation/Investigation` dengan semantik route aktif, bukan hanya copy text-nya
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah `getNavigationSemanticAccent()`
+  - phase non-hunt sekarang bisa memantulkan accent semantik ke:
+    - `badgeColor`
+    - `ObjectiveLabel`
+    - `ControlsHintLabel`
+    - `TimerCaption`
+    - `FooterLabel`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_match_semantic_accent_build.rbxlx`
+
+### Interpretation
+
+- panel match non-hunt sekarang memberi sinyal visual yang lebih konsisten dengan fungsi route aktif, bukan hanya beda wording

@@ -2218,6 +2218,23 @@ local function getInvestigationControlsHintText()
 	return string.format("ANCHOR: %s  •  SWEEP EVIDENCE  •  [1-5] TOOL  •  [J] JOURNAL", anchorLabel)
 end
 
+local function getNavigationSemanticAccent(anchor)
+	local subtitle = type(anchor) == "table" and tostring(anchor.subtitle or "") or ""
+	if subtitle == "Refuge route" then
+		return Color3.fromRGB(112, 164, 132)
+	end
+	if subtitle == "Akses vertikal" or subtitle == "Transisi vertikal" then
+		return Color3.fromRGB(122, 148, 214)
+	end
+	if subtitle == "Sweep evidence" then
+		return Color3.fromRGB(196, 144, 92)
+	end
+	if subtitle == "Area investigasi" then
+		return Color3.fromRGB(82, 154, 136)
+	end
+	return nil
+end
+
 local function resolveHideZoneLabel(zoneId, spotType)
 	if type(zoneId) ~= "string" or zoneId == "" then
 		return nil
@@ -4746,6 +4763,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	)
 	payload = payload or self._phasePayload
 	local huntAssistSnapshot = viewState == "Hunt" and getHuntAssistSnapshot() or nil
+	local navigationAnchor = nil
 
 	local badgeText = "STATUS MATCH"
 	local badgeColor = Color3.fromRGB(62, 80, 104)
@@ -4762,7 +4780,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	end
 
 	if viewState == "Preparation" or viewState == "Loading" then
-		local navigationAnchor = getNearestNavigationAnchorInfo()
+		navigationAnchor = getNearestNavigationAnchorInfo()
 		badgeText = "PERSIAPAN"
 		badgeColor = Color3.fromRGB(70, 96, 132)
 		phaseGlyphText = "PR"
@@ -4771,7 +4789,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			and ("Loading dan briefing aktif. Waktu fase: " .. timerText .. ".")
 			or "Tunggu loading selesai, lalu mulai cari evidence."
 	elseif viewState == "Investigation" then
-		local navigationAnchor = getNearestNavigationAnchorInfo()
+		navigationAnchor = getNearestNavigationAnchorInfo()
 		badgeText = "INVESTIGASI"
 		badgeColor = Color3.fromRGB(58, 112, 90)
 		phaseGlyphText = "IN"
@@ -4815,6 +4833,13 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		secondaryText = "Panel akan terisi otomatis saat match dimulai."
 	end
 
+	local semanticAccent = ((viewState == "Preparation" or viewState == "Loading" or viewState == "Investigation") and navigationAnchor)
+		and getNavigationSemanticAccent(navigationAnchor)
+		or nil
+	if semanticAccent then
+		badgeColor = semanticAccent:Lerp(badgeColor, 0.28)
+	end
+
 	local headerFill = badgeColor:Lerp(Color3.fromRGB(18, 22, 30), 0.72)
 	local summaryFill = badgeColor:Lerp(Color3.fromRGB(20, 27, 36), 0.76)
 	local actionFill = badgeColor:Lerp(Color3.fromRGB(34, 48, 64), 0.42)
@@ -4845,6 +4870,9 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	end
 	if match.BasicFooterLabel then
 		match.BasicFooterLabel.Text = footerText
+		match.BasicFooterLabel.TextColor3 = semanticAccent
+			and semanticAccent:Lerp(Color3.fromRGB(232, 238, 246), 0.45)
+			or Color3.fromRGB(162, 176, 198)
 	end
 	if match.SummaryFrame then
 		match.SummaryFrame.BackgroundColor3 = summaryFill
@@ -4857,7 +4885,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	if match.TimerCaption then
 		match.TimerCaption.Visible = match.TimerLabel and match.TimerLabel.Visible
 		match.TimerCaption.Text = viewState == "Hunt" and "HUNT TIMER" or "PHASE TIMER"
-		match.TimerCaption.TextColor3 = badgeColor:Lerp(Color3.fromRGB(232, 238, 246), 0.4)
+		match.TimerCaption.TextColor3 = (semanticAccent or badgeColor):Lerp(Color3.fromRGB(232, 238, 246), 0.4)
 	end
 	if match.EvidenceQuickButton then
 		match.EvidenceQuickButton.Visible = self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
@@ -4873,6 +4901,9 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		match.ControlsHintLabel.Text = viewState == "Hunt"
 			and getHuntControlsHintText()
 			or ((viewState == "Preparation" or viewState == "Investigation") and getInvestigationControlsHintText() or self._matchControlsHintText)
+		match.ControlsHintLabel.TextColor3 = semanticAccent
+			and semanticAccent:Lerp(Color3.fromRGB(240, 244, 248), 0.35)
+			or Color3.fromRGB(240, 244, 248)
 	end
 	if match.HuntStatusBadge then
 		match.HuntStatusBadge.Visible = viewState == "Hunt" and huntAssistSnapshot ~= nil
@@ -4905,6 +4936,12 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			match.ObjectiveLabel.Text = ""
 			match.ObjectiveLabel.Visible = false
 		end
+		match.ObjectiveLabel.BackgroundColor3 = semanticAccent
+			and semanticAccent:Lerp(Color3.fromRGB(18, 22, 30), 0.72)
+			or Color3.fromRGB(18, 22, 30)
+		match.ObjectiveLabel.TextColor3 = semanticAccent
+			and semanticAccent:Lerp(Color3.fromRGB(235, 240, 245), 0.3)
+			or Color3.fromRGB(235, 240, 245)
 	end
 	self:_updateMatchSummaryRows(match.BasicSummaryRows, viewState)
 	self:_refreshFieldKitPanel()
