@@ -71,6 +71,8 @@ local FACADE_SIGN_ZONE_FLAGS = {
     MatchmakingZone = true,
     ShopZone = true,
     PartyZone = true,
+    DailyRewardZone = true,
+    FlexZone = true,
 }
 local LOBBY_ZONE_GUIDES_ENABLED = false
 local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = true
@@ -190,6 +192,14 @@ local LOBBY_ZONE_ENTRY_KIOSK_COPY = {
     PartyZone = {
         title = "ROOM BOARD",
         subtitle = "Invite • Ready • Join",
+    },
+    DailyRewardZone = {
+        title = "GARDEN BOARD",
+        subtitle = "Reward • Social • Claim",
+    },
+    FlexZone = {
+        title = "FLEX BOARD",
+        subtitle = "Spotlight • Cosmetics",
     },
 }
 
@@ -1762,7 +1772,7 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         ensureGuideBoardSurface(toolsBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "TOOLS", "EMF • UV • BOX", style.color)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "CONTRACT BOARD", "Map • Mode • Start", style.color)
         ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "CONTRACT BOARD", "Map • Mode • Start", style.color)
-    elseif zoneName == "ShopZone" or zoneName == "PartyZone" then
+    elseif zoneName == "ShopZone" or zoneName == "PartyZone" or zoneName == "DailyRewardZone" or zoneName == "FlexZone" then
         local kioskCopy = LOBBY_ZONE_ENTRY_KIOSK_COPY[zoneName]
         local boardBackFace = isWideOnX and Enum.NormalId.Back or Enum.NormalId.Right
         local boardFrontFace = isWideOnX and Enum.NormalId.Front or Enum.NormalId.Left
