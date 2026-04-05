@@ -2197,6 +2197,9 @@ local function collectNavigationAnchors(mapModel)
 						subtitle = function(part)
 							return tostring(part:GetAttribute("DoorRouteSubtitle") or "Akses ruang")
 						end,
+						stateText = function(part)
+							return tostring(part:GetAttribute("DoorRouteStateText") or "")
+						end,
 					})
 				end
 			end
@@ -2355,10 +2358,15 @@ local function getNearestNavigationAnchorInfo(contextTag)
 			if type(subtitleValue) == "function" then
 				subtitleValue = subtitleValue(item.part)
 			end
+			local stateTextValue = item.stateText
+			if type(stateTextValue) == "function" then
+				stateTextValue = stateTextValue(item.part)
+			end
 			consider(item.part, {
 				kind = item.kind,
 				label = item.label,
 				subtitle = subtitleValue,
+				stateText = stateTextValue,
 			})
 		end
 	end
@@ -2487,7 +2495,9 @@ local function getInvestigationObjectiveText(contextTag)
 		return string.format("Dekati %s\nMulai investigasi area inti\nCari evidence lalu isi jurnal", label)
 	end
 	if anchor.kind == "Door" then
-		return string.format("Dekati %s\nMasuk ke area terkait\nCari evidence lalu isi jurnal", label)
+		local stateText = tostring(anchor.stateText or "")
+		local stateLine = stateText ~= "" and ("Status pintu: " .. stateText) or "Masuk ke area terkait"
+		return string.format("Dekati %s\n%s\nCari evidence lalu isi jurnal", label, stateLine)
 	end
 	return string.format("Gunakan anchor %s\nSweep area terdekat\nCari evidence lalu isi jurnal", label)
 end
@@ -2510,7 +2520,12 @@ local function getInvestigationControlsHintText(contextTag)
 		return string.format("SWEEP: %s  •  CEK RUANG DETAIL  •  [1-5] TOOL  •  [J] JOURNAL", anchorLabel)
 	end
 	if anchor.kind == "Door" then
-		return string.format("TARGET: %s  •  PINTU: E/X/TAP  •  [J] JOURNAL  •  [F] FLASHLIGHT", anchorLabel)
+		local stateText = tostring(anchor.stateText or "")
+		return string.format(
+			"TARGET: %s  •  PINTU: %s  •  [J] JOURNAL  •  [F] FLASHLIGHT",
+			anchorLabel,
+			stateText ~= "" and string.upper(stateText) or "E/X/TAP"
+		)
 	end
 	return string.format("ANCHOR: %s  •  SWEEP EVIDENCE  •  [1-5] TOOL  •  [J] JOURNAL", anchorLabel)
 end

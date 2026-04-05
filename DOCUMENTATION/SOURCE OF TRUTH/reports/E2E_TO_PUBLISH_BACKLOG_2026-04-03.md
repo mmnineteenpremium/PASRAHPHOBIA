@@ -2301,6 +2301,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (lobby zone proximity fallback baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-06 00:07 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi affordance pintu:
+  - objective dan controls hint match sekarang ikut menampilkan status operasional pintu saat anchor aktif.
+  - konteks pintu tidak lagi berhenti di label semantik saja.
+- validasi:
+  - build source sukses:
+    - `_tmp_door_state_hud_context_build.rbxlx`
+- status:
+  - **SELESAI (door state hud context baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
