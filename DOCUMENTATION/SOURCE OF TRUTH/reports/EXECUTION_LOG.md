@@ -10266,3 +10266,25 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - orientasi lobby sekarang lebih stabil; panel tidak lagi kosong konteks hanya karena pemain belum menyentuh trigger zona
+
+## 2026-04-06 - Door State HUD Context Pass
+
+### Scope
+
+- meneruskan state operasional pintu ke objective/hint match agar affordance pintu tidak berhenti di world beacon saja
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - anchor pintu sekarang menyertakan `stateText`
+  - objective text pintu sekarang menampilkan status operasional pintu saat anchor aktif
+  - controls hint pintu sekarang bisa menampilkan `TERBUKA / TERTUTUP / AKSES TERKUNCI`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_door_state_hud_context_build.rbxlx`
+
+### Interpretation
+
+- navigasi match sekarang lebih taktis; pemain tidak hanya tahu pintu mana yang relevan, tetapi juga apakah pintu itu sedang siap dilalui
