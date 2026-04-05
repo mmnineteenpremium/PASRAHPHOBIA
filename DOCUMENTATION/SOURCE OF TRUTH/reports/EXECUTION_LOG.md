@@ -10797,3 +10797,49 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `DeskModePlate = MODE / Classic`
   - `DeskStartPlate = START / Room Browser`
   - `Lobby Directory` aktif di plaza, beserta node/beacon arah zona
+
+### Follow-up 2026-04-06 11:25 ICT
+
+- pass besar `Lobby UX visual` berlanjut dari tahap signage/wayfinding ke tahap `spatial mass`:
+  - semua entrance utama sekarang punya `forecourt` world-space:
+    - `ForecourtPad`
+    - `LeftBench / RightBench`
+    - `LeftPlanter / RightPlanter`
+    - `LeftPlanterTop / RightPlanterTop`
+  - `North` (`PLAY`) sekarang tidak hanya punya `contract bay`, tetapi juga apron depan, bench, dan planter yang membuat façade terasa seperti entrance bangunan sungguhan
+  - `Shop / Party / Garden / Flex` sekarang ikut punya massa entrance yang setara, jadi shell lobby tidak lagi hanya terasa hidup di area utara
+  - `MainHubDecorRuntime` diperkuat lagi dengan:
+    - `HubPlanterNorthWest / NorthEast / SouthWest / SouthEast`
+    - `HubWallNorthWest / NorthEast / SouthWest / SouthEast`
+    - `DirectoryPad` dan `DirectoryPanel` yang lebih besar
+
+### Validation 2026-04-06 11:25 ICT
+
+- build source sukses:
+  - `_tmp_lobby_forecourt_and_hub_mass_build.rbxlx`
+- verifikasi live:
+  - `North` runtime:
+    - `ForecourtPad = 17.6 x 0.16 x 16`
+    - `LeftBench = 4.4 x 0.68 x 1.42`
+    - `LeftPlanter = 2.6 x 1.08 x 2.2`
+  - `Shop` runtime:
+    - `ForecourtPad = 12.8 x 0.16 x 14.8`
+  - `MainHub` runtime:
+    - `HubWallNorthWest = 6.2 x 1.44 x 0.52`
+    - `HubPlanterNorthWest = 4.2 x 1.18 x 2.9`
+    - `DirectoryPanel = 15.8 x 5.8 x 0.35`
+- capture live:
+  - fresh spawn `North` sekarang menampilkan `contract bay` + planter/bench, bukan façade polos
+  - `Lobby Directory` plaza sekarang terlihat sebagai focal point yang lebih nyata, bukan hanya panel tipis di tengah ruang kosong
+
+### Interpretation 2026-04-06 11:25 ICT
+
+- lobby sekarang sudah naik dari `identity cue` menjadi `world-space shell with staging mass`
+- area utara, timur, barat, selatan, dan tenggara sekarang minimal sudah punya:
+  - façade
+  - kiosk/sign
+  - forecourt mass
+- yang masih tersisa untuk menyebut lobby benar-benar final:
+  - interior bangunan
+  - prop final berbasis asset, bukan masih dominan primitive runtime
+  - kontrak / tools / shop / party world interaction yang lebih nyata dan tidak hanya visual

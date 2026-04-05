@@ -2403,3 +2403,22 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - baseline world-space lobby sekarang sudah jauh lebih terbaca, tetapi final art/interior masih tersisa.
 
+## Update 2026-04-06 11:25 ICT
+
+- `Lobby UX visual` menerima pass `spatial mass` besar:
+  - semua entrance utama sekarang punya `forecourt` nyata (pad + bench + planter)
+  - `North` sekarang tampil sebagai `contract bay + entrance mass`, bukan hanya façade sign
+  - `MainHub` sekarang punya planter sudut + wall section agar `Lobby Directory` benar-benar menjadi focal point plaza
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_forecourt_and_hub_mass_build.rbxlx`
+  - verifikasi live menembus:
+    - `North ForecourtPad`
+    - `Shop ForecourtPad`
+    - `HubWallNorthWest`
+    - `HubPlanterNorthWest`
+    - `DirectoryPanel` yang diperbesar
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby sekarang sudah jauh lebih terbaca sebagai ruang, tetapi interior bangunan dan asset final masih tersisa sebelum layak disebut selesai penuh.
+
