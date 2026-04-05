@@ -9951,3 +9951,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - panel lobby sekarang lebih sinkron dengan feedback zona dan world beacons; pemain tidak hanya melihat satu toast singkat lalu kembali ke copy generik
+
+## 2026-04-05 - Semantic Investigation HUD Pass
+
+### Scope
+
+- membuat objective/hint `Preparation/Investigation` memanfaatkan subtitle semantik anchor runtime, bukan hanya nama target terdekat
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - `getInvestigationObjectiveText()` sekarang membedakan arahan untuk:
+    - `Refuge route`
+    - `Akses vertikal / Transisi vertikal`
+    - `Sweep evidence`
+    - `Area investigasi`
+  - `getInvestigationControlsHintText()` sekarang juga menyesuaikan copy berdasarkan subtitle anchor
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_semantic_investigation_hud_build.rbxlx`
+
+### Interpretation
+
+- panel match non-hunt sekarang memberi arahan yang lebih relevan terhadap fungsi area, bukan hanya “target terdekat” secara buta

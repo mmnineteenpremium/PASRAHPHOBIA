@@ -2145,6 +2145,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (lobby panel zone focus baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 22:26 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi readability investigasi:
+  - objective dan controls hint `Preparation/Investigation` kini membedakan refuge route, akses vertikal, sweep evidence, dan area investigasi.
+  - panel match non-hunt jadi lebih kontekstual terhadap fungsi area terdekat.
+- validasi:
+  - build source sukses:
+    - `_tmp_semantic_investigation_hud_build.rbxlx`
+- status:
+  - **SELESAI (semantic investigation HUD baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
