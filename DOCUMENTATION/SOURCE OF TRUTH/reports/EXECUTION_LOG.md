@@ -10781,3 +10781,19 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - lobby sekarang mulai terbaca sebagai kumpulan bangunan/zona dengan fungsi nyata, bukan hanya shell besar dengan UI overlay
 - `North` sudah naik dari prototype signage menjadi `contract / evidence staging bay`
 - area plaza juga mulai punya peran orientasi, walau art direction akhir dan interior final masih belum selesai
+
+### Follow-up 2026-04-06 10:10 ICT
+
+- pass lanjutan untuk `MainHub`:
+  - `North` ditingkatkan lagi menjadi `contract bay` yang lebih konkret lewat:
+    - `DeskMapPlate`
+    - `DeskModePlate`
+    - `DeskStartPlate`
+  - `MainHubDecorRuntime` diperluas dengan:
+    - `BeaconNorth/East/West/South/Flex`
+    - route runner dan node marker yang lebih besar
+- validasi live:
+  - `DeskMapPlate = MAP / Haunted House`
+  - `DeskModePlate = MODE / Classic`
+  - `DeskStartPlate = START / Room Browser`
+  - `Lobby Directory` aktif di plaza, beserta node/beacon arah zona
