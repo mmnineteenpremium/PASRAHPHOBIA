@@ -2241,6 +2241,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (refuge anchor unification baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 23:24 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi konsistensi refuge:
+  - `SafeZoneRuntimeMarker` dan `HideSpotRuntimeMarker` sekarang memakai palette refuge yang sama dengan route guide/hud.
+  - bahasa visual refuge tidak lagi terpecah antara marker aman, hide spot, dan route beacon.
+- validasi:
+  - build source sukses:
+    - `_tmp_refuge_marker_palette_build.rbxlx`
+- status:
+  - **SELESAI (refuge marker palette alignment baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
