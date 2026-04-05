@@ -50,6 +50,7 @@ local LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME = "AccentLight"
 local LOBBY_ZONE_ENTRY_GUIDE_FRAME_TOP_NAME = "FrameTop"
 local LOBBY_ZONE_ENTRY_GUIDE_FRAME_LEFT_NAME = "FrameLeft"
 local LOBBY_ZONE_ENTRY_GUIDE_FRAME_RIGHT_NAME = "FrameRight"
+local LOBBY_ZONE_ENTRY_GUIDE_HEADER_NAME = "HeaderBand"
 local LOBBY_ZONE_GUIDES_ENABLED = false
 local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = true
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
@@ -1397,6 +1398,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         framePart.Transparency = 0.2
     end
 
+    local headerBand = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_HEADER_NAME)
+    headerBand.Color = style.color
+    headerBand.Transparency = 0.08
+
     if isWideOnX then
         frameTop.Size = Vector3.new(anchorPart.Size.X + 0.9, 0.18, frameDepth)
         frameTop.CFrame = anchorPart.CFrame * CFrame.new(0, topY, 0)
@@ -1404,6 +1409,8 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         frameLeft.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset, 0, 0)
         frameRight.Size = Vector3.new(0.18, anchorPart.Size.Y + 0.2, frameDepth)
         frameRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset, 0, 0)
+        headerBand.Size = Vector3.new(anchorPart.Size.X + 2.2, 1.55, frameDepth + 0.12)
+        headerBand.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.48, 0)
     else
         frameTop.Size = Vector3.new(frameDepth, 0.18, anchorPart.Size.Z + 0.9)
         frameTop.CFrame = anchorPart.CFrame * CFrame.new(0, topY, 0)
@@ -1411,6 +1418,8 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         frameLeft.CFrame = anchorPart.CFrame * CFrame.new(0, 0, -sideOffset)
         frameRight.Size = Vector3.new(frameDepth, anchorPart.Size.Y + 0.2, 0.18)
         frameRight.CFrame = anchorPart.CFrame * CFrame.new(0, 0, sideOffset)
+        headerBand.Size = Vector3.new(frameDepth + 0.12, 1.55, anchorPart.Size.Z + 2.2)
+        headerBand.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.48, 0)
     end
 
     local panel = billboard:FindFirstChild("Panel")
