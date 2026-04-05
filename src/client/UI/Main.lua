@@ -14924,6 +14924,30 @@ function UISystem:_refreshRoomBrowserView()
 		end
 		self._roomBrowserWidgets.KickNameBox.Visible = false
 		self._roomBrowserWidgets.KickButton.Visible = false
+
+		if hostCanControl == true and self._roomBrowserWidgets.ReadyButton.Visible == true then
+			local autoFocusKey = table.concat({
+				tostring(currentRoom or ""),
+				tostring(state.matchStarting == true),
+				tostring(roomData.playerCount or #roomPlayersData or 0),
+			}, "|")
+			local readyButton = self._roomBrowserWidgets.ReadyButton
+			local viewportBottom = panel.AbsolutePosition.Y + panel.AbsoluteSize.Y - 24
+			local readyBottom = readyButton.AbsolutePosition.Y + readyButton.AbsoluteSize.Y
+			local maxCanvasY = math.max(0, panel.AbsoluteCanvasSize.Y - panel.AbsoluteSize.Y)
+			if readyBottom > viewportBottom and self._roomBrowserActionFocusKey ~= autoFocusKey then
+				local delta = readyBottom - viewportBottom + 12
+				panel.CanvasPosition = Vector2.new(
+					panel.CanvasPosition.X,
+					math.clamp(panel.CanvasPosition.Y + delta, 0, maxCanvasY)
+				)
+				self._roomBrowserActionFocusKey = autoFocusKey
+			elseif readyBottom <= viewportBottom then
+				self._roomBrowserActionFocusKey = autoFocusKey
+			end
+		else
+			self._roomBrowserActionFocusKey = nil
+		end
 	else
 		for _, child in ipairs(self._roomBrowserWidgets.PlayersList:GetChildren()) do
 			if child:IsA("Frame") or child:IsA("TextLabel") then
@@ -14946,6 +14970,7 @@ function UISystem:_refreshRoomBrowserView()
 		end
 		self._roomBrowserWidgets.KickNameBox.Visible = false
 		self._roomBrowserWidgets.KickButton.Visible = false
+		self._roomBrowserActionFocusKey = nil
 	end
 
 	self:_updateRoomBrowserVisibility()

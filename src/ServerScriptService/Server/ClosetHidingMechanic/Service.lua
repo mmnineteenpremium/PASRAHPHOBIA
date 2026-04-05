@@ -22,6 +22,7 @@ local HIDE_SPOT_MARKER_TITLE_COLOR = Color3.fromRGB(244, 250, 246)
 local HIDE_SPOT_MARKER_SUBTITLE_COLOR = Color3.fromRGB(184, 222, 196)
 local HIDE_SPOT_MARKER_SUBTITLE_TEXT = "Bersembunyi saat hunt"
 local HIDE_SPOT_MARKER_STUDS_OFFSET = 2.6
+local HIDE_SPOT_WORLD_MARKERS_ENABLED = false
 
 local function createMarkerTextLabel(name, font, textSize, textColor, text, height, position)
 	local label = Instance.new("TextLabel")
@@ -255,6 +256,20 @@ local function ensureHideSpotMarker(record)
 
 	local part = record.part
 	if not part or part.Parent == nil then
+		return
+	end
+	if HIDE_SPOT_WORLD_MARKERS_ENABLED ~= true then
+		local markerFolder = record.markerFolder
+		if typeof(markerFolder) ~= "Instance" then
+			markerFolder = part:FindFirstChild(HIDE_SPOT_MARKER_FOLDER_NAME)
+		end
+		if typeof(markerFolder) == "Instance" and markerFolder.Parent ~= nil then
+			markerFolder:Destroy()
+		end
+		record.markerFolder = nil
+		record.markerOutline = nil
+		record.markerHighlight = nil
+		record.markerBillboard = nil
 		return
 	end
 
@@ -564,13 +579,13 @@ function Service:_setHideSpotVisualState(matchId, isVisible)
 	for _, record in pairs(state.records or {}) do
 		ensureHideSpotMarker(record)
 		if record.markerOutline then
-			record.markerOutline.Visible = visible
+			record.markerOutline.Visible = HIDE_SPOT_WORLD_MARKERS_ENABLED == true and visible
 		end
 		if record.markerHighlight then
-			record.markerHighlight.Enabled = visible
+			record.markerHighlight.Enabled = HIDE_SPOT_WORLD_MARKERS_ENABLED == true and visible
 		end
 		if record.markerBillboard then
-			record.markerBillboard.Enabled = visible
+			record.markerBillboard.Enabled = HIDE_SPOT_WORLD_MARKERS_ENABLED == true and visible
 		end
 	end
 end
