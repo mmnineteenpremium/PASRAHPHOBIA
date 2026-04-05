@@ -44,3 +44,5 @@ Checklist ini menutup sisa `Phase 17 QA dan perf gate` yang memang tidak bisa di
 
 - checklist ini sengaja manual agar sesuai gate publish nyata, bukan simulasi harness tunggal
 - jika checklist ini belum dijalankan, status QA publish adalah `pass_with_manual_multiplayer`, bukan `full_pass`
+- catat hasil run ke:
+  - `QA_MULTIPLAYER_RESULT_TEMPLATE_2026-04-06.md`

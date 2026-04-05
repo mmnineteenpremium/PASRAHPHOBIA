@@ -42,3 +42,5 @@ Menutup gap terakhir antara persistence mock Studio dan persistence target yang 
 
 - checklist ini wajib sebelum publish publik
 - jangan menilai persistence siap publish hanya dari Studio mock
+- catat hasil run ke:
+  - `PERSISTENCE_RESULT_TEMPLATE_2026-04-06.md`
