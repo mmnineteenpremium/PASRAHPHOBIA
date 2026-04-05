@@ -53,7 +53,8 @@ local LOBBY_ZONE_ENTRY_GUIDE_FRAME_RIGHT_NAME = "FrameRight"
 local LOBBY_ZONE_ENTRY_GUIDE_HEADER_NAME = "HeaderBand"
 local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BOARD_NAME = "ContractBoard"
 local LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BOARD_NAME = "ToolsBoard"
-local LOBBY_ZONE_ENTRY_GUIDE_BOARD_BILLBOARD_NAME = "BoardBillboard"
+local LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME = "BoardFrontSurface"
+local LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME = "BoardBackSurface"
 local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_STAND_NAME = "ContractStand"
 local LOBBY_ZONE_ENTRY_GUIDE_TOOLS_STAND_NAME = "ToolsStand"
 local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BASE_NAME = "ContractBase"
@@ -476,35 +477,47 @@ local function ensureGuidePanelPart(parent, name)
     return part
 end
 
-local function ensureGuideBoardBillboard(parent, titleText, subtitleText, accentColor)
-    local billboard = parent:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_BOARD_BILLBOARD_NAME)
-    if not (billboard and billboard:IsA("BillboardGui")) then
-        if billboard then
-            billboard:Destroy()
+local function clearLegacyBoardGui(parent)
+    if not parent then
+        return
+    end
+    local legacy = parent:FindFirstChild("BoardBillboard")
+    if legacy then
+        legacy:Destroy()
+    end
+end
+
+local function ensureGuideBoardSurface(parent, name, face, titleText, subtitleText, accentColor)
+    local surface = parent:FindFirstChild(name)
+    if not (surface and surface:IsA("SurfaceGui")) then
+        if surface then
+            surface:Destroy()
         end
-        billboard = Instance.new("BillboardGui")
-        billboard.Name = LOBBY_ZONE_ENTRY_GUIDE_BOARD_BILLBOARD_NAME
-        billboard.Parent = parent
+        surface = Instance.new("SurfaceGui")
+        surface.Name = name
+        surface.Parent = parent
     end
 
-    billboard.Active = false
-    billboard.Adornee = parent
-    billboard.AlwaysOnTop = true
-    billboard.Brightness = 2
-    billboard.LightInfluence = 0
-    billboard.MaxDistance = 90
-    billboard.ResetOnSpawn = false
-    billboard.Size = UDim2.fromOffset(148, 70)
-    billboard.StudsOffsetWorldSpace = Vector3.new(0, 0.1, 0)
+    surface.Active = false
+    surface.Adornee = parent
+    surface.AlwaysOnTop = false
+    surface.Brightness = 1
+    surface.LightInfluence = 0
+    surface.ClipsDescendants = true
+    surface.ResetOnSpawn = false
+    surface.Face = face
+    surface.PixelsPerStud = 40
+    surface.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+    surface.CanvasSize = Vector2.new(220, 150)
 
-    local panel = billboard:FindFirstChild("Panel")
+    local panel = surface:FindFirstChild("Panel")
     if not (panel and panel:IsA("Frame")) then
         if panel then
             panel:Destroy()
         end
         panel = Instance.new("Frame")
         panel.Name = "Panel"
-        panel.Parent = billboard
+        panel.Parent = surface
 
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, 10)
@@ -535,12 +548,12 @@ local function ensureGuideBoardBillboard(parent, titleText, subtitleText, accent
         title.Font = Enum.Font.GothamBold
         title.Text = titleText
         title.TextColor3 = Color3.fromRGB(245, 248, 252)
-        title.TextSize = 11
+        title.TextSize = 20
         title.TextTransparency = 0
         title.TextXAlignment = Enum.TextXAlignment.Left
         title.TextYAlignment = Enum.TextYAlignment.Center
-        title.Position = UDim2.new(0, 18, 0, 10)
-        title.Size = UDim2.new(1, -28, 0, 16)
+        title.Position = UDim2.new(0, 22, 0, 18)
+        title.Size = UDim2.new(1, -34, 0, 30)
         title.Parent = panel
 
         local subtitle = Instance.new("TextLabel")
@@ -550,19 +563,20 @@ local function ensureGuideBoardBillboard(parent, titleText, subtitleText, accent
         subtitle.Font = Enum.Font.GothamMedium
         subtitle.Text = subtitleText
         subtitle.TextColor3 = accentColor:Lerp(Color3.fromRGB(245, 248, 252), 0.25)
-        subtitle.TextSize = 9
+        subtitle.TextSize = 14
         subtitle.TextTransparency = 0
         subtitle.TextWrapped = true
         subtitle.TextXAlignment = Enum.TextXAlignment.Left
         subtitle.TextYAlignment = Enum.TextYAlignment.Top
-        subtitle.Position = UDim2.new(0, 18, 0, 28)
-        subtitle.Size = UDim2.new(1, -28, 0, 32)
+        subtitle.Position = UDim2.new(0, 22, 0, 54)
+        subtitle.Size = UDim2.new(1, -34, 0, 56)
         subtitle.Parent = panel
     end
 
-    panel.Size = UDim2.fromScale(1, 1)
+    panel.Size = UDim2.new(1, -18, 1, -18)
+    panel.Position = UDim2.fromOffset(9, 9)
     panel.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
-    panel.BackgroundTransparency = 0.12
+    panel.BackgroundTransparency = 0.08
     panel.BorderSizePixel = 0
 
     local stroke = panel:FindFirstChild("Stroke")
@@ -584,7 +598,7 @@ local function ensureGuideBoardBillboard(parent, titleText, subtitleText, accent
         subtitle.TextColor3 = accentColor:Lerp(Color3.fromRGB(245, 248, 252), 0.25)
     end
 
-    return billboard
+    return surface
 end
 
 local function createGuideTextLabel(name, font, textSize, textColor, text, height, position)
@@ -1672,9 +1686,15 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             facadeWingRight.Size = Vector3.new(3.2, anchorPart.Size.Y + 1.2, 1.25)
             facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(1.55, 0, sideOffset + 1.7)
         end
-        ensureGuideBoardBillboard(contractBoard, "ROOM", "Create • Join • Ready", style.color)
-        ensureGuideBoardBillboard(toolsBoard, "TOOLS", "EMF • UV • BOX", style.color)
-        ensureGuideBoardBillboard(centerBoard, "CONTRACT BOARD", "Map • Mode • Start", style.color)
+        clearLegacyBoardGui(contractBoard)
+        clearLegacyBoardGui(toolsBoard)
+        clearLegacyBoardGui(centerBoard)
+        ensureGuideBoardSurface(contractBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "ROOM", "Create • Join • Ready", style.color)
+        ensureGuideBoardSurface(contractBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "ROOM", "Create • Join • Ready", style.color)
+        ensureGuideBoardSurface(toolsBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "TOOLS", "EMF • UV • BOX", style.color)
+        ensureGuideBoardSurface(toolsBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "TOOLS", "EMF • UV • BOX", style.color)
+        ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "CONTRACT BOARD", "Map • Mode • Start", style.color)
+        ensureGuideBoardSurface(centerBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "CONTRACT BOARD", "Map • Mode • Start", style.color)
     else
         if contractBoard then
             contractBoard:Destroy()
