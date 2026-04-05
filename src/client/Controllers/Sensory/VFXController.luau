@@ -32,12 +32,12 @@ local NEUTRAL_THREAT_POST = {
 }
 
 local HUNT_THREAT_POST = {
-	Brightness = -0.03,
-	Contrast = 0.18,
-	Saturation = -0.22,
+	Brightness = -0.01,
+	Contrast = 0.14,
+	Saturation = -0.14,
 	Tint = Color3.fromRGB(210, 220, 235),
-	BlurSize = 7,
-	AtmosphereDensityDelta = 0.08,
+	BlurSize = 3,
+	AtmosphereDensityDelta = 0.03,
 }
 
 local MANIFEST_SHOCK_POST = {
@@ -252,12 +252,12 @@ local MAP_ATMOSPHERE_PROFILES = {
 		Haze = 2.35,
 	},
 	HauntedHouse = {
-		Density = 0.44,
-		Offset = 0.27,
-		Color = Color3.fromRGB(146, 156, 178),
-		Decay = Color3.fromRGB(88, 96, 118),
-		Glare = 0.14,
-		Haze = 2.1,
+		Density = 0.34,
+		Offset = 0.18,
+		Color = Color3.fromRGB(162, 170, 188),
+		Decay = Color3.fromRGB(112, 118, 136),
+		Glare = 0.1,
+		Haze = 1.55,
 	},
 	EmptyBuilding = {
 		Density = 0.32,
@@ -302,14 +302,14 @@ local MAP_LIGHTING_PROFILES = {
 	},
 	HauntedHouse = {
 		ClockTime = 1.35,
-		Brightness = 1.72,
-		ExposureCompensation = -0.28,
-		Ambient = Color3.fromRGB(82, 92, 108),
-		OutdoorAmbient = Color3.fromRGB(96, 106, 122),
-		EnvironmentDiffuseScale = 0.2,
-		EnvironmentSpecularScale = 0.1,
-		ColorShift_Top = Color3.fromRGB(0, 6, 14),
-		ColorShift_Bottom = Color3.fromRGB(0, 4, 10),
+		Brightness = 2.02,
+		ExposureCompensation = -0.08,
+		Ambient = Color3.fromRGB(104, 114, 130),
+		OutdoorAmbient = Color3.fromRGB(118, 126, 142),
+		EnvironmentDiffuseScale = 0.3,
+		EnvironmentSpecularScale = 0.14,
+		ColorShift_Top = Color3.fromRGB(2, 8, 14),
+		ColorShift_Bottom = Color3.fromRGB(2, 6, 10),
 	},
 	EmptyBuilding = {
 		ClockTime = 16.8,
@@ -349,10 +349,10 @@ local MAP_GRADE_PROFILES = {
 		TintColor = Color3.fromRGB(236, 220, 204),
 	},
 	HauntedHouse = {
-		Brightness = -0.01,
-		Contrast = 0.1,
-		Saturation = -0.16,
-		TintColor = Color3.fromRGB(220, 232, 250),
+		Brightness = 0.03,
+		Contrast = 0.08,
+		Saturation = -0.08,
+		TintColor = Color3.fromRGB(228, 236, 248),
 	},
 	EmptyBuilding = {
 		Brightness = 0,
@@ -380,9 +380,9 @@ local MAP_BLOOM_PROFILES = {
 		Threshold = 1.42,
 	},
 	HauntedHouse = {
-		Intensity = 0.07,
+		Intensity = 0.05,
 		Size = 12,
-		Threshold = 1.48,
+		Threshold = 1.02,
 	},
 	EmptyBuilding = {
 		Intensity = 0.1,
@@ -410,10 +410,10 @@ local MAP_DOF_PROFILES = {
 		NearIntensity = 0.04,
 	},
 	HauntedHouse = {
-		FarIntensity = 0.14,
-		FocusDistance = 18,
-		InFocusRadius = 9,
-		NearIntensity = 0.03,
+		FarIntensity = 0.08,
+		FocusDistance = 26,
+		InFocusRadius = 18,
+		NearIntensity = 0.01,
 	},
 	EmptyBuilding = {
 		FarIntensity = 0.1,
