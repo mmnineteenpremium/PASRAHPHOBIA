@@ -930,6 +930,7 @@ function MatchService:StartMatch(matchId)
 			player:SetAttribute("MatchId", authoritativeMatchId)
 			player:SetAttribute("MatchMode", tostring(match.mode or match.gameMode or "Classic"))
 			player:SetAttribute("MatchDifficulty", tostring(match.difficulty or "Mudah"))
+			player:SetAttribute("MatchMapId", tostring(match.mapId or match.map or ""))
 			player:SetAttribute("MatchLifecyclePhase", tostring(match.phase or "PreparationPhase"))
 		end
 	end
@@ -1222,6 +1223,7 @@ function MatchService:EndMatch(matchId, results)
 			player:SetAttribute("MatchId", nil)
 			player:SetAttribute("MatchMode", nil)
 			player:SetAttribute("MatchDifficulty", nil)
+			player:SetAttribute("MatchMapId", nil)
 			player:SetAttribute("MatchLifecyclePhase", nil)
 		end
 		self:_publish("PlayerTeleported", {
