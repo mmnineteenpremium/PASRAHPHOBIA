@@ -10192,3 +10192,30 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - navigasi non-hunt sekarang lebih operasional; pemain tidak hanya tahu target mana yang dipilih sistem, tetapi juga apakah target itu sudah dekat atau masih perlu rotasi
+
+## 2026-04-05 - Lobby Focus Distance Pass
+
+### Scope
+
+- memberi konteks jarak pada focus zona lobby agar panel lobby tidak hanya mengulang nama area, tetapi juga memberi rasa kedekatan terhadap bangunan/zona aktif
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah `LOBBY_ZONE_CLIENT_CANDIDATES`
+  - tambah helper:
+    - `resolveLobbyZonePart(zoneName)`
+    - `getLobbyZoneDistanceText(zoneName)`
+  - `LobbyZoneFocused` sekarang, saat dirender di panel lobby, menyertakan jarak ke zona aktif pada:
+    - `BasicSecondaryLabel`
+    - `BasicHintLabel`
+    - `BasicRoomPill`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_lobby_focus_distance_build.rbxlx`
+
+### Interpretation
+
+- orientasi lobby sekarang lebih praktis; focus zona tidak lagi terasa abstrak karena pemain mendapat konteks seberapa dekat area aktif tersebut dari posisi mereka
