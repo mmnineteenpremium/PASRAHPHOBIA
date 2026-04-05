@@ -1422,12 +1422,17 @@ function LobbyService:OnPlayerEnteredZone(player, zoneName)
 
     self._interaction:HandleZoneEntry(player, zoneName)
     local zoneFeedback = LOBBY_ZONE_FEEDBACK[zoneName]
+    local zoneStyle = LOBBY_ZONE_GUIDE_STYLE[zoneName]
+    local zoneEntryCopy = LOBBY_ZONE_ENTRY_COPY[zoneName]
     if type(zoneFeedback) == "table" then
         self:_publish("LobbyZoneFocused", {
             eventName = "LobbyZoneFocused",
             zoneName = zoneName,
             title = zoneFeedback.title,
             hint = zoneFeedback.hint,
+            badge = type(zoneEntryCopy) == "table" and zoneEntryCopy.title or zoneName,
+            subtitle = type(zoneStyle) == "table" and zoneStyle.subtitle or "",
+            accentColor = type(zoneStyle) == "table" and zoneStyle.color or nil,
             recipients = { player },
         })
     end

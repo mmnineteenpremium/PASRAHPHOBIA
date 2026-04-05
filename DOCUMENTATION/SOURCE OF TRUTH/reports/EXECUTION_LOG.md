@@ -9839,3 +9839,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - affordance pintu sekarang tidak hanya hidup saat prompt aktif; pemain bisa membaca tujuan ruang lebih awal dari world-space beacon ringan
+
+## 2026-04-05 - Lobby Feedback Sync Pass
+
+### Scope
+
+- menyamakan bahasa feedback UI lobby dengan guide dunia yang sudah ditambahkan pada zona dan pintu masuk lobby
+
+### Source Changes
+
+- `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+  - `LobbyZoneFocused` sekarang juga mengirim:
+    - `badge`
+    - `subtitle`
+    - `accentColor`
+- `src/client/UI/Main.lua`
+  - feedback label lobby sekarang memformat payload itu menjadi satu pesan yang lebih jelas
+  - warna feedback mengikuti accent zona saat event `LobbyZoneFocused`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_lobby_zone_feedback_sync_build.rbxlx`
+
+### Interpretation
+
+- feedback lobby sekarang lebih konsisten dengan beacon world-space; UI dan world guide tidak lagi terasa seperti dua sistem copy yang berbeda

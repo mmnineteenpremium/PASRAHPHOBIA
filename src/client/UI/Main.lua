@@ -9954,19 +9954,38 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 	elseif eventName == "LobbyZoneFocused" then
 		local title = tostring(payload and payload.title or "Area lobby aktif.")
 		local hint = tostring(payload and payload.hint or "")
-		if hint ~= "" then
-			lobby.FeedbackLabel.Text = title .. " " .. hint
+		local badge = tostring(payload and payload.badge or "")
+		local subtitle = tostring(payload and payload.subtitle or "")
+		local color = payload and payload.accentColor
+		if typeof(color) == "Color3" then
+			lobby.FeedbackLabel.TextColor3 = color:Lerp(Color3.fromRGB(240, 244, 248), 0.55)
 		else
-			lobby.FeedbackLabel.Text = title
+			lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
 		end
+		local message = ""
+		if badge ~= "" then
+			message = "[" .. badge .. "] " .. title
+		else
+			message = title
+		end
+		if subtitle ~= "" then
+			message ..= " • " .. subtitle
+		end
+		if hint ~= "" then
+			message ..= " • " .. hint
+		end
+		lobby.FeedbackLabel.Text = message
 	elseif eventName == "LobbyFlexSpotlightUpdated" then
+		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
 		local spotlight = payload and payload.spotlight or {}
 		local spotlightName = spotlight.displayName or spotlight.playerName or "Player"
 		local spotlightShow = spotlight.showcaseSummary or formatJoinedValues(spotlight.featuredNames, "koleksi lobby")
 		lobby.FeedbackLabel.Text = string.format("Flex aktif: %s menampilkan %s", tostring(spotlightName), tostring(spotlightShow))
 	elseif eventName == "LobbyFlexSpotlightCleared" then
+		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
 		lobby.FeedbackLabel.Text = "Flex zone kembali idle."
 	else
+		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
 		lobby.FeedbackLabel.Text = "Lobby event: " .. tostring(eventName)
 	end
 
