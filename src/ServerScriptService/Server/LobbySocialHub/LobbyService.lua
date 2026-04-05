@@ -54,6 +54,10 @@ local LOBBY_ZONE_ENTRY_GUIDE_HEADER_NAME = "HeaderBand"
 local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BOARD_NAME = "ContractBoard"
 local LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BOARD_NAME = "ToolsBoard"
 local LOBBY_ZONE_ENTRY_GUIDE_BOARD_BILLBOARD_NAME = "BoardBillboard"
+local LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME = "FacadeCanopy"
+local LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME = "FacadeApron"
+local LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME = "FacadeWingLeft"
+local LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME = "FacadeWingRight"
 local LOBBY_ZONE_GUIDES_ENABLED = false
 local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = true
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
@@ -1559,23 +1563,55 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
 
     local contractBoard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BOARD_NAME)
     local toolsBoard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BOARD_NAME)
+    local facadeCanopy = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
+    local facadeApron = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
+    local facadeWingLeft = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
+    local facadeWingRight = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME)
     if zoneName == "MatchmakingZone" then
         contractBoard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BOARD_NAME)
         toolsBoard = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BOARD_NAME)
+        facadeCanopy = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_CANOPY_NAME)
+        facadeApron = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_APRON_NAME)
+        facadeWingLeft = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_LEFT_NAME)
+        facadeWingRight = ensureGuidePanelPart(folder, LOBBY_ZONE_ENTRY_GUIDE_WING_RIGHT_NAME)
         for _, board in ipairs({ contractBoard, toolsBoard }) do
             board.Color = Color3.fromRGB(18, 26, 38)
             board.Transparency = 0.08
         end
+        for _, facadePart in ipairs({ facadeCanopy, facadeApron, facadeWingLeft, facadeWingRight }) do
+            facadePart.Color = Color3.fromRGB(24, 32, 46)
+            facadePart.Transparency = 0.02
+        end
+        facadeCanopy.Material = Enum.Material.Metal
+        facadeApron.Material = Enum.Material.Slate
+        facadeWingLeft.Material = Enum.Material.SmoothPlastic
+        facadeWingRight.Material = Enum.Material.SmoothPlastic
         if isWideOnX then
             contractBoard.Size = Vector3.new(4.4, 3.4, frameDepth + 0.06)
             contractBoard.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 3.2, 0.2, 0)
             toolsBoard.Size = Vector3.new(4.4, 3.4, frameDepth + 0.06)
             toolsBoard.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 3.2, 0.2, 0)
+            facadeCanopy.Size = Vector3.new(anchorPart.Size.X + 6.8, 0.62, 3.8)
+            facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(0, topY - 0.1, 1.9)
+            facadeApron.Size = Vector3.new(anchorPart.Size.X + 9.4, 0.28, 8.8)
+            facadeApron.CFrame = anchorPart.CFrame * CFrame.new(0, (-anchorPart.Size.Y * 0.5) + 0.15, 4.2)
+            facadeWingLeft.Size = Vector3.new(1.25, anchorPart.Size.Y + 1.2, 3.2)
+            facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(-sideOffset - 1.7, 0, 1.55)
+            facadeWingRight.Size = Vector3.new(1.25, anchorPart.Size.Y + 1.2, 3.2)
+            facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(sideOffset + 1.7, 0, 1.55)
         else
             contractBoard.Size = Vector3.new(frameDepth + 0.06, 3.4, 4.4)
             contractBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.2, -sideOffset - 3.2)
             toolsBoard.Size = Vector3.new(frameDepth + 0.06, 3.4, 4.4)
             toolsBoard.CFrame = anchorPart.CFrame * CFrame.new(0, 0.2, sideOffset + 3.2)
+            facadeCanopy.Size = Vector3.new(3.8, 0.62, anchorPart.Size.Z + 6.8)
+            facadeCanopy.CFrame = anchorPart.CFrame * CFrame.new(1.9, topY - 0.1, 0)
+            facadeApron.Size = Vector3.new(8.8, 0.28, anchorPart.Size.Z + 9.4)
+            facadeApron.CFrame = anchorPart.CFrame * CFrame.new(4.2, (-anchorPart.Size.Y * 0.5) + 0.15, 0)
+            facadeWingLeft.Size = Vector3.new(3.2, anchorPart.Size.Y + 1.2, 1.25)
+            facadeWingLeft.CFrame = anchorPart.CFrame * CFrame.new(1.55, 0, -sideOffset - 1.7)
+            facadeWingRight.Size = Vector3.new(3.2, anchorPart.Size.Y + 1.2, 1.25)
+            facadeWingRight.CFrame = anchorPart.CFrame * CFrame.new(1.55, 0, sideOffset + 1.7)
         end
         ensureGuideBoardBillboard(contractBoard, "CONTRACT", "Room • Mode • Start", style.color)
         ensureGuideBoardBillboard(toolsBoard, "TOOLS", "EMF • UV • BOX", style.color)
@@ -1585,6 +1621,18 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         end
         if toolsBoard then
             toolsBoard:Destroy()
+        end
+        if facadeCanopy then
+            facadeCanopy:Destroy()
+        end
+        if facadeApron then
+            facadeApron:Destroy()
+        end
+        if facadeWingLeft then
+            facadeWingLeft:Destroy()
+        end
+        if facadeWingRight then
+            facadeWingRight:Destroy()
         end
     end
 
