@@ -33,10 +33,12 @@ local UV_FLASHLIGHT_OWNED_ATTR = "PasrahOwnsUVFlashlight"
 local CURSOR_TOGGLE_KEY = Enum.KeyCode.LeftAlt
 local CURSOR_TOGGLE_FALLBACK_KEY = Enum.KeyCode.Backquote
 local CURSOR_UNLOCK_REQUEST_ATTR = "PasrahCursorUnlockRequested"
+local CURSOR_MODE_ATTR = "PasrahCursorMode"
 local HEAD_BOB_PROBE_ATTR = "PasrahHeadBobProbeActive"
 local HEAD_BOB_OFFSET_ATTR = "PasrahHeadBobOffset"
 local FLASHLIGHT_VISUAL_ALPHA_ATTR = "PasrahFlashlightVisualAlpha"
 local FLASHLIGHT_LIGHT_ENABLED_ATTR = "PasrahFlashlightLightEnabled"
+local FLASHLIGHT_AIM_OFFSET_ATTR = "PasrahFlashlightAimOffset"
 local CURSOR_TOGGLE_GUI_NAME = "FPVCursorToggleUI"
 local CURSOR_TOGGLE_BUTTON_NAME = "CursorToggleButton"
 local function safeRequire(moduleScript)
@@ -61,6 +63,7 @@ local HANDLE_CONFIG = FLASHLIGHT_CONFIG.handle or {}
 local LENS_CONFIG = FLASHLIGHT_CONFIG.lens or {}
 local LOCAL_LIGHT_CONFIG = FLASHLIGHT_CONFIG.localLight or {}
 local VIEWMODEL_CONFIG = FLASHLIGHT_CONFIG.viewmodel or {}
+local MOTION_CONFIG = FLASHLIGHT_CONFIG.motion or {}
 local FPV_BASE_OFFSET = VIEWMODEL_CONFIG.baseOffset or (CFrame.new(0, -1.36, -1.54) * CFrame.Angles(math.rad(-12), 0, 0))
 local FPV_PART_SCALE = tonumber(VIEWMODEL_CONFIG.partScale) or 0.86
 local VIEWMODEL_HANDS_ONLY = VIEWMODEL_CONFIG.handsOnly == true
@@ -81,6 +84,16 @@ local LOCAL_LIGHT_DEFAULT_COLOR = LOCAL_LIGHT_CONFIG.color or Color3.fromRGB(255
 local UV_FLASHLIGHT_ON_COLOR = Color3.fromRGB(168, 214, 255)
 local UV_FLASHLIGHT_OFF_COLOR = Color3.fromRGB(98, 116, 136)
 local UV_FLASHLIGHT_LIGHT_COLOR = Color3.fromRGB(186, 224, 255)
+local MOTION_WALK_SPEED_REFERENCE = tonumber(MOTION_CONFIG.walkSpeedReference) or 14
+local MOTION_CURSOR_UNLOCK_BOB_SCALE = tonumber(MOTION_CONFIG.cursorUnlockedBobScale) or 0.18
+local MOTION_IDLE_BREATH_AMPLITUDE = tonumber(MOTION_CONFIG.idleBreathAmplitude) or 0.018
+local MOTION_IDLE_BREATH_SPEED = tonumber(MOTION_CONFIG.idleBreathSpeed) or 1.35
+local MOTION_CAMERA_LAG_ALPHA = tonumber(MOTION_CONFIG.cameraLagAlpha) or 0.15
+local MOTION_LOOK_SWAY_X = tonumber(MOTION_CONFIG.lookSwayX) or 0.035
+local MOTION_LOOK_SWAY_Y = tonumber(MOTION_CONFIG.lookSwayY) or 0.024
+local MOTION_MOVE_SWAY_SCALE = tonumber(MOTION_CONFIG.moveSwayScale) or 0.5
+local MOTION_FLASHLIGHT_CARRY_OFFSET = MOTION_CONFIG.flashlightCarryOffset or Vector3.new(0.04, -0.015, -0.045)
+local MOTION_FLASHLIGHT_CARRY_ROLL = tonumber(MOTION_CONFIG.flashlightCarryRoll) or -2.5
 local fpvArmsModel = nil
 local fpvFlashlightModel = nil
 local fpvFlashlightHandle = nil
@@ -102,6 +115,8 @@ end
 
 player:SetAttribute(FLASHLIGHT_VISUAL_ALPHA_ATTR, 0)
 player:SetAttribute(FLASHLIGHT_LIGHT_ENABLED_ATTR, false)
+player:SetAttribute(CURSOR_MODE_ATTR, "Default")
+player:SetAttribute(FLASHLIGHT_AIM_OFFSET_ATTR, Vector3.zero)
 
 local function toneMapArmChannel(value)
 	return math.clamp(value, VIEWMODEL_ARM_MIN_CHANNEL, VIEWMODEL_ARM_MAX_CHANNEL)
@@ -197,7 +212,7 @@ local function updateCursorToggleUi()
 	local show = FPV_LOCKED and UserInputService.KeyboardEnabled
 	fpvCursorToggleGui.Enabled = show
 	button.Visible = show
-	button.Text = fpvCursorUnlocked and "LOCK CURSOR [ALT/~]" or "FREE CURSOR [ALT/~]"
+	button.Text = fpvCursorUnlocked and "RETURN FPV [ALT/~]" or "UI CURSOR [ALT/~]"
 	button.BackgroundColor3 = fpvCursorUnlocked and Color3.fromRGB(82, 98, 58) or Color3.fromRGB(48, 64, 84)
 end
 
@@ -209,12 +224,14 @@ local function applyFpvMouseMode()
 			player.CameraMaxZoomDistance = UNLOCKED_CURSOR_FPV_ZOOM
 			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 			UserInputService.MouseIconEnabled = true
+			player:SetAttribute(CURSOR_MODE_ATTR, "UnlockedUI")
 		else
 			player.CameraMode = Enum.CameraMode.LockFirstPerson
 			player.CameraMinZoomDistance = DEFAULT_CAMERA_MIN_ZOOM
 			player.CameraMaxZoomDistance = DEFAULT_CAMERA_MAX_ZOOM
 			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 			UserInputService.MouseIconEnabled = false
+			player:SetAttribute(CURSOR_MODE_ATTR, "LockedFPV")
 		end
 	else
 		player.CameraMode = Enum.CameraMode.Classic
@@ -222,6 +239,7 @@ local function applyFpvMouseMode()
 		player.CameraMaxZoomDistance = DEFAULT_CAMERA_MAX_ZOOM
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		UserInputService.MouseIconEnabled = true
+		player:SetAttribute(CURSOR_MODE_ATTR, "Default")
 	end
 	player:SetAttribute("PasrahCursorUnlocked", FPV_LOCKED and fpvCursorUnlocked or false)
 	updateCursorToggleUi()
@@ -857,17 +875,28 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 
 	local cameraBobTarget = Vector3.zero
 	local headBobProbeActive = player:GetAttribute(HEAD_BOB_PROBE_ATTR) == true
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	local planarVelocity = Vector3.zero
+	if rootPart and rootPart:IsA("BasePart") then
+		planarVelocity = Vector3.new(rootPart.AssemblyLinearVelocity.X, 0, rootPart.AssemblyLinearVelocity.Z)
+	end
+	local speedAlpha = math.clamp(planarVelocity.Magnitude / math.max(1, MOTION_WALK_SPEED_REFERENCE), 0, 1.4)
+	local bobIntensity = fpvCursorUnlocked and MOTION_CURSOR_UNLOCK_BOB_SCALE or lerpNumber(0.42, 1, speedAlpha)
 	local shouldApplyHeadBob = FPV_LOCKED and (humanoid.MoveDirection.Magnitude > 0 or headBobProbeActive)
 	if shouldApplyHeadBob then
-		-- Walking - apply bob
 		local time = tick()
-		local verticalBob = math.sin(time * bobFrequency * 2 * math.pi) * bobAmplitude
-		local horizontalSway = math.sin(time * bobFrequency * math.pi) * swayAmplitude
+		local dynamicFrequency = bobFrequency * lerpNumber(0.85, 1.24, speedAlpha)
+		local verticalBob = math.sin(time * dynamicFrequency * 2 * math.pi) * bobAmplitude * bobIntensity
+		local horizontalSway = math.sin(time * dynamicFrequency * math.pi) * swayAmplitude * bobIntensity
 
 		bobOffset = Vector3.new(horizontalSway, verticalBob, 0)
-		cameraBobTarget = Vector3.new(horizontalSway * 0.22, verticalBob * 0.3, 0)
+		cameraBobTarget = Vector3.new(horizontalSway * 0.22, verticalBob * 0.3, 0) * bobIntensity
+	elseif FPV_LOCKED and not fpvCursorUnlocked then
+		local time = tick()
+		local idleBreath = math.sin(time * MOTION_IDLE_BREATH_SPEED * 2 * math.pi) * MOTION_IDLE_BREATH_AMPLITUDE
+		bobOffset = bobOffset:Lerp(Vector3.new(0, idleBreath, 0), math.clamp(deltaTime * 4, 0, 1))
+		cameraBobTarget = Vector3.new(0, idleBreath * 0.2, 0)
 	else
-		-- Standing still or not in FPV - reduce bob
 		bobOffset = bobOffset:Lerp(Vector3.new(0, 0, 0), deltaTime * 5)
 	end
 	if FPV_LOCKED then
@@ -890,20 +919,27 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 		if not lastArmCamCF then
 			lastArmCamCF = currentCamCF
 		end
-		lastArmCamCF = lastArmCamCF:Lerp(currentCamCF, 0.15)
+		lastArmCamCF = lastArmCamCF:Lerp(currentCamCF, MOTION_CAMERA_LAG_ALPHA)
 
 		local look = currentCamCF.LookVector
 		local pitchOffset = look.Y * 0.2
 		local t = tick()
 		local swayX = math.sin(t * 1.5) * 0.02
 		local swayY = math.cos(t * 2) * 0.015
-		local swayOffset = CFrame.new(swayX, swayY, 0)
+		local breathSway = CFrame.new(0, math.sin(t * MOTION_IDLE_BREATH_SPEED * 2 * math.pi) * (MOTION_IDLE_BREATH_AMPLITUDE * 0.65), 0)
+		local lookSway = CFrame.new(-look.X * MOTION_LOOK_SWAY_X, -look.Y * MOTION_LOOK_SWAY_Y, 0)
+		local carryOffset = fpvFlashlightVisualAlpha > 0.02 and MOTION_FLASHLIGHT_CARRY_OFFSET * fpvFlashlightVisualAlpha or Vector3.zero
+		local carryCF = CFrame.new(carryOffset) * CFrame.Angles(0, 0, math.rad(MOTION_FLASHLIGHT_CARRY_ROLL * fpvFlashlightVisualAlpha))
+		local swayOffset = CFrame.new(swayX, swayY, 0) * breathSway * lookSway
 		local bobCF = CFrame.new(bobOffset.X * 0.6, bobOffset.Y * 0.6, 0)
 		local pitchCF = CFrame.new(0, pitchOffset, 0)
-		fpvArmsModel:PivotTo(lastArmCamCF * FPV_BASE_OFFSET * pitchCF * bobCF * swayOffset)
+		local moveSwayCF = CFrame.new(planarVelocity.X * 0.0012 * MOTION_MOVE_SWAY_SCALE, 0, -planarVelocity.Magnitude * 0.0006 * MOTION_MOVE_SWAY_SCALE)
+		player:SetAttribute(FLASHLIGHT_AIM_OFFSET_ATTR, Vector3.new(-look.X * MOTION_LOOK_SWAY_X, -look.Y * MOTION_LOOK_SWAY_Y, 0))
+		fpvArmsModel:PivotTo(lastArmCamCF * FPV_BASE_OFFSET * carryCF * pitchCF * bobCF * moveSwayCF * swayOffset)
 	else
 		_fpvJustActivated = false
 		lastArmCamCF = nil
+		player:SetAttribute(FLASHLIGHT_AIM_OFFSET_ATTR, Vector3.zero)
 		if not FPV_LOCKED then
 			clearFpvArms()
 		end

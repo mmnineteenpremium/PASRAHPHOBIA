@@ -92,6 +92,18 @@ local FlashlightConfig = {
 			},
 		},
 	},
+	motion = {
+		walkSpeedReference = 14,
+		cursorUnlockedBobScale = 0.18,
+		idleBreathAmplitude = 0.018,
+		idleBreathSpeed = 1.35,
+		cameraLagAlpha = 0.15,
+		lookSwayX = 0.035,
+		lookSwayY = 0.024,
+		moveSwayScale = 0.5,
+		flashlightCarryOffset = Vector3.new(0.04, -0.015, -0.045),
+		flashlightCarryRoll = -2.5,
+	},
 }
 
 return FlashlightConfig
