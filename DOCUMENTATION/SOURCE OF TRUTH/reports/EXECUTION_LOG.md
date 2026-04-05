@@ -10051,3 +10051,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - world guide sekarang tidak hanya berbeda subtitle; warna beacon juga ikut memberi sinyal fungsi area secara lebih cepat
+
+## 2026-04-05 - Traversal Metadata Sync Pass
+
+### Scope
+
+- menyatukan guide tangga pusat dengan ekosistem metadata route agar client HUD bisa membacanya seperti door/room guide lain
+
+### Source Changes
+
+- `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+  - `CentralStaircase` runtime sekarang menyimpan:
+    - `TraversalGuideLabel`
+    - `TraversalGuideSubtitle`
+  - traversal guide juga memakai palette vertikal yang konsisten
+- `src/client/UI/Main.lua`
+  - `getNearestNavigationAnchorInfo()` sekarang ikut memindai `TraversalGuideLabel`
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_traversal_metadata_sync_build.rbxlx`
+
+### Interpretation
+
+- jalur vertikal sekarang masuk ke sistem route yang sama; HUD non-hunt bisa mempertimbangkan tangga pusat sebagai anchor navigasi yang sah
