@@ -18,6 +18,7 @@ Status proyek sekarang:
 - ghost roster baseline
 - tool roster baseline
 - HUD / lobby / map readability
+- visual runtime verification untuk surface utama lobby / room / shop / royal pass / match prep
 - monetization guard dan fairness `Ranked`
 - QA single-client baseline
 - blueprint retention final
@@ -43,6 +44,10 @@ Status proyek sekarang:
 
 5. store/prompt review Roblox
    - pastikan offer `Robux` yang visible memang punya mapping Creator Hub resmi
+
+6. visual runtime spot-check
+   - gunakan:
+     - `VISUAL_RUNTIME_VERIFICATION_2026-04-06.md`
 
 ## Go / No-Go Saat Ini
 
