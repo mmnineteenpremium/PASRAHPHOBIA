@@ -2379,3 +2379,10 @@ Urutan yang paling masuk akal dari titik sekarang:
 - saat ini source hanya menunjukkan placeholder katalog/config/state, belum ada gameplay class live yang sah untuk diaktifkan.
 - jangan mengisi `marketplaceId` production untuk tiga item ini lebih dulu daripada `MM/PP` pack yang memang sudah jelas klasifikasinya.
 
+## LAST NOTE - Exterior Investigation Staging Flow
+
+- spawn pertama masuk ke match harus berada di luar bangunan/target investigasi, bukan langsung di inti interior map.
+- flow briefing investigasi harus lebih diegetic seperti `Phasmophobia`, tetapi tanpa van: pemain tiba di area depan rumah/map target.
+- objective investigasi utama, daftar misi, dan pemilihan/pergantian tool harus dipindahkan ke surface dunia seperti papan briefing / investigation board, bukan bertumpu pada UI player sebagai surface utama.
+- task ini terhubung langsung dengan rekonstruksi map berikutnya, karena membutuhkan area exterior staging yang jelas dan bisa diuji visual/audio secara live.
+
