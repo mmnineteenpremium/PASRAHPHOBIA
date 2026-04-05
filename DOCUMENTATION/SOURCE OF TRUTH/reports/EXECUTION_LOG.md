@@ -10167,3 +10167,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - refuge marker sekarang lebih konsisten secara visual; pemain tidak perlu menebak apakah `SafeZone`, `HideSpot`, dan refuge route adalah sistem yang berbeda
+
+## 2026-04-05 - Navigation Distance Readability Pass
+
+### Scope
+
+- menambahkan konteks jarak ke anchor navigasi aktif agar panel match tidak hanya menyebut tujuan, tetapi juga seberapa dekat pemain dengan route/ruang yang sedang disorot
+
+### Source Changes
+
+- `src/client/UI/Main.lua`
+  - tambah helper:
+    - `formatNavigationAnchorDistance(anchor)`
+    - `formatNavigationAnchorLabel(anchor, fallbackLabel)`
+  - objective text investigasi/preparation sekarang menyertakan jarak anchor aktif
+  - controls hint investigasi/preparation sekarang juga menyertakan jarak anchor aktif
+  - primary text panel match `Preparation` dan `Investigation` sekarang memakai label anchor + jarak
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_navigation_distance_readability_build.rbxlx`
+
+### Interpretation
+
+- navigasi non-hunt sekarang lebih operasional; pemain tidak hanya tahu target mana yang dipilih sistem, tetapi juga apakah target itu sudah dekat atau masih perlu rotasi

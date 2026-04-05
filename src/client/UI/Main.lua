@@ -2313,13 +2313,34 @@ local function getNearestNavigationAnchorInfo(contextTag)
 	return nearest
 end
 
+local function formatNavigationAnchorDistance(anchor)
+	if type(anchor) ~= "table" then
+		return nil
+	end
+	local distance = tonumber(anchor.distance)
+	if not distance then
+		return nil
+	end
+	local rounded = math.max(1, math.floor(distance + 0.5))
+	return string.format("%dm", rounded)
+end
+
+local function formatNavigationAnchorLabel(anchor, fallbackLabel)
+	local label = tostring((type(anchor) == "table" and anchor.label) or fallbackLabel or "area target")
+	local distanceText = formatNavigationAnchorDistance(anchor)
+	if distanceText then
+		return string.format("%s (%s)", label, distanceText)
+	end
+	return label
+end
+
 local function getInvestigationObjectiveText(contextTag)
 	local anchor = getNearestNavigationAnchorInfo(contextTag or "Investigation")
 	if type(anchor) ~= "table" then
 		return DEFAULT_MATCH_OBJECTIVE_TEXT
 	end
 
-	local label = tostring(anchor.label or "ruang target")
+	local label = formatNavigationAnchorLabel(anchor, "ruang target")
 	local subtitle = tostring(anchor.subtitle or "")
 	if subtitle == "Refuge route" then
 		return string.format("Catat jalur aman lewat %s\nIngat refuge terdekat\nLanjut sweep evidence", label)
@@ -2345,7 +2366,7 @@ local function getInvestigationControlsHintText(contextTag)
 		return "[1] Scan  •  [2] Garam  •  [3] Salib  •  [4] Dupa  •  [5] Spirit  •  [J] Journal"
 	end
 
-	local anchorLabel = string.upper(tostring(anchor.label or "AREA TARGET"))
+	local anchorLabel = string.upper(formatNavigationAnchorLabel(anchor, "AREA TARGET"))
 	local subtitle = tostring(anchor.subtitle or "")
 	if subtitle == "Refuge route" then
 		return string.format("REFUGE: %s  •  INGAT JALUR AMAN  •  [J] JOURNAL  •  [F] FLASHLIGHT", anchorLabel)
@@ -4928,7 +4949,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		badgeText = "PERSIAPAN"
 		badgeColor = Color3.fromRGB(70, 96, 132)
 		phaseGlyphText = "PR"
-		primaryText = navigationAnchor and ("Menuju " .. tostring(navigationAnchor.label or "titik masuk") .. "...") or "Masuk ke lokasi..."
+		primaryText = navigationAnchor and ("Menuju " .. formatNavigationAnchorLabel(navigationAnchor, "titik masuk") .. "...") or "Masuk ke lokasi..."
 		secondaryText = timerVisible
 			and ("Loading dan briefing aktif. Waktu fase: " .. timerText .. ".")
 			or "Tunggu loading selesai, lalu mulai cari evidence."
@@ -4937,7 +4958,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		badgeText = "INVESTIGASI"
 		badgeColor = Color3.fromRGB(58, 112, 90)
 		phaseGlyphText = "IN"
-		primaryText = navigationAnchor and ("Investigasi aktif di sekitar " .. tostring(navigationAnchor.label or "area target") .. ".") or "Investigasi aktif."
+		primaryText = navigationAnchor and ("Investigasi aktif di sekitar " .. formatNavigationAnchorLabel(navigationAnchor, "area target") .. ".") or "Investigasi aktif."
 		secondaryText = timerVisible
 			and ("Sisa waktu investigasi: " .. timerText .. ". " .. getInvestigationObjectiveText("Investigation"):gsub("\n", " • "))
 			or getInvestigationObjectiveText("Investigation"):gsub("\n", " • ")
