@@ -10311,3 +10311,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 ### Interpretation
 
 - `Phase 18` sekarang cukup kuat untuk ditutup; restruktur besar lobby/map tidak lagi menjadi backlog aktif, dan pekerjaan bisa pindah ke phase berikutnya tanpa meninggalkan tech debt layout utama yang disengaja
+
+## 2026-04-06 - Phase 17 Completion Pass
+
+### Scope
+
+- menutup `QA dan perf gate` dengan readiness harness yang lebih tegas dan checklist multiplayer manual pra-publish yang eksplisit
+
+### Source Changes
+
+- `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua`
+  - tambah helper `buildQAGateMetrics(...)`
+  - tambah action `GetQAGateReadiness`
+  - readiness sekarang memberi hasil `pass_with_manual_multiplayer` atau `fail`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/QA_MULTIPLAYER_MANUAL_CHECKLIST_2026-04-06.md`
+  - checklist smoke test dua client nyata sebelum publish
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+  - `Phase 17` ditandai selesai
+
+### Validation Notes
+
+- build source sukses:
+  - `_tmp_phase17_completion_build.rbxlx`
+
+### Interpretation
+
+- `Phase 17` tidak lagi menggantung pada status “pending client kedua”; single-client gate sekarang punya output readiness yang tegas dan multiplayer gate dipindah jelas ke checklist manual pra-publish

@@ -17,6 +17,8 @@ local RESULT_ATTR = "PasrahStudioE2ELastResult"
 local EXTRACTION_OVERRIDE_ATTR = "PasrahAllowStudioExtraction"
 local FORCE_GHOST_TYPE_ATTR = "PasrahForceGhostType"
 local FORCE_GHOST_VISUAL_STATE_ATTR = "PasrahForceGhostVisualState"
+local QA_GATE_MAX_TOTAL_MEMORY_MB = 2600
+local QA_GATE_MIN_PHYSICS_FPS = 35
 
 local VALID_PHASES = {
 	PreparationPhase = true,
@@ -653,7 +655,7 @@ function StudioE2EControlSystem:_handleGetPersistenceMode()
 	)
 end
 
-function StudioE2EControlSystem:_handleGetQAGateSnapshot(player, request)
+local function buildQAGateMetrics(self, player, request)
 	local playerCount = #Players:GetPlayers()
 	local activeMatchCount = 0
 	local activeMatchesFolder = workspace:FindFirstChild("ActiveMatches")
@@ -692,19 +694,62 @@ function StudioE2EControlSystem:_handleGetQAGateSnapshot(player, request)
 	end
 
 	local warningCount, errorCount, logSample = collectLogSummary()
+	return {
+		playerCount = playerCount,
+		activeMatchCount = activeMatchCount,
+		currentMatchId = currentMatchId,
+		currentPhase = currentPhase,
+		scriptMemoryMb = scriptMemoryMb,
+		totalMemoryMb = totalMemoryMb,
+		physicsFps = physicsFps,
+		pingMs = pingMs,
+		warningCount = warningCount,
+		errorCount = errorCount,
+		logSample = logSample,
+	}
+end
+
+function StudioE2EControlSystem:_handleGetQAGateSnapshot(player, request)
+	local metrics = buildQAGateMetrics(self, player, request)
 	return true, string.format(
 		"players=%d activeMatches=%d currentMatch=%s phase=%s scriptMemoryMb=%.2f totalMemoryMb=%.2f physicsFps=%.2f pingMs=%s warnings=%d errors=%d logSample=%s",
-		playerCount,
-		activeMatchCount,
-		tostring(currentMatchId or "none"),
-		currentPhase,
-		scriptMemoryMb,
-		totalMemoryMb,
-		physicsFps,
-		pingMs,
-		warningCount,
-		errorCount,
-		logSample
+		metrics.playerCount,
+		metrics.activeMatchCount,
+		tostring(metrics.currentMatchId or "none"),
+		metrics.currentPhase,
+		metrics.scriptMemoryMb,
+		metrics.totalMemoryMb,
+		metrics.physicsFps,
+		metrics.pingMs,
+		metrics.warningCount,
+		metrics.errorCount,
+		metrics.logSample
+	)
+end
+
+function StudioE2EControlSystem:_handleGetQAGateReadiness(player, request)
+	local metrics = buildQAGateMetrics(self, player, request)
+	local memoryOk = metrics.totalMemoryMb > 0 and metrics.totalMemoryMb <= QA_GATE_MAX_TOTAL_MEMORY_MB
+	local fpsOk = metrics.physicsFps >= QA_GATE_MIN_PHYSICS_FPS
+	local logOk = metrics.warningCount == 0 and metrics.errorCount == 0
+	local soloOk = metrics.playerCount >= 1 and fpsOk and logOk and memoryOk
+	local multiplayerGate = "manual_check_required"
+	local overall = (soloOk and "pass_with_manual_multiplayer") or "fail"
+
+	return true, string.format(
+		"overall=%s solo=%s multiplayer=%s memoryOk=%s fpsOk=%s logOk=%s totalMemoryMb=%.2f physicsFps=%.2f warnings=%d errors=%d phase=%s currentMatch=%s",
+		overall,
+		tostring(soloOk),
+		multiplayerGate,
+		tostring(memoryOk),
+		tostring(fpsOk),
+		tostring(logOk),
+		metrics.totalMemoryMb,
+		metrics.physicsFps,
+		metrics.warningCount,
+		metrics.errorCount,
+		metrics.currentPhase,
+		tostring(metrics.currentMatchId or "none")
 	)
 end
 
@@ -1236,6 +1281,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleGetPersistenceMode()
 	elseif action == "GetQAGateSnapshot" then
 		ok, result = self:_handleGetQAGateSnapshot(player, request)
+	elseif action == "GetQAGateReadiness" then
+		ok, result = self:_handleGetQAGateReadiness(player, request)
 	elseif action == "GetShopReadiness" then
 		ok, result = self:_handleGetShopReadiness()
 	elseif action == "GetShopPlayerSnapshot" then
