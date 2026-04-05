@@ -2253,6 +2253,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (refuge marker palette alignment baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 23:33 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi readability navigasi:
+  - panel match sekarang menyebut target anchor aktif beserta jaraknya.
+  - objective/hint `Preparation` dan `Investigation` tidak lagi hanya menyebut label ruang, tetapi juga estimasi kedekatan target.
+- validasi:
+  - build source sukses:
+    - `_tmp_navigation_distance_readability_build.rbxlx`
+- status:
+  - **SELESAI (navigation distance readability baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
