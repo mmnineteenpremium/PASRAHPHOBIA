@@ -2229,6 +2229,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (navigation anchor cache baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 23:14 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi penyatuan refuge:
+  - `SafeZone` dan `HideSpot` sekarang ikut masuk ke cache anchor navigasi client.
+  - refuge tidak lagi berdiri sepenuhnya di sistem marker terpisah dari route ecosystem utama.
+- validasi:
+  - build source sukses:
+    - `_tmp_refuge_anchor_cache_build.rbxlx`
+- status:
+  - **SELESAI (refuge anchor unification baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.

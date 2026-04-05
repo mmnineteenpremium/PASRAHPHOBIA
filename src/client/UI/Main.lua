@@ -2167,6 +2167,45 @@ local function collectNavigationAnchors(mapModel)
 		end
 	end
 
+	local safeZonesFolder = mapModel:FindFirstChild("SafeZones", true)
+	if safeZonesFolder then
+		for _, child in ipairs(safeZonesFolder:GetChildren()) do
+			if child:IsA("BasePart") then
+				local routeLabel = getRuntimeRefugeRouteLabel(child, tostring(child:GetAttribute("SafeZoneLabel") or child.Name))
+				if routeLabel ~= "" then
+					table.insert(items, {
+						part = child,
+						kind = "SafeZone",
+						label = routeLabel,
+						subtitle = "Refuge route",
+					})
+				end
+			end
+		end
+	end
+
+	local roomsFolder = mapModel:FindFirstChild("Rooms", true)
+	if roomsFolder then
+		for _, child in ipairs(roomsFolder:GetChildren()) do
+			if child:IsA("BasePart") then
+				local hideSpotId = tostring(child:GetAttribute("HideSpotId") or "")
+				local hideSpotType = tostring(child:GetAttribute("HideSpotType") or "")
+				local prompt = child:FindFirstChild("HideSpotPrompt")
+				if (hideSpotId ~= "" and hideSpotType ~= "") or (prompt and prompt:IsA("ProximityPrompt")) then
+					local routeLabel = getRuntimeRefugeRouteLabel(child, tostring(child:GetAttribute("HideSpotLabel") or child.Name))
+					if routeLabel ~= "" then
+						table.insert(items, {
+							part = child,
+							kind = "HideSpot",
+							label = routeLabel,
+							subtitle = "Refuge route",
+						})
+					end
+				end
+			end
+		end
+	end
+
 	for _, child in ipairs(mapModel:GetDescendants()) do
 		if child:IsA("BasePart") then
 			local traversalLabel = tostring(child:GetAttribute("TraversalGuideLabel") or "")
