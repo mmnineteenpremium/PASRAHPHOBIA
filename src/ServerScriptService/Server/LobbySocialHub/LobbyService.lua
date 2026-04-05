@@ -45,6 +45,8 @@ local LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME = "Highlight"
 local LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME = "LobbyZoneEntryGuideRuntime"
 local LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME = "Billboard"
 local LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME = "Highlight"
+local LOBBY_ZONE_ENTRY_GUIDE_ACCENT_NAME = "AccentBar"
+local LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME = "AccentLight"
 local LOBBY_ZONE_GUIDES_ENABLED = false
 local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = true
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
@@ -1322,6 +1324,41 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     billboard.ResetOnSpawn = false
     billboard.Size = UDim2.fromOffset(184, 46)
     billboard.StudsOffsetWorldSpace = Vector3.new(0, anchorPart.Size.Y * 0.5 + 2.8, 0)
+
+    local accentBar = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_ACCENT_NAME)
+    if not (accentBar and accentBar:IsA("Part")) then
+        if accentBar then
+            accentBar:Destroy()
+        end
+        accentBar = Instance.new("Part")
+        accentBar.Name = LOBBY_ZONE_ENTRY_GUIDE_ACCENT_NAME
+        accentBar.Anchored = true
+        accentBar.CanCollide = false
+        accentBar.CanQuery = false
+        accentBar.CanTouch = false
+        accentBar.CastShadow = false
+        accentBar.Locked = true
+        accentBar.Material = Enum.Material.Neon
+        accentBar.Parent = folder
+    end
+    accentBar.Color = style.color
+    accentBar.Transparency = 0.12
+    accentBar.Size = Vector3.new(math.max(anchorPart.Size.X, anchorPart.Size.Z) + 1.6, 0.28, 0.28)
+    accentBar.CFrame = anchorPart.CFrame * CFrame.new(0, anchorPart.Size.Y * 0.5 + 0.95, 0)
+
+    local accentLight = accentBar:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME)
+    if not (accentLight and accentLight:IsA("PointLight")) then
+        if accentLight then
+            accentLight:Destroy()
+        end
+        accentLight = Instance.new("PointLight")
+        accentLight.Name = LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME
+        accentLight.Parent = accentBar
+    end
+    accentLight.Color = style.color
+    accentLight.Brightness = 0.8
+    accentLight.Range = 10
+    accentLight.Shadows = false
 
     local panel = billboard:FindFirstChild("Panel")
     if not (panel and panel:IsA("Frame")) then
