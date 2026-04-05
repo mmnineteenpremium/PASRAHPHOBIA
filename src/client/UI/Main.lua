@@ -2176,6 +2176,19 @@ local function getInvestigationObjectiveText()
 	end
 
 	local label = tostring(anchor.label or "ruang target")
+	local subtitle = tostring(anchor.subtitle or "")
+	if subtitle == "Refuge route" then
+		return string.format("Catat jalur aman lewat %s\nIngat refuge terdekat\nLanjut sweep evidence", label)
+	end
+	if subtitle == "Akses vertikal" or subtitle == "Transisi vertikal" then
+		return string.format("Dekati %s\nBuka akses ke level berikutnya\nSweep evidence setelah rotasi", label)
+	end
+	if subtitle == "Sweep evidence" then
+		return string.format("Masuk ke %s\nSweep area detail\nCari evidence lalu isi jurnal", label)
+	end
+	if subtitle == "Area investigasi" then
+		return string.format("Dekati %s\nMulai investigasi area inti\nCari evidence lalu isi jurnal", label)
+	end
 	if anchor.kind == "Door" then
 		return string.format("Dekati %s\nMasuk ke area terkait\nCari evidence lalu isi jurnal", label)
 	end
@@ -2189,6 +2202,16 @@ local function getInvestigationControlsHintText()
 	end
 
 	local anchorLabel = string.upper(tostring(anchor.label or "AREA TARGET"))
+	local subtitle = tostring(anchor.subtitle or "")
+	if subtitle == "Refuge route" then
+		return string.format("REFUGE: %s  •  INGAT JALUR AMAN  •  [J] JOURNAL  •  [F] FLASHLIGHT", anchorLabel)
+	end
+	if subtitle == "Akses vertikal" or subtitle == "Transisi vertikal" then
+		return string.format("ROTASI: %s  •  BUKA LEVEL BERIKUTNYA  •  [J] JOURNAL  •  [F] FLASHLIGHT", anchorLabel)
+	end
+	if subtitle == "Sweep evidence" then
+		return string.format("SWEEP: %s  •  CEK RUANG DETAIL  •  [1-5] TOOL  •  [J] JOURNAL", anchorLabel)
+	end
 	if anchor.kind == "Door" then
 		return string.format("TARGET: %s  •  PINTU: E/X/TAP  •  [J] JOURNAL  •  [F] FLASHLIGHT", anchorLabel)
 	end
