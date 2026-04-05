@@ -45,7 +45,8 @@ local LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME = "Highlight"
 local LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME = "LobbyZoneEntryGuideRuntime"
 local LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME = "Billboard"
 local LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME = "Highlight"
-local LOBBY_GUIDE_VISUALS_ENABLED = false
+local LOBBY_ZONE_GUIDES_ENABLED = false
+local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = true
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
 local LOBBY_LOGIC_VOLUME_FOLDER_NAMES = {
 	"Rooms",
@@ -1107,12 +1108,12 @@ function LobbyService:_ensureZoneGuide(zoneName, zonePart)
 	if typeof(zonePart) ~= "Instance" or not zonePart:IsA("BasePart") or zonePart.Parent == nil then
 		return false
 	end
-	if LOBBY_GUIDE_VISUALS_ENABLED ~= true then
-		local existingFolder = zonePart:FindFirstChild(LOBBY_ZONE_GUIDE_FOLDER_NAME)
-		if existingFolder then
-			existingFolder:Destroy()
-		end
-		return false
+    if LOBBY_ZONE_GUIDES_ENABLED ~= true then
+        local existingFolder = zonePart:FindFirstChild(LOBBY_ZONE_GUIDE_FOLDER_NAME)
+        if existingFolder then
+            existingFolder:Destroy()
+        end
+        return false
 	end
 
 	local feedback = LOBBY_ZONE_FEEDBACK[zoneName]
@@ -1260,7 +1261,7 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     if not anchorPart then
         return false
     end
-    if LOBBY_GUIDE_VISUALS_ENABLED ~= true then
+    if LOBBY_ZONE_ENTRY_GUIDES_ENABLED ~= true then
         local existingFolder = anchorPart:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME)
         if existingFolder then
             existingFolder:Destroy()
@@ -1296,10 +1297,10 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     highlight.Adornee = anchorPart
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     highlight.FillColor = style.color
-    highlight.FillTransparency = 0.96
-    highlight.OutlineColor = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.18)
-    highlight.OutlineTransparency = 0.24
-    highlight.Enabled = true
+    highlight.FillTransparency = 1
+    highlight.OutlineColor = style.color
+    highlight.OutlineTransparency = 1
+    highlight.Enabled = false
 
     local billboard = folder:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME)
     if not (billboard and billboard:IsA("BillboardGui")) then
@@ -1387,13 +1388,17 @@ end
 function LobbyService:_syncZoneGuides()
     self:_clearZoneGuides()
     self:_clearZoneEntryGuides()
-    if LOBBY_GUIDE_VISUALS_ENABLED ~= true then
+    if LOBBY_ZONE_GUIDES_ENABLED ~= true and LOBBY_ZONE_ENTRY_GUIDES_ENABLED ~= true then
         return
     end
     local zoneParts = self._zoneManager and self._zoneManager:GetZoneParts() or {}
     for zoneName, zonePart in pairs(zoneParts) do
-        self:_ensureZoneGuide(zoneName, zonePart)
-        self:_ensureZoneEntryGuide(zoneName)
+        if LOBBY_ZONE_GUIDES_ENABLED == true then
+            self:_ensureZoneGuide(zoneName, zonePart)
+        end
+        if LOBBY_ZONE_ENTRY_GUIDES_ENABLED == true then
+            self:_ensureZoneEntryGuide(zoneName)
+        end
     end
 end
 
