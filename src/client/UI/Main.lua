@@ -2109,7 +2109,45 @@ local function getRuntimeHideSpotPart(zoneId)
 	return nil
 end
 
-local function getNearestNavigationAnchorInfo()
+local function getNavigationAnchorBias(contextTag, info)
+	local subtitle = type(info) == "table" and tostring(info.subtitle or "") or ""
+	local context = tostring(contextTag or "Default")
+	if context == "Preparation" or context == "Loading" then
+		if subtitle == "Area investigasi" then
+			return 0
+		end
+		if subtitle == "Akses vertikal" or subtitle == "Transisi vertikal" then
+			return 1.5
+		end
+		if subtitle == "Sweep evidence" then
+			return 3
+		end
+		if subtitle == "Refuge route" then
+			return 8
+		end
+		return 5
+	end
+
+	if context == "Investigation" then
+		if subtitle == "Sweep evidence" then
+			return 0
+		end
+		if subtitle == "Area investigasi" then
+			return 1.5
+		end
+		if subtitle == "Akses vertikal" or subtitle == "Transisi vertikal" then
+			return 4
+		end
+		if subtitle == "Refuge route" then
+			return 7
+		end
+		return 5
+	end
+
+	return 0
+end
+
+local function getNearestNavigationAnchorInfo(contextTag)
 	local player = Players.LocalPlayer
 	local character = player and player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -2128,8 +2166,11 @@ local function getNearestNavigationAnchorInfo()
 			return
 		end
 		local distance = (root.Position - part.Position).Magnitude
-		if nearest == nil or distance < nearest.distance then
+		local bias = getNavigationAnchorBias(contextTag, info)
+		local score = distance + bias
+		if nearest == nil or score < nearest.score or (math.abs(score - nearest.score) <= 0.01 and distance < nearest.distance) then
 			info.distance = distance
+			info.score = score
 			nearest = info
 		end
 	end
@@ -2182,8 +2223,8 @@ local function getNearestNavigationAnchorInfo()
 	return nearest
 end
 
-local function getInvestigationObjectiveText()
-	local anchor = getNearestNavigationAnchorInfo()
+local function getInvestigationObjectiveText(contextTag)
+	local anchor = getNearestNavigationAnchorInfo(contextTag or "Investigation")
 	if type(anchor) ~= "table" then
 		return DEFAULT_MATCH_OBJECTIVE_TEXT
 	end
@@ -2208,8 +2249,8 @@ local function getInvestigationObjectiveText()
 	return string.format("Gunakan anchor %s\nSweep area terdekat\nCari evidence lalu isi jurnal", label)
 end
 
-local function getInvestigationControlsHintText()
-	local anchor = getNearestNavigationAnchorInfo()
+local function getInvestigationControlsHintText(contextTag)
+	local anchor = getNearestNavigationAnchorInfo(contextTag or "Investigation")
 	if type(anchor) ~= "table" then
 		return "[1] Scan  •  [2] Garam  •  [3] Salib  •  [4] Dupa  •  [5] Spirit  •  [J] Journal"
 	end
@@ -4793,7 +4834,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	end
 
 	if viewState == "Preparation" or viewState == "Loading" then
-		navigationAnchor = getNearestNavigationAnchorInfo()
+		navigationAnchor = getNearestNavigationAnchorInfo("Preparation")
 		badgeText = "PERSIAPAN"
 		badgeColor = Color3.fromRGB(70, 96, 132)
 		phaseGlyphText = "PR"
@@ -4802,14 +4843,14 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			and ("Loading dan briefing aktif. Waktu fase: " .. timerText .. ".")
 			or "Tunggu loading selesai, lalu mulai cari evidence."
 	elseif viewState == "Investigation" then
-		navigationAnchor = getNearestNavigationAnchorInfo()
+		navigationAnchor = getNearestNavigationAnchorInfo("Investigation")
 		badgeText = "INVESTIGASI"
 		badgeColor = Color3.fromRGB(58, 112, 90)
 		phaseGlyphText = "IN"
 		primaryText = navigationAnchor and ("Investigasi aktif di sekitar " .. tostring(navigationAnchor.label or "area target") .. ".") or "Investigasi aktif."
 		secondaryText = timerVisible
-			and ("Sisa waktu investigasi: " .. timerText .. ". " .. getInvestigationObjectiveText():gsub("\n", " • "))
-			or getInvestigationObjectiveText():gsub("\n", " • ")
+			and ("Sisa waktu investigasi: " .. timerText .. ". " .. getInvestigationObjectiveText("Investigation"):gsub("\n", " • "))
+			or getInvestigationObjectiveText("Investigation"):gsub("\n", " • ")
 		footerText = CLOSE_HINT_TEXT .. ". Gunakan Field Kit [1-4] untuk tool cepat dan EVIDENCE [J] untuk jurnal."
 	elseif viewState == "Hunt" then
 		badgeText = "HUNT"
@@ -4913,7 +4954,9 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		match.ControlsHintLabel.Visible = self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
 		match.ControlsHintLabel.Text = viewState == "Hunt"
 			and getHuntControlsHintText()
-			or ((viewState == "Preparation" or viewState == "Investigation") and getInvestigationControlsHintText() or self._matchControlsHintText)
+			or ((viewState == "Preparation" and getInvestigationControlsHintText("Preparation"))
+				or (viewState == "Investigation" and getInvestigationControlsHintText("Investigation"))
+				or self._matchControlsHintText)
 		match.ControlsHintLabel.TextColor3 = semanticAccent
 			and semanticAccent:Lerp(Color3.fromRGB(240, 244, 248), 0.35)
 			or Color3.fromRGB(240, 244, 248)
@@ -4940,10 +4983,10 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			match.ObjectiveLabel.Text = getHuntObjectiveText()
 			match.ObjectiveLabel.Visible = true
 		elseif viewState == "Investigation" then
-			match.ObjectiveLabel.Text = getInvestigationObjectiveText()
+			match.ObjectiveLabel.Text = getInvestigationObjectiveText("Investigation")
 			match.ObjectiveLabel.Visible = true
 		elseif viewState == "Preparation" or viewState == "Loading" then
-			match.ObjectiveLabel.Text = getInvestigationObjectiveText()
+			match.ObjectiveLabel.Text = getInvestigationObjectiveText("Preparation")
 			match.ObjectiveLabel.Visible = true
 		else
 			match.ObjectiveLabel.Text = ""

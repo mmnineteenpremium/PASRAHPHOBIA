@@ -2205,6 +2205,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (traversal metadata sync baseline)**.
   - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
 
+## Update 2026-04-05 23:01 ICT
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi pemilihan anchor:
+  - HUD `Preparation` dan `Investigation` sekarang tidak lagi selalu mengambil anchor terdekat murni, tetapi memakai bias konteks fase.
+  - hasilnya anchor yang dipilih lebih relevan terhadap tujuan fase aktif.
+- validasi:
+  - build source sukses:
+    - `_tmp_phase_aware_navigation_build.rbxlx`
+- status:
+  - **SELESAI (phase-aware navigation anchor baseline)**.
+  - **NEXT** tetap di `P2.18`: lanjut restruktur visual/runtime lobby-map yang masih basic.
+
 ## LAST NOTE - Creator Hub Verification
 
 - `10576163165` belum boleh dipakai sebagai `marketplaceId` production.
