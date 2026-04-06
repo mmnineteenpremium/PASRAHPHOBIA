@@ -661,6 +661,52 @@ local function resolveEventBus(deps)
     return nil
 end
 
+local function resolveLobbySystemController(deps)
+    local lobbySystem = Services.Get(deps, "LobbySystem")
+    if type(lobbySystem) ~= "table" then
+        return nil
+    end
+    if type(lobbySystem.OnRequestRoomBrowserSnapshot) == "function" and type(lobbySystem.OnQueueFromRoomBrowser) == "function" then
+        return lobbySystem
+    end
+    if type(lobbySystem.Controller) == "table" then
+        return lobbySystem.Controller
+    end
+    return nil
+end
+
+local function resolveContractService(deps)
+    local contractSystem = Services.Get(deps, "ContractSystem")
+    if type(contractSystem) ~= "table" then
+        return nil
+    end
+    if type(contractSystem.GetBoardContracts) == "function" then
+        return contractSystem
+    end
+    if type(contractSystem.Service) == "table" and type(contractSystem.Service.GetBoardContracts) == "function" then
+        return contractSystem.Service
+    end
+    return nil
+end
+
+local function humanizeLobbyMapId(mapId)
+    local raw = tostring(mapId or "")
+    if raw == "" then
+        return "Unknown"
+    end
+    raw = raw:gsub("_", " ")
+    raw = raw:gsub("(%l)(%u)", "%1 %2")
+    return raw
+end
+
+local function lobbyPromptColor(zoneName)
+    local style = LOBBY_ZONE_GUIDE_STYLE[zoneName]
+    if type(style) == "table" and typeof(style.color) == "Color3" then
+        return style.color
+    end
+    return Color3.fromRGB(96, 118, 148)
+end
+
 local function safeRequire(moduleScript)
     if not moduleScript then
         return nil
@@ -1989,6 +2035,7 @@ local function applyMainHubVisualPatch()
         transparency = 0.03,
     })
     ensureGuideBoardSurface(northRoomStand, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "ROOM", "Create • Join • Ready", LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+    applyPrompt(ensurePrompt(northRoomStand, "InteractPrompt"), "Room Board", "Open Room Browser", 12)
     local northToolsStand = ensureDecorPart("ToolsBoard")
     applyPartProps(northToolsStand, {
         size = Vector3.new(2.2, 3.4, 2.2),
@@ -1998,6 +2045,7 @@ local function applyMainHubVisualPatch()
         transparency = 0.03,
     })
     ensureGuideBoardSurface(northToolsStand, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "TOOLS", "Train • Equip • Read", LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+    applyPrompt(ensurePrompt(northToolsStand, "InteractPrompt"), "Tools Board", "Open Training", 12)
     applyWingLight("NorthWingLight_A", Vector3.new(1588, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
     applyWingLight("NorthWingLight_B", Vector3.new(1600, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
     applyWingLight("NorthWingLight_C", Vector3.new(1612, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
@@ -2189,6 +2237,8 @@ function LobbyService.new(state, deps)
     self._state = state
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
+    self._lobbyController = resolveLobbySystemController(self._deps)
+    self._contractService = resolveContractService(self._deps)
 
     self._playerManager = LobbyPlayerManager.new(self._deps, self._deps.LobbyPlayerManagerConfig)
     self._zoneManager = LobbyZoneManager.new(self._deps, self._deps.LobbyZoneManagerConfig)
@@ -2196,6 +2246,7 @@ function LobbyService.new(state, deps)
     self._partySystem = PartySystem.new(self._deps, self._deps.PartySystemConfig)
     self._population = LobbyPopulationController.new(self._state, self._deps, self._deps.LobbyPopulationConfig)
     self._characterConnections = {}
+    self._promptConnections = {}
     self._cosmeticCatalogById = {}
     self._dependencies = {}
     return self
@@ -2217,6 +2268,254 @@ end
 function LobbyService:_publish(eventName, payload)
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
+    end
+end
+
+function LobbyService:_disconnectPromptConnections()
+    for _, connection in ipairs(self._promptConnections) do
+        connection:Disconnect()
+    end
+    table.clear(self._promptConnections)
+end
+
+function LobbyService:_publishLobbyWorldEvent(player, eventName, zoneName, title, message, extraPayload)
+    if not (typeof(player) == "Instance" and player:IsA("Player")) then
+        return
+    end
+
+    local payload = {
+        eventName = eventName,
+        recipients = { player },
+        zoneName = zoneName,
+        title = title,
+        message = message,
+        accentColor = lobbyPromptColor(zoneName),
+    }
+    for key, value in pairs(extraPayload or {}) do
+        payload[key] = value
+    end
+    self:_publish(eventName, payload)
+end
+
+function LobbyService:_connectWorldPrompt(partName, callback)
+    local promptHost = workspace:FindFirstChild(partName, true)
+    if not (promptHost and promptHost:IsA("BasePart")) then
+        return false
+    end
+
+    local prompt = promptHost:FindFirstChild("InteractPrompt")
+    if not (prompt and prompt:IsA("ProximityPrompt")) then
+        return false
+    end
+
+    table.insert(self._promptConnections, prompt.Triggered:Connect(function(player)
+        if not self._playerManager:IsInLobby(player) then
+            return
+        end
+        callback(player, promptHost, prompt)
+    end))
+    return true
+end
+
+function LobbyService:_refreshNorthContractBoard()
+    if not self._contractService then
+        self._contractService = resolveContractService(self._deps)
+    end
+    if not self._contractService or type(self._contractService.GetBoardContracts) ~= "function" then
+        return false
+    end
+
+    local board = workspace:FindFirstChild("ContractBoard", true)
+    if not (board and board:IsA("BasePart")) then
+        return false
+    end
+
+    local contracts = self._contractService:GetBoardContracts("lobby_main")
+    if type(contracts) ~= "table" or #contracts == 0 then
+        return false
+    end
+
+    local summaryLines = {}
+    for index = 1, math.min(3, #contracts) do
+        local entry = contracts[index]
+        local mapLabel = humanizeLobbyMapId(entry and entry.mapId)
+        local difficultyLabel = tostring((entry and entry.difficulty) or "Classic")
+        table.insert(summaryLines, string.format("%d. %s • %s", index, mapLabel, difficultyLabel))
+    end
+
+    local subtitle = table.concat(summaryLines, "\n")
+    ensureGuideBoardSurface(
+        board,
+        LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME,
+        Enum.NormalId.Front,
+        "CONTRACT BAY",
+        subtitle,
+        lobbyPromptColor("MatchmakingZone")
+    )
+    return true
+end
+
+function LobbyService:_bindWorldPrompts()
+    self:_disconnectPromptConnections()
+
+    local lobbyController = self._lobbyController
+    if not lobbyController then
+        lobbyController = resolveLobbySystemController(self._deps)
+        self._lobbyController = lobbyController
+    end
+
+    self:_connectWorldPrompt("QueueTrigger", function(player)
+        if lobbyController and type(lobbyController.OnQueueFromRoomBrowser) == "function" then
+            lobbyController:OnQueueFromRoomBrowser(player, {
+                source = "QueueTriggerPrompt",
+            })
+        end
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldSurfaceRequested",
+            "MatchmakingZone",
+            "Queue pad aktif",
+            "Queue dijalankan dan Room Browser dibuka untuk memantau state room.",
+            {
+                surface = "RoomBrowser",
+            }
+        )
+    end)
+
+    self:_connectWorldPrompt("ContractBoard", function(player)
+        self:_publish("ContractBoardRequested", {
+            player = player,
+            lobbyId = "lobby_main",
+            count = 3,
+            now = os.clock(),
+        })
+        self:_refreshNorthContractBoard()
+        if lobbyController and type(lobbyController.OnRequestRoomBrowserSnapshot) == "function" then
+            lobbyController:OnRequestRoomBrowserSnapshot(player, {
+                source = "ContractBoardPrompt",
+            })
+        end
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldSurfaceRequested",
+            "MatchmakingZone",
+            "Contract board aktif",
+            "Board direfresh dan Room Browser dibuka untuk pilih map, mode, lalu start.",
+            {
+                surface = "RoomBrowser",
+            }
+        )
+    end)
+
+    self:_connectWorldPrompt("RoomBoard", function(player)
+        if lobbyController and type(lobbyController.OnRequestRoomBrowserSnapshot) == "function" then
+            lobbyController:OnRequestRoomBrowserSnapshot(player, {
+                source = "RoomBoardPrompt",
+            })
+        end
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldSurfaceRequested",
+            "MatchmakingZone",
+            "Room board aktif",
+            "Room Browser dibuka dari bay utara untuk create, join, dan ready.",
+            {
+                surface = "RoomBrowser",
+            }
+        )
+    end)
+
+    self:_connectWorldPrompt("ToolsBoard", function(player)
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldPromptFeedback",
+            "MatchmakingZone",
+            "Tools bay aktif",
+            "Training tools hidup. Lanjutkan test dari meja EMF, UV, THERMO, BOX, WRITING, dan CAM.",
+            {}
+        )
+    end)
+
+    self:_connectWorldPrompt("PartyBoard", function(player)
+        if lobbyController and type(lobbyController.OnRequestRoomBrowserSnapshot) == "function" then
+            lobbyController:OnRequestRoomBrowserSnapshot(player, {
+                source = "PartyBoardPrompt",
+            })
+        end
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldSurfaceRequested",
+            "PartyZone",
+            "Party board aktif",
+            "Room Browser dibuka untuk create, invite, ready, dan kontrol room party.",
+            {
+                surface = "RoomBrowser",
+            }
+        )
+    end)
+
+    self:_connectWorldPrompt("ShopCounter", function(player)
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldSurfaceRequested",
+            "ShopZone",
+            "Shop aktif",
+            "Counter membuka surface shop untuk loadout, MM, PP, dan item store.",
+            {
+                surface = "ShopUI",
+            }
+        )
+    end)
+
+    self:_connectWorldPrompt("Interact_Shop", function(player)
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldSurfaceRequested",
+            "ShopZone",
+            "Shop aktif",
+            "Browse zone shop dibuka langsung dari area depan toko.",
+            {
+                surface = "ShopUI",
+            }
+        )
+    end)
+
+    self:_connectWorldPrompt("DailyRewardTerminal", function(player)
+        self:_publish("DailyRewardClaimRequest", {
+            player = player,
+        })
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldPromptFeedback",
+            "DailyRewardZone",
+            "Daily reward diproses",
+            "Permintaan claim dikirim. Hasil reward akan tampil di feedback lobby.",
+            {}
+        )
+    end)
+
+    local toolLabels = {
+        Table_Tools_1 = "EMF",
+        Table_Tools_2 = "UV",
+        Table_Tools_3 = "THERMO",
+        Table_Tools_4 = "BOX",
+        Table_Tools_5 = "WRITING",
+        Table_Tools_6 = "CAM",
+    }
+    for partName, label in pairs(toolLabels) do
+        self:_connectWorldPrompt(partName, function(player)
+            self:_publishLobbyWorldEvent(
+                player,
+                "LobbyWorldPromptFeedback",
+                "MatchmakingZone",
+                label .. " training aktif",
+                "Meja tools ini sekarang jadi anchor test evidence di bay utara.",
+                {
+                    toolLabel = label,
+                    promptId = partName,
+                }
+            )
+        end)
     end
 end
 
@@ -4157,7 +4456,9 @@ function LobbyService:Start()
     self._zoneManager:Start()
     sanitizeLobbyLogicVolumes()
     applyMainHubVisualPatch()
+    self:_refreshNorthContractBoard()
     self:_syncZoneGuides()
+    self:_bindWorldPrompts()
     self._interaction:Start()
     self._partySystem:Start()
     self._population:Start()
@@ -4167,6 +4468,7 @@ function LobbyService:Stop()
     self._state:Set("lobbyStatus", "stopped")
     self:_clearZoneGuides()
     self:_clearZoneEntryGuides()
+    self:_disconnectPromptConnections()
     self._zoneManager:Stop()
     self._interaction:Stop()
     self._partySystem:Stop()
