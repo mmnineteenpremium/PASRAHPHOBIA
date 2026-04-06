@@ -985,6 +985,13 @@ function VFXController:_handleMatchEvent(payload)
 	end
 end
 
+function VFXController:PreviewEvent(payload)
+	if type(payload) ~= "table" then
+		return
+	end
+	self:_handleMatchEvent(payload)
+end
+
 function VFXController:_tweenSanityPostProcessing()
 	local clamped = self._currentSanity
 	local normalized = math.clamp((clamped - SANITY_THRESHOLDS.critical) / (SANITY_THRESHOLDS.stable - SANITY_THRESHOLDS.critical), 0, 1)

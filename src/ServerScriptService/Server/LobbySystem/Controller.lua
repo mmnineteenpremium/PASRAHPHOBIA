@@ -273,6 +273,9 @@ function Controller:RegisterEventHandlers()
 		self:_subscribe("LobbyWorldPromptFeedback", function(payload)
 			self:_relayLobbyRuntimeEvent(payload)
 		end)
+		self:_subscribe("LobbyEvidenceTrainingUpdated", function(payload)
+			self:_relayLobbyRuntimeEvent(payload)
+		end)
 		self:_subscribe("DailyRewardAvailable", function(payload)
 			if not (payload and typeof(payload.player) == "Instance" and payload.player:IsA("Player")) then
 				return

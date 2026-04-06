@@ -2680,3 +2680,37 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **SELESAI (Lobby functional/world-space)**.
   - sisa lobby yang mungkin dikerjakan setelah ini bersifat `polish`, bukan blocker utama slice lobby.
 
+## Update 2026-04-06
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME`
+  - slice `LobbySocialHub` sekarang juga menutup `evidence training bay` di area utara:
+    - `ToolsBoard` dan `Table_Tools_1..6` sekarang memicu training evidence nyata
+    - ghost latihan dunia aktif di `North contract/evidence bay`
+    - HUD training lobby aktif di `LobbyUXGui`
+    - salah tool menaikkan aggression dan memicu sensory feedback
+    - tool benar mengunci evidence yang relevan
+    - `ToolsBoard` memutar ghost latihan baru sesudah training selesai
+- regression prompt utama tetap sehat sesudah wiring training:
+  - `ContractBoard -> RoomBrowserUI`
+  - `ShopCounter -> ShopUI`
+
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_evidence_training_build.rbxlx`
+    - `_tmp_lobby_evidence_training_ui_fix_build.rbxlx`
+  - live:
+    - `ToolsBoard` membuka training aktif
+    - `EMF` valid untuk `Banaspati` dan mengunci `MEDOK`
+    - `Spirit Box` salah dan menaikkan `AGGRO 24%`
+    - `THERMO` valid untuk `Suhu`
+    - `UV CAM` valid untuk `To'un`
+    - state `TRAINING CLEAR` tercapai
+    - `ToolsBoard` merotasi ghost berikutnya ke `SilumanUlar`
+    - `ContractBoard` tetap membuka `RoomBrowserUI`
+    - `ShopCounter` tetap membuka `ShopUI`
+
+- status:
+  - **SELESAI (Lobby executionmode scope)**.
+  - blocker lobby untuk `world-space + traversal + prompt + evidence training + SFX/VFX training` sudah tertutup.
+  - pekerjaan berikutnya untuk lobby, jika ada, jatuh ke lane `art polish / premium asset pass`, bukan blocker usability lobby lagi.
+

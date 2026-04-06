@@ -135,6 +135,67 @@ local FACADE_SIGN_ZONE_FLAGS = {
     DailyRewardZone = true,
     FlexZone = true,
 }
+local LOBBY_EVIDENCE_TRAINING_EVENT_NAME = "LobbyEvidenceTrainingUpdated"
+local LOBBY_TRAINING_GHOST_BASE_NAME = "TrainingGhostBase"
+local LOBBY_TRAINING_GHOST_CORE_NAME = "TrainingGhostCore"
+local LOBBY_TRAINING_GHOST_SHROUD_NAME = "TrainingGhostShroud"
+local LOBBY_TRAINING_GHOST_HEAD_NAME = "TrainingGhostHead"
+local LOBBY_TRAINING_GHOST_EYE_LEFT_NAME = "TrainingGhostEyeLeft"
+local LOBBY_TRAINING_GHOST_EYE_RIGHT_NAME = "TrainingGhostEyeRight"
+local LOBBY_TRAINING_GHOST_RING_NAME = "TrainingGhostRing"
+local LOBBY_TRAINING_GHOST_PLAQUE_NAME = "TrainingGhostPlaque"
+local LOBBY_TRAINING_TOOL_SPECS = {
+	{
+		partName = "Table_Tools_1",
+		label = "EMF",
+		promptLabel = "EMF Reader",
+		toolType = "JejakEnergi",
+		evidenceType = "MEDOK",
+	},
+	{
+		partName = "Table_Tools_2",
+		label = "UV CAM",
+		promptLabel = "UV Camera",
+		toolType = "BolaArwah",
+		evidenceType = "To'un",
+	},
+	{
+		partName = "Table_Tools_3",
+		label = "THERMO",
+		promptLabel = "Thermometer",
+		toolType = "SuhuMembeku",
+		evidenceType = "Suhu",
+	},
+	{
+		partName = "Table_Tools_4",
+		label = "BOX",
+		promptLabel = "Spirit Box",
+		toolType = "KotakArwah",
+		evidenceType = "Suara",
+	},
+	{
+		partName = "Table_Tools_5",
+		label = "WRITING",
+		promptLabel = "Writing Book",
+		toolType = "BukuTerkutuk",
+		evidenceType = "BukuTerkutuk",
+	},
+	{
+		partName = "Table_Tools_6",
+		label = "SENSOR",
+		promptLabel = "Motion Sensor",
+		toolType = "GerakanGaib",
+		evidenceType = "Pengganggu",
+	},
+}
+local LOBBY_TRAINING_GHOST_COLORS = {
+	Pocong = Color3.fromRGB(188, 214, 255),
+	Kuntilanak = Color3.fromRGB(214, 176, 255),
+	Genderuwo = Color3.fromRGB(214, 148, 128),
+	Leak = Color3.fromRGB(172, 214, 176),
+	Banaspati = Color3.fromRGB(255, 166, 112),
+	Palasik = Color3.fromRGB(214, 122, 122),
+}
 local LOBBY_ZONE_GUIDES_ENABLED = false
 local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = false
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
@@ -872,6 +933,50 @@ local function resolveShopCatalogModule()
     end
 
     return nil
+end
+
+local function resolveGhostDatabaseModule()
+    local pathOptions = {
+        { "shared", "GameData", "GhostDatabase" },
+        { "Shared", "GameData", "GhostDatabase" },
+    }
+
+    local cursor = script
+    while cursor do
+        for _, path in ipairs(pathOptions) do
+            local moduleScript = getByPath(cursor, path)
+            if moduleScript then
+                return moduleScript
+            end
+        end
+        cursor = cursor.Parent
+    end
+
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if ok and typeof(replicatedStorage) == "Instance" then
+        for _, path in ipairs(pathOptions) do
+            local moduleScript = getByPath(replicatedStorage, path)
+            if moduleScript then
+                return moduleScript
+            end
+        end
+    end
+
+    return nil
+end
+
+local function arrayContains(source, targetValue)
+    if type(source) ~= "table" then
+        return false
+    end
+    for _, value in ipairs(source) do
+        if value == targetValue then
+            return true
+        end
+    end
+    return false
 end
 
 local function toUserId(player)
@@ -2393,12 +2498,12 @@ local function applyMainHubVisualPatch()
 
     -- North contract / evidence bay
     for _, data in ipairs({
-        { name = "Table_Tools_1", pos = Vector3.new(1587, 1.02, -138), label = "EMF", color = Color3.fromRGB(132, 186, 255) },
-        { name = "Table_Tools_2", pos = Vector3.new(1600, 1.02, -138), label = "UV", color = Color3.fromRGB(214, 146, 255) },
-        { name = "Table_Tools_3", pos = Vector3.new(1613, 1.02, -138), label = "THERMO", color = Color3.fromRGB(142, 214, 198) },
-        { name = "Table_Tools_4", pos = Vector3.new(1587, 1.02, -151), label = "BOX", color = Color3.fromRGB(255, 196, 118) },
-        { name = "Table_Tools_5", pos = Vector3.new(1600, 1.02, -151), label = "WRITING", color = Color3.fromRGB(150, 189, 255) },
-        { name = "Table_Tools_6", pos = Vector3.new(1613, 1.02, -151), label = "CAM", color = Color3.fromRGB(255, 130, 130) },
+        { name = "Table_Tools_1", pos = Vector3.new(1587, 1.02, -138), label = "EMF", promptLabel = "EMF Reader", summary = "MEDOK • Scan", color = Color3.fromRGB(132, 186, 255) },
+        { name = "Table_Tools_2", pos = Vector3.new(1600, 1.02, -138), label = "UV CAM", promptLabel = "UV Camera", summary = "To'un • Camera", color = Color3.fromRGB(214, 146, 255) },
+        { name = "Table_Tools_3", pos = Vector3.new(1613, 1.02, -138), label = "THERMO", promptLabel = "Thermometer", summary = "Suhu • Freeze", color = Color3.fromRGB(142, 214, 198) },
+        { name = "Table_Tools_4", pos = Vector3.new(1587, 1.02, -151), label = "BOX", promptLabel = "Spirit Box", summary = "Suara • Voice", color = Color3.fromRGB(255, 196, 118) },
+        { name = "Table_Tools_5", pos = Vector3.new(1600, 1.02, -151), label = "WRITING", promptLabel = "Writing Book", summary = "Book • Script", color = Color3.fromRGB(150, 189, 255) },
+        { name = "Table_Tools_6", pos = Vector3.new(1613, 1.02, -151), label = "SENSOR", promptLabel = "Motion Sensor", summary = "Pengganggu • Move", color = Color3.fromRGB(255, 130, 130) },
     }) do
         local tablePart = ensureDecorPart(data.name)
         applyPartProps(tablePart, {
@@ -2408,8 +2513,8 @@ local function applyMainHubVisualPatch()
             material = Enum.Material.Slate,
             transparency = 0.03,
         })
-        ensureGuideBoardSurface(tablePart, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, data.label, "Test Table", data.color)
-        applyPrompt(ensurePrompt(tablePart, "InteractPrompt"), data.label .. " Table", "Test Tool", 10)
+        ensureGuideBoardSurface(tablePart, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, data.label, data.summary, data.color)
+        applyPrompt(ensurePrompt(tablePart, "InteractPrompt"), data.promptLabel, "Test Evidence", 10)
     end
     local northContractWall = ensureDecorPart("ContractBoard")
     applyPartProps(northContractWall, {
@@ -2588,6 +2693,79 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.SmoothPlastic,
         transparency = 0.02,
     })
+    local trainingGhostBase = ensureDecorPart(LOBBY_TRAINING_GHOST_BASE_NAME)
+    applyPartProps(trainingGhostBase, {
+        size = Vector3.new(3.6, 0.92, 2.2),
+        cframe = CFrame.new(1600, 0.56, -145.4),
+        color = Color3.fromRGB(28, 38, 54),
+        material = Enum.Material.Slate,
+        transparency = 0.04,
+    })
+    local trainingGhostPlaque = ensureDecorPart(LOBBY_TRAINING_GHOST_PLAQUE_NAME)
+    applyPartProps(trainingGhostPlaque, {
+        size = Vector3.new(2.6, 0.14, 1.6),
+        cframe = CFrame.new(1600, 1.1, -144.48),
+        color = Color3.fromRGB(22, 32, 48),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    local trainingGhostCore = ensureDecorPart(LOBBY_TRAINING_GHOST_CORE_NAME)
+    applyPartProps(trainingGhostCore, {
+        size = Vector3.new(1.46, 2.5, 0.86),
+        cframe = CFrame.new(1600, 2.32, -145.4),
+        color = Color3.fromRGB(184, 212, 255),
+        material = Enum.Material.Neon,
+        transparency = 0.28,
+    })
+    local trainingGhostShroud = ensureDecorPart(LOBBY_TRAINING_GHOST_SHROUD_NAME)
+    applyPartProps(trainingGhostShroud, {
+        size = Vector3.new(2.24, 3.2, 1.42),
+        cframe = CFrame.new(1600, 2.14, -145.36),
+        color = Color3.fromRGB(206, 228, 255),
+        material = Enum.Material.ForceField,
+        transparency = 0.46,
+    })
+    local trainingGhostHead = ensureDecorPart(LOBBY_TRAINING_GHOST_HEAD_NAME)
+    applyPartProps(trainingGhostHead, {
+        size = Vector3.new(0.94, 0.94, 0.94),
+        cframe = CFrame.new(1600, 4.02, -145.36),
+        color = Color3.fromRGB(236, 244, 255),
+        material = Enum.Material.Neon,
+        transparency = 0.14,
+        shape = Enum.PartType.Ball,
+    })
+    local trainingGhostEyeLeft = ensureDecorPart(LOBBY_TRAINING_GHOST_EYE_LEFT_NAME)
+    applyPartProps(trainingGhostEyeLeft, {
+        size = Vector3.new(0.12, 0.12, 0.12),
+        cframe = CFrame.new(1599.82, 4.06, -144.9),
+        color = Color3.fromRGB(255, 174, 174),
+        material = Enum.Material.Neon,
+        transparency = 0.08,
+        shape = Enum.PartType.Ball,
+    })
+    local trainingGhostEyeRight = ensureDecorPart(LOBBY_TRAINING_GHOST_EYE_RIGHT_NAME)
+    applyPartProps(trainingGhostEyeRight, {
+        size = Vector3.new(0.12, 0.12, 0.12),
+        cframe = CFrame.new(1600.18, 4.06, -144.9),
+        color = Color3.fromRGB(255, 174, 174),
+        material = Enum.Material.Neon,
+        transparency = 0.08,
+        shape = Enum.PartType.Ball,
+    })
+    local trainingGhostRing = ensureDecorPart(LOBBY_TRAINING_GHOST_RING_NAME)
+    applyPartProps(trainingGhostRing, {
+        size = Vector3.new(3.4, 0.08, 3.4),
+        cframe = CFrame.new(1600, 1.03, -145.4),
+        color = Color3.fromRGB(166, 212, 255),
+        material = Enum.Material.Neon,
+        transparency = 0.16,
+    })
+    applyDecorPointLight(trainingGhostHead, "TrainingGlow", {
+        color = Color3.fromRGB(174, 216, 255),
+        brightness = 1.4,
+        range = 14,
+    })
+    ensureGuideBoardSurface(trainingGhostPlaque, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "TRAINING GHOST", "Booting...", Color3.fromRGB(166, 212, 255))
     applyWingLight("NorthWingLight_A", Vector3.new(1588, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
     applyWingLight("NorthWingLight_B", Vector3.new(1600, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
     applyWingLight("NorthWingLight_C", Vector3.new(1612, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
@@ -3236,6 +3414,8 @@ function LobbyService.new(state, deps)
     self._promptConnections = {}
     self._cosmeticCatalogById = {}
     self._dependencies = {}
+    self._trainingGhostDatabase = nil
+    self._trainingRandom = Random.new()
     return self
 end
 
@@ -3485,7 +3665,492 @@ end
 function LobbyService:_refreshLobbyWorldBoards()
     self:_refreshNorthContractBoard()
     self:_refreshSecondaryLobbyBoards()
+    self:_refreshEvidenceTrainingWorld()
     return true
+end
+
+function LobbyService:_getEvidenceTrainingToolSpecByPart(partName)
+	for _, spec in ipairs(LOBBY_TRAINING_TOOL_SPECS) do
+		if spec.partName == partName then
+			return spec
+		end
+	end
+	return nil
+end
+
+function LobbyService:_getEvidenceTrainingToolSpecByEvidence(evidenceType)
+	for _, spec in ipairs(LOBBY_TRAINING_TOOL_SPECS) do
+		if spec.evidenceType == evidenceType then
+			return spec
+		end
+	end
+	return nil
+end
+
+function LobbyService:_getTrainingGhostDatabase()
+	if type(self._trainingGhostDatabase) == "table" and next(self._trainingGhostDatabase) ~= nil then
+		return self._trainingGhostDatabase
+	end
+
+	local database = safeRequire(resolveGhostDatabaseModule()) or {}
+	self._trainingGhostDatabase = database
+	return database
+end
+
+function LobbyService:_chooseNextTrainingGhost(excludedGhostType)
+	local candidates = {}
+	for ghostType, definition in pairs(self:_getTrainingGhostDatabase()) do
+		if type(definition) == "table" and type(definition.evidenceTypes) == "table" and #definition.evidenceTypes >= 3 then
+			table.insert(candidates, {
+				ghostType = ghostType,
+				evidenceTypes = cloneArray(definition.evidenceTypes),
+			})
+		end
+	end
+
+	table.sort(candidates, function(a, b)
+		return tostring(a.ghostType) < tostring(b.ghostType)
+	end)
+
+	if #candidates == 0 then
+		return {
+			ghostType = "Pocong",
+			evidenceTypes = { "MEDOK", "Suhu", "BukuTerkutuk" },
+		}
+	end
+
+	local filtered = {}
+	for _, entry in ipairs(candidates) do
+		if entry.ghostType ~= excludedGhostType then
+			table.insert(filtered, entry)
+		end
+	end
+	if #filtered == 0 then
+		filtered = candidates
+	end
+
+	local selectedIndex = self._trainingRandom:NextInteger(1, #filtered)
+	return filtered[selectedIndex]
+end
+
+function LobbyService:_getEvidenceTrainingState()
+	local state = self._state:Get("lobbyEvidenceTraining")
+	if type(state) ~= "table" then
+		state = {}
+		self._state:Set("lobbyEvidenceTraining", state)
+	end
+	return state
+end
+
+function LobbyService:_resolveEvidenceTrainingAggroState(aggression)
+	local value = math.clamp(tonumber(aggression) or 0, 0, 100)
+	if value >= 70 then
+		return "HOSTILE"
+	end
+	if value >= 35 then
+		return "ALERT"
+	end
+	return "CALM"
+end
+
+function LobbyService:_resolveEvidenceTrainingHint(state)
+	if type(state) ~= "table" then
+		return "Gunakan meja tools untuk membaca evidence ghost latihan."
+	end
+
+	if state.completed == true then
+		return string.format(
+			"%s selesai. Gunakan Tools Board untuk ghost latihan berikutnya.",
+			tostring(state.ghostType or "Training")
+		)
+	end
+
+	local recommendedSpec = nil
+	for _, evidenceType in ipairs(state.requiredEvidence or {}) do
+		if not arrayContains(state.discoveredEvidence, evidenceType) then
+			recommendedSpec = self:_getEvidenceTrainingToolSpecByEvidence(evidenceType)
+			break
+		end
+	end
+
+	if recommendedSpec then
+		return string.format(
+			"Cari %s lewat meja %s. Salah tool akan menaikkan aggression ghost.",
+			tostring(recommendedSpec.evidenceType),
+			tostring(recommendedSpec.label)
+		)
+	end
+
+	return "Gunakan Tools Board untuk review ghost latihan aktif."
+end
+
+function LobbyService:_buildEvidenceTrainingToolResult(spec, success, state, alreadyFound)
+	local data = {
+		toolType = spec.toolType,
+		evidenceType = spec.evidenceType,
+		validated = success == true,
+		ghostType = state and state.ghostType or nil,
+		alreadyFound = alreadyFound == true,
+	}
+
+	if spec.toolType == "JejakEnergi" then
+		data.requestType = "JejakEnergiScan"
+		data.emfLevel = success and 5 or 1
+	elseif spec.toolType == "BolaArwah" then
+		data.requestType = "TounDetection"
+		data.ghostOrbDetected = success == true
+	elseif spec.toolType == "SuhuMembeku" then
+		data.requestType = "SuhuReading"
+		data.temperatureC = success and -6 or 8
+		data.freezing = success == true
+	elseif spec.toolType == "KotakArwah" then
+		data.requestType = "KotakArwahQuestion"
+		data.ghostResponse = success == true
+		data.responseText = success and "Aku masih di sini..." or "..."
+		data.responseTier = success and "training" or "silent"
+	elseif spec.toolType == "BukuTerkutuk" then
+		data.requestType = "BukuTerkutukCheck"
+		data.writingAppeared = success == true
+	elseif spec.toolType == "GerakanGaib" then
+		data.requestType = "PenggangguCheck"
+		data.motionDetected = success == true
+	end
+
+	return data
+end
+
+function LobbyService:_getEvidenceTrainingGhostPosition()
+	local ghostCore = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_CORE_NAME, true)
+	if ghostCore and ghostCore:IsA("BasePart") then
+		return ghostCore.Position
+	end
+	return Vector3.new(1600, 3.2, -145.4)
+end
+
+function LobbyService:_publishEvidenceTrainingUpdate(recipients, title, message, extraPayload)
+	local state = self:_getEvidenceTrainingState()
+	local targetRecipients = recipients
+	if type(targetRecipients) ~= "table" then
+		targetRecipients = self:GetLobbyPlayers()
+	end
+	if #targetRecipients == 0 then
+		return
+	end
+	local accentColor = lobbyPromptColor("MatchmakingZone")
+
+	local recommendedSpec = nil
+	for _, evidenceType in ipairs(state.requiredEvidence or {}) do
+		if not arrayContains(state.discoveredEvidence, evidenceType) then
+			recommendedSpec = self:_getEvidenceTrainingToolSpecByEvidence(evidenceType)
+			break
+		end
+	end
+
+	local payload = {
+		eventName = LOBBY_EVIDENCE_TRAINING_EVENT_NAME,
+		recipients = targetRecipients,
+		zoneName = "MatchmakingZone",
+		title = title,
+		message = message,
+		accentColor = accentColor,
+		accentColorRgb = {
+			r = math.floor(accentColor.R * 255 + 0.5),
+			g = math.floor(accentColor.G * 255 + 0.5),
+			b = math.floor(accentColor.B * 255 + 0.5),
+		},
+		ghostType = state.ghostType,
+		discoveredEvidence = cloneArray(state.discoveredEvidence),
+		requiredEvidence = cloneArray(state.requiredEvidence),
+		aggression = state.aggression or 0,
+		aggressionState = state.aggressionState or "CALM",
+		recommendedTool = recommendedSpec and recommendedSpec.toolType or "",
+		recommendedToolLabel = recommendedSpec and recommendedSpec.label or "",
+		trainingHint = state.trainingHint,
+		completed = state.completed == true,
+	}
+	for key, value in pairs(extraPayload or {}) do
+		payload[key] = value
+	end
+	self:_publish(LOBBY_EVIDENCE_TRAINING_EVENT_NAME, payload)
+end
+
+function LobbyService:_resetEvidenceTraining(excludedGhostType)
+	local nextGhost = self:_chooseNextTrainingGhost(excludedGhostType)
+	local state = self:_getEvidenceTrainingState()
+	state.ghostType = nextGhost.ghostType
+	state.requiredEvidence = cloneArray(nextGhost.evidenceTypes)
+	state.discoveredEvidence = {}
+	state.aggression = 0
+	state.aggressionState = "CALM"
+	state.completed = false
+	state.lastToolType = nil
+	state.lastToolLabel = nil
+	state.lastReason = nil
+	state.trainingHint = self:_resolveEvidenceTrainingHint(state)
+	self._state:Set("lobbyEvidenceTraining", state)
+	self:_refreshEvidenceTrainingWorld()
+	return state
+end
+
+function LobbyService:_ensureEvidenceTrainingState()
+	local state = self:_getEvidenceTrainingState()
+	if type(state.ghostType) == "string" and state.ghostType ~= "" and type(state.requiredEvidence) == "table" and #state.requiredEvidence > 0 then
+		state.aggression = math.clamp(tonumber(state.aggression) or 0, 0, 100)
+		state.aggressionState = self:_resolveEvidenceTrainingAggroState(state.aggression)
+		state.trainingHint = self:_resolveEvidenceTrainingHint(state)
+		self._state:Set("lobbyEvidenceTraining", state)
+		return state
+	end
+	return self:_resetEvidenceTraining(nil)
+end
+
+function LobbyService:_refreshEvidenceTrainingWorld()
+	local state = self:_ensureEvidenceTrainingState()
+	local ghostColor = LOBBY_TRAINING_GHOST_COLORS[state.ghostType] or Color3.fromRGB(190, 214, 255)
+	local aggression = math.clamp(tonumber(state.aggression) or 0, 0, 100)
+	local aggressionAlpha = aggression / 100
+	local discoveredCount = #(state.discoveredEvidence or {})
+	local requiredCount = #(state.requiredEvidence or {})
+	local recommendedSpec = nil
+	for _, evidenceType in ipairs(state.requiredEvidence or {}) do
+		if not arrayContains(state.discoveredEvidence, evidenceType) then
+			recommendedSpec = self:_getEvidenceTrainingToolSpecByEvidence(evidenceType)
+			break
+		end
+	end
+
+	local plaque = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_PLAQUE_NAME, true)
+	if plaque and plaque:IsA("BasePart") then
+		ensureGuideBoardSurface(
+			plaque,
+			LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME,
+			Enum.NormalId.Top,
+			string.upper(tostring(state.ghostType or "GHOST")),
+			string.format("%d/%d evidence • %s", discoveredCount, requiredCount, tostring(state.aggressionState or "CALM")),
+			ghostColor
+		)
+		ensureGuideBoardSurface(
+			plaque,
+			LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME,
+			Enum.NormalId.Bottom,
+			string.upper(tostring(state.ghostType or "GHOST")),
+			string.format("%d/%d evidence • %s", discoveredCount, requiredCount, tostring(state.aggressionState or "CALM")),
+			ghostColor
+		)
+	end
+
+	local toolsBoard = workspace:FindFirstChild("ToolsBoard", true)
+	if toolsBoard and toolsBoard:IsA("BasePart") then
+		local toolsSubtitle = string.format(
+			"%s • %d/%d • aggro %d%%",
+			tostring(state.ghostType or "Ghost"),
+			discoveredCount,
+			requiredCount,
+			math.floor(aggression + 0.5)
+		)
+		ensureGuideBoardSurface(toolsBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "TRAINING", toolsSubtitle, ghostColor)
+		ensureGuideBoardSurface(toolsBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Back, "TRAINING", toolsSubtitle, ghostColor)
+	end
+
+	local leftCase = workspace:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME, true)
+	if leftCase and leftCase:IsA("BasePart") then
+		local foundSummary = discoveredCount > 0 and table.concat(state.discoveredEvidence, " • ") or "Belum ada"
+		ensureGuideBoardSurface(leftCase, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "FOUND", foundSummary, ghostColor)
+		ensureGuideBoardSurface(leftCase, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "FOUND", foundSummary, ghostColor)
+	end
+
+	local rightCase = workspace:FindFirstChild(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME, true)
+	if rightCase and rightCase:IsA("BasePart") then
+		local nextSummary = recommendedSpec and string.format("%s • %s", recommendedSpec.label, recommendedSpec.evidenceType) or "Training clear"
+		ensureGuideBoardSurface(rightCase, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "NEXT", nextSummary, ghostColor)
+		ensureGuideBoardSurface(rightCase, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "NEXT", nextSummary, ghostColor)
+	end
+
+	for _, spec in ipairs(LOBBY_TRAINING_TOOL_SPECS) do
+		local tablePart = workspace:FindFirstChild(spec.partName, true)
+		if tablePart and tablePart:IsA("BasePart") then
+			local subtitle = spec.evidenceType
+			if arrayContains(state.discoveredEvidence, spec.evidenceType) then
+				subtitle = spec.evidenceType .. " • FOUND"
+			elseif arrayContains(state.requiredEvidence, spec.evidenceType) then
+				subtitle = spec.evidenceType .. " • MATCH"
+			else
+				subtitle = spec.evidenceType .. " • RISK"
+			end
+			ensureGuideBoardSurface(tablePart, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, spec.label, subtitle, ghostColor)
+		end
+	end
+
+	local ghostBase = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_BASE_NAME, true)
+	if ghostBase and ghostBase:IsA("BasePart") then
+		ghostBase.Color = ghostColor:Lerp(Color3.fromRGB(32, 40, 56), 0.42)
+		ghostBase.Transparency = 0.08
+	end
+	local ghostCore = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_CORE_NAME, true)
+	if ghostCore and ghostCore:IsA("BasePart") then
+		ghostCore.Color = ghostColor:Lerp(Color3.fromRGB(255, 124, 124), aggressionAlpha * 0.72)
+		ghostCore.Transparency = 0.34 - math.min(0.12, discoveredCount * 0.03)
+		ghostCore:SetAttribute("PasrahLobbyTrainingGhostType", tostring(state.ghostType or ""))
+		ghostCore:SetAttribute("PasrahLobbyTrainingAggro", aggression)
+	end
+	local ghostShroud = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_SHROUD_NAME, true)
+	if ghostShroud and ghostShroud:IsA("BasePart") then
+		ghostShroud.Color = ghostColor
+		ghostShroud.Transparency = math.clamp(0.58 - aggressionAlpha * 0.2, 0.24, 0.58)
+	end
+	local ghostHead = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_HEAD_NAME, true)
+	if ghostHead and ghostHead:IsA("BasePart") then
+		ghostHead.Color = ghostColor:Lerp(Color3.fromRGB(246, 230, 224), 0.22)
+		ghostHead.Transparency = math.clamp(0.18 - aggressionAlpha * 0.06, 0.05, 0.18)
+	end
+	for _, eyeName in ipairs({ LOBBY_TRAINING_GHOST_EYE_LEFT_NAME, LOBBY_TRAINING_GHOST_EYE_RIGHT_NAME }) do
+		local eye = workspace:FindFirstChild(eyeName, true)
+		if eye and eye:IsA("BasePart") then
+			eye.Color = aggression >= 70 and Color3.fromRGB(255, 96, 96) or ghostColor:Lerp(Color3.fromRGB(255, 255, 255), 0.22)
+			eye.Transparency = aggression >= 35 and 0.02 or 0.18
+		end
+	end
+	local ghostRing = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_RING_NAME, true)
+	if ghostRing and ghostRing:IsA("BasePart") then
+		ghostRing.Color = aggression >= 70 and Color3.fromRGB(255, 96, 96) or ghostColor
+		ghostRing.Transparency = 0.16 - math.min(0.08, aggressionAlpha * 0.08)
+	end
+	local ghostLightHost = ghostHead or ghostCore
+	if ghostLightHost and ghostLightHost:IsA("BasePart") then
+		local ghostLight = ghostLightHost:FindFirstChild("TrainingGlow")
+		if not (ghostLight and ghostLight:IsA("PointLight")) then
+			if ghostLight then
+				ghostLight:Destroy()
+			end
+			ghostLight = Instance.new("PointLight")
+			ghostLight.Name = "TrainingGlow"
+			ghostLight.Parent = ghostLightHost
+		end
+		ghostLight.Color = aggression >= 70 and Color3.fromRGB(255, 118, 118) or ghostColor
+		ghostLight.Brightness = 1 + aggressionAlpha * 2.4
+		ghostLight.Range = 10 + aggressionAlpha * 10
+		ghostLight.Enabled = true
+	end
+end
+
+function LobbyService:_useEvidenceTrainingTool(player, spec)
+	local state = self:_ensureEvidenceTrainingState()
+	local validEvidence = arrayContains(state.requiredEvidence, spec.evidenceType)
+	local alreadyFound = arrayContains(state.discoveredEvidence, spec.evidenceType)
+	local toolSuccess = validEvidence == true
+	local toolReason = toolSuccess and (alreadyFound and "already_collected" or "collected") or "ghost_cannot_emit_evidence"
+	local toolEventName = toolSuccess and "EvidenceCollected" or "EvidenceToolResult"
+	local toolResult = self:_buildEvidenceTrainingToolResult(spec, toolSuccess, state, alreadyFound)
+	local ghostPosition = self:_getEvidenceTrainingGhostPosition()
+	local ghostPositionPayload = {
+		x = ghostPosition.X,
+		y = ghostPosition.Y,
+		z = ghostPosition.Z,
+	}
+	local audioEvent = nil
+	local vfxEvent = nil
+	local title = ""
+	local message = ""
+
+	if toolSuccess then
+		if not alreadyFound then
+			table.insert(state.discoveredEvidence, spec.evidenceType)
+		end
+		state.aggression = math.max(0, (tonumber(state.aggression) or 0) - 8)
+		title = string.format("%s membaca evidence", tostring(spec.label))
+		message = alreadyFound
+			and string.format("%s sudah pernah dikunci untuk %s.", tostring(spec.evidenceType), tostring(state.ghostType))
+			or string.format("%s valid untuk %s. Evidence %s berhasil dibaca.", tostring(spec.label), tostring(state.ghostType), tostring(spec.evidenceType))
+		if spec.toolType == "KotakArwah" then
+			audioEvent = {
+				eventName = "GhostAudioTriggered",
+				cue = "ghost_whisper",
+				intensity = 0.8,
+				position = ghostPositionPayload,
+			}
+			vfxEvent = {
+				eventName = "GhostAudioTriggered",
+				cue = "ghost_whisper",
+				intensity = 0.7,
+				position = ghostPositionPayload,
+			}
+		else
+			audioEvent = {
+				eventName = "EnvironmentalAudioTriggered",
+				eventType = "lightflicker",
+				intensity = 0.55,
+				position = ghostPositionPayload,
+			}
+			vfxEvent = {
+				eventName = "EnvironmentalAudioTriggered",
+				eventType = "lightflicker",
+				intensity = 0.55,
+				position = ghostPositionPayload,
+			}
+		end
+	else
+		state.aggression = math.min(100, (tonumber(state.aggression) or 0) + 24)
+		title = string.format("%s salah baca", tostring(spec.label))
+		message = string.format(
+			"%s tidak cocok untuk %s. Aggression ghost naik dan training jadi lebih berbahaya.",
+			tostring(spec.label),
+			tostring(state.ghostType)
+		)
+		audioEvent = {
+			eventName = "GhostAudioTriggered",
+			cue = state.aggression >= 70 and "ghost_manifest" or "ghost_whisper",
+			intensity = state.aggression >= 70 and 1.0 or 0.78,
+			position = ghostPositionPayload,
+		}
+		vfxEvent = state.aggression >= 70 and {
+			eventName = "GhostManifest",
+			intensity = 1 + math.clamp(state.aggression / 100, 0.1, 0.6),
+			position = ghostPositionPayload,
+		} or {
+			eventName = "EnvironmentalAudioTriggered",
+			eventType = "lightflicker",
+			intensity = 0.7,
+			position = ghostPositionPayload,
+		}
+	end
+
+	state.aggressionState = self:_resolveEvidenceTrainingAggroState(state.aggression)
+	state.completed = #(state.discoveredEvidence or {}) >= #(state.requiredEvidence or {})
+	state.lastToolType = spec.toolType
+	state.lastToolLabel = spec.label
+	state.lastReason = toolReason
+	state.trainingHint = self:_resolveEvidenceTrainingHint(state)
+	self._state:Set("lobbyEvidenceTraining", state)
+	self:_refreshEvidenceTrainingWorld()
+
+	if state.completed == true and toolSuccess then
+		title = string.format("%s complete", tostring(state.ghostType))
+		message = string.format(
+			"Semua evidence %s sudah terkunci. Gunakan Tools Board untuk memulai ghost latihan baru.",
+			tostring(state.ghostType)
+		)
+		audioEvent = {
+			eventName = "EnvironmentalAudioTriggered",
+			eventType = "lightflicker",
+			intensity = 0.42,
+			position = ghostPositionPayload,
+		}
+		vfxEvent = {
+			eventName = "GhostManifestEnd",
+			position = ghostPositionPayload,
+		}
+	end
+
+	self:_publishEvidenceTrainingUpdate(self:GetLobbyPlayers(), title, message, {
+		toolType = spec.toolType,
+		toolLabel = spec.label,
+		success = toolSuccess,
+		reason = toolReason,
+		toolEventName = toolEventName,
+		toolResult = toolResult,
+		audioEvent = audioEvent,
+		vfxEvent = vfxEvent,
+	})
 end
 
 function LobbyService:_bindWorldPrompts()
@@ -3561,14 +4226,24 @@ function LobbyService:_bindWorldPrompts()
     end)
 
     self:_connectWorldPrompt("ToolsBoard", function(player)
-        self:_publishLobbyWorldEvent(
-            player,
-            "LobbyWorldPromptFeedback",
-            "MatchmakingZone",
-            "Tools bay aktif",
-            "Training tools hidup. Lanjutkan test dari meja EMF, UV, THERMO, BOX, WRITING, dan CAM.",
-            {}
-        )
+        local state = self:_ensureEvidenceTrainingState()
+        if state.completed == true then
+            local previousGhost = state.ghostType
+            local nextState = self:_resetEvidenceTraining(previousGhost)
+            self:_publishEvidenceTrainingUpdate(self:GetLobbyPlayers(), "Ghost latihan baru", string.format(
+                "%s masuk ke bay training. Gunakan meja tools untuk membaca 3 evidence-nya.",
+                tostring(nextState.ghostType)
+            ), {})
+            return
+        end
+
+        self:_publishEvidenceTrainingUpdate({ player }, "Tools bay aktif", string.format(
+            "%s aktif. Progress %d/%d evidence, aggro %d%%.",
+            tostring(state.ghostType),
+            #(state.discoveredEvidence or {}),
+            #(state.requiredEvidence or {}),
+            math.floor((tonumber(state.aggression) or 0) + 0.5)
+        ), {})
     end)
 
     self:_connectWorldPrompt("PartyBoard", function(player)
@@ -3673,27 +4348,9 @@ function LobbyService:_bindWorldPrompts()
         )
     end)
 
-    local toolLabels = {
-        Table_Tools_1 = "EMF",
-        Table_Tools_2 = "UV",
-        Table_Tools_3 = "THERMO",
-        Table_Tools_4 = "BOX",
-        Table_Tools_5 = "WRITING",
-        Table_Tools_6 = "CAM",
-    }
-    for partName, label in pairs(toolLabels) do
-        self:_connectWorldPrompt(partName, function(player)
-            self:_publishLobbyWorldEvent(
-                player,
-                "LobbyWorldPromptFeedback",
-                "MatchmakingZone",
-                label .. " training aktif",
-                "Meja tools ini sekarang jadi anchor test evidence di bay utara.",
-                {
-                    toolLabel = label,
-                    promptId = partName,
-                }
-            )
+    for _, spec in ipairs(LOBBY_TRAINING_TOOL_SPECS) do
+        self:_connectWorldPrompt(spec.partName, function(player)
+            self:_useEvidenceTrainingTool(player, spec)
         end)
     end
 end
@@ -5636,6 +6293,7 @@ function LobbyService:Start()
     self._zoneManager:Start()
     sanitizeLobbyLogicVolumes()
     applyMainHubVisualPatch()
+    self:_ensureEvidenceTrainingState()
     self:_refreshLobbyWorldBoards()
     self:_syncZoneGuides()
     self:_bindWorldPrompts()
@@ -5659,6 +6317,7 @@ function LobbyService:Stop()
         rotationOrder = {},
         spotlightUserId = nil,
     })
+    self._state:Set("lobbyEvidenceTraining", {})
 
     for userId in pairs(self._characterConnections) do
         self:_disconnectCharacterConnection(userId)
@@ -5689,6 +6348,10 @@ function LobbyService:RegisterPlayer(player)
     task.defer(function()
         self:_renderLobbyCosmetics(player, player.Character, self:_getAppliedCosmetics(player))
     end)
+    self:_publishEvidenceTrainingUpdate({ player }, "Evidence training siap", string.format(
+        "%s aktif di bay utara. Gunakan meja tools untuk membaca evidence ghost latihan.",
+        tostring((self:_ensureEvidenceTrainingState().ghostType) or "Ghost")
+    ), {})
     return true
 end
 

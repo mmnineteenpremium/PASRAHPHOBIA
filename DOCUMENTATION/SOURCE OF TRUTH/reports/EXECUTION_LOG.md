@@ -11404,3 +11404,64 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - status:
   - **LOBBY FUNCTIONAL COMPLETE**.
   - sisa yang ada sekarang masuk kategori `polish visual/art premium`, bukan blocker world-space, traversal, atau interaksi lobby.
+
+## Update 2026-04-06
+
+- `LobbySocialHub` sekarang juga menutup slice `evidence training bay` di wing utara:
+  - `ToolsBoard` dan `Table_Tools_1..6` tidak lagi hanya memberi feedback generik
+  - ghost latihan dunia sekarang hidup sebagai exhibit runtime:
+    - `TrainingGhostBase`
+    - `TrainingGhostCore`
+    - `TrainingGhostShroud`
+    - `TrainingGhostHead`
+    - `TrainingGhostEyeLeft / Right`
+    - `TrainingGhostRing`
+    - `TrainingGhostPlaque`
+  - `LobbyEvidenceTrainingUpdated` sekarang me-relay state training dari server ke client lobby
+  - `LobbyUXGui` sekarang punya panel training khusus:
+    - ghost aktif
+    - aggro
+    - evidence ditemukan
+    - hint tool berikutnya
+  - `SoundSystem` dan `VFXController` sekarang punya preview hook resmi agar training lobby bisa memicu SFX/VFX tanpa membuat jalur paralel
+- evidence training sekarang terbukti mengajarkan tools:
+  - tool benar mengunci evidence dan mengurangi aggression
+  - tool salah menaikkan aggression dan memicu feedback penalti
+  - saat semua evidence terkunci, `ToolsBoard` memutar ghost latihan baru
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_evidence_training_build.rbxlx`
+  - `_tmp_lobby_evidence_training_ui_fix_build.rbxlx`
+- verifikasi live:
+  - `ToolsBoard` membuka training ghost aktif dan menyalakan panel training lobby
+  - `EMF` valid untuk `Banaspati` dan mengunci `MEDOK`
+  - `Spirit Box` salah untuk `Banaspati`:
+    - `AGGRO 24%`
+    - feedback `Aggression ghost naik`
+    - `PasrahAudioLastCategory = GhostAudio`
+    - `PasrahVFXLastProfile = lightflicker`
+  - `THERMO` valid mengunci `Suhu`
+  - `UV CAM` valid mengunci `To'un`
+  - training selesai:
+    - `TRAINING CLEAR • CALM`
+    - hint meminta rotasi ghost baru lewat `ToolsBoard`
+  - `ToolsBoard` kemudian merotasi training ke ghost baru:
+    - `SilumanUlar`
+    - aggro reset ke `0%`
+    - evidence reset ke kosong
+  - regression prompt utama sesudah wiring training tetap sehat:
+    - `ContractBoard -> RoomBrowserUI.Enabled = true`
+    - `ShopCounter -> ShopUI.Enabled = true`
+- catatan UI:
+  - `TrainingFrame` runtime sekarang punya `ZIndex` yang benar (`frame=8`, child=`9/10`) dan state live tampil di `LobbyUXGui`
+
+- status:
+  - **LOBBY EXECUTIONMODE COMPLETE** untuk scope lobby saat ini:
+    - world-space hub hidup
+    - traversal sehat
+    - prompt utama sehat
+    - evidence training usable
+    - SFX/VFX training hidup
+    - tidak ada error runtime baru yang muncul pada verifikasi live batch ini
