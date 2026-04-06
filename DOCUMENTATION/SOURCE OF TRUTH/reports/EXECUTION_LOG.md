@@ -11652,3 +11652,43 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - asset premium/non-primitive untuk staging luar
     - dressing exterior yang lebih kaya dan berbeda per map
     - transisi breach yang lebih sinematik secara visual, bukan baru cue/audio + state board
+
+- pass lanjutan pada lane yang sama:
+  - `PreparationRunner`, floodlight, dan lamp staging sekarang ikut state:
+    - ready
+    - armed
+    - breach open
+  - sync state staging sekarang tidak lagi hanya bergantung pada prompt dunia;
+    entry state ikut `MatchLifecyclePhase` authoritative
+- source owner yang disentuh:
+  - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+- validasi:
+  - build source sukses:
+    - `_tmp_match_preparation_entry_lane_build.rbxlx`
+    - `_tmp_match_preparation_entry_sync_build.rbxlx`
+  - live:
+    - default:
+      - runner coklat gelap
+      - floodlight `3.20`
+      - lamp `1.80`
+      - sign `MAIN ENTRY`
+    - sesudah `EMF`:
+      - `PreparationFocusTool = EMF`
+      - runner berubah biru
+      - floodlight `3.80`
+      - lamp `2.10`
+      - sign `EMF ready • breach armed`
+    - sesudah `AdvancePhase -> InvestigationPhase` tanpa prompt breach:
+      - `MatchPhase = InGame`
+      - `MatchLifecyclePhase = InvestigationPhase`
+      - runner berubah hijau
+      - floodlight `4.30`
+      - lamp `2.45`
+      - sign `BREACH OPEN`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - drift state dunia staging vs lifecycle authoritative sudah tertutup.
+  - residual lane tetap:
+    - asset premium/non-primitive untuk staging luar
+    - dressing exterior yang lebih kaya dan berbeda per map
+    - transisi breach yang lebih sinematik secara visual dan animatif
