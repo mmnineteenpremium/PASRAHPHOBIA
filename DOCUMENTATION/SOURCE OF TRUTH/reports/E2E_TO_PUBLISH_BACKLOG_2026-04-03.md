@@ -2554,3 +2554,20 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby tetap belum final, tetapi jalur kamera custom yang memicu drift sudah dicabut dulu sebelum lanjut lagi.
 
+## Update 2026-04-06
+
+- blocker `default Roblox camera di lobby` kini benar-benar ditutup:
+  - branch render-step lobby di `CameraController.client.lua` yang terus memanggil `setFpvLocked(false)` sudah dicabut
+  - camera controller sekarang tidak lagi mengambil alih camera/mouse state lobby di luar `InMatch`
+- validasi:
+  - lobby idle:
+    - `CameraType = Custom`
+    - `CameraMode = Classic`
+    - `MouseBehavior = Default`
+  - saat tahan klik kanan di lobby:
+    - `MouseBehavior = LockCurrentPosition`
+    - perilaku ini sesuai jalur default Roblox third-person
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - blocker mouse lobby sudah tertutup, tetapi pekerjaan lobby keseluruhan masih belum final.
+

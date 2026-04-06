@@ -865,12 +865,6 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 			or UserInputService.MouseIconEnabled ~= true)
 	then
 		applyFpvMouseMode()
-	elseif (not shouldLockFromState)
-		and (player.CameraMode ~= Enum.CameraMode.Classic
-			or UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default
-			or UserInputService.MouseIconEnabled ~= true)
-	then
-		setFpvLocked(false)
 	end
 
 	local cameraBobTarget = Vector3.zero
