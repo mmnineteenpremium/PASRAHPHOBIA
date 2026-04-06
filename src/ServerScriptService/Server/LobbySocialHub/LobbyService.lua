@@ -2120,6 +2120,36 @@ local function applyMainHubVisualPatch()
     applyGatewayWall("MainHubSouthJambLeft", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1582.4, 4.4, 69.5))
     applyGatewayWall("MainHubSouthJambRight", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1617.6, 4.4, 69.5))
     applyGatewayAccent("MainHubSouthAccent", Vector3.new(36, 0.22, 1.02), CFrame.new(1600, 8.98, 69.5), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color)
+    applyGatewayWall("GardenApproachArchLeft", Vector3.new(1.0, 7.8, 1.0), CFrame.new(1591.2, 3.9, 108.5))
+    applyGatewayWall("GardenApproachArchRight", Vector3.new(1.0, 7.8, 1.0), CFrame.new(1608.8, 3.9, 108.5))
+    applyGatewayWall("GardenApproachArchHeader", Vector3.new(18.8, 0.92, 1.0), CFrame.new(1600, 7.35, 108.5))
+    applyGatewayAccent("GardenApproachAccent", Vector3.new(19.4, 0.18, 1.08), CFrame.new(1600, 7.92, 108.5), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color)
+    local gardenApproachPanel = ensureDecorPart("GardenApproachPanel")
+    applyPartProps(gardenApproachPanel, {
+        size = Vector3.new(10.8, 2.5, 0.32),
+        cframe = CFrame.new(1600, 5.72, 109.18),
+        color = Color3.fromRGB(14, 22, 34),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(gardenApproachPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "GARDEN", "Daily • Social • Claim", LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color)
+    ensureGuideBoardSurface(gardenApproachPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Back, "RETURN", "Lobby hub • Daily path", LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color)
+    local gardenPathInset = ensureDecorPart("GardenPathInset")
+    applyPartProps(gardenPathInset, {
+        size = Vector3.new(9.8, 0.08, 48),
+        cframe = CFrame.new(1600, 0.14, 120),
+        color = Color3.fromRGB(36, 58, 38),
+        material = Enum.Material.Slate,
+        transparency = 0.04,
+    })
+    local gardenPathLine = ensureDecorPart("GardenPathLine")
+    applyPartProps(gardenPathLine, {
+        size = Vector3.new(1.02, 0.03, 46),
+        cframe = CFrame.new(1600, 0.185, 120),
+        color = LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color,
+        material = Enum.Material.Neon,
+        transparency = 0.3,
+    })
 
     applyGatewayWall("MainHubEastWallTop", Vector3.new(0.9, 10, 52), CFrame.new(1669.5, 5, -43))
     applyGatewayWall("MainHubEastWallBottom", Vector3.new(0.9, 10, 52), CFrame.new(1669.5, 5, 43))
@@ -2127,6 +2157,36 @@ local function applyMainHubVisualPatch()
     applyGatewayWall("MainHubEastJambTop", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1669.5, 4.4, -17.6))
     applyGatewayWall("MainHubEastJambBottom", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1669.5, 4.4, 17.6))
     applyGatewayAccent("MainHubEastAccent", Vector3.new(1.02, 0.22, 36), CFrame.new(1669.5, 8.98, 0), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
+    applyGatewayWall("ShopApproachArchTop", Vector3.new(1.0, 7.8, 1.0), CFrame.new(1692.5, 3.9, -28.8))
+    applyGatewayWall("ShopApproachArchBottom", Vector3.new(1.0, 7.8, 1.0), CFrame.new(1692.5, 3.9, -11.2))
+    applyGatewayWall("ShopApproachArchHeader", Vector3.new(1.0, 0.92, 18.8), CFrame.new(1692.5, 7.35, -20))
+    applyGatewayAccent("ShopApproachAccent", Vector3.new(1.08, 0.18, 19.4), CFrame.new(1692.5, 7.92, -20), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
+    local shopApproachPanel = ensureDecorPart("ShopApproachPanel")
+    applyPartProps(shopApproachPanel, {
+        size = Vector3.new(0.32, 2.5, 10.8),
+        cframe = CFrame.new(1691.82, 5.72, -20),
+        color = Color3.fromRGB(14, 22, 34),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(shopApproachPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Right, "SHOP", "Loadout • Currency • Utility", LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
+    ensureGuideBoardSurface(shopApproachPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Left, "RETURN", "Lobby hub • Store wing", LOBBY_ZONE_GUIDE_STYLE.ShopZone.color)
+    local shopPathInset = ensureDecorPart("ShopPathInset")
+    applyPartProps(shopPathInset, {
+        size = Vector3.new(48, 0.08, 9.8),
+        cframe = CFrame.new(1712, 0.14, -20),
+        color = Color3.fromRGB(58, 42, 30),
+        material = Enum.Material.Slate,
+        transparency = 0.04,
+    })
+    local shopPathLine = ensureDecorPart("ShopPathLine")
+    applyPartProps(shopPathLine, {
+        size = Vector3.new(46, 0.03, 1.02),
+        cframe = CFrame.new(1712, 0.185, -20),
+        color = LOBBY_ZONE_GUIDE_STYLE.ShopZone.color,
+        material = Enum.Material.Neon,
+        transparency = 0.3,
+    })
 
     applyGatewayWall("MainHubWestWallTop", Vector3.new(0.9, 10, 52), CFrame.new(1530.5, 5, -43))
     applyGatewayWall("MainHubWestWallBottom", Vector3.new(0.9, 10, 52), CFrame.new(1530.5, 5, 43))
@@ -2134,6 +2194,66 @@ local function applyMainHubVisualPatch()
     applyGatewayWall("MainHubWestJambTop", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1530.5, 4.4, -17.6))
     applyGatewayWall("MainHubWestJambBottom", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1530.5, 4.4, 17.6))
     applyGatewayAccent("MainHubWestAccent", Vector3.new(1.02, 0.22, 36), CFrame.new(1530.5, 8.98, 0), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+    applyGatewayWall("PartyApproachArchTop", Vector3.new(1.0, 7.8, 1.0), CFrame.new(1507.5, 3.9, -28.8))
+    applyGatewayWall("PartyApproachArchBottom", Vector3.new(1.0, 7.8, 1.0), CFrame.new(1507.5, 3.9, -11.2))
+    applyGatewayWall("PartyApproachArchHeader", Vector3.new(1.0, 0.92, 18.8), CFrame.new(1507.5, 7.35, -20))
+    applyGatewayAccent("PartyApproachAccent", Vector3.new(1.08, 0.18, 19.4), CFrame.new(1507.5, 7.92, -20), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+    local partyApproachPanel = ensureDecorPart("PartyApproachPanel")
+    applyPartProps(partyApproachPanel, {
+        size = Vector3.new(0.32, 2.5, 10.8),
+        cframe = CFrame.new(1508.18, 5.72, -20),
+        color = Color3.fromRGB(14, 22, 34),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(partyApproachPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Left, "PARTY", "Invite • Ready • Join", LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+    ensureGuideBoardSurface(partyApproachPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Right, "RETURN", "Lobby hub • Party wing", LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+    local partyPathInset = ensureDecorPart("PartyPathInset")
+    applyPartProps(partyPathInset, {
+        size = Vector3.new(48, 0.08, 9.8),
+        cframe = CFrame.new(1488, 0.14, -20),
+        color = Color3.fromRGB(28, 52, 52),
+        material = Enum.Material.Slate,
+        transparency = 0.04,
+    })
+    local partyPathLine = ensureDecorPart("PartyPathLine")
+    applyPartProps(partyPathLine, {
+        size = Vector3.new(46, 0.03, 1.02),
+        cframe = CFrame.new(1488, 0.185, -20),
+        color = LOBBY_ZONE_GUIDE_STYLE.PartyZone.color,
+        material = Enum.Material.Neon,
+        transparency = 0.3,
+    })
+    applyGatewayWall("FlexApproachArchTop", Vector3.new(1.0, 7.4, 1.0), CFrame.new(1688, 3.7, 90.8))
+    applyGatewayWall("FlexApproachArchBottom", Vector3.new(1.0, 7.4, 1.0), CFrame.new(1700.8, 3.7, 103.6))
+    applyGatewayWall("FlexApproachArchHeader", Vector3.new(1.0, 0.9, 18.2), CFrame.new(1694.4, 7.0, 97.2))
+    applyGatewayAccent("FlexApproachAccent", Vector3.new(1.08, 0.18, 18.8), CFrame.new(1694.4, 7.56, 97.2), LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
+    local flexApproachPanel = ensureDecorPart("FlexApproachPanel")
+    applyPartProps(flexApproachPanel, {
+        size = Vector3.new(0.32, 2.4, 9.8),
+        cframe = CFrame.new(1693.72, 5.4, 96.52),
+        color = Color3.fromRGB(14, 22, 34),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(flexApproachPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Right, "FLEX", "Spotlight • Cosmetic • News", LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
+    ensureGuideBoardSurface(flexApproachPanel, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Left, "RETURN", "Lobby hub • Flex wing", LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
+    local flexPathInset = ensureDecorPart("FlexPathInset")
+    applyPartProps(flexPathInset, {
+        size = Vector3.new(30, 0.08, 8.8),
+        cframe = CFrame.new(1707.5, 0.14, 111.5),
+        color = Color3.fromRGB(40, 28, 60),
+        material = Enum.Material.Slate,
+        transparency = 0.04,
+    })
+    local flexPathLine = ensureDecorPart("FlexPathLine")
+    applyPartProps(flexPathLine, {
+        size = Vector3.new(28, 0.03, 0.92),
+        cframe = CFrame.new(1707.5, 0.185, 111.5),
+        color = LOBBY_ZONE_GUIDE_STYLE.FlexZone.color,
+        material = Enum.Material.Neon,
+        transparency = 0.3,
+    })
 
     applyWingShell("NorthBay", Vector3.new(1600, 0, -152), 58, 36, 8.6, Vector3.new(1, 0, 0), Vector3.new(0, 0, 1), {
         floorColor = Color3.fromRGB(24, 34, 48),
