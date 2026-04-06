@@ -15,10 +15,10 @@ local SPAWN_OFFSETS = {
     Vector3.new(10, 0, 10),
 }
 local LOBBY_VISUAL_SPAWN_OFFSETS = {
+    Vector3.new(-4, 0, 26),
+    Vector3.new(4, 0, 26),
     Vector3.new(-4, 0, 34),
     Vector3.new(4, 0, 34),
-    Vector3.new(-4, 0, 42),
-    Vector3.new(4, 0, 42),
 }
 
 local function resolvePlayersService(deps)
