@@ -606,7 +606,11 @@ local function resolveSpawnFacingForward(mapClone, position, rawCFrame)
 		end
 	end
 
-	local mapPivot = mapClone and mapClone:GetPivot()
+	local mapPivot = nil
+	local anchorCFrame = mapClone and resolveSpatialAnchorCFrame(mapClone)
+	if typeof(anchorCFrame) == "CFrame" then
+		mapPivot = anchorCFrame
+	end
 	if typeof(mapPivot) == "CFrame" then
 		local towardPivot = Vector3.new(mapPivot.Position.X - position.X, 0, mapPivot.Position.Z - position.Z)
 		if towardPivot.Magnitude > 8 then
@@ -841,7 +845,26 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 						root and "ok" or "missing"
 					)
 				)
-				local safeSpawnCFrame = resolveSafeSpawnCFrame(mapClone, spawnPoints, index, floorClearance)
+				local safeSpawnCFrame = nil
+				local spawnCandidate = nil
+				local spawnOk, spawnResult = xpcall(function()
+					local resolvedCFrame, resolvedCandidate = resolveSafeSpawnCFrame(mapClone, spawnPoints, index, floorClearance)
+					return {
+						cframe = resolvedCFrame,
+						candidate = resolvedCandidate,
+					}
+				end, debug.traceback)
+				if spawnOk then
+					safeSpawnCFrame = spawnResult.cframe
+					spawnCandidate = spawnResult.candidate
+				else
+					table.insert(teleportTrace, string.format("%s:spawnResolveError=%s", player.Name, tostring(spawnResult)))
+					updateStudioTeleportTrace(
+						teleportTrace,
+						#teleported,
+						string.format("player=%s status=spawn_error", player.Name)
+					)
+				end
 				if not safeSpawnCFrame then
 					warn("[MatchTeleport] HARD FAIL SAFE SPAWN TRIGGERED")
 					local fallbackPart = mapClone:FindFirstChildWhichIsA("BasePart", true)
@@ -855,6 +878,8 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 						updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=skip_no_spawn", player.Name))
 						continue
 					end
+				elseif spawnCandidate then
+					table.insert(teleportTrace, string.format("%s:spawnCandidate=%s", player.Name, spawnCandidate:GetFullName()))
 				end
 
 				if not root then

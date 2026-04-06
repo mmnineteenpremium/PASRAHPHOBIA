@@ -11692,3 +11692,96 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - asset premium/non-primitive untuk staging luar
     - dressing exterior yang lebih kaya dan berbeda per map
     - transisi breach yang lebih sinematik secara visual dan animatif
+
+- progress tambahan pada lane `outside match preparation staging`:
+  - profile staging sekarang dibedakan per map, bukan lagi satu dressing generik:
+    - `HauntedHouse` -> `CONTRACT BAY`
+    - `AbandonedPalace` -> `PALACE GATE`
+    - `EmptyBuilding` -> `OPERATIONS ENTRY`
+    - `StudioMMNineteen` -> `CONTROL ACCESS`
+  - `HauntedHouse` sekarang membawa décor `house`:
+    - porch post
+    - supply crate
+    - notice stand
+  - `AbandonedPalace` sekarang membawa décor `palace`:
+    - carpet
+    - pillar
+    - brazier
+    - banner
+  - `EmptyBuilding` dan `StudioMMNineteen` memakai décor `facility` baseline
+- blocker yang berhasil ditemukan dan ditutup:
+  - `AbandonedPalace` sempat gagal membawa player ke staging luar
+  - akar masalahnya bukan di board/staging patch, tetapi di `MatchTeleport`
+  - `resolveSpawnFacingForward()` memanggil `GetPivot()` langsung pada `mapClone`, padahal `AbandonedPalace` dibungkus `Folder`
+  - hasil runtime sebelumnya:
+    - match terbentuk
+    - `PreparationStagingRuntimePatched = true`
+    - tapi teleport trace berhenti di `root_ok`
+    - player tetap di koordinat lobby
+  - fix:
+    - fallback pivot spawn sekarang memakai `resolveSpatialAnchorCFrame()`
+    - jalur `resolveSafeSpawnCFrame` dibungkus trace error agar kegagalan spawn tidak lagi silent
+- validasi terbaru:
+  - build:
+    - `_tmp_match_preparation_debug_build.rbxlx`
+    - `_tmp_match_preparation_ap_teleport_fix_build.rbxlx`
+  - `AbandonedPalace` default:
+    - `PreparationStagingRuntimePatched = true`
+    - `PreparationStagingRuntimeDebug = complete`
+    - teleport trace sekarang lanjut penuh:
+      - `spawn_points_ready count=4`
+      - `spawnCandidate=...PlayerSpawn_1`
+      - `teleporting`
+      - `teleportOk`
+      - `teleported_counted`
+    - `PasrahLastTeleportedCount = 1`
+    - `LocalPlayer.MatchLifecyclePhase = PreparationPhase`
+    - player posisi pindah ke map aktif sekitar `5.35, 3.35, 128.30`
+    - marquee hidup:
+      - title `PALACE GATE`
+      - subtitle `Ward • Briefing • Breach`
+    - entry hidup:
+      - title `PALACE ENTRY`
+      - body `Review board lalu breach dari gerbang istana.`
+    - décor palace hidup:
+      - `PreparationCarpet = Fabric`
+      - `PreparationPillar_1 = present`
+      - `PreparationBrazierFlame_1 = present`
+      - `PreparationBanner_1 = present`
+  - `AbandonedPalace` breach state:
+    - `LocalPlayer.MatchLifecyclePhase = InvestigationPhase`
+    - entry berubah ke:
+      - title `BREACH OPEN`
+      - subtitle `Investigation live`
+      - body `Masuk ke grand hall dan sweep sayap utama.`
+    - `PreparationGateSeal.Transparency = 0.9`
+    - runner berubah hijau
+    - floodlight `4.50`
+  - regression `HauntedHouse` tetap aman:
+    - `PasrahLastTeleportedCount = 1`
+    - trace memuat `teleportOk`
+    - player posisi pindah ke staging aktif sekitar `1299.11, 3.35, -5.17`
+    - marquee tetap:
+      - title `CONTRACT BAY`
+      - subtitle `Room • Contract • Tools`
+  - coverage map lain:
+    - `EmptyBuilding`
+      - marquee `OPERATIONS ENTRY`
+      - subtitle `Check • Brief • Breach`
+      - player posisi pindah ke map aktif sekitar `805.25, 3.50, 87.31`
+    - `StudioMMNineteen`
+      - marquee `CONTROL ACCESS`
+      - subtitle `Plan • Tools • Entry`
+      - entry title `ACCESS POINT`
+      - player posisi pindah ke map aktif sekitar `473.10, 3.50, 9.42`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - blocker functional lintas-map untuk staging luar sekarang sudah tertutup:
+    - build profile
+    - teleport ke staging
+    - board state
+    - breach state
+  - residual lane tinggal:
+    - asset premium/non-primitive untuk staging luar
+    - dressing exterior yang lebih kaya secara artistik
+    - transisi breach yang lebih sinematik secara visual

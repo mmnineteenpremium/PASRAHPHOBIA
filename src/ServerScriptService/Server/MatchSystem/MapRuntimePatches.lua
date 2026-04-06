@@ -9,6 +9,7 @@ local TRAVERSAL_GUIDE_PATCH_ATTR = "TraversalGuideRuntimePatched"
 local LOGIC_VOLUME_PATCH_ATTR = "LogicVolumesRuntimeHidden"
 local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
 local PREPARATION_STAGING_FOLDER_NAME = "PreparationStagingRuntime"
+local PREPARATION_STAGING_DEBUG_ATTR = "PreparationStagingRuntimeDebug"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
@@ -169,6 +170,48 @@ local PREPARATION_STAGING_PROFILES = {
 		platformWidth = 28,
 		platformDepth = 18,
 		stagingDistance = 18,
+		siteLabel = "CONTRACT BAY",
+		siteSubtitle = "Room • Contract • Tools",
+		contractExtraLine = "Hold porch staging before entering the house.",
+		entryTitle = "MAIN ENTRY",
+		entryReadyBody = "Review board lalu breach dari porch utama.",
+		entryArmedBodyTemplate = "Aktifkan breach untuk sweep awal dengan %s.",
+		entryOpenBody = "Masuk ke foyer rumah dan sweep area inti.",
+		propStyle = "house",
+		platformMaterial = Enum.Material.WoodPlanks,
+		platformColor = Color3.fromRGB(76, 60, 46),
+		runnerMaterial = Enum.Material.WoodPlanks,
+		forecourtMaterial = Enum.Material.Asphalt,
+		forecourtColor = Color3.fromRGB(48, 50, 58),
+		canopyMaterial = Enum.Material.WoodPlanks,
+		canopyColor = Color3.fromRGB(58, 46, 38),
+		frameMaterial = Enum.Material.Wood,
+		frameColor = Color3.fromRGB(92, 72, 58),
+		boardMaterial = Enum.Material.WoodPlanks,
+		boardColor = Color3.fromRGB(40, 32, 28),
+		deskMaterial = Enum.Material.WoodPlanks,
+		deskColor = Color3.fromRGB(92, 66, 48),
+		rackMaterial = Enum.Material.SmoothPlastic,
+		rackColor = Color3.fromRGB(54, 60, 72),
+		caseColor = Color3.fromRGB(78, 72, 66),
+		readyAccent = Color3.fromRGB(214, 160, 104),
+		armedAccent = Color3.fromRGB(132, 186, 255),
+		breachAccent = Color3.fromRGB(142, 214, 198),
+		runnerReadyColor = Color3.fromRGB(98, 84, 70),
+		runnerArmedColor = Color3.fromRGB(72, 104, 146),
+		runnerBreachColor = Color3.fromRGB(72, 138, 122),
+		floodReadyColor = Color3.fromRGB(214, 228, 255),
+		floodArmedColor = Color3.fromRGB(178, 214, 255),
+		floodBreachColor = Color3.fromRGB(174, 255, 236),
+		floodReadyBrightness = 3.2,
+		floodArmedBrightness = 3.8,
+		floodBreachBrightness = 4.3,
+		lampReadyColor = Color3.fromRGB(255, 214, 170),
+		lampArmedColor = Color3.fromRGB(184, 214, 255),
+		lampBreachColor = Color3.fromRGB(190, 255, 236),
+		lampReadyBrightness = 1.8,
+		lampArmedBrightness = 2.1,
+		lampBreachBrightness = 2.45,
 	},
 	abandonedpalace = {
 		anchorRoomName = "Room_GrandHall",
@@ -176,6 +219,48 @@ local PREPARATION_STAGING_PROFILES = {
 		platformWidth = 30,
 		platformDepth = 18,
 		stagingDistance = 20,
+		siteLabel = "PALACE GATE",
+		siteSubtitle = "Ward • Briefing • Breach",
+		contractExtraLine = "Ward the palace threshold before entry.",
+		entryTitle = "PALACE ENTRY",
+		entryReadyBody = "Review board lalu breach dari gerbang istana.",
+		entryArmedBodyTemplate = "Aktifkan breach untuk sweep awal dengan %s.",
+		entryOpenBody = "Masuk ke grand hall dan sweep sayap utama.",
+		propStyle = "palace",
+		platformMaterial = Enum.Material.Marble,
+		platformColor = Color3.fromRGB(112, 98, 90),
+		runnerMaterial = Enum.Material.Fabric,
+		forecourtMaterial = Enum.Material.Slate,
+		forecourtColor = Color3.fromRGB(58, 52, 58),
+		canopyMaterial = Enum.Material.Marble,
+		canopyColor = Color3.fromRGB(118, 108, 102),
+		frameMaterial = Enum.Material.Marble,
+		frameColor = Color3.fromRGB(146, 136, 128),
+		boardMaterial = Enum.Material.Metal,
+		boardColor = Color3.fromRGB(52, 42, 38),
+		deskMaterial = Enum.Material.Marble,
+		deskColor = Color3.fromRGB(118, 106, 98),
+		rackMaterial = Enum.Material.Metal,
+		rackColor = Color3.fromRGB(86, 76, 70),
+		caseColor = Color3.fromRGB(90, 82, 78),
+		readyAccent = Color3.fromRGB(232, 176, 126),
+		armedAccent = Color3.fromRGB(144, 182, 255),
+		breachAccent = Color3.fromRGB(170, 236, 214),
+		runnerReadyColor = Color3.fromRGB(108, 48, 48),
+		runnerArmedColor = Color3.fromRGB(84, 98, 148),
+		runnerBreachColor = Color3.fromRGB(72, 142, 126),
+		floodReadyColor = Color3.fromRGB(255, 224, 190),
+		floodArmedColor = Color3.fromRGB(188, 218, 255),
+		floodBreachColor = Color3.fromRGB(182, 255, 236),
+		floodReadyBrightness = 3.6,
+		floodArmedBrightness = 4.0,
+		floodBreachBrightness = 4.5,
+		lampReadyColor = Color3.fromRGB(255, 198, 150),
+		lampArmedColor = Color3.fromRGB(188, 214, 255),
+		lampBreachColor = Color3.fromRGB(198, 255, 234),
+		lampReadyBrightness = 1.95,
+		lampArmedBrightness = 2.2,
+		lampBreachBrightness = 2.55,
 	},
 	emptybuilding = {
 		anchorRoomName = "Room_Lobby",
@@ -183,6 +268,13 @@ local PREPARATION_STAGING_PROFILES = {
 		platformWidth = 26,
 		platformDepth = 16,
 		stagingDistance = 16,
+		siteLabel = "OPERATIONS ENTRY",
+		siteSubtitle = "Check • Brief • Breach",
+		entryTitle = "MAIN ENTRY",
+		entryReadyBody = "Review board lalu breach dari akses utama.",
+		entryArmedBodyTemplate = "Aktifkan breach untuk sweep awal dengan %s.",
+		entryOpenBody = "Masuk ke bangunan dan mulai sweep awal.",
+		propStyle = "facility",
 	},
 	studiommnineteen = {
 		anchorRoomName = "Room_ControlRoom",
@@ -190,6 +282,13 @@ local PREPARATION_STAGING_PROFILES = {
 		platformWidth = 26,
 		platformDepth = 16,
 		stagingDistance = 16,
+		siteLabel = "CONTROL ACCESS",
+		siteSubtitle = "Plan • Tools • Entry",
+		entryTitle = "ACCESS POINT",
+		entryReadyBody = "Review board lalu breach dari akses kontrol.",
+		entryArmedBodyTemplate = "Aktifkan breach untuk sweep awal dengan %s.",
+		entryOpenBody = "Masuk ke area kontrol dan mulai investigasi.",
+		propStyle = "facility",
 	},
 }
 
@@ -873,6 +972,8 @@ local function formatMapLabel(mapId)
 end
 
 local function buildPreparationBoardContent(mapId, matchContext)
+	local token = resolveMapOverrideToken((type(matchContext) == "table" and (matchContext.mapId or matchContext.map)) or mapId)
+	local profile = token and PREPARATION_STAGING_PROFILES[token] or nil
 	local mapLabel = formatMapLabel((type(matchContext) == "table" and (matchContext.mapId or matchContext.map)) or mapId)
 	local modeLabel = titleCaseToken(type(matchContext) == "table" and (matchContext.mode or matchContext.gameMode) or "Classic")
 	local difficultyLabel = titleCaseToken(type(matchContext) == "table" and matchContext.difficulty or "Mudah")
@@ -887,6 +988,9 @@ local function buildPreparationBoardContent(mapId, matchContext)
 		"Spawn di staging luar sebelum masuk.",
 		"Review board, pilih tool awal, lalu breach dari pintu utama.",
 	}
+	if type(profile) == "table" and type(profile.contractExtraLine) == "string" and profile.contractExtraLine ~= "" then
+		table.insert(contractLines, profile.contractExtraLine)
+	end
 
 	local objectiveLines = {
 		"PRIMARY",
@@ -991,18 +1095,63 @@ local function updatePreparationObjectiveBoard(boardPart, boardData, selectedToo
 	)
 end
 
-local function updatePreparationEntryBeacon(beaconPart, selectedTool, breachOpen)
+local function resolvePreparationTheme(profile, selectedTool, breachOpen)
+	local readyAccent = type(profile) == "table" and profile.readyAccent or Color3.fromRGB(214, 160, 104)
+	local armedAccent = type(profile) == "table" and profile.armedAccent or Color3.fromRGB(132, 186, 255)
+	local breachAccent = type(profile) == "table" and profile.breachAccent or Color3.fromRGB(142, 214, 198)
+	local runnerReadyColor = type(profile) == "table" and profile.runnerReadyColor or Color3.fromRGB(98, 84, 70)
+	local runnerArmedColor = type(profile) == "table" and profile.runnerArmedColor or Color3.fromRGB(72, 104, 146)
+	local runnerBreachColor = type(profile) == "table" and profile.runnerBreachColor or Color3.fromRGB(72, 138, 122)
+	local floodReadyColor = type(profile) == "table" and profile.floodReadyColor or Color3.fromRGB(214, 228, 255)
+	local floodArmedColor = type(profile) == "table" and profile.floodArmedColor or Color3.fromRGB(178, 214, 255)
+	local floodBreachColor = type(profile) == "table" and profile.floodBreachColor or Color3.fromRGB(174, 255, 236)
+	local floodReadyBrightness = type(profile) == "table" and tonumber(profile.floodReadyBrightness) or 3.2
+	local floodArmedBrightness = type(profile) == "table" and tonumber(profile.floodArmedBrightness) or 3.8
+	local floodBreachBrightness = type(profile) == "table" and tonumber(profile.floodBreachBrightness) or 4.3
+	local lampReadyColor = type(profile) == "table" and profile.lampReadyColor or Color3.fromRGB(255, 214, 170)
+	local lampArmedColor = type(profile) == "table" and profile.lampArmedColor or Color3.fromRGB(184, 214, 255)
+	local lampBreachColor = type(profile) == "table" and profile.lampBreachColor or Color3.fromRGB(190, 255, 236)
+	local lampReadyBrightness = type(profile) == "table" and tonumber(profile.lampReadyBrightness) or 1.8
+	local lampArmedBrightness = type(profile) == "table" and tonumber(profile.lampArmedBrightness) or 2.1
+	local lampBreachBrightness = type(profile) == "table" and tonumber(profile.lampBreachBrightness) or 2.45
+
+	if breachOpen then
+		return {
+			accent = breachAccent,
+			runnerColor = runnerBreachColor,
+			floodColor = floodBreachColor,
+			floodBrightness = floodBreachBrightness,
+			lampColor = lampBreachColor,
+			lampBrightness = lampBreachBrightness,
+		}
+	end
+	if type(selectedTool) == "string" and selectedTool ~= "" then
+		return {
+			accent = armedAccent,
+			runnerColor = runnerArmedColor,
+			floodColor = floodArmedColor,
+			floodBrightness = floodArmedBrightness,
+			lampColor = lampArmedColor,
+			lampBrightness = lampArmedBrightness,
+		}
+	end
+	return {
+		accent = readyAccent,
+		runnerColor = runnerReadyColor,
+		floodColor = floodReadyColor,
+		floodBrightness = floodReadyBrightness,
+		lampColor = lampReadyColor,
+		lampBrightness = lampReadyBrightness,
+	}
+end
+
+local function updatePreparationEntryBeacon(beaconPart, selectedTool, breachOpen, profile)
 	if not (typeof(beaconPart) == "Instance" and beaconPart:IsA("BasePart")) then
 		return
 	end
 
-	local color = Color3.fromRGB(214, 160, 104)
-	if type(selectedTool) == "string" and selectedTool ~= "" then
-		color = Color3.fromRGB(132, 186, 255)
-	end
-	if breachOpen then
-		color = Color3.fromRGB(142, 214, 198)
-	end
+	local theme = resolvePreparationTheme(profile, selectedTool, breachOpen)
+	local color = theme.accent
 
 	beaconPart.Color = color
 	local light = beaconPart:FindFirstChild("Light")
@@ -1020,39 +1169,23 @@ local function updatePreparationEntryBeacon(beaconPart, selectedTool, breachOpen
 	light.Shadows = false
 end
 
-local function updatePreparationEntryLane(folder, selectedTool, breachOpen)
+local function updatePreparationEntryLane(folder, selectedTool, breachOpen, profile)
 	if typeof(folder) ~= "Instance" then
 		return
 	end
 
-	local accent = Color3.fromRGB(214, 160, 104)
-	local runnerColor = Color3.fromRGB(98, 84, 70)
-	local floodColor = Color3.fromRGB(214, 228, 255)
-	local floodBrightness = 3.2
-	local lampColor = Color3.fromRGB(255, 214, 170)
-	local lampBrightness = 1.8
-
-	if type(selectedTool) == "string" and selectedTool ~= "" then
-		accent = Color3.fromRGB(132, 186, 255)
-		runnerColor = Color3.fromRGB(72, 104, 146)
-		floodColor = Color3.fromRGB(178, 214, 255)
-		floodBrightness = 3.8
-		lampColor = Color3.fromRGB(184, 214, 255)
-		lampBrightness = 2.1
-	end
-
-	if breachOpen then
-		accent = Color3.fromRGB(142, 214, 198)
-		runnerColor = Color3.fromRGB(72, 138, 122)
-		floodColor = Color3.fromRGB(174, 255, 236)
-		floodBrightness = 4.3
-		lampColor = Color3.fromRGB(190, 255, 236)
-		lampBrightness = 2.45
-	end
+	local theme = resolvePreparationTheme(profile, selectedTool, breachOpen)
+	local accent = theme.accent
+	local runnerColor = theme.runnerColor
+	local floodColor = theme.floodColor
+	local floodBrightness = theme.floodBrightness
+	local lampColor = theme.lampColor
+	local lampBrightness = theme.lampBrightness
 
 	local runner = folder:FindFirstChild("PreparationRunner")
 	if runner and runner:IsA("BasePart") then
 		runner.Color = runnerColor
+		runner.Material = type(profile) == "table" and profile.runnerMaterial or runner.Material
 	end
 
 	for index = 1, 2 do
@@ -1081,29 +1214,77 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen)
 	if entryAccent and entryAccent:IsA("BasePart") then
 		entryAccent.Color = accent
 	end
+
+	local marqueeAccent = folder:FindFirstChild("PreparationSiteMarqueeAccent")
+	if marqueeAccent and marqueeAccent:IsA("BasePart") then
+		marqueeAccent.Color = accent
+	end
+
+	local marqueeGlow = folder:FindFirstChild("PreparationSiteMarqueeGlow")
+	if marqueeGlow and marqueeGlow:IsA("BasePart") then
+		marqueeGlow.Color = accent
+		local glowLight = marqueeGlow:FindFirstChild("Light")
+		if glowLight and glowLight:IsA("PointLight") then
+			glowLight.Color = accent
+			glowLight.Brightness = breachOpen and 1.8 or 1.1
+		end
+	end
+
+	local entrySign = folder:FindFirstChild("PreparationEntrySign")
+	local gateLeft = folder:FindFirstChild("PreparationGateLeft")
+	local gateRight = folder:FindFirstChild("PreparationGateRight")
+	local gateSeal = folder:FindFirstChild("PreparationGateSeal")
+	if entrySign and entrySign:IsA("BasePart") and gateLeft and gateLeft:IsA("BasePart") and gateRight and gateRight:IsA("BasePart") then
+		local right = entrySign.CFrame.RightVector
+		local look = entrySign.CFrame.LookVector
+		local gateCenter = entrySign.Position + look * -0.14 + Vector3.new(0, -0.42, 0)
+		local closedSpan = math.max(0.6, (entrySign.Size.X * 0.25))
+		local openSpan = math.max(closedSpan + 1.8, (entrySign.Size.X * 0.62))
+		local span = breachOpen and openSpan or closedSpan
+		local gateColor = accent:Lerp(Color3.fromRGB(20, 24, 30), 0.34)
+		local leftPos = gateCenter - right * span
+		local rightPos = gateCenter + right * span
+		gateLeft.CFrame = CFrame.lookAt(leftPos, leftPos + look, Vector3.yAxis)
+		gateRight.CFrame = CFrame.lookAt(rightPos, rightPos + look, Vector3.yAxis)
+		gateLeft.Color = gateColor
+		gateRight.Color = gateColor
+		gateLeft.Transparency = breachOpen and 0.16 or 0
+		gateRight.Transparency = breachOpen and 0.16 or 0
+		if gateSeal and gateSeal:IsA("BasePart") then
+			gateSeal.Color = accent
+			gateSeal.Transparency = breachOpen and 0.9 or 0.08
+		end
+	end
+
+	for index = 1, 2 do
+		local brazierFlame = folder:FindFirstChild("PreparationBrazierFlame_" .. tostring(index))
+		if brazierFlame and brazierFlame:IsA("BasePart") then
+			brazierFlame.Color = accent:Lerp(Color3.fromRGB(255, 214, 166), 0.28)
+		end
+	end
 end
 
-local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen)
+local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen, profile)
 	if typeof(entrySign) ~= "Instance" then
 		return
 	end
 
-	local title = "MAIN ENTRY"
+	local theme = resolvePreparationTheme(profile, selectedTool, breachOpen)
+	local title = type(profile) == "table" and tostring(profile.entryTitle or "MAIN ENTRY") or "MAIN ENTRY"
 	local subtitle = "Breach setelah review board"
-	local body = "Ikuti runner ke pintu utama."
-	local accent = Color3.fromRGB(214, 160, 104)
+	local body = type(profile) == "table" and tostring(profile.entryReadyBody or "Ikuti runner ke pintu utama.") or "Ikuti runner ke pintu utama."
+	local accent = theme.accent
 
 	if type(selectedTool) == "string" and selectedTool ~= "" then
 		subtitle = string.format("%s ready • breach armed", selectedTool)
-		body = string.format("Aktifkan breach untuk sweep awal dengan %s.", selectedTool)
-		accent = Color3.fromRGB(132, 186, 255)
+		local template = type(profile) == "table" and tostring(profile.entryArmedBodyTemplate or "Aktifkan breach untuk sweep awal dengan %s.") or "Aktifkan breach untuk sweep awal dengan %s."
+		body = string.format(template, selectedTool)
 	end
 
 	if breachOpen then
 		title = "BREACH OPEN"
 		subtitle = "Investigation live"
-		body = "Masuk ke area utama sekarang."
-		accent = Color3.fromRGB(142, 214, 198)
+		body = type(profile) == "table" and tostring(profile.entryOpenBody or "Masuk ke area utama sekarang.") or "Masuk ke area utama sekarang."
 	end
 
 	ensureBoardSurface(
@@ -1124,6 +1305,279 @@ local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen)
 		body,
 		accent
 	)
+end
+
+local function buildPreparationStageDecor(folder, profile, platformCenter, runnerCenter, right, outward)
+	if typeof(folder) ~= "Instance" then
+		return
+	end
+
+	local frameMaterial = type(profile) == "table" and profile.frameMaterial or Enum.Material.Metal
+	local frameColor = type(profile) == "table" and profile.frameColor or Color3.fromRGB(76, 80, 88)
+	local boardMaterial = type(profile) == "table" and profile.boardMaterial or Enum.Material.Metal
+	local boardColor = type(profile) == "table" and profile.boardColor or Color3.fromRGB(34, 40, 52)
+	local readyAccent = type(profile) == "table" and profile.readyAccent or Color3.fromRGB(214, 160, 104)
+	local siteLabel = type(profile) == "table" and tostring(profile.siteLabel or "OUTSIDE STAGING") or "OUTSIDE STAGING"
+	local siteSubtitle = type(profile) == "table" and tostring(profile.siteSubtitle or "Briefing • Tools • Breach") or "Briefing • Tools • Breach"
+
+	local marquee = ensurePart(folder, "PreparationSiteMarquee")
+	configurePart(
+		marquee,
+		{
+			Size = Vector3.new(11.8, 2.9, 0.3),
+			CFrame = CFrame.lookAt(platformCenter + (outward * 3.8) + Vector3.new(0, 5.2, 0), platformCenter - outward, Vector3.yAxis),
+			Material = boardMaterial,
+			Color = boardColor,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+		}
+	)
+	ensureBoardSurface(marquee, "FrontSurface", Enum.NormalId.Front, siteLabel, siteSubtitle, "", readyAccent)
+	ensureBoardSurface(marquee, "BackSurface", Enum.NormalId.Back, siteLabel, siteSubtitle, "", readyAccent)
+
+	local marqueeAccent = ensurePart(folder, "PreparationSiteMarqueeAccent")
+	configurePart(
+		marqueeAccent,
+		{
+			Size = Vector3.new(11.2, 0.18, 0.14),
+			CFrame = CFrame.lookAt(marquee.Position + Vector3.new(0, -1.32, -0.08), marquee.Position + marquee.CFrame.LookVector, Vector3.yAxis),
+			Material = Enum.Material.Neon,
+			Color = readyAccent,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+		}
+	)
+
+	local marqueeGlow = ensurePart(folder, "PreparationSiteMarqueeGlow")
+	configurePart(
+		marqueeGlow,
+		{
+			Size = Vector3.new(1.6, 0.2, 0.16),
+			CFrame = CFrame.new(marquee.Position + Vector3.new(0, 0, -0.2)),
+			Material = Enum.Material.Neon,
+			Color = readyAccent,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+			Transparency = 0.14,
+		}
+	)
+	local glowLight = marqueeGlow:FindFirstChild("Light")
+	if not (glowLight and glowLight:IsA("PointLight")) then
+		if glowLight then
+			glowLight:Destroy()
+		end
+		glowLight = Instance.new("PointLight")
+		glowLight.Name = "Light"
+		glowLight.Parent = marqueeGlow
+	end
+	glowLight.Range = 18
+	glowLight.Brightness = 1.1
+	glowLight.Color = readyAccent
+	glowLight.Shadows = false
+
+	local entryAccent = ensurePart(folder, "PreparationEntryAccent")
+	configurePart(
+		entryAccent,
+		{
+			Size = Vector3.new(4.1, 0.16, 0.14),
+			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.68) + Vector3.new(0, 1.18, 0), runnerCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.Neon,
+			Color = readyAccent,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+		}
+	)
+
+	local gateTrack = ensurePart(folder, "PreparationGateTrack")
+	configurePart(
+		gateTrack,
+		{
+			Size = Vector3.new(5.4, 0.14, 0.18),
+			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.72) + Vector3.new(0, 1.52, 0), runnerCenter - outward, Vector3.yAxis),
+			Material = frameMaterial,
+			Color = frameColor,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+		}
+	)
+	for index, side in ipairs({ -1, 1 }) do
+		local gateLeaf = ensurePart(folder, "PreparationGate" .. (side < 0 and "Left" or "Right"))
+		configurePart(
+			gateLeaf,
+			{
+				Size = Vector3.new(1.5, 2.2, 0.18),
+				CFrame = CFrame.lookAt(runnerCenter + (right * side * 1.15) + (outward * -0.86) + Vector3.new(0, 0.84, 0), runnerCenter - outward, Vector3.yAxis),
+				Material = frameMaterial,
+				Color = frameColor,
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
+	end
+	local gateSeal = ensurePart(folder, "PreparationGateSeal")
+	configurePart(
+		gateSeal,
+		{
+			Size = Vector3.new(0.28, 2.04, 0.08),
+			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.78) + Vector3.new(0, 0.84, 0), runnerCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.Neon,
+			Color = readyAccent,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+			Transparency = 0.08,
+		}
+	)
+
+	local propStyle = type(profile) == "table" and profile.propStyle or nil
+	if propStyle == "house" then
+		for index, side in ipairs({ -1, 1 }) do
+			local porchPost = ensurePart(folder, "PreparationPorchPost_" .. tostring(index))
+			configurePart(
+				porchPost,
+				{
+					Size = Vector3.new(0.48, 4.2, 0.48),
+					CFrame = CFrame.new(platformCenter + (right * side * 4.8) + (outward * -1.4) + Vector3.new(0, 2.1, 0)),
+					Material = frameMaterial,
+					Color = frameColor,
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local crate = ensurePart(folder, "PreparationSupplyCrate_" .. tostring(index))
+			configurePart(
+				crate,
+				{
+					Size = Vector3.new(2.4, 1.3, 1.8),
+					CFrame = CFrame.lookAt(platformCenter + (right * side * 7.1) + (outward * 2.7) + Vector3.new(0, 0.66, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.WoodPlanks,
+					Color = Color3.fromRGB(94, 72, 54),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+		end
+		local noticeStand = ensurePart(folder, "PreparationNoticeStand")
+		configurePart(
+			noticeStand,
+			{
+				Size = Vector3.new(2.2, 2.8, 0.22),
+				CFrame = CFrame.lookAt(platformCenter + (right * -10.2) + (outward * 1.2) + Vector3.new(0, 1.5, 0), platformCenter - outward, Vector3.yAxis),
+				Material = boardMaterial,
+				Color = boardColor,
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+		ensureBoardSurface(noticeStand, "FrontSurface", Enum.NormalId.Front, "STAGING", "Porch hold", { "Room • Contract • Tools", "Breach after review" }, readyAccent)
+	elseif propStyle == "palace" then
+		local carpet = ensurePart(folder, "PreparationCarpet")
+		configurePart(
+			carpet,
+			{
+				Size = Vector3.new(8.2, 0.08, 17.6),
+				CFrame = CFrame.lookAt(runnerCenter + (outward * 2.6) + Vector3.new(0, -0.18, 0), runnerCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Fabric,
+				Color = Color3.fromRGB(112, 38, 42),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
+		for index, side in ipairs({ -1, 1 }) do
+			local pillar = ensurePart(folder, "PreparationPillar_" .. tostring(index))
+			configurePart(
+				pillar,
+				{
+					Size = Vector3.new(1.1, 5.6, 1.1),
+					CFrame = CFrame.new(platformCenter + (right * side * 8.6) + (outward * -0.9) + Vector3.new(0, 2.8, 0)),
+					Material = Enum.Material.Marble,
+					Color = Color3.fromRGB(144, 132, 124),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local brazierBase = ensurePart(folder, "PreparationBrazierBase_" .. tostring(index))
+			configurePart(
+				brazierBase,
+				{
+					Size = Vector3.new(1.6, 1.1, 1.6),
+					CFrame = CFrame.new(platformCenter + (right * side * 10.8) + (outward * 0.9) + Vector3.new(0, 0.56, 0)),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(96, 78, 64),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local brazierFlame = ensurePart(folder, "PreparationBrazierFlame_" .. tostring(index))
+			configurePart(
+				brazierFlame,
+				{
+					Size = Vector3.new(0.72, 0.72, 0.72),
+					CFrame = CFrame.new(brazierBase.Position + Vector3.new(0, 1.06, 0)),
+					Material = Enum.Material.Neon,
+					Color = readyAccent,
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
+			local flameLight = brazierFlame:FindFirstChild("Light")
+			if not (flameLight and flameLight:IsA("PointLight")) then
+				if flameLight then
+					flameLight:Destroy()
+				end
+				flameLight = Instance.new("PointLight")
+				flameLight.Name = "Light"
+				flameLight.Parent = brazierFlame
+			end
+			flameLight.Range = 18
+			flameLight.Brightness = 1.7
+			flameLight.Color = readyAccent
+			flameLight.Shadows = false
+
+			local banner = ensurePart(folder, "PreparationBanner_" .. tostring(index))
+			configurePart(
+				banner,
+				{
+					Size = Vector3.new(1.4, 3.8, 0.12),
+					CFrame = CFrame.lookAt(platformCenter + (right * side * 6.4) + (outward * -2.4) + Vector3.new(0, 3.4, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Fabric,
+					Color = Color3.fromRGB(96, 36, 40),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
+		end
+	else
+		for index, side in ipairs({ -1, 1 }) do
+			local bollard = ensurePart(folder, "PreparationMarker_" .. tostring(index))
+			configurePart(
+				bollard,
+				{
+					Size = Vector3.new(0.8, 1.8, 0.8),
+					CFrame = CFrame.new(platformCenter + (right * side * 8.2) + (outward * 2.2) + Vector3.new(0, 0.9, 0)),
+					Material = Enum.Material.Metal,
+					Color = frameColor,
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+		end
+	end
 end
 
 local function collectStairBounds(mapClone)
@@ -1700,12 +2154,19 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		return false
 	end
 
+	local function setPreparationDebug(stage)
+		if mapClone then
+			mapClone:SetAttribute(PREPARATION_STAGING_DEBUG_ATTR, tostring(stage or ""))
+		end
+	end
+
 	local token = resolveMapOverrideToken(mapId, mapClone)
 	if token and PREPARATION_STAGING_PROFILES[token] == nil then
 		token = resolveMapOverrideToken(nil, mapClone)
 	end
 	local profile = token and PREPARATION_STAGING_PROFILES[token] or nil
 	if not profile then
+		setPreparationDebug("profile_missing")
 		return false
 	end
 
@@ -1713,95 +2174,107 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	local doorsFolder = mapClone:FindFirstChild("Doors", true)
 	local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
 	if not (roomsFolder and doorsFolder and spawnFolder) then
+		setPreparationDebug("folder_missing")
 		return false
 	end
 
-	local anchorRoom = roomsFolder:FindFirstChild(profile.anchorRoomName)
-	local anchorDoor = doorsFolder:FindFirstChild(profile.anchorDoorName)
+	local anchorRoom = roomsFolder:FindFirstChild(profile.anchorRoomName, true)
+	local anchorDoor = doorsFolder:FindFirstChild(profile.anchorDoorName, true)
 	if not (anchorRoom and anchorRoom:IsA("BasePart") and anchorDoor and anchorDoor:IsA("BasePart")) then
+		setPreparationDebug(string.format(
+			"anchor_missing|token=%s|room=%s|door=%s",
+			tostring(token),
+			tostring(anchorRoom and anchorRoom:GetFullName() or "nil"),
+			tostring(anchorDoor and anchorDoor:GetFullName() or "nil")
+		))
 		return false
 	end
 
 	local outward = flattenDirection(anchorDoor.Position - anchorRoom.Position)
 	if not outward then
+		setPreparationDebug("outward_missing")
 		return false
 	end
-	local right = Vector3.new(-outward.Z, 0, outward.X)
-	local stageDistance = tonumber(profile.stagingDistance) or 18
-	local platformWidth = tonumber(profile.platformWidth) or 28
-	local platformDepth = tonumber(profile.platformDepth) or 18
-	local boardData = buildPreparationBoardContent(mapId, matchContext)
-	local baseY = anchorRoom.Position.Y
-	local platformCenter = Vector3.new(
-		anchorDoor.Position.X,
-		baseY - 0.28,
-		anchorDoor.Position.Z
-	) + (outward * stageDistance)
-	local existingBounds = collectMapXZBounds(mapClone, mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME))
-	if existingBounds then
-		local shellPadding = (platformDepth * 0.5) + 12
-		if math.abs(outward.X) >= math.abs(outward.Z) then
-			local targetX = outward.X >= 0
-				and (existingBounds.maxX + shellPadding)
-				or (existingBounds.minX - shellPadding)
-			platformCenter = Vector3.new(targetX, platformCenter.Y, anchorDoor.Position.Z)
-		else
-			local targetZ = outward.Z >= 0
-				and (existingBounds.maxZ + shellPadding)
-				or (existingBounds.minZ - shellPadding)
-			platformCenter = Vector3.new(anchorDoor.Position.X, platformCenter.Y, targetZ)
+	local ok, result = xpcall(function()
+		setPreparationDebug("start|" .. tostring(token))
+		local right = Vector3.new(-outward.Z, 0, outward.X)
+		local stageDistance = tonumber(profile.stagingDistance) or 18
+		local platformWidth = tonumber(profile.platformWidth) or 28
+		local platformDepth = tonumber(profile.platformDepth) or 18
+		local boardData = buildPreparationBoardContent(mapId, matchContext)
+		local baseY = anchorRoom.Position.Y
+		local platformCenter = Vector3.new(
+			anchorDoor.Position.X,
+			baseY - 0.28,
+			anchorDoor.Position.Z
+		) + (outward * stageDistance)
+		local existingBounds = collectMapXZBounds(mapClone, mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME))
+		if existingBounds then
+			local shellPadding = (platformDepth * 0.5) + 12
+			if math.abs(outward.X) >= math.abs(outward.Z) then
+				local targetX = outward.X >= 0
+					and (existingBounds.maxX + shellPadding)
+					or (existingBounds.minX - shellPadding)
+				platformCenter = Vector3.new(targetX, platformCenter.Y, anchorDoor.Position.Z)
+			else
+				local targetZ = outward.Z >= 0
+					and (existingBounds.maxZ + shellPadding)
+					or (existingBounds.minZ - shellPadding)
+				platformCenter = Vector3.new(anchorDoor.Position.X, platformCenter.Y, targetZ)
+			end
 		end
-	end
 
-	local existingFolder = mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME)
-	if existingFolder then
-		existingFolder:Destroy()
-	end
-	local folder = ensureFolder(mapClone, PREPARATION_STAGING_FOLDER_NAME)
-	if not folder then
-		return false
-	end
+		local existingFolder = mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME)
+		if existingFolder then
+			existingFolder:Destroy()
+		end
+		local folder = ensureFolder(mapClone, PREPARATION_STAGING_FOLDER_NAME)
+		if not folder then
+			setPreparationDebug("folder_create_failed")
+			return false
+		end
+		setPreparationDebug("folder_ready")
 
-	local platformCFrame = CFrame.lookAt(platformCenter, platformCenter - outward, Vector3.yAxis)
-	configurePart(
-		ensurePart(folder, "PreparationPlatform"),
-		{
-			Size = Vector3.new(platformWidth, 0.32, platformDepth),
-			CFrame = platformCFrame,
-			Material = Enum.Material.Concrete,
-			Color = Color3.fromRGB(64, 66, 74),
-			CanCollide = true,
-			CanTouch = false,
-			CanQuery = true,
-		}
-	)
+		local platformCFrame = CFrame.lookAt(platformCenter, platformCenter - outward, Vector3.yAxis)
+		configurePart(
+			ensurePart(folder, "PreparationPlatform"),
+			{
+				Size = Vector3.new(platformWidth, 0.32, platformDepth),
+				CFrame = platformCFrame,
+				Material = type(profile) == "table" and profile.platformMaterial or Enum.Material.Concrete,
+				Color = type(profile) == "table" and profile.platformColor or Color3.fromRGB(64, 66, 74),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
 
-	local runnerLength = math.max(10, (platformCenter - anchorDoor.Position).Magnitude - 2)
-	local runnerCenter = Vector3.new(
-		(platformCenter.X + anchorDoor.Position.X) * 0.5,
-		baseY - 0.32,
-		(platformCenter.Z + anchorDoor.Position.Z) * 0.5
-	)
-	configurePart(
-		ensurePart(folder, "PreparationRunner"),
-		{
-			Size = Vector3.new(math.max(8, platformWidth * 0.44), 0.18, runnerLength),
-			CFrame = CFrame.lookAt(runnerCenter, runnerCenter - outward, Vector3.yAxis),
-			Material = Enum.Material.Slate,
-			Color = Color3.fromRGB(88, 92, 102),
-			CanCollide = true,
-			CanTouch = false,
-			CanQuery = true,
-		}
-	)
+		local runnerLength = math.max(10, (platformCenter - anchorDoor.Position).Magnitude - 2)
+		local runnerCenter = Vector3.new(
+			(platformCenter.X + anchorDoor.Position.X) * 0.5,
+			baseY - 0.32,
+			(platformCenter.Z + anchorDoor.Position.Z) * 0.5
+		)
+		configurePart(
+			ensurePart(folder, "PreparationRunner"),
+			{
+				Size = Vector3.new(math.max(8, platformWidth * 0.44), 0.18, runnerLength),
+				CFrame = CFrame.lookAt(runnerCenter, runnerCenter - outward, Vector3.yAxis),
+				Material = type(profile) == "table" and profile.runnerMaterial or Enum.Material.Slate,
+				Color = Color3.fromRGB(88, 92, 102),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
 
 	configurePart(
 		ensurePart(folder, "PreparationForecourt"),
 		{
 			Size = Vector3.new(platformWidth + 16, 0.16, platformDepth + 14),
 			CFrame = CFrame.lookAt(platformCenter + (outward * 2.8) + Vector3.new(0, -0.12, 0), platformCenter - outward, Vector3.yAxis),
-			Material = Enum.Material.Asphalt,
-			Color = Color3.fromRGB(52, 56, 64),
+			Material = type(profile) == "table" and profile.forecourtMaterial or Enum.Material.Asphalt,
+			Color = type(profile) == "table" and profile.forecourtColor or Color3.fromRGB(52, 56, 64),
 			CanCollide = true,
 			CanTouch = false,
 			CanQuery = true,
@@ -1814,13 +2287,13 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		fenceBack,
 		{
 			Size = Vector3.new(platformWidth + 14, fenceHeight, 0.22),
-			CFrame = CFrame.lookAt(platformCenter + (outward * ((platformDepth * 0.5) + 6.8)) + Vector3.new(0, 2.1, 0), platformCenter - outward, Vector3.yAxis),
-			Material = Enum.Material.Metal,
-			Color = Color3.fromRGB(98, 104, 114),
-			CanCollide = true,
-			CanTouch = false,
-			CanQuery = true,
-		}
+				CFrame = CFrame.lookAt(platformCenter + (outward * ((platformDepth * 0.5) + 6.8)) + Vector3.new(0, 2.1, 0), platformCenter - outward, Vector3.yAxis),
+				Material = type(profile) == "table" and (profile.frameMaterial or Enum.Material.Metal) or Enum.Material.Metal,
+				Color = type(profile) == "table" and (profile.frameColor or Color3.fromRGB(98, 104, 114)) or Color3.fromRGB(98, 104, 114),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
 	)
 	for index, side in ipairs({ -1, 1 }) do
 		local fenceSide = ensurePart(folder, "PreparationFence_Side_" .. tostring(index))
@@ -1833,8 +2306,8 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 					platformCenter - outward,
 					Vector3.yAxis
 				),
-				Material = Enum.Material.Metal,
-				Color = Color3.fromRGB(98, 104, 114),
+				Material = type(profile) == "table" and (profile.frameMaterial or Enum.Material.Metal) or Enum.Material.Metal,
+				Color = type(profile) == "table" and (profile.frameColor or Color3.fromRGB(98, 104, 114)) or Color3.fromRGB(98, 104, 114),
 				CanCollide = true,
 				CanTouch = false,
 				CanQuery = true,
@@ -1864,15 +2337,15 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 
 	configurePart(
 		ensurePart(folder, "PreparationCanopy"),
-		{
-			Size = Vector3.new(platformWidth - 2, 0.24, 5.2),
-			CFrame = CFrame.lookAt(platformCenter + Vector3.new(0, 6.2, 0), platformCenter - outward, Vector3.yAxis),
-			Material = Enum.Material.Metal,
-			Color = Color3.fromRGB(46, 50, 58),
-			CanCollide = false,
-			CanTouch = false,
-			CanQuery = false,
-		}
+			{
+				Size = Vector3.new(platformWidth - 2, 0.24, 5.2),
+				CFrame = CFrame.lookAt(platformCenter + Vector3.new(0, 6.2, 0), platformCenter - outward, Vector3.yAxis),
+				Material = type(profile) == "table" and (profile.canopyMaterial or Enum.Material.Metal) or Enum.Material.Metal,
+				Color = type(profile) == "table" and (profile.canopyColor or Color3.fromRGB(46, 50, 58)) or Color3.fromRGB(46, 50, 58),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
 	)
 
 	for index, side in ipairs({ -1, 1 }) do
@@ -1984,15 +2457,15 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	local contractBoard = ensurePart(folder, "PreparationContractBoard")
 	configurePart(
 		contractBoard,
-		{
-			Size = Vector3.new(5.2, 4.6, 0.32),
-			CFrame = CFrame.lookAt(platformCenter + (outward * -1.6) + Vector3.new(0, 3.2, 0), platformCenter + outward, Vector3.yAxis),
-			Material = Enum.Material.Metal,
-			Color = Color3.fromRGB(34, 40, 52),
-			CanCollide = true,
-			CanTouch = false,
-			CanQuery = true,
-		}
+			{
+				Size = Vector3.new(5.2, 4.6, 0.32),
+				CFrame = CFrame.lookAt(platformCenter + (outward * -1.6) + Vector3.new(0, 3.2, 0), platformCenter + outward, Vector3.yAxis),
+				Material = type(profile) == "table" and (profile.boardMaterial or Enum.Material.Metal) or Enum.Material.Metal,
+				Color = type(profile) == "table" and (profile.boardColor or Color3.fromRGB(34, 40, 52)) or Color3.fromRGB(34, 40, 52),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
 	)
 	ensureBoardSurface(
 		contractBoard,
@@ -2007,15 +2480,15 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	local contractDesk = ensurePart(folder, "PreparationContractDesk")
 	configurePart(
 		contractDesk,
-		{
-			Size = Vector3.new(6.4, 1.2, 2.2),
-			CFrame = CFrame.lookAt(platformCenter + (outward * 1.2) + Vector3.new(0, 0.64, 0), platformCenter - outward, Vector3.yAxis),
-			Material = Enum.Material.WoodPlanks,
-			Color = Color3.fromRGB(82, 62, 48),
-			CanCollide = true,
-			CanTouch = false,
-			CanQuery = true,
-		}
+			{
+				Size = Vector3.new(6.4, 1.2, 2.2),
+				CFrame = CFrame.lookAt(platformCenter + (outward * 1.2) + Vector3.new(0, 0.64, 0), platformCenter - outward, Vector3.yAxis),
+				Material = type(profile) == "table" and (profile.deskMaterial or Enum.Material.WoodPlanks) or Enum.Material.WoodPlanks,
+				Color = type(profile) == "table" and (profile.deskColor or Color3.fromRGB(82, 62, 48)) or Color3.fromRGB(82, 62, 48),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
 	)
 	ensureBoardSurface(
 		contractBoard,
@@ -2030,45 +2503,45 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	local objectiveBoard = ensurePart(folder, "PreparationObjectiveBoard")
 	configurePart(
 		objectiveBoard,
-		{
-			Size = Vector3.new(5.8, 4.8, 0.32),
-			CFrame = CFrame.lookAt(platformCenter + (right * -8.2) + (outward * -0.4) + Vector3.new(0, 3.3, 0), platformCenter + outward, Vector3.yAxis),
-			Material = Enum.Material.Metal,
-			Color = Color3.fromRGB(26, 34, 48),
-			CanCollide = true,
-			CanTouch = false,
-			CanQuery = true,
-		}
+			{
+				Size = Vector3.new(5.8, 4.8, 0.32),
+				CFrame = CFrame.lookAt(platformCenter + (right * -8.2) + (outward * -0.4) + Vector3.new(0, 3.3, 0), platformCenter + outward, Vector3.yAxis),
+				Material = type(profile) == "table" and (profile.boardMaterial or Enum.Material.Metal) or Enum.Material.Metal,
+				Color = type(profile) == "table" and (profile.boardColor or Color3.fromRGB(26, 34, 48)) or Color3.fromRGB(26, 34, 48),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
 	)
 	updatePreparationObjectiveBoard(objectiveBoard, boardData, nil, false)
 
 	local toolsBoard = ensurePart(folder, "PreparationToolsBoard")
 	configurePart(
 		toolsBoard,
-		{
-			Size = Vector3.new(5.8, 4.8, 0.32),
-			CFrame = CFrame.lookAt(platformCenter + (right * 8.2) + (outward * -0.4) + Vector3.new(0, 3.3, 0), platformCenter + outward, Vector3.yAxis),
-			Material = Enum.Material.Metal,
-			Color = Color3.fromRGB(26, 34, 48),
-			CanCollide = true,
-			CanTouch = false,
-			CanQuery = true,
-		}
+			{
+				Size = Vector3.new(5.8, 4.8, 0.32),
+				CFrame = CFrame.lookAt(platformCenter + (right * 8.2) + (outward * -0.4) + Vector3.new(0, 3.3, 0), platformCenter + outward, Vector3.yAxis),
+				Material = type(profile) == "table" and (profile.boardMaterial or Enum.Material.Metal) or Enum.Material.Metal,
+				Color = type(profile) == "table" and (profile.boardColor or Color3.fromRGB(26, 34, 48)) or Color3.fromRGB(26, 34, 48),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
 	)
 	updatePreparationToolsBoard(toolsBoard, nil)
 
 	local rackBase = ensurePart(folder, "PreparationToolRack")
 	configurePart(
 		rackBase,
-		{
-			Size = Vector3.new(12.8, 1.1, 1.8),
-			CFrame = CFrame.lookAt(platformCenter + (right * 8.2) + (outward * 4.2) + Vector3.new(0, 0.6, 0), platformCenter + outward, Vector3.yAxis),
-			Material = Enum.Material.SmoothPlastic,
-			Color = Color3.fromRGB(58, 66, 82),
-			CanCollide = true,
-			CanTouch = false,
-			CanQuery = true,
-		}
+			{
+				Size = Vector3.new(12.8, 1.1, 1.8),
+				CFrame = CFrame.lookAt(platformCenter + (right * 8.2) + (outward * 4.2) + Vector3.new(0, 0.6, 0), platformCenter + outward, Vector3.yAxis),
+				Material = type(profile) == "table" and (profile.rackMaterial or Enum.Material.SmoothPlastic) or Enum.Material.SmoothPlastic,
+				Color = type(profile) == "table" and (profile.rackColor or Color3.fromRGB(58, 66, 82)) or Color3.fromRGB(58, 66, 82),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
 	)
 
 	for index, side in ipairs({ -1, 1, 0 }) do
@@ -2084,8 +2557,8 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 					platformCenter - outward,
 					Vector3.yAxis
 				),
-				Material = Enum.Material.Metal,
-				Color = side == 0 and Color3.fromRGB(58, 64, 76) or Color3.fromRGB(74, 78, 86),
+				Material = type(profile) == "table" and (profile.rackMaterial or Enum.Material.Metal) or Enum.Material.Metal,
+				Color = type(profile) == "table" and (profile.caseColor or (side == 0 and Color3.fromRGB(58, 64, 76) or Color3.fromRGB(74, 78, 86))) or (side == 0 and Color3.fromRGB(58, 64, 76) or Color3.fromRGB(74, 78, 86)),
 				CanCollide = true,
 				CanTouch = false,
 				CanQuery = true,
@@ -2093,20 +2566,23 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		)
 	end
 
+		buildPreparationStageDecor(folder, profile, platformCenter, runnerCenter, right, outward)
+		setPreparationDebug("decor_ready")
+
 	local entrySign = ensurePart(folder, "PreparationEntrySign")
 	configurePart(
 		entrySign,
 		{
 			Size = Vector3.new(4.6, 2.2, 0.24),
 			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.8) + Vector3.new(0, 2.6, 0), runnerCenter - outward, Vector3.yAxis),
-			Material = Enum.Material.Metal,
-			Color = Color3.fromRGB(28, 34, 44),
+			Material = type(profile) == "table" and (profile.boardMaterial or Enum.Material.Metal) or Enum.Material.Metal,
+			Color = type(profile) == "table" and (profile.boardColor or Color3.fromRGB(28, 34, 44)) or Color3.fromRGB(28, 34, 44),
 			CanCollide = false,
 			CanTouch = false,
 			CanQuery = false,
 		}
 	)
-	updatePreparationEntrySign(entrySign, nil, false)
+	updatePreparationEntrySign(entrySign, nil, false, profile)
 
 	local entryBeacon = ensurePart(folder, "PreparationEntryBeacon")
 	configurePart(
@@ -2121,8 +2597,8 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			CanQuery = false,
 		}
 	)
-	updatePreparationEntryBeacon(entryBeacon, nil, false)
-	updatePreparationEntryLane(folder, nil, false)
+	updatePreparationEntryBeacon(entryBeacon, nil, false, profile)
+	updatePreparationEntryLane(folder, nil, false, profile)
 
 	local breachPrompt
 	local function resolvePreparationSelectedTool()
@@ -2168,9 +2644,9 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		local selectedTool = resolvePreparationSelectedTool()
 		local breachOpen = resolvePreparationBreachOpen()
 		updatePreparationObjectiveBoard(objectiveBoard, boardData, selectedTool, breachOpen)
-		updatePreparationEntrySign(entrySign, selectedTool, breachOpen)
-		updatePreparationEntryBeacon(entryBeacon, selectedTool, breachOpen)
-		updatePreparationEntryLane(folder, selectedTool, breachOpen)
+		updatePreparationEntrySign(entrySign, selectedTool, breachOpen, profile)
+		updatePreparationEntryBeacon(entryBeacon, selectedTool, breachOpen, profile)
+		updatePreparationEntryLane(folder, selectedTool, breachOpen, profile)
 		if breachOpen and breachPrompt and breachPrompt.Parent then
 			breachPrompt:Destroy()
 		end
@@ -2250,36 +2726,44 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			end
 		end
 	end
-	syncPreparationEntryState()
+		syncPreparationEntryState()
 
-	local spawnOffsets = { -5.4, -1.8, 1.8, 5.4 }
-	local spawnY = anchorDoor.Position.Y + 0.5
-	for index = 1, 4 do
-		local spawnPart = ensurePart(spawnFolder, "PlayerSpawn_" .. tostring(index))
-		local spawnPosition = Vector3.new(
-			platformCenter.X,
-			spawnY,
-			platformCenter.Z
-		) + (outward * 5.8) + (right * spawnOffsets[index])
-		configurePart(
-			spawnPart,
-			{
-				Size = Vector3.new(1, 1, 1),
-				CFrame = CFrame.lookAt(spawnPosition, spawnPosition - outward, Vector3.yAxis),
-				Transparency = 1,
-				CanCollide = false,
-				CanTouch = false,
-				CanQuery = false,
-				Color = Color3.fromRGB(255, 255, 255),
-			}
-		)
-	end
+		local spawnOffsets = { -5.4, -1.8, 1.8, 5.4 }
+		local spawnY = anchorDoor.Position.Y + 0.5
+		for index = 1, 4 do
+			local spawnPart = ensurePart(spawnFolder, "PlayerSpawn_" .. tostring(index))
+			local spawnPosition = Vector3.new(
+				platformCenter.X,
+				spawnY,
+				platformCenter.Z
+			) + (outward * 5.8) + (right * spawnOffsets[index])
+			configurePart(
+				spawnPart,
+				{
+					Size = Vector3.new(1, 1, 1),
+					CFrame = CFrame.lookAt(spawnPosition, spawnPosition - outward, Vector3.yAxis),
+					Transparency = 1,
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+					Color = Color3.fromRGB(255, 255, 255),
+				}
+			)
+		end
 
-	mapClone:SetAttribute(PREPARATION_STAGING_PATCH_ATTR, true)
-	if type(matchContext) == "table" then
-		matchContext.preparationWorldBoard = true
+		mapClone:SetAttribute(PREPARATION_STAGING_PATCH_ATTR, true)
+		setPreparationDebug("complete")
+		if type(matchContext) == "table" then
+			matchContext.preparationWorldBoard = true
+		end
+		return true
+	end, debug.traceback)
+
+	if not ok then
+		setPreparationDebug("error|" .. tostring(result))
+		return false
 	end
-	return true
+	return result == true
 end
 
 local function patchMapMaterials(mapId, mapClone)
