@@ -497,6 +497,20 @@ function SoundSystem:_onAudioEvent(payload)
 	self:_playCategoryAudio(category, payload)
 end
 
+function SoundSystem:PreviewAudioEvent(payload)
+	if type(payload) ~= "table" then
+		return
+	end
+	self:_onAudioEvent(payload)
+end
+
+function SoundSystem:PreviewMatchEvent(payload)
+	if type(payload) ~= "table" then
+		return
+	end
+	self:_onMatchEvent(payload)
+end
+
 function SoundSystem:GetLastAudio(category)
 	return self._lastAudioByCategory[category]
 end

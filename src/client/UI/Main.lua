@@ -3792,6 +3792,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self:_resetFieldKitToolStates()
 			self:_setMatchWindowDismissed(false)
 			self:_refreshBasicMatchPanel("Lobby")
+			self:_refreshLobbyEvidenceTrainingPanel()
 		end
 		self._uiState.LobbyUI.lastEvent = eventName
 		self._uiState.LobbyUI.visible = true
@@ -4554,12 +4555,99 @@ function UISystem:_toggleLobbyPanelCollapsed()
 	self:_setLobbyPanelCollapsed(not (self._lobbyPanelCollapsed == true))
 end
 
-function UISystem:_getEvidenceToolsService()
+function UISystem:_getClientService(name)
 	local registry = self._context and self._context.Registry or nil
 	if not registry or type(registry.Get) ~= "function" then
 		return nil
 	end
-	return registry:Get("EvidenceTools")
+	return registry:Get(name)
+end
+
+function UISystem:_getEvidenceToolsService()
+	return self:_getClientService("EvidenceTools")
+end
+
+function UISystem:_previewLobbyTrainingSensory(payload)
+	if type(payload) ~= "table" then
+		return
+	end
+
+	local soundSystem = self:_getClientService("SoundSystem")
+	if soundSystem and type(soundSystem.PreviewAudioEvent) == "function" and type(payload.audioEvent) == "table" then
+		soundSystem:PreviewAudioEvent(payload.audioEvent)
+	end
+
+	local vfxController = self:_getClientService("VFXController")
+	if vfxController and type(vfxController.PreviewEvent) == "function" and type(payload.vfxEvent) == "table" then
+		vfxController:PreviewEvent(payload.vfxEvent)
+	end
+end
+
+function UISystem:_refreshLobbyEvidenceTrainingPanel()
+	local lobby = self._uxWidgets and self._uxWidgets.lobby or nil
+	if not lobby or not lobby.TrainingFrame then
+		return
+	end
+
+	local training = self._lobbyEvidenceTrainingState
+	local visible = self._matchPhase == MATCH_PHASE.LOBBY
+		and self._uiState
+		and self._uiState.LobbyUI
+		and self._uiState.LobbyUI.visible == true
+		and type(training) == "table"
+		and tostring(training.ghostType or "") ~= ""
+	lobby.TrainingFrame.Visible = visible
+	if not visible then
+		return
+	end
+
+	local accent = typeof(training.accentColor) == "Color3" and training.accentColor or Color3.fromRGB(112, 162, 224)
+	local aggression = math.clamp(tonumber(training.aggression) or 0, 0, 100)
+	local discoveredEvidence = type(training.discoveredEvidence) == "table" and training.discoveredEvidence or {}
+	local requiredEvidence = type(training.requiredEvidence) == "table" and training.requiredEvidence or {}
+	local evidenceSummary = (#discoveredEvidence > 0 and table.concat(discoveredEvidence, " • ") or "Belum ada evidence")
+	local targetSummary = (#requiredEvidence > 0 and table.concat(requiredEvidence, " • ") or "-")
+	local recommendedTool = tostring(training.recommendedToolLabel or training.recommendedTool or "")
+	local hint = tostring(training.trainingHint or training.lastResultText or "Gunakan meja tools untuk membaca evidence ghost latihan.")
+	if recommendedTool ~= "" and not tostring(hint):find(recommendedTool, 1, true) then
+		hint ..= " • Next " .. recommendedTool
+	end
+
+	if lobby.TrainingBadge then
+		lobby.TrainingBadge.BackgroundColor3 = accent
+	end
+	if lobby.TrainingTitle then
+		local stateSuffix = training.completed == true and "TRAINING CLEAR" or tostring(training.ghostType or "Unknown Ghost")
+		lobby.TrainingTitle.Text = string.format("%s • %s", stateSuffix, tostring(training.aggressionState or "CALM"))
+		lobby.TrainingTitle.TextColor3 = training.completed == true and Color3.fromRGB(214, 248, 206) or Color3.fromRGB(240, 244, 248)
+	end
+	if lobby.TrainingAggroLabel then
+		lobby.TrainingAggroLabel.Text = string.format("AGGRO %d%%", math.floor(aggression + 0.5))
+		lobby.TrainingAggroLabel.TextColor3 = aggression >= 70 and Color3.fromRGB(255, 184, 184) or Color3.fromRGB(255, 220, 184)
+	end
+	if lobby.TrainingEvidenceLabel then
+		lobby.TrainingEvidenceLabel.Text = string.format("Found: %s  |  Target: %s", evidenceSummary, targetSummary)
+	end
+	if lobby.TrainingAggroBar then
+		lobby.TrainingAggroBar.BackgroundColor3 = accent:Lerp(Color3.fromRGB(22, 28, 40), 0.72)
+	end
+	if lobby.TrainingAggroFill then
+		lobby.TrainingAggroFill.Size = UDim2.new(aggression / 100, 0, 1, 0)
+		lobby.TrainingAggroFill.BackgroundColor3 = aggression >= 70
+			and Color3.fromRGB(214, 92, 92)
+			or accent:Lerp(Color3.fromRGB(244, 248, 252), 0.16)
+	end
+	if lobby.TrainingHintLabel then
+		lobby.TrainingHintLabel.Text = hint
+		lobby.TrainingHintLabel.TextColor3 = training.completed == true
+			and Color3.fromRGB(204, 240, 198)
+			or Color3.fromRGB(182, 196, 214)
+	end
+
+	local stroke = lobby.TrainingFrame:FindFirstChild("TrainingStroke")
+	if stroke and stroke:IsA("UIStroke") then
+		stroke.Color = accent
+	end
 end
 
 function UISystem:_ensureFieldKitToolStates()
@@ -8631,6 +8719,24 @@ function UISystem:_applyDeviceSizing()
 		lobby.PlayButton.Size = UDim2.fromOffset(buttonSize.X, buttonSize.Y)
 		lobby.PlayButton.TextSize = profile:GetTextSize()
 		lobby.FeedbackLabel.TextSize = math.max(16, profile:GetTextSize() - 2)
+		if lobby.TrainingFrame then
+			local trainingWidth = profile.isMobile and math.min(viewportSize.X - 24, 420) or math.min(560, math.max(420, math.floor(viewportSize.X * 0.42)))
+			local trainingHeight = profile.isMobile and 132 or 122
+			lobby.TrainingFrame.Position = UDim2.new(0.5, 0, 0, topLeftInset.Y + (profile.isMobile and 88 or 82))
+			lobby.TrainingFrame.Size = UDim2.fromOffset(trainingWidth, trainingHeight)
+		end
+		if lobby.TrainingTitle then
+			lobby.TrainingTitle.TextSize = profile.isMobile and 16 or 18
+		end
+		if lobby.TrainingEvidenceLabel then
+			lobby.TrainingEvidenceLabel.TextSize = profile.isMobile and 12 or 13
+		end
+		if lobby.TrainingAggroLabel then
+			lobby.TrainingAggroLabel.TextSize = profile.isMobile and 13 or 14
+		end
+		if lobby.TrainingHintLabel then
+			lobby.TrainingHintLabel.TextSize = profile.isMobile and 11 or 12
+		end
 	end
 	if lobby and lobby.BasicOpenRoomBrowserButton and lobby.BasicPrimaryLabel then
 		local lobbyWidth = (profile.isMobile or viewportSize.X <= 1280)
@@ -10130,6 +10236,155 @@ function UISystem:_ensureUXLayers()
 		lobbyFeedback.Parent = lobbyLayer
 	end
 
+	local lobbyTrainingFrame = lobbyLayer:FindFirstChild("TrainingFrame")
+	if not lobbyTrainingFrame then
+		lobbyTrainingFrame = Instance.new("Frame")
+		lobbyTrainingFrame.Name = "TrainingFrame"
+		lobbyTrainingFrame.Visible = false
+		lobbyTrainingFrame.Active = false
+		lobbyTrainingFrame.Selectable = false
+		lobbyTrainingFrame.ZIndex = 8
+		lobbyTrainingFrame.AnchorPoint = Vector2.new(0.5, 0)
+		lobbyTrainingFrame.Position = UDim2.fromScale(0.5, 0.13)
+		lobbyTrainingFrame.Size = UDim2.fromOffset(540, 122)
+		lobbyTrainingFrame.BackgroundColor3 = Color3.fromRGB(18, 26, 36)
+		lobbyTrainingFrame.BackgroundTransparency = 0.08
+		lobbyTrainingFrame.BorderSizePixel = 0
+		lobbyTrainingFrame.Parent = lobbyLayer
+
+		local frameCorner = Instance.new("UICorner")
+		frameCorner.CornerRadius = UDim.new(0, 14)
+		frameCorner.Parent = lobbyTrainingFrame
+
+		local frameStroke = Instance.new("UIStroke")
+		frameStroke.Name = "TrainingStroke"
+		frameStroke.Thickness = 1.25
+		frameStroke.Transparency = 0.18
+		frameStroke.Color = Color3.fromRGB(96, 144, 210)
+		frameStroke.Parent = lobbyTrainingFrame
+
+		local framePadding = Instance.new("UIPadding")
+		framePadding.PaddingTop = UDim.new(0, 10)
+		framePadding.PaddingBottom = UDim.new(0, 10)
+		framePadding.PaddingLeft = UDim.new(0, 14)
+		framePadding.PaddingRight = UDim.new(0, 14)
+		framePadding.Parent = lobbyTrainingFrame
+	end
+
+	local lobbyTrainingBadge = lobbyTrainingFrame:FindFirstChild("TrainingBadge")
+	if not lobbyTrainingBadge then
+		lobbyTrainingBadge = Instance.new("TextLabel")
+		lobbyTrainingBadge.Name = "TrainingBadge"
+		lobbyTrainingBadge.Position = UDim2.fromOffset(0, 0)
+		lobbyTrainingBadge.Size = UDim2.fromOffset(132, 22)
+		lobbyTrainingBadge.BackgroundColor3 = Color3.fromRGB(82, 116, 168)
+		lobbyTrainingBadge.TextColor3 = Color3.fromRGB(246, 248, 250)
+		lobbyTrainingBadge.Font = Enum.Font.GothamBlack
+		lobbyTrainingBadge.TextSize = 11
+		lobbyTrainingBadge.ZIndex = 9
+		lobbyTrainingBadge.Text = "EVIDENCE TRAINING"
+		lobbyTrainingBadge.Parent = lobbyTrainingFrame
+
+		local badgeCorner = Instance.new("UICorner")
+		badgeCorner.CornerRadius = UDim.new(1, 0)
+		badgeCorner.Parent = lobbyTrainingBadge
+	end
+
+	local lobbyTrainingTitle = lobbyTrainingFrame:FindFirstChild("TrainingTitle")
+	if not lobbyTrainingTitle then
+		lobbyTrainingTitle = Instance.new("TextLabel")
+		lobbyTrainingTitle.Name = "TrainingTitle"
+		lobbyTrainingTitle.Position = UDim2.fromOffset(0, 28)
+		lobbyTrainingTitle.Size = UDim2.new(1, -168, 0, 22)
+		lobbyTrainingTitle.BackgroundTransparency = 1
+		lobbyTrainingTitle.Font = Enum.Font.GothamBold
+		lobbyTrainingTitle.TextSize = 18
+		lobbyTrainingTitle.TextColor3 = Color3.fromRGB(240, 244, 248)
+		lobbyTrainingTitle.TextXAlignment = Enum.TextXAlignment.Left
+		lobbyTrainingTitle.ZIndex = 9
+		lobbyTrainingTitle.Text = "Ghost training belum aktif."
+		lobbyTrainingTitle.Parent = lobbyTrainingFrame
+	end
+
+	local lobbyTrainingAggro = lobbyTrainingFrame:FindFirstChild("AggroLabel")
+	if not lobbyTrainingAggro then
+		lobbyTrainingAggro = Instance.new("TextLabel")
+		lobbyTrainingAggro.Name = "AggroLabel"
+		lobbyTrainingAggro.AnchorPoint = Vector2.new(1, 0)
+		lobbyTrainingAggro.Position = UDim2.new(1, 0, 28, 0)
+		lobbyTrainingAggro.Size = UDim2.fromOffset(154, 22)
+		lobbyTrainingAggro.BackgroundTransparency = 1
+		lobbyTrainingAggro.Font = Enum.Font.GothamBold
+		lobbyTrainingAggro.TextSize = 14
+		lobbyTrainingAggro.TextColor3 = Color3.fromRGB(255, 214, 176)
+		lobbyTrainingAggro.TextXAlignment = Enum.TextXAlignment.Right
+		lobbyTrainingAggro.ZIndex = 9
+		lobbyTrainingAggro.Text = "AGGRO 0%"
+		lobbyTrainingAggro.Parent = lobbyTrainingFrame
+	end
+
+	local lobbyTrainingEvidence = lobbyTrainingFrame:FindFirstChild("EvidenceLabel")
+	if not lobbyTrainingEvidence then
+		lobbyTrainingEvidence = Instance.new("TextLabel")
+		lobbyTrainingEvidence.Name = "EvidenceLabel"
+		lobbyTrainingEvidence.Position = UDim2.fromOffset(0, 54)
+		lobbyTrainingEvidence.Size = UDim2.new(1, 0, 0, 22)
+		lobbyTrainingEvidence.BackgroundTransparency = 1
+		lobbyTrainingEvidence.Font = Enum.Font.GothamSemibold
+		lobbyTrainingEvidence.TextSize = 13
+		lobbyTrainingEvidence.TextColor3 = Color3.fromRGB(214, 224, 236)
+		lobbyTrainingEvidence.TextXAlignment = Enum.TextXAlignment.Left
+		lobbyTrainingEvidence.ZIndex = 9
+		lobbyTrainingEvidence.Text = "Evidence: -"
+		lobbyTrainingEvidence.Parent = lobbyTrainingFrame
+	end
+
+	local lobbyTrainingBar = lobbyTrainingFrame:FindFirstChild("AggroBar")
+	if not lobbyTrainingBar then
+		lobbyTrainingBar = Instance.new("Frame")
+		lobbyTrainingBar.Name = "AggroBar"
+		lobbyTrainingBar.Position = UDim2.fromOffset(0, 82)
+		lobbyTrainingBar.Size = UDim2.new(1, 0, 0, 10)
+		lobbyTrainingBar.BackgroundColor3 = Color3.fromRGB(26, 34, 46)
+		lobbyTrainingBar.BackgroundTransparency = 0.08
+		lobbyTrainingBar.BorderSizePixel = 0
+		lobbyTrainingBar.ZIndex = 9
+		lobbyTrainingBar.Parent = lobbyTrainingFrame
+
+		local barCorner = Instance.new("UICorner")
+		barCorner.CornerRadius = UDim.new(1, 0)
+		barCorner.Parent = lobbyTrainingBar
+
+		local barFill = Instance.new("Frame")
+		barFill.Name = "AggroFill"
+		barFill.Size = UDim2.new(0, 0, 1, 0)
+		barFill.BackgroundColor3 = Color3.fromRGB(118, 176, 244)
+		barFill.BorderSizePixel = 0
+		barFill.ZIndex = 10
+		barFill.Parent = lobbyTrainingBar
+
+		local fillCorner = Instance.new("UICorner")
+		fillCorner.CornerRadius = UDim.new(1, 0)
+		fillCorner.Parent = barFill
+	end
+
+	local lobbyTrainingHint = lobbyTrainingFrame:FindFirstChild("HintLabel")
+	if not lobbyTrainingHint then
+		lobbyTrainingHint = Instance.new("TextLabel")
+		lobbyTrainingHint.Name = "HintLabel"
+		lobbyTrainingHint.Position = UDim2.fromOffset(0, 98)
+		lobbyTrainingHint.Size = UDim2.new(1, 0, 0, 18)
+		lobbyTrainingHint.BackgroundTransparency = 1
+		lobbyTrainingHint.Font = Enum.Font.Gotham
+		lobbyTrainingHint.TextSize = 12
+		lobbyTrainingHint.TextColor3 = Color3.fromRGB(178, 192, 210)
+		lobbyTrainingHint.TextXAlignment = Enum.TextXAlignment.Left
+		lobbyTrainingHint.TextWrapped = true
+		lobbyTrainingHint.ZIndex = 9
+		lobbyTrainingHint.Text = "Gunakan meja tools untuk membaca evidence ghost latihan."
+		lobbyTrainingHint.Parent = lobbyTrainingFrame
+	end
+
 	local playButton = lobbyLayer:FindFirstChild("PlayButton")
 	if not playButton then
 		playButton = Instance.new("TextButton")
@@ -10469,6 +10724,14 @@ function UISystem:_ensureUXLayers()
 	end
 
 	self._uxWidgets.lobby.FeedbackLabel = lobbyFeedback
+	self._uxWidgets.lobby.TrainingFrame = lobbyTrainingFrame
+	self._uxWidgets.lobby.TrainingBadge = lobbyTrainingBadge
+	self._uxWidgets.lobby.TrainingTitle = lobbyTrainingTitle
+	self._uxWidgets.lobby.TrainingEvidenceLabel = lobbyTrainingEvidence
+	self._uxWidgets.lobby.TrainingAggroLabel = lobbyTrainingAggro
+	self._uxWidgets.lobby.TrainingAggroBar = lobbyTrainingBar
+	self._uxWidgets.lobby.TrainingAggroFill = lobbyTrainingBar and lobbyTrainingBar:FindFirstChild("AggroFill") or nil
+	self._uxWidgets.lobby.TrainingHintLabel = lobbyTrainingHint
 	self._uxWidgets.lobby.PlayButton = playButton
 	self._uxWidgets.lobby.Gui = lobbyUXGui
 	self._uxWidgets.lobby.Layer = lobbyLayer
@@ -10762,6 +11025,59 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 		local color = payload and payload.accentColor
 		if typeof(color) == "Color3" then
 			lobby.FeedbackLabel.TextColor3 = color:Lerp(Color3.fromRGB(240, 244, 248), 0.55)
+		else
+			lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
+		end
+		lobby.FeedbackLabel.Text = message ~= "" and (title .. " • " .. message) or title
+	elseif eventName == "LobbyEvidenceTrainingUpdated" then
+		local title = tostring(payload and payload.title or "Evidence training aktif.")
+		local message = tostring(payload and payload.message or "")
+		local color = payload and payload.accentColor
+		local colorPayload = type(payload and payload.accentColorRgb) == "table" and payload.accentColorRgb or nil
+		if typeof(color) ~= "Color3" and colorPayload then
+			local r = math.clamp(math.floor(tonumber(colorPayload.r) or 112), 0, 255)
+			local g = math.clamp(math.floor(tonumber(colorPayload.g) or 162), 0, 255)
+			local b = math.clamp(math.floor(tonumber(colorPayload.b) or 224), 0, 255)
+			color = Color3.fromRGB(r, g, b)
+		end
+		self._lobbyEvidenceTrainingState = {
+			ghostType = payload and payload.ghostType or "",
+			discoveredEvidence = payload and payload.discoveredEvidence or {},
+			requiredEvidence = payload and payload.requiredEvidence or {},
+			recommendedTool = payload and payload.recommendedTool or "",
+			recommendedToolLabel = payload and payload.recommendedToolLabel or "",
+			aggression = tonumber(payload and payload.aggression) or 0,
+			aggressionState = payload and payload.aggressionState or "CALM",
+			trainingHint = payload and payload.trainingHint or message,
+			lastResultText = message,
+			accentColor = typeof(color) == "Color3" and color or Color3.fromRGB(112, 162, 224),
+			completed = payload and payload.completed == true,
+		}
+
+		local toolType = payload and payload.toolType or nil
+		if type(toolType) == "string" and FIELD_KIT_TOOL_CONFIG[toolType] then
+			local toolData = type(payload and payload.toolResult) == "table" and payload.toolResult or {}
+			local toolEventName = tostring(payload and payload.toolEventName or "EvidenceToolResult")
+			local toolSuccess = payload and payload.success ~= false
+			local toolReason = payload and payload.reason or nil
+			local statusText, detailText = resolveToolFeedback(toolType, toolSuccess, toolReason, toolData, toolEventName)
+			self:_applyFieldKitToolUpdate(toolType, toolSuccess, toolReason, toolData, toolEventName)
+
+			local journalState = self._journalState or {}
+			journalState.toolType = toolType
+			journalState.toolStatus = statusText
+			journalState.toolReason = detailText
+			journalState.toolSuccess = toolSuccess
+			journalState.toolLastUsedAt = os.clock()
+			self._journalState = journalState
+		end
+
+		self:_previewLobbyTrainingSensory(payload)
+		self:_refreshLobbyEvidenceTrainingPanel()
+		self:_refreshBasicLobbyPanel()
+
+		if typeof(color) == "Color3" then
+			lobby.FeedbackLabel.TextColor3 = color:Lerp(Color3.fromRGB(240, 244, 248), 0.45)
 		else
 			lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
 		end
