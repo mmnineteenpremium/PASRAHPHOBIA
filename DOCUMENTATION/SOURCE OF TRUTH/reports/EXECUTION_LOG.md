@@ -11508,3 +11508,39 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - dressing exterior yang lebih kaya dari staging primitive sekarang
     - board dunia pre-investigation yang lebih premium secara asset/art
     - rekonstruksi map luar/dalam agar transisi ke investigasi lebih sinematik
+
+- pass lanjutan pada lane yang sama:
+  - staging luar sekarang punya dressing exterior yang lebih terbaca sebagai `prep worksite`:
+    - `PreparationForecourt`
+    - `PreparationFence_*`
+    - `PreparationFloodlight_*`
+    - `PreparationContractDesk`
+    - `PreparationEquipmentCase_*`
+    - `PreparationEntrySign`
+  - pilihan `PreparationFocusTool` sekarang ikut terbawa ke panel `Investigation`
+- source owner yang disentuh:
+  - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/UI/Main.lua)
+- validasi:
+  - build source sukses:
+    - `_tmp_match_preparation_staging_exterior_build.rbxlx`
+    - `_tmp_match_preparation_staging_exterior_focus_build.rbxlx`
+  - live:
+    - `PreparationForecourt = 44 x 0.16 x 32`
+    - `PreparationContractDesk = 6.4 x 1.2 x 2.2`
+    - `PreparationFloodlight_1/2` hadir dan masing-masing punya `SpotLight`
+    - `PreparationEntrySign` hadir dengan copy `MAIN ENTRY`
+    - `PreparationFocusTool = EMF`
+    - panel `Investigation` sekarang membawa fokus tool:
+      - primary `Fokus awal: EMF`
+      - controls hint `FOKUS: EMF`
+      - objective label `Fokus awal: EMF`
+    - path staging tetap sehat ke permukaan pemain:
+      - `ToolStation_EMF -> PreparationPlatform = Success`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - staging luar sekarang lebih terasa sebagai exterior prep area dan pilihan tool tidak lagi mati setelah breach.
+  - residual lane ini tetap:
+    - art/asset premium untuk staging luar
+    - dressing exterior yang lebih kaya per map
+    - transisi luar->dalam yang lebih sinematik
