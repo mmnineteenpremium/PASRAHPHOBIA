@@ -991,6 +991,78 @@ local function updatePreparationObjectiveBoard(boardPart, boardData, selectedToo
 	)
 end
 
+local function updatePreparationEntryBeacon(beaconPart, selectedTool, breachOpen)
+	if not (typeof(beaconPart) == "Instance" and beaconPart:IsA("BasePart")) then
+		return
+	end
+
+	local color = Color3.fromRGB(214, 160, 104)
+	if type(selectedTool) == "string" and selectedTool ~= "" then
+		color = Color3.fromRGB(132, 186, 255)
+	end
+	if breachOpen then
+		color = Color3.fromRGB(142, 214, 198)
+	end
+
+	beaconPart.Color = color
+	local light = beaconPart:FindFirstChild("Light")
+	if not (light and light:IsA("PointLight")) then
+		if light then
+			light:Destroy()
+		end
+		light = Instance.new("PointLight")
+		light.Name = "Light"
+		light.Parent = beaconPart
+	end
+	light.Color = color
+	light.Brightness = breachOpen and 1.8 or 1.25
+	light.Range = 16
+	light.Shadows = false
+end
+
+local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen)
+	if typeof(entrySign) ~= "Instance" then
+		return
+	end
+
+	local title = "MAIN ENTRY"
+	local subtitle = "Breach setelah review board"
+	local body = "Ikuti runner ke pintu utama."
+	local accent = Color3.fromRGB(214, 160, 104)
+
+	if type(selectedTool) == "string" and selectedTool ~= "" then
+		subtitle = string.format("%s ready • breach armed", selectedTool)
+		body = string.format("Aktifkan breach untuk sweep awal dengan %s.", selectedTool)
+		accent = Color3.fromRGB(132, 186, 255)
+	end
+
+	if breachOpen then
+		title = "BREACH OPEN"
+		subtitle = "Investigation live"
+		body = "Masuk ke area utama sekarang."
+		accent = Color3.fromRGB(142, 214, 198)
+	end
+
+	ensureBoardSurface(
+		entrySign,
+		"FrontSurface",
+		Enum.NormalId.Front,
+		title,
+		subtitle,
+		body,
+		accent
+	)
+	ensureBoardSurface(
+		entrySign,
+		"BackSurface",
+		Enum.NormalId.Back,
+		title,
+		subtitle,
+		body,
+		accent
+	)
+end
+
 local function collectStairBounds(mapClone)
 	local bounds = nil
 
@@ -1971,15 +2043,23 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			CanQuery = false,
 		}
 	)
-	ensureBoardSurface(
-		entrySign,
-		"FrontSurface",
-		Enum.NormalId.Front,
-		"MAIN ENTRY",
-		"Breach setelah review board",
-		"Ikuti runner ke pintu utama.",
-		Color3.fromRGB(214, 160, 104)
+	updatePreparationEntrySign(entrySign, nil, false)
+
+	local entryBeacon = ensurePart(folder, "PreparationEntryBeacon")
+	configurePart(
+		entryBeacon,
+		{
+			Size = Vector3.new(0.48, 0.48, 0.48),
+			CFrame = CFrame.new(entrySign.Position + Vector3.new(0, 1.9, 0)),
+			Material = Enum.Material.Neon,
+			Color = Color3.fromRGB(214, 160, 104),
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+		}
 	)
+	updatePreparationEntryBeacon(entryBeacon, nil, false)
+
 	local breachPrompt = ensurePrompt(entrySign, "BreachPrompt", "Mulai Breach", "Main Entry")
 	if breachPrompt and breachPrompt:GetAttribute("PreparationConnected") ~= true then
 		breachPrompt:SetAttribute("PreparationConnected", true)
@@ -1994,24 +2074,8 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 						breachPrompt:Destroy()
 					end
 					updatePreparationObjectiveBoard(objectiveBoard, boardData, player:GetAttribute("PreparationFocusTool"), true)
-					ensureBoardSurface(
-						entrySign,
-						"FrontSurface",
-						Enum.NormalId.Front,
-						"BREACH OPEN",
-						"Investigation live",
-						"Masuk ke area utama sekarang.",
-						Color3.fromRGB(142, 214, 198)
-					)
-					ensureBoardSurface(
-						entrySign,
-						"BackSurface",
-						Enum.NormalId.Back,
-						"BREACH OPEN",
-						"Investigation live",
-						"Masuk ke area utama sekarang.",
-						Color3.fromRGB(142, 214, 198)
-					)
+					updatePreparationEntrySign(entrySign, player:GetAttribute("PreparationFocusTool"), true)
+					updatePreparationEntryBeacon(entryBeacon, player:GetAttribute("PreparationFocusTool"), true)
 				end
 			end
 		end)
@@ -2062,6 +2126,8 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 					player:SetAttribute("PreparationFocusTool", tool.title)
 					updatePreparationToolsBoard(toolsBoard, tool.title)
 					updatePreparationObjectiveBoard(objectiveBoard, boardData, tool.title, false)
+					updatePreparationEntrySign(entrySign, tool.title, false)
+					updatePreparationEntryBeacon(entryBeacon, tool.title, false)
 				end
 			end)
 		end

@@ -11607,3 +11607,48 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - asset premium/non-primitive untuk staging luar
     - dressing exterior yang lebih kaya dan berbeda per map
     - transisi breach yang lebih sinematik
+
+- pass lanjutan pada lane yang sama:
+  - `MAIN ENTRY` sekarang punya state visual hidup:
+    - default `READY`
+    - sesudah pilih tool `armed`
+    - sesudah breach `BREACH OPEN`
+  - beacon neon di atas entry sekarang ikut berubah warna sesuai state
+  - cue breach client sekarang memicu preview audio lingkungan saat transisi `Preparation -> Investigation`
+- source owner yang disentuh:
+  - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/UI/Main.lua)
+- validasi:
+  - build source sukses:
+    - `_tmp_match_preparation_entry_state_build.rbxlx`
+    - `_tmp_match_preparation_entry_state_ui_build.rbxlx`
+  - live:
+    - state default:
+      - `MAIN ENTRY`
+      - subtitle `Breach setelah review board`
+      - body `Ikuti runner ke pintu utama.`
+      - beacon amber
+    - sesudah prompt `EMF`:
+      - `PreparationFocusTool = EMF`
+      - subtitle `EMF ready • breach armed`
+      - body `Aktifkan breach untuk sweep awal dengan EMF.`
+      - beacon berubah biru
+    - sesudah prompt `Mulai Breach`:
+      - `MatchPhase = InGame`
+      - `MatchLifecyclePhase = InvestigationPhase`
+      - entry board berubah ke `BREACH OPEN`
+      - beacon berubah hijau
+      - `PasrahAudioLastCategory = EnvironmentalAudio`
+      - `PasrahAudioLastCue = env_doorslam`
+      - `MatchLoadingUI.Enabled = false`
+    - regression UI staging:
+      - `MatchLifecyclePhase = PreparationPhase`
+      - `MatchPhase = Preparing`
+      - `FieldKitFrame.Visible = false`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - staging luar sekarang bukan cuma punya board statis, tapi entry state yang hidup dan transisi breach yang terasa.
+  - residual lane tetap:
+    - asset premium/non-primitive untuk staging luar
+    - dressing exterior yang lebih kaya dan berbeda per map
+    - transisi breach yang lebih sinematik secara visual, bukan baru cue/audio + state board
