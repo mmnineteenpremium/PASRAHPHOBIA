@@ -2639,3 +2639,20 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby sekarang lebih seimbang secara wayfinding, tetapi asset premium, interior kaya per wing, dan art pass global masih tersisa sebelum bisa dinyatakan selesai penuh.
 
+## Update 2026-04-06
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi pada identitas interior wing:
+  - `SHOP`, `PARTY`, `GARDEN`, dan `FLEX` kini punya dressing internal yang lebih semantik
+  - pass ini membuat tiap wing tidak lagi terasa seperti shell datar dengan beberapa prop tipis
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_wing_identity_build.rbxlx`
+  - verifikasi live:
+    - `ShopPriceBoard` aktif dengan copy `OFFERS`
+    - `PartyDanceFloor` dan `PartyNeonBar` hidup
+    - `GardenPergolaBeam` dan `GardenLantern` hidup
+    - `FlexMarquee` aktif dengan copy `SPOTLIGHT`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby sekarang naik lagi pada readability dan massa ruang tiap wing, tetapi material/asset premium, route fisik yang lebih bersih, dan art pass global masih tersisa sebelum selesai penuh.
+
