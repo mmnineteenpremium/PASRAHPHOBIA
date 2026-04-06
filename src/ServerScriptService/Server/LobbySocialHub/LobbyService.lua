@@ -675,6 +675,20 @@ local function resolveLobbySystemController(deps)
     return nil
 end
 
+local function resolveLobbySystemService(deps)
+    local lobbySystem = Services.Get(deps, "LobbySystem")
+    if type(lobbySystem) ~= "table" then
+        return nil
+    end
+    if type(lobbySystem.GetRoomList) == "function" then
+        return lobbySystem
+    end
+    if type(lobbySystem.Service) == "table" and type(lobbySystem.Service.GetRoomList) == "function" then
+        return lobbySystem.Service
+    end
+    return nil
+end
+
 local function resolveContractService(deps)
     local contractSystem = Services.Get(deps, "ContractSystem")
     if type(contractSystem) ~= "table" then
@@ -705,6 +719,87 @@ local function lobbyPromptColor(zoneName)
         return style.color
     end
     return Color3.fromRGB(96, 118, 148)
+end
+
+local function clampLobbyText(text, maxLength)
+    local raw = tostring(text or "")
+    raw = raw:gsub("%s+", " ")
+    if #raw <= maxLength then
+        return raw
+    end
+    return string.sub(raw, 1, math.max(1, maxLength - 1)) .. "…"
+end
+
+local function summarizeLobbyRooms(rooms)
+    local summary = {
+        roomCount = 0,
+        openCount = 0,
+        playerCount = 0,
+        readyCount = 0,
+        featuredRoom = nil,
+    }
+    if type(rooms) ~= "table" then
+        return summary
+    end
+
+    for _, room in ipairs(rooms) do
+        local playerCount = math.max(0, math.floor(tonumber(room.playerCount) or 0))
+        local readyCount = math.max(0, math.floor(tonumber(room.readyCount) or 0))
+        local maxPlayers = math.max(1, math.floor(tonumber(room.maxPlayers) or 4))
+        local inGame = room.inGame == true
+
+        summary.roomCount += 1
+        summary.playerCount += playerCount
+        summary.readyCount += readyCount
+        if not inGame then
+            summary.openCount += 1
+        end
+
+        local candidateScore = 0
+        if not inGame then
+            candidateScore += 8
+        end
+        if room.starting == true then
+            candidateScore += 2
+        end
+        candidateScore += math.min(playerCount, maxPlayers)
+
+        if summary.featuredRoom == nil or candidateScore > summary.featuredRoom._score then
+            local snapshot = {}
+            for key, value in pairs(room) do
+                snapshot[key] = value
+            end
+            snapshot._score = candidateScore
+            summary.featuredRoom = snapshot
+        end
+    end
+
+    return summary
+end
+
+local function summarizeCosmeticCatalog(catalogById)
+    local summary = {
+        total = 0,
+        outfit = 0,
+        body = 0,
+        head = 0,
+        accessory = 0,
+        emote = 0,
+        class = 0,
+        pass = 0,
+    }
+
+    for _, entry in pairs(catalogById or {}) do
+        if type(entry) == "table" then
+            summary.total += 1
+            local slot = tostring(entry.slot or "utility")
+            if summary[slot] ~= nil then
+                summary[slot] += 1
+            end
+        end
+    end
+
+    return summary
 end
 
 local function safeRequire(moduleScript)
@@ -1825,6 +1920,8 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.Slate,
         transparency = 0.02,
     })
+    ensureGuideBoardSurface(queuePlatform, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "MATCH QUEUE", "Stand • Join • Watch", Color3.fromRGB(150, 196, 255))
+    ensureGuideBoardSurface(queuePlatform, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "MATCH QUEUE", "Stand • Join • Watch", Color3.fromRGB(150, 196, 255))
     local queueRing = ensureDecorPart("QueueRing")
     applyPartProps(queueRing, {
         size = Vector3.new(12.8, 0.1, 12.8),
@@ -2046,6 +2143,153 @@ local function applyMainHubVisualPatch()
     })
     ensureGuideBoardSurface(northToolsStand, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "TOOLS", "Train • Equip • Read", LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
     applyPrompt(ensurePrompt(northToolsStand, "InteractPrompt"), "Tools Board", "Open Training", 12)
+
+    local centerDesk = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_NAME)
+    applyPartProps(centerDesk, {
+        size = Vector3.new(7.2, 1.8, 3.4),
+        cframe = CFrame.new(1600, 1.02, -160),
+        color = Color3.fromRGB(30, 42, 58),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+    local centerDeskTop = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME)
+    applyPartProps(centerDeskTop, {
+        size = Vector3.new(7.6, 0.18, 3.7),
+        cframe = CFrame.new(1600, 2.02, -160),
+        color = Color3.fromRGB(50, 66, 86),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    local leftCase = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME)
+    applyPartProps(leftCase, {
+        size = Vector3.new(2.8, 1.5, 2.1),
+        cframe = CFrame.new(1587, 0.86, -159.8),
+        color = Color3.fromRGB(34, 46, 64),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+    local rightCase = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME)
+    applyPartProps(rightCase, {
+        size = Vector3.new(2.8, 1.5, 2.1),
+        cframe = CFrame.new(1613, 0.86, -159.8),
+        color = Color3.fromRGB(34, 46, 64),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+    local centerBackdrop = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_CENTER_BACKDROP_NAME)
+    applyPartProps(centerBackdrop, {
+        size = Vector3.new(18.6, 5.3, 0.24),
+        cframe = CFrame.new(1600, 4.05, -171.1),
+        color = Color3.fromRGB(16, 24, 36),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.04,
+    })
+    local floorRunner = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_FLOOR_RUNNER_NAME)
+    applyPartProps(floorRunner, {
+        size = Vector3.new(8.4, 0.06, 22.0),
+        cframe = CFrame.new(1600, 0.11, -151.4),
+        color = Color3.fromRGB(26, 40, 60),
+        material = Enum.Material.Fabric,
+        transparency = 0.04,
+    })
+    local leftCaseStrip = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_STRIP_NAME)
+    applyPartProps(leftCaseStrip, {
+        size = Vector3.new(2.5, 0.1, 0.24),
+        cframe = CFrame.new(1587, 1.67, -160.78),
+        color = LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color,
+        material = Enum.Material.Neon,
+        transparency = 0.16,
+    })
+    local rightCaseStrip = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_STRIP_NAME)
+    applyPartProps(rightCaseStrip, {
+        size = Vector3.new(2.5, 0.1, 0.24),
+        cframe = CFrame.new(1613, 1.67, -160.78),
+        color = LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color,
+        material = Enum.Material.Neon,
+        transparency = 0.16,
+    })
+
+    local contractClipboard = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_CLIPBOARD_NAME)
+    applyPartProps(contractClipboard, {
+        size = Vector3.new(1.45, 0.1, 1.0),
+        cframe = CFrame.new(1600, 2.18, -160.28) * CFrame.Angles(math.rad(-12), 0, 0),
+        color = Color3.fromRGB(32, 42, 58),
+        material = Enum.Material.Metal,
+        transparency = 0.02,
+    })
+    local contractPaper = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_PAPER_NAME)
+    applyPartProps(contractPaper, {
+        size = Vector3.new(1.12, 0.04, 0.72),
+        cframe = CFrame.new(1600, 2.26, -160.3) * CFrame.Angles(math.rad(-12), 0, 0),
+        color = Color3.fromRGB(224, 232, 242),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.01,
+    })
+    local roomLedger = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_ROOM_LEDGER_NAME)
+    applyPartProps(roomLedger, {
+        size = Vector3.new(1.2, 0.14, 0.82),
+        cframe = CFrame.new(1587, 1.7, -159.8) * CFrame.Angles(math.rad(-10), 0, 0),
+        color = Color3.fromRGB(52, 64, 84),
+        material = Enum.Material.Slate,
+        transparency = 0.02,
+    })
+    local roomCards = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_ROOM_CARDS_NAME)
+    applyPartProps(roomCards, {
+        size = Vector3.new(0.74, 0.08, 0.46),
+        cframe = CFrame.new(1587.54, 1.78, -159.68) * CFrame.Angles(0, math.rad(8), math.rad(-6)),
+        color = Color3.fromRGB(226, 236, 246),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.01,
+    })
+    local toolEmf = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_TOOL_EMF_NAME)
+    applyPartProps(toolEmf, {
+        size = Vector3.new(0.42, 0.82, 0.42),
+        cframe = CFrame.new(1612.25, 1.77, -159.98),
+        color = Color3.fromRGB(122, 182, 255),
+        material = Enum.Material.Metal,
+        transparency = 0.02,
+    })
+    local toolUv = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_TOOL_UV_NAME)
+    applyPartProps(toolUv, {
+        size = Vector3.new(0.28, 0.56, 0.96),
+        cframe = CFrame.new(1613.02, 1.58, -159.82),
+        color = Color3.fromRGB(214, 146, 255),
+        material = Enum.Material.Metal,
+        transparency = 0.02,
+    })
+    local toolBox = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_TOOL_BOX_NAME)
+    applyPartProps(toolBox, {
+        size = Vector3.new(0.92, 0.42, 0.72),
+        cframe = CFrame.new(1613.86, 1.5, -159.88),
+        color = Color3.fromRGB(255, 196, 118),
+        material = Enum.Material.Metal,
+        transparency = 0.02,
+    })
+
+    local mapPlate = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_DESK_MAP_PLATE_NAME)
+    applyPartProps(mapPlate, {
+        size = Vector3.new(1.46, 0.12, 1.12),
+        cframe = CFrame.new(1598.08, 2.16, -159.12),
+        color = Color3.fromRGB(24, 36, 52),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    local modePlate = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_DESK_MODE_PLATE_NAME)
+    applyPartProps(modePlate, {
+        size = Vector3.new(1.46, 0.12, 1.12),
+        cframe = CFrame.new(1600, 2.16, -159.12),
+        color = Color3.fromRGB(24, 36, 52),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    local startPlate = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_DESK_START_PLATE_NAME)
+    applyPartProps(startPlate, {
+        size = Vector3.new(1.46, 0.12, 1.12),
+        cframe = CFrame.new(1601.92, 2.16, -159.12),
+        color = Color3.fromRGB(24, 36, 52),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
     applyWingLight("NorthWingLight_A", Vector3.new(1588, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
     applyWingLight("NorthWingLight_B", Vector3.new(1600, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
     applyWingLight("NorthWingLight_C", Vector3.new(1612, 7.2, -142), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color, 24)
@@ -2101,6 +2345,46 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.Slate,
         transparency = 0.03,
     })
+    local shopShelfA = ensureDecorPart("ShopShelf_A")
+    applyPartProps(shopShelfA, {
+        size = Vector3.new(1.0, 3.2, 6.2),
+        cframe = CFrame.new(1762.5, 1.8, -31),
+        color = Color3.fromRGB(48, 38, 30),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    local shopShelfB = ensureDecorPart("ShopShelf_B")
+    applyPartProps(shopShelfB, {
+        size = Vector3.new(1.0, 3.2, 6.2),
+        cframe = CFrame.new(1762.5, 1.8, -9),
+        color = Color3.fromRGB(48, 38, 30),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    local shopCrateA = ensureDecorPart("ShopCrate_A")
+    applyPartProps(shopCrateA, {
+        size = Vector3.new(1.6, 1.1, 1.6),
+        cframe = CFrame.new(1750.8, 0.66, -31.5),
+        color = Color3.fromRGB(82, 62, 42),
+        material = Enum.Material.WoodPlanks,
+        transparency = 0.03,
+    })
+    local shopCrateB = ensureDecorPart("ShopCrate_B")
+    applyPartProps(shopCrateB, {
+        size = Vector3.new(1.6, 1.1, 1.6),
+        cframe = CFrame.new(1750.8, 0.66, -8.5),
+        color = Color3.fromRGB(82, 62, 42),
+        material = Enum.Material.WoodPlanks,
+        transparency = 0.03,
+    })
+    local shopMat = ensureDecorPart("ShopAccentMat")
+    applyPartProps(shopMat, {
+        size = Vector3.new(9.8, 0.08, 4.6),
+        cframe = CFrame.new(1729.8, 0.12, -20),
+        color = Color3.fromRGB(58, 44, 30),
+        material = Enum.Material.Fabric,
+        transparency = 0.04,
+    })
     applyWingLight("ShopWingLight_A", Vector3.new(1736, 7.0, -28), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, 22)
     applyWingLight("ShopWingLight_B", Vector3.new(1736, 7.0, -12), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, 22)
     applyWingLight("ShopWingLight_C", Vector3.new(1758, 7.0, -28), LOBBY_ZONE_GUIDE_STYLE.ShopZone.color, 20)
@@ -2115,6 +2399,8 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.Slate,
         transparency = 0.03,
     })
+    ensureGuideBoardSurface(partyPlatform, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "PARTY PAD", "Ready • Join", LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+    ensureGuideBoardSurface(partyPlatform, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "PARTY PAD", "Ready • Join", LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
     local partyBoard = ensureDecorPart("PartyBoard")
     applyPartProps(partyBoard, {
         size = Vector3.new(0.42, 3.8, 6.0),
@@ -2131,6 +2417,38 @@ local function applyMainHubVisualPatch()
         cframe = CFrame.new(1458, 1.2, -12),
         color = Color3.fromRGB(32, 48, 52),
         material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    local partySofaA = ensureDecorPart("PartySofa_A")
+    applyPartProps(partySofaA, {
+        size = Vector3.new(5.4, 1.3, 1.6),
+        cframe = CFrame.new(1439, 0.9, -30),
+        color = Color3.fromRGB(42, 64, 64),
+        material = Enum.Material.Fabric,
+        transparency = 0.03,
+    })
+    local partySofaB = ensureDecorPart("PartySofa_B")
+    applyPartProps(partySofaB, {
+        size = Vector3.new(5.4, 1.3, 1.6),
+        cframe = CFrame.new(1439, 0.9, -10),
+        color = Color3.fromRGB(42, 64, 64),
+        material = Enum.Material.Fabric,
+        transparency = 0.03,
+    })
+    local partyCoffeeTable = ensureDecorPart("PartyCoffeeTable")
+    applyPartProps(partyCoffeeTable, {
+        size = Vector3.new(2.6, 0.7, 1.6),
+        cframe = CFrame.new(1444.5, 0.56, -20),
+        color = Color3.fromRGB(58, 80, 80),
+        material = Enum.Material.WoodPlanks,
+        transparency = 0.03,
+    })
+    local partyReadyDesk = ensureDecorPart("PartyReadyDesk")
+    applyPartProps(partyReadyDesk, {
+        size = Vector3.new(3.6, 1.12, 1.8),
+        cframe = CFrame.new(1462, 0.96, -20),
+        color = Color3.fromRGB(28, 42, 44),
+        material = Enum.Material.Slate,
         transparency = 0.03,
     })
     applyWingLight("PartyWingLight_A", Vector3.new(1458, 7.0, -28), LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, 22)
@@ -2167,6 +2485,46 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.WoodPlanks,
         transparency = 0.02,
     })
+    local gardenArchLeft = ensureDecorPart("GardenArchLeft")
+    applyPartProps(gardenArchLeft, {
+        size = Vector3.new(0.8, 4.2, 0.8),
+        cframe = CFrame.new(1593.8, 2.1, 147.6),
+        color = Color3.fromRGB(84, 104, 86),
+        material = Enum.Material.WoodPlanks,
+        transparency = 0.02,
+    })
+    local gardenArchRight = ensureDecorPart("GardenArchRight")
+    applyPartProps(gardenArchRight, {
+        size = Vector3.new(0.8, 4.2, 0.8),
+        cframe = CFrame.new(1606.2, 2.1, 147.6),
+        color = Color3.fromRGB(84, 104, 86),
+        material = Enum.Material.WoodPlanks,
+        transparency = 0.02,
+    })
+    local gardenArchTop = ensureDecorPart("GardenArchTop")
+    applyPartProps(gardenArchTop, {
+        size = Vector3.new(13.2, 0.56, 0.8),
+        cframe = CFrame.new(1600, 4.16, 147.6),
+        color = Color3.fromRGB(92, 118, 94),
+        material = Enum.Material.WoodPlanks,
+        transparency = 0.02,
+    })
+    local gardenPedestalA = ensureDecorPart("GardenRewardPedestalA")
+    applyPartProps(gardenPedestalA, {
+        size = Vector3.new(1.8, 1.1, 1.8),
+        cframe = CFrame.new(1592, 0.56, 163.5),
+        color = Color3.fromRGB(44, 62, 44),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
+    local gardenPedestalB = ensureDecorPart("GardenRewardPedestalB")
+    applyPartProps(gardenPedestalB, {
+        size = Vector3.new(1.8, 1.1, 1.8),
+        cframe = CFrame.new(1608, 0.56, 163.5),
+        color = Color3.fromRGB(44, 62, 44),
+        material = Enum.Material.Slate,
+        transparency = 0.03,
+    })
     applyWingLight("GardenWingLight_A", Vector3.new(1572, 6.8, 152), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, 22)
     applyWingLight("GardenWingLight_B", Vector3.new(1628, 6.8, 170), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, 22)
     applyWingLight("GardenWingLight_C", Vector3.new(1578, 6.8, 166), LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, 20)
@@ -2181,6 +2539,8 @@ local function applyMainHubVisualPatch()
         material = Enum.Material.Slate,
         transparency = 0.03,
     })
+    ensureGuideBoardSurface(flexStage, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "SPOTLIGHT", "Style • Event", LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
+    ensureGuideBoardSurface(flexStage, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "SPOTLIGHT", "Style • Event", LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
     local flexBoard = ensureDecorPart("AnnouncementBoard")
     applyPartProps(flexBoard, {
         size = Vector3.new(0.42, 3.8, 6.0),
@@ -2203,6 +2563,38 @@ local function applyMainHubVisualPatch()
         size = Vector3.new(1.3, 1.2, 1.3),
         cframe = CFrame.new(1746, 1.2, 146),
         color = Color3.fromRGB(52, 44, 78),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    local flexBackdrop = ensureDecorPart("FlexBackdrop")
+    applyPartProps(flexBackdrop, {
+        size = Vector3.new(0.42, 4.6, 10.8),
+        cframe = CFrame.new(1764.6, 2.4, 140),
+        color = Color3.fromRGB(24, 22, 44),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    local flexRunway = ensureDecorPart("FlexRunway")
+    applyPartProps(flexRunway, {
+        size = Vector3.new(9.6, 0.12, 2.6),
+        cframe = CFrame.new(1748, 0.28, 140),
+        color = Color3.fromRGB(62, 54, 92),
+        material = Enum.Material.Neon,
+        transparency = 0.24,
+    })
+    local flexTrussLeft = ensureDecorPart("FlexTrussLeft")
+    applyPartProps(flexTrussLeft, {
+        size = Vector3.new(0.56, 5.2, 0.56),
+        cframe = CFrame.new(1759, 2.6, 133.8),
+        color = Color3.fromRGB(80, 72, 112),
+        material = Enum.Material.Metal,
+        transparency = 0.03,
+    })
+    local flexTrussRight = ensureDecorPart("FlexTrussRight")
+    applyPartProps(flexTrussRight, {
+        size = Vector3.new(0.56, 5.2, 0.56),
+        cframe = CFrame.new(1759, 2.6, 146.2),
+        color = Color3.fromRGB(80, 72, 112),
         material = Enum.Material.Metal,
         transparency = 0.03,
     })
@@ -2238,6 +2630,7 @@ function LobbyService.new(state, deps)
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
     self._lobbyController = resolveLobbySystemController(self._deps)
+    self._lobbyService = resolveLobbySystemService(self._deps)
     self._contractService = resolveContractService(self._deps)
 
     self._playerManager = LobbyPlayerManager.new(self._deps, self._deps.LobbyPlayerManagerConfig)
@@ -2352,6 +2745,152 @@ function LobbyService:_refreshNorthContractBoard()
         subtitle,
         lobbyPromptColor("MatchmakingZone")
     )
+
+    local featuredRoomCount = 0
+    if not self._lobbyService then
+        self._lobbyService = resolveLobbySystemService(self._deps)
+    end
+    if self._lobbyService and type(self._lobbyService.GetRoomList) == "function" then
+        featuredRoomCount = #(self._lobbyService:GetRoomList() or {})
+    end
+
+    local leadEntry = contracts[1] or {}
+    local mapPlate = workspace:FindFirstChild("DeskMapPlate", true)
+    if mapPlate and mapPlate:IsA("BasePart") then
+        local mapLabel = humanizeLobbyMapId(leadEntry.mapId)
+        ensureGuideBoardSurface(mapPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "MAP", mapLabel, lobbyPromptColor("MatchmakingZone"))
+        ensureGuideBoardSurface(mapPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "MAP", mapLabel, lobbyPromptColor("MatchmakingZone"))
+    end
+
+    local modePlate = workspace:FindFirstChild("DeskModePlate", true)
+    if modePlate and modePlate:IsA("BasePart") then
+        local modeLabel = clampLobbyText(tostring(leadEntry.mode or leadEntry.difficulty or "Classic"), 18)
+        ensureGuideBoardSurface(modePlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "MODE", modeLabel, lobbyPromptColor("MatchmakingZone"))
+        ensureGuideBoardSurface(modePlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "MODE", modeLabel, lobbyPromptColor("MatchmakingZone"))
+    end
+
+    local startPlate = workspace:FindFirstChild("DeskStartPlate", true)
+    if startPlate and startPlate:IsA("BasePart") then
+        local startLabel = featuredRoomCount > 0 and string.format("%d room live", featuredRoomCount) or "Room Browser"
+        ensureGuideBoardSurface(startPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "START", startLabel, lobbyPromptColor("MatchmakingZone"))
+        ensureGuideBoardSurface(startPlate, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "START", startLabel, lobbyPromptColor("MatchmakingZone"))
+    end
+    return true
+end
+
+function LobbyService:_refreshSecondaryLobbyBoards()
+    if not self._lobbyService then
+        self._lobbyService = resolveLobbySystemService(self._deps)
+    end
+
+    local rooms = {}
+    if self._lobbyService and type(self._lobbyService.GetRoomList) == "function" then
+        rooms = self._lobbyService:GetRoomList() or {}
+    end
+    local roomSummary = summarizeLobbyRooms(rooms)
+    local featuredRoom = roomSummary.featuredRoom
+    local shopSummary = summarizeCosmeticCatalog(self._cosmeticCatalogById)
+    local flexState = self:_getFlexState()
+    local spotlight = flexState and flexState.participantsByUserId and flexState.participantsByUserId[flexState.spotlightUserId] or nil
+
+    local queueSign = workspace:FindFirstChild("QueueSign", true)
+    if queueSign and queueSign:IsA("BasePart") then
+        local subtitle = roomSummary.roomCount > 0
+            and string.format("%d room • %d pemain\nJoin queue dari plaza", roomSummary.roomCount, roomSummary.playerCount)
+            or "Belum ada room\nJoin queue dari plaza"
+        ensureGuideBoardSurface(queueSign, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Back, "QUEUE HUB", subtitle, Color3.fromRGB(150, 196, 255))
+        ensureGuideBoardSurface(queueSign, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Front, "QUEUE HUB", subtitle, Color3.fromRGB(150, 196, 255))
+    end
+
+    local roomBoard = workspace:FindFirstChild("RoomBoard", true)
+    if roomBoard and roomBoard:IsA("BasePart") then
+        local subtitle = "Belum ada room\nCreate • Join • Ready"
+        if featuredRoom then
+            local mapLabel = clampLobbyText(humanizeLobbyMapId(featuredRoom.mapId), 20)
+            subtitle = string.format("%d room • %d ready\n%s • %d/%d", roomSummary.roomCount, roomSummary.readyCount, mapLabel, math.max(0, math.floor(tonumber(featuredRoom.playerCount) or 0)), math.max(1, math.floor(tonumber(featuredRoom.maxPlayers) or 4)))
+        end
+        ensureGuideBoardSurface(roomBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "ROOM", subtitle, lobbyPromptColor("MatchmakingZone"))
+    end
+
+    local partyBoard = workspace:FindFirstChild("PartyBoard", true)
+    if partyBoard and partyBoard:IsA("BasePart") then
+        local subtitle = "Belum ada party\nInvite • Join • Ready"
+        if featuredRoom then
+            local hostLabel = clampLobbyText(tostring(featuredRoom.hostName or "Host"), 16)
+            subtitle = string.format("%d room publik • %d ready\nHost %s", roomSummary.openCount, roomSummary.readyCount, hostLabel)
+        end
+        ensureGuideBoardSurface(partyBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Left, "PARTY", subtitle, lobbyPromptColor("PartyZone"))
+        ensureGuideBoardSurface(partyBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Right, "PARTY", subtitle, lobbyPromptColor("PartyZone"))
+    end
+
+    local partyPlatform = workspace:FindFirstChild("PartyPlatform", true)
+    if partyPlatform and partyPlatform:IsA("BasePart") then
+        local subtitle = roomSummary.openCount > 0 and string.format("%d room aktif\nReady • Join", roomSummary.openCount) or "Buat room dulu\nReady • Join"
+        ensureGuideBoardSurface(partyPlatform, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "PARTY PAD", subtitle, lobbyPromptColor("PartyZone"))
+        ensureGuideBoardSurface(partyPlatform, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "PARTY PAD", subtitle, lobbyPromptColor("PartyZone"))
+    end
+
+    local shopCounter = workspace:FindFirstChild("ShopCounter", true)
+    if shopCounter and shopCounter:IsA("BasePart") then
+        local subtitle = string.format("%d item • %d premium\nLoadout • Utility", shopSummary.total, shopSummary.pass + shopSummary.class)
+        ensureGuideBoardSurface(shopCounter, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "SHOP", subtitle, lobbyPromptColor("ShopZone"))
+        ensureGuideBoardSurface(shopCounter, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "SHOP", subtitle, lobbyPromptColor("ShopZone"))
+    end
+
+    local shopRack = workspace:FindFirstChild("EquipmentRack", true)
+    if shopRack and shopRack:IsA("BasePart") then
+        local subtitle = string.format("%d outfit • %d head\nStyle • Equip", shopSummary.outfit, shopSummary.head)
+        ensureGuideBoardSurface(shopRack, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Left, "RACK", subtitle, lobbyPromptColor("ShopZone"))
+        ensureGuideBoardSurface(shopRack, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Right, "RACK", subtitle, lobbyPromptColor("ShopZone"))
+    end
+
+    local shopDisplayA = workspace:FindFirstChild("DisplayTable_A", true)
+    if shopDisplayA and shopDisplayA:IsA("BasePart") then
+        local subtitle = string.format("%d emote • %d acc\nLoadout • MM", shopSummary.emote, shopSummary.accessory)
+        ensureGuideBoardSurface(shopDisplayA, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "LOADOUT", subtitle, lobbyPromptColor("ShopZone"))
+        ensureGuideBoardSurface(shopDisplayA, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "LOADOUT", subtitle, lobbyPromptColor("ShopZone"))
+    end
+
+    local shopDisplayB = workspace:FindFirstChild("DisplayTable_B", true)
+    if shopDisplayB and shopDisplayB:IsA("BasePart") then
+        local subtitle = string.format("%d pass • %d class\nPremium • PP", shopSummary.pass, shopSummary.class)
+        ensureGuideBoardSurface(shopDisplayB, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "PREMIUM", subtitle, lobbyPromptColor("ShopZone"))
+        ensureGuideBoardSurface(shopDisplayB, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "PREMIUM", subtitle, lobbyPromptColor("ShopZone"))
+    end
+
+    local gardenTerminal = workspace:FindFirstChild("DailyRewardTerminal", true)
+    if gardenTerminal and gardenTerminal:IsA("BasePart") then
+        local subtitle = "7 hari streak\nClaim sekali per hari"
+        ensureGuideBoardSurface(gardenTerminal, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Front, "DAILY", subtitle, lobbyPromptColor("DailyRewardZone"))
+    end
+
+    local flexBoard = workspace:FindFirstChild("AnnouncementBoard", true)
+    if flexBoard and flexBoard:IsA("BasePart") then
+        local subtitle = "Belum ada spotlight\nMasuk zone untuk tampil"
+        if spotlight then
+            local name = clampLobbyText(tostring(spotlight.displayName or spotlight.playerName or "Spotlight"), 16)
+            local summaryText = clampLobbyText(tostring(spotlight.spotlightSummary or "Cosmetic aktif"), 20)
+            subtitle = string.format("%s • Lv.%d\n%s", name, math.max(1, math.floor(tonumber(spotlight.playerLevel) or 1)), summaryText)
+        elseif roomSummary.roomCount > 0 and featuredRoom then
+            subtitle = string.format("%s\n%d room • %d pemain", clampLobbyText(humanizeLobbyMapId(featuredRoom.mapId), 20), roomSummary.roomCount, roomSummary.playerCount)
+        end
+        ensureGuideBoardSurface(flexBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Left, "FLEX", subtitle, lobbyPromptColor("FlexZone"))
+        ensureGuideBoardSurface(flexBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Right, "FLEX", subtitle, lobbyPromptColor("FlexZone"))
+    end
+
+    local flexStage = workspace:FindFirstChild("FlexStage", true)
+    if flexStage and flexStage:IsA("BasePart") then
+        local subtitle = string.format("%d visitor\nSpotlight • Cosmetic", math.max(0, #(flexState.rotationOrder or {})))
+        ensureGuideBoardSurface(flexStage, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "SPOTLIGHT", subtitle, lobbyPromptColor("FlexZone"))
+        ensureGuideBoardSurface(flexStage, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "SPOTLIGHT", subtitle, lobbyPromptColor("FlexZone"))
+    end
+
+    return true
+end
+
+function LobbyService:_refreshLobbyWorldBoards()
+    self:_refreshNorthContractBoard()
+    self:_refreshSecondaryLobbyBoards()
     return true
 end
 
@@ -2370,6 +2909,7 @@ function LobbyService:_bindWorldPrompts()
                 source = "QueueTriggerPrompt",
             })
         end
+        self:_refreshLobbyWorldBoards()
         self:_publishLobbyWorldEvent(
             player,
             "LobbyWorldSurfaceRequested",
@@ -2389,7 +2929,7 @@ function LobbyService:_bindWorldPrompts()
             count = 3,
             now = os.clock(),
         })
-        self:_refreshNorthContractBoard()
+        self:_refreshLobbyWorldBoards()
         if lobbyController and type(lobbyController.OnRequestRoomBrowserSnapshot) == "function" then
             lobbyController:OnRequestRoomBrowserSnapshot(player, {
                 source = "ContractBoardPrompt",
@@ -2413,6 +2953,7 @@ function LobbyService:_bindWorldPrompts()
                 source = "RoomBoardPrompt",
             })
         end
+        self:_refreshLobbyWorldBoards()
         self:_publishLobbyWorldEvent(
             player,
             "LobbyWorldSurfaceRequested",
@@ -2442,6 +2983,7 @@ function LobbyService:_bindWorldPrompts()
                 source = "PartyBoardPrompt",
             })
         end
+        self:_refreshLobbyWorldBoards()
         self:_publishLobbyWorldEvent(
             player,
             "LobbyWorldSurfaceRequested",
@@ -2777,6 +3319,7 @@ function LobbyService:_publishFlexSpotlight(flexState, reason)
     flexState.lastPayload = payload
     flexState.lastUpdatedAt = payload.updatedAt
     self._state:Set("flexZoneState", flexState)
+    self:_refreshSecondaryLobbyBoards()
     self:_publish(payload.eventName, payload)
 end
 
@@ -4456,7 +4999,7 @@ function LobbyService:Start()
     self._zoneManager:Start()
     sanitizeLobbyLogicVolumes()
     applyMainHubVisualPatch()
-    self:_refreshNorthContractBoard()
+    self:_refreshLobbyWorldBoards()
     self:_syncZoneGuides()
     self:_bindWorldPrompts()
     self._interaction:Start()

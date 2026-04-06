@@ -2571,3 +2571,26 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - blocker mouse lobby sudah tertutup, tetapi pekerjaan lobby keseluruhan masih belum final.
 
+## Update 2026-04-06
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di sisi lobby world-space:
+  - board sekunder `Queue / Shop / Party / Flex / Daily` sekarang ikut refresh saat boot lobby, tidak lagi tertinggal statis
+  - `North contract bay` sekarang lengkap lagi sebagai ruang staging:
+    - desk kontrak
+    - display case kiri/kanan
+    - props semantik kontrak/room/tools
+    - plate meja `MAP / MODE / START`
+  - prompt dunia utama tetap sehat sesudah pass ini:
+    - `ContractBoard -> RoomBrowserUI`
+    - `ShopCounter -> ShopUI`
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_board_refresh_fix_build.rbxlx`
+    - `_tmp_lobby_contract_bay_restore_build.rbxlx`
+  - verifikasi live:
+    - `QueueSign`, `ShopCounter`, `PartyBoard`, `AnnouncementBoard` menampilkan copy dinamis baru
+    - `DeskMapPlate`, `DeskModePlate`, `DeskStartPlate` hadir dan terisi data hidup
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby sekarang naik dari `functional world-space hub` menjadi `functional hub dengan contract bay yang kembali utuh`, tetapi art pass premium, asset final non-primitive, dan interior kaya per bangunan masih tersisa sebelum bisa dinyatakan final.
+

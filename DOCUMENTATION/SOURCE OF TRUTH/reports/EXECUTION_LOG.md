@@ -11224,3 +11224,39 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - capture live:
   - `CameraLobby_Default_AfterFix_1`
   - `CameraLobby_Default_AfterFix_FPV_1`
+
+## Update 2026-04-06
+
+- `LobbySocialHub` menerima pass besar yang menutup gap antara façade visual dan board dunia aktif:
+  - `Start()` sekarang memanggil `self:_refreshLobbyWorldBoards()`, jadi board sekunder ikut refresh saat lobby boot
+  - `_publishFlexSpotlight()` sekarang ikut memicu refresh board sekunder saat spotlight berubah
+  - `North contract bay` dilengkapi lagi dengan:
+    - `CenterDesk / CenterDeskTop`
+    - `LeftDisplayCase / RightDisplayCase`
+    - `CenterBackdrop / FloorRunner`
+    - `ContractClipboard / ContractPaper`
+    - `RoomLedger / RoomCards`
+    - `ToolDisplayEMF / ToolDisplayUV / ToolDisplayBox`
+    - `DeskMapPlate / DeskModePlate / DeskStartPlate`
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_board_refresh_fix_build.rbxlx`
+  - `_tmp_lobby_contract_bay_restore_build.rbxlx`
+- verifikasi live:
+  - board sekunder sekarang benar-benar hidup:
+    - `QueueSign = QUEUE HUB | 10 room • 0 pemain`
+    - `ShopCounter = SHOP | 31 item • 4 premium`
+    - `PartyBoard = PARTY | 10 room publik • 0 ready`
+    - `AnnouncementBoard = FLEX | Haunted House • 10 room`
+  - `North contract bay` runtime sekarang lengkap:
+    - `CenterDesk`, `CenterDeskTop`, `LeftDisplayCase`, `RightDisplayCase`
+    - `DeskMapPlate = MAP | Abandoned Palace`
+    - `DeskModePlate = MODE | Uji Nyali`
+    - `DeskStartPlate = START | 10 room live`
+  - prompt dunia utama tetap sehat:
+    - `ContractBoard` membuka `RoomBrowserUI`
+    - `ShopCounter` membuka `ShopUI`
+- capture live:
+  - `LobbyWorldPrompt_ShopCounter_1`
