@@ -2810,6 +2810,35 @@ Urutan yang paling masuk akal dari titik sekarang:
   - transisi breach yang lebih sinematik secara visual
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - `PreparationEntryLaneState` sekarang hidup di runtime
+  - state `ready / armed / breach` sekarang men-tween:
+    - runner
+    - floodlight
+    - lamp
+    - marquee accent/glow
+    - gate leaf
+    - gate seal
+  - state `armed / breach` sekarang juga memicu burst emitter ringan di staging
+- validasi terbaru:
+  - build:
+    - `_tmp_match_preparation_breach_tween_build.rbxlx`
+  - `HauntedHouse`
+    - default:
+      - `PreparationEntryLaneState = ready`
+      - `floodBrightness = 3.20`
+      - `gateSealTransparency = 0.08`
+      - emitter breach belum ada
+    - sesudah `InvestigationPhase`:
+      - `PreparationEntryLaneState = breach`
+      - `floodBrightness = 4.30`
+      - `gateSealTransparency = 0.90`
+      - `PreparationSiteMarqueeGlow.StateBurst = present`
+      - `PreparationGateSeal.BreachBurst = present`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - dressing exterior yang lebih kaya secara artistik per map
+
+- progress tambahan pada lane `outside match preparation staging`:
   - `PreparationEntrySign` sekarang stateful:
     - default `MAIN ENTRY`
     - armed state mengikuti tool terpilih

@@ -11785,3 +11785,44 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - asset premium/non-primitive untuk staging luar
     - dressing exterior yang lebih kaya secara artistik
     - transisi breach yang lebih sinematik secara visual
+
+- pass lanjutan pada lane `outside match preparation staging`:
+  - state `ready / armed / breach` sekarang tidak lagi hanya swap nilai instan
+  - `PreparationEntryLaneState` sekarang disimpan di runtime folder staging
+  - transisi lane sekarang men-tween:
+    - runner
+    - floodlight
+    - lamp
+    - entry accent
+    - marquee accent/glow
+    - gate leaf
+    - gate seal
+  - saat state naik ke `armed` atau `breach`, world-space sekarang juga memicu burst emitter ringan:
+    - `PreparationSiteMarqueeGlow.StateBurst`
+    - `PreparationGateSeal.BreachBurst`
+    - `PreparationBrazierFlame_*.BreachPulse` pada profile palace
+- source owner yang disentuh:
+  - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+- validasi:
+  - build:
+    - `_tmp_match_preparation_breach_tween_build.rbxlx`
+  - live `HauntedHouse`:
+    - state default:
+      - `PreparationEntryLaneState = ready`
+      - `runnerColor = 0.384314, 0.329412, 0.27451`
+      - `floodBrightness = 3.20`
+      - `gateSealTransparency = 0.08`
+      - belum ada emitter runtime di marquee/gate seal
+    - sesudah `AdvancePhase -> InvestigationPhase`:
+      - `PreparationEntryLaneState = breach`
+      - `runnerColor = 0.282353, 0.541176, 0.478431`
+      - `floodBrightness = 4.30`
+      - `gateSealTransparency = 0.90`
+      - `PreparationSiteMarqueeGlow.StateBurst = present`
+      - `PreparationGateSeal.BreachBurst = present`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - breach transition sekarang sudah punya animasi/tween dan burst world-space, jadi residual lane berkurang dari sekadar state swap kaku.
+  - residual lane sekarang tinggal:
+    - asset premium/non-primitive untuk staging luar
+    - dressing exterior yang lebih kaya secara artistik per map
