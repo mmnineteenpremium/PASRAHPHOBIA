@@ -2760,6 +2760,56 @@ Urutan yang paling masuk akal dari titik sekarang:
   - transisi dunia luar -> breach investigasi yang lebih sinematik
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - profile staging sekarang dibedakan per map:
+    - `HauntedHouse` -> `CONTRACT BAY`
+    - `AbandonedPalace` -> `PALACE GATE`
+    - `EmptyBuilding` -> `OPERATIONS ENTRY`
+    - `StudioMMNineteen` -> `CONTROL ACCESS`
+  - `HauntedHouse` sekarang punya décor `house`
+  - `AbandonedPalace` sekarang punya décor `palace`
+  - `EmptyBuilding` dan `StudioMMNineteen` sekarang punya décor `facility`
+- blocker yang tertutup:
+  - `AbandonedPalace` sebelumnya tidak memindahkan player ke staging luar
+  - akar masalahnya ada di `MatchTeleport`, bukan di patch staging:
+    - `resolveSpawnFacingForward()` memanggil `GetPivot()` langsung pada `mapClone`
+    - `AbandonedPalace` dibungkus `Folder`, jadi teleport abort setelah `root_ok`
+  - fix:
+    - pivot spawn sekarang memakai `resolveSpatialAnchorCFrame()`
+    - trace spawn sekarang mencatat `spawnResolveError` jika jalur itu gagal lagi
+- validasi terbaru:
+  - `AbandonedPalace`
+    - `PreparationStagingRuntimePatched = true`
+    - `PreparationStagingRuntimeDebug = complete`
+    - trace teleport:
+      - `spawnCandidate=...PlayerSpawn_1`
+      - `teleporting`
+      - `teleportOk`
+      - `teleported_counted`
+    - player benar-benar pindah ke staging aktif
+    - board hidup:
+      - `PALACE GATE`
+      - `PALACE ENTRY`
+    - décor palace hidup:
+      - `PreparationCarpet`
+      - `PreparationPillar_1`
+      - `PreparationBrazierFlame_1`
+      - `PreparationBanner_1`
+    - breach state hidup:
+      - `BREACH OPEN`
+      - runner hijau
+      - floodlight `4.50`
+  - regression `HauntedHouse`
+    - teleport tetap `teleportOk`
+    - marquee tetap `CONTRACT BAY`
+  - coverage default profile lain:
+    - `EmptyBuilding` -> `OPERATIONS ENTRY`
+    - `StudioMMNineteen` -> `CONTROL ACCESS`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - dressing exterior yang lebih kaya secara artistik
+  - transisi breach yang lebih sinematik secara visual
+
+- progress tambahan pada lane `outside match preparation staging`:
   - `PreparationEntrySign` sekarang stateful:
     - default `MAIN ENTRY`
     - armed state mengikuti tool terpilih
