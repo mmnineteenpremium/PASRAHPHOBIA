@@ -11362,3 +11362,45 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `FlexCurtainLeft / Right`, `FlexAudienceBenchLeft / Right` hadir di runtime
 - catatan:
   - capture interior per wing tidak tembus via navigasi otomatis karena route fisik lobby masih belum bersih untuk tool navigasi, jadi bukti utama pass ini saya pegang dari runtime object + surface text
+
+## Update 2026-04-06
+
+- `LobbySocialHub` kini ditutup sebagai `world-space hub` yang benar-benar bisa dipakai:
+  - floor, threshold, corridor, shell, gateway wall, planter, dan route pad utama sekarang menjadi surface fisik yang benar-benar terbaca oleh physics/pathfinding
+  - collision pintu asli lobby dicabut pada:
+    - `Door_NorthEvidenceBuilding`
+    - `Door_EastShopBuilding`
+    - `Door_WestPartyZone`
+    - `Door_SouthSocialGarden`
+    - `Door_SouthEastFlexZone`
+  - blocker `Party` terakhir ditutup dengan membuat `PartyBackdropWall` non-collide agar koridor inti tidak tertutup dekor sendiri
+  - parity interaksi dunia dilengkapi:
+    - `PartyPlatform` sekarang punya prompt `Join Party Room`
+    - `AnnouncementBoard` sekarang punya prompt `Read Spotlight`
+    - `FlexStage` sekarang punya prompt `View Spotlight`
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_traversal_interaction_final_build.rbxlx`
+- verifikasi live traversal:
+  - `ShopCore = Success`
+  - `PartyPlatformCore = Success`
+  - `GardenCore = Success`
+  - `FlexCore = Success`
+  - `NorthDeskFront = Success`
+  - `NorthRoomFront = Success`
+  - `NorthToolsFront = Success`
+- verifikasi live interaksi:
+  - `PartyBoard -> RoomBrowserUI.Enabled = true`
+  - `PartyPlatform -> RoomBrowserUI.Enabled = true`
+  - `ShopCounter` tetap membuka `ShopUI`
+  - `FlexStage` prompt hidup dan mengubah state/hint lobby tanpa memaksa surface lain terbuka
+- capture live:
+  - `LobbyPrompt_PartyBoard_Post_8`
+  - `LobbyPrompt_PartyPlatform_Post_14`
+  - `LobbyPrompt_Flex_Pre_15`
+
+- status:
+  - **LOBBY FUNCTIONAL COMPLETE**.
+  - sisa yang ada sekarang masuk kategori `polish visual/art premium`, bukan blocker world-space, traversal, atau interaksi lobby.

@@ -188,6 +188,9 @@ local LOBBY_EXTERIOR_VISUAL_PATCH = {
 		color = Color3.fromRGB(102, 132, 168),
 		material = Enum.Material.Metal,
 		transparency = 0.04,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
 	},
 	Door_NorthEvidenceBuilding_FrameL = {
 		color = Color3.fromRGB(148, 188, 255),
@@ -240,6 +243,9 @@ local LOBBY_EXTERIOR_VISUAL_PATCH = {
 		color = Color3.fromRGB(158, 120, 76),
 		material = Enum.Material.Metal,
 		transparency = 0.04,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
 	},
 	Door_EastShopBuilding_FrameTop = {
 		color = Color3.fromRGB(255, 201, 120),
@@ -286,6 +292,9 @@ local LOBBY_EXTERIOR_VISUAL_PATCH = {
 		color = Color3.fromRGB(90, 132, 132),
 		material = Enum.Material.Metal,
 		transparency = 0.04,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
 	},
 	Door_WestPartyZone_FrameL = {
 		color = Color3.fromRGB(132, 224, 212),
@@ -332,6 +341,9 @@ local LOBBY_EXTERIOR_VISUAL_PATCH = {
 		color = Color3.fromRGB(118, 148, 110),
 		material = Enum.Material.Metal,
 		transparency = 0.04,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
 	},
 	Door_SouthSocialGarden_FrameTop = {
 		color = Color3.fromRGB(152, 228, 166),
@@ -378,6 +390,9 @@ local LOBBY_EXTERIOR_VISUAL_PATCH = {
 		color = Color3.fromRGB(126, 118, 168),
 		material = Enum.Material.Metal,
 		transparency = 0.04,
+		canCollide = false,
+		canQuery = false,
+		canTouch = false,
 	},
 	Door_SouthEastFlexZone_FrameR = {
 		color = Color3.fromRGB(204, 164, 255),
@@ -1511,6 +1526,9 @@ local function applyMainHubVisualPatch()
             color = color,
             material = Enum.Material.Neon,
             transparency = 0.08,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
     end
 
@@ -1527,6 +1545,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(30, 42, 58),
             material = Enum.Material.Slate,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(edgeLeft, {
             size = Vector3.new(0.24, 0.18, length),
@@ -1552,6 +1573,9 @@ local function applyMainHubVisualPatch()
             color = color:Lerp(Color3.fromRGB(255, 255, 255), 0.18),
             material = Enum.Material.Neon,
             transparency = 0.12,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         ensureGuideBoardSurface(node, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, title, subtitle, color)
         ensureGuideBoardSurface(node, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, title, subtitle, color)
@@ -1638,6 +1662,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(74, 88, 108),
             material = Enum.Material.SmoothPlastic,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
     end
 
@@ -1704,6 +1731,9 @@ local function applyMainHubVisualPatch()
             color = palette.floorColor,
             material = Enum.Material.Slate,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(backWall, {
             size = Vector3.new(width, height, 0.32),
@@ -1711,6 +1741,9 @@ local function applyMainHubVisualPatch()
             color = palette.wallColor,
             material = Enum.Material.SmoothPlastic,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(sideLeft, {
             size = Vector3.new(0.32, height, depth),
@@ -1718,6 +1751,9 @@ local function applyMainHubVisualPatch()
             color = palette.sideColor or palette.wallColor,
             material = Enum.Material.SmoothPlastic,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(sideRight, {
             size = Vector3.new(0.32, height, depth),
@@ -1725,6 +1761,9 @@ local function applyMainHubVisualPatch()
             color = palette.sideColor or palette.wallColor,
             material = Enum.Material.SmoothPlastic,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(ceiling, {
             size = Vector3.new(width, 0.18, depth),
@@ -1739,6 +1778,9 @@ local function applyMainHubVisualPatch()
             color = palette.thresholdColor or palette.floorColor,
             material = Enum.Material.Slate,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(accent, {
             size = Vector3.new(width * 0.76, 0.18, 0.26),
@@ -1774,6 +1816,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(58, 70, 88),
             material = Enum.Material.SmoothPlastic,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(wallRight, {
             size = Vector3.new(sideWallWidth, height, 0.34),
@@ -1781,6 +1826,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(58, 70, 88),
             material = Enum.Material.SmoothPlastic,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(jambLeft, {
             size = Vector3.new(0.42, height - 0.7, 0.42),
@@ -1788,6 +1836,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(78, 92, 112),
             material = Enum.Material.Metal,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(jambRight, {
             size = Vector3.new(0.42, height - 0.7, 0.42),
@@ -1795,6 +1846,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(78, 92, 112),
             material = Enum.Material.Metal,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(header, {
             size = Vector3.new(openingWidth + 0.9, 0.96, 0.42),
@@ -1802,6 +1856,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(56, 68, 86),
             material = Enum.Material.Metal,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(accent, {
             size = Vector3.new(openingWidth + 1.6, 0.18, 0.5),
@@ -1816,6 +1873,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(26, 38, 52),
             material = Enum.Material.Metal,
             transparency = 0.03,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(signPanel, {
             size = Vector3.new(signWidth, 2.8, 0.24),
@@ -1832,6 +1892,9 @@ local function applyMainHubVisualPatch()
             color = accentColor:Lerp(Color3.fromRGB(255, 255, 255), 0.12),
             material = Enum.Material.Glass,
             transparency = 0.34,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(windowRight, {
             size = Vector3.new(3.4, 2.3, 0.18),
@@ -1839,6 +1902,9 @@ local function applyMainHubVisualPatch()
             color = accentColor:Lerp(Color3.fromRGB(255, 255, 255), 0.12),
             material = Enum.Material.Glass,
             transparency = 0.34,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(lampLeft, {
             size = Vector3.new(0.3, 2.8, 0.3),
@@ -1875,6 +1941,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(30, 42, 58),
             material = Enum.Material.Slate,
             transparency = 0.02,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
         applyPartProps(top, {
             size = Vector3.new(3.4, 0.38, 2.1),
@@ -1882,6 +1951,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(98, 138, 102),
             material = Enum.Material.Grass,
             transparency = 0.04,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
     end
 
@@ -1893,6 +1965,9 @@ local function applyMainHubVisualPatch()
             color = Color3.fromRGB(28, 40, 56),
             material = Enum.Material.Slate,
             transparency = 0.04,
+            canCollide = true,
+            canQuery = true,
+            canTouch = false,
         })
     end
 
@@ -2104,6 +2179,9 @@ local function applyMainHubVisualPatch()
         color = Color3.fromRGB(34, 50, 72),
         material = Enum.Material.Slate,
         transparency = 0.04,
+        canCollide = true,
+        canQuery = true,
+        canTouch = false,
     })
     local northPathLine = ensureDecorPart("NorthPathLine")
     applyPartProps(northPathLine, {
@@ -2141,6 +2219,9 @@ local function applyMainHubVisualPatch()
         color = Color3.fromRGB(36, 58, 38),
         material = Enum.Material.Slate,
         transparency = 0.04,
+        canCollide = true,
+        canQuery = true,
+        canTouch = false,
     })
     local gardenPathLine = ensureDecorPart("GardenPathLine")
     applyPartProps(gardenPathLine, {
@@ -2178,6 +2259,9 @@ local function applyMainHubVisualPatch()
         color = Color3.fromRGB(58, 42, 30),
         material = Enum.Material.Slate,
         transparency = 0.04,
+        canCollide = true,
+        canQuery = true,
+        canTouch = false,
     })
     local shopPathLine = ensureDecorPart("ShopPathLine")
     applyPartProps(shopPathLine, {
@@ -2215,6 +2299,9 @@ local function applyMainHubVisualPatch()
         color = Color3.fromRGB(28, 52, 52),
         material = Enum.Material.Slate,
         transparency = 0.04,
+        canCollide = true,
+        canQuery = true,
+        canTouch = false,
     })
     local partyPathLine = ensureDecorPart("PartyPathLine")
     applyPartProps(partyPathLine, {
@@ -2245,6 +2332,9 @@ local function applyMainHubVisualPatch()
         color = Color3.fromRGB(40, 28, 60),
         material = Enum.Material.Slate,
         transparency = 0.04,
+        canCollide = true,
+        canQuery = true,
+        canTouch = false,
     })
     local flexPathLine = ensureDecorPart("FlexPathLine")
     applyPartProps(flexPathLine, {
@@ -2661,6 +2751,7 @@ local function applyMainHubVisualPatch()
     })
     ensureGuideBoardSurface(partyPlatform, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "PARTY PAD", "Ready • Join", LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
     ensureGuideBoardSurface(partyPlatform, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "PARTY PAD", "Ready • Join", LOBBY_ZONE_GUIDE_STYLE.PartyZone.color)
+    applyPrompt(ensurePrompt(partyPlatform, "InteractPrompt"), "Party Pad", "Join Party Room", 12)
     local partyBoard = ensureDecorPart("PartyBoard")
     applyPartProps(partyBoard, {
         size = Vector3.new(0.42, 3.8, 6.0),
@@ -2899,6 +2990,7 @@ local function applyMainHubVisualPatch()
     })
     ensureGuideBoardSurface(flexStage, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, "SPOTLIGHT", "Style • Event", LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
     ensureGuideBoardSurface(flexStage, LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME, Enum.NormalId.Bottom, "SPOTLIGHT", "Style • Event", LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
+    applyPrompt(ensurePrompt(flexStage, "InteractPrompt"), "Spotlight Stage", "View Spotlight", 12)
     local flexBoard = ensureDecorPart("AnnouncementBoard")
     applyPartProps(flexBoard, {
         size = Vector3.new(0.42, 3.8, 6.0),
@@ -2908,6 +3000,7 @@ local function applyMainHubVisualPatch()
         transparency = 0.02,
     })
     ensureGuideBoardSurface(flexBoard, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Left, "FLEX", "Spotlight • Event", LOBBY_ZONE_GUIDE_STYLE.FlexZone.color)
+    applyPrompt(ensurePrompt(flexBoard, "InteractPrompt"), "Flex Board", "Read Spotlight", 12)
     local flexPedestalA = ensureDecorPart("FlexWingPedestalA")
     applyPartProps(flexPedestalA, {
         size = Vector3.new(1.3, 1.2, 1.3),
@@ -3020,6 +3113,107 @@ local function applyMainHubVisualPatch()
     applyBeaconPart("BeaconWest", westNodePos + Vector3.new(3.4, 0, 0), hubCenter, LOBBY_ZONE_GUIDE_STYLE.PartyZone.color, "PARTY", "Invite")
     applyBeaconPart("BeaconSouth", southNodePos + Vector3.new(0, 0, -3.4), hubCenter, LOBBY_ZONE_GUIDE_STYLE.DailyRewardZone.color, "GARDEN", "Reward")
     applyBeaconPart("BeaconFlex", flexNodePos + Vector3.new(-2.8, 0, -2.8), southNodePos, LOBBY_ZONE_GUIDE_STYLE.FlexZone.color, "FLEX", "Spotlight")
+
+    local function applySolidCollision(partName)
+        local part = ensureDecorPart(partName)
+        if not (part and part:IsA("BasePart")) then
+            return
+        end
+        if part.CanCollide ~= true then
+            part.CanCollide = true
+            changed = true
+        end
+        if part.CanQuery ~= true then
+            part.CanQuery = true
+            changed = true
+        end
+        if part.CanTouch then
+            part.CanTouch = false
+            changed = true
+        end
+    end
+
+    for _, partName in ipairs({
+        "DirectoryPad",
+        "Table_Tools_1",
+        "Table_Tools_2",
+        "Table_Tools_3",
+        "Table_Tools_4",
+        "Table_Tools_5",
+        "Table_Tools_6",
+        "ContractBoard",
+        "RoomBoard",
+        "ToolsBoard",
+        LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_NAME,
+        LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME,
+        LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME,
+        LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME,
+        "ShopCounter",
+        "EquipmentRack",
+        "DisplayTable_A",
+        "DisplayTable_B",
+        "ShopShelf_A",
+        "ShopShelf_B",
+        "ShopCrate_A",
+        "ShopCrate_B",
+        "ShopBackCounter",
+        "PartyPlatform",
+        "PartyBoard",
+        "PartyTerminal",
+        "PartySofa_A",
+        "PartySofa_B",
+        "PartyCoffeeTable",
+        "PartyReadyDesk",
+        "PartyBoothLeft",
+        "PartyBoothRight",
+        "DailyRewardTerminal",
+        "GardenBenchA",
+        "GardenBenchB",
+        "GardenArchLeft",
+        "GardenArchRight",
+        "GardenArchTop",
+        "GardenRewardPedestalA",
+        "GardenRewardPedestalB",
+        "GardenPergolaBeamLeft",
+        "GardenPergolaBeamRight",
+        "GardenFlowerBedLeft",
+        "GardenFlowerBedRight",
+        "GardenLanternA",
+        "GardenLanternB",
+        "GardenTreeATrunk",
+        "GardenTreeACanopy",
+        "GardenTreeBTrunk",
+        "GardenTreeBCanopy",
+        "FlexStage",
+        "AnnouncementBoard",
+        "FlexWingPedestalA",
+        "FlexWingPedestalB",
+        "FlexBackdrop",
+        "FlexTrussLeft",
+        "FlexTrussRight",
+        "FlexCurtainLeft",
+        "FlexCurtainRight",
+        "FlexAudienceBenchLeft",
+        "FlexAudienceBenchRight",
+    }) do
+        applySolidCollision(partName)
+    end
+
+    local partyBackdropWall = ensureDecorPart("PartyBackdropWall")
+    if partyBackdropWall and partyBackdropWall:IsA("BasePart") then
+        if partyBackdropWall.CanCollide then
+            partyBackdropWall.CanCollide = false
+            changed = true
+        end
+        if partyBackdropWall.CanQuery then
+            partyBackdropWall.CanQuery = false
+            changed = true
+        end
+        if partyBackdropWall.CanTouch then
+            partyBackdropWall.CanTouch = false
+            changed = true
+        end
+    end
 
 	return changed
 end
@@ -3396,6 +3590,25 @@ function LobbyService:_bindWorldPrompts()
         )
     end)
 
+    self:_connectWorldPrompt("PartyPlatform", function(player)
+        if lobbyController and type(lobbyController.OnRequestRoomBrowserSnapshot) == "function" then
+            lobbyController:OnRequestRoomBrowserSnapshot(player, {
+                source = "PartyPlatformPrompt",
+            })
+        end
+        self:_refreshLobbyWorldBoards()
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldSurfaceRequested",
+            "PartyZone",
+            "Party pad aktif",
+            "Room Browser dibuka dari pad party untuk join, ready, dan kontrol room.",
+            {
+                surface = "RoomBrowser",
+            }
+        )
+    end)
+
     self:_connectWorldPrompt("ShopCounter", function(player)
         self:_publishLobbyWorldEvent(
             player,
@@ -3432,6 +3645,30 @@ function LobbyService:_bindWorldPrompts()
             "DailyRewardZone",
             "Daily reward diproses",
             "Permintaan claim dikirim. Hasil reward akan tampil di feedback lobby.",
+            {}
+        )
+    end)
+
+    self:_connectWorldPrompt("AnnouncementBoard", function(player)
+        self:_refreshLobbyWorldBoards()
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldPromptFeedback",
+            "FlexZone",
+            "Flex board aktif",
+            "Spotlight board menampilkan update event, kosmetik, dan pemain yang sedang tampil.",
+            {}
+        )
+    end)
+
+    self:_connectWorldPrompt("FlexStage", function(player)
+        self:_refreshLobbyWorldBoards()
+        self:_publishLobbyWorldEvent(
+            player,
+            "LobbyWorldPromptFeedback",
+            "FlexZone",
+            "Flex stage aktif",
+            "Stage spotlight siap dipakai untuk showcase kosmetik dan rotasi player lobby.",
             {}
         )
     end)

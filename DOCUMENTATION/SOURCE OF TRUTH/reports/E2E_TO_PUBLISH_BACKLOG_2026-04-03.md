@@ -2656,3 +2656,27 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby sekarang naik lagi pada readability dan massa ruang tiap wing, tetapi material/asset premium, route fisik yang lebih bersih, dan art pass global masih tersisa sebelum selesai penuh.
 
+## Update 2026-04-06
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME`
+  - slice `LobbySocialHub` sekarang ditutup dari sisi:
+    - world-space hub
+    - traversal antarsayap
+    - prompt interaksi utama
+    - spawn/return readability
+- yang ditutup pada pass ini:
+  - collision pintu asli lobby dibuka agar traversal `hub -> wing core` tidak lagi buntu
+  - `PartyBackdropWall` dibuat non-collide agar koridor `Party` tidak tertutup dekor
+  - `PartyPlatform`, `AnnouncementBoard`, dan `FlexStage` kini punya prompt dunia hidup
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_traversal_interaction_final_build.rbxlx`
+  - live:
+    - `ShopCore`, `PartyPlatformCore`, `GardenCore`, `FlexCore`, `NorthDeskFront`, `NorthRoomFront`, `NorthToolsFront` = `Success`
+    - `PartyBoard` dan `PartyPlatform` membuka `RoomBrowserUI`
+    - `ShopCounter` tetap membuka `ShopUI`
+    - `FlexStage` prompt hidup dan mengubah hint/state lobby
+- status:
+  - **SELESAI (Lobby functional/world-space)**.
+  - sisa lobby yang mungkin dikerjakan setelah ini bersifat `polish`, bukan blocker utama slice lobby.
+
