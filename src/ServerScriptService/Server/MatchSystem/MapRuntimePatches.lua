@@ -1618,6 +1618,73 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	)
 
 	configurePart(
+		ensurePart(folder, "PreparationForecourt"),
+		{
+			Size = Vector3.new(platformWidth + 16, 0.16, platformDepth + 14),
+			CFrame = CFrame.lookAt(platformCenter + (outward * 2.8) + Vector3.new(0, -0.12, 0), platformCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.Asphalt,
+			Color = Color3.fromRGB(52, 56, 64),
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+		}
+	)
+
+	local fenceHeight = 4.2
+	local fenceBack = ensurePart(folder, "PreparationFence_Back")
+	configurePart(
+		fenceBack,
+		{
+			Size = Vector3.new(platformWidth + 14, fenceHeight, 0.22),
+			CFrame = CFrame.lookAt(platformCenter + (outward * ((platformDepth * 0.5) + 6.8)) + Vector3.new(0, 2.1, 0), platformCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.Metal,
+			Color = Color3.fromRGB(98, 104, 114),
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+		}
+	)
+	for index, side in ipairs({ -1, 1 }) do
+		local fenceSide = ensurePart(folder, "PreparationFence_Side_" .. tostring(index))
+		configurePart(
+			fenceSide,
+			{
+				Size = Vector3.new(0.22, fenceHeight, platformDepth + 10),
+				CFrame = CFrame.lookAt(
+					platformCenter + (right * side * ((platformWidth * 0.5) + 6.8)) + Vector3.new(0, 2.1, 0),
+					platformCenter - outward,
+					Vector3.yAxis
+				),
+				Material = Enum.Material.Metal,
+				Color = Color3.fromRGB(98, 104, 114),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+	end
+
+	for index, side in ipairs({ -1, 1 }) do
+		local barrier = ensurePart(folder, "PreparationBarrier_" .. tostring(index))
+		configurePart(
+			barrier,
+			{
+				Size = Vector3.new(3.8, 1.1, 0.9),
+				CFrame = CFrame.lookAt(
+					platformCenter + (right * side * ((platformWidth * 0.5) - 3.8)) + (outward * 6.8) + Vector3.new(0, 0.58, 0),
+					platformCenter - outward,
+					Vector3.yAxis
+				),
+				Material = Enum.Material.Metal,
+				Color = Color3.fromRGB(244, 180, 88),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+	end
+
+	configurePart(
 		ensurePart(folder, "PreparationCanopy"),
 		{
 			Size = Vector3.new(platformWidth - 2, 0.24, 5.2),
@@ -1629,6 +1696,67 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			CanQuery = false,
 		}
 	)
+
+	for index, side in ipairs({ -1, 1 }) do
+		local tripod = ensurePart(folder, "PreparationFloodlightTripod_" .. tostring(index))
+		local tripodPos = platformCenter + (right * side * ((platformWidth * 0.5) + 2.6)) + (outward * -1.8) + Vector3.new(0, 1.9, 0)
+		configurePart(
+			tripod,
+			{
+				Size = Vector3.new(0.34, 3.8, 0.34),
+				CFrame = CFrame.new(tripodPos),
+				Material = Enum.Material.Metal,
+				Color = Color3.fromRGB(82, 88, 98),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+
+		local lightBar = ensurePart(folder, "PreparationFloodlightBar_" .. tostring(index))
+		configurePart(
+			lightBar,
+			{
+				Size = Vector3.new(2.8, 0.28, 0.28),
+				CFrame = CFrame.lookAt(tripodPos + Vector3.new(0, 1.88, 0), tripodPos - outward, Vector3.yAxis),
+				Material = Enum.Material.Metal,
+				Color = Color3.fromRGB(90, 96, 106),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
+
+		local flood = ensurePart(folder, "PreparationFloodlight_" .. tostring(index))
+		configurePart(
+			flood,
+			{
+				Size = Vector3.new(1.8, 0.34, 0.72),
+				CFrame = CFrame.lookAt(tripodPos + Vector3.new(0, 1.88, 0), tripodPos - outward, Vector3.yAxis),
+				Material = Enum.Material.Neon,
+				Color = Color3.fromRGB(214, 228, 255),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
+
+		local spot = flood:FindFirstChild("Light")
+		if not (spot and spot:IsA("SpotLight")) then
+			if spot then
+				spot:Destroy()
+			end
+			spot = Instance.new("SpotLight")
+			spot.Name = "Light"
+			spot.Parent = flood
+		end
+		spot.Angle = 82
+		spot.Brightness = 3.2
+		spot.Color = Color3.fromRGB(214, 228, 255)
+		spot.Range = 40
+		spot.Face = Enum.NormalId.Front
+		spot.Shadows = false
+	end
 
 	for index, side in ipairs({ -1, 1 }) do
 		local post = ensurePart(folder, "PreparationPost_" .. tostring(index))
@@ -1696,6 +1824,20 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		boardData.contractSubtitle,
 		boardData.contractLines,
 		Color3.fromRGB(214, 160, 104)
+	)
+
+	local contractDesk = ensurePart(folder, "PreparationContractDesk")
+	configurePart(
+		contractDesk,
+		{
+			Size = Vector3.new(6.4, 1.2, 2.2),
+			CFrame = CFrame.lookAt(platformCenter + (outward * 1.2) + Vector3.new(0, 0.64, 0), platformCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.WoodPlanks,
+			Color = Color3.fromRGB(82, 62, 48),
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+		}
 	)
 	ensureBoardSurface(
 		contractBoard,
@@ -1766,6 +1908,51 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			CanTouch = false,
 			CanQuery = true,
 		}
+	)
+
+	for index, side in ipairs({ -1, 1, 0 }) do
+		local case = ensurePart(folder, "PreparationEquipmentCase_" .. tostring(index))
+		local offsetX = side == 0 and 0 or side * 6.2
+		local offsetZ = side == 0 and -4.2 or 1.8
+		configurePart(
+			case,
+			{
+				Size = side == 0 and Vector3.new(2.8, 1.1, 1.8) or Vector3.new(2.2, 1.0, 1.6),
+				CFrame = CFrame.lookAt(
+					platformCenter + (right * offsetX) + (outward * offsetZ) + Vector3.new(0, 0.56, 0),
+					platformCenter - outward,
+					Vector3.yAxis
+				),
+				Material = Enum.Material.Metal,
+				Color = side == 0 and Color3.fromRGB(58, 64, 76) or Color3.fromRGB(74, 78, 86),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+	end
+
+	local entrySign = ensurePart(folder, "PreparationEntrySign")
+	configurePart(
+		entrySign,
+		{
+			Size = Vector3.new(4.6, 2.2, 0.24),
+			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.8) + Vector3.new(0, 2.6, 0), runnerCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.Metal,
+			Color = Color3.fromRGB(28, 34, 44),
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+		}
+	)
+	ensureBoardSurface(
+		entrySign,
+		"FrontSurface",
+		Enum.NormalId.Front,
+		"MAIN ENTRY",
+		"Breach setelah review board",
+		"Ikuti runner ke pintu utama.",
+		Color3.fromRGB(214, 160, 104)
 	)
 
 	local rackCenter = rackBase.Position + Vector3.new(0, 1.02, 0)

@@ -2563,6 +2563,43 @@ local function getInvestigationControlsHintText(contextTag)
 	return string.format("ANCHOR: %s  •  SWEEP EVIDENCE  •  [1-5] TOOL  •  [J] JOURNAL", anchorLabel)
 end
 
+local function getPreparationFocusToolLabel()
+	local player = Players.LocalPlayer
+	local focusTool = player and player:GetAttribute("PreparationFocusTool")
+	if type(focusTool) ~= "string" then
+		return nil
+	end
+
+	focusTool = focusTool:match("^%s*(.-)%s*$")
+	if focusTool == "" then
+		return nil
+	end
+
+	return focusTool
+end
+
+local function appendPreparationFocusLine(baseText)
+	local focusTool = getPreparationFocusToolLabel()
+	if not focusTool then
+		return baseText
+	end
+	if type(baseText) ~= "string" or baseText == "" then
+		return "Fokus awal: " .. focusTool
+	end
+	return baseText .. "\nFokus awal: " .. focusTool
+end
+
+local function prependPreparationFocusHint(baseText)
+	local focusTool = getPreparationFocusToolLabel()
+	if not focusTool then
+		return baseText
+	end
+	if type(baseText) ~= "string" or baseText == "" then
+		return "FOKUS: " .. string.upper(focusTool)
+	end
+	return string.format("FOKUS: %s  •  %s", string.upper(focusTool), baseText)
+end
+
 local function getNavigationSemanticAccent(anchor)
 	local subtitle = type(anchor) == "table" and tostring(anchor.subtitle or "") or ""
 	if subtitle == "Refuge route" then
@@ -5319,10 +5356,17 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		badgeColor = Color3.fromRGB(58, 112, 90)
 		phaseGlyphText = "IN"
 		primaryText = navigationAnchor and ("Investigasi aktif di sekitar " .. formatNavigationAnchorLabel(navigationAnchor, "area target") .. ".") or "Investigasi aktif."
+		local focusTool = getPreparationFocusToolLabel()
+		if focusTool then
+			primaryText = primaryText .. " Fokus awal: " .. focusTool .. "."
+		end
 		secondaryText = timerVisible
 			and ("Sisa waktu investigasi: " .. timerText .. ". " .. getInvestigationObjectiveText("Investigation"):gsub("\n", " • "))
 			or getInvestigationObjectiveText("Investigation"):gsub("\n", " • ")
 		footerText = CLOSE_HINT_TEXT .. ". Gunakan Field Kit [1-4] untuk tool cepat dan EVIDENCE [J] untuk jurnal."
+		if focusTool then
+			footerText = footerText .. " Mulai sweep dengan fokus " .. focusTool .. "."
+		end
 	elseif viewState == "Hunt" then
 		badgeText = "HUNT"
 		badgeColor = Color3.fromRGB(132, 56, 56)
@@ -5431,7 +5475,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			or (viewState == "Hunt"
 			and getHuntControlsHintText()
 			or ((viewState == "Preparation" and getInvestigationControlsHintText("Preparation"))
-				or (viewState == "Investigation" and getInvestigationControlsHintText("Investigation"))
+				or (viewState == "Investigation" and prependPreparationFocusHint(getInvestigationControlsHintText("Investigation")))
 				or self._matchControlsHintText))
 		match.ControlsHintLabel.TextColor3 = semanticAccent
 			and semanticAccent:Lerp(Color3.fromRGB(240, 244, 248), 0.35)
@@ -5459,7 +5503,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			match.ObjectiveLabel.Text = getHuntObjectiveText()
 			match.ObjectiveLabel.Visible = true
 		elseif viewState == "Investigation" then
-			match.ObjectiveLabel.Text = getInvestigationObjectiveText("Investigation")
+			match.ObjectiveLabel.Text = appendPreparationFocusLine(getInvestigationObjectiveText("Investigation"))
 			match.ObjectiveLabel.Visible = true
 		elseif viewState == "Preparation" or viewState == "Loading" then
 			match.ObjectiveLabel.Text = (viewState == "Preparation" and (

@@ -2735,3 +2735,27 @@ Urutan yang paling masuk akal dari titik sekarang:
     - board dunia pre-investigation yang lebih kaya
     - rekonstruksi map luar/dalam untuk transisi investigasi
 
+- progress tambahan pada lane `outside match preparation staging`:
+  - dressing exterior runtime sudah ditambah:
+    - forecourt
+    - fence perimeter
+    - floodlight tripod
+    - contract desk
+    - equipment cases
+    - main entry sign
+  - fokus tool dari rack staging sekarang ikut ke panel investigasi setelah breach
+- validasi terbaru:
+  - `PreparationForecourt = 44 x 0.16 x 32`
+  - `PreparationContractDesk = 6.4 x 1.2 x 2.2`
+  - `PreparationFloodlight_1/2` punya `SpotLight`
+  - `PreparationFocusTool = EMF`
+  - panel investigasi live:
+    - `Fokus awal: EMF`
+    - `FOKUS: EMF`
+  - path staging:
+    - `ToolStation_EMF -> PreparationPlatform = Success`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - dressing exterior yang berbeda per map target
+  - transisi dunia luar -> breach investigasi yang lebih sinematik
+
