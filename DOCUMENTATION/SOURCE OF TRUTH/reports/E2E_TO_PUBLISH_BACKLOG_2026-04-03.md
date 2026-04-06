@@ -2760,6 +2760,47 @@ Urutan yang paling masuk akal dari titik sekarang:
   - transisi dunia luar -> breach investigasi yang lebih sinematik
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - `PreparationEntrySign` sekarang stateful:
+    - default `MAIN ENTRY`
+    - armed state mengikuti tool terpilih
+    - breach state `BREACH OPEN`
+  - `PreparationEntryBeacon` ikut berubah:
+    - amber `ready`
+    - biru `armed`
+    - hijau `breach open`
+  - client breach sekarang memicu cue lingkungan `env_doorslam` tanpa membiarkan loading card tetap menutup layar
+- validasi terbaru:
+  - build:
+    - `_tmp_match_preparation_entry_state_build.rbxlx`
+    - `_tmp_match_preparation_entry_state_ui_build.rbxlx`
+  - default:
+    - subtitle `Breach setelah review board`
+    - body `Ikuti runner ke pintu utama.`
+    - beacon amber
+  - sesudah `EMF`:
+    - `PreparationFocusTool = EMF`
+    - subtitle `EMF ready • breach armed`
+    - body `Aktifkan breach untuk sweep awal dengan EMF.`
+    - beacon biru
+  - sesudah `Mulai Breach`:
+    - `MatchPhase = InGame`
+    - `MatchLifecyclePhase = InvestigationPhase`
+    - title `BREACH OPEN`
+    - subtitle `Investigation live`
+    - body `Masuk ke area utama sekarang.`
+    - beacon hijau
+    - `PasrahAudioLastCue = env_doorslam`
+    - `MatchLoadingUI.Enabled = false`
+  - regression UI staging:
+    - `MatchLifecyclePhase = PreparationPhase`
+    - `MatchPhase = Preparing`
+    - `FieldKitFrame.Visible = false`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - dressing exterior yang berbeda per map target
+  - transisi dunia luar -> breach investigasi yang lebih sinematik secara visual
+
+- progress tambahan pada lane `outside match preparation staging`:
   - `PreparationObjectiveBoard` sekarang dinamis
   - target evidence pada board mengikuti difficulty profile match
   - board menampilkan status:

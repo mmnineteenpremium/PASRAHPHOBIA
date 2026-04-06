@@ -4620,6 +4620,26 @@ function UISystem:_previewLobbyTrainingSensory(payload)
 	end
 end
 
+function UISystem:_previewPreparationBreachSensory()
+	local soundSystem = self:_getClientService("SoundSystem")
+	if soundSystem and type(soundSystem.PreviewAudioEvent) == "function" then
+		soundSystem:PreviewAudioEvent({
+			eventName = "EnvironmentalAudioTriggered",
+			cue = "env_doorslam",
+			intensity = 0.92,
+		})
+	end
+
+	local vfxController = self:_getClientService("VFXController")
+	if vfxController and type(vfxController.PreviewEvent) == "function" then
+		vfxController:PreviewEvent({
+			eventName = "EnvironmentalAudioTriggered",
+			cue = "env_doorslam",
+			intensity = 0.9,
+		})
+	end
+end
+
 function UISystem:_refreshLobbyEvidenceTrainingPanel()
 	local lobby = self._uxWidgets and self._uxWidgets.lobby or nil
 	if not lobby or not lobby.TrainingFrame then
@@ -4906,10 +4926,14 @@ function UISystem:_refreshFieldKitPanel()
 		return
 	end
 
+	local player = Players.LocalPlayer
+	local lifecyclePhase = tostring(player and player:GetAttribute("MatchLifecyclePhase") or "")
+	local authoritativePreparation = lifecyclePhase:gsub("[%s_%-]+", ""):lower() == "preparationphase"
 	local screenEnabled = (match.BasicGui and match.BasicGui.Enabled == true)
 		or (self._uiState.MatchUI and self._uiState.MatchUI.visible == true)
 	local showFieldKit = screenEnabled
 		and (self._matchPhase == MATCH_PHASE.INGAME or self._matchPhase == MATCH_PHASE.ESCALATION or self._matchPhase == MATCH_PHASE.HUNT)
+		and not authoritativePreparation
 		and not self:_isMatchResultsPhase()
 	match.FieldKitFrame.Visible = showFieldKit
 
@@ -9577,6 +9601,7 @@ end
 function UISystem:_setPhase(newPhase, payload)
 	payload = decoratePhasePayload(payload)
 	local phaseChanged = self._matchPhase ~= newPhase
+	self._previousMatchPhase = self._matchPhase
 	self._matchPhase = newPhase
 	self._phasePayload = payload
 	self._phaseStartTime = (payload and payload._clientReceivedAt) or tick()
@@ -10044,15 +10069,26 @@ function UISystem:_renderPhase(phase, payload)
 	end
 
 	if phase == MATCH_PHASE.INGAME then
-		local MIN_LOADING_TIME = 1.5
-		local MAX_LOADING_WAIT = 2
-		local elapsed = tick() - (self._loadingStartTime or 0)
-		local waitTime = math.clamp(MIN_LOADING_TIME - elapsed, 0, MAX_LOADING_WAIT)
-		if waitTime > 0 then
-			task.wait(waitTime)
+		local useWorldPreparation = (type(payload) == "table" and payload.preparationWorldBoard == true) or self:_hasWorldPreparationStaging()
+		local breachTransition = self._previousMatchPhase == MATCH_PHASE.PREPARING and useWorldPreparation
+		if breachTransition then
+			if loadingUI and loadingUI:IsA("ScreenGui") then
+				self:_startLoadingScreenLoop(payload)
+				self:_setLoadingScreenContent("BREACHING...", payload, 1, "Masuk ke area investigasi...")
+			end
+			self:_previewPreparationBreachSensory()
+			task.wait(0.42)
+		else
+			local MIN_LOADING_TIME = 1.5
+			local MAX_LOADING_WAIT = 2
+			local elapsed = tick() - (self._loadingStartTime or 0)
+			local waitTime = math.clamp(MIN_LOADING_TIME - elapsed, 0, MAX_LOADING_WAIT)
+			if waitTime > 0 then
+				task.wait(waitTime)
+			end
 		end
 
-		self:_stopLoadingScreenLoop(true)
+		self:_stopLoadingScreenLoop(not breachTransition)
 		if matchUX and matchUX.MessageLabel then
 			matchUX.MessageLabel.Visible = false
 			matchUX.MessageLabel.Text = ""
