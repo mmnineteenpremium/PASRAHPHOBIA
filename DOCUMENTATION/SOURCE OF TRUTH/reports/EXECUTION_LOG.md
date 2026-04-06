@@ -11179,3 +11179,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - catatan jujur:
   - `DailyRewardTerminal` sudah terhubung ke jalur request server, tetapi bukti live yang benar-benar tegas untuk hasil claim masih belum saya pegang karena state reward player bisa sudah claimed dan feedback label runtime ini tidak stabil untuk dijadikan satu-satunya bukti
   - art pass lobby tetap belum final; batch ini fokus pada `world interaction wiring`, bukan asset final
+
+### Follow-up 2026-04-06
+
+- rollback `mouse/camera drift` dilakukan untuk kembali ke perilaku kamera Roblox bawaan:
+  - jalur `manual lobby orbit` dan `manual FPV camera` di `CameraController.client.lua` dicabut
+  - `StarterPlayer.DevComputerCameraMovementMode` dikembalikan ke `UserChoice`
+  - batch `LobbySocialHub` yang sedang berjalan dibatalkan agar tidak tercampur dengan rollback camera
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_camera_default_restore_build.rbxlx`
+- verifikasi live:
+  - `StarterPlayer.DevComputerCameraMovementMode = UserChoice`
+  - `LocalPlayer.CameraMode = Classic`
+  - `CurrentCamera.CameraType = Custom`
+  - `UserInputService.MouseBehavior = Default`
+  - `UserInputService.MouseIconEnabled = true`
+- capture live:
+  - `CameraRollback_Lobby_Baseline_1`
+  - `CameraRollback_Lobby_Baseline_2`
+- catatan jujur:
+  - rollback ini memulihkan jalur kamera ke baseline Roblox/default, tetapi saya belum mengklaim semua UX lobby selesai

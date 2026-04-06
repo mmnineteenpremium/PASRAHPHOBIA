@@ -2537,3 +2537,20 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby sekarang sudah naik dari `functional blockout` ke `functional world-space hub` yang mulai benar-benar bereaksi terhadap prompt dunia, tetapi asset/interior/art pass final masih tersisa.
 
+## Update 2026-04-06
+
+- blocker `mouse/camera drift` di lobby direvert ke jalur default Roblox:
+  - `CameraController.client.lua` kembali ke baseline sebelum `manual orbit / manual FPV` dipasang
+  - `StarterPlayer.DevComputerCameraMovementMode` kembali ke `UserChoice`
+  - batch `LobbySocialHub` yang sedang berjalan dibatalkan agar rollback ini bersih
+- validasi:
+  - build source sukses:
+    - `_tmp_camera_default_restore_build.rbxlx`
+  - runtime live:
+    - `CameraType = Custom`
+    - `CameraMode = Classic`
+    - `MouseBehavior = Default`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby tetap belum final, tetapi jalur kamera custom yang memicu drift sudah dicabut dulu sebelum lanjut lagi.
+
