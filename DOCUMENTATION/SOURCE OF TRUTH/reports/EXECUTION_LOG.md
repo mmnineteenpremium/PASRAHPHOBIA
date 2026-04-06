@@ -11544,3 +11544,38 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - art/asset premium untuk staging luar
     - dressing exterior yang lebih kaya per map
     - transisi luar->dalam yang lebih sinematik
+
+- pass lanjutan pada lane yang sama:
+  - staging luar sekarang punya `BREACH` prompt dunia yang benar-benar memajukan phase
+  - `Preparation -> Investigation` kini bisa dipicu dari `MAIN ENTRY`, tidak lagi hanya menunggu timer
+  - panel preparation juga diselaraskan:
+    - hint/footer kini mengarahkan pemain untuk aktifkan `BREACH` di `MAIN ENTRY`
+- source owner yang disentuh:
+  - [MatchService.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MatchService.lua)
+  - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/UI/Main.lua)
+- validasi:
+  - build source sukses:
+    - `_tmp_match_preparation_breach_prompt_build.rbxlx`
+    - `_tmp_match_preparation_breach_cleanup_build.rbxlx`
+    - `_tmp_match_preparation_breach_destroy_build.rbxlx`
+  - live:
+    - `Main Entry / Mulai Breach` prompt muncul di staging luar
+    - input pemain `E` di prompt itu memajukan:
+      - `MatchPhase = InGame`
+      - `MatchLifecyclePhase = InvestigationPhase`
+    - sesudah breach:
+      - prompt hilang dari layar
+      - papan entry berubah ke state `BREACH OPEN`
+    - panel preparation sekarang menulis:
+      - `aktifkan BREACH di MAIN ENTRY`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - staging luar sekarang sudah punya loop dunia yang utuh:
+    - review board
+    - pilih fokus tool
+    - breach ke investigasi
+  - residual lane ini tetap:
+    - asset premium/non-primitive untuk staging luar
+    - dressing exterior yang lebih kaya dan berbeda per map
+    - transisi breach yang lebih sinematik
