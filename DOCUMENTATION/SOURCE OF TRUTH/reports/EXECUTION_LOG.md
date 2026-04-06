@@ -11202,3 +11202,25 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `CameraRollback_Lobby_Baseline_2`
 - catatan jujur:
   - rollback ini memulihkan jalur kamera ke baseline Roblox/default, tetapi saya belum mengklaim semua UX lobby selesai
+
+### Follow-up 2026-04-06
+
+- akar drift lobby ditemukan di `CameraController.client.lua`:
+  - render-step lobby masih memanggil `setFpvLocked(false)` setiap frame saat state mouse/camera berubah dari baseline
+  - akibatnya perilaku default Roblox saat `right mouse drag` langsung ditarik balik oleh script client
+- branch lobby itu dicabut; `CameraController` sekarang hanya memaksa state saat benar-benar `InMatch`
+
+### Validation 2026-04-06
+
+- verifikasi live sesudah patch:
+  - lobby idle tetap:
+    - `CameraType = Custom`
+    - `CameraMode = Classic`
+    - `MouseBehavior = Default`
+  - saat `right mouse button` ditahan di lobby:
+    - `MouseBehavior = LockCurrentPosition`
+    - `CameraType = Custom`
+    - ini cocok dengan jalur default Roblox third-person
+- capture live:
+  - `CameraLobby_Default_AfterFix_1`
+  - `CameraLobby_Default_AfterFix_FPV_1`
