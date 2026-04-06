@@ -1020,6 +1020,69 @@ local function updatePreparationEntryBeacon(beaconPart, selectedTool, breachOpen
 	light.Shadows = false
 end
 
+local function updatePreparationEntryLane(folder, selectedTool, breachOpen)
+	if typeof(folder) ~= "Instance" then
+		return
+	end
+
+	local accent = Color3.fromRGB(214, 160, 104)
+	local runnerColor = Color3.fromRGB(98, 84, 70)
+	local floodColor = Color3.fromRGB(214, 228, 255)
+	local floodBrightness = 3.2
+	local lampColor = Color3.fromRGB(255, 214, 170)
+	local lampBrightness = 1.8
+
+	if type(selectedTool) == "string" and selectedTool ~= "" then
+		accent = Color3.fromRGB(132, 186, 255)
+		runnerColor = Color3.fromRGB(72, 104, 146)
+		floodColor = Color3.fromRGB(178, 214, 255)
+		floodBrightness = 3.8
+		lampColor = Color3.fromRGB(184, 214, 255)
+		lampBrightness = 2.1
+	end
+
+	if breachOpen then
+		accent = Color3.fromRGB(142, 214, 198)
+		runnerColor = Color3.fromRGB(72, 138, 122)
+		floodColor = Color3.fromRGB(174, 255, 236)
+		floodBrightness = 4.3
+		lampColor = Color3.fromRGB(190, 255, 236)
+		lampBrightness = 2.45
+	end
+
+	local runner = folder:FindFirstChild("PreparationRunner")
+	if runner and runner:IsA("BasePart") then
+		runner.Color = runnerColor
+	end
+
+	for index = 1, 2 do
+		local flood = folder:FindFirstChild("PreparationFloodlight_" .. tostring(index))
+		if flood and flood:IsA("BasePart") then
+			flood.Color = floodColor
+			local spot = flood:FindFirstChild("Light")
+			if spot and spot:IsA("SpotLight") then
+				spot.Color = floodColor
+				spot.Brightness = floodBrightness
+			end
+		end
+
+		local lamp = folder:FindFirstChild("PreparationLamp_" .. tostring(index))
+		if lamp and lamp:IsA("BasePart") then
+			lamp.Color = lampColor
+			local light = lamp:FindFirstChild("Light")
+			if light and light:IsA("PointLight") then
+				light.Color = lampColor
+				light.Brightness = lampBrightness
+			end
+		end
+	end
+
+	local entryAccent = folder:FindFirstChild("PreparationEntryAccent")
+	if entryAccent and entryAccent:IsA("BasePart") then
+		entryAccent.Color = accent
+	end
+end
+
 local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen)
 	if typeof(entrySign) ~= "Instance" then
 		return
@@ -2059,8 +2122,61 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		}
 	)
 	updatePreparationEntryBeacon(entryBeacon, nil, false)
+	updatePreparationEntryLane(folder, nil, false)
 
-	local breachPrompt = ensurePrompt(entrySign, "BreachPrompt", "Mulai Breach", "Main Entry")
+	local breachPrompt
+	local function resolvePreparationSelectedTool()
+		if type(matchContext) ~= "table" then
+			return nil
+		end
+
+		for _, participant in ipairs(matchContext.players or {}) do
+			if typeof(participant) == "Instance" and participant:IsA("Player") then
+				local focusTool = participant:GetAttribute("PreparationFocusTool")
+				if type(focusTool) == "string" and focusTool ~= "" then
+					return focusTool
+				end
+			end
+		end
+
+		return nil
+	end
+
+	local function resolvePreparationBreachOpen()
+		if type(matchContext) == "table" then
+			local phaseToken = tostring(matchContext.phase or "")
+			if phaseToken ~= "" and phaseToken ~= "PreparationPhase" then
+				return true
+			end
+		end
+
+		if type(matchContext) == "table" then
+			for _, participant in ipairs(matchContext.players or {}) do
+				if typeof(participant) == "Instance" and participant:IsA("Player") then
+					local lifecyclePhase = tostring(participant:GetAttribute("MatchLifecyclePhase") or "")
+					if lifecyclePhase ~= "" and lifecyclePhase ~= "PreparationPhase" then
+						return true
+					end
+				end
+			end
+		end
+
+		return false
+	end
+
+	local function syncPreparationEntryState()
+		local selectedTool = resolvePreparationSelectedTool()
+		local breachOpen = resolvePreparationBreachOpen()
+		updatePreparationObjectiveBoard(objectiveBoard, boardData, selectedTool, breachOpen)
+		updatePreparationEntrySign(entrySign, selectedTool, breachOpen)
+		updatePreparationEntryBeacon(entryBeacon, selectedTool, breachOpen)
+		updatePreparationEntryLane(folder, selectedTool, breachOpen)
+		if breachOpen and breachPrompt and breachPrompt.Parent then
+			breachPrompt:Destroy()
+		end
+	end
+
+	breachPrompt = ensurePrompt(entrySign, "BreachPrompt", "Mulai Breach", "Main Entry")
 	if breachPrompt and breachPrompt:GetAttribute("PreparationConnected") ~= true then
 		breachPrompt:SetAttribute("PreparationConnected", true)
 		breachPrompt.Triggered:Connect(function(player)
@@ -2070,12 +2186,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			if type(matchContext) == "table" and type(matchContext.requestAdvancePhase) == "function" then
 				local payload = matchContext.requestAdvancePhase(player, "InvestigationPhase")
 				if payload ~= nil then
-					if breachPrompt.Parent then
-						breachPrompt:Destroy()
-					end
-					updatePreparationObjectiveBoard(objectiveBoard, boardData, player:GetAttribute("PreparationFocusTool"), true)
-					updatePreparationEntrySign(entrySign, player:GetAttribute("PreparationFocusTool"), true)
-					updatePreparationEntryBeacon(entryBeacon, player:GetAttribute("PreparationFocusTool"), true)
+					syncPreparationEntryState()
 				end
 			end
 		end)
@@ -2125,13 +2236,21 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				if typeof(player) == "Instance" and player:IsA("Player") then
 					player:SetAttribute("PreparationFocusTool", tool.title)
 					updatePreparationToolsBoard(toolsBoard, tool.title)
-					updatePreparationObjectiveBoard(objectiveBoard, boardData, tool.title, false)
-					updatePreparationEntrySign(entrySign, tool.title, false)
-					updatePreparationEntryBeacon(entryBeacon, tool.title, false)
+					syncPreparationEntryState()
 				end
 			end)
 		end
 	end
+
+	if type(matchContext) == "table" then
+		for _, participant in ipairs(matchContext.players or {}) do
+			if typeof(participant) == "Instance" and participant:IsA("Player") then
+				participant:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(syncPreparationEntryState)
+				participant:GetAttributeChangedSignal("PreparationFocusTool"):Connect(syncPreparationEntryState)
+			end
+		end
+	end
+	syncPreparationEntryState()
 
 	local spawnOffsets = { -5.4, -1.8, 1.8, 5.4 }
 	local spawnY = anchorDoor.Position.Y + 0.5

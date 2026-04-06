@@ -2801,6 +2801,36 @@ Urutan yang paling masuk akal dari titik sekarang:
   - transisi dunia luar -> breach investigasi yang lebih sinematik secara visual
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - `PreparationRunner`, floodlight, dan lamp staging sekarang ikut state `ready / armed / breach`
+  - sync state staging sekarang membaca lifecycle authoritative, jadi world-space entry tetap ikut phase walau phase naik dari jalur selain prompt breach
+- validasi terbaru:
+  - build:
+    - `_tmp_match_preparation_entry_lane_build.rbxlx`
+    - `_tmp_match_preparation_entry_sync_build.rbxlx`
+  - default:
+    - runner coklat gelap
+    - floodlight `3.20`
+    - lamp `1.80`
+    - title `MAIN ENTRY`
+  - sesudah `EMF`:
+    - `PreparationFocusTool = EMF`
+    - runner biru
+    - floodlight `3.80`
+    - lamp `2.10`
+    - subtitle `EMF ready • breach armed`
+  - sesudah `AdvancePhase -> InvestigationPhase` tanpa prompt breach:
+    - `MatchPhase = InGame`
+    - `MatchLifecyclePhase = InvestigationPhase`
+    - runner hijau
+    - floodlight `4.30`
+    - lamp `2.45`
+    - title `BREACH OPEN`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - dressing exterior yang berbeda per map target
+  - transisi dunia luar -> breach investigasi yang lebih sinematik secara visual dan animatif
+
+- progress tambahan pada lane `outside match preparation staging`:
   - `PreparationObjectiveBoard` sekarang dinamis
   - target evidence pada board mengikuti difficulty profile match
   - board menampilkan status:
