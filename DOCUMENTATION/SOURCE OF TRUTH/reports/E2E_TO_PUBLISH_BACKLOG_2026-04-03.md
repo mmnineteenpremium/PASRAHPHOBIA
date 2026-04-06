@@ -2760,6 +2760,26 @@ Urutan yang paling masuk akal dari titik sekarang:
   - transisi dunia luar -> breach investigasi yang lebih sinematik
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - `PreparationObjectiveBoard` sekarang dinamis
+  - target evidence pada board mengikuti difficulty profile match
+  - board menampilkan status:
+    - `Focus awal`
+    - `Breach`
+- validasi terbaru:
+  - state default:
+    - `Capture 4 evidence`
+    - `Focus awal: pilih tool dari rack`
+    - `Breach: READY`
+  - state sesudah pilih `EMF`:
+    - `PreparationFocusTool = EMF`
+    - subtitle `Focus: EMF • breach ready`
+    - body `Focus awal: EMF`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - dressing exterior yang berbeda per map target
+  - transisi dunia luar -> breach investigasi yang lebih sinematik
+
+- progress tambahan pada lane `outside match preparation staging`:
   - `MAIN ENTRY` sekarang punya prompt `Mulai Breach`
   - prompt itu memajukan `Preparation -> Investigation` lewat lifecycle match yang authoritative
   - hint panel preparation sudah diarahkan ke prompt breach dunia, bukan sekadar menunggu timer

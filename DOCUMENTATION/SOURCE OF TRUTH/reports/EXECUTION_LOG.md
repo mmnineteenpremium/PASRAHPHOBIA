@@ -11579,3 +11579,31 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - asset premium/non-primitive untuk staging luar
     - dressing exterior yang lebih kaya dan berbeda per map
     - transisi breach yang lebih sinematik
+
+- pass lanjutan pada lane yang sama:
+  - `OBJECTIVES` board sekarang hidup dari state staging, bukan lagi template statis
+  - target evidence di board sekarang mengikuti difficulty profile match
+  - board juga menampilkan status `Focus awal` dan `Breach`
+- source owner yang disentuh:
+  - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+- validasi:
+  - build source sukses:
+    - `_tmp_match_preparation_objective_board_live_build.rbxlx`
+  - live:
+    - state default board:
+      - title `OBJECTIVES`
+      - subtitle `Primary + optional briefing`
+      - body memuat `Capture 4 evidence` pada `Mudah`
+      - status `Focus awal: pilih tool dari rack`
+      - status `Breach: READY`
+    - sesudah prompt `EMF`:
+      - `PreparationFocusTool = EMF`
+      - subtitle berubah ke `Focus: EMF • breach ready`
+      - body berubah ke `Focus awal: EMF`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - briefing dunia sekarang lebih hidup dan mengikuti difficulty + focus tool.
+  - residual lane tetap:
+    - asset premium/non-primitive untuk staging luar
+    - dressing exterior yang lebih kaya dan berbeda per map
+    - transisi breach yang lebih sinematik
