@@ -11465,3 +11465,46 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - evidence training usable
     - SFX/VFX training hidup
     - tidak ada error runtime baru yang muncul pada verifikasi live batch ini
+
+## Update 2026-04-06
+
+- blocker berikutnya sesudah lobby saya dorong di lane `core loop match preparation`:
+  - spawn awal match sekarang dipindah ke staging luar bangunan target
+  - `PreparationPhase` sekarang punya board dunia `CONTRACT / OBJECTIVES / TOOLS`
+  - rack tools dunia sekarang bisa memilih `fokus tool awal` dan memperbarui board tools live
+- source owner yang disentuh:
+  - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - [MatchTeleport.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MatchTeleport.lua)
+  - [MatchService.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MatchService.lua)
+  - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/UI/Main.lua)
+- validasi:
+  - build source sukses:
+    - `_tmp_match_preparation_staging_build.rbxlx`
+    - `_tmp_match_preparation_staging_ui_build.rbxlx`
+    - `_tmp_match_preparation_staging_outside_build.rbxlx`
+    - `_tmp_match_preparation_staging_client_fallback_build.rbxlx`
+    - `_tmp_match_preparation_staging_loading_hardblock_build.rbxlx`
+    - `_tmp_match_preparation_staging_router_fix_build.rbxlx`
+  - live:
+    - `PreparationPlatform` kini benar-benar berada di luar shell map aktif:
+      - `HauntedHouse.PreparationPlatform = 1295.30, 0.22, 0.00`
+      - shell map aktif berhenti sebelum titik itu
+    - spawn solo match tidak lagi lahir di dalam building:
+      - board dunia terlihat langsung di staging luar
+    - board dunia hidup:
+      - `CONTRACT`
+      - `OBJECTIVES`
+      - `TOOLS`
+    - `PreparationToolsBoard` berubah live saat prompt rack dipakai:
+      - `PreparationFocusTool = EMF`
+      - subtitle berubah menjadi `EMF ready for first sweep`
+    - HUD drift yang menutup board dunia ditutup:
+      - `PreparationPhase` tidak lagi dipaksa pakai loading card penuh saat `PreparationStagingRuntime` ada
+      - `FieldKit` tidak tampil saat `PreparationPhase`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - blocker `spawn awal harus di luar bangunan + board objective/tools dunia` sudah tertutup untuk baseline functional/UX.
+  - yang masih tersisa untuk lane ini adalah:
+    - dressing exterior yang lebih kaya dari staging primitive sekarang
+    - board dunia pre-investigation yang lebih premium secara asset/art
+    - rekonstruksi map luar/dalam agar transisi ke investigasi lebih sinematik

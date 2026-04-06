@@ -2714,3 +2714,24 @@ Urutan yang paling masuk akal dari titik sekarang:
   - blocker lobby untuk `world-space + traversal + prompt + evidence training + SFX/VFX training` sudah tertutup.
   - pekerjaan berikutnya untuk lobby, jika ada, jatuh ke lane `art polish / premium asset pass`, bukan blocker usability lobby lagi.
 
+## Update 2026-04-06
+
+- lane aktif sesudah lobby:
+  - `spawn awal match di luar bangunan target + board objective/tools dunia`
+- progress:
+  - `HauntedHouse` sekarang punya `PreparationStagingRuntime` di luar shell map
+  - `PreparationPhase` sekarang memprioritaskan board dunia `CONTRACT / OBJECTIVES / TOOLS`
+  - rack tools dunia sekarang bisa memilih `fokus tool awal` dan memperbarui board tools
+  - loading card penuh saat `PreparationPhase` dengan staging dunia sudah diblok agar board dunia benar-benar terlihat
+- validasi live:
+  - solo match `HauntedHouse` spawn ke staging luar
+  - `PreparationPlatform = 1295.30, 0.22, 0.00`
+  - `PreparationFocusTool = EMF` sesudah prompt rack dipakai
+  - `PreparationToolsBoard` subtitle berubah ke `EMF ready for first sweep`
+- status:
+  - **SELESAI (baseline functional/UX)** untuk blocker ini
+  - sisa lane berikutnya:
+    - asset/art premium untuk staging luar
+    - board dunia pre-investigation yang lebih kaya
+    - rekonstruksi map luar/dalam untuk transisi investigasi
+

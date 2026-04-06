@@ -799,7 +799,10 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 
 		local mapClone = mapTemplate:Clone()
 		mapClone.Parent = container
-		MapRuntimePatches.Apply(resolvedMapName or resolvedTemplateName, mapClone)
+		MapRuntimePatches.Apply(resolvedMapName or resolvedTemplateName, mapClone, match)
+		if type(match) == "table" then
+			match.preparationWorldBoard = mapClone:GetAttribute("PreparationStagingRuntimePatched") == true
+		end
 		local offset = computeMatchOffset(container)
 		if not applyWorldOffset(mapClone, offset) then
 			warn("[MatchTeleport] Unable to apply map offset (no pivotable part):", mapClone:GetFullName())
