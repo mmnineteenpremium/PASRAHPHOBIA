@@ -1954,6 +1954,41 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		"Ikuti runner ke pintu utama.",
 		Color3.fromRGB(214, 160, 104)
 	)
+	local breachPrompt = ensurePrompt(entrySign, "BreachPrompt", "Mulai Breach", "Main Entry")
+	if breachPrompt and breachPrompt:GetAttribute("PreparationConnected") ~= true then
+		breachPrompt:SetAttribute("PreparationConnected", true)
+		breachPrompt.Triggered:Connect(function(player)
+			if typeof(player) ~= "Instance" or not player:IsA("Player") then
+				return
+			end
+			if type(matchContext) == "table" and type(matchContext.requestAdvancePhase) == "function" then
+				local payload = matchContext.requestAdvancePhase(player, "InvestigationPhase")
+				if payload ~= nil then
+					if breachPrompt.Parent then
+						breachPrompt:Destroy()
+					end
+					ensureBoardSurface(
+						entrySign,
+						"FrontSurface",
+						Enum.NormalId.Front,
+						"BREACH OPEN",
+						"Investigation live",
+						"Masuk ke area utama sekarang.",
+						Color3.fromRGB(142, 214, 198)
+					)
+					ensureBoardSurface(
+						entrySign,
+						"BackSurface",
+						Enum.NormalId.Back,
+						"BREACH OPEN",
+						"Investigation live",
+						"Masuk ke area utama sekarang.",
+						Color3.fromRGB(142, 214, 198)
+					)
+				end
+			end
+		end)
+	end
 
 	local rackCenter = rackBase.Position + Vector3.new(0, 1.02, 0)
 	for index, tool in ipairs(PREPARATION_TOOL_STATIONS) do

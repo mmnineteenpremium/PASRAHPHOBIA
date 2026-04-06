@@ -261,6 +261,18 @@ local function preloadModeDefinitions()
 	return DEFAULT_MODE_CONFIG.ModeDefinitions
 end
 
+local function matchHasPlayer(match, player)
+	if type(match) ~= "table" or typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false
+	end
+	for _, candidate in ipairs(match.players or {}) do
+		if candidate == player then
+			return true
+		end
+	end
+	return false
+end
+
 local PRELOADED_MODE_DEFINITIONS = preloadModeDefinitions()
 MatchService._queue = MatchService._queue or {}
 MatchService.ModeDefinitions = PRELOADED_MODE_DEFINITIONS
@@ -924,6 +936,15 @@ function MatchService:StartMatch(matchId)
 	match.difficulty = self:_resolveDifficultyName(match.mode, match.difficulty, match)
 	match.difficultyProfile = match.difficultyProfile or self:_resolveDifficultyProfile(match.mode, match.difficulty, match)
 	local authoritativeMatchId = tostring(match.matchId or matchId)
+	match.requestAdvancePhase = function(sourcePlayer, nextPhase)
+		if type(match) ~= "table" or tostring(match.phase or "") ~= "PreparationPhase" then
+			return nil, "preparation_closed"
+		end
+		if sourcePlayer ~= nil and not matchHasPlayer(match, sourcePlayer) then
+			return nil, "player_not_in_match"
+		end
+		return self:AdvanceMatchPhase(matchId, nextPhase or "InvestigationPhase")
+	end
 
 	for _, player in ipairs(match.players or {}) do
 		if typeof(player) == "Instance" and player:IsA("Player") then

@@ -5339,7 +5339,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			secondaryText = timerVisible
 				and ("Preparation aktif di staging luar. Waktu fase: " .. timerText .. ".")
 				or "Preparation aktif di staging luar."
-			footerText = "Baca CONTRACT, OBJECTIVES, dan TOOLS di depan, lalu breach dari pintu utama."
+			footerText = "Baca CONTRACT, OBJECTIVES, dan TOOLS di depan, lalu gunakan prompt BREACH di MAIN ENTRY."
 		else
 			navigationAnchor = getNearestNavigationAnchorInfo("Preparation")
 			badgeText = "PERSIAPAN"
@@ -5471,7 +5471,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			(type(payload) == "table" and payload.preparationWorldBoard == true)
 			or self:_hasWorldPreparationStaging()
 		))
-			and "Review CONTRACT / OBJECTIVES / TOOLS di staging luar, lalu masuk dari pintu utama."
+			and "Review CONTRACT / OBJECTIVES / TOOLS di staging luar, lalu aktifkan BREACH di MAIN ENTRY."
 			or (viewState == "Hunt"
 			and getHuntControlsHintText()
 			or ((viewState == "Preparation" and getInvestigationControlsHintText("Preparation"))
@@ -5510,7 +5510,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 				(type(payload) == "table" and payload.preparationWorldBoard == true)
 				or self:_hasWorldPreparationStaging()
 			))
-				and "STAGING LUAR\nReview board objective dan tools sebelum masuk."
+				and "STAGING LUAR\nReview board objective dan tools, lalu aktifkan BREACH di MAIN ENTRY."
 				or getInvestigationObjectiveText("Preparation")
 			match.ObjectiveLabel.Visible = true
 		else
