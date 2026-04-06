@@ -876,6 +876,9 @@ local function buildPreparationBoardContent(mapId, matchContext)
 	local mapLabel = formatMapLabel((type(matchContext) == "table" and (matchContext.mapId or matchContext.map)) or mapId)
 	local modeLabel = titleCaseToken(type(matchContext) == "table" and (matchContext.mode or matchContext.gameMode) or "Classic")
 	local difficultyLabel = titleCaseToken(type(matchContext) == "table" and matchContext.difficulty or "Mudah")
+	local difficultyProfile = type(matchContext) == "table" and type(matchContext.difficultyProfile) == "table" and matchContext.difficultyProfile or nil
+	local evidenceCount = difficultyProfile and tonumber(difficultyProfile.EvidenceCount) or nil
+	local evidenceTarget = evidenceCount and string.format("Capture %d evidence", evidenceCount) or PREPARATION_OBJECTIVE_TEMPLATE.primary[2]
 
 	local contractLines = {
 		string.format("Map: %s", mapLabel),
@@ -888,7 +891,7 @@ local function buildPreparationBoardContent(mapId, matchContext)
 	local objectiveLines = {
 		"PRIMARY",
 		"- " .. PREPARATION_OBJECTIVE_TEMPLATE.primary[1],
-		"- " .. PREPARATION_OBJECTIVE_TEMPLATE.primary[2],
+		"- " .. evidenceTarget,
 		"",
 		"OPTIONAL",
 		"- " .. PREPARATION_OBJECTIVE_TEMPLATE.optional[1],
@@ -945,6 +948,46 @@ local function updatePreparationToolsBoard(boardPart, selectedTool)
 		subtitle,
 		lines,
 		Color3.fromRGB(132, 186, 255)
+	)
+end
+
+local function updatePreparationObjectiveBoard(boardPart, boardData, selectedTool, breachOpen)
+	local lines = {}
+	for _, line in ipairs(boardData.objectiveLines or {}) do
+		table.insert(lines, line)
+	end
+
+	table.insert(lines, "")
+	table.insert(lines, "STATUS")
+	if type(selectedTool) == "string" and selectedTool ~= "" then
+		table.insert(lines, "- Focus awal: " .. selectedTool)
+	else
+		table.insert(lines, "- Focus awal: pilih tool dari rack")
+	end
+	table.insert(lines, breachOpen and "- Breach: OPEN" or "- Breach: READY")
+
+	local subtitle = breachOpen and "Primary + breach active" or "Primary + optional briefing"
+	if not breachOpen and type(selectedTool) == "string" and selectedTool ~= "" then
+		subtitle = string.format("Focus: %s • breach ready", selectedTool)
+	end
+
+	ensureBoardSurface(
+		boardPart,
+		"FrontSurface",
+		Enum.NormalId.Front,
+		boardData.objectiveTitle,
+		subtitle,
+		lines,
+		Color3.fromRGB(142, 168, 236)
+	)
+	ensureBoardSurface(
+		boardPart,
+		"BackSurface",
+		Enum.NormalId.Back,
+		boardData.objectiveTitle,
+		subtitle,
+		lines,
+		Color3.fromRGB(142, 168, 236)
 	)
 end
 
@@ -1862,24 +1905,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			CanQuery = true,
 		}
 	)
-	ensureBoardSurface(
-		objectiveBoard,
-		"FrontSurface",
-		Enum.NormalId.Front,
-		boardData.objectiveTitle,
-		boardData.objectiveSubtitle,
-		boardData.objectiveLines,
-		Color3.fromRGB(142, 168, 236)
-	)
-	ensureBoardSurface(
-		objectiveBoard,
-		"BackSurface",
-		Enum.NormalId.Back,
-		boardData.objectiveTitle,
-		boardData.objectiveSubtitle,
-		boardData.objectiveLines,
-		Color3.fromRGB(142, 168, 236)
-	)
+	updatePreparationObjectiveBoard(objectiveBoard, boardData, nil, false)
 
 	local toolsBoard = ensurePart(folder, "PreparationToolsBoard")
 	configurePart(
@@ -1967,6 +1993,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 					if breachPrompt.Parent then
 						breachPrompt:Destroy()
 					end
+					updatePreparationObjectiveBoard(objectiveBoard, boardData, player:GetAttribute("PreparationFocusTool"), true)
 					ensureBoardSurface(
 						entrySign,
 						"FrontSurface",
@@ -2034,6 +2061,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				if typeof(player) == "Instance" and player:IsA("Player") then
 					player:SetAttribute("PreparationFocusTool", tool.title)
 					updatePreparationToolsBoard(toolsBoard, tool.title)
+					updatePreparationObjectiveBoard(objectiveBoard, boardData, tool.title, false)
 				end
 			end)
 		end
