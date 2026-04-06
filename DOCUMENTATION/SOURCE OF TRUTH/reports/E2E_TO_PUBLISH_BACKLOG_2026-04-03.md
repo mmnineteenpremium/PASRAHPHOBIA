@@ -2609,3 +2609,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby sekarang lebih jelas dari spawn, tetapi final pass masih membutuhkan material/asset premium, interior kaya, dan art pass global sebelum bisa dinyatakan selesai.
 
+## Update 2026-04-06
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di framing spawn:
+  - offset visual spawn `LobbyPlayerManager` dan `MatchCleanup` digeser lebih dekat ke arch `North`
+  - hasilnya `fresh spawn` dan `return-to-lobby` langsung masuk ke komposisi `Contract Bay`
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_spawn_framing_tight_build.rbxlx`
+  - verifikasi live:
+    - posisi spawn baru sekitar `1604, 3.47, -94.25`
+    - arch `North` dan bollard lamp tampil lebih dominan dari frame awal
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - framing lobby membaik, tetapi final pass masih butuh asset/interior/art pass sebelum dapat dinyatakan selesai penuh.
+

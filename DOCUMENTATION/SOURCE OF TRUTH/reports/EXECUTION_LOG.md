@@ -11283,3 +11283,19 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `NorthPathInset` dan bollard lamp hidup sepanjang jalur ke `North`
 - capture live:
   - `LobbyNorth_Approach_After_1`
+
+## Update 2026-04-06
+
+- framing spawn lobby kini ditarik lebih dekat ke jalur `North`:
+  - `LobbyPlayerManager` dan `MatchCleanup` memakai offset visual baru yang lebih maju ke arch `Contract Bay`
+  - jalur `fresh spawn` dan `return-to-lobby` tetap memakai framing yang sama
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_spawn_framing_tight_build.rbxlx`
+- verifikasi live:
+  - posisi spawn baru sekitar `1604, 3.47, -94.25`
+  - arch `North` dan bollard lamp kini masuk lebih dominan ke frame awal
+- capture live:
+  - `LobbyNorth_SpawnFraming_After_1`
