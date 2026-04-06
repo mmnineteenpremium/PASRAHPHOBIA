@@ -40,7 +40,7 @@
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "$properties": {
-        "DevComputerCameraMovementMode": "Classic"
+        "DevComputerCameraMovementMode": "UserChoice"
       },
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
