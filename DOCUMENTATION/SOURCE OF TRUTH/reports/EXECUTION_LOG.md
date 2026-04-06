@@ -11116,3 +11116,66 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - catatan jujur:
   - visual masih berada pada fase `proto art / structured blockout`
   - tetapi sekarang lobby bukan cuma readable secara visual; object dunia inti juga sudah sinkron dengan nama canonical yang dicari logic/codebase
+
+### Follow-up 2026-04-06
+
+- `LobbySocialHub` menerima pass `world prompt wiring` yang mengubah object canonical dari sekadar prop + prompt menjadi jalur kerja nyata:
+  - `ContractBoard`
+    - publish `ContractBoardRequested`
+    - refresh surface board utara dari data kontrak hidup
+    - buka `Room Browser`
+  - `RoomBoard`
+    - buka `Room Browser`
+  - `QueueTrigger`
+    - panggil queue via jalur `LobbySystem.Controller:OnQueueFromRoomBrowser`
+    - buka `Room Browser` untuk memantau state
+  - `ShopCounter / Interact_Shop`
+    - buka `ShopUI`
+  - `DailyRewardTerminal`
+    - publish `DailyRewardClaimRequest`
+  - `ToolsBoard` dan `Table_Tools_1..6`
+    - kirim feedback lobby world-space yang benar
+- `LobbySystem.Controller` sekarang merelay:
+  - `LobbyWorldSurfaceRequested`
+  - `LobbyWorldPromptFeedback`
+  - `DailyRewardAvailable`
+  - `DailyRewardClaimed`
+- `UISystem` sekarang merespons event lobby runtime baru itu:
+  - membuka `RoomBrowser`
+  - membuka `ShopUI`
+  - menulis feedback reward/queue yang lebih manusiawi
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_world_prompt_build.rbxlx`
+  - `_tmp_lobby_world_prompt_fix_build.rbxlx`
+- verifikasi live:
+  - runtime prompt hadir pada:
+    - `QueueTrigger`
+    - `ContractBoard`
+    - `RoomBoard`
+    - `ToolsBoard`
+    - `ShopCounter`
+    - `Interact_Shop`
+    - `PartyBoard`
+    - `DailyRewardTerminal`
+    - `Table_Tools_1`
+  - `ContractBoard` live sekarang tidak lagi statis:
+    - sebelum prompt:
+      - `1. Empty Building • Angker`
+      - `2. Empty Building • Lumayan`
+      - `3. Haunted House • Angker`
+    - sesudah prompt:
+      - `1. Empty Building • Angker`
+      - `2. Abandoned Palace • Lumayan`
+      - `3. Haunted House • Lumayan`
+  - `ContractBoard` prompt live membuka `RoomBrowserUI`
+  - `ShopCounter` prompt live membuka `ShopUI`
+- capture live:
+  - `LobbyPrompt_ContractBoard_Fix_1`
+  - `LobbyPrompt_ContractBoard_Fix_2`
+  - `LobbyPrompt_ShopCounter_1`
+- catatan jujur:
+  - `DailyRewardTerminal` sudah terhubung ke jalur request server, tetapi bukti live yang benar-benar tegas untuk hasil claim masih belum saya pegang karena state reward player bisa sudah claimed dan feedback label runtime ini tidak stabil untuk dijadikan satu-satunya bukti
+  - art pass lobby tetap belum final; batch ini fokus pada `world interaction wiring`, bukan asset final

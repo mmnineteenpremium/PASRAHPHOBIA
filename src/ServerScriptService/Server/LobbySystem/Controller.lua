@@ -267,6 +267,36 @@ function Controller:RegisterEventHandlers()
 		self:_subscribe("LobbyZoneFocused", function(payload)
 			self:_relayLobbyRuntimeEvent(payload)
 		end)
+		self:_subscribe("LobbyWorldSurfaceRequested", function(payload)
+			self:_relayLobbyRuntimeEvent(payload)
+		end)
+		self:_subscribe("LobbyWorldPromptFeedback", function(payload)
+			self:_relayLobbyRuntimeEvent(payload)
+		end)
+		self:_subscribe("DailyRewardAvailable", function(payload)
+			if not (payload and typeof(payload.player) == "Instance" and payload.player:IsA("Player")) then
+				return
+			end
+			self:_relayLobbyRuntimeEvent({
+				eventName = "DailyRewardAvailable",
+				recipients = { payload.player },
+				streak = payload.streak,
+				reward = payload.reward,
+				date = payload.date,
+			})
+		end)
+		self:_subscribe("DailyRewardClaimed", function(payload)
+			if not (payload and typeof(payload.player) == "Instance" and payload.player:IsA("Player")) then
+				return
+			end
+			self:_relayLobbyRuntimeEvent({
+				eventName = "DailyRewardClaimed",
+				recipients = { payload.player },
+				streak = payload.streak,
+				reward = payload.reward,
+				date = payload.date,
+			})
+		end)
 	end
 
 	self._handlersRegistered = true

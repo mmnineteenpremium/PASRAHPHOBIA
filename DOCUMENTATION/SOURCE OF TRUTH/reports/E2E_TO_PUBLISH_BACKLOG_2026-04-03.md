@@ -2517,3 +2517,23 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby sekarang sudah lebih dekat ke `functional hub yang bisa dihubungkan logic`, tetapi art pass, asset final, dan interaction flow final masih tersisa sebelum saya bisa menyebut lobby selesai penuh.
 
+## Update 2026-04-06
+
+- `Lobby UX visual` menerima pass `world prompt wiring`:
+  - `ContractBoard / RoomBoard / QueueTrigger` sekarang punya jalur nyata ke `Room Browser`
+  - `ShopCounter / Interact_Shop` sekarang benar-benar membuka `ShopUI`
+  - `DailyRewardTerminal` sekarang mengirim `DailyRewardClaimRequest`
+  - `ToolsBoard` dan `Table_Tools_*` sekarang memberi feedback lobby yang benar
+  - board utara sekarang menarik data kontrak hidup, tidak lagi murni statis
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_world_prompt_build.rbxlx`
+    - `_tmp_lobby_world_prompt_fix_build.rbxlx`
+  - verifikasi live:
+    - `ContractBoard` prompt membuka `RoomBrowserUI`
+    - `ShopCounter` prompt membuka `ShopUI`
+    - subtitle `ContractBoard` berubah sesuai refresh board kontrak hidup
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby sekarang sudah naik dari `functional blockout` ke `functional world-space hub` yang mulai benar-benar bereaksi terhadap prompt dunia, tetapi asset/interior/art pass final masih tersisa.
+

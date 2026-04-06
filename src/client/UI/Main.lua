@@ -10677,6 +10677,12 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 		lobby.FeedbackLabel.Text = "Invite kadaluarsa."
 	elseif eventName == "MatchStarting" or eventName == "RoomMatchStarting" then
 		lobby.FeedbackLabel.Text = "Match akan dimulai..."
+	elseif eventName == "RoomBrowserQueueStarted" then
+		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
+		lobby.FeedbackLabel.Text = "Queue dimulai. Room Browser memantau state antrian dan room."
+	elseif eventName == "RoomBrowserQueueFailed" then
+		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
+		lobby.FeedbackLabel.Text = "Queue gagal: " .. tostring(payload and payload.reason or "-")
 	elseif eventName == "LobbyZoneFocused" then
 		local title = tostring(payload and payload.title or "Area lobby aktif.")
 		local hint = tostring(payload and payload.hint or "")
@@ -10710,6 +10716,71 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 		end
 		lobby.FeedbackLabel.Text = message
 		self:_refreshBasicLobbyPanel()
+	elseif eventName == "LobbyWorldSurfaceRequested" then
+		local surface = tostring(payload and payload.surface or "")
+		local title = tostring(payload and payload.title or "Lobby world aktif.")
+		local message = tostring(payload and payload.message or "")
+		local zoneName = tostring(payload and payload.zoneName or "")
+		local color = payload and payload.accentColor
+		if surface == "RoomBrowser" then
+			if self._roomBrowser then
+				self._roomBrowser:RequestSnapshot()
+				self._roomBrowser:RequestRoomList()
+			end
+			self._roomBrowserSuppressed = false
+			self:_setRoomBrowserVisible(true)
+		elseif surface == "ShopUI" or surface == "Shop" then
+			self:_requestShopSnapshot(true)
+			self:_openAuxiliaryWindow("ShopUI")
+		elseif surface == "RoyalPassUI" or surface == "RoyalPass" then
+			self:_openAuxiliaryWindow("RoyalPassUI")
+		end
+		if typeof(color) == "Color3" then
+			lobby.FeedbackLabel.TextColor3 = color:Lerp(Color3.fromRGB(240, 244, 248), 0.55)
+		else
+			lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
+		end
+		local status = title
+		if message ~= "" then
+			status ..= " • " .. message
+		end
+		lobby.FeedbackLabel.Text = status
+		if zoneName ~= "" then
+			self._lobbyZoneFocus = {
+				zoneName = zoneName,
+				title = title,
+				hint = message,
+				badge = tostring(payload and payload.badge or ""),
+				subtitle = tostring(payload and payload.subtitle or ""),
+				accentColor = typeof(color) == "Color3" and color or nil,
+			}
+		end
+		self:_refreshBasicLobbyPanel()
+	elseif eventName == "LobbyWorldPromptFeedback" then
+		local title = tostring(payload and payload.title or "Lobby interaction aktif.")
+		local message = tostring(payload and payload.message or "")
+		local color = payload and payload.accentColor
+		if typeof(color) == "Color3" then
+			lobby.FeedbackLabel.TextColor3 = color:Lerp(Color3.fromRGB(240, 244, 248), 0.55)
+		else
+			lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
+		end
+		lobby.FeedbackLabel.Text = message ~= "" and (title .. " • " .. message) or title
+	elseif eventName == "DailyRewardAvailable" then
+		local reward = type(payload and payload.reward) == "table" and payload.reward or {}
+		local currencyText = formatCurrencyAndPrestigeReward(tonumber(reward.currency) or 0, 0)
+		local xpText = tostring(math.max(0, math.floor(tonumber(reward.xp) or 0)))
+		local streakText = tostring(math.max(1, math.floor(tonumber(payload and payload.streak) or 1)))
+		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(214, 244, 196)
+		lobby.FeedbackLabel.Text = string.format("Daily reward siap • streak %s • %s • XP %s", streakText, currencyText, xpText)
+	elseif eventName == "DailyRewardClaimed" then
+		local reward = type(payload and payload.reward) == "table" and payload.reward or {}
+		local currencyText = formatCurrencyAndPrestigeReward(tonumber(reward.currency) or 0, 0)
+		local xpText = tostring(math.max(0, math.floor(tonumber(reward.xp) or 0)))
+		local streakText = tostring(math.max(1, math.floor(tonumber(payload and payload.streak) or 1)))
+		local cosmeticText = type(reward.cosmetic) == "string" and reward.cosmetic ~= "" and (" • " .. tostring(reward.cosmetic)) or ""
+		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(214, 244, 196)
+		lobby.FeedbackLabel.Text = string.format("Daily reward claimed • streak %s • %s • XP %s%s", streakText, currencyText, xpText, cosmeticText)
 	elseif eventName == "LobbyFlexSpotlightUpdated" then
 		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
 		local spotlight = payload and payload.spotlight or {}
