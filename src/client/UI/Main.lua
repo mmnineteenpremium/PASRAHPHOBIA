@@ -4871,7 +4871,9 @@ function UISystem:_refreshFieldKitPanel()
 
 	local screenEnabled = (match.BasicGui and match.BasicGui.Enabled == true)
 		or (self._uiState.MatchUI and self._uiState.MatchUI.visible == true)
-	local showFieldKit = screenEnabled and self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
+	local showFieldKit = screenEnabled
+		and (self._matchPhase == MATCH_PHASE.INGAME or self._matchPhase == MATCH_PHASE.ESCALATION or self._matchPhase == MATCH_PHASE.HUNT)
+		and not self:_isMatchResultsPhase()
 	match.FieldKitFrame.Visible = showFieldKit
 
 	local state = self._journalState or {}
@@ -5070,7 +5072,7 @@ function UISystem:_setSummaryValue(label, value)
 	label.Text = tostring(value or "-")
 end
 
-function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
+function UISystem:_updateMatchSummaryRows(rowWidgets, viewState, payload)
 	if type(rowWidgets) ~= "table" then
 		return
 	end
@@ -5080,7 +5082,12 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 	local discoveredEvidence = type(journalState.discoveredEvidence) == "table" and journalState.discoveredEvidence or {}
 	local confirmedEvidence = type(journalState.confirmedEvidence) == "table" and journalState.confirmedEvidence or {}
 	local candidateGhosts = type(journalState.candidates) == "table" and journalState.candidates or {}
-	local navigationContext = (viewState == "Preparation" or viewState == "Loading")
+	local useWorldPreparation = viewState == "Preparation"
+		and (
+			(type(payload) == "table" and payload.preparationWorldBoard == true)
+			or self:_hasWorldPreparationStaging()
+		)
+	local navigationContext = (not useWorldPreparation and (viewState == "Preparation" or viewState == "Loading"))
 			and getNearestNavigationAnchorInfo("Preparation")
 		or ((viewState == "Investigation" or viewState == "Hunt") and getNearestNavigationAnchorInfo("Investigation"))
 		or nil
@@ -5105,7 +5112,7 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 	else
 		local phaseSummary = {
 			Lobby = "MENUNGGU",
-			Preparation = "BRIEFING",
+			Preparation = useWorldPreparation and "STAGING" or "BRIEFING",
 			Loading = "LOADING",
 			Investigation = "LIVE",
 			Hunt = "CRITICAL",
@@ -5124,6 +5131,7 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 				tostring(navigationContext.subtitle or navigationContext.kind or "Route"),
 				formatNavigationAnchorDistance(navigationContext) or "-"
 			)
+			or (useWorldPreparation and "Review board luar")
 			or (viewState == "Lobby" and "Lobby flow" or "Belum terkunci")
 		local accessSummary = type(navigationContext) == "table"
 			and (
@@ -5131,6 +5139,7 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState)
 					and tostring(navigationContext.stateText)
 					or tostring(navigationContext.label or "-")
 			)
+			or (useWorldPreparation and "Contract / Objective / Tools")
 			or (viewState == "Lobby" and "Quick access" or "-")
 		if viewState == "Hunt" then
 			local huntSnapshot = getHuntStatusSnapshot()
@@ -5280,14 +5289,30 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	end
 
 	if viewState == "Preparation" or viewState == "Loading" then
-		navigationAnchor = getNearestNavigationAnchorInfo("Preparation")
-		badgeText = "PERSIAPAN"
-		badgeColor = Color3.fromRGB(70, 96, 132)
-		phaseGlyphText = "PR"
-		primaryText = navigationAnchor and ("Menuju " .. formatNavigationAnchorLabel(navigationAnchor, "titik masuk") .. "...") or "Masuk ke lokasi..."
-		secondaryText = timerVisible
-			and ("Loading dan briefing aktif. Waktu fase: " .. timerText .. ".")
-			or "Tunggu loading selesai, lalu mulai cari evidence."
+		local useWorldPreparation = viewState == "Preparation"
+			and (
+				(type(payload) == "table" and payload.preparationWorldBoard == true)
+				or self:_hasWorldPreparationStaging()
+			)
+		if useWorldPreparation then
+			badgeText = "STAGING"
+			badgeColor = Color3.fromRGB(84, 108, 140)
+			phaseGlyphText = "ST"
+			primaryText = "Review board luar sebelum masuk."
+			secondaryText = timerVisible
+				and ("Preparation aktif di staging luar. Waktu fase: " .. timerText .. ".")
+				or "Preparation aktif di staging luar."
+			footerText = "Baca CONTRACT, OBJECTIVES, dan TOOLS di depan, lalu breach dari pintu utama."
+		else
+			navigationAnchor = getNearestNavigationAnchorInfo("Preparation")
+			badgeText = "PERSIAPAN"
+			badgeColor = Color3.fromRGB(70, 96, 132)
+			phaseGlyphText = "PR"
+			primaryText = navigationAnchor and ("Menuju " .. formatNavigationAnchorLabel(navigationAnchor, "titik masuk") .. "...") or "Masuk ke lokasi..."
+			secondaryText = timerVisible
+				and ("Loading dan briefing aktif. Waktu fase: " .. timerText .. ".")
+				or "Tunggu loading selesai, lalu mulai cari evidence."
+		end
 	elseif viewState == "Investigation" then
 		navigationAnchor = getNearestNavigationAnchorInfo("Investigation")
 		badgeText = "INVESTIGASI"
@@ -5398,11 +5423,16 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	end
 	if match.ControlsHintLabel then
 		match.ControlsHintLabel.Visible = self._matchPhase ~= MATCH_PHASE.LOBBY and not self:_isMatchResultsPhase()
-		match.ControlsHintLabel.Text = viewState == "Hunt"
+		match.ControlsHintLabel.Text = (viewState == "Preparation" and (
+			(type(payload) == "table" and payload.preparationWorldBoard == true)
+			or self:_hasWorldPreparationStaging()
+		))
+			and "Review CONTRACT / OBJECTIVES / TOOLS di staging luar, lalu masuk dari pintu utama."
+			or (viewState == "Hunt"
 			and getHuntControlsHintText()
 			or ((viewState == "Preparation" and getInvestigationControlsHintText("Preparation"))
 				or (viewState == "Investigation" and getInvestigationControlsHintText("Investigation"))
-				or self._matchControlsHintText)
+				or self._matchControlsHintText))
 		match.ControlsHintLabel.TextColor3 = semanticAccent
 			and semanticAccent:Lerp(Color3.fromRGB(240, 244, 248), 0.35)
 			or Color3.fromRGB(240, 244, 248)
@@ -5432,7 +5462,12 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			match.ObjectiveLabel.Text = getInvestigationObjectiveText("Investigation")
 			match.ObjectiveLabel.Visible = true
 		elseif viewState == "Preparation" or viewState == "Loading" then
-			match.ObjectiveLabel.Text = getInvestigationObjectiveText("Preparation")
+			match.ObjectiveLabel.Text = (viewState == "Preparation" and (
+				(type(payload) == "table" and payload.preparationWorldBoard == true)
+				or self:_hasWorldPreparationStaging()
+			))
+				and "STAGING LUAR\nReview board objective dan tools sebelum masuk."
+				or getInvestigationObjectiveText("Preparation")
 			match.ObjectiveLabel.Visible = true
 		else
 			match.ObjectiveLabel.Text = ""
@@ -5445,7 +5480,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			and semanticAccent:Lerp(Color3.fromRGB(235, 240, 245), 0.3)
 			or Color3.fromRGB(235, 240, 245)
 	end
-	self:_updateMatchSummaryRows(match.BasicSummaryRows, viewState)
+	self:_updateMatchSummaryRows(match.BasicSummaryRows, viewState, payload)
 	self:_refreshFieldKitPanel()
 	self:_syncMatchWindowVisibility()
 end
@@ -9251,11 +9286,37 @@ function UISystem:_applyDeviceSizing()
 	self:_layoutLobbyFloatRail()
 end
 
+function UISystem:_hasWorldPreparationStaging()
+	local player = Players.LocalPlayer
+	if not player or player:GetAttribute("InMatch") ~= true then
+		return false
+	end
+
+	local matchId = tostring(player:GetAttribute("MatchId") or "")
+	if matchId == "" then
+		return false
+	end
+
+	local activeMatches = Workspace:FindFirstChild("ActiveMatches")
+	local matchFolder = activeMatches and activeMatches:FindFirstChild("Match_" .. matchId)
+	if not matchFolder then
+		return false
+	end
+
+	return matchFolder:FindFirstChild("PreparationStagingRuntime", true) ~= nil
+end
+
 function UISystem:_runPostTeleportLoadingFlow(initialPayload)
 	if self._postTeleportFlowRunning then
 		return
 	end
 	if self._hasPostTeleportLoaded then
+		return
+	end
+	if (type(initialPayload) == "table" and initialPayload.preparationWorldBoard == true) or self:_hasWorldPreparationStaging() then
+		self._awaitingPostTeleportFlow = false
+		self._hasPostTeleportLoaded = true
+		self:_setPhase(MATCH_PHASE.PREPARING, initialPayload)
 		return
 	end
 
@@ -9732,6 +9793,10 @@ function UISystem:_setLoadingScreenContent(titleText, payload, progress, footerT
 	if not screen then
 		return
 	end
+	if self._matchPhase == MATCH_PHASE.PREPARING and self:_hasWorldPreparationStaging() then
+		screen.Enabled = false
+		return
+	end
 
 	local bg = screen:FindFirstChild("Background")
 	if not bg or not bg:IsA("Frame") then
@@ -9775,6 +9840,11 @@ function UISystem:_startLoadingScreenLoop(payload)
 
 	local screen = self:_ensureLoadingScreen()
 	if not screen then
+		return
+	end
+	if self._matchPhase == MATCH_PHASE.PREPARING and self:_hasWorldPreparationStaging() then
+		self._loadingLoopRunning = false
+		screen.Enabled = false
 		return
 	end
 
@@ -9879,11 +9949,18 @@ function UISystem:_renderPhase(phase, payload)
 			hud.Enabled = false
 		end
 		if loadingUI and loadingUI:IsA("ScreenGui") then
-			self:_startLoadingScreenLoop(payload)
-			self:_setLoadingScreenContent("Preparing Investigation...", payload, 0.18, "Mempersiapkan sesi investigasi...")
+			if (type(payload) == "table" and payload.preparationWorldBoard == true) or self:_hasWorldPreparationStaging() then
+				self:_stopLoadingScreenLoop(false)
+				loadingUI.Enabled = false
+			else
+				self:_startLoadingScreenLoop(payload)
+				self:_setLoadingScreenContent("Preparing Investigation...", payload, 0.18, "Mempersiapkan sesi investigasi...")
+			end
 		end
 		if matchUX and matchUX.MessageLabel then
-			matchUX.MessageLabel.Text = "Bermain"
+			matchUX.MessageLabel.Text = ((type(payload) == "table" and payload.preparationWorldBoard == true) or self:_hasWorldPreparationStaging())
+				and "Review board luar sebelum breach"
+				or "Bermain"
 			matchUX.MessageLabel.Visible = true
 		end
 		self:_refreshBasicMatchPanel("Preparation", payload)
@@ -10011,6 +10088,13 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		self._matchStartTransitionAudioArmed = false
 		self._hasPostTeleportLoaded = false
 		self._awaitingPostTeleportFlow = true
+		if (type(payload) == "table" and payload.preparationWorldBoard == true) or self:_hasWorldPreparationStaging() then
+			self:_stopLoadingScreenLoop(false)
+			local loadingUI = self:_ensureLoadingScreen()
+			if loadingUI and loadingUI:IsA("ScreenGui") then
+				loadingUI.Enabled = false
+			end
+		end
 		self:_runPostTeleportLoadingFlow(payload)
 	elseif eventName == "PhaseChanged" then
 		local resolvedPhase = resolvePhaseFromPayload(eventName, payload)

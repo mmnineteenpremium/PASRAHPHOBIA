@@ -7,6 +7,8 @@ local SAFE_ZONE_PATCH_ATTR = "SafeZoneRuntimePatched"
 local MATERIAL_PATCH_ATTR = "MapMaterialRuntimePatched"
 local TRAVERSAL_GUIDE_PATCH_ATTR = "TraversalGuideRuntimePatched"
 local LOGIC_VOLUME_PATCH_ATTR = "LogicVolumesRuntimeHidden"
+local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
+local PREPARATION_STAGING_FOLDER_NAME = "PreparationStagingRuntime"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
@@ -158,6 +160,58 @@ local MAP_MATERIAL_POLISH = {
 		lightColor = Color3.fromRGB(228, 234, 255),
 		lightBrightnessScale = 0.96,
 	},
+}
+
+local PREPARATION_STAGING_PROFILES = {
+	hauntedhouse = {
+		anchorRoomName = "Room_LivingRoom",
+		anchorDoorName = "Door_LivingRoom",
+		platformWidth = 28,
+		platformDepth = 18,
+		stagingDistance = 18,
+	},
+	abandonedpalace = {
+		anchorRoomName = "Room_GrandHall",
+		anchorDoorName = "Door_GrandHall",
+		platformWidth = 30,
+		platformDepth = 18,
+		stagingDistance = 20,
+	},
+	emptybuilding = {
+		anchorRoomName = "Room_Lobby",
+		anchorDoorName = "Door_Lobby",
+		platformWidth = 26,
+		platformDepth = 16,
+		stagingDistance = 16,
+	},
+	studiommnineteen = {
+		anchorRoomName = "Room_ControlRoom",
+		anchorDoorName = "Door_ControlRoom",
+		platformWidth = 26,
+		platformDepth = 16,
+		stagingDistance = 16,
+	},
+}
+
+local PREPARATION_OBJECTIVE_TEMPLATE = {
+	primary = {
+		"Identify ghost type",
+		"Capture 3 evidence",
+	},
+	optional = {
+		"Survive hunt",
+		"Witness ghost event",
+		"Use the right tool",
+	},
+}
+
+local PREPARATION_TOOL_STATIONS = {
+	{ name = "ToolStation_EMF", title = "EMF", subtitle = "Medok sweep", color = Color3.fromRGB(132, 186, 255) },
+	{ name = "ToolStation_UV", title = "UV CAM", subtitle = "To'un trace", color = Color3.fromRGB(214, 146, 255) },
+	{ name = "ToolStation_THERMO", title = "THERMO", subtitle = "Freeze check", color = Color3.fromRGB(142, 214, 198) },
+	{ name = "ToolStation_BOX", title = "BOX", subtitle = "Voice bait", color = Color3.fromRGB(255, 196, 118) },
+	{ name = "ToolStation_WRITING", title = "WRITING", subtitle = "Book proof", color = Color3.fromRGB(150, 189, 255) },
+	{ name = "ToolStation_SENSOR", title = "SENSOR", subtitle = "Movement read", color = Color3.fromRGB(255, 130, 130) },
 }
 
 local function normalizeToken(value)
@@ -532,6 +586,34 @@ local function getXZBounds(part)
 	}
 end
 
+local function collectMapXZBounds(mapClone, ignoredFolder)
+	if not mapClone then
+		return nil
+	end
+
+	local bounds = nil
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("BasePart") and (not ignoredFolder or not descendant:IsDescendantOf(ignoredFolder)) then
+			local partBounds = getXZBounds(descendant)
+			if not bounds then
+				bounds = {
+					minX = partBounds.minX,
+					maxX = partBounds.maxX,
+					minZ = partBounds.minZ,
+					maxZ = partBounds.maxZ,
+				}
+			else
+				bounds.minX = math.min(bounds.minX, partBounds.minX)
+				bounds.maxX = math.max(bounds.maxX, partBounds.maxX)
+				bounds.minZ = math.min(bounds.minZ, partBounds.minZ)
+				bounds.maxZ = math.max(bounds.maxZ, partBounds.maxZ)
+			end
+		end
+	end
+
+	return bounds
+end
+
 local function hasArea(bounds)
 	return bounds
 		and (bounds.maxX - bounds.minX) > MIN_SEGMENT_SIZE
@@ -581,6 +663,289 @@ local function createGuideTextLabel(name, font, textSize, textColor, text, heigh
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.TextYAlignment = Enum.TextYAlignment.Top
 	return label
+end
+
+local function ensureFolder(parent, name)
+	if typeof(parent) ~= "Instance" then
+		return nil
+	end
+
+	local folder = parent:FindFirstChild(name)
+	if not (folder and folder:IsA("Folder")) then
+		if folder then
+			folder:Destroy()
+		end
+		folder = Instance.new("Folder")
+		folder.Name = name
+		folder.Parent = parent
+	end
+	return folder
+end
+
+local function ensurePart(parent, name)
+	if typeof(parent) ~= "Instance" then
+		return nil
+	end
+
+	local part = parent:FindFirstChild(name)
+	if not (part and part:IsA("BasePart")) then
+		if part then
+			part:Destroy()
+		end
+		part = Instance.new("Part")
+		part.Name = name
+		part.Parent = parent
+	end
+
+	part.Anchored = true
+	part.TopSurface = Enum.SurfaceType.Smooth
+	part.BottomSurface = Enum.SurfaceType.Smooth
+	part.CastShadow = true
+	return part
+end
+
+local function configurePart(part, properties)
+	if not (part and part:IsA("BasePart")) or type(properties) ~= "table" then
+		return part
+	end
+
+	for key, value in pairs(properties) do
+		part[key] = value
+	end
+	return part
+end
+
+local function ensureBoardSurface(part, surfaceName, face, titleText, subtitleText, bodyLines, accentColor)
+	if not (part and part:IsA("BasePart")) then
+		return nil
+	end
+
+	local surface = part:FindFirstChild(surfaceName)
+	if not (surface and surface:IsA("SurfaceGui")) then
+		if surface then
+			surface:Destroy()
+		end
+		surface = Instance.new("SurfaceGui")
+		surface.Name = surfaceName
+		surface.Parent = part
+	end
+
+	surface.Adornee = part
+	surface.Face = face
+	surface.ResetOnSpawn = false
+	surface.AlwaysOnTop = false
+	surface.LightInfluence = 1
+	surface.Brightness = 1
+	surface.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	surface.PixelsPerStud = 40
+	surface.CanvasSize = Vector2.new(720, 420)
+
+	local panel = surface:FindFirstChild("Panel")
+	if not (panel and panel:IsA("Frame")) then
+		if panel then
+			panel:Destroy()
+		end
+		panel = Instance.new("Frame")
+		panel.Name = "Panel"
+		panel.Parent = surface
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 18)
+		corner.Parent = panel
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Name = "Stroke"
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke.Transparency = 0.14
+		stroke.Thickness = 2
+		stroke.Parent = panel
+
+		local accent = Instance.new("Frame")
+		accent.Name = "Accent"
+		accent.AnchorPoint = Vector2.new(0, 0.5)
+		accent.BorderSizePixel = 0
+		accent.Position = UDim2.new(0, 18, 0.5, 0)
+		accent.Size = UDim2.fromOffset(6, 180)
+		accent.Parent = panel
+
+		local accentCorner = Instance.new("UICorner")
+		accentCorner.CornerRadius = UDim.new(1, 0)
+		accentCorner.Parent = accent
+
+		createGuideTextLabel(
+			"Title",
+			Enum.Font.GothamBold,
+			28,
+			Color3.fromRGB(242, 246, 252),
+			titleText or "",
+			38,
+			UDim2.new(0, 38, 0, 26)
+		).Parent = panel
+
+		createGuideTextLabel(
+			"Subtitle",
+			Enum.Font.GothamMedium,
+			18,
+			Color3.fromRGB(188, 204, 236),
+			subtitleText or "",
+			28,
+			UDim2.new(0, 38, 0, 66)
+		).Parent = panel
+
+		local body = createGuideTextLabel(
+			"Body",
+			Enum.Font.GothamMedium,
+			16,
+			Color3.fromRGB(220, 228, 238),
+			"",
+			260,
+			UDim2.new(0, 38, 0, 116)
+		)
+		body.Size = UDim2.new(1, -66, 1, -138)
+		body.TextWrapped = true
+		body.Parent = panel
+	end
+
+	panel.Size = UDim2.fromScale(1, 1)
+	panel.BackgroundColor3 = Color3.fromRGB(10, 18, 30)
+	panel.BackgroundTransparency = 0.08
+	panel.BorderSizePixel = 0
+
+	local accent = panel:FindFirstChild("Accent")
+	if accent and accent:IsA("Frame") then
+		accent.BackgroundColor3 = accentColor or Color3.fromRGB(142, 168, 236)
+	end
+
+	local stroke = panel:FindFirstChild("Stroke")
+	if stroke and stroke:IsA("UIStroke") then
+		stroke.Color = accentColor or Color3.fromRGB(142, 168, 236)
+	end
+
+	local title = panel:FindFirstChild("Title")
+	if title and title:IsA("TextLabel") then
+		title.Text = titleText or ""
+	end
+
+	local subtitle = panel:FindFirstChild("Subtitle")
+	if subtitle and subtitle:IsA("TextLabel") then
+		subtitle.Text = subtitleText or ""
+	end
+
+	local body = panel:FindFirstChild("Body")
+	if body and body:IsA("TextLabel") then
+		body.Text = type(bodyLines) == "table" and table.concat(bodyLines, "\n") or tostring(bodyLines or "")
+	end
+
+	return surface
+end
+
+local function ensurePrompt(parent, name, actionText, objectText)
+	if typeof(parent) ~= "Instance" then
+		return nil
+	end
+
+	local prompt = parent:FindFirstChild(name)
+	if not (prompt and prompt:IsA("ProximityPrompt")) then
+		if prompt then
+			prompt:Destroy()
+		end
+		prompt = Instance.new("ProximityPrompt")
+		prompt.Name = name
+		prompt.Parent = parent
+	end
+
+	prompt.ActionText = actionText
+	prompt.ObjectText = objectText
+	prompt.HoldDuration = 0
+	prompt.RequiresLineOfSight = false
+	prompt.MaxActivationDistance = 12
+	prompt.Style = Enum.ProximityPromptStyle.Default
+	return prompt
+end
+
+local function formatMapLabel(mapId)
+	local token = tostring(mapId or ""):gsub("^%s+", ""):gsub("%s+$", "")
+	if token == "" then
+		return "Unknown Site"
+	end
+	token = token:gsub("(%l)(%u)", "%1 %2")
+	return titleCaseToken(token)
+end
+
+local function buildPreparationBoardContent(mapId, matchContext)
+	local mapLabel = formatMapLabel((type(matchContext) == "table" and (matchContext.mapId or matchContext.map)) or mapId)
+	local modeLabel = titleCaseToken(type(matchContext) == "table" and (matchContext.mode or matchContext.gameMode) or "Classic")
+	local difficultyLabel = titleCaseToken(type(matchContext) == "table" and matchContext.difficulty or "Mudah")
+
+	local contractLines = {
+		string.format("Map: %s", mapLabel),
+		string.format("Mode: %s", modeLabel),
+		string.format("Difficulty: %s", difficultyLabel),
+		"Spawn di staging luar sebelum masuk.",
+		"Review board, pilih tool awal, lalu breach dari pintu utama.",
+	}
+
+	local objectiveLines = {
+		"PRIMARY",
+		"- " .. PREPARATION_OBJECTIVE_TEMPLATE.primary[1],
+		"- " .. PREPARATION_OBJECTIVE_TEMPLATE.primary[2],
+		"",
+		"OPTIONAL",
+		"- " .. PREPARATION_OBJECTIVE_TEMPLATE.optional[1],
+		"- " .. PREPARATION_OBJECTIVE_TEMPLATE.optional[2],
+		"- " .. PREPARATION_OBJECTIVE_TEMPLATE.optional[3],
+	}
+
+	local toolLines = {
+		"Field kit issued for first sweep.",
+		"EMF • UV CAM • THERMO",
+		"BOX • WRITING • SENSOR",
+		"Gunakan rack kanan untuk review urutan tool awal.",
+	}
+
+	return {
+		contractTitle = "CONTRACT",
+		contractSubtitle = string.format("%s • %s • %s", mapLabel, modeLabel, difficultyLabel),
+		contractLines = contractLines,
+		objectiveTitle = "OBJECTIVES",
+		objectiveSubtitle = "Primary + optional briefing",
+		objectiveLines = objectiveLines,
+		toolsTitle = "TOOLS",
+		toolsSubtitle = "Default field kit briefing",
+		toolsLines = toolLines,
+	}
+end
+
+local function updatePreparationToolsBoard(boardPart, selectedTool)
+	local lines = {
+		"Field kit issued for first sweep.",
+		"EMF • UV CAM • THERMO",
+		"BOX • WRITING • SENSOR",
+	}
+	local subtitle = "Default field kit briefing"
+	if type(selectedTool) == "string" and selectedTool ~= "" then
+		subtitle = string.format("%s ready for first sweep", selectedTool)
+		table.insert(lines, 1, string.format("Focus awal: %s", selectedTool))
+	end
+
+	ensureBoardSurface(
+		boardPart,
+		"FrontSurface",
+		Enum.NormalId.Front,
+		"TOOLS",
+		subtitle,
+		lines,
+		Color3.fromRGB(132, 186, 255)
+	)
+	ensureBoardSurface(
+		boardPart,
+		"BackSurface",
+		Enum.NormalId.Back,
+		"TOOLS",
+		subtitle,
+		lines,
+		Color3.fromRGB(132, 186, 255)
+	)
 end
 
 local function collectStairBounds(mapClone)
@@ -1152,6 +1517,336 @@ local function patchSpawnPoints(mapId, mapClone)
 	return patchedAny
 end
 
+local function patchPreparationStaging(mapId, mapClone, matchContext)
+	if not mapClone or mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) == true then
+		return false
+	end
+
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if token and PREPARATION_STAGING_PROFILES[token] == nil then
+		token = resolveMapOverrideToken(nil, mapClone)
+	end
+	local profile = token and PREPARATION_STAGING_PROFILES[token] or nil
+	if not profile then
+		return false
+	end
+
+	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
+	local doorsFolder = mapClone:FindFirstChild("Doors", true)
+	local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
+	if not (roomsFolder and doorsFolder and spawnFolder) then
+		return false
+	end
+
+	local anchorRoom = roomsFolder:FindFirstChild(profile.anchorRoomName)
+	local anchorDoor = doorsFolder:FindFirstChild(profile.anchorDoorName)
+	if not (anchorRoom and anchorRoom:IsA("BasePart") and anchorDoor and anchorDoor:IsA("BasePart")) then
+		return false
+	end
+
+	local outward = flattenDirection(anchorDoor.Position - anchorRoom.Position)
+	if not outward then
+		return false
+	end
+	local right = Vector3.new(-outward.Z, 0, outward.X)
+	local stageDistance = tonumber(profile.stagingDistance) or 18
+	local platformWidth = tonumber(profile.platformWidth) or 28
+	local platformDepth = tonumber(profile.platformDepth) or 18
+	local boardData = buildPreparationBoardContent(mapId, matchContext)
+	local baseY = anchorRoom.Position.Y
+	local platformCenter = Vector3.new(
+		anchorDoor.Position.X,
+		baseY - 0.28,
+		anchorDoor.Position.Z
+	) + (outward * stageDistance)
+	local existingBounds = collectMapXZBounds(mapClone, mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME))
+	if existingBounds then
+		local shellPadding = (platformDepth * 0.5) + 12
+		if math.abs(outward.X) >= math.abs(outward.Z) then
+			local targetX = outward.X >= 0
+				and (existingBounds.maxX + shellPadding)
+				or (existingBounds.minX - shellPadding)
+			platformCenter = Vector3.new(targetX, platformCenter.Y, anchorDoor.Position.Z)
+		else
+			local targetZ = outward.Z >= 0
+				and (existingBounds.maxZ + shellPadding)
+				or (existingBounds.minZ - shellPadding)
+			platformCenter = Vector3.new(anchorDoor.Position.X, platformCenter.Y, targetZ)
+		end
+	end
+
+	local existingFolder = mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME)
+	if existingFolder then
+		existingFolder:Destroy()
+	end
+	local folder = ensureFolder(mapClone, PREPARATION_STAGING_FOLDER_NAME)
+	if not folder then
+		return false
+	end
+
+	local platformCFrame = CFrame.lookAt(platformCenter, platformCenter - outward, Vector3.yAxis)
+	configurePart(
+		ensurePart(folder, "PreparationPlatform"),
+		{
+			Size = Vector3.new(platformWidth, 0.32, platformDepth),
+			CFrame = platformCFrame,
+			Material = Enum.Material.Concrete,
+			Color = Color3.fromRGB(64, 66, 74),
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+		}
+	)
+
+	local runnerLength = math.max(10, (platformCenter - anchorDoor.Position).Magnitude - 2)
+	local runnerCenter = Vector3.new(
+		(platformCenter.X + anchorDoor.Position.X) * 0.5,
+		baseY - 0.32,
+		(platformCenter.Z + anchorDoor.Position.Z) * 0.5
+	)
+	configurePart(
+		ensurePart(folder, "PreparationRunner"),
+		{
+			Size = Vector3.new(math.max(8, platformWidth * 0.44), 0.18, runnerLength),
+			CFrame = CFrame.lookAt(runnerCenter, runnerCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.Slate,
+			Color = Color3.fromRGB(88, 92, 102),
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+		}
+	)
+
+	configurePart(
+		ensurePart(folder, "PreparationCanopy"),
+		{
+			Size = Vector3.new(platformWidth - 2, 0.24, 5.2),
+			CFrame = CFrame.lookAt(platformCenter + Vector3.new(0, 6.2, 0), platformCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.Metal,
+			Color = Color3.fromRGB(46, 50, 58),
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+		}
+	)
+
+	for index, side in ipairs({ -1, 1 }) do
+		local post = ensurePart(folder, "PreparationPost_" .. tostring(index))
+		local postPosition = platformCenter + (right * side * ((platformWidth * 0.5) - 1.8)) + (outward * -3.2) + Vector3.new(0, 2.9, 0)
+		configurePart(
+			post,
+			{
+				Size = Vector3.new(0.42, 5.8, 0.42),
+				CFrame = CFrame.new(postPosition),
+				Material = Enum.Material.Metal,
+				Color = Color3.fromRGB(74, 78, 86),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+
+		local lamp = ensurePart(folder, "PreparationLamp_" .. tostring(index))
+		configurePart(
+			lamp,
+			{
+				Size = Vector3.new(0.9, 0.22, 0.9),
+				CFrame = CFrame.new(postPosition + Vector3.new(0, 2.56, 0)),
+				Material = Enum.Material.Neon,
+				Color = Color3.fromRGB(255, 214, 170),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
+
+		local light = lamp:FindFirstChild("Light")
+		if not (light and light:IsA("PointLight")) then
+			if light then
+				light:Destroy()
+			end
+			light = Instance.new("PointLight")
+			light.Name = "Light"
+			light.Parent = lamp
+		end
+		light.Range = 20
+		light.Brightness = 1.8
+		light.Color = Color3.fromRGB(255, 214, 170)
+		light.Shadows = false
+	end
+
+	local contractBoard = ensurePart(folder, "PreparationContractBoard")
+	configurePart(
+		contractBoard,
+		{
+			Size = Vector3.new(5.2, 4.6, 0.32),
+			CFrame = CFrame.lookAt(platformCenter + (outward * -1.6) + Vector3.new(0, 3.2, 0), platformCenter + outward, Vector3.yAxis),
+			Material = Enum.Material.Metal,
+			Color = Color3.fromRGB(34, 40, 52),
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+		}
+	)
+	ensureBoardSurface(
+		contractBoard,
+		"FrontSurface",
+		Enum.NormalId.Front,
+		boardData.contractTitle,
+		boardData.contractSubtitle,
+		boardData.contractLines,
+		Color3.fromRGB(214, 160, 104)
+	)
+	ensureBoardSurface(
+		contractBoard,
+		"BackSurface",
+		Enum.NormalId.Back,
+		boardData.contractTitle,
+		boardData.contractSubtitle,
+		boardData.contractLines,
+		Color3.fromRGB(214, 160, 104)
+	)
+
+	local objectiveBoard = ensurePart(folder, "PreparationObjectiveBoard")
+	configurePart(
+		objectiveBoard,
+		{
+			Size = Vector3.new(5.8, 4.8, 0.32),
+			CFrame = CFrame.lookAt(platformCenter + (right * -8.2) + (outward * -0.4) + Vector3.new(0, 3.3, 0), platformCenter + outward, Vector3.yAxis),
+			Material = Enum.Material.Metal,
+			Color = Color3.fromRGB(26, 34, 48),
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+		}
+	)
+	ensureBoardSurface(
+		objectiveBoard,
+		"FrontSurface",
+		Enum.NormalId.Front,
+		boardData.objectiveTitle,
+		boardData.objectiveSubtitle,
+		boardData.objectiveLines,
+		Color3.fromRGB(142, 168, 236)
+	)
+	ensureBoardSurface(
+		objectiveBoard,
+		"BackSurface",
+		Enum.NormalId.Back,
+		boardData.objectiveTitle,
+		boardData.objectiveSubtitle,
+		boardData.objectiveLines,
+		Color3.fromRGB(142, 168, 236)
+	)
+
+	local toolsBoard = ensurePart(folder, "PreparationToolsBoard")
+	configurePart(
+		toolsBoard,
+		{
+			Size = Vector3.new(5.8, 4.8, 0.32),
+			CFrame = CFrame.lookAt(platformCenter + (right * 8.2) + (outward * -0.4) + Vector3.new(0, 3.3, 0), platformCenter + outward, Vector3.yAxis),
+			Material = Enum.Material.Metal,
+			Color = Color3.fromRGB(26, 34, 48),
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+		}
+	)
+	updatePreparationToolsBoard(toolsBoard, nil)
+
+	local rackBase = ensurePart(folder, "PreparationToolRack")
+	configurePart(
+		rackBase,
+		{
+			Size = Vector3.new(12.8, 1.1, 1.8),
+			CFrame = CFrame.lookAt(platformCenter + (right * 8.2) + (outward * 4.2) + Vector3.new(0, 0.6, 0), platformCenter + outward, Vector3.yAxis),
+			Material = Enum.Material.SmoothPlastic,
+			Color = Color3.fromRGB(58, 66, 82),
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+		}
+	)
+
+	local rackCenter = rackBase.Position + Vector3.new(0, 1.02, 0)
+	for index, tool in ipairs(PREPARATION_TOOL_STATIONS) do
+		local offset = (index - ((#PREPARATION_TOOL_STATIONS + 1) * 0.5)) * 2.18
+		local toolPart = ensurePart(folder, tool.name)
+		local toolPosition = rackCenter + (right * offset)
+		configurePart(
+			toolPart,
+			{
+				Size = Vector3.new(1.2, 1.0, 1.2),
+				CFrame = CFrame.lookAt(toolPosition, toolPosition + outward, Vector3.yAxis),
+				Material = Enum.Material.SmoothPlastic,
+				Color = tool.color,
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+
+		ensureBoardSurface(
+			toolPart,
+			"FrontSurface",
+			Enum.NormalId.Front,
+			tool.title,
+			tool.subtitle,
+			"",
+			tool.color
+		)
+		ensureBoardSurface(
+			toolPart,
+			"BackSurface",
+			Enum.NormalId.Back,
+			tool.title,
+			tool.subtitle,
+			"",
+			tool.color
+		)
+
+		local prompt = ensurePrompt(toolPart, "Prompt", "Pilih Fokus Tool", tool.title)
+		if prompt and prompt:GetAttribute("PreparationConnected") ~= true then
+			prompt:SetAttribute("PreparationConnected", true)
+			prompt.Triggered:Connect(function(player)
+				if typeof(player) == "Instance" and player:IsA("Player") then
+					player:SetAttribute("PreparationFocusTool", tool.title)
+					updatePreparationToolsBoard(toolsBoard, tool.title)
+				end
+			end)
+		end
+	end
+
+	local spawnOffsets = { -5.4, -1.8, 1.8, 5.4 }
+	local spawnY = anchorDoor.Position.Y + 0.5
+	for index = 1, 4 do
+		local spawnPart = ensurePart(spawnFolder, "PlayerSpawn_" .. tostring(index))
+		local spawnPosition = Vector3.new(
+			platformCenter.X,
+			spawnY,
+			platformCenter.Z
+		) + (outward * 5.8) + (right * spawnOffsets[index])
+		configurePart(
+			spawnPart,
+			{
+				Size = Vector3.new(1, 1, 1),
+				CFrame = CFrame.lookAt(spawnPosition, spawnPosition - outward, Vector3.yAxis),
+				Transparency = 1,
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+				Color = Color3.fromRGB(255, 255, 255),
+			}
+		)
+	end
+
+	mapClone:SetAttribute(PREPARATION_STAGING_PATCH_ATTR, true)
+	if type(matchContext) == "table" then
+		matchContext.preparationWorldBoard = true
+	end
+	return true
+end
+
 local function patchMapMaterials(mapId, mapClone)
 	if not mapClone or mapClone:GetAttribute(MATERIAL_PATCH_ATTR) == true then
 		return false
@@ -1202,7 +1897,7 @@ local function patchMapMaterials(mapId, mapClone)
 	return patchedAny
 end
 
-function MapRuntimePatches.Apply(mapId, mapClone)
+function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	local token = resolveMapOverrideToken(mapId, mapClone)
 	if token == nil or mapClone == nil then
 		return false
@@ -1216,6 +1911,7 @@ function MapRuntimePatches.Apply(mapId, mapClone)
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
 	didPatch = patchSpawnPoints(mapId, mapClone) or didPatch
+	didPatch = patchPreparationStaging(mapId, mapClone, matchContext) or didPatch
 	didPatch = patchTraversalGuides(mapClone) or didPatch
 	return didPatch
 end

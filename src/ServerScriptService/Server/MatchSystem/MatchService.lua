@@ -730,6 +730,7 @@ function MatchService:_buildPhasePayload(match, phaseName, startedAt)
 		mode = match.mode,
 		gameMode = match.gameMode,
 		difficulty = match.difficulty,
+		preparationWorldBoard = match.preparationWorldBoard == true and phaseName == "PreparationPhase",
 		roomIds = deepCopy(match.roomIds or {}),
 		ghostRoomCandidates = deepCopy(match.ghostRoomCandidates or {}),
 		evidenceSpawnPoints = deepCopy(match.evidenceSpawnPoints or {}),
@@ -987,6 +988,7 @@ function MatchService:StartMatch(matchId)
 				lifecyclePhase = match.phase,
 				phaseStartedAt = phaseNow,
 				durationSeconds = self:_getPhaseDuration(match.phase),
+				preparationWorldBoard = match.preparationWorldBoard == true and match.phase == "PreparationPhase",
 			})
 			self:_fireMatchEventToPlayers(teleportedPlayers, self:_buildPhasePayload(match, match.phase, phaseNow))
 			setStudioMatchStartStage(string.format("match=%s stage=match_started_sent", tostring(matchId)))
