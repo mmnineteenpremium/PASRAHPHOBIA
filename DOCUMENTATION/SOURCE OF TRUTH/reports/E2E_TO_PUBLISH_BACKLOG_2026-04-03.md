@@ -2624,3 +2624,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - framing lobby membaik, tetapi final pass masih butuh asset/interior/art pass sebelum dapat dinyatakan selesai penuh.
 
+## Update 2026-04-06
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi di koridor wing non-utara:
+  - jalur menuju `SHOP / PARTY / GARDEN / FLEX` kini punya approach marker dunia dan path treatment
+  - tujuan pass ini adalah membuat plaza membaca semua sayap utama sebagai tujuan nyata, bukan hanya `North`
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_multiwing_approach_build.rbxlx`
+  - verifikasi live:
+    - `ShopApproachPanel`, `PartyApproachPanel`, `GardenApproachPanel`, `FlexApproachPanel` tampil dengan copy zona yang benar
+    - `PathInset` dan `PathLine` masing-masing zona hadir di runtime
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby sekarang lebih seimbang secara wayfinding, tetapi asset premium, interior kaya per wing, dan art pass global masih tersisa sebelum bisa dinyatakan selesai penuh.
+

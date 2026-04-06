@@ -11299,3 +11299,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - arch `North` dan bollard lamp kini masuk lebih dominan ke frame awal
 - capture live:
   - `LobbyNorth_SpawnFraming_After_1`
+
+## Update 2026-04-06
+
+- `LobbySocialHub` menerima pass approach marker untuk wing selain `North`:
+  - `ShopApproach*`
+  - `PartyApproach*`
+  - `GardenApproach*`
+  - `FlexApproach*`
+  - masing-masing disertai `PathInset` dan `PathLine` agar koridor dari hub ke bangunan lebih mudah dibaca
+- tujuannya:
+  - membuat `SHOP / PARTY / GARDEN / FLEX` terbaca sebelum pemain sampai ke façade ujung
+  - mengurangi rasa `hub kosong + bangunan jauh` di plaza
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_multiwing_approach_build.rbxlx`
+- verifikasi live:
+  - `ShopApproachPanel = SHOP | Loadout • Currency • Utility`
+  - `PartyApproachPanel = PARTY | Invite • Ready • Join`
+  - `GardenApproachPanel = GARDEN | Daily • Social • Claim`
+  - `FlexApproachPanel = FLEX | Spotlight • Cosmetic • News`
+  - `ShopPathInset / PartyPathInset / GardenPathInset / FlexPathInset` hidup di runtime
+- catatan:
+  - capture plaza yang mencoba menampilkan banyak wing sekaligus tertimpa loading overlay, jadi bukti utama pass ini saya pegang dari runtime object + surface text
