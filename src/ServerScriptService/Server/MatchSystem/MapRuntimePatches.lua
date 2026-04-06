@@ -1,4 +1,5 @@
 local MapRuntimePatches = {}
+local TweenService = game:GetService("TweenService")
 
 local FLOOR_PATCH_ATTR = "SecondFloorRuntimePatched"
 local INTERACTION_PATCH_ATTR = "InteractionPointsRuntimePatched"
@@ -10,6 +11,7 @@ local LOGIC_VOLUME_PATCH_ATTR = "LogicVolumesRuntimeHidden"
 local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
 local PREPARATION_STAGING_FOLDER_NAME = "PreparationStagingRuntime"
 local PREPARATION_STAGING_DEBUG_ATTR = "PreparationStagingRuntimeDebug"
+local PREPARATION_LANE_STATE_ATTR = "PreparationEntryLaneState"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
@@ -18,6 +20,8 @@ local DEFAULT_DOOR_POLICY = "HybridRadiusPrompt"
 local DEFAULT_DOOR_OPEN_SOUND_ID = "rbxassetid://139204195403262"
 local DEFAULT_DOOR_CLOSE_SOUND_ID = "rbxassetid://83336813491039"
 local MIN_SEGMENT_SIZE = 0.25
+local PREPARATION_TWEEN_INFO = TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local PREPARATION_FAST_TWEEN_INFO = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local STAIR_MARGIN = 0.75
 local INTERACTION_HEIGHT_OFFSET = 1.5
 local TRAVERSAL_GUIDE_FOLDER_NAME = "TraversalGuideRuntime"
@@ -1095,6 +1099,69 @@ local function updatePreparationObjectiveBoard(boardPart, boardData, selectedToo
 	)
 end
 
+local function tweenPreparationProperties(instance, tweenInfo, properties)
+	if typeof(instance) ~= "Instance" then
+		return
+	end
+
+	local ok, tween = pcall(function()
+		return TweenService:Create(instance, tweenInfo or PREPARATION_TWEEN_INFO, properties)
+	end)
+	if ok and tween then
+		tween:Play()
+		return
+	end
+
+	for propertyName, value in pairs(properties) do
+		pcall(function()
+			instance[propertyName] = value
+		end)
+	end
+end
+
+local function ensurePreparationBurstEmitter(part, name, baseColor)
+	if not (typeof(part) == "Instance" and part:IsA("BasePart")) then
+		return nil
+	end
+
+	local emitter = part:FindFirstChild(name)
+	if emitter and not emitter:IsA("ParticleEmitter") then
+		emitter:Destroy()
+		emitter = nil
+	end
+	if not emitter then
+		emitter = Instance.new("ParticleEmitter")
+		emitter.Name = name
+		emitter.Parent = part
+	end
+
+	emitter.Enabled = false
+	emitter.Rate = 0
+	emitter.Lifetime = NumberRange.new(0.28, 0.45)
+	emitter.Speed = NumberRange.new(6, 12)
+	emitter.Rotation = NumberRange.new(-180, 180)
+	emitter.RotSpeed = NumberRange.new(-90, 90)
+	emitter.SpreadAngle = Vector2.new(65, 65)
+	emitter.LightEmission = 0.72
+	emitter.LightInfluence = 0
+	emitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.08),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	emitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.32),
+		NumberSequenceKeypoint.new(0.4, 0.14),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	local color = baseColor or Color3.fromRGB(255, 255, 255)
+	emitter.Color = ColorSequence.new(
+		color:Lerp(Color3.fromRGB(255, 255, 255), 0.2),
+		color:Lerp(Color3.fromRGB(20, 24, 28), 0.1)
+	)
+	return emitter
+end
+
 local function resolvePreparationTheme(profile, selectedTool, breachOpen)
 	local readyAccent = type(profile) == "table" and profile.readyAccent or Color3.fromRGB(214, 160, 104)
 	local armedAccent = type(profile) == "table" and profile.armedAccent or Color3.fromRGB(132, 186, 255)
@@ -1145,6 +1212,16 @@ local function resolvePreparationTheme(profile, selectedTool, breachOpen)
 	}
 end
 
+local function resolvePreparationLaneState(selectedTool, breachOpen)
+	if breachOpen then
+		return "breach"
+	end
+	if type(selectedTool) == "string" and selectedTool ~= "" then
+		return "armed"
+	end
+	return "ready"
+end
+
 local function updatePreparationEntryBeacon(beaconPart, selectedTool, breachOpen, profile)
 	if not (typeof(beaconPart) == "Instance" and beaconPart:IsA("BasePart")) then
 		return
@@ -1174,6 +1251,9 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 		return
 	end
 
+	local laneState = resolvePreparationLaneState(selectedTool, breachOpen)
+	local previousLaneState = tostring(folder:GetAttribute(PREPARATION_LANE_STATE_ATTR) or "")
+	local stateChanged = previousLaneState ~= laneState
 	local theme = resolvePreparationTheme(profile, selectedTool, breachOpen)
 	local accent = theme.accent
 	local runnerColor = theme.runnerColor
@@ -1184,49 +1264,103 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 
 	local runner = folder:FindFirstChild("PreparationRunner")
 	if runner and runner:IsA("BasePart") then
-		runner.Color = runnerColor
+		if stateChanged then
+			tweenPreparationProperties(runner, PREPARATION_TWEEN_INFO, {
+				Color = runnerColor,
+			})
+		else
+			runner.Color = runnerColor
+		end
 		runner.Material = type(profile) == "table" and profile.runnerMaterial or runner.Material
 	end
 
 	for index = 1, 2 do
 		local flood = folder:FindFirstChild("PreparationFloodlight_" .. tostring(index))
 		if flood and flood:IsA("BasePart") then
-			flood.Color = floodColor
+			if stateChanged then
+				tweenPreparationProperties(flood, PREPARATION_TWEEN_INFO, {
+					Color = floodColor,
+				})
+			else
+				flood.Color = floodColor
+			end
 			local spot = flood:FindFirstChild("Light")
 			if spot and spot:IsA("SpotLight") then
+				if stateChanged then
+					tweenPreparationProperties(spot, PREPARATION_TWEEN_INFO, {
+						Brightness = floodBrightness,
+					})
+				else
+					spot.Brightness = floodBrightness
+				end
 				spot.Color = floodColor
-				spot.Brightness = floodBrightness
 			end
 		end
 
 		local lamp = folder:FindFirstChild("PreparationLamp_" .. tostring(index))
 		if lamp and lamp:IsA("BasePart") then
-			lamp.Color = lampColor
+			if stateChanged then
+				tweenPreparationProperties(lamp, PREPARATION_TWEEN_INFO, {
+					Color = lampColor,
+				})
+			else
+				lamp.Color = lampColor
+			end
 			local light = lamp:FindFirstChild("Light")
 			if light and light:IsA("PointLight") then
+				if stateChanged then
+					tweenPreparationProperties(light, PREPARATION_TWEEN_INFO, {
+						Brightness = lampBrightness,
+					})
+				else
+					light.Brightness = lampBrightness
+				end
 				light.Color = lampColor
-				light.Brightness = lampBrightness
 			end
 		end
 	end
 
 	local entryAccent = folder:FindFirstChild("PreparationEntryAccent")
 	if entryAccent and entryAccent:IsA("BasePart") then
-		entryAccent.Color = accent
+		if stateChanged then
+			tweenPreparationProperties(entryAccent, PREPARATION_FAST_TWEEN_INFO, {
+				Color = accent,
+			})
+		else
+			entryAccent.Color = accent
+		end
 	end
 
 	local marqueeAccent = folder:FindFirstChild("PreparationSiteMarqueeAccent")
 	if marqueeAccent and marqueeAccent:IsA("BasePart") then
-		marqueeAccent.Color = accent
+		if stateChanged then
+			tweenPreparationProperties(marqueeAccent, PREPARATION_FAST_TWEEN_INFO, {
+				Color = accent,
+			})
+		else
+			marqueeAccent.Color = accent
+		end
 	end
 
 	local marqueeGlow = folder:FindFirstChild("PreparationSiteMarqueeGlow")
 	if marqueeGlow and marqueeGlow:IsA("BasePart") then
-		marqueeGlow.Color = accent
+		if stateChanged then
+			tweenPreparationProperties(marqueeGlow, PREPARATION_FAST_TWEEN_INFO, {
+				Color = accent,
+			})
+		else
+			marqueeGlow.Color = accent
+		end
 		local glowLight = marqueeGlow:FindFirstChild("Light")
 		if glowLight and glowLight:IsA("PointLight") then
 			glowLight.Color = accent
-			glowLight.Brightness = breachOpen and 1.8 or 1.1
+			if stateChanged then
+				tweenPreparationProperties(glowLight, PREPARATION_FAST_TWEEN_INFO, {
+					Brightness = breachOpen and 1.8 or 1.1,
+				})
+			else
+				glowLight.Brightness = breachOpen and 1.8 or 1.1
+			end
 		end
 	end
 
@@ -1244,24 +1378,74 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 		local gateColor = accent:Lerp(Color3.fromRGB(20, 24, 30), 0.34)
 		local leftPos = gateCenter - right * span
 		local rightPos = gateCenter + right * span
-		gateLeft.CFrame = CFrame.lookAt(leftPos, leftPos + look, Vector3.yAxis)
-		gateRight.CFrame = CFrame.lookAt(rightPos, rightPos + look, Vector3.yAxis)
-		gateLeft.Color = gateColor
-		gateRight.Color = gateColor
-		gateLeft.Transparency = breachOpen and 0.16 or 0
-		gateRight.Transparency = breachOpen and 0.16 or 0
+		local gateLeftCFrame = CFrame.lookAt(leftPos, leftPos + look, Vector3.yAxis)
+		local gateRightCFrame = CFrame.lookAt(rightPos, rightPos + look, Vector3.yAxis)
+		if stateChanged then
+			tweenPreparationProperties(gateLeft, PREPARATION_TWEEN_INFO, {
+				CFrame = gateLeftCFrame,
+				Color = gateColor,
+				Transparency = breachOpen and 0.16 or 0,
+			})
+			tweenPreparationProperties(gateRight, PREPARATION_TWEEN_INFO, {
+				CFrame = gateRightCFrame,
+				Color = gateColor,
+				Transparency = breachOpen and 0.16 or 0,
+			})
+		else
+			gateLeft.CFrame = gateLeftCFrame
+			gateRight.CFrame = gateRightCFrame
+			gateLeft.Color = gateColor
+			gateRight.Color = gateColor
+			gateLeft.Transparency = breachOpen and 0.16 or 0
+			gateRight.Transparency = breachOpen and 0.16 or 0
+		end
 		if gateSeal and gateSeal:IsA("BasePart") then
-			gateSeal.Color = accent
-			gateSeal.Transparency = breachOpen and 0.9 or 0.08
+			if stateChanged then
+				tweenPreparationProperties(gateSeal, PREPARATION_TWEEN_INFO, {
+					Color = accent,
+					Transparency = breachOpen and 0.9 or 0.08,
+				})
+			else
+				gateSeal.Color = accent
+				gateSeal.Transparency = breachOpen and 0.9 or 0.08
+			end
+			if stateChanged and laneState == "breach" then
+				local sealEmitter = ensurePreparationBurstEmitter(gateSeal, "BreachBurst", accent)
+				if sealEmitter then
+					sealEmitter:Emit(24)
+				end
+			end
 		end
 	end
 
 	for index = 1, 2 do
 		local brazierFlame = folder:FindFirstChild("PreparationBrazierFlame_" .. tostring(index))
 		if brazierFlame and brazierFlame:IsA("BasePart") then
-			brazierFlame.Color = accent:Lerp(Color3.fromRGB(255, 214, 166), 0.28)
+			local flameColor = accent:Lerp(Color3.fromRGB(255, 214, 166), 0.28)
+			if stateChanged then
+				tweenPreparationProperties(brazierFlame, PREPARATION_FAST_TWEEN_INFO, {
+					Color = flameColor,
+				})
+			else
+				brazierFlame.Color = flameColor
+			end
+			if stateChanged and laneState == "breach" then
+				local flameEmitter = ensurePreparationBurstEmitter(brazierFlame, "BreachPulse", flameColor)
+				if flameEmitter then
+					flameEmitter:Emit(10)
+				end
+			end
 		end
 	end
+
+	if stateChanged and laneState ~= "ready" and marqueeGlow and marqueeGlow:IsA("BasePart") then
+		local marqueeEmitter = ensurePreparationBurstEmitter(marqueeGlow, "StateBurst", accent)
+		if marqueeEmitter then
+			marqueeEmitter:Emit(laneState == "breach" and 18 or 10)
+		end
+	end
+
+	folder:SetAttribute(PREPARATION_LANE_STATE_ATTR, laneState)
 end
 
 local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen, profile)
