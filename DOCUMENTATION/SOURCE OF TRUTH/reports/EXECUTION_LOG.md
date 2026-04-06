@@ -11324,3 +11324,41 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `ShopPathInset / PartyPathInset / GardenPathInset / FlexPathInset` hidup di runtime
 - catatan:
   - capture plaza yang mencoba menampilkan banyak wing sekaligus tertimpa loading overlay, jadi bukti utama pass ini saya pegang dari runtime object + surface text
+
+## Update 2026-04-06
+
+- `LobbySocialHub` menerima pass `wing identity dressing` untuk empat sayap non-utara:
+  - `SHOP`
+    - `ShopBackCounter`
+    - `ShopPriceBoard`
+    - `ShopPendantLeft / Right`
+    - `ShopFloorRunner`
+  - `PARTY`
+    - `PartyBackdropWall`
+    - `PartyDanceFloor`
+    - `PartyBoothLeft / Right`
+    - `PartyNeonBar`
+  - `GARDEN`
+    - `GardenPergolaBeamLeft / Right`
+    - `GardenFlowerBedLeft / Right`
+    - `GardenLanternA / B`
+  - `FLEX`
+    - `FlexCurtainLeft / Right`
+    - `FlexMarquee`
+    - `FlexAudienceBenchLeft / Right`
+- tujuannya:
+  - memberi massa ruang dan identitas saat pemain benar-benar masuk ke wing
+  - mengurangi rasa `box polos + prop tipis` pada empat bangunan non-utara
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_wing_identity_build.rbxlx`
+- verifikasi live:
+  - `ShopPriceBoard = OFFERS | MM • PP • Utility`
+  - `PartyBackdropWall`, `PartyDanceFloor`, `PartyNeonBar` hadir di runtime
+  - `GardenPergolaBeamLeft / Right`, `GardenLanternA / B` hadir di runtime
+  - `FlexMarquee = SPOTLIGHT | Style • Event • Feature`
+  - `FlexCurtainLeft / Right`, `FlexAudienceBenchLeft / Right` hadir di runtime
+- catatan:
+  - capture interior per wing tidak tembus via navigasi otomatis karena route fisik lobby masih belum bersih untuk tool navigasi, jadi bukti utama pass ini saya pegang dari runtime object + surface text
