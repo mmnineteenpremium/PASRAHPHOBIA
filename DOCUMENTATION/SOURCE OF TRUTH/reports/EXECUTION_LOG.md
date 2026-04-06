@@ -11260,3 +11260,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `ShopCounter` membuka `ShopUI`
 - capture live:
   - `LobbyWorldPrompt_ShopCounter_1`
+
+## Update 2026-04-06
+
+- `LobbySocialHub` menerima pass arsitektur pendekatan `North` supaya frame spawn tidak lagi didominasi floor abu-abu kosong:
+  - `NorthApproachArchLeft / Right / Header`
+  - `NorthApproachAccent`
+  - `NorthApproachPanel`
+  - `NorthPathInset / NorthPathLine`
+  - bollard lamp kiri/kanan di jalur utara
+- tujuannya:
+  - memberi framing world-space ke jalur `Contract Bay`
+  - membuat arah `PLAY / Contract / Room / Tools` terbaca dari spawn pertama
+
+### Validation 2026-04-06
+
+- build source sukses:
+  - `_tmp_lobby_north_approach_build.rbxlx`
+- verifikasi live:
+  - `NorthApproachPanel = CONTRACT BAY | Room • Contract • Tools`
+  - `NorthApproachArchLeft / Right / Header` hadir di runtime
+  - `NorthPathInset` dan bollard lamp hidup sepanjang jalur ke `North`
+- capture live:
+  - `LobbyNorth_Approach_After_1`
