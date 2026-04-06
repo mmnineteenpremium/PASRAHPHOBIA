@@ -2025,6 +2025,94 @@ local function applyMainHubVisualPatch()
     applyGatewayWall("MainHubNorthJambLeft", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1582.4, 4.4, -69.5))
     applyGatewayWall("MainHubNorthJambRight", Vector3.new(0.9, 8.8, 0.9), CFrame.new(1617.6, 4.4, -69.5))
     applyGatewayAccent("MainHubNorthAccent", Vector3.new(36, 0.22, 1.02), CFrame.new(1600, 8.98, -69.5), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+    applyGatewayWall("NorthApproachArchLeft", Vector3.new(1.1, 8.2, 1.1), CFrame.new(1590.8, 4.1, -107.5))
+    applyGatewayWall("NorthApproachArchRight", Vector3.new(1.1, 8.2, 1.1), CFrame.new(1609.2, 4.1, -107.5))
+    applyGatewayWall("NorthApproachArchHeader", Vector3.new(19.6, 1.0, 1.1), CFrame.new(1600, 7.8, -107.5))
+    applyGatewayAccent("NorthApproachAccent", Vector3.new(20.2, 0.2, 1.18), CFrame.new(1600, 8.42, -107.5), LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color)
+    local northApproachPanel = ensureDecorPart("NorthApproachPanel")
+    applyPartProps(northApproachPanel, {
+        size = Vector3.new(11.8, 2.8, 0.32),
+        cframe = CFrame.new(1600, 6.0, -106.82),
+        color = Color3.fromRGB(14, 22, 34),
+        material = Enum.Material.SmoothPlastic,
+        transparency = 0.02,
+    })
+    ensureGuideBoardSurface(
+        northApproachPanel,
+        LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME,
+        Enum.NormalId.Back,
+        "CONTRACT BAY",
+        "Room • Contract • Tools",
+        LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color
+    )
+    ensureGuideBoardSurface(
+        northApproachPanel,
+        LOBBY_ZONE_ENTRY_GUIDE_BOARD_FRONT_SURFACE_NAME,
+        Enum.NormalId.Front,
+        "RETURN",
+        "Lobby hub • Room Browser",
+        LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color
+    )
+    for index, offsetZ in ipairs({ -96, -112, -128, -144 }) do
+        local leftBollard = ensureDecorPart(string.format("NorthPathBollardLeft_%d", index))
+        applyPartProps(leftBollard, {
+            size = Vector3.new(0.72, 2.8, 0.72),
+            cframe = CFrame.new(1592.6, 1.4, offsetZ),
+            color = Color3.fromRGB(28, 40, 58),
+            material = Enum.Material.Metal,
+            transparency = 0.03,
+        })
+        applyDecorPointLight(leftBollard, "Glow", {
+            color = LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color,
+            brightness = 1.4,
+            range = 18,
+        })
+        local leftCap = ensureDecorPart(string.format("NorthPathBollardLeftCap_%d", index))
+        applyPartProps(leftCap, {
+            size = Vector3.new(0.94, 0.16, 0.94),
+            cframe = CFrame.new(1592.6, 2.82, offsetZ),
+            color = LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color,
+            material = Enum.Material.Neon,
+            transparency = 0.18,
+        })
+        local rightBollard = ensureDecorPart(string.format("NorthPathBollardRight_%d", index))
+        applyPartProps(rightBollard, {
+            size = Vector3.new(0.72, 2.8, 0.72),
+            cframe = CFrame.new(1607.4, 1.4, offsetZ),
+            color = Color3.fromRGB(28, 40, 58),
+            material = Enum.Material.Metal,
+            transparency = 0.03,
+        })
+        applyDecorPointLight(rightBollard, "Glow", {
+            color = LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color,
+            brightness = 1.4,
+            range = 18,
+        })
+        local rightCap = ensureDecorPart(string.format("NorthPathBollardRightCap_%d", index))
+        applyPartProps(rightCap, {
+            size = Vector3.new(0.94, 0.16, 0.94),
+            cframe = CFrame.new(1607.4, 2.82, offsetZ),
+            color = LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color,
+            material = Enum.Material.Neon,
+            transparency = 0.18,
+        })
+    end
+    local northPathInset = ensureDecorPart("NorthPathInset")
+    applyPartProps(northPathInset, {
+        size = Vector3.new(9.6, 0.08, 60),
+        cframe = CFrame.new(1600, 0.14, -120),
+        color = Color3.fromRGB(34, 50, 72),
+        material = Enum.Material.Slate,
+        transparency = 0.04,
+    })
+    local northPathLine = ensureDecorPart("NorthPathLine")
+    applyPartProps(northPathLine, {
+        size = Vector3.new(1.1, 0.03, 58),
+        cframe = CFrame.new(1600, 0.185, -120),
+        color = LOBBY_ZONE_GUIDE_STYLE.MatchmakingZone.color,
+        material = Enum.Material.Neon,
+        transparency = 0.3,
+    })
 
     applyGatewayWall("MainHubSouthWallLeft", Vector3.new(52, 10, 0.9), CFrame.new(1557, 5, 69.5))
     applyGatewayWall("MainHubSouthWallRight", Vector3.new(52, 10, 0.9), CFrame.new(1643, 5, 69.5))

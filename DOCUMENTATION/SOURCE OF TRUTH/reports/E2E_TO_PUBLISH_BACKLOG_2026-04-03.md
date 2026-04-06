@@ -2594,3 +2594,18 @@ Urutan yang paling masuk akal dari titik sekarang:
   - **LANJUT / BELUM FINAL**.
   - lobby sekarang naik dari `functional world-space hub` menjadi `functional hub dengan contract bay yang kembali utuh`, tetapi art pass premium, asset final non-primitive, dan interior kaya per bangunan masih tersisa sebelum bisa dinyatakan final.
 
+## Update 2026-04-06
+
+- `P2.18 Final pass perubahan dan restruktur LOBBY + MAP IN GAME` maju lagi pada framing spawn `North`:
+  - jalur utara kini punya arch dunia, marquee `Contract Bay`, path inset, line neon, dan bollard lamp
+  - tujuan pass ini adalah memecah frame spawn yang sebelumnya terlalu kosong dan langsung mengarahkan pemain ke `PLAY / Contract / Room / Tools`
+- validasi:
+  - build source sukses:
+    - `_tmp_lobby_north_approach_build.rbxlx`
+  - verifikasi live:
+    - `NorthApproachPanel` tampil dengan copy `CONTRACT BAY`
+    - arch dan bollard lamp hadir di runtime `MainHubDecorRuntime`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lobby sekarang lebih jelas dari spawn, tetapi final pass masih membutuhkan material/asset premium, interior kaya, dan art pass global sebelum bisa dinyatakan selesai.
+
