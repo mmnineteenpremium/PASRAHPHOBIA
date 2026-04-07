@@ -2787,6 +2787,17 @@ Urutan yang paling masuk akal dari titik sekarang:
 - residual sesudah pass ini:
   - state `spent` pada preview `Salib` masih belum final-proof
 
+- progress tambahan pada lane `asset player-facing HUD`:
+  - `LobbyEvidenceTrainingUpdated` sekarang ikut me-refresh `Journal + Field Kit + visibility`
+  - ini menutup gap preview HUD pada support tool training di lobby
+- validasi terbaru:
+  - jalur live lobby training:
+    - `Garam|active`
+    - `Salib|active`
+    - `Dupa|active`
+- residual sesudah pass ini:
+  - `spent` untuk `Salib` masih belum final-proof
+
 - progress tambahan pada lane `asset integration`:
   - `Pocong` profile asset sekarang dipakai sebagai overlay visual ghost runtime
   - `Garam / Salib / Dupa` sekarang dipakai tegas oleh jalur visual utility tool match

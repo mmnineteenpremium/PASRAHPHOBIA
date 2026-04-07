@@ -11495,6 +11495,9 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 			journalState.toolLastUsedAt = os.clock()
 			self._journalState = journalState
 		end
+		self:_refreshJournalPanel()
+		self:_refreshFieldKitPanel()
+		self:_applyVisibility()
 
 		self:_previewLobbyTrainingSensory(payload)
 		self:_refreshLobbyEvidenceTrainingPanel()
