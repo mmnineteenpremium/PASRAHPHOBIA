@@ -12439,3 +12439,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
       - `Leak | Model | 2.00,5.20,2.48`
 - residual sesudah pass ini:
   - state `spent` untuk preview `Salib` masih belum saya cap final karena run `ConsumeHuntProtection` yang terakhir belum memberi hunt protection valid
+
+- progress tambahan pada lane `player-facing asset integration`:
+  - `Lobby evidence training` sekarang punya `SupportStrip` untuk `Garam / Salib / Dupa`
+  - tiap card support memakai `ViewportFrame` yang sama dengan owner `Field Kit`, jadi asset support tool tidak lagi hanya terlihat di HUD match
+  - saya juga menutup bug source di `UISystem:_applyDeviceSizing()`:
+    - `trainingWidth` sebelumnya dipakai di luar scope saat sizing `TrainingSupportStrip`
+    - ini bisa mematahkan render strip saat layout dijalankan
+- validasi terbaru:
+  - proof owner-driven live pada `Players.ZyraaaVex.PlayerGui.UXLayer.LobbyUXGui.LobbyUXLayer.TrainingFrame`
+  - hasil:
+    - `TrainingFrame.Visible = true`
+    - `SupportStrip = present`
+    - `GaramSupportCard -> Garam|active | world=true | camera=true | meta=AKTIF`
+    - `SalibSupportCard -> Salib|ready | world=true | camera=true | meta=x1`
+    - `DupaSupportCard -> Dupa|ready | world=true | camera=true | meta=x1`
+- catatan verifikasi:
+  - pada session ini `StudioE2EControl` request training hanya mengubah trace tanpa mengirim `ack/result` kembali
+  - karena itu proof support strip saya tutup lewat owner runtime `UI/Main.lua` sendiri, bukan lewat ack route yang sedang macet di session tersebut
+- proof tambahan:
+  - state `Salib|spent` juga sudah tembus di support strip owner-driven
+  - hasil:
+    - `TrainingTitle -> Leak • ALERT • ASSET LIVE`
+    - `SalibSupportCard -> Salib|spent | world=true | camera=true | meta=C0`
+- residual sesudah pass ini:
+  - jalur live `match HUD` untuk `Salib|spent` masih belum saya cap final
