@@ -3280,3 +3280,19 @@ Urutan yang paling masuk akal dari titik sekarang:
 - residual sesudah pass ini:
   - proof `Salib|spent` pada HUD masih belum final
 
+- progress tambahan pada lane `player-facing asset integration`:
+  - `Lobby evidence training` sekarang punya `SupportStrip` untuk `Garam / Salib / Dupa`
+  - tiap card support merender asset tool 3D lewat `ViewportFrame`
+  - bug scope di `UISystem:_applyDeviceSizing()` yang mematahkan sizing strip sudah ditutup
+- validasi terbaru:
+  - `TrainingFrame.Visible = true`
+  - `SupportStrip = present`
+  - `GaramSupportCard -> Garam|active | world=true | camera=true | meta=AKTIF`
+  - `SalibSupportCard -> Salib|ready | world=true | camera=true | meta=x1`
+  - `DupaSupportCard -> Dupa|ready | world=true | camera=true | meta=x1`
+- residual sesudah pass ini:
+  - ack `StudioE2EControl` untuk request training pada session verifikasi ini tidak kembali ke client, jadi proof strip ditutup lewat owner runtime UI
+  - `Salib|spent` sudah terbukti di support strip owner-driven:
+    - `SalibSupportCard -> Salib|spent | world=true | camera=true | meta=C0`
+  - proof `Salib|spent` pada live `match HUD` masih belum final
+

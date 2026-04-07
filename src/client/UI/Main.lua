@@ -1160,6 +1160,34 @@ local function renderLobbyTrainingGhostPreview(viewportFrame, ghostType, accentC
 	return true
 end
 
+local function resolveFieldKitToolPreviewState(toolName, toolState, selected, metaDanger)
+	if type(toolState) ~= "table" then
+		return "ready"
+	end
+
+	local usesRemaining = tonumber(toolState.usesRemaining)
+	local chargesRemaining = tonumber(toolState.chargesRemaining)
+	if toolState.pending then
+		return "pending"
+	end
+	if metaDanger or toolState.lastSuccess == false then
+		return "danger"
+	end
+	if toolName == "Salib" and chargesRemaining ~= nil and chargesRemaining <= 0 and toolState.visualPlaced == true then
+		return "spent"
+	end
+	if usesRemaining ~= nil and usesRemaining <= 0 then
+		return "empty"
+	end
+	if toolState.visualPlaced == true then
+		return "active"
+	end
+	if selected then
+		return "focus"
+	end
+	return "ready"
+end
+
 local function ensureFieldKitButtonVisuals(button, definition, toolType)
 	if not button then
 		return nil
@@ -1300,6 +1328,99 @@ local function ensureFieldKitButtonVisuals(button, definition, toolType)
 		FooterLabel = footerLabel,
 		AccentBar = accentBar,
 		ToolPreview = toolPreview,
+	}
+end
+
+local function ensureLobbyTrainingSupportCard(container, toolType)
+	if not container or type(toolType) ~= "string" then
+		return nil
+	end
+
+	local config = FIELD_KIT_TOOL_CONFIG[toolType]
+	if type(config) ~= "table" then
+		return nil
+	end
+
+	local cardName = toolType .. "SupportCard"
+	local card = container:FindFirstChild(cardName)
+	if not card or not card:IsA("Frame") then
+		card = Instance.new("Frame")
+		card.Name = cardName
+		card.Size = UDim2.fromOffset(108, 42)
+		card.BackgroundColor3 = Color3.fromRGB(22, 28, 38)
+		card.BackgroundTransparency = 0.04
+		card.BorderSizePixel = 0
+		card.ZIndex = 9
+		card.Parent = container
+
+		local cardCorner = Instance.new("UICorner")
+		cardCorner.CornerRadius = UDim.new(0, 10)
+		cardCorner.Parent = card
+
+		local cardStroke = Instance.new("UIStroke")
+		cardStroke.Name = "CardStroke"
+		cardStroke.Thickness = 1
+		cardStroke.Transparency = 0.16
+		cardStroke.Color = config.accent
+		cardStroke.Parent = card
+	end
+
+	local preview = card:FindFirstChild("ToolPreview")
+	if not preview or not preview:IsA("ViewportFrame") then
+		preview = Instance.new("ViewportFrame")
+		preview.Name = "ToolPreview"
+		preview.Position = UDim2.fromOffset(6, 5)
+		preview.Size = UDim2.fromOffset(34, 34)
+		preview.BackgroundColor3 = Color3.fromRGB(18, 24, 34)
+		preview.BackgroundTransparency = 0.02
+		preview.BorderSizePixel = 0
+		preview.ZIndex = 10
+		preview.Parent = card
+
+		local previewCorner = Instance.new("UICorner")
+		previewCorner.CornerRadius = UDim.new(0, 8)
+		previewCorner.Parent = preview
+	end
+
+	local titleLabel = card:FindFirstChild("TitleLabel")
+	if not titleLabel or not titleLabel:IsA("TextLabel") then
+		titleLabel = Instance.new("TextLabel")
+		titleLabel.Name = "TitleLabel"
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Font = Enum.Font.GothamBold
+		titleLabel.TextSize = 11
+		titleLabel.TextColor3 = Color3.fromRGB(242, 244, 248)
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		titleLabel.ZIndex = 10
+		titleLabel.Parent = card
+	end
+
+	local metaLabel = card:FindFirstChild("MetaLabel")
+	if not metaLabel or not metaLabel:IsA("TextLabel") then
+		metaLabel = Instance.new("TextLabel")
+		metaLabel.Name = "MetaLabel"
+		metaLabel.BackgroundTransparency = 1
+		metaLabel.Font = Enum.Font.GothamSemibold
+		metaLabel.TextSize = 10
+		metaLabel.TextColor3 = Color3.fromRGB(196, 210, 228)
+		metaLabel.TextXAlignment = Enum.TextXAlignment.Left
+		metaLabel.ZIndex = 10
+		metaLabel.Parent = card
+	end
+
+	titleLabel.Position = UDim2.fromOffset(48, 6)
+	titleLabel.Size = UDim2.new(1, -54, 0, 14)
+	titleLabel.Text = tostring(config.label or toolType)
+
+	metaLabel.Position = UDim2.fromOffset(48, 22)
+	metaLabel.Size = UDim2.new(1, -54, 0, 16)
+	metaLabel.Text = "READY"
+
+	return {
+		Card = card,
+		ToolPreview = preview,
+		TitleLabel = titleLabel,
+		MetaLabel = metaLabel,
 	}
 end
 
@@ -5150,6 +5271,41 @@ function UISystem:_refreshLobbyEvidenceTrainingPanel()
 			and Color3.fromRGB(204, 240, 198)
 			or Color3.fromRGB(182, 196, 214)
 	end
+	if lobby.TrainingSupportCards then
+		local journalState = self._journalState or {}
+		local toolStates = self:_ensureFieldKitToolStates()
+		local isRecent = (os.clock() - (tonumber(journalState.toolLastUsedAt) or 0)) <= 4
+		for toolName, widget in pairs(lobby.TrainingSupportCards) do
+			local toolConfig = FIELD_KIT_TOOL_CONFIG[toolName]
+			local toolState = toolStates[toolName]
+			if toolConfig and toolState and widget and widget.Card then
+				local metaText, metaDanger = self:_resolveFieldKitMeta(toolName, toolState)
+				local selected = journalState.toolType == toolName and (isRecent or toolState.pending or toolState.visualPlaced == true)
+				local previewState = resolveFieldKitToolPreviewState(toolName, toolState, selected, metaDanger)
+				local previewVisible = widget.ToolPreview and renderFieldKitToolPreview(widget.ToolPreview, toolName, toolConfig.accent, previewState) or false
+				if widget.ToolPreview then
+					widget.ToolPreview.Visible = previewVisible
+				end
+				widget.Card.BackgroundColor3 = toolConfig.accent:Lerp(Color3.fromRGB(20, 26, 36), selected and 0.54 or 0.82)
+				local cardStroke = widget.Card:FindFirstChild("CardStroke")
+				if cardStroke and cardStroke:IsA("UIStroke") then
+					cardStroke.Color = metaDanger and Color3.fromRGB(214, 108, 108) or toolConfig.accent
+				end
+				if widget.TitleLabel then
+					widget.TitleLabel.Text = tostring(toolConfig.label or toolName)
+					widget.TitleLabel.TextColor3 = selected
+						and toolConfig.accent:Lerp(Color3.fromRGB(248, 244, 236), 0.18)
+						or Color3.fromRGB(242, 244, 248)
+				end
+				if widget.MetaLabel then
+					widget.MetaLabel.Text = tostring(metaText or "READY")
+					widget.MetaLabel.TextColor3 = metaDanger
+						and Color3.fromRGB(244, 198, 198)
+						or Color3.fromRGB(194, 208, 224)
+				end
+			end
+		end
+	end
 
 	local stroke = lobby.TrainingFrame:FindFirstChild("TrainingStroke")
 	if stroke and stroke:IsA("UIStroke") then
@@ -5438,20 +5594,7 @@ function UISystem:_refreshFieldKitPanel()
 					widget.GlyphPlate.BackgroundTransparency = selected and 0.08 or 0.18
 				end
 				if widget.ToolPreview then
-					local previewState = "ready"
-					if toolState.pending then
-						previewState = "pending"
-					elseif metaDanger or toolState.lastSuccess == false then
-						previewState = "danger"
-					elseif toolName == "Salib" and chargesRemaining ~= nil and chargesRemaining <= 0 and toolState.visualPlaced == true then
-						previewState = "spent"
-					elseif usesRemaining ~= nil and usesRemaining <= 0 then
-						previewState = "empty"
-					elseif toolState.visualPlaced == true then
-						previewState = "active"
-					elseif selected then
-						previewState = "focus"
-					end
+					local previewState = resolveFieldKitToolPreviewState(toolName, toolState, selected, metaDanger)
 					local previewVisible = renderFieldKitToolPreview(widget.ToolPreview, toolName, toolConfig.accent, previewState)
 					widget.ToolPreview.Visible = previewVisible
 					if widget.GlyphLabel then
@@ -9294,12 +9437,13 @@ function UISystem:_applyDeviceSizing()
 	local lobby = self._uxWidgets.lobby
 	if lobby and lobby.PlayButton and lobby.FeedbackLabel then
 		local buttonSize = profile:GetButtonSize()
+		local trainingWidth = nil
 		lobby.PlayButton.Size = UDim2.fromOffset(buttonSize.X, buttonSize.Y)
 		lobby.PlayButton.TextSize = profile:GetTextSize()
 		lobby.FeedbackLabel.TextSize = math.max(16, profile:GetTextSize() - 2)
 		if lobby.TrainingFrame then
-			local trainingWidth = profile.isMobile and math.min(viewportSize.X - 24, 420) or math.min(560, math.max(420, math.floor(viewportSize.X * 0.42)))
-			local trainingHeight = profile.isMobile and 144 or 130
+			trainingWidth = profile.isMobile and math.min(viewportSize.X - 24, 420) or math.min(560, math.max(420, math.floor(viewportSize.X * 0.42)))
+			local trainingHeight = profile.isMobile and 194 or 178
 			lobby.TrainingFrame.Position = UDim2.new(0.5, 0, 0, topLeftInset.Y + (profile.isMobile and 88 or 82))
 			lobby.TrainingFrame.Size = UDim2.fromOffset(trainingWidth, trainingHeight)
 		end
@@ -9326,6 +9470,38 @@ function UISystem:_applyDeviceSizing()
 		end
 		if lobby.TrainingAggroBar then
 			lobby.TrainingAggroBar.Size = UDim2.new(1, profile.isMobile and -144 or -154, 0, 10)
+		end
+		if lobby.TrainingSupportStrip then
+			local stripWidth = math.max(240, (trainingWidth or (profile.isMobile and math.min(viewportSize.X - 24, 420) or math.min(560, math.max(420, math.floor(viewportSize.X * 0.42))))) - 28)
+			local stripPadding = profile.isMobile and 6 or 8
+			lobby.TrainingSupportStrip.Position = UDim2.fromOffset(0, profile.isMobile and 144 or 132)
+			lobby.TrainingSupportStrip.Size = UDim2.fromOffset(stripWidth, profile.isMobile and 44 or 42)
+			local layout = lobby.TrainingSupportStrip:FindFirstChild("SupportLayout")
+			if layout and layout:IsA("UIListLayout") then
+				layout.Padding = UDim.new(0, stripPadding)
+			end
+			if lobby.TrainingSupportCards then
+				local cardWidth = math.max(profile.isMobile and 90 or 98, math.floor((stripWidth - (stripPadding * 2)) / 3))
+				for _, widget in pairs(lobby.TrainingSupportCards) do
+					if widget and widget.Card then
+						widget.Card.Size = UDim2.fromOffset(cardWidth, profile.isMobile and 44 or 42)
+					end
+					if widget and widget.ToolPreview then
+						widget.ToolPreview.Position = UDim2.fromOffset(6, 5)
+						widget.ToolPreview.Size = UDim2.fromOffset(profile.isMobile and 34 or 32, profile.isMobile and 34 or 32)
+					end
+					if widget and widget.TitleLabel then
+						widget.TitleLabel.Position = UDim2.fromOffset(profile.isMobile and 46 or 44, 6)
+						widget.TitleLabel.Size = UDim2.new(1, profile.isMobile and -50 or -48, 0, 14)
+						widget.TitleLabel.TextSize = profile.isMobile and 11 or 10
+					end
+					if widget and widget.MetaLabel then
+						widget.MetaLabel.Position = UDim2.fromOffset(profile.isMobile and 46 or 44, 22)
+						widget.MetaLabel.Size = UDim2.new(1, profile.isMobile and -50 or -48, 0, 16)
+						widget.MetaLabel.TextSize = profile.isMobile and 10 or 9
+					end
+				end
+			end
 		end
 	end
 	if lobby and lobby.BasicOpenRoomBrowserButton and lobby.BasicPrimaryLabel then
@@ -10900,7 +11076,7 @@ function UISystem:_ensureUXLayers()
 		lobbyTrainingFrame.ZIndex = 8
 		lobbyTrainingFrame.AnchorPoint = Vector2.new(0.5, 0)
 		lobbyTrainingFrame.Position = UDim2.fromScale(0.5, 0.13)
-		lobbyTrainingFrame.Size = UDim2.fromOffset(540, 122)
+		lobbyTrainingFrame.Size = UDim2.fromOffset(540, 178)
 		lobbyTrainingFrame.BackgroundColor3 = Color3.fromRGB(18, 26, 36)
 		lobbyTrainingFrame.BackgroundTransparency = 0.08
 		lobbyTrainingFrame.BorderSizePixel = 0
@@ -11063,6 +11239,32 @@ function UISystem:_ensureUXLayers()
 		lobbyTrainingHint.Text = "Gunakan meja tools untuk membaca evidence ghost latihan."
 		lobbyTrainingHint.Parent = lobbyTrainingFrame
 	end
+
+	local lobbyTrainingSupportStrip = lobbyTrainingFrame:FindFirstChild("SupportStrip")
+	if not lobbyTrainingSupportStrip then
+		lobbyTrainingSupportStrip = Instance.new("Frame")
+		lobbyTrainingSupportStrip.Name = "SupportStrip"
+		lobbyTrainingSupportStrip.BackgroundTransparency = 1
+		lobbyTrainingSupportStrip.Position = UDim2.fromOffset(0, 132)
+		lobbyTrainingSupportStrip.Size = UDim2.fromOffset(420, 42)
+		lobbyTrainingSupportStrip.ZIndex = 9
+		lobbyTrainingSupportStrip.Parent = lobbyTrainingFrame
+
+		local supportLayout = Instance.new("UIListLayout")
+		supportLayout.Name = "SupportLayout"
+		supportLayout.FillDirection = Enum.FillDirection.Horizontal
+		supportLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+		supportLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		supportLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		supportLayout.Padding = UDim.new(0, 8)
+		supportLayout.Parent = lobbyTrainingSupportStrip
+	end
+
+	local lobbyTrainingSupportCards = {
+		Garam = ensureLobbyTrainingSupportCard(lobbyTrainingSupportStrip, "Garam"),
+		Salib = ensureLobbyTrainingSupportCard(lobbyTrainingSupportStrip, "Salib"),
+		Dupa = ensureLobbyTrainingSupportCard(lobbyTrainingSupportStrip, "Dupa"),
+	}
 
 	local playButton = lobbyLayer:FindFirstChild("PlayButton")
 	if not playButton then
@@ -11412,6 +11614,8 @@ function UISystem:_ensureUXLayers()
 	self._uxWidgets.lobby.TrainingAggroBar = lobbyTrainingBar
 	self._uxWidgets.lobby.TrainingAggroFill = lobbyTrainingBar and lobbyTrainingBar:FindFirstChild("AggroFill") or nil
 	self._uxWidgets.lobby.TrainingHintLabel = lobbyTrainingHint
+	self._uxWidgets.lobby.TrainingSupportStrip = lobbyTrainingSupportStrip
+	self._uxWidgets.lobby.TrainingSupportCards = lobbyTrainingSupportCards
 	self._uxWidgets.lobby.PlayButton = playButton
 	self._uxWidgets.lobby.Gui = lobbyUXGui
 	self._uxWidgets.lobby.Layer = lobbyLayer
