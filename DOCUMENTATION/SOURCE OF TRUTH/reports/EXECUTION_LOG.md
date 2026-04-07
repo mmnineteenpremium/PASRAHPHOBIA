@@ -12485,3 +12485,33 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - sampled stabil hingga `3.75s` tanpa jatuh lagi ke `ready`
 - residual sesudah pass ini:
   - multi-trigger lanjutan ke `C1/C0` pada run yang sama belum saya cap final
+
+- progress tambahan pada lane `ghost visual regression + preparation entry clarity`:
+  - `Pocong` visual mesh sekarang dikunci kembali ke `0.06 x 0.07 x 0.07`
+  - fix ini hanya untuk layer visual:
+    - logic/root/bounds tetap di clamp target lama
+    - fallback model `Pocong` untuk ghost lain tidak dipakai lagi
+  - `outside-match preparation staging` sekarang punya gate fisik yang lebih terbaca:
+    - `PreparationGateHeader`
+    - `PreparationGateThreshold`
+    - `PreparationGateJambLeft`
+    - `PreparationGateJambRight`
+    - leaf gate menutup sebelum breach dan membuka saat breach
+- validasi terbaru:
+  - proof live in-game:
+    - `Workspace.DebugPocongPreview`
+    - `MeshPart.Size = 0.06, 0.07, 0.07`
+    - preview ini hanya dipakai untuk validasi visual, bukan actor logic
+  - proof live preparation gate:
+    - `PreparationPhase`
+      - `PreparationGateLeft.CanCollide = true`
+      - `PreparationGateRight.CanCollide = true`
+      - `PreparationGateSeal.Transparency = 0.08`
+    - sesudah `Mulai Breach`
+      - `MatchLifecyclePhase = InvestigationPhase`
+      - `PreparationGateLeft.CanCollide = false`
+      - `PreparationGateRight.CanCollide = false`
+      - `PreparationGateSeal.Transparency = 0.90`
+      - prompt breach hilang
+- residual sesudah pass ini:
+  - actor ghost match pasif masih belum selalu mudah difoto pada run normal, jadi proof visual `Pocong` hari ini saya tutup lewat preview runtime di session in-game yang sama

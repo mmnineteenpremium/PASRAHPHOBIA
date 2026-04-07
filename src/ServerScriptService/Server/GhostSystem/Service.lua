@@ -386,13 +386,6 @@ local function resolveGhostModelTemplate(ghostType)
 		end
 	end
 
-	local fallbackProfile = resolveGhostVisualProfile("Pocong")
-	for _, candidateName in ipairs(buildGhostTemplateCandidateNames("Pocong", fallbackProfile)) do
-		local candidate = ghosts:FindFirstChild(candidateName)
-		if candidate and candidate:IsA("Model") then
-			return candidate
-		end
-	end
 	return nil
 end
 
@@ -667,7 +660,7 @@ local function loadGhostVisualTuning()
 					end
 
 					local meshSize = coerceProfileVector3(profile.size)
-					if meshSize then
+					if meshSize and meshSizes[ghostType] == nil then
 						meshSizes[ghostType] = meshSize
 					end
 
