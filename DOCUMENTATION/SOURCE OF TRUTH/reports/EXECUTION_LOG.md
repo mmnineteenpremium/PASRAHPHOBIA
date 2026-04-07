@@ -11994,3 +11994,39 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - residual lane yang tersisa turun ke:
     - asset premium/non-primitive jika ingin naik dari blockout art pass ke art final
     - exterior composition yang lebih mewah/sinematik jika ingin naik lagi ke presentational polish
+
+- pass lanjutan pada lane `outside match preparation staging`:
+  - breach sekarang tidak lagi hanya mengubah phase, tetapi juga benar-benar memindahkan pemain dari staging luar ke target entry dunia di dalam map
+  - runtime baru:
+    - `PreparationBreachTarget_1..4`
+    - attr `PreparationBreachMoved`
+  - sync authoritative:
+    - jika `MatchLifecyclePhase` naik ke `InvestigationPhase`, pemain yang masih di staging luar otomatis dipindah ke target breach
+    - jadi jalur prompt breach dan jalur authoritative lain tetap berakhir pada hasil dunia yang sama
+  - source owner:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+- validasi:
+  - build:
+    - `_tmp_match_preparation_breach_entry_build.rbxlx`
+  - `HauntedHouse`:
+    - sebelum breach:
+      - `stagedPos = 1299.11, 3.50, -5.17`
+    - target:
+      - `PreparationBreachTarget_1 = 1184.95, 4.00, -4.20`
+    - sesudah `InvestigationPhase`:
+      - `PreparationBreachMoved = true`
+      - `movedPos = 1184.95, 4.00, -4.20`
+  - `AbandonedPalace`:
+    - sebelum breach:
+      - `stagedPos = 5.35, 3.50, 128.30`
+    - target:
+      - `PreparationBreachTarget_1 = 4.20, 4.00, 24.95`
+    - sesudah `InvestigationPhase`:
+      - `PreparationBreachMoved = true`
+      - `movedPos = 4.20, 3.42, 24.95`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - gap utama jalur `outside -> breach -> entry investigasi` sekarang sudah tertutup secara runtime
+  - residual lane yang tersisa praktis tinggal:
+    - premium asset/non-primitive
+    - presentational polish/sinematik yang lebih mewah
