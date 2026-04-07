@@ -452,6 +452,48 @@ local MAP_SUNRAYS_PROFILES = {
 	},
 }
 
+local PREPARATION_VISUAL_PROFILES = {
+	HauntedHouse = {
+		Exposure = 0.12,
+		BloomIntensity = 0.14,
+		SunRaysIntensity = 0.038,
+		AtmosphereDensityDelta = -0.035,
+		GradeTint = Color3.fromRGB(244, 236, 220),
+	},
+	AbandonedPalace = {
+		Exposure = -0.08,
+		BloomIntensity = 0.12,
+		SunRaysIntensity = 0.026,
+		AtmosphereDensityDelta = -0.05,
+		GradeTint = Color3.fromRGB(250, 224, 198),
+	},
+	EmptyBuilding = {
+		Exposure = 0.08,
+		BloomIntensity = 0.12,
+		SunRaysIntensity = 0.036,
+		AtmosphereDensityDelta = -0.028,
+		GradeTint = Color3.fromRGB(236, 242, 252),
+	},
+	StudioMMNineteen = {
+		Exposure = 0.05,
+		BloomIntensity = 0.11,
+		SunRaysIntensity = 0.03,
+		AtmosphereDensityDelta = -0.025,
+		GradeTint = Color3.fromRGB(226, 238, 255),
+	},
+}
+
+local PREPARATION_TOOL_VISUAL_ACCENTS = {
+	EMF = Color3.fromRGB(152, 206, 255),
+	["UV CAM"] = Color3.fromRGB(174, 148, 255),
+	THERMO = Color3.fromRGB(178, 224, 255),
+	BOX = Color3.fromRGB(255, 184, 154),
+	WRITING = Color3.fromRGB(228, 232, 242),
+	SENSOR = Color3.fromRGB(186, 255, 210),
+}
+
+local PREPARATION_VISUAL_TWEEN = TweenInfo.new(0.48, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+
 local function ensureSanityColorCorrection()
 	local effect = Lighting:FindFirstChild("SensorySanityGrading")
 	if not effect then
@@ -638,6 +680,7 @@ function VFXController:Init(context)
 	self._sanityTween = nil
 	self._threatTweens = nil
 	self._transientTweens = nil
+	self._preparationTweens = nil
 	self._transientEffectToken = 0
 end
 
@@ -665,6 +708,12 @@ function VFXController:Start()
 			self:_syncMapVisualProfileFromPlayerState()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MapName"):Connect(function()
+			self:_syncMapVisualProfileFromPlayerState()
+		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
+			self:_syncMapVisualProfileFromPlayerState()
+		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("PreparationFocusTool"):Connect(function()
 			self:_syncMapVisualProfileFromPlayerState()
 		end))
 	end
@@ -933,6 +982,7 @@ function VFXController:Stop()
 	self._connections = {}
 	self:_cancelTweenSet(self._transientTweens)
 	self:_cancelTweenSet(self._threatTweens)
+	self:_cancelTweenSet(self._preparationTweens)
 end
 
 function VFXController:_handleSanityUpdate(payload)
@@ -1339,6 +1389,63 @@ function VFXController:_applyMapSunRays(mapName)
 	end
 end
 
+function VFXController:_applyPreparationVisualProfile(mapName)
+	local localPlayer = Players.LocalPlayer
+	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
+	local lifecyclePhase = tostring(localPlayer and localPlayer:GetAttribute("MatchLifecyclePhase") or "")
+	local isPreparation = inMatch and lifecyclePhase == "PreparationPhase"
+	local profile = PREPARATION_VISUAL_PROFILES[mapName]
+	local focusTool = tostring(localPlayer and localPlayer:GetAttribute("PreparationFocusTool") or "")
+	local focusAccent = PREPARATION_TOOL_VISUAL_ACCENTS[focusTool]
+	local tintTarget = self._baseMapGradeTint
+	local exposureTarget = self._baseLightingExposure
+	local bloomTarget = self._baseMapBloomIntensity
+	local raysTarget = self._baseMapSunRaysIntensity
+	local atmosphereTarget = self._baseAtmosphereDensity
+
+	if isPreparation and profile then
+		tintTarget = profile.GradeTint or tintTarget
+		exposureTarget = (profile.Exposure or 0) + self._baseLightingExposure
+		bloomTarget = profile.BloomIntensity or bloomTarget
+		raysTarget = profile.SunRaysIntensity or raysTarget
+		atmosphereTarget = self._baseAtmosphereDensity + (profile.AtmosphereDensityDelta or 0)
+		if focusAccent then
+			tintTarget = tintTarget:Lerp(focusAccent, 0.28)
+		end
+	end
+
+	self:_cancelTweenSet(self._preparationTweens)
+	self._preparationTweens = {}
+
+	local targets = {
+		mapCorrection = self._mapCorrection and TweenService:Create(self._mapCorrection, PREPARATION_VISUAL_TWEEN, {
+			TintColor = tintTarget,
+		}) or nil,
+		bloom = self._mapBloom and TweenService:Create(self._mapBloom, PREPARATION_VISUAL_TWEEN, {
+			Intensity = bloomTarget,
+		}) or nil,
+		sunRays = self._mapSunRays and TweenService:Create(self._mapSunRays, PREPARATION_VISUAL_TWEEN, {
+			Intensity = raysTarget,
+		}) or nil,
+		atmosphere = self._atmosphere and TweenService:Create(self._atmosphere, PREPARATION_VISUAL_TWEEN, {
+			Density = atmosphereTarget,
+		}) or nil,
+	}
+
+	for key, tween in pairs(targets) do
+		if tween then
+			self._preparationTweens[key] = tween
+			tween:Play()
+		end
+	end
+
+	Lighting.ExposureCompensation = exposureTarget
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahVFXPreparationActive", isPreparation and true or nil)
+		localPlayer:SetAttribute("PasrahVFXPreparationTool", isPreparation and (focusTool ~= "" and focusTool or nil) or nil)
+	end
+end
+
 function VFXController:_applyMapVisualProfile(mapName)
 	local resolvedMapName = normalizeMapProfileName(mapName) or "LobbySocialHub"
 	self._activeMapProfileName = resolvedMapName
@@ -1348,6 +1455,7 @@ function VFXController:_applyMapVisualProfile(mapName)
 	self:_applyMapBloom(resolvedMapName)
 	self:_applyMapDepthOfField(resolvedMapName)
 	self:_applyMapSunRays(resolvedMapName)
+	self:_applyPreparationVisualProfile(resolvedMapName)
 	local localPlayer = Players.LocalPlayer
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahVFXMapProfile", resolvedMapName)
