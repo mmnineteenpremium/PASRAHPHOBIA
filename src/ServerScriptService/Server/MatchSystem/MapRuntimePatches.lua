@@ -1577,12 +1577,16 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 	local gateLeft = folder:FindFirstChild("PreparationGateLeft")
 	local gateRight = folder:FindFirstChild("PreparationGateRight")
 	local gateSeal = folder:FindFirstChild("PreparationGateSeal")
+	local gateHeader = folder:FindFirstChild("PreparationGateHeader")
+	local gateThreshold = folder:FindFirstChild("PreparationGateThreshold")
+	local gateJambLeft = folder:FindFirstChild("PreparationGateJambLeft")
+	local gateJambRight = folder:FindFirstChild("PreparationGateJambRight")
 	if entrySign and entrySign:IsA("BasePart") and gateLeft and gateLeft:IsA("BasePart") and gateRight and gateRight:IsA("BasePart") then
 		local right = entrySign.CFrame.RightVector
 		local look = entrySign.CFrame.LookVector
 		local gateCenter = entrySign.Position + look * -0.14 + Vector3.new(0, -0.42, 0)
-		local closedSpan = math.max(0.6, (entrySign.Size.X * 0.25))
-		local openSpan = math.max(closedSpan + 1.8, (entrySign.Size.X * 0.62))
+		local closedSpan = math.max(0.86, (entrySign.Size.X * 0.18))
+		local openSpan = math.max(closedSpan + 2.6, (entrySign.Size.X * 0.58))
 		local span = breachOpen and openSpan or closedSpan
 		local gateColor = accent:Lerp(Color3.fromRGB(20, 24, 30), 0.34)
 		local leftPos = gateCenter - right * span
@@ -1608,6 +1612,10 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 			gateLeft.Transparency = breachOpen and 0.16 or 0
 			gateRight.Transparency = breachOpen and 0.16 or 0
 		end
+		gateLeft.CanCollide = not breachOpen
+		gateRight.CanCollide = not breachOpen
+		gateLeft.CanQuery = not breachOpen
+		gateRight.CanQuery = not breachOpen
 		if gateSeal and gateSeal:IsA("BasePart") then
 			if stateChanged then
 				tweenPreparationProperties(gateSeal, PREPARATION_TWEEN_INFO, {
@@ -1622,6 +1630,20 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 				local sealEmitter = ensurePreparationBurstEmitter(gateSeal, "BreachBurst", accent)
 				if sealEmitter then
 					sealEmitter:Emit(24)
+				end
+			end
+		end
+		for _, framePart in ipairs({ gateHeader, gateThreshold, gateJambLeft, gateJambRight }) do
+			if framePart and framePart:IsA("BasePart") then
+				local frameColor = accent:Lerp(Color3.fromRGB(28, 34, 44), 0.46)
+				if stateChanged then
+					tweenPreparationProperties(framePart, PREPARATION_FAST_TWEEN_INFO, {
+						Color = frameColor,
+						Transparency = breachOpen and 0.03 or 0,
+					})
+				else
+					framePart.Color = frameColor
+					framePart.Transparency = breachOpen and 0.03 or 0
 				end
 			end
 		end
@@ -1677,7 +1699,7 @@ local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen, p
 	if breachOpen then
 		title = "BREACH OPEN"
 		subtitle = "Investigation live"
-		body = type(profile) == "table" and tostring(profile.entryOpenBody or "Masuk ke area utama sekarang.") or "Masuk ke area utama sekarang."
+		body = type(profile) == "table" and tostring(profile.entryOpenBody or "Gate utama terbuka. Masuk ke area utama sekarang.") or "Gate utama terbuka. Masuk ke area utama sekarang."
 	end
 
 	ensureBoardSurface(
@@ -1910,8 +1932,8 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 	configurePart(
 		gateTrack,
 		{
-			Size = Vector3.new(5.4, 0.14, 0.18),
-			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.72) + Vector3.new(0, 1.52, 0), runnerCenter - outward, Vector3.yAxis),
+			Size = Vector3.new(7.2, 0.18, 0.26),
+			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.72) + Vector3.new(0, 1.92, 0), runnerCenter - outward, Vector3.yAxis),
 			Material = frameMaterial,
 			Color = frameColor,
 			CanCollide = false,
@@ -1919,13 +1941,39 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 			CanQuery = false,
 		}
 	)
-	for index, side in ipairs({ -1, 1 }) do
-		local gateLeaf = ensurePart(folder, "PreparationGate" .. (side < 0 and "Left" or "Right"))
+	local gateHeader = ensurePart(folder, "PreparationGateHeader")
+	configurePart(
+		gateHeader,
+		{
+			Size = Vector3.new(7.8, 0.28, 0.32),
+			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.78) + Vector3.new(0, 2.86, 0), runnerCenter - outward, Vector3.yAxis),
+			Material = frameMaterial,
+			Color = frameColor,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+		}
+	)
+	local gateThreshold = ensurePart(folder, "PreparationGateThreshold")
+	configurePart(
+		gateThreshold,
+		{
+			Size = Vector3.new(7.4, 0.12, 0.34),
+			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.74) + Vector3.new(0, -0.08, 0), runnerCenter - outward, Vector3.yAxis),
+			Material = frameMaterial,
+			Color = frameColor,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+		}
+	)
+	for _, side in ipairs({ -1, 1 }) do
+		local gateJamb = ensurePart(folder, "PreparationGateJamb" .. (side < 0 and "Left" or "Right"))
 		configurePart(
-			gateLeaf,
+			gateJamb,
 			{
-				Size = Vector3.new(1.5, 2.2, 0.18),
-				CFrame = CFrame.lookAt(runnerCenter + (right * side * 1.15) + (outward * -0.86) + Vector3.new(0, 0.84, 0), runnerCenter - outward, Vector3.yAxis),
+				Size = Vector3.new(0.28, 3.24, 0.28),
+				CFrame = CFrame.lookAt(runnerCenter + (right * side * 2.16) + (outward * -0.76) + Vector3.new(0, 1.34, 0), runnerCenter - outward, Vector3.yAxis),
 				Material = frameMaterial,
 				Color = frameColor,
 				CanCollide = false,
@@ -1933,13 +1981,31 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 				CanQuery = false,
 			}
 		)
+		gateJamb:SetAttribute("PreparationAccentIdleTransparency", 0)
+		gateJamb:SetAttribute("PreparationAccentFocusTransparency", 0)
+		gateJamb:SetAttribute("PreparationAccentBreachTransparency", 0.03)
+	end
+	for index, side in ipairs({ -1, 1 }) do
+		local gateLeaf = ensurePart(folder, "PreparationGate" .. (side < 0 and "Left" or "Right"))
+		configurePart(
+			gateLeaf,
+			{
+				Size = Vector3.new(2.0, 3.0, 0.22),
+				CFrame = CFrame.lookAt(runnerCenter + (right * side * 0.96) + (outward * -0.84) + Vector3.new(0, 1.24, 0), runnerCenter - outward, Vector3.yAxis),
+				Material = frameMaterial,
+				Color = frameColor,
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
 	end
 	local gateSeal = ensurePart(folder, "PreparationGateSeal")
 	configurePart(
 		gateSeal,
 		{
-			Size = Vector3.new(0.28, 2.04, 0.08),
-			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.78) + Vector3.new(0, 0.84, 0), runnerCenter - outward, Vector3.yAxis),
+			Size = Vector3.new(0.34, 2.84, 0.1),
+			CFrame = CFrame.lookAt(runnerCenter + (outward * -0.78) + Vector3.new(0, 1.24, 0), runnerCenter - outward, Vector3.yAxis),
 			Material = Enum.Material.Neon,
 			Color = readyAccent,
 			CanCollide = false,

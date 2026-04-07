@@ -3314,3 +3314,14 @@ Urutan yang paling masuk akal dari titik sekarang:
 - residual sesudah pass ini:
   - multi-trigger lanjutan ke `C1/C0` pada live `match HUD` masih belum final
 
+- progress tambahan pada lane `ghost visual regression + preparation entry clarity`:
+  - `Pocong` visual mesh source sekarang kembali ke `0.06 x 0.07 x 0.07`
+  - visual preview live in-game sudah saya pakai untuk mengunci ukuran ini tanpa mengubah logic bounds
+  - `Preparation` sekarang punya gate fisik yang jelas dan ikut state `closed -> open` saat breach
+- validasi terbaru:
+  - `DebugPocongPreview.MeshPart.Size = 0.06, 0.07, 0.07`
+  - `PreparationPhase -> gate collidable`
+  - `InvestigationPhase -> gate open, prompt breach hilang`
+- residual sesudah pass ini:
+  - still need premium art pass untuk entry gate bila mau naik ke presentasi final
+

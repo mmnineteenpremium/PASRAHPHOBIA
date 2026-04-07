@@ -2,7 +2,7 @@ return {
 	ghosts = {
 		Pocong = {
 			-- X = lebar, Y = tinggi, Z = ketebalan visual mesh utama.
-			meshSize = Vector3.new(0.07, 0.06, 0.07),
+			meshSize = Vector3.new(0.06, 0.07, 0.07),
 			-- Naik/turunkan mesh relatif ke HumanoidRootPart.
 			meshOffset = Vector3.new(0, 0.1, 0),
 			-- Clamp bounding box saat model di-spawn agar asset impor tidak raksasa.
