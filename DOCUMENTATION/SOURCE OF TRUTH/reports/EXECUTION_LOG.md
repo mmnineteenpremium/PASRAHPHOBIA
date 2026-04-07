@@ -12402,3 +12402,23 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - residual sesudah pass ini:
   - state `active` sudah terbukti dari jalur tool asli
   - state `spent` untuk preview `Salib` masih belum saya cap final karena `ConsumeHuntProtection` pada run ini menjawab `no_hunt_protection`
+
+- progress tambahan pada lane `player-facing asset integration`:
+  - `LobbyEvidenceTrainingUpdated` sekarang juga memaksa refresh:
+    - `:_refreshJournalPanel()`
+    - `:_refreshFieldKitPanel()`
+    - `:_applyVisibility()`
+  - ini menutup owner refresh kedua untuk training support tool di lobby
+- validasi terbaru:
+  - proof live jalur lobby training:
+    - `LobbyTrainingUseSupport(Garam)`
+    - `LobbyTrainingUseSupport(Salib)`
+    - `LobbyTrainingUseSupport(Dupa)`
+  - hasil:
+    - `GaramButton.ToolPreview -> Garam|active`
+    - `SalibButton.ToolPreview -> Salib|active`
+    - `DupaButton.ToolPreview -> Dupa|active`
+- status:
+  - preview asset HUD sekarang hidup di:
+    - jalur `match EvidenceEvent`
+    - jalur `lobby evidence training`
