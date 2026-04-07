@@ -3296,3 +3296,21 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `SalibSupportCard -> Salib|spent | world=true | camera=true | meta=C0`
   - proof `Salib|spent` pada live `match HUD` masih belum final
 
+- progress tambahan pada lane `player-facing asset integration`:
+  - `SupportStrip` sekarang juga terbukti hidup dari jalur event asli `LobbyTrainingUseSupport`
+  - drift `Salib` di live `match HUD` sudah turun satu level:
+    - setelah `ConsumeHuntProtection` pertama, HUD tetap `Salib|active` dengan `C2`
+    - tidak lagi langsung jatuh ke `ready/x2`
+- validasi terbaru:
+  - `TrainingFrame.Visible = true`
+  - `TrainingTitle = Jerangkong • CALM • ASSET LIVE`
+  - `GaramSupportCard -> Garam|active | world=true | camera=true | meta=AKTIF`
+  - `SalibSupportCard -> Salib|active | world=true | camera=true | meta=C3`
+  - `DupaSupportCard -> Dupa|active | world=true | camera=true | meta=AKTIF`
+  - live match HUD:
+    - `before consume -> Salib|active | C3`
+    - `after first consume -> Salib|active | C2`
+    - stabil sampled sampai `3.75s`
+- residual sesudah pass ini:
+  - multi-trigger lanjutan ke `C1/C0` pada live `match HUD` masih belum final
+

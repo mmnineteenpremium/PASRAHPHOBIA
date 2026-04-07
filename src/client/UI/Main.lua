@@ -1173,8 +1173,8 @@ local function resolveFieldKitToolPreviewState(toolName, toolState, selected, me
 	if metaDanger or toolState.lastSuccess == false then
 		return "danger"
 	end
-	if toolName == "Salib" and chargesRemaining ~= nil and chargesRemaining <= 0 and toolState.visualPlaced == true then
-		return "spent"
+	if toolName == "Salib" and chargesRemaining ~= nil then
+		return chargesRemaining <= 0 and "spent" or "active"
 	end
 	if usesRemaining ~= nil and usesRemaining <= 0 then
 		return "empty"
@@ -5366,6 +5366,10 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 		local chargesRemaining = tonumber(data.chargesRemaining)
 		if chargesRemaining ~= nil then
 			toolState.chargesRemaining = math.max(0, math.floor(chargesRemaining))
+			if toolType == "Salib" then
+				-- Keep crucifix visuals in a placed state so charge loss and burn-out can render on the HUD.
+				toolState.visualPlaced = true
+			end
 		end
 
 		local placementId = data.placementId
@@ -5384,7 +5388,7 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 	if eventName == "CrucifixTriggered" then
 		local chargesRemaining = tonumber(toolState.chargesRemaining)
 		if chargesRemaining ~= nil and chargesRemaining <= 0 then
-			toolState.visualPlaced = false
+			toolState.visualPlaced = true
 		end
 	end
 
@@ -5419,7 +5423,7 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	if cooldownActive or toolState.lastReason == "tool_local_cooldown" or toolState.lastReason == "tool_cooldown" then
 		return "COOLDOWN", false, "HOLD"
 	end
-	if toolType == "Salib" and chargesRemaining ~= nil and toolState.visualPlaced == true then
+	if toolType == "Salib" and chargesRemaining ~= nil then
 		return string.format("C%d", math.max(0, math.floor(chargesRemaining))), false, chargesRemaining > 0 and "GUARD" or "BURNT"
 	end
 	if toolState.visualPlaced == true then
