@@ -30,6 +30,10 @@ local DEFAULT_GHOST_TEMPLATE_VISUAL_OFFSETS = {
 	Pocong = Vector3.new(0, 0.1, 0),
 }
 
+local DEFAULT_GHOST_TEMPLATE_ROOT_SIZES = {
+	Pocong = Vector3.new(2, 2, 1),
+}
+
 local DEFAULT_GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {
 	Pocong = Vector3.new(1.08, 3.65, 0.96),
 }
@@ -53,11 +57,22 @@ local DEFAULT_GHOST_TEMPLATE_GROUNDED = {
 	Leak = true,
 }
 
+local DEFAULT_GHOST_TEMPLATE_MESH_PART_NAMES = {
+	Pocong = "material",
+}
+
+local DEFAULT_GHOST_TEMPLATE_CAST_SHADOW = {
+	Pocong = false,
+}
+
 local GHOST_TEMPLATE_VISUAL_OFFSETS = {}
+local GHOST_TEMPLATE_ROOT_SIZES = {}
 local GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {}
 local GHOST_TEMPLATE_TARGET_BOUNDS = {}
 local GHOST_TEMPLATE_MAX_HOVER_HEIGHT = {}
 local GHOST_TEMPLATE_GROUNDED = {}
+local GHOST_TEMPLATE_MESH_PART_NAMES = {}
+local GHOST_TEMPLATE_CAST_SHADOW = {}
 
 local GHOST_VISUAL_MOVE_SPEED_BY_STATE = {
 	Idle = 1.75,
@@ -281,6 +296,71 @@ local function safeRequire(moduleScript)
 	return nil
 end
 
+local function resolveGhostVisualProfileFolder()
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	return assets and assets:FindFirstChild("GhostVisualProfiles") or nil
+end
+
+local function resolveGhostVisualProfile(ghostType)
+	if type(ghostType) ~= "string" or ghostType == "" then
+		return nil
+	end
+	local folder = resolveGhostVisualProfileFolder()
+	if not folder then
+		return nil
+	end
+	local moduleScript = folder:FindFirstChild(ghostType)
+	if not (moduleScript and moduleScript:IsA("ModuleScript")) then
+		return nil
+	end
+	local profile = safeRequire(moduleScript)
+	if type(profile) ~= "table" then
+		return nil
+	end
+	return profile
+end
+
+local function coerceProfileVector3(value)
+	if typeof(value) == "Vector3" then
+		return value
+	end
+	if type(value) ~= "table" then
+		return nil
+	end
+
+	local x = tonumber(value.x or value.X or value[1])
+	local y = tonumber(value.y or value.Y or value[2])
+	local z = tonumber(value.z or value.Z or value[3])
+	if x and y and z then
+		return Vector3.new(x, y, z)
+	end
+	return nil
+end
+
+local function buildGhostTemplateCandidateNames(ghostType, profile)
+	local seen = {}
+	local candidates = {}
+
+	local function addCandidate(name)
+		if type(name) ~= "string" or name == "" or seen[name] then
+			return
+		end
+		seen[name] = true
+		table.insert(candidates, name)
+	end
+
+	addCandidate(ghostType)
+	addCandidate("Ghost_" .. tostring(ghostType))
+
+	local modelName = type(profile) == "table" and profile.modelName or nil
+	addCandidate(modelName)
+	if type(modelName) == "string" and string.sub(modelName, 1, 6) == "Ghost_" then
+		addCandidate(string.sub(modelName, 7))
+	end
+
+	return candidates
+end
+
 local function resolveGhostModelTemplate(ghostType)
 	if type(ghostType) ~= "string" or ghostType == "" then
 		return nil
@@ -297,13 +377,21 @@ local function resolveGhostModelTemplate(ghostType)
 	if not ghosts then
 		return nil
 	end
-	local exact = ghosts:FindFirstChild(ghostType)
-	if exact and exact:IsA("Model") then
-		return exact
+
+	local profile = resolveGhostVisualProfile(ghostType)
+	for _, candidateName in ipairs(buildGhostTemplateCandidateNames(ghostType, profile)) do
+		local candidate = ghosts:FindFirstChild(candidateName)
+		if candidate and candidate:IsA("Model") then
+			return candidate
+		end
 	end
-	local fallback = ghosts:FindFirstChild("Pocong")
-	if fallback and fallback:IsA("Model") then
-		return fallback
+
+	local fallbackProfile = resolveGhostVisualProfile("Pocong")
+	for _, candidateName in ipairs(buildGhostTemplateCandidateNames("Pocong", fallbackProfile)) do
+		local candidate = ghosts:FindFirstChild(candidateName)
+		if candidate and candidate:IsA("Model") then
+			return candidate
+		end
 	end
 	return nil
 end
@@ -388,6 +476,9 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 		return nil
 	end
 
+	local preferredRootSize = GHOST_TEMPLATE_ROOT_SIZES[ghostType]
+	local preferredCastShadow = GHOST_TEMPLATE_CAST_SHADOW[ghostType]
+
 	local ghostModel = template:Clone()
 	ghostModel.Name = string.format("Ghost_%s", tostring(ghostType or "Unknown"))
 	ghostModel:SetAttribute("GhostType", ghostType)
@@ -402,6 +493,9 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 			descendant.Anchored = true
 			if shouldHideGhostControlPart(descendant) then
 				descendant.Transparency = 1
+				descendant.CastShadow = false
+			elseif type(preferredCastShadow) == "boolean" then
+				descendant.CastShadow = preferredCastShadow
 			end
 		end
 	end
@@ -410,7 +504,11 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 
 	local root = ghostModel:FindFirstChild("HumanoidRootPart", true)
 	if root and root:IsA("BasePart") then
-		root.Size = Vector3.new(2, 2, 1)
+		if typeof(preferredRootSize) == "Vector3" then
+			root.Size = preferredRootSize
+		else
+			root.Size = Vector3.new(2, 2, 1)
+		end
 		root.Transparency = 1
 		root.CanCollide = false
 		root.CanTouch = false
@@ -428,7 +526,17 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 
 	if ghostModel.PrimaryPart then
 		local visualOffset = GHOST_TEMPLATE_VISUAL_OFFSETS[ghostType]
-		local visualMesh = ghostModel:FindFirstChildWhichIsA("MeshPart", true)
+		local visualMesh = nil
+		local preferredMeshPartName = GHOST_TEMPLATE_MESH_PART_NAMES[ghostType]
+		if type(preferredMeshPartName) == "string" and preferredMeshPartName ~= "" then
+			local candidate = ghostModel:FindFirstChild(preferredMeshPartName, true)
+			if candidate and candidate:IsA("MeshPart") then
+				visualMesh = candidate
+			end
+		end
+		if not visualMesh then
+			visualMesh = ghostModel:FindFirstChildWhichIsA("MeshPart", true)
+		end
 		if visualMesh then
 			local forcedSize = GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES[ghostType]
 			if typeof(forcedSize) == "Vector3" then
@@ -501,16 +609,29 @@ local function copyGhostVisualBooleanMap(source)
 	return out
 end
 
+local function copyGhostVisualStringMap(source)
+	local out = {}
+	for ghostType, value in pairs(source or {}) do
+		if type(ghostType) == "string" and type(value) == "string" and value ~= "" then
+			out[ghostType] = value
+		end
+	end
+	return out
+end
+
 local function loadGhostVisualTuning()
 	local offsets = copyGhostVisualVectorMap(DEFAULT_GHOST_TEMPLATE_VISUAL_OFFSETS)
+	local rootSizes = copyGhostVisualVectorMap(DEFAULT_GHOST_TEMPLATE_ROOT_SIZES)
 	local meshSizes = copyGhostVisualVectorMap(DEFAULT_GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES)
 	local bounds = copyGhostVisualVectorMap(DEFAULT_GHOST_TEMPLATE_TARGET_BOUNDS)
 	local maxHoverHeights = copyGhostVisualNumberMap(DEFAULT_GHOST_TEMPLATE_MAX_HOVER_HEIGHT)
 	local grounded = copyGhostVisualBooleanMap(DEFAULT_GHOST_TEMPLATE_GROUNDED)
+	local meshPartNames = copyGhostVisualStringMap(DEFAULT_GHOST_TEMPLATE_MESH_PART_NAMES)
+	local castShadow = copyGhostVisualBooleanMap(DEFAULT_GHOST_TEMPLATE_CAST_SHADOW)
 	local tuning = safeRequire(resolveSharedGameDataModule("GhostVisualTuning"))
 	local ghosts = type(tuning) == "table" and tuning.ghosts or nil
 	if type(ghosts) ~= "table" then
-		return offsets, meshSizes, bounds, maxHoverHeights, grounded
+		ghosts = {}
 	end
 
 	for ghostType, config in pairs(ghosts) do
@@ -533,14 +654,61 @@ local function loadGhostVisualTuning()
 		end
 	end
 
-	return offsets, meshSizes, bounds, maxHoverHeights, grounded
+	local profilesFolder = resolveGhostVisualProfileFolder()
+	if profilesFolder then
+		for _, child in ipairs(profilesFolder:GetChildren()) do
+			if child:IsA("ModuleScript") then
+				local profile = safeRequire(child)
+				if type(profile) == "table" then
+					local ghostType = child.Name
+					local visualOffset = coerceProfileVector3(profile.visualOffset)
+					if visualOffset then
+						offsets[ghostType] = visualOffset
+					end
+
+					local meshSize = coerceProfileVector3(profile.size)
+					if meshSize then
+						meshSizes[ghostType] = meshSize
+					end
+
+					local rootSize = coerceProfileVector3(profile.rootSize)
+					if rootSize then
+						rootSizes[ghostType] = rootSize
+					end
+
+					local targetBounds = coerceProfileVector3(profile.targetBounds) or meshSize
+					if targetBounds then
+						bounds[ghostType] = targetBounds
+					end
+
+					if type(profile.maxHoverHeight) == "number" then
+						maxHoverHeights[ghostType] = math.max(0, profile.maxHoverHeight)
+					end
+					if type(profile.grounded) == "boolean" then
+						grounded[ghostType] = profile.grounded
+					end
+					if type(profile.meshPartName) == "string" and profile.meshPartName ~= "" then
+						meshPartNames[ghostType] = profile.meshPartName
+					end
+					if type(profile.castShadow) == "boolean" then
+						castShadow[ghostType] = profile.castShadow
+					end
+				end
+			end
+		end
+	end
+
+	return offsets, meshSizes, bounds, maxHoverHeights, grounded, rootSizes, meshPartNames, castShadow
 end
 
 GHOST_TEMPLATE_VISUAL_OFFSETS,
 	GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES,
 	GHOST_TEMPLATE_TARGET_BOUNDS,
 	GHOST_TEMPLATE_MAX_HOVER_HEIGHT,
-	GHOST_TEMPLATE_GROUNDED = loadGhostVisualTuning()
+	GHOST_TEMPLATE_GROUNDED,
+	GHOST_TEMPLATE_ROOT_SIZES,
+	GHOST_TEMPLATE_MESH_PART_NAMES,
+	GHOST_TEMPLATE_CAST_SHADOW = loadGhostVisualTuning()
 
 local function loadMapDatabase()
 	local database = safeRequire(resolveSharedGameDataModule("MapConfig"))

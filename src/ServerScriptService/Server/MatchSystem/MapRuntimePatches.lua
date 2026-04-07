@@ -832,6 +832,78 @@ local function configureAccentDrivenPart(part, properties, idleTransparency, foc
 	return part
 end
 
+local function resolveReplicatedAssetModelTemplate(categoryName, modelName)
+	local replicatedStorage = game:GetService("ReplicatedStorage")
+	local assets = replicatedStorage:FindFirstChild("Assets")
+	local models = assets and assets:FindFirstChild("Models")
+	local categoryFolder = models and models:FindFirstChild(tostring(categoryName or ""))
+	local template = categoryFolder and categoryFolder:FindFirstChild(tostring(modelName or ""))
+	if template and template:IsA("Model") then
+		return template
+	end
+	return nil
+end
+
+local function configureRuntimeModel(model, options)
+	if not (model and model:IsA("Model")) then
+		return model
+	end
+
+	local desiredCollision = type(options) == "table" and options.canCollide == true or false
+	local desiredQuery = type(options) == "table" and options.canQuery == true or false
+	local desiredShadow = type(options) == "table" and options.castShadow == true or false
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.Anchored = true
+			descendant.CanCollide = desiredCollision
+			descendant.CanTouch = false
+			descendant.CanQuery = desiredQuery
+			descendant.CastShadow = desiredShadow
+		end
+	end
+	return model
+end
+
+local function syncRuntimeAssetModel(parent, runtimeName, categoryName, modelName, targetCFrame, options)
+	if typeof(parent) ~= "Instance" then
+		return nil
+	end
+
+	local template = resolveReplicatedAssetModelTemplate(categoryName, modelName)
+	local existing = parent:FindFirstChild(runtimeName)
+	if not (template and template:IsA("Model")) then
+		if existing then
+			existing:Destroy()
+		end
+		return nil
+	end
+
+	local sourceToken = string.format("%s/%s", tostring(categoryName or ""), tostring(modelName or ""))
+	local model = existing
+	if not (model and model:IsA("Model") and model:GetAttribute("PasrahAssetSourceToken") == sourceToken) then
+		if model then
+			model:Destroy()
+		end
+		model = template:Clone()
+		model.Name = runtimeName
+		model:SetAttribute("PasrahAssetSourceToken", sourceToken)
+		model.Parent = parent
+	end
+
+	configureRuntimeModel(model, options)
+	if type(options) == "table" and type(options.scale) == "number" and options.scale > 0 then
+		pcall(function()
+			model:ScaleTo(options.scale)
+		end)
+	end
+	if typeof(targetCFrame) == "CFrame" then
+		pcall(function()
+			model:PivotTo(targetCFrame)
+		end)
+	end
+	return model
+end
+
 local function ensureBoardSurface(part, surfaceName, face, titleText, subtitleText, bodyLines, accentColor)
 	if not (part and part:IsA("BasePart")) then
 		return nil
@@ -1025,6 +1097,7 @@ local function buildPreparationBoardContent(mapId, matchContext)
 		"Field kit issued for first sweep.",
 		"EMF • UV CAM • THERMO",
 		"BOX • WRITING • SENSOR",
+		"Support kit: GARAM • SALIB • DUPA",
 		"Gunakan rack kanan untuk review urutan tool awal.",
 	}
 
@@ -1046,6 +1119,7 @@ local function updatePreparationToolsBoard(boardPart, selectedTool)
 		"Field kit issued for first sweep.",
 		"EMF • UV CAM • THERMO",
 		"BOX • WRITING • SENSOR",
+		"Support kit: GARAM • SALIB • DUPA",
 	}
 	local subtitle = "Default field kit briefing"
 	if type(selectedTool) == "string" and selectedTool ~= "" then
@@ -3675,6 +3749,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			}
 	)
 
+	local equipmentCases = {}
 	for index, side in ipairs({ -1, 1, 0 }) do
 		local case = ensurePart(folder, "PreparationEquipmentCase_" .. tostring(index))
 		local offsetX = side == 0 and 0 or side * 6.2
@@ -3693,6 +3768,46 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				CanCollide = true,
 				CanTouch = false,
 				CanQuery = true,
+			}
+		)
+		equipmentCases[side] = case
+	end
+	if equipmentCases[-1] then
+		syncRuntimeAssetModel(
+			folder,
+			"PreparationSupportTool_Garam",
+			"Tools",
+			"Garam",
+			equipmentCases[-1].CFrame * CFrame.new(0, equipmentCases[-1].Size.Y * 0.5 + 0.12, 0.08) * CFrame.Angles(0, math.rad(18), 0),
+			{
+				scale = 0.98,
+				castShadow = false,
+			}
+		)
+	end
+	if equipmentCases[1] then
+		syncRuntimeAssetModel(
+			folder,
+			"PreparationSupportTool_Dupa",
+			"Tools",
+			"Dupa",
+			equipmentCases[1].CFrame * CFrame.new(0, equipmentCases[1].Size.Y * 0.5 + 0.1, -0.06) * CFrame.Angles(0, math.rad(-24), math.rad(8)),
+			{
+				scale = 1.0,
+				castShadow = false,
+			}
+		)
+	end
+	if equipmentCases[0] then
+		syncRuntimeAssetModel(
+			folder,
+			"PreparationSupportTool_Salib",
+			"Tools",
+			"Salib",
+			equipmentCases[0].CFrame * CFrame.new(0, equipmentCases[0].Size.Y * 0.5 + 1.02, 0.04) * CFrame.Angles(0, math.rad(180), 0),
+			{
+				scale = 0.82,
+				castShadow = false,
 			}
 		)
 	end

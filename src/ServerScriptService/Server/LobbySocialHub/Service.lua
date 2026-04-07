@@ -67,5 +67,21 @@ function Service:ApplyCosmetic(player, cosmeticId, category)
     return self._lobbyService:ApplyCosmetic(player, cosmeticId, category)
 end
 
+function Service:StudioGetEvidenceTrainingSnapshot()
+    return self._lobbyService:StudioGetEvidenceTrainingSnapshot()
+end
+
+function Service:StudioUseEvidenceTrainingTool(player, token)
+    return self._lobbyService:StudioUseEvidenceTrainingTool(player, token)
+end
+
+function Service:StudioUseEvidenceTrainingSupportTool(player, token)
+    return self._lobbyService:StudioUseEvidenceTrainingSupportTool(player, token)
+end
+
+function Service:StudioRotateEvidenceTrainingGhost(excludedGhostType)
+    return self._lobbyService:StudioRotateEvidenceTrainingGhost(excludedGhostType)
+end
+
 return Service
 

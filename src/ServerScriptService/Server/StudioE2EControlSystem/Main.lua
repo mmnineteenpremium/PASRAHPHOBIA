@@ -32,6 +32,36 @@ local STUDIO_TOOL_EVIDENCE_MAP = {
 	BolaArwah = "To'un",
 	TounDetection = "To'un",
 }
+local LOBBY_TRAINING_TOOL_PART_MAP = {
+	emf = "Table_Tools_1",
+	jejakenergi = "Table_Tools_1",
+	uv = "Table_Tools_2",
+	uvcam = "Table_Tools_2",
+	bolaarwah = "Table_Tools_2",
+	thermo = "Table_Tools_3",
+	suhumembeku = "Table_Tools_3",
+	box = "Table_Tools_4",
+	spiritbox = "Table_Tools_4",
+	kotakarwah = "Table_Tools_4",
+	writing = "Table_Tools_5",
+	bukuterkutuk = "Table_Tools_5",
+	sensor = "Table_Tools_6",
+	gerakangaib = "Table_Tools_6",
+}
+local LOBBY_TRAINING_SUPPORT_MAP = {
+	garam = {
+		label = "GARAM",
+		toolType = "Garam",
+	},
+	salib = {
+		label = "SALIB",
+		toolType = "Salib",
+	},
+	dupa = {
+		label = "DUPA",
+		toolType = "Dupa",
+	},
+}
 
 local function resolveService(deps, name, methodName)
 	local service = Services.Get(deps, name)
@@ -109,6 +139,23 @@ local function countEntries(source)
 		total += 1
 	end
 	return total
+end
+
+local function cloneArray(source)
+	if type(source) ~= "table" then
+		return {}
+	end
+	local copy = {}
+	for _, value in ipairs(source) do
+		table.insert(copy, value)
+	end
+	return copy
+end
+
+local function normalizeToken(value)
+	local token = tostring(value or "")
+	token = token:gsub("[%s%p_%-]+", ""):lower()
+	return token
 end
 
 local function coerceVector3(value)
@@ -358,6 +405,81 @@ function StudioE2EControlSystem:_handleSimulateLobbyZone(player, request)
 	end
 	self._lobbyHubService:OnPlayerEnteredZone(player, zoneName)
 	return true, string.format("zone=%s simulated", zoneName)
+end
+
+function StudioE2EControlSystem:_handleLobbyTrainingSnapshot(player, request)
+	local registry = rawget(_G, "SystemRegistry")
+	local registryLobbyHub = type(registry) == "table"
+		and ((type(registry.GetService) == "function" and registry:GetService("LobbySocialHub")) or (type(registry.Get) == "function" and registry:Get("LobbySocialHub")))
+		or nil
+	local lobbyHubSystem = registryLobbyHub or resolveSystem(self._deps, "LobbySocialHub") or self._lobbyHubService
+	local lobbyHub = type(lobbyHubSystem) == "table"
+		and (type(lobbyHubSystem.StudioGetEvidenceTrainingSnapshot) == "function" and lobbyHubSystem or lobbyHubSystem.Service)
+		or nil
+	if type(lobbyHub) ~= "table" or type(lobbyHub.StudioGetEvidenceTrainingSnapshot) ~= "function" then
+		return false, "missing_lobby_training_service"
+	end
+
+	return true, HttpService:JSONEncode(lobbyHub:StudioGetEvidenceTrainingSnapshot())
+end
+
+function StudioE2EControlSystem:_handleLobbyTrainingUseTool(player, request)
+	local registry = rawget(_G, "SystemRegistry")
+	local registryLobbyHub = type(registry) == "table"
+		and ((type(registry.GetService) == "function" and registry:GetService("LobbySocialHub")) or (type(registry.Get) == "function" and registry:Get("LobbySocialHub")))
+		or nil
+	local lobbyHubSystem = registryLobbyHub or resolveSystem(self._deps, "LobbySocialHub") or self._lobbyHubService
+	local lobbyHub = type(lobbyHubSystem) == "table"
+		and (type(lobbyHubSystem.StudioUseEvidenceTrainingTool) == "function" and lobbyHubSystem or lobbyHubSystem.Service)
+		or nil
+	if type(lobbyHub) ~= "table" or type(lobbyHub.StudioUseEvidenceTrainingTool) ~= "function" then
+		return false, "missing_lobby_training_service"
+	end
+
+	local token = type(request) == "table" and (request.tool or request.toolType or request.partName) or ""
+	local okUse, result = lobbyHub:StudioUseEvidenceTrainingTool(player, token)
+	if okUse ~= true then
+		return false, tostring(result or "lobby_training_tool_failed")
+	end
+	return true, HttpService:JSONEncode(result)
+end
+
+function StudioE2EControlSystem:_handleLobbyTrainingUseSupport(player, request)
+	local registry = rawget(_G, "SystemRegistry")
+	local registryLobbyHub = type(registry) == "table"
+		and ((type(registry.GetService) == "function" and registry:GetService("LobbySocialHub")) or (type(registry.Get) == "function" and registry:Get("LobbySocialHub")))
+		or nil
+	local lobbyHubSystem = registryLobbyHub or resolveSystem(self._deps, "LobbySocialHub") or self._lobbyHubService
+	local lobbyHub = type(lobbyHubSystem) == "table"
+		and (type(lobbyHubSystem.StudioUseEvidenceTrainingSupportTool) == "function" and lobbyHubSystem or lobbyHubSystem.Service)
+		or nil
+	if type(lobbyHub) ~= "table" or type(lobbyHub.StudioUseEvidenceTrainingSupportTool) ~= "function" then
+		return false, "missing_lobby_training_service"
+	end
+
+	local token = type(request) == "table" and (request.tool or request.toolType or request.supportTool) or ""
+	local okUse, result = lobbyHub:StudioUseEvidenceTrainingSupportTool(player, token)
+	if okUse ~= true then
+		return false, tostring(result or "lobby_support_tool_failed")
+	end
+	return true, HttpService:JSONEncode(result)
+end
+
+function StudioE2EControlSystem:_handleLobbyTrainingRotate(player, request)
+	local registry = rawget(_G, "SystemRegistry")
+	local registryLobbyHub = type(registry) == "table"
+		and ((type(registry.GetService) == "function" and registry:GetService("LobbySocialHub")) or (type(registry.Get) == "function" and registry:Get("LobbySocialHub")))
+		or nil
+	local lobbyHubSystem = registryLobbyHub or resolveSystem(self._deps, "LobbySocialHub") or self._lobbyHubService
+	local lobbyHub = type(lobbyHubSystem) == "table"
+		and (type(lobbyHubSystem.StudioRotateEvidenceTrainingGhost) == "function" and lobbyHubSystem or lobbyHubSystem.Service)
+		or nil
+	if type(lobbyHub) ~= "table" or type(lobbyHub.StudioRotateEvidenceTrainingGhost) ~= "function" then
+		return false, "missing_lobby_training_service"
+	end
+
+	local excludedGhostType = type(request) == "table" and tostring(request.excludedGhostType or request.excludeGhostType or "") or ""
+	return true, HttpService:JSONEncode(lobbyHub:StudioRotateEvidenceTrainingGhost(excludedGhostType))
 end
 
 function StudioE2EControlSystem:_handleForceHunt(player, request)
@@ -1404,6 +1526,14 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleSetPreparationFocusTool(player, request)
 	elseif action == "SimulateLobbyZone" then
 		ok, result = self:_handleSimulateLobbyZone(player, request)
+	elseif action == "LobbyTrainingSnapshot" then
+		ok, result = self:_handleLobbyTrainingSnapshot(player, request)
+	elseif action == "LobbyTrainingUseTool" then
+		ok, result = self:_handleLobbyTrainingUseTool(player, request)
+	elseif action == "LobbyTrainingUseSupport" then
+		ok, result = self:_handleLobbyTrainingUseSupport(player, request)
+	elseif action == "LobbyTrainingRotate" then
+		ok, result = self:_handleLobbyTrainingRotate(player, request)
 	elseif action == "ForceHunt" then
 		ok, result = self:_handleForceHunt(player, request)
 	elseif action == "ExtractSelf" then

@@ -12304,3 +12304,48 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - residual lane menyempit ke:
     - premium asset/non-primitive
     - final art polish
+
+- progress tambahan pada lane `asset integration`:
+  - asset baru `Garam / Salib / Dupa` sekarang dipakai tegas oleh jalur visual utility tool match, bukan hanya display lobby/staging
+  - `UtilityToolVisuals` sekarang menandai runtime model dengan atribut:
+    - `PasrahUtilityToolType`
+    - `PasrahUtilityTemplateName`
+    - `PasrahUtilityUsesAsset`
+    - `PasrahUtilityVisualState`
+  - state visual runtime sekarang ikut bukti gameplay:
+    - `Garam` -> `Triggered`
+    - `Salib` -> `Armed` + `PasrahUtilityChargesRemaining`
+    - `Dupa` -> `Repel` + `PasrahUtilityRepelledHunt`
+  - `GhostSystem` sekarang membaca `Assets/GhostVisualProfiles/*` sebagai overlay authoritative untuk:
+    - `visualOffset`
+    - `size`
+    - `rootSize`
+    - `targetBounds`
+    - `meshPartName`
+    - `castShadow`
+  - `Pocong` asset sekarang tidak lagi jatuh ke tuning mesh mini lama `0.07 x 0.06 x 0.07`
+  - `Lobby evidence training` sekarang memprioritaskan ghost yang memang punya asset model
+- validasi terbaru:
+  - proof edit-runtime via cloned live module:
+    - `Preview_Pocong`:
+      - `template = Pocong`
+      - `meshName = material`
+      - `meshSize = 1.4 x 5.2 x 1.2`
+      - `rootSize = 2 x 2 x 1`
+    - `Garam_salt_probe`:
+      - `template = Garam`
+      - `usesAsset = true`
+      - `state = Triggered`
+    - `Salib_cross_probe`:
+      - `template = Salib`
+      - `usesAsset = true`
+      - `state = Armed`
+      - `charges = 2`
+    - `Dupa_smudge_probe`:
+      - `template = Dupa`
+      - `usesAsset = true`
+      - `state = Repel`
+      - `repelled = true`
+- status:
+  - **LANJUT / ASSET BARU SUDAH MASUK JALUR GAMEPLAY UTAMA**.
+  - residual menyempit ke asset pass berikutnya yang benar-benar baru, bukan wiring asset yang sudah ada
