@@ -954,6 +954,7 @@ function MatchService:StartMatch(matchId)
 			player:SetAttribute("MatchDifficulty", tostring(match.difficulty or "Mudah"))
 			player:SetAttribute("MatchMapId", tostring(match.mapId or match.map or ""))
 			player:SetAttribute("MatchLifecyclePhase", tostring(match.phase or "PreparationPhase"))
+			player:SetAttribute("PreparationFocusTool", nil)
 		end
 	end
 
@@ -1248,6 +1249,7 @@ function MatchService:EndMatch(matchId, results)
 			player:SetAttribute("MatchDifficulty", nil)
 			player:SetAttribute("MatchMapId", nil)
 			player:SetAttribute("MatchLifecyclePhase", nil)
+			player:SetAttribute("PreparationFocusTool", nil)
 		end
 		self:_publish("PlayerTeleported", {
 			player = player,

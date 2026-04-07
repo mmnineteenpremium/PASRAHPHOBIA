@@ -12030,3 +12030,56 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - residual lane yang tersisa praktis tinggal:
     - premium asset/non-primitive
     - presentational polish/sinematik yang lebih mewah
+
+- pass lanjutan pada lane `outside match preparation staging`:
+  - `PreparationPhase` sekarang punya visual profile client yang berbeda dari investigasi normal
+  - source owner:
+    - [VFXController.luau](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/Controllers/Sensory/VFXController.luau)
+    - [MatchService.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MatchService.lua)
+  - per profile map, briefing luar sekarang menaikkan readability staging:
+    - exposure
+    - bloom
+    - sun rays
+    - atmosphere density
+    - tint grading
+  - saat `PreparationFocusTool` dipilih, tint staging ikut bergeser ke aksen tool
+  - `PreparationFocusTool` juga sekarang di-reset saat `StartMatch` dan `EndMatch`, jadi staging baru selalu mulai netral
+- validasi:
+  - build:
+    - `_tmp_match_preparation_vfx_build.rbxlx`
+    - `_tmp_match_preparation_polish_build.rbxlx`
+  - `HauntedHouse`:
+    - state default `PreparationPhase`:
+      - `PasrahVFXPreparationActive = true`
+      - `Exposure = 0.12`
+      - `Bloom = 0.14`
+      - `SunRays = 0.038`
+      - `AtmosphereDensity = 0.305`
+      - tint hangat staging luar
+    - sesudah pilih `EMF`:
+      - `PasrahVFXPreparationTool = EMF`
+      - tint bergeser ke aksen biru `EMF`
+      - `Bloom = 0.0926`
+      - `SunRays = 0.0243`
+      - `AtmosphereDensity = 0.3234`
+    - sesudah `InvestigationPhase`:
+      - `Exposure = 0`
+      - `Bloom = 0.05`
+      - `SunRays = 0.012`
+      - `AtmosphereDensity = 0.34`
+      - profile kembali ke investigasi normal
+    - `PreparationFocusTool` default saat start match baru:
+      - `nil`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lane sekarang sudah punya:
+    - world-space staging luar
+    - briefing board
+    - focus tool
+    - ambience preview
+    - breach authoritative
+    - breach move-to-entry
+    - client visual profile khusus briefing luar
+  - residual yang benar-benar tersisa turun ke:
+    - premium asset/model pass
+    - presentational polish/sinematik tingkat akhir

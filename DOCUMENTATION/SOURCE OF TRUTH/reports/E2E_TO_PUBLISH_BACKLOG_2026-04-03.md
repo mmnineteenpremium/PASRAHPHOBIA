@@ -2847,6 +2847,46 @@ Urutan yang paling masuk akal dari titik sekarang:
   - presentational polish/sinematik breach bila mau naik ke finishing premium
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - `PreparationPhase` sekarang punya visual profile client khusus
+  - owner:
+    - `VFXController`
+    - `MatchService`
+  - staging luar sekarang mengubah:
+    - `Exposure`
+    - `Bloom`
+    - `SunRays`
+    - `AtmosphereDensity`
+    - `MapGrading Tint`
+  - saat `PreparationFocusTool` dipilih, tint staging ikut bergeser ke aksen tool
+  - `PreparationFocusTool` di-reset saat `StartMatch` dan `EndMatch`, jadi briefing match baru tidak mewarisi focus tool lama
+- validasi terbaru:
+  - build:
+    - `_tmp_match_preparation_vfx_build.rbxlx`
+    - `_tmp_match_preparation_polish_build.rbxlx`
+  - `HauntedHouse`:
+    - default `PreparationPhase`:
+      - `PasrahVFXPreparationActive = true`
+      - `Exposure = 0.12`
+      - `Bloom = 0.14`
+      - `SunRays = 0.038`
+      - `AtmosphereDensity = 0.305`
+      - `PreparationFocusTool = nil`
+    - sesudah pilih `EMF`:
+      - `PasrahVFXPreparationTool = EMF`
+      - tint bergeser ke aksen `EMF`
+      - `Bloom = 0.0926`
+      - `SunRays = 0.0243`
+      - `AtmosphereDensity = 0.3234`
+    - sesudah `InvestigationPhase`:
+      - `Exposure = 0`
+      - `Bloom = 0.05`
+      - `SunRays = 0.012`
+      - `AtmosphereDensity = 0.34`
+- residual sesudah pass ini:
+  - premium asset/model staging luar bila mau naik ke art final
+  - presentational polish/sinematik tingkat akhir
+
+- progress tambahan pada lane `outside match preparation staging`:
   - profile staging sekarang dibedakan per map:
     - `HauntedHouse` -> `CONTRACT BAY`
     - `AbandonedPalace` -> `PALACE GATE`
