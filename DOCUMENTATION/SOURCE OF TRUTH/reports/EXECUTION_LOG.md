@@ -12206,3 +12206,41 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - residual lane turun ke:
     - premium asset/non-primitive
     - polish artistik/presentasional akhir
+
+- progress tambahan pada lane `outside match preparation staging`:
+  - trim kit staging sekarang ikut state `idle / focus / breach`
+  - owner source:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - perubahan:
+    - `PreparationRunnerInset`
+    - `PreparationCanopyTrim`
+    - `PreparationPlatformTrim_Front/Back/Left/Right`
+    - `PreparationSiteCrest`
+    - `ToolStation_*_Pad`
+  - state pad dan trim sekarang ikut aksen lane, bukan diam statis
+- validasi:
+  - build:
+    - `_tmp_match_preparation_trim_pass_build.rbxlx`
+  - default `PreparationPhase`:
+    - `PreparationRunnerInset = present`
+    - `runnerTransparency = 0.28`
+    - `PreparationSiteCrest = present`
+    - `ToolStation_EMF_Pad = present`
+    - `padTransparency = 0.30`
+  - sesudah `SetPreparationFocusTool(EMF)`:
+    - `runner = 0.517647, 0.729412, 1`
+    - `runnerTransparency = 0.14`
+    - `crest = 0.517647, 0.729412, 1`
+    - `pad = 0.517647, 0.729412, 1`
+    - `padTransparency = 0.12`
+  - sesudah `AdvancePhase -> InvestigationPhase`:
+    - `runner = 0.556863, 0.839216, 0.776471`
+    - `runnerTransparency = 0.08`
+    - `crestTransparency = 0.02`
+    - `padTransparency = 0.08`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - staging luar sekarang jauh lebih dekat ke presentational pass akhir
+  - residual utama tinggal:
+    - premium asset/non-primitive
+    - final art polish

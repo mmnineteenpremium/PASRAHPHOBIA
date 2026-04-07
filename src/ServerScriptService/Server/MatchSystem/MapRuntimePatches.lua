@@ -1062,7 +1062,7 @@ local function updatePreparationToolsBoard(boardPart, selectedTool)
 	)
 end
 
-local function updatePreparationToolStationState(toolPart, prompt, toolData, selectedTool, breachOpen)
+local function updatePreparationToolStationState(toolPart, prompt, toolData, selectedTool, breachOpen, statePad)
 	if not (toolPart and toolPart:IsA("BasePart") and type(toolData) == "table") then
 		return
 	end
@@ -1078,12 +1078,22 @@ local function updatePreparationToolStationState(toolPart, prompt, toolData, sel
 
 	local stateSubtitle = toolData.subtitle or ""
 	local stateBody = ""
+	local padColor = accentColor:Lerp(Color3.fromRGB(28, 34, 44), 0.62)
+	local padTransparency = 0.3
 	if breachOpen then
 		stateSubtitle = isSelected and "Focus active • breach live" or "Rack locked • breach live"
 		stateBody = isSelected and "Masuk dan buka sweep awal dengan tool ini." or "Ubah fokus hanya tersedia saat staging luar."
+		if isSelected then
+			padColor = accentColor:Lerp(Color3.fromRGB(220, 250, 240), 0.22)
+			padTransparency = 0.08
+		else
+			padTransparency = 0.4
+		end
 	elseif isSelected then
 		stateSubtitle = "Focus active • use first"
 		stateBody = "Gunakan tool ini untuk sweep pertama sebelum ganti jalur evidence."
+		padColor = accentColor
+		padTransparency = 0.12
 	end
 
 	ensureBoardSurface(
@@ -1135,6 +1145,11 @@ local function updatePreparationToolStationState(toolPart, prompt, toolData, sel
 	stateLight.Brightness = isSelected and 1.8 or 0
 	stateLight.Range = isSelected and 11 or 0
 	stateLight.Enabled = isSelected
+
+	if statePad and statePad:IsA("BasePart") then
+		statePad.Color = padColor
+		statePad.Transparency = padTransparency
+	end
 
 	if prompt and prompt:IsA("ProximityPrompt") then
 		if breachOpen then
@@ -1365,6 +1380,52 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 		runner.Material = type(profile) == "table" and profile.runnerMaterial or runner.Material
 	end
 
+	local runnerInset = folder:FindFirstChild("PreparationRunnerInset")
+	if runnerInset and runnerInset:IsA("BasePart") then
+		if stateChanged then
+			tweenPreparationProperties(runnerInset, PREPARATION_FAST_TWEEN_INFO, {
+				Color = accent,
+				Transparency = breachOpen and 0.08 or (type(selectedTool) == "string" and selectedTool ~= "" and 0.14 or 0.28),
+			})
+		else
+			runnerInset.Color = accent
+			runnerInset.Transparency = breachOpen and 0.08 or (type(selectedTool) == "string" and selectedTool ~= "" and 0.14 or 0.28)
+		end
+	end
+
+	local canopyTrim = folder:FindFirstChild("PreparationCanopyTrim")
+	if canopyTrim and canopyTrim:IsA("BasePart") then
+		if stateChanged then
+			tweenPreparationProperties(canopyTrim, PREPARATION_FAST_TWEEN_INFO, {
+				Color = accent,
+				Transparency = breachOpen and 0.04 or 0.16,
+			})
+		else
+			canopyTrim.Color = accent
+			canopyTrim.Transparency = breachOpen and 0.04 or 0.16
+		end
+	end
+
+	for _, trimName in ipairs({
+		"PreparationPlatformTrim_Front",
+		"PreparationPlatformTrim_Back",
+		"PreparationPlatformTrim_Left",
+		"PreparationPlatformTrim_Right",
+	}) do
+		local trim = folder:FindFirstChild(trimName)
+		if trim and trim:IsA("BasePart") then
+			if stateChanged then
+				tweenPreparationProperties(trim, PREPARATION_FAST_TWEEN_INFO, {
+					Color = accent,
+					Transparency = breachOpen and 0.06 or 0.18,
+				})
+			else
+				trim.Color = accent
+				trim.Transparency = breachOpen and 0.06 or 0.18
+			end
+		end
+	end
+
 	for index = 1, 2 do
 		local flood = folder:FindFirstChild("PreparationFloodlight_" .. tostring(index))
 		if flood and flood:IsA("BasePart") then
@@ -1452,6 +1513,19 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 			else
 				glowLight.Brightness = breachOpen and 1.8 or 1.1
 			end
+		end
+	end
+
+	local crest = folder:FindFirstChild("PreparationSiteCrest")
+	if crest and crest:IsA("BasePart") then
+		if stateChanged then
+			tweenPreparationProperties(crest, PREPARATION_FAST_TWEEN_INFO, {
+				Color = accent,
+				Transparency = breachOpen and 0.02 or 0.12,
+			})
+		else
+			crest.Color = accent
+			crest.Transparency = breachOpen and 0.02 or 0.12
 		end
 	end
 
@@ -1693,6 +1767,74 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 	glowLight.Brightness = 1.1
 	glowLight.Color = readyAccent
 	glowLight.Shadows = false
+
+	local crest = ensurePart(folder, "PreparationSiteCrest")
+	configurePart(
+		crest,
+		{
+			Size = Vector3.new(1.4, 1.4, 0.12),
+			CFrame = CFrame.lookAt(marquee.Position + Vector3.new(0, 0.04, -0.1), marquee.Position + marquee.CFrame.LookVector, Vector3.yAxis),
+			Material = Enum.Material.Neon,
+			Color = readyAccent,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+			Transparency = 0.12,
+			Shape = Enum.PartType.Ball,
+		}
+	)
+
+	local runnerInset = ensurePart(folder, "PreparationRunnerInset")
+	configurePart(
+		runnerInset,
+		{
+			Size = Vector3.new(3.6, 0.05, 12.4),
+			CFrame = CFrame.lookAt(runnerCenter + Vector3.new(0, -0.06, 0), runnerCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.Neon,
+			Color = readyAccent,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+			Transparency = 0.28,
+		}
+	)
+
+	local canopyTrim = ensurePart(folder, "PreparationCanopyTrim")
+	configurePart(
+		canopyTrim,
+		{
+			Size = Vector3.new(10.2, 0.14, 0.22),
+			CFrame = CFrame.lookAt(platformCenter + Vector3.new(0, 6.06, 2.48), platformCenter - outward, Vector3.yAxis),
+			Material = Enum.Material.Neon,
+			Color = readyAccent,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = false,
+			Transparency = 0.16,
+		}
+	)
+
+	for _, trimData in ipairs({
+		{ name = "PreparationPlatformTrim_Front", size = Vector3.new(12.6, 0.12, 0.18), offset = outward * -8.1 + Vector3.new(0, 0.02, 0) },
+		{ name = "PreparationPlatformTrim_Back", size = Vector3.new(12.6, 0.12, 0.18), offset = outward * 8.1 + Vector3.new(0, 0.02, 0) },
+		{ name = "PreparationPlatformTrim_Left", size = Vector3.new(0.18, 0.12, 9.4), offset = right * -12.9 + Vector3.new(0, 0.02, 0) },
+		{ name = "PreparationPlatformTrim_Right", size = Vector3.new(0.18, 0.12, 9.4), offset = right * 12.9 + Vector3.new(0, 0.02, 0) },
+	}) do
+		local trim = ensurePart(folder, trimData.name)
+		configurePart(
+			trim,
+			{
+				Size = trimData.size,
+				CFrame = CFrame.lookAt(platformCenter + trimData.offset, platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Neon,
+				Color = readyAccent,
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+				Transparency = 0.18,
+			}
+		)
+	end
 
 	local entryAccent = ensurePart(folder, "PreparationEntryAccent")
 	configurePart(
@@ -3463,7 +3605,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		local breachOpen = resolvePreparationBreachOpen()
 		updatePreparationToolsBoard(toolsBoard, selectedTool)
 		for _, station in ipairs(toolStations) do
-			updatePreparationToolStationState(station.part, station.prompt, station.tool, selectedTool, breachOpen)
+			updatePreparationToolStationState(station.part, station.prompt, station.tool, selectedTool, breachOpen, station.pad)
 		end
 		updatePreparationObjectiveBoard(objectiveBoard, boardData, selectedTool, breachOpen)
 		updatePreparationEntrySign(entrySign, selectedTool, breachOpen, profile)
@@ -3510,6 +3652,20 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				CanQuery = true,
 			}
 		)
+		local statePad = ensurePart(folder, tool.name .. "_Pad")
+		configurePart(
+			statePad,
+			{
+				Size = Vector3.new(1.6, 0.06, 1.6),
+				CFrame = CFrame.lookAt(toolPosition + Vector3.new(0, -0.48, 0), toolPosition + outward, Vector3.yAxis),
+				Material = Enum.Material.Neon,
+				Color = tool.color:Lerp(Color3.fromRGB(28, 34, 44), 0.62),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+				Transparency = 0.3,
+			}
+		)
 
 		ensureBoardSurface(
 			toolPart,
@@ -3544,6 +3700,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			part = toolPart,
 			prompt = prompt,
 			tool = tool,
+			pad = statePad,
 		})
 	end
 

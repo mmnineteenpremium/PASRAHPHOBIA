@@ -2841,6 +2841,32 @@ Urutan yang paling masuk akal dari titik sekarang:
   - polish artistik/presentasional akhir
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - trim kit staging sekarang ikut state lane
+  - source owner:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - validasi terbaru:
+    - build:
+      - `_tmp_match_preparation_trim_pass_build.rbxlx`
+    - default:
+      - `PreparationRunnerInset = present`
+      - `runnerTransparency = 0.28`
+      - `PreparationSiteCrest = present`
+      - `ToolStation_EMF_Pad = present`
+      - `padTransparency = 0.30`
+    - sesudah `SetPreparationFocusTool(EMF)`:
+      - `runnerTransparency = 0.14`
+      - `crest = 0.517647, 0.729412, 1`
+      - `pad = 0.517647, 0.729412, 1`
+      - `padTransparency = 0.12`
+    - sesudah `AdvancePhase -> InvestigationPhase`:
+      - `runnerTransparency = 0.08`
+      - `crestTransparency = 0.02`
+      - `padTransparency = 0.08`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - final art polish
+
+- progress tambahan pada lane `outside match preparation staging`:
   - dua map `facility` sekarang tidak lagi share dressing yang sama:
     - `EmptyBuilding` -> varian `industrial`
     - `StudioMMNineteen` -> varian `control`
