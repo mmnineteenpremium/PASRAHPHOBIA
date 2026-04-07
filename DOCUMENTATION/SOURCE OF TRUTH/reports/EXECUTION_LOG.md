@@ -11826,3 +11826,171 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - residual lane sekarang tinggal:
     - asset premium/non-primitive untuk staging luar
     - dressing exterior yang lebih kaya secara artistik per map
+
+- pass lanjutan pada lane `outside match preparation staging`:
+  - dua map `facility` sekarang tidak lagi share dressing yang sama:
+    - `EmptyBuilding` -> varian `industrial`
+    - `StudioMMNineteen` -> varian `control`
+  - `EmptyBuilding` sekarang punya:
+    - `PreparationOpsCrate`
+    - `PreparationPortableMonitor`
+    - `PreparationSafetyCone_1/2`
+    - monitor board `SITE FEED`
+  - `StudioMMNineteen` sekarang punya:
+    - `PreparationOpsConsole`
+    - `PreparationServerRack`
+    - `PreparationSignalDisplay`
+    - display board `SIGNAL GRID`
+- validasi:
+  - build:
+    - `_tmp_match_preparation_facility_variants_build.rbxlx`
+  - `EmptyBuilding`:
+    - `PreparationOpsCrate = present`
+    - `PreparationPortableMonitor = present`
+    - `PreparationSafetyCone_1 = present`
+    - `PreparationPortableMonitor.FrontSurface.Title = SITE FEED`
+  - `StudioMMNineteen`:
+    - `PreparationOpsConsole = present`
+    - `PreparationServerRack = present`
+    - `PreparationSignalDisplay = present`
+    - `PreparationSignalDisplay.FrontSurface.Title = SIGNAL GRID`
+
+- pass lanjutan pada lane `outside match preparation staging`:
+  - staging luar sekarang punya ambience preview khusus `PreparationPhase`
+  - source owner:
+    - [AudioController.luau](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/Controllers/Sensory/AudioController.luau)
+  - fakta source penting:
+    - `AmbientLoop_Main` di repo ternyata masih kosong (`AudioContent = ""`)
+    - karena itu saya pakai fallback asset yang benar-benar ada:
+      - `Assets/Audio/Environment/EnvironmentalCreak_01`
+    - clone runtime-nya diberi nama `PreparationAmbient`
+  - `PreparationAmbient` sekarang:
+    - aktif hanya saat `InMatch = true` dan `MatchLifecyclePhase = PreparationPhase`
+    - berhenti otomatis saat phase keluar dari `PreparationPhase`
+    - menyimpan debug attr:
+      - `PasrahPreparationAmbientActive`
+      - `PasrahPreparationAmbientMap`
+- validasi:
+  - build:
+    - `_tmp_match_preparation_audio_preview_build.rbxlx`
+    - `_tmp_match_preparation_audio_fallback_build.rbxlx`
+  - `AbandonedPalace`:
+    - sebelum breach:
+      - `MatchLifecyclePhase = PreparationPhase`
+      - `PasrahPreparationAmbientActive = true`
+      - `PasrahPreparationAmbientMap = AbandonedPalace`
+      - `PreparationAmbient.IsPlaying = true`
+      - `PreparationAmbient.SoundId = rbxassetid://139204195403262`
+      - `PreparationAmbient.Volume = 0.24`
+      - `PreparationAmbient.PlaybackSpeed = 0.88`
+    - sesudah `AdvancePhase -> InvestigationPhase`:
+      - `PasrahPreparationAmbientActive = nil`
+      - `PasrahPreparationAmbientMap = nil`
+      - `PreparationAmbient.IsPlaying = false`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - lintas-map staging luar sekarang sudah punya:
+    - profile berbeda
+    - teleport yang benar
+    - board state
+    - breach state
+    - breach transition tween/burst
+    - ambience preview saat briefing
+  - residual lane yang masih tersisa tinggal:
+    - asset premium/non-primitive untuk staging luar
+    - dressing exterior yang lebih kaya lagi bila ingin naik ke art pass penuh
+
+- pass lanjutan pada lane `outside match preparation staging`:
+  - dressing exterior per-profile sekarang naik lagi dari board/runner menjadi `hero prop` yang benar-benar berbeda:
+    - `HauntedHouse`:
+      - `PreparationGearBench`
+      - `PreparationFenceRail_1/2`
+      - `PreparationPorchLantern_1/2`
+    - `AbandonedPalace`:
+      - `PreparationArchLintel`
+      - `PreparationRelicPlinth`
+      - `PreparationRelicCore`
+      - `PreparationSealMosaic`
+    - `EmptyBuilding`:
+      - `PreparationCableSpool`
+      - `PreparationWorklightStand`
+      - `PreparationWorklightHead`
+      - `PreparationHazardRail`
+    - `StudioMMNineteen`:
+      - `PreparationAccessScanner`
+      - `PreparationScannerGlow`
+      - `PreparationDataPedestal`
+      - `PreparationConduitStrip`
+  - ambience preparation juga dipoles:
+    - masuk dengan fade-in
+    - keluar dengan fade-out
+    - tidak lagi start/stop keras saat phase berubah
+  - source owner:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+    - [AudioController.luau](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/Controllers/Sensory/AudioController.luau)
+- validasi:
+  - build:
+    - `_tmp_match_preparation_artpass_build.rbxlx`
+  - live lintas map:
+    - `HauntedHouse`:
+      - `PreparationGearBench = true`
+      - `PreparationFenceRail_1 = true`
+      - `PreparationPorchLantern_1 = true`
+      - ambience:
+        - `active = true`
+        - `isPlaying = true`
+        - `volume = 0.18`
+        - `playbackSpeed = 0.94`
+      - sesudah `InvestigationPhase`:
+        - `volume = 0`
+        - `isPlaying = false`
+    - `AbandonedPalace`:
+      - `PreparationArchLintel = true`
+      - `PreparationRelicPlinth = true`
+      - `PreparationSealMosaic = true`
+      - ambience:
+        - `active = true`
+        - `isPlaying = true`
+        - `volume = 0.24`
+        - `playbackSpeed = 0.88`
+      - sesudah `InvestigationPhase`:
+        - `volume = 0`
+        - `isPlaying = false`
+    - `EmptyBuilding`:
+      - `PreparationCableSpool = true`
+      - `PreparationWorklightHead = true`
+      - `PreparationHazardRail = true`
+      - `PreparationPortableMonitor = true`
+      - ambience:
+        - `active = true`
+        - `isPlaying = true`
+        - `volume = 0.16`
+        - `playbackSpeed = 1.00`
+      - sesudah `InvestigationPhase`:
+        - `volume = 0`
+        - `isPlaying = false`
+    - `StudioMMNineteen`:
+      - `PreparationAccessScanner = true`
+      - `PreparationScannerGlow = true`
+      - `PreparationConduitStrip = true`
+      - `PreparationSignalDisplay = true`
+      - ambience:
+        - `active = true`
+        - `isPlaying = true`
+        - `volume = 0.15`
+        - `playbackSpeed = 0.98`
+      - sesudah `InvestigationPhase`:
+        - `volume = 0`
+        - `isPlaying = false`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - staging luar sekarang sudah punya:
+    - profile visual per-map
+    - objective/tools world boards
+    - breach flow authoritative
+    - tween/burst state change
+    - ambience preview
+    - hero prop dressing lintas map
+  - residual lane yang tersisa turun ke:
+    - asset premium/non-primitive jika ingin naik dari blockout art pass ke art final
+    - exterior composition yang lebih mewah/sinematik jika ingin naik lagi ke presentational polish

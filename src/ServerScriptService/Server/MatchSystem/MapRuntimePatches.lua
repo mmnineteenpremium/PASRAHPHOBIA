@@ -279,6 +279,7 @@ local PREPARATION_STAGING_PROFILES = {
 		entryArmedBodyTemplate = "Aktifkan breach untuk sweep awal dengan %s.",
 		entryOpenBody = "Masuk ke bangunan dan mulai sweep awal.",
 		propStyle = "facility",
+		propVariant = "industrial",
 	},
 	studiommnineteen = {
 		anchorRoomName = "Room_ControlRoom",
@@ -293,6 +294,7 @@ local PREPARATION_STAGING_PROFILES = {
 		entryArmedBodyTemplate = "Aktifkan breach untuk sweep awal dengan %s.",
 		entryOpenBody = "Masuk ke area kontrol dan mulai investigasi.",
 		propStyle = "facility",
+		propVariant = "control",
 	},
 }
 
@@ -1663,6 +1665,60 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 			}
 		)
 		ensureBoardSurface(noticeStand, "FrontSurface", Enum.NormalId.Front, "STAGING", "Porch hold", { "Room • Contract • Tools", "Breach after review" }, readyAccent)
+		local gearBench = ensurePart(folder, "PreparationGearBench")
+		configurePart(
+			gearBench,
+			{
+				Size = Vector3.new(3.8, 0.94, 1.6),
+				CFrame = CFrame.lookAt(platformCenter + (right * 10.2) + (outward * 1.4) + Vector3.new(0, 0.48, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.WoodPlanks,
+				Color = Color3.fromRGB(98, 76, 58),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+		for index, side in ipairs({ -1, 1 }) do
+			local rail = ensurePart(folder, "PreparationFenceRail_" .. tostring(index))
+			configurePart(
+				rail,
+				{
+					Size = Vector3.new(0.28, 1.6, 4.2),
+					CFrame = CFrame.lookAt(platformCenter + (right * side * 11.8) + (outward * 4.8) + Vector3.new(0, 0.82, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.WoodPlanks,
+					Color = Color3.fromRGB(86, 68, 54),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local porchLantern = ensurePart(folder, "PreparationPorchLantern_" .. tostring(index))
+			configurePart(
+				porchLantern,
+				{
+					Size = Vector3.new(0.42, 0.42, 0.42),
+					CFrame = CFrame.new(platformCenter + (right * side * 5.1) + (outward * -1.3) + Vector3.new(0, 4.46, 0)),
+					Material = Enum.Material.Neon,
+					Color = Color3.fromRGB(255, 214, 170),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
+			local lanternLight = porchLantern:FindFirstChild("Light")
+			if not (lanternLight and lanternLight:IsA("PointLight")) then
+				if lanternLight then
+					lanternLight:Destroy()
+				end
+				lanternLight = Instance.new("PointLight")
+				lanternLight.Name = "Light"
+				lanternLight.Parent = porchLantern
+			end
+			lanternLight.Range = 14
+			lanternLight.Brightness = 1.2
+			lanternLight.Color = Color3.fromRGB(255, 214, 170)
+			lanternLight.Shadows = false
+		end
 	elseif propStyle == "palace" then
 		local carpet = ensurePart(folder, "PreparationCarpet")
 		configurePart(
@@ -1745,7 +1801,73 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 				}
 			)
 		end
+		local archLintel = ensurePart(folder, "PreparationArchLintel")
+		configurePart(
+			archLintel,
+			{
+				Size = Vector3.new(10.6, 0.9, 0.42),
+				CFrame = CFrame.lookAt(platformCenter + (outward * -1.1) + Vector3.new(0, 5.4, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Marble,
+				Color = Color3.fromRGB(150, 138, 128),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+		local relicPlinth = ensurePart(folder, "PreparationRelicPlinth")
+		configurePart(
+			relicPlinth,
+			{
+				Size = Vector3.new(2.4, 1.2, 2.4),
+				CFrame = CFrame.lookAt(platformCenter + (outward * 4.4) + Vector3.new(0, 0.62, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Marble,
+				Color = Color3.fromRGB(136, 122, 112),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
+		local relicCore = ensurePart(folder, "PreparationRelicCore")
+		configurePart(
+			relicCore,
+			{
+				Size = Vector3.new(0.82, 0.82, 0.82),
+				CFrame = CFrame.new(relicPlinth.Position + Vector3.new(0, 1.12, 0)),
+				Material = Enum.Material.Neon,
+				Color = readyAccent,
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
+		local relicLight = relicCore:FindFirstChild("Light")
+		if not (relicLight and relicLight:IsA("PointLight")) then
+			if relicLight then
+				relicLight:Destroy()
+			end
+			relicLight = Instance.new("PointLight")
+			relicLight.Name = "Light"
+			relicLight.Parent = relicCore
+		end
+		relicLight.Range = 16
+		relicLight.Brightness = 1.35
+		relicLight.Color = readyAccent
+		relicLight.Shadows = false
+		local sealMosaic = ensurePart(folder, "PreparationSealMosaic")
+		configurePart(
+			sealMosaic,
+			{
+				Size = Vector3.new(4.4, 0.05, 4.4),
+				CFrame = CFrame.lookAt(platformCenter + (outward * 2.0) + Vector3.new(0, -0.11, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Slate,
+				Color = Color3.fromRGB(92, 46, 48),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
 	else
+		local propVariant = type(profile) == "table" and tostring(profile.propVariant or "facility") or "facility"
 		for index, side in ipairs({ -1, 1 }) do
 			local bollard = ensurePart(folder, "PreparationMarker_" .. tostring(index))
 			configurePart(
@@ -1758,6 +1880,240 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 					CanCollide = true,
 					CanTouch = false,
 					CanQuery = true,
+				}
+			)
+		end
+
+		if propVariant == "industrial" then
+			local crate = ensurePart(folder, "PreparationOpsCrate")
+			configurePart(
+				crate,
+				{
+					Size = Vector3.new(2.8, 1.4, 1.8),
+					CFrame = CFrame.lookAt(platformCenter + (right * -7.2) + (outward * 3.1) + Vector3.new(0, 0.72, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.DiamondPlate,
+					Color = Color3.fromRGB(88, 94, 104),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local monitor = ensurePart(folder, "PreparationPortableMonitor")
+			configurePart(
+				monitor,
+				{
+					Size = Vector3.new(2.4, 1.8, 0.22),
+					CFrame = CFrame.lookAt(platformCenter + (right * 7.2) + (outward * 1.6) + Vector3.new(0, 1.38, 0), platformCenter - outward, Vector3.yAxis),
+					Material = boardMaterial,
+					Color = boardColor,
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			ensureBoardSurface(
+				monitor,
+				"FrontSurface",
+				Enum.NormalId.Front,
+				"SITE FEED",
+				"Ops lane",
+				{ "Check • Brief • Breach", "Prep power before entry" },
+				readyAccent
+			)
+			for index, side in ipairs({ -1, 1 }) do
+				local cone = ensurePart(folder, "PreparationSafetyCone_" .. tostring(index))
+				configurePart(
+					cone,
+					{
+						Size = Vector3.new(0.9, 1.2, 0.9),
+						CFrame = CFrame.new(platformCenter + (right * side * 4.1) + (outward * 4.8) + Vector3.new(0, 0.62, 0)),
+						Material = Enum.Material.Neon,
+						Color = Color3.fromRGB(255, 170, 82),
+						CanCollide = true,
+						CanTouch = false,
+						CanQuery = true,
+					}
+				)
+			end
+			local spool = ensurePart(folder, "PreparationCableSpool")
+			configurePart(
+				spool,
+				{
+					Size = Vector3.new(1.9, 1.4, 1.9),
+					CFrame = CFrame.lookAt(platformCenter + (right * -9.2) + (outward * 2.8) + Vector3.new(0, 0.72, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.WoodPlanks,
+					Color = Color3.fromRGB(102, 88, 72),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local worklightStand = ensurePart(folder, "PreparationWorklightStand")
+			configurePart(
+				worklightStand,
+				{
+					Size = Vector3.new(0.32, 3.4, 0.32),
+					CFrame = CFrame.new(platformCenter + (right * 9.6) + (outward * 3.6) + Vector3.new(0, 1.72, 0)),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(84, 90, 102),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local worklightHead = ensurePart(folder, "PreparationWorklightHead")
+			configurePart(
+				worklightHead,
+				{
+					Size = Vector3.new(1.4, 0.34, 0.7),
+					CFrame = CFrame.lookAt(worklightStand.Position + Vector3.new(0, 1.66, 0), platformCenter, Vector3.yAxis),
+					Material = Enum.Material.Neon,
+					Color = Color3.fromRGB(224, 232, 255),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
+			local worklight = worklightHead:FindFirstChild("Light")
+			if not (worklight and worklight:IsA("SpotLight")) then
+				if worklight then
+					worklight:Destroy()
+				end
+				worklight = Instance.new("SpotLight")
+				worklight.Name = "Light"
+				worklight.Parent = worklightHead
+			end
+			worklight.Angle = 72
+			worklight.Brightness = 2.2
+			worklight.Range = 28
+			worklight.Color = Color3.fromRGB(224, 232, 255)
+			worklight.Face = Enum.NormalId.Front
+			worklight.Shadows = false
+			local hazardRail = ensurePart(folder, "PreparationHazardRail")
+			configurePart(
+				hazardRail,
+				{
+					Size = Vector3.new(6.2, 0.24, 0.24),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 5.9) + Vector3.new(0, 1.22, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Neon,
+					Color = Color3.fromRGB(255, 178, 80),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
+		elseif propVariant == "control" then
+			local console = ensurePart(folder, "PreparationOpsConsole")
+			configurePart(
+				console,
+				{
+					Size = Vector3.new(4.2, 1.4, 1.8),
+					CFrame = CFrame.lookAt(platformCenter + (right * -6.8) + (outward * 2.6) + Vector3.new(0, 0.72, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(72, 82, 100),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local rack = ensurePart(folder, "PreparationServerRack")
+			configurePart(
+				rack,
+				{
+					Size = Vector3.new(1.8, 3.8, 1.8),
+					CFrame = CFrame.lookAt(platformCenter + (right * 7.4) + (outward * 2.2) + Vector3.new(0, 1.92, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(48, 56, 70),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local display = ensurePart(folder, "PreparationSignalDisplay")
+			configurePart(
+				display,
+				{
+					Size = Vector3.new(2.8, 1.8, 0.2),
+					CFrame = CFrame.lookAt(platformCenter + (right * -6.8) + (outward * 0.8) + Vector3.new(0, 1.8, 0), platformCenter - outward, Vector3.yAxis),
+					Material = boardMaterial,
+					Color = boardColor,
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			ensureBoardSurface(
+				display,
+				"FrontSurface",
+				Enum.NormalId.Front,
+				"SIGNAL GRID",
+				"Control lane",
+				{ "Plan • Tools • Entry", "Sync board before breach" },
+				readyAccent
+			)
+			local scannerPedestal = ensurePart(folder, "PreparationAccessScanner")
+			configurePart(
+				scannerPedestal,
+				{
+					Size = Vector3.new(1.2, 2.8, 1.2),
+					CFrame = CFrame.lookAt(platformCenter + (right * 9.2) + (outward * 3.2) + Vector3.new(0, 1.42, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(62, 72, 94),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local scannerGlow = ensurePart(folder, "PreparationScannerGlow")
+			configurePart(
+				scannerGlow,
+				{
+					Size = Vector3.new(0.88, 0.88, 0.18),
+					CFrame = CFrame.lookAt(scannerPedestal.Position + Vector3.new(0, 0.84, -0.5), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Neon,
+					Color = Color3.fromRGB(114, 182, 255),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
+			local scannerLight = scannerGlow:FindFirstChild("Light")
+			if not (scannerLight and scannerLight:IsA("PointLight")) then
+				if scannerLight then
+					scannerLight:Destroy()
+				end
+				scannerLight = Instance.new("PointLight")
+				scannerLight.Name = "Light"
+				scannerLight.Parent = scannerGlow
+			end
+			scannerLight.Range = 14
+			scannerLight.Brightness = 1.4
+			scannerLight.Color = Color3.fromRGB(114, 182, 255)
+			scannerLight.Shadows = false
+			local dataPedestal = ensurePart(folder, "PreparationDataPedestal")
+			configurePart(
+				dataPedestal,
+				{
+					Size = Vector3.new(1.9, 1.18, 1.9),
+					CFrame = CFrame.lookAt(platformCenter + (right * -9.4) + (outward * 2.4) + Vector3.new(0, 0.6, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(54, 62, 80),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local conduitStrip = ensurePart(folder, "PreparationConduitStrip")
+			configurePart(
+				conduitStrip,
+				{
+					Size = Vector3.new(7.2, 0.18, 0.32),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 5.4) + Vector3.new(0, 0.12, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Neon,
+					Color = Color3.fromRGB(88, 146, 228),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
 				}
 			)
 		end

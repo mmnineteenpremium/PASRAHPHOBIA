@@ -12,6 +12,28 @@ local MAP_REVERB = {
 	StudioMMNineteen = Enum.ReverbType.PaddedCell,
 }
 
+local PREPARATION_AMBIENT_PROFILE = {
+	HauntedHouse = {
+		Volume = 0.18,
+		PlaybackSpeed = 0.94,
+	},
+	AbandonedPalace = {
+		Volume = 0.24,
+		PlaybackSpeed = 0.88,
+	},
+	EmptyBuilding = {
+		Volume = 0.16,
+		PlaybackSpeed = 1.0,
+	},
+	StudioMMNineteen = {
+		Volume = 0.15,
+		PlaybackSpeed = 0.98,
+	},
+}
+
+local PREPARATION_AMBIENT_TWEEN_IN = TweenInfo.new(0.65, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+local PREPARATION_AMBIENT_TWEEN_OUT = TweenInfo.new(0.45, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+
 local HEARTBEAT_SPEED_RANGE = {
 	min = 1.0,
 	max = 1.8,
@@ -60,6 +82,35 @@ local function lookupHeartbeatSound()
 	return fallback
 end
 
+local function lookupPreparationAmbientSound()
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local audioFolder = assets and assets:FindFirstChild("Audio")
+	local ambientFolder = audioFolder and audioFolder:FindFirstChild("Ambient")
+	if ambientFolder then
+		local ambientLoop = ambientFolder:FindFirstChild("AmbientLoop_Main")
+		if ambientLoop and ambientLoop:IsA("Sound") then
+			local clone = ambientLoop:Clone()
+			if tostring(clone.SoundId or "") ~= "" then
+				clone.Name = "PreparationAmbient"
+				return clone
+			end
+		end
+	end
+
+	local environmentFolder = audioFolder and audioFolder:FindFirstChild("Environment")
+	if environmentFolder then
+		local environmentalBed = environmentFolder:FindFirstChild("EnvironmentalCreak_01")
+		if environmentalBed and environmentalBed:IsA("Sound") then
+			local clone = environmentalBed:Clone()
+			clone.Name = "PreparationAmbient"
+			return clone
+		end
+	end
+	local fallback = Instance.new("Sound")
+	fallback.Name = "PreparationAmbient"
+	return fallback
+end
+
 function AudioController:Init(context)
 	self._context = context or {}
 	self._remotes = self._context.Remotes or {}
@@ -67,12 +118,19 @@ function AudioController:Init(context)
 	self._player = Players.LocalPlayer
 	self._currentSanity = 100
 	self._ghostHuntActive = false
+	self._preparationAmbientTargetVolume = 0
+	self._preparationAmbientTween = nil
 	self._heartbeatSound = lookupHeartbeatSound()
 	self._heartbeatSound.Looped = true
 	self._heartbeatSound.Volume = 0
 	self._heartbeatSound:SetAttribute("MissingSourceAsset", self._heartbeatSound.SoundId == "")
+	self._preparationAmbientSound = lookupPreparationAmbientSound()
+	self._preparationAmbientSound.Looped = true
+	self._preparationAmbientSound.Volume = 0
+	self._preparationAmbientSound:SetAttribute("MissingSourceAsset", self._preparationAmbientSound.SoundId == "")
 	local camera = Workspace.CurrentCamera or Workspace:FindFirstChildWhichIsA("Camera")
 	self._heartbeatSound.Parent = camera or Workspace
+	self._preparationAmbientSound.Parent = camera or Workspace
 end
 
 function AudioController:Start()
@@ -94,15 +152,22 @@ function AudioController:Start()
 	if localPlayer then
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("InMatch"):Connect(function()
 			self:_syncMapReverbFromPlayerState()
+			self:_updatePreparationAmbient()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchMapId"):Connect(function()
 			self:_syncMapReverbFromPlayerState()
+			self:_updatePreparationAmbient()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MapName"):Connect(function()
 			self:_syncMapReverbFromPlayerState()
+			self:_updatePreparationAmbient()
+		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
+			self:_updatePreparationAmbient()
 		end))
 	end
 	self:_syncMapReverbFromPlayerState()
+	self:_updatePreparationAmbient()
 end
 
 function AudioController:Stop()
@@ -111,10 +176,45 @@ function AudioController:Stop()
 	end
 	table.clear(self._connections)
 	self._connections = {}
+	if self._preparationAmbientTween then
+		self._preparationAmbientTween:Cancel()
+		self._preparationAmbientTween = nil
+	end
 
 	if self._heartbeatSound and self._heartbeatSound.Parent then
 		self._heartbeatSound:Stop()
 	end
+	if self._preparationAmbientSound and self._preparationAmbientSound.Parent then
+		self._preparationAmbientSound:Stop()
+	end
+end
+
+function AudioController:_tweenPreparationAmbient(targetVolume, tweenInfo, stopAfterFade)
+	if not self._preparationAmbientSound then
+		return
+	end
+
+	if self._preparationAmbientTween then
+		self._preparationAmbientTween:Cancel()
+		self._preparationAmbientTween = nil
+	end
+
+	self._preparationAmbientTargetVolume = targetVolume
+	local tween = TweenService:Create(self._preparationAmbientSound, tweenInfo or PREPARATION_AMBIENT_TWEEN_IN, {
+		Volume = targetVolume,
+	})
+	self._preparationAmbientTween = tween
+	tween.Completed:Connect(function(playbackState)
+		if self._preparationAmbientTween == tween then
+			self._preparationAmbientTween = nil
+		end
+		if stopAfterFade and playbackState == Enum.PlaybackState.Completed then
+			if self._preparationAmbientSound and self._preparationAmbientSound.Volume <= 0.001 then
+				self._preparationAmbientSound:Stop()
+			end
+		end
+	end)
+	tween:Play()
 end
 
 function AudioController:_applyMapReverb(mapName)
@@ -215,6 +315,39 @@ function AudioController:_updateHeartbeat()
 	else
 		if self._heartbeatSound.IsPlaying then
 			self._heartbeatSound:Stop()
+		end
+	end
+end
+
+function AudioController:_updatePreparationAmbient()
+	if not self._preparationAmbientSound or self._preparationAmbientSound.SoundId == "" then
+		return
+	end
+
+	local localPlayer = self._player or Players.LocalPlayer
+	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
+	local lifecyclePhase = tostring(localPlayer and localPlayer:GetAttribute("MatchLifecyclePhase") or "")
+	local mapProfile = self:_resolveAuthoritativeMapProfile()
+	local profile = PREPARATION_AMBIENT_PROFILE[mapProfile] or PREPARATION_AMBIENT_PROFILE.HauntedHouse
+	local shouldPlay = inMatch and lifecyclePhase == "PreparationPhase"
+
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahPreparationAmbientActive", shouldPlay and true or nil)
+		localPlayer:SetAttribute("PasrahPreparationAmbientMap", shouldPlay and tostring(mapProfile or "") or nil)
+	end
+
+	if shouldPlay then
+		self._preparationAmbientSound.PlaybackSpeed = profile.PlaybackSpeed
+		if not self._preparationAmbientSound.IsPlaying then
+			self._preparationAmbientSound.Volume = 0
+			self._preparationAmbientSound:Play()
+		end
+		if math.abs(self._preparationAmbientTargetVolume - profile.Volume) > 0.001 or not self._preparationAmbientTween then
+			self:_tweenPreparationAmbient(profile.Volume, PREPARATION_AMBIENT_TWEEN_IN, false)
+		end
+	else
+		if self._preparationAmbientSound.IsPlaying or self._preparationAmbientSound.Volume > 0.001 then
+			self:_tweenPreparationAmbient(0, PREPARATION_AMBIENT_TWEEN_OUT, true)
 		end
 	end
 end

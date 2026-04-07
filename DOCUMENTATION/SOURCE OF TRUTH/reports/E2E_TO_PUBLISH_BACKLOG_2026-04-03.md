@@ -2760,6 +2760,70 @@ Urutan yang paling masuk akal dari titik sekarang:
   - transisi dunia luar -> breach investigasi yang lebih sinematik
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - dua map `facility` sekarang tidak lagi share dressing yang sama:
+    - `EmptyBuilding` -> varian `industrial`
+    - `StudioMMNineteen` -> varian `control`
+  - `EmptyBuilding` sekarang punya:
+    - `PreparationOpsCrate`
+    - `PreparationPortableMonitor`
+    - `PreparationSafetyCone_1/2`
+    - `PreparationCableSpool`
+    - `PreparationWorklightStand`
+    - `PreparationWorklightHead`
+    - `PreparationHazardRail`
+  - `StudioMMNineteen` sekarang punya:
+    - `PreparationOpsConsole`
+    - `PreparationServerRack`
+    - `PreparationSignalDisplay`
+    - `PreparationAccessScanner`
+    - `PreparationScannerGlow`
+    - `PreparationDataPedestal`
+    - `PreparationConduitStrip`
+  - `HauntedHouse` dan `AbandonedPalace` juga naik dari décor awal ke hero prop dressing:
+    - `HauntedHouse`: `PreparationGearBench`, `PreparationFenceRail_1/2`, `PreparationPorchLantern_1/2`
+    - `AbandonedPalace`: `PreparationArchLintel`, `PreparationRelicPlinth`, `PreparationRelicCore`, `PreparationSealMosaic`
+  - ambience `PreparationPhase` sekarang:
+    - hidup hanya saat briefing luar
+    - masuk dengan fade-in
+    - keluar dengan fade-out
+    - berhenti saat phase naik ke `InvestigationPhase`
+- validasi terbaru:
+  - build:
+    - `_tmp_match_preparation_facility_variants_build.rbxlx`
+    - `_tmp_match_preparation_audio_preview_build.rbxlx`
+    - `_tmp_match_preparation_audio_fallback_build.rbxlx`
+    - `_tmp_match_preparation_artpass_build.rbxlx`
+  - lintas map:
+    - `HauntedHouse`:
+      - `PreparationGearBench = true`
+      - `PreparationFenceRail_1 = true`
+      - `PreparationPorchLantern_1 = true`
+      - ambience `volume = 0.18`, `speed = 0.94`
+    - `AbandonedPalace`:
+      - `PreparationArchLintel = true`
+      - `PreparationRelicPlinth = true`
+      - `PreparationSealMosaic = true`
+      - ambience `volume = 0.24`, `speed = 0.88`
+    - `EmptyBuilding`:
+      - `PreparationCableSpool = true`
+      - `PreparationWorklightHead = true`
+      - `PreparationHazardRail = true`
+      - `PreparationPortableMonitor = true`
+      - ambience `volume = 0.16`, `speed = 1.00`
+    - `StudioMMNineteen`:
+      - `PreparationAccessScanner = true`
+      - `PreparationScannerGlow = true`
+      - `PreparationConduitStrip = true`
+      - `PreparationSignalDisplay = true`
+      - ambience `volume = 0.15`, `speed = 0.98`
+    - sesudah `InvestigationPhase`:
+      - `PreparationAmbient.Volume = 0`
+      - `PreparationAmbient.IsPlaying = false`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar bila mau naik ke art final
+  - dressing exterior yang lebih kaya lagi bila mau naik ke presentational polish penuh
+
+- progress tambahan pada lane `outside match preparation staging`:
   - profile staging sekarang dibedakan per map:
     - `HauntedHouse` -> `CONTRACT BAY`
     - `AbandonedPalace` -> `PALACE GATE`
