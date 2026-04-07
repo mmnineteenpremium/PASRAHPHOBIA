@@ -2772,6 +2772,21 @@ Urutan yang paling masuk akal dari titik sekarang:
   - verifikasi live `active/spent` pada preview HUD saat run match E2E masih terbuka
   - asset preview player-facing sudah tidak lagi hanya ada di world placement
 
+- progress tambahan pada lane `asset player-facing HUD`:
+  - `EvidenceEvent` sekarang memaksa refresh `Journal + Field Kit + visibility` di client owner
+  - ini menutup gap yang sebelumnya membuat preview tool tetap `ready` walau `UseEvidenceTool` sukses
+- validasi terbaru:
+  - jalur live:
+    - `StartSoloMatch`
+    - `AdvancePhase -> InvestigationPhase`
+    - `UseEvidenceTool(Garam/Salib/Dupa)`
+  - hasil:
+    - `Garam|active`
+    - `Salib|active`
+    - `Dupa|active`
+- residual sesudah pass ini:
+  - state `spent` pada preview `Salib` masih belum final-proof
+
 - progress tambahan pada lane `asset integration`:
   - `Pocong` profile asset sekarang dipakai sebagai overlay visual ghost runtime
   - `Garam / Salib / Dupa` sekarang dipakai tegas oleh jalur visual utility tool match

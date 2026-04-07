@@ -12381,3 +12381,24 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - residual sesudah pass ini:
   - preview asset HUD sudah hidup dan terlihat di jalur player-facing
   - verifikasi live `active/spent` saat match run ini belum saya cap final karena `FieldKit` tidak visible pada sesi E2E yang dipakai untuk proof lanjutan
+
+- progress tambahan pada lane `player-facing asset integration`:
+  - `UISystem:_onServerEvent()` untuk `EvidenceEvent` sekarang langsung:
+    - `:_refreshJournalPanel()`
+    - `:_refreshFieldKitPanel()`
+    - `:_applyVisibility()`
+  - ini menutup bug owner yang sebelumnya membuat `Field Kit` tidak ikut refresh walau `UseEvidenceTool` sukses dan state tool sudah berubah
+- validasi terbaru:
+  - proof live jalur tool asli:
+    - `StartSoloMatch -> AdvancePhase(InvestigationPhase) -> UseEvidenceTool`
+  - result:
+    - `GaramButton.ToolPreview -> Garam|active`
+    - `SalibButton.ToolPreview -> Salib|active`
+    - `DupaButton.ToolPreview -> Dupa|active`
+    - meta text:
+      - `Garam = AKTIF`
+      - `Salib = C3`
+      - `Dupa = AKTIF`
+- residual sesudah pass ini:
+  - state `active` sudah terbukti dari jalur tool asli
+  - state `spent` untuk preview `Salib` masih belum saya cap final karena `ConsumeHuntProtection` pada run ini menjawab `no_hunt_protection`

@@ -3996,6 +3996,9 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._journalState.toolSuccess = payload.success ~= false
 			self._journalState.toolLastUsedAt = os.clock()
 		end
+		self:_refreshJournalPanel()
+		self:_refreshFieldKitPanel()
+		self:_applyVisibility()
 	elseif remoteName == "LobbyEvent" then
 		if eventName == "RoomBrowserRoomLeft" or eventName == "LobbyEntered" then
 			if self._matchPhase ~= MATCH_PHASE.LOBBY then
