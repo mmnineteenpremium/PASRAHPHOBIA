@@ -3325,3 +3325,24 @@ Urutan yang paling masuk akal dari titik sekarang:
 - residual sesudah pass ini:
   - still need premium art pass untuk entry gate bila mau naik ke presentasi final
 
+- progress tambahan pada lane `ghost runtime verification + authoritative manifest probe`:
+  - actor ghost match asli sudah tervalidasi live sebagai `Ghost_Pocong` dengan mesh `0.06 x 0.07 x 0.07`
+  - baseline snapshot ghost sekarang hidup langsung dari `MatchService`:
+    - `PasrahGhostType`
+    - `PasrahGhostModelPath`
+    - `PasrahGhostMeshSize`
+    - `PasrahGhostRuntimeState`
+  - `PreparationStagingRuntime` sekarang punya `StudioManifestPrompt` yang hanya aktif sesudah breach untuk memaksa manifest live
+  - bug utama ditemukan di `GhostStateMachine`:
+    - `Idle -> Manifestation` ditolak
+    - akibatnya jalur `ForceManifest` sebelumnya tidak pernah benar-benar membuat actor ghost manifest
+- validasi terbaru:
+  - sesudah patch:
+    - `RuntimeGhostState = Manifest`
+    - `RuntimeGhostStateActual = Manifest`
+    - `PasrahGhostRuntimeState = Manifest`
+    - capture `GhostPocong_ManifestRuntime_1` menunjukkan actor ghost live saat manifest
+- residual sesudah pass ini:
+  - `StudioE2EControl` masih belum stabil untuk dijadikan jalur verifikasi utama
+  - lane publish masih perlu visual/audio polish tingkat akhir, tetapi blocker runtime ghost manifest untuk studio test sudah tertutup
+

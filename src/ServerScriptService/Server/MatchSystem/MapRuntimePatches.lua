@@ -1,4 +1,5 @@
 local MapRuntimePatches = {}
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local FLOOR_PATCH_ATTR = "SecondFloorRuntimePatched"
@@ -3913,6 +3914,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	updatePreparationEntryLane(folder, nil, false, profile)
 
 	local breachPrompt
+	local studioManifestPrompt
 	local toolStations = {}
 	local function resolvePreparationSelectedTool()
 		if type(matchContext) ~= "table" then
@@ -3970,6 +3972,9 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		if breachOpen and breachPrompt and breachPrompt.Parent then
 			breachPrompt:Destroy()
 		end
+		if studioManifestPrompt then
+			studioManifestPrompt.Enabled = breachOpen == true
+		end
 	end
 
 	breachPrompt = ensurePrompt(entrySign, "BreachPrompt", "Mulai Breach", "Main Entry")
@@ -3986,6 +3991,28 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				end
 			end
 		end)
+	end
+
+	if RunService:IsStudio() then
+		studioManifestPrompt = ensurePrompt(entrySign, "StudioManifestPrompt", "Paksa Manifest", "Studio Ghost Probe")
+		if studioManifestPrompt then
+			studioManifestPrompt.MaxActivationDistance = 14
+			studioManifestPrompt.Enabled = false
+			if studioManifestPrompt:GetAttribute("PreparationConnected") ~= true then
+				studioManifestPrompt:SetAttribute("PreparationConnected", true)
+				studioManifestPrompt.Triggered:Connect(function(player)
+					if typeof(player) ~= "Instance" or not player:IsA("Player") then
+						return
+					end
+					if type(matchContext) == "table" and type(matchContext.requestForceManifest) == "function" then
+						local payload = matchContext.requestForceManifest(player)
+						if payload ~= nil then
+							syncPreparationEntryState()
+						end
+					end
+				end)
+			end
+		end
 	end
 
 	local rackCenter = rackBase.Position + Vector3.new(0, 1.02, 0)

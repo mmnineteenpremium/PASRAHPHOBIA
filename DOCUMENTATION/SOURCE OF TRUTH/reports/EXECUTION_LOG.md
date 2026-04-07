@@ -12515,3 +12515,36 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
       - prompt breach hilang
 - residual sesudah pass ini:
   - actor ghost match pasif masih belum selalu mudah difoto pada run normal, jadi proof visual `Pocong` hari ini saya tutup lewat preview runtime di session in-game yang sama
+
+- progress tambahan pada lane `ghost runtime verification + authoritative manifest probe`:
+  - actor ghost match asli sekarang terbukti hidup sebagai `Workspace.ActiveMatches.Match_match_1.Ghost_Pocong`, bukan cuma preview/debug clone
+  - baseline visual ghost sekarang diinisialisasi langsung saat `InitializeMatch`, jadi actor runtime tidak lagi lahir tanpa state visual
+  - player snapshot ghost dasar sekarang diisi langsung dari `MatchService`, sehingga proof `ghost type / mesh size / runtime state / model path` tidak lagi bergantung penuh pada timing event controller
+  - `PreparationStagingRuntime` sekarang punya prompt studio-only `Paksa Manifest` yang hanya aktif setelah breach untuk verifikasi actor ghost live
+  - akar bug `ForceManifest` ditemukan di `GhostStateMachine`: transisi `Idle -> Manifestation` sebelumnya ditolak, sehingga probe hanya mendorong ghost keluar dari diam tanpa benar-benar manifest
+  - transisi itu sekarang dibuka, dan probe authoritative langsung memanggil `ForceManifest + TickGhost` pada owner match
+- validasi terbaru:
+  - proof runtime dasar:
+    - `Workspace.ActiveMatches.Match_match_1.Ghost_Pocong`
+    - `MeshPart.Size = 0.06, 0.07, 0.07`
+    - `RuntimeGhostState = Idle`
+    - `RuntimeGhostStateActual = Idle`
+    - `VisualTemplateName = Pocong`
+  - proof player snapshot dasar:
+    - `PasrahGhostType = Pocong`
+    - `PasrahGhostModelPath = Workspace.ActiveMatches.Match_match_1.Ghost_Pocong`
+    - `PasrahGhostMeshSize = 0.06, 0.07, 0.07`
+    - `PasrahGhostRuntimeState = Idle`
+  - proof breach + manifest:
+    - `PreparationPhase -> BreachPrompt`
+    - sesudah breach `StudioManifestPrompt.Enabled = true`
+    - sesudah `Paksa Manifest`:
+      - `RuntimeGhostState = Manifest`
+      - `RuntimeGhostStateActual = Manifest`
+      - `PasrahGhostRuntimeState = Manifest`
+      - actor ghost tetap memakai mesh `0.06, 0.07, 0.07`
+  - proof visual live:
+    - capture `GhostPocong_ManifestRuntime_1` menunjukkan actor `Ghost_Pocong` sesungguhnya saat manifest, bukan preview
+- residual sesudah pass ini:
+  - route `StudioE2EControl` ack/ready masih belum cukup bersih untuk dijadikan jalur utama verifikasi
+  - karena itu jalur test authoritative saat ini tetap mengandalkan `LobbyEvent + world prompts + runtime attrs`

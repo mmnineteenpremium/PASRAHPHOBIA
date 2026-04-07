@@ -8,7 +8,7 @@ local RetreatState = require(script.Parent.States.RetreatState)
 local DEFAULT_STATE = "Idle"
 
 local VALID_TRANSITIONS = {
-    Idle = { "Roaming" },
+    Idle = { "Roaming", "Manifestation" },
     Roaming = { "Manifestation", "Hunting", "Idle" },
     Manifestation = { "Roaming", "Hunting" },
     Hunting = { "Cooldown" },

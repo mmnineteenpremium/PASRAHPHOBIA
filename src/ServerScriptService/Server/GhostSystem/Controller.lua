@@ -86,6 +86,40 @@ local function setGhostTraceState(stage, details)
 	ReplicatedStorage:SetAttribute("PasrahGhostTraceDetails", details)
 end
 
+local function setStudioGhostPlayerSnapshot(players, matchId, match, ghostState)
+	if not RunService:IsStudio() or type(players) ~= "table" then
+		return
+	end
+
+	local ghostModel = type(match) == "table" and match.ghost or nil
+	local meshPart = ghostModel and ghostModel:FindFirstChildWhichIsA("MeshPart", true) or nil
+	local modelPath = typeof(ghostModel) == "Instance" and ghostModel:GetFullName() or nil
+	local modelName = typeof(ghostModel) == "Instance" and ghostModel.Name or nil
+	local ghostType = type(match) == "table" and tostring(match.ghostType or "") or nil
+	local visualTemplateName = typeof(ghostModel) == "Instance" and ghostModel:GetAttribute("VisualTemplateName") or nil
+	local runtimeState = typeof(ghostModel) == "Instance" and ghostModel:GetAttribute("RuntimeGhostState") or nil
+	local ghostPosition = (ghostModel and ghostModel:IsA("Model")) and tostring(ghostModel:GetPivot().Position) or nil
+	local meshSize = (meshPart and meshPart:IsA("MeshPart")) and tostring(meshPart.Size) or nil
+
+	for _, player in ipairs(players) do
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			player:SetAttribute("PasrahGhostMatchId", type(matchId) == "string" and matchId or tostring(matchId or ""))
+			player:SetAttribute("PasrahGhostType", ghostType ~= "" and ghostType or nil)
+			player:SetAttribute("PasrahGhostModelName", modelName)
+			player:SetAttribute("PasrahGhostModelPath", modelPath)
+			player:SetAttribute("PasrahGhostVisualTemplate", visualTemplateName)
+			player:SetAttribute("PasrahGhostRuntimeState", runtimeState)
+			player:SetAttribute("PasrahGhostMeshSize", meshSize)
+			player:SetAttribute("PasrahGhostPosition", ghostPosition)
+			player:SetAttribute("PasrahGhostHasModel", typeof(ghostModel) == "Instance")
+			player:SetAttribute("PasrahGhostPlaceholder", typeof(ghostModel) == "Instance" and ghostModel:GetAttribute("PlaceholderVisual") == true or false)
+			player:SetAttribute("PasrahGhostSessionState", type(ghostState) == "table" and tostring(ghostState.state or "") or nil)
+			player:SetAttribute("PasrahGhostCurrentRoomId", type(ghostState) == "table" and ghostState.currentRoomId or nil)
+			player:SetAttribute("PasrahGhostHuntActive", type(ghostState) == "table" and ghostState.huntActive == true or false)
+		end
+	end
+end
+
 function Controller.new(state, service, deps)
 	local self = setmetatable({}, Controller)
 	self._state = state
@@ -284,6 +318,9 @@ function Controller:OnMatchStarted(payload)
 		error = err or "nil",
 	})
 
+	local liveMatch = self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or payload and payload.players, matchId, liveMatch, self._service:GetGhostState(matchId))
+
 	if err then
 		self:_publish("MatchPhaseTransitionRequested", {
 			matchId = matchId,
@@ -317,6 +354,8 @@ function Controller:OnPhaseStarted(payload)
 
 	local session = self._service:TickGhost(matchId, payload.snapshot or {}, payload.dt, payload.now)
 	self:_maybePublishAggressionThreshold(matchId, session)
+	local liveMatch = self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or nil, matchId, liveMatch, self._service:GetGhostState(matchId))
 end
 
 function Controller:OnHuntTriggered(payload)
@@ -343,6 +382,8 @@ function Controller:OnForceManifest(payload)
 	self._service:ApplyDirectorEvent(matchId, "ForceManifest", payload)
 	self._service:ForceManifest(matchId, payload.now)
 	self._service:TickGhost(matchId, payload.snapshot or {}, payload.dt, payload.now)
+	local liveMatch = self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or nil, matchId, liveMatch, self._service:GetGhostState(matchId))
 end
 
 function Controller:OnForceHunt(payload)
@@ -351,6 +392,8 @@ function Controller:OnForceHunt(payload)
 		return
 	end
 	self._service:ForceHunt(matchId, payload.snapshot, payload.now)
+	local liveMatch = self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or nil, matchId, liveMatch, self._service:GetGhostState(matchId))
 end
 
 function Controller:OnSanityCritical(payload)
@@ -396,6 +439,8 @@ function Controller:OnEvidenceCollected(payload)
 		investigationToolUsedNearGhostRoom = payload.toolNearGhostRoom == true,
 	}, payload.dt, payload.now)
 	self:_maybePublishAggressionThreshold(matchId, session)
+	local liveMatch = self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or nil, matchId, liveMatch, self._service:GetGhostState(matchId))
 end
 
 function Controller:OnEscalationStageChanged(payload)
@@ -430,10 +475,16 @@ end
 
 function Controller:OnGhostManifest(payload)
 	self:_forwardMatchEvent("GhostManifest", payload)
+	local matchId = payload and payload.matchId
+	local liveMatch = matchId and self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or nil, matchId, liveMatch, self._service:GetGhostState(matchId))
 end
 
 function Controller:OnGhostManifestEnd(payload)
 	self:_forwardMatchEvent("GhostManifestEnd", payload)
+	local matchId = payload and payload.matchId
+	local liveMatch = matchId and self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or nil, matchId, liveMatch, self._service:GetGhostState(matchId))
 end
 
 return Controller

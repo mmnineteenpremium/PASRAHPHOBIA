@@ -53,6 +53,14 @@ function GhostSystem:ForceHunt(match, snapshot, now)
     return self.Service:ForceHunt(match, snapshot, now)
 end
 
+function GhostSystem:ForceManifest(match, now)
+    return self.Service:ForceManifest(match, now)
+end
+
+function GhostSystem:TickGhost(match, snapshot, dt, now)
+    return self.Service:TickGhost(match, snapshot, dt, now)
+end
+
 function GhostSystem:EndHunt(match, now)
     return self.Service:EndHunt(match, now)
 end
