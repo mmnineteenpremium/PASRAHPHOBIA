@@ -2821,6 +2821,26 @@ Urutan yang paling masuk akal dari titik sekarang:
   - polish artistik/presentasional tingkat akhir
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - selection `focus tool` sekarang punya cue client resmi
+  - source owner:
+    - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/UI/Main.lua)
+    - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/SoundSystem/Main.lua)
+    - [VFXController.luau](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/Controllers/Sensory/VFXController.luau)
+  - validasi terbaru:
+    - build:
+      - `_tmp_match_preparation_focus_polish_build.rbxlx`
+    - sesudah `SetPreparationFocusTool(EMF)`:
+      - `PreparationFocusTool = EMF`
+      - `PasrahAudioLastCue = prep_focus_lock`
+      - `PasrahAudioLastCategory = EnvironmentalAudio`
+      - `PasrahVFXLastEvent = PreparationFocusChanged`
+      - `PasrahVFXLastProfile = EMF`
+      - `PasrahVFXPreparationTool = EMF`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - polish artistik/presentasional akhir
+
+- progress tambahan pada lane `outside match preparation staging`:
   - dua map `facility` sekarang tidak lagi share dressing yang sama:
     - `EmptyBuilding` -> varian `industrial`
     - `StudioMMNineteen` -> varian `control`

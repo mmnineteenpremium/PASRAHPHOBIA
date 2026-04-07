@@ -12178,3 +12178,31 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - residual lane menyempit ke:
     - premium asset/non-primitive
     - polish artistik/presentasional tingkat akhir
+
+- progress tambahan pada lane `outside match preparation staging`:
+  - pemilihan `focus tool` sekarang punya cue client yang benar-benar terasa, bukan cuma ganti teks
+  - owner source:
+    - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/UI/Main.lua)
+    - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/SoundSystem/Main.lua)
+    - [VFXController.luau](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/Controllers/Sensory/VFXController.luau)
+  - perubahan:
+    - `PreparationFocusTool` sekarang memicu cue audio `prep_focus_lock`
+    - `PreparationFocusChanged` sekarang memicu pulse VFX berbasis aksen tool
+    - panel preparation di-refresh saat tool fokus berubah
+- validasi:
+  - build:
+    - `_tmp_match_preparation_focus_polish_build.rbxlx`
+  - `HauntedHouse` sesudah `SetPreparationFocusTool(EMF)`:
+    - `phase = PreparationPhase`
+    - `PreparationFocusTool = EMF`
+    - `PasrahAudioLastCue = prep_focus_lock`
+    - `PasrahAudioLastCategory = EnvironmentalAudio`
+    - `PasrahVFXLastEvent = PreparationFocusChanged`
+    - `PasrahVFXLastProfile = EMF`
+    - `PasrahVFXPreparationTool = EMF`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - feedback player-facing untuk selection tool sekarang sudah hidup
+  - residual lane turun ke:
+    - premium asset/non-primitive
+    - polish artistik/presentasional akhir

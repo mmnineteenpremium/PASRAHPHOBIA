@@ -1013,6 +1013,8 @@ function VFXController:_handleMatchEvent(payload)
 		self:_triggerEnvironmentalShock(payload)
 	elseif eventName == "GhostAudioTriggered" then
 		self:_triggerGhostAudioShock(payload)
+	elseif eventName == "PreparationFocusChanged" then
+		self:_triggerPreparationFocusPulse(payload)
 	elseif eventName == "MatchStarted" then
 		local mapName = normalizeMapProfileName((payload and payload.mapName) or (payload and payload.mapType) or (payload and payload.mapId))
 		self:_applyMapVisualProfile(mapName or self:_resolveAuthoritativeMapProfile())
@@ -1306,6 +1308,21 @@ function VFXController:_triggerGhostAudioShock(payload)
 	cloned.AtmosphereDensityDelta = (cloned.AtmosphereDensityDelta or 0) * math.clamp(intensity, 0.85, 1.2)
 	self:_recordVFXDebug("GhostAudioTriggered", cueToken)
 	self:_playTransientShock(cloned)
+end
+
+function VFXController:_triggerPreparationFocusPulse(payload)
+	local toolToken = tostring(payload and payload.tool or payload and payload.focusTool or "")
+	local accent = PREPARATION_TOOL_VISUAL_ACCENTS[toolToken] or Color3.fromRGB(132, 186, 255)
+	local intensity = math.clamp(tonumber(payload and payload.intensity) or 1, 0.45, 1.25)
+	self:_recordVFXDebug("PreparationFocusChanged", toolToken ~= "" and toolToken or "focus")
+	self:_playTransientShock({
+		BlurSize = math.max(0, math.floor(3 * intensity + 0.5)),
+		Contrast = 0.05 * intensity,
+		Brightness = 0.03 * math.clamp(intensity, 0.85, 1.15),
+		Saturation = 0.08 * intensity,
+		Tint = accent:Lerp(Color3.fromRGB(244, 248, 252), 0.14),
+		AtmosphereDensityDelta = -0.01 * math.clamp(intensity, 0.8, 1.2),
+	})
 end
 
 function VFXController:_applyMapAtmosphere(mapName)
