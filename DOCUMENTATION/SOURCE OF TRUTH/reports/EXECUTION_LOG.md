@@ -12464,3 +12464,24 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `SalibSupportCard -> Salib|spent | world=true | camera=true | meta=C0`
 - residual sesudah pass ini:
   - jalur live `match HUD` untuk `Salib|spent` masih belum saya cap final
+
+- progress tambahan pada lane `player-facing asset integration`:
+  - bug scope `trainingWidth` di `UISystem:_applyDeviceSizing()` ternyata memang akar panel training yang tidak pernah hidup di jalur event asli
+  - sesudah fix itu, `LobbyTrainingUseSupport` live sekarang benar-benar menghidupkan `TrainingFrame` dan merender semua card support dari event nyata, bukan hanya dari harness
+  - saya lanjut menutup drift `Salib` di match HUD:
+    - preview dan meta `Salib` sekarang dibaca authoritative dari `chargesRemaining`
+    - charge loss tidak lagi langsung jatuh ke state `ready/x2` pada consume pertama
+- validasi terbaru:
+  - proof live jalur `LobbyTrainingUseSupport`:
+    - `TrainingFrame.Visible = true`
+    - `TrainingTitle -> Jerangkong • CALM • ASSET LIVE`
+    - `GaramSupportCard -> Garam|active | world=true | camera=true | meta=AKTIF`
+    - `SalibSupportCard -> Salib|active | world=true | camera=true | meta=C3`
+    - `DupaSupportCard -> Dupa|active | world=true | camera=true | meta=AKTIF`
+  - proof live jalur match HUD:
+    - `StartSoloMatch -> Investigation -> UseEvidenceTool(Salib) -> ConsumeHuntProtection`
+    - `before -> Salib|active | meta=C3`
+    - `after first consume -> Salib|active | meta=C2`
+    - sampled stabil hingga `3.75s` tanpa jatuh lagi ke `ready`
+- residual sesudah pass ini:
+  - multi-trigger lanjutan ke `C1/C0` pada run yang sama belum saya cap final
