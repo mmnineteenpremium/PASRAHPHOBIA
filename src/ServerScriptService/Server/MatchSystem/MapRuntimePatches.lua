@@ -1062,6 +1062,94 @@ local function updatePreparationToolsBoard(boardPart, selectedTool)
 	)
 end
 
+local function updatePreparationToolStationState(toolPart, prompt, toolData, selectedTool, breachOpen)
+	if not (toolPart and toolPart:IsA("BasePart") and type(toolData) == "table") then
+		return
+	end
+
+	local isSelected = type(selectedTool) == "string" and selectedTool == toolData.title
+	local accentColor = toolData.color or Color3.fromRGB(132, 186, 255)
+	local highlightColor = accentColor:Lerp(Color3.new(1, 1, 1), 0.18)
+	local idleColor = accentColor:Lerp(Color3.fromRGB(46, 52, 64), 0.18)
+
+	toolPart.Material = isSelected and Enum.Material.Neon or Enum.Material.SmoothPlastic
+	toolPart.Color = isSelected and highlightColor or idleColor
+	toolPart.Reflectance = isSelected and 0.04 or 0
+
+	local stateSubtitle = toolData.subtitle or ""
+	local stateBody = ""
+	if breachOpen then
+		stateSubtitle = isSelected and "Focus active • breach live" or "Rack locked • breach live"
+		stateBody = isSelected and "Masuk dan buka sweep awal dengan tool ini." or "Ubah fokus hanya tersedia saat staging luar."
+	elseif isSelected then
+		stateSubtitle = "Focus active • use first"
+		stateBody = "Gunakan tool ini untuk sweep pertama sebelum ganti jalur evidence."
+	end
+
+	ensureBoardSurface(
+		toolPart,
+		"FrontSurface",
+		Enum.NormalId.Front,
+		toolData.title,
+		stateSubtitle,
+		stateBody,
+		accentColor
+	)
+	ensureBoardSurface(
+		toolPart,
+		"BackSurface",
+		Enum.NormalId.Back,
+		toolData.title,
+		stateSubtitle,
+		stateBody,
+		accentColor
+	)
+
+	local highlight = toolPart:FindFirstChild("StateHighlight")
+	if not (highlight and highlight:IsA("Highlight")) then
+		if highlight then
+			highlight:Destroy()
+		end
+		highlight = Instance.new("Highlight")
+		highlight.Name = "StateHighlight"
+		highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+		highlight.Adornee = toolPart
+		highlight.Parent = toolPart
+	end
+	highlight.Enabled = isSelected
+	highlight.FillColor = accentColor
+	highlight.OutlineColor = highlightColor
+	highlight.FillTransparency = 0.68
+	highlight.OutlineTransparency = 0.08
+
+	local stateLight = toolPart:FindFirstChild("StateLight")
+	if not (stateLight and stateLight:IsA("PointLight")) then
+		if stateLight then
+			stateLight:Destroy()
+		end
+		stateLight = Instance.new("PointLight")
+		stateLight.Name = "StateLight"
+		stateLight.Parent = toolPart
+	end
+	stateLight.Color = accentColor
+	stateLight.Brightness = isSelected and 1.8 or 0
+	stateLight.Range = isSelected and 11 or 0
+	stateLight.Enabled = isSelected
+
+	if prompt and prompt:IsA("ProximityPrompt") then
+		if breachOpen then
+			prompt.Enabled = false
+			prompt.ActionText = "Breach Live"
+		elseif isSelected then
+			prompt.Enabled = true
+			prompt.ActionText = "Tool Aktif"
+		else
+			prompt.Enabled = true
+			prompt.ActionText = "Pilih Fokus Tool"
+		end
+	end
+end
+
 local function updatePreparationObjectiveBoard(boardPart, boardData, selectedTool, breachOpen)
 	local lines = {}
 	for _, line in ipairs(boardData.objectiveLines or {}) do
@@ -3183,6 +3271,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	updatePreparationEntryLane(folder, nil, false, profile)
 
 	local breachPrompt
+	local toolStations = {}
 	local function resolvePreparationSelectedTool()
 		if type(matchContext) ~= "table" then
 			return nil
@@ -3225,6 +3314,10 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	local function syncPreparationEntryState()
 		local selectedTool = resolvePreparationSelectedTool()
 		local breachOpen = resolvePreparationBreachOpen()
+		updatePreparationToolsBoard(toolsBoard, selectedTool)
+		for _, station in ipairs(toolStations) do
+			updatePreparationToolStationState(station.part, station.prompt, station.tool, selectedTool, breachOpen)
+		end
 		updatePreparationObjectiveBoard(objectiveBoard, boardData, selectedTool, breachOpen)
 		updatePreparationEntrySign(entrySign, selectedTool, breachOpen, profile)
 		updatePreparationEntryBeacon(entryBeacon, selectedTool, breachOpen, profile)
@@ -3296,11 +3389,15 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			prompt.Triggered:Connect(function(player)
 				if typeof(player) == "Instance" and player:IsA("Player") then
 					player:SetAttribute("PreparationFocusTool", tool.title)
-					updatePreparationToolsBoard(toolsBoard, tool.title)
 					syncPreparationEntryState()
 				end
 			end)
 		end
+		table.insert(toolStations, {
+			part = toolPart,
+			prompt = prompt,
+			tool = tool,
+		})
 	end
 
 	if type(matchContext) == "table" then
