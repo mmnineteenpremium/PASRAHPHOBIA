@@ -70,6 +70,7 @@ local CUE_AUDIO_PROFILES = {
 		env_objectthrow = { volumeScale = 1.0, playbackSpeed = 0.96 },
 		env_windowknock = { volumeScale = 0.86, playbackSpeed = 0.98 },
 		env_lightflicker = { volumeScale = 0.72, playbackSpeed = 1.04 },
+		prep_focus_lock = { volumeScale = 0.58, playbackSpeed = 1.12 },
 		env_radiostatic = { volumeScale = 0.68, playbackSpeed = 0.9 },
 		env_shadowapparition = { volumeScale = 0.94, playbackSpeed = 0.9 },
 		env_footstepsound = { volumeScale = 0.82, playbackSpeed = 1.03 },

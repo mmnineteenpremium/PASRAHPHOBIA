@@ -3559,6 +3559,7 @@ function UISystem:Init(context)
 	self._teleportOverlayToken = 0
 	self._teleportOverlayTween = nil
 	self._lastCountdownAudioSecond = nil
+	self._lastPreparationFocusToolSeen = nil
 	self._matchWindowDismissed = false
 	self._matchControlsHintText = "[1] Scan   [2] Garam   [3] Salib   [4] Dupa   [5] Spirit   [J] Journal   [F] Flashlight   [K] Match   [Esc] Tutup UI"
 	self._uxWidgets = {
@@ -4637,6 +4638,52 @@ function UISystem:_previewPreparationBreachSensory()
 			cue = "env_doorslam",
 			intensity = 0.9,
 		})
+	end
+end
+
+function UISystem:_previewPreparationFocusSensory(focusTool)
+	if type(focusTool) ~= "string" or focusTool == "" then
+		return
+	end
+
+	local soundSystem = self:_getClientService("SoundSystem")
+	if soundSystem and type(soundSystem.PreviewAudioEvent) == "function" then
+		soundSystem:PreviewAudioEvent({
+			eventName = "EnvironmentalAudioTriggered",
+			cue = "prep_focus_lock",
+			intensity = 0.62,
+		})
+	end
+
+	local vfxController = self:_getClientService("VFXController")
+	if vfxController and type(vfxController.PreviewEvent) == "function" then
+		vfxController:PreviewEvent({
+			eventName = "PreparationFocusChanged",
+			tool = focusTool,
+			intensity = 0.74,
+		})
+	end
+end
+
+function UISystem:_handlePreparationFocusToolChanged()
+	local player = Players.LocalPlayer
+	if not player then
+		return
+	end
+
+	local focusTool = tostring(player:GetAttribute("PreparationFocusTool") or "")
+	local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+	local previousTool = type(self._lastPreparationFocusToolSeen) == "string" and self._lastPreparationFocusToolSeen or ""
+	if focusTool == previousTool then
+		return
+	end
+
+	self._lastPreparationFocusToolSeen = focusTool ~= "" and focusTool or nil
+	if lifecyclePhase == "PreparationPhase" and focusTool ~= "" then
+		self:_previewPreparationFocusSensory(focusTool)
+		if self._matchPhase == MATCH_PHASE.PREPARING or self._matchPhase == MATCH_PHASE.BRIEFING or self._matchPhase == MATCH_PHASE.LOADING then
+			self:_refreshBasicMatchPanel("Preparation", self._phasePayload)
+		end
 	end
 end
 
@@ -9550,6 +9597,9 @@ function UISystem:_bindPostTeleportLoading()
 
 	table.insert(self._connections, player:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
 		self:_syncPhaseFromAuthoritativeLifecycle()
+	end))
+	table.insert(self._connections, player:GetAttributeChangedSignal("PreparationFocusTool"):Connect(function()
+		self:_handlePreparationFocusToolChanged()
 	end))
 end
 
