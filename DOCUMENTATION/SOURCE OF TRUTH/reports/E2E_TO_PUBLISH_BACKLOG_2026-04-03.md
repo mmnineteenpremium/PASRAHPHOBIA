@@ -2759,6 +2759,19 @@ Urutan yang paling masuk akal dari titik sekarang:
   - dressing exterior yang berbeda per map target
   - transisi dunia luar -> breach investigasi yang lebih sinematik
 
+- progress tambahan pada lane `asset integration`:
+  - `Pocong` profile asset sekarang dipakai sebagai overlay visual ghost runtime
+  - `Garam / Salib / Dupa` sekarang dipakai tegas oleh jalur visual utility tool match
+  - `Lobby evidence training` sekarang memprioritaskan ghost yang memang punya asset model
+- validasi terbaru:
+  - `Preview_Pocong.meshSize = 1.4 x 5.2 x 1.2`
+  - `Garam_salt_probe.usesAsset = true | state = Triggered`
+  - `Salib_cross_probe.usesAsset = true | state = Armed | charges = 2`
+  - `Dupa_smudge_probe.usesAsset = true | state = Repel | repelled = true`
+- residual sesudah pass ini:
+  - asset berikutnya yang baru masih harus masuk jalur gameplay dengan pola yang sama
+  - premium art/model polish tetap lane terpisah sesudah wiring asset inti aman
+
 - progress tambahan pada lane `outside match preparation staging`:
   - `tool rack` dunia sekarang stateful dan punya proof runtime yang deterministik
   - source owner:
