@@ -12349,3 +12349,35 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - status:
   - **LANJUT / ASSET BARU SUDAH MASUK JALUR GAMEPLAY UTAMA**.
   - residual menyempit ke asset pass berikutnya yang benar-benar baru, bukan wiring asset yang sudah ada
+
+- progress tambahan pada lane `player-facing asset integration`:
+  - `Field Kit` client sekarang memakai preview 3D langsung dari asset tools untuk:
+    - `Garam`
+    - `Salib`
+    - `Dupa`
+  - owner yang dipakai:
+    - [src/client/UI/Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/UI/Main.lua)
+  - preview memakai `ViewportFrame + PreviewWorld + PreviewCamera`
+  - style preview ikut state HUD:
+    - `ready`
+    - `focus`
+    - `active`
+    - `spent`
+    - `empty`
+    - `danger`
+- validasi terbaru:
+  - proof live di `PlayerGui.MatchUI.FieldKitFrame.Buttons`:
+    - `GaramButton.ToolPreview = present`
+    - `SalibButton.ToolPreview = present`
+    - `DupaButton.ToolPreview = present`
+    - semua punya:
+      - `PreviewWorld`
+      - `PreviewCamera`
+      - model asset clone yang sesuai
+    - signature awal:
+      - `Garam|ready`
+      - `Salib|ready`
+      - `Dupa|ready`
+- residual sesudah pass ini:
+  - preview asset HUD sudah hidup dan terlihat di jalur player-facing
+  - verifikasi live `active/spent` saat match run ini belum saya cap final karena `FieldKit` tidak visible pada sesi E2E yang dipakai untuk proof lanjutan

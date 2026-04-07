@@ -2759,6 +2759,19 @@ Urutan yang paling masuk akal dari titik sekarang:
   - dressing exterior yang berbeda per map target
   - transisi dunia luar -> breach investigasi yang lebih sinematik
 
+- progress tambahan pada lane `asset player-facing HUD`:
+  - `Field Kit` sekarang menampilkan preview 3D asset untuk `Garam`, `Salib`, dan `Dupa`
+  - preview ini sudah hidup di `PlayerGui.MatchUI.FieldKitFrame.Buttons`
+  - source owner:
+    - [src/client/UI/Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/client/UI/Main.lua)
+- validasi terbaru:
+  - `GaramButton.ToolPreview -> PreviewSignature = Garam|ready`
+  - `SalibButton.ToolPreview -> PreviewSignature = Salib|ready`
+  - `DupaButton.ToolPreview -> PreviewSignature = Dupa|ready`
+- residual sesudah pass ini:
+  - verifikasi live `active/spent` pada preview HUD saat run match E2E masih terbuka
+  - asset preview player-facing sudah tidak lagi hanya ada di world placement
+
 - progress tambahan pada lane `asset integration`:
   - `Pocong` profile asset sekarang dipakai sebagai overlay visual ghost runtime
   - `Garam / Salib / Dupa` sekarang dipakai tegas oleh jalur visual utility tool match

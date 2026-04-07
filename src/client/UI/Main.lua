@@ -254,6 +254,26 @@ local FIELD_KIT_TOOL_CONFIG = {
 		keyCode = Enum.KeyCode.Five,
 	},
 }
+local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
+	Garam = {
+		rotation = Vector3.new(10, 24, 0),
+		focusOffset = Vector3.new(0, 0.06, 0),
+		cameraVector = Vector3.new(0.26, 0.72, 1),
+		distanceScale = 1.5,
+	},
+	Salib = {
+		rotation = Vector3.new(0, 18, 0),
+		focusOffset = Vector3.new(0, 1.02, 0),
+		cameraVector = Vector3.new(0.62, 0.24, 1),
+		distanceScale = 1.05,
+	},
+	Dupa = {
+		rotation = Vector3.new(-8, -20, 0),
+		focusOffset = Vector3.new(0.08, 0.18, 0),
+		cameraVector = Vector3.new(0.42, 0.56, 1),
+		distanceScale = 1.34,
+	},
+}
 local lobbyZonePartCache = {}
 
 local function createDefaultFieldKitToolState(toolType)
@@ -784,7 +804,154 @@ local function styleButton(button, text)
 	refreshButtonPolish(button, true)
 end
 
-local function ensureFieldKitButtonVisuals(button, definition)
+local function getFieldKitToolAssetTemplate(toolType)
+	if type(toolType) ~= "string" or toolType == "" then
+		return nil
+	end
+
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local models = assets and assets:FindFirstChild("Models")
+	local tools = models and models:FindFirstChild("Tools")
+	local template = tools and tools:FindFirstChild(toolType)
+	if template and template:IsA("Model") then
+		return template
+	end
+	return nil
+end
+
+local function findPreviewModelRoot(model)
+	if not model then
+		return nil
+	end
+	if model.PrimaryPart then
+		return model.PrimaryPart
+	end
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			return descendant
+		end
+	end
+	return nil
+end
+
+local function styleFieldKitToolPreview(viewportFrame, accentColor, previewState)
+	local accent = accentColor or Color3.fromRGB(204, 210, 224)
+	local state = tostring(previewState or "ready")
+	local imageColor = Color3.fromRGB(242, 238, 230)
+	local backgroundColor = accent:Lerp(Color3.fromRGB(18, 24, 32), 0.88)
+	local backgroundTransparency = 0.08
+	local ambient = accent:Lerp(Color3.fromRGB(188, 194, 206), 0.7)
+	local lightColor = accent:Lerp(Color3.fromRGB(250, 244, 236), 0.42)
+
+	if state == "focus" then
+		backgroundColor = accent:Lerp(Color3.fromRGB(24, 30, 40), 0.74)
+		backgroundTransparency = 0.03
+		ambient = accent:Lerp(Color3.fromRGB(230, 236, 244), 0.28)
+		lightColor = accent:Lerp(Color3.fromRGB(255, 248, 236), 0.18)
+	elseif state == "active" then
+		backgroundColor = accent:Lerp(Color3.fromRGB(20, 26, 36), 0.58)
+		backgroundTransparency = 0.01
+		ambient = accent:Lerp(Color3.fromRGB(252, 248, 240), 0.1)
+		lightColor = accent:Lerp(Color3.fromRGB(255, 250, 244), 0.08)
+	elseif state == "pending" then
+		backgroundColor = accent:Lerp(Color3.fromRGB(22, 26, 34), 0.8)
+		backgroundTransparency = 0.08
+		ambient = accent:Lerp(Color3.fromRGB(214, 220, 232), 0.42)
+		lightColor = accent:Lerp(Color3.fromRGB(246, 238, 226), 0.24)
+	elseif state == "spent" or state == "empty" then
+		imageColor = Color3.fromRGB(156, 160, 168)
+		backgroundColor = Color3.fromRGB(34, 36, 42)
+		backgroundTransparency = 0.1
+		ambient = Color3.fromRGB(156, 160, 170)
+		lightColor = Color3.fromRGB(196, 198, 204)
+	elseif state == "danger" then
+		imageColor = Color3.fromRGB(246, 214, 214)
+		backgroundColor = Color3.fromRGB(64, 34, 34)
+		backgroundTransparency = 0.04
+		ambient = Color3.fromRGB(226, 166, 166)
+		lightColor = Color3.fromRGB(248, 204, 204)
+	end
+
+	viewportFrame.BackgroundColor3 = backgroundColor
+	viewportFrame.BackgroundTransparency = backgroundTransparency
+	viewportFrame.ImageColor3 = imageColor
+	viewportFrame.LightColor = lightColor
+	viewportFrame.Ambient = ambient
+	viewportFrame.LightDirection = Vector3.new(-0.72, -1, -0.44)
+end
+
+local function renderFieldKitToolPreview(viewportFrame, toolType, accentColor, previewState)
+	if not viewportFrame or not viewportFrame:IsA("ViewportFrame") then
+		return false
+	end
+
+	local previewConfig = FIELD_KIT_TOOL_PREVIEW_CONFIG[toolType]
+	local template = getFieldKitToolAssetTemplate(toolType)
+	if not previewConfig or not template then
+		viewportFrame.Visible = false
+		return false
+	end
+
+	styleFieldKitToolPreview(viewportFrame, accentColor, previewState)
+
+	local previewSignature = string.format("%s|%s", tostring(toolType), tostring(previewState or "ready"))
+	if viewportFrame:GetAttribute("PreviewSignature") == previewSignature then
+		viewportFrame.Visible = true
+		return true
+	end
+
+	for _, child in ipairs(viewportFrame:GetChildren()) do
+		if not child:IsA("UICorner") then
+			child:Destroy()
+		end
+	end
+
+	local worldModel = Instance.new("WorldModel")
+	worldModel.Name = "PreviewWorld"
+	worldModel.Parent = viewportFrame
+
+	local camera = Instance.new("Camera")
+	camera.Name = "PreviewCamera"
+	camera.Parent = viewportFrame
+	viewportFrame.CurrentCamera = camera
+
+	local model = template:Clone()
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.Anchored = true
+			descendant.CanCollide = false
+			descendant.CanQuery = false
+			descendant.CanTouch = false
+			descendant.CastShadow = false
+		end
+	end
+	local root = findPreviewModelRoot(model)
+	if not root then
+		viewportFrame.Visible = false
+		return false
+	end
+	model.PrimaryPart = root
+	model.Parent = worldModel
+
+	local rotation = previewConfig.rotation or Vector3.zero
+	model:PivotTo(CFrame.new() * CFrame.Angles(math.rad(rotation.X), math.rad(rotation.Y), math.rad(rotation.Z)))
+	local extents = model:GetExtentsSize()
+	local focusOffset = previewConfig.focusOffset or Vector3.zero
+	local focus = Vector3.new(0, math.max(extents.Y * 0.34, 0.12), 0) + focusOffset
+	local distance = math.max(extents.X, extents.Y, extents.Z) * (tonumber(previewConfig.distanceScale) or 1.4)
+	local cameraVector = previewConfig.cameraVector or Vector3.new(0.4, 0.5, 1)
+	if cameraVector.Magnitude <= 0 then
+		cameraVector = Vector3.new(0.4, 0.5, 1)
+	end
+	local cameraOffset = cameraVector.Unit * distance
+	camera.CFrame = CFrame.new(focus + cameraOffset, focus)
+
+	viewportFrame:SetAttribute("PreviewSignature", previewSignature)
+	viewportFrame.Visible = true
+	return true
+end
+
+local function ensureFieldKitButtonVisuals(button, definition, toolType)
 	if not button then
 		return nil
 	end
@@ -892,6 +1059,20 @@ local function ensureFieldKitButtonVisuals(button, definition)
 	end
 	ensureCorner(accentBar, "AccentBarCorner", UDim.new(1, 0))
 
+	local toolPreview = button:FindFirstChild("ToolPreview")
+	if not toolPreview and FIELD_KIT_TOOL_PREVIEW_CONFIG[toolType] ~= nil then
+		toolPreview = Instance.new("ViewportFrame")
+		toolPreview.Name = "ToolPreview"
+		toolPreview.BackgroundColor3 = Color3.fromRGB(20, 24, 32)
+		toolPreview.BackgroundTransparency = 0.08
+		toolPreview.BorderSizePixel = 0
+		toolPreview.Size = UDim2.fromOffset(30, 18)
+		toolPreview.Position = UDim2.fromOffset(5, 7)
+		toolPreview.ZIndex = button.ZIndex + 2
+		toolPreview.Parent = button
+		ensureCorner(toolPreview, "ToolPreviewCorner", UDim.new(0, 7))
+	end
+
 	glyphLabel.Text = tostring((definition and definition.glyph) or "?")
 	titleLabel.Text = tostring((definition and definition.label) or "TOOL")
 	shortcutLabel.Text = string.format("[%s]", tostring((definition and definition.shortcut) or "?"))
@@ -909,6 +1090,7 @@ local function ensureFieldKitButtonVisuals(button, definition)
 		HintLabel = hintLabel,
 		FooterLabel = footerLabel,
 		AccentBar = accentBar,
+		ToolPreview = toolPreview,
 	}
 end
 
@@ -5013,6 +5195,8 @@ function UISystem:_refreshFieldKitPanel()
 			if button and toolConfig and toolState then
 				local metaText, metaDanger, footerText = self:_resolveFieldKitMeta(toolName, toolState)
 				local selected = activeTool == toolName and (isRecent or toolState.pending or toolState.visualPlaced == true)
+				local usesRemaining = tonumber(toolState.usesRemaining)
+				local chargesRemaining = tonumber(toolState.chargesRemaining)
 				local idleColor = toolConfig.accent:Lerp(Color3.fromRGB(34, 42, 56), 0.44)
 				local fillColor = selected and toolConfig.accent or idleColor
 				button.BackgroundColor3 = fillColor
@@ -5031,6 +5215,29 @@ function UISystem:_refreshFieldKitPanel()
 					widget.GlyphPlate.Size = UDim2.fromOffset(26, 20)
 					widget.GlyphPlate.BackgroundColor3 = toolConfig.accent:Lerp(Color3.fromRGB(248, 244, 236), selected and 0.12 or 0.2)
 					widget.GlyphPlate.BackgroundTransparency = selected and 0.08 or 0.18
+				end
+				if widget.ToolPreview then
+					local previewState = "ready"
+					if toolState.pending then
+						previewState = "pending"
+					elseif metaDanger or toolState.lastSuccess == false then
+						previewState = "danger"
+					elseif toolName == "Salib" and chargesRemaining ~= nil and chargesRemaining <= 0 and toolState.visualPlaced == true then
+						previewState = "spent"
+					elseif usesRemaining ~= nil and usesRemaining <= 0 then
+						previewState = "empty"
+					elseif toolState.visualPlaced == true then
+						previewState = "active"
+					elseif selected then
+						previewState = "focus"
+					end
+					local previewVisible = renderFieldKitToolPreview(widget.ToolPreview, toolName, toolConfig.accent, previewState)
+					widget.ToolPreview.Visible = previewVisible
+					if widget.GlyphLabel then
+						widget.GlyphLabel.Visible = not previewVisible
+					end
+				elseif widget.GlyphLabel then
+					widget.GlyphLabel.Visible = true
 				end
 				if widget.GlyphLabel then
 					widget.GlyphLabel.Size = UDim2.fromScale(1, 1)
@@ -12575,7 +12782,7 @@ function UISystem:_ensureBasicUIs()
 					toolButton.Parent = fieldKitButtonsFrame
 					self:_setSelectableStyle(toolButton)
 				end
-				local fieldKitWidget = ensureFieldKitButtonVisuals(toolButton, definition)
+				local fieldKitWidget = ensureFieldKitButtonVisuals(toolButton, definition, toolType)
 				if toolButton:GetAttribute("Bound") ~= true then
 					local boundToolType = toolType
 					local boundOpenJournal = definition.openJournal == true
