@@ -2824,6 +2824,29 @@ Urutan yang paling masuk akal dari titik sekarang:
   - dressing exterior yang lebih kaya lagi bila mau naik ke presentational polish penuh
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - breach sekarang tidak berhenti di board/phase saja
+  - staging runtime sekarang punya:
+    - `PreparationBreachTarget_1..4`
+    - attr `PreparationBreachMoved`
+  - saat `MatchLifecyclePhase` naik ke `InvestigationPhase`, pemain otomatis dipindah dari platform staging luar ke target entry dunia di dalam map
+- validasi terbaru:
+  - build:
+    - `_tmp_match_preparation_breach_entry_build.rbxlx`
+  - `HauntedHouse`:
+    - `stagedPos = 1299.11, 3.50, -5.17`
+    - `PreparationBreachTarget_1 = 1184.95, 4.00, -4.20`
+    - `PreparationBreachMoved = true`
+    - `movedPos = 1184.95, 4.00, -4.20`
+  - `AbandonedPalace`:
+    - `stagedPos = 5.35, 3.50, 128.30`
+    - `PreparationBreachTarget_1 = 4.20, 4.00, 24.95`
+    - `PreparationBreachMoved = true`
+    - `movedPos = 4.20, 3.42, 24.95`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar bila mau naik ke art final
+  - presentational polish/sinematik breach bila mau naik ke finishing premium
+
+- progress tambahan pada lane `outside match preparation staging`:
   - profile staging sekarang dibedakan per map:
     - `HauntedHouse` -> `CONTRACT BAY`
     - `AbandonedPalace` -> `PALACE GATE`

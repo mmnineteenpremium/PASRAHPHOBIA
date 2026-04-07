@@ -12,6 +12,7 @@ local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
 local PREPARATION_STAGING_FOLDER_NAME = "PreparationStagingRuntime"
 local PREPARATION_STAGING_DEBUG_ATTR = "PreparationStagingRuntimeDebug"
 local PREPARATION_LANE_STATE_ATTR = "PreparationEntryLaneState"
+local PREPARATION_BREACH_MOVED_ATTR = "PreparationBreachMoved"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
@@ -1491,6 +1492,47 @@ local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen, p
 		body,
 		accent
 	)
+end
+
+local function movePlayersToPreparationBreachTargets(folder, matchContext, outward)
+	if typeof(folder) ~= "Instance" or type(matchContext) ~= "table" then
+		return false
+	end
+
+	local players = matchContext.players
+	if type(players) ~= "table" or #players == 0 then
+		return false
+	end
+
+	local targets = {}
+	for index = 1, 4 do
+		local target = folder:FindFirstChild("PreparationBreachTarget_" .. tostring(index))
+		if target and target:IsA("BasePart") then
+			table.insert(targets, target)
+		end
+	end
+	if #targets == 0 then
+		return false
+	end
+
+	local movedAny = false
+	for index, participant in ipairs(players) do
+		if typeof(participant) == "Instance" and participant:IsA("Player") then
+			local character = participant.Character
+			local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+			if rootPart and rootPart:IsA("BasePart") then
+				local target = targets[math.min(index, #targets)]
+				local targetPosition = target.Position
+				character:PivotTo(CFrame.lookAt(targetPosition, targetPosition - outward, Vector3.yAxis))
+				movedAny = true
+			end
+		end
+	end
+
+	if movedAny then
+		folder:SetAttribute(PREPARATION_BREACH_MOVED_ATTR, true)
+	end
+	return movedAny
 end
 
 local function buildPreparationStageDecor(folder, profile, platformCenter, runnerCenter, right, outward)
@@ -3187,6 +3229,9 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		updatePreparationEntrySign(entrySign, selectedTool, breachOpen, profile)
 		updatePreparationEntryBeacon(entryBeacon, selectedTool, breachOpen, profile)
 		updatePreparationEntryLane(folder, selectedTool, breachOpen, profile)
+		if breachOpen and folder:GetAttribute(PREPARATION_BREACH_MOVED_ATTR) ~= true then
+			movePlayersToPreparationBreachTargets(folder, matchContext, outward)
+		end
 		if breachOpen and breachPrompt and breachPrompt.Parent then
 			breachPrompt:Destroy()
 		end
@@ -3269,6 +3314,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		syncPreparationEntryState()
 
 		local spawnOffsets = { -5.4, -1.8, 1.8, 5.4 }
+		local breachOffsets = { -4.2, -1.4, 1.4, 4.2 }
 		local spawnY = anchorDoor.Position.Y + 0.5
 		for index = 1, 4 do
 			local spawnPart = ensurePart(spawnFolder, "PlayerSpawn_" .. tostring(index))
@@ -3282,6 +3328,25 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				{
 					Size = Vector3.new(1, 1, 1),
 					CFrame = CFrame.lookAt(spawnPosition, spawnPosition - outward, Vector3.yAxis),
+					Transparency = 1,
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+					Color = Color3.fromRGB(255, 255, 255),
+				}
+			)
+
+			local breachTarget = ensurePart(folder, "PreparationBreachTarget_" .. tostring(index))
+			local breachPosition = Vector3.new(
+				anchorDoor.Position.X,
+				spawnY,
+				anchorDoor.Position.Z
+			) - (outward * 4.8) + (right * breachOffsets[index])
+			configurePart(
+				breachTarget,
+				{
+					Size = Vector3.new(1, 1, 1),
+					CFrame = CFrame.lookAt(breachPosition, breachPosition - outward, Vector3.yAxis),
 					Transparency = 1,
 					CanCollide = false,
 					CanTouch = false,
