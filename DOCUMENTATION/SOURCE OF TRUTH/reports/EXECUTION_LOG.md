@@ -12244,3 +12244,63 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - residual utama tinggal:
     - premium asset/non-primitive
     - final art polish
+
+- progress tambahan pada lane `outside match preparation staging`:
+  - pass struktural besar per-map sekarang masuk, jadi staging tidak lagi hanya `trim + props`
+  - owner source:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - tambahan struktural:
+    - `HauntedHouse`
+      - `PreparationHouseFacadeWall_1/2`
+      - `PreparationHouseWindow_1/2`
+      - `PreparationHouseRoofCap`
+      - `PreparationHousePorchLintel`
+    - `AbandonedPalace`
+      - `PreparationPalacePorticoRoof`
+      - `PreparationPalaceScreen_1/2`
+      - `PreparationPalaceCornice`
+    - `EmptyBuilding`
+      - `PreparationIndustrialWall`
+      - `PreparationIndustrialRoof`
+      - `PreparationIndustrialCatwalkStrip`
+    - `StudioMMNineteen`
+      - `PreparationControlVestibule`
+      - `PreparationControlRoof`
+      - `PreparationControlPulseBar`
+  - accent-driven parts sekarang pakai jalur state umum `idle / focus / breach`
+- validasi:
+  - build:
+    - `_tmp_match_preparation_structural_pass_build.rbxlx`
+  - lintas map:
+    - `HauntedHouse`:
+      - `PreparationHouseFacadeWall_1 = true`
+      - `PreparationHouseRoofCap = true`
+      - `PreparationHousePorchLintel = true`
+    - `AbandonedPalace`:
+      - `PreparationPalacePorticoRoof = true`
+      - `PreparationPalaceScreen_1 = true`
+      - `PreparationPalaceCornice = true`
+    - `EmptyBuilding`:
+      - `PreparationIndustrialWall = true`
+      - `PreparationIndustrialRoof = true`
+      - `PreparationIndustrialCatwalkStrip = true`
+    - `StudioMMNineteen`:
+      - `PreparationControlVestibule = true`
+      - `PreparationControlRoof = true`
+      - `PreparationControlPulseBar = true`
+  - `HauntedHouse` state proof:
+    - idle:
+      - `PreparationHousePorchLintel = 0.839216, 0.627451, 0.407843`
+      - `transparency = 0.16`
+    - focus `EMF`:
+      - `PreparationHousePorchLintel = 0.517647, 0.729412, 1`
+      - `transparency = 0.08`
+    - breach:
+      - `PreparationHousePorchLintel = 0.556863, 0.839216, 0.776471`
+      - `transparency = 0.03`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - staging luar sekarang punya massa arsitektural yang lebih tebal dan stateful
+  - residual lane menyempit ke:
+    - premium asset/non-primitive
+    - final art polish

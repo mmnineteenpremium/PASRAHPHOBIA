@@ -2867,6 +2867,37 @@ Urutan yang paling masuk akal dari titik sekarang:
   - final art polish
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - pass struktural besar per-map sekarang masuk
+  - source owner:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - validasi terbaru:
+    - build:
+      - `_tmp_match_preparation_structural_pass_build.rbxlx`
+    - `HauntedHouse`:
+      - `PreparationHouseFacadeWall_1 = true`
+      - `PreparationHouseRoofCap = true`
+      - `PreparationHousePorchLintel = true`
+    - `AbandonedPalace`:
+      - `PreparationPalacePorticoRoof = true`
+      - `PreparationPalaceScreen_1 = true`
+      - `PreparationPalaceCornice = true`
+    - `EmptyBuilding`:
+      - `PreparationIndustrialWall = true`
+      - `PreparationIndustrialRoof = true`
+      - `PreparationIndustrialCatwalkStrip = true`
+    - `StudioMMNineteen`:
+      - `PreparationControlVestibule = true`
+      - `PreparationControlRoof = true`
+      - `PreparationControlPulseBar = true`
+    - `HauntedHouse` state proof:
+      - idle lintel transparency `0.16`
+      - focus lintel transparency `0.08`
+      - breach lintel transparency `0.03`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - final art polish
+
+- progress tambahan pada lane `outside match preparation staging`:
   - dua map `facility` sekarang tidak lagi share dressing yang sama:
     - `EmptyBuilding` -> varian `industrial`
     - `StudioMMNineteen` -> varian `control`

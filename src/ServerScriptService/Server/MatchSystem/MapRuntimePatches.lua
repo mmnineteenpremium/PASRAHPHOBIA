@@ -821,6 +821,17 @@ local function configurePart(part, properties)
 	return part
 end
 
+local function configureAccentDrivenPart(part, properties, idleTransparency, focusTransparency, breachTransparency)
+	part = configurePart(part, properties)
+	if part and part:IsA("BasePart") then
+		part:SetAttribute("PreparationAccentDriven", true)
+		part:SetAttribute("PreparationAccentIdleTransparency", tonumber(idleTransparency) or 0.18)
+		part:SetAttribute("PreparationAccentFocusTransparency", tonumber(focusTransparency) or 0.1)
+		part:SetAttribute("PreparationAccentBreachTransparency", tonumber(breachTransparency) or 0.04)
+	end
+	return part
+end
+
 local function ensureBoardSurface(part, surfaceName, face, titleText, subtitleText, bodyLines, accentColor)
 	if not (part and part:IsA("BasePart")) then
 		return nil
@@ -1380,52 +1391,6 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 		runner.Material = type(profile) == "table" and profile.runnerMaterial or runner.Material
 	end
 
-	local runnerInset = folder:FindFirstChild("PreparationRunnerInset")
-	if runnerInset and runnerInset:IsA("BasePart") then
-		if stateChanged then
-			tweenPreparationProperties(runnerInset, PREPARATION_FAST_TWEEN_INFO, {
-				Color = accent,
-				Transparency = breachOpen and 0.08 or (type(selectedTool) == "string" and selectedTool ~= "" and 0.14 or 0.28),
-			})
-		else
-			runnerInset.Color = accent
-			runnerInset.Transparency = breachOpen and 0.08 or (type(selectedTool) == "string" and selectedTool ~= "" and 0.14 or 0.28)
-		end
-	end
-
-	local canopyTrim = folder:FindFirstChild("PreparationCanopyTrim")
-	if canopyTrim and canopyTrim:IsA("BasePart") then
-		if stateChanged then
-			tweenPreparationProperties(canopyTrim, PREPARATION_FAST_TWEEN_INFO, {
-				Color = accent,
-				Transparency = breachOpen and 0.04 or 0.16,
-			})
-		else
-			canopyTrim.Color = accent
-			canopyTrim.Transparency = breachOpen and 0.04 or 0.16
-		end
-	end
-
-	for _, trimName in ipairs({
-		"PreparationPlatformTrim_Front",
-		"PreparationPlatformTrim_Back",
-		"PreparationPlatformTrim_Left",
-		"PreparationPlatformTrim_Right",
-	}) do
-		local trim = folder:FindFirstChild(trimName)
-		if trim and trim:IsA("BasePart") then
-			if stateChanged then
-				tweenPreparationProperties(trim, PREPARATION_FAST_TWEEN_INFO, {
-					Color = accent,
-					Transparency = breachOpen and 0.06 or 0.18,
-				})
-			else
-				trim.Color = accent
-				trim.Transparency = breachOpen and 0.06 or 0.18
-			end
-		end
-	end
-
 	for index = 1, 2 do
 		local flood = folder:FindFirstChild("PreparationFloodlight_" .. tostring(index))
 		if flood and flood:IsA("BasePart") then
@@ -1516,16 +1481,21 @@ local function updatePreparationEntryLane(folder, selectedTool, breachOpen, prof
 		end
 	end
 
-	local crest = folder:FindFirstChild("PreparationSiteCrest")
-	if crest and crest:IsA("BasePart") then
-		if stateChanged then
-			tweenPreparationProperties(crest, PREPARATION_FAST_TWEEN_INFO, {
-				Color = accent,
-				Transparency = breachOpen and 0.02 or 0.12,
-			})
-		else
-			crest.Color = accent
-			crest.Transparency = breachOpen and 0.02 or 0.12
+	for _, descendant in ipairs(folder:GetDescendants()) do
+		if descendant:IsA("BasePart") and descendant:GetAttribute("PreparationAccentDriven") == true then
+			local idleTransparency = tonumber(descendant:GetAttribute("PreparationAccentIdleTransparency")) or descendant.Transparency
+			local focusTransparency = tonumber(descendant:GetAttribute("PreparationAccentFocusTransparency")) or idleTransparency
+			local breachTransparency = tonumber(descendant:GetAttribute("PreparationAccentBreachTransparency")) or focusTransparency
+			local targetTransparency = breachOpen and breachTransparency or ((type(selectedTool) == "string" and selectedTool ~= "") and focusTransparency or idleTransparency)
+			if stateChanged then
+				tweenPreparationProperties(descendant, PREPARATION_FAST_TWEEN_INFO, {
+					Color = accent,
+					Transparency = targetTransparency,
+				})
+			else
+				descendant.Color = accent
+				descendant.Transparency = targetTransparency
+			end
 		end
 	end
 
@@ -1769,7 +1739,7 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 	glowLight.Shadows = false
 
 	local crest = ensurePart(folder, "PreparationSiteCrest")
-	configurePart(
+	configureAccentDrivenPart(
 		crest,
 		{
 			Size = Vector3.new(1.4, 1.4, 0.12),
@@ -1781,11 +1751,14 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 			CanQuery = false,
 			Transparency = 0.12,
 			Shape = Enum.PartType.Ball,
-		}
+		},
+		0.12,
+		0.08,
+		0.02
 	)
 
 	local runnerInset = ensurePart(folder, "PreparationRunnerInset")
-	configurePart(
+	configureAccentDrivenPart(
 		runnerInset,
 		{
 			Size = Vector3.new(3.6, 0.05, 12.4),
@@ -1796,11 +1769,14 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 			CanTouch = false,
 			CanQuery = false,
 			Transparency = 0.28,
-		}
+		},
+		0.28,
+		0.14,
+		0.08
 	)
 
 	local canopyTrim = ensurePart(folder, "PreparationCanopyTrim")
-	configurePart(
+	configureAccentDrivenPart(
 		canopyTrim,
 		{
 			Size = Vector3.new(10.2, 0.14, 0.22),
@@ -1811,7 +1787,10 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 			CanTouch = false,
 			CanQuery = false,
 			Transparency = 0.16,
-		}
+		},
+		0.16,
+		0.1,
+		0.04
 	)
 
 	for _, trimData in ipairs({
@@ -1821,7 +1800,7 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 		{ name = "PreparationPlatformTrim_Right", size = Vector3.new(0.18, 0.12, 9.4), offset = right * 12.9 + Vector3.new(0, 0.02, 0) },
 	}) do
 		local trim = ensurePart(folder, trimData.name)
-		configurePart(
+		configureAccentDrivenPart(
 			trim,
 			{
 				Size = trimData.size,
@@ -1832,7 +1811,10 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 				CanTouch = false,
 				CanQuery = false,
 				Transparency = 0.18,
-			}
+			},
+			0.18,
+			0.12,
+			0.06
 		)
 	end
 
@@ -2031,6 +2013,65 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 				CanQuery = true,
 			}
 		)
+		for index, side in ipairs({ -1, 1 }) do
+			local facadeWall = ensurePart(folder, "PreparationHouseFacadeWall_" .. tostring(index))
+			configurePart(
+				facadeWall,
+				{
+					Size = Vector3.new(3.6, 4.8, 0.42),
+					CFrame = CFrame.lookAt(platformCenter + (right * side * 6.4) + (outward * 0.4) + Vector3.new(0, 2.4, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.WoodPlanks,
+					Color = Color3.fromRGB(92, 78, 70),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local window = ensurePart(folder, "PreparationHouseWindow_" .. tostring(index))
+			configurePart(
+				window,
+				{
+					Size = Vector3.new(1.5, 1.5, 0.1),
+					CFrame = CFrame.lookAt(facadeWall.Position + Vector3.new(0, 0.24, -0.2), facadeWall.Position + facadeWall.CFrame.LookVector, Vector3.yAxis),
+					Material = Enum.Material.Glass,
+					Color = Color3.fromRGB(176, 208, 236),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+					Transparency = 0.22,
+				}
+			)
+		end
+		local roofCap = ensurePart(folder, "PreparationHouseRoofCap")
+		configurePart(
+			roofCap,
+			{
+				Size = Vector3.new(13.2, 0.36, 4.6),
+				CFrame = CFrame.lookAt(platformCenter + (outward * 0.5) + Vector3.new(0, 5.06, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Slate,
+				Color = Color3.fromRGB(66, 70, 84),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
+		local porchLintel = ensurePart(folder, "PreparationHousePorchLintel")
+		configureAccentDrivenPart(
+			porchLintel,
+			{
+				Size = Vector3.new(9.8, 0.18, 0.18),
+				CFrame = CFrame.lookAt(platformCenter + (outward * 0.18) + Vector3.new(0, 3.12, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Neon,
+				Color = readyAccent,
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+				Transparency = 0.16,
+			},
+			0.16,
+			0.08,
+			0.03
+		)
 	elseif propStyle == "palace" then
 		local stairDais = ensurePart(folder, "PreparationStairDais")
 		configurePart(
@@ -2205,6 +2246,51 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 				CanQuery = false,
 			}
 		)
+		local porticoRoof = ensurePart(folder, "PreparationPalacePorticoRoof")
+		configurePart(
+			porticoRoof,
+			{
+				Size = Vector3.new(12.8, 0.42, 4.8),
+				CFrame = CFrame.lookAt(platformCenter + (outward * 0.36) + Vector3.new(0, 5.54, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Marble,
+				Color = Color3.fromRGB(148, 138, 128),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
+		for index, side in ipairs({ -1, 1 }) do
+			local screen = ensurePart(folder, "PreparationPalaceScreen_" .. tostring(index))
+			configurePart(
+				screen,
+				{
+					Size = Vector3.new(2.4, 4.6, 0.24),
+					CFrame = CFrame.lookAt(platformCenter + (right * side * 6.8) + (outward * 0.9) + Vector3.new(0, 2.32, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Marble,
+					Color = Color3.fromRGB(142, 130, 120),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+		end
+		local cornice = ensurePart(folder, "PreparationPalaceCornice")
+		configureAccentDrivenPart(
+			cornice,
+			{
+				Size = Vector3.new(11.4, 0.2, 0.16),
+				CFrame = CFrame.lookAt(platformCenter + (outward * 0.22) + Vector3.new(0, 4.78, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Neon,
+				Color = readyAccent,
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+				Transparency = 0.16,
+			},
+			0.16,
+			0.08,
+			0.03
+		)
 	else
 		local propVariant = type(profile) == "table" and tostring(profile.propVariant or "facility") or "facility"
 		for index, side in ipairs({ -1, 1 }) do
@@ -2353,6 +2439,49 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 					CanTouch = false,
 					CanQuery = false,
 				}
+			)
+			local hangarWall = ensurePart(folder, "PreparationIndustrialWall")
+			configurePart(
+				hangarWall,
+				{
+					Size = Vector3.new(12.8, 4.8, 0.24),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 0.8) + Vector3.new(0, 2.4, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.CorrodedMetal,
+					Color = Color3.fromRGB(88, 94, 102),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local hangarRoof = ensurePart(folder, "PreparationIndustrialRoof")
+			configurePart(
+				hangarRoof,
+				{
+					Size = Vector3.new(13.4, 0.28, 4.6),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 0.42) + Vector3.new(0, 5.12, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(78, 84, 96),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
+			local catwalkStrip = ensurePart(folder, "PreparationIndustrialCatwalkStrip")
+			configureAccentDrivenPart(
+				catwalkStrip,
+				{
+					Size = Vector3.new(10.2, 0.18, 0.18),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 0.16) + Vector3.new(0, 3.88, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Neon,
+					Color = readyAccent,
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+					Transparency = 0.18,
+				},
+				0.18,
+				0.1,
+				0.04
 			)
 			local generator = ensurePart(folder, "PreparationGenerator")
 			configurePart(
@@ -2534,6 +2663,49 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 					CanTouch = false,
 					CanQuery = false,
 				}
+			)
+			local controlVestibule = ensurePart(folder, "PreparationControlVestibule")
+			configurePart(
+				controlVestibule,
+				{
+					Size = Vector3.new(12.4, 4.8, 0.22),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 0.76) + Vector3.new(0, 2.4, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(62, 72, 92),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local controlRoof = ensurePart(folder, "PreparationControlRoof")
+			configurePart(
+				controlRoof,
+				{
+					Size = Vector3.new(13.2, 0.28, 4.2),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 0.44) + Vector3.new(0, 5.02, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(56, 66, 84),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
+			local controlPulseBar = ensurePart(folder, "PreparationControlPulseBar")
+			configureAccentDrivenPart(
+				controlPulseBar,
+				{
+					Size = Vector3.new(9.4, 0.18, 0.18),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 0.14) + Vector3.new(0, 3.86, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Neon,
+					Color = readyAccent,
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+					Transparency = 0.18,
+				},
+				0.18,
+				0.1,
+				0.04
 			)
 		end
 	end
