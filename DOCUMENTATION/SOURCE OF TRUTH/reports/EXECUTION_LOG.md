@@ -12422,3 +12422,20 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - preview asset HUD sekarang hidup di:
     - jalur `match EvidenceEvent`
     - jalur `lobby evidence training`
+
+- progress tambahan pada lane `player-facing asset integration`:
+  - panel `Lobby evidence training` sekarang punya `TrainingPreview` berbasis `ViewportFrame`
+  - preview itu membaca asset ghost dari `ReplicatedStorage.Assets.Models.Ghosts` dan profile visual dari `ReplicatedStorage.Assets.GhostVisualProfiles`
+  - jika asset ghost tersedia, title panel sekarang mengakui state itu lewat suffix `ASSET LIVE`
+  - jika asset tidak tersedia, panel fallback ke render profile sederhana tanpa memecah layout
+- validasi terbaru:
+  - proof live pada `Players.ZyraaaVex.PlayerGui.UXLayer.LobbyUXGui.LobbyUXLayer.TrainingFrame`
+  - hasil:
+    - `TrainingPreview -> present`
+    - `GhostPreviewWorld -> present`
+    - `GhostPreviewCamera -> present`
+    - `TrainingTitle -> Leak • CALM • ASSET LIVE`
+    - model preview aktif:
+      - `Leak | Model | 2.00,5.20,2.48`
+- residual sesudah pass ini:
+  - state `spent` untuk preview `Salib` masih belum saya cap final karena run `ConsumeHuntProtection` yang terakhir belum memberi hunt protection valid

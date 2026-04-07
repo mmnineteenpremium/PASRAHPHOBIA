@@ -3264,3 +3264,19 @@ Urutan yang paling masuk akal dari titik sekarang:
   - dressing exterior yang berbeda per map target
   - transisi dunia luar -> breach investigasi yang lebih sinematik
 
+- progress tambahan pada lane `player-facing asset integration`:
+  - `Lobby evidence training` sekarang menampilkan preview ghost 3D di panel training
+  - preview itu memakai asset ghost nyata saat tersedia, bukan hanya text ghost type
+  - title panel sekarang membedakan:
+    - `ASSET LIVE` bila model asset berhasil dirender
+    - `PROFILE` bila fallback profile yang dipakai
+- validasi terbaru:
+  - `TrainingFrame.TrainingPreview -> present`
+  - `GhostPreviewWorld -> present`
+  - `GhostPreviewCamera -> present`
+  - `TrainingTitle -> Leak • CALM • ASSET LIVE`
+  - model preview live:
+    - `Leak | Model | 2.00,5.20,2.48`
+- residual sesudah pass ini:
+  - proof `Salib|spent` pada HUD masih belum final
+

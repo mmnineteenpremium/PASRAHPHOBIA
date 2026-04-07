@@ -358,6 +358,41 @@ local function loadMapMetadata()
 end
 
 local MAP_METADATA = loadMapMetadata()
+local function coercePreviewVector3(value)
+	if typeof(value) == "Vector3" then
+		return value
+	end
+	if type(value) == "table" then
+		local x = tonumber(value[1] or value.x or value.X)
+		local y = tonumber(value[2] or value.y or value.Y)
+		local z = tonumber(value[3] or value.z or value.Z)
+		if x and y and z then
+			return Vector3.new(x, y, z)
+		end
+	end
+	return nil
+end
+
+local function loadGhostVisualProfileMetadata()
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local profilesFolder = assets and assets:FindFirstChild("GhostVisualProfiles")
+	if not profilesFolder then
+		return {}
+	end
+
+	local out = {}
+	for _, moduleScript in ipairs(profilesFolder:GetChildren()) do
+		if moduleScript:IsA("ModuleScript") then
+			local profile = safeRequire(moduleScript)
+			if type(profile) == "table" then
+				out[moduleScript.Name] = profile
+			end
+		end
+	end
+	return out
+end
+
+local GHOST_VISUAL_PROFILE_METADATA = loadGhostVisualProfileMetadata()
 local UI_BRAND = {
 	text = Color3.fromRGB(244, 241, 234),
 	muted = Color3.fromRGB(184, 194, 208),
@@ -819,6 +854,42 @@ local function getFieldKitToolAssetTemplate(toolType)
 	return nil
 end
 
+local function getGhostPreviewAssetTemplate(ghostType)
+	if type(ghostType) ~= "string" or ghostType == "" then
+		return nil
+	end
+
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local models = assets and assets:FindFirstChild("Models")
+	local ghosts = models and models:FindFirstChild("Ghosts")
+	if not ghosts then
+		return nil
+	end
+
+	local profile = GHOST_VISUAL_PROFILE_METADATA[ghostType]
+	local candidateNames = {}
+	local function addCandidate(name)
+		if type(name) == "string" and name ~= "" then
+			table.insert(candidateNames, name)
+		end
+	end
+
+	addCandidate(ghostType)
+	addCandidate(type(profile) == "table" and profile.modelName or nil)
+	if type(profile) == "table" and type(profile.modelName) == "string" and string.sub(profile.modelName, 1, 6) == "Ghost_" then
+		addCandidate(string.sub(profile.modelName, 7))
+	end
+	addCandidate("Ghost_" .. ghostType)
+
+	for _, candidateName in ipairs(candidateNames) do
+		local template = ghosts:FindFirstChild(candidateName)
+		if template and template:IsA("Model") then
+			return template, profile
+		end
+	end
+	return nil, profile
+end
+
 local function findPreviewModelRoot(model)
 	if not model then
 		return nil
@@ -832,6 +903,55 @@ local function findPreviewModelRoot(model)
 		end
 	end
 	return nil
+end
+
+local function buildGhostPreviewFallbackModel(ghostType, accentColor)
+	local model = Instance.new("Model")
+	model.Name = tostring(ghostType or "Ghost")
+
+	local shell = Instance.new("Part")
+	shell.Name = "Shell"
+	shell.Anchored = true
+	shell.CanCollide = false
+	shell.CanQuery = false
+	shell.CanTouch = false
+	shell.Size = Vector3.new(2.1, 3.4, 1.4)
+	shell.Material = Enum.Material.SmoothPlastic
+	shell.Color = (typeof(accentColor) == "Color3" and accentColor or Color3.fromRGB(188, 208, 236)):Lerp(Color3.fromRGB(246, 244, 238), 0.34)
+	shell.Transparency = 0.12
+	shell.Parent = model
+
+	local core = Instance.new("Part")
+	core.Name = "Core"
+	core.Anchored = true
+	core.CanCollide = false
+	core.CanQuery = false
+	core.CanTouch = false
+	core.Shape = Enum.PartType.Ball
+	core.Size = Vector3.new(0.92, 0.92, 0.92)
+	core.Position = Vector3.new(0, 1.9, 0)
+	core.Material = Enum.Material.Neon
+	core.Color = typeof(accentColor) == "Color3" and accentColor or Color3.fromRGB(188, 208, 236)
+	core.Transparency = 0.08
+	core.Parent = model
+
+	local ring = Instance.new("Part")
+	ring.Name = "Ring"
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.CanQuery = false
+	ring.CanTouch = false
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Size = Vector3.new(0.12, 2.6, 2.6)
+	ring.Position = Vector3.new(0, 0.24, 0)
+	ring.Material = Enum.Material.Neon
+	ring.Color = core.Color
+	ring.Transparency = 0.34
+	ring.CFrame = CFrame.new(ring.Position) * CFrame.Angles(0, 0, math.rad(90))
+	ring.Parent = model
+
+	model.PrimaryPart = shell
+	return model
 end
 
 local function styleFieldKitToolPreview(viewportFrame, accentColor, previewState)
@@ -878,6 +998,19 @@ local function styleFieldKitToolPreview(viewportFrame, accentColor, previewState
 	viewportFrame.LightColor = lightColor
 	viewportFrame.Ambient = ambient
 	viewportFrame.LightDirection = Vector3.new(-0.72, -1, -0.44)
+end
+
+local function styleLobbyGhostPreview(viewportFrame, accentColor, aggression)
+	local accent = typeof(accentColor) == "Color3" and accentColor or Color3.fromRGB(190, 214, 255)
+	local aggro = math.clamp(tonumber(aggression) or 0, 0, 100)
+	local dangerColor = Color3.fromRGB(255, 116, 116)
+	local blend = aggro / 100
+	viewportFrame.BackgroundColor3 = accent:Lerp(Color3.fromRGB(18, 24, 34), 0.82 - math.min(0.22, blend * 0.14))
+	viewportFrame.BackgroundTransparency = 0.02
+	viewportFrame.ImageColor3 = blend >= 0.7 and dangerColor:Lerp(Color3.fromRGB(248, 240, 236), 0.2) or Color3.fromRGB(244, 242, 236)
+	viewportFrame.Ambient = accent:Lerp(Color3.fromRGB(236, 240, 248), 0.26)
+	viewportFrame.LightColor = blend >= 0.7 and dangerColor or accent:Lerp(Color3.fromRGB(255, 248, 238), 0.14)
+	viewportFrame.LightDirection = Vector3.new(-0.6, -1, -0.28)
 end
 
 local function renderFieldKitToolPreview(viewportFrame, toolType, accentColor, previewState)
@@ -945,6 +1078,82 @@ local function renderFieldKitToolPreview(viewportFrame, toolType, accentColor, p
 	end
 	local cameraOffset = cameraVector.Unit * distance
 	camera.CFrame = CFrame.new(focus + cameraOffset, focus)
+
+	viewportFrame:SetAttribute("PreviewSignature", previewSignature)
+	viewportFrame.Visible = true
+	return true
+end
+
+local function renderLobbyTrainingGhostPreview(viewportFrame, ghostType, accentColor, aggression)
+	if not viewportFrame or not viewportFrame:IsA("ViewportFrame") then
+		return false
+	end
+
+	local previewSignature = string.format("%s|%d", tostring(ghostType or ""), math.floor((tonumber(aggression) or 0) + 0.5))
+	styleLobbyGhostPreview(viewportFrame, accentColor, aggression)
+	if viewportFrame:GetAttribute("PreviewSignature") == previewSignature then
+		viewportFrame.Visible = true
+		return true
+	end
+
+	for _, child in ipairs(viewportFrame:GetChildren()) do
+		if not child:IsA("UICorner") then
+			child:Destroy()
+		end
+	end
+
+	local worldModel = Instance.new("WorldModel")
+	worldModel.Name = "GhostPreviewWorld"
+	worldModel.Parent = viewportFrame
+
+	local camera = Instance.new("Camera")
+	camera.Name = "GhostPreviewCamera"
+	camera.Parent = viewportFrame
+	viewportFrame.CurrentCamera = camera
+
+	local template, profile = getGhostPreviewAssetTemplate(ghostType)
+	local model = template and template:Clone() or buildGhostPreviewFallbackModel(ghostType, accentColor)
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.Anchored = true
+			descendant.CanCollide = false
+			descendant.CanQuery = false
+			descendant.CanTouch = false
+			descendant.CastShadow = type(profile) == "table" and type(profile.castShadow) == "boolean" and profile.castShadow or false
+		end
+	end
+
+	if type(profile) == "table" then
+		local rootSize = coercePreviewVector3(profile.rootSize)
+		local meshSize = coercePreviewVector3(profile.size)
+		local meshPartName = type(profile.meshPartName) == "string" and profile.meshPartName or nil
+		local meshPart = meshPartName and model:FindFirstChild(meshPartName, true) or nil
+		if meshPart and meshPart:IsA("BasePart") and meshSize then
+			meshPart.Size = meshSize
+		end
+		if rootSize then
+			local rootPart = findPreviewModelRoot(model)
+			if rootPart and rootPart:IsA("BasePart") then
+				rootPart.Size = rootSize
+			end
+		end
+	end
+
+	local root = findPreviewModelRoot(model)
+	if not root then
+		viewportFrame.Visible = false
+		return false
+	end
+	model.PrimaryPart = root
+	model.Parent = worldModel
+
+	local rotationY = math.rad(176)
+	model:PivotTo(CFrame.new() * CFrame.Angles(0, rotationY, 0))
+	local extents = model:GetExtentsSize()
+	local visualOffset = type(profile) == "table" and coercePreviewVector3(profile.visualOffset) or nil
+	local focus = Vector3.new(0, math.max(extents.Y * 0.45, 1.25), 0) + (visualOffset or Vector3.zero)
+	local distance = math.max(extents.X, extents.Y, extents.Z) * 1.24
+	camera.CFrame = CFrame.new(focus + Vector3.new(0.34, 0.08, distance), focus)
 
 	viewportFrame:SetAttribute("PreviewSignature", previewSignature)
 	viewportFrame.Visible = true
@@ -4905,9 +5114,18 @@ function UISystem:_refreshLobbyEvidenceTrainingPanel()
 	if lobby.TrainingBadge then
 		lobby.TrainingBadge.BackgroundColor3 = accent
 	end
+	if lobby.TrainingPreview then
+		local previewVisible = renderLobbyTrainingGhostPreview(lobby.TrainingPreview, tostring(training.ghostType or ""), accent, aggression)
+		lobby.TrainingPreview.Visible = previewVisible
+		local previewStroke = lobby.TrainingPreview:FindFirstChild("PreviewStroke")
+		if previewStroke and previewStroke:IsA("UIStroke") then
+			previewStroke.Color = aggression >= 70 and Color3.fromRGB(232, 118, 118) or accent
+		end
+	end
 	if lobby.TrainingTitle then
 		local stateSuffix = training.completed == true and "TRAINING CLEAR" or tostring(training.ghostType or "Unknown Ghost")
-		lobby.TrainingTitle.Text = string.format("%s • %s", stateSuffix, tostring(training.aggressionState or "CALM"))
+		local previewSuffix = lobby.TrainingPreview and lobby.TrainingPreview.Visible == true and "ASSET LIVE" or "PROFILE"
+		lobby.TrainingTitle.Text = string.format("%s • %s • %s", stateSuffix, tostring(training.aggressionState or "CALM"), previewSuffix)
 		lobby.TrainingTitle.TextColor3 = training.completed == true and Color3.fromRGB(214, 248, 206) or Color3.fromRGB(240, 244, 248)
 	end
 	if lobby.TrainingAggroLabel then
@@ -9081,21 +9299,33 @@ function UISystem:_applyDeviceSizing()
 		lobby.FeedbackLabel.TextSize = math.max(16, profile:GetTextSize() - 2)
 		if lobby.TrainingFrame then
 			local trainingWidth = profile.isMobile and math.min(viewportSize.X - 24, 420) or math.min(560, math.max(420, math.floor(viewportSize.X * 0.42)))
-			local trainingHeight = profile.isMobile and 132 or 122
+			local trainingHeight = profile.isMobile and 144 or 130
 			lobby.TrainingFrame.Position = UDim2.new(0.5, 0, 0, topLeftInset.Y + (profile.isMobile and 88 or 82))
 			lobby.TrainingFrame.Size = UDim2.fromOffset(trainingWidth, trainingHeight)
 		end
 		if lobby.TrainingTitle then
 			lobby.TrainingTitle.TextSize = profile.isMobile and 16 or 18
+			lobby.TrainingTitle.Size = UDim2.new(1, profile.isMobile and -144 or -154, 0, 22)
+		end
+		if lobby.TrainingPreview then
+			lobby.TrainingPreview.Position = UDim2.new(1, -4, 0, profile.isMobile and 30 or 28)
+			lobby.TrainingPreview.Size = UDim2.fromOffset(profile.isMobile and 92 or 108, profile.isMobile and 92 or 78)
 		end
 		if lobby.TrainingEvidenceLabel then
+			lobby.TrainingEvidenceLabel.Size = UDim2.new(1, profile.isMobile and -144 or -154, 0, 22)
 			lobby.TrainingEvidenceLabel.TextSize = profile.isMobile and 12 or 13
 		end
 		if lobby.TrainingAggroLabel then
 			lobby.TrainingAggroLabel.TextSize = profile.isMobile and 13 or 14
+			lobby.TrainingAggroLabel.Size = UDim2.fromOffset(profile.isMobile and 108 or 118, 22)
+			lobby.TrainingAggroLabel.Position = UDim2.new(1, -6, 0, 2)
 		end
 		if lobby.TrainingHintLabel then
 			lobby.TrainingHintLabel.TextSize = profile.isMobile and 11 or 12
+			lobby.TrainingHintLabel.Size = UDim2.new(1, profile.isMobile and -144 or -154, 0, 28)
+		end
+		if lobby.TrainingAggroBar then
+			lobby.TrainingAggroBar.Size = UDim2.new(1, profile.isMobile and -144 or -154, 0, 10)
 		end
 	end
 	if lobby and lobby.BasicOpenRoomBrowserButton and lobby.BasicPrimaryLabel then
@@ -10719,7 +10949,7 @@ function UISystem:_ensureUXLayers()
 		lobbyTrainingTitle = Instance.new("TextLabel")
 		lobbyTrainingTitle.Name = "TrainingTitle"
 		lobbyTrainingTitle.Position = UDim2.fromOffset(0, 28)
-		lobbyTrainingTitle.Size = UDim2.new(1, -168, 0, 22)
+		lobbyTrainingTitle.Size = UDim2.new(1, -154, 0, 22)
 		lobbyTrainingTitle.BackgroundTransparency = 1
 		lobbyTrainingTitle.Font = Enum.Font.GothamBold
 		lobbyTrainingTitle.TextSize = 18
@@ -10730,13 +10960,38 @@ function UISystem:_ensureUXLayers()
 		lobbyTrainingTitle.Parent = lobbyTrainingFrame
 	end
 
+	local lobbyTrainingPreview = lobbyTrainingFrame:FindFirstChild("TrainingPreview")
+	if not lobbyTrainingPreview then
+		lobbyTrainingPreview = Instance.new("ViewportFrame")
+		lobbyTrainingPreview.Name = "TrainingPreview"
+		lobbyTrainingPreview.AnchorPoint = Vector2.new(1, 0)
+		lobbyTrainingPreview.Position = UDim2.new(1, 0, 0, 28)
+		lobbyTrainingPreview.Size = UDim2.fromOffset(108, 78)
+		lobbyTrainingPreview.BackgroundColor3 = Color3.fromRGB(18, 24, 34)
+		lobbyTrainingPreview.BackgroundTransparency = 0.04
+		lobbyTrainingPreview.BorderSizePixel = 0
+		lobbyTrainingPreview.ZIndex = 9
+		lobbyTrainingPreview.Parent = lobbyTrainingFrame
+
+		local previewCorner = Instance.new("UICorner")
+		previewCorner.CornerRadius = UDim.new(0, 10)
+		previewCorner.Parent = lobbyTrainingPreview
+
+		local previewStroke = Instance.new("UIStroke")
+		previewStroke.Name = "PreviewStroke"
+		previewStroke.Thickness = 1
+		previewStroke.Transparency = 0.18
+		previewStroke.Color = Color3.fromRGB(108, 154, 220)
+		previewStroke.Parent = lobbyTrainingPreview
+	end
+
 	local lobbyTrainingAggro = lobbyTrainingFrame:FindFirstChild("AggroLabel")
 	if not lobbyTrainingAggro then
 		lobbyTrainingAggro = Instance.new("TextLabel")
 		lobbyTrainingAggro.Name = "AggroLabel"
 		lobbyTrainingAggro.AnchorPoint = Vector2.new(1, 0)
-		lobbyTrainingAggro.Position = UDim2.new(1, 0, 28, 0)
-		lobbyTrainingAggro.Size = UDim2.fromOffset(154, 22)
+		lobbyTrainingAggro.Position = UDim2.new(1, -6, 0, 2)
+		lobbyTrainingAggro.Size = UDim2.fromOffset(118, 22)
 		lobbyTrainingAggro.BackgroundTransparency = 1
 		lobbyTrainingAggro.Font = Enum.Font.GothamBold
 		lobbyTrainingAggro.TextSize = 14
@@ -10752,7 +11007,7 @@ function UISystem:_ensureUXLayers()
 		lobbyTrainingEvidence = Instance.new("TextLabel")
 		lobbyTrainingEvidence.Name = "EvidenceLabel"
 		lobbyTrainingEvidence.Position = UDim2.fromOffset(0, 54)
-		lobbyTrainingEvidence.Size = UDim2.new(1, 0, 0, 22)
+		lobbyTrainingEvidence.Size = UDim2.new(1, -154, 0, 22)
 		lobbyTrainingEvidence.BackgroundTransparency = 1
 		lobbyTrainingEvidence.Font = Enum.Font.GothamSemibold
 		lobbyTrainingEvidence.TextSize = 13
@@ -10768,7 +11023,7 @@ function UISystem:_ensureUXLayers()
 		lobbyTrainingBar = Instance.new("Frame")
 		lobbyTrainingBar.Name = "AggroBar"
 		lobbyTrainingBar.Position = UDim2.fromOffset(0, 82)
-		lobbyTrainingBar.Size = UDim2.new(1, 0, 0, 10)
+		lobbyTrainingBar.Size = UDim2.new(1, -154, 0, 10)
 		lobbyTrainingBar.BackgroundColor3 = Color3.fromRGB(26, 34, 46)
 		lobbyTrainingBar.BackgroundTransparency = 0.08
 		lobbyTrainingBar.BorderSizePixel = 0
@@ -10797,7 +11052,7 @@ function UISystem:_ensureUXLayers()
 		lobbyTrainingHint = Instance.new("TextLabel")
 		lobbyTrainingHint.Name = "HintLabel"
 		lobbyTrainingHint.Position = UDim2.fromOffset(0, 98)
-		lobbyTrainingHint.Size = UDim2.new(1, 0, 0, 18)
+		lobbyTrainingHint.Size = UDim2.new(1, -154, 0, 28)
 		lobbyTrainingHint.BackgroundTransparency = 1
 		lobbyTrainingHint.Font = Enum.Font.Gotham
 		lobbyTrainingHint.TextSize = 12
@@ -11151,6 +11406,7 @@ function UISystem:_ensureUXLayers()
 	self._uxWidgets.lobby.TrainingFrame = lobbyTrainingFrame
 	self._uxWidgets.lobby.TrainingBadge = lobbyTrainingBadge
 	self._uxWidgets.lobby.TrainingTitle = lobbyTrainingTitle
+	self._uxWidgets.lobby.TrainingPreview = lobbyTrainingPreview
 	self._uxWidgets.lobby.TrainingEvidenceLabel = lobbyTrainingEvidence
 	self._uxWidgets.lobby.TrainingAggroLabel = lobbyTrainingAggro
 	self._uxWidgets.lobby.TrainingAggroBar = lobbyTrainingBar
