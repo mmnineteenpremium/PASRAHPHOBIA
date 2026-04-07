@@ -12083,3 +12083,52 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - residual yang benar-benar tersisa turun ke:
     - premium asset/model pass
     - presentational polish/sinematik tingkat akhir
+
+- progress tambahan pada lane `outside match preparation staging`:
+  - `tool rack` dunia sekarang benar-benar stateful
+  - owner source:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+    - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua)
+  - perubahan:
+    - tool terpilih berubah `SmoothPlastic -> Neon`
+    - `StateHighlight` dan `StateLight` aktif di tool yang dipilih
+    - subtitle/body board tiap tool ikut state `idle / focus active / breach live`
+    - prompt tool berubah:
+      - idle `Pilih Fokus Tool`
+      - selected `Tool Aktif`
+      - breach `Breach Live` + disabled
+    - `StudioE2EControlSystem` sekarang punya action QA `SetPreparationFocusTool` supaya state rack bisa diverifikasi deterministik di Studio
+- validasi:
+  - build:
+    - `_tmp_match_preparation_toolrack_state_build.rbxlx`
+    - `_tmp_match_preparation_toolrack_stateful_build.rbxlx`
+  - default `PreparationPhase`:
+    - `PreparationFocusTool = nil`
+    - `ToolStation_EMF.Material = SmoothPlastic`
+    - `highlight = false`
+    - `light = false`
+    - `prompt = Pilih Fokus Tool`
+    - subtitle `Medok sweep`
+  - sesudah `SetPreparationFocusTool(EMF)`:
+    - `PreparationFocusTool = EMF`
+    - `ToolStation_EMF.Material = Neon`
+    - `highlight = true`
+    - `light = true`
+    - `prompt = Tool Aktif`
+    - subtitle `Focus active • use first`
+    - body `Gunakan tool ini untuk sweep pertama sebelum ganti jalur evidence.`
+  - sesudah `AdvancePhase -> InvestigationPhase`:
+    - `PreparationFocusTool = EMF`
+    - `highlight = true`
+    - `light = true`
+    - `prompt.Enabled = false`
+    - `prompt = Breach Live`
+    - subtitle `Focus active • breach live`
+    - body `Masuk dan buka sweep awal dengan tool ini.`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - rack tool sekarang sudah punya state dunia yang jelas dan tidak lagi hanya board global
+  - residual lane tetap:
+    - premium asset/non-primitive
+    - dressing exterior per map yang lebih kaya
+    - polish sinematik/presentasional tingkat akhir

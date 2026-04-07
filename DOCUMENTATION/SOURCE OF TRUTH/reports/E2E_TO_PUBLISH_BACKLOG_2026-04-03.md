@@ -2760,6 +2760,40 @@ Urutan yang paling masuk akal dari titik sekarang:
   - transisi dunia luar -> breach investigasi yang lebih sinematik
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - `tool rack` dunia sekarang stateful dan punya proof runtime yang deterministik
+  - source owner:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+    - [Main.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua)
+  - validasi terbaru:
+    - build:
+      - `_tmp_match_preparation_toolrack_state_build.rbxlx`
+      - `_tmp_match_preparation_toolrack_stateful_build.rbxlx`
+    - default:
+      - `PreparationFocusTool = nil`
+      - `ToolStation_EMF.Material = SmoothPlastic`
+      - `highlight = false`
+      - `light = false`
+      - `prompt = Pilih Fokus Tool`
+      - subtitle `Medok sweep`
+    - sesudah `SetPreparationFocusTool(EMF)`:
+      - `PreparationFocusTool = EMF`
+      - `ToolStation_EMF.Material = Neon`
+      - `highlight = true`
+      - `light = true`
+      - `prompt = Tool Aktif`
+      - subtitle `Focus active • use first`
+      - body `Gunakan tool ini untuk sweep pertama sebelum ganti jalur evidence.`
+    - sesudah `AdvancePhase -> InvestigationPhase`:
+      - `prompt.Enabled = false`
+      - `prompt = Breach Live`
+      - subtitle `Focus active • breach live`
+      - body `Masuk dan buka sweep awal dengan tool ini.`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - dressing exterior yang berbeda per map target
+  - polish sinematik/presentasional tingkat akhir
+
+- progress tambahan pada lane `outside match preparation staging`:
   - dua map `facility` sekarang tidak lagi share dressing yang sama:
     - `EmptyBuilding` -> varian `industrial`
     - `StudioMMNineteen` -> varian `control`

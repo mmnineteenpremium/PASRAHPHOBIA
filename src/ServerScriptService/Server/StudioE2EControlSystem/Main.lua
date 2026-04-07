@@ -305,6 +305,46 @@ function StudioE2EControlSystem:_handleStartSoloMatch(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleSetPreparationFocusTool(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+	if lifecyclePhase ~= "PreparationPhase" then
+		return false, string.format("not_preparation_phase phase=%s", lifecyclePhase)
+	end
+
+	local focusTool = type(request) == "table" and (request.tool or request.focusTool) or nil
+	if focusTool == nil or tostring(focusTool) == "" then
+		player:SetAttribute("PreparationFocusTool", nil)
+		return true, string.format("match=%s focus=nil", matchId)
+	end
+
+	local token = tostring(focusTool):gsub("[%s_%-%.]+", ""):upper()
+	local allowedTools = {
+		EMF = "EMF",
+		UV = "UV CAM",
+		UVCAM = "UV CAM",
+		THERMO = "THERMO",
+		BOX = "BOX",
+		WRITING = "WRITING",
+		SENSOR = "SENSOR",
+	}
+	local resolvedTool = allowedTools[token]
+	if resolvedTool == nil then
+		return false, "invalid_tool"
+	end
+
+	player:SetAttribute("PreparationFocusTool", resolvedTool)
+	return true, string.format("match=%s focus=%s", matchId, resolvedTool)
+end
+
 function StudioE2EControlSystem:_handleSimulateLobbyZone(player, request)
 	if type(self._lobbyHubService) ~= "table" or type(self._lobbyHubService.OnPlayerEnteredZone) ~= "function" then
 		return false, "missing_lobby_hub_service"
@@ -1360,6 +1400,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleAdvancePhase(player, request)
 	elseif action == "StartSoloMatch" then
 		ok, result = self:_handleStartSoloMatch(player, request)
+	elseif action == "SetPreparationFocusTool" then
+		ok, result = self:_handleSetPreparationFocusTool(player, request)
 	elseif action == "SimulateLobbyZone" then
 		ok, result = self:_handleSimulateLobbyZone(player, request)
 	elseif action == "ForceHunt" then
