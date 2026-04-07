@@ -1753,6 +1753,19 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 
 	local propStyle = type(profile) == "table" and profile.propStyle or nil
 	if propStyle == "house" then
+		local gateArch = ensurePart(folder, "PreparationGateArch")
+		configurePart(
+			gateArch,
+			{
+				Size = Vector3.new(9.6, 0.44, 1.2),
+				CFrame = CFrame.lookAt(platformCenter + (outward * 5.4) + Vector3.new(0, 3.86, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.WoodPlanks,
+				Color = Color3.fromRGB(92, 74, 58),
+				CanCollide = false,
+				CanTouch = false,
+				CanQuery = false,
+			}
+		)
 		for index, side in ipairs({ -1, 1 }) do
 			local porchPost = ensurePart(folder, "PreparationPorchPost_" .. tostring(index))
 			configurePart(
@@ -1848,8 +1861,48 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 			lanternLight.Brightness = 1.2
 			lanternLight.Color = Color3.fromRGB(255, 214, 170)
 			lanternLight.Shadows = false
+
+			local hedge = ensurePart(folder, "PreparationHedge_" .. tostring(index))
+			configurePart(
+				hedge,
+				{
+					Size = Vector3.new(2.6, 1.6, 4.6),
+					CFrame = CFrame.lookAt(platformCenter + (right * side * 12.4) + (outward * 4.1) + Vector3.new(0, 0.82, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Grass,
+					Color = Color3.fromRGB(72, 106, 68),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
 		end
+		local mailbox = ensurePart(folder, "PreparationMailbox")
+		configurePart(
+			mailbox,
+			{
+				Size = Vector3.new(0.8, 1.8, 0.8),
+				CFrame = CFrame.lookAt(platformCenter + (right * -12.2) + (outward * 2.9) + Vector3.new(0, 0.92, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Metal,
+				Color = Color3.fromRGB(82, 90, 108),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
 	elseif propStyle == "palace" then
+		local stairDais = ensurePart(folder, "PreparationStairDais")
+		configurePart(
+			stairDais,
+			{
+				Size = Vector3.new(10.8, 0.42, 3.2),
+				CFrame = CFrame.lookAt(platformCenter + (outward * 5.4) + Vector3.new(0, 0.08, 0), platformCenter - outward, Vector3.yAxis),
+				Material = Enum.Material.Marble,
+				Color = Color3.fromRGB(138, 126, 116),
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+			}
+		)
 		local carpet = ensurePart(folder, "PreparationCarpet")
 		configurePart(
 			carpet,
@@ -1928,6 +1981,20 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 					CanCollide = false,
 					CanTouch = false,
 					CanQuery = false,
+				}
+			)
+
+			local urn = ensurePart(folder, "PreparationUrn_" .. tostring(index))
+			configurePart(
+				urn,
+				{
+					Size = Vector3.new(1.3, 1.9, 1.3),
+					CFrame = CFrame.new(platformCenter + (right * side * 12.2) + (outward * 1.8) + Vector3.new(0, 0.96, 0)),
+					Material = Enum.Material.Marble,
+					Color = Color3.fromRGB(132, 120, 110),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
 				}
 			)
 		end
@@ -2015,6 +2082,19 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 		end
 
 		if propVariant == "industrial" then
+			local trussFrame = ensurePart(folder, "PreparationTrussFrame")
+			configurePart(
+				trussFrame,
+				{
+					Size = Vector3.new(10.4, 0.34, 0.34),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 5.2) + Vector3.new(0, 4.1, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(94, 100, 112),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
 			local crate = ensurePart(folder, "PreparationOpsCrate")
 			configurePart(
 				crate,
@@ -2132,7 +2212,46 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 					CanQuery = false,
 				}
 			)
+			local generator = ensurePart(folder, "PreparationGenerator")
+			configurePart(
+				generator,
+				{
+					Size = Vector3.new(2.6, 1.8, 1.8),
+					CFrame = CFrame.lookAt(platformCenter + (right * 10.2) + (outward * 2.4) + Vector3.new(0, 0.92, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.DiamondPlate,
+					Color = Color3.fromRGB(98, 104, 118),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
+			local drumStack = ensurePart(folder, "PreparationDrumStack")
+			configurePart(
+				drumStack,
+				{
+					Size = Vector3.new(1.8, 2.1, 1.8),
+					CFrame = CFrame.lookAt(platformCenter + (right * -10.6) + (outward * 4.0) + Vector3.new(0, 1.06, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(72, 86, 106),
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+				}
+			)
 		elseif propVariant == "control" then
+			local securityArch = ensurePart(folder, "PreparationSecurityArch")
+			configurePart(
+				securityArch,
+				{
+					Size = Vector3.new(9.8, 0.3, 0.42),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 5.0) + Vector3.new(0, 4.2, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(72, 82, 104),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
 			local console = ensurePart(folder, "PreparationOpsConsole")
 			configurePart(
 				console,
@@ -2220,6 +2339,21 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 			scannerLight.Brightness = 1.4
 			scannerLight.Color = Color3.fromRGB(114, 182, 255)
 			scannerLight.Shadows = false
+			for index, side in ipairs({ -1, 1 }) do
+				local dataColumn = ensurePart(folder, "PreparationDataColumn_" .. tostring(index))
+				configurePart(
+					dataColumn,
+					{
+						Size = Vector3.new(1.1, 3.8, 1.1),
+						CFrame = CFrame.new(platformCenter + (right * side * 11.2) + (outward * 2.6) + Vector3.new(0, 1.92, 0)),
+						Material = Enum.Material.Metal,
+						Color = Color3.fromRGB(58, 68, 92),
+						CanCollide = true,
+						CanTouch = false,
+						CanQuery = true,
+					}
+				)
+			end
 			local dataPedestal = ensurePart(folder, "PreparationDataPedestal")
 			configurePart(
 				dataPedestal,
@@ -2241,6 +2375,19 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 					CFrame = CFrame.lookAt(platformCenter + (outward * 5.4) + Vector3.new(0, 0.12, 0), platformCenter - outward, Vector3.yAxis),
 					Material = Enum.Material.Neon,
 					Color = Color3.fromRGB(88, 146, 228),
+					CanCollide = false,
+					CanTouch = false,
+					CanQuery = false,
+				}
+			)
+			local guideStrip = ensurePart(folder, "PreparationGuideStrip")
+			configurePart(
+				guideStrip,
+				{
+					Size = Vector3.new(7.2, 0.08, 0.6),
+					CFrame = CFrame.lookAt(platformCenter + (outward * 4.1) + Vector3.new(0, -0.12, 0), platformCenter - outward, Vector3.yAxis),
+					Material = Enum.Material.Neon,
+					Color = Color3.fromRGB(108, 176, 255),
 					CanCollide = false,
 					CanTouch = false,
 					CanQuery = false,

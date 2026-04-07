@@ -2794,6 +2794,33 @@ Urutan yang paling masuk akal dari titik sekarang:
   - polish sinematik/presentasional tingkat akhir
 
 - progress tambahan pada lane `outside match preparation staging`:
+  - exterior identity per map sekarang naik dari `variasi prop kecil` ke `silhouette staging` yang beda dari jauh
+  - source owner:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - validasi terbaru:
+    - build:
+      - `_tmp_match_preparation_exterior_identity_build.rbxlx`
+    - `HauntedHouse`:
+      - `PreparationGateArch = true`
+      - `PreparationHedge_1 = true`
+      - `PreparationMailbox = true`
+    - `AbandonedPalace`:
+      - `PreparationStairDais = true`
+      - `PreparationUrn_1 = true`
+      - `PreparationSealMosaic = true`
+    - `EmptyBuilding`:
+      - `PreparationTrussFrame = true`
+      - `PreparationGenerator = true`
+      - `PreparationDrumStack = true`
+    - `StudioMMNineteen`:
+      - `PreparationSecurityArch = true`
+      - `PreparationDataColumn_1 = true`
+      - `PreparationGuideStrip = true`
+- residual sesudah pass ini:
+  - asset premium/non-primitive untuk staging luar
+  - polish artistik/presentasional tingkat akhir
+
+- progress tambahan pada lane `outside match preparation staging`:
   - dua map `facility` sekarang tidak lagi share dressing yang sama:
     - `EmptyBuilding` -> varian `industrial`
     - `StudioMMNineteen` -> varian `control`
