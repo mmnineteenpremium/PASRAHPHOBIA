@@ -12132,3 +12132,49 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - premium asset/non-primitive
     - dressing exterior per map yang lebih kaya
     - polish sinematik/presentasional tingkat akhir
+
+- progress tambahan pada lane `outside match preparation staging`:
+  - exterior staging sekarang punya silhouette yang lebih berbeda per map, bukan hanya prop kecil
+  - owner source:
+    - [MapRuntimePatches.lua](C:/Projects/ROBLOX/PASRAHPHOBIA/src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua)
+  - tambahan baru:
+    - `HauntedHouse`:
+      - `PreparationGateArch`
+      - `PreparationHedge_1/2`
+      - `PreparationMailbox`
+    - `AbandonedPalace`:
+      - `PreparationStairDais`
+      - `PreparationUrn_1/2`
+    - `EmptyBuilding`:
+      - `PreparationTrussFrame`
+      - `PreparationGenerator`
+      - `PreparationDrumStack`
+    - `StudioMMNineteen`:
+      - `PreparationSecurityArch`
+      - `PreparationDataColumn_1/2`
+      - `PreparationGuideStrip`
+- validasi:
+  - build:
+    - `_tmp_match_preparation_exterior_identity_build.rbxlx`
+  - `HauntedHouse`:
+    - `PreparationGateArch = true`
+    - `PreparationHedge_1 = true`
+    - `PreparationMailbox = true`
+  - `AbandonedPalace`:
+    - `PreparationStairDais = true`
+    - `PreparationUrn_1 = true`
+    - `PreparationSealMosaic = true`
+  - `EmptyBuilding`:
+    - `PreparationTrussFrame = true`
+    - `PreparationGenerator = true`
+    - `PreparationDrumStack = true`
+  - `StudioMMNineteen`:
+    - `PreparationSecurityArch = true`
+    - `PreparationDataColumn_1 = true`
+    - `PreparationGuideStrip = true`
+- status:
+  - **LANJUT / BELUM FINAL**.
+  - staging luar sekarang sudah beda bentuk dari jauh per map, bukan cuma beda board/warna
+  - residual lane menyempit ke:
+    - premium asset/non-primitive
+    - polish artistik/presentasional tingkat akhir
