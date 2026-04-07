@@ -117,6 +117,84 @@ local CLIENT_PHASE_BY_MATCH_PHASE = {
 	EndgamePhase = "Endgame",
 }
 
+local function resolveGhostSystem(deps)
+	local ghostSystem = nil
+	if type(deps) == "table" then
+		local services = deps.Services or deps.ServiceRegistry
+		if type(services) == "table" then
+			local get = services.Get or services.GetService
+			if type(get) == "function" then
+				ghostSystem = get(services, "GhostSystem")
+			end
+		end
+		if not ghostSystem and type(deps.GhostSystem) == "table" then
+			ghostSystem = deps.GhostSystem
+		end
+	end
+	if type(ghostSystem) ~= "table" then
+		return nil
+	end
+	return ghostSystem
+end
+
+local STUDIO_GHOST_PLAYER_ATTRS = {
+	"PasrahGhostMatchId",
+	"PasrahGhostType",
+	"PasrahGhostModelName",
+	"PasrahGhostModelPath",
+	"PasrahGhostVisualTemplate",
+	"PasrahGhostRuntimeState",
+	"PasrahGhostMeshSize",
+	"PasrahGhostPosition",
+	"PasrahGhostHasModel",
+	"PasrahGhostPlaceholder",
+}
+
+local function clearStudioGhostPlayerSnapshot(players)
+	if not RunService:IsStudio() or type(players) ~= "table" then
+		return
+	end
+	for _, player in ipairs(players) do
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			for _, attrName in ipairs(STUDIO_GHOST_PLAYER_ATTRS) do
+				player:SetAttribute(attrName, nil)
+			end
+		end
+	end
+end
+
+local function setStudioGhostPlayerSnapshot(players, matchId, match)
+	if not RunService:IsStudio() or type(players) ~= "table" then
+		return
+	end
+
+	local ghostModel = type(match) == "table" and match.ghost or nil
+	local meshPart = ghostModel and ghostModel:FindFirstChildWhichIsA("MeshPart", true) or nil
+	local modelPath = typeof(ghostModel) == "Instance" and ghostModel:GetFullName() or nil
+	local modelName = typeof(ghostModel) == "Instance" and ghostModel.Name or nil
+	local ghostType = type(match) == "table" and tostring(match.ghostType or "") or nil
+	local visualTemplateName = typeof(ghostModel) == "Instance" and ghostModel:GetAttribute("VisualTemplateName") or nil
+	local runtimeState = typeof(ghostModel) == "Instance" and ghostModel:GetAttribute("RuntimeGhostState") or nil
+	local ghostPosition = (ghostModel and ghostModel:IsA("Model")) and tostring(ghostModel:GetPivot().Position) or nil
+	local meshSize = (meshPart and meshPart:IsA("MeshPart")) and tostring(meshPart.Size) or nil
+	local placeholder = typeof(ghostModel) == "Instance" and ghostModel:GetAttribute("PlaceholderVisual") == true or false
+
+	for _, player in ipairs(players) do
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			player:SetAttribute("PasrahGhostMatchId", type(matchId) == "string" and matchId or tostring(matchId or ""))
+			player:SetAttribute("PasrahGhostType", ghostType ~= "" and ghostType or nil)
+			player:SetAttribute("PasrahGhostModelName", modelName)
+			player:SetAttribute("PasrahGhostModelPath", modelPath)
+			player:SetAttribute("PasrahGhostVisualTemplate", visualTemplateName)
+			player:SetAttribute("PasrahGhostRuntimeState", runtimeState)
+			player:SetAttribute("PasrahGhostMeshSize", meshSize)
+			player:SetAttribute("PasrahGhostPosition", ghostPosition)
+			player:SetAttribute("PasrahGhostHasModel", typeof(ghostModel) == "Instance")
+			player:SetAttribute("PasrahGhostPlaceholder", placeholder)
+		end
+	end
+end
+
 local OBJECTIVE_TEXT_BY_PHASE = {
 	PreparationPhase = "Masuk ke lokasi dan siapkan tim.",
 	InvestigationPhase = "Investigasi lokasi, kumpulkan evidence, lalu tebak ghost sebelum waktu habis.",
@@ -945,6 +1023,37 @@ function MatchService:StartMatch(matchId)
 		end
 		return self:AdvanceMatchPhase(matchId, nextPhase or "InvestigationPhase")
 	end
+	match.requestForceManifest = function(sourcePlayer)
+		if type(match) ~= "table" then
+			return nil, "invalid_match"
+		end
+		if sourcePlayer ~= nil and not matchHasPlayer(match, sourcePlayer) then
+			return nil, "player_not_in_match"
+		end
+		local phaseToken = tostring(match.phase or "")
+		if phaseToken ~= "InvestigationPhase" and phaseToken ~= "HuntPhase" then
+			return nil, "manifest_closed"
+		end
+		local now = getNow()
+		local ghostSystem = resolveGhostSystem(self._deps)
+		local forced = false
+		if ghostSystem and type(ghostSystem.ForceManifest) == "function" then
+			forced = ghostSystem:ForceManifest(match, now) == true
+			if type(ghostSystem.TickGhost) == "function" then
+				ghostSystem:TickGhost(match, match.snapshot or {}, 0.2, now)
+			end
+		end
+		if not forced then
+			self:_publish("ForceManifest", {
+				matchId = authoritativeMatchId,
+				source = "MatchPreparationProbe",
+				reason = "studio_probe",
+				now = now,
+			})
+		end
+		setStudioGhostPlayerSnapshot(match.players, authoritativeMatchId, match)
+		return forced or true
+	end
 
 	for _, player in ipairs(match.players or {}) do
 		if typeof(player) == "Instance" and player:IsA("Player") then
@@ -1039,6 +1148,14 @@ function MatchService:StartMatch(matchId)
 				ghostSeed = match.ghostSeed,
 			})
 
+			local ghostSystem = resolveGhostSystem(self._deps)
+			if ghostSystem and type(ghostSystem.InitializeMatch) == "function" then
+				pcall(function()
+					ghostSystem:InitializeMatch(match)
+				end)
+			end
+			setStudioGhostPlayerSnapshot(match.players, authoritativeMatchId, match)
+
 			if match.difficultyProfile then
 				self:_publish("MatchDifficultyResolved", {
 					matchId = match.matchId,
@@ -1076,6 +1193,7 @@ function MatchService:AdvanceMatchPhase(matchId, nextPhase)
 			player:SetAttribute("MatchLifecyclePhase", tostring(phase))
 		end
 	end
+	setStudioGhostPlayerSnapshot(match.players, matchId, match)
 
 	self:_fireMatchEventToPlayers(match.players, self:_buildPhasePayload(match, phase, now))
 
@@ -1257,6 +1375,7 @@ function MatchService:EndMatch(matchId, results)
 			mapId = "Lobby",
 		})
 	end
+	clearStudioGhostPlayerSnapshot(lobbyPlayers)
 
 	local payload = mergePayload(match:ToPayload(), safeResults)
 	payload.source = "MatchSystem"

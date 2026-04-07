@@ -1871,6 +1871,21 @@ function Service:InitializeMatch(match)
 
 	self:SelectGhostRoom(match)
 
+	local ghostState = self._ghostService and self._ghostService.GetGhostState and self._ghostService:GetGhostState(matchId) or nil
+	if type(ghostState) == "table" then
+		self:_syncGhostVisual(match, ghostState)
+	else
+		self:_applyGhostVisualState(match, {
+			state = "Idle",
+			currentRoomId = match.ghostRoom and match.ghostRoom.Name or nil,
+			favoriteRoomId = match.ghostRoom and match.ghostRoom.Name or nil,
+		})
+		match.ghost:SetAttribute("CurrentRoomId", match.ghostRoom and match.ghostRoom.Name or nil)
+		match.ghost:SetAttribute("FavoriteRoomId", match.ghostRoom and match.ghostRoom.Name or nil)
+		match.ghost:SetAttribute("VisualMotionState", "Idle")
+		match.ghost:SetAttribute("VisualTargetMode", "Room")
+	end
+
 	return ghostModel
 end
 

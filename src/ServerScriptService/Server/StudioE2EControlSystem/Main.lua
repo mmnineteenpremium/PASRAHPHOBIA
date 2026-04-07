@@ -14,6 +14,8 @@ local REMOTE_NAME = "StudioE2EControl"
 local READY_ATTR = "PasrahStudioE2EReady"
 local TRACE_ATTR = "PasrahStudioE2ELastAction"
 local RESULT_ATTR = "PasrahStudioE2ELastResult"
+local PLAYER_TRACE_ATTR = "PasrahStudioE2ELastAction"
+local PLAYER_RESULT_ATTR = "PasrahStudioE2ELastResult"
 local EXTRACTION_OVERRIDE_ATTR = "PasrahAllowStudioExtraction"
 local FORCE_GHOST_TYPE_ATTR = "PasrahForceGhostType"
 local FORCE_GHOST_VISUAL_STATE_ATTR = "PasrahForceGhostVisualState"
@@ -253,6 +255,7 @@ function StudioE2EControlSystem.new(deps)
 	self._inventoryService = nil
 	self._evidenceService = nil
 	self._lobbyHubService = nil
+	self._ghostSystem = nil
 	self._eventBus = nil
 	return self
 end
@@ -267,21 +270,30 @@ function StudioE2EControlSystem:Init()
 	self._inventoryService = resolveService(self._deps, "InventorySystem", "HasItem")
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._lobbyHubService = resolveService(self._deps, "LobbySocialHub", "OnPlayerEnteredZone")
+	self._ghostSystem = resolveService(self._deps, "GhostSystem", "GetGhostState")
 	self._eventBus = resolveEventBus(self._deps)
 end
 
-function StudioE2EControlSystem:_setTrace(parts)
+function StudioE2EControlSystem:_setTrace(parts, player)
 	if not RunService:IsStudio() then
 		return
 	end
-	ReplicatedStorage:SetAttribute(TRACE_ATTR, encodeSummary(parts))
+	local encoded = encodeSummary(parts)
+	ReplicatedStorage:SetAttribute(TRACE_ATTR, encoded)
+	if typeof(player) == "Instance" and player:IsA("Player") then
+		player:SetAttribute(PLAYER_TRACE_ATTR, encoded)
+	end
 end
 
-function StudioE2EControlSystem:_setResult(parts)
+function StudioE2EControlSystem:_setResult(parts, player)
 	if not RunService:IsStudio() then
 		return
 	end
-	ReplicatedStorage:SetAttribute(RESULT_ATTR, encodeSummary(parts))
+	local encoded = encodeSummary(parts)
+	ReplicatedStorage:SetAttribute(RESULT_ATTR, encoded)
+	if typeof(player) == "Instance" and player:IsA("Player") then
+		player:SetAttribute(PLAYER_RESULT_ATTR, encoded)
+	end
 end
 
 function StudioE2EControlSystem:_resolveMatchId(player, request)
@@ -503,6 +515,74 @@ function StudioE2EControlSystem:_handleForceHunt(player, request)
 		now = os.clock(),
 	})
 	return true, string.format("match=%s forced", matchId)
+end
+
+function StudioE2EControlSystem:_handleForceManifest(player, request)
+	if not self._eventBus then
+		return false, "missing_event_bus"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+	local currentPhase = resolveLiveMatchPhase(self._matchSystem, matchId)
+	if currentPhase ~= "InvestigationPhase" and currentPhase ~= "HuntPhase" then
+		return false, string.format("match_not_manifest_ready phase=%s", tostring(currentPhase))
+	end
+
+	self._eventBus:Publish("ForceManifest", {
+		matchId = matchId,
+		source = "StudioE2EControlSystem",
+		reason = type(request) == "table" and request.reason or "studio_e2e",
+		now = os.clock(),
+	})
+	return true, string.format("match=%s manifest_forced", matchId)
+end
+
+function StudioE2EControlSystem:_handleGetGhostRuntimeSnapshot(player, request)
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local match = self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	local ghostService = self._ghostSystem
+	local ghostState = ghostService and ghostService.GetGhostState and ghostService:GetGhostState(matchId) or nil
+	local ghostModel = type(match) == "table" and match.ghost or nil
+	local meshPart = ghostModel and ghostModel:FindFirstChildWhichIsA("MeshPart", true) or nil
+
+	local snapshot = {
+		matchId = matchId,
+		hasLiveMatch = type(match) == "table",
+		matchPhase = type(match) == "table" and tostring(match.phase or "") or nil,
+		matchGhostType = type(match) == "table" and tostring(match.ghostType or "") or nil,
+		forcedGhostType = ReplicatedStorage:GetAttribute(FORCE_GHOST_TYPE_ATTR),
+		hasGhostState = type(ghostState) == "table",
+		ghostState = type(ghostState) == "table" and tostring(ghostState.state or "") or nil,
+		ghostRoomId = type(ghostState) == "table" and ghostState.currentRoomId or nil,
+		huntActive = type(ghostState) == "table" and ghostState.huntActive == true or false,
+		hasGhostModel = typeof(ghostModel) == "Instance",
+	}
+
+	if typeof(ghostModel) == "Instance" then
+		snapshot.ghostPath = ghostModel:GetFullName()
+		snapshot.ghostName = ghostModel.Name
+		snapshot.placeholder = ghostModel:GetAttribute("PlaceholderVisual")
+		snapshot.runtimeState = ghostModel:GetAttribute("RuntimeGhostState")
+		snapshot.visualTemplateName = ghostModel:GetAttribute("VisualTemplateName")
+		if ghostModel:IsA("Model") then
+			snapshot.ghostPosition = tostring(ghostModel:GetPivot().Position)
+		end
+	end
+
+	if meshPart and meshPart:IsA("MeshPart") then
+		snapshot.meshPartName = meshPart.Name
+		snapshot.meshSize = tostring(meshPart.Size)
+		snapshot.meshTransparency = meshPart.Transparency
+	end
+
+	return true, HttpService:JSONEncode(snapshot)
 end
 
 function StudioE2EControlSystem:_handleExtractSelf(player, request)
@@ -1513,7 +1593,7 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		"action=" .. tostring(action),
 		"player=" .. tostring(player and player.Name),
 		"match=" .. tostring(self:_resolveMatchId(player, request)),
-	})
+	}, player)
 
 	local ok = false
 	local result = "unsupported_action"
@@ -1536,6 +1616,10 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		ok, result = self:_handleLobbyTrainingRotate(player, request)
 	elseif action == "ForceHunt" then
 		ok, result = self:_handleForceHunt(player, request)
+	elseif action == "ForceManifest" then
+		ok, result = self:_handleForceManifest(player, request)
+	elseif action == "GetGhostRuntimeSnapshot" then
+		ok, result = self:_handleGetGhostRuntimeSnapshot(player, request)
 	elseif action == "ExtractSelf" then
 		ok, result = self:_handleExtractSelf(player, request)
 	elseif action == "DrainSanity" then
@@ -1586,7 +1670,7 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 		"ok=" .. tostring(ok),
 		"action=" .. tostring(action),
 		"result=" .. tostring(result),
-	})
+	}, player)
 
 	if self._remote then
 		self._remote:FireClient(player, {
