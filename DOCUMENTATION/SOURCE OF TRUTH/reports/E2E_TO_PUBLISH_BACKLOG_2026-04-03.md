@@ -3781,3 +3781,14 @@ Urutan yang paling masuk akal dari titik sekarang:
   - `LobbyTrainingRotate` returned full asset-ready visual payload for `Pocong`, including `ghostVisualPath`, `ghostVisualExtents`, `ghostVisualScale`, and `ghostTargetBounds`
 - Build passed: `_tmp_ghost_snapshot_target_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 00:39:11 +07:00 - Expose Ambient And Heartbeat Runtime State
+- Status: DONE.
+- `AudioController` now exposes runtime attrs for lobby ambient, preparation ambient, and heartbeat state so those audio layers can be verified live without guessing hidden controller state.
+- Live Studio proof:
+  - lobby ambient attrs became active with the uploaded lobby ambient ID
+  - preparation ambient attrs became active in `PreparationPhase` with uploaded ambient ID and expected playback speed
+  - heartbeat attrs became active during forced hunt in `InvestigationPhase`
+  - after `EndMatch`, lobby ambient returned and the match-only attrs cleared again
+- Build passed: `_tmp_audio_controller_state_attrs_build.rbxlx`.
+- Studio stop-test reporting rule followed.

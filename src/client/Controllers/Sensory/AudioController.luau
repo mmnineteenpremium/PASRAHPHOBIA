@@ -224,6 +224,14 @@ function AudioController:Stop()
 	end
 	local localPlayer = self._player or Players.LocalPlayer
 	if localPlayer then
+		localPlayer:SetAttribute("PasrahHeartbeatActive", nil)
+		localPlayer:SetAttribute("PasrahHeartbeatSoundId", nil)
+		localPlayer:SetAttribute("PasrahHeartbeatPlaybackSpeed", nil)
+		localPlayer:SetAttribute("PasrahHeartbeatReason", nil)
+		localPlayer:SetAttribute("PasrahPreparationAmbientActive", nil)
+		localPlayer:SetAttribute("PasrahPreparationAmbientSoundId", nil)
+		localPlayer:SetAttribute("PasrahPreparationAmbientMap", nil)
+		localPlayer:SetAttribute("PasrahPreparationAmbientPlaybackSpeed", nil)
 		localPlayer:SetAttribute("PasrahLobbyAmbientActive", nil)
 		localPlayer:SetAttribute("PasrahLobbyAmbientSoundId", nil)
 		localPlayer:SetAttribute("PasrahLobbyAmbientMap", nil)
@@ -367,11 +375,24 @@ function AudioController:_updateHeartbeat()
 	if not self._heartbeatSound then
 		return
 	end
+	local localPlayer = self._player or Players.LocalPlayer
 	if self._heartbeatSound.SoundId == "" then
+		if localPlayer then
+			localPlayer:SetAttribute("PasrahHeartbeatActive", nil)
+			localPlayer:SetAttribute("PasrahHeartbeatSoundId", nil)
+			localPlayer:SetAttribute("PasrahHeartbeatPlaybackSpeed", nil)
+			localPlayer:SetAttribute("PasrahHeartbeatReason", nil)
+		end
 		return
 	end
 
 	local needsHeartbeat = self._ghostHuntActive or self._currentSanity < 40
+	local heartbeatReason = nil
+	if self._ghostHuntActive then
+		heartbeatReason = "HUNT"
+	elseif self._currentSanity < 40 then
+		heartbeatReason = "SANITY_LOW"
+	end
 	if needsHeartbeat then
 		local intensity = math.clamp(1 - (self._currentSanity / 40), 0, 1)
 		self._heartbeatSound.Volume = math.max(0.2, intensity)
@@ -383,9 +404,21 @@ function AudioController:_updateHeartbeat()
 		if not self._heartbeatSound.IsPlaying then
 			self._heartbeatSound:Play()
 		end
+		if localPlayer then
+			localPlayer:SetAttribute("PasrahHeartbeatActive", true)
+			localPlayer:SetAttribute("PasrahHeartbeatSoundId", tostring(self._heartbeatSound.SoundId or ""))
+			localPlayer:SetAttribute("PasrahHeartbeatPlaybackSpeed", self._heartbeatSound.PlaybackSpeed)
+			localPlayer:SetAttribute("PasrahHeartbeatReason", heartbeatReason)
+		end
 	else
 		if self._heartbeatSound.IsPlaying then
 			self._heartbeatSound:Stop()
+		end
+		if localPlayer then
+			localPlayer:SetAttribute("PasrahHeartbeatActive", nil)
+			localPlayer:SetAttribute("PasrahHeartbeatSoundId", nil)
+			localPlayer:SetAttribute("PasrahHeartbeatPlaybackSpeed", nil)
+			localPlayer:SetAttribute("PasrahHeartbeatReason", nil)
 		end
 	end
 end
@@ -404,7 +437,9 @@ function AudioController:_updatePreparationAmbient()
 
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahPreparationAmbientActive", shouldPlay and true or nil)
+		localPlayer:SetAttribute("PasrahPreparationAmbientSoundId", shouldPlay and tostring(self._preparationAmbientSound.SoundId or "") or nil)
 		localPlayer:SetAttribute("PasrahPreparationAmbientMap", shouldPlay and tostring(mapProfile or "") or nil)
+		localPlayer:SetAttribute("PasrahPreparationAmbientPlaybackSpeed", shouldPlay and profile.PlaybackSpeed or nil)
 	end
 
 	if shouldPlay then
