@@ -4162,3 +4162,15 @@ Urutan yang paling masuk akal dari titik sekarang:
   - client `EvidenceEvent` traffic during the same run no longer included `UIGhostPredictionUpdated`; only canonical journal/evidence events remained.
 - Build passed: `_tmp_journal_owner_registry_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 05:22:41 +07:00 - Stamp Journal UI Runtime Identity
+- Status: DONE.
+- `Client.UI.Main` now stamps direct runtime attrs on `JournalUI` itself, including panel, status badge, candidate body, and tool action button.
+- Live Studio proof:
+  - `PlayerGui.JournalUI.MainPanel` -> `PasrahJournalUIOwner=UISystem`, `PasrahJournalUIChannel=JournalPanel`
+  - `StatusBadge` -> `PasrahJournalUIChannel=JournalStatusBadge`
+  - `CandidateSection.BodyLabel` -> `PasrahJournalUIChannel=JournalCandidateBody`, `PasrahJournalCandidateCount=12`
+  - `ToolActionButton` -> `PasrahJournalToolType=JejakEnergi`, `PasrahJournalToolStatus=EMF level 5 terkunci.`
+  - canonical data owner remained `PasrahJournalOwner=JournalSystem`
+- Build passed: `_tmp_journal_ui_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
