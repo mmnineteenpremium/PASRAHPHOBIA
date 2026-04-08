@@ -4149,3 +4149,16 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `PasrahFlashlightRemoteHandleMatchesCache=true`
 - Build passed: `_tmp_flashlight_runtime_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 05:08:12 +07:00 - Disable Duplicate Ghost Deduction Journal Owner
+- Status: DONE.
+- `Server.Core.SystemRegistry` now disables `GhostDeductionJournal`, leaving `JournalSystem` as the single active owner for journal/UI ghost candidate state.
+- Live Studio proof:
+  - `StartSoloMatch -> InvestigationPhase -> UseEvidenceTool(JejakEnergi)` still produced:
+    - `PasrahJournalOwner=JournalSystem`
+    - `PasrahJournalLastEvent=JournalUpdated`
+    - `PasrahJournalCandidateCount=6`
+    - `PasrahJournalCandidateList=Banaspati | Genderuwo | HantuTanah | Leak | Pocong | SilumanUlar`
+  - client `EvidenceEvent` traffic during the same run no longer included `UIGhostPredictionUpdated`; only canonical journal/evidence events remained.
+- Build passed: `_tmp_journal_owner_registry_build.rbxlx`.
+- Studio stop-test reporting rule followed.

@@ -13058,6 +13058,22 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 05:08:12 +07:00 - Disable Duplicate Ghost Deduction Journal Owner
+- Updated `src/ServerScriptService/Server/Core/SystemRegistry.lua` so `GhostDeductionJournal` is now disabled alongside `EvidenceJournalSystem`, leaving `JournalSystem` as the single active owner for journal/UI ghost candidate state.
+- Build passed: `_tmp_journal_owner_registry_build.rbxlx`.
+- Live Studio proof:
+  - `StartSoloMatch -> AdvancePhase(InvestigationPhase) -> UseEvidenceTool(JejakEnergi)` still updated the canonical journal owner:
+    - `PasrahJournalOwner=JournalSystem`
+    - `PasrahJournalMatchId=match_1`
+    - `PasrahJournalLastEvent=JournalUpdated`
+    - `PasrahJournalCandidateCount=6`
+    - `PasrahJournalCandidateList=Banaspati | Genderuwo | HantuTanah | Leak | Pocong | SilumanUlar`
+  - client `EvidenceEvent` traffic observed during the same run no longer included `UIGhostPredictionUpdated`; observed journal/evidence events were limited to:
+    - `JournalUpdated`
+    - `UIEvidenceUpdated`
+    - `EvidenceCollected`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 09:36:40 +07:00 - Stamp Sanity Runtime Identity
 - Updated `src/ServerScriptService/Server/SanitySystem/Service.lua` so server-authoritative sanity state now writes direct runtime attrs on the player instead of staying implicit inside service state.
 - Build passed: `_tmp_sanity_runtime_identity_build.rbxlx`.
