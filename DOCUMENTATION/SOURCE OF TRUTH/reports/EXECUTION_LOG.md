@@ -12797,3 +12797,13 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `Salib`:
     - `crucifix_hot = Salib|danger|asset`
     - `crucifix_decay = Salib|active|asset`
+
+- progress tambahan pada lane `dupa preview local expiry sync`:
+  - bug `Dupa` yang terus aktif ternyata berasal dari perbandingan `server os.clock()` melawan `client os.clock()`
+  - state repel sekarang dikonversi ke expiry lokal client, lalu HUD menjadwalkan refresh penutup saat window efek habis
+- validasi terbaru:
+  - probe runtime singleton `Client.UI.Main`:
+    - `hot.signature = Dupa|active|asset`
+    - `hot.repellentUntilLocal = 66313.7177`
+    - `decay.signature = Dupa|focus|asset`
+    - `phase = InvestigationPhase`
