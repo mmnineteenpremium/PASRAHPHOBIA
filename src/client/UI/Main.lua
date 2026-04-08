@@ -543,7 +543,7 @@ local UI_SOUND_PATHS = {
 }
 local UI_SOUND_FALLBACKS = {
 	ButtonClick = {
-		SoundId = "rbxasset://sounds/volume_slider.ogg",
+		SoundId = "rbxassetid://85056627192723",
 		Volume = 0.14,
 	},
 }

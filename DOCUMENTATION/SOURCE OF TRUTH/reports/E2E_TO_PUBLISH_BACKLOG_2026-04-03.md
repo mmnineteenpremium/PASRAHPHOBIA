@@ -3591,3 +3591,12 @@ Urutan yang paling masuk akal dari titik sekarang:
   - batch audio canonical sekarang tidak lagi tertahan pada raw asset lokal untuk slot-slot yang memang sudah punya upload resmi di inventory Roblox
   - residual yang tersisa tinggal raw asset yang belum bisa di-upload karena limit bulanan, bukan lagi kebingungan owner aktif untuk slot yang sudah tersedia
 
+- progress tambahan pada lane `ui click fallback cleanup`:
+  - `client/UI/Main.lua` fallback click sekarang tidak lagi memakai built-in Roblox `rbxasset://sounds/volume_slider.ogg`
+  - fallback diselaraskan ke `click5` yang sama dengan template canonical `ButtonClick_01`
+- validasi terbaru:
+  - script live `game.StarterPlayer.StarterPlayerScripts.Client.UI.Main` membaca:
+    - `UI_SOUND_FALLBACKS.ButtonClick.SoundId = rbxassetid://85056627192723`
+- publish impact:
+  - tidak ada lagi path fallback UI click yang diam-diam keluar dari inventory upload akun aktif
+
