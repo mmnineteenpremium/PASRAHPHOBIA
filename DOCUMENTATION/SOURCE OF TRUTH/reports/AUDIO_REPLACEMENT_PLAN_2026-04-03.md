@@ -281,3 +281,19 @@ Kesimpulan:
 
 - cue ambient/hunt yang sebelumnya masih jatuh ke template generik sekarang memakai asset upload yang lebih sesuai secara fungsi, tetap lewat owner audio existing dan tanpa local raw path.
 
+## Update 2026-04-08 22:55 ICT
+
+Batch `legacy audio cue alias coverage` menutup alias runtime berikut:
+
+- `hunt_stinger` -> `hard-horror-hit-drum` (`rbxassetid://101202336513383`)
+- `heartbeat_rise` -> `single-heart-beat` (`rbxassetid://138884191945388`)
+- `ambient_tension_loop` -> `Midnight Litany of Drones (Ancient Ritual Ambient)` (`rbxassetid://140704980462451`)
+
+Owner runtime aktif:
+
+- `src/client/SoundSystem/Main.lua`
+
+Kesimpulan:
+
+- cue default/legacy sekarang tetap masuk ke asset upload inventory yang sudah terkunci, tanpa mengganti producer event lama dan tanpa membuat sistem audio baru.
+
