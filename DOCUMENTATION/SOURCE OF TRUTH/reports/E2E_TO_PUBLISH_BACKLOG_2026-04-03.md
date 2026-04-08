@@ -3704,6 +3704,21 @@ Urutan yang paling masuk akal dari titik sekarang:
 - GetQAGateReadiness is pass_with_manual_multiplayer; GetPublishReadiness remains overall=fail in Studio because persistence=mock and obuxMissingId=10.
 - Studio stop-test reporting rule followed.
 
+## 2026-04-09 05:07:51 +07:00 - Stamp Journal Runtime Identity
+- Status: DONE.
+- `Server.JournalSystem.Service` now exposes direct journal attrs on the player so evidence logging is readable from Studio without relying on UI sync only.
+- Live Studio proof after `UseEvidenceTool(JejakEnergi)`:
+  - `PasrahJournalOwner=JournalSystem`
+  - `PasrahJournalMatchId=match_1`
+  - `PasrahJournalLastEvent=JournalUpdated`
+  - `PasrahJournalDiscoveredCount=1`
+  - `PasrahJournalConfirmedCount=1`
+  - `PasrahJournalCandidateCount=0`
+  - `PasrahJournalDiscoveredList=MEDOK`
+  - `PasrahJournalConfirmedList=MEDOK`
+- Build passed: `_tmp_journal_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
 ## 2026-04-09 04:57:26 +07:00 - Stamp Door Runtime Identity
 - Status: DONE.
 - `Server.MatchSystem.DoorRuntime` now exposes direct runtime attrs on live door parts and prompts so entry/interior door state is readable from Studio without inferring it from prompt copy alone.
