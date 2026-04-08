@@ -12857,24 +12857,15 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `toolType = Dupa`
     - `visualPlaced = true`
 
-- progress tambahan pada lane `roblox inventory sync memory lock`:
-  - mapping parsial `raw asset lokal -> inventory upload Roblox -> runtime asset id` sekarang dikunci permanen di `ROBLOX_INVENTORY_SYNC_LEDGER_2026-04-08.md`
-  - context scan yang dipakai:
-    - `Toolbox -> Inventory -> My Audio` di Studio `PASRAHPHOBIA.rbxlx`
-    - `Toolbox -> Inventory -> My Models` di Studio publish `PASRAHPHOBIA`
-  - exact match audio yang sekarang sudah confirmed punya `rbxassetid`:
-    - `scroll_001`
-    - `bookFlip3`
-    - `doorClose_1`
-    - `thermometer_reading`
-    - `ghost_whisper_3`
-    - `ui_error`
-    - `maximize_001`
-    - `error_005`
-  - exact match audio yang sudah terlihat di Studio tetapi `assetid` masih pending:
-    - `impactPunch_medium_002`
-    - `switch15`
-  - model upload yang sudah confirmed:
-    - `pocong PASRAHPHIA`
-    - `genderuwo`
-    - `kuntilanak_Iv Pole Walking`
+- progress tambahan pada lane `roblox inventory full crawl lock`:
+  - inventory Roblox sekarang tidak lagi dicatat sebagai subset parsial; saya tarik penuh lewat `inventory.roblox.com` menggunakan `CreatorId 10576163165`
+  - snapshot yang terkunci di `ROBLOX_INVENTORY_SYNC_LEDGER_2026-04-08.md` sekarang berisi:
+    - `101` audio
+    - `11` model
+  - hasil compare ke repo:
+    - `92 / 101` audio exact-match ke raw asset lokal
+    - `9 / 101` audio inventory-only
+    - `1 / 11` model exact-match (`genderuwo`)
+  - audio yang sebelumnya masih pending sekarang sudah terkunci juga:
+    - `switch15 -> rbxassetid://140513388846872`
+    - `impactPunch_medium_002 -> rbxassetid://126504722314888`

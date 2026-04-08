@@ -38,7 +38,7 @@ Catatan penting:
 - Baca `ASSET_LICENSE_LEDGER_2026-04-03.md` untuk status ownership/licensing asset aktif yang benar-benar terlihat di source.
 - Baca `AUDIO_REPLACEMENT_PLAN_2026-04-03.md` untuk slot audio kosong yang masih perlu diganti dan jalur apply setelah upload asset.
 - Baca `ROBLOX_CLOUD_PLACE_IDENTITY_2026-04-08.md` untuk identity `PlaceId/GameId` cloud yang canonical saat task membutuhkan context akun Roblox, inventory Toolbox, atau asset upload private.
-- Baca `ROBLOX_INVENTORY_SYNC_LEDGER_2026-04-08.md` untuk mapping parsial `raw asset lokal -> upload inventory Roblox -> rbxassetid` yang sudah confirmed hari ini.
+- Baca `ROBLOX_INVENTORY_SYNC_LEDGER_2026-04-08.md` untuk snapshot penuh inventory upload Roblox (`101` audio, `11` model) dan mapping `raw asset lokal -> upload inventory Roblox -> rbxassetid` yang sudah dikunci hari ini.
 - Baca `CREATOR_HUB_ID_TEMPLATE_2026-04-03.md` untuk blocker manual yang masih diperlukan agar bridge monetization bisa ditutup end-to-end.
 - Baca `EXECUTION_LOG.md` untuk progres task yang sudah dikerjakan selama fase eksekusi.
 - Baca `PUBLISH_REVIEW_FINAL_2026-04-06.md` untuk status publish saat ini.
