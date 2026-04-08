@@ -13201,3 +13201,34 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `ghostVisualExtents=1.600000023841858, 1.600000023841858, 0.800000011920929`
     - `ghostTargetBounds=1.600000023841858, 3.75, 1.1799999475479126`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 00:39:11 +07:00 - Expose Ambient And Heartbeat Runtime State
+- Extended `src/client/Controllers/Sensory/AudioController.luau` so player-facing runtime attrs now expose the active audio state for:
+  - lobby ambient
+  - preparation ambient
+  - heartbeat
+- Added and maintained:
+  - `PasrahPreparationAmbientSoundId`
+  - `PasrahPreparationAmbientPlaybackSpeed`
+  - `PasrahHeartbeatActive`
+  - `PasrahHeartbeatSoundId`
+  - `PasrahHeartbeatPlaybackSpeed`
+  - `PasrahHeartbeatReason`
+- `AudioController:Stop()` now clears the new ambience/heartbeat attrs alongside the existing lobby ambient attrs.
+- Build passed: `_tmp_audio_controller_state_attrs_build.rbxlx`.
+- Live Studio proof:
+  - lobby idle:
+    - `PasrahLobbyAmbientActive=true`
+    - `PasrahLobbyAmbientSoundId=rbxassetid://113854211240490`
+    - `PasrahLobbyAmbientMap=LobbySocialHub`
+  - `PreparationPhase`:
+    - `PasrahPreparationAmbientActive=true`
+    - `PasrahPreparationAmbientSoundId=rbxassetid://140704980462451`
+    - `PasrahPreparationAmbientMap=HauntedHouse`
+    - `PasrahPreparationAmbientPlaybackSpeed=0.94`
+  - forced hunt in `InvestigationPhase`:
+    - `PasrahHeartbeatActive=true`
+    - `PasrahHeartbeatSoundId=rbxassetid://138884191945388`
+    - `PasrahHeartbeatReason=HUNT`
+  - after `EndMatch`, lobby ambient returned and the match-only attrs dropped back out.
+- Roblox Studio was returned to STOP TEST before logging.
