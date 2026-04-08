@@ -318,6 +318,53 @@ local function updateDoorRouteGuide(doorRecord, isOpen, isLocked)
 	end
 end
 
+local function stampDoorRuntimeInstance(instance, channel, doorRecord, nearestDistance)
+	if typeof(instance) ~= "Instance" or instance.Parent == nil or type(doorRecord) ~= "table" then
+		return
+	end
+
+	local part = doorRecord.part
+	local isOpen = part and part:GetAttribute("DoorIsOpen") == true or false
+	local isLocked = part and part:GetAttribute("DoorLocked") == true or false
+	local guideSubtitle = part and tostring(part:GetAttribute("DoorRouteSubtitle") or "") or ""
+	local stateText = part and tostring(part:GetAttribute("DoorRouteStateText") or "") or ""
+
+	instance:SetAttribute("PasrahDoorOwner", "DoorRuntime")
+	instance:SetAttribute("PasrahDoorChannel", tostring(channel or instance.Name))
+	instance:SetAttribute("PasrahDoorMatchId", type(doorRecord.matchId) == "string" and doorRecord.matchId or nil)
+	instance:SetAttribute("PasrahDoorObjectId", type(doorRecord.objectId) == "string" and doorRecord.objectId or nil)
+	instance:SetAttribute("PasrahDoorLabel", type(doorRecord.label) == "string" and doorRecord.label or nil)
+	instance:SetAttribute("PasrahDoorRouteSubtitle", guideSubtitle ~= "" and guideSubtitle or nil)
+	instance:SetAttribute("PasrahDoorPolicy", type(doorRecord.policy) == "string" and doorRecord.policy or nil)
+	instance:SetAttribute("PasrahDoorStateText", stateText ~= "" and stateText or nil)
+	instance:SetAttribute("PasrahDoorIsOpen", isOpen)
+	instance:SetAttribute("PasrahDoorLocked", isLocked)
+	instance:SetAttribute(
+		"PasrahDoorNearestApproachDistance",
+		type(nearestDistance) == "number" and nearestDistance < math.huge and math.floor(nearestDistance * 100 + 0.5) / 100 or nil
+	)
+	instance:SetAttribute(
+		"PasrahDoorLastInteractionSource",
+		type(doorRecord.lastInteractionSource) == "string" and doorRecord.lastInteractionSource or nil
+	)
+	if instance:IsA("ProximityPrompt") then
+		instance:SetAttribute("PasrahDoorPromptActionText", tostring(instance.ActionText or ""))
+		instance:SetAttribute("PasrahDoorPromptObjectText", tostring(instance.ObjectText or ""))
+	end
+end
+
+local function stampDoorRuntime(doorRecord, nearestDistance)
+	if type(doorRecord) ~= "table" then
+		return
+	end
+
+	stampDoorRuntimeInstance(doorRecord.part, "DoorPart", doorRecord, nearestDistance)
+	stampDoorRuntimeInstance(doorRecord.prompt, "DoorPrompt", doorRecord, nearestDistance)
+	stampDoorRuntimeInstance(doorRecord.guideBillboard, "DoorGuideBillboard", doorRecord, nearestDistance)
+	stampDoorRuntimeInstance(doorRecord.guidePanel, "DoorGuidePanel", doorRecord, nearestDistance)
+	stampDoorRuntimeInstance(doorRecord.guideHighlight, "DoorGuideHighlight", doorRecord, nearestDistance)
+end
+
 local function resolveEventBus(deps)
 	local eventBus = Services.Get(deps, "EventBus")
 	if type(eventBus) ~= "table" then
@@ -512,6 +559,7 @@ local function applyDoorState(doorRecord, interactionType, suppressSound)
 		part:GetAttribute("DoorIsOpen") == true,
 		part:GetAttribute("DoorLocked") == true
 	)
+	stampDoorRuntime(doorRecord, doorRecord.lastNearestApproachDistance)
 end
 
 local function getPlayerDoorApproachDistance(doorRecord, player, depthThreshold, widthPadding)
@@ -585,6 +633,7 @@ local function executeDoorInteraction(doorRecord, interactionType, interactionSo
 
 	local now = os.clock()
 	doorRecord.lastInteractionAt = now
+	doorRecord.lastInteractionSource = interactionSource
 	if interactionSource == LOCAL_PROMPT_SOURCE then
 		doorRecord.manualOverrideUntil = now + MANUAL_OVERRIDE_SECONDS
 		doorRecord.manualOverrideState = interactionType == "Open" and "Open" or "Closed"
@@ -674,6 +723,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 
 	local eventBus = resolveEventBus(deps)
 	local mapInteractionSystem = resolveMapInteractionSystem(deps)
+	local matchId = match and tostring(match.matchId or match.id or "") or ""
 	local doorLookup = {}
 
 	if match and match._doorRuntimeSubscription and eventBus then
@@ -691,6 +741,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 				part = descendant,
 				prompt = prompt,
 				label = doorLabel,
+				matchId = matchId ~= "" and matchId or nil,
 				closedCFrame = closedCFrame,
 				openCFrame = buildOpenCFrame(descendant, closedCFrame),
 				policy = normalizePolicy(initialState.policy),
@@ -700,6 +751,8 @@ function DoorRuntime.Attach(match, mapClone, deps)
 				mapInteractionSystem = mapInteractionSystem,
 				lastNearbyAt = 0,
 				lastInteractionAt = 0,
+				lastInteractionSource = "Attach",
+				lastNearestApproachDistance = nil,
 				manualOverrideUntil = 0,
 				manualOverrideState = nil,
 			}
@@ -735,7 +788,6 @@ function DoorRuntime.Attach(match, mapClone, deps)
 	end
 
 	if next(doorLookup) ~= nil and match and type(match.players) == "table" then
-		local matchId = tostring(match.matchId or match.id or "")
 		match._doorRuntimeHeartbeat = RunService.Heartbeat:Connect(function()
 			if typeof(mapClone) ~= "Instance" or mapClone.Parent == nil then
 				if match._doorRuntimeHeartbeat then
@@ -771,6 +823,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 					HYBRID_CLOSE_APPROACH_DEPTH,
 					HYBRID_LATERAL_PADDING + 1
 				)
+				doorRecord.lastNearestApproachDistance = nearestOpenDistance or nearestKeepOpenDistance
 				local playerNearby = type(nearestOpenDistance) == "number"
 				local playerWithinKeepOpen = type(nearestKeepOpenDistance) == "number"
 				if playerNearby then
@@ -788,6 +841,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 						executeDoorInteraction(doorRecord, "Close", LOCAL_AUTO_SOURCE)
 					end
 				end
+				stampDoorRuntime(doorRecord, doorRecord.lastNearestApproachDistance)
 			end
 		end)
 	end
