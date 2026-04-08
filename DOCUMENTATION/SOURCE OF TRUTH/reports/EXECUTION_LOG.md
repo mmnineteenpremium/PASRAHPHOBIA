@@ -12738,3 +12738,8 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `BukuTerkutukButton = [7]`
     - `BolaArwahButton = [8]`
     - `GerakanGaibButton = [9]`
+
+- progress tambahan pada lane `field kit idle copy clarity`:
+  - state idle `Field Kit` sekarang langsung menyebut roster `[1-9]` dan menjelaskan bahwa tool evidence + utility sama-sama siap dipakai
+- validasi terbaru:
+  - `FieldKitFrame.StatusLabel = Field kit [1-9] siap. Pilih tool evidence atau utility sesuai situasi investigasi.`

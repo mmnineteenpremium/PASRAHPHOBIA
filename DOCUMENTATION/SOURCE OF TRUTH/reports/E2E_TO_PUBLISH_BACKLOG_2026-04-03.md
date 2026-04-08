@@ -3482,3 +3482,10 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - player sekarang bisa membaca shortcut roster penuh langsung dari HUD, bukan mengandalkan hint lama yang hanya akurat untuk 5 tool
 
+- progress tambahan pada lane `field kit idle copy clarity`:
+  - copy idle `Field Kit` sekarang langsung mengakui roster `[1-9]`
+- validasi terbaru:
+  - `FieldKitFrame.StatusLabel = Field kit [1-9] siap. Pilih tool evidence atau utility sesuai situasi investigasi.`
+- publish impact:
+  - state idle match sekarang langsung mengajari pemain bahwa semua tool utama sudah aktif tanpa harus menunggu tooltip atau trial-and-error
+
