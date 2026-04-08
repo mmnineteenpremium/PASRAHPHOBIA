@@ -13308,3 +13308,18 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `VisualTemplateName=Pocong`
     - `PasrahGhostInventoryModelAssetId=rbxassetid://123151303766691`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 01:36:54 +07:00 - Stamp Match Ghost Runtime Identity
+- Updated `src/ServerScriptService/Server/GhostSystem/Service.lua` so real spawned ghost actors now carry `PasrahGhostInventoryModelAssetId` directly on the runtime model when shared tuning knows the uploaded inventory model.
+- Placeholder visuals explicitly keep that attr empty, so direct workspace inspection stays truthful for ghosts that still rely on local runtime visuals only.
+- Build passed: `_tmp_match_ghost_runtime_identity_attr_build.rbxlx`.
+- Live Studio proof:
+  - real `Genderuwo` actor:
+    - `Workspace.ActiveMatches.Match_match_1.Ghost_Genderuwo`
+    - `VisualTemplateName=Genderuwo`
+    - `PasrahGhostInventoryModelAssetId=rbxassetid://117009327297852`
+  - real `Leak` actor:
+    - `Workspace.ActiveMatches.Match_match_2.Ghost_Leak`
+    - `VisualTemplateName=Leak`
+    - no `PasrahGhostInventoryModelAssetId`
+- Roblox Studio was returned to STOP TEST before logging.
