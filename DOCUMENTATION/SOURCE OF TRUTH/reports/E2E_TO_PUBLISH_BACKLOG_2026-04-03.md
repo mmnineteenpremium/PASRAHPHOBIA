@@ -3423,3 +3423,15 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - block hunt dari `Salib` sekarang terbaca langsung oleh pemain, bukan hanya lewat perubahan charge yang mudah terlewat
 
+- progress tambahan pada lane `main investigation tool evidence lock`:
+  - `JejakEnergi` dan `KotakArwah` sekarang mengunci hasil evidence yang sudah valid langsung di `Field Kit`
+- validasi terbaru:
+  - `Banaspati -> JejakEnergi`:
+    - `Meta = EMF 5`
+    - `Footer = MEDOK LOCK`
+  - `Kuntilanak -> KotakArwah`:
+    - `Meta = RESPON`
+    - `Footer = VOICE LOCK`
+- publish impact:
+  - evidence utama sekarang tidak lagi hanya terbaca di jurnal/status text; button tool aktif juga menyatakan hasil lock secara eksplisit
+

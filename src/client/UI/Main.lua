@@ -290,6 +290,7 @@ local function createDefaultFieldKitToolState(toolType)
 	return {
 		usesRemaining = usesRemaining and math.max(0, math.floor(usesRemaining)) or nil,
 		chargesRemaining = nil,
+		lastEvidenceType = nil,
 		saltTriggered = false,
 		huntBlockedAt = 0,
 		huntRepelled = false,
@@ -4313,6 +4314,18 @@ function UISystem:_onServerEvent(remoteName, payload)
 				end
 				self._journalState.toolSuccess = true
 				self._journalState.toolLastUsedAt = os.clock()
+				if FIELD_KIT_TOOL_CONFIG[collectedToolType] then
+					local toolData = {
+						evidenceType = collectedEvidenceType,
+					}
+					if collectedToolType == JOURNAL_TOOL_TYPE and collectedEvidenceType == "MEDOK" then
+						toolData.emfLevel = 5
+					elseif collectedToolType == "KotakArwah" and collectedEvidenceType == "Suara" then
+						toolData.ghostResponse = true
+						toolData.responseTier = "LOCK"
+					end
+					self:_applyFieldKitToolUpdate(collectedToolType, true, "collected", toolData, eventName)
+				end
 			end
 		elseif payload and type(payload.toolType) == "string" and FIELD_KIT_TOOL_CONFIG[payload.toolType] then
 			local toolData = payload.result or payload.data or payload
@@ -5383,6 +5396,9 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 		if data.visualPlaced ~= nil then
 			toolState.visualPlaced = data.visualPlaced == true
 		end
+		if type(data.evidenceType) == "string" and data.evidenceType ~= "" then
+			toolState.lastEvidenceType = data.evidenceType
+		end
 		if toolType == "Garam" then
 			toolState.saltTriggered = data.tracksDetected == true
 		end
@@ -5474,6 +5490,10 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	end
 	if toolType == JOURNAL_TOOL_TYPE then
 		local emfLevel = tonumber(feedbackData and feedbackData.emfLevel)
+		local evidenceType = tostring(toolState.lastEvidenceType or "")
+		if evidenceType == "MEDOK" then
+			return emfLevel and string.format("EMF %d", math.max(0, math.floor(emfLevel))) or "EMF 5", false, "MEDOK LOCK"
+		end
 		if toolState.lastSuccess ~= false and emfLevel ~= nil then
 			return string.format("EMF %d", math.max(0, math.floor(emfLevel))), false, "MEDOK LOCK"
 		end
@@ -5483,6 +5503,9 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 		return tostring(config.readyMeta or "LIVE"), false, tostring(config.readyFooter or "SCAN LOOP")
 	end
 	if toolType == "KotakArwah" then
+		if tostring(toolState.lastEvidenceType or "") == "Suara" then
+			return "RESPON", false, "VOICE LOCK"
+		end
 		if feedbackData and feedbackData.ghostResponse == true then
 			return "RESPON", false, string.format("VOICE %s", string.upper(tostring(feedbackData.responseTier or "BASE")))
 		end

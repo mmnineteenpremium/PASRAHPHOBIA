@@ -12653,3 +12653,16 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - snapshot decay sesudah jeda:
     - `Decay Meta = C2`
     - `Decay Footer = GUARD`
+
+- progress tambahan pada lane `main investigation tool evidence lock`:
+  - `JejakEnergi` dan `KotakArwah` di `Field Kit` sekarang ikut mengunci state tombol saat `EvidenceCollected`, bukan hanya mengubah status jurnal
+  - client menyimpan `lastEvidenceType` di state tool agar evidence yang sudah valid tetap terbaca walau feedback tool generik datang sesudahnya
+- validasi terbaru:
+  - `Banaspati -> JejakEnergi`:
+    - `Meta = EMF 5`
+    - `Footer = MEDOK LOCK`
+    - `FieldKitFrame.StatusLabel = Evidence berhasil dibaca. Collected MEDOK`
+  - `Kuntilanak -> KotakArwah`:
+    - `Meta = RESPON`
+    - `Footer = VOICE LOCK`
+    - `FieldKitFrame.StatusLabel = Evidence berhasil dibaca. Collected Suara`
