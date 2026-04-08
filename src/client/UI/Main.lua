@@ -567,6 +567,22 @@ local UI_SOUND_FALLBACKS = {
 		SoundId = "rbxassetid://97217836947594",
 		Volume = 0.18,
 	},
+	PanelOpen = {
+		SoundId = "rbxassetid://115397007938540",
+		Volume = 0.16,
+	},
+	PanelSoftClose = {
+		SoundId = "rbxassetid://73589904561594",
+		Volume = 0.11,
+	},
+	JournalPage = {
+		SoundId = "rbxassetid://97915135753208",
+		Volume = 0.16,
+	},
+	Error = {
+		SoundId = "rbxassetid://70594579947868",
+		Volume = 0.2,
+	},
 }
 local cachedSoundTemplates = {}
 local activeRuntimeUISounds = {}
@@ -713,6 +729,12 @@ local function playRuntimeUISound(soundKey, options)
 		runtimeSound.PlaybackSpeed = math.clamp(runtimeSound.PlaybackSpeed + ((math.random() * jitter) - (jitter * 0.5)), 0.85, 1.25)
 	end
 	runtimeSound.Parent = SoundService
+	local localPlayer = Players.LocalPlayer
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahUILastSoundKey", tostring(soundKey or ""))
+		localPlayer:SetAttribute("PasrahUILastSoundId", tostring(runtimeSound.SoundId or ""))
+		localPlayer:SetAttribute("PasrahUILastSoundAt", os.clock())
+	end
 	if options and options.SingleInstance then
 		activeRuntimeUISounds[soundKey] = runtimeSound
 	end
@@ -4681,6 +4703,10 @@ function UISystem:_onServerEvent(remoteName, payload)
 			if self._roomBrowserWidgets and self._roomBrowserWidgets.PasswordModal and self._passwordJoinPendingRoomId ~= nil then
 				self._roomBrowserWidgets.PasswordModal.Visible = true
 			end
+			playRuntimeUISound("Error", {
+				SingleInstance = true,
+				VolumeScale = 0.94,
+			})
 			if payload and payload.reason == "room_full" and self._roomBrowserWidgets and self._roomBrowserWidgets.KickNoticeModal then
 				self._kickNoticeVisible = true
 				self._roomBrowserWidgets.KickNoticeText.Text = "ROOM PENUH"
@@ -5301,6 +5327,11 @@ function UISystem:_openAuxiliaryWindow(guiName)
 		self:_requestCosmeticSnapshot()
 	end
 	self:_applyVisibility()
+	playRuntimeUISound(guiName == "JournalUI" and "JournalPage" or "PanelOpen", {
+		SingleInstance = true,
+		VolumeScale = guiName == "JournalUI" and 0.86 or 0.82,
+		PlaybackJitter = 0.02,
+	})
 end
 
 function UISystem:_toggleAuxiliaryWindow(guiName)
@@ -16453,10 +16484,18 @@ function UISystem:_setRoomBrowserVisible(visible)
 	if visible == true then
 		self:_closeConflictingWindows("RoomBrowser")
 	end
+	local previousVisible = self._roomBrowserVisible == true
 	self._roomBrowserVisible = visible == true
 	self:_updateRoomBrowserVisibility()
 	if self._roomBrowserVisible and self._roomBrowserWidgets and self._roomBrowserWidgets.RootPanel then
 		animatePanelReveal(self._roomBrowserWidgets.RootPanel, false)
+	end
+	if previousVisible ~= self._roomBrowserVisible then
+		playRuntimeUISound(self._roomBrowserVisible and "PanelOpen" or "PanelSoftClose", {
+			SingleInstance = true,
+			VolumeScale = self._roomBrowserVisible and 0.78 or 0.9,
+			PlaybackJitter = 0.02,
+		})
 	end
 	self:_syncAuxiliaryWindowVisibility()
 	self:_syncLobbyAuxiliaryWindowVisibility()
