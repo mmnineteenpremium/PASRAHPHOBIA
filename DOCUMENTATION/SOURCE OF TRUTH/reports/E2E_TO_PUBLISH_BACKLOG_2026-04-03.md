@@ -3686,3 +3686,8 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Live proof: client bootstrap stage started; generated PlayerGui roots include LobbyUI, MatchUI, RoomBrowserUI, RoomBrowserFloatUI, UXLayer.
 - UI surface cue proof remains on uploaded Roblox inventory asset IDs, not local files: JournalPage = rbxassetid://97915135753208, PanelSoftClose = rbxassetid://73589904561594.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-08 22:37:11 +07:00 - Client Bootstrap E2E Regression Proof
+- Status: DONE.
+- Live regression proof after UI bootstrap recovery: preparation HUD appears, investigation Field Kit appears, objective update cue uses uploaded inventory asset id, and JejakEnergi -> MEDOK still processes through StudioE2E.
+- Studio stop-test reporting rule followed.
