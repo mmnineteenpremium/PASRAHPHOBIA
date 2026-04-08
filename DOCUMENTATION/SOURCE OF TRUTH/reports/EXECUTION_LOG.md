@@ -12631,3 +12631,13 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - world placement:
       - `runtime = Repel`
       - `visual = Repel`
+
+- progress tambahan pada lane `garam trigger HUD clarity`:
+  - `Garam` di `Field Kit` sekarang membedakan `trap line aktif` vs `ghost benar-benar menginjak garam`
+  - client menyimpan state `saltTriggered` supaya button tidak lagi tetap generik saat jejak sudah terbaca
+- validasi terbaru:
+  - `UseEvidenceTool(Garam, nearGhostRoom=true)`:
+    - `MatchPhase = InGame`
+    - `Garam Meta = TRACK`
+    - `Garam Footer = GHOST STEP`
+    - `FieldKitFrame.StatusLabel = Jejak garam terpicu. Ghost melintas di area garam.`
