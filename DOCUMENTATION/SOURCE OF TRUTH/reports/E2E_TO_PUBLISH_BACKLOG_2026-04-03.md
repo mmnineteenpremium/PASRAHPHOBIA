@@ -3661,3 +3661,21 @@ Urutan yang paling masuk akal dari titik sekarang:
 - backlog impact:
   - gap publish lane audio makin menyempit ke polish/coverage, bukan lagi owner cue inti yang salah asset
 
+- progress tambahan pada lane `ui surface inventory cues`:
+  - UI owner existing sekarang punya mapping upload inventory untuk:
+    - `PanelOpen -> maximize_001`
+    - `PanelSoftClose -> scroll_001`
+    - `JournalPage -> bookFlip3`
+    - `Error -> ui_error`
+  - penggunaan awal:
+    - auxiliary panel open
+    - Room Browser open/close dengan visibility guard
+    - Room Browser join failed
+- validasi terbaru:
+  - build lolos:
+    - `_tmp_ui_inventory_surface_cues_build.rbxlx`
+    - `_tmp_ui_inventory_surface_cues_guarded_build.rbxlx`
+  - source live Studio membaca fallback baru di `client/UI/Main.lua`
+- backlog impact:
+  - coverage audio UI sudah naik untuk panel/journal/error, tetapi playback proof langsung untuk command harness UI tidak diklaim karena konteks VM test tidak sama dengan bootstrap client aktif
+

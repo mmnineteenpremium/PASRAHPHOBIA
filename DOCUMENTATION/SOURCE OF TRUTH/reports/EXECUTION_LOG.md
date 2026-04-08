@@ -12990,3 +12990,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `ghost_object_throw -> PasrahAudioLastSoundId = rbxassetid://126504722314888`
 - publish impact:
   - cue interaction lingkungan yang sebelumnya jatuh ke template generik sekarang mulai memakai suara upload yang lebih tepat secara fungsi tanpa duplikasi sistem atau asset local path
+
+- progress tambahan pada lane `ui surface inventory cues`:
+  - `client/UI/Main.lua` sekarang memakai upload inventory tambahan untuk surface UI yang sebelumnya masih senyap/generik:
+    - `PanelOpen -> rbxassetid://115397007938540` (`maximize_001`)
+    - `PanelSoftClose -> rbxassetid://73589904561594` (`scroll_001`)
+    - `JournalPage -> rbxassetid://97915135753208` (`bookFlip3`)
+    - `Error -> rbxassetid://70594579947868` (`ui_error`)
+  - cue dipasang di owner UI existing:
+    - open auxiliary window
+    - Room Browser open/close, dengan guard agar sound hanya muncul saat visibility benar-benar berubah
+    - `RoomBrowserRoomJoinFailed`
+  - debug attr client ditambahkan untuk inspeksi berikutnya:
+    - `PasrahUILastSoundKey`
+    - `PasrahUILastSoundId`
+    - `PasrahUILastSoundAt`
+- validasi terbaru:
+  - build lolos:
+    - `_tmp_ui_inventory_surface_cues_build.rbxlx`
+    - `_tmp_ui_inventory_surface_cues_guarded_build.rbxlx`
+  - source live `game.StarterPlayer.StarterPlayerScripts.Client.UI.Main` membaca fallback baru dan debug attr write path
+  - catatan jujur: direct command harness UI client tidak dipakai sebagai proof final karena command execution memakai konteks VM terpisah dari bootstrap client aktif
+- publish impact:
+  - UI panel/journal/error feedback sekarang punya mapping audio inventory-owned yang siap dipakai di jalur runtime normal tanpa local raw asset dan tanpa sistem UI baru

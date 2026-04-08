@@ -360,6 +360,23 @@ Kesimpulan:
 
 - ketiga asset upload di atas sekarang bukan hanya tercatat di inventory ledger, tetapi sudah benar-benar dipakai oleh cue runtime player-facing yang sebelumnya masih jatuh ke template generik.
 
+## Update 2026-04-08 21:25 ICT
+
+Batch `ui surface inventory cues` menutup penggunaan runtime berikut:
+
+- `maximize_001` (`rbxassetid://115397007938540`) -> UI `PanelOpen`
+- `scroll_001` (`rbxassetid://73589904561594`) -> UI `PanelSoftClose`
+- `bookFlip3` (`rbxassetid://97915135753208`) -> UI `JournalPage`
+- `ui_error` (`rbxassetid://70594579947868`) -> UI `Error`
+
+Owner runtime aktif:
+
+- `src/client/UI/Main.lua`
+
+Kesimpulan:
+
+- asset UI upload di atas kini menjadi fallback runtime untuk panel/journal/error surface di owner UI existing, bukan local raw asset.
+
 ## Update 2026-04-05 17:24 ICT
 
 Validasi source eksternal `Pocong` kini ditutup lebih jauh:
