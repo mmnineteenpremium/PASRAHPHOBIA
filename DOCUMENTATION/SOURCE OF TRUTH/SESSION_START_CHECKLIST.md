@@ -19,11 +19,12 @@ Baca file berikut dalam urutan ini:
 2. `DOCUMENTATION/SOURCE OF TRUTH/REPORTS.md`
 3. `DOCUMENTATION/SOURCE OF TRUTH/CANONICAL_SPECIFICATIONS_v2.md`
 4. `DOCUMENTATION/SOURCE OF TRUTH/reports/README.md`
-5. `DOCUMENTATION/SOURCE OF TRUTH/reports/REALITY_SCAN_2026-04-03.md`
-6. `DOCUMENTATION/SOURCE OF TRUTH/reports/DUPLICATION_AND_RUNTIME_DRIFT_2026-04-03.md`
-7. `DOCUMENTATION/SOURCE OF TRUTH/reports/FULL_EXECUTION_ROADMAP_2026-04-03.md`
-8. `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
-9. `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TEST_MATRIX_2026-04-03.md`
+5. `DOCUMENTATION/SOURCE OF TRUTH/reports/ROBLOX_CLOUD_PLACE_IDENTITY_2026-04-08.md`
+6. `DOCUMENTATION/SOURCE OF TRUTH/reports/REALITY_SCAN_2026-04-03.md`
+7. `DOCUMENTATION/SOURCE OF TRUTH/reports/DUPLICATION_AND_RUNTIME_DRIFT_2026-04-03.md`
+8. `DOCUMENTATION/SOURCE OF TRUTH/reports/FULL_EXECUTION_ROADMAP_2026-04-03.md`
+9. `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+10. `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TEST_MATRIX_2026-04-03.md`
 
 ## Dokumen yang Bukan Landasan Utama
 
@@ -52,6 +53,28 @@ Sesi hanya dianggap siap jika:
 - `Roblox_Studio` terlihat di `/mcp`
 - Studio menunjukkan client MCP terhubung
 
+## Startup Check Cloud Place Identity
+
+Jika task membutuhkan context akun/cloud Roblox, verifikasi identity berikut di Studio:
+
+- `game.PlaceId = 113010869463813`
+- `game.GameId = 9802743087`
+- `game.Name = Place2`
+- `game.CreatorId = 10576163165`
+
+Task yang termasuk:
+
+- scan `Toolbox -> Inventory`
+- audit `My Audio`
+- audit `My Models`
+- verifikasi asset upload yang sudah ada di akun Roblox
+
+Jika salah satu ID di atas tidak cocok:
+
+- jangan menebak-nebak context Studio
+- anggap session belum terhubung ke place cloud yang benar
+- perbaiki dulu context Studio sebelum audit inventory/private upload
+
 ## Startup Check Rojo
 
 Lakukan verifikasi ini di awal sesi:
@@ -72,6 +95,11 @@ pwsh -NoLogo -File .\scripts\serve-rojo.ps1
 Aturan kerja yang berlaku:
 
 - source code lokal di repo adalah source of truth
+- identity cloud Roblox yang canonical untuk session Studio ter-publish saat ini:
+  - `PlaceId = 113010869463813`
+  - `GameId = 9802743087`
+  - `Name = Place2`
+  - `CreatorId = 10576163165`
 - `Rojo` dipakai untuk `local -> Studio`
 - `MCP` dipakai untuk inspect state live, playtest, input, dan operasi Studio-only
 - perubahan Studio yang dianggap final harus dimirror kembali ke repo
@@ -114,4 +142,3 @@ Jika sesi baru dimulai, AI sebaiknya memulai dengan prinsip ini:
 3. verifikasi `Rojo`
 4. scan source aktif
 5. lanjutkan task dari roadmap dan backlog terbaru
-

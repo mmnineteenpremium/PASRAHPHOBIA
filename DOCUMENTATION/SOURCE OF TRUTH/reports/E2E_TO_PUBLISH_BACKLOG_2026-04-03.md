@@ -8,6 +8,16 @@ Dokumen ini adalah backlog kerja dari kondisi proyek hari ini sampai:
 2. vertical slice yang layak dimainkan
 3. publish readiness
 
+## Operational Lock 2026-04-08
+
+- identity cloud Roblox yang sekarang canonical untuk session Studio ter-publish:
+  - `PlaceId = 113010869463813`
+  - `GameId = 9802743087`
+  - `Name = Place2`
+  - `CreatorId = 10576163165`
+- repo lokal tetap source of truth
+- jika lane kerja butuh `Toolbox -> Inventory`, `My Audio`, `My Models`, atau audit asset upload akun, jangan lanjut di session `PlaceId = 0`
+
 ## P0 - Blocker E2E
 
 ### 1. Konsolidasi owner client

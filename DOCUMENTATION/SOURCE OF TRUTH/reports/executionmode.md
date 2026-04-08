@@ -23,7 +23,12 @@ Environment berikut SELALU aktif dan tersedia:
 
 - MCP SERVER → AKTIF
 - Roblox Studio → TERBUKA
-- Project file → PASRAHPHOBIA.rbxlx (ACTIVE SESSION)
+- Source lokal workspace → `PASRAHPHOBIA.rbxlx` / repo lokal tetap source of truth
+- Published cloud session canonical →
+  - `PlaceId = 113010869463813`
+  - `GameId = 9802743087`
+  - `Name = Place2`
+  - `CreatorId = 10576163165`
 - Rojo Serve → BERJALAN
 - Rojo Connect (Studio) → TERHUBUNG & AKTIF
 
@@ -31,10 +36,12 @@ JANGAN:
 - Mengasumsikan environment mati
 - Memberikan instruksi setup ulang
 - Menyarankan restart kecuali benar-benar diperlukan
+- Menganggap `CreatorId` sama dengan `marketplaceId`
 
 SELALU:
 - Anggap perubahan bisa langsung diuji di environment aktif
 - Gunakan pendekatan live iteration
+- Jika task butuh context inventory/upload Roblox, pastikan Studio benar-benar attach ke identity cloud canonical di atas
 
 ---
 

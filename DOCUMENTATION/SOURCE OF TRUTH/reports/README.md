@@ -37,6 +37,7 @@ Catatan penting:
 - Baca `FULL_EXECUTION_ROADMAP_2026-04-03.md` sebagai peta kerja utama sampai siap publish.
 - Baca `ASSET_LICENSE_LEDGER_2026-04-03.md` untuk status ownership/licensing asset aktif yang benar-benar terlihat di source.
 - Baca `AUDIO_REPLACEMENT_PLAN_2026-04-03.md` untuk slot audio kosong yang masih perlu diganti dan jalur apply setelah upload asset.
+- Baca `ROBLOX_CLOUD_PLACE_IDENTITY_2026-04-08.md` untuk identity `PlaceId/GameId` cloud yang canonical saat task membutuhkan context akun Roblox, inventory Toolbox, atau asset upload private.
 - Baca `CREATOR_HUB_ID_TEMPLATE_2026-04-03.md` untuk blocker manual yang masih diperlukan agar bridge monetization bisa ditutup end-to-end.
 - Baca `EXECUTION_LOG.md` untuk progres task yang sudah dikerjakan selama fase eksekusi.
 - Baca `PUBLISH_REVIEW_FINAL_2026-04-06.md` untuk status publish saat ini.
@@ -53,6 +54,7 @@ Catatan penting:
 - `Rojo` dipakai hanya untuk `local -> Studio`
 - `Rojo Two-Way Edit` tidak dipakai
 - `MCP` dipakai untuk inspect state live, playtest, input simulation, dan operasi Studio-only
+- jika task membutuhkan `Toolbox -> Inventory`, `My Audio`, atau `My Models`, verifikasi dulu identity cloud canonical di `ROBLOX_CLOUD_PLACE_IDENTITY_2026-04-08.md`
 - setiap perubahan Studio yang dianggap final harus dimirror kembali ke source lokal sebelum dianggap selesai
 - jangan menambah sistem baru sebelum drift dan duplikasi owner utama dibersihkan
 
