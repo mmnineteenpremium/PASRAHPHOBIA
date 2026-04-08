@@ -404,6 +404,16 @@ local function clamp01(value)
 	return math.clamp(tonumber(value) or 0, 0, 1)
 end
 
+local function setStudioEvidenceServiceTrace(player, stage, detail)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return
+	end
+	player:SetAttribute("PasrahEvidenceServiceStage", tostring(stage or "unknown"))
+	if detail ~= nil then
+		player:SetAttribute("PasrahEvidenceServiceDetail", tostring(detail))
+	end
+end
+
 local SPIRIT_BOX_RESPONSE_LIBRARY = {
 	base = {
 		"...",
@@ -1069,6 +1079,7 @@ function EvidenceService:_resolveGhostRoom(matchId)
 end
 
 function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
+	setStudioEvidenceServiceTrace(player, "salt_begin")
 	local config = UTILITY_TOOL_CONFIG.Garam
 	local now = requestPayload.now or os.clock()
 	local ghostRoomId, ghostState = self:_resolveGhostRoom(matchId)
@@ -1076,6 +1087,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
 	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, player, userId, "Garam")
+	setStudioEvidenceServiceTrace(player, "salt_after_consume_stock", stockReason or usesRemaining)
 	if stockOk ~= true then
 		return false, stockReason or "tool_out_of_stock", {
 			toolType = "Garam",
@@ -1100,7 +1112,9 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 		end
 	end
 	table.insert(utilityState.saltPlacements, placement)
+	setStudioEvidenceServiceTrace(player, "salt_before_place_visual")
 	local visualPlaced = self:_placeUtilityVisual(matchId, "Garam", placementId, player, requestPayload) ~= nil
+	setStudioEvidenceServiceTrace(player, "salt_after_place_visual", tostring(visualPlaced))
 
 	local shouldTriggerImmediately = requestPayload.nearGhostRoom == true
 		or isWithinDistance(requestPayload.distanceToGhost, config.immediateTriggerDistance)
@@ -1111,6 +1125,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 		self:_saveUtilityState(matchId, utilityState)
 		self._utilityVisuals:MarkSaltTriggered(matchId, placementId)
 		self:_destroyUtilityVisualLater(matchId, placementId, 8)
+		setStudioEvidenceServiceTrace(player, "salt_before_publish_triggered")
 		self:_publish("SaltTriggered", {
 			matchId = matchId,
 			now = now,
@@ -1123,6 +1138,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 			usesRemaining = usesRemaining,
 			visualPlaced = visualPlaced,
 		})
+		setStudioEvidenceServiceTrace(player, "salt_after_publish_triggered")
 		return true, "salt_triggered", {
 			ghostRoomId = ghostRoomId,
 			placementId = placementId,
@@ -1137,6 +1153,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 
 	self:_saveUtilityState(matchId, utilityState)
 	self:_destroyUtilityVisualLater(matchId, placementId, config.durationSeconds)
+	setStudioEvidenceServiceTrace(player, "salt_before_publish_placed")
 	self:_publish("SaltPlaced", {
 		expiresAt = placement.expiresAt,
 		matchId = matchId,
@@ -1149,6 +1166,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 		usesRemaining = usesRemaining,
 		visualPlaced = visualPlaced,
 	})
+	setStudioEvidenceServiceTrace(player, "salt_after_publish_placed")
 	return true, "salt_placed", {
 		ghostRoomId = ghostRoomId,
 		placementId = placementId,
@@ -1162,6 +1180,7 @@ function EvidenceService:_handleSaltUse(player, matchId, requestPayload)
 end
 
 function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
+	setStudioEvidenceServiceTrace(player, "salib_begin")
 	local config = UTILITY_TOOL_CONFIG.Salib
 	local now = requestPayload.now or os.clock()
 	local ghostRoomId, ghostState = self:_resolveGhostRoom(matchId)
@@ -1169,6 +1188,7 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
 	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, player, userId, "Salib")
+	setStudioEvidenceServiceTrace(player, "salib_after_consume_stock", stockReason or usesRemaining)
 	if stockOk ~= true then
 		return false, stockReason or "tool_out_of_stock", {
 			toolType = "Salib",
@@ -1189,9 +1209,12 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 
 	table.insert(utilityState.crucifixPlacements, placement)
 	self:_saveUtilityState(matchId, utilityState)
+	setStudioEvidenceServiceTrace(player, "salib_before_place_visual")
 	local visualPlaced = self:_placeUtilityVisual(matchId, "Salib", placementId, player, requestPayload) ~= nil
+	setStudioEvidenceServiceTrace(player, "salib_after_place_visual", tostring(visualPlaced))
 	self:_destroyUtilityVisualLater(matchId, placementId, config.durationSeconds)
 
+	setStudioEvidenceServiceTrace(player, "salib_before_publish_crucifixplaced")
 	self:_publish("CrucifixPlaced", {
 		chargesRemaining = placement.chargesRemaining,
 		expiresAt = placement.expiresAt,
@@ -1205,6 +1228,7 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 		usesRemaining = usesRemaining,
 		visualPlaced = visualPlaced,
 	})
+	setStudioEvidenceServiceTrace(player, "salib_after_publish_crucifixplaced")
 
 	return true, "crucifix_armed", {
 		chargesRemaining = placement.chargesRemaining,
@@ -1220,6 +1244,7 @@ function EvidenceService:_handleCrucifixUse(player, matchId, requestPayload)
 end
 
 function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
+	setStudioEvidenceServiceTrace(player, "dupa_begin")
 	local config = UTILITY_TOOL_CONFIG.Dupa
 	local now = requestPayload.now or os.clock()
 	local ghostRoomId, ghostState = self:_resolveGhostRoom(matchId)
@@ -1227,6 +1252,7 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 	local utilityState = self:_trimExpiredUtilityState(matchId, now)
 	local userId = resolveUserId(player)
 	local stockOk, stockReason, usesRemaining = self:_consumePlayerToolStock(matchId, player, userId, "Dupa")
+	setStudioEvidenceServiceTrace(player, "dupa_after_consume_stock", stockReason or usesRemaining)
 	if stockOk ~= true then
 		return false, stockReason or "tool_out_of_stock", {
 			toolType = "Dupa",
@@ -1246,7 +1272,9 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 
 	table.insert(utilityState.smudgeEffects, effect)
 	self:_saveUtilityState(matchId, utilityState)
+	setStudioEvidenceServiceTrace(player, "dupa_before_place_visual")
 	local visualPlaced = self:_placeUtilityVisual(matchId, "Dupa", placementId, player, requestPayload) ~= nil
+	setStudioEvidenceServiceTrace(player, "dupa_after_place_visual", tostring(visualPlaced))
 	if visualPlaced then
 		self._utilityVisuals:ActivateSmudge(matchId, placementId, false)
 	end
@@ -1268,6 +1296,7 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 		huntRepelled = ok and ended ~= false
 	end
 
+	setStudioEvidenceServiceTrace(player, "dupa_before_publish_smudge")
 	self:_publish("SmudgeActivated", {
 		huntRepelled = huntRepelled,
 		matchId = matchId,
@@ -1282,6 +1311,7 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 		usesRemaining = usesRemaining,
 		visualPlaced = visualPlaced,
 	})
+	setStudioEvidenceServiceTrace(player, "dupa_after_publish_smudge")
 
 	if huntRepelled then
 		self._utilityVisuals:ActivateSmudge(matchId, placementId, true)
@@ -1576,6 +1606,7 @@ function EvidenceService:SpawnEvidence(matchId, payload)
 end
 
 function EvidenceService:ProcessToolUse(player, matchId, payload)
+	setStudioEvidenceServiceTrace(player, "process_begin")
 	if not matchId then
 		return false, "missing_match_id", nil
 	end
@@ -1586,6 +1617,7 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 	local toolType = payload.toolType
 	local requestPayload = payload.payload or {}
 	if UTILITY_TOOL_TYPES[toolType] == true then
+		setStudioEvidenceServiceTrace(player, "process_utility_dispatch", toolType)
 		return self:_processUtilityToolUse(player, matchId, toolType, requestPayload)
 	end
 
@@ -1615,6 +1647,7 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 	if spiritBoxMeta then
 		spiritBoxMeta.detectionChance = detectionChance
 	end
+	setStudioEvidenceServiceTrace(player, "process_before_roll", string.format("%s|%.2f", tostring(toolType), detectionChance))
 	local roll = math.random()
 	if roll > detectionChance then
 		return false, "Inconclusive", {
@@ -1631,6 +1664,7 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 	local activity = tonumber(requestPayload.activity) or 1
 	local distanceToGhost = tonumber(requestPayload.distanceToGhost)
 
+	setStudioEvidenceServiceTrace(player, "process_before_spawn", toolType)
 	local signal, spawnReason = self:SpawnEvidence(matchId, {
 		source = "client_tool_use",
 		trigger = "near_tool",
@@ -1639,6 +1673,7 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 		roomId = requestPayload.roomId,
 		now = now,
 	})
+	setStudioEvidenceServiceTrace(player, "process_after_spawn", spawnReason or (signal and "spawned" or "nil"))
 
 	if spawnReason == "throttled" then
 		return false, "tool_throttled", {
@@ -1678,6 +1713,7 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 		}
 	end
 
+	setStudioEvidenceServiceTrace(player, "process_before_collect", toolType)
 	local ok, collectReason, collectResult = self:CollectEvidence(player, matchId, {
 		evidenceType = evidenceType,
 		toolType = toolType,
@@ -1688,6 +1724,7 @@ function EvidenceService:ProcessToolUse(player, matchId, payload)
 		distanceToGhost = distanceToGhost,
 		now = now,
 	})
+	setStudioEvidenceServiceTrace(player, "process_after_collect", collectReason or (ok and "ok" or "nil"))
 
 	if not ok then
 		return false, collectReason or "collect_failed", {

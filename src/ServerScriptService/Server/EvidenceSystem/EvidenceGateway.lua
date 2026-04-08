@@ -4,6 +4,7 @@ local Services = require(script.Parent.Parent.Core.Services)
 
 local REMOTE_FUNCTIONS_FOLDER_NAME = "RemoteFunctions"
 local EVIDENCE_REQUEST_FUNCTION_NAME = "EvidenceRequest"
+local READY_ATTRIBUTE_NAME = "PasrahEvidenceGatewayReady"
 local TOOL_REQUEST_COOLDOWN_SECONDS = 0.4
 local MAX_GHOST_SCAN_DISTANCE = 22
 local MODDED_SPIRIT_BOX_RANGE = 26
@@ -64,6 +65,16 @@ local TOOL_ALIASES = {
 	smudge = "Dupa",
 	smudgestick = "Dupa",
 }
+
+local function setStudioEvidenceGatewayTrace(player, stage, detail)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return
+	end
+	player:SetAttribute("PasrahEvidenceGatewayStage", tostring(stage or "unknown"))
+	if detail ~= nil then
+		player:SetAttribute("PasrahEvidenceGatewayDetail", tostring(detail))
+	end
+end
 
 local function resolveEventBus(deps)
 	local eventBus = Services.Get(deps, "EventBus")
@@ -165,43 +176,65 @@ function EvidenceGateway:_resolveRemoteFunction()
 	end
 
 	local remoteFunctionsFolder = replicatedStorage:FindFirstChild(REMOTE_FUNCTIONS_FOLDER_NAME)
-	if not (remoteFunctionsFolder and remoteFunctionsFolder:IsA("Folder")) then
+	if not remoteFunctionsFolder then
+		remoteFunctionsFolder = Instance.new("Folder")
+		remoteFunctionsFolder.Name = REMOTE_FUNCTIONS_FOLDER_NAME
+		remoteFunctionsFolder.Parent = replicatedStorage
+	elseif not remoteFunctionsFolder:IsA("Folder") then
 		warn(string.format(
-			"[EvidenceGateway] Missing canonical folder ReplicatedStorage.%s",
+			"[EvidenceGateway] Canonical path ReplicatedStorage.%s is not a Folder",
 			REMOTE_FUNCTIONS_FOLDER_NAME
 		))
 		return nil
 	end
 
 	local requestFunction = remoteFunctionsFolder:FindFirstChild(EVIDENCE_REQUEST_FUNCTION_NAME)
-	if requestFunction and requestFunction:IsA("RemoteFunction") then
-		return requestFunction
+	if not requestFunction then
+		requestFunction = Instance.new("RemoteFunction")
+		requestFunction.Name = EVIDENCE_REQUEST_FUNCTION_NAME
+		requestFunction.Parent = remoteFunctionsFolder
+	elseif not requestFunction:IsA("RemoteFunction") then
+		warn(string.format(
+			"[EvidenceGateway] Canonical remote ReplicatedStorage.%s.%s is not a RemoteFunction",
+			REMOTE_FUNCTIONS_FOLDER_NAME,
+			EVIDENCE_REQUEST_FUNCTION_NAME
+		))
+		return nil
 	end
-
-	warn(string.format(
-		"[EvidenceGateway] Missing canonical remote ReplicatedStorage.%s.%s",
-		REMOTE_FUNCTIONS_FOLDER_NAME,
-		EVIDENCE_REQUEST_FUNCTION_NAME
-	))
-	return nil
+	return requestFunction
 end
 
-function EvidenceGateway:Start()
-	if not self._requestRemote then
-		self._requestRemote = self:_resolveRemoteFunction()
+function EvidenceGateway:_setReadyFlag(isReady)
+	local ok, replicatedStorage = pcall(function()
+		return game:GetService("ReplicatedStorage")
+	end)
+	if ok and typeof(replicatedStorage) == "Instance" then
+		replicatedStorage:SetAttribute(READY_ATTRIBUTE_NAME, isReady == true)
 	end
+end
+
+function EvidenceGateway:_bindRemoteFunction()
+	self._requestRemote = self:_resolveRemoteFunction()
 	if not self._requestRemote then
-		return
+		self:_setReadyFlag(false)
+		return false
 	end
 	self._requestRemote.OnServerInvoke = function(player, request)
 		return self:HandleRequest(player, request)
 	end
+	self:_setReadyFlag(true)
+	return true
+end
+
+function EvidenceGateway:Start()
+	self:_bindRemoteFunction()
 end
 
 function EvidenceGateway:Stop()
 	if self._requestRemote then
 		self._requestRemote.OnServerInvoke = nil
 	end
+	self:_setReadyFlag(false)
 	table.clear(self._lastRequestAtByUserId)
 end
 
@@ -339,10 +372,12 @@ function EvidenceGateway:_buildData(toolType, ok, reason, result)
 end
 
 function EvidenceGateway:_validateRequest(player, request)
+	setStudioEvidenceGatewayTrace(player, "validate_request_begin")
 	if type(request) ~= "table" then
 		return false, "invalid_request"
 	end
 
+	setStudioEvidenceGatewayTrace(player, "before_remote_event_publish")
 	self:_publish("RemoteEventReceived", {
 		player = player,
 		remoteName = EVIDENCE_REQUEST_FUNCTION_NAME,
@@ -351,11 +386,14 @@ function EvidenceGateway:_validateRequest(player, request)
 			system = "EvidenceSystem",
 		},
 	})
+	setStudioEvidenceGatewayTrace(player, "after_remote_event_publish")
 
 	if self._security then
+		setStudioEvidenceGatewayTrace(player, "before_security_validate_remote")
 		local ok, reason = self._security:ValidateRemoteRequest(player, EVIDENCE_REQUEST_FUNCTION_NAME, request, {
 			system = "EvidenceSystem",
 		})
+		setStudioEvidenceGatewayTrace(player, "after_security_validate_remote", reason or "ok")
 		if not ok then
 			return false, reason or "blocked_by_security"
 		end
@@ -364,6 +402,7 @@ function EvidenceGateway:_validateRequest(player, request)
 end
 
 function EvidenceGateway:HandleRequest(player, request)
+	setStudioEvidenceGatewayTrace(player, "handle_request_begin")
 	local validRequest, requestErr = self:_validateRequest(player, request)
 	if not validRequest then
 		return {
@@ -374,10 +413,12 @@ function EvidenceGateway:HandleRequest(player, request)
 
 	local requestPayload = type(request.payload) == "table" and request.payload or {}
 	if self._security and type(self._security.ValidateMatchRequest) == "function" then
+		setStudioEvidenceGatewayTrace(player, "before_security_validate_match")
 		local ok, reason = self._security:ValidateMatchRequest(player, {
 			action = "EvidenceRequest",
 			targetPosition = requestPayload.targetPosition,
 		})
+		setStudioEvidenceGatewayTrace(player, "after_security_validate_match", reason or "ok")
 		if not ok then
 			return {
 				success = false,
@@ -426,7 +467,9 @@ function EvidenceGateway:HandleRequest(player, request)
 	end
 
 	if self._sanitySystem and type(self._sanitySystem.GetSanity) == "function" then
+		setStudioEvidenceGatewayTrace(player, "before_sanity_check")
 		local sanity = self._sanitySystem:GetSanity(player, matchId)
+		setStudioEvidenceGatewayTrace(player, "after_sanity_check", sanity)
 		if type(sanity) == "number" and sanity <= 0 then
 			return {
 				success = false,
@@ -452,13 +495,15 @@ function EvidenceGateway:HandleRequest(player, request)
 			success = false,
 			reason = "ghost_out_of_range",
 			toolType = toolType,
-		}
+	}
 	end
 
+	setStudioEvidenceGatewayTrace(player, "before_process_tool_use", toolType)
 	local ok, reason, result = self._service:ProcessToolUse(player, matchId, {
 		toolType = toolType,
 		payload = requestPayload,
 	})
+	setStudioEvidenceGatewayTrace(player, "after_process_tool_use", reason or (ok and "success" or "nil"))
 
 	return {
 		success = ok,

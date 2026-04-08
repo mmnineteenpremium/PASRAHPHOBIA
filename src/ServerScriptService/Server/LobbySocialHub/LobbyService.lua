@@ -230,6 +230,13 @@ local LOBBY_TRAINING_SUPPORT_TOOL_COLORS = {
 	Salib = Color3.fromRGB(255, 220, 164),
 	Dupa = Color3.fromRGB(214, 186, 255),
 }
+local LOBBY_TRAINING_SUPPORT_TOOL_MODEL_NAMES = {
+	Garam = LOBBY_ZONE_ENTRY_GUIDE_TOOL_GARAM_NAME,
+	Salib = LOBBY_ZONE_ENTRY_GUIDE_TOOL_SALIB_NAME,
+	Dupa = LOBBY_ZONE_ENTRY_GUIDE_TOOL_DUPA_NAME,
+}
+local LOBBY_TRAINING_SUPPORT_VISUAL_HIGHLIGHT_NAME = "TrainingSupportHighlight"
+local LOBBY_TRAINING_SUPPORT_VISUAL_LIGHT_NAME = "TrainingSupportVisualGlow"
 local LOBBY_ZONE_GUIDES_ENABLED = false
 local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = false
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
@@ -1043,6 +1050,104 @@ local function findFirstRenderableBasePart(root)
         end
     end
     return nil
+end
+
+local function coerceProfileVector3(value)
+    if typeof(value) == "Vector3" then
+        return value
+    end
+    if type(value) ~= "table" then
+        return nil
+    end
+
+    local x = tonumber(value.x or value.X or value[1])
+    local y = tonumber(value.y or value.Y or value[2])
+    local z = tonumber(value.z or value.Z or value[3])
+    if x and y and z then
+        return Vector3.new(x, y, z)
+    end
+    return nil
+end
+
+local function resolveGhostVisualProfileTargetBounds(ghostType)
+    if type(ghostType) ~= "string" or ghostType == "" then
+        return nil
+    end
+
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if not ok or typeof(replicatedStorage) ~= "Instance" then
+        return nil
+    end
+
+    local assets = replicatedStorage:FindFirstChild("Assets")
+    local profilesFolder = assets and assets:FindFirstChild("GhostVisualProfiles")
+    local moduleScript = profilesFolder and profilesFolder:FindFirstChild(ghostType)
+    if not (moduleScript and moduleScript:IsA("ModuleScript")) then
+        return nil
+    end
+
+    local okProfile, profile = pcall(require, moduleScript)
+    if not okProfile or type(profile) ~= "table" then
+        return nil
+    end
+
+    return coerceProfileVector3(profile.targetBounds) or coerceProfileVector3(profile.size)
+end
+
+local function clampRuntimeModelBounds(model, targetBounds)
+    if not (model and model:IsA("Model")) or typeof(targetBounds) ~= "Vector3" then
+        return false
+    end
+
+    local okExtents, extents = pcall(function()
+        return model:GetExtentsSize()
+    end)
+    if not okExtents or typeof(extents) ~= "Vector3" then
+        return false
+    end
+    if extents.X <= 0 or extents.Y <= 0 or extents.Z <= 0 then
+        return false
+    end
+
+    if extents.X <= targetBounds.X and extents.Y <= targetBounds.Y and extents.Z <= targetBounds.Z then
+        return false
+    end
+
+    local scaleMultiplier = math.min(
+        targetBounds.X / extents.X,
+        targetBounds.Y / extents.Y,
+        targetBounds.Z / extents.Z
+    )
+    if scaleMultiplier <= 0 then
+        return false
+    end
+
+    local okScale, currentScale = pcall(function()
+        return model:GetScale()
+    end)
+    local nextScale = scaleMultiplier
+    if okScale and type(currentScale) == "number" and currentScale > 0 then
+        nextScale = currentScale * scaleMultiplier
+    end
+
+    local okPivot, pivot = pcall(function()
+        return model:GetPivot()
+    end)
+    local changed = false
+    if not okScale or math.abs(currentScale - nextScale) > 1e-3 then
+        local okApply = pcall(function()
+            model:ScaleTo(nextScale)
+        end)
+        changed = okApply or changed
+    end
+    if okPivot and typeof(pivot) == "CFrame" then
+        pcall(function()
+            model:PivotTo(pivot)
+        end)
+    end
+    return changed
 end
 
 local function syncRuntimeAssetModel(parent, runtimeName, categoryName, modelName, targetCFrame, options)
@@ -2782,6 +2887,13 @@ local function applyMainHubVisualPatch()
         transparency = 0.16,
     })
 
+    local function applyDecorAssetModel(runtimeName, categoryName, modelName, targetCFrame, options)
+        local _, didChange = syncRuntimeAssetModel(decorFolder, runtimeName, categoryName, modelName, targetCFrame, options)
+        if didChange then
+            changed = true
+        end
+    end
+
     local contractClipboard = ensureDecorPart(LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_CLIPBOARD_NAME)
     applyPartProps(contractClipboard, {
         size = Vector3.new(1.45, 0.1, 1.0),
@@ -3550,13 +3662,6 @@ local function applyMainHubVisualPatch()
         end
     end
 
-    local function applyDecorAssetModel(runtimeName, categoryName, modelName, targetCFrame, options)
-        local _, didChange = syncRuntimeAssetModel(decorFolder, runtimeName, categoryName, modelName, targetCFrame, options)
-        if didChange then
-            changed = true
-        end
-    end
-
     for _, partName in ipairs({
         "DirectoryPad",
         "Table_Tools_1",
@@ -4312,6 +4417,11 @@ function LobbyService:_refreshEvidenceTrainingGhostAsset(state, ghostColor, aggr
 	))
 	if not (ghostVisual and ghostVisual:IsA("Model")) then
 		return false
+	end
+
+	local targetBounds = resolveGhostVisualProfileTargetBounds(ghostType)
+	if targetBounds then
+		clampRuntimeModelBounds(ghostVisual, targetBounds)
 	end
 
 	ghostVisual:SetAttribute("PasrahLobbyTrainingGhostType", ghostType)
@@ -7163,4 +7273,3 @@ function LobbyService:ApplyCosmetic(player, cosmeticId, category)
 end
 
 return LobbyService
-

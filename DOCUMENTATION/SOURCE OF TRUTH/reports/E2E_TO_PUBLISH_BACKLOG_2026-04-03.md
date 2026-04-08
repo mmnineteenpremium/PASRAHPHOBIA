@@ -3346,3 +3346,25 @@ Urutan yang paling masuk akal dari titik sekarang:
   - `StudioE2EControl` masih belum stabil untuk dijadikan jalur verifikasi utama
   - lane publish masih perlu visual/audio polish tingkat akhir, tetapi blocker runtime ghost manifest untuk studio test sudah tertutup
 
+- progress tambahan pada lane `runtime unblock before publish`:
+  - `SystemRegistry` sekarang punya studio boot trace untuk menunjukkan sistem mana yang memutus startup
+  - blocker utama ditemukan dan ditutup:
+    - `LobbySocialHub:Start()` crash karena helper `applyDecorAssetModel` dipakai sebelum didefinisikan
+    - crash ini sebelumnya memotong seluruh `Start()` chain, sehingga `EvidenceSystem`, `StudioE2EControlSystem`, dan runtime readiness lain tampak “random mati”
+  - `EvidenceSystem` sekarang start penuh di Studio:
+    - `PasrahEvidenceGatewayReady = true`
+    - `PasrahEvidenceBootstrapVerified = true`
+    - `PasrahStudioE2EReady = true`
+  - `EvidenceRequest` lane yang sebelumnya hang sekarang sudah tembus live dari client runtime asli
+- validasi terbaru:
+  - `StartSoloMatch -> PreparationPhase -> InvestigationPhase` tembus via `StudioE2EControl`
+  - `EvidenceTools.UseTool` live:
+    - `Salib -> crucifix_armed`
+    - `Garam -> salt_placed`
+    - `Dupa -> smudge_activated`
+  - `InvestigationTools` world placement hidup untuk tiga support tool itu
+- publish impact:
+  - blocker runtime besar untuk publish turun satu tingkat:
+    - sekarang bootstrap penuh dan evidence support flow tidak lagi hang
+  - yang tersisa untuk lane publish bukan lagi remote hang dasar, melainkan polish dan verification lane lain
+
