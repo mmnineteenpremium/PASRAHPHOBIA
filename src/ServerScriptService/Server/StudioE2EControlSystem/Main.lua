@@ -209,17 +209,33 @@ local function safeRequireModule(moduleScript)
 	return nil
 end
 
-local function resolveGhostTargetBounds(ghostType)
+local function resolveGhostVisualConfig(ghostType)
 	if type(ghostType) ~= "string" or ghostType == "" then
 		return nil
 	end
 	local tuning = safeRequireModule(resolveSharedGameDataModule("GhostVisualTuning"))
 	local ghosts = type(tuning) == "table" and tuning.ghosts or nil
-	local config = type(ghosts) == "table" and ghosts[ghostType] or nil
+	return type(ghosts) == "table" and ghosts[ghostType] or nil
+end
+
+local function resolveGhostTargetBounds(ghostType)
+	local config = resolveGhostVisualConfig(ghostType)
 	if type(config) ~= "table" then
 		return nil
 	end
 	return coerceVector3(config.targetBounds) or coerceVector3(config.meshSize)
+end
+
+local function resolveGhostInventoryModelAssetId(ghostType)
+	local config = resolveGhostVisualConfig(ghostType)
+	if type(config) ~= "table" then
+		return nil
+	end
+	local assetId = config.inventoryModelAssetId
+	if type(assetId) == "string" and assetId ~= "" then
+		return assetId
+	end
+	return nil
 end
 
 local function compactLogMessage(message)
@@ -625,6 +641,10 @@ function StudioE2EControlSystem:_handleGetGhostRuntimeSnapshot(player, request)
 	local targetBounds = resolveGhostTargetBounds(snapshot.matchGhostType)
 	if typeof(targetBounds) == "Vector3" then
 		snapshot.ghostTargetBounds = tostring(targetBounds)
+	end
+	local inventoryModelAssetId = resolveGhostInventoryModelAssetId(snapshot.matchGhostType)
+	if type(inventoryModelAssetId) == "string" and inventoryModelAssetId ~= "" then
+		snapshot.ghostInventoryModelAssetId = inventoryModelAssetId
 	end
 
 	if typeof(ghostModel) == "Instance" then
