@@ -13291,3 +13291,20 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - returned `ghostType=Genderuwo`
     - `ghostInventoryModelAssetId=rbxassetid://117009327297852`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 01:31:08 +07:00 - Stamp Lobby Training Ghost Runtime Identity
+- Updated `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua` so imported lobby training ghost instances now carry runtime identity attrs directly on the model:
+  - `VisualTemplateName`
+  - `PlaceholderVisual=false`
+  - `PasrahGhostInventoryModelAssetId`
+- This removes the remaining mismatch where lobby snapshot already knew the ghost type/asset ID externally, but the actual `TrainingGhostVisual` model still looked anonymous when inspected directly.
+- Build passed: `_tmp_lobby_training_ghost_identity_attr_build.rbxlx`.
+- Live Studio proof:
+  - lobby rotate settled to `ghostType=Pocong`
+  - snapshot returned:
+    - `ghostVisualTemplateName=Pocong`
+    - `ghostInventoryModelAssetId=rbxassetid://123151303766691`
+  - runtime model `Workspace...TrainingGhostVisual` now exposes:
+    - `VisualTemplateName=Pocong`
+    - `PasrahGhostInventoryModelAssetId=rbxassetid://123151303766691`
+- Roblox Studio was returned to STOP TEST before logging.
