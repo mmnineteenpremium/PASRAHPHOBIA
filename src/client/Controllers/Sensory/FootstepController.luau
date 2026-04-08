@@ -57,6 +57,19 @@ local function stringifyMaterial(material)
 	return tostring(material)
 end
 
+local function stampFootstepRuntimeSound(sound, templateName, material)
+	if typeof(sound) ~= "Instance" or not sound:IsA("Sound") then
+		return
+	end
+	sound:SetAttribute("PasrahAudioOwner", "FootstepController")
+	sound:SetAttribute("PasrahAudioCategory", "FootstepAudio")
+	sound:SetAttribute("PasrahAudioCue", "footstep")
+	sound:SetAttribute("PasrahAudioTemplate", tostring(templateName or ""))
+	sound:SetAttribute("PasrahAudioSoundId", tostring(sound.SoundId or sound:GetAttribute("AudioContent") or ""))
+	sound:SetAttribute("PasrahFootstepTemplate", tostring(templateName or ""))
+	sound:SetAttribute("PasrahFootstepMaterial", stringifyMaterial(material))
+end
+
 function FootstepController:Init(context)
 	self._context = context or {}
 	self._player = Players.LocalPlayer
@@ -158,7 +171,7 @@ function FootstepController:_playStep(material, volumeScale)
 	runtimeSound.Volume = math.clamp((tonumber(runtimeSound.Volume) or 0.24) * (volumeScale or 1), 0.05, 0.6)
 	runtimeSound.PlaybackSpeed = math.clamp((tonumber(runtimeSound.PlaybackSpeed) or 1) * self._random:NextNumber(0.94, 1.06), 0.86, 1.12)
 	runtimeSound.TimePosition = 0
-	runtimeSound:SetAttribute("PasrahFootstepTemplate", templateName)
+	stampFootstepRuntimeSound(runtimeSound, templateName, material)
 	runtimeSound:Play()
 	Debris:AddItem(runtimeSound, math.max(2, runtimeSound.TimeLength + 0.25))
 

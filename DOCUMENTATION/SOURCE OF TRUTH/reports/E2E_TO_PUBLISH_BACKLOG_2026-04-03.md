@@ -3898,8 +3898,24 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `SensoryHorrorHUD` carried `PasrahHUDOwner=HorrorHUD`, `PasrahHUDChannel=SensoryHorrorHUD`, `PasrahHUDPhase=InvestigationPhase`
     - `Vignette` carried `PasrahHUDChannel=Vignette`
     - both HUD instances carried `PasrahHUDSanity=100`, `PasrahHUDSanitySource=SanityEvent`
-  - after a short delay, the same HUD instance settled to:
-    - `PasrahHUDSanityFresh=false`
-    - confirming the runtime attr is an explicitly stale last-seen reading rather than a fake authoritative current sanity
+- after a short delay, the same HUD instance settled to:
+  - `PasrahHUDSanityFresh=false`
+  - confirming the runtime attr is an explicitly stale last-seen reading rather than a fake authoritative current sanity
 - Build passed: `_tmp_horrorhud_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 02:41:58 +07:00 - Stamp Footstep Runtime Audio Identity
+- Status: DONE.
+- `Client.Controllers.Sensory.FootstepController` now stamps direct audio/runtime attrs on `LocalFootstepRuntime` instead of exposing only player-side probe attrs.
+- Live Studio proof:
+  - forced `PasrahFootstepProbeRequested` created `HumanoidRootPart.LocalFootstepRuntime`
+  - runtime sound carried:
+    - `PasrahAudioOwner=FootstepController`
+    - `PasrahAudioCategory=FootstepAudio`
+    - `PasrahAudioCue=footstep`
+    - `PasrahAudioTemplate=ConcreteStep_01`
+    - `PasrahAudioSoundId=rbxassetid://79900103772577`
+    - `PasrahFootstepTemplate=ConcreteStep_01`
+    - `PasrahFootstepMaterial=Concrete`
+- Build passed: `_tmp_footstep_runtime_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.
