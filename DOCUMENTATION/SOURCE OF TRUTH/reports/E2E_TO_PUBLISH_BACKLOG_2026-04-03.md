@@ -3767,6 +3767,32 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Build passed: `_tmp_runtime_identity_batch_4_build.rbxlx`.
 - Studio stop-test reporting rule followed.
 
+## 2026-04-09 10:22:44 +07:00 - Stamp Reward Runtime Identity On Active Endgame Owner
+- Status: DONE.
+- Endgame reward runtime owner yang benar terbukti `Server.RewardCalculationSystem.Service`, bukan `RewardSystem`/`EconomySystem` direct attrs.
+- `RewardCalculationSystem.Service` sekarang stamps:
+  - `PasrahRewardOwner`
+  - `PasrahRewardMatchId`
+  - `PasrahRewardReason`
+  - `PasrahRewardCurrency`
+  - `PasrahRewardLastAmount`
+  - `PasrahRewardLastPPReward`
+  - `PasrahRewardLastXP`
+  - `PasrahRewardRoyalPassXP`
+  - `PasrahRewardDailyProgress`
+- Live Studio proof:
+  - wallet moved `MM 1200 -> 1506`, `PP 12 -> 14`
+  - attrs now show:
+    - `PasrahRewardOwner=RewardCalculationSystem`
+    - `PasrahRewardReason=endgame_match_reward`
+    - `PasrahRewardLastAmount=306`
+    - `PasrahRewardLastPPReward=2`
+    - `PasrahRewardLastXP=222`
+    - `PasrahRewardRoyalPassXP=99`
+    - `PasrahRewardDailyProgress=2`
+- Build passed: `_tmp_reward_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
 ## 2026-04-09 05:07:51 +07:00 - Stamp Journal Runtime Identity
 - Status: DONE.
 - `Server.JournalSystem.Service` now exposes direct journal attrs on the player so evidence logging is readable from Studio without relying on UI sync only.
