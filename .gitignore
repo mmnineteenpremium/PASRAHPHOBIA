@@ -10,6 +10,11 @@
 default.project.json.rojo
 *.revent
 *.rgui
+*.rbxlx.lock
+tmp_*.json
+tmp_*.txt
+tmp_*.png
+*_Roblox_Studio.png
 
 # Large assets
 *.mp3
