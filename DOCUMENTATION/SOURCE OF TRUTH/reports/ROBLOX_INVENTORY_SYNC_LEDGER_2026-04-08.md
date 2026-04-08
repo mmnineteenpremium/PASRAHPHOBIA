@@ -219,7 +219,7 @@ Catatan:
   - `613` file lokal
   - `564` nama stem unik
   - inventory baru `100` nama audio unik
-- exact-name model match memang baru `genderuwo`; `pocong PASRAHPHIA` dan `kuntilanak_Iv Pole Walking` tetap tercatat di inventory, tetapi nama file lokal owner-nya tidak exact-match satu banding satu.
+- exact-name model match memang baru `genderuwo`; `pocong PASRAHPHOBIA` dan `kuntilanak_Iv Pole Walking` tetap tercatat di inventory, tetapi nama file lokal owner-nya tidak exact-match satu banding satu.
 - kalau nanti ada raw asset baru yang relevan, workflow yang benar tetap:
   1. cek raw asset lokal sebagai referensi/nama canonical
   2. cek exact match ke inventory upload

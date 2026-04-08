@@ -102,12 +102,22 @@ local CUE_SOUND_ID_OVERRIDES = {
 		env_doorslam = "rbxassetid://78764817933410",
 		env_windowknock = "rbxassetid://71098340187847",
 		env_objectthrow = "rbxassetid://86917747509286",
+		env_lightflicker = "rbxassetid://96038914699044",
+		env_radiostatic = "rbxassetid://82526759214554",
+		env_shadowapparition = "rbxassetid://139204195403262",
+		env_footstepsound = "rbxassetid://95974189526179",
+		env_suddenwhisper = "rbxassetid://110779846516591",
+		env_temperaturedrop = "rbxassetid://87230026682789",
 	},
 	GhostAudio = {
 		ghost_whisper = "rbxassetid://98105844059537",
 		ghost_fake_footsteps = "rbxassetid://95974189526179",
 		ghost_manifest = "rbxassetid://139204195403262",
 		ghost_object_throw = "rbxassetid://86917747509286",
+	},
+	HuntAudio = {
+		hunt_start = "rbxassetid://101202336513383",
+		hunt_phase_loop = "rbxassetid://138329686293368",
 	},
 	FearAudio = {
 		fear_rise = "rbxassetid://138884191945388",

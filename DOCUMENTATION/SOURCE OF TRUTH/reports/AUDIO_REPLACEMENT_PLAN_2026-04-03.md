@@ -260,3 +260,24 @@ Dokumen ini dianggap tercapai untuk batch canonical saat ini jika:
 3. owner script aktif (`DoorRuntime`, `MapRuntimePatches`, `FlashlightConfig`) ikut terselaraskan
 4. `ASSET_LICENSE_LEDGER_2026-04-03.md` dan ledger inventory sudah sinkron dengan status baru
 
+## Update 2026-04-08 22:49 ICT
+
+Batch `expanded inventory audio cue coverage` menutup penggunaan runtime berikut:
+
+- `zap2` (`rbxassetid://96038914699044`) -> cue `env_lightflicker`
+- `zap1` (`rbxassetid://82526759214554`) -> cue `env_radiostatic`
+- `creaky-door-open` (`rbxassetid://139204195403262`) -> cue `env_shadowapparition`
+- `ghost_footstep_2` (`rbxassetid://95974189526179`) -> cue `env_footstepsound`
+- `ghost_whisper_2` (`rbxassetid://110779846516591`) -> cue `env_suddenwhisper`
+- `thermometer_reading` (`rbxassetid://87230026682789`) -> cue `env_temperaturedrop`
+- `hard-horror-hit-drum` (`rbxassetid://101202336513383`) -> cue `hunt_start`
+- `horror-deep-drum-heartbeat` (`rbxassetid://138329686293368`) -> cue `hunt_phase_loop`
+
+Owner runtime aktif:
+
+- `src/client/SoundSystem/Main.lua`
+
+Kesimpulan:
+
+- cue ambient/hunt yang sebelumnya masih jatuh ke template generik sekarang memakai asset upload yang lebih sesuai secara fungsi, tetap lewat owner audio existing dan tanpa local raw path.
+
