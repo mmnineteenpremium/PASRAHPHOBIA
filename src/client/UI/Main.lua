@@ -419,7 +419,9 @@ local function createDefaultFieldKitToolState(toolType)
 		saltTriggeredAt = 0,
 		huntBlockedAt = 0,
 		huntRepelled = false,
+		smudgeActivatedAt = 0,
 		repellentUntil = nil,
+		repellentUntilLocal = nil,
 		visualPlaced = false,
 		placementId = nil,
 		pending = false,
@@ -1395,7 +1397,8 @@ local function resolveFieldKitToolPreviewState(toolName, toolState, selected, me
 	local chargesRemaining = tonumber(toolState.chargesRemaining)
 	local recentSaltTrigger = toolName == "Garam" and ((os.clock() - (tonumber(toolState.saltTriggeredAt) or 0)) <= 4)
 	local recentHuntBlock = toolName == "Salib" and ((os.clock() - (tonumber(toolState.huntBlockedAt) or 0)) <= 4)
-	local repellentUntil = tonumber(toolState.repellentUntil)
+	local recentSmudge = toolName == "Dupa" and ((os.clock() - (tonumber(toolState.smudgeActivatedAt) or 0)) <= 4)
+	local repellentUntil = tonumber(toolState.repellentUntilLocal)
 	if toolState.pending then
 		return "pending"
 	end
@@ -1408,11 +1411,20 @@ local function resolveFieldKitToolPreviewState(toolName, toolState, selected, me
 	if toolName == "Salib" and recentHuntBlock then
 		return chargesRemaining ~= nil and chargesRemaining <= 0 and "spent" or "danger"
 	end
-	if toolName == "Dupa" and (toolState.huntRepelled == true or (repellentUntil ~= nil and repellentUntil > os.clock())) then
+	if toolName == "Dupa" and (recentSmudge or (repellentUntil ~= nil and repellentUntil > os.clock())) then
 		return "active"
 	end
 	if toolName == "Salib" and chargesRemaining ~= nil then
 		return chargesRemaining <= 0 and "spent" or "active"
+	end
+	if toolName == "Dupa" then
+		if usesRemaining ~= nil and usesRemaining <= 0 then
+			return "empty"
+		end
+		if selected then
+			return "focus"
+		end
+		return "ready"
 	end
 	if usesRemaining ~= nil and usesRemaining <= 0 then
 		return "empty"
@@ -4337,6 +4349,8 @@ function UISystem:Init(context)
 	self._teleportOverlayTween = nil
 	self._lastCountdownAudioSecond = nil
 	self._lastPreparationFocusToolSeen = nil
+	self._lastFieldKitTemporalRefreshAt = 0
+	self._fieldKitTemporalRefreshArmed = false
 	self._matchWindowDismissed = false
 	self._matchControlsHintText = "[1-9] Field Kit   [J] Journal   [F] Flashlight   [K] Match   [Esc] Tutup UI"
 	self._uxWidgets = {
@@ -4463,6 +4477,9 @@ function UISystem:Start()
 	end))
 	table.insert(self._connections, MarketplaceService.PromptProductPurchaseFinished:Connect(function(_userId, productId, isPurchased)
 		self:_onMarketplacePromptFinished("DeveloperProduct", productId, isPurchased)
+	end))
+	table.insert(self._connections, RunService.Heartbeat:Connect(function()
+		self:_refreshFieldKitTemporalStates()
 	end))
 
 	if self._roomBrowser then
@@ -5662,11 +5679,25 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 			toolState.saltTriggered = data.tracksDetected == true
 			if toolState.saltTriggered == true then
 				toolState.saltTriggeredAt = os.clock()
+				self:_scheduleFieldKitTemporalRefresh(4.1)
 			end
 		end
 		if toolType == "Dupa" then
 			toolState.huntRepelled = data.huntRepelled == true
+			if toolState.huntRepelled == true then
+				toolState.smudgeActivatedAt = os.clock()
+			end
 			toolState.repellentUntil = data.repellentUntil
+			local repellentUntil = tonumber(data.repellentUntil)
+			if repellentUntil ~= nil then
+				local serverNow = tonumber(data.now)
+				local remaining = serverNow and math.max(0.1, repellentUntil - serverNow) or 20
+				toolState.repellentUntilLocal = os.clock() + remaining
+				self:_scheduleFieldKitTemporalRefresh(remaining + 0.1)
+			else
+				toolState.repellentUntilLocal = os.clock() + 20
+				self:_scheduleFieldKitTemporalRefresh(4.1)
+			end
 		end
 	end
 
@@ -5676,12 +5707,19 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 	if toolType == "Garam" and eventName == "SaltTriggered" then
 		toolState.saltTriggered = true
 		toolState.saltTriggeredAt = os.clock()
+		self:_scheduleFieldKitTemporalRefresh(4.1)
 	end
 	if toolType == "Salib" and (eventName == "CrucifixTriggered" or (eventName == "HuntBlocked" and reason == "crucifix_prevented_hunt")) then
 		toolState.huntBlockedAt = os.clock()
+		self:_scheduleFieldKitTemporalRefresh(4.1)
 	end
 	if toolType == "Dupa" and eventName == "GhostRepelled" then
 		toolState.huntRepelled = true
+		toolState.smudgeActivatedAt = os.clock()
+	end
+	if toolType == "Dupa" and eventName == "SmudgeActivated" then
+		toolState.smudgeActivatedAt = os.clock()
+		self:_scheduleFieldKitTemporalRefresh(4.1)
 	end
 
 	if eventName == "CrucifixTriggered" then
@@ -5716,7 +5754,8 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	local usesRemaining = tonumber(toolState.usesRemaining)
 	local chargesRemaining = tonumber(toolState.chargesRemaining)
 	local recentHuntBlock = toolType == "Salib" and ((os.clock() - (tonumber(toolState.huntBlockedAt) or 0)) <= 4)
-	local repellentUntil = tonumber(toolState.repellentUntil)
+	local recentSmudge = toolType == "Dupa" and ((os.clock() - (tonumber(toolState.smudgeActivatedAt) or 0)) <= 4)
+	local repellentUntil = tonumber(toolState.repellentUntilLocal)
 
 	if toolState.pending then
 		return "WAIT", false, "REQUEST"
@@ -5733,14 +5772,18 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	if toolType == "Garam" and (toolState.saltTriggered == true or (feedbackData and feedbackData.tracksDetected == true)) then
 		return "TRACK", false, "GHOST STEP"
 	end
-	if toolType == "Dupa" and (toolState.huntRepelled == true or (repellentUntil ~= nil and repellentUntil > os.clock()) or (feedbackData and feedbackData.huntRepelled == true)) then
-		return toolState.huntRepelled == true and "REPEL" or "SAFE", false, toolState.huntRepelled == true and "SAFE GAP" or "SMOKE ON"
+	if toolType == "Dupa" and (recentSmudge or (repellentUntil ~= nil and repellentUntil > os.clock()) or (feedbackData and feedbackData.huntRepelled == true)) then
+		local repelHot = recentSmudge or (feedbackData and feedbackData.huntRepelled == true)
+		return repelHot and "REPEL" or "SAFE", false, repelHot and "SAFE GAP" or "SMOKE ON"
 	end
 	if toolState.visualPlaced == true then
 		if toolType == "Garam" then
 			return "AKTIF", false, "TRAP ON"
 		elseif toolType == "Dupa" then
-			return "AKTIF", false, "SMOKE ON"
+			if usesRemaining ~= nil and usesRemaining <= 0 then
+				return "HABIS", true, "STOK 0"
+			end
+			return tostring(config.readyMeta or "CALM"), false, tostring(config.readyFooter or config.role or "UTILITY")
 		elseif toolType == "Salib" then
 			return "AKTIF", false, "GUARD"
 		end
@@ -5817,6 +5860,63 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 		return tostring(config.readyMeta or "MOVE"), false, tostring(config.readyFooter or config.role or "UTILITY")
 	end
 	return tostring(config.readyMeta or "READY"), false, string.upper(tostring(config.readyFooter or config.role or "UTILITY"))
+end
+
+function UISystem:_hasActiveFieldKitTemporalState()
+	local toolStates = self:_ensureFieldKitToolStates()
+	local now = os.clock()
+	local garamState = toolStates and toolStates.Garam or nil
+	local salibState = toolStates and toolStates.Salib or nil
+	local dupaState = toolStates and toolStates.Dupa or nil
+
+	if garamState and ((now - (tonumber(garamState.saltTriggeredAt) or 0)) <= 4) then
+		return true
+	end
+	if salibState and ((now - (tonumber(salibState.huntBlockedAt) or 0)) <= 4) then
+		return true
+	end
+	if dupaState then
+		local recentSmudge = (now - (tonumber(dupaState.smudgeActivatedAt) or 0)) <= 4
+		local repellentUntil = tonumber(dupaState.repellentUntilLocal)
+		if recentSmudge or (repellentUntil ~= nil and repellentUntil > now) then
+			return true
+		end
+	end
+	return false
+end
+
+function UISystem:_refreshFieldKitTemporalStates()
+	if self._matchPhase ~= MATCH_PHASE.INGAME and self._matchPhase ~= MATCH_PHASE.HUNT then
+		self._fieldKitTemporalRefreshArmed = false
+		return
+	end
+
+	local now = os.clock()
+	local temporalActive = self:_hasActiveFieldKitTemporalState()
+	if temporalActive then
+		self._fieldKitTemporalRefreshArmed = true
+		if (now - (self._lastFieldKitTemporalRefreshAt or 0)) >= 0.25 then
+			self._lastFieldKitTemporalRefreshAt = now
+			self:_refreshFieldKitPanel()
+		end
+	elseif self._fieldKitTemporalRefreshArmed == true then
+		self._fieldKitTemporalRefreshArmed = false
+		self._lastFieldKitTemporalRefreshAt = now
+		self:_refreshFieldKitPanel()
+	end
+end
+
+function UISystem:_scheduleFieldKitTemporalRefresh(delaySeconds)
+	local delayTime = tonumber(delaySeconds) or 0
+	if delayTime < 0.05 then
+		delayTime = 0.05
+	end
+	task.delay(delayTime, function()
+		if self._uxWidgets == nil then
+			return
+		end
+		self:_refreshFieldKitPanel()
+	end)
 end
 
 function UISystem:_useInvestigationTool(toolType, options)

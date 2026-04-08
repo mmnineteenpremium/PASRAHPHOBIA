@@ -3538,3 +3538,13 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - preview utility tidak lagi terjebak di warna alarm permanen, jadi HUD tetap terbaca selama investigasi panjang
 
+- progress tambahan pada lane `dupa preview local expiry sync`:
+  - expiry `Dupa` sekarang memakai waktu lokal client, bukan membandingkan absolute `server os.clock()` langsung terhadap `client os.clock()`
+  - refresh penutup dijadwalkan saat window repel selesai
+- validasi terbaru:
+  - `hot.signature = Dupa|active|asset`
+  - `decay.signature = Dupa|focus|asset`
+  - runtime singleton menunjukkan `repellentUntilLocal` terisi dan investigasi tetap aktif
+- publish impact:
+  - state `Dupa` sekarang benar-benar punya lifecycle waktu yang akurat di HUD client, bukan aktif terus karena mismatch clock server/client
+
