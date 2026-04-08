@@ -13048,3 +13048,12 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Build passed: _tmp_audio_extended_cue_overrides_build.rbxlx.
 - Live verification after StartSoloMatch: nv_windowknock, nv_objectthrow, ghost_fake_footsteps, ghost_whisper, ear_critical, and jumpscare_stinger all reported the expected PasrahAudioLastSoundId values.
 - Roblox Studio was returned to STOP TEST before reporting.
+
+## 2026-04-08 22:42:51 +07:00 - Publish Readiness Probe After UI/Audio Recovery
+- Ran live StudioE2E publish readiness probe after client bootstrap and uploaded-inventory audio cue fixes.
+- GetQAGateReadiness: overall=pass_with_manual_multiplayer, solo=true, multiplayer=manual_check_required, memoryOk=true, psOk=true, warnings=0, rrors=0.
+- GetPublishReadiness: overall=fail because persistence=mock, persistenceReady=false, obuxMissingId=10, and multiplayer=manual_check_required.
+- commerceReady=true and obuxVisible=0, so Robux products remain hidden/setup-gated rather than exposed with invalid IDs.
+- GetShopReadiness: 	otal=31 MM=14 PP=7 Robux=10 disabled=10 robuxMissingId=10.
+- Client UI roots were present during the probe.
+- Roblox Studio was returned to STOP TEST before logging.

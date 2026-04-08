@@ -3697,3 +3697,9 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Runtime audio coverage expanded using uploaded Roblox inventory asset IDs only; no raw local audio paths used.
 - Verified live in active match: nv_windowknock, nv_objectthrow, ghost_fake_footsteps, ghost_whisper, ear_critical, jumpscare_stinger all resolved to expected uploaded asset IDs.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-08 22:42:51 +07:00 - Publish Readiness Probe After UI/Audio Recovery
+- Status: PROBED.
+- Current publish gate is not blocked by the recovered UI/audio work. Active blockers are expected external/manual gates: non-mock persistence/live environment, 2-client manual multiplayer smoke, and Creator Hub marketplace IDs for Robux slots.
+- GetQAGateReadiness is pass_with_manual_multiplayer; GetPublishReadiness remains overall=fail in Studio because persistence=mock and obuxMissingId=10.
+- Studio stop-test reporting rule followed.
