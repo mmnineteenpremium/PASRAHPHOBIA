@@ -12666,3 +12666,27 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `Meta = RESPON`
     - `Footer = VOICE LOCK`
     - `FieldKitFrame.StatusLabel = Evidence berhasil dibaca. Collected Suara`
+
+- progress tambahan pada lane `evidence lock copy clarity`:
+  - `EvidenceCollected` sekarang memberi copy yang lebih tegas di `Field Kit`, bukan lagi campuran generic/Inggris
+  - `EMF` menampilkan `EMF level 5 terkunci`
+  - `KotakArwah` menampilkan `Respons suara terkunci`
+- validasi terbaru:
+  - `Banaspati -> JejakEnergi`:
+    - `Meta = EMF 5`
+    - `Footer = MEDOK LOCK`
+    - `FieldKitFrame.StatusLabel = EMF level 5 terkunci. MEDOK tervalidasi sebagai evidence.`
+  - `Kuntilanak -> KotakArwah`:
+    - `Meta = RESPON`
+    - `Footer = VOICE LOCK`
+    - `FieldKitFrame.StatusLabel = Respons suara terkunci. Suara tervalidasi sebagai evidence.`
+
+- progress tambahan pada lane `studio e2e fallback coverage`:
+  - `StudioE2EControl` sekarang punya fallback evidence map untuk tool utama yang sebelumnya belum tertutup:
+    - `KotakArwah -> Suara`
+    - `SuhuMembeku -> Suhu`
+    - `BukuTerkutuk -> BukuTerkutuk`
+    - `GerakanGaib -> Pengganggu`
+- validasi terbaru:
+  - fresh probe `Kuntilanak -> KotakArwah` sekarang sukses deterministic dari jalur studio:
+    - `PasrahStudioE2ELastResult = ok=true | action=UseEvidenceTool | result=match=match_1 tool=KotakArwah evidence=Suara`

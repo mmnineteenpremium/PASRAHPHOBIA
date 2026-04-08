@@ -31,7 +31,11 @@ local VALID_PHASES = {
 
 local STUDIO_TOOL_EVIDENCE_MAP = {
 	JejakEnergi = "MEDOK",
+	KotakArwah = "Suara",
+	SuhuMembeku = "Suhu",
+	BukuTerkutuk = "BukuTerkutuk",
 	BolaArwah = "To'un",
+	GerakanGaib = "Pengganggu",
 	TounDetection = "To'un",
 }
 local LOBBY_TRAINING_TOOL_PART_MAP = {

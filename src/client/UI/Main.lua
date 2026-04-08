@@ -3587,6 +3587,18 @@ local function resolveToolFeedback(toolType, success, reason, data, eventName)
 	elseif eventName == "GhostRepelled" then
 		status = "Ghost terpukul mundur."
 		detail = "Jarak aman sementara tercipta."
+	elseif eventName == "EvidenceCollected" then
+		local evidenceType = tostring(data and data.evidenceType or "")
+		if toolType == JOURNAL_TOOL_TYPE and evidenceType == "MEDOK" then
+			status = "EMF level 5 terkunci."
+			detail = "MEDOK tervalidasi sebagai evidence."
+		elseif toolType == "KotakArwah" and evidenceType == "Suara" then
+			status = "Respons suara terkunci."
+			detail = "Suara tervalidasi sebagai evidence."
+		else
+			status = "Evidence berhasil dibaca."
+			detail = evidenceType ~= "" and string.format("%s tervalidasi sebagai evidence.", evidenceType) or "Evidence berhasil dikunci."
+		end
 	elseif eventName == "HuntBlocked" then
 		status = "Hunt diblokir."
 		detail = reason == "crucifix_prevented_hunt"
@@ -4305,13 +4317,12 @@ function UISystem:_onServerEvent(remoteName, payload)
 				self._journalState.candidates = payload.possibleGhosts or payload.candidates
 			end
 			if type(collectedToolType) == "string" and collectedToolType ~= "" then
+				local collectedStatus, collectedDetail = resolveToolFeedback(collectedToolType, true, "collected", {
+					evidenceType = collectedEvidenceType,
+				}, eventName)
 				self._journalState.toolType = collectedToolType
-				self._journalState.toolStatus = "Evidence berhasil dibaca."
-				if type(collectedEvidenceType) == "string" and collectedEvidenceType ~= "" then
-					self._journalState.toolReason = string.format("Collected %s", tostring(collectedEvidenceType))
-				else
-					self._journalState.toolReason = "Collected evidence."
-				end
+				self._journalState.toolStatus = collectedStatus
+				self._journalState.toolReason = collectedDetail
 				self._journalState.toolSuccess = true
 				self._journalState.toolLastUsedAt = os.clock()
 				if FIELD_KIT_TOOL_CONFIG[collectedToolType] then

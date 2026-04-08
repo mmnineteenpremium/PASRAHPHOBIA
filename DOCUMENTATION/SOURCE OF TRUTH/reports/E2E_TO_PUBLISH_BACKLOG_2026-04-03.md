@@ -3435,3 +3435,21 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - evidence utama sekarang tidak lagi hanya terbaca di jurnal/status text; button tool aktif juga menyatakan hasil lock secara eksplisit
 
+- progress tambahan pada lane `evidence lock copy clarity`:
+  - copy `EvidenceCollected` di `Field Kit` sekarang lebih tegas dan konsisten untuk tool utama
+- validasi terbaru:
+  - `JejakEnergi`:
+    - `StatusLabel = EMF level 5 terkunci. MEDOK tervalidasi sebagai evidence.`
+  - `KotakArwah`:
+    - `StatusLabel = Respons suara terkunci. Suara tervalidasi sebagai evidence.`
+- publish impact:
+  - hasil evidence utama sekarang terbaca jelas di status panel, bukan hanya di meta/footer tombol
+
+- progress tambahan pada lane `studio e2e fallback coverage`:
+  - fallback studio untuk tool evidence utama sekarang mencakup `KotakArwah`, `SuhuMembeku`, `BukuTerkutuk`, dan `GerakanGaib`
+- validasi terbaru:
+  - fresh probe `Kuntilanak -> KotakArwah`:
+    - `PasrahStudioE2ELastResult = ok=true | action=UseEvidenceTool | result=... evidence=Suara`
+- publish impact:
+  - test Studio untuk tool evidence utama sekarang lebih deterministic dan tidak berat ke RNG spawn biasa
+
