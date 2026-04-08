@@ -35,7 +35,7 @@ local DEFAULT_GHOST_TEMPLATE_ROOT_SIZES = {
 }
 
 local DEFAULT_GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {
-	Pocong = Vector3.new(1.08, 3.65, 0.96),
+	Pocong = Vector3.new(0.06, 0.07, 0.07),
 }
 
 local DEFAULT_GHOST_TEMPLATE_TARGET_BOUNDS = {

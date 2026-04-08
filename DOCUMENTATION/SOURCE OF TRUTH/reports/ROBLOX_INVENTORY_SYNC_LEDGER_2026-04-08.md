@@ -203,7 +203,7 @@ Catatan:
 - `rbxassetid://117009327297852` `genderuwo`
 - `rbxassetid://119434537320191` `Scene`
 - `rbxassetid://99030495222571` `Scene`
-- `rbxassetid://123151303766691` ` pocong PASRAHPHOBIA`
+- `rbxassetid://123151303766691` `pocong PASRAHPHOBIA`
 - `rbxassetid://96614451051984` `Scene`
 - `rbxassetid://93357688576883` `kuntilanak_Iv Pole Walking`
 - `rbxassetid://118867381731250` `0341c93314aeb9f0e7f7bd7e09c91117`
@@ -220,6 +220,7 @@ Catatan:
   - `564` nama stem unik
   - inventory baru `100` nama audio unik
 - exact-name model match memang baru `genderuwo`; `pocong PASRAHPHOBIA` dan `kuntilanak_Iv Pole Walking` tetap tercatat di inventory, tetapi nama file lokal owner-nya tidak exact-match satu banding satu.
+- `pocong PASRAHPHOBIA` is inventory-tracked but should not be treated as a generic fallback model for other ghost types. Runtime proof on 2026-04-08 confirmed `Banaspati` remains a placeholder and does not reuse the Pocong model.
 - kalau nanti ada raw asset baru yang relevan, workflow yang benar tetap:
   1. cek raw asset lokal sebagai referensi/nama canonical
   2. cek exact match ke inventory upload
