@@ -9728,6 +9728,33 @@ function UISystem:_refreshPasraPanel()
 		"Summary hasil ini basic, visual, dan cukup untuk test E2E return flow.",
 		badgeColor
 	)
+
+	local gui, panel = self:_getBasicWindowState("PASRA_UI")
+	local statusBadge = panel and panel:FindFirstChild("StatusBadge")
+	local footerLabel = panel and panel:FindFirstChild("FooterLabel")
+	local contentTextLabel = panel and panel:FindFirstChild("ContentFrame") and panel.ContentFrame:FindFirstChild("ContentText")
+	local function stamp(instance, channel)
+		if not instance then
+			return
+		end
+		instance:SetAttribute("PasrahPasraUIOwner", "UISystem")
+		instance:SetAttribute("PasrahPasraUIChannel", tostring(channel or instance.Name))
+		instance:SetAttribute("PasrahPasraUIVisible", instance:IsA("GuiObject") and instance.Visible == true or nil)
+		instance:SetAttribute("PasrahPasraGhostType", tostring(result.ghostType or "Unknown"))
+		instance:SetAttribute("PasrahPasraCorrectGuess", result.correctGuess == true)
+		instance:SetAttribute("PasrahPasraCurrencyReward", tonumber(result.currencyReward) or 0)
+		instance:SetAttribute("PasrahPasraPPReward", tonumber(result.ppReward) or 0)
+		instance:SetAttribute("PasrahPasraXPReward", tonumber(result.xpReward) or 0)
+		instance:SetAttribute("PasrahPasraRoyalPassXP", tonumber(result.royalPassXP) or 0)
+		instance:SetAttribute("PasrahPasraDailyProgress", tonumber(result.dailyProgress) or 0)
+		instance:SetAttribute("PasrahPasraLastEvent", tostring(self._pasraState.lastEvent or "Idle"))
+	end
+
+	stamp(gui, "PasraGui")
+	stamp(panel, "PasraPanel")
+	stamp(statusBadge, "PasraStatusBadge")
+	stamp(contentTextLabel, "PasraContentText")
+	stamp(footerLabel, "PasraFooterLabel")
 end
 
 function UISystem:_refreshSpectatorPanel()
