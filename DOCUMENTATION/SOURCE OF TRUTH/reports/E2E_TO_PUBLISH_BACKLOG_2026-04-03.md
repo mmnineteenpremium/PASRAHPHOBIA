@@ -3883,6 +3883,23 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `SensoryMapGrading`, `SensoryMapBloom`, and `HorrorAtmosphere` all carried `PasrahVFXMapProfile=HauntedHouse`, `PasrahVFXLifecyclePhase=PreparationPhase`, `PasrahVFXPreparationTool=EMF`
   - runtime apparition:
     - `Workspace.RuntimeVFX` carried `PasrahVFXOwner=VFXController`, `PasrahVFXChannel=RuntimeVFX`, `PasrahVFXMapProfile=HauntedHouse`
-    - `Workspace.RuntimeVFX.ShadowApparitionRuntime` carried `PasrahVFXChannel=RuntimeShadowApparition`, `PasrahVFXEvent=EnvironmentalAudioTriggered`, `PasrahVFXProfile=shadowapparition`
+- `Workspace.RuntimeVFX.ShadowApparitionRuntime` carried `PasrahVFXChannel=RuntimeShadowApparition`, `PasrahVFXEvent=EnvironmentalAudioTriggered`, `PasrahVFXProfile=shadowapparition`
 - Build passed: `_tmp_vfx_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 02:36:22 +07:00 - Stamp Horror HUD Runtime Identity
+- Status: DONE.
+- `Client.UI.HUD.HorrorHUD` now stamps direct identity attrs onto the sensory vignette HUD and lobby fade canvas, instead of leaving that layer anonymous.
+- HUD runtime identity now uses `MatchLifecyclePhase` as the authoritative phase, and marks sanity as the latest `SanityEvent` reading with explicit freshness instead of pretending it is always current.
+- Live Studio proof:
+  - lobby idle:
+    - `LobbyUI.SensoryLobbyCanvasGroup` carried `PasrahHUDOwner=HorrorHUD`, `PasrahHUDChannel=LobbyCanvas`, `PasrahHUDInMatch=false`
+  - `InvestigationPhase` after `StartSoloMatch`, `AdvancePhase`, and `DrainSanity`:
+    - `SensoryHorrorHUD` carried `PasrahHUDOwner=HorrorHUD`, `PasrahHUDChannel=SensoryHorrorHUD`, `PasrahHUDPhase=InvestigationPhase`
+    - `Vignette` carried `PasrahHUDChannel=Vignette`
+    - both HUD instances carried `PasrahHUDSanity=100`, `PasrahHUDSanitySource=SanityEvent`
+  - after a short delay, the same HUD instance settled to:
+    - `PasrahHUDSanityFresh=false`
+    - confirming the runtime attr is an explicitly stale last-seen reading rather than a fake authoritative current sanity
+- Build passed: `_tmp_horrorhud_runtime_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.

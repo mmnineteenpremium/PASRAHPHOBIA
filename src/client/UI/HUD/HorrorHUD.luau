@@ -102,6 +102,20 @@ local function createVignetteGui(playerGui)
 	return screenGui
 end
 
+local function stampHorrorHUDInstance(instance, channel, phase, sanity, inMatch, lastEvent, sanitySource, sanityFresh)
+	if typeof(instance) ~= "Instance" then
+		return
+	end
+	instance:SetAttribute("PasrahHUDOwner", "HorrorHUD")
+	instance:SetAttribute("PasrahHUDChannel", tostring(channel or instance.Name))
+	instance:SetAttribute("PasrahHUDPhase", type(phase) == "string" and phase ~= "" and phase or nil)
+	instance:SetAttribute("PasrahHUDSanity", tonumber(sanity))
+	instance:SetAttribute("PasrahHUDInMatch", inMatch == true)
+	instance:SetAttribute("PasrahHUDEvent", type(lastEvent) == "string" and lastEvent ~= "" and lastEvent or nil)
+	instance:SetAttribute("PasrahHUDSanitySource", type(sanitySource) == "string" and sanitySource ~= "" and sanitySource or nil)
+	instance:SetAttribute("PasrahHUDSanityFresh", sanityFresh == true)
+end
+
 function HorrorHUD:Init(context)
 	self._context = context or {}
 	self._remotes = self._context.Remotes or {}
@@ -110,6 +124,9 @@ function HorrorHUD:Init(context)
 	self._vignetteTween = nil
 	self._lobbyFadeTween = nil
 	self._currentSanity = 100
+	self._lastEventName = nil
+	self._hasSanityReading = false
+	self._lastSanityAt = nil
 end
 
 function HorrorHUD:Start()
@@ -177,7 +194,23 @@ function HorrorHUD:_ensureVignetteGui()
 	self._playerGui = playerGui
 	self._vignetteGui = createVignetteGui(playerGui)
 	self._vignetteImage = self._vignetteGui and self._vignetteGui:FindFirstChild("Vignette") or nil
+	self:_stampRuntimeIdentity()
 	return self._vignetteGui
+end
+
+function HorrorHUD:_stampRuntimeIdentity()
+	local phase = tostring(
+		(self._player and self._player:GetAttribute("MatchLifecyclePhase"))
+			or (self._player and self._player:GetAttribute("MatchPhase"))
+			or ""
+	)
+	local inMatch = isPlayerInMatch(self._player)
+	local sanity = self._hasSanityReading and self._currentSanity or nil
+	local sanitySource = self._hasSanityReading and "SanityEvent" or nil
+	local sanityFresh = type(self._lastSanityAt) == "number" and (os.clock() - self._lastSanityAt) <= 1.5
+	stampHorrorHUDInstance(self._vignetteGui, "SensoryHorrorHUD", phase, sanity, inMatch, self._lastEventName, sanitySource, sanityFresh)
+	stampHorrorHUDInstance(self._vignetteImage, "Vignette", phase, sanity, inMatch, self._lastEventName, sanitySource, sanityFresh)
+	stampHorrorHUDInstance(self._lobbyCanvasGroup, "LobbyCanvas", phase, sanity, inMatch, self._lastEventName, sanitySource, sanityFresh)
 end
 
 function HorrorHUD:_syncHudPresence()
@@ -194,6 +227,7 @@ function HorrorHUD:_syncHudPresence()
 	if gui then
 		gui.Enabled = isActiveMatchPhase(self._player)
 	end
+	self:_stampRuntimeIdentity()
 end
 
 function HorrorHUD:_handleSanity(payload)
@@ -205,7 +239,10 @@ function HorrorHUD:_handleSanity(payload)
 	end
 	local sanity = tonumber((payload and payload.newSanity) or (payload and payload.sanity) or payload) or 100
 	self._currentSanity = math.clamp(sanity, 0, 100)
+	self._hasSanityReading = true
+	self._lastSanityAt = os.clock()
 	self:_tweenVignette()
+	self:_stampRuntimeIdentity()
 end
 
 function HorrorHUD:_tweenVignette()
@@ -250,6 +287,7 @@ function HorrorHUD:_ensureLobbyCanvasGroup()
 	end
 
 	self._lobbyCanvasGroup = canvasGroup
+	self:_stampRuntimeIdentity()
 end
 
 function HorrorHUD:_handleMatchEvent(payload)
@@ -257,6 +295,7 @@ function HorrorHUD:_handleMatchEvent(payload)
 	if not eventName then
 		return
 	end
+	self._lastEventName = tostring(eventName)
 
 	if eventName == "MatchStarted" then
 		self:_fadeLobby(1)
@@ -284,6 +323,7 @@ function HorrorHUD:_fadeLobby(target)
 		{ GroupTransparency = target }
 	)
 	self._lobbyFadeTween:Play()
+	self:_stampRuntimeIdentity()
 end
 
 return setmetatable({}, HorrorHUD)
