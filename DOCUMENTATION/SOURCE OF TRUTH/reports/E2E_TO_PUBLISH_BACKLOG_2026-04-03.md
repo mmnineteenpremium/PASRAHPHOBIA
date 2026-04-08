@@ -3453,3 +3453,21 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - test Studio untuk tool evidence utama sekarang lebih deterministic dan tidak berat ke RNG spawn biasa
 
+- progress tambahan pada lane `field kit expansion`:
+  - `Field Kit` sekarang membawa 9 tool aktif dan grid multi-row yang tetap readable
+- validasi terbaru:
+  - runtime button set:
+    - `BolaArwahButton,BukuTerkutukButton,DupaButton,GaramButton,GerakanGaibButton,JejakEnergiButton,KotakArwahButton,SalibButton,SuhuMembekuButton`
+- publish impact:
+  - pemain sekarang tidak lagi terkunci ke 5 tool saja saat investigasi; seluruh tool utama punya surface langsung di HUD match
+
+- progress tambahan pada lane `remaining evidence tool lock states`:
+  - tool utama tambahan sekarang punya lock state jelas di `Field Kit`
+- validasi terbaru:
+  - `SuhuMembeku`: `-5C / SUHU LOCK`
+  - `BukuTerkutuk`: `WRITE / INK LOCK`
+  - `BolaArwah`: `ORB / TO'UN LOCK`
+  - `GerakanGaib`: `MOVE / DISTURB LOCK`
+- publish impact:
+  - seluruh tool evidence utama sekarang mengembalikan feedback lock yang bisa dibaca pemain tanpa harus menebak dari jurnal saja
+
