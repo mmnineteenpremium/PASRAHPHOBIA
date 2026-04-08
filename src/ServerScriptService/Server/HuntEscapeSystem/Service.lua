@@ -194,7 +194,37 @@ function Service.new(state, deps)
     self._eventBus = resolveEventBus(self._deps)
     self._dependencies = {}
     self._zoneConnectionsByMatchId = {}
+    self._zonePartsByMatchId = {}
     return self
+end
+
+local function stampExtractionZoneRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("BasePart") then
+        return
+    end
+    target:SetAttribute("PasrahExtractionOwner", "HuntEscapeSystem")
+    target:SetAttribute("PasrahExtractionMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+    target:SetAttribute("PasrahExtractionZoneId", type(payload.zoneId) == "string" and payload.zoneId or target.Name)
+    target:SetAttribute("PasrahExtractionGhostIdentified", payload.ghostIdentified == true)
+    target:SetAttribute("PasrahExtractionLivingCount", tonumber(payload.livingCount) or 0)
+    target:SetAttribute("PasrahExtractionExtractedLivingCount", tonumber(payload.extractedLivingCount) or 0)
+    target:SetAttribute("PasrahExtractionCompleted", payload.completed == true)
+    target:SetAttribute("PasrahExtractionLastResult", type(payload.lastResult) == "string" and payload.lastResult or nil)
+    target:SetAttribute("PasrahExtractionLastUpdatedAt", tonumber(payload.updatedAt) or os.clock())
+end
+
+local function stampExtractionPlayerRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+    target:SetAttribute("PasrahExtractionOwner", "HuntEscapeSystem")
+    target:SetAttribute("PasrahExtractionMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+    target:SetAttribute("PasrahExtractionZoneId", type(payload.zoneId) == "string" and payload.zoneId or nil)
+    target:SetAttribute("PasrahExtractionGhostIdentified", payload.ghostIdentified == true)
+    target:SetAttribute("PasrahExtractionExtracted", payload.extracted == true)
+    target:SetAttribute("PasrahExtractionCompleted", payload.completed == true)
+    target:SetAttribute("PasrahExtractionLastResult", type(payload.lastResult) == "string" and payload.lastResult or nil)
+    target:SetAttribute("PasrahExtractionLastUpdatedAt", tonumber(payload.updatedAt) or os.clock())
 end
 
 function Service:_resolveMapModel(matchId, mapId)
@@ -240,6 +270,7 @@ function Service:Stop()
         end
         self._zoneConnectionsByMatchId[matchId] = nil
     end
+    self._zonePartsByMatchId = {}
     self._state:Clear()
 end
 
@@ -361,6 +392,39 @@ function Service:_checkExtractionComplete(matchId)
     })
 end
 
+function Service:_stampExtractionRuntime(matchId, zoneId, player, lastResult)
+    local zone = self._zonePartsByMatchId[matchId]
+    if not zone then
+        local mapModel = self:_resolveMapModel(matchId)
+        local folder = mapModel and mapModel:FindFirstChild(EXTRACTION_FOLDER_NAME)
+        zone = folder and folder:FindFirstChild(zoneId or DEFAULT_ZONE_NAME)
+        if not zone then
+            zone = folder and folder:FindFirstChildWhichIsA("BasePart")
+        end
+    end
+
+    local payload = {
+        matchId = matchId,
+        zoneId = zoneId,
+        ghostIdentified = self:_isGhostIdentified(matchId),
+        livingCount = self:_countLiving(matchId),
+        extractedLivingCount = self:_countExtractedLiving(matchId),
+        completed = self:_isExtractionCompleted(matchId),
+        lastResult = lastResult,
+        updatedAt = os.clock(),
+    }
+    if typeof(zone) == "Instance" and zone:IsA("BasePart") then
+        stampExtractionZoneRuntime(zone, payload)
+    end
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        payload.extracted = self:_isExtracted(matchId, player.UserId)
+        if lastResult == "extracted" or lastResult == "extracted_via_studio_override" then
+            payload.extracted = true
+        end
+        stampExtractionPlayerRuntime(player, payload)
+    end
+end
+
 function Service:_registerZones(matchId, mapId)
     local mapModel = self:_resolveMapModel(matchId, mapId)
     if not mapModel then
@@ -391,6 +455,8 @@ function Service:_registerZones(matchId, mapId)
         end
     end)
     table.insert(self._zoneConnectionsByMatchId[matchId], connection)
+    self._zonePartsByMatchId[matchId] = zonePart
+    self:_stampExtractionRuntime(matchId, zonePart.Name, nil, "zone_registered")
 
     self:_publish("ExtractionZoneRegistered", {
         matchId = matchId,
@@ -420,6 +486,7 @@ function Service:_cleanupMatch(matchId)
         end
         self._zoneConnectionsByMatchId[matchId] = nil
     end
+    self._zonePartsByMatchId[matchId] = nil
 end
 
 function Service:HandlePlayerExtraction(player, matchId, zoneId, source)
@@ -435,12 +502,14 @@ function Service:HandlePlayerExtraction(player, matchId, zoneId, source)
         if typeof(player) == "Instance" and player:IsA("Player") then
             player:SetAttribute("LastExtractionResult", "already_extracted")
         end
+        self:_stampExtractionRuntime(matchId, zoneId, player, "already_extracted")
         return false, "already_extracted"
     end
     if not self:_isAlive(matchId, userId) then
         if typeof(player) == "Instance" and player:IsA("Player") then
             player:SetAttribute("LastExtractionResult", "player_not_alive")
         end
+        self:_stampExtractionRuntime(matchId, zoneId, player, "player_not_alive")
         return false, "player_not_alive"
     end
     local ghostIdentified = self:_isGhostIdentified(matchId)
@@ -463,6 +532,7 @@ function Service:HandlePlayerExtraction(player, matchId, zoneId, source)
             reason = "ghost_not_identified",
             source = "HuntEscapeSystem",
         })
+        self:_stampExtractionRuntime(matchId, zoneId, player, "ghost_not_identified")
         return false, "ghost_not_identified"
     end
 
@@ -493,6 +563,7 @@ function Service:HandlePlayerExtraction(player, matchId, zoneId, source)
     })
 
     self:_checkExtractionComplete(matchId)
+    self:_stampExtractionRuntime(matchId, zoneId, player, studioOverride and "extracted_via_studio_override" or "extracted")
     return true
 end
 
@@ -524,6 +595,7 @@ function Service:HandleEvent(eventName, payload)
         end
 
         self:_registerZones(matchId, payload and (payload.mapId or payload.map))
+        self:_stampExtractionRuntime(matchId, DEFAULT_ZONE_NAME, nil, "match_started")
         return
     end
 
@@ -546,6 +618,7 @@ function Service:HandleEvent(eventName, payload)
 
     if eventName == "GhostIdentified" then
         self:_setGhostIdentified(matchId, true)
+        self:_stampExtractionRuntime(matchId, DEFAULT_ZONE_NAME, payload and payload.player, "ghost_identified")
         return
     end
 
