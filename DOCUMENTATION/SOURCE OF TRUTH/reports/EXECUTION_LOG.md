@@ -13088,3 +13088,9 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Added ignore rules for local Roblox Studio lock files and inventory scan/screenshot temp artifacts.
 - Removed `PASRAHPHOBIA.rbxlx.lock` from git tracking with `git rm --cached`; the lock file remains on disk for Studio, but should no longer be committed.
 - This is workflow hygiene only; no runtime code or raw asset folder contents were changed.
+
+## 2026-04-08 23:04:19 +07:00 - Remove Player-Facing Placeholder Copy From Royal Pass
+- Replaced visible `placeholder hadiah karakter rarity 5` Royal Pass copy in `src/client/UI/Main.lua` with `teaser/finale` language.
+- This keeps the UI honest about the day-30 reward preview without exposing raw implementation wording to players.
+- Build passed: `_tmp_ui_placeholder_copy_build.rbxlx`.
+- Studio script grep verified the old `placeholder hadiah karakter` text is gone and the new teaser/finale copy is present.
