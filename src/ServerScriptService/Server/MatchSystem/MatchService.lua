@@ -179,17 +179,33 @@ local function safeRequireModule(moduleScript)
 	return nil
 end
 
-local function resolveGhostTargetBounds(ghostType)
+local function resolveGhostVisualConfig(ghostType)
 	if type(ghostType) ~= "string" or ghostType == "" then
 		return nil
 	end
 	local tuning = safeRequireModule(resolveSharedGameDataModule("GhostVisualTuning"))
 	local ghosts = type(tuning) == "table" and tuning.ghosts or nil
-	local config = type(ghosts) == "table" and ghosts[ghostType] or nil
+	return type(ghosts) == "table" and ghosts[ghostType] or nil
+end
+
+local function resolveGhostTargetBounds(ghostType)
+	local config = resolveGhostVisualConfig(ghostType)
 	if type(config) ~= "table" then
 		return nil
 	end
 	return coerceVector3(config.targetBounds) or coerceVector3(config.meshSize)
+end
+
+local function resolveGhostInventoryModelAssetId(ghostType)
+	local config = resolveGhostVisualConfig(ghostType)
+	if type(config) ~= "table" then
+		return nil
+	end
+	local assetId = config.inventoryModelAssetId
+	if type(assetId) == "string" and assetId ~= "" then
+		return assetId
+	end
+	return nil
 end
 
 local function resolveStudioGhostSessionState(ghostState, runtimeState)
@@ -224,6 +240,7 @@ local STUDIO_GHOST_PLAYER_ATTRS = {
 	"PasrahGhostTargetBounds",
 	"PasrahGhostExtents",
 	"PasrahGhostScale",
+	"PasrahGhostInventoryModelAssetId",
 }
 
 local function clearStudioGhostPlayerSnapshot(players)
@@ -271,6 +288,7 @@ local function setStudioGhostPlayerSnapshot(players, matchId, match, ghostState)
 		end
 	end
 	local targetBounds = resolveGhostTargetBounds(ghostType)
+	local inventoryModelAssetId = resolveGhostInventoryModelAssetId(ghostType)
 
 	for _, player in ipairs(players) do
 		if typeof(player) == "Instance" and player:IsA("Player") then
@@ -290,6 +308,7 @@ local function setStudioGhostPlayerSnapshot(players, matchId, match, ghostState)
 			player:SetAttribute("PasrahGhostTargetBounds", typeof(targetBounds) == "Vector3" and tostring(targetBounds) or nil)
 			player:SetAttribute("PasrahGhostExtents", ghostExtents)
 			player:SetAttribute("PasrahGhostScale", ghostScale)
+			player:SetAttribute("PasrahGhostInventoryModelAssetId", inventoryModelAssetId)
 		end
 	end
 end

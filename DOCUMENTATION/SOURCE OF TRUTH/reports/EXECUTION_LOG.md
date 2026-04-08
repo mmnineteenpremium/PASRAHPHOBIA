@@ -13263,3 +13263,31 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `PasrahGhostHuntActive=true`
     - `PasrahGhostTargetBounds=3.4000000953674316, 5.800000190734863, 2.5999999046325684`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 01:24:31 +07:00 - Attach Inventory Model Identity To Ghost Snapshots
+- Extended `src/shared/GameData/GhostVisualTuning.lua` so shared ghost tuning now carries uploaded Roblox inventory model IDs for:
+  - `Pocong`
+  - `Kuntilanak`
+  - `KuntilanakAggressive`
+  - `Genderuwo`
+- Extended `src/ServerScriptService/Server/MatchSystem/MatchService.lua` and `src/ServerScriptService/Server/GhostSystem/Controller.lua` so Studio player attrs now also expose `PasrahGhostInventoryModelAssetId`.
+- Extended `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua` so `GetGhostRuntimeSnapshot` now includes `ghostInventoryModelAssetId`.
+- Extended `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua` so lobby evidence training snapshot also includes `ghostInventoryModelAssetId`.
+- This closes the remaining ambiguity between:
+  - a ghost that is visually present because it has a real uploaded inventory model
+  - a ghost that is visually present but still does not have any uploaded inventory model identity yet
+- Build passed: `_tmp_ghost_inventory_model_identity_build.rbxlx`.
+- Live Studio proof:
+  - forced `Genderuwo` match:
+    - `PasrahGhostInventoryModelAssetId=rbxassetid://117009327297852`
+    - snapshot `ghostInventoryModelAssetId=rbxassetid://117009327297852`
+  - forced `Pocong` match:
+    - `PasrahGhostInventoryModelAssetId=rbxassetid://123151303766691`
+    - snapshot `ghostInventoryModelAssetId=rbxassetid://123151303766691`
+  - forced `Leak` match:
+    - no `PasrahGhostInventoryModelAssetId`
+    - snapshot also omitted `ghostInventoryModelAssetId`
+  - lobby training rotate:
+    - returned `ghostType=Genderuwo`
+    - `ghostInventoryModelAssetId=rbxassetid://117009327297852`
+- Roblox Studio was returned to STOP TEST before logging.

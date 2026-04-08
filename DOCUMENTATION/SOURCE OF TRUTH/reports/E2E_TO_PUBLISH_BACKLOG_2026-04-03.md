@@ -3807,6 +3807,19 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Live Studio proof with forced `Genderuwo`:
   - `PreparationPhase` settled to `Idle`
   - forced manifest settled to `Manifest`
-  - forced hunt settled to `Hunting` with `PasrahGhostHuntActive=true`
+- forced hunt settled to `Hunting` with `PasrahGhostHuntActive=true`
 - Build passed: `_tmp_ghost_player_attr_sync_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 01:24:31 +07:00 - Attach Inventory Model Identity To Ghost Snapshots
+- Status: DONE.
+- Shared `GhostVisualTuning` now carries uploaded inventory model IDs for `Pocong`, `Kuntilanak`, `KuntilanakAggressive`, and `Genderuwo`.
+- Match player attrs and Studio ghost runtime snapshot now expose `inventory model asset id` directly, instead of forcing comparison against the separate inventory ledger.
+- Lobby evidence training snapshot now exposes the same identity field, so lobby and match ghost verification stay on one vocabulary.
+- Live Studio proof:
+  - `Genderuwo` match attrs/snapshot both resolved to `rbxassetid://117009327297852`
+  - `Pocong` match attrs/snapshot both resolved to `rbxassetid://123151303766691`
+  - `Leak` remained visually active but carried no inventory model asset ID, which is the intended truthful result for a ghost without uploaded model coverage
+  - lobby training rotate returned `ghostInventoryModelAssetId` for `Genderuwo`
+- Build passed: `_tmp_ghost_inventory_model_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.

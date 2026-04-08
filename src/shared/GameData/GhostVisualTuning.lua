@@ -7,19 +7,23 @@ return {
 			meshOffset = Vector3.new(0, 0.1, 0),
 			-- Clamp bounding box saat model di-spawn agar asset impor tidak raksasa.
 			targetBounds = Vector3.new(1.6, 3.75, 1.18),
+			inventoryModelAssetId = "rbxassetid://123151303766691",
 			grounded = true,
 			maxHoverHeight = 0,
 		},
 		Kuntilanak = {
 			targetBounds = Vector3.new(3.5, 4.8, 1.8),
+			inventoryModelAssetId = "rbxassetid://93357688576883",
 			maxHoverHeight = 0.05,
 		},
 		KuntilanakAggressive = {
 			targetBounds = Vector3.new(2.2, 5.4, 1.8),
+			inventoryModelAssetId = "rbxassetid://93357688576883",
 			maxHoverHeight = 0.05,
 		},
 		Genderuwo = {
 			targetBounds = Vector3.new(3.4, 5.8, 2.6),
+			inventoryModelAssetId = "rbxassetid://117009327297852",
 			grounded = true,
 			maxHoverHeight = 0,
 		},

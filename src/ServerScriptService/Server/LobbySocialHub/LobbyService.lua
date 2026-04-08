@@ -1136,6 +1136,24 @@ local function resolveGhostVisualProfileTargetBounds(ghostType)
     return coerceProfileVector3(profile.targetBounds) or coerceProfileVector3(profile.size)
 end
 
+local function resolveGhostVisualProfileInventoryModelAssetId(ghostType)
+    if type(ghostType) ~= "string" or ghostType == "" then
+        return nil
+    end
+
+    local sharedTuning = safeRequireModule(resolveSharedGameDataModule("GhostVisualTuning"))
+    local ghosts = type(sharedTuning) == "table" and sharedTuning.ghosts or nil
+    local sharedConfig = type(ghosts) == "table" and ghosts[ghostType] or nil
+    if type(sharedConfig) == "table" then
+        local assetId = sharedConfig.inventoryModelAssetId
+        if type(assetId) == "string" and assetId ~= "" then
+            return assetId
+        end
+    end
+
+    return nil
+end
+
 local function clampRuntimeModelBounds(model, targetBounds)
     if not (model and model:IsA("Model")) or typeof(targetBounds) ~= "Vector3" then
         return false
@@ -4614,6 +4632,7 @@ function LobbyService:StudioGetEvidenceTrainingSnapshot()
 	local ghostVisual = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_VISUAL_NAME, true)
 	local ghostVisualSnapshot = describeRuntimeModel(ghostVisual)
 	local targetBounds = resolveGhostVisualProfileTargetBounds(tostring(state.ghostType or ""))
+	local inventoryModelAssetId = resolveGhostVisualProfileInventoryModelAssetId(tostring(state.ghostType or ""))
 	return {
 		ghostType = state.ghostType or "",
 		discoveredEvidence = cloneArray(state.discoveredEvidence),
@@ -4632,6 +4651,7 @@ function LobbyService:StudioGetEvidenceTrainingSnapshot()
 		ghostVisualPosition = ghostVisualSnapshot and ghostVisualSnapshot.position or "",
 		ghostVisualTemplateName = ghostVisual and tostring(ghostVisual:GetAttribute("VisualTemplateName") or "") or "",
 		ghostTargetBounds = typeof(targetBounds) == "Vector3" and tostring(targetBounds) or "",
+		ghostInventoryModelAssetId = inventoryModelAssetId or "",
 	}
 end
 
