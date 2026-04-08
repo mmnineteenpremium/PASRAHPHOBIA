@@ -526,6 +526,7 @@ local function loadGhostVisualProfileMetadata()
 end
 
 local GHOST_VISUAL_PROFILE_METADATA = loadGhostVisualProfileMetadata()
+
 local UI_BRAND = {
 	text = Color3.fromRGB(244, 241, 234),
 	muted = Color3.fromRGB(184, 194, 208),
@@ -1215,6 +1216,43 @@ local function buildFieldKitToolFallbackModel(toolType, accentColor)
 	return nil
 end
 
+local function stampFieldKitPreviewModel(model, toolType, usingFallback, previewState)
+	if typeof(model) ~= "Instance" or not model:IsA("Model") then
+		return
+	end
+	model:SetAttribute("PasrahPreviewOwner", "UI")
+	model:SetAttribute("PasrahPreviewKind", "FieldKitTool")
+	model:SetAttribute("PasrahPreviewToolType", tostring(toolType or ""))
+	model:SetAttribute("PasrahPreviewUsesAssetTemplate", usingFallback ~= true)
+	model:SetAttribute("PasrahPreviewState", tostring(previewState or "ready"))
+end
+
+local function stampGhostPreviewModel(model, ghostType, template, profile)
+	if typeof(model) ~= "Instance" or not model:IsA("Model") then
+		return
+	end
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
+	local gameDataFolder = shared and shared:FindFirstChild("GameData") or nil
+	local moduleScript = gameDataFolder and gameDataFolder:FindFirstChild("GhostVisualTuning") or nil
+	local tuningModule = safeRequire(moduleScript)
+	local tuningGhosts = type(tuningModule) == "table" and tuningModule.ghosts or nil
+	local tuning = type(tuningGhosts) == "table" and tuningGhosts[ghostType] or nil
+	local inventoryModelAssetId = type(tuning) == "table" and tuning.inventoryModelAssetId or nil
+	local visualTemplateName = template and template.Name
+	if (type(visualTemplateName) ~= "string" or visualTemplateName == "") and type(profile) == "table" then
+		visualTemplateName = type(profile.modelName) == "string" and profile.modelName or nil
+	end
+	if type(visualTemplateName) ~= "string" or visualTemplateName == "" then
+		visualTemplateName = tostring(ghostType or "")
+	end
+	model:SetAttribute("PasrahPreviewOwner", "UI")
+	model:SetAttribute("PasrahPreviewKind", "Ghost")
+	model:SetAttribute("PasrahPreviewGhostType", tostring(ghostType or ""))
+	model:SetAttribute("PasrahPreviewUsesAssetTemplate", template ~= nil)
+	model:SetAttribute("VisualTemplateName", visualTemplateName)
+	model:SetAttribute("PasrahGhostInventoryModelAssetId", type(inventoryModelAssetId) == "string" and inventoryModelAssetId ~= "" and inventoryModelAssetId or nil)
+end
+
 local function styleFieldKitToolPreview(viewportFrame, accentColor, previewState)
 	local accent = accentColor or Color3.fromRGB(204, 210, 224)
 	local state = tostring(previewState or "ready")
@@ -1294,6 +1332,9 @@ local function renderFieldKitToolPreview(viewportFrame, toolType, accentColor, p
 
 	local previewSignature = string.format("%s|%s|%s", tostring(toolType), tostring(previewState or "ready"), usingFallback and "fallback" or "asset")
 	if viewportFrame:GetAttribute("PreviewSignature") == previewSignature then
+		local worldModel = viewportFrame:FindFirstChild("PreviewWorld")
+		local currentModel = worldModel and worldModel:IsA("WorldModel") and worldModel:FindFirstChildWhichIsA("Model") or nil
+		stampFieldKitPreviewModel(currentModel, toolType, usingFallback, previewState)
 		viewportFrame.Visible = true
 		return true
 	end
@@ -1318,6 +1359,7 @@ local function renderFieldKitToolPreview(viewportFrame, toolType, accentColor, p
 		viewportFrame.Visible = false
 		return false
 	end
+	stampFieldKitPreviewModel(model, toolType, usingFallback, previewState)
 	for _, descendant in ipairs(model:GetDescendants()) do
 		if descendant:IsA("BasePart") then
 			descendant.Anchored = true
@@ -1361,6 +1403,10 @@ local function renderLobbyTrainingGhostPreview(viewportFrame, ghostType, accentC
 	local previewSignature = string.format("%s|%d", tostring(ghostType or ""), math.floor((tonumber(aggression) or 0) + 0.5))
 	styleLobbyGhostPreview(viewportFrame, accentColor, aggression)
 	if viewportFrame:GetAttribute("PreviewSignature") == previewSignature then
+		local template, profile = getGhostPreviewAssetTemplate(ghostType)
+		local worldModel = viewportFrame:FindFirstChild("GhostPreviewWorld")
+		local currentModel = worldModel and worldModel:IsA("WorldModel") and worldModel:FindFirstChildWhichIsA("Model") or nil
+		stampGhostPreviewModel(currentModel, ghostType, template, profile)
 		viewportFrame.Visible = true
 		return true
 	end
@@ -1382,6 +1428,7 @@ local function renderLobbyTrainingGhostPreview(viewportFrame, ghostType, accentC
 
 	local template, profile = getGhostPreviewAssetTemplate(ghostType)
 	local model = template and template:Clone() or buildGhostPreviewFallbackModel(ghostType, accentColor)
+	stampGhostPreviewModel(model, ghostType, template, profile)
 	for _, descendant in ipairs(model:GetDescendants()) do
 		if descendant:IsA("BasePart") then
 			descendant.Anchored = true

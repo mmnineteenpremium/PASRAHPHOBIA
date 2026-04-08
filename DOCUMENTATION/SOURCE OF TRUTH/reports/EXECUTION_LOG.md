@@ -13058,6 +13058,20 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 02:13:41 +07:00 - Stamp UI Preview Runtime Identity
+- Status: DONE.
+- `Client.UI.Main` now stamps direct runtime identity attrs onto viewport preview clones instead of leaving field-kit and training previews anonymous.
+- Fixed a client bootstrap regression during this batch by removing extra top-level locals that pushed `Client.UI.Main` over Roblox's local register limit.
+- Live Studio proof:
+  - `InvestigationPhase` field kit previews:
+    - `JejakEnergiButton` carried `PasrahPreviewOwner=UI`, `PasrahPreviewKind=FieldKitTool`, `PasrahPreviewToolType=JejakEnergi`, `PasrahPreviewUsesAssetTemplate=false`, `PasrahPreviewState=ready`
+    - `GaramButton` carried `PasrahPreviewOwner=UI`, `PasrahPreviewKind=FieldKitTool`, `PasrahPreviewToolType=Garam`, `PasrahPreviewUsesAssetTemplate=true`, `PasrahPreviewState=ready`
+  - lobby training previews after `LobbyTrainingRotate` and `LobbyTrainingUseSupport`:
+    - `TrainingPreview` carried `PasrahPreviewOwner=UI`, `PasrahPreviewKind=Ghost`, `PasrahPreviewGhostType=HantuTanah`, `PasrahPreviewUsesAssetTemplate=false`, `VisualTemplateName=HantuTanah`
+    - `GaramSupportCard.ToolPreview` carried `PasrahPreviewOwner=UI`, `PasrahPreviewKind=FieldKitTool`, `PasrahPreviewToolType=Garam`, `PasrahPreviewState=active`
+- Build passed: `_tmp_ui_preview_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
 ## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
 - Added more cue-specific uploaded Roblox inventory overrides in `src/client/SoundSystem/Main.lua`.
 - New active cue mappings:
