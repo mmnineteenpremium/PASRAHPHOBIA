@@ -13083,3 +13083,8 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Build passed: `_tmp_audio_cue_alias_build.rbxlx`.
 - Live client SoundSystem probe verified all three legacy/default cue names resolved to the expected uploaded asset IDs.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-08 23:02:51 +07:00 - Ignore Local Studio And Inventory Scan Artifacts
+- Added ignore rules for local Roblox Studio lock files and inventory scan/screenshot temp artifacts.
+- Removed `PASRAHPHOBIA.rbxlx.lock` from git tracking with `git rm --cached`; the lock file remains on disk for Studio, but should no longer be committed.
+- This is workflow hygiene only; no runtime code or raw asset folder contents were changed.
