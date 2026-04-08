@@ -3679,3 +3679,10 @@ Urutan yang paling masuk akal dari titik sekarang:
 - backlog impact:
   - coverage audio UI sudah naik untuk panel/journal/error, tetapi playback proof langsung untuk command harness UI tidak diklaim karena konteks VM test tidak sama dengan bootstrap client aktif
 
+
+## 2026-04-08 22:33:46 +07:00 - Client Bootstrap UI Startup Recovery
+- Status: DONE.
+- Direct client bootstrap mapping and UI/Main.lua parse/runtime startup blocker fixed.
+- Live proof: client bootstrap stage started; generated PlayerGui roots include LobbyUI, MatchUI, RoomBrowserUI, RoomBrowserFloatUI, UXLayer.
+- UI surface cue proof remains on uploaded Roblox inventory asset IDs, not local files: JournalPage = rbxassetid://97915135753208, PanelSoftClose = rbxassetid://73589904561594.
+- Studio stop-test reporting rule followed.

@@ -44,6 +44,9 @@
       },
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
+        "ClientBootstrap": {
+          "$path": "src/StarterPlayerScripts/ClientBootstrap.client.lua"
+        },
         "Client": {
           "$path": "src/client"
         }
