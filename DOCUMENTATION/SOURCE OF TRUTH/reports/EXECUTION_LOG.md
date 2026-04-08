@@ -13178,7 +13178,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - match snapshot for forced `Genderuwo` now includes `ghostExtents=2.870025634765625, 6.016216278076172, 1.505476474761963` and `ghostScale=0.045082248747348788`
   - lobby snapshot for `Kuntilanak` now includes:
     - `ghostVisualPath=Workspace.Maps.LobbySocialHub.LobbySocialHub.MainHubDecorRuntime.TrainingGhostVisual`
-    - `ghostVisualExtents=3.484506130218506, 4.800000190734863, 1.7543654441833496`
-    - `ghostTargetBounds=3.5, 4.800000190734863, 1.7999999523162842`
-    - `ghostVisualScale=1.742253065109253`
+  - `ghostVisualExtents=3.484506130218506, 4.800000190734863, 1.7543654441833496`
+  - `ghostTargetBounds=3.5, 4.800000190734863, 1.7999999523162842`
+  - `ghostVisualScale=1.742253065109253`
+- Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 00:28:19 +07:00 - Unify Target Bounds Into Ghost Snapshot Payloads
+- Extended `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua` so `GetGhostRuntimeSnapshot` now includes `ghostTargetBounds` from shared `GhostVisualTuning`.
+- Updated `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua` so `StudioRotateEvidenceTrainingGhost` now returns the same full visual snapshot payload as `StudioGetEvidenceTrainingSnapshot`, instead of a reduced payload that forced a second query.
+- This closes the remaining two-step debugging flow:
+  - one rotate call is now enough to know whether a lobby ghost has an asset, where it is, and how its fitted extents compare to target bounds
+  - one match snapshot now carries both live extents and intended target bounds in the same payload
+- Build passed: `_tmp_ghost_snapshot_target_build.rbxlx`.
+- Live Studio proof:
+  - forced `Leak` match snapshot now includes `ghostTargetBounds=2, 4.800000190734863, 2.3499999046325684`
+  - `LobbyTrainingRotate` now returns full asset-ready payload in one call for asset ghosts, including:
+    - `ghostVisualPath`
+    - `ghostVisualExtents`
+    - `ghostVisualScale`
+    - `ghostTargetBounds`
+  - verified on `Pocong` rotate payload with:
+    - `ghostVisualExtents=1.600000023841858, 1.600000023841858, 0.800000011920929`
+    - `ghostTargetBounds=1.600000023841858, 3.75, 1.1799999475479126`
 - Roblox Studio was returned to STOP TEST before logging.
