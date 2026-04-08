@@ -8927,7 +8927,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	trackHint.TextSize = 11
 	trackHint.TextXAlignment = Enum.TextXAlignment.Left
 	trackHint.TextColor3 = Color3.fromRGB(170, 184, 202)
-	trackHint.Text = "Geser horizontal untuk melihat 30 hari. Hari ke-30 menampilkan placeholder hadiah karakter rarity 5."
+	trackHint.Text = "Geser horizontal untuk melihat 30 hari. Hari ke-30 menampilkan teaser hadiah karakter rarity 5."
 	trackHint.Parent = deck
 
 	local trackScroller = Instance.new("ScrollingFrame")
@@ -9342,8 +9342,8 @@ function UISystem:_refreshRoyalPassPanel()
 			widgets.TrackHint.Text = "Premium track masih pending. Reward view ini hanya preview sampai entitlement Roblox benar-benar siap."
 		else
 			widgets.TrackHint.Text = state.viewMode == "Missions"
-				and "Geser horizontal untuk melihat 30 hari misi. Hari ke-30 menjaga placeholder hadiah karakter rarity 5."
-				or "Geser horizontal untuk melihat 30 hari reward. Hari ke-30 menampilkan placeholder hadiah karakter rarity 5."
+				and "Geser horizontal untuk melihat 30 hari misi. Hari ke-30 menjaga finale hadiah karakter rarity 5."
+				or "Geser horizontal untuk melihat 30 hari reward. Hari ke-30 menampilkan teaser hadiah karakter rarity 5."
 		end
 	end
 
@@ -9374,7 +9374,7 @@ function UISystem:_refreshRoyalPassPanel()
 			}
 			titleText = isFinalDay and "MISSION 30 • GRAND FINALE" or string.format("MISSION %02d", index)
 			metaText = isFinalDay
-				and "Selesaikan misi penutup season untuk membuka placeholder hadiah karakter rarity 5."
+				and "Selesaikan misi penutup season untuk membuka teaser hadiah karakter rarity 5."
 				or missionTemplates[((index - 1) % #missionTemplates) + 1]
 			rewardText = isFinalDay and "R5 TOKEN" or string.format("+%d XP", 60 + (index * 5))
 			accentColor = isFinalDay and Color3.fromRGB(210, 160, 86) or Color3.fromRGB(112, 84, 150)
@@ -9384,7 +9384,7 @@ function UISystem:_refreshRoyalPassPanel()
 		else
 			titleText = isFinalDay and "DAY 30 • CHARACTER R5" or string.format("DAY %02d REWARD", index)
 			metaText = isFinalDay
-				and "Border placeholder untuk hadiah karakter rarity 5 di penghujung 30 hari season."
+				and "Border finale untuk hadiah karakter rarity 5 di penghujung 30 hari season."
 				or string.format("Claim harian untuk ritme login. Bonus tier mengikuti season %s.", tostring(state.seasonId or "S1"))
 			rewardText = isFinalDay and "R5 BORDER" or string.format("+%d MM", 120 + ((index - 1) * 20))
 			accentColor = isFinalDay and Color3.fromRGB(224, 170, 88) or (premiumOwned and Color3.fromRGB(126, 98, 52) or Color3.fromRGB(82, 110, 162))
