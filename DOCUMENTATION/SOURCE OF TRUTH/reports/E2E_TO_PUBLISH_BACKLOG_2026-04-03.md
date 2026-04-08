@@ -3402,3 +3402,12 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - pemain sekarang dapat membaca hasil repel dari HUD secara langsung, bukan hanya dari state world placement
 
+- progress tambahan pada lane `garam trigger HUD clarity`:
+  - `Garam` sekarang tidak lagi tampil generik saat jejak benar-benar terbaca
+- validasi terbaru:
+  - `UseEvidenceTool(Garam, nearGhostRoom=true)`:
+    - `Meta = TRACK`
+    - `Footer = GHOST STEP`
+- publish impact:
+  - hasil trap garam sekarang kebaca langsung dari HUD, tidak harus menunggu pemain membaca world state
+
