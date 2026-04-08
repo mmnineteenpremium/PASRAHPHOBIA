@@ -13323,3 +13323,43 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `VisualTemplateName=Leak`
     - no `PasrahGhostInventoryModelAssetId`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 01:43:22 +07:00 - Stamp Runtime Audio Instance Identity
+- Updated `src/client/SoundSystem/Main.lua` so one-shot and looped runtime sounds now carry direct identity attrs on the sound instance itself:
+  - `PasrahAudioOwner`
+  - `PasrahAudioCategory`
+  - `PasrahAudioCue`
+  - `PasrahAudioEventType`
+  - `PasrahAudioTemplate`
+  - `PasrahAudioSoundId`
+  - `PasrahAudioLooped`
+- Updated `src/client/Controllers/Sensory/AudioController.luau` so managed persistent sounds (`LobbyAmbient`, `PreparationAmbient`, `Heartbeat`) now carry the same direct identity attrs, plus:
+  - `PasrahAudioMapProfile` on lobby/preparation ambience
+  - `PasrahHeartbeatReason` on heartbeat
+- This closes the remaining mismatch where player attrs/debug already knew what sound had fired, but direct workspace/camera inspection still had to infer audio identity from instance names.
+- Build passed: `_tmp_audio_runtime_identity_build.rbxlx`.
+- Live Studio proof:
+  - lobby idle:
+    - `Workspace.Camera.LobbyAmbient`
+    - `PasrahAudioOwner=AudioController`
+    - `PasrahAudioCategory=AmbientAudio`
+    - `PasrahAudioCue=bgm_lobby_ambient`
+    - `PasrahAudioSoundId=rbxassetid://113854211240490`
+    - `PasrahAudioMapProfile=LobbySocialHub`
+  - `PreparationPhase`:
+    - `Workspace.Camera.PreparationAmbient`
+    - `PasrahAudioCue=ambient_investigation`
+    - `PasrahAudioSoundId=rbxassetid://140704980462451`
+    - `PasrahAudioMapProfile=HauntedHouse`
+  - forced oneshot cue:
+    - `Workspace.Camera.EnvironmentalAudioRuntime`
+    - `PasrahAudioOwner=SoundSystem`
+    - `PasrahAudioCue=env_doorslam`
+    - `PasrahAudioEventType=DoorSlam`
+    - `PasrahAudioSoundId=rbxassetid://78764817933410`
+  - forced hunt:
+    - `Workspace.Camera.Heartbeat`
+    - `PasrahHeartbeatReason=HUNT`
+    - `PasrahAudioCue=heartbeat_rise`
+    - `PasrahAudioSoundId=rbxassetid://138884191945388`
+- Roblox Studio was returned to STOP TEST before logging.
