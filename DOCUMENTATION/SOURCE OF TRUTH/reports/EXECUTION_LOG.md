@@ -13124,3 +13124,15 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `GrassFootstep` -> `rbxassetid://128180668604255`
   - `SnowFootstep` -> `rbxassetid://71785355785721`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-08 23:18:57 +07:00 - Lock Pocong Default Visual Guard
+- Updated `src/ServerScriptService/Server/GhostSystem/Service.lua` so the default `Pocong` visual size override is `0.06, 0.07, 0.07`, matching the user-validated visual size and the existing `GhostVisualTuning`/`Pocong` profile.
+- This is a visual guard only; `Pocong` target bounds/root logic remain separate and are not shrunk to mesh scale.
+- Corrected the inventory ledger row from `` ` pocong PASRAHPHOBIA` `` to `` `pocong PASRAHPHOBIA` ``.
+- Build passed: `_tmp_pocong_visual_guard_build.rbxlx`.
+- Live Studio proof:
+  - Forced `Pocong` match actor spawned as `Workspace.ActiveMatches.Match_match_1.Ghost_Pocong`
+  - `PlaceholderVisual=false`, `VisualTemplateName=Pocong`
+  - mesh size `0.05999999865889549, 0.07000000029802322, 0.07000000029802322`
+  - Forced `Banaspati` spawned as `GhostPlaceholder_Banaspati`, `PlaceholderVisual=true`, with no Pocong mesh fallback.
+- Roblox Studio was returned to STOP TEST before logging.

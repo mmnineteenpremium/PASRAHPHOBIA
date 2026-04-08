@@ -3733,3 +3733,13 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Build passed: `_tmp_soundsystem_default_cue_audio_build.rbxlx`.
 - Live Studio client probe verified all six cue/material cases with expected `rbxassetid://...` values.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-08 23:18:57 +07:00 - Lock Pocong Default Visual Guard
+- Status: DONE.
+- Default `Pocong` visual size override in `GhostSystem.Service` now matches the user-validated visual mesh size `0.06, 0.07, 0.07`.
+- Logic/root bounds remain separate; this does not shrink collision/target bounds.
+- Live Studio proof:
+  - forced `Pocong` actor spawned as `Ghost_Pocong`, not preview, with mesh size approximately `0.06, 0.07, 0.07`
+  - forced `Banaspati` spawned as `GhostPlaceholder_Banaspati`, so ghost types without local model no longer masquerade as Pocong
+- Build passed: `_tmp_pocong_visual_guard_build.rbxlx`.
+- Studio stop-test reporting rule followed.
