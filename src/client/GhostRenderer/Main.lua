@@ -1,9 +1,21 @@
 local GhostRenderer = {}
 GhostRenderer.__index = GhostRenderer
 
+local function stampGhostRenderState(player, ghostState)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return
+	end
+	local state = type(ghostState) == "table" and ghostState or {}
+	player:SetAttribute("PasrahGhostRenderManifesting", state.isManifesting == true)
+	player:SetAttribute("PasrahGhostRenderSpectator", state.isSpectator == true)
+	player:SetAttribute("PasrahGhostRenderSanity", tonumber(state.sanity))
+	player:SetAttribute("PasrahGhostRenderDistortion", tonumber(state.distortion))
+end
+
 function GhostRenderer:Init(context)
 	self._context = context
 	self._remotes = context.Remotes
+	self._player = game:GetService("Players").LocalPlayer
 	self._connections = {}
 	self._ghostState = {
 		isManifesting = false,
@@ -11,6 +23,7 @@ function GhostRenderer:Init(context)
 		isSpectator = false,
 		distortion = 0,
 	}
+	stampGhostRenderState(self._player, self._ghostState)
 end
 
 function GhostRenderer:Start()
@@ -57,6 +70,7 @@ function GhostRenderer:_updateDistortion()
 	local spectatorFactor = self._ghostState.isSpectator and 0.35 or 0
 	local manifestFactor = self._ghostState.isManifesting and 0.45 or 0
 	self._ghostState.distortion = math.clamp(sanityFactor + spectatorFactor + manifestFactor, 0, 1)
+	stampGhostRenderState(self._player, self._ghostState)
 end
 
 function GhostRenderer:GetRenderState()

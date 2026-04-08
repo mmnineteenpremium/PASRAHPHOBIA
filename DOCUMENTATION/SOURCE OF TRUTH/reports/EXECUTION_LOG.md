@@ -13117,8 +13117,27 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `PasrahAudioTemplate=ConcreteStep_01`
     - `PasrahAudioSoundId=rbxassetid://79900103772577`
     - `PasrahFootstepTemplate=ConcreteStep_01`
-    - `PasrahFootstepMaterial=Concrete`
+- `PasrahFootstepMaterial=Concrete`
 - Build passed: `_tmp_footstep_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 02:48:12 +07:00 - Stamp Ghost Renderer Runtime State
+- Status: DONE.
+- `Client.GhostRenderer.Main` now publishes its internal client render state directly to player attrs instead of keeping manifestation/distortion state hidden in module memory.
+- Live Studio proof:
+  - lobby idle:
+    - `PasrahGhostRenderManifesting=false`
+    - `PasrahGhostRenderSpectator=false`
+    - `PasrahGhostRenderSanity=100`
+    - `PasrahGhostRenderDistortion=0`
+  - `InvestigationPhase` after forced manifestation:
+    - `PasrahGhostRenderManifesting=true`
+    - `PasrahGhostRenderSanity=95`
+    - `PasrahGhostRenderDistortion=0.5`
+  - after an additional `DrainSanity` and wait:
+    - `PasrahGhostRenderSanity=75`
+    - `PasrahGhostRenderDistortion=0.7`
+- Build passed: `_tmp_ghostrenderer_runtime_state_build.rbxlx`.
 - Studio stop-test reporting rule followed.
 
 ## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
