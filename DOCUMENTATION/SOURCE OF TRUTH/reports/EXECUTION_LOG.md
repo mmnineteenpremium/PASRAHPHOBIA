@@ -12941,3 +12941,32 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `UI_SOUND_FALLBACKS.ButtonClick.SoundId = rbxassetid://85056627192723`
 - publish impact:
   - jalur utama dan fallback UI click sekarang sama-sama memakai asset upload akun aktif, jadi tidak ada lagi diam-diam jatuh ke built-in Roblox default
+
+- progress tambahan pada lane `lobby ambient inventory audio`:
+  - `client/Controllers/Sensory/AudioController.luau` sekarang punya owner aktif untuk ambience lobby, bukan hanya preparation ambience
+  - runtime baru:
+    - `LobbyAmbient -> rbxassetid://113854211240490`
+    - profile default `Volume=0.16`, `PlaybackSpeed=0.98`
+  - owner yang ditutup:
+    - fade-in lobby saat `InMatch ~= true` dan map profile `LobbySocialHub`
+    - fade-out otomatis saat masuk match/preparation
+    - debug attrs player:
+      - `PasrahLobbyAmbientActive`
+      - `PasrahLobbyAmbientSoundId`
+      - `PasrahLobbyAmbientMap`
+- validasi terbaru:
+  - build lolos:
+    - `_tmp_lobby_ambient_audio_build.rbxlx`
+  - live di `PASRAHPHOBIA.rbxlx`:
+    - lobby idle:
+      - `PasrahLobbyAmbientActive = true`
+      - `PasrahLobbyAmbientSoundId = rbxassetid://113854211240490`
+      - `CurrentCamera.LobbyAmbient.IsPlaying = true`
+      - `CurrentCamera.LobbyAmbient.Volume ~= 0`
+    - sesudah `StartSoloMatch -> PreparationPhase`:
+      - `PasrahPreparationAmbientActive = true`
+      - `CurrentCamera.PreparationAmbient.IsPlaying = true`
+      - `CurrentCamera.LobbyAmbient.Volume = 0`
+      - `PasrahLobbyAmbientActive` turun `nil`
+- publish impact:
+  - lobby sekarang tidak lagi diam atau hanya mengandalkan ambience preparation; surface hub punya bed audio inventory-owned yang padam bersih saat match mulai tanpa menambah sistem audio baru

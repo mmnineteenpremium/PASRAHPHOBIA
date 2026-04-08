@@ -31,8 +31,16 @@ local PREPARATION_AMBIENT_PROFILE = {
 	},
 }
 
+local LOBBY_AMBIENT_SOUND_ID = "rbxassetid://113854211240490"
+local LOBBY_AMBIENT_PROFILE = {
+	Volume = 0.16,
+	PlaybackSpeed = 0.98,
+}
+
 local PREPARATION_AMBIENT_TWEEN_IN = TweenInfo.new(0.65, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 local PREPARATION_AMBIENT_TWEEN_OUT = TweenInfo.new(0.45, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+local LOBBY_AMBIENT_TWEEN_IN = TweenInfo.new(0.72, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+local LOBBY_AMBIENT_TWEEN_OUT = TweenInfo.new(0.48, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
 
 local HEARTBEAT_SPEED_RANGE = {
 	min = 1.0,
@@ -111,6 +119,13 @@ local function lookupPreparationAmbientSound()
 	return fallback
 end
 
+local function lookupLobbyAmbientSound()
+	local sound = Instance.new("Sound")
+	sound.Name = "LobbyAmbient"
+	sound.SoundId = LOBBY_AMBIENT_SOUND_ID
+	return sound
+end
+
 function AudioController:Init(context)
 	self._context = context or {}
 	self._remotes = self._context.Remotes or {}
@@ -120,6 +135,8 @@ function AudioController:Init(context)
 	self._ghostHuntActive = false
 	self._preparationAmbientTargetVolume = 0
 	self._preparationAmbientTween = nil
+	self._lobbyAmbientTargetVolume = 0
+	self._lobbyAmbientTween = nil
 	self._heartbeatSound = lookupHeartbeatSound()
 	self._heartbeatSound.Looped = true
 	self._heartbeatSound.Volume = 0
@@ -128,9 +145,15 @@ function AudioController:Init(context)
 	self._preparationAmbientSound.Looped = true
 	self._preparationAmbientSound.Volume = 0
 	self._preparationAmbientSound:SetAttribute("MissingSourceAsset", self._preparationAmbientSound.SoundId == "")
+	self._lobbyAmbientSound = lookupLobbyAmbientSound()
+	self._lobbyAmbientSound.Looped = true
+	self._lobbyAmbientSound.Volume = 0
+	self._lobbyAmbientSound.PlaybackSpeed = LOBBY_AMBIENT_PROFILE.PlaybackSpeed
+	self._lobbyAmbientSound:SetAttribute("MissingSourceAsset", self._lobbyAmbientSound.SoundId == "")
 	local camera = Workspace.CurrentCamera or Workspace:FindFirstChildWhichIsA("Camera")
 	self._heartbeatSound.Parent = camera or Workspace
 	self._preparationAmbientSound.Parent = camera or Workspace
+	self._lobbyAmbientSound.Parent = camera or Workspace
 end
 
 function AudioController:Start()
@@ -153,21 +176,26 @@ function AudioController:Start()
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("InMatch"):Connect(function()
 			self:_syncMapReverbFromPlayerState()
 			self:_updatePreparationAmbient()
+			self:_updateLobbyAmbient()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchMapId"):Connect(function()
 			self:_syncMapReverbFromPlayerState()
 			self:_updatePreparationAmbient()
+			self:_updateLobbyAmbient()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MapName"):Connect(function()
 			self:_syncMapReverbFromPlayerState()
 			self:_updatePreparationAmbient()
+			self:_updateLobbyAmbient()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
 			self:_updatePreparationAmbient()
+			self:_updateLobbyAmbient()
 		end))
 	end
 	self:_syncMapReverbFromPlayerState()
 	self:_updatePreparationAmbient()
+	self:_updateLobbyAmbient()
 end
 
 function AudioController:Stop()
@@ -180,12 +208,25 @@ function AudioController:Stop()
 		self._preparationAmbientTween:Cancel()
 		self._preparationAmbientTween = nil
 	end
+	if self._lobbyAmbientTween then
+		self._lobbyAmbientTween:Cancel()
+		self._lobbyAmbientTween = nil
+	end
 
 	if self._heartbeatSound and self._heartbeatSound.Parent then
 		self._heartbeatSound:Stop()
 	end
 	if self._preparationAmbientSound and self._preparationAmbientSound.Parent then
 		self._preparationAmbientSound:Stop()
+	end
+	if self._lobbyAmbientSound and self._lobbyAmbientSound.Parent then
+		self._lobbyAmbientSound:Stop()
+	end
+	local localPlayer = self._player or Players.LocalPlayer
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahLobbyAmbientActive", nil)
+		localPlayer:SetAttribute("PasrahLobbyAmbientSoundId", nil)
+		localPlayer:SetAttribute("PasrahLobbyAmbientMap", nil)
 	end
 end
 
@@ -211,6 +252,34 @@ function AudioController:_tweenPreparationAmbient(targetVolume, tweenInfo, stopA
 		if stopAfterFade and playbackState == Enum.PlaybackState.Completed then
 			if self._preparationAmbientSound and self._preparationAmbientSound.Volume <= 0.001 then
 				self._preparationAmbientSound:Stop()
+			end
+		end
+	end)
+	tween:Play()
+end
+
+function AudioController:_tweenLobbyAmbient(targetVolume, tweenInfo, stopAfterFade)
+	if not self._lobbyAmbientSound then
+		return
+	end
+
+	if self._lobbyAmbientTween then
+		self._lobbyAmbientTween:Cancel()
+		self._lobbyAmbientTween = nil
+	end
+
+	self._lobbyAmbientTargetVolume = targetVolume
+	local tween = TweenService:Create(self._lobbyAmbientSound, tweenInfo or LOBBY_AMBIENT_TWEEN_IN, {
+		Volume = targetVolume,
+	})
+	self._lobbyAmbientTween = tween
+	tween.Completed:Connect(function(playbackState)
+		if self._lobbyAmbientTween == tween then
+			self._lobbyAmbientTween = nil
+		end
+		if stopAfterFade and playbackState == Enum.PlaybackState.Completed then
+			if self._lobbyAmbientSound and self._lobbyAmbientSound.Volume <= 0.001 then
+				self._lobbyAmbientSound:Stop()
 			end
 		end
 	end)
@@ -290,6 +359,8 @@ function AudioController:_onMatchEvent(payload)
 		self:_syncMapReverbFromPlayerState()
 		self:_updateHeartbeat()
 	end
+	self:_updatePreparationAmbient()
+	self:_updateLobbyAmbient()
 end
 
 function AudioController:_updateHeartbeat()
@@ -348,6 +419,38 @@ function AudioController:_updatePreparationAmbient()
 	else
 		if self._preparationAmbientSound.IsPlaying or self._preparationAmbientSound.Volume > 0.001 then
 			self:_tweenPreparationAmbient(0, PREPARATION_AMBIENT_TWEEN_OUT, true)
+		end
+	end
+end
+
+function AudioController:_updateLobbyAmbient()
+	if not self._lobbyAmbientSound or self._lobbyAmbientSound.SoundId == "" then
+		return
+	end
+
+	local localPlayer = self._player or Players.LocalPlayer
+	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
+	local mapProfile = self:_resolveAuthoritativeMapProfile()
+	local shouldPlay = (not inMatch) and mapProfile == "LobbySocialHub"
+
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahLobbyAmbientActive", shouldPlay and true or nil)
+		localPlayer:SetAttribute("PasrahLobbyAmbientSoundId", shouldPlay and tostring(self._lobbyAmbientSound.SoundId or "") or nil)
+		localPlayer:SetAttribute("PasrahLobbyAmbientMap", shouldPlay and tostring(mapProfile or "") or nil)
+	end
+
+	if shouldPlay then
+		self._lobbyAmbientSound.PlaybackSpeed = LOBBY_AMBIENT_PROFILE.PlaybackSpeed
+		if not self._lobbyAmbientSound.IsPlaying then
+			self._lobbyAmbientSound.Volume = 0
+			self._lobbyAmbientSound:Play()
+		end
+		if math.abs(self._lobbyAmbientTargetVolume - LOBBY_AMBIENT_PROFILE.Volume) > 0.001 or not self._lobbyAmbientTween then
+			self:_tweenLobbyAmbient(LOBBY_AMBIENT_PROFILE.Volume, LOBBY_AMBIENT_TWEEN_IN, false)
+		end
+	else
+		if self._lobbyAmbientSound.IsPlaying or self._lobbyAmbientSound.Volume > 0.001 then
+			self:_tweenLobbyAmbient(0, LOBBY_AMBIENT_TWEEN_OUT, true)
 		end
 	end
 end

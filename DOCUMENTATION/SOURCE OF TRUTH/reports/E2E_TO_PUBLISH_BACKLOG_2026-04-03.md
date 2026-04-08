@@ -3630,3 +3630,18 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - evidence HUD sekarang tidak hanya kuat secara visual/teks, tetapi juga mulai punya cue audio yang relevan untuk suhu, writing, dan motion tanpa keluar dari workflow inventory-owned
 
+- progress tambahan pada lane `lobby ambient inventory audio`:
+  - `AudioController` sekarang memegang ambience lobby inventory-owned langsung di owner existing
+  - `LobbyAmbient` memakai `rbxassetid://113854211240490`
+  - active hanya saat `LobbySocialHub` dan `InMatch ~= true`
+  - preparation/match sekarang otomatis memadamkan ambience lobby dan menyerahkan bed ke `PreparationAmbient`
+- validasi terbaru:
+  - build lolos:
+    - `_tmp_lobby_ambient_audio_build.rbxlx`
+  - live:
+    - lobby idle `PasrahLobbyAmbientActive = true`
+    - `CurrentCamera.LobbyAmbient.IsPlaying = true`
+    - sesudah `StartSoloMatch -> PreparationPhase`, `CurrentCamera.LobbyAmbient.Volume = 0` dan `PasrahPreparationAmbientActive = true`
+- backlog impact:
+  - gap publish untuk ambience lobby kini bergeser dari `missing runtime owner` ke `brand/polish mix`, bukan lagi ketiadaan audio lobby yang hidup
+

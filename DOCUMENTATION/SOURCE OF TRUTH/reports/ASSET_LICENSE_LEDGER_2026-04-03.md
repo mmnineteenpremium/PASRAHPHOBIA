@@ -329,6 +329,21 @@ Kesimpulan:
 
 - blocker lisensi/publish aktif kini bukan lagi slot audio canonical kosong, melainkan review brand final dan cleanup legacy asset.
 
+## Update 2026-04-08 20:58 ICT
+
+Batch `lobby ambient inventory audio` menutup ownership runtime untuk ambience hub:
+
+- `LobbyAmbient` kini memakai `rbxassetid://113854211240490`
+- owner runtime aktif:
+  - `src/client/Controllers/Sensory/AudioController.luau`
+- mode pakai:
+  - hanya aktif di `LobbySocialHub`
+  - otomatis fade-out saat masuk match/preparation
+
+Kesimpulan:
+
+- `Midnight Litany of Drones (Ancient Ritual Ambient)` sekarang bukan hanya asset inventory yang terdokumentasi, tetapi juga sudah benar-benar dipakai oleh owner runtime lobby yang aktif.
+
 ## Update 2026-04-05 17:24 ICT
 
 Validasi source eksternal `Pocong` kini ditutup lebih jauh:
