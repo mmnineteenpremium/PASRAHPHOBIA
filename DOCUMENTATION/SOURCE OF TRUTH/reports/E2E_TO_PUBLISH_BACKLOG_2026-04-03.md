@@ -3519,3 +3519,12 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - pemain sekarang bisa membaca perbedaan visual antara slot evidence yang baru siap dengan slot evidence yang benar-benar sudah mengunci hasil
 
+- progress tambahan pada lane `field kit utility preview signal state`:
+  - preview asset untuk `Garam / Salib / Dupa` sekarang tidak lagi diam setelah event penting; preview ikut menandai state hasil utility di HUD
+- validasi terbaru:
+  - `GaramButton = Garam|danger|asset` setelah `SaltTriggered`
+  - `SalibButton = Salib|danger|asset` sesaat sesudah `HuntBlocked`
+  - `DupaButton = Dupa|active|asset` sesudah repel aktif
+- publish impact:
+  - support tool sekarang memberi bahasa visual yang setara dengan teks HUD, jadi pemain tidak harus membaca footer saja untuk tahu utility mereka benar-benar bekerja
+

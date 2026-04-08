@@ -12773,3 +12773,17 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - tool evidence yang belum dipakai tetap:
     - `BukuTerkutukButton = BukuTerkutuk|ready|fallback`
     - `GerakanGaibButton = GerakanGaib|ready|fallback`
+
+- progress tambahan pada lane `field kit utility preview signal state`:
+  - preview asset `Garam / Salib / Dupa` sekarang ikut memberi sinyal state yang lebih tegas saat tool benar-benar bekerja
+- validasi terbaru:
+  - baseline:
+    - `GaramButton = Garam|ready|asset`
+    - `SalibButton = Salib|ready|asset`
+    - `DupaButton = Dupa|ready|asset`
+  - sesudah `Garam` terpicu:
+    - `GaramButton = Garam|danger|asset`
+  - sesudah `Salib` memblok hunt:
+    - `SalibButton = Salib|danger|asset`
+  - sesudah `Dupa` repel:
+    - `DupaButton = Dupa|active|asset`

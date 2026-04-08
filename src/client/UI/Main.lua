@@ -1392,11 +1392,22 @@ local function resolveFieldKitToolPreviewState(toolName, toolState, selected, me
 
 	local usesRemaining = tonumber(toolState.usesRemaining)
 	local chargesRemaining = tonumber(toolState.chargesRemaining)
+	local recentHuntBlock = toolName == "Salib" and ((os.clock() - (tonumber(toolState.huntBlockedAt) or 0)) <= 4)
+	local repellentUntil = tonumber(toolState.repellentUntil)
 	if toolState.pending then
 		return "pending"
 	end
 	if metaDanger or toolState.lastSuccess == false then
 		return "danger"
+	end
+	if toolName == "Garam" and toolState.saltTriggered == true then
+		return "danger"
+	end
+	if toolName == "Salib" and recentHuntBlock then
+		return chargesRemaining ~= nil and chargesRemaining <= 0 and "spent" or "danger"
+	end
+	if toolName == "Dupa" and (toolState.huntRepelled == true or (repellentUntil ~= nil and repellentUntil > os.clock())) then
+		return "active"
 	end
 	if toolName == "Salib" and chargesRemaining ~= nil then
 		return chargesRemaining <= 0 and "spent" or "active"
