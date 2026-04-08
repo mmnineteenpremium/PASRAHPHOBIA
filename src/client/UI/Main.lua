@@ -5466,8 +5466,8 @@ function UISystem:_resetFieldKitToolStates()
 	local journalState = self._journalState or {}
 	journalState.toolStates = createDefaultFieldKitToolStates()
 	journalState.toolType = JOURNAL_TOOL_TYPE
-	journalState.toolStatus = "Field kit siap."
-	journalState.toolReason = "Scan jejak, dengar respons, atau pasang utility sesuai situasi."
+	journalState.toolStatus = "Field kit [1-9] siap."
+	journalState.toolReason = "Pilih tool evidence atau utility sesuai situasi investigasi."
 	journalState.toolSuccess = nil
 	journalState.toolLastUsedAt = 0
 	self._journalState = journalState
@@ -5755,7 +5755,7 @@ function UISystem:_refreshFieldKitPanel()
 	local activeTool = FIELD_KIT_TOOL_CONFIG[state.toolType] and state.toolType or JOURNAL_TOOL_TYPE
 	local activeConfig = FIELD_KIT_TOOL_CONFIG[activeTool] or FIELD_KIT_TOOL_CONFIG[JOURNAL_TOOL_TYPE]
 	local detailText = tostring(state.toolReason or "Pilih tool untuk lanjut investigasi.")
-	local statusText = tostring(state.toolStatus or "Field kit siap.")
+	local statusText = tostring(state.toolStatus or "Field kit [1-9] siap.")
 	local isRecent = (os.clock() - (tonumber(state.toolLastUsedAt) or 0)) <= 4
 	local toolStates = self:_ensureFieldKitToolStates()
 
@@ -13443,7 +13443,7 @@ function UISystem:_ensureBasicUIs()
 				fieldKitStatusLabel.TextWrapped = true
 				fieldKitStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 				fieldKitStatusLabel.TextYAlignment = Enum.TextYAlignment.Top
-				fieldKitStatusLabel.Text = "Field kit siap.\nPilih tool untuk lanjut investigasi."
+				fieldKitStatusLabel.Text = "Field kit [1-9] siap.\nPilih tool untuk lanjut investigasi."
 				fieldKitStatusLabel.Parent = fieldKitFrame
 			end
 
