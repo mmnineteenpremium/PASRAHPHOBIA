@@ -71,6 +71,45 @@ local function resolvePlayerName(player)
 	return nil
 end
 
+local function resolvePlayerInstance(player)
+	if typeof(player) == "Instance" and player:IsA("Player") then
+		return player
+	end
+	return nil
+end
+
+local function stampSanityRuntime(target, payload)
+	if typeof(target) ~= "Instance" then
+		return
+	end
+	target:SetAttribute("PasrahSanityOwner", "SanitySystem")
+	target:SetAttribute("PasrahSanityMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+	target:SetAttribute("PasrahSanityValue", tonumber(payload.sanity))
+	target:SetAttribute("PasrahSanityBand", type(payload.sanityBand) == "string" and payload.sanityBand or nil)
+	target:SetAttribute("PasrahSanityCritical", payload.critical == true)
+	target:SetAttribute("PasrahSanityReason", type(payload.reason) == "string" and payload.reason or nil)
+	target:SetAttribute("PasrahSanityTeamAverage", tonumber(payload.teamAverage))
+	target:SetAttribute("PasrahSanityHuntActive", payload.huntActive == true)
+	target:SetAttribute("PasrahSanityGhostRoomId", type(payload.ghostRoomId) == "string" and payload.ghostRoomId or nil)
+	target:SetAttribute("PasrahSanityLastUpdatedAt", tonumber(payload.updatedAt) or os.clock())
+end
+
+local function clearSanityRuntime(target)
+	if typeof(target) ~= "Instance" then
+		return
+	end
+	target:SetAttribute("PasrahSanityOwner", nil)
+	target:SetAttribute("PasrahSanityMatchId", nil)
+	target:SetAttribute("PasrahSanityValue", nil)
+	target:SetAttribute("PasrahSanityBand", nil)
+	target:SetAttribute("PasrahSanityCritical", nil)
+	target:SetAttribute("PasrahSanityReason", nil)
+	target:SetAttribute("PasrahSanityTeamAverage", nil)
+	target:SetAttribute("PasrahSanityHuntActive", nil)
+	target:SetAttribute("PasrahSanityGhostRoomId", nil)
+	target:SetAttribute("PasrahSanityLastUpdatedAt", nil)
+end
+
 local function classifySanity(value)
 	if value <= 10 then
 		return "hunt_risk"
@@ -155,6 +194,59 @@ function Service:_setSessions(sessions)
 	self._state:Set("sessions", sessions)
 end
 
+function Service:_stampPlayerSanity(matchId, playerOrUserId, reason)
+	local session = self:_sessions()[matchId]
+	if type(session) ~= "table" then
+		return
+	end
+	local userId = resolveUserId(playerOrUserId)
+	if not userId then
+		return
+	end
+	local entry = session.players[userId]
+	if type(entry) ~= "table" then
+		return
+	end
+	local player = resolvePlayerInstance(playerOrUserId) or resolvePlayerInstance(entry.player)
+	if not player then
+		return
+	end
+	stampSanityRuntime(player, {
+		matchId = matchId,
+		sanity = entry.sanity,
+		sanityBand = classifySanity(entry.sanity),
+		critical = entry.criticalFired == true,
+		reason = reason,
+		teamAverage = self:GetAverageTeamSanity(matchId),
+		huntActive = session.huntActive == true,
+		ghostRoomId = session.ghostRoomId,
+		updatedAt = entry.lastUpdatedAt or os.clock(),
+	})
+end
+
+function Service:_stampSessionPlayers(matchId, reason)
+	local session = self:_sessions()[matchId]
+	if type(session) ~= "table" then
+		return
+	end
+	for userId, entry in pairs(session.players or {}) do
+		self:_stampPlayerSanity(matchId, entry.player or { userId = userId }, reason)
+	end
+end
+
+function Service:_clearSessionPlayers(matchId)
+	local session = self:_sessions()[matchId]
+	if type(session) ~= "table" then
+		return
+	end
+	for _, entry in pairs(session.players or {}) do
+		local player = resolvePlayerInstance(entry.player)
+		if player then
+			clearSanityRuntime(player)
+		end
+	end
+end
+
 function Service:_getOrCreateSession(matchId)
 	local sessions = self:_sessions()
 	local session = sessions[matchId]
@@ -204,12 +296,14 @@ function Service:StartMatch(matchId, payloadOrPlayers, difficultyProfile)
 				playerName = resolvePlayerName(player),
 				criticalFired = false,
 			}
+			self:_stampPlayerSanity(matchId, player, "match_started")
 		end
 	end
 	return session
 end
 
 function Service:EndMatch(matchId)
+	self:_clearSessionPlayers(matchId)
 	local sessions = self:_sessions()
 	sessions[matchId] = nil
 	self:_setSessions(sessions)
@@ -218,6 +312,7 @@ end
 function Service:SetGhostRoom(matchId, roomId)
 	local session = self:_getOrCreateSession(matchId)
 	session.ghostRoomId = roomId
+	self:_stampSessionPlayers(matchId, "ghost_room_updated")
 end
 
 function Service:GetSanity(player, matchId)
@@ -256,6 +351,7 @@ function Service:_setSanity(matchId, player, newSanity, reason)
 	local oldValue = session.players[userId].sanity
 	local clamped = clamp(newSanity, self._config.MinSanity, self._config.MaxSanity)
 	session.players[userId].sanity = clamped
+	session.players[userId].lastUpdatedAt = os.clock()
 
 	if oldValue ~= clamped then
 		self:_publish("SanityChanged", {
@@ -294,6 +390,7 @@ function Service:_setSanity(matchId, player, newSanity, reason)
 				reason = reason,
 			})
 		end
+		self:_stampPlayerSanity(matchId, player, reason)
 	end
 	return clamped
 end
@@ -420,11 +517,13 @@ function Service:OnHuntStarted(matchId, payload)
 			self:DrainSanity(player, self._config.HuntDrain, matchId, "hunt_start")
 		end
 	end
+	self:_stampSessionPlayers(matchId, "hunt_started")
 end
 
 function Service:OnHuntEnded(matchId)
 	local session = self:_getOrCreateSession(matchId)
 	session.huntActive = false
+	self:_stampSessionPlayers(matchId, "hunt_ended")
 end
 
 function Service:OnEnvironmentalEvent(matchId, payload)
