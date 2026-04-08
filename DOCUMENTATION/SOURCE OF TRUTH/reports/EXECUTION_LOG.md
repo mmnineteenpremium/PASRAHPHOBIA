@@ -12690,3 +12690,41 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - validasi terbaru:
   - fresh probe `Kuntilanak -> KotakArwah` sekarang sukses deterministic dari jalur studio:
     - `PasrahStudioE2ELastResult = ok=true | action=UseEvidenceTool | result=match=match_1 tool=KotakArwah evidence=Suara`
+
+- progress tambahan pada lane `field kit expansion`:
+  - `Field Kit` sekarang menampilkan 9 tool aktif, bukan hanya 5:
+    - `JejakEnergi`
+    - `Garam`
+    - `Salib`
+    - `Dupa`
+    - `KotakArwah`
+    - `SuhuMembeku`
+    - `BukuTerkutuk`
+    - `BolaArwah`
+    - `GerakanGaib`
+  - grid `Field Kit` sekarang multi-row dan responsif sesuai jumlah tool
+- validasi terbaru:
+  - runtime `FieldKitFrame.Buttons`:
+    - `BolaArwahButton,BukuTerkutukButton,DupaButton,GaramButton,GerakanGaibButton,JejakEnergiButton,KotakArwahButton,SalibButton,SuhuMembekuButton`
+
+- progress tambahan pada lane `remaining evidence tool lock states`:
+  - empat tool evidence utama yang sebelumnya tidak punya surface UI sekarang punya lock state player-facing:
+    - `SuhuMembeku -> -5C / SUHU LOCK`
+    - `BukuTerkutuk -> WRITE / INK LOCK`
+    - `BolaArwah -> ORB / TO'UN LOCK`
+    - `GerakanGaib -> MOVE / DISTURB LOCK`
+- validasi terbaru:
+  - `Banaspati -> SuhuMembeku`:
+    - `Meta = -5C`
+    - `Footer = SUHU LOCK`
+  - `Banaspati -> BolaArwah`:
+    - `Meta = ORB`
+    - `Footer = TO'UN LOCK`
+    - `FieldKitFrame.StatusLabel = Orb terkunci. To'un tervalidasi sebagai evidence.`
+  - `Jerangkong -> BukuTerkutuk`:
+    - `Meta = WRITE`
+    - `Footer = INK LOCK`
+  - `Jerangkong -> GerakanGaib`:
+    - `Meta = MOVE`
+    - `Footer = DISTURB LOCK`
+    - `FieldKitFrame.StatusLabel = Gangguan gerak terkunci. Pengganggu tervalidasi sebagai evidence.`

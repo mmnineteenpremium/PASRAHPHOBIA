@@ -190,7 +190,17 @@ local CLOSE_KEYBOARD_KEY = Enum.KeyCode.Escape
 local CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
 local CLOSE_HINT_TEXT = "[Esc] / [B] / [X] untuk tutup"
 local JOURNAL_TOOL_TYPE = "JejakEnergi"
-local FIELD_KIT_TOOL_ORDER = { "JejakEnergi", "Garam", "Salib", "Dupa", "KotakArwah" }
+local FIELD_KIT_TOOL_ORDER = {
+	"JejakEnergi",
+	"Garam",
+	"Salib",
+	"Dupa",
+	"KotakArwah",
+	"SuhuMembeku",
+	"BukuTerkutuk",
+	"BolaArwah",
+	"GerakanGaib",
+}
 local FIELD_KIT_TOOL_CONFIG = {
 	JejakEnergi = {
 		accent = Color3.fromRGB(66, 104, 146),
@@ -253,6 +263,54 @@ local FIELD_KIT_TOOL_CONFIG = {
 		shortcut = "5",
 		keyCode = Enum.KeyCode.Five,
 	},
+	SuhuMembeku = {
+		accent = Color3.fromRGB(86, 138, 178),
+		glyph = "TM",
+		label = "THERMO",
+		hint = "Cold sweep",
+		openJournal = false,
+		readyMeta = "COLD",
+		readyFooter = "TEMP ARC",
+		role = "Freeze",
+		shortcut = "6",
+		keyCode = Enum.KeyCode.Six,
+	},
+	BukuTerkutuk = {
+		accent = Color3.fromRGB(128, 96, 86),
+		glyph = "BK",
+		label = "WRITING",
+		hint = "Ink trace",
+		openJournal = false,
+		readyMeta = "PAGE",
+		readyFooter = "INK LINK",
+		role = "Ink",
+		shortcut = "7",
+		keyCode = Enum.KeyCode.Seven,
+	},
+	BolaArwah = {
+		accent = Color3.fromRGB(98, 142, 108),
+		glyph = "OR",
+		label = "ORB",
+		hint = "Visual sweep",
+		openJournal = false,
+		readyMeta = "GLOW",
+		readyFooter = "ORB ARC",
+		role = "Orb",
+		shortcut = "8",
+		keyCode = Enum.KeyCode.Eight,
+	},
+	GerakanGaib = {
+		accent = Color3.fromRGB(138, 124, 92),
+		glyph = "MG",
+		label = "MOTION",
+		hint = "Disturb sweep",
+		openJournal = false,
+		readyMeta = "MOVE",
+		readyFooter = "TRACK ARC",
+		role = "Motion",
+		shortcut = "9",
+		keyCode = Enum.KeyCode.Nine,
+	},
 }
 local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 	Garam = {
@@ -274,6 +332,36 @@ local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 		distanceScale = 1.34,
 	},
 }
+local FIELD_KIT_DESKTOP_MAX_COLUMNS = 5
+local FIELD_KIT_MOBILE_MAX_COLUMNS = 3
+
+local function getFieldKitLayoutMetrics(isMobile, availableWidth)
+	local toolCount = math.max(1, #FIELD_KIT_TOOL_ORDER)
+	local maxColumns = isMobile and FIELD_KIT_MOBILE_MAX_COLUMNS or FIELD_KIT_DESKTOP_MAX_COLUMNS
+	local columns = math.min(toolCount, maxColumns)
+	local cellPaddingX = 6
+	local cellPaddingY = 6
+	local cellHeight = isMobile and 66 or 64
+	local minCellWidth = isMobile and 92 or 58
+	local cellWidth = math.floor((math.max(280, availableWidth) - (cellPaddingX * math.max(0, columns - 1))) / columns)
+	local rows = math.max(1, math.ceil(toolCount / columns))
+	local buttonsHeight = (rows * cellHeight) + (math.max(0, rows - 1) * cellPaddingY)
+	local statusY = 34 + buttonsHeight + 8
+	local statusHeight = isMobile and 40 or 36
+	local frameHeight = statusY + statusHeight + 12
+	return {
+		columns = columns,
+		rows = rows,
+		cellPaddingX = cellPaddingX,
+		cellPaddingY = cellPaddingY,
+		cellWidth = math.max(minCellWidth, cellWidth),
+		cellHeight = cellHeight,
+		buttonsHeight = buttonsHeight,
+		statusY = statusY,
+		statusHeight = statusHeight,
+		frameHeight = frameHeight,
+	}
+end
 local lobbyZonePartCache = {}
 
 local function createDefaultFieldKitToolState(toolType)
@@ -3595,6 +3683,18 @@ local function resolveToolFeedback(toolType, success, reason, data, eventName)
 		elseif toolType == "KotakArwah" and evidenceType == "Suara" then
 			status = "Respons suara terkunci."
 			detail = "Suara tervalidasi sebagai evidence."
+		elseif toolType == "SuhuMembeku" and evidenceType == "Suhu" then
+			status = "Suhu beku terkunci."
+			detail = "Suhu tervalidasi sebagai evidence."
+		elseif toolType == "BukuTerkutuk" and evidenceType == "BukuTerkutuk" then
+			status = "Tulisan gaib terkunci."
+			detail = "Buku terkutuk tervalidasi sebagai evidence."
+		elseif toolType == "BolaArwah" and evidenceType == "To'un" then
+			status = "Orb terkunci."
+			detail = "To'un tervalidasi sebagai evidence."
+		elseif toolType == "GerakanGaib" and evidenceType == "Pengganggu" then
+			status = "Gangguan gerak terkunci."
+			detail = "Pengganggu tervalidasi sebagai evidence."
 		else
 			status = "Evidence berhasil dibaca."
 			detail = evidenceType ~= "" and string.format("%s tervalidasi sebagai evidence.", evidenceType) or "Evidence berhasil dikunci."
@@ -5524,6 +5624,45 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 			return "SENYAP", false, "VOICE NULL"
 		end
 		return tostring(config.readyMeta or "READY"), false, tostring(config.readyFooter or config.role or "UTILITY")
+	end
+	if toolType == "SuhuMembeku" then
+		local evidenceType = tostring(toolState.lastEvidenceType or "")
+		local temperatureC = tonumber(feedbackData and feedbackData.temperatureC)
+		if evidenceType == "Suhu" or (feedbackData and feedbackData.freezing == true) then
+			local displayTemp = temperatureC and math.floor(temperatureC) or -5
+			return string.format("%dC", displayTemp), false, "SUHU LOCK"
+		end
+		if toolState.lastSuccess == false and toolState.lastReason == "ghost_out_of_range" then
+			return "WARM", false, "TEMP NULL"
+		end
+		return tostring(config.readyMeta or "COLD"), false, tostring(config.readyFooter or config.role or "UTILITY")
+	end
+	if toolType == "BukuTerkutuk" then
+		if tostring(toolState.lastEvidenceType or "") == "BukuTerkutuk" or (feedbackData and feedbackData.writingAppeared == true) then
+			return "WRITE", false, "INK LOCK"
+		end
+		if toolState.lastSuccess == false and toolState.lastReason == "ghost_out_of_range" then
+			return "BLANK", false, "PAGE NULL"
+		end
+		return tostring(config.readyMeta or "PAGE"), false, tostring(config.readyFooter or config.role or "UTILITY")
+	end
+	if toolType == "BolaArwah" then
+		if tostring(toolState.lastEvidenceType or "") == "To'un" or (feedbackData and feedbackData.ghostOrbDetected == true) then
+			return "ORB", false, "TO'UN LOCK"
+		end
+		if toolState.lastSuccess == false and toolState.lastReason == "ghost_out_of_range" then
+			return "DARK", false, "ORB NULL"
+		end
+		return tostring(config.readyMeta or "GLOW"), false, tostring(config.readyFooter or config.role or "UTILITY")
+	end
+	if toolType == "GerakanGaib" then
+		if tostring(toolState.lastEvidenceType or "") == "Pengganggu" or (feedbackData and feedbackData.motionDetected == true) then
+			return "MOVE", false, "DISTURB LOCK"
+		end
+		if toolState.lastSuccess == false and toolState.lastReason == "ghost_out_of_range" then
+			return "CALM", false, "TRACK NULL"
+		end
+		return tostring(config.readyMeta or "MOVE"), false, tostring(config.readyFooter or config.role or "UTILITY")
 	end
 	return tostring(config.readyMeta or "READY"), false, string.upper(tostring(config.readyFooter or config.role or "UTILITY"))
 end
@@ -9793,8 +9932,9 @@ function UISystem:_applyDeviceSizing()
 	end
 	if match and match.FieldKitFrame then
 		local kitWidth = profile.isMobile and math.min(viewportSize.X - 20, 420) or 356
-		local kitHeight = profile.isMobile and 164 or 156
-		match.FieldKitFrame.Size = UDim2.fromOffset(math.max(profile.isMobile and 316 or 332, math.floor(kitWidth)), kitHeight)
+		local frameWidth = math.max(profile.isMobile and 316 or 332, math.floor(kitWidth))
+		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, frameWidth - 24)
+		match.FieldKitFrame.Size = UDim2.fromOffset(frameWidth, fieldKitLayout.frameHeight)
 		if profile.isMobile then
 			match.FieldKitFrame.AnchorPoint = Vector2.new(0.5, 1)
 			match.FieldKitFrame.Position = UDim2.new(0.5, 0, 1, -(60 + bottomRightInset.Y))
@@ -9809,21 +9949,20 @@ function UISystem:_applyDeviceSizing()
 		match.FieldKitTitle.TextSize = profile.isMobile and 12 or 11
 	end
 	if match and match.FieldKitButtonsFrame then
+		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset - 24 or 332)
 		match.FieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
-		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, profile.isMobile and 66 or 64)
+		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, fieldKitLayout.buttonsHeight)
 	end
 	if match and match.FieldKitGrid and match.FieldKitFrame then
-		local availableWidth = math.max(280, match.FieldKitFrame.Size.X.Offset - 24)
-		local toolCount = math.max(1, #FIELD_KIT_TOOL_ORDER)
-		local cellPadding = profile.isMobile and 6 or 6
-		local cellWidth = math.floor((availableWidth - (cellPadding * math.max(0, toolCount - 1))) / toolCount)
-		local minCellWidth = toolCount >= 5 and 56 or (profile.isMobile and 72 or 76)
-		match.FieldKitGrid.CellPadding = UDim2.fromOffset(cellPadding, 0)
-		match.FieldKitGrid.CellSize = UDim2.fromOffset(math.max(minCellWidth, cellWidth), profile.isMobile and 66 or 64)
+		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame.Size.X.Offset - 24)
+		match.FieldKitGrid.CellPadding = UDim2.fromOffset(fieldKitLayout.cellPaddingX, fieldKitLayout.cellPaddingY)
+		match.FieldKitGrid.CellSize = UDim2.fromOffset(fieldKitLayout.cellWidth, fieldKitLayout.cellHeight)
+		match.FieldKitGrid.FillDirectionMaxCells = fieldKitLayout.columns
 	end
 	if match and match.FieldKitStatusLabel then
-		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, profile.isMobile and 108 or 106)
-		match.FieldKitStatusLabel.Size = UDim2.new(1, -24, 0, profile.isMobile and 40 or 36)
+		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset - 24 or 332)
+		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, fieldKitLayout.statusY)
+		match.FieldKitStatusLabel.Size = UDim2.new(1, -24, 0, fieldKitLayout.statusHeight)
 		match.FieldKitStatusLabel.TextSize = profile.isMobile and 12 or 11
 	end
 	if self._uxWidgets and self._uxWidgets.windows then
@@ -13229,11 +13368,12 @@ function UISystem:_ensureBasicUIs()
 
 			local fieldKitFrame = gui:FindFirstChild("FieldKitFrame")
 			if not fieldKitFrame then
+				local defaultFieldKitLayout = getFieldKitLayoutMetrics(false, 332)
 				fieldKitFrame = Instance.new("Frame")
 				fieldKitFrame.Name = "FieldKitFrame"
 				fieldKitFrame.AnchorPoint = Vector2.new(0, 1)
 				fieldKitFrame.Position = UDim2.new(0, 16, 1, -60)
-				fieldKitFrame.Size = UDim2.fromOffset(356, 146)
+				fieldKitFrame.Size = UDim2.fromOffset(356, defaultFieldKitLayout.frameHeight)
 				fieldKitFrame.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
 				fieldKitFrame.BackgroundTransparency = 0.08
 				fieldKitFrame.BorderSizePixel = 0
@@ -13269,19 +13409,20 @@ function UISystem:_ensureBasicUIs()
 
 			local fieldKitButtonsFrame = fieldKitFrame:FindFirstChild("Buttons")
 			if not fieldKitButtonsFrame then
+				local defaultFieldKitLayout = getFieldKitLayoutMetrics(false, 332)
 				fieldKitButtonsFrame = Instance.new("Frame")
 				fieldKitButtonsFrame.Name = "Buttons"
 				fieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
-				fieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, 58)
+				fieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, defaultFieldKitLayout.buttonsHeight)
 				fieldKitButtonsFrame.BackgroundTransparency = 1
 				fieldKitButtonsFrame.Parent = fieldKitFrame
 
 				local fieldKitGrid = Instance.new("UIGridLayout")
 				fieldKitGrid.Name = "Grid"
-				fieldKitGrid.CellPadding = UDim2.fromOffset(6, 0)
-				fieldKitGrid.CellSize = UDim2.fromOffset(79, 56)
+				fieldKitGrid.CellPadding = UDim2.fromOffset(defaultFieldKitLayout.cellPaddingX, defaultFieldKitLayout.cellPaddingY)
+				fieldKitGrid.CellSize = UDim2.fromOffset(defaultFieldKitLayout.cellWidth, defaultFieldKitLayout.cellHeight)
 				fieldKitGrid.FillDirection = Enum.FillDirection.Horizontal
-				fieldKitGrid.FillDirectionMaxCells = 4
+				fieldKitGrid.FillDirectionMaxCells = defaultFieldKitLayout.columns
 				fieldKitGrid.HorizontalAlignment = Enum.HorizontalAlignment.Left
 				fieldKitGrid.SortOrder = Enum.SortOrder.LayoutOrder
 				fieldKitGrid.VerticalAlignment = Enum.VerticalAlignment.Top
@@ -13290,10 +13431,11 @@ function UISystem:_ensureBasicUIs()
 
 			local fieldKitStatusLabel = fieldKitFrame:FindFirstChild("StatusLabel")
 			if not fieldKitStatusLabel then
+				local defaultFieldKitLayout = getFieldKitLayoutMetrics(false, 332)
 				fieldKitStatusLabel = Instance.new("TextLabel")
 				fieldKitStatusLabel.Name = "StatusLabel"
-				fieldKitStatusLabel.Position = UDim2.fromOffset(12, 98)
-				fieldKitStatusLabel.Size = UDim2.new(1, -24, 0, 36)
+				fieldKitStatusLabel.Position = UDim2.fromOffset(12, defaultFieldKitLayout.statusY)
+				fieldKitStatusLabel.Size = UDim2.new(1, -24, 0, defaultFieldKitLayout.statusHeight)
 				fieldKitStatusLabel.BackgroundTransparency = 1
 				fieldKitStatusLabel.Font = Enum.Font.Gotham
 				fieldKitStatusLabel.TextSize = 11
