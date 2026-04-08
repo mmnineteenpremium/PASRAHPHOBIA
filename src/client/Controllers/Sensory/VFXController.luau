@@ -635,6 +635,17 @@ local function normalizeMapProfileName(mapName)
 	return normalized
 end
 
+local function stampVFXInstance(effect, channel, mapProfile, lifecyclePhase, preparationTool)
+	if typeof(effect) ~= "Instance" then
+		return
+	end
+	effect:SetAttribute("PasrahVFXOwner", "VFXController")
+	effect:SetAttribute("PasrahVFXChannel", tostring(channel or effect.Name))
+	effect:SetAttribute("PasrahVFXMapProfile", type(mapProfile) == "string" and mapProfile ~= "" and mapProfile or nil)
+	effect:SetAttribute("PasrahVFXLifecyclePhase", type(lifecyclePhase) == "string" and lifecyclePhase ~= "" and lifecyclePhase or nil)
+	effect:SetAttribute("PasrahVFXPreparationTool", type(preparationTool) == "string" and preparationTool ~= "" and preparationTool or nil)
+end
+
 function VFXController:Init(context)
 	self._context = context or {}
 	self._remotes = self._context.Remotes or {}
@@ -718,6 +729,21 @@ function VFXController:Start()
 		end))
 	end
 	self:_syncMapVisualProfileFromPlayerState()
+end
+
+function VFXController:_stampPersistentVFXIdentity()
+	local localPlayer = Players.LocalPlayer
+	local lifecyclePhase = tostring(localPlayer and localPlayer:GetAttribute("MatchLifecyclePhase") or "")
+	local preparationTool = tostring(localPlayer and localPlayer:GetAttribute("PreparationFocusTool") or "")
+	local mapProfile = self._activeMapProfileName or self:_resolveAuthoritativeMapProfile() or "LobbySocialHub"
+	stampVFXInstance(self._sanityCorrection, "SanityGrading", mapProfile, lifecyclePhase, preparationTool)
+	stampVFXInstance(self._threatCorrection, "ThreatGrading", mapProfile, lifecyclePhase, preparationTool)
+	stampVFXInstance(self._mapCorrection, "MapGrading", mapProfile, lifecyclePhase, preparationTool)
+	stampVFXInstance(self._ghostBlur, "GhostBlur", mapProfile, lifecyclePhase, preparationTool)
+	stampVFXInstance(self._mapBloom, "MapBloom", mapProfile, lifecyclePhase, preparationTool)
+	stampVFXInstance(self._mapDepthOfField, "MapDepthOfField", mapProfile, lifecyclePhase, preparationTool)
+	stampVFXInstance(self._mapSunRays, "MapSunRays", mapProfile, lifecyclePhase, preparationTool)
+	stampVFXInstance(self._atmosphere, "Atmosphere", mapProfile, lifecyclePhase, preparationTool)
 end
 
 function VFXController:_recordVFXDebug(eventName, profileName)
@@ -901,6 +927,7 @@ function VFXController:_ensureRuntimeVFXFolder()
 		folder.Name = "RuntimeVFX"
 		folder.Parent = Workspace
 	end
+	stampVFXInstance(folder, "RuntimeVFX", self._activeMapProfileName, nil, nil)
 	return folder
 end
 
@@ -912,6 +939,11 @@ function VFXController:_spawnShadowApparition(centerPosition)
 	local model = Instance.new("Model")
 	model.Name = "ShadowApparitionRuntime"
 	model.Parent = self:_ensureRuntimeVFXFolder()
+	model:SetAttribute("PasrahVFXOwner", "VFXController")
+	model:SetAttribute("PasrahVFXChannel", "RuntimeShadowApparition")
+	model:SetAttribute("PasrahVFXEvent", "EnvironmentalAudioTriggered")
+	model:SetAttribute("PasrahVFXProfile", "shadowapparition")
+	model:SetAttribute("PasrahVFXMapProfile", self._activeMapProfileName or nil)
 
 	local torso = Instance.new("Part")
 	torso.Name = "Torso"
@@ -1461,6 +1493,7 @@ function VFXController:_applyPreparationVisualProfile(mapName)
 		localPlayer:SetAttribute("PasrahVFXPreparationActive", isPreparation and true or nil)
 		localPlayer:SetAttribute("PasrahVFXPreparationTool", isPreparation and (focusTool ~= "" and focusTool or nil) or nil)
 	end
+	self:_stampPersistentVFXIdentity()
 end
 
 function VFXController:_applyMapVisualProfile(mapName)
@@ -1477,6 +1510,7 @@ function VFXController:_applyMapVisualProfile(mapName)
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahVFXMapProfile", resolvedMapName)
 	end
+	self:_stampPersistentVFXIdentity()
 end
 
 function VFXController:_resolveAuthoritativeMapProfile()

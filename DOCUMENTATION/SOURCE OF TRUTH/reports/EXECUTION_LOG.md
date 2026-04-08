@@ -13068,8 +13068,24 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `GaramButton` carried `PasrahPreviewOwner=UI`, `PasrahPreviewKind=FieldKitTool`, `PasrahPreviewToolType=Garam`, `PasrahPreviewUsesAssetTemplate=true`, `PasrahPreviewState=ready`
   - lobby training previews after `LobbyTrainingRotate` and `LobbyTrainingUseSupport`:
     - `TrainingPreview` carried `PasrahPreviewOwner=UI`, `PasrahPreviewKind=Ghost`, `PasrahPreviewGhostType=HantuTanah`, `PasrahPreviewUsesAssetTemplate=false`, `VisualTemplateName=HantuTanah`
-    - `GaramSupportCard.ToolPreview` carried `PasrahPreviewOwner=UI`, `PasrahPreviewKind=FieldKitTool`, `PasrahPreviewToolType=Garam`, `PasrahPreviewState=active`
+- `GaramSupportCard.ToolPreview` carried `PasrahPreviewOwner=UI`, `PasrahPreviewKind=FieldKitTool`, `PasrahPreviewToolType=Garam`, `PasrahPreviewState=active`
 - Build passed: `_tmp_ui_preview_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 02:24:18 +07:00 - Stamp Runtime VFX Identity
+- Status: DONE.
+- `Client.Controllers.Sensory.VFXController` now stamps direct identity attrs onto persistent lighting/post-processing effects and runtime apparition VFX, so VFX state no longer has to be inferred only from player attrs or effect names.
+- Live Studio proof:
+  - lobby idle:
+    - `Lighting.SensoryMapGrading` carried `PasrahVFXOwner=VFXController`, `PasrahVFXChannel=MapGrading`, `PasrahVFXMapProfile=LobbySocialHub`
+    - `Lighting.SensoryMapBloom` carried `PasrahVFXChannel=MapBloom`
+    - `Lighting.HorrorAtmosphere` carried `PasrahVFXChannel=Atmosphere`
+  - `PreparationPhase` after `SetPreparationFocusTool=EMF`:
+    - `SensoryMapGrading`, `SensoryMapBloom`, and `HorrorAtmosphere` all carried `PasrahVFXMapProfile=HauntedHouse`, `PasrahVFXLifecyclePhase=PreparationPhase`, `PasrahVFXPreparationTool=EMF`
+  - runtime apparition:
+    - `Workspace.RuntimeVFX` carried `PasrahVFXOwner=VFXController`, `PasrahVFXChannel=RuntimeVFX`, `PasrahVFXMapProfile=HauntedHouse`
+    - `Workspace.RuntimeVFX.ShadowApparitionRuntime` carried `PasrahVFXChannel=RuntimeShadowApparition`, `PasrahVFXEvent=EnvironmentalAudioTriggered`, `PasrahVFXProfile=shadowapparition`
+- Build passed: `_tmp_vfx_runtime_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.
 
 ## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
