@@ -13058,6 +13058,45 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 04:57:26 +07:00 - Stamp Door Runtime Identity
+- Updated `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua` so live door runtime now stamps direct state/identity attrs onto the actual door parts and proximity prompts instead of leaving door state implicit in prompt text and object memory only.
+- Door runtime instances now expose:
+  - `PasrahDoorOwner`
+  - `PasrahDoorChannel`
+  - `PasrahDoorMatchId`
+  - `PasrahDoorObjectId`
+  - `PasrahDoorLabel`
+  - `PasrahDoorRouteSubtitle`
+  - `PasrahDoorPolicy`
+  - `PasrahDoorStateText`
+  - `PasrahDoorIsOpen`
+  - `PasrahDoorLocked`
+  - `PasrahDoorNearestApproachDistance`
+  - `PasrahDoorLastInteractionSource`
+- Build passed: `_tmp_door_runtime_identity_build.rbxlx`.
+- Live Studio proof:
+  - baseline `Door_LivingRoom`:
+    - `DoorPart.PasrahDoorOwner=DoorRuntime`
+    - `DoorPart.PasrahDoorChannel=DoorPart`
+    - `DoorPart.PasrahDoorMatchId=match_1`
+    - `DoorPart.PasrahDoorObjectId=Door_LivingRoom`
+    - `DoorPart.PasrahDoorLabel=Pintu Livingroom`
+    - `DoorPart.PasrahDoorRouteSubtitle=Area investigasi`
+    - `DoorPart.PasrahDoorPolicy=HybridRadiusPrompt`
+    - `DoorPart.PasrahDoorStateText=Tertutup`
+    - `DoorPart.PasrahDoorIsOpen=false`
+  - matching prompt baseline:
+    - `DoorPrompt.PasrahDoorChannel=DoorPrompt`
+    - `DoorPrompt.PasrahDoorPromptActionText=Buka Pintu`
+    - `DoorPrompt.PasrahDoorPromptObjectText=Pintu Livingroom`
+  - after moving the player close to `Door_LivingRoom`, the runtime auto-open path became explicit:
+    - `DoorPart.PasrahDoorIsOpen=true`
+    - `DoorPart.PasrahDoorStateText=Terbuka`
+    - `DoorPart.PasrahDoorNearestApproachDistance=1`
+    - `DoorPart.PasrahDoorLastInteractionSource=DoorRuntimeAuto`
+    - `DoorPrompt.PasrahDoorPromptActionText=Tutup Pintu`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 04:53:58 +07:00 - Stamp Hiding Safe Zone Runtime Identity
 - Updated `src/ServerScriptService/Server/HidingSystem/Service.lua` so runtime safe zones now publish direct zone identity/state attrs instead of hiding safe-zone state only in service memory and player attrs.
 - `SafeZone` parts now expose:

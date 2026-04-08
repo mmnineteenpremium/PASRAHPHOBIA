@@ -3704,6 +3704,33 @@ Urutan yang paling masuk akal dari titik sekarang:
 - GetQAGateReadiness is pass_with_manual_multiplayer; GetPublishReadiness remains overall=fail in Studio because persistence=mock and obuxMissingId=10.
 - Studio stop-test reporting rule followed.
 
+## 2026-04-09 04:57:26 +07:00 - Stamp Door Runtime Identity
+- Status: DONE.
+- `Server.MatchSystem.DoorRuntime` now exposes direct runtime attrs on live door parts and prompts so entry/interior door state is readable from Studio without inferring it from prompt copy alone.
+- Live Studio proof:
+  - `Door_LivingRoom` baseline:
+    - `PasrahDoorOwner=DoorRuntime`
+    - `PasrahDoorChannel=DoorPart`
+    - `PasrahDoorMatchId=match_1`
+    - `PasrahDoorObjectId=Door_LivingRoom`
+    - `PasrahDoorLabel=Pintu Livingroom`
+    - `PasrahDoorRouteSubtitle=Area investigasi`
+    - `PasrahDoorPolicy=HybridRadiusPrompt`
+    - `PasrahDoorStateText=Tertutup`
+    - `PasrahDoorIsOpen=false`
+  - matching prompt baseline:
+    - `PasrahDoorChannel=DoorPrompt`
+    - `PasrahDoorPromptActionText=Buka Pintu`
+    - `PasrahDoorPromptObjectText=Pintu Livingroom`
+  - after moving close to the door:
+    - `PasrahDoorIsOpen=true`
+    - `PasrahDoorStateText=Terbuka`
+    - `PasrahDoorNearestApproachDistance=1`
+    - `PasrahDoorLastInteractionSource=DoorRuntimeAuto`
+    - `PasrahDoorPromptActionText=Tutup Pintu`
+- Build passed: `_tmp_door_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
 ## 2026-04-09 04:53:58 +07:00 - Stamp Hiding Safe Zone Runtime Identity
 - Status: DONE.
 - `Server.HidingSystem.Service` now exposes direct runtime attrs on safe-zone parts so hunt refuge state is readable from the world instances themselves, not only from player attrs.
