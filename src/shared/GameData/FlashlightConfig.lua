@@ -12,7 +12,7 @@ local FlashlightConfig = {
 		lensOffset = CFrame.new(0, 0, -1.14),
 	},
 	sound = {
-		soundId = "rbxassetid://115959318",
+		soundId = "rbxassetid://140513388846872",
 		volume = 0.32,
 		playbackSpeed = 1,
 		rollOffMinDistance = 4,

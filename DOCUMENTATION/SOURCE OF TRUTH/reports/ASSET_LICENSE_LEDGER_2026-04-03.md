@@ -51,31 +51,52 @@ Aturan baca:
        - `AssetTypeId = 3`
      - asset ini sekarang dianggap internal/account-owned untuk workspace aktif ini
 
-2. `EnvironmentalCreak_01`
+2. `AmbientLoop_Main`
    - Asset:
-     - `rbxassetid://139204195403262`
+     - `rbxassetid://140704980462451`
+   - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `Midnight Litany of Drones (Ancient Ritual Ambient)`
+     - batch `2026-04-08` menutup status kosong/placeholder ambience canonical
+     - slot ini sekarang dipakai langsung oleh lookup ambience modern di client
+
+3. `EnvironmentalCreak_01`
+   - Asset:
+     - `rbxassetid://111282528409948`
    - Source in repo:
      - `src/ReplicatedStorage/Assets/Audio/Environment/EnvironmentalCreak_01.model.json`
    - Provenance status:
      - `verified`
    - Notes:
-     - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
-     - validasi client live menunjukkan `EnvironmentalAudioRuntime` benar-benar `IsPlaying = true`
+     - asset aktif di inventory akun: `door_creak_3`
+     - canonical creak runtime sekarang tidak lagi berbagi ID dengan `GhostManifest_01`
 
-3. `GhostManifest_01`
+4. `GhostManifest_01`
    - Asset:
-     - `rbxassetid://83336813491039`
+     - `rbxassetid://139204195403262`
    - Source in repo:
      - `src/ReplicatedStorage/Assets/Audio/Ghost/GhostManifest_01.model.json`
    - Provenance status:
      - `verified`
    - Notes:
-     - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
-     - validasi client live menunjukkan `GhostAudioRuntime` benar-benar `IsPlaying = true`
-     - asset ini sekarang juga dipakai oleh `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
-     - validasi client live `2026-04-03` membuktikan template `GhostWhisper_01` sekarang `IsLoaded = true` dan `IsPlaying = true` setelah restart playtest
+     - asset aktif di inventory akun: `creaky-door-open`
+     - `GhostManifest_01` dan `GhostWhisper_01` sekarang memang sudah dipisah lagi sebagai template berbeda
 
-4. `HuntStart_01`
+5. `GhostWhisper_01`
+   - Asset:
+     - `rbxassetid://98105844059537`
+   - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/Ghost/GhostWhisper_01.model.json`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `ghost_whisper_3`
+     - batch `2026-04-08` menutup reuse lama `GhostManifest_01` sebagai whisper
+
+6. `HuntStart_01`
    - Asset:
      - `rbxassetid://138329686293368`
    - Source in repo:
@@ -83,22 +104,70 @@ Aturan baca:
    - Provenance status:
      - `verified`
    - Notes:
-     - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
-     - dipakai juga sebagai `TeleportDrop_01`
-     - validasi client live menunjukkan `HuntAudioRuntime` benar-benar `IsPlaying = true`
+     - asset aktif di inventory akun: `horror-deep-drum-heartbeat`
+     - `HuntStart_01` tidak lagi dibagi dengan `TeleportDrop_01`
 
-5. `CountdownTick_01`
+7. `TeleportDrop_01`
    - Asset:
-     - `rbxassetid://101202336513383`
+     - `rbxassetid://82086363159443`
+   - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/UI/TeleportDrop_01.model.json`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `drop_002`
+     - batch `2026-04-08` menutup reuse `HuntStart_01` sebagai drop cue
+
+8. `CountdownTick_01`
+   - Asset:
+     - `rbxassetid://81830522846878`
    - Source in repo:
      - `src/ReplicatedStorage/Assets/Audio/UI/CountdownTick_01.model.json`
    - Provenance status:
      - `verified`
    - Notes:
-     - validasi live `MarketplaceService:GetProductInfo()` pada `2026-04-03` menunjukkan creator `ZyraaaVex`
+     - asset aktif di inventory akun: `tick_001`
      - dipakai untuk countdown overlay canonical
 
-6. Footstep set
+9. `ButtonClick_01`
+   - Asset:
+     - `rbxassetid://85056627192723`
+   - Source in repo:
+     - `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+     - `src/client/UI/Main.lua`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `click5`
+     - batch `2026-04-08` menutup fallback lama `rbxassetid://115959318`
+
+10. `Flashlight toggle`
+   - Asset:
+     - `rbxassetid://140513388846872`
+   - Source in repo:
+     - `src/shared/GameData/FlashlightConfig.lua`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `switch15`
+     - dipakai oleh toggle flashlight investigasi aktif
+
+11. `DoorRuntime default pair`
+   - Asset IDs:
+     - open `rbxassetid://83005562781593`
+     - close `rbxassetid://78764817933410`
+   - Source in repo:
+     - `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua`
+     - `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun:
+       - `doorOpen_2`
+       - `doorClose_1`
+     - pasangan default dunia sekarang tidak lagi memakai reuse manifest/whisper
+
+12. Footstep set
    - Asset IDs:
      - `rbxassetid://104336169985098`
      - `rbxassetid://79900103772577`
@@ -114,7 +183,7 @@ Aturan baca:
      - asset sudah source-controlled
      - belum masuk jalur locomotion modern, jadi statusnya legal/runtime-ready tetapi belum gameplay-live
 
-7. `Jumpscare_01`
+13. `Jumpscare_01`
    - Asset:
      - `rbxassetid://138186576`
    - Source in repo:
@@ -127,21 +196,6 @@ Aturan baca:
        - `IsPublicDomain = true`
      - `AssetTypeId = 3`
      - asset ini tidak lagi dianggap abu-abu untuk publish gate
-
-8. `ButtonClick_01`
-   - Asset:
-     - `rbxassetid://115959318`
-   - Source in repo:
-     - `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
-     - `src/client/UI/Main.lua`
-   - Provenance status:
-     - `verified`
-   - Notes:
-     - `ButtonClick_01` sekarang memakai signature click runtime canonical
-     - validasi live `2026-04-05` membuktikan template source membaca `rbxassetid://115959318`
-   - Publish gate:
-     - aman sebagai cue UI canonical saat ini
-     - tetap boleh diganti nanti jika brand audio final berubah
 
 ### Animation active
 
@@ -168,17 +222,12 @@ Aturan baca:
 
 ## Active Runtime Assets That Must Be Replaced Or Documented
 
-1. Remaining unresolved audio slots
-   - Source in repo:
-     - `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
-   - Provenance status:
-     - `replace/remove` (until ambience final diisi lagi)
-   - Notes:
-     - slot ambience sengaja dikosongkan lagi (`AudioContent = ""`) untuk menghindari overlap dengan `Heartbeat`
-     - sebelumnya slot ini sempat memakai ID heartbeat yang sama, sehingga diagnosis audio runtime bisa bias/dobel
-     - status publish untuk ambience kembali `open` sampai asset ambience final legal di-upload
-   - Replacement queue:
-     - lihat `reports/AUDIO_REPLACEMENT_PLAN_2026-04-03.md` bila ingin ambience khusus brand
+Tidak ada slot audio canonical yang masih kosong untuk batch active runtime saat ini.
+
+Replacement berikutnya bersifat opsional/presentational:
+
+1. review apakah `AmbientLoop_Main` saat ini sudah final secara brand, atau hanya baseline ambience yang cukup aman untuk sekarang
+2. review apakah `GhostManifest_01` dan `HuntStart_01` perlu signature artistik yang lebih kuat pada art pass audio final
 
 ## Legacy-Only Assets
 
@@ -201,12 +250,29 @@ Status:
    - nama author
    - syarat attribution
    - opsional: screenshot license page bila ingin pack audit manual yang lebih lengkap
-2. Finalisasi keputusan ambience loop (`AmbientLoop_Main`) apakah dipertahankan sebagai placeholder account-owned atau diganti cue brand final.
-3. Upload candidate audio legal ke akun Roblox aktif lalu isi `AudioContent` source dengan asset ID final jika ingin mengganti placeholder saat ini.
+2. Review apakah ambience/hunt/manifest saat ini sudah final secara brand atau masih baseline inventory-owned yang akan dipoles lagi.
+3. Upload candidate audio legal ke akun Roblox aktif hanya jika ingin mengganti signature yang sekarang.
 4. Putuskan nasib asset `LegacyDisabled`:
    - hapus dari source
    - atau dokumentasikan ownership-nya
 5. Jangan aktifkan monetization publik sebelum audit legacy asset tersisa ditutup dan attribution runtime final tetap terlihat jelas di experience.
+
+## Update 2026-04-08 20:05 ICT
+
+Batch canonical inventory sync menutup gap aktif berikut:
+
+- `AmbientLoop_Main` tidak lagi kosong; sekarang memakai `rbxassetid://140704980462451`
+- `EnvironmentalCreak_01` dipindah ke `rbxassetid://111282528409948`
+- `GhostWhisper_01` dipindah ke `rbxassetid://98105844059537`
+- `ButtonClick_01` dipindah ke `rbxassetid://85056627192723`
+- `CountdownTick_01` dipindah ke `rbxassetid://81830522846878`
+- `TeleportDrop_01` dipindah ke `rbxassetid://82086363159443`
+- `DoorRuntime` default open/close sekarang memakai `doorOpen_2` dan `doorClose_1`
+- `Flashlight toggle` sekarang memakai `switch15`
+
+Kesimpulan:
+
+- blocker lisensi/publish aktif kini bukan lagi slot audio canonical kosong, melainkan review brand final dan cleanup legacy asset.
 
 ## Update 2026-04-05 17:24 ICT
 

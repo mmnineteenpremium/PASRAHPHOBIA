@@ -12874,3 +12874,27 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - audio yang sebelumnya masih pending sekarang sudah terkunci juga:
     - `switch15 -> rbxassetid://140513388846872`
     - `impactPunch_medium_002 -> rbxassetid://126504722314888`
+
+- progress tambahan pada lane `canonical audio inventory apply`:
+  - slot audio canonical yang sebelumnya kosong/fallback sekarang dipasang ke asset upload Roblox yang sudah benar-benar ada di inventory akun aktif
+  - source yang diselaraskan:
+    - `AmbientLoop_Main -> rbxassetid://140704980462451`
+    - `EnvironmentalCreak_01 -> rbxassetid://111282528409948`
+    - `GhostWhisper_01 -> rbxassetid://98105844059537`
+    - `ButtonClick_01 -> rbxassetid://85056627192723`
+    - `CountdownTick_01 -> rbxassetid://81830522846878`
+    - `TeleportDrop_01 -> rbxassetid://82086363159443`
+  - owner script aktif yang ikut diselaraskan:
+    - `DoorRuntime` / `MapRuntimePatches`
+      - open `rbxassetid://83005562781593`
+      - close `rbxassetid://78764817933410`
+    - `FlashlightConfig.sound.soundId -> rbxassetid://140513388846872`
+- validasi edit-time Studio `PASRAHPHOBIA.rbxlx`:
+  - `AmbientLoop_Main.SoundId = rbxassetid://140704980462451`
+  - `EnvironmentalCreak_01.SoundId = rbxassetid://111282528409948`
+  - `GhostWhisper_01.SoundId = rbxassetid://98105844059537`
+  - `ButtonClick_01.SoundId = rbxassetid://85056627192723`
+  - `CountdownTick_01.SoundId = rbxassetid://81830522846878`
+  - `TeleportDrop_01.SoundId = rbxassetid://82086363159443`
+- publish impact:
+  - inventory upload yang memang sudah ada sekarang benar-benar masuk ke owner runtime canonical, jadi batch audio tidak lagi menggantung di path lokal/raw asset atau placeholder lama

@@ -33,6 +33,22 @@ Ringkasan kebutuhan vs tersedia:
 - File audio di `ReplicatedStorage/Assets/Audio`: tersedia `6`
 - Raw source audio di `src/Asset Project/*.mp3`: tersedia, tapi belum terlihat terintegrasi ke runtime asset folder
 
+Update 2026-04-08:
+- bagian audit ini sudah **stale** untuk owner audio canonical utama
+- slot berikut sekarang **sudah terisi** dengan asset upload Roblox akun aktif dan tidak lagi boleh dibaca sebagai placeholder kosong:
+  - `AmbientLoop_Main`
+  - `EnvironmentalCreak_01`
+  - `GhostWhisper_01`
+  - `ButtonClick_01`
+  - `CountdownTick_01`
+  - `TeleportDrop_01`
+- tambahan owner script aktif juga sudah tersinkron:
+  - `DoorRuntime` default open/close
+  - `FlashlightConfig.sound.soundId`
+- rujukan canonical terbaru:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/ROBLOX_INVENTORY_SYNC_LEDGER_2026-04-08.md`
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/ASSET_LICENSE_LEDGER_2026-04-03.md`
+
 | Nama asset | Status | Catatan kebutuhan |
 |---|---|---|
 | `Assets/Audio/Ambient/AmbientLoop_Main` | PLACEHOLDER | Ada file, tapi ID termasuk daftar `BROKEN_IDS` di `AudioSanitizer` (berpotensi diganti runtime). |
