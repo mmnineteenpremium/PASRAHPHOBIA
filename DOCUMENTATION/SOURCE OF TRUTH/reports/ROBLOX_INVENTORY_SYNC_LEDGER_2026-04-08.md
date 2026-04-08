@@ -33,12 +33,28 @@ Dokumen ini dipakai untuk mencegah kebingungan berikutnya:
   - `101` audio
   - `11` model
 
-## Ringkasan Sinkronisasi
+## Deep Scan Lokal
 
-- audio inventory dengan exact-name local match:
-  - `92 / 101`
-- audio inventory tanpa exact-name local match:
-  - `9 / 101`
+- deep scan seluruh proyek lokal menemukan:
+  - `613` file audio
+  - `564` nama stem unik
+- sumber lokal bukan hanya `asset mentah/`, tetapi seluruh path proyek yang relevan, termasuk:
+  - `asset mentah/...`
+  - `src/Asset Project/...`
+- konsekuensinya:
+  - angka sinkronisasi lama yang memakai subset folder memang terlalu kecil
+
+## Ringkasan Sinkronisasi Yang Sudah Dikoreksi
+
+- inventory audio:
+  - `101` row
+  - `100` nama unik
+- exact-name match antara inventory audio dan lokal:
+  - `99 / 100` nama unik inventory
+- inventory audio tanpa pasangan exact-name di lokal:
+  - `1 / 100`
+- local-only audio:
+  - `465` nama stem unik
 - model inventory dengan exact-name local match:
   - `1 / 11`
 - model inventory lain tetap tercatat, tetapi tidak boleh otomatis dianggap canonical runtime hanya karena ada di inventory
@@ -46,14 +62,19 @@ Dokumen ini dipakai untuk mencegah kebingungan berikutnya:
 ## Audio Inventory Tanpa Exact-Name Local Match
 
 - `rbxassetid://140704980462451` `Midnight Litany of Drones (Ancient Ritual Ambient)`
-- `rbxassetid://79900103772577` `concrete footstep`
-- `rbxassetid://138329686293368` `horror-deep-drum-heartbeat`
-- `rbxassetid://90448271562175` `metal footstep`
-- `rbxassetid://83336813491039` `creaking-public-toilet-door`
-- `rbxassetid://101202336513383` `hard-horror-hit-drum`
-- `rbxassetid://139204195403262` `creaky-door-open`
-- `rbxassetid://138884191945388` `single-heart-beat`
-- `rbxassetid://104336169985098` `wood footstep`
+
+Catatan:
+
+- item yang sebelumnya sempat saya tandai `inventory-only` seperti:
+  - `concrete footstep`
+  - `horror-deep-drum-heartbeat`
+  - `metal footstep`
+  - `creaking-public-toilet-door`
+  - `hard-horror-hit-drum`
+  - `creaky-door-open`
+  - `single-heart-beat`
+  - `wood footstep`
+- ternyata punya pasangan lokal di `src/Asset Project/`
 
 ## Exact-Name Local Match Yang Penting
 
@@ -193,6 +214,11 @@ Dokumen ini dipakai untuk mencegah kebingungan berikutnya:
 ## Catatan Operasional
 
 - `switch15` dan `impactPunch_medium_002` sekarang **sudah tidak pending**; asset id keduanya sudah terkunci.
+- pass sebelumnya memang salah membaca scope lokal; sekarang ledger ini memakai deep scan seluruh proyek, bukan subset folder.
+- local audio memang jauh lebih besar dari inventory upload saat ini:
+  - `613` file lokal
+  - `564` nama stem unik
+  - inventory baru `100` nama audio unik
 - exact-name model match memang baru `genderuwo`; `pocong PASRAHPHIA` dan `kuntilanak_Iv Pole Walking` tetap tercatat di inventory, tetapi nama file lokal owner-nya tidak exact-match satu banding satu.
 - kalau nanti ada raw asset baru yang relevan, workflow yang benar tetap:
   1. cek raw asset lokal sebagai referensi/nama canonical

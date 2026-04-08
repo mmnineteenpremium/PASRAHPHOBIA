@@ -12862,9 +12862,14 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - snapshot yang terkunci di `ROBLOX_INVENTORY_SYNC_LEDGER_2026-04-08.md` sekarang berisi:
     - `101` audio
     - `11` model
-  - hasil compare ke repo:
-    - `92 / 101` audio exact-match ke raw asset lokal
-    - `9 / 101` audio inventory-only
+  - deep scan koreksi ke seluruh proyek lokal membuktikan pass subset sebelumnya terlalu sempit
+  - hasil compare yang benar setelah scan penuh:
+    - `613` file audio lokal
+    - `564` nama stem audio unik lokal
+    - `100` nama audio unik di inventory
+    - `99 / 100` nama inventory exact-match ke lokal
+    - `1 / 100` inventory-only: `Midnight Litany of Drones (Ancient Ritual Ambient)`
+    - `465` nama audio lokal masih belum ada di inventory
     - `1 / 11` model exact-match (`genderuwo`)
   - audio yang sebelumnya masih pending sekarang sudah terkunci juga:
     - `switch15 -> rbxassetid://140513388846872`
