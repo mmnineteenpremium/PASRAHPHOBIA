@@ -1407,6 +1407,9 @@ local function resolveFieldKitToolPreviewState(toolName, toolState, selected, me
 	if toolState.visualPlaced == true then
 		return "active"
 	end
+	if type(toolState.lastEvidenceType) == "string" and toolState.lastEvidenceType ~= "" then
+		return "active"
+	end
 	if selected then
 		return "focus"
 	end

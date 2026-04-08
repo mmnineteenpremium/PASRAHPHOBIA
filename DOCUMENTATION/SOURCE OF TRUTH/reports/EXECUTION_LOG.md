@@ -12761,3 +12761,15 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - semua `ToolPreview` live:
     - `previewVisible = true`
     - `hasWorld = true`
+
+- progress tambahan pada lane `field kit evidence preview active state`:
+  - preview tool evidence yang sudah benar-benar lock sekarang tidak lagi tetap terlihat `ready`
+  - jalur preview kini naik ke state `active` saat `lastEvidenceType` sudah terisi
+- validasi terbaru:
+  - `KotakArwah -> Suara`:
+    - `KotakArwahButton = KotakArwah|active|fallback`
+  - `SuhuMembeku -> Suhu`:
+    - `SuhuMembekuButton = SuhuMembeku|active|fallback`
+  - tool evidence yang belum dipakai tetap:
+    - `BukuTerkutukButton = BukuTerkutuk|ready|fallback`
+    - `GerakanGaibButton = GerakanGaib|ready|fallback`

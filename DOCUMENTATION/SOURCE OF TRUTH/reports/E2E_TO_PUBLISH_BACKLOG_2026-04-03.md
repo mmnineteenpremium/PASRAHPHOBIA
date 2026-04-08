@@ -3509,3 +3509,13 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - `Field Kit` sekarang tidak punya slot evidence utama yang kosong secara visual hanya karena asset 3D final belum tersedia
 
+- progress tambahan pada lane `field kit evidence preview active state`:
+  - preview tool evidence fallback sekarang ikut naik ke state aktif ketika evidence benar-benar sudah lock
+- validasi terbaru:
+  - `KotakArwahButton = KotakArwah|active|fallback`
+  - `SuhuMembekuButton = SuhuMembeku|active|fallback`
+  - `BukuTerkutukButton = BukuTerkutuk|ready|fallback`
+  - `GerakanGaibButton = GerakanGaib|ready|fallback`
+- publish impact:
+  - pemain sekarang bisa membaca perbedaan visual antara slot evidence yang baru siap dengan slot evidence yang benar-benar sudah mengunci hasil
+
