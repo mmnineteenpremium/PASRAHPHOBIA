@@ -1930,6 +1930,8 @@ local function createDefaultMatchResult()
 		ppReward = 0,
 		ppBreakdown = {},
 		xpReward = 0,
+		royalPassXP = 0,
+		dailyProgress = 0,
 	}
 end
 
@@ -4893,6 +4895,8 @@ function UISystem:_onServerEvent(remoteName, payload)
 					ppReward = payload.ppReward or payload.ppAmount or previousResult.ppReward or 0,
 					ppBreakdown = payload.ppBreakdown or previousResult.ppBreakdown or {},
 					xpReward = payload.xpReward or previousResult.xpReward or 0,
+					royalPassXP = payload.royalPassXP or previousResult.royalPassXP or 0,
+					dailyProgress = payload.dailyProgress or previousResult.dailyProgress or 0,
 				}
 			end
 			self._profileState.totalGames = (tonumber(self._profileState.totalGames) or 0) + 1
@@ -4916,6 +4920,8 @@ function UISystem:_onServerEvent(remoteName, payload)
 				self._matchResult.ppReward = payload.ppReward or payload.ppAmount or self._matchResult.ppReward
 				self._matchResult.ppBreakdown = payload.ppBreakdown or self._matchResult.ppBreakdown or {}
 				self._matchResult.xpReward = payload.xpReward or self._matchResult.xpReward
+				self._matchResult.royalPassXP = payload.royalPassXP or self._matchResult.royalPassXP
+				self._matchResult.dailyProgress = payload.dailyProgress or self._matchResult.dailyProgress
 			end
 			self._uiState.PASRA_UI.lastEvent = eventName
 			self._uiState.PASRA_UI.visible = false
@@ -6845,6 +6851,8 @@ function UISystem:_stampResultsUIInstance(instance, channel, payload, result, mi
 	instance:SetAttribute("PasrahResultsCurrencyReward", type(result) == "table" and tonumber(result.currencyReward) or 0)
 	instance:SetAttribute("PasrahResultsPPReward", type(result) == "table" and tonumber(result.ppReward) or 0)
 	instance:SetAttribute("PasrahResultsXPReward", type(result) == "table" and tonumber(result.xpReward) or 0)
+	instance:SetAttribute("PasrahResultsRoyalPassXP", type(result) == "table" and tonumber(result.royalPassXP) or 0)
+	instance:SetAttribute("PasrahResultsDailyProgress", type(result) == "table" and tonumber(result.dailyProgress) or 0)
 	instance:SetAttribute("PasrahResultsMissionFailed", missionFailed == true)
 	instance:SetAttribute("PasrahResultsCloseUnlocked", closeUnlocked == true)
 end
@@ -6925,8 +6933,14 @@ function UISystem:_renderResultsPanel(payload)
 			self._matchResult and self._matchResult.ppReward or 0,
 			self._matchResult and self._matchResult.ppBreakdown or nil
 		)
+		local rewardResult = self._matchResult or createDefaultMatchResult()
+		local progressionFooter = string.format(
+			" RP XP %d | Daily %d",
+			math.floor(tonumber(rewardResult.royalPassXP or 0) or 0),
+			math.floor(tonumber(rewardResult.dailyProgress or 0) or 0)
+		)
 		match.ResultsFooter.Text = closeUnlocked
-			and (ppFooter .. " Tekan tombol lanjut untuk kembali ke lobby flow.")
+			and (ppFooter .. progressionFooter .. " Tekan tombol lanjut untuk kembali ke lobby flow.")
 			or "Hasil match fullscreen dikunci 5 detik agar semua pemain sempat membaca hasil."
 	end
 	self:_updateMatchSummaryRows(match.ResultsSummaryRows, "Results")
@@ -9701,6 +9715,8 @@ function UISystem:_refreshPasraPanel()
 		string.format("Hadiah MM: %s", tostring(math.floor(tonumber(result.currencyReward or 0) or 0))),
 		string.format("Hadiah PP: %s", tostring(math.floor(tonumber(result.ppReward or 0) or 0))),
 		string.format("Hadiah XP: %s", tostring(math.floor(tonumber(result.xpReward or 0) or 0))),
+		string.format("Royal Pass XP: %s", tostring(math.floor(tonumber(result.royalPassXP or 0) or 0))),
+		string.format("Daily Progress: %s", tostring(math.floor(tonumber(result.dailyProgress or 0) or 0))),
 		string.format("Last Event: %s", tostring(self._pasraState.lastEvent or "Idle")),
 	}, "\n")
 	self:_refreshWindowText(

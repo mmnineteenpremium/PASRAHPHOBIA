@@ -4190,3 +4190,16 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `XpRow` -> `PasrahResultsUIChannel=ResultsXPRow`, `PasrahResultsRowText=222`
 - Build passed: `_tmp_results_ui_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 05:39:18 +07:00 - Surface Reward Progress On Results UI
+- Status: DONE.
+- `Client.UI.Main` now carries `royalPassXP` and `dailyProgress` inside client match results, stamps them onto `ResultsPanel`, and surfaces them in existing result summaries instead of leaving them hidden on player attrs only.
+- Live Studio proof:
+  - `ResultsPanel` -> `PasrahResultsRoyalPassXP=99`, `PasrahResultsDailyProgress=2`
+  - `ResultsFooter` after unlock:
+    - `PP: Tebakan benar +1 • Selamat hidup +1 RP XP 99 | Daily 2 Tekan tombol lanjut untuk kembali ke lobby flow.`
+  - `PASRA_UI` content summary now includes:
+    - `Royal Pass XP: 99`
+    - `Daily Progress: 2`
+- Build passed: `_tmp_results_reward_progress_build.rbxlx`.
+- Studio stop-test reporting rule followed.
