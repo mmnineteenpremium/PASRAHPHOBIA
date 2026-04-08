@@ -13121,6 +13121,22 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
       - `PasrahResultsRowText=222`
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 05:39:18 +07:00 - Surface Reward Progress On Results UI
+- Updated `src/client/UI/Main.lua` so client match result state now carries `royalPassXP` and `dailyProgress`, then propagates both into `ResultsPanel` attrs and player-facing summary copy.
+- Build passed: `_tmp_results_reward_progress_build.rbxlx`.
+- Live Studio proof after `StartSoloMatch -> EndMatch`:
+  - canonical reward owner remained:
+    - `PasrahRewardOwner=RewardCalculationSystem`
+  - `ResultsPanel` attrs now carry progression:
+    - `PasrahResultsRoyalPassXP=99`
+    - `PasrahResultsDailyProgress=2`
+  - `ResultsFooter` text now surfaces that same progression after result unlock:
+    - `PP: Tebakan benar +1 • Selamat hidup +1 RP XP 99 | Daily 2 Tekan tombol lanjut untuk kembali ke lobby flow.`
+  - `PASRA_UI` content summary now includes:
+    - `Royal Pass XP: 99`
+    - `Daily Progress: 2`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 09:36:40 +07:00 - Stamp Sanity Runtime Identity
 - Updated `src/ServerScriptService/Server/SanitySystem/Service.lua` so server-authoritative sanity state now writes direct runtime attrs on the player instead of staying implicit inside service state.
 - Build passed: `_tmp_sanity_runtime_identity_build.rbxlx`.
