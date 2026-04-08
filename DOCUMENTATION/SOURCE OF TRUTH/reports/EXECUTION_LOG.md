@@ -10,6 +10,45 @@ Setiap entry mencatat:
 - validasi
 - blocker atau next step
 
+## 2026-04-08 17:11 ICT
+
+### Task
+
+Kunci identity cloud Roblox yang canonical agar workflow Studio tidak lagi drift antara `file lokal .rbxlx` dan `place publish`.
+
+### Linked Issues
+
+- context Studio ambigu antara `PlaceId = 0` vs place publish
+- audit `Toolbox -> Inventory / My Audio / My Models` tidak boleh lagi menebak-nebak session
+
+### Files Changed
+
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/ROBLOX_CLOUD_PLACE_IDENTITY_2026-04-08.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/SESSION_START_CHECKLIST.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/README.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/executionmode.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/E2E_TO_PUBLISH_BACKLOG_2026-04-03.md`
+
+### Change Summary
+
+- simpan identity cloud yang sudah terverifikasi live:
+  - `game.PlaceId = 113010869463813`
+  - `game.GameId = 9802743087`
+  - `game.Name = Place2`
+  - `game.CreatorId = 10576163165`
+- tegaskan bahwa repo lokal tetap source of truth, tetapi task yang butuh context akun/cloud harus memakai identity cloud canonical ini
+- tambahkan startup gate agar sesi baru tidak lagi mengaudit inventory/private upload pada session `PlaceId = 0`
+
+### Validation Plan
+
+- cek live Studio published session menampilkan:
+  - `PlaceId = 113010869463813`
+  - `GameId = 9802743087`
+  - `Name = Place2`
+  - `CreatorId = 10576163165`
+- gunakan dokumen identity ini pada task berikutnya yang menyentuh `Toolbox -> Inventory`
+
 ## 2026-04-03 23:56 ICT
 
 ### Task
