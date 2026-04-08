@@ -13136,3 +13136,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - mesh size `0.05999999865889549, 0.07000000029802322, 0.07000000029802322`
   - Forced `Banaspati` spawned as `GhostPlaceholder_Banaspati`, `PlaceholderVisual=true`, with no Pocong mesh fallback.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 00:07:41 +07:00 - Stabilize Ghost Runtime Snapshot And Align Lobby Ghost Fit
+- Fixed `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua` so Studio E2E ghost snapshot actions no longer silently fail:
+  - added the missing `HttpService` dependency
+  - `GetGhostRuntimeSnapshot` now writes `PasrahStudioGhostRuntimeSnapshot` on `ReplicatedStorage` and the requesting `Player`
+  - request dispatch is now wrapped so handler exceptions surface as `handler_error` instead of leaving stale result attributes
+- Updated `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua` so lobby ghost training visuals read shared tuning from `src/shared/GameData/GhostVisualTuning.lua` before asset-local profile modules.
+- Changed lobby runtime ghost fitting to scale models both down and up toward target bounds, removing the old behavior where small imported ghost assets stayed miniature in lobby training.
+- Build passed: `_tmp_ghost_runtime_visual_batch_build.rbxlx`.
+- Live Studio proof after fresh play sessions:
+  - `GetGhostRuntimeSnapshot` now works authoritatively:
+    - forced `Genderuwo` spawned as `Workspace.ActiveMatches.Match_match_1.Ghost_Genderuwo`
+    - `placeholder=false`, `visualTemplateName=Genderuwo`
+    - `ForceManifest` advanced snapshot state from `Idle` to `Manifest`
+  - second clean run:
+    - forced `Leak` spawned as `Workspace.ActiveMatches.Match_match_1.Ghost_Leak`
+    - `placeholder=false`, `visualTemplateName=Leak`
+    - snapshot remained live through `PreparationPhase -> InvestigationPhase -> ForceManifest`
+  - lobby training ghost fit now matches shared tuning:
+    - `Genderuwo` visual extents `2.870, 5.800, 1.505`
+    - `Kuntilanak` visual extents `3.485, 4.800, 1.754`
+    - `Leak` visual extents `1.846, 4.800, 2.287`
+- Roblox Studio was returned to STOP TEST before logging.

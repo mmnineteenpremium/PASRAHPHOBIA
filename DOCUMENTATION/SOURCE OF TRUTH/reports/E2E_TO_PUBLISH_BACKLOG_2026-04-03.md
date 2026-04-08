@@ -3743,3 +3743,20 @@ Urutan yang paling masuk akal dari titik sekarang:
   - forced `Banaspati` spawned as `GhostPlaceholder_Banaspati`, so ghost types without local model no longer masquerade as Pocong
 - Build passed: `_tmp_pocong_visual_guard_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 00:07:41 +07:00 - Stabilize Ghost Runtime Snapshot And Align Lobby Ghost Fit
+- Status: DONE.
+- `StudioE2EControlSystem` ghost snapshot flow is now reliable enough for live runtime verification:
+  - fixed missing `HttpService`
+  - snapshot JSON now persists to `PasrahStudioGhostRuntimeSnapshot`
+  - handler failures no longer stay silent behind stale result attributes
+- `LobbySocialHub` ghost training visuals now consume shared `GhostVisualTuning` and fit imported ghost models toward target bounds in both directions, not just downscaling oversized models.
+- Live Studio proof:
+  - forced `Genderuwo` match actor spawned with `placeholder=false`, then reached manifest state through the repaired snapshot path
+  - forced `Leak` match actor spawned with `placeholder=false` and remained visible through `Preparation -> Investigation -> ForceManifest`
+  - lobby training visuals now fit to shared tuning bounds for:
+    - `Genderuwo`
+    - `Kuntilanak`
+    - `Leak`
+- Build passed: `_tmp_ghost_runtime_visual_batch_build.rbxlx`.
+- Studio stop-test reporting rule followed.

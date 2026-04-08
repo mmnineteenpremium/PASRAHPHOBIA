@@ -1069,9 +1069,53 @@ local function coerceProfileVector3(value)
     return nil
 end
 
+local function resolveSharedGameDataModule(moduleName)
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if not ok or typeof(replicatedStorage) ~= "Instance" then
+        return nil
+    end
+
+    local shared = replicatedStorage:FindFirstChild("Shared") or replicatedStorage:FindFirstChild("shared")
+    if not shared then
+        return nil
+    end
+    local gameData = shared:FindFirstChild("GameData")
+    if not gameData then
+        return nil
+    end
+    local moduleScript = gameData:FindFirstChild(moduleName)
+    if moduleScript and moduleScript:IsA("ModuleScript") then
+        return moduleScript
+    end
+    return nil
+end
+
+local function safeRequireModule(moduleScript)
+    if not (moduleScript and moduleScript:IsA("ModuleScript")) then
+        return nil
+    end
+    local ok, result = pcall(require, moduleScript)
+    if ok and type(result) == "table" then
+        return result
+    end
+    return nil
+end
+
 local function resolveGhostVisualProfileTargetBounds(ghostType)
     if type(ghostType) ~= "string" or ghostType == "" then
         return nil
+    end
+
+    local sharedTuning = safeRequireModule(resolveSharedGameDataModule("GhostVisualTuning"))
+    local ghosts = type(sharedTuning) == "table" and sharedTuning.ghosts or nil
+    local sharedConfig = type(ghosts) == "table" and ghosts[ghostType] or nil
+    if type(sharedConfig) == "table" then
+        local sharedBounds = coerceProfileVector3(sharedConfig.targetBounds) or coerceProfileVector3(sharedConfig.meshSize)
+        if sharedBounds then
+            return sharedBounds
+        end
     end
 
     local ok, replicatedStorage = pcall(function()
@@ -1084,12 +1128,8 @@ local function resolveGhostVisualProfileTargetBounds(ghostType)
     local assets = replicatedStorage:FindFirstChild("Assets")
     local profilesFolder = assets and assets:FindFirstChild("GhostVisualProfiles")
     local moduleScript = profilesFolder and profilesFolder:FindFirstChild(ghostType)
-    if not (moduleScript and moduleScript:IsA("ModuleScript")) then
-        return nil
-    end
-
-    local okProfile, profile = pcall(require, moduleScript)
-    if not okProfile or type(profile) ~= "table" then
+    local profile = safeRequireModule(moduleScript)
+    if type(profile) ~= "table" then
         return nil
     end
 
@@ -1111,16 +1151,12 @@ local function clampRuntimeModelBounds(model, targetBounds)
         return false
     end
 
-    if extents.X <= targetBounds.X and extents.Y <= targetBounds.Y and extents.Z <= targetBounds.Z then
-        return false
-    end
-
     local scaleMultiplier = math.min(
         targetBounds.X / extents.X,
         targetBounds.Y / extents.Y,
         targetBounds.Z / extents.Z
     )
-    if scaleMultiplier <= 0 then
+    if scaleMultiplier <= 0 or math.abs(scaleMultiplier - 1) <= 1e-3 then
         return false
     end
 
