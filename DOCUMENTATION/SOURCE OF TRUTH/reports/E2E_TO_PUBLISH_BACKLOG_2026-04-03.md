@@ -3704,6 +3704,37 @@ Urutan yang paling masuk akal dari titik sekarang:
 - GetQAGateReadiness is pass_with_manual_multiplayer; GetPublishReadiness remains overall=fail in Studio because persistence=mock and obuxMissingId=10.
 - Studio stop-test reporting rule followed.
 
+## 2026-04-09 04:49:59 +07:00 - Stamp Survival Runtime Identity
+- Status: DONE.
+- `Client.UI.Main` now stamps direct runtime attrs onto the active hunt/hide UI instances so survival state is readable from Studio without inferring it from text only.
+- `Client.MovementController` now exposes sprint, target speed, backward penalty, and move magnitude directly on the player/humanoid/root runtime path.
+- `Server.PlayerHealthSystem.Service` now publishes authoritative hunt-pressure attrs for threat, distance, exposure, grace, and hidden state.
+- Live Studio proof:
+  - sprint hot path:
+    - `PasrahMovementSprinting=true`
+    - `PasrahMovementTargetSpeed=14`
+    - `PasrahMovementCurrentWalkSpeed=14`
+    - `PasrahMovementMoveMagnitude=1`
+  - backward movement hot path:
+    - `PasrahMovementBackwardPenalty=true`
+    - `PasrahMovementTargetSpeed=6.5`
+  - forced hunt authoritative path:
+    - `PasrahGhostSessionState=Hunting`
+    - `PasrahGhostHuntActive=true`
+    - `PasrahHuntPressureThreatState=Warn`
+    - `PasrahHuntPressureGraceValue=6`
+  - hidden safe-zone path:
+    - `PasrahHideState=Hidden`
+    - `PasrahHideZoneId=SafeZone_1`
+    - `PasrahHuntPressureHidden=true`
+    - `PasrahHuntPressureThreatState=Sheltered`
+    - `MatchControlsHintLabel.PasrahMatchHintText=SAFEZONE 1  •  DIAM  •  TUNGGU`
+    - `ObjectiveLabel.PasrahMatchObjectiveText=Tetap diam di SafeZone 1 sampai hunt selesai.`
+    - `HuntStatusBadge.PasrahHuntBadgeText=HIDDEN`
+    - `HuntOverlay.PasrahHuntOverlayVisible=true`
+- Build passed: `_tmp_survival_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
 ## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
 - Status: DONE.
 - Runtime audio coverage expanded again using uploaded Roblox inventory asset IDs only; raw local audio files remain reference/source only.

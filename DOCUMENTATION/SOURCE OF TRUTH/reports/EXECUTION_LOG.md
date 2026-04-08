@@ -13058,6 +13058,47 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 04:49:59 +07:00 - Stamp Survival Runtime Identity
+- Updated `src/client/UI/Main.lua` so live survival UI state now stamps direct runtime attrs onto the real match instances that are active in Studio, instead of leaving hunt/hide state implicit in text only.
+- Updated `src/client/MovementController.client.lua` so sprint, target speed, backward penalty, and move magnitude now publish direct runtime attrs onto the player, humanoid, and root part.
+- Updated `src/ServerScriptService/Server/PlayerHealthSystem/Service.lua` so authoritative hunt pressure now publishes direct player attrs for threat state, distance, exposure, grace, and hidden status.
+- Build passed: `_tmp_survival_runtime_identity_build.rbxlx`.
+- Live Studio proof:
+  - sprint while holding `W + LeftShift`:
+    - `PasrahMovementOwner=MovementController`
+    - `PasrahMovementSprinting=true`
+    - `PasrahMovementTargetSpeed=14`
+    - `PasrahMovementCurrentWalkSpeed=14`
+    - `PasrahMovementMoveMagnitude=1`
+  - backward penalty while holding `S`:
+    - `PasrahMovementBackwardPenalty=true`
+    - `PasrahMovementTargetSpeed=6.5`
+    - `PasrahMovementCurrentWalkSpeed=6.5`
+  - forced hunt authoritative attrs:
+    - `PasrahHuntPressureOwner=PlayerHealthSystem`
+    - `PasrahGhostSessionState=Hunting`
+    - `PasrahGhostHuntActive=true`
+    - `PasrahHuntPressureThreatState=Warn`
+    - `PasrahHuntPressureGraceValue=6`
+  - hide/shelter runtime state after `EnterHide`:
+    - `PasrahHideState=Hidden`
+    - `PasrahHideZoneId=SafeZone_1`
+    - `PasrahHuntPressureHidden=true`
+    - `PasrahHuntPressureThreatState=Sheltered`
+    - `PasrahHuntPressureExposureValue=0`
+  - active match UI instances carried the same state directly:
+    - `MatchControlsHintLabel.PasrahMatchUIChannel=MatchControlsHintLabel`
+    - `MatchControlsHintLabel.PasrahMatchUIViewState=Hunt`
+    - `MatchControlsHintLabel.PasrahHideState=Hidden`
+    - `MatchControlsHintLabel.PasrahHuntThreatState=Sheltered`
+    - `MatchControlsHintLabel.PasrahMatchHintText=SAFEZONE 1  •  DIAM  •  TUNGGU`
+    - `ObjectiveLabel.PasrahMatchObjectiveText=Tetap diam di SafeZone 1 sampai hunt selesai.`
+    - `HuntStatusBadge.PasrahHuntBadgeText=HIDDEN`
+    - `HuntAssistLabel.PasrahHuntAssistRoute=POSISI AMAN: SAFEZONE 1`
+    - `HuntAssistLabel.PasrahHuntAssistSupport=DIAM  •  TUNGGU  •  JANGAN KELUAR`
+    - `HuntOverlay.PasrahHuntOverlayVisible=true`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 02:13:41 +07:00 - Stamp UI Preview Runtime Identity
 - Status: DONE.
 - `Client.UI.Main` now stamps direct runtime identity attrs onto viewport preview clones instead of leaving field-kit and training previews anonymous.
