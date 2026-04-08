@@ -1,6 +1,8 @@
 local SystemRegistry = {}
 SystemRegistry.__index = SystemRegistry
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local SYSTEM_GROUP_ORDER = {
     "CoreSystems",
     "GameSystems",
@@ -145,6 +147,16 @@ local function validateLifecycle(systemName, system)
         system.Shutdown = function() end
     end
     return true
+end
+
+local function setStudioBootTrace(attributeName, value)
+    if not game:GetService("RunService"):IsStudio() then
+        return
+    end
+    if type(attributeName) ~= "string" or attributeName == "" then
+        return
+    end
+    ReplicatedStorage:SetAttribute(attributeName, value)
 end
 
 local function isSystemContainer(candidate)
@@ -361,13 +373,16 @@ function SystemRegistry:Initialize()
                 end
             end
             local t0 = os.clock()
+            setStudioBootTrace("PasrahRegistryInitCursor", systemName)
             local initOk, initError = pcall(function()
                 system:Init()
             end)
             local t1 = os.clock()
             if not initOk then
+                setStudioBootTrace("PasrahRegistryFailure", string.format("%s:Init:%s", systemName, tostring(initError)))
                 error(string.format("[Registry] %s Init failed: %s", systemName, tostring(initError)))
             end
+            setStudioBootTrace("PasrahRegistryInitDone", systemName)
             loadedSystems[systemName] = true
             print(string.format("[%s] Init", systemName))
             print(string.format("[Registry] %s Init %d ms", systemName, math.floor((t1 - t0) * 1000)))
@@ -394,19 +409,24 @@ function SystemRegistry:Start()
             warn(string.format("[Registry] Missing Start() for %s", systemName))
         else
             local t2 = os.clock()
+            setStudioBootTrace("PasrahRegistryStartCursor", systemName)
             local startOk, startError = pcall(function()
                 system:Start()
             end)
             local t3 = os.clock()
             if not startOk then
+                setStudioBootTrace("PasrahRegistryFailure", string.format("%s:Start:%s", systemName, tostring(startError)))
                 error(string.format("[Registry] %s Start failed: %s", systemName, tostring(startError)))
             end
+            setStudioBootTrace("PasrahRegistryStartDone", systemName)
             print(string.format("[Registry] %s Start %d ms", systemName, math.floor((t3 - t2) * 1000)))
         end
     end
 
     local bootEnd = os.clock()
     self._started = true
+    setStudioBootTrace("PasrahRegistryFailure", nil)
+    setStudioBootTrace("PasrahRegistryStarted", true)
     print("[Registry] All systems started")
     local bootStart = self._bootStart or bootEnd
     print("[Registry] Boot completed in", math.floor((bootEnd - bootStart) * 1000), "ms")

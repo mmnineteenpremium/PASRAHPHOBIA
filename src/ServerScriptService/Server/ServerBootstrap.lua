@@ -88,6 +88,50 @@ local function ensureStudioRuntimeSystem(systemRegistry, systemName, readyAttrib
     end
 end
 
+local function ensureEvidenceGatewayBinding(systemRegistry)
+    if not RunService:IsStudio() then
+        return
+    end
+
+    local evidenceSystem = nil
+    if type(systemRegistry) == "table" and type(systemRegistry.Get) == "function" then
+        local ok, result = pcall(function()
+            return systemRegistry:Get("EvidenceSystem")
+        end)
+        if ok then
+            evidenceSystem = result
+        end
+    end
+
+    if type(evidenceSystem) ~= "table" then
+        warn("[Bootstrap] Evidence gateway verify skipped: missing EvidenceSystem")
+        return
+    end
+
+    local controller = evidenceSystem.Controller
+    if type(controller) ~= "table" then
+        warn("[Bootstrap] Evidence gateway verify skipped: missing controller")
+        return
+    end
+
+    if controller._handlersRegistered ~= true and type(controller.RegisterEventHandlers) == "function" then
+        controller:RegisterEventHandlers()
+    end
+
+    local gateway = controller._gateway
+    if type(gateway) == "table" and type(gateway._bindRemoteFunction) == "function" then
+        gateway:_bindRemoteFunction()
+    end
+
+    local ready = ReplicatedStorage:GetAttribute("PasrahEvidenceGatewayReady") == true
+    ReplicatedStorage:SetAttribute("PasrahEvidenceBootstrapVerified", ready)
+    if ready then
+        print("[Bootstrap] Evidence gateway binding verified")
+    else
+        warn("[Bootstrap] Evidence gateway binding verify failed")
+    end
+end
+
 local function ensureStudioE2EControl(systemRegistry)
     if not RunService:IsStudio() then
         return
@@ -178,6 +222,8 @@ function ServerBootstrap.Start()
         SystemRegistry:Start()
         ensureStudioRuntimeSystem(SystemRegistry, "HidingSystem", "PasrahHidingReady")
         ensureStudioRuntimeSystem(SystemRegistry, "PlayerHealthSystem", "PasrahHuntPressureReady")
+        ensureStudioRuntimeSystem(SystemRegistry, "EvidenceSystem", "PasrahEvidenceGatewayReady")
+        ensureEvidenceGatewayBinding(SystemRegistry)
         ensureStudioE2EControl(SystemRegistry)
         _G.SystemRegistry = SystemRegistry
         print("[Bootstrap] _G.SystemRegistry exposed")

@@ -12548,3 +12548,42 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - residual sesudah pass ini:
   - route `StudioE2EControl` ack/ready masih belum cukup bersih untuk dijadikan jalur utama verifikasi
   - karena itu jalur test authoritative saat ini tetap mengandalkan `LobbyEvent + world prompts + runtime attrs`
+
+- progress tambahan pada lane `match evidence request unblock + full registry boot`:
+  - akar hang `EvidenceRequest` ternyata bukan di remote itu sendiri, tetapi `SystemRegistry:Start()` abort di `LobbySocialHub:Start()`
+  - crash point ditemukan via studio boot trace baru di `SystemRegistry`:
+    - `LobbySocialHub:Start -> LobbyService.lua:2948`
+    - penyebabnya `applyDecorAssetModel` dipanggil sebelum function didefinisikan
+  - `LobbyService` sekarang tidak lagi memutus bootstrap; `SystemRegistry` tembus penuh sampai `WeeklyChallengeSystem`
+  - `ServerBootstrap` sekarang juga memverifikasi `EvidenceSystem` benar-benar expose readiness dan gateway bind di Studio
+  - `EvidenceGateway` sekarang self-healing:
+    - canonical `ReplicatedStorage.RemoteFunctions` dibuat bila hilang
+    - `EvidenceRequest` dibuat bila hilang
+    - readiness attr `PasrahEvidenceGatewayReady` ditulis saat bind/unbind
+  - stage trace untuk `EvidenceGateway` dan `EvidenceService` sekarang hidup pada player attr agar stall berikutnya bisa dilokalisasi tanpa tebak-tebakan
+- validasi terbaru:
+  - proof boot:
+    - `PasrahRegistryStarted = true`
+    - `PasrahRegistryFailure = nil`
+    - `PasrahEvidenceGatewayReady = true`
+    - `PasrahEvidenceBootstrapVerified = true`
+    - `PasrahStudioE2EReady = true`
+  - proof match flow via client runtime:
+    - `StartSoloMatch(HauntedHouse) -> PreparationPhase`
+    - `AdvancePhase -> InvestigationPhase`
+    - `StudioE2EAck = AdvancePhase|true|match=match_1 nextPhase=InvestigationPhase`
+  - proof evidence/support tools dari `EvidenceTools` client asli:
+    - `Salib -> crucifix_armed`
+    - `Garam -> salt_placed`
+    - `Dupa -> smudge_activated`
+  - proof trace hidup:
+    - `PasrahEvidenceGatewayStage = after_process_tool_use`
+    - `PasrahEvidenceGatewayDetail = crucifix_armed`
+    - `PasrahEvidenceServiceStage = salib_after_publish_crucifixplaced`
+  - proof world placement:
+    - `Workspace.ActiveMatches.Match_match_1.InvestigationTools.Salib_* | Armed`
+    - `Workspace.ActiveMatches.Match_match_1.InvestigationTools.Garam_* | Placed/Triggered`
+    - `Workspace.ActiveMatches.Match_match_1.InvestigationTools.Dupa_* | Active`
+- residual sesudah pass ini:
+  - outside staging visual masih bisa drift di run tertentu dan butuh pass terpisah
+  - stage trace studio boleh dipertahankan untuk regression lane berikutnya karena sekarang berguna dan murah
