@@ -313,3 +313,21 @@ Kesimpulan:
 
 - surface grass/leafy/ground/sand dan snow/ice/glacier sekarang tidak lagi jatuh ke concrete fallback generik; semuanya tetap memakai asset ID inventory Roblox, bukan raw local path.
 
+## Update 2026-04-08 23:13 ICT
+
+Batch `default audio cue gap closure` menutup penggunaan runtime berikut:
+
+- `Midnight Litany of Drones (Ancient Ritual Ambient)` (`rbxassetid://140704980462451`) -> `ambient_investigation`, `ambient_tension_loop`, `post_hunt_calm`
+- `door_creak_3` (`rbxassetid://111282528409948`) -> `environment_disturbance`, `env_event`
+- `ghost_whisper_3` (`rbxassetid://98105844059537`) -> `ghost_interaction`
+- `footstep_grass_002` (`rbxassetid://128180668604255`) -> SoundSystem footstep payload tokens `grass/leafy/ground/sand`
+- `footstep_snow_000` (`rbxassetid://71785355785721`) -> SoundSystem footstep payload tokens `snow/ice/glacier`
+
+Owner runtime aktif:
+
+- `src/client/SoundSystem/Main.lua`
+
+Kesimpulan:
+
+- default/fallback cue names sekarang eksplisit memakai ID upload Roblox yang sudah ada di inventory ledger, dan resolver SoundSystem tidak lagi mendorong event footstep grass/snow ke concrete fallback.
+

@@ -455,6 +455,16 @@ Catatan:
   - `footstep_snow_000` -> `rbxassetid://71785355785721`
 - Raw local files remain source/reference only; runtime uses the uploaded `rbxassetid://...` IDs above.
 
+## 2026-04-08 23:13:13 +07:00 - Default Audio Cue Gap Closure
+- Owner: `src/client/SoundSystem/Main.lua`.
+- Runtime default/fallback cue coverage now explicitly uses uploaded Roblox inventory IDs:
+  - `Midnight Litany of Drones (Ancient Ritual Ambient)` -> `rbxassetid://140704980462451`
+  - `door_creak_3` -> `rbxassetid://111282528409948`
+  - `ghost_whisper_3` -> `rbxassetid://98105844059537`
+  - `footstep_grass_002` -> `rbxassetid://128180668604255`
+  - `footstep_snow_000` -> `rbxassetid://71785355785721`
+- Raw local files remain source/reference only; runtime uses uploaded `rbxassetid://...` IDs.
+
 ## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
 - Owner: `src/client/SoundSystem/Main.lua`.
 - Runtime now also uses uploaded Roblox inventory IDs for these additional cue-specific overrides:

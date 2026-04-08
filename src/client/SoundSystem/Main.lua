@@ -67,6 +67,8 @@ local CUE_AUDIO_PROFILES = {
 		post_hunt_calm = { volumeScale = 0.78, playbackSpeed = 0.94 },
 	},
 	EnvironmentalAudio = {
+		environment_disturbance = { volumeScale = 0.72, playbackSpeed = 0.96 },
+		env_event = { volumeScale = 0.7, playbackSpeed = 0.96 },
 		env_doorslam = { volumeScale = 1.06, playbackSpeed = 0.92 },
 		env_objectthrow = { volumeScale = 1.0, playbackSpeed = 0.96 },
 		env_windowknock = { volumeScale = 0.86, playbackSpeed = 0.98 },
@@ -79,6 +81,7 @@ local CUE_AUDIO_PROFILES = {
 		env_temperaturedrop = { volumeScale = 0.8, playbackSpeed = 0.88 },
 	},
 	GhostAudio = {
+		ghost_interaction = { volumeScale = 0.72, playbackSpeed = 0.92 },
 		ghost_whisper = { volumeScale = 0.84, playbackSpeed = 0.9 },
 		ghost_fake_footsteps = { volumeScale = 0.74, playbackSpeed = 1.04 },
 		ghost_manifest = { volumeScale = 0.98, playbackSpeed = 0.88 },
@@ -100,8 +103,15 @@ local CUE_AUDIO_PROFILES = {
 }
 
 local CUE_SOUND_ID_OVERRIDES = {
+	AmbientAudio = {
+		ambient_investigation = "rbxassetid://140704980462451",
+		ambient_tension_loop = "rbxassetid://140704980462451",
+		post_hunt_calm = "rbxassetid://140704980462451",
+	},
 	EnvironmentalAudio = {
 		prep_focus_lock = "rbxassetid://140513388846872",
+		environment_disturbance = "rbxassetid://111282528409948",
+		env_event = "rbxassetid://111282528409948",
 		env_doorslam = "rbxassetid://78764817933410",
 		env_windowknock = "rbxassetid://71098340187847",
 		env_objectthrow = "rbxassetid://86917747509286",
@@ -113,6 +123,7 @@ local CUE_SOUND_ID_OVERRIDES = {
 		env_temperaturedrop = "rbxassetid://87230026682789",
 	},
 	GhostAudio = {
+		ghost_interaction = "rbxassetid://98105844059537",
 		ghost_whisper = "rbxassetid://98105844059537",
 		ghost_fake_footsteps = "rbxassetid://95974189526179",
 		ghost_manifest = "rbxassetid://139204195403262",
@@ -325,6 +336,15 @@ resolveFootstepTemplate = function(root, payload)
 		templateName = "Woodstep_01"
 	elseif string.find(cueToken, "metal", 1, true) or string.find(cueToken, "diamondplate", 1, true) then
 		templateName = "MetalStep_01"
+	elseif string.find(cueToken, "grass", 1, true)
+		or string.find(cueToken, "leafy", 1, true)
+		or string.find(cueToken, "ground", 1, true)
+		or string.find(cueToken, "sand", 1, true) then
+		templateName = "GrassStep_01"
+	elseif string.find(cueToken, "snow", 1, true)
+		or string.find(cueToken, "ice", 1, true)
+		or string.find(cueToken, "glacier", 1, true) then
+		templateName = "SnowStep_01"
 	end
 	return resolveFolderTemplate(root, "Footsteps", templateName)
 		or resolveFolderTemplate(root, "Footsteps", "ConcreteStep_01")

@@ -3724,3 +3724,12 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Verified live in client probe: Grass/LeafyGrass -> `GrassStep_01`, Snow/Ice -> `SnowStep_01`, Metal -> `MetalStep_01`, all with expected uploaded asset IDs.
 - Build passed: `_tmp_footstep_material_audio_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-08 23:13:13 +07:00 - Close Default Audio Cue Gaps
+- Status: DONE.
+- Default/fallback cue names in `SoundSystem` now resolve to uploaded Roblox inventory IDs instead of relying on generic template routing.
+- Added explicit coverage for `post_hunt_calm`, `ambient_investigation`, `ambient_tension_loop`, `environment_disturbance`, `env_event`, and `ghost_interaction`.
+- Expanded SoundSystem footstep cue resolution so `GrassFootstep` and `SnowFootstep` payloads use the uploaded `GrassStep_01` and `SnowStep_01` templates.
+- Build passed: `_tmp_soundsystem_default_cue_audio_build.rbxlx`.
+- Live Studio client probe verified all six cue/material cases with expected `rbxassetid://...` values.
+- Studio stop-test reporting rule followed.
