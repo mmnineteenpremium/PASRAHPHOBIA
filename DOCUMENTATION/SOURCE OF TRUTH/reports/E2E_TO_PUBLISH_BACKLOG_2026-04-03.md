@@ -3368,3 +3368,19 @@ Urutan yang paling masuk akal dari titik sekarang:
     - sekarang bootstrap penuh dan evidence support flow tidak lagi hang
   - yang tersisa untuk lane publish bukan lagi remote hang dasar, melainkan polish dan verification lane lain
 
+- progress tambahan pada lane `investigation HUD resync after breach`:
+  - `FieldKitFrame` sekarang tidak lagi tertahan di jalur `Preparation -> Investigation`
+  - authoritative `MatchLifecyclePhase = InvestigationPhase` sekarang cukup untuk mendorong UI client ke `MatchPhase = InGame`
+- validasi terbaru:
+  - `AdvancePhase -> InvestigationPhase`:
+    - `MatchUI.Enabled = true`
+    - `FieldKitFrame.Visible = true`
+  - jalur nyata `Main Entry -> E`:
+    - sesudah breach:
+      - `MatchLifecyclePhase = InvestigationPhase`
+      - `MatchPhase = InGame`
+      - `FieldKitFrame.Visible = true`
+- publish impact:
+  - HUD investigation sekarang selaras lagi dengan breach flow nyata
+  - blocker client-facing bergeser dari `FieldKitFrame tidak muncul` ke polish konten objective/message yang masih bisa disempurnakan
+

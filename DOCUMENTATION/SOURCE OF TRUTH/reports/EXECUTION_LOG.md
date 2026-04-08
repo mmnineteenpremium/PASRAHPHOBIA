@@ -12587,3 +12587,22 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - residual sesudah pass ini:
   - outside staging visual masih bisa drift di run tertentu dan butuh pass terpisah
   - stage trace studio boleh dipertahankan untuk regression lane berikutnya karena sekarang berguna dan murah
+
+- progress tambahan pada lane `investigation HUD resync after breach`:
+  - `FieldKitFrame` sempat tetap `Visible = false` walau authoritative `MatchLifecyclePhase` sudah `InvestigationPhase`
+  - akar bug ada di `UISystem:_syncPhaseFromAuthoritativeLifecycle()`:
+    - client hanya mau promosi ke `InGame` dari `Briefing/Loading`
+    - jalur world-preparation kita berhenti di `Preparing`, jadi HUD tertahan
+  - sinkronisasi lifecycle sekarang mempromosikan client ke `InGame` dari phase non-terminal manapun saat authoritative lifecycle sudah `InvestigationPhase`
+- validasi terbaru:
+  - `AdvancePhase -> InvestigationPhase`:
+    - `MatchPhase = InGame`
+    - `MatchUI.Enabled = true`
+    - `FieldKitFrame.Visible = true`
+  - jalur nyata `StartSoloMatch -> PreparationPhase -> Main Entry -> E` juga tembus lagi:
+    - sesudah breach:
+      - `MatchLifecyclePhase = InvestigationPhase`
+      - `MatchPhase = InGame`
+      - `FieldKitFrame.Visible = true`
+- residual sesudah pass ini:
+  - objective/message text untuk investigation masih perlu saya audit di batch berikutnya bila ingin dipoles lebih jauh
