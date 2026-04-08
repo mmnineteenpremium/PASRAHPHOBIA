@@ -4693,13 +4693,11 @@ function LobbyService:StudioRotateEvidenceTrainingGhost(excludedGhostType)
 	local currentState = self:_ensureEvidenceTrainingState()
 	local excluded = type(excludedGhostType) == "string" and excludedGhostType or tostring(currentState.ghostType or "")
 	local nextState = self:_resetEvidenceTraining(excluded ~= "" and excluded or nil)
-	local ghostVisual = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_VISUAL_NAME, true)
-	return {
-		previousGhost = tostring(currentState.ghostType or ""),
-		ghostType = tostring(nextState.ghostType or ""),
-		requiredEvidence = cloneArray(nextState.requiredEvidence),
-		ghostAssetActive = ghostVisual ~= nil,
-	}
+	local snapshot = self:StudioGetEvidenceTrainingSnapshot()
+	snapshot.previousGhost = tostring(currentState.ghostType or "")
+	snapshot.ghostType = tostring(nextState.ghostType or "")
+	snapshot.requiredEvidence = cloneArray(nextState.requiredEvidence)
+	return snapshot
 end
 
 function LobbyService:_refreshEvidenceTrainingWorld()

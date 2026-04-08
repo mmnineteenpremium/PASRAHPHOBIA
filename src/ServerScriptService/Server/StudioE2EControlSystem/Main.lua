@@ -182,6 +182,46 @@ local function coerceVector3(value)
 	return nil
 end
 
+local function resolveSharedGameDataModule(moduleName)
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
+	if not shared then
+		return nil
+	end
+	local gameData = shared:FindFirstChild("GameData")
+	if not gameData then
+		return nil
+	end
+	local moduleScript = gameData:FindFirstChild(moduleName)
+	if moduleScript and moduleScript:IsA("ModuleScript") then
+		return moduleScript
+	end
+	return nil
+end
+
+local function safeRequireModule(moduleScript)
+	if not (moduleScript and moduleScript:IsA("ModuleScript")) then
+		return nil
+	end
+	local ok, result = pcall(require, moduleScript)
+	if ok and type(result) == "table" then
+		return result
+	end
+	return nil
+end
+
+local function resolveGhostTargetBounds(ghostType)
+	if type(ghostType) ~= "string" or ghostType == "" then
+		return nil
+	end
+	local tuning = safeRequireModule(resolveSharedGameDataModule("GhostVisualTuning"))
+	local ghosts = type(tuning) == "table" and tuning.ghosts or nil
+	local config = type(ghosts) == "table" and ghosts[ghostType] or nil
+	if type(config) ~= "table" then
+		return nil
+	end
+	return coerceVector3(config.targetBounds) or coerceVector3(config.meshSize)
+end
+
 local function compactLogMessage(message)
 	message = tostring(message or "")
 	message = message:gsub("[%c\r\n\t]+", " ")
@@ -582,6 +622,10 @@ function StudioE2EControlSystem:_handleGetGhostRuntimeSnapshot(player, request)
 		huntActive = type(ghostState) == "table" and ghostState.huntActive == true or false,
 		hasGhostModel = typeof(ghostModel) == "Instance",
 	}
+	local targetBounds = resolveGhostTargetBounds(snapshot.matchGhostType)
+	if typeof(targetBounds) == "Vector3" then
+		snapshot.ghostTargetBounds = tostring(targetBounds)
+	end
 
 	if typeof(ghostModel) == "Instance" then
 		snapshot.ghostPath = ghostModel:GetFullName()

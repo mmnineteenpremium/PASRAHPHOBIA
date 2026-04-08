@@ -3771,3 +3771,13 @@ Urutan yang paling masuk akal dari titik sekarang:
   - `Kuntilanak` lobby snapshot now returns both fitted extents and target bounds in the same payload
 - Build passed: `_tmp_ghost_snapshot_fields_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 00:28:19 +07:00 - Unify Target Bounds Into Ghost Snapshot Payloads
+- Status: DONE.
+- Match snapshot now includes `ghostTargetBounds` from shared `GhostVisualTuning`, so live actor size and intended fit target are available in the same payload.
+- `LobbyTrainingRotate` now returns the full lobby ghost snapshot directly, removing the extra follow-up call that was previously needed to inspect fitted extents/path/scale after each rotation.
+- Live Studio proof:
+  - forced `Leak` match snapshot returned non-empty `ghostTargetBounds`
+  - `LobbyTrainingRotate` returned full asset-ready visual payload for `Pocong`, including `ghostVisualPath`, `ghostVisualExtents`, `ghostVisualScale`, and `ghostTargetBounds`
+- Build passed: `_tmp_ghost_snapshot_target_build.rbxlx`.
+- Studio stop-test reporting rule followed.
