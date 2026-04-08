@@ -13023,3 +13023,12 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Verified live in Roblox Studio: PlayerGui now creates LobbyUI, MatchUI, RoomBrowserUI, RoomBrowserFloatUI, UXLayer, JournalUI, and auxiliary UI roots.
 - Verified live UI audio attrs: JournalPage -> rbxassetid://97915135753208; room browser close PanelSoftClose -> rbxassetid://73589904561594.
 - Roblox Studio was returned to STOP TEST before reporting.
+
+## 2026-04-08 22:37:11 +07:00 - Client Bootstrap E2E Regression Proof
+- Re-ran live Studio regression after Restore client bootstrap UI startup.
+- Verified client bootstrap stage started and generated PlayerGui roots are present.
+- Verified StartSoloMatch -> PreparationPhase keeps MatchUI active.
+- Verified InvestigationPhase sets MatchPhase = InGame, MatchUI.Enabled = true, and FieldKitFrame.Visible = true.
+- Verified uploaded inventory UI cue still fires in live client: ObjectiveUpdate -> rbxassetid://96021243760086.
+- Verified StudioE2E evidence request still reaches server after HUD recovery: JejakEnergi -> MEDOK publish fallback result.
+- Roblox Studio was returned to STOP TEST before this report/log entry.
