@@ -3489,3 +3489,23 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - state idle match sekarang langsung mengajari pemain bahwa semua tool utama sudah aktif tanpa harus menunggu tooltip atau trial-and-error
 
+- progress tambahan pada lane `field kit evidence preview fallback`:
+  - enam tool evidence utama yang belum punya asset model sekarang tetap punya `ToolPreview` procedural di HUD
+  - tiga utility yang memang sudah punya asset model tetap memakai jalur asset preview
+- validasi terbaru:
+  - `InvestigationPhase` live:
+    - `JejakEnergi|ready|fallback`
+    - `KotakArwah|ready|fallback`
+    - `SuhuMembeku|ready|fallback`
+    - `BukuTerkutuk|ready|fallback`
+    - `BolaArwah|ready|fallback`
+    - `GerakanGaib|ready|fallback`
+    - `Garam|ready|asset`
+    - `Salib|ready|asset`
+    - `Dupa|ready|asset`
+  - seluruh tombol menunjukkan:
+    - `previewVisible = true`
+    - `hasWorld = true`
+- publish impact:
+  - `Field Kit` sekarang tidak punya slot evidence utama yang kosong secara visual hanya karena asset 3D final belum tersedia
+

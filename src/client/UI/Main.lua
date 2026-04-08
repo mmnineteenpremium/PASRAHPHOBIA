@@ -313,6 +313,12 @@ local FIELD_KIT_TOOL_CONFIG = {
 	},
 }
 local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
+	JejakEnergi = {
+		rotation = Vector3.new(-10, -22, 0),
+		focusOffset = Vector3.new(0, 0.08, 0),
+		cameraVector = Vector3.new(0.44, 0.32, 1),
+		distanceScale = 1.18,
+	},
 	Garam = {
 		rotation = Vector3.new(10, 24, 0),
 		focusOffset = Vector3.new(0, 0.06, 0),
@@ -330,6 +336,36 @@ local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 		focusOffset = Vector3.new(0.08, 0.18, 0),
 		cameraVector = Vector3.new(0.42, 0.56, 1),
 		distanceScale = 1.34,
+	},
+	KotakArwah = {
+		rotation = Vector3.new(-12, 24, 0),
+		focusOffset = Vector3.new(0, 0.1, 0),
+		cameraVector = Vector3.new(0.38, 0.46, 1),
+		distanceScale = 1.22,
+	},
+	SuhuMembeku = {
+		rotation = Vector3.new(-6, -28, 0),
+		focusOffset = Vector3.new(0.06, 0.06, 0),
+		cameraVector = Vector3.new(0.5, 0.34, 1),
+		distanceScale = 1.2,
+	},
+	BukuTerkutuk = {
+		rotation = Vector3.new(-18, -18, 0),
+		focusOffset = Vector3.new(0, 0.04, 0),
+		cameraVector = Vector3.new(0.3, 0.72, 1),
+		distanceScale = 1.3,
+	},
+	BolaArwah = {
+		rotation = Vector3.new(-10, 24, 0),
+		focusOffset = Vector3.new(0.04, 0.08, 0),
+		cameraVector = Vector3.new(0.46, 0.38, 1),
+		distanceScale = 1.24,
+	},
+	GerakanGaib = {
+		rotation = Vector3.new(-14, -24, 0),
+		focusOffset = Vector3.new(0, 0.08, 0),
+		cameraVector = Vector3.new(0.34, 0.52, 1),
+		distanceScale = 1.18,
 	},
 }
 local FIELD_KIT_DESKTOP_MAX_COLUMNS = 5
@@ -1047,6 +1083,94 @@ local function buildGhostPreviewFallbackModel(ghostType, accentColor)
 	return model
 end
 
+local function buildFieldKitToolFallbackModel(toolType, accentColor)
+	local accent = typeof(accentColor) == "Color3" and accentColor or Color3.fromRGB(196, 206, 226)
+	local baseColor = accent:Lerp(Color3.fromRGB(240, 236, 228), 0.38)
+	local darkColor = accent:Lerp(Color3.fromRGB(42, 48, 58), 0.72)
+	local model = Instance.new("Model")
+	model.Name = tostring(toolType or "Tool")
+
+	local function makePart(name, size, cframe, color, material, shape)
+		local part = Instance.new("Part")
+		part.Name = name
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+		part.CastShadow = false
+		part.Size = size
+		part.CFrame = cframe
+		part.Color = color or baseColor
+		part.Material = material or Enum.Material.SmoothPlastic
+		if shape then
+			part.Shape = shape
+		end
+		part.Parent = model
+		return part
+	end
+
+	local root = makePart("Root", Vector3.new(0.62, 0.18, 0.28), CFrame.new(), darkColor)
+
+	if toolType == "JejakEnergi" then
+		root.Size = Vector3.new(0.48, 0.12, 0.24)
+		local handle = makePart("Handle", Vector3.new(0.14, 0.5, 0.14), CFrame.new(0, -0.28, 0), darkColor)
+		local screen = makePart("Screen", Vector3.new(0.28, 0.03, 0.14), CFrame.new(0, 0.06, -0.03), accent, Enum.Material.Neon)
+		local antenna = makePart("Antenna", Vector3.new(0.05, 0.32, 0.05), CFrame.new(0.16, 0.2, 0), Color3.fromRGB(220, 224, 232), Enum.Material.Metal)
+		screen.Transparency = 0.08
+		antenna.Material = Enum.Material.Metal
+		model.PrimaryPart = root
+		return model
+	elseif toolType == "KotakArwah" then
+		root.Size = Vector3.new(0.58, 0.28, 0.26)
+		local grille = makePart("Grille", Vector3.new(0.4, 0.18, 0.03), CFrame.new(0, 0, -0.12), Color3.fromRGB(208, 214, 226), Enum.Material.Metal)
+		local knob = makePart("Knob", Vector3.new(0.1, 0.1, 0.1), CFrame.new(0.18, 0, -0.08), accent, Enum.Material.Neon, Enum.PartType.Ball)
+		local antenna = makePart("Antenna", Vector3.new(0.04, 0.36, 0.04), CFrame.new(-0.18, 0.28, 0), Color3.fromRGB(228, 232, 238), Enum.Material.Metal)
+		grille.Material = Enum.Material.Metal
+		antenna.Material = Enum.Material.Metal
+		model.PrimaryPart = root
+		return model
+	elseif toolType == "SuhuMembeku" then
+		root.Size = Vector3.new(0.54, 0.16, 0.18)
+		local grip = makePart("Grip", Vector3.new(0.12, 0.38, 0.12), CFrame.new(-0.12, -0.2, 0), darkColor)
+		local sensor = makePart("Sensor", Vector3.new(0.18, 0.12, 0.12), CFrame.new(0.28, 0.02, 0), accent, Enum.Material.Neon)
+		local display = makePart("Display", Vector3.new(0.18, 0.02, 0.1), CFrame.new(0.04, 0.08, 0), Color3.fromRGB(238, 244, 255), Enum.Material.Neon)
+		sensor.Transparency = 0.04
+		display.Transparency = 0.08
+		model.PrimaryPart = root
+		return model
+	elseif toolType == "BukuTerkutuk" then
+		root.Size = Vector3.new(0.44, 0.08, 0.58)
+		root.Color = Color3.fromRGB(84, 58, 52)
+		local pageLeft = makePart("PageLeft", Vector3.new(0.2, 0.04, 0.54), CFrame.new(-0.12, 0.05, 0), Color3.fromRGB(240, 232, 214))
+		local pageRight = makePart("PageRight", Vector3.new(0.2, 0.04, 0.54), CFrame.new(0.12, 0.05, 0), Color3.fromRGB(236, 228, 210))
+		local spine = makePart("Spine", Vector3.new(0.04, 0.1, 0.58), CFrame.new(0, 0.01, 0), accent, Enum.Material.SmoothPlastic)
+		pageLeft.CFrame = pageLeft.CFrame * CFrame.Angles(math.rad(-8), 0, math.rad(-14))
+		pageRight.CFrame = pageRight.CFrame * CFrame.Angles(math.rad(8), 0, math.rad(14))
+		model.PrimaryPart = root
+		return model
+	elseif toolType == "BolaArwah" then
+		root.Size = Vector3.new(0.46, 0.16, 0.28)
+		local lens = makePart("Lens", Vector3.new(0.18, 0.18, 0.08), CFrame.new(0.22, 0, -0.1), accent, Enum.Material.Neon)
+		local screen = makePart("Screen", Vector3.new(0.2, 0.02, 0.14), CFrame.new(-0.08, 0.08, 0), Color3.fromRGB(234, 242, 255), Enum.Material.Neon)
+		local foot = makePart("Foot", Vector3.new(0.34, 0.04, 0.14), CFrame.new(0, -0.12, 0), darkColor)
+		lens.Shape = Enum.PartType.Cylinder
+		lens.CFrame = lens.CFrame * CFrame.Angles(0, 0, math.rad(90))
+		screen.Transparency = 0.08
+		model.PrimaryPart = root
+		return model
+	elseif toolType == "GerakanGaib" then
+		root.Size = Vector3.new(0.54, 0.34, 0.1)
+		local sensor = makePart("Sensor", Vector3.new(0.42, 0.18, 0.04), CFrame.new(0, 0.04, -0.06), accent, Enum.Material.Neon)
+		local base = makePart("Base", Vector3.new(0.2, 0.08, 0.2), CFrame.new(0, -0.22, 0.02), darkColor)
+		sensor.Transparency = 0.12
+		model.PrimaryPart = root
+		return model
+	end
+
+	model:Destroy()
+	return nil
+end
+
 local function styleFieldKitToolPreview(viewportFrame, accentColor, previewState)
 	local accent = accentColor or Color3.fromRGB(204, 210, 224)
 	local state = tostring(previewState or "ready")
@@ -1113,14 +1237,18 @@ local function renderFieldKitToolPreview(viewportFrame, toolType, accentColor, p
 
 	local previewConfig = FIELD_KIT_TOOL_PREVIEW_CONFIG[toolType]
 	local template = getFieldKitToolAssetTemplate(toolType)
-	if not previewConfig or not template then
+	local usingFallback = false
+	if not previewConfig then
 		viewportFrame.Visible = false
 		return false
+	end
+	if not template then
+		usingFallback = true
 	end
 
 	styleFieldKitToolPreview(viewportFrame, accentColor, previewState)
 
-	local previewSignature = string.format("%s|%s", tostring(toolType), tostring(previewState or "ready"))
+	local previewSignature = string.format("%s|%s|%s", tostring(toolType), tostring(previewState or "ready"), usingFallback and "fallback" or "asset")
 	if viewportFrame:GetAttribute("PreviewSignature") == previewSignature then
 		viewportFrame.Visible = true
 		return true
@@ -1141,7 +1269,11 @@ local function renderFieldKitToolPreview(viewportFrame, toolType, accentColor, p
 	camera.Parent = viewportFrame
 	viewportFrame.CurrentCamera = camera
 
-	local model = template:Clone()
+	local model = template and template:Clone() or buildFieldKitToolFallbackModel(toolType, accentColor)
+	if not model then
+		viewportFrame.Visible = false
+		return false
+	end
 	for _, descendant in ipairs(model:GetDescendants()) do
 		if descendant:IsA("BasePart") then
 			descendant.Anchored = true
