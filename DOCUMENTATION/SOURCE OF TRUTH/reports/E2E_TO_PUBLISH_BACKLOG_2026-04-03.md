@@ -3645,3 +3645,19 @@ Urutan yang paling masuk akal dari titik sekarang:
 - backlog impact:
   - gap publish untuk ambience lobby kini bergeser dari `missing runtime owner` ke `brand/polish mix`, bukan lagi ketiadaan audio lobby yang hidup
 
+- progress tambahan pada lane `cue-specific inventory audio overrides`:
+  - `SoundSystem` sekarang mengunci override audio inventory untuk cue yang sebelumnya masih jatuh ke template generik
+  - cue yang ditutup:
+    - `prep_focus_lock -> switch15`
+    - `env_doorslam -> doorClose_1`
+    - `env_objectthrow -> impactPunch_medium_002`
+    - `ghost_object_throw -> impactPunch_medium_002`
+- validasi terbaru:
+  - build lolos:
+    - `_tmp_audio_cue_override_build.rbxlx`
+    - `_tmp_audio_cue_override_fix_build.rbxlx`
+  - live:
+    - `PasrahAudioLastSoundId` berpindah sesuai mapping override untuk keempat cue di atas
+- backlog impact:
+  - gap publish lane audio makin menyempit ke polish/coverage, bukan lagi owner cue inti yang salah asset
+

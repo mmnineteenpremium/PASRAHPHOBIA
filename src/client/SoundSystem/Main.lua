@@ -96,6 +96,18 @@ local CUE_AUDIO_PROFILES = {
 	},
 }
 
+local CUE_SOUND_ID_OVERRIDES = {
+	EnvironmentalAudio = {
+		prep_focus_lock = "rbxassetid://140513388846872",
+		env_doorslam = "rbxassetid://78764817933410",
+		env_windowknock = "rbxassetid://78764817933410",
+		env_objectthrow = "rbxassetid://126504722314888",
+	},
+	GhostAudio = {
+		ghost_object_throw = "rbxassetid://126504722314888",
+	},
+}
+
 local SPATIAL_SOUND_CATEGORIES = {
 	EnvironmentalAudio = true,
 	GhostAudio = true,
@@ -165,6 +177,31 @@ local function resolveCueProfile(category, payload)
 		end
 		if profiles[eventToken] then
 			return profiles[eventToken]
+		end
+	end
+
+	return nil
+end
+
+local function resolveCueSoundIdOverride(category, payload)
+	local overrides = CUE_SOUND_ID_OVERRIDES[category]
+	if type(overrides) ~= "table" then
+		return nil
+	end
+
+	local cueToken = normalizeCue(payload and payload.cue)
+	if cueToken ~= "" and overrides[cueToken] then
+		return overrides[cueToken]
+	end
+
+	local eventToken = normalizeCue(payload and payload.eventType)
+	if eventToken ~= "" then
+		local prefixed = "env_" .. eventToken
+		if overrides[prefixed] then
+			return overrides[prefixed]
+		end
+		if overrides[eventToken] then
+			return overrides[eventToken]
 		end
 	end
 
@@ -524,25 +561,31 @@ function SoundSystem:_getParentForCategory(category)
 end
 
 function SoundSystem:_getTemplateForCategory(category, payload)
+	local template = nil
 	if category == "GhostAudio" then
-		return resolveGhostTemplate(self._audioRoot, payload)
+		template = resolveGhostTemplate(self._audioRoot, payload)
+	elseif category == "EnvironmentalAudio" then
+		template = resolveEnvironmentalTemplate(self._audioRoot, payload)
+	elseif category == "JumpscareAudio" then
+		template = resolveJumpscareTemplate(self._audioRoot, payload)
+	else
+		local cached = self._audioTemplates[category]
+		if cached and cached.Parent then
+			template = cached
+		else
+			local pathSegments = CATEGORY_TEMPLATE_PATHS[category]
+			template = resolveTemplate(self._audioRoot, pathSegments)
+			if template then
+				self._audioTemplates[category] = template
+			end
+		end
 	end
-	if category == "EnvironmentalAudio" then
-		return resolveEnvironmentalTemplate(self._audioRoot, payload)
-	end
-	if category == "JumpscareAudio" then
-		return resolveJumpscareTemplate(self._audioRoot, payload)
-	end
-
-	local cached = self._audioTemplates[category]
-	if cached and cached.Parent then
-		return cached
-	end
-
-	local pathSegments = CATEGORY_TEMPLATE_PATHS[category]
-	local template = resolveTemplate(self._audioRoot, pathSegments)
-	if template then
-		self._audioTemplates[category] = template
+	local overrideSoundId = resolveCueSoundIdOverride(category, payload)
+	if overrideSoundId and overrideSoundId ~= "" then
+		local cueTemplate = template and template:Clone() or Instance.new("Sound")
+		cueTemplate.Name = tostring(template and template.Name or category) .. "_CueOverride"
+		cueTemplate.SoundId = overrideSoundId
+		return cueTemplate
 	end
 	return template
 end
