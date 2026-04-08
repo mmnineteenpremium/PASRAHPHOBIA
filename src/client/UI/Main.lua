@@ -291,6 +291,7 @@ local function createDefaultFieldKitToolState(toolType)
 		usesRemaining = usesRemaining and math.max(0, math.floor(usesRemaining)) or nil,
 		chargesRemaining = nil,
 		saltTriggered = false,
+		huntBlockedAt = 0,
 		huntRepelled = false,
 		repellentUntil = nil,
 		visualPlaced = false,
@@ -5397,6 +5398,9 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 	if toolType == "Garam" and eventName == "SaltTriggered" then
 		toolState.saltTriggered = true
 	end
+	if toolType == "Salib" and (eventName == "CrucifixTriggered" or (eventName == "HuntBlocked" and reason == "crucifix_prevented_hunt")) then
+		toolState.huntBlockedAt = os.clock()
+	end
 	if toolType == "Dupa" and eventName == "GhostRepelled" then
 		toolState.huntRepelled = true
 	end
@@ -5432,6 +5436,7 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	local feedbackData = feedback and type(feedback.data) == "table" and feedback.data or feedback
 	local usesRemaining = tonumber(toolState.usesRemaining)
 	local chargesRemaining = tonumber(toolState.chargesRemaining)
+	local recentHuntBlock = toolType == "Salib" and ((os.clock() - (tonumber(toolState.huntBlockedAt) or 0)) <= 4)
 	local repellentUntil = tonumber(toolState.repellentUntil)
 
 	if toolState.pending then
@@ -5439,6 +5444,9 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	end
 	if cooldownActive or toolState.lastReason == "tool_local_cooldown" or toolState.lastReason == "tool_cooldown" then
 		return "COOLDOWN", false, "HOLD"
+	end
+	if recentHuntBlock and chargesRemaining ~= nil and chargesRemaining > 0 then
+		return "BLOCK", false, "HUNT OFF"
 	end
 	if toolType == "Salib" and chargesRemaining ~= nil then
 		return string.format("C%d", math.max(0, math.floor(chargesRemaining))), false, chargesRemaining > 0 and "GUARD" or "BURNT"
