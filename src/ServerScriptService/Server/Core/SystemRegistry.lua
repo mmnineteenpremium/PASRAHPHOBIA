@@ -20,6 +20,7 @@ local DISABLED_RUNTIME_SYSTEM_NAMES = {
     ToolInteractionSystem = true,
     -- Journal/UI evidence ownership lives in JournalSystem.
     EvidenceJournalSystem = true,
+    GhostDeductionJournal = true,
     -- Generic reward fan-out duplicates active reward owners.
     RewardSystem = true,
     ContractRewardSystem = true,
