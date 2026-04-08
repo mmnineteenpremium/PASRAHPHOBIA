@@ -13106,3 +13106,21 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Build passed: `_tmp_footstep_material_audio_build.rbxlx`.
 - Live Studio client probe verified Grass/LeafyGrass -> `GrassStep_01`, Snow/Ice -> `SnowStep_01`, and Metal remains `MetalStep_01`, all with expected uploaded asset IDs.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-08 23:13:13 +07:00 - Close Default Audio Cue Gaps
+- Added explicit uploaded Roblox inventory overrides in `src/client/SoundSystem/Main.lua` for default/fallback cues that previously relied on generic template routing:
+  - `AmbientAudio/post_hunt_calm -> rbxassetid://140704980462451` (`Midnight Litany of Drones (Ancient Ritual Ambient)`)
+  - `AmbientAudio/ambient_investigation -> rbxassetid://140704980462451`
+  - `AmbientAudio/ambient_tension_loop -> rbxassetid://140704980462451`
+  - `EnvironmentalAudio/environment_disturbance -> rbxassetid://111282528409948` (`door_creak_3`)
+  - `EnvironmentalAudio/env_event -> rbxassetid://111282528409948`
+  - `GhostAudio/ghost_interaction -> rbxassetid://98105844059537` (`ghost_whisper_3`)
+- Expanded `SoundSystem` footstep template resolution so audio events carrying grass/leafy/ground/sand or snow/ice/glacier tokens route to the uploaded `GrassStep_01` and `SnowStep_01` templates instead of concrete fallback.
+- Build passed: `_tmp_soundsystem_default_cue_audio_build.rbxlx`.
+- Live Studio client probe verified:
+  - `environment_disturbance` and `env_event` -> `rbxassetid://111282528409948`
+  - `ghost_interaction` -> `rbxassetid://98105844059537`
+  - `post_hunt_calm` -> `rbxassetid://140704980462451`
+  - `GrassFootstep` -> `rbxassetid://128180668604255`
+  - `SnowFootstep` -> `rbxassetid://71785355785721`
+- Roblox Studio was returned to STOP TEST before logging.
