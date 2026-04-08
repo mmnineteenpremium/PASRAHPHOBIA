@@ -3471,3 +3471,14 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - seluruh tool evidence utama sekarang mengembalikan feedback lock yang bisa dibaca pemain tanpa harus menebak dari jurnal saja
 
+- progress tambahan pada lane `field kit shortcut clarity`:
+  - hint investigasi default sekarang mengikuti roster `Field Kit` penuh
+  - shortcut tool baru `[6]-[9]` sekarang muncul langsung di tombol
+- validasi terbaru:
+  - `SuhuMembekuButton = [6]`
+  - `BukuTerkutukButton = [7]`
+  - `BolaArwahButton = [8]`
+  - `GerakanGaibButton = [9]`
+- publish impact:
+  - player sekarang bisa membaca shortcut roster penuh langsung dari HUD, bukan mengandalkan hint lama yang hanya akurat untuk 5 tool
+
