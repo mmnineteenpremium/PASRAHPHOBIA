@@ -3614,3 +3614,19 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - tidak ada lagi path fallback UI click yang diam-diam keluar dari inventory upload akun aktif
 
+- progress tambahan pada lane `field kit evidence cue pass`:
+  - `client/UI/Main.lua` sekarang memakai tiga cue upload inventory untuk tool evidence yang sudah aktif:
+    - `ThermometerRead -> rbxassetid://87230026682789`
+    - `WritingScratch -> rbxassetid://83865030928382`
+    - `MotionTrigger -> rbxassetid://97217836947594`
+  - cue ini dipakai lewat owner yang sama:
+    - `SuhuMembeku`
+    - `BukuTerkutuk`
+    - `GerakanGaib`
+  - dedupe lokal mencegah spam saat event tool yang sama terproses berulang
+- validasi terbaru:
+  - source live `game.StarterPlayer.StarterPlayerScripts.Client.UI.Main` membaca ketiga fallback baru tersebut
+  - helper `_playFieldKitEvidenceCueIfNeeded` aktif di source live
+- publish impact:
+  - evidence HUD sekarang tidak hanya kuat secara visual/teks, tetapi juga mulai punya cue audio yang relevan untuk suhu, writing, dan motion tanpa keluar dari workflow inventory-owned
+

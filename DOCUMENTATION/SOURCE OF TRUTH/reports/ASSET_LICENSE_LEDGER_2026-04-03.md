@@ -163,7 +163,40 @@ Aturan baca:
      - asset aktif di inventory akun: `ui_notification`
      - dipakai sebagai fallback cue untuk `Lobby feedback` dan `Room invite popup`
 
-12. `Flashlight toggle`
+12. `Thermometer read cue`
+   - Asset:
+     - `rbxassetid://87230026682789`
+   - Source in repo:
+     - `src/client/UI/Main.lua`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `thermometer_reading`
+     - dipakai sebagai cue fallback saat `SuhuMembeku` memberikan pembacaan penting di `Field Kit`
+
+13. `Ghost writing scratch cue`
+   - Asset:
+     - `rbxassetid://83865030928382`
+   - Source in repo:
+     - `src/client/UI/Main.lua`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `ghost_writing_scratch`
+     - dipakai sebagai cue fallback saat `BukuTerkutuk` mengunci tulisan di `Field Kit`
+
+14. `Motion trigger cue`
+   - Asset:
+     - `rbxassetid://97217836947594`
+   - Source in repo:
+     - `src/client/UI/Main.lua`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `motion_sensor_trigger`
+     - dipakai sebagai cue fallback saat `GerakanGaib` mendeteksi gangguan di `Field Kit`
+
+15. `Flashlight toggle`
    - Asset:
      - `rbxassetid://140513388846872`
    - Source in repo:
@@ -174,7 +207,7 @@ Aturan baca:
      - asset aktif di inventory akun: `switch15`
      - dipakai oleh toggle flashlight investigasi aktif
 
-13. `DoorRuntime default pair`
+16. `DoorRuntime default pair`
    - Asset IDs:
      - open `rbxassetid://83005562781593`
      - close `rbxassetid://78764817933410`
@@ -189,7 +222,7 @@ Aturan baca:
        - `doorClose_1`
      - pasangan default dunia sekarang tidak lagi memakai reuse manifest/whisper
 
-14. Footstep set
+17. Footstep set
    - Asset IDs:
      - `rbxassetid://104336169985098`
      - `rbxassetid://79900103772577`
@@ -205,7 +238,7 @@ Aturan baca:
      - asset sudah source-controlled
      - belum masuk jalur locomotion modern, jadi statusnya legal/runtime-ready tetapi belum gameplay-live
 
-15. `Jumpscare_01`
+18. `Jumpscare_01`
    - Asset:
      - `rbxassetid://138186576`
    - Source in repo:
