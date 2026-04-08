@@ -26,6 +26,29 @@ local toggleGui = nil
 local toggleButton = nil
 local toggleFlashlight
 
+local function stampFlashlightClientState()
+	player:SetAttribute("PasrahFlashlightClientEnabled", flashlightOn == true)
+	player:SetAttribute("PasrahFlashlightClientTouchEligible", UserInputService.TouchEnabled == true)
+	player:SetAttribute("PasrahFlashlightClientToggleVisible", shouldShowToggleUI())
+end
+
+local function stampToggleRuntime()
+	if toggleGui then
+		toggleGui:SetAttribute("PasrahFlashlightOwner", "FlashlightController")
+		toggleGui:SetAttribute("PasrahFlashlightChannel", "ToggleUI")
+		toggleGui:SetAttribute("PasrahFlashlightTouchEligible", UserInputService.TouchEnabled == true)
+		toggleGui:SetAttribute("PasrahFlashlightVisible", shouldShowToggleUI())
+	end
+	if toggleButton then
+		toggleButton:SetAttribute("PasrahFlashlightOwner", "FlashlightController")
+		toggleButton:SetAttribute("PasrahFlashlightChannel", "ToggleButton")
+		toggleButton:SetAttribute("PasrahFlashlightState", flashlightOn and "On" or "Off")
+		toggleButton:SetAttribute("PasrahFlashlightVisible", shouldShowToggleUI())
+		toggleButton:SetAttribute("PasrahFlashlightInputMode", UserInputService.TouchEnabled == true and "Touch" or "Keyboard")
+	end
+	stampFlashlightClientState()
+end
+
 local function isPlayerInMatch()
 	return player:GetAttribute("InMatch") == true
 		or tostring(player:GetAttribute("MatchId") or "") ~= ""
@@ -114,6 +137,7 @@ camera = resolveCamera()
 
 local function updateToggleVisual()
 	if not toggleButton then
+		stampFlashlightClientState()
 		return
 	end
 	if flashlightOn then
@@ -123,6 +147,7 @@ local function updateToggleVisual()
 		toggleButton.Text = "SENTER\nOFF"
 		toggleButton.BackgroundColor3 = Color3.fromRGB(52, 62, 80)
 	end
+	stampToggleRuntime()
 end
 
 local function ensureToggleUI()
@@ -191,6 +216,7 @@ local function ensureToggleUI()
 
 	toggleGui.Enabled = shouldShowToggleUI()
 	updateToggleVisual()
+	stampToggleRuntime()
 	return toggleGui
 end
 
@@ -203,6 +229,7 @@ toggleFlashlight = function()
 		enabled = flashlightOn,
 	})
 	updateToggleVisual()
+	stampToggleRuntime()
 
 	if flashlightOn then
 		print("[Flashlight] ON")
@@ -226,11 +253,13 @@ local function refreshToggleUIVisibility()
 	if toggleGui then
 		toggleGui.Enabled = shouldShowToggleUI()
 	end
+	stampToggleRuntime()
 end
 
 player:SetAttribute(FLASHLIGHT_ATTRIBUTE, flashlightOn)
 ensureToggleUI()
 refreshToggleUIVisibility()
+stampFlashlightClientState()
 
 player:GetAttributeChangedSignal("InMatch"):Connect(refreshToggleUIVisibility)
 player:GetAttributeChangedSignal("MatchId"):Connect(refreshToggleUIVisibility)

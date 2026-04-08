@@ -13445,3 +13445,34 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `PasrahAudioCue=heartbeat_rise`
     - `PasrahAudioSoundId=rbxassetid://138884191945388`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 04:34:55 +07:00 - Stamp Flashlight Runtime Identity
+- Updated `src/client/FlashlightController.client.lua` so local flashlight runtime now publishes direct toggle state/visibility attrs instead of keeping flashlight state implicit in button text only.
+- Updated `src/client/CameraController.client.lua` so FPV flashlight viewmodel and cursor toggle now stamp direct runtime attrs on the actual client instances:
+  - `FPV_Arms`
+  - `FPV_Flashlight`
+  - `Handle`
+  - `Lens`
+  - `FPV_LocalSpotLight`
+  - `FPVCursorToggleUI`
+  - `CursorToggleButton`
+- Updated `src/ServerScriptService/Server/FlashlightSyncSystem/Service.lua` so flashlight remote sync now rechecks attachment on demand instead of trusting spawn-time cache only, and now publishes authoritative remote flashlight probe attrs back onto the player for Studio verification.
+- Build passed: `_tmp_flashlight_runtime_identity_build.rbxlx`.
+- Live Studio proof:
+  - forced FPV probe (`InMatch=true`, `MatchId=flashlight_probe`) produced:
+    - `PasrahCursorMode=LockedFPV`
+    - `PasrahFlashlightVisualAlpha=1`
+    - `PasrahFlashlightLightEnabled=true`
+  - runtime FPV instances carried direct identity:
+    - `Workspace.Camera.FPV_Arms` -> `PasrahFlashlightChannel=FPVArms`
+    - `Workspace.Camera.FPV_Arms.FPV_Flashlight.Lens.FPV_LocalSpotLight` -> `PasrahFlashlightChannel=FPVLocalSpotLight`
+    - `PlayerGui.FPVCursorToggleUI.CursorToggleButton` -> `PasrahFlashlightChannel=CursorToggleButton`
+  - after `LeftAlt` unlock:
+    - `PasrahCursorMode=UnlockedUI`
+    - `PasrahCursorUnlocked=true`
+    - `CursorToggleButton.PasrahCursorUnlocked=true`
+  - server-authoritative remote flashlight probe now proves the remote owner is alive even when the local client does not surface `FlashlightHandle` on its own character tree:
+    - `PasrahFlashlightRemoteLastAction=Toggle`
+    - `PasrahFlashlightRemoteLiveHandle=true`
+    - `PasrahFlashlightRemoteHandleMatchesCache=true`
+- Roblox Studio was returned to STOP TEST before logging.

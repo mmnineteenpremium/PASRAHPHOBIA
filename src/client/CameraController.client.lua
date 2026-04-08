@@ -109,6 +109,64 @@ local fpvFlashlightVisualAlpha = 0
 local lastLoggedCameraMode = nil
 local setCursorUnlocked
 
+local function stampCursorToggleRuntime()
+	if fpvCursorToggleGui then
+		fpvCursorToggleGui:SetAttribute("PasrahFlashlightOwner", "CameraController")
+		fpvCursorToggleGui:SetAttribute("PasrahFlashlightChannel", "CursorToggleUI")
+		fpvCursorToggleGui:SetAttribute("PasrahCursorMode", tostring(player:GetAttribute(CURSOR_MODE_ATTR) or ""))
+		fpvCursorToggleGui:SetAttribute("PasrahFpvLocked", FPV_LOCKED == true)
+		fpvCursorToggleGui:SetAttribute("PasrahCursorUnlocked", fpvCursorUnlocked == true)
+	end
+	if fpvCursorToggleButton then
+		fpvCursorToggleButton:SetAttribute("PasrahFlashlightOwner", "CameraController")
+		fpvCursorToggleButton:SetAttribute("PasrahFlashlightChannel", "CursorToggleButton")
+		fpvCursorToggleButton:SetAttribute("PasrahCursorMode", tostring(player:GetAttribute(CURSOR_MODE_ATTR) or ""))
+		fpvCursorToggleButton:SetAttribute("PasrahFpvLocked", FPV_LOCKED == true)
+		fpvCursorToggleButton:SetAttribute("PasrahCursorUnlocked", fpvCursorUnlocked == true)
+		fpvCursorToggleButton:SetAttribute("PasrahCursorToggleVisible", fpvCursorToggleButton.Visible == true)
+	end
+end
+
+local function stampFpvRuntime()
+	local flashlightEnabled = player:GetAttribute(FLASHLIGHT_ATTRIBUTE) == true
+	local ownsUvFlashlight = player:GetAttribute(UV_FLASHLIGHT_OWNED_ATTR) == true
+	if fpvArmsModel then
+		fpvArmsModel:SetAttribute("PasrahFlashlightOwner", "CameraController")
+		fpvArmsModel:SetAttribute("PasrahFlashlightChannel", "FPVArms")
+		fpvArmsModel:SetAttribute("PasrahFpvLocked", FPV_LOCKED == true)
+		fpvArmsModel:SetAttribute("PasrahCursorUnlocked", fpvCursorUnlocked == true)
+		fpvArmsModel:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
+	end
+	if fpvFlashlightModel then
+		fpvFlashlightModel:SetAttribute("PasrahFlashlightOwner", "CameraController")
+		fpvFlashlightModel:SetAttribute("PasrahFlashlightChannel", "FPVFlashlightModel")
+		fpvFlashlightModel:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
+		fpvFlashlightModel:SetAttribute("PasrahFlashlightUsesUV", ownsUvFlashlight)
+		fpvFlashlightModel:SetAttribute("PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha)
+	end
+	if fpvFlashlightHandle then
+		fpvFlashlightHandle:SetAttribute("PasrahFlashlightOwner", "CameraController")
+		fpvFlashlightHandle:SetAttribute("PasrahFlashlightChannel", "FPVFlashlightHandle")
+		fpvFlashlightHandle:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
+		fpvFlashlightHandle:SetAttribute("PasrahFlashlightUsesUV", ownsUvFlashlight)
+		fpvFlashlightHandle:SetAttribute("PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha)
+	end
+	if fpvFlashlightLens then
+		fpvFlashlightLens:SetAttribute("PasrahFlashlightOwner", "CameraController")
+		fpvFlashlightLens:SetAttribute("PasrahFlashlightChannel", "FPVFlashlightLens")
+		fpvFlashlightLens:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
+		fpvFlashlightLens:SetAttribute("PasrahFlashlightUsesUV", ownsUvFlashlight)
+		fpvFlashlightLens:SetAttribute("PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha)
+	end
+	if fpvFlashlightLight then
+		fpvFlashlightLight:SetAttribute("PasrahFlashlightOwner", "CameraController")
+		fpvFlashlightLight:SetAttribute("PasrahFlashlightChannel", "FPVLocalSpotLight")
+		fpvFlashlightLight:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
+		fpvFlashlightLight:SetAttribute("PasrahFlashlightUsesUV", ownsUvFlashlight)
+		fpvFlashlightLight:SetAttribute("PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha)
+	end
+end
+
 local function lerpNumber(a, b, alpha)
 	return a + ((b - a) * math.clamp(alpha, 0, 1))
 end
@@ -214,6 +272,7 @@ local function updateCursorToggleUi()
 	button.Visible = show
 	button.Text = fpvCursorUnlocked and "RETURN FPV [ALT/~]" or "UI CURSOR [ALT/~]"
 	button.BackgroundColor3 = fpvCursorUnlocked and Color3.fromRGB(82, 98, 58) or Color3.fromRGB(48, 64, 84)
+	stampCursorToggleRuntime()
 end
 
 local function applyFpvMouseMode()
@@ -243,6 +302,7 @@ local function applyFpvMouseMode()
 	end
 	player:SetAttribute("PasrahCursorUnlocked", FPV_LOCKED and fpvCursorUnlocked or false)
 	updateCursorToggleUi()
+	stampCursorToggleRuntime()
 end
 
 setCursorUnlocked = function(unlocked)
@@ -507,6 +567,7 @@ local function updateFpvFlashlightVisual(deltaTime)
 	end
 	player:SetAttribute(FLASHLIGHT_VISUAL_ALPHA_ATTR, fpvFlashlightVisualAlpha)
 	player:SetAttribute(FLASHLIGHT_LIGHT_ENABLED_ATTR, fpvFlashlightVisualAlpha > 0.02)
+	stampFpvRuntime()
 end
 
 local function sanitizeFpvClonePart(clonePart, sourcePart, cloneName)
@@ -696,6 +757,7 @@ local function ensureFpvArms(character)
 	updateFpvFlashlightVisual()
 	model.PrimaryPart = viewRoot
 	fpvArmsModel = model
+	stampFpvRuntime()
 	return true
 end
 
@@ -938,6 +1000,8 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 			clearFpvArms()
 		end
 	end
+	stampCursorToggleRuntime()
+	stampFpvRuntime()
 end)
 
 print("[Phase7.1] Camera Controller initialized")

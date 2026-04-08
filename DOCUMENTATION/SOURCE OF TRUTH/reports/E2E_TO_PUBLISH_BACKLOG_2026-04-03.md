@@ -3938,3 +3938,26 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `PasrahGhostRenderDistortion=0.7`
 - Build passed: `_tmp_ghostrenderer_runtime_state_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 04:34:55 +07:00 - Stamp Flashlight Runtime Identity
+- Status: DONE.
+- `Client.FlashlightController` now exposes direct flashlight toggle attrs instead of hiding state in button copy only.
+- `Client.CameraController` now stamps runtime identity on the FPV flashlight viewmodel and cursor toggle UI.
+- `Server.FlashlightSyncSystem.Service` now retries flashlight attachment on demand and exposes authoritative remote flashlight probe attrs for Studio.
+- Live Studio proof:
+  - FPV flashlight path:
+    - `PasrahCursorMode=LockedFPV`
+    - `PasrahFlashlightVisualAlpha=1`
+    - `PasrahFlashlightLightEnabled=true`
+    - `FPV_Arms.PasrahFlashlightChannel=FPVArms`
+    - `FPV_LocalSpotLight.PasrahFlashlightChannel=FPVLocalSpotLight`
+  - cursor unlock path:
+    - `PasrahCursorMode=UnlockedUI`
+    - `PasrahCursorUnlocked=true`
+    - `CursorToggleButton.PasrahCursorUnlocked=true`
+  - server remote flashlight path:
+    - `PasrahFlashlightRemoteLastAction=Toggle`
+    - `PasrahFlashlightRemoteLiveHandle=true`
+    - `PasrahFlashlightRemoteHandleMatchesCache=true`
+- Build passed: `_tmp_flashlight_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
