@@ -141,7 +141,29 @@ Aturan baca:
      - asset aktif di inventory akun: `click5`
      - batch `2026-04-08` menutup fallback lama `rbxassetid://115959318`
 
-10. `Flashlight toggle`
+10. `Objective update cue`
+   - Asset:
+     - `rbxassetid://96021243760086`
+   - Source in repo:
+     - `src/client/UI/Main.lua`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `objective_update`
+     - dipakai sebagai fallback cue saat `ObjectiveLabel` berubah pada surface `Preparation / Investigation / Hunt`
+
+11. `Lobby / invite notification cue`
+   - Asset:
+     - `rbxassetid://130533639073623`
+   - Source in repo:
+     - `src/client/UI/Main.lua`
+   - Provenance status:
+     - `verified`
+   - Notes:
+     - asset aktif di inventory akun: `ui_notification`
+     - dipakai sebagai fallback cue untuk `Lobby feedback` dan `Room invite popup`
+
+12. `Flashlight toggle`
    - Asset:
      - `rbxassetid://140513388846872`
    - Source in repo:
@@ -152,7 +174,7 @@ Aturan baca:
      - asset aktif di inventory akun: `switch15`
      - dipakai oleh toggle flashlight investigasi aktif
 
-11. `DoorRuntime default pair`
+13. `DoorRuntime default pair`
    - Asset IDs:
      - open `rbxassetid://83005562781593`
      - close `rbxassetid://78764817933410`
@@ -167,7 +189,7 @@ Aturan baca:
        - `doorClose_1`
      - pasangan default dunia sekarang tidak lagi memakai reuse manifest/whisper
 
-12. Footstep set
+14. Footstep set
    - Asset IDs:
      - `rbxassetid://104336169985098`
      - `rbxassetid://79900103772577`
@@ -183,7 +205,7 @@ Aturan baca:
      - asset sudah source-controlled
      - belum masuk jalur locomotion modern, jadi statusnya legal/runtime-ready tetapi belum gameplay-live
 
-13. `Jumpscare_01`
+15. `Jumpscare_01`
    - Asset:
      - `rbxassetid://138186576`
    - Source in repo:

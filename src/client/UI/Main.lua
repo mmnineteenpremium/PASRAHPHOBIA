@@ -546,6 +546,14 @@ local UI_SOUND_FALLBACKS = {
 		SoundId = "rbxassetid://85056627192723",
 		Volume = 0.14,
 	},
+	ObjectiveUpdate = {
+		SoundId = "rbxassetid://96021243760086",
+		Volume = 0.17,
+	},
+	Notification = {
+		SoundId = "rbxassetid://130533639073623",
+		Volume = 0.18,
+	},
 }
 local cachedSoundTemplates = {}
 local activeRuntimeUISounds = {}
@@ -640,20 +648,18 @@ local function createFallbackSoundTemplate(soundKey)
 end
 
 local function getCachedSoundTemplate(soundKey)
-	local pathSegments = UI_SOUND_PATHS[soundKey]
-	if type(pathSegments) ~= "table" then
-		return nil
-	end
-
 	local cached = cachedSoundTemplates[soundKey]
 	if cached and (cached.Parent or cached:GetAttribute("PasrahRuntimeTemplate") == true) then
 		return cached
 	end
 
-	local resolved = resolveSoundTemplate(pathSegments)
-	if resolved and tostring(resolved.SoundId or "") ~= "" then
-		cachedSoundTemplates[soundKey] = resolved
-		return resolved
+	local pathSegments = UI_SOUND_PATHS[soundKey]
+	if type(pathSegments) == "table" then
+		local resolved = resolveSoundTemplate(pathSegments)
+		if resolved and tostring(resolved.SoundId or "") ~= "" then
+			cachedSoundTemplates[soundKey] = resolved
+			return resolved
+		end
 	end
 
 	local fallback = createFallbackSoundTemplate(soundKey)
@@ -662,7 +668,7 @@ local function getCachedSoundTemplate(soundKey)
 		return fallback
 	end
 
-	return resolved
+	return nil
 end
 
 local function playRuntimeUISound(soundKey, options)
@@ -4355,6 +4361,8 @@ function UISystem:Init(context)
 	self._teleportOverlayToken = 0
 	self._teleportOverlayTween = nil
 	self._lastCountdownAudioSecond = nil
+	self._lastObjectiveSoundSignature = nil
+	self._lastLobbyFeedbackSignature = nil
 	self._lastPreparationFocusToolSeen = nil
 	self._lastFieldKitTemporalRefreshAt = 0
 	self._fieldKitTemporalRefreshArmed = false
@@ -6633,6 +6641,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			and semanticAccent:Lerp(Color3.fromRGB(235, 240, 245), 0.3)
 			or Color3.fromRGB(235, 240, 245)
 	end
+	self:_playObjectiveUpdateCueIfNeeded(viewState)
 	self:_updateMatchSummaryRows(match.BasicSummaryRows, viewState, payload)
 	self:_refreshFieldKitPanel()
 	self:_syncMatchWindowVisibility()
@@ -6687,6 +6696,33 @@ function UISystem:_renderResultsPanel(payload)
 	end
 	self:_updateMatchSummaryRows(match.ResultsSummaryRows, "Results")
 	self:_syncMatchWindowVisibility()
+end
+
+function UISystem:_playObjectiveUpdateCueIfNeeded(viewState)
+	local match = self._uxWidgets and self._uxWidgets.match or nil
+	local objectiveLabel = match and match.ObjectiveLabel or nil
+	if not objectiveLabel or not objectiveLabel:IsA("TextLabel") then
+		self._lastObjectiveSoundSignature = nil
+		return
+	end
+
+	local objectiveText = objectiveLabel.Visible == true and tostring(objectiveLabel.Text or "") or ""
+	if objectiveText == "" or viewState == "Lobby" or viewState == "Results" then
+		self._lastObjectiveSoundSignature = nil
+		return
+	end
+
+	local signature = string.format("%s|%s", tostring(viewState or ""), objectiveText)
+	if self._lastObjectiveSoundSignature == signature then
+		return
+	end
+
+	self._lastObjectiveSoundSignature = signature
+	playRuntimeUISound("ObjectiveUpdate", {
+		SingleInstance = true,
+		VolumeScale = viewState == "Hunt" and 1.02 or 0.96,
+		PlaybackJitter = 0.03,
+	})
 end
 
 function UISystem:_startResultsCloseLock(payload)
@@ -12268,6 +12304,7 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 	if not lobby or not lobby.FeedbackLabel then
 		return
 	end
+	local previousFeedbackText = tostring(lobby.FeedbackLabel.Text or "")
 
 	if eventName == "RoomUpdated" or eventName == "RoomStateUpdate" then
 		local roomId = payload and payload.room and payload.room.roomId or payload and payload.roomId
@@ -12473,6 +12510,20 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 	if lobby.PlayButton then
 		lobby.PlayButton.Visible = false
 	end
+	local nextFeedbackText = tostring(lobby.FeedbackLabel.Text or "")
+	if nextFeedbackText == "" then
+		self._lastLobbyFeedbackSignature = nil
+		return
+	end
+	local signature = string.format("%s|%s", tostring(eventName or ""), nextFeedbackText)
+	if signature ~= self._lastLobbyFeedbackSignature and nextFeedbackText ~= previousFeedbackText then
+		self._lastLobbyFeedbackSignature = signature
+		playRuntimeUISound("Notification", {
+			SingleInstance = true,
+			VolumeScale = 0.92,
+			PlaybackJitter = 0.02,
+		})
+	end
 end
 
 function UISystem:_hideRoomInvitePopup()
@@ -12501,6 +12552,11 @@ function UISystem:_showRoomInvitePopup(payload)
 	local modeText = tostring(payload.mode or "Classic")
 	textLabel.Text = string.format("%s mengundang kamu ke Room #%s (%s)", inviterName, roomId, modeText)
 	popup.Visible = true
+	playRuntimeUISound("Notification", {
+		SingleInstance = true,
+		VolumeScale = 1.0,
+		PlaybackSpeed = 1.02,
+	})
 	task.delay(5, function()
 		if self._activeInviteId == inviteId then
 			self:RoomBrowserRespondRoomInvite(inviteId, false)
@@ -14266,9 +14322,22 @@ function UISystem:_ensureBasicUIs()
 				ShopButton = shopButton,
 				RankButton = rankButton,
 				MenuButton = menuButton,
-			}
+		}
+	end
+
+	local nextFeedbackText = tostring(lobby.FeedbackLabel.Text or "")
+	if nextFeedbackText ~= "" then
+		local signature = string.format("%s|%s", tostring(eventName or ""), nextFeedbackText)
+		if signature ~= self._lastLobbyFeedbackSignature and nextFeedbackText ~= previousFeedbackText then
+			self._lastLobbyFeedbackSignature = signature
+			playRuntimeUISound("Notification", {
+				SingleInstance = true,
+				VolumeScale = 0.92,
+				PlaybackJitter = 0.02,
+			})
 		end
 	end
+end
 
 	self:_refreshBasicLobbyPanel()
 	self:_refreshBasicMatchPanel("Lobby")
