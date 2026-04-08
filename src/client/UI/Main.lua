@@ -290,6 +290,8 @@ local function createDefaultFieldKitToolState(toolType)
 	return {
 		usesRemaining = usesRemaining and math.max(0, math.floor(usesRemaining)) or nil,
 		chargesRemaining = nil,
+		huntRepelled = false,
+		repellentUntil = nil,
 		visualPlaced = false,
 		placementId = nil,
 		pending = false,
@@ -5379,10 +5381,17 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 		if data.visualPlaced ~= nil then
 			toolState.visualPlaced = data.visualPlaced == true
 		end
+		if toolType == "Dupa" then
+			toolState.huntRepelled = data.huntRepelled == true
+			toolState.repellentUntil = data.repellentUntil
+		end
 	end
 
 	if eventName == "SaltPlaced" or eventName == "CrucifixPlaced" or eventName == "SmudgeActivated" then
 		toolState.visualPlaced = true
+	end
+	if toolType == "Dupa" and eventName == "GhostRepelled" then
+		toolState.huntRepelled = true
 	end
 
 	if eventName == "CrucifixTriggered" then
@@ -5416,6 +5425,7 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	local feedbackData = feedback and type(feedback.data) == "table" and feedback.data or feedback
 	local usesRemaining = tonumber(toolState.usesRemaining)
 	local chargesRemaining = tonumber(toolState.chargesRemaining)
+	local repellentUntil = tonumber(toolState.repellentUntil)
 
 	if toolState.pending then
 		return "WAIT", false, "REQUEST"
@@ -5425,6 +5435,9 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	end
 	if toolType == "Salib" and chargesRemaining ~= nil then
 		return string.format("C%d", math.max(0, math.floor(chargesRemaining))), false, chargesRemaining > 0 and "GUARD" or "BURNT"
+	end
+	if toolType == "Dupa" and (toolState.huntRepelled == true or (repellentUntil ~= nil and repellentUntil > os.clock()) or (feedbackData and feedbackData.huntRepelled == true)) then
+		return toolState.huntRepelled == true and "REPEL" or "SAFE", false, toolState.huntRepelled == true and "SAFE GAP" or "SMOKE ON"
 	end
 	if toolState.visualPlaced == true then
 		if toolType == "Garam" then
