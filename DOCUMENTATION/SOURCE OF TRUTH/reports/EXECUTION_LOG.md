@@ -13074,6 +13074,24 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `EvidenceCollected`
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 05:22:41 +07:00 - Stamp Journal UI Runtime Identity
+- Updated `src/client/UI/Main.lua` so `JournalUI` now stamps direct runtime attrs on the actual auxiliary window instances and key journal widgets instead of leaving journal identity only on player attrs.
+- Build passed: `_tmp_journal_ui_identity_build.rbxlx`.
+- Live Studio proof:
+  - `Client.UI.Main` now loads successfully again in play after moving the journal stamp helpers off top-level locals.
+  - `StartSoloMatch -> InvestigationPhase -> UseEvidenceTool(JejakEnergi)` produced:
+    - player attrs:
+      - `PasrahJournalOwner=JournalSystem`
+      - `PasrahJournalLastEvent=JournalUpdated`
+    - UI runtime attrs:
+      - `PlayerGui.JournalUI.MainPanel` -> `PasrahJournalUIOwner=UISystem`, `PasrahJournalUIChannel=JournalPanel`
+      - `PlayerGui.JournalUI.MainPanel.StatusBadge` -> `PasrahJournalUIOwner=UISystem`, `PasrahJournalUIChannel=JournalStatusBadge`
+      - `PlayerGui.JournalUI.MainPanel.ContentFrame.JournalDeck.CandidateSection.BodyLabel` -> `PasrahJournalUIOwner=UISystem`, `PasrahJournalUIChannel=JournalCandidateBody`, `PasrahJournalCandidateCount=12`
+      - `PlayerGui.JournalUI.MainPanel.ToolActionButton` -> `PasrahJournalUIChannel=JournalToolActionButton`, `PasrahJournalToolType=JejakEnergi`, `PasrahJournalToolStatus=EMF level 5 terkunci.`
+      - candidate body list snapshot:
+        - `Banaspati | Genderuwo | HantuTanah | Jerangkong | Kuntilanak | Leak | Palasik | Pocong | SilumanUlar | SundelBolong | Tuyul | WeweGombel`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 09:36:40 +07:00 - Stamp Sanity Runtime Identity
 - Updated `src/ServerScriptService/Server/SanitySystem/Service.lua` so server-authoritative sanity state now writes direct runtime attrs on the player instead of staying implicit inside service state.
 - Build passed: `_tmp_sanity_runtime_identity_build.rbxlx`.

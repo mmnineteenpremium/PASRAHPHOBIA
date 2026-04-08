@@ -7816,6 +7816,56 @@ function UISystem:_ensureJournalWidgets(window)
 	return window.JournalWidgets
 end
 
+function UISystem:_stampJournalUIInstance(instance, channel, uiVisible, state, discovered, confirmed, candidates)
+	if not instance then
+		return
+	end
+
+	instance:SetAttribute("PasrahJournalUIOwner", "UISystem")
+	instance:SetAttribute("PasrahJournalUIChannel", tostring(channel or instance.Name))
+	instance:SetAttribute("PasrahJournalUIVisible", instance:IsA("GuiObject") and instance.Visible == true or uiVisible == true)
+	instance:SetAttribute("PasrahJournalMatchId", type(state) == "table" and tostring(state.matchId or "") or nil)
+	instance:SetAttribute("PasrahJournalLastEvent", type(state) == "table" and tostring(state.lastEvent or "") or nil)
+	instance:SetAttribute("PasrahJournalDiscoveredCount", type(discovered) == "table" and #discovered or 0)
+	instance:SetAttribute("PasrahJournalConfirmedCount", type(confirmed) == "table" and #confirmed or 0)
+	instance:SetAttribute("PasrahJournalCandidateCount", type(candidates) == "table" and #candidates or 0)
+	instance:SetAttribute("PasrahJournalDiscoveredList", type(discovered) == "table" and #discovered > 0 and table.concat(discovered, " | ") or nil)
+	instance:SetAttribute("PasrahJournalConfirmedList", type(confirmed) == "table" and #confirmed > 0 and table.concat(confirmed, " | ") or nil)
+	instance:SetAttribute("PasrahJournalCandidateList", type(candidates) == "table" and #candidates > 0 and table.concat(candidates, " | ") or nil)
+	instance:SetAttribute("PasrahJournalToolType", type(state) == "table" and tostring(state.toolType or "") or nil)
+	instance:SetAttribute("PasrahJournalToolStatus", type(state) == "table" and tostring(state.toolStatus or "") or nil)
+end
+
+function UISystem:_stampJournalUIRuntime(window, widgets, uiVisible, state, discovered, confirmed, candidates)
+	if type(window) ~= "table" then
+		return
+	end
+
+	self:_stampJournalUIInstance(window.Gui, "JournalGui", uiVisible, state, discovered, confirmed, candidates)
+	self:_stampJournalUIInstance(window.Panel, "JournalPanel", uiVisible, state, discovered, confirmed, candidates)
+	self:_stampJournalUIInstance(window.StatusBadge, "JournalStatusBadge", uiVisible, state, discovered, confirmed, candidates)
+	self:_stampJournalUIInstance(window.PrimaryLabel, "JournalPrimaryLabel", uiVisible, state, discovered, confirmed, candidates)
+	self:_stampJournalUIInstance(window.SecondaryLabel, "JournalSecondaryLabel", uiVisible, state, discovered, confirmed, candidates)
+	self:_stampJournalUIInstance(window.ContentFrame, "JournalContentFrame", uiVisible, state, discovered, confirmed, candidates)
+	self:_stampJournalUIInstance(window.ContentText, "JournalContentText", uiVisible, state, discovered, confirmed, candidates)
+	self:_stampJournalUIInstance(window.FooterLabel, "JournalFooterLabel", uiVisible, state, discovered, confirmed, candidates)
+	self:_stampJournalUIInstance(window.ToolStatusLabel, "JournalToolStatusLabel", uiVisible, state, discovered, confirmed, candidates)
+	self:_stampJournalUIInstance(window.ToolActionButton, "JournalToolActionButton", uiVisible, state, discovered, confirmed, candidates)
+
+	if type(widgets) == "table" then
+		self:_stampJournalUIInstance(widgets.HeroCard, "JournalHeroCard", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.HeroBadge, "JournalHeroBadge", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.HeroTitle, "JournalHeroTitle", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.HeroMeta, "JournalHeroMeta", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.DiscoveredCount, "JournalDiscoveredCount", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.ConfirmedCount, "JournalConfirmedCount", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.CandidateCount, "JournalCandidateCount", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.DiscoveredBody, "JournalDiscoveredBody", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.ConfirmedBody, "JournalConfirmedBody", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.CandidateBody, "JournalCandidateBody", uiVisible, state, discovered, confirmed, candidates)
+	end
+end
+
 function UISystem:_refreshJournalPanel()
 	local state = self._journalState or {}
 	local discovered = state.discoveredEvidence or {}
@@ -7918,6 +7968,15 @@ function UISystem:_refreshJournalPanel()
 		window.ToolActionButton.Text = "SCAN JEJAK"
 		window.ToolActionButton.BackgroundColor3 = badgeColor:Lerp(Color3.fromRGB(42, 62, 84), 0.24)
 	end
+	self:_stampJournalUIRuntime(
+		window,
+		window and window.JournalWidgets or nil,
+		self._uiState and self._uiState.JournalUI and self._uiState.JournalUI.visible == true,
+		state,
+		discovered,
+		confirmed,
+		candidates
+	)
 	self:_refreshFieldKitPanel()
 end
 
