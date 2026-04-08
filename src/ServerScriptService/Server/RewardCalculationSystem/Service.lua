@@ -92,6 +92,22 @@ function Service.new(state, deps)
     return self
 end
 
+local function stampRewardCalculationRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+    target:SetAttribute("PasrahRewardOwner", "RewardCalculationSystem")
+    target:SetAttribute("PasrahRewardMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+    target:SetAttribute("PasrahRewardReason", type(payload.reason) == "string" and payload.reason or nil)
+    target:SetAttribute("PasrahRewardCurrency", type(payload.currency) == "string" and payload.currency or nil)
+    target:SetAttribute("PasrahRewardLastAmount", tonumber(payload.amount) or 0)
+    target:SetAttribute("PasrahRewardLastPPReward", tonumber(payload.ppReward) or 0)
+    target:SetAttribute("PasrahRewardLastXP", tonumber(payload.xp) or 0)
+    target:SetAttribute("PasrahRewardRoyalPassXP", tonumber(payload.royalPassXP) or 0)
+    target:SetAttribute("PasrahRewardDailyProgress", tonumber(payload.dailyProgress) or 0)
+    target:SetAttribute("PasrahRewardLastUpdatedAt", os.clock())
+end
+
 function Service:Init()
     self._dependencies = {
         EconomySystem = Services.Get(self._deps, "EconomySystem"),
@@ -429,6 +445,7 @@ function Service:_grantToPlayer(matchId, payload, entry, reward)
         progress = reward.dailyProgress,
         sourceSystem = "RewardCalculationSystem",
     })
+    stampRewardCalculationRuntime(entry.player or Players:GetPlayerByUserId(userId), rewardPayload)
 
     self:_fireMatchRewardSummary(entry.player or Players:GetPlayerByUserId(userId), matchId, reward)
 

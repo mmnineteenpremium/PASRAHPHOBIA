@@ -13140,7 +13140,36 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `PasrahMatchResultPlayersDead=0`
     - `PasrahMatchResultPlayersExtracted=0`
     - `PasrahMatchResultTeamSuccess=false`
-    - `PasrahMatchResultExtractionCompleted=false`
+  - `PasrahMatchResultExtractionCompleted=false`
+- Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 10:22:44 +07:00 - Stamp Reward Runtime Identity On Active Endgame Owner
+- Reward runtime proof did not come from `RewardSystem` or `EconomySystem` direct attrs. Live wallet movement proved the active endgame reward owner was `RewardCalculationSystem`.
+- Updated `src/ServerScriptService/Server/RewardCalculationSystem/Service.lua` so endgame reward distribution now stamps direct reward attrs on the rewarded player:
+  - `PasrahRewardOwner`
+  - `PasrahRewardMatchId`
+  - `PasrahRewardReason`
+  - `PasrahRewardCurrency`
+  - `PasrahRewardLastAmount`
+  - `PasrahRewardLastPPReward`
+  - `PasrahRewardLastXP`
+  - `PasrahRewardRoyalPassXP`
+  - `PasrahRewardDailyProgress`
+- Build passed: `_tmp_reward_runtime_identity_build.rbxlx`.
+- Live Studio proof after fresh `StartSoloMatch -> EndMatch`:
+  - wallet moved:
+    - before: `MM=1200 PP=12 Robux=0`
+    - after: `MM=1506 PP=14 Robux=0`
+  - player attrs:
+    - `PasrahRewardOwner=RewardCalculationSystem`
+    - `PasrahRewardReason=endgame_match_reward`
+    - `PasrahRewardCurrency=MM`
+    - `PasrahRewardMatchId=match_1`
+    - `PasrahRewardLastAmount=306`
+    - `PasrahRewardLastPPReward=2`
+    - `PasrahRewardLastXP=222`
+    - `PasrahRewardRoyalPassXP=99`
+    - `PasrahRewardDailyProgress=2`
 - Roblox Studio was returned to STOP TEST before logging.
 
 ## 2026-04-09 05:07:51 +07:00 - Stamp Journal Runtime Identity
