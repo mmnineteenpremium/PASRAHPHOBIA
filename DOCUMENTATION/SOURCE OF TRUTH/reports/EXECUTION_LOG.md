@@ -12728,3 +12728,13 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `Meta = MOVE`
     - `Footer = DISTURB LOCK`
     - `FieldKitFrame.StatusLabel = Gangguan gerak terkunci. Pengganggu tervalidasi sebagai evidence.`
+
+- progress tambahan pada lane `field kit shortcut clarity`:
+  - hint default investigasi sekarang mengacu ke `Field Kit [1-9]`, bukan lagi shortcut era 5 tool
+  - shortcut label live untuk tool baru sekarang benar-benar muncul di surface tombol
+- validasi terbaru:
+  - runtime shortcut label:
+    - `SuhuMembekuButton = [6]`
+    - `BukuTerkutukButton = [7]`
+    - `BolaArwahButton = [8]`
+    - `GerakanGaibButton = [9]`

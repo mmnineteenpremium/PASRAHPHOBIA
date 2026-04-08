@@ -3143,7 +3143,7 @@ end
 local function getInvestigationControlsHintText(contextTag)
 	local anchor = getNearestNavigationAnchorInfo(contextTag or "Investigation")
 	if type(anchor) ~= "table" then
-		return "[1] Scan  •  [2] Garam  •  [3] Salib  •  [4] Dupa  •  [5] Spirit  •  [J] Journal"
+		return "[1-9] FIELD KIT  •  [J] JOURNAL  •  [F] FLASHLIGHT"
 	end
 
 	local anchorLabel = string.upper(formatNavigationAnchorLabel(anchor, "AREA TARGET"))
@@ -3155,7 +3155,7 @@ local function getInvestigationControlsHintText(contextTag)
 		return string.format("ROTASI: %s  •  BUKA LEVEL BERIKUTNYA  •  [J] JOURNAL  •  [F] FLASHLIGHT", anchorLabel)
 	end
 	if subtitle == "Sweep evidence" then
-		return string.format("SWEEP: %s  •  CEK RUANG DETAIL  •  [1-5] TOOL  •  [J] JOURNAL", anchorLabel)
+		return string.format("SWEEP: %s  •  CEK RUANG DETAIL  •  [1-9] FIELD KIT  •  [J] JOURNAL", anchorLabel)
 	end
 	if anchor.kind == "Door" then
 		local stateText = tostring(anchor.stateText or "")
@@ -3165,7 +3165,7 @@ local function getInvestigationControlsHintText(contextTag)
 			stateText ~= "" and string.upper(stateText) or "E/X/TAP"
 		)
 	end
-	return string.format("ANCHOR: %s  •  SWEEP EVIDENCE  •  [1-5] TOOL  •  [J] JOURNAL", anchorLabel)
+	return string.format("ANCHOR: %s  •  SWEEP EVIDENCE  •  [1-9] FIELD KIT  •  [J] JOURNAL", anchorLabel)
 end
 
 local function getPreparationFocusToolLabel()
@@ -4190,7 +4190,7 @@ function UISystem:Init(context)
 	self._lastCountdownAudioSecond = nil
 	self._lastPreparationFocusToolSeen = nil
 	self._matchWindowDismissed = false
-	self._matchControlsHintText = "[1] Scan   [2] Garam   [3] Salib   [4] Dupa   [5] Spirit   [J] Journal   [F] Flashlight   [K] Match   [Esc] Tutup UI"
+	self._matchControlsHintText = "[1-9] Field Kit   [J] Journal   [F] Flashlight   [K] Match   [Esc] Tutup UI"
 	self._uxWidgets = {
 		match = {},
 		lobby = {},
