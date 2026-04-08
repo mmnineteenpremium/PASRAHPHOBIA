@@ -1,0 +1,6 @@
+{
+  "type": "world_effect",
+  "class": "Beam",
+  "brightness": 1.1,
+  "color": "180,205,255"
+}

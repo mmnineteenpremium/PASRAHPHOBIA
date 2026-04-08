@@ -12786,7 +12786,7 @@ AssetRegistry
  └─ Kawani
 Monetization Loop
 
-Ini yang membuat monetization kamu kuat:
+Ini yang membuat monetization kuat:
 
 Player masuk lobby
         │
@@ -12820,6 +12820,7 @@ MM cap = 20000
 Daily Mission = 10000
 
 Ini membuat pass terasa bernilai.
+
 
 PASRAHPHOBIA — ECONOMY DATA STRUCTURE (SERVER SIDE)
 
@@ -13364,13 +13365,13 @@ Tools available
 
 Kotak Arwah
 
-Buku Terkutuk
+Buku Terkutuk /
 
-Bola Arwah
+Bola Arwah / To'un
 
 Gerakan Gaib
 
-Jejak Energi
+Jejak Energi / MEDOK
 
 Suhu Membeku
 

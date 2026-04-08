@@ -1,0 +1,6 @@
+{
+  "type": "world_effect",
+  "class": "Highlight",
+  "fillTransparency": 0.75,
+  "outlineTransparency": 1.0
+}

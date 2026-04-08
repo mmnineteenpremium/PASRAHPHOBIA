@@ -11,6 +11,7 @@ local TOOL_REQUEST_TYPES = {
 	BolaArwah = "TounDetection",
 	GerakanGaib = "PenggangguCheck",
 	Garam = "SaltPlacement",
+	PilSanity = "SanityPillUse",
 	Salib = "CrucifixPlacement",
 	Dupa = "SmudgeIgnite",
 }
@@ -23,6 +24,7 @@ local ToolModules = {
 	BolaArwah = require(script.Parent.BolaArwah.Main),
 	GerakanGaib = require(script.Parent.GerakanGaib.Main),
 	Garam = require(script.Parent.Garam.Main),
+	PilSanity = require(script.Parent.PilSanity.Main),
 	Salib = require(script.Parent.Salib.Main),
 	Dupa = require(script.Parent.Dupa.Main),
 }

@@ -1,0 +1,7 @@
+{
+  "type": "world_effect",
+  "class": "ParticleEmitter",
+  "texture": "freezing_breath_vapor.png",
+  "rate": 12,
+  "speed": 0.25
+}

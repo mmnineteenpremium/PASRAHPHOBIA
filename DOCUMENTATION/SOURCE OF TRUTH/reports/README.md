@@ -48,7 +48,7 @@ Catatan penting:
 - Baca `RETENTION_LOOP_BLUEPRINT_2026-04-06.md` untuk blueprint retention pasca backlog teknis utama selesai.
 
 ## Aturan Kerja yang Berlaku
-
+- READ `executionmode.md` (tidak boleh di ubah atau di hapus!)
 - source of truth tetap file lokal di repo
 - `Rojo` dipakai hanya untuk `local -> Studio`
 - `Rojo Two-Way Edit` tidak dipakai
