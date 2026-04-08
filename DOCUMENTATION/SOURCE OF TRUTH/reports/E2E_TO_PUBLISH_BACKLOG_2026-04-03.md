@@ -3704,6 +3704,32 @@ Urutan yang paling masuk akal dari titik sekarang:
 - GetQAGateReadiness is pass_with_manual_multiplayer; GetPublishReadiness remains overall=fail in Studio because persistence=mock and obuxMissingId=10.
 - Studio stop-test reporting rule followed.
 
+## 2026-04-09 04:53:58 +07:00 - Stamp Hiding Safe Zone Runtime Identity
+- Status: DONE.
+- `Server.HidingSystem.Service` now exposes direct runtime attrs on safe-zone parts so hunt refuge state is readable from the world instances themselves, not only from player attrs.
+- Live Studio proof:
+  - `SafeZone_1` during hunt + hide:
+    - `PasrahHideOwner=HidingSystem`
+    - `PasrahHideChannel=SafeZonePart`
+    - `PasrahHideMatchId=match_2`
+    - `PasrahHideZoneId=SafeZone_1`
+    - `PasrahHideLabel=SAFE ZONE`
+    - `PasrahHideSubtitle=Anchor aman: Livingroom`
+    - `PasrahHideRouteLabel=Livingroom`
+    - `PasrahHideVisible=true`
+    - `PasrahHideOccupiedCount=1`
+    - `PasrahHideHiddenCount=1`
+  - authoritative player state matched the zone:
+    - `PasrahHideState=Hidden`
+    - `PasrahHideZoneId=SafeZone_1`
+    - `PasrahHuntPressureHidden=true`
+    - `PasrahHuntPressureThreatState=Sheltered`
+  - non-occupied contrast zone remained truthful:
+    - `SafeZone_2.PasrahHideOccupiedCount=0`
+    - `SafeZone_2.PasrahHideHiddenCount=0`
+- Build passed: `_tmp_hiding_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
 ## 2026-04-09 04:49:59 +07:00 - Stamp Survival Runtime Identity
 - Status: DONE.
 - `Client.UI.Main` now stamps direct runtime attrs onto the active hunt/hide UI instances so survival state is readable from Studio without inferring it from text only.

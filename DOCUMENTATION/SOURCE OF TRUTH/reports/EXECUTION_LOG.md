@@ -13058,6 +13058,42 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 04:53:58 +07:00 - Stamp Hiding Safe Zone Runtime Identity
+- Updated `src/ServerScriptService/Server/HidingSystem/Service.lua` so runtime safe zones now publish direct zone identity/state attrs instead of hiding safe-zone state only in service memory and player attrs.
+- `SafeZone` parts now expose:
+  - `PasrahHideOwner`
+  - `PasrahHideChannel`
+  - `PasrahHideMatchId`
+  - `PasrahHideZoneId`
+  - `PasrahHideLabel`
+  - `PasrahHideSubtitle`
+  - `PasrahHideRouteLabel`
+  - `PasrahHideVisible`
+  - `PasrahHideOccupiedCount`
+  - `PasrahHideHiddenCount`
+- Build passed: `_tmp_hiding_runtime_identity_build.rbxlx`.
+- Live Studio proof:
+  - `Match_match_2.HauntedHouse.SafeZones.SafeZone_1` during hunt + hidden:
+    - `PasrahHideOwner=HidingSystem`
+    - `PasrahHideChannel=SafeZonePart`
+    - `PasrahHideMatchId=match_2`
+    - `PasrahHideZoneId=SafeZone_1`
+    - `PasrahHideLabel=SAFE ZONE`
+    - `PasrahHideSubtitle=Anchor aman: Livingroom`
+    - `PasrahHideRouteLabel=Livingroom`
+    - `PasrahHideVisible=true`
+    - `PasrahHideOccupiedCount=1`
+    - `PasrahHideHiddenCount=1`
+  - matching player state stayed authoritative:
+    - `PasrahHideState=Hidden`
+    - `PasrahHideZoneId=SafeZone_1`
+    - `PasrahHuntPressureHidden=true`
+    - `PasrahHuntPressureThreatState=Sheltered`
+  - zone contrast remained truthful:
+    - `SafeZone_2.PasrahHideOccupiedCount=0`
+    - `SafeZone_2.PasrahHideHiddenCount=0`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 04:49:59 +07:00 - Stamp Survival Runtime Identity
 - Updated `src/client/UI/Main.lua` so live survival UI state now stamps direct runtime attrs onto the real match instances that are active in Studio, instead of leaving hunt/hide state implicit in text only.
 - Updated `src/client/MovementController.client.lua` so sprint, target speed, backward penalty, and move magnitude now publish direct runtime attrs onto the player, humanoid, and root part.
