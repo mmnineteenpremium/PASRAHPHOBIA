@@ -4203,3 +4203,13 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `Daily Progress: 2`
 - Build passed: `_tmp_results_reward_progress_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 05:45:06 +07:00 - Stamp PASRA Summary Runtime Identity
+- Status: DONE.
+- `Client.UI.Main` now stamps direct runtime attrs on `PASRA_UI` summary instances so post-match summary identity is auditable directly on the player-facing panel.
+- Live Studio proof:
+  - `PASRA_UI.MainPanel` -> `PasrahPasraUIOwner=UISystem`, `PasrahPasraUIChannel=PasraPanel`, `PasrahPasraRoyalPassXP=99`, `PasrahPasraDailyProgress=2`
+  - `ContentFrame.ContentText` -> `PasrahPasraUIChannel=PasraContentText`, `PasrahPasraLastEvent=MatchEnded`
+  - `FooterLabel` -> `PasrahPasraUIChannel=PasraFooterLabel`, `PasrahPasraRoyalPassXP=99`, `PasrahPasraDailyProgress=2`
+- Build passed: `_tmp_pasra_ui_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.

@@ -13137,6 +13137,27 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `Daily Progress: 2`
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 05:45:06 +07:00 - Stamp PASRA Summary Runtime Identity
+- Updated `src/client/UI/Main.lua` so `PASRA_UI` now stamps direct runtime attrs on the summary surface itself instead of leaving result summary traceable only through text content.
+- Build passed: `_tmp_pasra_ui_identity_build.rbxlx`.
+- Live Studio proof after `StartSoloMatch -> EndMatch`:
+  - `PlayerGui.PASRA_UI.MainPanel`:
+    - `PasrahPasraUIOwner=UISystem`
+    - `PasrahPasraUIChannel=PasraPanel`
+    - `PasrahPasraRoyalPassXP=99`
+    - `PasrahPasraDailyProgress=2`
+  - `PlayerGui.PASRA_UI.MainPanel.ContentFrame.ContentText`:
+    - `PasrahPasraUIChannel=PasraContentText`
+    - `PasrahPasraLastEvent=MatchEnded`
+    - text includes:
+      - `Royal Pass XP: 99`
+      - `Daily Progress: 2`
+  - `PlayerGui.PASRA_UI.MainPanel.FooterLabel`:
+    - `PasrahPasraUIChannel=PasraFooterLabel`
+    - `PasrahPasraRoyalPassXP=99`
+    - `PasrahPasraDailyProgress=2`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 09:36:40 +07:00 - Stamp Sanity Runtime Identity
 - Updated `src/ServerScriptService/Server/SanitySystem/Service.lua` so server-authoritative sanity state now writes direct runtime attrs on the player instead of staying implicit inside service state.
 - Build passed: `_tmp_sanity_runtime_identity_build.rbxlx`.
