@@ -3567,3 +3567,27 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - tool utility temporer sekarang selesai benar-benar kembali netral di HUD, sementara trap/guard yang memang menetap tetap boleh bertahan highlighted
 
+- progress tambahan pada lane `audio inventory canonicalization`:
+  - asset upload Roblox yang memang sudah tersedia di inventory akun aktif sekarang dipasang ke owner runtime canonical, bukan lagi dibiarkan sebagai placeholder/fallback lama
+  - slot yang ditutup:
+    - `AmbientLoop_Main -> rbxassetid://140704980462451`
+    - `EnvironmentalCreak_01 -> rbxassetid://111282528409948`
+    - `GhostWhisper_01 -> rbxassetid://98105844059537`
+    - `ButtonClick_01 -> rbxassetid://85056627192723`
+    - `CountdownTick_01 -> rbxassetid://81830522846878`
+    - `TeleportDrop_01 -> rbxassetid://82086363159443`
+  - owner script aktif yang ikut ditutup:
+    - `DoorRuntime` / `MapRuntimePatches` default open/close
+    - `FlashlightConfig.sound.soundId`
+- validasi terbaru:
+  - edit-time Studio `PASRAHPHOBIA.rbxlx` membaca:
+    - `AmbientLoop_Main.SoundId = rbxassetid://140704980462451`
+    - `EnvironmentalCreak_01.SoundId = rbxassetid://111282528409948`
+    - `GhostWhisper_01.SoundId = rbxassetid://98105844059537`
+    - `ButtonClick_01.SoundId = rbxassetid://85056627192723`
+    - `CountdownTick_01.SoundId = rbxassetid://81830522846878`
+    - `TeleportDrop_01.SoundId = rbxassetid://82086363159443`
+- publish impact:
+  - batch audio canonical sekarang tidak lagi tertahan pada raw asset lokal untuk slot-slot yang memang sudah punya upload resmi di inventory Roblox
+  - residual yang tersisa tinggal raw asset yang belum bisa di-upload karena limit bulanan, bukan lagi kebingungan owner aktif untuk slot yang sudah tersedia
+

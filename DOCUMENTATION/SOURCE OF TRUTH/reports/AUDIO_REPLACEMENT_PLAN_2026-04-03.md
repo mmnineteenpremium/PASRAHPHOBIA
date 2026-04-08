@@ -15,18 +15,23 @@ Targetnya bukan sekadar "cari sound", tetapi:
 
 ## Status Saat Ini
 
-Slot canonical yang **masih kosong** di source aktif sekarang tinggal:
+Slot canonical yang **sudah terisi dan sinkron dengan inventory Roblox aktif**:
 
 1. `src/ReplicatedStorage/Assets/Audio/Ambient/AmbientLoop_Main.model.json`
+   - runtime canonical sekarang memakai `rbxassetid://140704980462451`
+   - source inventory:
+     - `Midnight Litany of Drones (Ancient Ritual Ambient)`
+   - status:
+     - blocker ambience kosong sudah tertutup
+     - asset ini memang inventory-only; tidak punya exact-name raw match di lokal, tetapi sudah valid sebagai upload akun aktif
 
-Slot canonical yang **sudah punya fallback runtime aman** walau asset Roblox final belum di-upload:
-
-1. `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
-   - runtime canonical `UISystem` sekarang memakai asset source-controlled `rbxassetid://115959318`
-   - validasi live terbaru membuktikan klik tombol lobby canonical memang memilih cue ini
+2. `src/ReplicatedStorage/Assets/Audio/UI/ButtonClick_01.model.json`
+   - runtime canonical `UISystem` sekarang memakai `rbxassetid://85056627192723`
+   - source inventory:
+     - `click5`
    - status:
      - blocker runtime sudah tertutup
-     - tetap boleh diganti nanti jika direction audio brand berubah
+     - sudah sinkron ke inventory upload akun aktif
 
 Slot canonical yang **sudah terisi lagi** dan sudah tervalidasi runtime:
 
@@ -53,11 +58,13 @@ Catatan penting:
   - `FearAudio`
   - `GhostAudio`
   - `HuntAudio`
-- validasi client live membuktikan cue berikut benar-benar membuat `Sound` runtime yang `IsPlaying = true`:
-  - `EnvironmentalAudioRuntime -> rbxassetid://139204195403262`
-  - `FearAudioRuntime -> rbxassetid://138884191945388`
-  - `GhostAudioRuntime -> rbxassetid://83336813491039`
-  - `HuntAudioRuntime -> rbxassetid://138329686293368`
+- validasi client live sebelumnya membuktikan kategori runtime modern memang hidup; source canonical terbaru sekarang dipetakan ke asset upload akun aktif berikut:
+  - `AmbientLoop_Main -> rbxassetid://140704980462451`
+  - `EnvironmentalCreak_01 -> rbxassetid://111282528409948`
+  - `GhostWhisper_01 -> rbxassetid://98105844059537`
+  - `ButtonClick_01 -> rbxassetid://85056627192723`
+  - `CountdownTick_01 -> rbxassetid://81830522846878`
+  - `TeleportDrop_01 -> rbxassetid://82086363159443`
 
 ## Asset Yang Sudah Tervalidasi
 
@@ -84,7 +91,27 @@ Catatan penting:
      - legal/runtime clear
      - masih placeholder artistik, bukan final ghost animation pack
 
-## Candidate Queue
+## Update 2026-04-08
+
+Batch canonicalization terbaru sudah memakai asset upload akun aktif yang ditemukan di inventory Roblox. Slot yang tadinya kosong/fallback sekarang sudah terisi sebagai berikut:
+
+- `AmbientLoop_Main` -> `rbxassetid://140704980462451` (`Midnight Litany of Drones (Ancient Ritual Ambient)`)
+- `EnvironmentalCreak_01` -> `rbxassetid://111282528409948` (`door_creak_3`)
+- `GhostWhisper_01` -> `rbxassetid://98105844059537` (`ghost_whisper_3`)
+- `ButtonClick_01` -> `rbxassetid://85056627192723` (`click5`)
+- `CountdownTick_01` -> `rbxassetid://81830522846878` (`tick_001`)
+- `TeleportDrop_01` -> `rbxassetid://82086363159443` (`drop_002`)
+
+Tambahan canonical owner yang juga sudah diselaraskan ke inventory upload akun aktif:
+
+- `DoorRuntime` / `MapRuntimePatches`
+  - open -> `rbxassetid://83005562781593` (`doorOpen_2`)
+  - close -> `rbxassetid://78764817933410` (`doorClose_1`)
+- `FlashlightConfig.sound.soundId` -> `rbxassetid://140513388846872` (`switch15`)
+
+Artinya blocker upload untuk batch audio canonical ini sudah tertutup untuk slot-slot yang memang sudah tersedia di inventory. Queue di bawah sekarang tinggal berfungsi sebagai catatan historis dan opsi art-pass masa depan, bukan blocker aktif.
+
+## Candidate Queue Historis / Opsional
 
 Semua kandidat di bawah dipilih karena lisensinya jelas dari halaman sumber dan cocok untuk role slot-nya. Mereka **belum otomatis ada di Roblox**; perlu download + upload ke account aktif dulu.
 
@@ -100,6 +127,9 @@ Semua kandidat di bawah dipilih karena lisensinya jelas dari halaman sumber dan 
 - Notes:
   - cocok dipotong atau di-loop sebagai ambience low-pressure
   - target volume source tetap rendah karena slot ini sudah di-tune `Volume = 0.25`
+  - status sekarang:
+    - **sudah tidak blocker**
+    - canonical source aktif memakai `rbxassetid://140704980462451`
 
 ### 2. EnvironmentalCreak_01
 
@@ -113,6 +143,9 @@ Semua kandidat di bawah dipilih karena lisensinya jelas dari halaman sumber dan 
 - Notes:
   - cocok dipotong jadi 1-2 varian creak pendek
   - tidak perlu loop
+  - status sekarang:
+    - **sudah tidak blocker**
+    - canonical source aktif memakai `rbxassetid://111282528409948`
 
 ### 3. GhostManifest_01
 
@@ -139,6 +172,9 @@ Semua kandidat di bawah dipilih karena lisensinya jelas dari halaman sumber dan 
 - Notes:
   - dipilih karena explicit disebut `Ghost Whispers`
   - perlu trim agar tidak terlalu panjang untuk trigger pendek
+  - status sekarang:
+    - **sudah tidak blocker**
+    - canonical source aktif memakai `rbxassetid://98105844059537`
 
 ### 5. HuntStart_01
 
@@ -159,18 +195,23 @@ Semua kandidat di bawah dipilih karena lisensinya jelas dari halaman sumber dan 
   - klik tombol UI utama
   - dipakai untuk micro-feedback pada lobby, room browser, shop, dan panel auxiliary
 - Current runtime fallback:
-  - `rbxassetid://115959318`
-  - dipakai langsung dari template canonical `ButtonClick_01`
+  - `rbxassetid://85056627192723`
+  - source inventory:
+    - `click5`
 - Status:
   - blocker runtime sudah tertutup
-  - cue brand baseline sudah hidup; penggantian selanjutnya opsional
+  - cue brand baseline sudah hidup dengan asset upload akun aktif; penggantian selanjutnya opsional
 - Candidate final:
   - optional
   - hanya diperlukan jika ingin mengganti signature click sekarang dengan versi brand lain
 
 ## Kenapa Belum Langsung Di-apply
 
-Blocker saat ini bukan pemilihan sumber, tetapi **upload ke Roblox account**:
+Bagian ini sekarang hanya berlaku untuk asset raw baru yang **belum** ada di inventory upload Roblox.
+
+Untuk batch 2026-04-08, apply sudah bisa dilakukan karena asset yang dipakai memang sudah ada di inventory akun aktif dan `rbxassetid://...`-nya sudah berhasil dicocokkan dengan nama lokal.
+
+Blocker ke depan tetap sama untuk raw asset baru:
 
 - workflow MCP yang aktif bisa inspect/edit Studio, tetapi tidak punya tool upload audio ke inventory account
 - repo lokal juga tidak punya jalur otomatis untuk membuat asset audio Roblox tanpa credential/upload step
@@ -212,10 +253,10 @@ pwsh -NoLogo -File .\scripts\set-audio-asset-ids.ps1 `
 
 ## Exit Criteria
 
-Dokumen ini dianggap selesai jika:
+Dokumen ini dianggap tercapai untuk batch canonical saat ini jika:
 
-1. slot kosong yang tersisa (`AmbientLoop_Main`) sudah punya Roblox asset ID final
-2. source `.model.json` sudah terisi untuk seluruh cue aktif lain yang dipakai runtime modern
-3. playtest boot tidak lagi memakai slot canonical kosong pada jalur aktif selain ambience loop yang memang masih ditahan jujur
-4. `ASSET_LICENSE_LEDGER_2026-04-03.md` tidak lagi menyimpan `GhostWhisper_01` sebagai blocker publish
+1. slot canonical yang tadinya kosong/fallback sudah terisi asset ID inventory aktif
+2. source `.model.json` aktif membaca ID baru tersebut
+3. owner script aktif (`DoorRuntime`, `MapRuntimePatches`, `FlashlightConfig`) ikut terselaraskan
+4. `ASSET_LICENSE_LEDGER_2026-04-03.md` dan ledger inventory sudah sinkron dengan status baru
 
