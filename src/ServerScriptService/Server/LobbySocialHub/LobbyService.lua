@@ -1186,6 +1186,33 @@ local function clampRuntimeModelBounds(model, targetBounds)
     return changed
 end
 
+local function describeRuntimeModel(model)
+    if not (model and model:IsA("Model")) then
+        return nil
+    end
+
+    local snapshot = {
+        path = model:GetFullName(),
+        scale = tostring(model:GetScale()),
+    }
+
+    local okExtents, extents = pcall(function()
+        return model:GetExtentsSize()
+    end)
+    if okExtents and typeof(extents) == "Vector3" then
+        snapshot.extents = tostring(extents)
+    end
+
+    local okPivot, pivot = pcall(function()
+        return model:GetPivot()
+    end)
+    if okPivot and typeof(pivot) == "CFrame" then
+        snapshot.position = tostring(pivot.Position)
+    end
+
+    return snapshot
+end
+
 local function syncRuntimeAssetModel(parent, runtimeName, categoryName, modelName, targetCFrame, options)
     if typeof(parent) ~= "Instance" then
         return nil, false
@@ -4585,6 +4612,8 @@ end
 function LobbyService:StudioGetEvidenceTrainingSnapshot()
 	local state = self:_ensureEvidenceTrainingState()
 	local ghostVisual = workspace:FindFirstChild(LOBBY_TRAINING_GHOST_VISUAL_NAME, true)
+	local ghostVisualSnapshot = describeRuntimeModel(ghostVisual)
+	local targetBounds = resolveGhostVisualProfileTargetBounds(tostring(state.ghostType or ""))
 	return {
 		ghostType = state.ghostType or "",
 		discoveredEvidence = cloneArray(state.discoveredEvidence),
@@ -4597,6 +4626,12 @@ function LobbyService:StudioGetEvidenceTrainingSnapshot()
 		lastSupportLabel = state.lastSupportLabel or "",
 		lastSupportOutcome = state.lastSupportOutcome or "",
 		ghostAssetActive = ghostVisual ~= nil,
+		ghostVisualPath = ghostVisualSnapshot and ghostVisualSnapshot.path or "",
+		ghostVisualScale = ghostVisualSnapshot and ghostVisualSnapshot.scale or "",
+		ghostVisualExtents = ghostVisualSnapshot and ghostVisualSnapshot.extents or "",
+		ghostVisualPosition = ghostVisualSnapshot and ghostVisualSnapshot.position or "",
+		ghostVisualTemplateName = ghostVisual and tostring(ghostVisual:GetAttribute("VisualTemplateName") or "") or "",
+		ghostTargetBounds = typeof(targetBounds) == "Vector3" and tostring(targetBounds) or "",
 	}
 end
 

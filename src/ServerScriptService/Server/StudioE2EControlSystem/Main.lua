@@ -590,6 +590,18 @@ function StudioE2EControlSystem:_handleGetGhostRuntimeSnapshot(player, request)
 		snapshot.runtimeState = ghostModel:GetAttribute("RuntimeGhostState")
 		snapshot.visualTemplateName = ghostModel:GetAttribute("VisualTemplateName")
 		if ghostModel:IsA("Model") then
+			local okExtents, extents = pcall(function()
+				return ghostModel:GetExtentsSize()
+			end)
+			if okExtents and typeof(extents) == "Vector3" then
+				snapshot.ghostExtents = tostring(extents)
+			end
+			local okScale, scale = pcall(function()
+				return ghostModel:GetScale()
+			end)
+			if okScale and type(scale) == "number" then
+				snapshot.ghostScale = scale
+			end
 			snapshot.ghostPosition = tostring(ghostModel:GetPivot().Position)
 		end
 	end

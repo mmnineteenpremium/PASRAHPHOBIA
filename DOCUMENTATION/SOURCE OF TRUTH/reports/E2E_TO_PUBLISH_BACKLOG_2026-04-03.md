@@ -3760,3 +3760,14 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `Leak`
 - Build passed: `_tmp_ghost_runtime_visual_batch_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 00:18:56 +07:00 - Expose Ghost Visual Metrics In Studio Snapshots
+- Status: DONE.
+- Studio ghost verification payloads now carry visual metrics directly instead of forcing manual workspace inspection:
+  - match snapshot adds `ghostExtents` and `ghostScale`
+  - lobby training snapshot adds `ghostVisualPath`, `ghostVisualExtents`, `ghostVisualScale`, `ghostVisualPosition`, `ghostVisualTemplateName`, and `ghostTargetBounds`
+- Live Studio proof:
+  - forced `Genderuwo` match snapshot now returns non-empty `ghostExtents` and `ghostScale`
+  - `Kuntilanak` lobby snapshot now returns both fitted extents and target bounds in the same payload
+- Build passed: `_tmp_ghost_snapshot_fields_build.rbxlx`.
+- Studio stop-test reporting rule followed.

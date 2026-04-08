@@ -13159,3 +13159,26 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `Kuntilanak` visual extents `3.485, 4.800, 1.754`
     - `Leak` visual extents `1.846, 4.800, 2.287`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 00:18:56 +07:00 - Expose Ghost Visual Metrics In Studio Snapshots
+- Extended `src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua` so `GetGhostRuntimeSnapshot` now includes:
+  - `ghostExtents`
+  - `ghostScale`
+  - existing actor path/template/state data in the same JSON payload
+- Extended `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua` so `StudioGetEvidenceTrainingSnapshot` now includes:
+  - `ghostVisualPath`
+  - `ghostVisualExtents`
+  - `ghostVisualScale`
+  - `ghostVisualPosition`
+  - `ghostVisualTemplateName`
+  - `ghostTargetBounds`
+- This closes the remaining need to inspect workspace manually just to compare lobby/match ghost size against target tuning during Studio E2E passes.
+- Build passed: `_tmp_ghost_snapshot_fields_build.rbxlx`.
+- Live Studio proof:
+  - match snapshot for forced `Genderuwo` now includes `ghostExtents=2.870025634765625, 6.016216278076172, 1.505476474761963` and `ghostScale=0.045082248747348788`
+  - lobby snapshot for `Kuntilanak` now includes:
+    - `ghostVisualPath=Workspace.Maps.LobbySocialHub.LobbySocialHub.MainHubDecorRuntime.TrainingGhostVisual`
+    - `ghostVisualExtents=3.484506130218506, 4.800000190734863, 1.7543654441833496`
+    - `ghostTargetBounds=3.5, 4.800000190734863, 1.7999999523162842`
+    - `ghostVisualScale=1.742253065109253`
+- Roblox Studio was returned to STOP TEST before logging.
