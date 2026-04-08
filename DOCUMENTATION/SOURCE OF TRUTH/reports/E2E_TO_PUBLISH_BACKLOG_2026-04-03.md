@@ -3591,6 +3591,20 @@ Urutan yang paling masuk akal dari titik sekarang:
   - batch audio canonical sekarang tidak lagi tertahan pada raw asset lokal untuk slot-slot yang memang sudah punya upload resmi di inventory Roblox
   - residual yang tersisa tinggal raw asset yang belum bisa di-upload karena limit bulanan, bukan lagi kebingungan owner aktif untuk slot yang sudah tersedia
 
+- progress tambahan pada lane `objective and lobby feedback cue pass`:
+  - `client/UI/Main.lua` sekarang memakai asset upload inventory untuk dua cue player-facing baru:
+    - `ObjectiveUpdate -> rbxassetid://96021243760086`
+    - `Notification -> rbxassetid://130533639073623`
+  - cue ini dipakai tanpa sistem baru:
+    - objective label match
+    - lobby feedback label
+    - room invite popup
+- validasi terbaru:
+  - source live `game.StarterPlayer.StarterPlayerScripts.Client.UI.Main` membaca dua fallback baru tersebut
+  - helper `_playObjectiveUpdateCueIfNeeded` sudah hidup di source aktif
+- publish impact:
+  - surface objective/feedback sekarang punya cue audio inventory-owned yang konsisten dengan workflow canonical, bukan built-in generik atau senyap
+
 - progress tambahan pada lane `ui click fallback cleanup`:
   - `client/UI/Main.lua` fallback click sekarang tidak lagi memakai built-in Roblox `rbxasset://sounds/volume_slider.ogg`
   - fallback diselaraskan ke `click5` yang sama dengan template canonical `ButtonClick_01`

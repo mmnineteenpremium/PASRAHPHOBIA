@@ -12899,6 +12899,20 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - publish impact:
   - inventory upload yang memang sudah ada sekarang benar-benar masuk ke owner runtime canonical, jadi batch audio tidak lagi menggantung di path lokal/raw asset atau placeholder lama
 
+- progress tambahan pada lane `objective and lobby feedback cues`:
+  - `client/UI/Main.lua` sekarang punya fallback inventory-owned untuk:
+    - `ObjectiveUpdate -> rbxassetid://96021243760086`
+    - `Notification -> rbxassetid://130533639073623`
+  - `ObjectiveLabel` sekarang memicu cue update saat text objective benar-benar berubah di surface `Preparation / Investigation / Hunt`
+  - `Lobby feedback` dan `Room invite popup` sekarang memicu cue notification dari owner UI yang sama
+- validasi terbaru:
+  - edit-time script live `game.StarterPlayer.StarterPlayerScripts.Client.UI.Main` membaca:
+    - `ObjectiveUpdate.SoundId = rbxassetid://96021243760086`
+    - `Notification.SoundId = rbxassetid://130533639073623`
+  - helper `_playObjectiveUpdateCueIfNeeded` sekarang ada di source aktif dan dipanggil setelah refresh `ObjectiveLabel`
+- publish impact:
+  - flow objective dan feedback lobby sekarang tidak lagi hanya berubah teks; sudah punya cue audio upload akun aktif tanpa membuat sistem notifikasi baru
+
 - progress tambahan pada lane `ui audio fallback alignment`:
   - fallback click di `client/UI/Main.lua` tidak lagi memakai built-in `rbxasset://sounds/volume_slider.ogg`
   - fallback sekarang diselaraskan ke asset canonical yang sama dengan template `ButtonClick_01`:
