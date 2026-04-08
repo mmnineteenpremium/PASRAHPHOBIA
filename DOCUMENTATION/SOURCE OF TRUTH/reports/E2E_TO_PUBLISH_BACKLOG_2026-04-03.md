@@ -3717,3 +3717,10 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Verified live in client SoundSystem probe: `hunt_stinger`, `heartbeat_rise`, and `ambient_tension_loop` resolved to expected uploaded asset IDs.
 - Build passed: `_tmp_audio_cue_alias_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-08 23:06:51 +07:00 - Expand Footstep Material Audio Coverage
+- Status: DONE.
+- Footstep material coverage now uses uploaded Roblox inventory IDs for grass/leafy/ground/sand and snow/ice/glacier surfaces.
+- Verified live in client probe: Grass/LeafyGrass -> `GrassStep_01`, Snow/Ice -> `SnowStep_01`, Metal -> `MetalStep_01`, all with expected uploaded asset IDs.
+- Build passed: `_tmp_footstep_material_audio_build.rbxlx`.
+- Studio stop-test reporting rule followed.

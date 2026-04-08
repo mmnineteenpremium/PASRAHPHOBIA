@@ -11,6 +11,7 @@ local FOOTSTEP_PROBE_REQUEST_ATTR = "PasrahFootstepProbeRequested"
 local FOOTSTEP_PROBE_COUNT_ATTR = "PasrahFootstepProbePlayCount"
 local FOOTSTEP_PROBE_TEMPLATE_ATTR = "PasrahFootstepProbeLastTemplate"
 local FOOTSTEP_PROBE_MATERIAL_ATTR = "PasrahFootstepProbeLastMaterial"
+local FOOTSTEP_PROBE_SOUND_ID_ATTR = "PasrahFootstepProbeLastSoundId"
 
 local DEFAULT_TEMPLATE_NAME = "ConcreteStep_01"
 local MATERIAL_TEMPLATE_NAMES = {
@@ -27,6 +28,13 @@ local MATERIAL_TEMPLATE_NAMES = {
 	[Enum.Material.Pavement] = "ConcreteStep_01",
 	[Enum.Material.Rock] = "ConcreteStep_01",
 	[Enum.Material.Slate] = "ConcreteStep_01",
+	[Enum.Material.Grass] = "GrassStep_01",
+	[Enum.Material.LeafyGrass] = "GrassStep_01",
+	[Enum.Material.Ground] = "GrassStep_01",
+	[Enum.Material.Sand] = "GrassStep_01",
+	[Enum.Material.Snow] = "SnowStep_01",
+	[Enum.Material.Ice] = "SnowStep_01",
+	[Enum.Material.Glacier] = "SnowStep_01",
 }
 
 local function resolveFootstepFolder()
@@ -73,6 +81,7 @@ function FootstepController:Init(context)
 	self._player:SetAttribute(FOOTSTEP_PROBE_COUNT_ATTR, 0)
 	self._player:SetAttribute(FOOTSTEP_PROBE_TEMPLATE_ATTR, "")
 	self._player:SetAttribute(FOOTSTEP_PROBE_MATERIAL_ATTR, "")
+	self._player:SetAttribute(FOOTSTEP_PROBE_SOUND_ID_ATTR, "")
 end
 
 function FootstepController:Start()
@@ -155,6 +164,7 @@ function FootstepController:_playStep(material, volumeScale)
 
 	self._player:SetAttribute(FOOTSTEP_PROBE_TEMPLATE_ATTR, templateName)
 	self._player:SetAttribute(FOOTSTEP_PROBE_MATERIAL_ATTR, stringifyMaterial(material))
+	self._player:SetAttribute(FOOTSTEP_PROBE_SOUND_ID_ATTR, tostring(runtimeSound.SoundId or runtimeSound:GetAttribute("AudioContent") or ""))
 	self._player:SetAttribute(FOOTSTEP_PROBE_COUNT_ATTR, (tonumber(self._player:GetAttribute(FOOTSTEP_PROBE_COUNT_ATTR)) or 0) + 1)
 	return true
 end

@@ -448,6 +448,13 @@ Catatan:
   - `Midnight Litany of Drones (Ancient Ritual Ambient)` -> `rbxassetid://140704980462451`
 - These aliases keep old/default cue names on uploaded runtime IDs without adding a duplicate audio system or local raw path.
 
+## 2026-04-08 23:06:51 +07:00 - Expanded Footstep Material Audio Coverage
+- Owner: `src/client/Controllers/Sensory/FootstepController.luau` and `src/ReplicatedStorage/Assets/Audio/Footsteps`.
+- Runtime now uses these uploaded Roblox inventory IDs for additional footstep surface templates:
+  - `footstep_grass_002` -> `rbxassetid://128180668604255`
+  - `footstep_snow_000` -> `rbxassetid://71785355785721`
+- Raw local files remain source/reference only; runtime uses the uploaded `rbxassetid://...` IDs above.
+
 ## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
 - Owner: `src/client/SoundSystem/Main.lua`.
 - Runtime now also uses uploaded Roblox inventory IDs for these additional cue-specific overrides:

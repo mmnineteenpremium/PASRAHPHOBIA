@@ -297,3 +297,19 @@ Kesimpulan:
 
 - cue default/legacy sekarang tetap masuk ke asset upload inventory yang sudah terkunci, tanpa mengganti producer event lama dan tanpa membuat sistem audio baru.
 
+## Update 2026-04-08 23:06 ICT
+
+Batch `expanded footstep material audio coverage` menutup penggunaan runtime berikut:
+
+- `footstep_grass_002` (`rbxassetid://128180668604255`) -> template `GrassStep_01`
+- `footstep_snow_000` (`rbxassetid://71785355785721`) -> template `SnowStep_01`
+
+Owner runtime aktif:
+
+- `src/client/Controllers/Sensory/FootstepController.luau`
+- `src/ReplicatedStorage/Assets/Audio/Footsteps`
+
+Kesimpulan:
+
+- surface grass/leafy/ground/sand dan snow/ice/glacier sekarang tidak lagi jatuh ke concrete fallback generik; semuanya tetap memakai asset ID inventory Roblox, bukan raw local path.
+
