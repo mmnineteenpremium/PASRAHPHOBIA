@@ -440,6 +440,14 @@ Catatan:
   - `hard-horror-hit-drum` -> `rbxassetid://101202336513383`
 - These are runtime `rbxassetid://` references from the Roblox inventory sync ledger; raw local files remain source/reference only.
 
+## 2026-04-08 22:55:25 +07:00 - Legacy Audio Cue Alias Coverage
+- Owner: `src/client/SoundSystem/Main.lua`.
+- The following uploaded Roblox inventory IDs are now also used by backward-compatible cue aliases:
+  - `hard-horror-hit-drum` -> `rbxassetid://101202336513383`
+  - `single-heart-beat` -> `rbxassetid://138884191945388`
+  - `Midnight Litany of Drones (Ancient Ritual Ambient)` -> `rbxassetid://140704980462451`
+- These aliases keep old/default cue names on uploaded runtime IDs without adding a duplicate audio system or local raw path.
+
 ## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
 - Owner: `src/client/SoundSystem/Main.lua`.
 - Runtime now also uses uploaded Roblox inventory IDs for these additional cue-specific overrides:

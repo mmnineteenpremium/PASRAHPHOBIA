@@ -13073,3 +13073,13 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Build passed: `_tmp_audio_cue_coverage_build.rbxlx`.
 - Live client SoundSystem probe verified all new cue mappings resolve to the expected uploaded asset IDs.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-08 22:55:25 +07:00 - Legacy Audio Cue Alias Coverage
+- Added backward-compatible cue aliases in `src/client/SoundSystem/Main.lua` so older/default event names still hit uploaded inventory audio and cue profiles.
+- Alias coverage:
+  - `HuntAudio/hunt_stinger -> rbxassetid://101202336513383` (`hard-horror-hit-drum`)
+  - `FearAudio/heartbeat_rise -> rbxassetid://138884191945388` (`single-heart-beat`)
+  - `AmbientAudio/ambient_tension_loop -> rbxassetid://140704980462451` (`Midnight Litany of Drones (Ancient Ritual Ambient)`)
+- Build passed: `_tmp_audio_cue_alias_build.rbxlx`.
+- Live client SoundSystem probe verified all three legacy/default cue names resolved to the expected uploaded asset IDs.
+- Roblox Studio was returned to STOP TEST before logging.

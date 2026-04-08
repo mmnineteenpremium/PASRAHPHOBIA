@@ -63,6 +63,7 @@ local AUDIO_DEBUG_ATTRS = {
 local CUE_AUDIO_PROFILES = {
 	AmbientAudio = {
 		ambient_investigation = { volumeScale = 0.9, playbackSpeed = 0.97 },
+		ambient_tension_loop = { volumeScale = 0.9, playbackSpeed = 0.97 },
 		post_hunt_calm = { volumeScale = 0.78, playbackSpeed = 0.94 },
 	},
 	EnvironmentalAudio = {
@@ -85,10 +86,12 @@ local CUE_AUDIO_PROFILES = {
 	},
 	HuntAudio = {
 		hunt_start = { volumeScale = 1.04, playbackSpeed = 1.02 },
+		hunt_stinger = { volumeScale = 1.04, playbackSpeed = 1.02 },
 		hunt_phase_loop = { volumeScale = 0.96, playbackSpeed = 0.99 },
 	},
 	FearAudio = {
 		fear_rise = { volumeScale = 0.86, playbackSpeed = 1.0 },
+		heartbeat_rise = { volumeScale = 0.86, playbackSpeed = 1.0 },
 		fear_critical = { volumeScale = 1.0, playbackSpeed = 1.08 },
 	},
 	JumpscareAudio = {
@@ -117,10 +120,12 @@ local CUE_SOUND_ID_OVERRIDES = {
 	},
 	HuntAudio = {
 		hunt_start = "rbxassetid://101202336513383",
+		hunt_stinger = "rbxassetid://101202336513383",
 		hunt_phase_loop = "rbxassetid://138329686293368",
 	},
 	FearAudio = {
 		fear_rise = "rbxassetid://138884191945388",
+		heartbeat_rise = "rbxassetid://138884191945388",
 		fear_critical = "rbxassetid://138329686293368",
 	},
 	JumpscareAudio = {

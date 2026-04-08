@@ -3710,3 +3710,10 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Verified live in client SoundSystem probe: `env_lightflicker`, `env_radiostatic`, `env_shadowapparition`, `env_temperaturedrop`, `env_suddenwhisper`, `ghost_fake_footsteps`, `hunt_start`, and `hunt_phase_loop` all resolved to expected uploaded asset IDs.
 - Build passed: `_tmp_audio_cue_coverage_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-08 22:55:25 +07:00 - Legacy Audio Cue Alias Coverage
+- Status: DONE.
+- Backward-compatible cue aliases now map older/default event names to uploaded inventory IDs instead of falling through generic treatment.
+- Verified live in client SoundSystem probe: `hunt_stinger`, `heartbeat_rise`, and `ambient_tension_loop` resolved to expected uploaded asset IDs.
+- Build passed: `_tmp_audio_cue_alias_build.rbxlx`.
+- Studio stop-test reporting rule followed.
