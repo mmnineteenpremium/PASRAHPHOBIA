@@ -3392,3 +3392,13 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - inspeksi Studio/runtime untuk support tool jadi lebih jujur dan konsisten
 
+- progress tambahan pada lane `dupa repel HUD clarity`:
+  - `Dupa` sekarang tidak lagi tampil generik saat berhasil repel hunt
+- validasi terbaru:
+  - `ForceHunt -> Dupa nearGhostRoom`:
+    - `Meta = REPEL`
+    - `Footer = SAFE GAP`
+    - world placement `RuntimeState = Repel`
+- publish impact:
+  - pemain sekarang dapat membaca hasil repel dari HUD secara langsung, bukan hanya dari state world placement
+

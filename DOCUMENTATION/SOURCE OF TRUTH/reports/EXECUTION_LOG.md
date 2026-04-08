@@ -12618,3 +12618,16 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `Garam` authoritative placement:
     - `runtime = Triggered`
     - `visual = Triggered`
+
+- progress tambahan pada lane `dupa repel HUD clarity`:
+  - state `Dupa` di `Field Kit` sekarang membedakan `smoke aktif` vs `hunt benar-benar terpukul mundur`
+  - client menyimpan context `huntRepelled` dan `repellentUntil` agar button tidak lagi selalu tampil generik `AKTIF / SMOKE ON`
+- validasi terbaru:
+  - `ForceHunt -> Dupa nearGhostRoom`:
+    - `MatchPhase = InGame`
+    - `Dupa Meta = REPEL`
+    - `Dupa Footer = SAFE GAP`
+    - `FieldKitFrame.StatusLabel = Ghost terpukul mundur. Jarak aman sementara tercipta.`
+    - world placement:
+      - `runtime = Repel`
+      - `visual = Repel`
