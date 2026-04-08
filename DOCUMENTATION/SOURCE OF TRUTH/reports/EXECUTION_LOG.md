@@ -13013,3 +13013,13 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - catatan jujur: direct command harness UI client tidak dipakai sebagai proof final karena command execution memakai konteks VM terpisah dari bootstrap client aktif
 - publish impact:
   - UI panel/journal/error feedback sekarang punya mapping audio inventory-owned yang siap dipakai di jalur runtime normal tanpa local raw asset dan tanpa sistem UI baru
+
+## 2026-04-08 22:33:46 +07:00 - Client Bootstrap UI Startup Recovery
+- Restored direct StarterPlayerScripts.ClientBootstrap mapping so the client bootstrap runs outside the nested Client module tree.
+- Removed a misplaced lobby notification block from src/client/UI/Main.lua that referenced lobby, ventName, and previousFeedbackText from the wrong scope.
+- Added the missing structural nd for _ensureBasicUIs() after removing that stale block.
+- Added lightweight PasrahClientBootstrapStage / PasrahClientBootstrapDetail attrs in the client bootstrap entrypoint for future runtime diagnosis.
+- Verified build: _tmp_client_ui_bootstrap_fix_build.rbxlx, _tmp_client_bootstrap_trace_build.rbxlx, _tmp_client_ui_parse_fix_build.rbxlx.
+- Verified live in Roblox Studio: PlayerGui now creates LobbyUI, MatchUI, RoomBrowserUI, RoomBrowserFloatUI, UXLayer, JournalUI, and auxiliary UI roots.
+- Verified live UI audio attrs: JournalPage -> rbxassetid://97915135753208; room browser close PanelSoftClose -> rbxassetid://73589904561594.
+- Roblox Studio was returned to STOP TEST before reporting.

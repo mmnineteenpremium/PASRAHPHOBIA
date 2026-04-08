@@ -14406,23 +14406,10 @@ function UISystem:_ensureBasicUIs()
 		}
 	end
 
-	local nextFeedbackText = tostring(lobby.FeedbackLabel.Text or "")
-	if nextFeedbackText ~= "" then
-		local signature = string.format("%s|%s", tostring(eventName or ""), nextFeedbackText)
-		if signature ~= self._lastLobbyFeedbackSignature and nextFeedbackText ~= previousFeedbackText then
-			self._lastLobbyFeedbackSignature = signature
-			playRuntimeUISound("Notification", {
-				SingleInstance = true,
-				VolumeScale = 0.92,
-				PlaybackJitter = 0.02,
-			})
-		end
-	end
-end
-
 	self:_refreshBasicLobbyPanel()
 	self:_refreshBasicMatchPanel("Lobby")
 	self:_applyVisibility()
+end
 end
 
 function UISystem:_ensureRoomBrowserGui()
