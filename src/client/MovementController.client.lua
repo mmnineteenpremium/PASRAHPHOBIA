@@ -32,6 +32,31 @@ humanoid.AutoRotate = true
 -- Sprint state
 local sprinting = false
 
+local function stampMovementRuntime(targetSpeed, moveDirection, inMatch, backwardPenaltyActive)
+    local moveMagnitude = typeof(moveDirection) == "Vector3" and moveDirection.Magnitude or 0
+    player:SetAttribute("PasrahMovementOwner", "MovementController")
+    player:SetAttribute("PasrahMovementSprinting", sprinting == true)
+    player:SetAttribute("PasrahMovementInMatch", inMatch == true)
+    player:SetAttribute("PasrahMovementTargetSpeed", tonumber(targetSpeed))
+    player:SetAttribute("PasrahMovementCurrentWalkSpeed", humanoid and tonumber(humanoid.WalkSpeed) or nil)
+    player:SetAttribute("PasrahMovementBackwardPenalty", backwardPenaltyActive == true)
+    player:SetAttribute("PasrahMovementMoveMagnitude", math.floor((moveMagnitude or 0) * 100 + 0.5) / 100)
+    if humanoid then
+        humanoid:SetAttribute("PasrahMovementOwner", "MovementController")
+        humanoid:SetAttribute("PasrahMovementTargetSpeed", tonumber(targetSpeed))
+        humanoid:SetAttribute("PasrahMovementSprinting", sprinting == true)
+        humanoid:SetAttribute("PasrahMovementInMatch", inMatch == true)
+        humanoid:SetAttribute("PasrahMovementBackwardPenalty", backwardPenaltyActive == true)
+    end
+    if humanoidRootPart then
+        humanoidRootPart:SetAttribute("PasrahMovementOwner", "MovementController")
+        humanoidRootPart:SetAttribute("PasrahMovementTargetSpeed", tonumber(targetSpeed))
+        humanoidRootPart:SetAttribute("PasrahMovementSprinting", sprinting == true)
+        humanoidRootPart:SetAttribute("PasrahMovementInMatch", inMatch == true)
+        humanoidRootPart:SetAttribute("PasrahMovementBackwardPenalty", backwardPenaltyActive == true)
+    end
+end
+
 local function bindCharacter(newCharacter)
     character = newCharacter
     humanoid = character:WaitForChild("Humanoid")
@@ -40,6 +65,7 @@ local function bindCharacter(newCharacter)
     humanoid.JumpPower = JUMP_POWER
     humanoid.UseJumpPower = true
     humanoid.AutoRotate = true
+    stampMovementRuntime(humanoid.WalkSpeed, Vector3.zero, player:GetAttribute("InMatch") == true, false)
 end
 
 player.CharacterAdded:Connect(bindCharacter)
@@ -51,6 +77,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if input.KeyCode == Enum.KeyCode.LeftShift then
         sprinting = true
         humanoid.WalkSpeed = SPRINT_SPEED
+        stampMovementRuntime(humanoid.WalkSpeed, humanoid.MoveDirection, player:GetAttribute("InMatch") == true, false)
     end
 end)
 
@@ -58,6 +85,7 @@ UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.LeftShift then
         sprinting = false
         humanoid.WalkSpeed = WALK_SPEED
+        stampMovementRuntime(humanoid.WalkSpeed, humanoid.MoveDirection, player:GetAttribute("InMatch") == true, false)
     end
 end)
 
@@ -79,6 +107,7 @@ RunService.RenderStepped:Connect(function()
     local inMatch = player:GetAttribute("InMatch") == true
     local baseSpeed = sprinting and SPRINT_SPEED or WALK_SPEED
     local targetSpeed = baseSpeed
+    local backwardPenaltyActive = false
 
     -- Enforce planar movement in investigation so FPV/camera vectors cannot inject Y motion.
     if inMatch and moveDirection.Magnitude > 0 then
@@ -99,6 +128,7 @@ RunService.RenderStepped:Connect(function()
             local dot = flatForward:Dot(flatMove.Unit)
             if dot < -0.1 then
                 targetSpeed = baseSpeed * BACKWARD_SPEED_MULTIPLIER
+                backwardPenaltyActive = true
             end
         end
     end
@@ -106,6 +136,8 @@ RunService.RenderStepped:Connect(function()
     if humanoid.WalkSpeed ~= targetSpeed then
         humanoid.WalkSpeed = targetSpeed
     end
+
+    stampMovementRuntime(targetSpeed, moveDirection, inMatch, backwardPenaltyActive)
 
 end)
 

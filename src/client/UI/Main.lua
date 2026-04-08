@@ -3839,6 +3839,53 @@ local function getHuntAssistSnapshot()
 	}
 end
 
+local function stampMatchSurvivalInstance(instance, channel, viewState, huntSnapshot)
+	if not instance then
+		return
+	end
+	instance:SetAttribute("PasrahMatchUIOwner", "UISystem")
+	instance:SetAttribute("PasrahMatchUIChannel", tostring(channel or instance.Name))
+	instance:SetAttribute("PasrahMatchUIViewState", tostring(viewState or ""))
+	instance:SetAttribute("PasrahMatchUIVisible", instance:IsA("GuiObject") and instance.Visible == true or nil)
+	instance:SetAttribute("PasrahHideState", type(huntSnapshot) == "table" and tostring(huntSnapshot.hideState or "") or nil)
+	instance:SetAttribute("PasrahHideZoneId", type(huntSnapshot) == "table" and tostring(huntSnapshot.hideZoneId or "") or nil)
+	instance:SetAttribute("PasrahHuntThreatState", type(huntSnapshot) == "table" and tostring(huntSnapshot.threatState or "") or nil)
+	instance:SetAttribute("PasrahHuntThreatDistance", type(huntSnapshot) == "table" and tonumber(huntSnapshot.threatDistance) or nil)
+end
+
+local function stampMatchSurvivalRuntime(match, viewState, huntSnapshot, huntAssistSnapshot)
+	if type(match) ~= "table" then
+		return
+	end
+
+	stampMatchSurvivalInstance(match.BasicPanel, "MatchBasicPanel", viewState, huntSnapshot)
+	stampMatchSurvivalInstance(match.BasicStateBadge, "MatchStateBadge", viewState, huntSnapshot)
+	stampMatchSurvivalInstance(match.ObjectiveLabel, "MatchObjectiveLabel", viewState, huntSnapshot)
+	stampMatchSurvivalInstance(match.ControlsHintBar, "MatchControlsHintBar", viewState, huntSnapshot)
+	stampMatchSurvivalInstance(match.ControlsHintLabel, "MatchControlsHintLabel", viewState, huntSnapshot)
+	stampMatchSurvivalInstance(match.HuntStatusBadge, "HuntStatusBadge", viewState, huntSnapshot)
+	stampMatchSurvivalInstance(match.HuntAssistLabel, "HuntAssistLabel", viewState, huntSnapshot)
+	stampMatchSurvivalInstance(match.HuntOverlay, "HuntOverlay", viewState, huntSnapshot)
+
+	if match.ObjectiveLabel then
+		match.ObjectiveLabel:SetAttribute("PasrahMatchObjectiveText", tostring(match.ObjectiveLabel.Text or ""))
+	end
+	if match.ControlsHintLabel then
+		match.ControlsHintLabel:SetAttribute("PasrahMatchHintText", tostring(match.ControlsHintLabel.Text or ""))
+	end
+	if match.HuntStatusBadge then
+		match.HuntStatusBadge:SetAttribute("PasrahHuntBadgeText", type(huntAssistSnapshot) == "table" and tostring(huntAssistSnapshot.badgeText or "") or nil)
+	end
+	if match.HuntAssistLabel then
+		match.HuntAssistLabel:SetAttribute("PasrahHuntAssistText", tostring(match.HuntAssistLabel.Text or ""))
+		match.HuntAssistLabel:SetAttribute("PasrahHuntAssistRoute", type(huntAssistSnapshot) == "table" and tostring(huntAssistSnapshot.routeText or "") or nil)
+		match.HuntAssistLabel:SetAttribute("PasrahHuntAssistSupport", type(huntAssistSnapshot) == "table" and tostring(huntAssistSnapshot.supportText or "") or nil)
+	end
+	if match.HuntOverlay then
+		match.HuntOverlay:SetAttribute("PasrahHuntOverlayVisible", viewState == "Hunt" and huntAssistSnapshot ~= nil)
+	end
+end
+
 local function bulletList(list, emptyText)
 	if type(list) ~= "table" or #list == 0 then
 		return emptyText or "- Tidak ada"
@@ -6554,6 +6601,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	)
 	payload = payload or self._phasePayload
 	local huntAssistSnapshot = viewState == "Hunt" and getHuntAssistSnapshot() or nil
+	local huntStatusSnapshot = viewState == "Hunt" and getHuntStatusSnapshot() or nil
 	local navigationAnchor = nil
 
 	local badgeText = "STATUS MATCH"
@@ -6769,6 +6817,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			and semanticAccent:Lerp(Color3.fromRGB(235, 240, 245), 0.3)
 			or Color3.fromRGB(235, 240, 245)
 	end
+	stampMatchSurvivalRuntime(match, viewState, huntStatusSnapshot, huntAssistSnapshot)
 	self:_playObjectiveUpdateCueIfNeeded(viewState)
 	self:_updateMatchSummaryRows(match.BasicSummaryRows, viewState, payload)
 	self:_refreshFieldKitPanel()

@@ -400,6 +400,20 @@ function Service:_setExposureAttribute(player, exposure)
     end
 end
 
+function Service:_stampHuntPressureRuntime(player, matchId, threatState, distance, exposure, graceRemaining, hidden)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return
+    end
+
+    player:SetAttribute("PasrahHuntPressureOwner", "PlayerHealthSystem")
+    player:SetAttribute("PasrahHuntPressureMatchId", type(matchId) == "string" and matchId or nil)
+    player:SetAttribute("PasrahHuntPressureThreatState", type(threatState) == "string" and threatState or nil)
+    player:SetAttribute("PasrahHuntPressureDistance", type(distance) == "number" and distance < math.huge and math.floor(distance + 0.5) or nil)
+    player:SetAttribute("PasrahHuntPressureExposureValue", type(exposure) == "number" and math.floor(exposure * 100 + 0.5) / 100 or nil)
+    player:SetAttribute("PasrahHuntPressureGraceValue", type(graceRemaining) == "number" and math.floor(graceRemaining * 10 + 0.5) / 10 or nil)
+    player:SetAttribute("PasrahHuntPressureHidden", hidden == true)
+end
+
 function Service:_tickHuntPressure(dt)
     local now = os.clock()
     local effectiveDt = math.min(math.max(dt or 0, 0), self._config.MaxHuntPressureTickDelta or HUNT_PRESSURE_TICK_INTERVAL)
@@ -424,6 +438,7 @@ function Service:_tickHuntPressure(dt)
                                 player:SetAttribute("PasrahHuntGraceRemaining", nil)
                             end
                             self:_setThreatAttributes(player, nil, "Sheltered")
+                            self:_stampHuntPressureRuntime(player, matchId, "Sheltered", nil, exposure, nil, true)
                         else
                             local root = getCharacterRoot(player)
                             local distance = math.huge
@@ -464,6 +479,7 @@ function Service:_tickHuntPressure(dt)
                             end
 
                             self:_setExposureAttribute(player, exposure)
+                            self:_stampHuntPressureRuntime(player, matchId, threatState, distance, exposure, huntGraceRemaining > 0 and huntGraceRemaining or nil, false)
                             setStudioProbe("PasrahHuntPressureLastExposure", math.floor(exposure * 100 + 0.5) / 100)
                             setStudioProbe("PasrahHuntPressureLastThreatState", threatState)
                             setStudioProbe(
@@ -791,6 +807,7 @@ function Service:HandleEvent(eventName, payload)
                     player:SetAttribute("PasrahHuntThreatDistance", nil)
                     player:SetAttribute("PasrahHuntGraceRemaining", math.floor((self._config.HuntStartGraceSeconds or 0) * 10 + 0.5) / 10)
                     player:SetAttribute("PasrahHuntExposure", nil)
+                    self:_stampHuntPressureRuntime(player, matchId, "Warn", nil, nil, self._config.HuntStartGraceSeconds or 0, false)
                 end
             end
         end
@@ -809,6 +826,7 @@ function Service:HandleEvent(eventName, payload)
                 player:SetAttribute("PasrahHuntGraceRemaining", nil)
                 player:SetAttribute("PasrahHuntExposure", nil)
                 self:_setThreatAttributes(player, nil, "Clear")
+                self:_stampHuntPressureRuntime(player, matchId, "Clear", nil, nil, nil, false)
             end
         end
         return
@@ -868,6 +886,7 @@ function Service:HandleEvent(eventName, payload)
             player:SetAttribute("PasrahHuntExposure", nil)
         end
         self:_setThreatAttributes(player, nil, "Clear")
+        self:_stampHuntPressureRuntime(player, matchId, "Clear", nil, nil, nil, false)
     end
 end
 
