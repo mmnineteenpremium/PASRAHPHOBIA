@@ -3703,3 +3703,10 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Current publish gate is not blocked by the recovered UI/audio work. Active blockers are expected external/manual gates: non-mock persistence/live environment, 2-client manual multiplayer smoke, and Creator Hub marketplace IDs for Robux slots.
 - GetQAGateReadiness is pass_with_manual_multiplayer; GetPublishReadiness remains overall=fail in Studio because persistence=mock and obuxMissingId=10.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
+- Status: DONE.
+- Runtime audio coverage expanded again using uploaded Roblox inventory asset IDs only; raw local audio files remain reference/source only.
+- Verified live in client SoundSystem probe: `env_lightflicker`, `env_radiostatic`, `env_shadowapparition`, `env_temperaturedrop`, `env_suddenwhisper`, `ghost_fake_footsteps`, `hunt_start`, and `hunt_phase_loop` all resolved to expected uploaded asset IDs.
+- Build passed: `_tmp_audio_cue_coverage_build.rbxlx`.
+- Studio stop-test reporting rule followed.

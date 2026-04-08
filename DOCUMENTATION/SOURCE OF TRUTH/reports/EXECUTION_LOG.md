@@ -13057,3 +13057,19 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - GetShopReadiness: 	otal=31 MM=14 PP=7 Robux=10 disabled=10 robuxMissingId=10.
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
+- Added more cue-specific uploaded Roblox inventory overrides in `src/client/SoundSystem/Main.lua`.
+- New active cue mappings:
+  - `EnvironmentalAudio/env_lightflicker -> rbxassetid://96038914699044` (`zap2`)
+  - `EnvironmentalAudio/env_radiostatic -> rbxassetid://82526759214554` (`zap1`)
+  - `EnvironmentalAudio/env_shadowapparition -> rbxassetid://139204195403262` (`creaky-door-open`)
+  - `EnvironmentalAudio/env_footstepsound -> rbxassetid://95974189526179` (`ghost_footstep_2`)
+  - `EnvironmentalAudio/env_suddenwhisper -> rbxassetid://110779846516591` (`ghost_whisper_2`)
+  - `EnvironmentalAudio/env_temperaturedrop -> rbxassetid://87230026682789` (`thermometer_reading`)
+  - `HuntAudio/hunt_start -> rbxassetid://101202336513383` (`hard-horror-hit-drum`)
+  - `HuntAudio/hunt_phase_loop -> rbxassetid://138329686293368` (`horror-deep-drum-heartbeat`)
+- Corrected the `pocong PASRAHPHOBIA` spelling in the inventory sync ledger note.
+- Build passed: `_tmp_audio_cue_coverage_build.rbxlx`.
+- Live client SoundSystem probe verified all new cue mappings resolve to the expected uploaded asset IDs.
+- Roblox Studio was returned to STOP TEST before logging.

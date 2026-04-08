@@ -439,3 +439,16 @@ Catatan:
   - `horror-deep-drum-heartbeat` -> `rbxassetid://138329686293368`
   - `hard-horror-hit-drum` -> `rbxassetid://101202336513383`
 - These are runtime `rbxassetid://` references from the Roblox inventory sync ledger; raw local files remain source/reference only.
+
+## 2026-04-08 22:49:33 +07:00 - Expanded Inventory Audio Cue Coverage
+- Owner: `src/client/SoundSystem/Main.lua`.
+- Runtime now also uses uploaded Roblox inventory IDs for these additional cue-specific overrides:
+  - `zap2` -> `rbxassetid://96038914699044`
+  - `zap1` -> `rbxassetid://82526759214554`
+  - `creaky-door-open` -> `rbxassetid://139204195403262`
+  - `ghost_footstep_2` -> `rbxassetid://95974189526179`
+  - `ghost_whisper_2` -> `rbxassetid://110779846516591`
+  - `thermometer_reading` -> `rbxassetid://87230026682789`
+  - `hard-horror-hit-drum` -> `rbxassetid://101202336513383`
+  - `horror-deep-drum-heartbeat` -> `rbxassetid://138329686293368`
+- These are runtime `rbxassetid://` references from the Roblox inventory sync ledger; raw local files remain source/reference only.
