@@ -3704,6 +3704,69 @@ Urutan yang paling masuk akal dari titik sekarang:
 - GetQAGateReadiness is pass_with_manual_multiplayer; GetPublishReadiness remains overall=fail in Studio because persistence=mock and obuxMissingId=10.
 - Studio stop-test reporting rule followed.
 
+## 2026-04-09 09:36:40 +07:00 - Stamp Sanity Runtime Identity
+- Status: DONE.
+- `Server.SanitySystem.Service` now stamps direct runtime sanity attrs on players:
+  - `PasrahSanityOwner`
+  - `PasrahSanityMatchId`
+  - `PasrahSanityValue`
+  - `PasrahSanityBand`
+  - `PasrahSanityReason`
+  - `PasrahSanityTeamAverage`
+  - `PasrahSanityHuntActive`
+- Live Studio proof:
+  - after `DrainSanity(22)` -> `PasrahSanityValue=78`, `PasrahSanityReason=studio_e2e`
+- Build passed: `_tmp_sanity_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 09:42:11 +07:00 - Stamp Sanity Event Runtime Identity
+- Status: DONE.
+- `Server.SanityEventSystem.Service` now stamps active/resolved sanity event attrs directly on the affected player.
+- Live Studio proof:
+  - hot: `PasrahSanityEventActive=true`, `PasrahSanityEventType=ShadowMovement`, `PasrahSanityEventReason=triggered`
+  - resolved: `PasrahSanityEventActive=false`, `PasrahSanityEventReason=resolved`
+- Build passed: `_tmp_sanity_event_runtime_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 09:55:18 +07:00 - Stamp Random Jumpscare Runtime Identity
+- Status: DONE.
+- `Server.RandomJumpscareSystem.Controller` now stamps direct jumpscare identity attrs on affected players when runtime jumpscare events are forwarded.
+- Live Studio proof:
+  - `PasrahJumpscareOwner=RandomJumpscareSystem`
+  - `PasrahJumpscareActive=true`
+  - `PasrahJumpscareTriggerType=jumpscare_stinger`
+- Build passed inside `_tmp_runtime_identity_batch_3_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 09:57:03 +07:00 - Stamp Contract Objective Runtime Identity
+- Status: DONE.
+- `Server.ContractObjectiveSystem.Service` now stamps active objective/progress state directly on active match players.
+- Live Studio proof:
+  - start: `PasrahObjectiveActiveCount=5`, `PasrahObjectiveLastEvent=ObjectivesStarted`
+  - after `JejakEnergi`: `PasrahObjectiveLastObjectiveId=CaptureEvidence`, `PasrahObjectiveLastProgress=1`
+- Build passed inside `_tmp_runtime_identity_batch_2_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 09:59:14 +07:00 - Stamp Extraction Runtime Identity
+- Status: DONE.
+- `Server.HuntEscapeSystem.Service` now stamps extraction zone/player runtime identity and result attrs.
+- Live Studio proof:
+  - `PasrahExtractionOwner=HuntEscapeSystem`
+  - `PasrahExtractionZoneId=StudioE2EZone`
+  - `PasrahExtractionLastResult=extracted_via_studio_override`
+  - `PasrahExtractionExtracted=true`
+- Build passed inside `_tmp_runtime_identity_batch_3_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 10:05:27 +07:00 - Stamp Match Result Runtime Identity
+- Status: DONE.
+- `Server.MatchResultSystem.Service` now stamps direct match-result attrs on participating players at match start/end.
+- Live Studio proof:
+  - start: `PasrahMatchResultLastEvent=MatchStarted`
+  - end: `PasrahMatchResultLastEvent=MatchEnded`, `PasrahMatchResultPlayersSurvived=1`, `PasrahMatchResultPlayersDead=0`
+- Build passed: `_tmp_runtime_identity_batch_4_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
 ## 2026-04-09 05:07:51 +07:00 - Stamp Journal Runtime Identity
 - Status: DONE.
 - `Server.JournalSystem.Service` now exposes direct journal attrs on the player so evidence logging is readable from Studio without relying on UI sync only.

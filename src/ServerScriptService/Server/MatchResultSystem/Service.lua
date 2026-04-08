@@ -52,6 +52,27 @@ function Service.new(state, deps)
     return self
 end
 
+local function stampMatchResultRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+    target:SetAttribute("PasrahMatchResultOwner", "MatchResultSystem")
+    target:SetAttribute("PasrahMatchResultMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+    target:SetAttribute("PasrahMatchResultGhostType", type(payload.ghostType) == "string" and payload.ghostType or nil)
+    target:SetAttribute("PasrahMatchResultCorrectGuess", payload.correctGuess == true)
+    target:SetAttribute("PasrahMatchResultGhostIdentified", payload.ghostIdentified == true)
+    target:SetAttribute("PasrahMatchResultEvidenceCollected", tonumber(payload.evidenceCollected) or 0)
+    target:SetAttribute("PasrahMatchResultPlayersSurvived", tonumber(payload.playersSurvived) or 0)
+    target:SetAttribute("PasrahMatchResultPlayersDead", tonumber(payload.playersDead) or 0)
+    target:SetAttribute("PasrahMatchResultPlayersExtracted", tonumber(payload.playersExtracted) or 0)
+    target:SetAttribute("PasrahMatchResultContractSuccess", payload.contractSuccess == true)
+    target:SetAttribute("PasrahMatchResultTeamSuccess", payload.teamSuccess == true)
+    target:SetAttribute("PasrahMatchResultExtractionCompleted", payload.extractionCompleted == true)
+    target:SetAttribute("PasrahMatchResultDuration", tonumber(payload.matchDuration) or 0)
+    target:SetAttribute("PasrahMatchResultLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+    target:SetAttribute("PasrahMatchResultLastUpdatedAt", tonumber(payload.updatedAt) or os.clock())
+end
+
 function Service:Init()
     self._dependencies = {
         MatchSystem = Services.Get(self._deps, "MatchSystem"),
@@ -147,6 +168,24 @@ function Service:_registerPlayers(players)
                 evidenceCount = 0,
                 player = player,
             }
+        end
+        if typeof(player) == "Instance" and player:IsA("Player") then
+            stampMatchResultRuntime(player, {
+                matchId = self._state:Get("activeMatchId"),
+                ghostType = self._state:Get("ghostType"),
+                correctGuess = self._state:Get("correctGuess"),
+                ghostIdentified = self._state:Get("ghostIdentified"),
+                evidenceCollected = self._state:Get("teamEvidenceCount") or 0,
+                playersSurvived = 0,
+                playersDead = 0,
+                playersExtracted = 0,
+                contractSuccess = self._state:Get("contractSuccess"),
+                teamSuccess = false,
+                extractionCompleted = false,
+                matchDuration = 0,
+                lastEvent = "MatchStarted",
+                updatedAt = os.clock(),
+            })
         end
     end
     self:_setOutcome(outcome)
@@ -245,6 +284,26 @@ function Service:HandleEvent(eventName, payload)
         }
 
         self._state:Set("lastResult", result)
+        for _, player in ipairs(self:_collectPlayers(payload, result)) do
+            if typeof(player) == "Instance" and player:IsA("Player") then
+                stampMatchResultRuntime(player, {
+                    matchId = result.matchId,
+                    ghostType = result.ghostType,
+                    correctGuess = result.correctGuess,
+                    ghostIdentified = result.ghostIdentified,
+                    evidenceCollected = result.evidenceCollected,
+                    playersSurvived = result.playersSurvived,
+                    playersDead = result.playersDead,
+                    playersExtracted = result.playersExtracted,
+                    contractSuccess = result.contractSuccess,
+                    teamSuccess = result.teamSuccess,
+                    extractionCompleted = result.extractionCompleted,
+                    matchDuration = result.matchDuration,
+                    lastEvent = "MatchEnded",
+                    updatedAt = os.clock(),
+                })
+            end
+        end
         self:_publish("MatchCompleted", result)
         self:_fireMatchEventToPlayers(self:_collectPlayers(payload, result), {
             eventName = "MatchCompleted",

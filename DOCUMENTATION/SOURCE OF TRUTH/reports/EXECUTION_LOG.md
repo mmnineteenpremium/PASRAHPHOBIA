@@ -13058,6 +13058,91 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 09:36:40 +07:00 - Stamp Sanity Runtime Identity
+- Updated `src/ServerScriptService/Server/SanitySystem/Service.lua` so server-authoritative sanity state now writes direct runtime attrs on the player instead of staying implicit inside service state.
+- Build passed: `_tmp_sanity_runtime_identity_build.rbxlx`.
+- Live Studio proof after `StartSoloMatch`, settle, and `DrainSanity(22)`:
+  - `PasrahSanityOwner=SanitySystem`
+  - `PasrahSanityValue=78`
+  - `PasrahSanityBand=safe`
+  - `PasrahSanityReason=studio_e2e`
+  - `PasrahSanityTeamAverage=78`
+  - `PasrahSanityHuntActive=false`
+- Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 09:42:11 +07:00 - Stamp Sanity Event Runtime Identity
+- Updated `src/ServerScriptService/Server/SanityEventSystem/Service.lua` so triggered and resolved sanity events now stamp direct attrs on the affected player.
+- Build passed: `_tmp_sanity_event_runtime_identity_build.rbxlx`.
+- Live Studio proof after `DrainSanity(80)`:
+  - hot state:
+    - `PasrahSanityEventOwner=SanityEventSystem`
+    - `PasrahSanityEventMatchId=match_1`
+    - `PasrahSanityEventActive=true`
+    - `PasrahSanityEventType=ShadowMovement`
+    - `PasrahSanityEventIntensity=0.8`
+    - `PasrahSanityEventReason=triggered`
+  - resolved state:
+    - `PasrahSanityEventActive=false`
+    - `PasrahSanityEventReason=resolved`
+    - `PasrahSanityEventCooldownUntil` populated
+- Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 09:55:18 +07:00 - Stamp Random Jumpscare Runtime Identity
+- Updated `src/ServerScriptService/Server/RandomJumpscareSystem/Controller.lua` so forwarded jumpscares now stamp direct runtime attrs on affected players.
+- Build passed inside `_tmp_runtime_identity_batch_3_build.rbxlx`.
+- Live Studio proof after `TriggerJumpscare`:
+  - `PasrahJumpscareOwner=RandomJumpscareSystem`
+  - `PasrahJumpscareMatchId=match_1`
+  - `PasrahJumpscareActive=true`
+  - `PasrahJumpscareTriggerType=jumpscare_stinger`
+- Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 09:57:03 +07:00 - Stamp Contract Objective Runtime Identity
+- Updated `src/ServerScriptService/Server/ContractObjectiveSystem/Service.lua` so active objective state/progress now stamps direct attrs on active match players.
+- Build passed inside `_tmp_runtime_identity_batch_2_build.rbxlx`.
+- Live Studio proof:
+  - at objective start:
+    - `PasrahObjectiveOwner=ContractObjectiveSystem`
+    - `PasrahObjectiveActiveCount=5`
+    - `PasrahObjectiveCompletedCount=0`
+    - `PasrahObjectiveLastEvent=ObjectivesStarted`
+  - after `UseEvidenceTool(JejakEnergi)`:
+    - `PasrahObjectiveLastEvent=ObjectiveProgress`
+    - `PasrahObjectiveLastObjectiveId=CaptureEvidence`
+    - `PasrahObjectiveLastProgress=1`
+    - `PasrahObjectiveProgressSummary=CaptureEvidence:1/3:live | IdentifyGhost:0/1:live | SurviveHunt:0/1:live | UseSpecificTool:0/1:live | WitnessGhostEvent:0/1:live`
+- Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 09:59:14 +07:00 - Stamp Extraction Runtime Identity
+- Updated `src/ServerScriptService/Server/HuntEscapeSystem/Service.lua` so extraction zone/player runtime now stamps direct identity/result attrs instead of relying on hidden state only.
+- Build passed inside `_tmp_runtime_identity_batch_3_build.rbxlx`.
+- Live Studio proof after `ExtractSelf` with studio override:
+  - `PasrahExtractionOwner=HuntEscapeSystem`
+  - `PasrahExtractionMatchId=match_1`
+  - `PasrahExtractionZoneId=StudioE2EZone`
+  - `PasrahExtractionLastResult=extracted_via_studio_override`
+  - `PasrahExtractionExtracted=true`
+- Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 10:05:27 +07:00 - Stamp Match Result Runtime Identity
+- Updated `src/ServerScriptService/Server/MatchResultSystem/Service.lua` so match start/end results now stamp direct attrs on participating players.
+- Build passed: `_tmp_runtime_identity_batch_4_build.rbxlx`.
+- Live Studio proof:
+  - before end:
+    - `PasrahMatchResultOwner=MatchResultSystem`
+    - `PasrahMatchResultLastEvent=MatchStarted`
+    - `PasrahMatchResultMatchId=match_1`
+  - after `EndMatch`:
+    - `PasrahMatchResultLastEvent=MatchEnded`
+    - `PasrahMatchResultGhostType=Unknown`
+    - `PasrahMatchResultEvidenceCollected=0`
+    - `PasrahMatchResultPlayersSurvived=1`
+    - `PasrahMatchResultPlayersDead=0`
+    - `PasrahMatchResultPlayersExtracted=0`
+    - `PasrahMatchResultTeamSuccess=false`
+    - `PasrahMatchResultExtractionCompleted=false`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 05:07:51 +07:00 - Stamp Journal Runtime Identity
 - Updated `src/ServerScriptService/Server/JournalSystem/Service.lua` so the authoritative journal state now publishes direct player attrs instead of leaving evidence log state only in service memory and remotes.
 - Player runtime now exposes:
