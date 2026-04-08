@@ -13092,6 +13092,35 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
         - `Banaspati | Genderuwo | HantuTanah | Jerangkong | Kuntilanak | Leak | Palasik | Pocong | SilumanUlar | SundelBolong | Tuyul | WeweGombel`
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 05:31:22 +07:00 - Stamp Results UI Runtime Identity
+- Updated `src/client/UI/Main.lua` so `ResultsPanel` now stamps runtime attrs directly on the live UI surface and reward rows, linked to canonical server owners (`MatchResultSystem` and `RewardCalculationSystem`).
+- Build passed: `_tmp_results_ui_identity_build.rbxlx`.
+- Live Studio proof:
+  - after `StartSoloMatch -> EndMatch`, canonical player attrs remained:
+    - `PasrahMatchResultOwner=MatchResultSystem`
+    - `PasrahRewardOwner=RewardCalculationSystem`
+  - results surface attrs now present:
+    - `PlayerGui.UXLayer.MatchUXGui.MatchUXLayer.ResultsPanel`:
+      - `PasrahResultsUIOwner=UISystem`
+      - `PasrahResultsUIChannel=ResultsPanel`
+      - `PasrahResultsGhostType=Unknown`
+      - `PasrahResultsCurrencyReward=306`
+      - `PasrahResultsPPReward=2`
+      - `PasrahResultsXPReward=222`
+      - `PasrahResultsCloseUnlocked=true`
+    - `ResultsStatus`:
+      - `PasrahResultsUIChannel=ResultsStatus`
+    - `ResultsSummary.StatusRow`:
+      - `PasrahResultsUIChannel=ResultsStatusRow`
+      - `PasrahResultsRowText=BERHASIL`
+    - `ResultsSummary.RewardRow`:
+      - `PasrahResultsUIChannel=ResultsRewardRow`
+      - `PasrahResultsRowText=306 MM | 2 PP`
+    - `ResultsSummary.XpRow`:
+      - `PasrahResultsUIChannel=ResultsXPRow`
+      - `PasrahResultsRowText=222`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 09:36:40 +07:00 - Stamp Sanity Runtime Identity
 - Updated `src/ServerScriptService/Server/SanitySystem/Service.lua` so server-authoritative sanity state now writes direct runtime attrs on the player instead of staying implicit inside service state.
 - Build passed: `_tmp_sanity_runtime_identity_build.rbxlx`.

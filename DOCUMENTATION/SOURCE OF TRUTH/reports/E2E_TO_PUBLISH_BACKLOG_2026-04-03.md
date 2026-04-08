@@ -4174,3 +4174,19 @@ Urutan yang paling masuk akal dari titik sekarang:
   - canonical data owner remained `PasrahJournalOwner=JournalSystem`
 - Build passed: `_tmp_journal_ui_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 05:31:22 +07:00 - Stamp Results UI Runtime Identity
+- Status: DONE.
+- `Client.UI.Main` now stamps direct runtime attrs on `ResultsPanel`, `ResultsStatus`, and summary rows (`Status`, `Reward`, `XP`) so result/readout identity is visible directly on player-facing UI.
+- Live Studio proof:
+  - canonical owners remained:
+    - `PasrahMatchResultOwner=MatchResultSystem`
+    - `PasrahRewardOwner=RewardCalculationSystem`
+  - UI runtime attrs now present:
+    - `ResultsPanel` -> `PasrahResultsUIOwner=UISystem`, `PasrahResultsUIChannel=ResultsPanel`
+    - `ResultsStatus` -> `PasrahResultsUIChannel=ResultsStatus`
+    - `StatusRow` -> `PasrahResultsUIChannel=ResultsStatusRow`, `PasrahResultsRowText=BERHASIL`
+    - `RewardRow` -> `PasrahResultsUIChannel=ResultsRewardRow`, `PasrahResultsRowText=306 MM | 2 PP`
+    - `XpRow` -> `PasrahResultsUIChannel=ResultsXPRow`, `PasrahResultsRowText=222`
+- Build passed: `_tmp_results_ui_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
