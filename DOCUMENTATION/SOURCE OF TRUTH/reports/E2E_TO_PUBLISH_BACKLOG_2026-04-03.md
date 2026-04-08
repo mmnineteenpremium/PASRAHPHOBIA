@@ -3691,3 +3691,9 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Status: DONE.
 - Live regression proof after UI bootstrap recovery: preparation HUD appears, investigation Field Kit appears, objective update cue uses uploaded inventory asset id, and JejakEnergi -> MEDOK still processes through StudioE2E.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-08 22:40:12 +07:00 - Extended Inventory Audio Cue Overrides
+- Status: DONE.
+- Runtime audio coverage expanded using uploaded Roblox inventory asset IDs only; no raw local audio paths used.
+- Verified live in active match: nv_windowknock, nv_objectthrow, ghost_fake_footsteps, ghost_whisper, ear_critical, jumpscare_stinger all resolved to expected uploaded asset IDs.
+- Studio stop-test reporting rule followed.

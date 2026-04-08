@@ -13032,3 +13032,19 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Verified uploaded inventory UI cue still fires in live client: ObjectiveUpdate -> rbxassetid://96021243760086.
 - Verified StudioE2E evidence request still reaches server after HUD recovery: JejakEnergi -> MEDOK publish fallback result.
 - Roblox Studio was returned to STOP TEST before this report/log entry.
+
+## 2026-04-08 22:40:12 +07:00 - Extended Inventory Audio Cue Overrides
+- Added cue-specific uploaded inventory audio overrides in src/client/SoundSystem/Main.lua without creating a new audio system.
+- New active cue mappings:
+  - EnvironmentalAudio/env_windowknock -> rbxassetid://71098340187847 (impactWood_light_001)
+  - EnvironmentalAudio/env_objectthrow -> rbxassetid://86917747509286 (object_fall)
+  - GhostAudio/ghost_whisper -> rbxassetid://98105844059537 (ghost_whisper_3)
+  - GhostAudio/ghost_fake_footsteps -> rbxassetid://95974189526179 (ghost_footstep_2)
+  - GhostAudio/ghost_manifest -> rbxassetid://139204195403262 (creaky-door-open)
+  - GhostAudio/ghost_object_throw -> rbxassetid://86917747509286 (object_fall)
+  - FearAudio/fear_rise -> rbxassetid://138884191945388 (single-heart-beat)
+  - FearAudio/fear_critical -> rbxassetid://138329686293368 (horror-deep-drum-heartbeat)
+  - JumpscareAudio/jumpscare_stinger -> rbxassetid://101202336513383 (hard-horror-hit-drum)
+- Build passed: _tmp_audio_extended_cue_overrides_build.rbxlx.
+- Live verification after StartSoloMatch: nv_windowknock, nv_objectthrow, ghost_fake_footsteps, ghost_whisper, ear_critical, and jumpscare_stinger all reported the expected PasrahAudioLastSoundId values.
+- Roblox Studio was returned to STOP TEST before reporting.
