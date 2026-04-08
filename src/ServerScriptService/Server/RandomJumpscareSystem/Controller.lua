@@ -44,6 +44,27 @@ local function resolveMatchRemote()
     return nil
 end
 
+local function stampJumpscareRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+    target:SetAttribute("PasrahJumpscareOwner", "RandomJumpscareSystem")
+    target:SetAttribute("PasrahJumpscareMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+    target:SetAttribute("PasrahJumpscareActive", payload.active == true)
+    local triggerType = type(payload.triggerType) == "string" and payload.triggerType or nil
+    if triggerType == nil and type(payload.cue) == "string" and payload.cue ~= "" then
+        triggerType = payload.cue
+    end
+    target:SetAttribute("PasrahJumpscareTriggerType", triggerType)
+    target:SetAttribute("PasrahJumpscareProfile", type(payload.effectProfile) == "string" and payload.effectProfile or nil)
+    target:SetAttribute("PasrahJumpscareGhostFlash", payload.ghostFlash == true)
+    target:SetAttribute("PasrahJumpscareAudioSpike", payload.audioSpike == true)
+    target:SetAttribute("PasrahJumpscareCameraShake", payload.cameraShake == true)
+    target:SetAttribute("PasrahJumpscareEnvironmentalDisturbance", payload.environmentalDisturbance == true)
+    target:SetAttribute("PasrahJumpscareReason", type(payload.reason) == "string" and payload.reason or nil)
+    target:SetAttribute("PasrahJumpscareTriggeredAt", tonumber(payload.now) or os.clock())
+end
+
 function Controller.new(state, service, deps)
     local self = setmetatable({}, Controller)
     self._state = state
@@ -78,9 +99,25 @@ function Controller:RegisterEventHandlers()
 
     self:_subscribe("MatchStarted", function(payload)
         self._service:OnMatchStarted(payload)
+        for _, player in ipairs((payload and payload.players) or {}) do
+            stampJumpscareRuntime(player, {
+                matchId = payload and payload.matchId,
+                active = false,
+                reason = "match_started",
+                now = payload and payload.now,
+            })
+        end
     end)
     self:_subscribe("MatchEnded", function(payload)
         self._service:OnMatchEnded(payload)
+        for _, player in ipairs((payload and payload.players) or {}) do
+            stampJumpscareRuntime(player, {
+                matchId = payload and payload.matchId,
+                active = false,
+                reason = "match_ended",
+                now = payload and payload.now,
+            })
+        end
     end)
     self:_subscribe("GhostInteraction", function(payload)
         self._service:OnGhostInteraction(payload)
@@ -151,6 +188,19 @@ function Controller:_forwardMatchEvent(eventName, payload)
 
     for _, player in ipairs(players) do
         if typeof(player) == "Instance" and player:IsA("Player") then
+            stampJumpscareRuntime(player, {
+                matchId = matchId,
+                active = true,
+                triggerType = clientPayload.triggerType,
+                effectProfile = clientPayload.effectProfile,
+                cue = clientPayload.cue,
+                ghostFlash = clientPayload.ghostFlash,
+                audioSpike = clientPayload.audioSpike,
+                cameraShake = clientPayload.cameraShake,
+                environmentalDisturbance = clientPayload.environmentalDisturbance,
+                reason = "triggered",
+                now = clientPayload.now,
+            })
             remote:FireClient(player, clientPayload)
         end
     end
