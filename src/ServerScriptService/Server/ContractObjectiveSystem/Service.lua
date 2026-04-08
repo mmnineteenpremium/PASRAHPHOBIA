@@ -43,6 +43,35 @@ local function listToMapById(list)
 	return out
 end
 
+local function buildProgressSummary(objectives, progress, completed)
+	local parts = {}
+	for objectiveId, objective in pairs(objectives or {}) do
+		local current = tonumber(progress and progress[objectiveId]) or 0
+		local target = tonumber(objective.target) or 1
+		local status = completed and completed[objectiveId] == true and "done" or "live"
+		table.insert(parts, string.format("%s:%d/%d:%s", objectiveId, current, target, status))
+	end
+	table.sort(parts)
+	return #parts > 0 and table.concat(parts, " | ") or nil
+end
+
+local function stampObjectiveRuntime(target, payload)
+	if typeof(target) ~= "Instance" or not target:IsA("Player") then
+		return
+	end
+	target:SetAttribute("PasrahObjectiveOwner", "ContractObjectiveSystem")
+	target:SetAttribute("PasrahObjectiveMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+	target:SetAttribute("PasrahObjectiveContractType", type(payload.contractType) == "string" and payload.contractType or nil)
+	target:SetAttribute("PasrahObjectiveActiveCount", tonumber(payload.activeCount) or 0)
+	target:SetAttribute("PasrahObjectiveCompletedCount", tonumber(payload.completedCount) or 0)
+	target:SetAttribute("PasrahObjectiveProgressSummary", type(payload.progressSummary) == "string" and payload.progressSummary or nil)
+	target:SetAttribute("PasrahObjectiveLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+	target:SetAttribute("PasrahObjectiveLastObjectiveId", type(payload.lastObjectiveId) == "string" and payload.lastObjectiveId or nil)
+	target:SetAttribute("PasrahObjectiveLastProgress", tonumber(payload.lastProgress))
+	target:SetAttribute("PasrahObjectiveAllPrimaryComplete", payload.allPrimaryComplete == true)
+	target:SetAttribute("PasrahObjectiveLastUpdatedAt", tonumber(payload.updatedAt) or os.clock())
+end
+
 function Service.new(state, deps)
 	local self = setmetatable({}, Service)
 	self._state = state
@@ -69,6 +98,7 @@ function Service:Init()
 	self._state:Set("objectiveProgress", {})
 	self._state:Set("contractType", nil)
 	self._state:Set("activeMatchId", nil)
+	self._state:Set("activePlayers", {})
 end
 
 function Service:Start()
@@ -82,6 +112,36 @@ end
 function Service:_publish(eventName, payload)
 	if self._eventBus then
 		self._eventBus:Publish(eventName, payload)
+	end
+end
+
+function Service:_stampPlayers(lastEvent, lastObjectiveId, lastProgress, allPrimaryComplete)
+	local players = self._state:Get("activePlayers") or {}
+	local objectives = self._state:Get("activeObjectives") or {}
+	local completed = self._state:Get("completedObjectives") or {}
+	local progress = self._state:Get("objectiveProgress") or {}
+	local activeCount = 0
+	local completedCount = 0
+	for objectiveId, _ in pairs(objectives) do
+		activeCount += 1
+		if completed[objectiveId] == true then
+			completedCount += 1
+		end
+	end
+	local payload = {
+		matchId = self._state:Get("activeMatchId"),
+		contractType = self._state:Get("contractType"),
+		activeCount = activeCount,
+		completedCount = completedCount,
+		progressSummary = buildProgressSummary(objectives, progress, completed),
+		lastEvent = lastEvent,
+		lastObjectiveId = lastObjectiveId,
+		lastProgress = lastProgress,
+		allPrimaryComplete = allPrimaryComplete == true,
+		updatedAt = os.clock(),
+	}
+	for _, player in ipairs(players) do
+		stampObjectiveRuntime(player, payload)
 	end
 end
 
@@ -101,6 +161,7 @@ function Service:LoadContractObjectives(contractType)
 	self._state:Set("completedObjectives", {})
 	self._state:Set("objectiveProgress", {})
 	self._state:Set("contractType", contractType)
+	self:_stampPlayers("ObjectivesLoaded")
 	return deepCopy(objectives)
 end
 
@@ -113,6 +174,7 @@ function Service:StartObjectives()
 			objective = deepCopy(objective),
 		})
 	end
+	self:_stampPlayers("ObjectivesStarted")
 end
 
 function Service:UpdateObjectiveProgress(objectiveId, amount)
@@ -142,6 +204,7 @@ function Service:UpdateObjectiveProgress(objectiveId, amount)
 		progress = nextValue,
 		target = objective.target,
 	})
+	self:_stampPlayers("ObjectiveProgress", objectiveId, nextValue)
 
 	if nextValue >= objective.target then
 		self:CompleteObjective(objectiveId)
@@ -177,6 +240,7 @@ function Service:CompleteObjective(objectiveId)
 		contractType = self._state:Get("contractType"),
 		objective = deepCopy(objective),
 	})
+	self:_stampPlayers("ObjectiveCompleted", objectiveId, tonumber((self._state:Get("objectiveProgress") or {})[objectiveId]) or objective.target)
 
 	self:CheckContractCompletion()
 	return true
@@ -200,6 +264,7 @@ function Service:CheckContractCompletion()
 	end
 
 	if allPrimaryComplete and totalCount > 0 then
+		self:_stampPlayers("ContractCompleted", nil, nil, true)
 		self:_publish("ContractCompleted", {
 			matchId = self._state:Get("activeMatchId"),
 			contractType = self._state:Get("contractType"),
@@ -220,6 +285,7 @@ function Service:OnMatchStarted(payload)
 	end
 	local contractType = payload and payload.contractType or "Investigation"
 	self._state:ResetForMatch(matchId, contractType)
+	self._state:Set("activePlayers", payload and payload.players or {})
 	self:LoadContractObjectives(contractType)
 	self:StartObjectives()
 end
@@ -258,6 +324,7 @@ function Service:OnMatchEnded(payload)
 	end
 	self:CompleteObjective("CompleteInvestigation")
 	self:CheckContractCompletion()
+	self:_stampPlayers("MatchEnded")
 	self._state:Clear()
 end
 
