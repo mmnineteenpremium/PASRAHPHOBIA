@@ -12898,3 +12898,13 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `TeleportDrop_01.SoundId = rbxassetid://82086363159443`
 - publish impact:
   - inventory upload yang memang sudah ada sekarang benar-benar masuk ke owner runtime canonical, jadi batch audio tidak lagi menggantung di path lokal/raw asset atau placeholder lama
+
+- progress tambahan pada lane `ui audio fallback alignment`:
+  - fallback click di `client/UI/Main.lua` tidak lagi memakai built-in `rbxasset://sounds/volume_slider.ogg`
+  - fallback sekarang diselaraskan ke asset canonical yang sama dengan template `ButtonClick_01`:
+    - `rbxassetid://85056627192723` (`click5`)
+- validasi terbaru:
+  - script live `game.StarterPlayer.StarterPlayerScripts.Client.UI.Main` membaca:
+    - `UI_SOUND_FALLBACKS.ButtonClick.SoundId = rbxassetid://85056627192723`
+- publish impact:
+  - jalur utama dan fallback UI click sekarang sama-sama memakai asset upload akun aktif, jadi tidak ada lagi diam-diam jatuh ke built-in Roblox default
