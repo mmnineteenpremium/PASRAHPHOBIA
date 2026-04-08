@@ -13094,3 +13094,15 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - This keeps the UI honest about the day-30 reward preview without exposing raw implementation wording to players.
 - Build passed: `_tmp_ui_placeholder_copy_build.rbxlx`.
 - Studio script grep verified the old `placeholder hadiah karakter` text is gone and the new teaser/finale copy is present.
+
+## 2026-04-08 23:06:51 +07:00 - Expand Footstep Material Audio Coverage
+- Added uploaded Roblox inventory footstep templates:
+  - `GrassStep_01 -> rbxassetid://128180668604255` (`footstep_grass_002`)
+  - `SnowStep_01 -> rbxassetid://71785355785721` (`footstep_snow_000`)
+- Expanded `FootstepController` material routing:
+  - `Grass`, `LeafyGrass`, `Ground`, and `Sand` now use `GrassStep_01`
+  - `Snow`, `Ice`, and `Glacier` now use `SnowStep_01`
+- Added `PasrahFootstepProbeLastSoundId` for future runtime verification.
+- Build passed: `_tmp_footstep_material_audio_build.rbxlx`.
+- Live Studio client probe verified Grass/LeafyGrass -> `GrassStep_01`, Snow/Ice -> `SnowStep_01`, and Metal remains `MetalStep_01`, all with expected uploaded asset IDs.
+- Roblox Studio was returned to STOP TEST before logging.
