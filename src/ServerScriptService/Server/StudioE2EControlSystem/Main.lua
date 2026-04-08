@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 local LogService = game:GetService("LogService")
 local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
+local HttpService = game:GetService("HttpService")
 
 local Services = require(script.Parent.Parent.Core.Services)
 
@@ -16,6 +17,8 @@ local TRACE_ATTR = "PasrahStudioE2ELastAction"
 local RESULT_ATTR = "PasrahStudioE2ELastResult"
 local PLAYER_TRACE_ATTR = "PasrahStudioE2ELastAction"
 local PLAYER_RESULT_ATTR = "PasrahStudioE2ELastResult"
+local GHOST_SNAPSHOT_ATTR = "PasrahStudioGhostRuntimeSnapshot"
+local PLAYER_GHOST_SNAPSHOT_ATTR = "PasrahStudioGhostRuntimeSnapshot"
 local EXTRACTION_OVERRIDE_ATTR = "PasrahAllowStudioExtraction"
 local FORCE_GHOST_TYPE_ATTR = "PasrahForceGhostType"
 local FORCE_GHOST_VISUAL_STATE_ATTR = "PasrahForceGhostVisualState"
@@ -297,6 +300,17 @@ function StudioE2EControlSystem:_setResult(parts, player)
 	ReplicatedStorage:SetAttribute(RESULT_ATTR, encoded)
 	if typeof(player) == "Instance" and player:IsA("Player") then
 		player:SetAttribute(PLAYER_RESULT_ATTR, encoded)
+	end
+end
+
+function StudioE2EControlSystem:_setGhostSnapshot(snapshotJson, player)
+	if not RunService:IsStudio() then
+		return
+	end
+	local encoded = type(snapshotJson) == "string" and snapshotJson or ""
+	ReplicatedStorage:SetAttribute(GHOST_SNAPSHOT_ATTR, encoded)
+	if typeof(player) == "Instance" and player:IsA("Player") then
+		player:SetAttribute(PLAYER_GHOST_SNAPSHOT_ATTR, encoded)
 	end
 end
 
@@ -586,7 +600,15 @@ function StudioE2EControlSystem:_handleGetGhostRuntimeSnapshot(player, request)
 		snapshot.meshTransparency = meshPart.Transparency
 	end
 
-	return true, HttpService:JSONEncode(snapshot)
+	local encoded = HttpService:JSONEncode(snapshot)
+	self:_setGhostSnapshot(encoded, player)
+	return true, string.format(
+		"match=%s snapshot_ready hasGhost=%s placeholder=%s template=%s",
+		tostring(matchId),
+		tostring(snapshot.hasGhostModel == true),
+		tostring(snapshot.placeholder),
+		tostring(snapshot.visualTemplateName)
+	)
 end
 
 function StudioE2EControlSystem:_handleExtractSelf(player, request)
@@ -1601,73 +1623,84 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 
 	local ok = false
 	local result = "unsupported_action"
+	local dispatchOk, dispatchResultA, dispatchResultB = xpcall(function()
+		if action == "AdvancePhase" then
+			return self:_handleAdvancePhase(player, request)
+		elseif action == "StartSoloMatch" then
+			return self:_handleStartSoloMatch(player, request)
+		elseif action == "SetPreparationFocusTool" then
+			return self:_handleSetPreparationFocusTool(player, request)
+		elseif action == "SimulateLobbyZone" then
+			return self:_handleSimulateLobbyZone(player, request)
+		elseif action == "LobbyTrainingSnapshot" then
+			return self:_handleLobbyTrainingSnapshot(player, request)
+		elseif action == "LobbyTrainingUseTool" then
+			return self:_handleLobbyTrainingUseTool(player, request)
+		elseif action == "LobbyTrainingUseSupport" then
+			return self:_handleLobbyTrainingUseSupport(player, request)
+		elseif action == "LobbyTrainingRotate" then
+			return self:_handleLobbyTrainingRotate(player, request)
+		elseif action == "ForceHunt" then
+			return self:_handleForceHunt(player, request)
+		elseif action == "ForceManifest" then
+			return self:_handleForceManifest(player, request)
+		elseif action == "GetGhostRuntimeSnapshot" then
+			return self:_handleGetGhostRuntimeSnapshot(player, request)
+		elseif action == "ExtractSelf" then
+			return self:_handleExtractSelf(player, request)
+		elseif action == "DrainSanity" then
+			return self:_handleDrainSanity(player, request)
+		elseif action == "SetForcedGhost" then
+			return self:_handleSetForcedGhost(player, request)
+		elseif action == "EndMatch" then
+			return self:_handleEndMatch(player, request)
+		elseif action == "GetWallet" then
+			return self:_handleGetWallet(player)
+		elseif action == "GrantCurrency" then
+			return self:_handleGrantCurrency(player, request)
+		elseif action == "GrantMarketplacePurchase" then
+			return self:_handleGrantMarketplacePurchase(player, request)
+		elseif action == "GrantMarketplaceEntitlement" then
+			return self:_handleGrantMarketplaceEntitlement(player, request)
+		elseif action == "GetPersistenceMode" then
+			return self:_handleGetPersistenceMode()
+		elseif action == "GetQAGateSnapshot" then
+			return self:_handleGetQAGateSnapshot(player, request)
+		elseif action == "GetQAGateReadiness" then
+			return self:_handleGetQAGateReadiness(player, request)
+		elseif action == "GetPublishReadiness" then
+			return self:_handleGetPublishReadiness(player, request)
+		elseif action == "GetShopReadiness" then
+			return self:_handleGetShopReadiness()
+		elseif action == "GetShopPlayerSnapshot" then
+			return self:_handleGetShopPlayerSnapshot(player, request)
+		elseif action == "UseEvidenceTool" then
+			return self:_handleUseEvidenceTool(player, request)
+		elseif action == "ConsumeHuntProtection" then
+			return self:_handleConsumeHuntProtection(player, request)
+		elseif action == "TriggerJumpscare" then
+			return self:_handleTriggerJumpscare(player, request)
+		elseif action == "TriggerAudioCue" then
+			return self:_handleTriggerAudioCue(player, request)
+		elseif action == "HidingDebugSnapshot" then
+			return self:_handleHidingDebugSnapshot(player, request)
+		elseif action == "EnterHide" then
+			return self:_handleEnterHide(player, request)
+		elseif action == "ExitHide" then
+			return self:_handleExitHide(player, request)
+		end
+		return false, "unsupported_action"
+	end, function(err)
+		return debug.traceback(err)
+	end)
 
-	if action == "AdvancePhase" then
-		ok, result = self:_handleAdvancePhase(player, request)
-	elseif action == "StartSoloMatch" then
-		ok, result = self:_handleStartSoloMatch(player, request)
-	elseif action == "SetPreparationFocusTool" then
-		ok, result = self:_handleSetPreparationFocusTool(player, request)
-	elseif action == "SimulateLobbyZone" then
-		ok, result = self:_handleSimulateLobbyZone(player, request)
-	elseif action == "LobbyTrainingSnapshot" then
-		ok, result = self:_handleLobbyTrainingSnapshot(player, request)
-	elseif action == "LobbyTrainingUseTool" then
-		ok, result = self:_handleLobbyTrainingUseTool(player, request)
-	elseif action == "LobbyTrainingUseSupport" then
-		ok, result = self:_handleLobbyTrainingUseSupport(player, request)
-	elseif action == "LobbyTrainingRotate" then
-		ok, result = self:_handleLobbyTrainingRotate(player, request)
-	elseif action == "ForceHunt" then
-		ok, result = self:_handleForceHunt(player, request)
-	elseif action == "ForceManifest" then
-		ok, result = self:_handleForceManifest(player, request)
-	elseif action == "GetGhostRuntimeSnapshot" then
-		ok, result = self:_handleGetGhostRuntimeSnapshot(player, request)
-	elseif action == "ExtractSelf" then
-		ok, result = self:_handleExtractSelf(player, request)
-	elseif action == "DrainSanity" then
-		ok, result = self:_handleDrainSanity(player, request)
-	elseif action == "SetForcedGhost" then
-		ok, result = self:_handleSetForcedGhost(player, request)
-	elseif action == "EndMatch" then
-		ok, result = self:_handleEndMatch(player, request)
-	elseif action == "GetWallet" then
-		ok, result = self:_handleGetWallet(player)
-	elseif action == "GrantCurrency" then
-		ok, result = self:_handleGrantCurrency(player, request)
-	elseif action == "GrantMarketplacePurchase" then
-		ok, result = self:_handleGrantMarketplacePurchase(player, request)
-	elseif action == "GrantMarketplaceEntitlement" then
-		ok, result = self:_handleGrantMarketplaceEntitlement(player, request)
-	elseif action == "GetPersistenceMode" then
-		ok, result = self:_handleGetPersistenceMode()
-	elseif action == "GetQAGateSnapshot" then
-		ok, result = self:_handleGetQAGateSnapshot(player, request)
-	elseif action == "GetQAGateReadiness" then
-		ok, result = self:_handleGetQAGateReadiness(player, request)
-	elseif action == "GetPublishReadiness" then
-		ok, result = self:_handleGetPublishReadiness(player, request)
-	elseif action == "GetShopReadiness" then
-		ok, result = self:_handleGetShopReadiness()
-	elseif action == "GetShopPlayerSnapshot" then
-		ok, result = self:_handleGetShopPlayerSnapshot(player, request)
-	elseif action == "UseEvidenceTool" then
-		ok, result = self:_handleUseEvidenceTool(player, request)
-	elseif action == "ConsumeHuntProtection" then
-		ok, result = self:_handleConsumeHuntProtection(player, request)
-	elseif action == "TriggerJumpscare" then
-		ok, result = self:_handleTriggerJumpscare(player, request)
-	elseif action == "TriggerAudioCue" then
-		ok, result = self:_handleTriggerAudioCue(player, request)
-	elseif action == "HidingDebugSnapshot" then
-		ok, result = self:_handleHidingDebugSnapshot(player, request)
-	elseif action == "EnterHide" then
-		ok, result = self:_handleEnterHide(player, request)
-	elseif action == "ExitHide" then
-		ok, result = self:_handleExitHide(player, request)
+	if dispatchOk then
+		ok = dispatchResultA
+		result = dispatchResultB
 	else
-		ok, result = false, "unsupported_action"
+		ok = false
+		result = "handler_error"
+		warn(string.format("[StudioE2EControlSystem] action=%s failed\n%s", tostring(action), tostring(dispatchResultA)))
 	end
 
 	self:_setResult({
@@ -1712,6 +1745,7 @@ function StudioE2EControlSystem:Shutdown()
 		ReplicatedStorage:SetAttribute(READY_ATTR, nil)
 		ReplicatedStorage:SetAttribute(TRACE_ATTR, nil)
 		ReplicatedStorage:SetAttribute(RESULT_ATTR, nil)
+		ReplicatedStorage:SetAttribute(GHOST_SNAPSHOT_ATTR, nil)
 	end
 end
 
