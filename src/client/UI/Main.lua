@@ -1441,6 +1441,13 @@ local function resolveFieldKitToolPreviewState(toolName, toolState, selected, me
 	return "ready"
 end
 
+local function shouldPersistFieldKitSelection(toolName, toolState)
+	if type(toolState) ~= "table" or toolState.visualPlaced ~= true then
+		return false
+	end
+	return toolName == "Garam" or toolName == "Salib"
+end
+
 local function ensureFieldKitButtonVisuals(button, definition, toolType)
 	if not button then
 		return nil
@@ -5573,7 +5580,7 @@ function UISystem:_refreshLobbyEvidenceTrainingPanel()
 			local toolState = toolStates[toolName]
 			if toolConfig and toolState and widget and widget.Card then
 				local metaText, metaDanger = self:_resolveFieldKitMeta(toolName, toolState)
-				local selected = journalState.toolType == toolName and (isRecent or toolState.pending or toolState.visualPlaced == true)
+				local selected = journalState.toolType == toolName and (isRecent or toolState.pending or shouldPersistFieldKitSelection(toolName, toolState))
 				local previewState = resolveFieldKitToolPreviewState(toolName, toolState, selected, metaDanger)
 				local previewVisible = widget.ToolPreview and renderFieldKitToolPreview(widget.ToolPreview, toolName, toolConfig.accent, previewState) or false
 				if widget.ToolPreview then
@@ -6031,7 +6038,7 @@ function UISystem:_refreshFieldKitPanel()
 			local toolState = toolStates[toolName]
 			if button and toolConfig and toolState then
 				local metaText, metaDanger, footerText = self:_resolveFieldKitMeta(toolName, toolState)
-				local selected = activeTool == toolName and (isRecent or toolState.pending or toolState.visualPlaced == true)
+				local selected = activeTool == toolName and (isRecent or toolState.pending or shouldPersistFieldKitSelection(toolName, toolState))
 				local usesRemaining = tonumber(toolState.usesRemaining)
 				local chargesRemaining = tonumber(toolState.chargesRemaining)
 				local idleColor = toolConfig.accent:Lerp(Color3.fromRGB(34, 42, 56), 0.44)

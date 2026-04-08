@@ -3548,3 +3548,12 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - state `Dupa` sekarang benar-benar punya lifecycle waktu yang akurat di HUD client, bukan aktif terus karena mismatch clock server/client
 
+- progress tambahan pada lane `dupa selection persistence fix`:
+  - selection persist untuk utility placement sekarang tidak lagi menyeret `Dupa` ikut tetap highlighted setelah efeknya selesai
+- validasi terbaru:
+  - `hot.signature = Dupa|active|asset`
+  - `decay.signature = Dupa|ready|asset`
+  - `visualPlaced = true` tapi preview sudah turun normal
+- publish impact:
+  - tool utility temporer sekarang selesai benar-benar kembali netral di HUD, sementara trap/guard yang memang menetap tetap boleh bertahan highlighted
+

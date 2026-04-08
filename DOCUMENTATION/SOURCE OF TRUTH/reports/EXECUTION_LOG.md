@@ -12807,3 +12807,13 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `hot.repellentUntilLocal = 66313.7177`
     - `decay.signature = Dupa|focus|asset`
     - `phase = InvestigationPhase`
+
+- progress tambahan pada lane `dupa selection persistence fix`:
+  - `Dupa` tidak lagi ikut aturan selection persist yang dipakai untuk utility placement jangka panjang
+  - persistence selection sekarang dibatasi ke tool yang memang masuk akal tetap menempel: `Garam` dan `Salib`
+- validasi terbaru:
+  - probe runtime sesudah `22s`:
+    - `hot.signature = Dupa|active|asset`
+    - `decay.signature = Dupa|ready|asset`
+    - `toolType = Dupa`
+    - `visualPlaced = true`
