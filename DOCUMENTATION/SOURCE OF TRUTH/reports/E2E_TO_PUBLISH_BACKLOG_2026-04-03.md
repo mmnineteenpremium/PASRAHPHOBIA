@@ -3528,3 +3528,13 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - support tool sekarang memberi bahasa visual yang setara dengan teks HUD, jadi pemain tidak harus membaca footer saja untuk tahu utility mereka benar-benar bekerja
 
+- progress tambahan pada lane `field kit utility preview decay`:
+  - preview utility sekarang punya decay state yang lebih elegan setelah event keras terjadi
+- validasi terbaru:
+  - `salt_hot = Garam|danger|asset`
+  - `salt_decay = Garam|active|asset`
+  - `crucifix_hot = Salib|danger|asset`
+  - `crucifix_decay = Salib|active|asset`
+- publish impact:
+  - preview utility tidak lagi terjebak di warna alarm permanen, jadi HUD tetap terbaca selama investigasi panjang
+

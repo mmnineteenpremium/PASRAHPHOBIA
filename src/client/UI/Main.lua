@@ -416,6 +416,7 @@ local function createDefaultFieldKitToolState(toolType)
 		chargesRemaining = nil,
 		lastEvidenceType = nil,
 		saltTriggered = false,
+		saltTriggeredAt = 0,
 		huntBlockedAt = 0,
 		huntRepelled = false,
 		repellentUntil = nil,
@@ -1392,6 +1393,7 @@ local function resolveFieldKitToolPreviewState(toolName, toolState, selected, me
 
 	local usesRemaining = tonumber(toolState.usesRemaining)
 	local chargesRemaining = tonumber(toolState.chargesRemaining)
+	local recentSaltTrigger = toolName == "Garam" and ((os.clock() - (tonumber(toolState.saltTriggeredAt) or 0)) <= 4)
 	local recentHuntBlock = toolName == "Salib" and ((os.clock() - (tonumber(toolState.huntBlockedAt) or 0)) <= 4)
 	local repellentUntil = tonumber(toolState.repellentUntil)
 	if toolState.pending then
@@ -1400,7 +1402,7 @@ local function resolveFieldKitToolPreviewState(toolName, toolState, selected, me
 	if metaDanger or toolState.lastSuccess == false then
 		return "danger"
 	end
-	if toolName == "Garam" and toolState.saltTriggered == true then
+	if toolName == "Garam" and recentSaltTrigger then
 		return "danger"
 	end
 	if toolName == "Salib" and recentHuntBlock then
@@ -5658,6 +5660,9 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 		end
 		if toolType == "Garam" then
 			toolState.saltTriggered = data.tracksDetected == true
+			if toolState.saltTriggered == true then
+				toolState.saltTriggeredAt = os.clock()
+			end
 		end
 		if toolType == "Dupa" then
 			toolState.huntRepelled = data.huntRepelled == true
@@ -5670,6 +5675,7 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 	end
 	if toolType == "Garam" and eventName == "SaltTriggered" then
 		toolState.saltTriggered = true
+		toolState.saltTriggeredAt = os.clock()
 	end
 	if toolType == "Salib" and (eventName == "CrucifixTriggered" or (eventName == "HuntBlocked" and reason == "crucifix_prevented_hunt")) then
 		toolState.huntBlockedAt = os.clock()
