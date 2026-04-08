@@ -427,6 +427,7 @@ local function createDefaultFieldKitToolState(toolType)
 		pending = false,
 		lastEvent = "Idle",
 		lastReason = nil,
+		lastCueSignature = nil,
 		lastSuccess = nil,
 		lastUpdatedAt = 0,
 	}
@@ -552,6 +553,18 @@ local UI_SOUND_FALLBACKS = {
 	},
 	Notification = {
 		SoundId = "rbxassetid://130533639073623",
+		Volume = 0.18,
+	},
+	ThermometerRead = {
+		SoundId = "rbxassetid://87230026682789",
+		Volume = 0.2,
+	},
+	WritingScratch = {
+		SoundId = "rbxassetid://83865030928382",
+		Volume = 0.18,
+	},
+	MotionTrigger = {
+		SoundId = "rbxassetid://97217836947594",
 		Volume = 0.18,
 	},
 }
@@ -5753,6 +5766,8 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 		toolState.placementId = nil
 		toolState.chargesRemaining = nil
 	end
+
+	self:_playFieldKitEvidenceCueIfNeeded(toolType, toolState, success, reason, data, eventName)
 end
 
 function UISystem:_resolveFieldKitMeta(toolType, toolState)
@@ -5932,6 +5947,41 @@ function UISystem:_scheduleFieldKitTemporalRefresh(delaySeconds)
 		end
 		self:_refreshFieldKitPanel()
 	end)
+end
+
+function UISystem:_playFieldKitEvidenceCueIfNeeded(toolType, toolState, success, reason, data, eventName)
+	if success == false or type(toolState) ~= "table" then
+		return
+	end
+
+	local cueKey = nil
+	local cueSignature = nil
+	local evidenceType = type(data) == "table" and tostring(data.evidenceType or "") or ""
+	local motionDetected = type(data) == "table" and data.motionDetected == true
+	local writingAppeared = type(data) == "table" and data.writingAppeared == true
+	local temperatureC = type(data) == "table" and tonumber(data.temperatureC) or nil
+
+	if toolType == "SuhuMembeku" and (temperatureC ~= nil or evidenceType == "Suhu") then
+		cueKey = "ThermometerRead"
+		cueSignature = string.format("%s|%s|%s", tostring(toolType), tostring(eventName or reason or "temperature"), tostring(math.floor(temperatureC or -5)))
+	elseif toolType == "BukuTerkutuk" and (writingAppeared or evidenceType == "BukuTerkutuk") then
+		cueKey = "WritingScratch"
+		cueSignature = string.format("%s|%s|%s", tostring(toolType), tostring(eventName or reason or "writing"), tostring(evidenceType ~= "" and evidenceType or "writing"))
+	elseif toolType == "GerakanGaib" and (motionDetected or evidenceType == "Pengganggu") then
+		cueKey = "MotionTrigger"
+		cueSignature = string.format("%s|%s|%s", tostring(toolType), tostring(eventName or reason or "motion"), tostring(evidenceType ~= "" and evidenceType or "motion"))
+	end
+
+	if not cueKey or not cueSignature or toolState.lastCueSignature == cueSignature then
+		return
+	end
+
+	toolState.lastCueSignature = cueSignature
+	playRuntimeUISound(cueKey, {
+		SingleInstance = true,
+		VolumeScale = 0.96,
+		PlaybackJitter = 0.03,
+	})
 end
 
 function UISystem:_useInvestigationTool(toolType, options)

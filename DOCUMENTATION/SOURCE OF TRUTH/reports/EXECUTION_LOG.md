@@ -12913,6 +12913,25 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - publish impact:
   - flow objective dan feedback lobby sekarang tidak lagi hanya berubah teks; sudah punya cue audio upload akun aktif tanpa membuat sistem notifikasi baru
 
+- progress tambahan pada lane `field kit evidence cue pass`:
+  - `client/UI/Main.lua` sekarang punya tiga cue fallback inventory-owned tambahan untuk tool evidence yang memang sudah hidup:
+    - `ThermometerRead -> rbxassetid://87230026682789`
+    - `WritingScratch -> rbxassetid://83865030928382`
+    - `MotionTrigger -> rbxassetid://97217836947594`
+  - cue tersebut dipakai oleh owner existing `Field Kit`, bukan sistem baru:
+    - `SuhuMembeku`
+    - `BukuTerkutuk`
+    - `GerakanGaib`
+  - dedupe lokal ditutup lewat `toolState.lastCueSignature`, jadi update tool tidak spam audio saat event yang sama diproses ulang
+- validasi terbaru:
+  - script live `game.StarterPlayer.StarterPlayerScripts.Client.UI.Main` membaca:
+    - `ThermometerRead.SoundId = rbxassetid://87230026682789`
+    - `WritingScratch.SoundId = rbxassetid://83865030928382`
+    - `MotionTrigger.SoundId = rbxassetid://97217836947594`
+  - helper `_playFieldKitEvidenceCueIfNeeded` ada di source aktif dan dipanggil dari `_applyFieldKitToolUpdate`
+- publish impact:
+  - tool evidence yang tadinya hanya mengubah teks/meta HUD sekarang punya cue audio inventory-owned yang lebih mudah dipahami pemain saat membaca suhu, tulisan, dan trigger motion
+
 - progress tambahan pada lane `ui audio fallback alignment`:
   - fallback click di `client/UI/Main.lua` tidak lagi memakai built-in `rbxasset://sounds/volume_slider.ogg`
   - fallback sekarang diselaraskan ke asset canonical yang sama dengan template `ButtonClick_01`:
