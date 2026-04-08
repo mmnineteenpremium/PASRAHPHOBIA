@@ -3411,3 +3411,15 @@ Urutan yang paling masuk akal dari titik sekarang:
 - publish impact:
   - hasil trap garam sekarang kebaca langsung dari HUD, tidak harus menunggu pemain membaca world state
 
+- progress tambahan pada lane `salib hunt-block HUD clarity`:
+  - `Salib` sekarang memberi feedback block yang tegas sebelum kembali ke state charge normal
+- validasi terbaru:
+  - sesudah hunt diblokir:
+    - `Immediate Meta = BLOCK`
+    - `Immediate Footer = HUNT OFF`
+  - beberapa detik sesudahnya:
+    - `Decay Meta = C2`
+    - `Decay Footer = GUARD`
+- publish impact:
+  - block hunt dari `Salib` sekarang terbaca langsung oleh pemain, bukan hanya lewat perubahan charge yang mudah terlewat
+

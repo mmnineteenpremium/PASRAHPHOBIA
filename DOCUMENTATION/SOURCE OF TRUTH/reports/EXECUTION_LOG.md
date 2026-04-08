@@ -12641,3 +12641,15 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `Garam Meta = TRACK`
     - `Garam Footer = GHOST STEP`
     - `FieldKitFrame.StatusLabel = Jejak garam terpicu. Ghost melintas di area garam.`
+
+- progress tambahan pada lane `salib hunt-block HUD clarity`:
+  - `Salib` di `Field Kit` sekarang memberi state singkat `BLOCK / HUNT OFF` tepat setelah hunt berhasil diblokir
+  - sesudah jendela singkat itu lewat, HUD kembali ke state charge normal (`C2 / GUARD`, dst)
+- validasi terbaru:
+  - snapshot cepat sesudah `ConsumeHuntProtection`:
+    - `Immediate Meta = BLOCK`
+    - `Immediate Footer = HUNT OFF`
+    - `Immediate Status = Hunt diblokir. Salib menahan trigger hunt.`
+  - snapshot decay sesudah jeda:
+    - `Decay Meta = C2`
+    - `Decay Footer = GUARD`
