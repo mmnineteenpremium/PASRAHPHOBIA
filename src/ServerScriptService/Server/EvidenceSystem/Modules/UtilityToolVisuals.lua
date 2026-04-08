@@ -7,6 +7,7 @@ local TOOL_ASSET_ATTRIBUTE = "PasrahUtilityUsesAsset"
 local TOOL_TEMPLATE_ATTRIBUTE = "PasrahUtilityTemplateName"
 local TOOL_TYPE_ATTRIBUTE = "PasrahUtilityToolType"
 local TOOL_PLACEMENT_ID_ATTRIBUTE = "PasrahUtilityPlacementId"
+local RUNTIME_STATE_ATTRIBUTE = "RuntimeState"
 
 local UtilityToolVisuals = {}
 UtilityToolVisuals.__index = UtilityToolVisuals
@@ -99,6 +100,15 @@ local function setPartColor(model, partName, color, transparency, material)
 		end
 	end
 	return part
+end
+
+local function setModelState(model, state)
+	if typeof(model) ~= "Instance" then
+		return
+	end
+	local resolved = tostring(state or "")
+	model:SetAttribute(TOOL_STATE_ATTRIBUTE, resolved)
+	model:SetAttribute(RUNTIME_STATE_ATTRIBUTE, resolved)
 end
 
 local function buildFallbackModel(toolType)
@@ -197,7 +207,7 @@ function UtilityToolVisuals:PlaceTool(matchId, toolType, placementId, worldCFram
 	model:SetAttribute(TOOL_PLACEMENT_ID_ATTRIBUTE, tostring(placementId))
 	model:SetAttribute(TOOL_ASSET_ATTRIBUTE, template ~= nil)
 	model:SetAttribute(TOOL_TEMPLATE_ATTRIBUTE, template and template.Name or "Fallback")
-	model:SetAttribute(TOOL_STATE_ATTRIBUTE, "Placed")
+	setModelState(model, "Placed")
 	setPlacementPhysics(model)
 	model.Parent = container
 
@@ -243,7 +253,7 @@ function UtilityToolVisuals:MarkSaltTriggered(matchId, placementId)
 	setPartColor(model, "SaltGlow", Color3.fromRGB(208, 220, 255), 0.32, Enum.Material.Neon)
 	setPartColor(model, "Satchel", Color3.fromRGB(112, 92, 68), nil, nil)
 	setPartColor(model, "Seal", Color3.fromRGB(222, 206, 160), 0.05, Enum.Material.Metal)
-	model:SetAttribute(TOOL_STATE_ATTRIBUTE, "Triggered")
+	setModelState(model, "Triggered")
 
 	return true
 end
@@ -280,7 +290,7 @@ function UtilityToolVisuals:UpdateCrucifixCharges(matchId, placementId, chargesR
 	end
 	setPartColor(model, "HaloBack", auraColor, auraTransparency, Enum.Material.Neon)
 	setPartColor(model, "GroundAura", auraColor, math.min(0.9, auraTransparency + 0.06), Enum.Material.Neon)
-	model:SetAttribute(TOOL_STATE_ATTRIBUTE, remaining > 0 and "Armed" or "Spent")
+	setModelState(model, remaining > 0 and "Armed" or "Spent")
 	model:SetAttribute("PasrahUtilityChargesRemaining", remaining)
 
 	return true
@@ -310,7 +320,7 @@ function UtilityToolVisuals:ActivateSmudge(matchId, placementId, huntRepelled)
 			Enum.Material.Neon
 		)
 	end
-	model:SetAttribute(TOOL_STATE_ATTRIBUTE, huntRepelled and "Repel" or "Active")
+	setModelState(model, huntRepelled and "Repel" or "Active")
 	model:SetAttribute("PasrahUtilityRepelledHunt", huntRepelled == true)
 
 	return true

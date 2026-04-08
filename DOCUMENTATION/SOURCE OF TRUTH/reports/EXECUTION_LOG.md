@@ -12606,3 +12606,15 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
       - `FieldKitFrame.Visible = true`
 - residual sesudah pass ini:
   - objective/message text untuk investigation masih perlu saya audit di batch berikutnya bila ingin dipoles lebih jauh
+
+- progress tambahan pada lane `support tool runtime inspection cleanup`:
+  - placement dunia utility tool sekarang menulis alias attr `RuntimeState` yang sama dengan `PasrahUtilityVisualState`
+  - tujuan pass ini hanya membuat inspeksi live/debug berikutnya lebih konsisten; gameplay tidak diubah
+- validasi terbaru:
+  - `Salib` authoritative placement:
+    - `runtime = Armed`
+    - `visual = Armed`
+    - `charges = 3`
+  - `Garam` authoritative placement:
+    - `runtime = Triggered`
+    - `visual = Triggered`
