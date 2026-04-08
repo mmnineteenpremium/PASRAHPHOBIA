@@ -308,6 +308,42 @@ local function applyHideAttributes(player, state, spotType, zoneId)
     player:SetAttribute("PasrahHideZoneId", zoneId)
 end
 
+local function stampSafeZoneInstance(instance, channel, matchId, zoneId, label, subtitle, routeLabel, huntVisible, occupiedCount, hiddenCount)
+    if typeof(instance) ~= "Instance" or instance.Parent == nil then
+        return
+    end
+
+    instance:SetAttribute("PasrahHideOwner", "HidingSystem")
+    instance:SetAttribute("PasrahHideChannel", tostring(channel or instance.Name))
+    instance:SetAttribute("PasrahHideMatchId", type(matchId) == "string" and matchId or nil)
+    instance:SetAttribute("PasrahHideZoneId", type(zoneId) == "string" and zoneId or nil)
+    instance:SetAttribute("PasrahHideLabel", type(label) == "string" and label or nil)
+    instance:SetAttribute("PasrahHideSubtitle", type(subtitle) == "string" and subtitle or nil)
+    instance:SetAttribute("PasrahHideRouteLabel", type(routeLabel) == "string" and routeLabel or nil)
+    instance:SetAttribute("PasrahHideVisible", huntVisible == true)
+    instance:SetAttribute("PasrahHideOccupiedCount", tonumber(occupiedCount) or 0)
+    instance:SetAttribute("PasrahHideHiddenCount", tonumber(hiddenCount) or 0)
+end
+
+local function stampSafeZoneRuntime(record, matchId, huntVisible, occupiedCount, hiddenCount)
+    if type(record) ~= "table" then
+        return
+    end
+
+    local zone = record.part
+    local zoneId = type(record.id) == "string" and record.id or (zone and zone.Name) or nil
+    local label = type(record.label) == "string" and record.label or (zone and tostring(zone:GetAttribute("SafeZoneLabel") or SAFE_ZONE_MARKER_TITLE_TEXT)) or SAFE_ZONE_MARKER_TITLE_TEXT
+    local subtitle = type(record.subtitle) == "string" and record.subtitle or (zone and tostring(zone:GetAttribute("SafeZoneSubtitle") or SAFE_ZONE_MARKER_SUBTITLE_TEXT)) or SAFE_ZONE_MARKER_SUBTITLE_TEXT
+    local routeLabel = type(record.routeLabel) == "string" and record.routeLabel or zoneId
+
+    stampSafeZoneInstance(zone, "SafeZonePart", matchId, zoneId, label, subtitle, routeLabel, huntVisible, occupiedCount, hiddenCount)
+    stampSafeZoneInstance(record.markerFolder, "SafeZoneMarkerFolder", matchId, zoneId, label, subtitle, routeLabel, huntVisible, occupiedCount, hiddenCount)
+    stampSafeZoneInstance(record.markerOutline, "SafeZoneMarkerOutline", matchId, zoneId, label, subtitle, routeLabel, huntVisible, occupiedCount, hiddenCount)
+    stampSafeZoneInstance(record.markerHighlight, "SafeZoneMarkerHighlight", matchId, zoneId, label, subtitle, routeLabel, huntVisible, occupiedCount, hiddenCount)
+    stampSafeZoneInstance(record.markerBillboard, "SafeZoneMarkerBillboard", matchId, zoneId, label, subtitle, routeLabel, huntVisible, occupiedCount, hiddenCount)
+    stampSafeZoneInstance(record.markerPanel, "SafeZoneMarkerPanel", matchId, zoneId, label, subtitle, routeLabel, huntVisible, occupiedCount, hiddenCount)
+end
+
 local function applyDebugAttributes(player, trace, matchId, zoneCount, playerCount)
     if not RunService:IsStudio() then
         return
@@ -402,6 +438,7 @@ function Service:_setSafeZoneVisualState(matchId, isVisible)
     if type(safeZoneState) ~= "table" then
         return
     end
+    safeZoneState.huntVisible = isVisible == true
 
 	for _, record in ipairs(safeZoneState.records or {}) do
 		local zone = record.part
@@ -428,6 +465,7 @@ function Service:_setSafeZoneVisualState(matchId, isVisible)
 		if record.markerBillboard then
 			record.markerBillboard.Enabled = SAFE_ZONE_WORLD_MARKERS_ENABLED == true and isVisible == true
 		end
+        stampSafeZoneRuntime(record, matchId, safeZoneState.huntVisible, zone and zone:GetAttribute("PasrahHideOccupiedCount") or 0, zone and zone:GetAttribute("PasrahHideHiddenCount") or 0)
 	end
 end
 function Service:_registerSafeZones(matchId)
@@ -461,6 +499,7 @@ function Service:_registerSafeZones(matchId)
             child:SetAttribute("SafeZoneLabel", tostring(child:GetAttribute("SafeZoneLabel") or SAFE_ZONE_MARKER_TITLE_TEXT))
             child:SetAttribute("SafeZoneSubtitle", tostring(child:GetAttribute("SafeZoneSubtitle") or SAFE_ZONE_MARKER_SUBTITLE_TEXT))
             ensureSafeZoneMarker(records[#records])
+            stampSafeZoneRuntime(records[#records], matchId, false, 0, 0)
         end
     end
 
@@ -488,6 +527,16 @@ function Service:_cleanupSafeZones(matchId)
                 zone:SetAttribute("SafeZoneSubtitle", nil)
                 zone:SetAttribute("SafeZoneRoomLabel", nil)
                 zone:SetAttribute("RefugeRouteLabel", nil)
+                zone:SetAttribute("PasrahHideOwner", nil)
+                zone:SetAttribute("PasrahHideChannel", nil)
+                zone:SetAttribute("PasrahHideMatchId", nil)
+                zone:SetAttribute("PasrahHideZoneId", nil)
+                zone:SetAttribute("PasrahHideLabel", nil)
+                zone:SetAttribute("PasrahHideSubtitle", nil)
+                zone:SetAttribute("PasrahHideRouteLabel", nil)
+                zone:SetAttribute("PasrahHideVisible", nil)
+                zone:SetAttribute("PasrahHideOccupiedCount", nil)
+                zone:SetAttribute("PasrahHideHiddenCount", nil)
             end
             cleanupSafeZoneMarker(record)
         end
@@ -526,6 +575,8 @@ function Service:_tickSafeZones()
 
     local hidden = self._state:Get("hiddenPlayers") or {}
     local playersByUserId = liveMatch.playersByUserId or {}
+    local activeZoneCounts = {}
+    local hiddenZoneCounts = {}
     local playerCount = 0
     for _ in pairs(playersByUserId) do
         playerCount += 1
@@ -591,6 +642,24 @@ function Service:_tickSafeZones()
         else
             applyHideAttributes(player, "Exposed", "None", "")
         end
+
+        if activeZoneId ~= nil then
+            activeZoneCounts[activeZoneId] = (activeZoneCounts[activeZoneId] or 0) + 1
+        end
+        local effectiveHiddenEntry = hidden[userId]
+        if type(effectiveHiddenEntry) == "table" and effectiveHiddenEntry.spotType == "SafeZone" and type(effectiveHiddenEntry.zoneId) == "string" and effectiveHiddenEntry.zoneId ~= "" then
+            hiddenZoneCounts[effectiveHiddenEntry.zoneId] = (hiddenZoneCounts[effectiveHiddenEntry.zoneId] or 0) + 1
+        end
+    end
+
+    for _, record in ipairs(safeZoneState.records) do
+        stampSafeZoneRuntime(
+            record,
+            matchId,
+            safeZoneState.huntVisible == true,
+            activeZoneCounts[record.id] or 0,
+            hiddenZoneCounts[record.id] or 0
+        )
     end
 end
 function Service:HandleEvent(eventName, payload)
