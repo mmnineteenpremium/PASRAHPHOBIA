@@ -48,6 +48,41 @@ local BOOST_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.boostBrightness) or 8
 local FILL_RANGE = tonumber(REMOTE_LIGHT_CONFIG.fillRange) or 13
 local FILL_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.fillBrightness) or 3
 
+local function stampRemoteFlashlightInstance(instance, channel, data, player)
+    if not instance then
+        return
+    end
+    local userId = toUserId(player)
+    instance:SetAttribute("PasrahFlashlightOwner", "FlashlightSyncSystem")
+    instance:SetAttribute("PasrahFlashlightChannel", tostring(channel or instance.Name))
+    instance:SetAttribute("PasrahFlashlightEnabled", data and data.flashlightOn == true or false)
+    instance:SetAttribute("PasrahFlashlightUserId", userId)
+end
+
+local function stampRemoteFlashlightRuntime(data, player)
+    if not data then
+        return
+    end
+    stampRemoteFlashlightInstance(data.flashlightHandle, "RemoteHandle", data, player)
+    stampRemoteFlashlightInstance(data.aimAttachment, "RemoteAimAttachment", data, player)
+    stampRemoteFlashlightInstance(data.beamStart, "RemoteBeamStart", data, player)
+    stampRemoteFlashlightInstance(data.beamEnd, "RemoteBeamEnd", data, player)
+    stampRemoteFlashlightInstance(data.spotlight, "RemoteSpotLight", data, player)
+    stampRemoteFlashlightInstance(data.boost, "RemoteBoostLight", data, player)
+    stampRemoteFlashlightInstance(data.fill, "RemoteFillLight", data, player)
+    stampRemoteFlashlightInstance(data.beam, "RemoteBeam", data, player)
+    stampRemoteFlashlightInstance(data.toggleSound, "RemoteToggleSound", data, player)
+    if data.toggleSound then
+        data.toggleSound:SetAttribute("PasrahFlashlightSoundId", tostring(data.toggleSound.SoundId or ""))
+    end
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        player:SetAttribute("PasrahFlashlightRemoteAttached", data.flashlightHandle ~= nil and data.flashlightHandle.Parent ~= nil)
+        player:SetAttribute("PasrahFlashlightRemoteEnabled", data.flashlightOn == true)
+        player:SetAttribute("PasrahFlashlightRemoteSoundId", data.toggleSound and tostring(data.toggleSound.SoundId or "") or nil)
+        player:SetAttribute("PasrahFlashlightRemoteHandlePath", data.flashlightHandle and data.flashlightHandle:GetFullName() or nil)
+    end
+end
+
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
@@ -373,6 +408,45 @@ function Service:_getPlayerState(userId)
     return players[userId]
 end
 
+function Service:_ensureFlashlightAttached(player, userId)
+    local data = userId and self:_getPlayerState(userId) or nil
+    local character = typeof(player) == "Instance" and player:IsA("Player") and player.Character or nil
+    if not character then
+        return data
+    end
+
+    local handle = data and data.flashlightHandle
+    local aimAttachment = data and data.aimAttachment
+    local spotlight = data and data.spotlight
+    local liveHandle = character:FindFirstChild(REMOTE_HANDLE_NAME)
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        player:SetAttribute("PasrahFlashlightRemoteLiveHandle", liveHandle ~= nil)
+        player:SetAttribute("PasrahFlashlightRemoteCacheHandle", handle ~= nil)
+        player:SetAttribute("PasrahFlashlightRemoteHandleMatchesCache", liveHandle ~= nil and handle == liveHandle or false)
+    end
+    local needsAttach = data == nil
+        or data.character ~= character
+        or not (handle and handle.Parent == character)
+        or handle ~= liveHandle
+        or not (aimAttachment and aimAttachment.Parent)
+        or not (spotlight and spotlight.Parent)
+
+    if needsAttach then
+        self:AttachFlashlight(player, character)
+        if typeof(player) == "Instance" and player:IsA("Player") then
+            player:SetAttribute("PasrahFlashlightRemoteRecovered", true)
+            player:SetAttribute("PasrahFlashlightRemoteAttachNeeded", true)
+        end
+        return userId and self:_getPlayerState(userId) or data
+    end
+
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        player:SetAttribute("PasrahFlashlightRemoteAttachNeeded", false)
+    end
+
+    return data
+end
+
 function Service:OnPlayerAdded(player)
     if typeof(player) ~= "Instance" or not player:IsA("Player") then
         return
@@ -460,6 +534,10 @@ function Service:AttachFlashlight(player, character)
     aimAttachment.CFrame = CFrame.new()
     beamStart.CFrame = CFrame.new()
     beamEnd.CFrame = CFrame.new(0, 0, -FLASHLIGHT_RANGE)
+    stampRemoteFlashlightRuntime(data, player)
+    player:SetAttribute("PasrahFlashlightRemoteAttached", true)
+    player:SetAttribute("PasrahFlashlightRemoteHandlePath", flashlightHandle:GetFullName())
+    player:SetAttribute("PasrahFlashlightRemoteSoundId", toggleSound and tostring(toggleSound.SoundId or "") or nil)
 
     self:_storePlayer(userId, data)
 end
@@ -508,6 +586,7 @@ function Service:_setEnabled(data, enabled)
     if data.beam then
         data.beam.Enabled = enabled
     end
+    stampRemoteFlashlightRuntime(data, data.player)
 end
 
 function Service:_playToggleSound(data)
@@ -522,6 +601,7 @@ function Service:_playToggleSound(data)
 
     sound.TimePosition = 0
     sound:Play()
+    stampRemoteFlashlightRuntime(data, data.player)
 end
 
 function Service:HandleRemote(player, payload)
@@ -537,12 +617,13 @@ function Service:HandleRemote(player, payload)
         return
     end
 
-    local data = self:_getPlayerState(userId)
+    local data = self:_ensureFlashlightAttached(player, userId)
     if not data then
         return
     end
 
     local action = payload.action
+    player:SetAttribute("PasrahFlashlightRemoteLastAction", tostring(action or ""))
     if action == "Toggle" then
         local enabled = payload.enabled == true
         local wasEnabled = data.flashlightOn == true
@@ -551,6 +632,11 @@ function Service:HandleRemote(player, payload)
         if wasEnabled ~= enabled then
             self:_playToggleSound(data)
         end
+        stampRemoteFlashlightRuntime(data, player)
+        player:SetAttribute("PasrahFlashlightRemoteEnabled", enabled)
+        player:SetAttribute("PasrahFlashlightRemoteAttached", data.flashlightHandle ~= nil and data.flashlightHandle.Parent ~= nil)
+        player:SetAttribute("PasrahFlashlightRemoteHandlePath", data.flashlightHandle and data.flashlightHandle:GetFullName() or nil)
+        player:SetAttribute("PasrahFlashlightRemoteSoundId", data.toggleSound and tostring(data.toggleSound.SoundId or "") or nil)
         self:_storePlayer(userId, data)
         self:_publish("FlashlightToggled", {
             player = player,
@@ -585,6 +671,7 @@ function Service:HandleRemote(player, payload)
         end
 
         self:_applyLookVector(data.currentLook, data)
+        stampRemoteFlashlightRuntime(data, player)
         self:_storePlayer(userId, data)
         return
     end
