@@ -60,6 +60,19 @@ local AUDIO_DEBUG_ATTRS = {
 	playCount = "PasrahAudioPlayCount",
 }
 
+local function stampRuntimeSoundIdentity(sound, category, template, payload, owner)
+	if typeof(sound) ~= "Instance" or not sound:IsA("Sound") then
+		return
+	end
+	sound:SetAttribute("PasrahAudioOwner", tostring(owner or "SoundSystem"))
+	sound:SetAttribute("PasrahAudioCategory", tostring(category or ""))
+	sound:SetAttribute("PasrahAudioCue", tostring(payload and payload.cue or ""))
+	sound:SetAttribute("PasrahAudioEventType", tostring(payload and payload.eventType or ""))
+	sound:SetAttribute("PasrahAudioTemplate", tostring(template and template.Name or ""))
+	sound:SetAttribute("PasrahAudioSoundId", tostring(sound.SoundId or ""))
+	sound:SetAttribute("PasrahAudioLooped", sound.Looped == true)
+end
+
 local CUE_AUDIO_PROFILES = {
 	AmbientAudio = {
 		ambient_investigation = { volumeScale = 0.9, playbackSpeed = 0.97 },
@@ -661,8 +674,6 @@ function SoundSystem:_applySoundProfile(sound, category, payload)
 	local templateVolume = tonumber(sound.Volume) or baseVolume
 	local cueProfile = resolveCueProfile(category, payload)
 	sound.Volume = math.clamp(templateVolume * intensity * (tonumber(cueProfile and cueProfile.volumeScale) or 1), 0, 1)
-	sound:SetAttribute("PasrahAudioCategory", category)
-	sound:SetAttribute("PasrahAudioCue", tostring(payload and payload.cue or ""))
 
 	if category == "FearAudio" then
 		sound.PlaybackSpeed = math.clamp(0.92 + intensity * 0.4, 0.92, 1.45)
@@ -710,6 +721,7 @@ function SoundSystem:_playLoopedCategory(category, template, payload)
 	local active = self._activeSounds[category]
 	if active and active.Parent and active.SoundId == template.SoundId then
 		self:_applySoundProfile(active, category, payload)
+		stampRuntimeSoundIdentity(active, category, template, payload, "SoundSystem")
 		self:_recordAudioDebug(category, active, payload)
 		if not active.IsPlaying then
 			active:Play()
@@ -727,6 +739,7 @@ function SoundSystem:_playLoopedCategory(category, template, payload)
 	runtimeSound:SetAttribute("PasrahSpatialMode", playbackTarget.spatialMode)
 	runtimeSound:SetAttribute("PasrahAudioSourcePosition", playbackTarget.sourcePosition)
 	self:_applySoundProfile(runtimeSound, category, payload)
+	stampRuntimeSoundIdentity(runtimeSound, category, template, payload, "SoundSystem")
 	self:_recordAudioDebug(category, runtimeSound, payload)
 	runtimeSound:Play()
 	self._activeSounds[category] = runtimeSound
@@ -754,6 +767,7 @@ function SoundSystem:_playOneShotCategory(category, template, payload)
 	runtimeSound:SetAttribute("PasrahSpatialMode", playbackTarget.spatialMode)
 	runtimeSound:SetAttribute("PasrahAudioSourcePosition", playbackTarget.sourcePosition)
 	self:_applySoundProfile(runtimeSound, category, payload)
+	stampRuntimeSoundIdentity(runtimeSound, category, template, payload, "SoundSystem")
 	self:_recordAudioDebug(category, runtimeSound, payload)
 	runtimeSound.Ended:Connect(function()
 		if runtimeSound.Parent then

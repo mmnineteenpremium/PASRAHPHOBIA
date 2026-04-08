@@ -126,6 +126,19 @@ local function lookupLobbyAmbientSound()
 	return sound
 end
 
+local function stampManagedAudioIdentity(sound, owner, category, cue, eventType)
+	if typeof(sound) ~= "Instance" or not sound:IsA("Sound") then
+		return
+	end
+	sound:SetAttribute("PasrahAudioOwner", tostring(owner or "AudioController"))
+	sound:SetAttribute("PasrahAudioCategory", tostring(category or ""))
+	sound:SetAttribute("PasrahAudioCue", tostring(cue or ""))
+	sound:SetAttribute("PasrahAudioEventType", tostring(eventType or ""))
+	sound:SetAttribute("PasrahAudioTemplate", sound.Name)
+	sound:SetAttribute("PasrahAudioSoundId", tostring(sound.SoundId or ""))
+	sound:SetAttribute("PasrahAudioLooped", sound.Looped == true)
+end
+
 function AudioController:Init(context)
 	self._context = context or {}
 	self._remotes = self._context.Remotes or {}
@@ -140,15 +153,18 @@ function AudioController:Init(context)
 	self._heartbeatSound = lookupHeartbeatSound()
 	self._heartbeatSound.Looped = true
 	self._heartbeatSound.Volume = 0
+	stampManagedAudioIdentity(self._heartbeatSound, "AudioController", "FearAudio", "heartbeat_rise", "HeartbeatLoop")
 	self._heartbeatSound:SetAttribute("MissingSourceAsset", self._heartbeatSound.SoundId == "")
 	self._preparationAmbientSound = lookupPreparationAmbientSound()
 	self._preparationAmbientSound.Looped = true
 	self._preparationAmbientSound.Volume = 0
+	stampManagedAudioIdentity(self._preparationAmbientSound, "AudioController", "AmbientAudio", "ambient_investigation", "PreparationAmbientLoop")
 	self._preparationAmbientSound:SetAttribute("MissingSourceAsset", self._preparationAmbientSound.SoundId == "")
 	self._lobbyAmbientSound = lookupLobbyAmbientSound()
 	self._lobbyAmbientSound.Looped = true
 	self._lobbyAmbientSound.Volume = 0
 	self._lobbyAmbientSound.PlaybackSpeed = LOBBY_AMBIENT_PROFILE.PlaybackSpeed
+	stampManagedAudioIdentity(self._lobbyAmbientSound, "AudioController", "AmbientAudio", "bgm_lobby_ambient", "LobbyAmbientLoop")
 	self._lobbyAmbientSound:SetAttribute("MissingSourceAsset", self._lobbyAmbientSound.SoundId == "")
 	local camera = Workspace.CurrentCamera or Workspace:FindFirstChildWhichIsA("Camera")
 	self._heartbeatSound.Parent = camera or Workspace
@@ -404,6 +420,7 @@ function AudioController:_updateHeartbeat()
 		if not self._heartbeatSound.IsPlaying then
 			self._heartbeatSound:Play()
 		end
+		self._heartbeatSound:SetAttribute("PasrahHeartbeatReason", heartbeatReason)
 		if localPlayer then
 			localPlayer:SetAttribute("PasrahHeartbeatActive", true)
 			localPlayer:SetAttribute("PasrahHeartbeatSoundId", tostring(self._heartbeatSound.SoundId or ""))
@@ -414,6 +431,7 @@ function AudioController:_updateHeartbeat()
 		if self._heartbeatSound.IsPlaying then
 			self._heartbeatSound:Stop()
 		end
+		self._heartbeatSound:SetAttribute("PasrahHeartbeatReason", nil)
 		if localPlayer then
 			localPlayer:SetAttribute("PasrahHeartbeatActive", nil)
 			localPlayer:SetAttribute("PasrahHeartbeatSoundId", nil)
@@ -444,6 +462,7 @@ function AudioController:_updatePreparationAmbient()
 
 	if shouldPlay then
 		self._preparationAmbientSound.PlaybackSpeed = profile.PlaybackSpeed
+		self._preparationAmbientSound:SetAttribute("PasrahAudioMapProfile", tostring(mapProfile or ""))
 		if not self._preparationAmbientSound.IsPlaying then
 			self._preparationAmbientSound.Volume = 0
 			self._preparationAmbientSound:Play()
@@ -452,6 +471,7 @@ function AudioController:_updatePreparationAmbient()
 			self:_tweenPreparationAmbient(profile.Volume, PREPARATION_AMBIENT_TWEEN_IN, false)
 		end
 	else
+		self._preparationAmbientSound:SetAttribute("PasrahAudioMapProfile", nil)
 		if self._preparationAmbientSound.IsPlaying or self._preparationAmbientSound.Volume > 0.001 then
 			self:_tweenPreparationAmbient(0, PREPARATION_AMBIENT_TWEEN_OUT, true)
 		end
@@ -476,6 +496,7 @@ function AudioController:_updateLobbyAmbient()
 
 	if shouldPlay then
 		self._lobbyAmbientSound.PlaybackSpeed = LOBBY_AMBIENT_PROFILE.PlaybackSpeed
+		self._lobbyAmbientSound:SetAttribute("PasrahAudioMapProfile", tostring(mapProfile or ""))
 		if not self._lobbyAmbientSound.IsPlaying then
 			self._lobbyAmbientSound.Volume = 0
 			self._lobbyAmbientSound:Play()
@@ -484,6 +505,7 @@ function AudioController:_updateLobbyAmbient()
 			self:_tweenLobbyAmbient(LOBBY_AMBIENT_PROFILE.Volume, LOBBY_AMBIENT_TWEEN_IN, false)
 		end
 	else
+		self._lobbyAmbientSound:SetAttribute("PasrahAudioMapProfile", nil)
 		if self._lobbyAmbientSound.IsPlaying or self._lobbyAmbientSound.Volume > 0.001 then
 			self:_tweenLobbyAmbient(0, LOBBY_AMBIENT_TWEEN_OUT, true)
 		end

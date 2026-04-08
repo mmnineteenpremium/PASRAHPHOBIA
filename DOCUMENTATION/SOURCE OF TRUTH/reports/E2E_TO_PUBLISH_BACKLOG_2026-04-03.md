@@ -3840,6 +3840,19 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Placeholder/unknown-model ghosts keep that attr empty, so direct workspace inspection no longer has to infer from player attrs or snapshot payloads.
 - Live Studio proof:
   - `Ghost_Genderuwo` carried `rbxassetid://117009327297852`
-  - `Ghost_Leak` stayed without `PasrahGhostInventoryModelAssetId`
+- `Ghost_Leak` stayed without `PasrahGhostInventoryModelAssetId`
 - Build passed: `_tmp_match_ghost_runtime_identity_attr_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 01:43:22 +07:00 - Stamp Runtime Audio Instance Identity
+- Status: DONE.
+- Runtime sound instances now carry direct identity attrs instead of relying only on player debug attrs:
+  - `SoundSystem` oneshot/looped runtime sounds
+  - `AudioController` managed lobby/preparation/heartbeat sounds
+- Live Studio proof:
+  - `LobbyAmbient` carried `bgm_lobby_ambient`
+  - `PreparationAmbient` carried `ambient_investigation`
+  - `EnvironmentalAudioRuntime` carried `env_doorslam`
+  - `Heartbeat` carried `heartbeat_rise` and `PasrahHeartbeatReason=HUNT`
+- Build passed: `_tmp_audio_runtime_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.
