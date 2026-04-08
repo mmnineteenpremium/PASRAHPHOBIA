@@ -160,6 +160,31 @@ function Service:_snapshot(userId)
     }
 end
 
+function Service:_stampJournalRuntime(player, userId, matchId, journalData, eventName)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        player = self:_resolvePlayer(userId)
+    end
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return
+    end
+
+    local snapshot = type(journalData) == "table" and journalData or self:_snapshot(userId)
+    local discovered = type(snapshot.discoveredEvidence) == "table" and snapshot.discoveredEvidence or {}
+    local confirmed = type(snapshot.confirmedEvidence) == "table" and snapshot.confirmedEvidence or {}
+    local candidates = type(snapshot.ghostCandidates) == "table" and snapshot.ghostCandidates or {}
+
+    player:SetAttribute("PasrahJournalOwner", "JournalSystem")
+    player:SetAttribute("PasrahJournalMatchId", type(matchId) == "string" and matchId or nil)
+    player:SetAttribute("PasrahJournalLastEvent", type(eventName) == "string" and eventName or nil)
+    player:SetAttribute("PasrahJournalDiscoveredCount", #discovered)
+    player:SetAttribute("PasrahJournalConfirmedCount", #confirmed)
+    player:SetAttribute("PasrahJournalCandidateCount", #candidates)
+    player:SetAttribute("PasrahJournalDiscoveredList", #discovered > 0 and table.concat(discovered, " | ") or nil)
+    player:SetAttribute("PasrahJournalConfirmedList", #confirmed > 0 and table.concat(confirmed, " | ") or nil)
+    player:SetAttribute("PasrahJournalCandidateList", #candidates > 0 and table.concat(candidates, " | ") or nil)
+    player:SetAttribute("PasrahJournalLastUpdatedAt", tonumber(snapshot.lastUpdatedAt) or nil)
+end
+
 function Service:_publishJournalUpdated(userId, player, matchId)
     local journalPayload = {
         player = player or self:_resolvePlayer(userId),
@@ -172,6 +197,7 @@ function Service:_publishJournalUpdated(userId, player, matchId)
         matchId = journalPayload.matchId,
         journalData = journalPayload.journalData,
     })
+    self:_stampJournalRuntime(journalPayload.player, userId, journalPayload.matchId, journalPayload.journalData, "JournalUpdated")
     self:_sendRemoteEvent("JournalUpdated", journalPayload)
 end
 
@@ -191,6 +217,18 @@ function Service:OnMatchStarted(payload)
     end
     self._state:Set("activeMatchId", payload.matchId)
     self._state:Set("playerJournalData", {})
+    local players = type(payload.players) == "table" and payload.players or {}
+    for _, player in ipairs(players) do
+        local userId = toUserId(player)
+        if userId then
+            self:_stampJournalRuntime(player, userId, payload.matchId, {
+                discoveredEvidence = {},
+                confirmedEvidence = {},
+                ghostCandidates = {},
+                lastUpdatedAt = 0,
+            }, "MatchStarted")
+        end
+    end
 end
 
 function Service:OnMatchEnded(payload)
@@ -201,6 +239,16 @@ function Service:OnMatchEnded(payload)
     end
     self._state:Set("activeMatchId", nil)
     self._state:Set("playerJournalData", {})
+    local player = payload and payload.player or nil
+    local userId = toUserId(player or (payload and payload.userId))
+    if userId then
+        self:_stampJournalRuntime(player, userId, nil, {
+            discoveredEvidence = {},
+            confirmedEvidence = {},
+            ghostCandidates = {},
+            lastUpdatedAt = 0,
+        }, "MatchEnded")
+    end
 end
 
 function Service:OnEvidenceDetected(payload)

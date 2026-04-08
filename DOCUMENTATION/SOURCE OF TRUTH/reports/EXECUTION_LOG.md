@@ -13058,6 +13058,30 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 05:07:51 +07:00 - Stamp Journal Runtime Identity
+- Updated `src/ServerScriptService/Server/JournalSystem/Service.lua` so the authoritative journal state now publishes direct player attrs instead of leaving evidence log state only in service memory and remotes.
+- Player runtime now exposes:
+  - `PasrahJournalOwner`
+  - `PasrahJournalMatchId`
+  - `PasrahJournalLastEvent`
+  - `PasrahJournalDiscoveredCount`
+  - `PasrahJournalConfirmedCount`
+  - `PasrahJournalCandidateCount`
+  - `PasrahJournalDiscoveredList`
+  - `PasrahJournalConfirmedList`
+  - `PasrahJournalCandidateList`
+- Build passed: `_tmp_journal_runtime_identity_build.rbxlx`.
+- Live Studio proof after `UseEvidenceTool(JejakEnergi)`:
+  - `PasrahJournalOwner=JournalSystem`
+  - `PasrahJournalMatchId=match_1`
+  - `PasrahJournalLastEvent=JournalUpdated`
+  - `PasrahJournalDiscoveredCount=1`
+  - `PasrahJournalConfirmedCount=1`
+  - `PasrahJournalCandidateCount=0`
+  - `PasrahJournalDiscoveredList=MEDOK`
+  - `PasrahJournalConfirmedList=MEDOK`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 04:57:26 +07:00 - Stamp Door Runtime Identity
 - Updated `src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua` so live door runtime now stamps direct state/identity attrs onto the actual door parts and proximity prompts instead of leaving door state implicit in prompt text and object memory only.
 - Door runtime instances now expose:
