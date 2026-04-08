@@ -6824,6 +6824,64 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	self:_syncMatchWindowVisibility()
 end
 
+function UISystem:_stampResultsUIInstance(instance, channel, payload, result, missionFailed, closeUnlocked)
+	if not instance then
+		return
+	end
+
+	local localPlayer = Players.LocalPlayer
+	local matchId = type(payload) == "table" and payload.matchId or nil
+	if type(matchId) ~= "string" or matchId == "" then
+		matchId = localPlayer and localPlayer:GetAttribute("PasrahMatchResultMatchId") or nil
+	end
+
+	instance:SetAttribute("PasrahResultsUIOwner", "UISystem")
+	instance:SetAttribute("PasrahResultsUIChannel", tostring(channel or instance.Name))
+	instance:SetAttribute("PasrahResultsUIVisible", instance:IsA("GuiObject") and instance.Visible == true or nil)
+	instance:SetAttribute("PasrahResultsMatchId", type(matchId) == "string" and matchId ~= "" and matchId or nil)
+	instance:SetAttribute("PasrahResultsGhostType", type(result) == "table" and tostring(result.ghostType or "Unknown") or "Unknown")
+	instance:SetAttribute("PasrahResultsCorrectGuess", type(result) == "table" and result.correctGuess == true or false)
+	instance:SetAttribute("PasrahResultsEvidenceCollected", type(result) == "table" and tonumber(result.evidenceCollected) or 0)
+	instance:SetAttribute("PasrahResultsCurrencyReward", type(result) == "table" and tonumber(result.currencyReward) or 0)
+	instance:SetAttribute("PasrahResultsPPReward", type(result) == "table" and tonumber(result.ppReward) or 0)
+	instance:SetAttribute("PasrahResultsXPReward", type(result) == "table" and tonumber(result.xpReward) or 0)
+	instance:SetAttribute("PasrahResultsMissionFailed", missionFailed == true)
+	instance:SetAttribute("PasrahResultsCloseUnlocked", closeUnlocked == true)
+end
+
+function UISystem:_stampResultsUIRuntime(match, payload, missionFailed, closeUnlocked)
+	if type(match) ~= "table" then
+		return
+	end
+
+	local result = self._matchResult or createDefaultMatchResult()
+	self:_stampResultsUIInstance(match.ResultsPanel, "ResultsPanel", payload, result, missionFailed, closeUnlocked)
+	self:_stampResultsUIInstance(match.ResultsCard, "ResultsCard", payload, result, missionFailed, closeUnlocked)
+	self:_stampResultsUIInstance(match.ResultsStatus, "ResultsStatus", payload, result, missionFailed, closeUnlocked)
+	self:_stampResultsUIInstance(match.ResultsSubtitle, "ResultsSubtitle", payload, result, missionFailed, closeUnlocked)
+	self:_stampResultsUIInstance(match.ResultsFooter, "ResultsFooter", payload, result, missionFailed, closeUnlocked)
+	self:_stampResultsUIInstance(match.ResultsLockHint, "ResultsLockHint", payload, result, missionFailed, closeUnlocked)
+	self:_stampResultsUIInstance(match.ResultsCloseButton, "ResultsCloseButton", payload, result, missionFailed, closeUnlocked)
+
+	if type(match.ResultsSummaryRows) == "table" then
+		local statusRow = match.ResultsSummaryRows.status and match.ResultsSummaryRows.status.Parent or nil
+		local rewardRow = match.ResultsSummaryRows.currencyReward and match.ResultsSummaryRows.currencyReward.Parent or nil
+		local xpRow = match.ResultsSummaryRows.xpReward and match.ResultsSummaryRows.xpReward.Parent or nil
+		self:_stampResultsUIInstance(statusRow, "ResultsStatusRow", payload, result, missionFailed, closeUnlocked)
+		self:_stampResultsUIInstance(rewardRow, "ResultsRewardRow", payload, result, missionFailed, closeUnlocked)
+		self:_stampResultsUIInstance(xpRow, "ResultsXPRow", payload, result, missionFailed, closeUnlocked)
+		if statusRow and match.ResultsSummaryRows.status then
+			statusRow:SetAttribute("PasrahResultsRowText", tostring(match.ResultsSummaryRows.status.Text or ""))
+		end
+		if rewardRow and match.ResultsSummaryRows.currencyReward then
+			rewardRow:SetAttribute("PasrahResultsRowText", tostring(match.ResultsSummaryRows.currencyReward.Text or ""))
+		end
+		if xpRow and match.ResultsSummaryRows.xpReward then
+			xpRow:SetAttribute("PasrahResultsRowText", tostring(match.ResultsSummaryRows.xpReward.Text or ""))
+		end
+	end
+end
+
 function UISystem:_renderResultsPanel(payload)
 	local match = self._uxWidgets and self._uxWidgets.match or nil
 	if not match or not match.ResultsPanel then
@@ -6872,6 +6930,7 @@ function UISystem:_renderResultsPanel(payload)
 			or "Hasil match fullscreen dikunci 5 detik agar semua pemain sempat membaca hasil."
 	end
 	self:_updateMatchSummaryRows(match.ResultsSummaryRows, "Results")
+	self:_stampResultsUIRuntime(match, payload, missionFailed, closeUnlocked)
 	self:_syncMatchWindowVisibility()
 end
 
