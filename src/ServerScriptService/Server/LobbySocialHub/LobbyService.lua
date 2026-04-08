@@ -4501,12 +4501,16 @@ function LobbyService:_refreshEvidenceTrainingGhostAsset(state, ghostColor, aggr
 	end
 
 	local targetBounds = resolveGhostVisualProfileTargetBounds(ghostType)
+	local inventoryModelAssetId = resolveGhostVisualProfileInventoryModelAssetId(ghostType)
 	if targetBounds then
 		clampRuntimeModelBounds(ghostVisual, targetBounds)
 	end
 
 	ghostVisual:SetAttribute("PasrahLobbyTrainingGhostType", ghostType)
 	ghostVisual:SetAttribute("PasrahLobbyTrainingAggro", tonumber(aggression) or 0)
+	ghostVisual:SetAttribute("VisualTemplateName", ghostType ~= "" and ghostType or nil)
+	ghostVisual:SetAttribute("PlaceholderVisual", false)
+	ghostVisual:SetAttribute("PasrahGhostInventoryModelAssetId", inventoryModelAssetId)
 
 	local highlight = ghostVisual:FindFirstChild(LOBBY_TRAINING_GHOST_VISUAL_HIGHLIGHT_NAME)
 	if not (highlight and highlight:IsA("Highlight")) then

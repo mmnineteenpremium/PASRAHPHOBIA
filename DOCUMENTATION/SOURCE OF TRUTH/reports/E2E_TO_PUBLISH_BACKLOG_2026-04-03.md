@@ -3823,3 +3823,13 @@ Urutan yang paling masuk akal dari titik sekarang:
   - lobby training rotate returned `ghostInventoryModelAssetId` for `Genderuwo`
 - Build passed: `_tmp_ghost_inventory_model_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 01:31:08 +07:00 - Stamp Lobby Training Ghost Runtime Identity
+- Status: DONE.
+- `LobbySocialHub` now stamps imported `TrainingGhostVisual` instances with their own runtime identity attrs instead of leaving identity only in the returned snapshot payload.
+- Live Studio proof:
+  - rotate settled to `Pocong`
+  - snapshot returned `ghostVisualTemplateName=Pocong`
+  - runtime model attr `PasrahGhostInventoryModelAssetId=rbxassetid://123151303766691`
+- Build passed: `_tmp_lobby_training_ghost_identity_attr_build.rbxlx`.
+- Studio stop-test reporting rule followed.
