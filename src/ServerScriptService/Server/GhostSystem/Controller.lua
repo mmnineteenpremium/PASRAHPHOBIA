@@ -45,6 +45,76 @@ local function resolveMatchSystem(deps)
 	return nil
 end
 
+local function coerceVector3(value)
+	if typeof(value) == "Vector3" then
+		return value
+	end
+	if type(value) == "table" then
+		local x = tonumber(value.x or value.X)
+		local y = tonumber(value.y or value.Y)
+		local z = tonumber(value.z or value.Z)
+		if x and y and z then
+			return Vector3.new(x, y, z)
+		end
+	end
+	return nil
+end
+
+local function resolveSharedGameDataModule(moduleName)
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
+	if not shared then
+		return nil
+	end
+	local gameData = shared:FindFirstChild("GameData")
+	if not gameData then
+		return nil
+	end
+	local moduleScript = gameData:FindFirstChild(moduleName)
+	if moduleScript and moduleScript:IsA("ModuleScript") then
+		return moduleScript
+	end
+	return nil
+end
+
+local function safeRequireModule(moduleScript)
+	if not (moduleScript and moduleScript:IsA("ModuleScript")) then
+		return nil
+	end
+	local ok, result = pcall(require, moduleScript)
+	if ok and type(result) == "table" then
+		return result
+	end
+	return nil
+end
+
+local function resolveGhostTargetBounds(ghostType)
+	if type(ghostType) ~= "string" or ghostType == "" then
+		return nil
+	end
+	local tuning = safeRequireModule(resolveSharedGameDataModule("GhostVisualTuning"))
+	local ghosts = type(tuning) == "table" and tuning.ghosts or nil
+	local config = type(ghosts) == "table" and ghosts[ghostType] or nil
+	if type(config) ~= "table" then
+		return nil
+	end
+	return coerceVector3(config.targetBounds) or coerceVector3(config.meshSize)
+end
+
+local function resolveStudioGhostSessionState(ghostState, runtimeState)
+	local runtimeToken = type(runtimeState) == "string" and runtimeState or nil
+	local stateToken = type(ghostState) == "table" and tostring(ghostState.state or "") or nil
+	if runtimeToken and runtimeToken ~= "" and type(ghostState) == "table" and ghostState.huntActive == true then
+		return runtimeToken
+	end
+	if stateToken and stateToken ~= "" then
+		return stateToken
+	end
+	if runtimeToken and runtimeToken ~= "" then
+		return runtimeToken
+	end
+	return nil
+end
+
 local function resolveMatchRemote()
 	local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
 	if not remoteFolder then
@@ -100,6 +170,23 @@ local function setStudioGhostPlayerSnapshot(players, matchId, match, ghostState)
 	local runtimeState = typeof(ghostModel) == "Instance" and ghostModel:GetAttribute("RuntimeGhostState") or nil
 	local ghostPosition = (ghostModel and ghostModel:IsA("Model")) and tostring(ghostModel:GetPivot().Position) or nil
 	local meshSize = (meshPart and meshPart:IsA("MeshPart")) and tostring(meshPart.Size) or nil
+	local ghostExtents = nil
+	local ghostScale = nil
+	if ghostModel and ghostModel:IsA("Model") then
+		local okExtents, extents = pcall(function()
+			return ghostModel:GetExtentsSize()
+		end)
+		if okExtents and typeof(extents) == "Vector3" then
+			ghostExtents = tostring(extents)
+		end
+		local okScale, scale = pcall(function()
+			return ghostModel:GetScale()
+		end)
+		if okScale and type(scale) == "number" then
+			ghostScale = scale
+		end
+	end
+	local targetBounds = resolveGhostTargetBounds(ghostType)
 
 	for _, player in ipairs(players) do
 		if typeof(player) == "Instance" and player:IsA("Player") then
@@ -113,9 +200,12 @@ local function setStudioGhostPlayerSnapshot(players, matchId, match, ghostState)
 			player:SetAttribute("PasrahGhostPosition", ghostPosition)
 			player:SetAttribute("PasrahGhostHasModel", typeof(ghostModel) == "Instance")
 			player:SetAttribute("PasrahGhostPlaceholder", typeof(ghostModel) == "Instance" and ghostModel:GetAttribute("PlaceholderVisual") == true or false)
-			player:SetAttribute("PasrahGhostSessionState", type(ghostState) == "table" and tostring(ghostState.state or "") or nil)
+			player:SetAttribute("PasrahGhostSessionState", resolveStudioGhostSessionState(ghostState, runtimeState))
 			player:SetAttribute("PasrahGhostCurrentRoomId", type(ghostState) == "table" and ghostState.currentRoomId or nil)
 			player:SetAttribute("PasrahGhostHuntActive", type(ghostState) == "table" and ghostState.huntActive == true or false)
+			player:SetAttribute("PasrahGhostTargetBounds", typeof(targetBounds) == "Vector3" and tostring(targetBounds) or nil)
+			player:SetAttribute("PasrahGhostExtents", ghostExtents)
+			player:SetAttribute("PasrahGhostScale", ghostScale)
 		end
 	end
 end
@@ -364,6 +454,8 @@ function Controller:OnHuntTriggered(payload)
 		return
 	end
 	self._service:StartHunt(matchId, payload.snapshot, payload.now)
+	local liveMatch = self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or nil, matchId, liveMatch, self._service:GetGhostState(matchId))
 end
 
 function Controller:OnTensionHigh(payload)
@@ -418,6 +510,8 @@ function Controller:OnHuntStarted(payload)
 		return
 	end
 	self._service:TransitionGhostState(matchId, "Hunting", payload and payload.now)
+	local liveMatch = self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or nil, matchId, liveMatch, self._service:GetGhostState(matchId))
 end
 
 function Controller:OnHuntEnded(payload)
@@ -426,6 +520,8 @@ function Controller:OnHuntEnded(payload)
 		return
 	end
 	self._service:TransitionGhostState(matchId, "Cooldown", payload and payload.now)
+	local liveMatch = self._matchSystem and self._matchSystem.GetLiveMatch and self._matchSystem:GetLiveMatch(matchId) or nil
+	setStudioGhostPlayerSnapshot(type(liveMatch) == "table" and liveMatch.players or nil, matchId, liveMatch, self._service:GetGhostState(matchId))
 end
 
 function Controller:OnEvidenceCollected(payload)

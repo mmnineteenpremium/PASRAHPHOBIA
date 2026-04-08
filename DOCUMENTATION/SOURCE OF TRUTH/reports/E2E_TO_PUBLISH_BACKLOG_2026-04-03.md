@@ -3788,7 +3788,25 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Live Studio proof:
   - lobby ambient attrs became active with the uploaded lobby ambient ID
   - preparation ambient attrs became active in `PreparationPhase` with uploaded ambient ID and expected playback speed
-  - heartbeat attrs became active during forced hunt in `InvestigationPhase`
-  - after `EndMatch`, lobby ambient returned and the match-only attrs cleared again
+- heartbeat attrs became active during forced hunt in `InvestigationPhase`
+- after `EndMatch`, lobby ambient returned and the match-only attrs cleared again
 - Build passed: `_tmp_audio_controller_state_attrs_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 01:06:42 +07:00 - Unify Studio Ghost Player Attr Snapshots
+- Status: DONE.
+- Studio player attrs now expose authoritative ghost runtime state across match flow:
+  - `PasrahGhostSessionState`
+  - `PasrahGhostCurrentRoomId`
+  - `PasrahGhostHuntActive`
+  - `PasrahGhostTargetBounds`
+  - `PasrahGhostExtents`
+  - `PasrahGhostScale`
+- `GhostSystem.Controller` now refreshes the same attrs again on hunt transitions, so player-side probes stay current through `ForceManifest` and `ForceHunt`.
+- Player-facing `PasrahGhostSessionState` no longer drifts during hunt; it now resolves to `Hunting` when the live ghost is actively hunting.
+- Live Studio proof with forced `Genderuwo`:
+  - `PreparationPhase` settled to `Idle`
+  - forced manifest settled to `Manifest`
+  - forced hunt settled to `Hunting` with `PasrahGhostHuntActive=true`
+- Build passed: `_tmp_ghost_player_attr_sync_build.rbxlx`.
 - Studio stop-test reporting rule followed.

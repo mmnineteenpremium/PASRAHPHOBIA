@@ -13232,3 +13232,34 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `PasrahHeartbeatReason=HUNT`
   - after `EndMatch`, lobby ambient returned and the match-only attrs dropped back out.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 01:06:42 +07:00 - Unify Studio Ghost Player Attr Snapshots
+- Extended `src/ServerScriptService/Server/MatchSystem/MatchService.lua` so Studio player attrs now carry richer ghost runtime state:
+  - `PasrahGhostSessionState`
+  - `PasrahGhostCurrentRoomId`
+  - `PasrahGhostHuntActive`
+  - `PasrahGhostTargetBounds`
+  - `PasrahGhostExtents`
+  - `PasrahGhostScale`
+- Extended `src/ServerScriptService/Server/GhostSystem/Controller.lua` so the same attrs are refreshed again on hunt transitions, not only on match start/phase changes.
+- Added a small effective-state guard so player-facing `PasrahGhostSessionState` follows `Hunting` when hunt is live, instead of staying stale on `Manifest`.
+- Build passed: `_tmp_ghost_player_attr_sync_build.rbxlx`.
+- Live Studio proof with forced `Genderuwo`:
+  - `PreparationPhase` settled to:
+    - `PasrahGhostType=Genderuwo`
+    - `PasrahGhostSessionState=Idle`
+    - `PasrahGhostRuntimeState=Idle`
+    - `PasrahGhostExtents=2.870025634765625, 6.016210556030273, 1.505476474761963`
+  - `InvestigationPhase` settled to:
+    - `PasrahGhostSessionState=Roaming`
+    - `PasrahGhostRuntimeState=Roaming`
+    - `PasrahGhostCurrentRoomId=StairHall`
+  - forced manifest settled to:
+    - `PasrahGhostSessionState=Manifest`
+    - `PasrahGhostRuntimeState=Manifest`
+  - forced hunt settled to:
+    - `PasrahGhostSessionState=Hunting`
+    - `PasrahGhostRuntimeState=Hunting`
+    - `PasrahGhostHuntActive=true`
+    - `PasrahGhostTargetBounds=3.4000000953674316, 5.800000190734863, 2.5999999046325684`
+- Roblox Studio was returned to STOP TEST before logging.
