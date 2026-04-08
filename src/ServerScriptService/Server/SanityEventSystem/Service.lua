@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local Services = require(script.Parent.Parent.Core.Services)
 
 local Service = {}
@@ -49,6 +50,35 @@ local function safeCall(target, methodName, ...)
     return result
 end
 
+local function resolvePlayerByUserId(userId)
+    if type(userId) ~= "number" then
+        return nil
+    end
+    local ok, player = pcall(function()
+        return Players:GetPlayerByUserId(userId)
+    end)
+    if ok then
+        return player
+    end
+    return nil
+end
+
+local function stampSanityEventRuntime(target, payload)
+    if typeof(target) ~= "Instance" then
+        return
+    end
+    target:SetAttribute("PasrahSanityEventOwner", "SanityEventSystem")
+    target:SetAttribute("PasrahSanityEventMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+    target:SetAttribute("PasrahSanityEventActive", payload.active == true)
+    target:SetAttribute("PasrahSanityEventType", type(payload.eventType) == "string" and payload.eventType or nil)
+    target:SetAttribute("PasrahSanityEventIntensity", tonumber(payload.intensity))
+    target:SetAttribute("PasrahSanityEventDuration", tonumber(payload.duration))
+    target:SetAttribute("PasrahSanityEventStartedAt", tonumber(payload.startedAt))
+    target:SetAttribute("PasrahSanityEventCooldownUntil", tonumber(payload.cooldownUntil))
+    target:SetAttribute("PasrahSanityEventReason", type(payload.reason) == "string" and payload.reason or nil)
+    target:SetAttribute("PasrahSanityEventLastUpdatedAt", tonumber(payload.updatedAt) or os.clock())
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -81,6 +111,14 @@ end
 
 function Service:Stop()
     self._state:Clear()
+end
+
+function Service:_stampUserEvent(userId, payload)
+    local player = resolvePlayerByUserId(userId)
+    if not player then
+        return
+    end
+    stampSanityEventRuntime(player, payload)
 end
 
 function Service:_publish(eventName, payload)
@@ -118,6 +156,18 @@ function Service:TriggerSanityEvent(userId, matchId, sanity)
         intensity = intensity,
     }
     self._state:Set("activeSanityEvents", activeEvents)
+    local cooldownUntil = os.clock() + 8
+    self:_stampUserEvent(userId, {
+        matchId = matchId,
+        active = true,
+        eventType = eventType,
+        intensity = intensity,
+        duration = duration,
+        startedAt = activeEvents[userId].startedAt,
+        cooldownUntil = cooldownUntil,
+        reason = "triggered",
+        updatedAt = os.clock(),
+    })
 
     local mapEventSystem = self._dependencies.MapEventSystem
     safeCall(mapEventSystem, "TriggerEvent", {
@@ -151,6 +201,17 @@ function Service:TriggerSanityEvent(userId, matchId, sanity)
         if current and current.eventType == eventType then
             activeNow[userId] = nil
             self._state:Set("activeSanityEvents", activeNow)
+            self:_stampUserEvent(userId, {
+                matchId = matchId,
+                active = false,
+                eventType = eventType,
+                intensity = intensity,
+                duration = duration,
+                startedAt = current.startedAt,
+                cooldownUntil = (self._state:Get("eventCooldowns") or {})[userId],
+                reason = "resolved",
+                updatedAt = os.clock(),
+            })
             self:_publish("SanityEventResolved", {
                 userId = userId,
                 matchId = matchId,
@@ -208,6 +269,17 @@ function Service:OnMatchEnded(payload)
     for userId, eventData in pairs(active) do
         if matchId == nil or eventData.matchId == matchId then
             active[userId] = nil
+            self:_stampUserEvent(userId, {
+                matchId = matchId,
+                active = false,
+                eventType = eventData.eventType,
+                intensity = eventData.intensity,
+                duration = eventData.duration,
+                startedAt = eventData.startedAt,
+                cooldownUntil = (self._state:Get("eventCooldowns") or {})[userId],
+                reason = "match_ended",
+                updatedAt = os.clock(),
+            })
             self:_publish("SanityEventResolved", {
                 userId = userId,
                 matchId = matchId,
