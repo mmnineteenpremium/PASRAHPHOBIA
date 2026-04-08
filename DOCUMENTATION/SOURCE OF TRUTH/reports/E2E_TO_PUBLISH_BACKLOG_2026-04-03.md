@@ -3384,3 +3384,11 @@ Urutan yang paling masuk akal dari titik sekarang:
   - HUD investigation sekarang selaras lagi dengan breach flow nyata
   - blocker client-facing bergeser dari `FieldKitFrame tidak muncul` ke polish konten objective/message yang masih bisa disempurnakan
 
+- progress tambahan pada lane `support tool runtime inspection cleanup`:
+  - utility tool placement sekarang punya alias `RuntimeState` yang selaras dengan `PasrahUtilityVisualState`
+- validasi terbaru:
+  - `Salib -> RuntimeState = Armed`
+  - `Garam -> RuntimeState = Triggered`
+- publish impact:
+  - inspeksi Studio/runtime untuk support tool jadi lebih jujur dan konsisten
+
