@@ -1,0 +1,5 @@
+{
+  "class": "DepthOfFieldEffect",
+  "focusDistance": 18,
+  "inFocusRadius": 8
+}

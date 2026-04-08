@@ -11,6 +11,7 @@ local EVIDENCE_REMOTE_NAME = "EvidenceEvent"
 local UTILITY_BROADCAST_EVENTS = {
 	"SaltPlaced",
 	"SaltTriggered",
+	"SanityPillUsed",
 	"CrucifixPlaced",
 	"CrucifixTriggered",
 	"SmudgeActivated",
@@ -206,6 +207,7 @@ local EVIDENCE_TYPES = resolveSharedEvidenceTypes() or {}
 local UTILITY_TOOL_TYPES = {
 	Dupa = true,
 	Garam = true,
+	PilSanity = true,
 	Salib = true,
 }
 local function resolveMatchSystem(deps)

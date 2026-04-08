@@ -1,0 +1,7 @@
+{
+  "type": "world_effect",
+  "class": "ParticleEmitter",
+  "texture": "ghost_manifest_particles.png",
+  "rate": 8,
+  "speed": 0.4
+}

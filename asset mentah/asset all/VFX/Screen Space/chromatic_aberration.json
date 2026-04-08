@@ -1,0 +1,6 @@
+{
+  "type": "screen_effect",
+  "mode": "chromatic_aberration",
+  "intensity": 0.18,
+  "sanityScaled": true
+}
