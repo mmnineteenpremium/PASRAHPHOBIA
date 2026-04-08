@@ -3830,6 +3830,16 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Live Studio proof:
   - rotate settled to `Pocong`
   - snapshot returned `ghostVisualTemplateName=Pocong`
-  - runtime model attr `PasrahGhostInventoryModelAssetId=rbxassetid://123151303766691`
+- runtime model attr `PasrahGhostInventoryModelAssetId=rbxassetid://123151303766691`
 - Build passed: `_tmp_lobby_training_ghost_identity_attr_build.rbxlx`.
+- Studio stop-test reporting rule followed.
+
+## 2026-04-09 01:36:54 +07:00 - Stamp Match Ghost Runtime Identity
+- Status: DONE.
+- Real spawned match ghost actors now carry `PasrahGhostInventoryModelAssetId` directly on the model instance whenever shared tuning knows the uploaded inventory model.
+- Placeholder/unknown-model ghosts keep that attr empty, so direct workspace inspection no longer has to infer from player attrs or snapshot payloads.
+- Live Studio proof:
+  - `Ghost_Genderuwo` carried `rbxassetid://117009327297852`
+  - `Ghost_Leak` stayed without `PasrahGhostInventoryModelAssetId`
+- Build passed: `_tmp_match_ghost_runtime_identity_attr_build.rbxlx`.
 - Studio stop-test reporting rule followed.

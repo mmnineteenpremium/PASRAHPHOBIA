@@ -73,6 +73,7 @@ local GHOST_TEMPLATE_MAX_HOVER_HEIGHT = {}
 local GHOST_TEMPLATE_GROUNDED = {}
 local GHOST_TEMPLATE_MESH_PART_NAMES = {}
 local GHOST_TEMPLATE_CAST_SHADOW = {}
+local GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS = {}
 
 local GHOST_VISUAL_MOVE_SPEED_BY_STATE = {
 	Idle = 1.75,
@@ -261,6 +262,7 @@ local function createVisibleGhostPlaceholder(spawnCFrame, ghostType)
 	ghostModel.Name = string.format("GhostPlaceholder_%s", tostring(ghostType or "Unknown"))
 	ghostModel:SetAttribute("GhostType", ghostType)
 	ghostModel:SetAttribute("PlaceholderVisual", true)
+	ghostModel:SetAttribute("PasrahGhostInventoryModelAssetId", nil)
 
 	local root = createGhostRigPart(ghostModel, "HumanoidRootPart", Vector3.new(2, 2, 1), spawnCFrame, Color3.fromRGB(80, 86, 96))
 	root.Transparency = 1
@@ -471,12 +473,14 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 
 	local preferredRootSize = GHOST_TEMPLATE_ROOT_SIZES[ghostType]
 	local preferredCastShadow = GHOST_TEMPLATE_CAST_SHADOW[ghostType]
+	local inventoryModelAssetId = GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS[ghostType]
 
 	local ghostModel = template:Clone()
 	ghostModel.Name = string.format("Ghost_%s", tostring(ghostType or "Unknown"))
 	ghostModel:SetAttribute("GhostType", ghostType)
 	ghostModel:SetAttribute("PlaceholderVisual", false)
 	ghostModel:SetAttribute("VisualTemplateName", template.Name)
+	ghostModel:SetAttribute("PasrahGhostInventoryModelAssetId", inventoryModelAssetId)
 
 	for _, descendant in ipairs(ghostModel:GetDescendants()) do
 		if descendant:IsA("BasePart") then
@@ -621,6 +625,7 @@ local function loadGhostVisualTuning()
 	local grounded = copyGhostVisualBooleanMap(DEFAULT_GHOST_TEMPLATE_GROUNDED)
 	local meshPartNames = copyGhostVisualStringMap(DEFAULT_GHOST_TEMPLATE_MESH_PART_NAMES)
 	local castShadow = copyGhostVisualBooleanMap(DEFAULT_GHOST_TEMPLATE_CAST_SHADOW)
+	local inventoryModelAssetIds = copyGhostVisualStringMap({})
 	local tuning = safeRequire(resolveSharedGameDataModule("GhostVisualTuning"))
 	local ghosts = type(tuning) == "table" and tuning.ghosts or nil
 	if type(ghosts) ~= "table" then
@@ -643,6 +648,9 @@ local function loadGhostVisualTuning()
 			end
 			if type(config.grounded) == "boolean" then
 				grounded[ghostType] = config.grounded
+			end
+			if type(config.inventoryModelAssetId) == "string" and config.inventoryModelAssetId ~= "" then
+				inventoryModelAssetIds[ghostType] = config.inventoryModelAssetId
 			end
 		end
 	end
@@ -691,7 +699,7 @@ local function loadGhostVisualTuning()
 		end
 	end
 
-	return offsets, meshSizes, bounds, maxHoverHeights, grounded, rootSizes, meshPartNames, castShadow
+	return offsets, meshSizes, bounds, maxHoverHeights, grounded, rootSizes, meshPartNames, castShadow, inventoryModelAssetIds
 end
 
 GHOST_TEMPLATE_VISUAL_OFFSETS,
@@ -701,7 +709,8 @@ GHOST_TEMPLATE_VISUAL_OFFSETS,
 	GHOST_TEMPLATE_GROUNDED,
 	GHOST_TEMPLATE_ROOT_SIZES,
 	GHOST_TEMPLATE_MESH_PART_NAMES,
-	GHOST_TEMPLATE_CAST_SHADOW = loadGhostVisualTuning()
+	GHOST_TEMPLATE_CAST_SHADOW,
+	GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS = loadGhostVisualTuning()
 
 local function loadMapDatabase()
 	local database = safeRequire(resolveSharedGameDataModule("MapConfig"))
