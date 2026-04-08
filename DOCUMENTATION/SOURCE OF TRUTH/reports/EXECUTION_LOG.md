@@ -12787,3 +12787,13 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `SalibButton = Salib|danger|asset`
   - sesudah `Dupa` repel:
     - `DupaButton = Dupa|active|asset`
+
+- progress tambahan pada lane `field kit utility preview decay`:
+  - preview utility yang sempat masuk sinyal keras sekarang tidak lagi tertahan permanen; state panas turun lagi ke state stabil setelah window event lewat
+- validasi terbaru:
+  - `Garam`:
+    - `salt_hot = Garam|danger|asset`
+    - `salt_decay = Garam|active|asset`
+  - `Salib`:
+    - `crucifix_hot = Salib|danger|asset`
+    - `crucifix_decay = Salib|active|asset`
