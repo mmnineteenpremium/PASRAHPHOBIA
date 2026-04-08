@@ -344,6 +344,22 @@ Kesimpulan:
 
 - `Midnight Litany of Drones (Ancient Ritual Ambient)` sekarang bukan hanya asset inventory yang terdokumentasi, tetapi juga sudah benar-benar dipakai oleh owner runtime lobby yang aktif.
 
+## Update 2026-04-08 21:12 ICT
+
+Batch `cue-specific inventory audio overrides` menutup penggunaan runtime berikut:
+
+- `switch15` (`rbxassetid://140513388846872`) -> cue `prep_focus_lock`
+- `doorClose_1` (`rbxassetid://78764817933410`) -> cue `env_doorslam`, `env_windowknock`
+- `impactPunch_medium_002` (`rbxassetid://126504722314888`) -> cue `env_objectthrow`, `ghost_object_throw`
+
+Owner runtime aktif:
+
+- `src/client/SoundSystem/Main.lua`
+
+Kesimpulan:
+
+- ketiga asset upload di atas sekarang bukan hanya tercatat di inventory ledger, tetapi sudah benar-benar dipakai oleh cue runtime player-facing yang sebelumnya masih jatuh ke template generik.
+
 ## Update 2026-04-05 17:24 ICT
 
 Validasi source eksternal `Pocong` kini ditutup lebih jauh:

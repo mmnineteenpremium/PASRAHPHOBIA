@@ -12970,3 +12970,23 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
       - `PasrahLobbyAmbientActive` turun `nil`
 - publish impact:
   - lobby sekarang tidak lagi diam atau hanya mengandalkan ambience preparation; surface hub punya bed audio inventory-owned yang padam bersih saat match mulai tanpa menambah sistem audio baru
+
+- progress tambahan pada lane `cue-specific inventory audio overrides`:
+  - `client/SoundSystem/Main.lua` sekarang bisa menimpa template kategori dengan `rbxassetid://...` khusus untuk cue tertentu tanpa membuat owner audio baru
+  - override yang ditutup:
+    - `prep_focus_lock -> rbxassetid://140513388846872` (`switch15`)
+    - `env_doorslam -> rbxassetid://78764817933410` (`doorClose_1`)
+    - `env_windowknock -> rbxassetid://78764817933410` (`doorClose_1`)
+    - `env_objectthrow -> rbxassetid://126504722314888` (`impactPunch_medium_002`)
+    - `ghost_object_throw -> rbxassetid://126504722314888` (`impactPunch_medium_002`)
+- validasi terbaru:
+  - build lolos:
+    - `_tmp_audio_cue_override_build.rbxlx`
+    - `_tmp_audio_cue_override_fix_build.rbxlx`
+  - live di `PASRAHPHOBIA.rbxlx` setelah `StartSoloMatch -> PreparationPhase`:
+    - `prep_focus_lock -> PasrahAudioLastSoundId = rbxassetid://140513388846872`
+    - `env_doorslam -> PasrahAudioLastSoundId = rbxassetid://78764817933410`
+    - `env_objectthrow -> PasrahAudioLastSoundId = rbxassetid://126504722314888`
+    - `ghost_object_throw -> PasrahAudioLastSoundId = rbxassetid://126504722314888`
+- publish impact:
+  - cue interaction lingkungan yang sebelumnya jatuh ke template generik sekarang mulai memakai suara upload yang lebih tepat secara fungsi tanpa duplikasi sistem atau asset local path
