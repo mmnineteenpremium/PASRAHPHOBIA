@@ -12743,3 +12743,21 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - state idle `Field Kit` sekarang langsung menyebut roster `[1-9]` dan menjelaskan bahwa tool evidence + utility sama-sama siap dipakai
 - validasi terbaru:
   - `FieldKitFrame.StatusLabel = Field kit [1-9] siap. Pilih tool evidence atau utility sesuai situasi investigasi.`
+
+- progress tambahan pada lane `field kit evidence preview fallback`:
+  - enam tool evidence utama yang belum punya asset model sekarang tetap punya `ToolPreview` procedural di `Field Kit`
+  - utility lama `Garam / Salib / Dupa` tetap memakai asset preview yang sudah ada
+- validasi terbaru:
+  - runtime `InvestigationPhase`:
+    - `JejakEnergiButton = JejakEnergi|ready|fallback`
+    - `KotakArwahButton = KotakArwah|ready|fallback`
+    - `SuhuMembekuButton = SuhuMembeku|ready|fallback`
+    - `BukuTerkutukButton = BukuTerkutuk|ready|fallback`
+    - `BolaArwahButton = BolaArwah|ready|fallback`
+    - `GerakanGaibButton = GerakanGaib|ready|fallback`
+    - `GaramButton = Garam|ready|asset`
+    - `SalibButton = Salib|ready|asset`
+    - `DupaButton = Dupa|ready|asset`
+  - semua `ToolPreview` live:
+    - `previewVisible = true`
+    - `hasWorld = true`
