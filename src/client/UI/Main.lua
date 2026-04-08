@@ -10236,7 +10236,11 @@ function UISystem:_syncPhaseFromAuthoritativeLifecycle()
 	end
 
 	if resolvedPhase == MATCH_PHASE.INGAME then
-		if self._matchPhase == MATCH_PHASE.BRIEFING or self._matchPhase == MATCH_PHASE.LOADING or self._awaitingPostTeleportFlow then
+		local shouldPromoteToInGame = self._matchPhase ~= MATCH_PHASE.INGAME
+			and self._matchPhase ~= MATCH_PHASE.HUNT
+			and self._matchPhase ~= MATCH_PHASE.RESULT
+			and self._matchPhase ~= MATCH_PHASE.END
+		if shouldPromoteToInGame or self._awaitingPostTeleportFlow then
 			self._pendingInGamePayload = nil
 			self._hasPostTeleportLoaded = true
 			self._awaitingPostTeleportFlow = false
