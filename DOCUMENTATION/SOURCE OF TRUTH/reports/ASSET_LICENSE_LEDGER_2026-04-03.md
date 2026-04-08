@@ -426,3 +426,16 @@ Catatan:
 - asset canonical lain tetap valid dan terbaca creator/account sesuai status sebelumnya.
 - `ButtonClick_01` tidak lagi masuk slot kosong; cue ini kini memakai asset canonical final.
 
+
+## 2026-04-08 22:40:12 +07:00 - Extended Inventory Audio Cue Overrides
+- Owner: `src/client/SoundSystem/Main.lua`.
+- Runtime now uses uploaded Roblox inventory IDs for additional cue-specific overrides:
+  - `impactWood_light_001` -> `rbxassetid://71098340187847`
+  - `object_fall` -> `rbxassetid://86917747509286`
+  - `ghost_footstep_2` -> `rbxassetid://95974189526179`
+  - `ghost_whisper_3` -> `rbxassetid://98105844059537`
+  - `creaky-door-open` -> `rbxassetid://139204195403262`
+  - `single-heart-beat` -> `rbxassetid://138884191945388`
+  - `horror-deep-drum-heartbeat` -> `rbxassetid://138329686293368`
+  - `hard-horror-hit-drum` -> `rbxassetid://101202336513383`
+- These are runtime `rbxassetid://` references from the Roblox inventory sync ledger; raw local files remain source/reference only.

@@ -100,11 +100,21 @@ local CUE_SOUND_ID_OVERRIDES = {
 	EnvironmentalAudio = {
 		prep_focus_lock = "rbxassetid://140513388846872",
 		env_doorslam = "rbxassetid://78764817933410",
-		env_windowknock = "rbxassetid://78764817933410",
-		env_objectthrow = "rbxassetid://126504722314888",
+		env_windowknock = "rbxassetid://71098340187847",
+		env_objectthrow = "rbxassetid://86917747509286",
 	},
 	GhostAudio = {
-		ghost_object_throw = "rbxassetid://126504722314888",
+		ghost_whisper = "rbxassetid://98105844059537",
+		ghost_fake_footsteps = "rbxassetid://95974189526179",
+		ghost_manifest = "rbxassetid://139204195403262",
+		ghost_object_throw = "rbxassetid://86917747509286",
+	},
+	FearAudio = {
+		fear_rise = "rbxassetid://138884191945388",
+		fear_critical = "rbxassetid://138329686293368",
+	},
+	JumpscareAudio = {
+		jumpscare_stinger = "rbxassetid://101202336513383",
 	},
 }
 
