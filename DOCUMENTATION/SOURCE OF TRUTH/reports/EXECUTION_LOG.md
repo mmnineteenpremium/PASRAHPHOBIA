@@ -13872,3 +13872,22 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `RoyalPassDeck.TrackScroller.DayCard1` -> `PasrahRoyalPassUIChannel=RoyalPassCurrentDayCard`, `PasrahRoyalPassCurrentDay=1`, `PasrahRoyalPassLastEvent=RoyalPassSnapshot`
 - Build passed: `_tmp_royalpass_ui_identity_build.rbxlx`.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 07:10:18 +07:00 - Stamp Profile, Shop, And Spectator UI Runtime Identity
+- Status: DONE.
+- `Client.UI.Main` now stamps direct runtime attrs on `ProfileUI`, `ShopUI`, and `SpectatorUI` under the canonical `UISystem` owner.
+- Build passed: `_tmp_profile_shop_spectator_identity_build.rbxlx`.
+- Live Studio proof:
+  - `ProfileUI` opened via canonical shortcut flow and now carries:
+    - `MainPanel` -> `PasrahProfileUIOwner=UISystem`, `PasrahProfileUIChannel=ProfilePanel`, `PasrahProfileUIVisible=true`, `PasrahProfileLastEvent=CosmeticSnapshot`
+    - `ContentFrame.ProfileDeck.HeroCard` -> `PasrahProfileUIChannel=ProfileHeroCard`
+  - `ShopUI` opened via canonical shortcut flow and now carries:
+    - `MainPanel` -> `PasrahShopUIOwner=UISystem`, `PasrahShopUIChannel=ShopPanel`, `PasrahShopFilter=All`
+    - wallet snapshot attrs -> `PasrahShopWalletMM=1200`, `PasrahShopWalletPP=12`
+    - `ContentFrame.ItemList.ItemRow1` -> `PasrahShopItemId=eq_sanitypill_standard`, `PasrahShopItemCurrency=MM`, `PasrahShopItemPurchasable=true`
+  - `SpectatorUI` opened via canonical shortcut flow and now carries:
+    - `MainPanel` -> `PasrahSpectatorUIOwner=UISystem`, `PasrahSpectatorUIChannel=SpectatorPanel`, `PasrahSpectatorUIVisible=true`
+    - baseline spectator state remained truthful in lobby idle -> `PasrahSpectatorMode=none`, `PasrahSpectatorTitle=Belum spectate.`, `PasrahSpectatorLastEvent=Idle`
+- Note:
+  - full `dead -> spectator` transition was not claimed in this batch; the verified proof above is the baseline panel/runtime owner path.
+- Roblox Studio was returned to STOP TEST before logging.

@@ -8438,6 +8438,94 @@ function UISystem:_refreshProfileWardrobe(widgets)
 	end
 end
 
+function UISystem:_stampProfileUIInstance(instance, channel, uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	if not instance then
+		return
+	end
+
+	local player = Players.LocalPlayer
+	instance:SetAttribute("PasrahProfileUIOwner", "UISystem")
+	instance:SetAttribute("PasrahProfileUIChannel", tostring(channel or instance.Name))
+	instance:SetAttribute("PasrahProfileUIVisible", instance:IsA("GuiObject") and instance.Visible == true or uiVisible == true)
+	instance:SetAttribute("PasrahProfilePlayerName", tostring(playerName or "Player"))
+	instance:SetAttribute("PasrahProfileUserId", tonumber(player and player.UserId) or 0)
+	instance:SetAttribute("PasrahProfileSanity", tonumber(sanity) or 0)
+	instance:SetAttribute("PasrahProfileStatus", type(profile) == "table" and tostring(profile.status or "safe") or "safe")
+	instance:SetAttribute("PasrahProfileLevel", type(profile) == "table" and math.max(1, math.floor(tonumber(profile.level or 1) or 1)) or 1)
+	instance:SetAttribute("PasrahProfileRank", type(profile) == "table" and tostring(profile.rank or "Bayi III") or "Bayi III")
+	instance:SetAttribute("PasrahProfileTotalGames", type(profile) == "table" and math.max(0, math.floor(tonumber(profile.totalGames or 0) or 0)) or 0)
+	instance:SetAttribute("PasrahProfileFavoriteTool", type(profile) == "table" and tostring(profile.favoriteTool or "-") or "-")
+	instance:SetAttribute("PasrahProfileLastEvent", type(profile) == "table" and tostring(profile.lastEvent or "Idle") or "Idle")
+	instance:SetAttribute("PasrahProfileOwnedCosmeticCount", tonumber(ownedCount) or 0)
+	instance:SetAttribute("PasrahProfileEquippedCosmeticCount", tonumber(equippedCount) or 0)
+	instance:SetAttribute(
+		"PasrahProfileSpotlightName",
+		type(profile) == "table" and type(profile.featuredFlex) == "table" and tostring(profile.featuredFlex.displayName or "") or nil
+	)
+end
+
+function UISystem:_stampProfileUIRuntime(window, widgets, uiVisible, profile, playerName, sanity)
+	if type(window) ~= "table" then
+		return
+	end
+
+	local ownedCount = countLookupEntries(type(profile) == "table" and profile.ownedCosmeticIds or nil)
+	local equippedCount = countLookupEntries(type(profile) == "table" and profile.equippedCosmetics or nil)
+	self:_stampProfileUIInstance(window.Gui, "ProfileGui", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(window.Panel, "ProfilePanel", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(window.StatusBadge, "ProfileStatusBadge", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(window.PrimaryLabel, "ProfilePrimaryLabel", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(window.SecondaryLabel, "ProfileSecondaryLabel", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(window.ContentFrame, "ProfileContentFrame", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(window.FooterLabel, "ProfileFooterLabel", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(window.FloatButton, "ProfileFloatButton", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(window.CloseButton, "ProfileCloseButton", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+
+	if type(widgets) ~= "table" then
+		return
+	end
+
+	self:_stampProfileUIInstance(widgets.Deck, "ProfileDeck", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.HeroCard, "ProfileHeroCard", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.AvatarGlyph, "ProfileAvatarGlyph", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.ProfileTitle, "ProfileHeroTitle", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.ProfileMeta, "ProfileHeroMeta", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.StatusPill, "ProfileStatusPill", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.Spotlight, "ProfileSpotlight", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.ActionButton, "ProfileActionButton", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.WardrobeHeader, "ProfileWardrobeHeader", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.WardrobeEmpty, "ProfileWardrobeEmpty", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+	self:_stampProfileUIInstance(widgets.WardrobeList, "ProfileWardrobeList", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+
+	for rowKey, row in pairs(widgets.Rows or {}) do
+		if row and row.Root then
+			self:_stampProfileUIInstance(row.Root, "Profile" .. tostring(rowKey) .. "Row", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+			self:_stampProfileUIInstance(row.Title, "Profile" .. tostring(rowKey) .. "Title", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+			self:_stampProfileUIInstance(row.Meta, "Profile" .. tostring(rowKey) .. "Meta", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+			self:_stampProfileUIInstance(row.PricePill, "Profile" .. tostring(rowKey) .. "Pill", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+			self:_stampProfileUIInstance(row.Button, "Profile" .. tostring(rowKey) .. "Button", uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+		end
+	end
+
+	for index, row in ipairs(widgets.WardrobeRows or {}) do
+		if row and row.Root then
+			self:_stampProfileUIInstance(
+				row.Root,
+				"ProfileWardrobeRow" .. tostring(index),
+				uiVisible,
+				profile,
+				playerName,
+				sanity,
+				ownedCount,
+				equippedCount
+			)
+			row.Root:SetAttribute("PasrahProfileCosmeticId", row.Root:GetAttribute("CosmeticId"))
+			row.Root:SetAttribute("PasrahProfileCosmeticSlot", row.Root:GetAttribute("CosmeticSlot"))
+			self:_stampProfileUIInstance(row.Button, "ProfileWardrobeButton" .. tostring(index), uiVisible, profile, playerName, sanity, ownedCount, equippedCount)
+		end
+	end
+end
+
 function UISystem:_refreshProfilePanel()
 	local player = Players.LocalPlayer
 	local profile = self._profileState or {}
@@ -8573,6 +8661,14 @@ function UISystem:_refreshProfilePanel()
 	end
 
 	self:_refreshProfileWardrobe(widgets)
+	self:_stampProfileUIRuntime(
+		window,
+		widgets,
+		self._uiState and self._uiState.ProfileUI and self._uiState.ProfileUI.visible == true,
+		profile,
+		playerName,
+		sanity
+	)
 end
 
 function UISystem:_applyShopSnapshot(snapshot)
@@ -8803,6 +8899,80 @@ function UISystem:_applyShopRowVisual(row, item, index)
 	end
 end
 
+function UISystem:_stampShopUIInstance(instance, channel, uiVisible, shopState, ownedCount, activeFilter)
+	if not instance then
+		return
+	end
+
+	local wallet = type(shopState) == "table" and type(shopState.wallet) == "table" and shopState.wallet or {}
+	local lastPurchase = type(shopState) == "table" and type(shopState.lastPurchase) == "table" and shopState.lastPurchase or nil
+	instance:SetAttribute("PasrahShopUIOwner", "UISystem")
+	instance:SetAttribute("PasrahShopUIChannel", tostring(channel or instance.Name))
+	instance:SetAttribute("PasrahShopUIVisible", instance:IsA("GuiObject") and instance.Visible == true or uiVisible == true)
+	instance:SetAttribute("PasrahShopFilter", tostring(activeFilter or "All"))
+	instance:SetAttribute("PasrahShopOwnedCount", tonumber(ownedCount) or 0)
+	instance:SetAttribute("PasrahShopWalletMM", math.max(0, math.floor(tonumber(wallet.MM) or 0)))
+	instance:SetAttribute("PasrahShopWalletPP", math.max(0, math.floor(tonumber(wallet.PP) or 0)))
+	instance:SetAttribute("PasrahShopWalletRobux", math.max(0, math.floor(tonumber(wallet.Robux) or 0)))
+	instance:SetAttribute("PasrahShopLastMessage", type(shopState) == "table" and tostring(shopState.lastMessage or "") or nil)
+	instance:SetAttribute("PasrahShopLastPurchaseItemId", lastPurchase and tostring(lastPurchase.itemId or "") or nil)
+	instance:SetAttribute("PasrahShopLastPurchaseSuccess", lastPurchase and lastPurchase.success == true or false)
+	instance:SetAttribute("PasrahShopLastPurchaseReason", lastPurchase and tostring(lastPurchase.reason or "") or nil)
+end
+
+function UISystem:_stampShopUIRuntime(window, uiVisible)
+	if type(window) ~= "table" then
+		return
+	end
+
+	local shopState = self._shopState or {}
+	local activeFilter = tostring(shopState.filterKey or "All")
+	local ownedCount = countLookupEntries(shopState.ownedItemIds)
+	self:_stampShopUIInstance(window.Gui, "ShopGui", uiVisible, shopState, ownedCount, activeFilter)
+	self:_stampShopUIInstance(window.Panel, "ShopPanel", uiVisible, shopState, ownedCount, activeFilter)
+	self:_stampShopUIInstance(window.StatusBadge, "ShopStatusBadge", uiVisible, shopState, ownedCount, activeFilter)
+	self:_stampShopUIInstance(window.PrimaryLabel, "ShopPrimaryLabel", uiVisible, shopState, ownedCount, activeFilter)
+	self:_stampShopUIInstance(window.SecondaryLabel, "ShopSecondaryLabel", uiVisible, shopState, ownedCount, activeFilter)
+	self:_stampShopUIInstance(window.ContentFrame, "ShopContentFrame", uiVisible, shopState, ownedCount, activeFilter)
+	self:_stampShopUIInstance(window.FooterLabel, "ShopFooterLabel", uiVisible, shopState, ownedCount, activeFilter)
+	self:_stampShopUIInstance(window.FloatButton, "ShopFloatButton", uiVisible, shopState, ownedCount, activeFilter)
+	self:_stampShopUIInstance(window.CloseButton, "ShopCloseButton", uiVisible, shopState, ownedCount, activeFilter)
+
+	if type(window.ShopFilterButtons) == "table" then
+		for filterKey, button in pairs(window.ShopFilterButtons) do
+			self:_stampShopUIInstance(button, "ShopFilter" .. tostring(filterKey), uiVisible, shopState, ownedCount, activeFilter)
+			if button then
+				button:SetAttribute("PasrahShopFilterKey", tostring(filterKey))
+				button:SetAttribute("PasrahShopFilterSelected", tostring(activeFilter) == tostring(filterKey))
+			end
+		end
+	end
+
+	if type(window.ItemRows) == "table" then
+		for index, row in ipairs(window.ItemRows) do
+			local item = shopState.catalog and shopState.catalog[index] or nil
+			local owned = item and self:_isShopItemOwned(item) or false
+			local purchasable, blockedReason = false, nil
+			if item then
+				purchasable, blockedReason = self:_getShopItemPurchaseAvailability(item)
+			end
+			if row and row.Root then
+				self:_stampShopUIInstance(row.Root, "ShopItemRow" .. tostring(index), uiVisible, shopState, ownedCount, activeFilter)
+				row.Root:SetAttribute("PasrahShopItemId", item and tostring(item.id or "") or nil)
+				row.Root:SetAttribute("PasrahShopItemName", item and tostring(item.name or item.id or "") or nil)
+				row.Root:SetAttribute("PasrahShopItemCurrency", item and tostring(item.currency or "MM") or nil)
+				row.Root:SetAttribute("PasrahShopItemOwned", owned == true)
+				row.Root:SetAttribute("PasrahShopItemPurchasable", purchasable == true)
+				row.Root:SetAttribute("PasrahShopItemBlockedReason", blockedReason and tostring(blockedReason) or nil)
+				self:_stampShopUIInstance(row.Title, "ShopItemTitle" .. tostring(index), uiVisible, shopState, ownedCount, activeFilter)
+				self:_stampShopUIInstance(row.Meta, "ShopItemMeta" .. tostring(index), uiVisible, shopState, ownedCount, activeFilter)
+				self:_stampShopUIInstance(row.PricePill, "ShopItemPill" .. tostring(index), uiVisible, shopState, ownedCount, activeFilter)
+				self:_stampShopUIInstance(row.Button, "ShopItemButton" .. tostring(index), uiVisible, shopState, ownedCount, activeFilter)
+			end
+		end
+	end
+end
+
 function UISystem:_refreshShopPanel()
 	local window = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows.ShopUI
 	if not window then
@@ -8901,6 +9071,8 @@ function UISystem:_refreshShopPanel()
 			end
 		end
 	end
+
+	self:_stampShopUIRuntime(window, self._uiState and self._uiState.ShopUI and self._uiState.ShopUI.visible == true)
 end
 
 function UISystem:_applyRoyalPassSnapshot(snapshot)
@@ -9804,6 +9976,36 @@ function UISystem:_refreshPasraPanel()
 	stamp(footerLabel, "PasraFooterLabel")
 end
 
+function UISystem:_stampSpectatorUIInstance(instance, channel, uiVisible, spectator)
+	if not instance then
+		return
+	end
+
+	instance:SetAttribute("PasrahSpectatorUIOwner", "UISystem")
+	instance:SetAttribute("PasrahSpectatorUIChannel", tostring(channel or instance.Name))
+	instance:SetAttribute("PasrahSpectatorUIVisible", instance:IsA("GuiObject") and instance.Visible == true or uiVisible == true)
+	instance:SetAttribute("PasrahSpectatorMode", type(spectator) == "table" and tostring(spectator.mode or "none") or "none")
+	instance:SetAttribute("PasrahSpectatorTitle", type(spectator) == "table" and tostring(spectator.title or "") or nil)
+	instance:SetAttribute("PasrahSpectatorSubtitle", type(spectator) == "table" and tostring(spectator.subtitle or "") or nil)
+	instance:SetAttribute("PasrahSpectatorLastEvent", type(spectator) == "table" and tostring(spectator.lastEvent or "Idle") or "Idle")
+end
+
+function UISystem:_stampSpectatorUIRuntime(window, uiVisible, spectator)
+	if type(window) ~= "table" then
+		return
+	end
+
+	self:_stampSpectatorUIInstance(window.Gui, "SpectatorGui", uiVisible, spectator)
+	self:_stampSpectatorUIInstance(window.Panel, "SpectatorPanel", uiVisible, spectator)
+	self:_stampSpectatorUIInstance(window.StatusBadge, "SpectatorStatusBadge", uiVisible, spectator)
+	self:_stampSpectatorUIInstance(window.PrimaryLabel, "SpectatorPrimaryLabel", uiVisible, spectator)
+	self:_stampSpectatorUIInstance(window.SecondaryLabel, "SpectatorSecondaryLabel", uiVisible, spectator)
+	self:_stampSpectatorUIInstance(window.ContentText, "SpectatorContentText", uiVisible, spectator)
+	self:_stampSpectatorUIInstance(window.FooterLabel, "SpectatorFooterLabel", uiVisible, spectator)
+	self:_stampSpectatorUIInstance(window.FloatButton, "SpectatorFloatButton", uiVisible, spectator)
+	self:_stampSpectatorUIInstance(window.CloseButton, "SpectatorCloseButton", uiVisible, spectator)
+end
+
 function UISystem:_refreshSpectatorPanel()
 	local spectator = self._spectatorState or {}
 	local badgeText = spectator.mode == "dead" and "DEAD" or "NOTICE"
@@ -9828,6 +10030,13 @@ function UISystem:_refreshSpectatorPanel()
 		contentText,
 		"Pesan spectator basic ini mengikuti requirement visual death/spectator.",
 		badgeColor
+	)
+
+	local window = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows.SpectatorUI
+	self:_stampSpectatorUIRuntime(
+		window,
+		self._uiState and self._uiState.SpectatorUI and self._uiState.SpectatorUI.visible == true,
+		spectator
 	)
 end
 
