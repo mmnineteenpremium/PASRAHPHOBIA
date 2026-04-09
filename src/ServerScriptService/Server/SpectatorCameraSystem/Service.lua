@@ -46,6 +46,13 @@ local function centerFromBounds(bounds)
     return (bounds.min + bounds.max) * 0.5
 end
 
+local function vectorToString(value)
+    if typeof(value) ~= "Vector3" then
+        return nil
+    end
+    return string.format("%.3f, %.3f, %.3f", value.X, value.Y, value.Z)
+end
+
 local function resolveBounds(payload)
     local candidate = payload and (payload.cameraBounds or payload.spectatorBounds or payload.mapBounds)
     if type(candidate) == "table" and typeof(candidate.min) == "Vector3" and typeof(candidate.max) == "Vector3" then
@@ -127,16 +134,56 @@ function Service:_removeCameraState(userId)
     self:_setCameraStateMap(cameraMap)
 end
 
-function Service:_emitCameraUpdated(matchId, userId, player)
+function Service:_stampRuntime(player, payload)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return
+    end
+
+    player:SetAttribute("PasrahSpectatorCameraOwner", "SpectatorCameraSystem")
+    player:SetAttribute("PasrahSpectatorCameraMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+    player:SetAttribute("PasrahSpectatorCameraMode", type(payload.mode) == "string" and payload.mode or nil)
+    player:SetAttribute("PasrahSpectatorCameraTargetUserId", tonumber(payload.targetUserId))
+    player:SetAttribute("PasrahSpectatorCameraPosition", vectorToString(payload.position))
+    player:SetAttribute("PasrahSpectatorCameraRotation", vectorToString(payload.rotation))
+    player:SetAttribute("PasrahSpectatorCameraBoundsMin", type(payload.bounds) == "table" and vectorToString(payload.bounds.min) or nil)
+    player:SetAttribute("PasrahSpectatorCameraBoundsMax", type(payload.bounds) == "table" and vectorToString(payload.bounds.max) or nil)
+    player:SetAttribute("PasrahSpectatorCameraCanObserveLivingPlayers", payload.canObserveLivingPlayers == true)
+    player:SetAttribute("PasrahSpectatorCameraCanObserveGhost", payload.canObserveGhost == true)
+    player:SetAttribute("PasrahSpectatorCameraLimitedAwareness", payload.limitedAwareness == true)
+    player:SetAttribute("PasrahSpectatorCameraLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+    player:SetAttribute("PasrahSpectatorCameraReason", type(payload.reason) == "string" and payload.reason or nil)
+    player:SetAttribute("PasrahSpectatorCameraActive", payload.active == true)
+    player:SetAttribute("PasrahSpectatorCameraLastUpdatedAt", os.clock())
+end
+
+function Service:_emitCameraUpdated(matchId, userId, player, lastEvent)
     local cameraMap = self:_cameraStateMap()
     local state = cameraMap[userId]
     if not state then
         return
     end
+    local runtimePlayer = player
+    if typeof(runtimePlayer) ~= "Instance" or not runtimePlayer:IsA("Player") then
+        runtimePlayer = Players:GetPlayerByUserId(userId)
+    end
+    self:_stampRuntime(runtimePlayer, {
+        matchId = matchId,
+        mode = state.mode,
+        targetUserId = state.targetUserId,
+        position = state.position,
+        rotation = state.rotation,
+        canObserveLivingPlayers = state.canObserveLivingPlayers,
+        canObserveGhost = state.canObserveGhost,
+        limitedAwareness = state.limitedAwareness,
+        bounds = state.bounds,
+        lastEvent = lastEvent,
+        reason = state.reason,
+        active = true,
+    })
     self:_publish("SpectatorCameraUpdated", {
         matchId = matchId,
         userId = userId,
-        player = player,
+        player = runtimePlayer,
         cameraState = state,
         source = "SpectatorCameraSystem",
     })
@@ -161,8 +208,9 @@ function Service:_onSpectatorModeStarted(payload)
         canObserveGhost = true,
         limitedAwareness = true,
         bounds = bounds,
+        reason = payload and payload.reason,
     })
-    self:_emitCameraUpdated(matchId, userId, payload and payload.player)
+    self:_emitCameraUpdated(matchId, userId, payload and payload.player, "SpectatorModeStarted")
 end
 
 function Service:_onCameraInput(payload)
@@ -191,7 +239,7 @@ function Service:_onCameraInput(payload)
     state.rotation = payload and payload.rotation or state.rotation
     cameraMap[userId] = state
     self:_setCameraStateMap(cameraMap)
-    self:_emitCameraUpdated(matchId, userId, payload and payload.player)
+    self:_emitCameraUpdated(matchId, userId, payload and payload.player, "SpectatorCameraInput")
 end
 
 function Service:_onTargetChanged(payload)
@@ -207,7 +255,7 @@ function Service:_onTargetChanged(payload)
     state.targetUserId = payload and payload.targetUserId
     cameraMap[userId] = state
     self:_setCameraStateMap(cameraMap)
-    self:_emitCameraUpdated(self:_matchId(payload), userId, payload and payload.player)
+    self:_emitCameraUpdated(self:_matchId(payload), userId, payload and payload.player, "SpectatorTargetChanged")
 end
 
 function Service:HandleEvent(eventName, payload)
@@ -218,6 +266,16 @@ function Service:HandleEvent(eventName, payload)
         end
         self._state:Set("activeMatchId", matchId)
         self:_setBounds(matchId, resolveBounds(payload))
+        for _, player in ipairs(type(payload.players) == "table" and payload.players or {}) do
+            self:_stampRuntime(player, {
+                matchId = matchId,
+                mode = nil,
+                bounds = self:_getBounds(matchId),
+                lastEvent = "MatchStarted",
+                reason = "match_started",
+                active = false,
+            })
+        end
         return
     end
 
@@ -225,6 +283,24 @@ function Service:HandleEvent(eventName, payload)
         local matchId = self:_matchId(payload)
         if type(matchId) ~= "string" then
             return
+        end
+        local cameraMap = self:_cameraStateMap()
+        for userId, state in pairs(cameraMap) do
+            local player = Players:GetPlayerByUserId(userId)
+            self:_stampRuntime(player, {
+                matchId = matchId,
+                mode = nil,
+                targetUserId = nil,
+                position = state.position,
+                rotation = state.rotation,
+                canObserveLivingPlayers = state.canObserveLivingPlayers,
+                canObserveGhost = state.canObserveGhost,
+                limitedAwareness = state.limitedAwareness,
+                bounds = state.bounds,
+                lastEvent = "MatchEnded",
+                reason = "match_ended",
+                active = false,
+            })
         end
         self._state:Set("cameraStateBySpectator", {})
         local boundsByMatch = self:_boundsMap()
@@ -244,6 +320,22 @@ function Service:HandleEvent(eventName, payload)
     if eventName == "SpectatorModeEnded" or eventName == "PlayerDisconnected" then
         local userId = toUserId(payload and (payload.player or payload.userId))
         if userId then
+            local cameraMap = self:_cameraStateMap()
+            local state = cameraMap[userId]
+            self:_stampRuntime(payload and payload.player or Players:GetPlayerByUserId(userId), {
+                matchId = self:_matchId(payload),
+                mode = nil,
+                targetUserId = nil,
+                position = state and state.position or nil,
+                rotation = state and state.rotation or nil,
+                canObserveLivingPlayers = state and state.canObserveLivingPlayers or false,
+                canObserveGhost = state and state.canObserveGhost or false,
+                limitedAwareness = state and state.limitedAwareness or false,
+                bounds = state and state.bounds or self:_getBounds(self:_matchId(payload)),
+                lastEvent = eventName,
+                reason = payload and payload.reason or (eventName == "PlayerDisconnected" and "disconnected" or "spectator_ended"),
+                active = false,
+            })
             self:_removeCameraState(userId)
         end
         return

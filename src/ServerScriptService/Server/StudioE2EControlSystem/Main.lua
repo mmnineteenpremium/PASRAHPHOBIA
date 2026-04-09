@@ -108,6 +108,22 @@ local function resolveEventBus(deps)
 	return nil
 end
 
+local function summarizeSpectatorCameraState(state)
+	if type(state) ~= "table" then
+		return "state=missing"
+	end
+	local position = typeof(state.position) == "Vector3" and tostring(state.position) or "nil"
+	local rotation = typeof(state.rotation) == "Vector3" and tostring(state.rotation) or "nil"
+	return string.format(
+		"mode=%s target=%s position=%s rotation=%s limited=%s",
+		tostring(state.mode),
+		tostring(state.targetUserId),
+		position,
+		rotation,
+		tostring(state.limitedAwareness == true)
+	)
+end
+
 local function ensureRemote()
 	local remoteFolder = ReplicatedStorage:FindFirstChild(REMOTE_FOLDER_NAME)
 	if not remoteFolder then
@@ -1591,6 +1607,106 @@ function StudioE2EControlSystem:_handleSimulateTeammateWarning(player, request)
 	return true, string.format("match=%s teammate=%s(%d)", tostring(matchId), tostring(teammateName), teammateUserId)
 end
 
+function StudioE2EControlSystem:_handleSimulateSpectatorCamera(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if type(matchId) ~= "string" or matchId == "" then
+		return false, "missing_match_id"
+	end
+
+	local eventBus = self._eventBus or resolveEventBus(self._deps)
+	if not eventBus then
+		return false, "missing_event_bus"
+	end
+
+	local cameraSystem = resolveSystem(self._deps, "SpectatorCameraSystem")
+	if type(cameraSystem) ~= "table" or type(cameraSystem.State) ~= "table" or type(cameraSystem.State.Get) ~= "function" then
+		return false, "missing_spectator_camera_system"
+	end
+
+	local minBound = coerceVector3(type(request) == "table" and request.boundsMin)
+	local maxBound = coerceVector3(type(request) == "table" and request.boundsMax)
+	local bounds = nil
+	if minBound and maxBound then
+		bounds = {
+			min = minBound,
+			max = maxBound,
+		}
+	end
+
+	local targetUserId = tonumber(type(request) == "table" and request.targetUserId) or 910001
+	local reason = type(request) == "table" and request.reason or "studio_probe"
+	eventBus:Publish("SpectatorModeStarted", {
+		matchId = matchId,
+		player = player,
+		userId = player.UserId,
+		targetUserId = targetUserId,
+		cameraBounds = bounds,
+		limitedAwareness = true,
+		reason = reason,
+		source = "StudioE2EControlSystem",
+	})
+
+	local moveVector = coerceVector3(type(request) == "table" and request.moveVector)
+	local rotation = coerceVector3(type(request) == "table" and request.rotation)
+	if moveVector or rotation then
+		eventBus:Publish("SpectatorCameraInput", {
+			matchId = matchId,
+			player = player,
+			userId = player.UserId,
+			moveVector = moveVector,
+			rotation = rotation,
+			deltaTime = tonumber(type(request) == "table" and request.deltaTime) or 0.05,
+			speed = tonumber(type(request) == "table" and request.speed) or 28,
+			source = "StudioE2EControlSystem",
+		})
+	end
+
+	local switchTargetUserId = tonumber(type(request) == "table" and request.switchTargetUserId)
+	if switchTargetUserId then
+		eventBus:Publish("SpectatorTargetChanged", {
+			matchId = matchId,
+			player = player,
+			userId = player.UserId,
+			targetUserId = switchTargetUserId,
+			source = "StudioE2EControlSystem",
+		})
+	end
+
+	local cameraMap = cameraSystem.State:Get("cameraStateBySpectator") or {}
+	local state = cameraMap[player.UserId]
+	return true, string.format("match=%s %s", matchId, summarizeSpectatorCameraState(state))
+end
+
+function StudioE2EControlSystem:_handleEndSpectatorCamera(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if type(matchId) ~= "string" or matchId == "" then
+		return false, "missing_match_id"
+	end
+
+	local eventBus = self._eventBus or resolveEventBus(self._deps)
+	if not eventBus then
+		return false, "missing_event_bus"
+	end
+
+	eventBus:Publish("SpectatorModeEnded", {
+		matchId = matchId,
+		player = player,
+		userId = player.UserId,
+		reason = type(request) == "table" and request.reason or "studio_probe_end",
+		source = "StudioE2EControlSystem",
+	})
+
+	return true, string.format("match=%s spectator_camera_ended", matchId)
+end
+
 function StudioE2EControlSystem:_handleHidingDebugSnapshot(player, request)
 	local hidingSystem = resolveSystem(self._deps, "HidingSystem")
 	if type(hidingSystem) ~= "table" then
@@ -1813,6 +1929,10 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleTriggerAudioCue(player, request)
 		elseif action == "SimulateTeammateWarning" then
 			return self:_handleSimulateTeammateWarning(player, request)
+		elseif action == "SimulateSpectatorCamera" then
+			return self:_handleSimulateSpectatorCamera(player, request)
+		elseif action == "EndSpectatorCamera" then
+			return self:_handleEndSpectatorCamera(player, request)
 		elseif action == "HidingDebugSnapshot" then
 			return self:_handleHidingDebugSnapshot(player, request)
 		elseif action == "EnterHide" then
