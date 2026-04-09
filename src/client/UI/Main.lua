@@ -3848,7 +3848,11 @@ local function stampMatchSurvivalInstance(instance, channel, viewState, huntSnap
 	instance:SetAttribute("PasrahMatchUIOwner", "UISystem")
 	instance:SetAttribute("PasrahMatchUIChannel", tostring(channel or instance.Name))
 	instance:SetAttribute("PasrahMatchUIViewState", tostring(viewState or ""))
-	instance:SetAttribute("PasrahMatchUIVisible", instance:IsA("GuiObject") and instance.Visible == true or nil)
+	instance:SetAttribute(
+		"PasrahMatchUIVisible",
+		UISystem._resolveEffectiveUIVisibility and UISystem._resolveEffectiveUIVisibility(UISystem, instance, nil)
+			or (instance:IsA("GuiObject") and instance.Visible == true or nil)
+	)
 	instance:SetAttribute("PasrahHideState", type(huntSnapshot) == "table" and tostring(huntSnapshot.hideState or "") or nil)
 	instance:SetAttribute("PasrahHideZoneId", type(huntSnapshot) == "table" and tostring(huntSnapshot.hideZoneId or "") or nil)
 	instance:SetAttribute("PasrahHuntThreatState", type(huntSnapshot) == "table" and tostring(huntSnapshot.threatState or "") or nil)
@@ -5092,6 +5096,34 @@ function UISystem:_getPlayerGui()
 		return nil
 	end
 	return player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui", 5)
+end
+
+function UISystem:_resolveEffectiveUIVisibility(instance, fallbackVisible)
+	local fallback = fallbackVisible == true
+	if not instance then
+		return fallback
+	end
+
+	local current = instance
+	local sawLayerCollector = false
+	while current do
+		if current:IsA("GuiObject") then
+			if current.Visible ~= true then
+				return false
+			end
+		elseif current:IsA("LayerCollector") then
+			sawLayerCollector = true
+			if current.Enabled ~= true then
+				return false
+			end
+		end
+		current = current.Parent
+	end
+
+	if sawLayerCollector then
+		return true
+	end
+	return fallback
 end
 
 function UISystem:_applyVisibility()
@@ -6843,7 +6875,7 @@ function UISystem:_stampResultsUIInstance(instance, channel, payload, result, mi
 
 	instance:SetAttribute("PasrahResultsUIOwner", "UISystem")
 	instance:SetAttribute("PasrahResultsUIChannel", tostring(channel or instance.Name))
-	instance:SetAttribute("PasrahResultsUIVisible", instance:IsA("GuiObject") and instance.Visible == true or nil)
+	instance:SetAttribute("PasrahResultsUIVisible", self:_resolveEffectiveUIVisibility(instance, nil))
 	instance:SetAttribute("PasrahResultsMatchId", type(matchId) == "string" and matchId ~= "" and matchId or nil)
 	instance:SetAttribute("PasrahResultsGhostType", type(result) == "table" and tostring(result.ghostType or "Unknown") or "Unknown")
 	instance:SetAttribute("PasrahResultsCorrectGuess", type(result) == "table" and result.correctGuess == true or false)
@@ -7242,6 +7274,33 @@ function UISystem:_refreshMainMenuPanel()
 			and Color3.fromRGB(98, 104, 62)
 			or Color3.fromRGB(78, 84, 50)
 	end
+
+	local function stamp(instance, channel)
+		if not instance then
+			return
+		end
+		instance:SetAttribute("PasrahMainMenuUIOwner", "UISystem")
+		instance:SetAttribute("PasrahMainMenuUIChannel", tostring(channel or instance.Name))
+		instance:SetAttribute("PasrahMainMenuUIVisible", self:_resolveEffectiveUIVisibility(instance, nil))
+		instance:SetAttribute("PasrahMainMenuSelectedMode", selectedMode)
+		instance:SetAttribute("PasrahMainMenuSelectedMap", selectedMap)
+		instance:SetAttribute("PasrahMainMenuRoomCount", #rooms)
+		instance:SetAttribute("PasrahMainMenuCurrentRoomId", currentRoom and tostring(currentRoom.roomId or "") or nil)
+		instance:SetAttribute("PasrahMainMenuRoomBrowserVisible", self._roomBrowserVisible == true)
+	end
+
+	stamp(window.Gui, "MainMenuGui")
+	stamp(window.Panel, "MainMenuPanel")
+	stamp(window.StatusBadge, "MainMenuStatusBadge")
+	stamp(window.PrimaryLabel, "MainMenuPrimaryLabel")
+	stamp(window.SecondaryLabel, "MainMenuSecondaryLabel")
+	stamp(window.FooterLabel, "MainMenuFooterLabel")
+	stamp(window.FloatButton, "MainMenuFloatButton")
+	stamp(window.CloseButton, "MainMenuCloseButton")
+	stamp(window.RoomBrowserButton, "MainMenuRoomBrowserButton")
+	stamp(window.ProfileButton, "MainMenuProfileButton")
+	stamp(window.ShopButton, "MainMenuShopButton")
+	stamp(window.RankButton, "MainMenuRankButton")
 end
 
 function UISystem:_ensureLeaderboardWidgets(window)
@@ -7584,6 +7643,56 @@ function UISystem:_refreshLeaderboardPanel()
 			and Color3.fromRGB(86, 96, 120)
 			or Color3.fromRGB(58, 66, 84)
 	end
+
+	local function stamp(instance, channel)
+		if not instance then
+			return
+		end
+		instance:SetAttribute("PasrahLeaderboardUIOwner", "UISystem")
+		instance:SetAttribute("PasrahLeaderboardUIChannel", tostring(channel or instance.Name))
+		instance:SetAttribute("PasrahLeaderboardUIVisible", self:_resolveEffectiveUIVisibility(instance, nil))
+		instance:SetAttribute("PasrahLeaderboardPlayerName", tostring(playerName))
+		instance:SetAttribute("PasrahLeaderboardRank", tostring(leaderboardLabel))
+		instance:SetAttribute("PasrahLeaderboardLevel", level)
+		instance:SetAttribute("PasrahLeaderboardTotalGames", totalGames)
+		instance:SetAttribute("PasrahLeaderboardSanity", sanity)
+		instance:SetAttribute("PasrahLeaderboardVictories", victories)
+		instance:SetAttribute("PasrahLeaderboardCurrentRoomId", currentRoom and tostring(currentRoom.roomId or "") or nil)
+		instance:SetAttribute("PasrahLeaderboardRoomBrowserVisible", self._roomBrowserVisible == true)
+		instance:SetAttribute("PasrahLeaderboardLastEvent", tostring(profile.lastEvent or "Idle"))
+	end
+
+	stamp(window.Gui, "LeaderboardGui")
+	stamp(window.Panel, "LeaderboardPanel")
+	stamp(window.StatusBadge, "LeaderboardStatusBadge")
+	stamp(window.PrimaryLabel, "LeaderboardPrimaryLabel")
+	stamp(window.SecondaryLabel, "LeaderboardSecondaryLabel")
+	stamp(window.FooterLabel, "LeaderboardFooterLabel")
+	stamp(window.FloatButton, "LeaderboardFloatButton")
+	stamp(window.CloseButton, "LeaderboardCloseButton")
+	stamp(window.ProfileButton, "LeaderboardProfileButton")
+	stamp(window.RoomBrowserButton, "LeaderboardRoomBrowserButton")
+	stamp(window.MenuButton, "LeaderboardMenuButton")
+
+	if widgets then
+		stamp(widgets.Deck, "LeaderboardDeck")
+		stamp(widgets.HeroCard, "LeaderboardHeroCard")
+		stamp(widgets.HeroBadge, "LeaderboardHeroBadge")
+		stamp(widgets.HeroTitle, "LeaderboardHeroTitle")
+		stamp(widgets.HeroMeta, "LeaderboardHeroMeta")
+		stamp(widgets.ProgressTrack, "LeaderboardProgressTrack")
+		stamp(widgets.ProgressFill, "LeaderboardProgressFill")
+		stamp(widgets.ProgressCaption, "LeaderboardProgressCaption")
+		for index, row in ipairs(widgets.Rows or {}) do
+			if row then
+				stamp(row.Root, "LeaderboardRow" .. tostring(index))
+				stamp(row.Title, "LeaderboardRowTitle" .. tostring(index))
+				stamp(row.Meta, "LeaderboardRowMeta" .. tostring(index))
+				stamp(row.PricePill, "LeaderboardRowPill" .. tostring(index))
+				stamp(row.Button, "LeaderboardRowButton" .. tostring(index))
+			end
+		end
+	end
 end
 
 function UISystem:_refreshAuxiliaryPanels()
@@ -7896,7 +8005,7 @@ function UISystem:_stampJournalUIInstance(instance, channel, uiVisible, state, d
 
 	instance:SetAttribute("PasrahJournalUIOwner", "UISystem")
 	instance:SetAttribute("PasrahJournalUIChannel", tostring(channel or instance.Name))
-	instance:SetAttribute("PasrahJournalUIVisible", instance:IsA("GuiObject") and instance.Visible == true or uiVisible == true)
+	instance:SetAttribute("PasrahJournalUIVisible", self:_resolveEffectiveUIVisibility(instance, uiVisible))
 	instance:SetAttribute("PasrahJournalMatchId", type(state) == "table" and tostring(state.matchId or "") or nil)
 	instance:SetAttribute("PasrahJournalLastEvent", type(state) == "table" and tostring(state.lastEvent or "") or nil)
 	instance:SetAttribute("PasrahJournalDiscoveredCount", type(discovered) == "table" and #discovered or 0)
@@ -8446,7 +8555,7 @@ function UISystem:_stampProfileUIInstance(instance, channel, uiVisible, profile,
 	local player = Players.LocalPlayer
 	instance:SetAttribute("PasrahProfileUIOwner", "UISystem")
 	instance:SetAttribute("PasrahProfileUIChannel", tostring(channel or instance.Name))
-	instance:SetAttribute("PasrahProfileUIVisible", instance:IsA("GuiObject") and instance.Visible == true or uiVisible == true)
+	instance:SetAttribute("PasrahProfileUIVisible", self:_resolveEffectiveUIVisibility(instance, uiVisible))
 	instance:SetAttribute("PasrahProfilePlayerName", tostring(playerName or "Player"))
 	instance:SetAttribute("PasrahProfileUserId", tonumber(player and player.UserId) or 0)
 	instance:SetAttribute("PasrahProfileSanity", tonumber(sanity) or 0)
@@ -8908,7 +9017,7 @@ function UISystem:_stampShopUIInstance(instance, channel, uiVisible, shopState, 
 	local lastPurchase = type(shopState) == "table" and type(shopState.lastPurchase) == "table" and shopState.lastPurchase or nil
 	instance:SetAttribute("PasrahShopUIOwner", "UISystem")
 	instance:SetAttribute("PasrahShopUIChannel", tostring(channel or instance.Name))
-	instance:SetAttribute("PasrahShopUIVisible", instance:IsA("GuiObject") and instance.Visible == true or uiVisible == true)
+	instance:SetAttribute("PasrahShopUIVisible", self:_resolveEffectiveUIVisibility(instance, uiVisible))
 	instance:SetAttribute("PasrahShopFilter", tostring(activeFilter or "All"))
 	instance:SetAttribute("PasrahShopOwnedCount", tonumber(ownedCount) or 0)
 	instance:SetAttribute("PasrahShopWalletMM", math.max(0, math.floor(tonumber(wallet.MM) or 0)))
@@ -9840,7 +9949,7 @@ function UISystem:_refreshRoyalPassPanel()
 		end
 		instance:SetAttribute("PasrahRoyalPassUIOwner", "UISystem")
 		instance:SetAttribute("PasrahRoyalPassUIChannel", tostring(channel or instance.Name))
-		instance:SetAttribute("PasrahRoyalPassUIVisible", instance:IsA("GuiObject") and instance.Visible == true or nil)
+		instance:SetAttribute("PasrahRoyalPassUIVisible", self:_resolveEffectiveUIVisibility(instance, nil))
 		instance:SetAttribute("PasrahRoyalPassSeasonId", tostring(state.seasonId or "S1"))
 		instance:SetAttribute("PasrahRoyalPassCurrentTier", currentTier)
 		instance:SetAttribute("PasrahRoyalPassMaxTier", maxTier)
@@ -9958,7 +10067,7 @@ function UISystem:_refreshPasraPanel()
 		end
 		instance:SetAttribute("PasrahPasraUIOwner", "UISystem")
 		instance:SetAttribute("PasrahPasraUIChannel", tostring(channel or instance.Name))
-		instance:SetAttribute("PasrahPasraUIVisible", instance:IsA("GuiObject") and instance.Visible == true or nil)
+		instance:SetAttribute("PasrahPasraUIVisible", self:_resolveEffectiveUIVisibility(instance, nil))
 		instance:SetAttribute("PasrahPasraGhostType", tostring(result.ghostType or "Unknown"))
 		instance:SetAttribute("PasrahPasraCorrectGuess", result.correctGuess == true)
 		instance:SetAttribute("PasrahPasraCurrencyReward", tonumber(result.currencyReward) or 0)
@@ -9983,7 +10092,7 @@ function UISystem:_stampSpectatorUIInstance(instance, channel, uiVisible, specta
 
 	instance:SetAttribute("PasrahSpectatorUIOwner", "UISystem")
 	instance:SetAttribute("PasrahSpectatorUIChannel", tostring(channel or instance.Name))
-	instance:SetAttribute("PasrahSpectatorUIVisible", instance:IsA("GuiObject") and instance.Visible == true or uiVisible == true)
+	instance:SetAttribute("PasrahSpectatorUIVisible", self:_resolveEffectiveUIVisibility(instance, uiVisible))
 	instance:SetAttribute("PasrahSpectatorMode", type(spectator) == "table" and tostring(spectator.mode or "none") or "none")
 	instance:SetAttribute("PasrahSpectatorTitle", type(spectator) == "table" and tostring(spectator.title or "") or nil)
 	instance:SetAttribute("PasrahSpectatorSubtitle", type(spectator) == "table" and tostring(spectator.subtitle or "") or nil)

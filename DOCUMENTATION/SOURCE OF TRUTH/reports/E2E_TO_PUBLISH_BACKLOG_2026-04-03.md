@@ -4252,3 +4252,15 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Note:
   - full `dead -> spectator` transition was not claimed in this batch; only baseline panel/runtime owner path is verified.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 10:49:50 +07:00 - MainMenu/Leaderboard Identity + Visibility Truth
+- Status: DONE.
+- `Client.UI.Main` now stamps `MainMenuUI` and `LeaderboardUI` runtime identity attrs directly on panel, float button, and leaderboard deck/hero path.
+- Visibility stamping now uses effective parent-aware visibility for this lane, so hidden panel state is reflected correctly in descendant attrs.
+- Build passed: `_tmp_mainmenu_leaderboard_identity_build.rbxlx`.
+- Live proof:
+  - `MainMenuPanel` -> `PasrahMainMenuUIVisible=false`
+  - `MainMenuFloatButton` -> `PasrahMainMenuUIVisible=false`
+  - `LeaderboardPanel` -> `PasrahLeaderboardUIVisible=false`
+  - `LeaderboardDeck/HeroCard` -> `PasrahLeaderboardUIVisible=false`
+- Studio stop-test reporting rule followed.

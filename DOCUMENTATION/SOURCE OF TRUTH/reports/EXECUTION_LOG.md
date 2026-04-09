@@ -13891,3 +13891,15 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Note:
   - full `dead -> spectator` transition was not claimed in this batch; the verified proof above is the baseline panel/runtime owner path.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 10:49:50 +07:00 - Stamp MainMenu And Leaderboard Runtime Identity + Effective Visibility
+- Status: DONE.
+- `Client.UI.Main` now stamps direct runtime attrs for `MainMenuUI` and `LeaderboardUI`, and all UI visibility attrs in the same lane now use effective parent-aware visibility.
+- Build passed: `_tmp_mainmenu_leaderboard_identity_build.rbxlx`.
+- Live Studio proof in Play Solo client context (`isClient=true`, `LocalPlayer=true`):
+  - `MainMenuUI.MainPanel.Visible=false` and `PasrahMainMenuUIVisible=false`.
+  - `MainMenuUI.MainMenuFloatButton.Visible=true` but `PasrahMainMenuUIVisible=false` because parent panel lane is hidden.
+  - `LeaderboardUI.MainPanel.Visible=false` and `PasrahLeaderboardUIVisible=false`.
+  - `LeaderboardDeck.Visible=true` and `HeroCard.Visible=true`, both now stamped `PasrahLeaderboardUIVisible=false` while panel is hidden.
+  - channel attrs are present and canonical (`MainMenuPanel`, `MainMenuFloatButton`, `LeaderboardPanel`, `LeaderboardDeck`, `LeaderboardHeroCard`).
+- Roblox Studio was returned to STOP TEST before logging.
