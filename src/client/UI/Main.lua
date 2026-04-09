@@ -4881,7 +4881,11 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self:_closeConflictingWindows("SpectatorUI")
 			task.delay(5, function()
 				if self._spectatorState.mode == "warning" then
+					self._spectatorState.mode = "none"
+					self._spectatorState.title = "Belum spectate."
+					self._spectatorState.subtitle = "Panel ini akan aktif saat local player mati atau mode spectator berjalan."
 					self._uiState.SpectatorUI.visible = false
+					self:_refreshSpectatorPanel()
 					self:_applyVisibility()
 				end
 			end)

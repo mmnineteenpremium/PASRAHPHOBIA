@@ -13984,3 +13984,19 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Note:
   - this batch proves the client warning lane through the existing Studio E2E owner, not through real multiplayer replication.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 12:33:11 +07:00 - Decay Teammate Warning Back To Neutral
+- Status: DONE.
+- `Client.UI.Main` now fully decays the non-local teammate warning path back to neutral after the warning timeout instead of only hiding the panel while leaving `warning` state active.
+- Build passed: `_tmp_teammate_warning_decay_build.rbxlx`.
+- Live Studio proof in Play Solo using the existing `SimulateTeammateWarning` probe:
+  - hot state:
+    - `PasrahSpectatorMode=warning`
+    - `PasrahSpectatorUIVisible=true`
+    - `PasrahSpectatorTitle=TEAMMATE DOWN`
+  - cooled state after timeout:
+    - `PasrahSpectatorMode=none`
+    - `PasrahSpectatorUIVisible=false`
+    - `PasrahSpectatorLastEvent=PlayerKilled`
+    - `PasrahSpectatorTitle=Belum spectate.`
+- Roblox Studio was returned to STOP TEST before logging.
