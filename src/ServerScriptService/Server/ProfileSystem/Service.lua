@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local Services = require(script.Parent.Parent.Core.Services)
 
 local Service = {}
@@ -60,6 +61,25 @@ local function toUserId(playerOrUserId)
     end
     if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
         return playerOrUserId.UserId
+    end
+    return nil
+end
+
+local function resolvePlayer(playerOrUserId)
+    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+        return playerOrUserId
+    end
+
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return nil
+    end
+
+    local ok, player = pcall(function()
+        return Players:GetPlayerByUserId(userId)
+    end)
+    if ok then
+        return player
     end
     return nil
 end
@@ -192,6 +212,29 @@ local function defaultProfile(userId)
     }
 end
 
+local function stampProfileRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+
+    target:SetAttribute("PasrahProfileOwner", "ProfileSystem")
+    target:SetAttribute("PasrahProfileLevel", math.max(1, math.floor(tonumber(payload.level) or 1)))
+    target:SetAttribute("PasrahProfileXP", math.max(0, math.floor(tonumber(payload.xp) or 0)))
+    target:SetAttribute("PasrahProfileRank", tostring(payload.rank or DEFAULT_RANK.playerRank))
+    target:SetAttribute("PasrahProfileTotalMatches", math.max(0, math.floor(tonumber(payload.totalMatches) or 0)))
+    target:SetAttribute("PasrahProfileTotalWins", math.max(0, math.floor(tonumber(payload.totalWins) or 0)))
+    target:SetAttribute("PasrahProfileWinRate", math.max(0, math.floor(tonumber(payload.winRate) or 0)))
+    target:SetAttribute("PasrahProfileFavoriteTool", payload.favoriteTool ~= nil and tostring(payload.favoriteTool) or nil)
+    target:SetAttribute("PasrahProfileGalleryCount", math.max(0, math.floor(tonumber(payload.galleryCount) or 0)))
+    target:SetAttribute("PasrahProfileBio", tostring(payload.bio or ""))
+    target:SetAttribute("PasrahProfileFlexBorder", payload.flexBorder ~= nil and tostring(payload.flexBorder) or nil)
+    target:SetAttribute("PasrahProfileWinrateVisible", payload.winrateVisible ~= false)
+    target:SetAttribute("PasrahProfileSeasonTitleCount", math.max(0, math.floor(tonumber(payload.seasonTitleCount) or 0)))
+    target:SetAttribute("PasrahProfileLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+    target:SetAttribute("PasrahProfileLastSource", type(payload.lastSource) == "string" and payload.lastSource or nil)
+    target:SetAttribute("PasrahProfileUpdatedAt", os.clock())
+end
+
 local function normalizeProgression(rawProfile, rawRank)
     local progression = type(rawProfile.progression) == "table" and rawProfile.progression or {}
     local level = progression.level
@@ -321,6 +364,65 @@ end
 function Service:Stop()
     self._state:Clear()
     self._persistence = nil
+end
+
+function Service:_buildRuntimeSnapshot(playerOrUserId)
+    local profile = self:_ensureProfile(playerOrUserId)
+    if type(profile) ~= "table" then
+        return nil
+    end
+
+    local totalMatches = math.max(0, math.floor(tonumber(profile.statistics.totalGames) or 0))
+    local totalWins = math.max(0, math.floor(tonumber(profile.statistics.totalWins) or 0))
+    return {
+        userId = profile.userId,
+        level = math.max(1, math.floor(tonumber(profile.progression.level) or 1)),
+        xp = math.max(0, math.floor(tonumber(profile.progression.exp) or 0)),
+        rank = tostring(profile.rank.playerRank or DEFAULT_RANK.playerRank),
+        totalMatches = totalMatches,
+        totalWins = math.max(0, math.min(totalWins, totalMatches)),
+        winRate = calculateWinrate(totalWins, totalMatches),
+        favoriteTool = profile.statistics.favoriteTool,
+        galleryCount = #(profile.profile.galleryItems or {}),
+        bio = tostring(profile.profile.bio or ""),
+        flexBorder = profile.profile.flexBorder,
+        winrateVisible = profile.profile.winrateVisible ~= false,
+        seasonTitleCount = #(profile.statistics.seasonTitles or {}),
+    }
+end
+
+function Service:_stampRuntimeState(playerOrUserId, payload)
+    local player = resolvePlayer(playerOrUserId)
+    if not player then
+        return
+    end
+
+    local snapshot = self:_buildRuntimeSnapshot(player)
+    if type(snapshot) ~= "table" then
+        return
+    end
+
+    local lastSource = type(payload) == "table" and payload.lastSource or nil
+    if lastSource == nil then
+        lastSource = player:GetAttribute("PasrahProfileLastSource")
+    end
+
+    stampProfileRuntime(player, {
+        level = snapshot.level,
+        xp = snapshot.xp,
+        rank = snapshot.rank,
+        totalMatches = snapshot.totalMatches,
+        totalWins = snapshot.totalWins,
+        winRate = snapshot.winRate,
+        favoriteTool = snapshot.favoriteTool,
+        galleryCount = snapshot.galleryCount,
+        bio = snapshot.bio,
+        flexBorder = snapshot.flexBorder,
+        winrateVisible = snapshot.winrateVisible,
+        seasonTitleCount = snapshot.seasonTitleCount,
+        lastEvent = type(payload) == "table" and payload.lastEvent or nil,
+        lastSource = lastSource,
+    })
 end
 
 function Service:_profiles()
@@ -531,11 +633,22 @@ function Service:LoadProfile(playerOrUserId, forceReload)
     if not profile then
         return nil
     end
+    self:_stampRuntimeState(playerOrUserId, {
+        lastEvent = "ProfileLoaded",
+        lastSource = forceReload == true and "load_profile_forced" or "load_profile",
+    })
     return self:GetPlayerProfile(playerOrUserId)
 end
 
 function Service:SaveProfile(playerOrUserId)
-    return self:_persistProfile(playerOrUserId)
+    local ok = self:_persistProfile(playerOrUserId)
+    if ok then
+        self:_stampRuntimeState(playerOrUserId, {
+            lastEvent = "ProfileSaved",
+            lastSource = "save_profile",
+        })
+    end
+    return ok
 end
 
 function Service:GetPlayerProfile(playerOrUserId)
@@ -548,7 +661,7 @@ function Service:GetPlayerProfile(playerOrUserId)
     local totalWins = profile.statistics.totalWins
     local winRate = calculateWinrate(totalWins, totalMatches)
 
-    return {
+    local snapshot = {
         userId = profile.userId,
         playerXP = profile.progression.exp,
         playerLevel = profile.progression.level,
@@ -587,6 +700,10 @@ function Service:GetPlayerProfile(playerOrUserId)
             victories = profile.rank.victories,
         },
     }
+    self:_stampRuntimeState(playerOrUserId, {
+        lastEvent = "ProfileSnapshotBuilt",
+    })
+    return snapshot
 end
 
 function Service:UpdateProfile(playerOrUserId, changes)
@@ -676,6 +793,10 @@ function Service:UpdateProfile(playerOrUserId, changes)
 
     self:_syncRank(profile)
     self:_persistProfile(playerOrUserId)
+    self:_stampRuntimeState(playerOrUserId, {
+        lastEvent = "ProfileUpdated",
+        lastSource = "update_profile",
+    })
     return true, nil, self:GetPlayerProfile(playerOrUserId)
 end
 
@@ -795,6 +916,10 @@ function Service:OnRankUpdated(payload)
     end
 
     self:_persistProfile(playerOrUserId)
+    self:_stampRuntimeState(playerOrUserId, {
+        lastEvent = "ProfileRankUpdated",
+        lastSource = "rank_updated",
+    })
 end
 
 function Service:OnMatchEnded(payload)
@@ -837,6 +962,10 @@ function Service:OnMatchEnded(payload)
 
     for userId in pairs(changedPlayers) do
         self:_persistProfile(userId)
+        self:_stampRuntimeState(userId, {
+            lastEvent = "ProfileMatchStatsApplied",
+            lastSource = "match_ended",
+        })
     end
 end
 
