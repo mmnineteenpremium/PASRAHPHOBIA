@@ -104,6 +104,28 @@ local function nowClock()
     return os.clock()
 end
 
+local function stampShopRuntime(target, payload)
+	if typeof(target) ~= "Instance" or not target:IsA("Player") then
+		return
+	end
+
+	target:SetAttribute("PasrahShopOwner", "ShopSystem")
+	target:SetAttribute("PasrahShopWalletMM", math.max(0, math.floor(tonumber(payload.walletMM) or 0)))
+	target:SetAttribute("PasrahShopWalletPP", math.max(0, math.floor(tonumber(payload.walletPP) or 0)))
+	target:SetAttribute("PasrahShopWalletRobux", math.max(0, math.floor(tonumber(payload.walletRobux) or 0)))
+	target:SetAttribute("PasrahShopOwnedCount", math.max(0, math.floor(tonumber(payload.ownedCount) or 0)))
+	target:SetAttribute("PasrahShopLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+	target:SetAttribute("PasrahShopLastItemId", type(payload.lastItemId) == "string" and payload.lastItemId or nil)
+	target:SetAttribute("PasrahShopLastCategory", type(payload.lastCategory) == "string" and payload.lastCategory or nil)
+	target:SetAttribute("PasrahShopLastCurrency", type(payload.lastCurrency) == "string" and payload.lastCurrency or nil)
+	target:SetAttribute("PasrahShopLastResult", type(payload.lastResult) == "string" and payload.lastResult or nil)
+	target:SetAttribute("PasrahShopLastReason", type(payload.lastReason) == "string" and payload.lastReason or nil)
+	target:SetAttribute("PasrahShopLastSource", type(payload.lastSource) == "string" and payload.lastSource or nil)
+	target:SetAttribute("PasrahShopLastMarketplaceType", type(payload.lastMarketplaceType) == "string" and payload.lastMarketplaceType or nil)
+	target:SetAttribute("PasrahShopLastMarketplaceId", tonumber(payload.lastMarketplaceId))
+	target:SetAttribute("PasrahShopUpdatedAt", os.clock())
+end
+
 local function normalizeMarketplaceCompliance(item)
     if type(item) ~= "table" then
         return item
@@ -191,6 +213,27 @@ function Service:Stop()
 end
 
 function Service:_publish(eventName, payload)
+    if type(payload) == "table" then
+        local snapshot = self:_buildClientSnapshot(payload.player)
+        if type(snapshot) == "table" then
+            self:_applyOwnedItemAttributes(payload.player, snapshot)
+        end
+        self:_stampRuntimeState(payload.player, {
+            snapshot = snapshot,
+            lastEvent = eventName,
+            lastItemId = payload.itemId,
+            lastCategory = payload.category,
+            lastCurrency = payload.currency,
+            lastResult = eventName == "ItemPurchased" and "purchased"
+                or eventName == "PurchaseRefunded" and "refunded"
+                or eventName == "PurchaseFailed" and "failed"
+                or nil,
+            lastReason = payload.reason,
+            lastSource = payload.source,
+            lastMarketplaceType = payload.marketplaceType,
+            lastMarketplaceId = payload.marketplaceId,
+        })
+    end
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
     end
@@ -253,7 +296,7 @@ function Service:_applyOwnedItemAttributes(player, snapshot)
 	end
 end
 
-function Service:BuildClientSnapshot(player)
+function Service:_buildClientSnapshot(player)
     local userId = toUserId(player)
     if not userId then
         return nil, "invalid_player"
@@ -290,7 +333,50 @@ function Service:BuildClientSnapshot(player)
 
     table.sort(snapshot.ownedItemIds)
     snapshot.ownedCount = #snapshot.ownedItemIds
+    return snapshot
+end
+
+function Service:_stampRuntimeState(player, payload)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return
+    end
+
+    local snapshot = type(payload) == "table" and payload.snapshot or nil
+    if type(snapshot) ~= "table" then
+        snapshot = self:_buildClientSnapshot(player)
+    end
+    if type(snapshot) ~= "table" then
+        return
+    end
+
+    stampShopRuntime(player, {
+        walletMM = type(snapshot.wallet) == "table" and snapshot.wallet.MM or 0,
+        walletPP = type(snapshot.wallet) == "table" and snapshot.wallet.PP or 0,
+        walletRobux = type(snapshot.wallet) == "table" and snapshot.wallet.Robux or 0,
+        ownedCount = snapshot.ownedCount,
+        lastEvent = type(payload) == "table" and payload.lastEvent or nil,
+        lastItemId = type(payload) == "table" and payload.lastItemId or nil,
+        lastCategory = type(payload) == "table" and payload.lastCategory or nil,
+        lastCurrency = type(payload) == "table" and payload.lastCurrency or nil,
+        lastResult = type(payload) == "table" and payload.lastResult or nil,
+        lastReason = type(payload) == "table" and payload.lastReason or nil,
+        lastSource = type(payload) == "table" and payload.lastSource or nil,
+        lastMarketplaceType = type(payload) == "table" and payload.lastMarketplaceType or nil,
+        lastMarketplaceId = type(payload) == "table" and payload.lastMarketplaceId or nil,
+    })
+end
+
+function Service:BuildClientSnapshot(player)
+    local snapshot, reason = self:_buildClientSnapshot(player)
+    if type(snapshot) ~= "table" then
+        return nil, reason
+    end
     self:_applyOwnedItemAttributes(player, snapshot)
+    self:_stampRuntimeState(player, {
+        snapshot = snapshot,
+        lastEvent = "ShopSnapshotBuilt",
+        lastResult = "snapshot",
+    })
     return snapshot
 end
 

@@ -966,7 +966,14 @@ function StudioE2EControlSystem:_handleGrantMarketplacePurchase(player, request)
 	end
 
 	local snapshot
-	if type(shopService.BuildClientSnapshot) == "function" then
+	if type(shopService._buildClientSnapshot) == "function" then
+		local snapshotOk, snapshotResult = pcall(function()
+			return shopService:_buildClientSnapshot(player)
+		end)
+		if snapshotOk and type(snapshotResult) == "table" then
+			snapshot = snapshotResult
+		end
+	elseif type(shopService.BuildClientSnapshot) == "function" then
 		local snapshotOk, snapshotResult = pcall(function()
 			return shopService:BuildClientSnapshot(player)
 		end)
@@ -1351,6 +1358,61 @@ function StudioE2EControlSystem:_handleGetShopPlayerSnapshot(player, request)
 		tostring(hasItem),
 		tostring(ownsCosmetic),
 		tostring(ownedSnapshot)
+	)
+end
+
+function StudioE2EControlSystem:_handleProcessShopPurchase(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local shopService = self._shopService
+	if type(shopService) ~= "table"
+		or type(shopService.ProcessPurchase) ~= "function"
+		or type(shopService.BuildClientSnapshot) ~= "function"
+	then
+		return false, "missing_shop_service"
+	end
+	if type(self._economyService) ~= "table" or type(self._economyService.GetBalance) ~= "function" then
+		return false, "missing_economy_service"
+	end
+
+	local itemId = type(request) == "table" and tostring(request.itemId or "") or ""
+	if itemId == "" then
+		return false, "missing_item_id"
+	end
+
+	local ok, reason = shopService:ProcessPurchase(player, itemId)
+	if ok ~= true then
+		return false, tostring(reason or "purchase_failed")
+	end
+
+	local snapshot = {}
+	if type(shopService._buildClientSnapshot) == "function" then
+		local snapshotOk, snapshotResult = pcall(function()
+			return shopService:_buildClientSnapshot(player)
+		end)
+		if snapshotOk and type(snapshotResult) == "table" then
+			snapshot = snapshotResult
+		end
+	elseif type(shopService.BuildClientSnapshot) == "function" then
+		local snapshotOk, snapshotResult = pcall(function()
+			return shopService:BuildClientSnapshot(player)
+		end)
+		if snapshotOk and type(snapshotResult) == "table" then
+			snapshot = snapshotResult
+		end
+	end
+	local wallet = self._economyService:GetBalance(player) or {}
+	local ownedCount = type(snapshot.ownedItemIds) == "table" and #snapshot.ownedItemIds or 0
+
+	return true, string.format(
+		"item=%s MM=%d PP=%d Robux=%d ownedCount=%d",
+		itemId,
+		math.max(0, math.floor(tonumber(wallet.MM) or 0)),
+		math.max(0, math.floor(tonumber(wallet.PP) or 0)),
+		math.max(0, math.floor(tonumber(wallet.Robux) or 0)),
+		ownedCount
 	)
 end
 
@@ -2026,6 +2088,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleGetShopReadiness()
 		elseif action == "GetShopPlayerSnapshot" then
 			return self:_handleGetShopPlayerSnapshot(player, request)
+		elseif action == "ProcessShopPurchase" then
+			return self:_handleProcessShopPurchase(player, request)
 		elseif action == "UseEvidenceTool" then
 			return self:_handleUseEvidenceTool(player, request)
 		elseif action == "ConsumeHuntProtection" then
