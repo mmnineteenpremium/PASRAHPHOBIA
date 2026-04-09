@@ -4383,3 +4383,38 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `PasrahSpectatorCameraReason=studio_camera_probe_hot_end`
 - Note:
   - probe needs a short settle delay after `StartSoloMatch`, otherwise baseline `MatchStarted` stamping can race with the hot snapshot.
+
+## 2026-04-09 12:41:27 +07:00 - Spectator Vision Server Identity
+- Status: DONE.
+- `Server.SpectatorSystem.SpectatorService`
+  - now stamps `PasrahSpectatorVision*` directly on the player for match baseline, spectator enter, target switching, ghost activity, evidence distortion, and cooled exit state
+  - keeps owner truthful as `SpectatorSystem` even after exit, with `active=false`
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `SimulateSpectatorVision`
+  - now exposes `EndSpectatorVision`
+  - seeds the probe through the real `SpectatorSystem` core service instead of calling `_ensureMatch` on the wrapper
+- Build passed:
+  - `_tmp_spectator_vision_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - hot:
+    - `PasrahSpectatorVisionOwner=SpectatorSystem`
+    - `PasrahSpectatorVisionActive=true`
+    - `PasrahSpectatorVisionTargetUserId=950001`
+    - `PasrahSpectatorVisionLastOutcome=fake`
+    - `PasrahSpectatorVisionLastSignalType=FakeGhost`
+    - `PasrahSpectatorVisionLastRoomId=Room_LivingRoom`
+    - `PasrahSpectatorVisionReliability=low`
+    - `PasrahSpectatorVisionVoiceAllowed=true`
+    - `PasrahSpectatorVisionDistortionHint=fake`
+    - `PasrahSpectatorVisionLikelyMisleading=true`
+    - `PasrahSpectatorVisionLastEvent=SpectatorVisionUpdated`
+  - cooled:
+    - `PasrahSpectatorVisionOwner=SpectatorSystem`
+    - `PasrahSpectatorVisionActive=false`
+    - `PasrahSpectatorVisionLastEvent=SpectatorExited`
+    - `PasrahSpectatorVisionReason=spectator_exited`
+    - `PasrahSpectatorVisionTargetUserId` cleared
+    - `PasrahSpectatorVisionLastOutcome` cleared
+    - `PasrahSpectatorVisionLastSignalType` cleared
+- Note:
+  - the first probe run exposed a real bug: `SimulateSpectatorVision` tried to call `_ensureMatch` on the wrapper `Service` table and returned `handler_error`; the lane is only marked DONE after fixing that runtime path and re-proving hot and cooled attrs live.

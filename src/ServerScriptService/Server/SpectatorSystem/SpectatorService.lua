@@ -114,6 +114,30 @@ local function sortedAliveUserIds(aliveByUserId)
 	return userIds
 end
 
+local function stampSpectatorVisionRuntime(target, payload)
+	if typeof(target) ~= "Instance" or not target:IsA("Player") then
+		return
+	end
+
+	target:SetAttribute("PasrahSpectatorVisionOwner", "SpectatorSystem")
+	target:SetAttribute("PasrahSpectatorVisionMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+	target:SetAttribute("PasrahSpectatorVisionActive", payload.active == true)
+	target:SetAttribute("PasrahSpectatorVisionTargetUserId", tonumber(payload.targetUserId))
+	target:SetAttribute("PasrahSpectatorVisionLastOutcome", type(payload.outcome) == "string" and payload.outcome or nil)
+	target:SetAttribute("PasrahSpectatorVisionLastSignalType", type(payload.signalType) == "string" and payload.signalType or nil)
+	target:SetAttribute("PasrahSpectatorVisionLastRoomId", type(payload.roomId) == "string" and payload.roomId or nil)
+	target:SetAttribute("PasrahSpectatorVisionReliability", type(payload.reliability) == "string" and payload.reliability or nil)
+	target:SetAttribute("PasrahSpectatorVisionVoiceAllowed", payload.canTransmitVoice == true)
+	target:SetAttribute("PasrahSpectatorVisionDistortionHint", type(payload.distortionHint) == "string" and payload.distortionHint or nil)
+	target:SetAttribute("PasrahSpectatorVisionLikelyMisleading", payload.isLikelyMisleading == true)
+	target:SetAttribute("PasrahSpectatorVisionLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+	target:SetAttribute("PasrahSpectatorVisionLastActivityType", type(payload.activityType) == "string" and payload.activityType or nil)
+	target:SetAttribute("PasrahSpectatorVisionReason", type(payload.reason) == "string" and payload.reason or nil)
+	target:SetAttribute("PasrahSpectatorVisionCreatedAt", type(payload.createdAt) == "number" and payload.createdAt or nil)
+	target:SetAttribute("PasrahSpectatorVisionVisibleUntil", type(payload.visibilityEndsAt) == "number" and payload.visibilityEndsAt or nil)
+	target:SetAttribute("PasrahSpectatorVisionLastUpdatedAt", os.clock())
+end
+
 function SpectatorService.new(state, deps)
 	local self = setmetatable({}, SpectatorService)
 	self._state = state
@@ -258,6 +282,10 @@ function SpectatorService:_refreshSpectatorTargets(match)
 	end
 end
 
+function SpectatorService:_stampSpectatorRuntime(player, payload)
+	stampSpectatorVisionRuntime(player, payload or {})
+end
+
 function SpectatorService:_getGhostState(matchId)
 	if not self._ghostService then
 		return {}
@@ -293,6 +321,12 @@ function SpectatorService:StartMatch(matchId, payload)
 		if typeof(player) == "Instance" and player:IsA("Player") then
 			match.playersByUserId[player.UserId] = player
 			match.aliveByUserId[player.UserId] = true
+			self:_stampSpectatorRuntime(player, {
+				matchId = matchId,
+				active = false,
+				lastEvent = "SpectatorMatchStarted",
+				reason = "match_started",
+			})
 		end
 	end
 
@@ -305,6 +339,17 @@ function SpectatorService:StartMatch(matchId, payload)
 end
 
 function SpectatorService:EndMatch(matchId)
+	local match = self:_getMatch(matchId)
+	if match and type(match.playersByUserId) == "table" then
+		for _, player in pairs(match.playersByUserId) do
+			self:_stampSpectatorRuntime(player, {
+				matchId = matchId,
+				active = false,
+				lastEvent = "SpectatorMatchEnded",
+				reason = "match_ended",
+			})
+		end
+	end
 	self:_removeMatch(matchId)
 	self:_publish("SpectatorMatchEnded", { matchId = matchId })
 end
@@ -345,6 +390,17 @@ function SpectatorService:EnterSpectator(player, matchId, payload)
 	match.spectatorFlagsByUserId[player.UserId] = true
 	self._communication:RegisterSpectator(matchId, player.UserId)
 	self:_refreshSpectatorTargets(match)
+	local communicationContext = self._communication:GetCommunicationContext(matchId, player.UserId)
+	self:_stampSpectatorRuntime(player, {
+		matchId = matchId,
+		active = true,
+		targetUserId = targetUserId,
+		canTransmitVoice = communicationContext.canTransmitVoice,
+		distortionHint = communicationContext.distortionHint,
+		isLikelyMisleading = communicationContext.isLikelyMisleading,
+		lastEvent = "SpectatorEntered",
+		reason = payload and payload.reason or "spectator_entered",
+	})
 
 	self:_publish("SpectatorEntered", {
 		matchId = matchId,
@@ -373,6 +429,12 @@ function SpectatorService:ExitSpectator(player, matchId)
 
 	match.spectatorsByUserId[userId] = nil
 	self._communication:UnregisterSpectator(matchId, userId)
+	self:_stampSpectatorRuntime(typeof(player) == "Instance" and player:IsA("Player") and player or match.playersByUserId[userId], {
+		matchId = matchId,
+		active = false,
+		lastEvent = "SpectatorExited",
+		reason = "spectator_exited",
+	})
 
 	self:_publish("SpectatorExited", {
 		matchId = matchId,
@@ -415,6 +477,17 @@ function SpectatorService:SwitchSpectatorTarget(player, matchId, direction)
 
 	local nextTarget = self:_rotateTarget(match, spectator.targetUserId, direction or 1)
 	spectator.targetUserId = nextTarget
+	local communicationContext = self._communication:GetCommunicationContext(matchId, userId)
+	self:_stampSpectatorRuntime(spectator.player, {
+		matchId = matchId,
+		active = true,
+		targetUserId = nextTarget,
+		canTransmitVoice = communicationContext.canTransmitVoice,
+		distortionHint = communicationContext.distortionHint,
+		isLikelyMisleading = communicationContext.isLikelyMisleading,
+		lastEvent = "SpectatorTargetChanged",
+		reason = "target_switched",
+	})
 
 	self:_publish("SpectatorTargetChanged", {
 		matchId = matchId,
@@ -472,12 +545,30 @@ function SpectatorService:_endRealVisionsForHuntStart(match, matchId, now)
 		end
 		spectator.lastVision = endedVision
 		self._communication:RecordVisionOutcome(matchId, userId, "uncertain")
+		local communicationContext = self._communication:GetCommunicationContext(matchId, userId)
+		self:_stampSpectatorRuntime(spectator.player, {
+			matchId = matchId,
+			active = true,
+			targetUserId = spectator.targetUserId,
+			outcome = endedVision.outcome,
+			signalType = endedVision.ghostSignal and endedVision.ghostSignal.type,
+			roomId = endedVision.ghostSignal and endedVision.ghostSignal.roomId,
+			reliability = endedVision.reliability,
+			canTransmitVoice = communicationContext.canTransmitVoice,
+			distortionHint = communicationContext.distortionHint,
+			isLikelyMisleading = communicationContext.isLikelyMisleading,
+			lastEvent = "SpectatorVisionUpdated",
+			activityType = "hunt_started",
+			reason = endedVision.ghostSignal and endedVision.ghostSignal.reason,
+			createdAt = endedVision.createdAt,
+			visibilityEndsAt = endedVision.visibilityEndsAt,
+		})
 
 		self:_publish("SpectatorVisionUpdated", {
 			matchId = matchId,
 			player = spectator.player,
 			vision = endedVision,
-			communication = self._communication:GetCommunicationContext(matchId, userId),
+			communication = communicationContext,
 		})
 	end
 end
@@ -550,6 +641,23 @@ function SpectatorService:ProcessGhostActivity(matchId, payload)
 		self._communication:RecordVisionOutcome(matchId, spectatorUserId, visionState.outcome)
 
 		local communicationContext = self._communication:GetCommunicationContext(matchId, spectatorUserId)
+		self:_stampSpectatorRuntime(spectator.player, {
+			matchId = matchId,
+			active = true,
+			targetUserId = spectator.targetUserId,
+			outcome = visionState.outcome,
+			signalType = visionState.ghostSignal and visionState.ghostSignal.type,
+			roomId = visionState.ghostSignal and visionState.ghostSignal.roomId,
+			reliability = visionState.reliability,
+			canTransmitVoice = communicationContext.canTransmitVoice,
+			distortionHint = communicationContext.distortionHint,
+			isLikelyMisleading = communicationContext.isLikelyMisleading,
+			lastEvent = "SpectatorVisionUpdated",
+			activityType = safePayload.activityType,
+			reason = decision.outcome,
+			createdAt = visionState.createdAt,
+			visibilityEndsAt = visionState.visibilityEndsAt,
+		})
 		self:_publish("SpectatorVisionUpdated", {
 			matchId = matchId,
 			player = spectator.player,
@@ -600,6 +708,20 @@ function SpectatorService:ProcessEvidenceEvent(matchId, payload)
     local eventsPublished = 0
     for userId, spectator in pairs(match.spectatorsByUserId) do
         local distortion = self._distortionEngine:DistortEvidence(payload, self._evidenceTypes)
+        self:_stampSpectatorRuntime(spectator.player, {
+            matchId = matchId,
+            active = true,
+            targetUserId = spectator.targetUserId,
+            outcome = distortion and distortion.outcome,
+            signalType = "Evidence",
+            reliability = distortion and distortion.outcome == "real" and "high" or "low",
+            canTransmitVoice = self._communication:CanTransmitVoice(matchId, userId),
+            distortionHint = distortion and distortion.outcome or "unknown",
+            isLikelyMisleading = distortion and (distortion.outcome == "fake" or distortion.outcome == "uncertain") or false,
+            lastEvent = "SpectatorEvidenceUpdated",
+            activityType = "evidence",
+            reason = distortion and distortion.payload and distortion.payload.message or nil,
+        })
         self:_publish("SpectatorEvidenceUpdated", {
             matchId = matchId,
             player = spectator.player,
