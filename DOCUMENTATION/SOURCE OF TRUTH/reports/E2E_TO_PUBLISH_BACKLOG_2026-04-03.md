@@ -4306,3 +4306,11 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Scope intentionally not claimed here:
   - real multiplayer replication
   - warning decay/expiry lifecycle
+
+## 2026-04-09 12:33:11 +07:00 - Teammate Warning Decay
+- Status: DONE.
+- `Client.UI.Main` now decays teammate warning back to neutral after the timeout instead of leaving `PasrahSpectatorMode=warning` hidden behind `PasrahSpectatorUIVisible=false`.
+- Build passed: `_tmp_teammate_warning_decay_build.rbxlx`.
+- Live proof in Play Solo via `SimulateTeammateWarning`:
+  - hot -> `PasrahSpectatorMode=warning`, `PasrahSpectatorUIVisible=true`, `PasrahSpectatorTitle=TEAMMATE DOWN`
+  - cooled -> `PasrahSpectatorMode=none`, `PasrahSpectatorUIVisible=false`, `PasrahSpectatorLastEvent=PlayerKilled`, `PasrahSpectatorTitle=Belum spectate.`
