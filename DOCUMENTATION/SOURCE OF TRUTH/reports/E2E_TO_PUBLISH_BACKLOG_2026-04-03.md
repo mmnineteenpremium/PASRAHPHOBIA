@@ -4352,3 +4352,34 @@ Urutan yang paling masuk akal dari titik sekarang:
       - blur/color correction attrs both disabled again
 - Note:
   - local death routing itself was not re-probed in this batch because the current Studio E2E server surface still has no dedicated kill action for this owner; the new client identity was verified through direct module probes instead of inventing a fake server owner.
+
+## 2026-04-09 12:01:36 +07:00 - Spectator Camera Server Identity
+- Status: DONE.
+- `Server.SpectatorCameraSystem.Service`
+  - now stamps `PasrahSpectatorCamera*` directly on the player for active and cooled camera state
+  - keeps owner truthful as `SpectatorCameraSystem` even after end, with `active=false`
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `SimulateSpectatorCamera`
+  - now exposes `EndSpectatorCamera`
+  - publishes through the real `EventBus` owner route
+- Build passed:
+  - `_tmp_spectator_camera_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - hot:
+    - `PasrahSpectatorCameraOwner=SpectatorCameraSystem`
+    - `PasrahSpectatorCameraActive=true`
+    - `PasrahSpectatorCameraMode=FreeCamera`
+    - `PasrahSpectatorCameraTargetUserId=940002`
+    - `PasrahSpectatorCameraPosition=-2.500, 19.000, 2.500`
+    - `PasrahSpectatorCameraRotation=0.000, 25.000, 0.000`
+    - `PasrahSpectatorCameraLastEvent=SpectatorTargetChanged`
+    - `PasrahSpectatorCameraReason=studio_camera_probe_hot`
+  - cooled:
+    - `PasrahSpectatorCameraOwner=SpectatorCameraSystem`
+    - `PasrahSpectatorCameraActive=false`
+    - `PasrahSpectatorCameraMode` cleared
+    - `PasrahSpectatorCameraTargetUserId` cleared
+    - `PasrahSpectatorCameraLastEvent=SpectatorModeEnded`
+    - `PasrahSpectatorCameraReason=studio_camera_probe_hot_end`
+- Note:
+  - probe needs a short settle delay after `StartSoloMatch`, otherwise baseline `MatchStarted` stamping can race with the hot snapshot.

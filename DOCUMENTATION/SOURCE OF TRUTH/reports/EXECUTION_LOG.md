@@ -14105,3 +14105,53 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
       - `SpectatorBlurEffect.PasrahSpectatorFXEnabled=false`
       - `SpectatorColorCorrection.PasrahSpectatorFXEnabled=false`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 12:01:36 +07:00 - Stamp Spectator Camera Server Identity + Studio Probe
+- Status: DONE.
+- `Server.SpectatorCameraSystem.Service` now stamps direct runtime attrs on the player under the active owner:
+  - `PasrahSpectatorCameraOwner`
+  - `PasrahSpectatorCameraMatchId`
+  - `PasrahSpectatorCameraMode`
+  - `PasrahSpectatorCameraTargetUserId`
+  - `PasrahSpectatorCameraPosition`
+  - `PasrahSpectatorCameraRotation`
+  - `PasrahSpectatorCameraBoundsMin`
+  - `PasrahSpectatorCameraBoundsMax`
+  - `PasrahSpectatorCameraCanObserveLivingPlayers`
+  - `PasrahSpectatorCameraCanObserveGhost`
+  - `PasrahSpectatorCameraLimitedAwareness`
+  - `PasrahSpectatorCameraLastEvent`
+  - `PasrahSpectatorCameraReason`
+  - `PasrahSpectatorCameraActive`
+- `Server.StudioE2EControlSystem.Main` now exposes:
+  - `SimulateSpectatorCamera`
+  - `EndSpectatorCamera`
+- The new Studio probe publishes through the real `EventBus` owner route instead of inventing a parallel camera debug system.
+- Build passed: `_tmp_spectator_camera_identity_build.rbxlx`.
+- Live Studio proof in Play Solo:
+  - `StartSoloMatch` -> `ok=true | action=StartSoloMatch | result=match=match_2 map=HauntedHouse mode=Classic difficulty=Mudah players=1`
+  - after a settle delay, `SimulateSpectatorCamera` ->
+    - `ok=true | action=SimulateSpectatorCamera | result=match=match_2 mode=FreeCamera target=940002 position=-2.5, 19, 2.5 rotation=0, 25, 0 limited=true`
+  - hot runtime attrs on player:
+    - `PasrahSpectatorCameraOwner=SpectatorCameraSystem`
+    - `PasrahSpectatorCameraActive=true`
+    - `PasrahSpectatorCameraMode=FreeCamera`
+    - `PasrahSpectatorCameraTargetUserId=940002`
+    - `PasrahSpectatorCameraPosition=-2.500, 19.000, 2.500`
+    - `PasrahSpectatorCameraRotation=0.000, 25.000, 0.000`
+    - `PasrahSpectatorCameraBoundsMin=-20.000, 8.000, -20.000`
+    - `PasrahSpectatorCameraBoundsMax=20.000, 30.000, 20.000`
+    - `PasrahSpectatorCameraLastEvent=SpectatorTargetChanged`
+    - `PasrahSpectatorCameraReason=studio_camera_probe_hot`
+  - `EndSpectatorCamera` ->
+    - `ok=true | action=EndSpectatorCamera | result=match=match_2 spectator_camera_ended`
+  - cooled runtime attrs on player:
+    - `PasrahSpectatorCameraOwner=SpectatorCameraSystem`
+    - `PasrahSpectatorCameraActive=false`
+    - `PasrahSpectatorCameraMode` cleared
+    - `PasrahSpectatorCameraTargetUserId` cleared
+    - `PasrahSpectatorCameraLastEvent=SpectatorModeEnded`
+    - `PasrahSpectatorCameraReason=studio_camera_probe_hot_end`
+- Note:
+  - the probe intentionally waits for `MatchStarted` baseline to settle before simulating camera state, otherwise the baseline `MatchStarted` stamp can race and overwrite the hot snapshot.
+- Roblox Studio was returned to STOP TEST before logging.
