@@ -13158,6 +13158,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `PasrahPasraDailyProgress=2`
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 05:49:43 +07:00 - Stamp Royal Pass UI Runtime Identity
+- Updated `src/client/UI/Main.lua` so `RoyalPassUI` now stamps direct runtime attrs on the panel, hero/progress widgets, scroller, and active day card.
+- Build passed: `_tmp_royalpass_ui_identity_build.rbxlx`.
+- Live Studio proof:
+  - baseline attrs exist even before opening:
+    - `PlayerGui.RoyalPassUI.MainPanel`:
+      - `PasrahRoyalPassUIOwner=UISystem`
+      - `PasrahRoyalPassUIChannel=RoyalPassPanel`
+      - `PasrahRoyalPassCurrentTier=1`
+      - `PasrahRoyalPassTotalXP=0`
+      - `PasrahRoyalPassPremiumOwned=false`
+      - `PasrahRoyalPassCurrentDay=1`
+  - after canonical `R` toggle opened the panel:
+    - `RoyalPassUI.MainPanel.Visible=true`
+    - `RoyalPassDeck.HeroCard` -> `PasrahRoyalPassUIChannel=RoyalPassHeroCard`
+    - `RoyalPassDeck.TrackScroller` -> `PasrahRoyalPassUIChannel=RoyalPassTrackScroller`
+    - `RoyalPassDeck.TrackScroller.DayCard1` -> `PasrahRoyalPassUIChannel=RoyalPassCurrentDayCard`
+    - current day card also carried:
+      - `PasrahRoyalPassCurrentDay=1`
+      - `PasrahRoyalPassLastEvent=RoyalPassSnapshot`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 09:36:40 +07:00 - Stamp Sanity Runtime Identity
 - Updated `src/ServerScriptService/Server/SanitySystem/Service.lua` so server-authoritative sanity state now writes direct runtime attrs on the player instead of staying implicit inside service state.
 - Build passed: `_tmp_sanity_runtime_identity_build.rbxlx`.
@@ -13829,4 +13851,24 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `PasrahFlashlightRemoteLastAction=Toggle`
     - `PasrahFlashlightRemoteLiveHandle=true`
     - `PasrahFlashlightRemoteHandleMatchesCache=true`
+- Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 07:03:19 +07:00 - Stamp Royal Pass UI Runtime Identity
+- Status: DONE.
+- `Client.UI.Main` now stamps direct runtime attrs on `RoyalPassUI` itself, including the main panel, hero card, progress widgets, premium CTA, track scroller, and active current-day card bundle.
+- Live Studio proof:
+  - baseline before opening the panel:
+    - `PlayerGui.RoyalPassUI.MainPanel.Visible=false`
+    - `PasrahRoyalPassUIOwner=UISystem`
+    - `PasrahRoyalPassUIChannel=RoyalPassPanel`
+    - `PasrahRoyalPassCurrentTier=1`
+    - `PasrahRoyalPassTotalXP=0`
+    - `PasrahRoyalPassPremiumOwned=false`
+    - `PasrahRoyalPassCurrentDay=1`
+  - after canonical `R` open:
+    - `RoyalPassUI.MainPanel.Visible=true`
+    - `RoyalPassDeck.HeroCard` -> `PasrahRoyalPassUIChannel=RoyalPassHeroCard`
+    - `RoyalPassDeck.TrackScroller` -> `PasrahRoyalPassUIChannel=RoyalPassTrackScroller`
+    - `RoyalPassDeck.TrackScroller.DayCard1` -> `PasrahRoyalPassUIChannel=RoyalPassCurrentDayCard`, `PasrahRoyalPassCurrentDay=1`, `PasrahRoyalPassLastEvent=RoyalPassSnapshot`
+- Build passed: `_tmp_royalpass_ui_identity_build.rbxlx`.
 - Roblox Studio was returned to STOP TEST before logging.

@@ -9661,6 +9661,53 @@ function UISystem:_refreshRoyalPassPanel()
 		self._royalPassTrackFocusKey = focusKey
 		self:_focusRoyalPassTrackCard(widgets, currentDay)
 	end
+
+	local function stamp(instance, channel)
+		if not instance then
+			return
+		end
+		instance:SetAttribute("PasrahRoyalPassUIOwner", "UISystem")
+		instance:SetAttribute("PasrahRoyalPassUIChannel", tostring(channel or instance.Name))
+		instance:SetAttribute("PasrahRoyalPassUIVisible", instance:IsA("GuiObject") and instance.Visible == true or nil)
+		instance:SetAttribute("PasrahRoyalPassSeasonId", tostring(state.seasonId or "S1"))
+		instance:SetAttribute("PasrahRoyalPassCurrentTier", currentTier)
+		instance:SetAttribute("PasrahRoyalPassMaxTier", maxTier)
+		instance:SetAttribute("PasrahRoyalPassTotalXP", totalXP)
+		instance:SetAttribute("PasrahRoyalPassCurrentTierXP", currentTierXP)
+		instance:SetAttribute("PasrahRoyalPassRemainingXP", remainingXP)
+		instance:SetAttribute("PasrahRoyalPassUnlockedTierCount", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0)))
+		instance:SetAttribute("PasrahRoyalPassProgressPercent", progressPercent)
+		instance:SetAttribute("PasrahRoyalPassPremiumOwned", premiumOwned == true)
+		instance:SetAttribute("PasrahRoyalPassViewMode", tostring(state.viewMode or "Rewards"))
+		instance:SetAttribute("PasrahRoyalPassCurrentDay", currentDay)
+		instance:SetAttribute("PasrahRoyalPassLastEvent", tostring(state.lastEvent or "Idle"))
+	end
+
+	stamp(window.Gui, "RoyalPassGui")
+	stamp(window.Panel, "RoyalPassPanel")
+	stamp(window.StatusBadge, "RoyalPassStatusBadge")
+	stamp(window.PrimaryLabel, "RoyalPassPrimaryLabel")
+	stamp(window.SecondaryLabel, "RoyalPassSecondaryLabel")
+	stamp(window.FooterLabel, "RoyalPassFooterLabel")
+	stamp(widgets.HeroCard, "RoyalPassHeroCard")
+	stamp(widgets.HeroBadge, "RoyalPassHeroBadge")
+	stamp(widgets.HeroMeta, "RoyalPassHeroMeta")
+	stamp(widgets.ProgressTrack, "RoyalPassProgressTrack")
+	stamp(widgets.ProgressFill, "RoyalPassProgressFill")
+	stamp(widgets.ProgressCaption, "RoyalPassProgressCaption")
+	stamp(widgets.PremiumActionButton, "RoyalPassPremiumActionButton")
+	stamp(widgets.TrackScroller, "RoyalPassTrackScroller")
+	stamp(widgets.TrackHint, "RoyalPassTrackHint")
+
+	local activeCard = widgets.TrackCards and widgets.TrackCards[currentDay]
+	if type(activeCard) == "table" then
+		stamp(activeCard.Root, "RoyalPassCurrentDayCard")
+		stamp(activeCard.DayBadge, "RoyalPassCurrentDayBadge")
+		stamp(activeCard.Title, "RoyalPassCurrentDayTitle")
+		stamp(activeCard.Meta, "RoyalPassCurrentDayMeta")
+		stamp(activeCard.RewardPill, "RoyalPassCurrentDayRewardPill")
+		stamp(activeCard.Footer, "RoyalPassCurrentDayFooter")
+	end
 end
 
 function UISystem:_focusRoyalPassTrackCard(widgets, targetIndex)
