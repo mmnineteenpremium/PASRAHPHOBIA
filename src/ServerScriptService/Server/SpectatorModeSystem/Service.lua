@@ -283,6 +283,15 @@ function Service:HandleEvent(eventName, payload)
         return
     end
 
+    if eventName == "PlayerRespawnRequested" or eventName == "PlayerRespawned" then
+        local userId = payload and payload.userId or toUserId(payload and payload.player)
+        if not userId then
+            return
+        end
+        self:_removeSpectator(matchId, userId, payload and payload.player, payload and payload.reason or "respawn")
+        return
+    end
+
     if eventName == "PlayerDisconnected" then
         local userId = payload and payload.userId or toUserId(payload and payload.player)
         if not userId then

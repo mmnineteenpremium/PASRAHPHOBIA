@@ -7,6 +7,18 @@ local DEATH_DEBOUNCE_SECONDS = 1
 local lastDeathTime = {}
 
 function DeathEventBridge.Start(deathService)
+	local function shouldEmitRespawn(player)
+		if typeof(player) ~= "Instance" or not player:IsA("Player") then
+			return false
+		end
+		local states = deathService and deathService._state and deathService._state:Get("deathStateByPlayer") or {}
+		local state = type(states) == "table" and states[player.UserId] or nil
+		if state == "Dead" or state == "RespawnRequested" then
+			return true
+		end
+		return player:GetAttribute("PasrahDeathActive") == true or player:GetAttribute("PasrahSpectatorActive") == true
+	end
+
 	local function hookCharacter(player, character)
 		local humanoid = character:WaitForChild("Humanoid")
 		humanoid.Died:Connect(function()
@@ -44,6 +56,19 @@ function DeathEventBridge.Start(deathService)
 
 		player.CharacterAdded:Connect(function(character)
 			hookCharacter(player, character)
+			if shouldEmitRespawn(player) then
+				local matchId = deathService._state:Get("activeMatchId")
+				if type(matchId) == "string" then
+					task.defer(function()
+						deathService:HandleEvent("PlayerRespawnRequested", {
+							matchId = matchId,
+							userId = player.UserId,
+							player = player,
+							reason = "character_added",
+						})
+					end)
+				end
+			end
 		end)
 	end
 

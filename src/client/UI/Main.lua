@@ -4885,6 +4885,13 @@ function UISystem:_onServerEvent(remoteName, payload)
 					self:_applyVisibility()
 				end
 			end)
+		elseif eventName == "PlayerRespawned" and payload and payload.localPlayerRespawned == true then
+			self._uiState.SpectatorUI.lastEvent = eventName
+			self._uiState.SpectatorUI.visible = false
+			self._spectatorState.lastEvent = eventName
+			self._spectatorState.mode = "none"
+			self._spectatorState.title = "Belum spectate."
+			self._spectatorState.subtitle = "Panel ini akan aktif saat local player mati atau mode spectator berjalan."
 		elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 			if payload and type(payload) == "table" then
 				local previousResult = self._matchResult or createDefaultMatchResult()

@@ -122,7 +122,7 @@ function SpectatorEffects:_onMatchEvent(payload)
 		return
 	end
 
-	if eventName == "PlayerRespawned" or eventName == "MatchEnded" then
+	if (eventName == "PlayerRespawned" and payload and payload.localPlayerRespawned == true) or eventName == "MatchEnded" then
 		self:ExitSpectatorMode()
 		return
 	end
