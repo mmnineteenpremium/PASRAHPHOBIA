@@ -200,7 +200,16 @@ function Controller:_sendPayload(player, payload)
 end
 
 function Controller:_sendSnapshot(player, eventName, extraPayload)
-    local snapshot = self._service:GetPlayerSnapshot(player)
+    local snapshotBuilder = type(self._service) == "table" and type(self._service._buildPlayerSnapshot) == "function"
+        and self._service._buildPlayerSnapshot
+        or type(self._service) == "table" and type(self._service.GetPlayerSnapshot) == "function"
+        and self._service.GetPlayerSnapshot
+        or nil
+    if type(snapshotBuilder) ~= "function" then
+        return
+    end
+
+    local snapshot = snapshotBuilder(self._service, player)
     if not snapshot then
         return
     end
