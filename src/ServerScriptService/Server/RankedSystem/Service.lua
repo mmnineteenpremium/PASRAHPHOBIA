@@ -1,6 +1,7 @@
 local Service = {}
 Service.__index = Service
 
+local Players = game:GetService("Players")
 local Services = require(script.Parent.Parent.Core.Services)
 
 local DIVISION_ROMAN = {
@@ -71,6 +72,25 @@ local function toUserId(playerOrUserId)
     return nil
 end
 
+local function resolvePlayer(playerOrUserId)
+    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+        return playerOrUserId
+    end
+
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return nil
+    end
+
+    local ok, player = pcall(function()
+        return Players:GetPlayerByUserId(userId)
+    end)
+    if ok then
+        return player
+    end
+    return nil
+end
+
 local function formatLegacyRankName(rank)
     if type(rank) ~= "table" then
         return nil
@@ -86,6 +106,23 @@ local function formatLegacyRankName(rank)
     end
 
     return string.format("%s %s", tier, DIVISION_ROMAN[division] or tostring(division))
+end
+
+local function stampRankedRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+
+    target:SetAttribute("PasrahRankedOwner", "RankedSystem")
+    target:SetAttribute("PasrahRankedPlayerRank", tostring(payload.playerRank or "Bayi III"))
+    target:SetAttribute("PasrahRankedTier", tostring(payload.tier or "Bayi"))
+    target:SetAttribute("PasrahRankedDivision", math.max(0, math.floor(tonumber(payload.division) or 0)))
+    target:SetAttribute("PasrahRankedStars", math.max(0, math.floor(tonumber(payload.stars) or 0)))
+    target:SetAttribute("PasrahRankedVictories", math.max(0, math.floor(tonumber(payload.victories) or 0)))
+    target:SetAttribute("PasrahRankedDifficulty", math.max(0, math.floor(tonumber(payload.difficulty) or 0)))
+    target:SetAttribute("PasrahRankedLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+    target:SetAttribute("PasrahRankedLastReason", type(payload.lastReason) == "string" and payload.lastReason or nil)
+    target:SetAttribute("PasrahRankedUpdatedAt", os.clock())
 end
 
 function Service.new(state, deps)
@@ -110,6 +147,51 @@ end
 
 function Service:Stop()
     self._state:Clear()
+end
+
+function Service:_buildRuntimeSnapshot(playerOrUserId)
+    local rank = self:_ensureRank(playerOrUserId)
+    if type(rank) ~= "table" then
+        return nil
+    end
+
+    local playerRank = formatLegacyRankName(rank)
+    return {
+        playerRank = playerRank,
+        tier = rank.tier,
+        division = rank.division,
+        stars = rank.stars,
+        victories = rank.victories,
+        difficulty = self:CalculateRankDifficulty(playerOrUserId) or 0,
+    }
+end
+
+function Service:_stampRuntimeState(playerOrUserId, payload)
+    local player = resolvePlayer(playerOrUserId)
+    if not player then
+        return
+    end
+
+    local snapshot = self:_buildRuntimeSnapshot(player)
+    if type(snapshot) ~= "table" then
+        return
+    end
+
+    local lastReason = type(payload) == "table" and payload.lastReason or nil
+    if lastReason == nil then
+        lastReason = player:GetAttribute("PasrahRankedLastReason")
+    end
+
+    stampRankedRuntime(player, {
+        playerRank = snapshot.playerRank,
+        tier = snapshot.tier,
+        division = snapshot.division,
+        stars = snapshot.stars,
+        victories = snapshot.victories,
+        difficulty = snapshot.difficulty,
+        lastEvent = type(payload) == "table" and payload.lastEvent or nil,
+        lastReason = lastReason,
+    })
 end
 
 function Service:_publish(eventName, payload)
@@ -386,6 +468,9 @@ function Service:GetPlayerRank(playerOrUserId)
     if not rank then
         return nil
     end
+    self:_stampRuntimeState(playerOrUserId, {
+        lastEvent = "RankSnapshotBuilt",
+    })
     return self:_serialize(playerOrUserId, rank)
 end
 
@@ -404,6 +489,10 @@ function Service:AddStar(playerOrUserId)
         self:_publish("RankUpdated", payload)
         self:_recordUpdate(payload.userId, payload)
         self:_syncProfile(playerOrUserId, rank)
+        self:_stampRuntimeState(playerOrUserId, {
+            lastEvent = "RankStarAdded",
+            lastReason = "win",
+        })
         return self:GetPlayerRank(playerOrUserId)
     end
 
@@ -432,6 +521,10 @@ function Service:AddStar(playerOrUserId)
     self:_publish("RankUpdated", payload)
     self:_recordUpdate(payload.userId, payload)
     self:_syncProfile(playerOrUserId, rank)
+    self:_stampRuntimeState(playerOrUserId, {
+        lastEvent = "RankStarAdded",
+        lastReason = "win",
+    })
     return self:GetPlayerRank(playerOrUserId)
 end
 
@@ -464,6 +557,10 @@ function Service:RemoveStar(playerOrUserId)
     self:_publish("RankUpdated", payload)
     self:_recordUpdate(payload.userId, payload)
     self:_syncProfile(playerOrUserId, rank)
+    self:_stampRuntimeState(playerOrUserId, {
+        lastEvent = "RankStarRemoved",
+        lastReason = "loss",
+    })
     return self:GetPlayerRank(playerOrUserId)
 end
 

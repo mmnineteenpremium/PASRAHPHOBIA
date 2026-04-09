@@ -4615,3 +4615,34 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `PasrahPlayerProfileLastEvent=PlayerProfileViewed`
 - Note:
   - the first proof run exposed a real gap: `equippedCount` stayed `0` because `PlayerProfileSystem` only looked for `GetPlayerInventory`; the lane is only marked DONE after falling back to `InventorySystem:GetEquipmentSlots` and re-proving the viewer snapshot live.
+
+## 2026-04-09 15:50:50 +07:00 - Ranked Server Identity
+- Status: DONE.
+- `Server.RankedSystem.Service`
+  - now stamps `PasrahRanked*` directly on the player for rank snapshot builds, star gains, and star losses
+  - keeps owner truthful as `RankedSystem`, with rank name/tier/division/stars/victories/difficulty attached to runtime state
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `GetRankSnapshot`
+  - now exposes `AddRankStarSnapshot`
+  - now exposes `RemoveRankStarSnapshot`
+- Build passed:
+  - `_tmp_ranked_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - baseline snapshot:
+    - `ok=true | action=GetRankSnapshot | result=rank=Bayi III tier=Bayi division=3 stars=0 victories=0 difficulty=1`
+  - star gain:
+    - `ok=true | action=AddRankStarSnapshot | result=rank=Bayi III tier=Bayi division=3 stars=1 victories=0`
+    - `ok=true | action=GetRankSnapshot | result=rank=Bayi III tier=Bayi division=3 stars=1 victories=0 difficulty=1`
+  - star rollback:
+    - `ok=true | action=RemoveRankStarSnapshot | result=rank=Bayi III tier=Bayi division=3 stars=0 victories=0`
+    - `ok=true | action=GetRankSnapshot | result=rank=Bayi III tier=Bayi division=3 stars=0 victories=0 difficulty=1`
+  - hot runtime attrs on player after the cycle:
+    - `PasrahRankedOwner=RankedSystem`
+    - `PasrahRankedPlayerRank=Bayi III`
+    - `PasrahRankedTier=Bayi`
+    - `PasrahRankedDivision=3`
+    - `PasrahRankedStars=0`
+    - `PasrahRankedVictories=0`
+    - `PasrahRankedDifficulty=1`
+    - `PasrahRankedLastEvent=RankSnapshotBuilt`
+    - `PasrahRankedLastReason=loss`
