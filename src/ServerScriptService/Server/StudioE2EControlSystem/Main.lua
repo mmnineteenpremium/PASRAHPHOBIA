@@ -363,6 +363,7 @@ function StudioE2EControlSystem.new(deps)
 	self._persistenceService = nil
 	self._shopService = nil
 	self._inventoryService = nil
+	self._royalPassService = nil
 	self._evidenceService = nil
 	self._lobbyHubService = nil
 	self._ghostSystem = nil
@@ -378,6 +379,7 @@ function StudioE2EControlSystem:Init()
 	self._persistenceService = resolveService(self._deps, "DataPersistenceService", "HasProcessedReceipt")
 	self._shopService = resolveService(self._deps, "ShopSystem", "GetCatalog")
 	self._inventoryService = resolveService(self._deps, "InventorySystem", "HasItem")
+	self._royalPassService = resolveService(self._deps, "RoyalPassSystem", "GetPlayerSnapshot")
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._lobbyHubService = resolveService(self._deps, "LobbySocialHub", "OnPlayerEnteredZone")
 	self._ghostSystem = resolveService(self._deps, "GhostSystem", "GetGhostState")
@@ -1416,6 +1418,87 @@ function StudioE2EControlSystem:_handleProcessShopPurchase(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleGetRoyalPassSnapshot(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local royalPassService = self._royalPassService
+	if type(royalPassService) ~= "table" or type(royalPassService.GetPlayerSnapshot) ~= "function" then
+		return false, "missing_royalpass_service"
+	end
+
+	local snapshot = royalPassService:GetPlayerSnapshot(player)
+	if type(snapshot) ~= "table" then
+		return false, "snapshot_unavailable"
+	end
+
+	return true, string.format(
+		"season=%s premium=%s tier=%d totalXP=%d tierXP=%d remainingXP=%d unlocked=%d nextTier=%s",
+		tostring(snapshot.seasonId),
+		tostring(snapshot.premiumOwned == true),
+		math.max(1, math.floor(tonumber(snapshot.currentTier) or 1)),
+		math.max(0, math.floor(tonumber(snapshot.totalXP) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.currentTierXP) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.remainingXP) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.unlockedTierCount) or 0)),
+		tostring(snapshot.nextTier)
+	)
+end
+
+function StudioE2EControlSystem:_handleGrantRoyalPassXP(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local royalPassService = self._royalPassService
+	if type(royalPassService) ~= "table" or type(royalPassService.AddXP) ~= "function" then
+		return false, "missing_royalpass_service"
+	end
+
+	local amount = math.max(0, math.floor(tonumber(type(request) == "table" and request.amount) or 0))
+	if amount <= 0 then
+		return false, "invalid_amount"
+	end
+
+	local ok, reason = royalPassService:AddXP(player, amount, type(request) == "table" and request.source or "studio_e2e")
+	if ok ~= true then
+		return false, tostring(reason or "grant_failed")
+	end
+
+	local snapshot
+	if type(royalPassService._buildPlayerSnapshot) == "function" then
+		local snapshotOk, snapshotResult = pcall(function()
+			return royalPassService:_buildPlayerSnapshot(player)
+		end)
+		if snapshotOk and type(snapshotResult) == "table" then
+			snapshot = snapshotResult
+		end
+	elseif type(royalPassService.GetPlayerSnapshot) == "function" then
+		local snapshotOk, snapshotResult = pcall(function()
+			return royalPassService:GetPlayerSnapshot(player)
+		end)
+		if snapshotOk and type(snapshotResult) == "table" then
+			snapshot = snapshotResult
+		end
+	end
+
+	if type(snapshot) ~= "table" then
+		return false, "snapshot_unavailable"
+	end
+
+	return true, string.format(
+		"amount=%d premium=%s tier=%d totalXP=%d tierXP=%d unlocked=%d nextTier=%s",
+		amount,
+		tostring(snapshot.premiumOwned == true),
+		math.max(1, math.floor(tonumber(snapshot.currentTier) or 1)),
+		math.max(0, math.floor(tonumber(snapshot.totalXP) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.currentTierXP) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.unlockedTierCount) or 0)),
+		tostring(snapshot.nextTier)
+	)
+end
+
 function StudioE2EControlSystem:_handleUseEvidenceTool(player, request)
 	local evidenceService = self._evidenceService
 	if type(evidenceService) ~= "table" or type(evidenceService.ProcessToolUse) ~= "function" then
@@ -2090,6 +2173,10 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleGetShopPlayerSnapshot(player, request)
 		elseif action == "ProcessShopPurchase" then
 			return self:_handleProcessShopPurchase(player, request)
+		elseif action == "GetRoyalPassSnapshot" then
+			return self:_handleGetRoyalPassSnapshot(player)
+		elseif action == "GrantRoyalPassXP" then
+			return self:_handleGrantRoyalPassXP(player, request)
 		elseif action == "UseEvidenceTool" then
 			return self:_handleUseEvidenceTool(player, request)
 		elseif action == "ConsumeHuntProtection" then

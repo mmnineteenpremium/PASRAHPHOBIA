@@ -45,6 +45,28 @@ local function safeCall(target, methodName, ...)
     return result
 end
 
+local function stampRoyalPassRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+
+    target:SetAttribute("PasrahRoyalPassOwner", "RoyalPassSystem")
+    target:SetAttribute("PasrahRoyalPassSeasonId", type(payload.seasonId) == "string" and payload.seasonId or nil)
+    target:SetAttribute("PasrahRoyalPassTotalXP", math.max(0, math.floor(tonumber(payload.totalXP) or 0)))
+    target:SetAttribute("PasrahRoyalPassCurrentTier", math.max(1, math.floor(tonumber(payload.currentTier) or 1)))
+    target:SetAttribute("PasrahRoyalPassCurrentTierXP", math.max(0, math.floor(tonumber(payload.currentTierXP) or 0)))
+    target:SetAttribute("PasrahRoyalPassRemainingXP", math.max(0, math.floor(tonumber(payload.remainingXP) or 0)))
+    target:SetAttribute("PasrahRoyalPassProgressPercent", tonumber(payload.progressPercent) or 0)
+    target:SetAttribute("PasrahRoyalPassPremiumOwned", payload.premiumOwned == true)
+    target:SetAttribute("PasrahRoyalPassUnlockedTierCount", math.max(0, math.floor(tonumber(payload.unlockedTierCount) or 0)))
+    target:SetAttribute("PasrahRoyalPassNextTier", tonumber(payload.nextTier))
+    target:SetAttribute("PasrahRoyalPassLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+    target:SetAttribute("PasrahRoyalPassLastSource", type(payload.lastSource) == "string" and payload.lastSource or nil)
+    target:SetAttribute("PasrahRoyalPassLastGrantedXP", tonumber(payload.lastGrantedXP))
+    target:SetAttribute("PasrahRoyalPassLastUnlockedTier", tonumber(payload.lastUnlockedTier))
+    target:SetAttribute("PasrahRoyalPassUpdatedAt", os.clock())
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -81,6 +103,14 @@ function Service:Stop()
 end
 
 function Service:_publish(eventName, payload)
+    if type(payload) == "table" then
+        self:_stampRuntimeState(payload.player, {
+            lastEvent = eventName,
+            lastSource = payload.source,
+            lastGrantedXP = payload.amount or payload.xp,
+            lastUnlockedTier = payload.tier,
+        })
+    end
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
     end
@@ -114,7 +144,7 @@ function Service:_rewardForTier(tier, premium)
     return reward
 end
 
-function Service:GetPlayerSnapshot(player)
+function Service:_buildPlayerSnapshot(player)
     local userId = self:_ensurePlayerState(player)
     if not userId then
         return nil
@@ -163,6 +193,60 @@ function Service:GetPlayerSnapshot(player)
         nextTier = nextTier,
         nextReward = nextReward,
     }
+end
+
+function Service:_stampRuntimeState(player, payload)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return
+    end
+
+    local snapshot = type(payload) == "table" and payload.snapshot or nil
+    if type(snapshot) ~= "table" then
+        snapshot = self:_buildPlayerSnapshot(player)
+    end
+    if type(snapshot) ~= "table" then
+        return
+    end
+
+    local lastSource = type(payload) == "table" and payload.lastSource or nil
+    if lastSource == nil then
+        lastSource = player:GetAttribute("PasrahRoyalPassLastSource")
+    end
+    local lastGrantedXP = type(payload) == "table" and payload.lastGrantedXP or nil
+    if lastGrantedXP == nil then
+        lastGrantedXP = player:GetAttribute("PasrahRoyalPassLastGrantedXP")
+    end
+    local lastUnlockedTier = type(payload) == "table" and payload.lastUnlockedTier or nil
+    if lastUnlockedTier == nil then
+        lastUnlockedTier = player:GetAttribute("PasrahRoyalPassLastUnlockedTier")
+    end
+
+    stampRoyalPassRuntime(player, {
+        seasonId = snapshot.seasonId,
+        totalXP = snapshot.totalXP,
+        currentTier = snapshot.currentTier,
+        currentTierXP = snapshot.currentTierXP,
+        remainingXP = snapshot.remainingXP,
+        progressPercent = snapshot.progressPercent,
+        premiumOwned = snapshot.premiumOwned,
+        unlockedTierCount = snapshot.unlockedTierCount,
+        nextTier = snapshot.nextTier,
+        lastEvent = type(payload) == "table" and payload.lastEvent or nil,
+        lastSource = lastSource,
+        lastGrantedXP = lastGrantedXP,
+        lastUnlockedTier = lastUnlockedTier,
+    })
+end
+
+function Service:GetPlayerSnapshot(player)
+    local snapshot = self:_buildPlayerSnapshot(player)
+    if type(snapshot) == "table" then
+        self:_stampRuntimeState(player, {
+            snapshot = snapshot,
+            lastEvent = "RoyalPassSnapshotBuilt",
+        })
+    end
+    return snapshot
 end
 
 function Service:_grantTierReward(player, tier)

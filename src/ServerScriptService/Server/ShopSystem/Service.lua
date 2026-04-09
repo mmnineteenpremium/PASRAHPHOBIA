@@ -436,11 +436,18 @@ end
 
 function Service:_ownsRoyalPassPremium(player)
     local royalPass = self:_getRoyalPassService()
-    if type(royalPass) ~= "table" or type(royalPass.GetPlayerSnapshot) ~= "function" then
+    if type(royalPass) ~= "table" then
+        return false
+    end
+    local snapshotBuilder = type(royalPass._buildPlayerSnapshot) == "function"
+        and royalPass._buildPlayerSnapshot
+        or type(royalPass.GetPlayerSnapshot) == "function" and royalPass.GetPlayerSnapshot
+        or nil
+    if type(snapshotBuilder) ~= "function" then
         return false
     end
     local ok, snapshot = pcall(function()
-        return royalPass:GetPlayerSnapshot(player)
+        return snapshotBuilder(royalPass, player)
     end)
     return ok and type(snapshot) == "table" and snapshot.premiumOwned == true
 end

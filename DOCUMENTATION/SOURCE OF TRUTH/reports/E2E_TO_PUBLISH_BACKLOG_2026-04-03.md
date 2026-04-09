@@ -4451,3 +4451,33 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `PasrahShopLastMarketplaceType=GamePass`
 - Note:
   - `royalpass_premium_track` still carries `marketplaceId=0` in the catalog, so the proof here is about server runtime truth and owner stamping, not about publish-ready Robux commerce configuration.
+
+## 2026-04-09 13:03:16 +07:00 - Royal Pass Server Identity
+- Status: DONE.
+- `Server.RoyalPassSystem.Service`
+  - now stamps `PasrahRoyalPass*` directly on the player for premium ownership changes, XP grants, tier unlocks, and snapshot builds
+  - keeps owner truthful as `RoyalPassSystem`, with current tier/xp/premium state attached to the runtime state
+- `Server.RoyalPassSystem.Controller`
+  - now uses the internal snapshot builder when pushing remote snapshot payloads, so controller-driven sync no longer clobbers hot runtime attrs with `RoyalPassSnapshotBuilt`
+- `Server.ShopSystem.Service`
+  - now uses the internal Royal Pass snapshot builder when checking premium ownership during shop snapshots, so shop entitlement checks no longer overwrite `RoyalPassPremiumOwnershipChanged`
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `GetRoyalPassSnapshot`
+  - now exposes `GrantRoyalPassXP`
+- Build passed:
+  - `_tmp_royalpass_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - premium grant:
+    - `PasrahRoyalPassPremiumOwned=true`
+    - `PasrahRoyalPassLastEvent=RoyalPassPremiumOwnershipChanged`
+  - XP grant:
+    - `PasrahRoyalPassCurrentTier=3`
+    - `PasrahRoyalPassCurrentTierXP=50`
+    - `PasrahRoyalPassRemainingXP=150`
+    - `PasrahRoyalPassTotalXP=450`
+    - `PasrahRoyalPassUnlockedTierCount=2`
+    - `PasrahRoyalPassNextTier=4`
+    - `PasrahRoyalPassLastEvent=RoyalPassTierUnlocked`
+    - `PasrahRoyalPassLastUnlockedTier=3`
+- Note:
+  - this lane proves runtime truth and entitlement/progression state only. It does not change the current Roblox commerce readiness fact that `royalpass_premium_track` still has `marketplaceId=0` in the catalog.

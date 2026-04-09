@@ -13058,6 +13058,61 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 13:03:16 +07:00 - Stamp Royal Pass Server Identity
+- Status: DONE.
+- `Server.RoyalPassSystem.Service` now stamps direct runtime attrs on the player under the active owner:
+  - `PasrahRoyalPassOwner`
+  - `PasrahRoyalPassSeasonId`
+  - `PasrahRoyalPassTotalXP`
+  - `PasrahRoyalPassCurrentTier`
+  - `PasrahRoyalPassCurrentTierXP`
+  - `PasrahRoyalPassRemainingXP`
+  - `PasrahRoyalPassProgressPercent`
+  - `PasrahRoyalPassPremiumOwned`
+  - `PasrahRoyalPassUnlockedTierCount`
+  - `PasrahRoyalPassNextTier`
+  - `PasrahRoyalPassLastEvent`
+  - `PasrahRoyalPassLastSource`
+  - `PasrahRoyalPassLastGrantedXP`
+  - `PasrahRoyalPassLastUnlockedTier`
+  - `PasrahRoyalPassUpdatedAt`
+- `Server.RoyalPassSystem.Controller` now reads the internal snapshot builder when pushing remote snapshots, so `RoyalPassSnapshot` delivery no longer overwrites the hot runtime event truth on the player.
+- `Server.ShopSystem.Service` now reads the internal Royal Pass snapshot builder when checking premium ownership, so marketplace entitlement grants no longer overwrite `RoyalPassPremiumOwnershipChanged` with `RoyalPassSnapshotBuilt`.
+- `Server.StudioE2EControlSystem.Main` now exposes:
+  - `GetRoyalPassSnapshot`
+  - `GrantRoyalPassXP`
+- Build passed: `_tmp_royalpass_identity_build.rbxlx`.
+- Live Studio proof in Play Solo:
+  - baseline snapshot:
+    - `GetRoyalPassSnapshot` ->
+      - `ok=true | action=GetRoyalPassSnapshot | result=season=S1 premium=false tier=1 totalXP=0 tierXP=0 remainingXP=200 unlocked=0 nextTier=2`
+  - premium entitlement grant:
+    - `GrantMarketplacePurchase(item=royalpass_premium_track)` ->
+      - `ok=true | action=GrantMarketplacePurchase | result=item=royalpass_premium_track category=Entitlement currency=Robux owned=true ownedCount=1 MM=1200 PP=12 Robux=0`
+    - hot runtime attrs on player:
+      - `PasrahRoyalPassOwner=RoyalPassSystem`
+      - `PasrahRoyalPassPremiumOwned=true`
+      - `PasrahRoyalPassCurrentTier=1`
+      - `PasrahRoyalPassTotalXP=0`
+      - `PasrahRoyalPassUnlockedTierCount=0`
+      - `PasrahRoyalPassLastEvent=RoyalPassPremiumOwnershipChanged`
+  - XP grant:
+    - `GrantRoyalPassXP(amount=450, source=studio_e2e_royalpass)` ->
+      - `ok=true | action=GrantRoyalPassXP | result=amount=450 premium=true tier=3 totalXP=450 tierXP=50 unlocked=2 nextTier=4`
+    - hot runtime attrs on player:
+      - `PasrahRoyalPassOwner=RoyalPassSystem`
+      - `PasrahRoyalPassSeasonId=S1`
+      - `PasrahRoyalPassPremiumOwned=true`
+      - `PasrahRoyalPassCurrentTier=3`
+      - `PasrahRoyalPassCurrentTierXP=50`
+      - `PasrahRoyalPassRemainingXP=150`
+      - `PasrahRoyalPassTotalXP=450`
+      - `PasrahRoyalPassUnlockedTierCount=2`
+      - `PasrahRoyalPassNextTier=4`
+      - `PasrahRoyalPassLastEvent=RoyalPassTierUnlocked`
+      - `PasrahRoyalPassLastUnlockedTier=3`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 12:56:48 +07:00 - Stamp Shop + Inventory Server Identity
 - Status: DONE.
 - `Server.ShopSystem.Service` now stamps direct runtime attrs on the player under the active owner:
