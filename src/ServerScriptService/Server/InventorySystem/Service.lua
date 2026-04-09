@@ -86,10 +86,82 @@ local function cloneDict(source)
     return result
 end
 
+local function countEntries(source)
+    if type(source) ~= "table" then
+        return 0
+    end
+    local total = 0
+    for _ in pairs(source) do
+        total += 1
+    end
+    return total
+end
+
+local function stampInventoryRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+
+    target:SetAttribute("PasrahInventoryOwner", "InventorySystem")
+    target:SetAttribute("PasrahInventoryItemCount", math.max(0, math.floor(tonumber(payload.itemCount) or 0)))
+    target:SetAttribute("PasrahInventoryCosmeticCount", math.max(0, math.floor(tonumber(payload.cosmeticCount) or 0)))
+    target:SetAttribute("PasrahInventoryUnlockedCount", math.max(0, math.floor(tonumber(payload.unlockedCount) or 0)))
+    target:SetAttribute("PasrahInventoryEquippedCount", math.max(0, math.floor(tonumber(payload.equippedCount) or 0)))
+    target:SetAttribute("PasrahInventoryLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+    target:SetAttribute("PasrahInventoryLastItemId", type(payload.lastItemId) == "string" and payload.lastItemId or nil)
+    target:SetAttribute("PasrahInventoryLastSlotName", type(payload.lastSlotName) == "string" and payload.lastSlotName or nil)
+    target:SetAttribute("PasrahInventoryLastReason", type(payload.lastReason) == "string" and payload.lastReason or nil)
+    target:SetAttribute("PasrahInventoryUpdatedAt", os.clock())
+end
+
 function Service:_publish(eventName, payload)
+    if type(payload) == "table" then
+        self:_stampRuntimeState(payload.player, {
+            lastEvent = eventName,
+            lastItemId = payload.itemId,
+            lastSlotName = payload.slotName,
+            lastReason = payload.reason,
+        })
+    end
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
     end
+end
+
+function Service:_buildRuntimeSnapshot(player)
+    local userId = toUserId(player)
+    if not userId then
+        return nil
+    end
+
+    local inventory = self:_getTable("playerItems")
+    local ownership = self:_getTable("cosmeticOwnership")
+    local unlocked = self:_getTable("unlockedItems")
+    local slots = self:_getTable("equipmentSlots")
+    return {
+        itemCount = countEntries(inventory[userId] or {}),
+        cosmeticCount = countEntries(ownership[userId] or {}),
+        unlockedCount = countEntries(unlocked[userId] or {}),
+        equippedCount = countEntries(slots[userId] or {}),
+    }
+end
+
+function Service:_stampRuntimeState(player, payload)
+    local snapshot = self:_buildRuntimeSnapshot(player)
+    if type(snapshot) ~= "table" then
+        return
+    end
+
+    stampInventoryRuntime(player, {
+        itemCount = snapshot.itemCount,
+        cosmeticCount = snapshot.cosmeticCount,
+        unlockedCount = snapshot.unlockedCount,
+        equippedCount = snapshot.equippedCount,
+        lastEvent = type(payload) == "table" and payload.lastEvent or nil,
+        lastItemId = type(payload) == "table" and payload.lastItemId or nil,
+        lastSlotName = type(payload) == "table" and payload.lastSlotName or nil,
+        lastReason = type(payload) == "table" and payload.lastReason or nil,
+    })
 end
 
 function Service:UnlockItem(player, itemId)
@@ -307,6 +379,10 @@ function Service:LoadPlayerData(player)
         unlocked[userId] = data.unlocked
         self._state:Set("unlockedItems", unlocked)
     end
+    self:_stampRuntimeState(player, {
+        lastEvent = "InventoryLoaded",
+        lastReason = "persistence",
+    })
 end
 
 function Service:SavePlayerData(player)
@@ -319,6 +395,10 @@ function Service:SavePlayerData(player)
     end
     local snapshot = self:GetSnapshotForPersistence(player)
     self._persistence:SaveInventory(userId, snapshot)
+    self:_stampRuntimeState(player, {
+        lastEvent = "InventorySaved",
+        lastReason = "persistence",
+    })
 end
 
 function Service:StoreItem(player, itemId)

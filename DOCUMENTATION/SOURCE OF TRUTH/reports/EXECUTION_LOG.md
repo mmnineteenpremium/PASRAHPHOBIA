@@ -13058,6 +13058,77 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 12:56:48 +07:00 - Stamp Shop + Inventory Server Identity
+- Status: DONE.
+- `Server.ShopSystem.Service` now stamps direct runtime attrs on the player under the active owner:
+  - `PasrahShopOwner`
+  - `PasrahShopWalletMM`
+  - `PasrahShopWalletPP`
+  - `PasrahShopWalletRobux`
+  - `PasrahShopOwnedCount`
+  - `PasrahShopLastEvent`
+  - `PasrahShopLastItemId`
+  - `PasrahShopLastCategory`
+  - `PasrahShopLastCurrency`
+  - `PasrahShopLastResult`
+  - `PasrahShopLastReason`
+  - `PasrahShopLastSource`
+  - `PasrahShopLastMarketplaceType`
+  - `PasrahShopLastMarketplaceId`
+  - `PasrahShopUpdatedAt`
+- `Server.InventorySystem.Service` now stamps direct runtime attrs on the player under the active owner:
+  - `PasrahInventoryOwner`
+  - `PasrahInventoryItemCount`
+  - `PasrahInventoryCosmeticCount`
+  - `PasrahInventoryUnlockedCount`
+  - `PasrahInventoryEquippedCount`
+  - `PasrahInventoryLastEvent`
+  - `PasrahInventoryLastItemId`
+  - `PasrahInventoryLastSlotName`
+  - `PasrahInventoryLastReason`
+  - `PasrahInventoryUpdatedAt`
+- `Server.StudioE2EControlSystem.Main` now exposes:
+  - `ProcessShopPurchase`
+- Fixed the Studio purchase probes so they read the internal shop snapshot helper instead of calling `BuildClientSnapshot()` and overwriting the hot `ItemPurchased` truth with a later `ShopSnapshotBuilt` stamp.
+- Build passed: `_tmp_shop_inventory_identity_build.rbxlx`.
+- Live Studio proof in Play Solo:
+  - soft-currency baseline scan:
+    - `GetShopPlayerSnapshot(item=eq_flashlight_uv)` ->
+      - `ok=true | action=GetShopPlayerSnapshot | result=MM=1200 PP=12 Robux=0 inventory=0 cosmetics=0 ownedCount=1 item=eq_flashlight_uv hasItem=false ownsCosmetic=false ownedSnapshot=false`
+  - soft-currency grant + purchase:
+    - `GrantCurrency(MM=5000)` ->
+      - `ok=true | action=GrantCurrency | result=currency=MM granted=5000 MM=6200 PP=12 Robux=0`
+    - `ProcessShopPurchase(item=eq_flashlight_uv)` ->
+      - `ok=true | action=ProcessShopPurchase | result=item=eq_flashlight_uv MM=4700 PP=12 Robux=0 ownedCount=2`
+    - hot runtime attrs on player:
+      - `PasrahShopOwner=ShopSystem`
+      - `PasrahShopLastEvent=ItemPurchased`
+      - `PasrahShopLastItemId=eq_flashlight_uv`
+      - `PasrahShopLastCategory=Equipment`
+      - `PasrahShopLastCurrency=MM`
+      - `PasrahShopLastResult=purchased`
+      - `PasrahShopOwnedCount=2`
+      - `PasrahInventoryOwner=InventorySystem`
+      - `PasrahInventoryLastEvent=InventoryGrantCompleted`
+      - `PasrahInventoryLastItemId=eq_flashlight_uv`
+      - `PasrahInventoryItemCount=1`
+      - `PasrahInventoryCosmeticCount=0`
+  - marketplace entitlement grant:
+    - `GetShopPlayerSnapshot(item=royalpass_premium_track)` ->
+      - `ok=true | action=GetShopPlayerSnapshot | result=MM=1200 PP=12 Robux=0 inventory=0 cosmetics=0 ownedCount=0 item=royalpass_premium_track hasItem=false ownsCosmetic=false ownedSnapshot=false`
+    - `GrantMarketplacePurchase(item=royalpass_premium_track)` ->
+      - `ok=true | action=GrantMarketplacePurchase | result=item=royalpass_premium_track category=Entitlement currency=Robux owned=true ownedCount=1 MM=1200 PP=12 Robux=0`
+    - hot runtime attrs on player:
+      - `PasrahShopLastEvent=ItemPurchased`
+      - `PasrahShopLastItemId=royalpass_premium_track`
+      - `PasrahShopLastCategory=Entitlement`
+      - `PasrahShopLastCurrency=Robux`
+      - `PasrahShopLastResult=purchased`
+      - `PasrahShopLastSource=StudioE2EMarketplacePurchase`
+      - `PasrahShopLastMarketplaceType=GamePass`
+      - `PasrahShopLastMarketplaceId=0`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 05:08:12 +07:00 - Disable Duplicate Ghost Deduction Journal Owner
 - Updated `src/ServerScriptService/Server/Core/SystemRegistry.lua` so `GhostDeductionJournal` is now disabled alongside `EvidenceJournalSystem`, leaving `JournalSystem` as the single active owner for journal/UI ghost candidate state.
 - Build passed: `_tmp_journal_owner_registry_build.rbxlx`.

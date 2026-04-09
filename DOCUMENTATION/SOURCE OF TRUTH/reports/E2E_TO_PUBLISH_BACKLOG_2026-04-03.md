@@ -4418,3 +4418,36 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `PasrahSpectatorVisionLastSignalType` cleared
 - Note:
   - the first probe run exposed a real bug: `SimulateSpectatorVision` tried to call `_ensureMatch` on the wrapper `Service` table and returned `handler_error`; the lane is only marked DONE after fixing that runtime path and re-proving hot and cooled attrs live.
+
+## 2026-04-09 12:56:48 +07:00 - Shop + Inventory Server Identity
+- Status: DONE.
+- `Server.ShopSystem.Service`
+  - now stamps `PasrahShop*` directly on the player for snapshot builds, soft-currency purchases, marketplace grants, refunds, and failed purchase paths
+  - keeps owner truthful as `ShopSystem`, with last item/category/currency/source/result attached to the runtime state
+- `Server.InventorySystem.Service`
+  - now stamps `PasrahInventory*` directly on the player for inventory loads, saves, grants, unlocks, cosmetic ownership updates, and equipment slot updates
+  - keeps owner truthful as `InventorySystem`, with counts and last item/event attached to the runtime state
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `ProcessShopPurchase`
+  - fixes both purchase probes to use the internal snapshot builder so `ItemPurchased` stays visible as the hot runtime truth instead of being overwritten by `ShopSnapshotBuilt`
+- Build passed:
+  - `_tmp_shop_inventory_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - soft-currency purchase:
+    - `PasrahShopLastEvent=ItemPurchased`
+    - `PasrahShopLastItemId=eq_flashlight_uv`
+    - `PasrahShopLastCategory=Equipment`
+    - `PasrahShopLastCurrency=MM`
+    - `PasrahShopLastResult=purchased`
+    - `PasrahInventoryLastEvent=InventoryGrantCompleted`
+    - `PasrahInventoryLastItemId=eq_flashlight_uv`
+    - `PasrahInventoryItemCount=1`
+  - marketplace grant:
+    - `PasrahShopLastEvent=ItemPurchased`
+    - `PasrahShopLastItemId=royalpass_premium_track`
+    - `PasrahShopLastCategory=Entitlement`
+    - `PasrahShopLastCurrency=Robux`
+    - `PasrahShopLastSource=StudioE2EMarketplacePurchase`
+    - `PasrahShopLastMarketplaceType=GamePass`
+- Note:
+  - `royalpass_premium_track` still carries `marketplaceId=0` in the catalog, so the proof here is about server runtime truth and owner stamping, not about publish-ready Robux commerce configuration.
