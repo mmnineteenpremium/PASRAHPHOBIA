@@ -13058,6 +13058,40 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 15:43:14 +07:00 - Player Profile Server Identity
+- Status: DONE.
+- `Server.PlayerProfileSystem.Service`
+  - now stamps `PasrahPlayerProfile*` on the viewer player when public profile snapshots are refreshed/viewed
+  - keeps owner truthful as `PlayerProfileSystem`, with viewed target, profile summary, gallery count, equipped cosmetic count, and viewer-side view count attached to runtime state
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `GetPublicProfileSnapshot`
+- Build passed:
+  - `_tmp_playerprofile_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - seed state:
+    - `ok=true | action=UpdateProfileSnapshot | result=level=1 rank=Bayi III favoriteTool=JejakEnergi gallery=3 bio=viewer profile probe`
+    - `ok=true | action=GrantCurrency | result=currency=MM granted=1000 MM=2200 PP=12 Robux=0`
+    - `ok=true | action=ProcessShopPurchase | result=item=cos_accessory_wardingcharm MM=1500 PP=12 Robux=0 ownedCount=1`
+    - `ok=true | action=EquipCosmeticSnapshot | result=cosmetic=cos_accessory_wardingcharm slot=accessory owned=1 equipped=1`
+  - public profile views:
+    - `ok=true | action=GetPublicProfileSnapshot | result=target=10576163165 level=1 rank=Bayi III totalMatches=0 totalWins=0 winRate=0 gallery=3 equipped=1 viewCount=1`
+    - `ok=true | action=GetPublicProfileSnapshot | result=target=10576163165 level=1 rank=Bayi III totalMatches=0 totalWins=0 winRate=0 gallery=3 equipped=1 viewCount=2`
+  - hot runtime attrs on viewer player:
+    - `PasrahPlayerProfileOwner=PlayerProfileSystem`
+    - `PasrahPlayerProfileTargetUserId=10576163165`
+    - `PasrahPlayerProfileLevel=1`
+    - `PasrahPlayerProfileRank=Bayi III`
+    - `PasrahPlayerProfileTotalMatches=0`
+    - `PasrahPlayerProfileTotalWins=0`
+    - `PasrahPlayerProfileWinRate=0`
+    - `PasrahPlayerProfileGalleryCount=3`
+    - `PasrahPlayerProfileEquippedCosmeticCount=1`
+    - `PasrahPlayerProfileViewCount=2`
+    - `PasrahPlayerProfileLastEvent=PlayerProfileViewed`
+- Note:
+  - the first proof run exposed a real gap: `equippedCount` stayed `0` because `PlayerProfileSystem` only looked for `GetPlayerInventory`; the lane is only marked DONE after falling back to `InventorySystem:GetEquipmentSlots` and re-proving the viewer snapshot live.
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 15:11:27 +07:00 - Profile Server Identity
 - Status: DONE.
 - `Server.ProfileSystem.Service`
