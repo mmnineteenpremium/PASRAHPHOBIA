@@ -14155,3 +14155,59 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Note:
   - the probe intentionally waits for `MatchStarted` baseline to settle before simulating camera state, otherwise the baseline `MatchStarted` stamp can race and overwrite the hot snapshot.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 12:41:27 +07:00 - Stamp Spectator Vision Server Identity + Studio Probe
+- Status: DONE.
+- `Server.SpectatorSystem.SpectatorService` now stamps direct runtime attrs on the player under the active owner:
+  - `PasrahSpectatorVisionOwner`
+  - `PasrahSpectatorVisionMatchId`
+  - `PasrahSpectatorVisionActive`
+  - `PasrahSpectatorVisionTargetUserId`
+  - `PasrahSpectatorVisionLastOutcome`
+  - `PasrahSpectatorVisionLastSignalType`
+  - `PasrahSpectatorVisionLastRoomId`
+  - `PasrahSpectatorVisionReliability`
+  - `PasrahSpectatorVisionVoiceAllowed`
+  - `PasrahSpectatorVisionDistortionHint`
+  - `PasrahSpectatorVisionLikelyMisleading`
+  - `PasrahSpectatorVisionLastEvent`
+  - `PasrahSpectatorVisionLastActivityType`
+  - `PasrahSpectatorVisionReason`
+  - `PasrahSpectatorVisionCreatedAt`
+  - `PasrahSpectatorVisionVisibleUntil`
+  - `PasrahSpectatorVisionLastUpdatedAt`
+- `Server.StudioE2EControlSystem.Main` now exposes:
+  - `SimulateSpectatorVision`
+  - `EndSpectatorVision`
+- Fixed the Studio probe to seed the match through the real `SpectatorSystem` core service instead of calling the private `_ensureMatch` method on the wrapper `Service` table.
+- Build passed: `_tmp_spectator_vision_identity_build.rbxlx`.
+- Live Studio proof in Play Solo:
+  - `StartSoloMatch` -> `ok=true | action=StartSoloMatch | result=match=match_1 map=HauntedHouse mode=Classic difficulty=Mudah players=1`
+  - `SimulateSpectatorVision` ->
+    - `ok=true | action=SimulateSpectatorVision | result=match=match_1 events=1 outcome=fake signal=FakeGhost room=Room_LivingRoom target=950001 voice=true hint=fake`
+  - hot runtime attrs on player:
+    - `PasrahSpectatorVisionOwner=SpectatorSystem`
+    - `PasrahSpectatorVisionActive=true`
+    - `PasrahSpectatorVisionTargetUserId=950001`
+    - `PasrahSpectatorVisionLastOutcome=fake`
+    - `PasrahSpectatorVisionLastSignalType=FakeGhost`
+    - `PasrahSpectatorVisionLastRoomId=Room_LivingRoom`
+    - `PasrahSpectatorVisionReliability=low`
+    - `PasrahSpectatorVisionVoiceAllowed=true`
+    - `PasrahSpectatorVisionDistortionHint=fake`
+    - `PasrahSpectatorVisionLikelyMisleading=true`
+    - `PasrahSpectatorVisionLastEvent=SpectatorVisionUpdated`
+    - `PasrahSpectatorVisionReason=fake`
+  - `EndSpectatorVision` ->
+    - `ok=true | action=EndSpectatorVision | result=match=match_1 spectator_vision_ended`
+  - cooled runtime attrs on player:
+    - `PasrahSpectatorVisionOwner=SpectatorSystem`
+    - `PasrahSpectatorVisionActive=false`
+    - `PasrahSpectatorVisionLastEvent=SpectatorExited`
+    - `PasrahSpectatorVisionReason=spectator_exited`
+    - `PasrahSpectatorVisionTargetUserId` cleared
+    - `PasrahSpectatorVisionLastOutcome` cleared
+    - `PasrahSpectatorVisionLastSignalType` cleared
+    - `PasrahSpectatorVisionVoiceAllowed=false`
+    - `PasrahSpectatorVisionDistortionHint` cleared
+- Roblox Studio was returned to STOP TEST before logging.

@@ -124,6 +124,23 @@ local function summarizeSpectatorCameraState(state)
 	)
 end
 
+local function summarizeSpectatorVisionState(vision, communication)
+	if type(vision) ~= "table" then
+		return "vision=missing"
+	end
+	local signalType = type(vision.ghostSignal) == "table" and tostring(vision.ghostSignal.type) or "nil"
+	local roomId = type(vision.ghostSignal) == "table" and tostring(vision.ghostSignal.roomId) or "nil"
+	return string.format(
+		"outcome=%s signal=%s room=%s target=%s voice=%s hint=%s",
+		tostring(vision.outcome),
+		signalType,
+		roomId,
+		tostring(vision.followTargetUserId),
+		tostring(type(communication) == "table" and communication.canTransmitVoice == true),
+		tostring(type(communication) == "table" and communication.distortionHint or nil)
+	)
+end
+
 local function ensureRemote()
 	local remoteFolder = ReplicatedStorage:FindFirstChild(REMOTE_FOLDER_NAME)
 	if not remoteFolder then
@@ -1707,6 +1724,96 @@ function StudioE2EControlSystem:_handleEndSpectatorCamera(player, request)
 	return true, string.format("match=%s spectator_camera_ended", matchId)
 end
 
+function StudioE2EControlSystem:_handleSimulateSpectatorVision(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if type(matchId) ~= "string" or matchId == "" then
+		return false, "missing_match_id"
+	end
+
+	local spectatorSystem = resolveSystem(self._deps, "SpectatorSystem")
+	local service = type(spectatorSystem) == "table" and spectatorSystem.Service or nil
+	if type(service) ~= "table" then
+		return false, "missing_spectator_system"
+	end
+	local coreService = type(service._spectatorService) == "table" and service._spectatorService or service
+
+	local roomId = type(request) == "table" and tostring(request.roomId or "") or ""
+	if roomId == "" then
+		roomId = "Room_LivingRoom"
+	end
+	local roomIds = type(request) == "table" and request.roomIds or nil
+	if type(roomIds) ~= "table" or #roomIds == 0 then
+		roomIds = { roomId, "Room_Hallway", "Room_Bedroom" }
+	end
+
+	service:StartMatch(matchId, {
+		matchId = matchId,
+		players = { player },
+		roomIds = roomIds,
+	})
+
+	local targetUserId = tonumber(type(request) == "table" and request.targetUserId) or 950001
+	local match = coreService:_ensureMatch(matchId)
+	match.aliveByUserId[targetUserId] = true
+	match.playerRooms[targetUserId] = roomId
+	match.roomIds = roomIds
+
+	service:EnterSpectator(player, matchId, {
+		reason = type(request) == "table" and request.reason or "studio_vision_probe",
+		playerRooms = {
+			[targetUserId] = roomId,
+		},
+	})
+
+	local activityType = type(request) == "table" and request.activityType or "ghost_roamed"
+	local ghostRoomId = type(request) == "table" and tostring(request.ghostRoomId or roomId) or roomId
+	local eventsPublished = service:ProcessGhostActivity(matchId, {
+		activityType = activityType,
+		room = ghostRoomId,
+		playerRooms = {
+			[targetUserId] = roomId,
+		},
+		now = os.clock(),
+	})
+
+	local vision = service:GetSpectatorVision(player, matchId)
+	local communication = service:GetCommunicationContext(player, matchId)
+	return true, string.format(
+		"match=%s events=%s %s",
+		matchId,
+		tostring(eventsPublished),
+		summarizeSpectatorVisionState(vision, communication)
+	)
+end
+
+function StudioE2EControlSystem:_handleEndSpectatorVision(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if type(matchId) ~= "string" or matchId == "" then
+		return false, "missing_match_id"
+	end
+
+	local spectatorSystem = resolveSystem(self._deps, "SpectatorSystem")
+	local service = type(spectatorSystem) == "table" and spectatorSystem.Service or nil
+	if type(service) ~= "table" then
+		return false, "missing_spectator_system"
+	end
+
+	local ok = service:ExitSpectator(player, matchId)
+	if ok ~= true then
+		return false, "spectator_exit_failed"
+	end
+
+	return true, string.format("match=%s spectator_vision_ended", matchId)
+end
+
 function StudioE2EControlSystem:_handleHidingDebugSnapshot(player, request)
 	local hidingSystem = resolveSystem(self._deps, "HidingSystem")
 	if type(hidingSystem) ~= "table" then
@@ -1933,6 +2040,10 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleSimulateSpectatorCamera(player, request)
 		elseif action == "EndSpectatorCamera" then
 			return self:_handleEndSpectatorCamera(player, request)
+		elseif action == "SimulateSpectatorVision" then
+			return self:_handleSimulateSpectatorVision(player, request)
+		elseif action == "EndSpectatorVision" then
+			return self:_handleEndSpectatorVision(player, request)
 		elseif action == "HidingDebugSnapshot" then
 			return self:_handleHidingDebugSnapshot(player, request)
 		elseif action == "EnterHide" then
