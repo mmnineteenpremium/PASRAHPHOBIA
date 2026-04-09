@@ -4213,3 +4213,23 @@ Urutan yang paling masuk akal dari titik sekarang:
   - `FooterLabel` -> `PasrahPasraUIChannel=PasraFooterLabel`, `PasrahPasraRoyalPassXP=99`, `PasrahPasraDailyProgress=2`
 - Build passed: `_tmp_pasra_ui_identity_build.rbxlx`.
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 07:03:19 +07:00 - Stamp Royal Pass UI Runtime Identity
+- Status: DONE.
+- `Client.UI.Main` now stamps direct runtime attrs on `RoyalPassUI` itself, including the main panel, hero card, progress widgets, premium CTA, track scroller, and active current-day card bundle.
+- Live Studio proof:
+  - baseline before opening the panel:
+    - `PlayerGui.RoyalPassUI.MainPanel.Visible=false`
+    - `PasrahRoyalPassUIOwner=UISystem`
+    - `PasrahRoyalPassUIChannel=RoyalPassPanel`
+    - `PasrahRoyalPassCurrentTier=1`
+    - `PasrahRoyalPassTotalXP=0`
+    - `PasrahRoyalPassPremiumOwned=false`
+    - `PasrahRoyalPassCurrentDay=1`
+  - after canonical `R` open:
+    - `RoyalPassUI.MainPanel.Visible=true`
+    - `RoyalPassDeck.HeroCard` -> `PasrahRoyalPassUIChannel=RoyalPassHeroCard`
+    - `RoyalPassDeck.TrackScroller` -> `PasrahRoyalPassUIChannel=RoyalPassTrackScroller`
+    - `RoyalPassDeck.TrackScroller.DayCard1` -> `PasrahRoyalPassUIChannel=RoyalPassCurrentDayCard`, `PasrahRoyalPassCurrentDay=1`, `PasrahRoyalPassLastEvent=RoyalPassSnapshot`
+- Build passed: `_tmp_royalpass_ui_identity_build.rbxlx`.
+- Studio stop-test reporting rule followed.
