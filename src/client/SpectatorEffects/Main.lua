@@ -80,6 +80,9 @@ function SpectatorEffects:Init(context)
 	self._isSpectating = false
 	self._nextPulseAt = 0
 	self._lastOutcome = "none"
+	self._lastReason = "Idle"
+	self._staticOverlay = nil
+	self._desaturationOverlay = nil
 
 	self._blur = Lighting:FindFirstChild("SpectatorBlurEffect")
 	if not self._blur then
@@ -100,6 +103,8 @@ function SpectatorEffects:Init(context)
 		self._color.Enabled = false
 		self._color.Parent = Lighting
 	end
+
+	self:_stampRuntimeState()
 end
 
 function SpectatorEffects:Start()
@@ -107,6 +112,13 @@ function SpectatorEffects:Start()
 	if matchEvent and matchEvent.OnClientEvent then
 		table.insert(self._connections, matchEvent.OnClientEvent:Connect(function(payload)
 			self:_onMatchEvent(payload)
+		end))
+	end
+
+	local lobbyEvent = self._remotes.LobbyEvent
+	if lobbyEvent and lobbyEvent.OnClientEvent then
+		table.insert(self._connections, lobbyEvent.OnClientEvent:Connect(function(payload)
+			self:_onLobbyEvent(payload)
 		end))
 	end
 
@@ -122,13 +134,25 @@ function SpectatorEffects:_onMatchEvent(payload)
 		return
 	end
 
-	if (eventName == "PlayerRespawned" and payload and payload.localPlayerRespawned == true) or eventName == "MatchEnded" then
+	if (eventName == "PlayerRespawned" and payload and payload.localPlayerRespawned == true)
+		or eventName == "MatchEnded"
+		or eventName == "MatchCompleted"
+		or eventName == "ReturnedToLobby" then
+		self._lastReason = tostring(eventName or "ExitSpectatorMode")
 		self:ExitSpectatorMode()
 		return
 	end
 
 	if self._isSpectating and DISTORTION_EVENT_NAMES[eventName] then
 		self:_triggerDistortion(eventName)
+	end
+end
+
+function SpectatorEffects:_onLobbyEvent(payload)
+	local eventName = payload and payload.eventName
+	if eventName == "LobbyEntered" or eventName == "RoomBrowserRoomLeft" then
+		self._lastReason = tostring(eventName)
+		self:ExitSpectatorMode()
 	end
 end
 
@@ -148,6 +172,7 @@ end
 
 function SpectatorEffects:EnterSpectatorMode()
 	self._isSpectating = true
+	self._lastReason = "EnterSpectatorMode"
 	self._nextPulseAt = os.clock() + self._rng:NextNumber(2, 5)
 	self:_setOverlayState(false, false)
 	self:_setPostEffects(2, -0.15, 0.05)
@@ -156,10 +181,12 @@ end
 function SpectatorEffects:ExitSpectatorMode()
 	self._isSpectating = false
 	self._lastOutcome = "none"
+	self._lastReason = "ExitSpectatorMode"
 	self:_setOverlayState(false, false)
 	self:_setPostEffects(0, 0, 0)
 	self._blur.Enabled = false
 	self._color.Enabled = false
+	self:_stampRuntimeState()
 end
 
 function SpectatorEffects:_setPostEffects(blurSize, saturation, contrast)
@@ -169,6 +196,7 @@ function SpectatorEffects:_setPostEffects(blurSize, saturation, contrast)
 	self._color.Enabled = saturation ~= 0 or contrast ~= 0
 	self._color.Saturation = saturation
 	self._color.Contrast = contrast
+	self:_stampRuntimeState()
 end
 
 function SpectatorEffects:_setOverlayState(staticVisible, desaturatedVisible)
@@ -178,12 +206,15 @@ function SpectatorEffects:_setOverlayState(staticVisible, desaturatedVisible)
 	end
 
 	local staticOverlay, desaturationOverlay = findOverlayFrames(player)
+	self._staticOverlay = staticOverlay
+	self._desaturationOverlay = desaturationOverlay
 	if staticOverlay then
 		staticOverlay.Visible = staticVisible
 	end
 	if desaturationOverlay then
 		desaturationOverlay.Visible = desaturatedVisible
 	end
+	self:_stampRuntimeState()
 end
 
 function SpectatorEffects:_rollOutcome()
@@ -200,6 +231,7 @@ end
 function SpectatorEffects:_triggerDistortion(_reason)
 	local outcome = self:_rollOutcome()
 	self._lastOutcome = outcome
+	self._lastReason = tostring(_reason or "Unknown")
 
 	if outcome == "fake" then
 		self:_setOverlayState(true, false)
@@ -226,6 +258,47 @@ function SpectatorEffects:_triggerDistortion(_reason)
 		tween:Play()
 		self:_setPostEffects(2, -0.15, 0.05)
 	end)
+end
+
+function SpectatorEffects:_stampEffectInstance(instance, channel)
+	if typeof(instance) ~= "Instance" then
+		return
+	end
+
+	instance:SetAttribute("PasrahSpectatorFXOwner", "SpectatorEffects")
+	instance:SetAttribute("PasrahSpectatorFXChannel", tostring(channel or instance.Name))
+	instance:SetAttribute("PasrahSpectatorFXActive", self._isSpectating == true)
+	instance:SetAttribute("PasrahSpectatorFXLastOutcome", self._lastOutcome ~= "none" and self._lastOutcome or nil)
+	instance:SetAttribute("PasrahSpectatorFXLastReason", self._lastReason ~= "Idle" and self._lastReason or nil)
+
+	if instance == self._blur then
+		instance:SetAttribute("PasrahSpectatorFXEnabled", self._blur.Enabled == true)
+		instance:SetAttribute("PasrahSpectatorFXIntensity", tonumber(self._blur.Size) or 0)
+	elseif instance == self._color then
+		instance:SetAttribute("PasrahSpectatorFXEnabled", self._color.Enabled == true)
+		instance:SetAttribute("PasrahSpectatorFXSaturation", tonumber(self._color.Saturation) or 0)
+		instance:SetAttribute("PasrahSpectatorFXContrast", tonumber(self._color.Contrast) or 0)
+	elseif instance:IsA("GuiObject") then
+		instance:SetAttribute("PasrahSpectatorFXVisible", instance.Visible == true)
+	end
+end
+
+function SpectatorEffects:_stampRuntimeState()
+	local player = Players.LocalPlayer
+	if player then
+		player:SetAttribute("PasrahSpectatorFXOwner", "SpectatorEffects")
+		player:SetAttribute("PasrahSpectatorFXActive", self._isSpectating == true)
+		player:SetAttribute("PasrahSpectatorFXOutcome", self._lastOutcome ~= "none" and self._lastOutcome or nil)
+		player:SetAttribute("PasrahSpectatorFXReason", self._lastReason ~= "Idle" and self._lastReason or nil)
+		player:SetAttribute("PasrahSpectatorFXStaticVisible", self._staticOverlay and self._staticOverlay.Visible == true or false)
+		player:SetAttribute("PasrahSpectatorFXDesaturatedVisible", self._desaturationOverlay and self._desaturationOverlay.Visible == true or false)
+		player:SetAttribute("PasrahSpectatorFXNextPulseAt", self._isSpectating and self._nextPulseAt or nil)
+	end
+
+	self:_stampEffectInstance(self._blur, "Blur")
+	self:_stampEffectInstance(self._color, "ColorCorrection")
+	self:_stampEffectInstance(self._staticOverlay, "StaticOverlay")
+	self:_stampEffectInstance(self._desaturationOverlay, "DesaturationOverlay")
 end
 
 function SpectatorEffects:GetState()
