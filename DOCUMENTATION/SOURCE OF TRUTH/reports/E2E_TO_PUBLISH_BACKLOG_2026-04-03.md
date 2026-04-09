@@ -4545,3 +4545,40 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `PasrahProfileWinrateVisible=true`
     - `PasrahProfileLastSource=update_profile`
     - `PasrahProfileLastEvent=ProfileSnapshotBuilt`
+
+## 2026-04-09 15:32:00 +07:00 - Cosmetic Server Identity
+- Status: DONE.
+- `Server.CosmeticSystem.Service`
+  - now stamps `PasrahCosmetic*` directly on the player for snapshot builds, lobby apply, equip, and unequip
+  - keeps owner truthful as `CosmeticSystem`, with owned/equipped counts and last cosmetic/slot attached to runtime state
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `GetCosmeticSnapshot`
+  - now exposes `EquipCosmeticSnapshot`
+  - now exposes `UnequipCosmeticSnapshot`
+- Build passed:
+  - `_tmp_cosmetic_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - grant MM:
+    - `ok=true | action=GrantCurrency | result=currency=MM granted=1000 MM=2200 PP=12 Robux=0`
+  - purchase cosmetic:
+    - `ok=true | action=ProcessShopPurchase | result=item=cos_accessory_wardingcharm MM=1500 PP=12 Robux=0 ownedCount=1`
+  - ownership proof:
+    - `ok=true | action=GetShopPlayerSnapshot | result=MM=1500 PP=12 Robux=0 inventory=1 cosmetics=1 ownedCount=1 item=cos_accessory_wardingcharm hasItem=true ownsCosmetic=true ownedSnapshot=true`
+    - `ok=true | action=GetCosmeticSnapshot | result=owned=1 equipped=0`
+  - equip proof:
+    - `ok=true | action=EquipCosmeticSnapshot | result=cosmetic=cos_accessory_wardingcharm slot=accessory owned=1 equipped=1`
+    - `ok=true | action=GetCosmeticSnapshot | result=owned=1 equipped=1`
+  - unequip proof:
+    - `ok=true | action=UnequipCosmeticSnapshot | result=slot=accessory owned=1 equipped=0`
+    - `ok=true | action=GetCosmeticSnapshot | result=owned=1 equipped=0`
+  - hot runtime attrs on player after the cycle:
+    - `PasrahCosmeticOwner=CosmeticSystem`
+    - `PasrahCosmeticOwnedCount=1`
+    - `PasrahCosmeticEquippedCount=0`
+    - `PasrahCosmeticLastCosmeticId=cos_accessory_wardingcharm`
+    - `PasrahCosmeticLastSlot=accessory`
+    - `PasrahCosmeticLastReason=unequip`
+    - `PasrahCosmeticAppliedToLobby=true`
+    - `PasrahCosmeticLastEvent=CosmeticSnapshotBuilt`
+- Note:
+  - this lane is only marked DONE after running the full MM purchase -> equip -> unequip cycle. A snapshot-only proof would have been too weak for this owner.

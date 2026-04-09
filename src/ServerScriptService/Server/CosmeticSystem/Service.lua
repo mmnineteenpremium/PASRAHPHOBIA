@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local Services = require(script.Parent.Parent.Core.Services)
 
 local Service = {}
@@ -116,6 +117,25 @@ local function toUserId(player)
     return nil
 end
 
+local function resolvePlayer(playerOrUserId)
+    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+        return playerOrUserId
+    end
+
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return nil
+    end
+
+    local ok, player = pcall(function()
+        return Players:GetPlayerByUserId(userId)
+    end)
+    if ok then
+        return player
+    end
+    return nil
+end
+
 local function isNonEmptyMap(value)
     if type(value) ~= "table" then
         return false
@@ -146,6 +166,22 @@ local function countEntries(source)
         total += 1
     end
     return total
+end
+
+local function stampCosmeticRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+
+    target:SetAttribute("PasrahCosmeticOwner", "CosmeticSystem")
+    target:SetAttribute("PasrahCosmeticOwnedCount", math.max(0, math.floor(tonumber(payload.ownedCount) or 0)))
+    target:SetAttribute("PasrahCosmeticEquippedCount", math.max(0, math.floor(tonumber(payload.equippedCount) or 0)))
+    target:SetAttribute("PasrahCosmeticLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+    target:SetAttribute("PasrahCosmeticLastCosmeticId", type(payload.lastCosmeticId) == "string" and payload.lastCosmeticId or nil)
+    target:SetAttribute("PasrahCosmeticLastSlot", type(payload.lastSlot) == "string" and payload.lastSlot or nil)
+    target:SetAttribute("PasrahCosmeticLastReason", type(payload.lastReason) == "string" and payload.lastReason or nil)
+    target:SetAttribute("PasrahCosmeticAppliedToLobby", payload.appliedToLobby == true)
+    target:SetAttribute("PasrahCosmeticUpdatedAt", os.clock())
 end
 
 function Service.new(state, deps)
@@ -212,6 +248,70 @@ end
 function Service:Stop()
     self._state:Clear()
     table.clear(self._loadedProfiles)
+end
+
+function Service:_buildRuntimeSnapshot(playerOrUserId)
+    local player = resolvePlayer(playerOrUserId)
+    if not player then
+        return nil
+    end
+
+    local ownedCosmeticIds = {}
+    local inventory = self:_getInventory()
+    if type(inventory) == "table" and type(inventory.GetOwnedCosmetics) == "function" then
+        local ok, result = pcall(function()
+            return inventory:GetOwnedCosmetics(player)
+        end)
+        if ok and type(result) == "table" then
+            ownedCosmeticIds = result
+        end
+    end
+
+    local equippedCosmetics = cloneMap(self:_resolveEquippedForPlayer(player))
+
+    return {
+        ownedCount = #ownedCosmeticIds,
+        equippedCount = countEntries(equippedCosmetics),
+    }
+end
+
+function Service:_stampRuntimeState(playerOrUserId, payload)
+    local player = resolvePlayer(playerOrUserId)
+    if not player then
+        return
+    end
+
+    local snapshot = self:_buildRuntimeSnapshot(player)
+    if type(snapshot) ~= "table" then
+        return
+    end
+
+    local lastCosmeticId = type(payload) == "table" and payload.lastCosmeticId or nil
+    if lastCosmeticId == nil then
+        lastCosmeticId = player:GetAttribute("PasrahCosmeticLastCosmeticId")
+    end
+    local lastSlot = type(payload) == "table" and payload.lastSlot or nil
+    if lastSlot == nil then
+        lastSlot = player:GetAttribute("PasrahCosmeticLastSlot")
+    end
+    local lastReason = type(payload) == "table" and payload.lastReason or nil
+    if lastReason == nil then
+        lastReason = player:GetAttribute("PasrahCosmeticLastReason")
+    end
+    local appliedToLobby = type(payload) == "table" and payload.appliedToLobby
+    if appliedToLobby == nil then
+        appliedToLobby = player:GetAttribute("PasrahCosmeticAppliedToLobby") == true
+    end
+
+    stampCosmeticRuntime(player, {
+        ownedCount = snapshot.ownedCount,
+        equippedCount = snapshot.equippedCount,
+        lastEvent = type(payload) == "table" and payload.lastEvent or nil,
+        lastCosmeticId = lastCosmeticId,
+        lastSlot = lastSlot,
+        lastReason = lastReason,
+        appliedToLobby = appliedToLobby,
+    })
 end
 
 function Service:_publish(eventName, payload)
@@ -362,13 +462,17 @@ function Service:BuildClientSnapshot(player)
 
     local equippedCosmetics = cloneMap(self:_resolveEquippedForPlayer(player))
 
-    return {
+    local snapshot = {
         ownedCosmeticIds = ownedCosmeticIds,
         equippedCosmetics = equippedCosmetics,
         ownedCount = #ownedCosmeticIds,
         equippedCount = countEntries(equippedCosmetics),
         updatedAt = os.clock(),
     }
+    self:_stampRuntimeState(player, {
+        lastEvent = "CosmeticSnapshotBuilt",
+    })
+    return snapshot
 end
 
 function Service:_syncInventorySlot(player, slot, cosmeticId)
@@ -441,6 +545,11 @@ function Service:ApplyCosmetic(player)
         userId = userId,
         equipped = playerEquipped,
     })
+    self:_stampRuntimeState(player, {
+        lastEvent = "CosmeticAppliedToLobby",
+        lastReason = "apply_lobby",
+        appliedToLobby = true,
+    })
     return true
 end
 
@@ -472,6 +581,13 @@ function Service:EquipCosmetic(player, cosmeticId)
         userId = userId,
         cosmeticId = cosmeticId,
         slot = slot,
+    })
+    self:_stampRuntimeState(player, {
+        lastEvent = "CosmeticEquipped",
+        lastCosmeticId = cosmeticId,
+        lastSlot = slot,
+        lastReason = "equip",
+        appliedToLobby = true,
     })
     return true, nil, slot
 end
@@ -506,6 +622,13 @@ function Service:UnequipCosmetic(player, cosmeticSlot)
         userId = userId,
         slot = cosmeticSlot,
         cosmeticId = previous,
+    })
+    self:_stampRuntimeState(player, {
+        lastEvent = "CosmeticUnequipped",
+        lastCosmeticId = previous,
+        lastSlot = cosmeticSlot,
+        lastReason = "unequip",
+        appliedToLobby = true,
     })
     return true
 end

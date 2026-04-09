@@ -366,6 +366,7 @@ function StudioE2EControlSystem.new(deps)
 	self._royalPassService = nil
 	self._progressionService = nil
 	self._profileService = nil
+	self._cosmeticService = nil
 	self._evidenceService = nil
 	self._lobbyHubService = nil
 	self._ghostSystem = nil
@@ -384,6 +385,7 @@ function StudioE2EControlSystem:Init()
 	self._royalPassService = resolveService(self._deps, "RoyalPassSystem", "GetPlayerSnapshot")
 	self._progressionService = resolveService(self._deps, "ProgressionSystem", "GetPlayerLevel")
 	self._profileService = resolveService(self._deps, "ProfileSystem", "GetPlayerProfile")
+	self._cosmeticService = resolveService(self._deps, "CosmeticSystem", "BuildClientSnapshot")
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._lobbyHubService = resolveService(self._deps, "LobbySocialHub", "OnPlayerEnteredZone")
 	self._ghostSystem = resolveService(self._deps, "GhostSystem", "GetGhostState")
@@ -1646,6 +1648,87 @@ function StudioE2EControlSystem:_handleUpdateProfileSnapshot(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleGetCosmeticSnapshot(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local cosmeticService = self._cosmeticService
+	if type(cosmeticService) ~= "table" or type(cosmeticService.BuildClientSnapshot) ~= "function" then
+		return false, "missing_cosmetic_service"
+	end
+
+	local snapshot = cosmeticService:BuildClientSnapshot(player)
+	if type(snapshot) ~= "table" then
+		return false, "snapshot_unavailable"
+	end
+
+	return true, string.format(
+		"owned=%d equipped=%d",
+		math.max(0, math.floor(tonumber(snapshot.ownedCount) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.equippedCount) or 0))
+	)
+end
+
+function StudioE2EControlSystem:_handleEquipCosmeticSnapshot(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local cosmeticService = self._cosmeticService
+	if type(cosmeticService) ~= "table" or type(cosmeticService.EquipCosmetic) ~= "function" then
+		return false, "missing_cosmetic_service"
+	end
+
+	local cosmeticId = type(request) == "table" and tostring(request.cosmeticId or request.itemId or "") or ""
+	if cosmeticId == "" then
+		return false, "invalid_cosmetic"
+	end
+
+	local ok, reason, slot = cosmeticService:EquipCosmetic(player, cosmeticId)
+	if ok ~= true then
+		return false, tostring(reason or "equip_failed")
+	end
+
+	local snapshot = type(cosmeticService.BuildClientSnapshot) == "function" and cosmeticService:BuildClientSnapshot(player) or nil
+	return true, string.format(
+		"cosmetic=%s slot=%s owned=%d equipped=%d",
+		cosmeticId,
+		tostring(slot or "-"),
+		type(snapshot) == "table" and math.max(0, math.floor(tonumber(snapshot.ownedCount) or 0)) or 0,
+		type(snapshot) == "table" and math.max(0, math.floor(tonumber(snapshot.equippedCount) or 0)) or 0
+	)
+end
+
+function StudioE2EControlSystem:_handleUnequipCosmeticSnapshot(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local cosmeticService = self._cosmeticService
+	if type(cosmeticService) ~= "table" or type(cosmeticService.UnequipCosmetic) ~= "function" then
+		return false, "missing_cosmetic_service"
+	end
+
+	local slot = type(request) == "table" and tostring(request.slot or request.cosmeticSlot or "") or ""
+	if slot == "" then
+		return false, "invalid_slot"
+	end
+
+	local ok, reason = cosmeticService:UnequipCosmetic(player, slot)
+	if ok ~= true then
+		return false, tostring(reason or "unequip_failed")
+	end
+
+	local snapshot = type(cosmeticService.BuildClientSnapshot) == "function" and cosmeticService:BuildClientSnapshot(player) or nil
+	return true, string.format(
+		"slot=%s owned=%d equipped=%d",
+		slot,
+		type(snapshot) == "table" and math.max(0, math.floor(tonumber(snapshot.ownedCount) or 0)) or 0,
+		type(snapshot) == "table" and math.max(0, math.floor(tonumber(snapshot.equippedCount) or 0)) or 0
+	)
+end
+
 function StudioE2EControlSystem:_handleUseEvidenceTool(player, request)
 	local evidenceService = self._evidenceService
 	if type(evidenceService) ~= "table" or type(evidenceService.ProcessToolUse) ~= "function" then
@@ -2332,6 +2415,12 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleGetProfileSnapshot(player)
 		elseif action == "UpdateProfileSnapshot" then
 			return self:_handleUpdateProfileSnapshot(player, request)
+		elseif action == "GetCosmeticSnapshot" then
+			return self:_handleGetCosmeticSnapshot(player)
+		elseif action == "EquipCosmeticSnapshot" then
+			return self:_handleEquipCosmeticSnapshot(player, request)
+		elseif action == "UnequipCosmeticSnapshot" then
+			return self:_handleUnequipCosmeticSnapshot(player, request)
 		elseif action == "UseEvidenceTool" then
 			return self:_handleUseEvidenceTool(player, request)
 		elseif action == "ConsumeHuntProtection" then
