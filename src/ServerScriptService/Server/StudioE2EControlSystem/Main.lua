@@ -367,6 +367,7 @@ function StudioE2EControlSystem.new(deps)
 	self._progressionService = nil
 	self._profileService = nil
 	self._cosmeticService = nil
+	self._playerProfileService = nil
 	self._evidenceService = nil
 	self._lobbyHubService = nil
 	self._ghostSystem = nil
@@ -386,6 +387,7 @@ function StudioE2EControlSystem:Init()
 	self._progressionService = resolveService(self._deps, "ProgressionSystem", "GetPlayerLevel")
 	self._profileService = resolveService(self._deps, "ProfileSystem", "GetPlayerProfile")
 	self._cosmeticService = resolveService(self._deps, "CosmeticSystem", "BuildClientSnapshot")
+	self._playerProfileService = resolveService(self._deps, "PlayerProfileSystem", "GetPublicProfile")
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._lobbyHubService = resolveService(self._deps, "LobbySocialHub", "OnPlayerEnteredZone")
 	self._ghostSystem = resolveService(self._deps, "GhostSystem", "GetGhostState")
@@ -1729,6 +1731,43 @@ function StudioE2EControlSystem:_handleUnequipCosmeticSnapshot(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleGetPublicProfileSnapshot(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local playerProfileService = self._playerProfileService
+	if type(playerProfileService) ~= "table" or type(playerProfileService.GetPublicProfile) ~= "function" then
+		return false, "missing_player_profile_service"
+	end
+
+	local target = player
+	if type(request) == "table" and tonumber(request.targetUserId) then
+		target = math.floor(tonumber(request.targetUserId))
+	end
+
+	local snapshot = playerProfileService:GetPublicProfile(target, player)
+	if type(snapshot) ~= "table" then
+		return false, "snapshot_unavailable"
+	end
+
+	local galleryCount = type(snapshot.flexGallery) == "table" and #snapshot.flexGallery or 0
+	local equippedCount = type(snapshot.equippedCosmetics) == "table" and countEntries(snapshot.equippedCosmetics) or 0
+	local viewerViewCount = math.max(0, math.floor(tonumber(player:GetAttribute("PasrahPlayerProfileViewCount")) or 0))
+	return true, string.format(
+		"target=%d level=%d rank=%s totalMatches=%d totalWins=%d winRate=%d gallery=%d equipped=%d viewCount=%d",
+		math.max(0, math.floor(tonumber(snapshot.userId) or 0)),
+		math.max(1, math.floor(tonumber(snapshot.playerLevel) or 1)),
+		tostring(snapshot.rankTier or "Bayi III"),
+		math.max(0, math.floor(tonumber(snapshot.totalMatches) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.totalWins) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.winRate) or 0)),
+		galleryCount,
+		equippedCount,
+		viewerViewCount
+	)
+end
+
 function StudioE2EControlSystem:_handleUseEvidenceTool(player, request)
 	local evidenceService = self._evidenceService
 	if type(evidenceService) ~= "table" or type(evidenceService.ProcessToolUse) ~= "function" then
@@ -2421,6 +2460,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleEquipCosmeticSnapshot(player, request)
 		elseif action == "UnequipCosmeticSnapshot" then
 			return self:_handleUnequipCosmeticSnapshot(player, request)
+		elseif action == "GetPublicProfileSnapshot" then
+			return self:_handleGetPublicProfileSnapshot(player, request)
 		elseif action == "UseEvidenceTool" then
 			return self:_handleUseEvidenceTool(player, request)
 		elseif action == "ConsumeHuntProtection" then
