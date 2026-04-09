@@ -13929,3 +13929,41 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
       - `PasrahSpectatorMode=dead`
       - `PasrahSpectatorLastEvent=PlayerKilled`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 12:11:18 +07:00 - Close Spectator Exit On Respawn
+- Status: DONE.
+- `Server.DeathStateSystem.DeathEventBridge` now promotes real `CharacterAdded` after death into `PlayerRespawnRequested` only when the player was actually dead/spectating.
+- `Server.DeathStateSystem.Service` now:
+  - clears `PasrahDeath*` runtime attrs on respawn
+  - forwards `MatchEvent.PlayerRespawned` with truthful `localPlayerRespawned`
+  - asks `SpectatorModeSystem` to exit the player from spectator state
+- `Server.SpectatorModeSystem.Service` now removes spectator state on `PlayerRespawnRequested` / `PlayerRespawned`.
+- Client consumers now honor the respawn exit path:
+  - `src/client/SpectatorSystem/Main.lua`
+  - `src/client/SpectatorEffects/Main.lua`
+  - `src/client/UI/Main.lua`
+- Build passed: `_tmp_spectator_respawn_exit_build.rbxlx`.
+- Live Studio proof in Play Solo:
+  - run used the same canonical path:
+    - `StartSoloMatch` -> `ok=true | action=StartSoloMatch | result=match=match_1 map=HauntedHouse mode=Classic difficulty=Mudah players=1`
+    - `AdvancePhase` -> `ok=true | action=AdvancePhase | result=match=match_1 nextPhase=InvestigationPhase`
+    - local death entered spectator as expected first
+  - after real respawn/`CharacterAdded`, exit state became truthful:
+    - player attrs:
+      - `PasrahDeathOwner` cleared
+      - `PasrahDeathState` cleared
+      - `PasrahDeathActive` cleared
+      - `PasrahSpectatorOwner=SpectatorModeSystem`
+      - `PasrahSpectatorActive=false`
+      - `PasrahSpectatorMode` cleared
+      - `PasrahSpectatorReason=character_added`
+    - spectator UI:
+      - `PasrahSpectatorMode=none`
+      - `PasrahSpectatorLastEvent=PlayerRespawned`
+    - spectator FX:
+      - `SpectatorBlurEffect.Enabled=false`
+      - `SpectatorBlurEffect.Size=0`
+      - `SpectatorColorCorrection.Enabled=false`
+- Note:
+  - the Play Solo run can re-enter danger if left running too long inside the active match; proof was captured at the first truthful respawn-exit state, then Studio was returned to STOP TEST.
+- Roblox Studio was returned to STOP TEST before logging.

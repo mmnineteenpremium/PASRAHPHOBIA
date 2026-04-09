@@ -289,11 +289,43 @@ function Service:HandleEvent(eventName, payload)
         end
         local userId = toUserId(payload and (payload.player or payload.userId))
         if userId then
+            local player = resolvePlayerFromPayload(payload) or Players:GetPlayerByUserId(userId)
             local states = self._state:Get("deathStateByPlayer") or {}
             states[userId] = "RespawnRequested"
             self._state:Set("deathStateByPlayer", states)
-            clearDeathRuntime(payload and payload.player or Players:GetPlayerByUserId(userId))
-            self:_publish("DeathStateChanged", { userId = userId, player = payload.player, state = "RespawnRequested", matchId = matchId })
+            local lastDeathEventAtByPlayer = self._state:Get("lastDeathEventAtByPlayer") or {}
+            lastDeathEventAtByPlayer[userId] = nil
+            self._state:Set("lastDeathEventAtByPlayer", lastDeathEventAtByPlayer)
+            local spectatorSystem = self._deps.SpectatorModeSystem
+            if spectatorSystem and spectatorSystem.Service then
+                spectatorSystem.Service:HandleEvent("PlayerRespawnRequested", {
+                    matchId = matchId,
+                    userId = userId,
+                    player = player,
+                    reason = payload and payload.reason or "respawn",
+                })
+            end
+            clearDeathRuntime(player)
+            local liveMatch = resolveLiveMatch(self._dependencies.MatchSystem, matchId)
+            self:_fireMatchEventToPlayers(resolveMatchPlayers(liveMatch), function(recipient)
+                return {
+                    eventName = "PlayerRespawned",
+                    matchId = matchId,
+                    userId = userId,
+                    player = player,
+                    reason = payload and payload.reason or "respawn",
+                    source = "DeathStateSystem",
+                    localPlayerRespawned = recipient.UserId == userId,
+                }
+            end)
+            self:_publish("PlayerRespawned", {
+                userId = userId,
+                player = player,
+                matchId = matchId,
+                reason = payload and payload.reason or "respawn",
+                source = "DeathStateSystem",
+            })
+            self:_publish("DeathStateChanged", { userId = userId, player = player, state = "RespawnRequested", matchId = matchId })
         end
     end
 end

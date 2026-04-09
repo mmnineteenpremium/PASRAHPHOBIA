@@ -4278,3 +4278,20 @@ Urutan yang paling masuk akal dari titik sekarang:
   - teammate warning path in multiplayer
   - respawn exit path
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 12:11:18 +07:00 - Spectator Exit On Respawn
+- Status: DONE.
+- `DeathEventBridge` now turns real post-death `CharacterAdded` into `PlayerRespawnRequested` only when the player truly had dead/spectator state.
+- `DeathStateSystem` now clears `PasrahDeath*`, emits `MatchEvent.PlayerRespawned`, and asks `SpectatorModeSystem` to exit spectator state.
+- `SpectatorModeSystem` now removes spectator state on `PlayerRespawnRequested` / `PlayerRespawned`.
+- Client consumers now exit on respawn:
+  - `SpectatorSystem`
+  - `SpectatorEffects`
+  - `Client.UI.Main`
+- Build passed: `_tmp_spectator_respawn_exit_build.rbxlx`.
+- Live proof in Play Solo:
+  - post-respawn player attrs -> `PasrahDeath*` cleared, `PasrahSpectatorOwner=SpectatorModeSystem`, `PasrahSpectatorActive=false`, `PasrahSpectatorMode` cleared, `PasrahSpectatorReason=character_added`
+  - spectator UI -> `PasrahSpectatorMode=none`, `PasrahSpectatorLastEvent=PlayerRespawned`
+  - spectator FX -> blur/color correction disabled again
+- Note:
+  - the active match can become dangerous again if left running after proof; the verified exit state was captured first, then Studio was returned to STOP TEST.
