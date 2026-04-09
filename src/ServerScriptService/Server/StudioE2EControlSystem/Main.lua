@@ -364,6 +364,7 @@ function StudioE2EControlSystem.new(deps)
 	self._shopService = nil
 	self._inventoryService = nil
 	self._royalPassService = nil
+	self._progressionService = nil
 	self._evidenceService = nil
 	self._lobbyHubService = nil
 	self._ghostSystem = nil
@@ -380,6 +381,7 @@ function StudioE2EControlSystem:Init()
 	self._shopService = resolveService(self._deps, "ShopSystem", "GetCatalog")
 	self._inventoryService = resolveService(self._deps, "InventorySystem", "HasItem")
 	self._royalPassService = resolveService(self._deps, "RoyalPassSystem", "GetPlayerSnapshot")
+	self._progressionService = resolveService(self._deps, "ProgressionSystem", "GetPlayerLevel")
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._lobbyHubService = resolveService(self._deps, "LobbySocialHub", "OnPlayerEnteredZone")
 	self._ghostSystem = resolveService(self._deps, "GhostSystem", "GetGhostState")
@@ -1499,6 +1501,75 @@ function StudioE2EControlSystem:_handleGrantRoyalPassXP(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleGetProgressionSnapshot(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local progressionService = self._progressionService
+	if type(progressionService) ~= "table" then
+		return false, "missing_progression_service"
+	end
+
+	local snapshot = nil
+	if type(progressionService.GetPlayerSnapshot) == "function" then
+		snapshot = progressionService:GetPlayerSnapshot(player)
+	elseif type(progressionService._buildRuntimeSnapshot) == "function" then
+		snapshot = progressionService:_buildRuntimeSnapshot(player)
+	end
+	if type(snapshot) ~= "table" then
+		return false, "snapshot_unavailable"
+	end
+
+	return true, string.format(
+		"storedXP=%d storedLevel=%d sessionXP=%d sessionLevel=%d",
+		math.max(0, math.floor(tonumber(snapshot.storedXP) or 0)),
+		math.max(1, math.floor(tonumber(snapshot.storedLevel) or 1)),
+		math.max(0, math.floor(tonumber(snapshot.sessionXP) or 0)),
+		math.max(1, math.floor(tonumber(snapshot.sessionLevel) or 1))
+	)
+end
+
+function StudioE2EControlSystem:_handleGrantProgressionXP(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local progressionService = self._progressionService
+	if type(progressionService) ~= "table" or type(progressionService.GrantXP) ~= "function" then
+		return false, "missing_progression_service"
+	end
+
+	local amount = math.max(0, math.floor(tonumber(type(request) == "table" and request.amount) or 0))
+	if amount <= 0 then
+		return false, "invalid_amount"
+	end
+
+	local ok, reason = progressionService:GrantXP(player, amount)
+	if ok ~= true then
+		return false, tostring(reason or "grant_failed")
+	end
+
+	local snapshot = nil
+	if type(progressionService._buildRuntimeSnapshot) == "function" then
+		snapshot = progressionService:_buildRuntimeSnapshot(player)
+	elseif type(progressionService.GetPlayerSnapshot) == "function" then
+		snapshot = progressionService:GetPlayerSnapshot(player)
+	end
+	if type(snapshot) ~= "table" then
+		return false, "snapshot_unavailable"
+	end
+
+	return true, string.format(
+		"amount=%d storedXP=%d storedLevel=%d sessionXP=%d sessionLevel=%d",
+		amount,
+		math.max(0, math.floor(tonumber(snapshot.storedXP) or 0)),
+		math.max(1, math.floor(tonumber(snapshot.storedLevel) or 1)),
+		math.max(0, math.floor(tonumber(snapshot.sessionXP) or 0)),
+		math.max(1, math.floor(tonumber(snapshot.sessionLevel) or 1))
+	)
+end
+
 function StudioE2EControlSystem:_handleUseEvidenceTool(player, request)
 	local evidenceService = self._evidenceService
 	if type(evidenceService) ~= "table" or type(evidenceService.ProcessToolUse) ~= "function" then
@@ -2177,6 +2248,10 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleGetRoyalPassSnapshot(player)
 		elseif action == "GrantRoyalPassXP" then
 			return self:_handleGrantRoyalPassXP(player, request)
+		elseif action == "GetProgressionSnapshot" then
+			return self:_handleGetProgressionSnapshot(player)
+		elseif action == "GrantProgressionXP" then
+			return self:_handleGrantProgressionXP(player, request)
 		elseif action == "UseEvidenceTool" then
 			return self:_handleUseEvidenceTool(player, request)
 		elseif action == "ConsumeHuntProtection" then

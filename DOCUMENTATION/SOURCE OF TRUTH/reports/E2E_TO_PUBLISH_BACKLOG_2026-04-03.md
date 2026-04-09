@@ -4481,3 +4481,34 @@ Urutan yang paling masuk akal dari titik sekarang:
     - `PasrahRoyalPassLastUnlockedTier=3`
 - Note:
   - this lane proves runtime truth and entitlement/progression state only. It does not change the current Roblox commerce readiness fact that `royalpass_premium_track` still has `marketplaceId=0` in the catalog.
+
+## 2026-04-09 14:58:57 +07:00 - Progression Server Identity
+- Status: DONE.
+- `Server.ProgressionSystem.Service`
+  - now stamps `PasrahProgression*` directly on the player for session init/save, XP grants, level-up publishing, and snapshot builds
+  - keeps owner truthful as `ProgressionSystem`, with stored/session XP and level attached to runtime state
+- `Server.ProgressionSystem.Main`
+  - now exposes `GetPlayerSnapshot` on the canonical owner wrapper so Studio probes do not have to reach into the raw service table
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `GetProgressionSnapshot`
+  - now exposes `GrantProgressionXP`
+- Build passed:
+  - `_tmp_progression_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - baseline snapshot:
+    - `ok=true | action=GetProgressionSnapshot | result=storedXP=0 storedLevel=1 sessionXP=0 sessionLevel=1`
+  - XP grant:
+    - `ok=true | action=GrantProgressionXP | result=amount=275 storedXP=275 storedLevel=3 sessionXP=0 sessionLevel=1`
+  - post-grant snapshot:
+    - `ok=true | action=GetProgressionSnapshot | result=storedXP=275 storedLevel=3 sessionXP=0 sessionLevel=1`
+  - hot runtime attrs on player:
+    - `PasrahProgressionOwner=ProgressionSystem`
+    - `PasrahProgressionStoredXP=275`
+    - `PasrahProgressionStoredLevel=3`
+    - `PasrahProgressionSessionXP=0`
+    - `PasrahProgressionSessionLevel=1`
+    - `PasrahProgressionLastSource=ProgressionSystem`
+    - `PasrahProgressionLastGrantedXP=275`
+    - `PasrahProgressionLastEvent=ProgressionSnapshotBuilt`
+- Note:
+  - the first probe run exposed a real wrapper gap: `GetProgressionSnapshot` returned `snapshot_unavailable` because `ProgressionSystem.Main` did not expose `GetPlayerSnapshot`; the lane is only marked DONE after fixing the wrapper and re-proving the Studio actions live.

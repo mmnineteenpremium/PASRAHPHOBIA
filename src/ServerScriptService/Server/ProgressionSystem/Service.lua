@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local Services = require(script.Parent.Parent.Core.Services)
 
 local Service = {}
@@ -86,6 +87,41 @@ local function getLevelThreshold(xpTable, level)
     return nil
 end
 
+local function resolvePlayer(playerOrUserId)
+    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+        return playerOrUserId
+    end
+
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return nil
+    end
+
+    local ok, player = pcall(function()
+        return Players:GetPlayerByUserId(userId)
+    end)
+    if ok then
+        return player
+    end
+    return nil
+end
+
+local function stampProgressionRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+
+    target:SetAttribute("PasrahProgressionOwner", "ProgressionSystem")
+    target:SetAttribute("PasrahProgressionStoredXP", math.max(0, math.floor(tonumber(payload.storedXP) or 0)))
+    target:SetAttribute("PasrahProgressionStoredLevel", math.max(1, math.floor(tonumber(payload.storedLevel) or 1)))
+    target:SetAttribute("PasrahProgressionSessionXP", math.max(0, math.floor(tonumber(payload.sessionXP) or 0)))
+    target:SetAttribute("PasrahProgressionSessionLevel", math.max(1, math.floor(tonumber(payload.sessionLevel) or 1)))
+    target:SetAttribute("PasrahProgressionLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
+    target:SetAttribute("PasrahProgressionLastSource", type(payload.lastSource) == "string" and payload.lastSource or nil)
+    target:SetAttribute("PasrahProgressionLastGrantedXP", tonumber(payload.lastGrantedXP))
+    target:SetAttribute("PasrahProgressionUpdatedAt", os.clock())
+end
+
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -150,9 +186,64 @@ function Service:Stop()
 end
 
 function Service:_publish(eventName, payload)
+    local player = type(payload) == "table" and (payload.player or payload.userId) or nil
+    self:_stampRuntimeState(player, {
+        lastEvent = eventName,
+        lastSource = type(payload) == "table" and payload.source or nil,
+        lastGrantedXP = type(payload) == "table" and payload.amount or nil,
+    })
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
     end
+end
+
+function Service:_buildRuntimeSnapshot(playerOrUserId)
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return nil
+    end
+
+    local playerXP = self._state:Get("playerXP") or {}
+    local playerLevels = self._state:Get("playerLevels") or {}
+    local session = self._sessions[userId]
+    return {
+        userId = userId,
+        storedXP = math.max(0, math.floor(tonumber(playerXP[userId]) or 0)),
+        storedLevel = math.max(1, math.floor(tonumber(playerLevels[userId]) or 1)),
+        sessionXP = math.max(0, math.floor(tonumber(type(session) == "table" and session.xp or 0) or 0)),
+        sessionLevel = math.max(1, math.floor(tonumber(type(session) == "table" and session.level or 1) or 1)),
+    }
+end
+
+function Service:_stampRuntimeState(playerOrUserId, payload)
+    local player = resolvePlayer(playerOrUserId)
+    if not player then
+        return
+    end
+
+    local snapshot = self:_buildRuntimeSnapshot(player)
+    if type(snapshot) ~= "table" then
+        return
+    end
+
+    local lastSource = type(payload) == "table" and payload.lastSource or nil
+    if lastSource == nil then
+        lastSource = player:GetAttribute("PasrahProgressionLastSource")
+    end
+    local lastGrantedXP = type(payload) == "table" and payload.lastGrantedXP or nil
+    if lastGrantedXP == nil then
+        lastGrantedXP = player:GetAttribute("PasrahProgressionLastGrantedXP")
+    end
+
+    stampProgressionRuntime(player, {
+        storedXP = snapshot.storedXP,
+        storedLevel = snapshot.storedLevel,
+        sessionXP = snapshot.sessionXP,
+        sessionLevel = snapshot.sessionLevel,
+        lastEvent = type(payload) == "table" and payload.lastEvent or nil,
+        lastSource = lastSource,
+        lastGrantedXP = lastGrantedXP,
+    })
 end
 
 function Service:_readProfileProgress(player)
@@ -278,6 +369,10 @@ function Service:InitSession(userId, savedData)
         xp = savedXp or 0,
         level = savedLevel or 1,
     }
+    self:_stampRuntimeState(resolvedId, {
+        lastEvent = "ProgressionSessionInitialized",
+        lastSource = "session_init",
+    })
     return self._sessions[resolvedId]
 end
 
@@ -327,6 +422,10 @@ function Service:SaveSession(userId)
             },
         })
     end
+    self:_stampRuntimeState(resolvedId, {
+        lastEvent = "ProgressionSessionSaved",
+        lastSource = "session_save",
+    })
     self._sessions[resolvedId] = nil
     return true
 end
@@ -371,6 +470,16 @@ function Service:GetPlayerLevel(player)
     return playerLevels[userId] or 1
 end
 
+function Service:GetPlayerSnapshot(player)
+    local snapshot = self:_buildRuntimeSnapshot(player)
+    if type(snapshot) == "table" then
+        self:_stampRuntimeState(player, {
+            lastEvent = "ProgressionSnapshotBuilt",
+        })
+    end
+    return snapshot
+end
+
 
 function Service:AddXP(userId, amount)
     local resolvedId = toUserId(userId)
@@ -411,6 +520,11 @@ function Service:AddXP(userId, amount)
     if session.level > 100 then
         session.level = 100
     end
+    self:_stampRuntimeState(resolvedId, {
+        lastEvent = "ProgressionSessionXPGranted",
+        lastSource = "session_xp",
+        lastGrantedXP = xpAmount,
+    })
     return true
 end
 
@@ -437,6 +551,7 @@ function Service:GrantXP(player, amount)
         amount = xpAmount,
         previousXP = previousXP,
         totalXP = totalXP,
+        source = "ProgressionSystem",
     })
 
     self:CheckLevelUp(player)

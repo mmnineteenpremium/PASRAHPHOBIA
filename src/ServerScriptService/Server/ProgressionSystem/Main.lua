@@ -123,5 +123,9 @@ function ProgressionSystem:GetPlayerLevel(player)
     return self.Service:GetPlayerLevel(player)
 end
 
+function ProgressionSystem:GetPlayerSnapshot(player)
+    return self.Service:GetPlayerSnapshot(player)
+end
+
 return ProgressionSystem
 
