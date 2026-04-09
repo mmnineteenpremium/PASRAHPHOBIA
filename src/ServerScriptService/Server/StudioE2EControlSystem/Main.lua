@@ -131,6 +131,20 @@ local function ensureRemote()
 	return remote
 end
 
+local function resolveMatchEventRemote()
+	local remoteFolder = ReplicatedStorage:FindFirstChild(REMOTE_FOLDER_NAME)
+	if not remoteFolder then
+		return nil
+	end
+
+	local remote = remoteFolder:FindFirstChild("MatchEvent")
+	if remote and remote:IsA("RemoteEvent") then
+		return remote
+	end
+
+	return nil
+end
+
 local function encodeSummary(parts)
 	local buffer = {}
 	for _, part in ipairs(parts) do
@@ -1538,6 +1552,45 @@ function StudioE2EControlSystem:_handleTriggerAudioCue(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleSimulateTeammateWarning(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local remote = resolveMatchEventRemote()
+	if not remote then
+		return false, "missing_match_event_remote"
+	end
+
+	local teammateUserId = tonumber(type(request) == "table" and request.teammateUserId) or 900001
+	if teammateUserId == player.UserId then
+		teammateUserId += 1
+	end
+	local teammateName = type(request) == "table" and tostring(request.teammateName or "") or ""
+	if teammateName == "" then
+		teammateName = string.format("Teammate_%d", teammateUserId)
+	end
+
+	remote:FireClient(player, {
+		eventName = "PlayerKilled",
+		matchId = matchId,
+		userId = teammateUserId,
+		teammateUserId = teammateUserId,
+		teammateName = teammateName,
+		localPlayerKilled = false,
+		reason = type(request) == "table" and request.reason or "studio_simulated_teammate_down",
+		simulated = true,
+		source = "StudioE2EControlSystem",
+	})
+
+	return true, string.format("match=%s teammate=%s(%d)", tostring(matchId), tostring(teammateName), teammateUserId)
+end
+
 function StudioE2EControlSystem:_handleHidingDebugSnapshot(player, request)
 	local hidingSystem = resolveSystem(self._deps, "HidingSystem")
 	if type(hidingSystem) ~= "table" then
@@ -1758,6 +1811,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleTriggerJumpscare(player, request)
 		elseif action == "TriggerAudioCue" then
 			return self:_handleTriggerAudioCue(player, request)
+		elseif action == "SimulateTeammateWarning" then
+			return self:_handleSimulateTeammateWarning(player, request)
 		elseif action == "HidingDebugSnapshot" then
 			return self:_handleHidingDebugSnapshot(player, request)
 		elseif action == "EnterHide" then

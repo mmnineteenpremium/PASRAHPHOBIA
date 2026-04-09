@@ -4295,3 +4295,14 @@ Urutan yang paling masuk akal dari titik sekarang:
   - spectator FX -> blur/color correction disabled again
 - Note:
   - the active match can become dangerous again if left running after proof; the verified exit state was captured first, then Studio was returned to STOP TEST.
+
+## 2026-04-09 12:25:42 +07:00 - Simulated Teammate Warning Probe
+- Status: DONE.
+- `StudioE2EControlSystem` now exposes `SimulateTeammateWarning` through the existing Studio E2E remote and sends the payload over the real `MatchEvent` channel.
+- Build passed: `_tmp_teammate_warning_sim_build.rbxlx`.
+- Live proof in Play Solo:
+  - `SimulateTeammateWarning` ack -> `match=match_1 teammate=DebugTeammate(910001)`
+  - spectator warning UI -> `PasrahSpectatorMode=warning`, `PasrahSpectatorUIVisible=true`, `PasrahSpectatorLastEvent=PlayerKilled`, `PasrahSpectatorTitle=TEAMMATE DOWN`
+- Scope intentionally not claimed here:
+  - real multiplayer replication
+  - warning decay/expiry lifecycle
