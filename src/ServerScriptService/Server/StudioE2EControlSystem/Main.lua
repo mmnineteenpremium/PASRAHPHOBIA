@@ -368,6 +368,7 @@ function StudioE2EControlSystem.new(deps)
 	self._profileService = nil
 	self._cosmeticService = nil
 	self._playerProfileService = nil
+	self._rankedService = nil
 	self._evidenceService = nil
 	self._lobbyHubService = nil
 	self._ghostSystem = nil
@@ -388,6 +389,7 @@ function StudioE2EControlSystem:Init()
 	self._profileService = resolveService(self._deps, "ProfileSystem", "GetPlayerProfile")
 	self._cosmeticService = resolveService(self._deps, "CosmeticSystem", "BuildClientSnapshot")
 	self._playerProfileService = resolveService(self._deps, "PlayerProfileSystem", "GetPublicProfile")
+	self._rankedService = resolveService(self._deps, "RankedSystem", "GetPlayerRank")
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._lobbyHubService = resolveService(self._deps, "LobbySocialHub", "OnPlayerEnteredZone")
 	self._ghostSystem = resolveService(self._deps, "GhostSystem", "GetGhostState")
@@ -1768,6 +1770,82 @@ function StudioE2EControlSystem:_handleGetPublicProfileSnapshot(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleGetRankSnapshot(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local rankedService = self._rankedService
+	if type(rankedService) ~= "table" or type(rankedService.GetPlayerRank) ~= "function" then
+		return false, "missing_ranked_service"
+	end
+
+	local snapshot = rankedService:GetPlayerRank(player)
+	if type(snapshot) ~= "table" then
+		return false, "snapshot_unavailable"
+	end
+
+	return true, string.format(
+		"rank=%s tier=%s division=%d stars=%d victories=%d difficulty=%d",
+		tostring(snapshot.playerRank or snapshot.rank or "Bayi III"),
+		tostring(snapshot.tier or "Bayi"),
+		math.max(0, math.floor(tonumber(snapshot.division) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.stars) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.victories) or 0)),
+		math.max(0, math.floor(tonumber(type(rankedService.CalculateRankDifficulty) == "function" and rankedService:CalculateRankDifficulty(player) or 0) or 0))
+	)
+end
+
+function StudioE2EControlSystem:_handleAddRankStarSnapshot(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local rankedService = self._rankedService
+	if type(rankedService) ~= "table" or type(rankedService.AddStar) ~= "function" then
+		return false, "missing_ranked_service"
+	end
+
+	local snapshot = rankedService:AddStar(player)
+	if type(snapshot) ~= "table" then
+		return false, "rank_update_failed"
+	end
+
+	return true, string.format(
+		"rank=%s tier=%s division=%d stars=%d victories=%d",
+		tostring(snapshot.playerRank or snapshot.rank or "Bayi III"),
+		tostring(snapshot.tier or "Bayi"),
+		math.max(0, math.floor(tonumber(snapshot.division) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.stars) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.victories) or 0))
+	)
+end
+
+function StudioE2EControlSystem:_handleRemoveRankStarSnapshot(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local rankedService = self._rankedService
+	if type(rankedService) ~= "table" or type(rankedService.RemoveStar) ~= "function" then
+		return false, "missing_ranked_service"
+	end
+
+	local snapshot = rankedService:RemoveStar(player)
+	if type(snapshot) ~= "table" then
+		return false, "rank_update_failed"
+	end
+
+	return true, string.format(
+		"rank=%s tier=%s division=%d stars=%d victories=%d",
+		tostring(snapshot.playerRank or snapshot.rank or "Bayi III"),
+		tostring(snapshot.tier or "Bayi"),
+		math.max(0, math.floor(tonumber(snapshot.division) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.stars) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.victories) or 0))
+	)
+end
+
 function StudioE2EControlSystem:_handleUseEvidenceTool(player, request)
 	local evidenceService = self._evidenceService
 	if type(evidenceService) ~= "table" or type(evidenceService.ProcessToolUse) ~= "function" then
@@ -2462,6 +2540,12 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleUnequipCosmeticSnapshot(player, request)
 		elseif action == "GetPublicProfileSnapshot" then
 			return self:_handleGetPublicProfileSnapshot(player, request)
+		elseif action == "GetRankSnapshot" then
+			return self:_handleGetRankSnapshot(player)
+		elseif action == "AddRankStarSnapshot" then
+			return self:_handleAddRankStarSnapshot(player)
+		elseif action == "RemoveRankStarSnapshot" then
+			return self:_handleRemoveRankStarSnapshot(player)
 		elseif action == "UseEvidenceTool" then
 			return self:_handleUseEvidenceTool(player, request)
 		elseif action == "ConsumeHuntProtection" then
