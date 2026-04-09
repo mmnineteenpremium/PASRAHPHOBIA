@@ -13058,6 +13058,40 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 15:11:27 +07:00 - Profile Server Identity
+- Status: DONE.
+- `Server.ProfileSystem.Service`
+  - now stamps `PasrahProfile*` directly on the player for load/save, snapshot builds, profile updates, rank sync, and match-stat sync
+  - keeps owner truthful as `ProfileSystem`, with level/xp/rank/stats/profile detail counts attached to runtime state
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `GetProfileSnapshot`
+  - now exposes `UpdateProfileSnapshot`
+- Build passed:
+  - `_tmp_profile_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - baseline snapshot:
+    - `ok=true | action=GetProfileSnapshot | result=level=1 rank=Bayi III totalMatches=0 totalWins=0 winRate=0 favoriteTool=- gallery=0 bio=`
+  - profile update:
+    - `ok=true | action=UpdateProfileSnapshot | result=level=1 rank=Bayi III favoriteTool=JejakEnergi gallery=3 bio=studio profile sync`
+  - post-update snapshot:
+    - `ok=true | action=GetProfileSnapshot | result=level=1 rank=Bayi III totalMatches=0 totalWins=0 winRate=0 favoriteTool=JejakEnergi gallery=3 bio=studio profile sync`
+  - hot runtime attrs on player:
+    - `PasrahProfileOwner=ProfileSystem`
+    - `PasrahProfileLevel=1`
+    - `PasrahProfileXP=0`
+    - `PasrahProfileRank=Bayi III`
+    - `PasrahProfileTotalMatches=0`
+    - `PasrahProfileTotalWins=0`
+    - `PasrahProfileWinRate=0`
+    - `PasrahProfileFavoriteTool=JejakEnergi`
+    - `PasrahProfileGalleryCount=3`
+    - `PasrahProfileBio=studio profile sync`
+    - `PasrahProfileFlexBorder=border_emerald`
+    - `PasrahProfileWinrateVisible=true`
+    - `PasrahProfileLastSource=update_profile`
+    - `PasrahProfileLastEvent=ProfileSnapshotBuilt`
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 14:58:57 +07:00 - Progression Server Identity
 - Status: DONE.
 - `Server.ProgressionSystem.Service`

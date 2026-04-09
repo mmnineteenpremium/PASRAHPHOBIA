@@ -365,6 +365,7 @@ function StudioE2EControlSystem.new(deps)
 	self._inventoryService = nil
 	self._royalPassService = nil
 	self._progressionService = nil
+	self._profileService = nil
 	self._evidenceService = nil
 	self._lobbyHubService = nil
 	self._ghostSystem = nil
@@ -382,6 +383,7 @@ function StudioE2EControlSystem:Init()
 	self._inventoryService = resolveService(self._deps, "InventorySystem", "HasItem")
 	self._royalPassService = resolveService(self._deps, "RoyalPassSystem", "GetPlayerSnapshot")
 	self._progressionService = resolveService(self._deps, "ProgressionSystem", "GetPlayerLevel")
+	self._profileService = resolveService(self._deps, "ProfileSystem", "GetPlayerProfile")
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._lobbyHubService = resolveService(self._deps, "LobbySocialHub", "OnPlayerEnteredZone")
 	self._ghostSystem = resolveService(self._deps, "GhostSystem", "GetGhostState")
@@ -1570,6 +1572,80 @@ function StudioE2EControlSystem:_handleGrantProgressionXP(player, request)
 	)
 end
 
+function StudioE2EControlSystem:_handleGetProfileSnapshot(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local profileService = self._profileService
+	if type(profileService) ~= "table" or type(profileService.GetPlayerProfile) ~= "function" then
+		return false, "missing_profile_service"
+	end
+
+	local snapshot = profileService:GetPlayerProfile(player)
+	if type(snapshot) ~= "table" then
+		return false, "snapshot_unavailable"
+	end
+
+	local favoriteTool = type(snapshot.statistics) == "table" and snapshot.statistics.favoriteTool or nil
+	local bio = type(snapshot.profile) == "table" and snapshot.profile.bio or nil
+	local galleryItems = type(snapshot.profile) == "table" and snapshot.profile.galleryItems or nil
+	return true, string.format(
+		"level=%d rank=%s totalMatches=%d totalWins=%d winRate=%d favoriteTool=%s gallery=%d bio=%s",
+		math.max(1, math.floor(tonumber(snapshot.playerLevel) or 1)),
+		tostring(type(snapshot.rank) == "table" and snapshot.rank.playerRank or "Bayi III"),
+		math.max(0, math.floor(tonumber(snapshot.totalMatches) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.totalWins) or 0)),
+		math.max(0, math.floor(tonumber(snapshot.winRate) or 0)),
+		tostring(favoriteTool or "-"),
+		type(galleryItems) == "table" and #galleryItems or 0,
+		tostring(bio or "")
+	)
+end
+
+function StudioE2EControlSystem:_handleUpdateProfileSnapshot(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local profileService = self._profileService
+	if type(profileService) ~= "table" or type(profileService.UpdateProfile) ~= "function" then
+		return false, "missing_profile_service"
+	end
+
+	local payload = {
+		profile = {
+			bio = type(request) == "table" and tostring(request.bio or "studio profile sync") or "studio profile sync",
+			flexBorder = type(request) == "table" and request.flexBorder or "border_emerald",
+			winrateVisible = type(request) == "table" and request.winrateVisible ~= false or true,
+			galleryItems = type(request) == "table" and type(request.galleryItems) == "table" and cloneArray(request.galleryItems)
+				or { "gallery_evidence", "gallery_contract", "gallery_survival" },
+		},
+		statistics = {
+			favoriteTool = type(request) == "table" and request.favoriteTool or "JejakEnergi",
+		},
+	}
+
+	local ok, reason, snapshot = profileService:UpdateProfile(player, payload)
+	if ok ~= true then
+		return false, tostring(reason or "update_failed")
+	end
+	if type(snapshot) ~= "table" then
+		return false, "snapshot_unavailable"
+	end
+
+	local favoriteTool = type(snapshot.statistics) == "table" and snapshot.statistics.favoriteTool or nil
+	local galleryItems = type(snapshot.profile) == "table" and snapshot.profile.galleryItems or nil
+	return true, string.format(
+		"level=%d rank=%s favoriteTool=%s gallery=%d bio=%s",
+		math.max(1, math.floor(tonumber(snapshot.playerLevel) or 1)),
+		tostring(type(snapshot.rank) == "table" and snapshot.rank.playerRank or "Bayi III"),
+		tostring(favoriteTool or "-"),
+		type(galleryItems) == "table" and #galleryItems or 0,
+		tostring(type(snapshot.profile) == "table" and snapshot.profile.bio or "")
+	)
+end
+
 function StudioE2EControlSystem:_handleUseEvidenceTool(player, request)
 	local evidenceService = self._evidenceService
 	if type(evidenceService) ~= "table" or type(evidenceService.ProcessToolUse) ~= "function" then
@@ -2252,6 +2328,10 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleGetProgressionSnapshot(player)
 		elseif action == "GrantProgressionXP" then
 			return self:_handleGrantProgressionXP(player, request)
+		elseif action == "GetProfileSnapshot" then
+			return self:_handleGetProfileSnapshot(player)
+		elseif action == "UpdateProfileSnapshot" then
+			return self:_handleUpdateProfileSnapshot(player, request)
 		elseif action == "UseEvidenceTool" then
 			return self:_handleUseEvidenceTool(player, request)
 		elseif action == "ConsumeHuntProtection" then
