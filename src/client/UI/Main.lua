@@ -4585,12 +4585,7 @@ function UISystem:Init(context)
 		viewMode = "Rewards",
 	}
 	self._royalPassTrackFocusKey = nil
-	self._spectatorState = {
-		lastEvent = "Idle",
-		title = "Belum spectate.",
-		subtitle = "Panel ini akan aktif saat local player mati atau mode spectator berjalan.",
-		mode = "none",
-	}
+	self._spectatorState = self:_createDefaultSpectatorState()
 	self._pasraState = {
 		lastEvent = "Idle",
 		status = "Belum ada hasil match.",
@@ -4696,6 +4691,23 @@ function UISystem:_connectLobbyEventRouting()
 	end)
 end
 
+function UISystem:_createDefaultSpectatorState(lastEvent)
+	return {
+		lastEvent = type(lastEvent) == "string" and lastEvent ~= "" and lastEvent or "Idle",
+		title = "Belum spectate.",
+		subtitle = "Panel ini akan aktif saat local player mati atau mode spectator berjalan.",
+		mode = "none",
+	}
+end
+
+function UISystem:_resetSpectatorState(lastEvent)
+	self._spectatorState = self:_createDefaultSpectatorState(lastEvent)
+	if self._uiState and self._uiState.SpectatorUI then
+		self._uiState.SpectatorUI.lastEvent = self._spectatorState.lastEvent
+		self._uiState.SpectatorUI.visible = false
+	end
+end
+
 function UISystem:_onServerEvent(remoteName, payload)
 	local eventName = payload and payload.eventName or "UnknownEvent"
 
@@ -4784,7 +4796,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._uiState.JournalUI.visible = false
 			self._uiState.RoyalPassUI.visible = true
 			self._uiState.PASRA_UI.visible = false
-			self._uiState.SpectatorUI.visible = false
+			self:_resetSpectatorState(eventName)
 			self:_resetFieldKitToolStates()
 			self:_setMatchWindowDismissed(false)
 			self:_refreshBasicMatchPanel("Lobby")
@@ -4881,21 +4893,13 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self:_closeConflictingWindows("SpectatorUI")
 			task.delay(5, function()
 				if self._spectatorState.mode == "warning" then
-					self._spectatorState.mode = "none"
-					self._spectatorState.title = "Belum spectate."
-					self._spectatorState.subtitle = "Panel ini akan aktif saat local player mati atau mode spectator berjalan."
-					self._uiState.SpectatorUI.visible = false
+					self:_resetSpectatorState(self._spectatorState.lastEvent)
 					self:_refreshSpectatorPanel()
 					self:_applyVisibility()
 				end
 			end)
 		elseif eventName == "PlayerRespawned" and payload and payload.localPlayerRespawned == true then
-			self._uiState.SpectatorUI.lastEvent = eventName
-			self._uiState.SpectatorUI.visible = false
-			self._spectatorState.lastEvent = eventName
-			self._spectatorState.mode = "none"
-			self._spectatorState.title = "Belum spectate."
-			self._spectatorState.subtitle = "Panel ini akan aktif saat local player mati atau mode spectator berjalan."
+			self:_resetSpectatorState(eventName)
 		elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
 			if payload and type(payload) == "table" then
 				local previousResult = self._matchResult or createDefaultMatchResult()
@@ -4919,7 +4923,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self:_setRoomBrowserVisible(false)
 			self._uiState.PASRA_UI.lastEvent = eventName
 			self._uiState.PASRA_UI.visible = false
-			self._uiState.SpectatorUI.visible = false
+			self:_resetSpectatorState(eventName)
 			self._uiState.MatchUI.visible = true
 			self._pasraState.lastEvent = eventName
 			self._pasraState.status = payload and payload.missionFailed == true and "Misi berakhir dengan gagal." or "Misi selesai. Hasil dan reward siap dibaca."
@@ -4940,7 +4944,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			end
 			self._uiState.PASRA_UI.lastEvent = eventName
 			self._uiState.PASRA_UI.visible = false
-			self._uiState.SpectatorUI.visible = false
+			self:_resetSpectatorState(eventName)
 			self._uiState.MatchUI.visible = true
 			self._pasraState.lastEvent = eventName
 			self._pasraState.status = "Reward summary diterima dari server."
@@ -4963,7 +4967,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self:_forceCloseAllPanelsForTeleport()
 			self._uiState.PASRA_UI.visible = false
 			self._uiState.MatchUI.visible = true
-			self._uiState.SpectatorUI.visible = false
+			self:_resetSpectatorState(eventName)
 			self._uiState.JournalUI.visible = true
 			self._uiState.ProfileUI.visible = false
 			self._uiState.ShopUI.visible = false
@@ -4985,8 +4989,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._uiState.MatchUI.visible = keepResultsVisible
 			self._uiState.JournalUI.visible = false
 			self._uiState.PASRA_UI.visible = false
-			self._uiState.SpectatorUI.visible = false
-			self._spectatorState.mode = "none"
+			self:_resetSpectatorState(eventName)
 			self:_resetFieldKitToolStates()
 			self:_setMatchWindowDismissed(false)
 			self:_refreshBasicMatchPanel(keepResultsVisible and "Results" or "Lobby", payload)
@@ -6387,8 +6390,7 @@ function UISystem:_returnFromResultsToLobby()
 	self._uiState.MatchUI.visible = false
 	self._uiState.JournalUI.visible = false
 	self._uiState.PASRA_UI.visible = false
-	self._uiState.SpectatorUI.visible = false
-	self._spectatorState.mode = "none"
+	self:_resetSpectatorState("ReturnedToLobby")
 	self._matchWindowDismissed = false
 	self:_setRoomBrowserVisible(false)
 	self:_hideTeleportOverlay()
