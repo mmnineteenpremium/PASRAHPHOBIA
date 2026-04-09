@@ -13967,3 +13967,20 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Note:
   - the Play Solo run can re-enter danger if left running too long inside the active match; proof was captured at the first truthful respawn-exit state, then Studio was returned to STOP TEST.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 12:25:42 +07:00 - Add Simulated Teammate Warning Probe
+- Status: DONE.
+- `Server.StudioE2EControlSystem.Main` now exposes `SimulateTeammateWarning` on the existing Studio E2E remote, using the real `MatchEvent` client route instead of a duplicate debug channel.
+- Build passed: `_tmp_teammate_warning_sim_build.rbxlx`.
+- Live Studio proof in Play Solo:
+  - `StartSoloMatch` -> `ok=true | action=StartSoloMatch | result=match=match_1 map=HauntedHouse mode=Classic difficulty=Mudah players=1`
+  - `AdvancePhase` -> `ok=true | action=AdvancePhase | result=match=match_1 nextPhase=InvestigationPhase`
+  - `SimulateTeammateWarning` -> `ok=true | action=SimulateTeammateWarning | result=match=match_1 teammate=DebugTeammate(910001)`
+  - spectator warning UI entered the expected non-local path:
+    - `PasrahSpectatorMode=warning`
+    - `PasrahSpectatorUIVisible=true`
+    - `PasrahSpectatorLastEvent=PlayerKilled`
+    - `PasrahSpectatorTitle=TEAMMATE DOWN`
+- Note:
+  - this batch proves the client warning lane through the existing Studio E2E owner, not through real multiplayer replication.
+- Roblox Studio was returned to STOP TEST before logging.
