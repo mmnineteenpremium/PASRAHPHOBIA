@@ -32,6 +32,34 @@ local function toUserId(playerOrUserId)
     return nil
 end
 
+local function stampSpectatorRuntime(target, payload)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+
+    target:SetAttribute("PasrahSpectatorOwner", "SpectatorModeSystem")
+    target:SetAttribute("PasrahSpectatorMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
+    target:SetAttribute("PasrahSpectatorReason", type(payload.reason) == "string" and payload.reason or nil)
+    target:SetAttribute("PasrahSpectatorMode", type(payload.mode) == "string" and payload.mode or nil)
+    target:SetAttribute("PasrahSpectatorActive", payload.active == true)
+    target:SetAttribute("PasrahSpectatorLimitedAwareness", payload.limitedAwareness == true)
+    target:SetAttribute("PasrahSpectatorEnteredAt", payload.active == true and os.clock() or nil)
+end
+
+local function clearSpectatorRuntime(target)
+    if typeof(target) ~= "Instance" or not target:IsA("Player") then
+        return
+    end
+
+    target:SetAttribute("PasrahSpectatorOwner", nil)
+    target:SetAttribute("PasrahSpectatorMatchId", nil)
+    target:SetAttribute("PasrahSpectatorReason", nil)
+    target:SetAttribute("PasrahSpectatorMode", nil)
+    target:SetAttribute("PasrahSpectatorActive", nil)
+    target:SetAttribute("PasrahSpectatorLimitedAwareness", nil)
+    target:SetAttribute("PasrahSpectatorEnteredAt", nil)
+end
+
 local function resolveBounds(payload)
     local candidate = payload and (payload.spectatorBounds or payload.cameraBounds or payload.mapBounds)
     if type(candidate) == "table" and typeof(candidate.min) == "Vector3" and typeof(candidate.max) == "Vector3" then
@@ -141,6 +169,13 @@ function Service:_registerSpectator(matchId, userId, player, reason)
         player = player,
         source = "SpectatorModeSystem",
     })
+    stampSpectatorRuntime(player, {
+        matchId = matchId,
+        reason = reason or "death",
+        mode = "FreeCamera",
+        active = true,
+        limitedAwareness = true,
+    })
 end
 
 function Service:_removeSpectator(matchId, userId, player, reason)
@@ -163,6 +198,13 @@ function Service:_removeSpectator(matchId, userId, player, reason)
         reason = reason or "exit",
         source = "SpectatorModeSystem",
     })
+    stampSpectatorRuntime(player, {
+        matchId = matchId,
+        reason = reason or "exit",
+        mode = nil,
+        active = false,
+        limitedAwareness = false,
+    })
 end
 
 function Service:_clearMatch(matchId)
@@ -180,11 +222,20 @@ function Service:_clearMatch(matchId)
     self:_setBoundsMap(bounds)
 
     for userId in pairs(matchSpectators) do
+        local player = game:GetService("Players"):GetPlayerByUserId(userId)
         self:_publish("SpectatorModeEnded", {
             matchId = matchId,
             userId = userId,
+            player = player,
             reason = "match_ended",
             source = "SpectatorModeSystem",
+        })
+        stampSpectatorRuntime(player, {
+            matchId = matchId,
+            reason = "match_ended",
+            mode = nil,
+            active = false,
+            limitedAwareness = false,
         })
     end
 end
@@ -200,6 +251,9 @@ function Service:HandleEvent(eventName, payload)
         local spectators = self:_spectatorMap()
         spectators[matchId] = {}
         self:_setSpectatorMap(spectators)
+        for _, player in ipairs(type(payload.players) == "table" and payload.players or {}) do
+            clearSpectatorRuntime(player)
+        end
         return
     end
 

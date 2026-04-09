@@ -4264,3 +4264,17 @@ Urutan yang paling masuk akal dari titik sekarang:
   - `LeaderboardPanel` -> `PasrahLeaderboardUIVisible=false`
   - `LeaderboardDeck/HeroCard` -> `PasrahLeaderboardUIVisible=false`
 - Studio stop-test reporting rule followed.
+
+## 2026-04-09 11:39:31 +07:00 - Dead To Spectator Identity + Client Bridge
+- Status: DONE.
+- `DeathStateSystem` now owns death runtime truth for this lane and fires `MatchEvent.PlayerKilled` to match clients with truthful `localPlayerKilled`.
+- `SpectatorModeSystem` now stamps direct runtime attrs on player enter/exit/match-end.
+- Build passed: `_tmp_deadstate_spectator_identity_build.rbxlx`.
+- Live proof in Play Solo:
+  - dead player attrs -> `PasrahDeathOwner=DeathStateSystem`, `PasrahDeathState=Dead`, `PasrahDeathLastEvent=PlayerKilled`, `PasrahDeathActive=true`
+  - spectator attrs -> `PasrahSpectatorOwner=SpectatorModeSystem`, `PasrahSpectatorMode=FreeCamera`, `PasrahSpectatorActive=true`
+  - spectator UI -> `PasrahSpectatorUIVisible=true`, `PasrahSpectatorMode=dead`, `PasrahSpectatorLastEvent=PlayerKilled`
+- Scope intentionally not claimed here:
+  - teammate warning path in multiplayer
+  - respawn exit path
+- Studio stop-test reporting rule followed.

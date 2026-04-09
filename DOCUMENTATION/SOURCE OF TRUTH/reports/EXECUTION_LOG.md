@@ -13903,3 +13903,29 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `LeaderboardDeck.Visible=true` and `HeroCard.Visible=true`, both now stamped `PasrahLeaderboardUIVisible=false` while panel is hidden.
   - channel attrs are present and canonical (`MainMenuPanel`, `MainMenuFloatButton`, `LeaderboardPanel`, `LeaderboardDeck`, `LeaderboardHeroCard`).
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 11:39:31 +07:00 - Close Dead To Spectator Runtime Truth
+- Status: DONE.
+- `Server.DeathStateSystem.Service` is now the canonical owner for death runtime truth in this lane:
+  - stamps `PasrahDeath*` attrs directly on the dead player
+  - forwards `MatchEvent.PlayerKilled` to match clients with truthful `localPlayerKilled`
+- `Server.SpectatorModeSystem.Service` now stamps `PasrahSpectator*` attrs directly on the player for enter/exit/match-end transitions.
+- Build passed: `_tmp_deadstate_spectator_identity_build.rbxlx`.
+- Live Studio proof in Play Solo:
+  - `StartSoloMatch` -> `ok=true | action=StartSoloMatch | result=match=match_1 map=HauntedHouse mode=Classic difficulty=Mudah players=1`
+  - `AdvancePhase` -> `ok=true | action=AdvancePhase | result=match=match_1 nextPhase=InvestigationPhase`
+  - forced death after spawn-protection window produced:
+    - player attrs:
+      - `PasrahDeathOwner=DeathStateSystem`
+      - `PasrahDeathState=Dead`
+      - `PasrahDeathLastEvent=PlayerKilled`
+      - `PasrahDeathActive=true`
+      - `PasrahSpectatorOwner=SpectatorModeSystem`
+      - `PasrahSpectatorMode=FreeCamera`
+      - `PasrahSpectatorActive=true`
+    - UI attrs:
+      - `Players.ZyraaaVex.PlayerGui.SpectatorUI.MainPanel`
+      - `PasrahSpectatorUIVisible=true`
+      - `PasrahSpectatorMode=dead`
+      - `PasrahSpectatorLastEvent=PlayerKilled`
+- Roblox Studio was returned to STOP TEST before logging.
