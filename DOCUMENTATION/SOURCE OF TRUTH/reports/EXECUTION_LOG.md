@@ -13058,6 +13058,38 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Client UI roots were present during the probe.
 - Roblox Studio was returned to STOP TEST before logging.
 
+## 2026-04-09 14:58:57 +07:00 - Progression Server Identity
+- Status: DONE.
+- `Server.ProgressionSystem.Service`
+  - now stamps `PasrahProgression*` directly on the player for session init/save, XP grants, level-up publishing, and snapshot builds
+  - keeps owner truthful as `ProgressionSystem`, with stored/session XP and level attached to runtime state
+- `Server.ProgressionSystem.Main`
+  - now exposes `GetPlayerSnapshot` on the canonical owner wrapper so Studio probes do not have to reach into the raw service table
+- `Server.StudioE2EControlSystem.Main`
+  - now exposes `GetProgressionSnapshot`
+  - now exposes `GrantProgressionXP`
+- Build passed:
+  - `_tmp_progression_identity_build.rbxlx`
+- Live proof in Play Solo:
+  - baseline snapshot:
+    - `ok=true | action=GetProgressionSnapshot | result=storedXP=0 storedLevel=1 sessionXP=0 sessionLevel=1`
+  - XP grant:
+    - `ok=true | action=GrantProgressionXP | result=amount=275 storedXP=275 storedLevel=3 sessionXP=0 sessionLevel=1`
+  - post-grant snapshot:
+    - `ok=true | action=GetProgressionSnapshot | result=storedXP=275 storedLevel=3 sessionXP=0 sessionLevel=1`
+  - hot runtime attrs on player:
+    - `PasrahProgressionOwner=ProgressionSystem`
+    - `PasrahProgressionStoredXP=275`
+    - `PasrahProgressionStoredLevel=3`
+    - `PasrahProgressionSessionXP=0`
+    - `PasrahProgressionSessionLevel=1`
+    - `PasrahProgressionLastSource=ProgressionSystem`
+    - `PasrahProgressionLastGrantedXP=275`
+    - `PasrahProgressionLastEvent=ProgressionSnapshotBuilt`
+- Note:
+  - the first probe run exposed a real wrapper gap: `GetProgressionSnapshot` returned `snapshot_unavailable` because `ProgressionSystem.Main` did not expose `GetPlayerSnapshot`; the lane is only marked DONE after fixing the wrapper and re-proving the Studio actions live.
+- Roblox Studio was returned to STOP TEST before logging.
+
 ## 2026-04-09 13:03:16 +07:00 - Stamp Royal Pass Server Identity
 - Status: DONE.
 - `Server.RoyalPassSystem.Service` now stamps direct runtime attrs on the player under the active owner:
