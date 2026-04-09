@@ -14000,3 +14000,108 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `PasrahSpectatorLastEvent=PlayerKilled`
     - `PasrahSpectatorTitle=Belum spectate.`
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 12:01:36 +07:00 - Centralize Spectator Baseline Reset + Restore UI Compile Health
+- Status: DONE.
+- `Client.UI.Main` now resets spectator baseline through one canonical helper instead of repeating manual `mode/title/subtitle/visible` mutations across teammate-warning decay, respawn, match start/end, lobby return, and results exit.
+- The helper was implemented as a `UISystem` method, not a new top-level local function, to avoid re-triggering the Luau `out of local registers` failure in `Client.UI.Main`.
+- Build passed: `_tmp_spectator_reset_helper_build.rbxlx`.
+- Live Studio proof in Play Solo through the existing Studio E2E path:
+  - `StartSoloMatch` -> `ok=true | action=StartSoloMatch | result=match=match_5 map=HauntedHouse mode=Classic difficulty=Mudah players=1`
+  - `AdvancePhase` -> `ok=true | action=AdvancePhase | result=match=match_5 nextPhase=InvestigationPhase`
+  - `SimulateTeammateWarning` hot state:
+    - `PasrahSpectatorMode=warning`
+    - `PasrahSpectatorUIVisible=true`
+    - `PasrahSpectatorTitle=TEAMMATE DOWN`
+    - `PasrahSpectatorLastEvent=PlayerKilled`
+  - cooled state after timeout:
+    - `PasrahSpectatorMode=none`
+    - `PasrahSpectatorUIVisible=false`
+    - `PasrahSpectatorTitle=Belum spectate.`
+    - `PasrahSpectatorLastEvent=PlayerKilled`
+- Health check:
+  - no fresh `ClientBootstrap` warnings
+  - no fresh `out of local registers` errors from `Players.ZyraaaVex.PlayerScripts.Client.UI.Main`
+
+## 2026-04-09 12:01:36 +07:00 - Stamp Spectator FX Runtime Identity
+- Status: DONE.
+- `Client.SpectatorEffects.Main` now stamps direct runtime attrs on:
+  - `Lighting.SpectatorBlurEffect`
+  - `Lighting.SpectatorColorCorrection`
+  - `PlayerGui.SpectatorUI.StaticFlickerOverlay`
+  - `PlayerGui.SpectatorUI.ColorDesaturationOverlay`
+  - local player attrs `PasrahSpectatorFX*`
+- New runtime truth includes owner/channel, active state, last outcome, last reason, overlay visibility, and blur/color intensity.
+- Build passed:
+  - `_tmp_spectator_effects_identity_build.rbxlx`
+  - `_tmp_spectator_lobby_exit_build.rbxlx`
+- Live Studio proof via direct module probe of the client owner:
+  - hot state:
+    - player attrs:
+      - `PasrahSpectatorFXOwner=SpectatorEffects`
+      - `PasrahSpectatorFXActive=true`
+      - `PasrahSpectatorFXOutcome=fake`
+      - `PasrahSpectatorFXReason=StudioProbe`
+    - `Lighting.SpectatorBlurEffect`:
+      - `PasrahSpectatorFXOwner=SpectatorEffects`
+      - `PasrahSpectatorFXChannel=Blur`
+      - `PasrahSpectatorFXEnabled=true`
+      - `PasrahSpectatorFXIntensity=10`
+    - `Lighting.SpectatorColorCorrection`:
+      - `PasrahSpectatorFXOwner=SpectatorEffects`
+      - `PasrahSpectatorFXChannel=ColorCorrection`
+      - `PasrahSpectatorFXEnabled=true`
+  - cooled state after explicit exit:
+    - `PasrahSpectatorFXActive=false`
+    - `PasrahSpectatorFXReason=ExitSpectatorMode`
+    - `SpectatorBlurEffect.PasrahSpectatorFXEnabled=false`
+    - `SpectatorColorCorrection.PasrahSpectatorFXEnabled=false`
+- Note:
+  - this proof intentionally uses a direct client module probe because the current Studio E2E server surface does not yet expose a dedicated local-kill probe for this owner.
+
+## 2026-04-09 12:01:36 +07:00 - Stamp Spectator Client/Camera Identity + Lobby Exit Truth
+- Status: DONE.
+- `Client.SpectatorSystem.Main` now stamps direct runtime attrs on the local player and `Workspace.CurrentCamera`:
+  - `PasrahSpectatorClientOwner`
+  - `PasrahSpectatorClientActive`
+  - `PasrahSpectatorClientMode`
+  - `PasrahSpectatorClientTarget`
+  - `PasrahSpectatorClientDistortionState`
+  - `PasrahSpectatorClientLastEvent`
+  - `PasrahSpectatorClientReason`
+  - `PasrahSpectatorClientEnteredAt`
+- `SpectatorSystem` and `SpectatorEffects` now both clear on:
+  - `MatchCompleted`
+  - `ReturnedToLobby`
+  - `LobbyEntered`
+  - `RoomBrowserRoomLeft`
+- Build passed:
+  - `_tmp_spectator_system_identity_build.rbxlx`
+  - `_tmp_spectator_lobby_exit_build.rbxlx`
+- Live Studio proof via direct module probe:
+  - hot state:
+    - player attrs:
+      - `PasrahSpectatorClientOwner=SpectatorSystem`
+      - `PasrahSpectatorClientActive=true`
+      - `PasrahSpectatorClientMode=FreeCamera`
+      - `PasrahSpectatorClientTarget=ProbeTarget`
+      - `PasrahSpectatorClientReason=StudioProbe`
+    - `Workspace.CurrentCamera`:
+      - `PasrahSpectatorClientOwner=SpectatorSystem`
+      - `PasrahSpectatorClientActive=true`
+      - `PasrahSpectatorClientMode=FreeCamera`
+      - `PasrahSpectatorClientTarget=ProbeTarget`
+  - after `LobbyEntered` probe:
+    - player attrs:
+      - `PasrahSpectatorClientActive=false`
+      - `PasrahSpectatorClientMode=None`
+      - `PasrahSpectatorClientLastEvent=LobbyEntered`
+      - `PasrahSpectatorClientReason=LobbyEntered`
+    - camera attrs:
+      - `PasrahSpectatorClientActive=false`
+      - `PasrahSpectatorClientMode=None`
+    - FX lane also cleared truthfully:
+      - `PasrahSpectatorFXActive=false`
+      - `SpectatorBlurEffect.PasrahSpectatorFXEnabled=false`
+      - `SpectatorColorCorrection.PasrahSpectatorFXEnabled=false`
+- Roblox Studio was returned to STOP TEST before logging.

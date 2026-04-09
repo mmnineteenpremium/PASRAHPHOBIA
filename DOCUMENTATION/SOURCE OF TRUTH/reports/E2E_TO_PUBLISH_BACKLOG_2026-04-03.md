@@ -4314,3 +4314,41 @@ Urutan yang paling masuk akal dari titik sekarang:
 - Live proof in Play Solo via `SimulateTeammateWarning`:
   - hot -> `PasrahSpectatorMode=warning`, `PasrahSpectatorUIVisible=true`, `PasrahSpectatorTitle=TEAMMATE DOWN`
   - cooled -> `PasrahSpectatorMode=none`, `PasrahSpectatorUIVisible=false`, `PasrahSpectatorLastEvent=PlayerKilled`, `PasrahSpectatorTitle=Belum spectate.`
+
+## 2026-04-09 12:01:36 +07:00 - Spectator Client Identity Follow-Up
+- Status: DONE.
+- `Client.UI.Main`
+  - centralized spectator baseline reset into one helper
+  - removed the fresh `out of local registers` regression by keeping the helper on `UISystem`, not as a new top-level local
+- `Client.SpectatorEffects.Main`
+  - stamps `PasrahSpectatorFX*` on blur, color correction, spectator overlays, and local player attrs
+- `Client.SpectatorSystem.Main`
+  - stamps `PasrahSpectatorClient*` on local player and `Workspace.CurrentCamera`
+  - clears spectator client state on `MatchCompleted`, `ReturnedToLobby`, `LobbyEntered`, and `RoomBrowserRoomLeft`
+- Builds passed:
+  - `_tmp_spectator_reset_helper_build.rbxlx`
+  - `_tmp_spectator_effects_identity_build.rbxlx`
+  - `_tmp_spectator_system_identity_build.rbxlx`
+  - `_tmp_spectator_lobby_exit_build.rbxlx`
+- Live proof:
+  - event-path Play Solo:
+    - `SimulateTeammateWarning` still goes `warning -> none` with `PasrahSpectatorLastEvent=PlayerKilled`
+  - direct client owner probe:
+    - hot spectator client:
+      - `PasrahSpectatorClientOwner=SpectatorSystem`
+      - `PasrahSpectatorClientActive=true`
+      - `PasrahSpectatorClientMode=FreeCamera`
+      - `PasrahSpectatorClientTarget=ProbeTarget`
+    - hot spectator FX:
+      - `PasrahSpectatorFXOwner=SpectatorEffects`
+      - `PasrahSpectatorFXActive=true`
+      - `SpectatorBlurEffect.PasrahSpectatorFXEnabled=true`
+      - `SpectatorColorCorrection.PasrahSpectatorFXEnabled=true`
+    - after `LobbyEntered` probe:
+      - `PasrahSpectatorClientActive=false`
+      - `PasrahSpectatorClientMode=None`
+      - `PasrahSpectatorClientLastEvent=LobbyEntered`
+      - `PasrahSpectatorFXActive=false`
+      - blur/color correction attrs both disabled again
+- Note:
+  - local death routing itself was not re-probed in this batch because the current Studio E2E server surface still has no dedicated kill action for this owner; the new client identity was verified through direct module probes instead of inventing a fake server owner.
