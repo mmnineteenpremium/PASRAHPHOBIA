@@ -1,3 +1,7 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
 local SpectatorSystem = {}
 SpectatorSystem.__index = SpectatorSystem
 
@@ -20,12 +24,46 @@ local function resolveTargetLabel(target)
 	return nil
 end
 
+local function resolveTargetPlayer(payload)
+	local targetPlayer = payload and payload.targetPlayer
+	if typeof(targetPlayer) == "Instance" and targetPlayer:IsA("Player") then
+		return targetPlayer
+	end
+	local targetUserId = tonumber(payload and payload.targetUserId)
+	if targetUserId then
+		return Players:GetPlayerByUserId(targetUserId)
+	end
+	return nil
+end
+
+local function resolveTargetSubject(targetPlayer)
+	if typeof(targetPlayer) ~= "Instance" or not targetPlayer:IsA("Player") then
+		return nil
+	end
+	local character = targetPlayer.Character
+	if typeof(character) ~= "Instance" or not character:IsA("Model") then
+		return nil
+	end
+	return character:FindFirstChildOfClass("Humanoid")
+end
+
+local function resolveLocalSubject()
+	local localPlayer = Players.LocalPlayer
+	local character = localPlayer and localPlayer.Character
+	if typeof(character) ~= "Instance" or not character:IsA("Model") then
+		return nil
+	end
+	return character:FindFirstChildOfClass("Humanoid")
+end
+
 function SpectatorSystem:Init(context)
 	self._context = context
 	self._remotes = context.Remotes
 	self._connections = {}
 	self._isSpectating = false
 	self._cameraTarget = nil
+	self._cameraTargetUserId = nil
+	self._targetCharacterConnection = nil
 	self._distortionState = "none"
 	self._lastEvent = "Idle"
 	self._lastReason = nil
@@ -47,6 +85,10 @@ function SpectatorSystem:Start()
 			self:_onLobbyEvent(payload)
 		end))
 	end
+
+	table.insert(self._connections, RunService.RenderStepped:Connect(function()
+		self:_applySpectatorCamera()
+	end))
 end
 
 function SpectatorSystem:_onMatchEvent(payload)
@@ -67,13 +109,63 @@ function SpectatorSystem:_onLobbyEvent(payload)
 	end
 end
 
+function SpectatorSystem:_disconnectTargetCharacterConnection()
+	if self._targetCharacterConnection then
+		self._targetCharacterConnection:Disconnect()
+		self._targetCharacterConnection = nil
+	end
+end
+
+function SpectatorSystem:_bindTargetCharacter()
+	self:_disconnectTargetCharacterConnection()
+	if typeof(self._cameraTarget) ~= "Instance" or not self._cameraTarget:IsA("Player") then
+		return
+	end
+	self._targetCharacterConnection = self._cameraTarget.CharacterAdded:Connect(function()
+		self:_applySpectatorCamera()
+	end)
+end
+
+function SpectatorSystem:_applySpectatorCamera()
+	if self._isSpectating ~= true then
+		return
+	end
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	if (typeof(self._cameraTarget) ~= "Instance" or not self._cameraTarget:IsA("Player")) and self._cameraTargetUserId then
+		self._cameraTarget = Players:GetPlayerByUserId(self._cameraTargetUserId)
+	end
+	local targetSubject = resolveTargetSubject(self._cameraTarget)
+	if targetSubject then
+		camera.CameraType = Enum.CameraType.Custom
+		camera.CameraSubject = targetSubject
+	end
+end
+
+function SpectatorSystem:_restoreLocalCamera()
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	local localSubject = resolveLocalSubject()
+	camera.CameraType = Enum.CameraType.Custom
+	if localSubject then
+		camera.CameraSubject = localSubject
+	end
+end
+
 function SpectatorSystem:EnterSpectatorMode(payload)
 	self._isSpectating = true
-	self._cameraTarget = payload and payload.targetPlayer
+	self._cameraTarget = resolveTargetPlayer(payload)
+	self._cameraTargetUserId = tonumber(payload and payload.targetUserId) or (self._cameraTarget and self._cameraTarget.UserId) or nil
 	self._distortionState = "active"
 	self._lastEvent = payload and payload.eventName or "PlayerKilled"
 	self._lastReason = payload and payload.reason or "PlayerKilled"
 	self._enteredAt = os.clock()
+	self:_bindTargetCharacter()
+	self:_applySpectatorCamera()
 
 	local renderer = self._context.Registry:Get("GhostRenderer")
 	if renderer and renderer.SetSpectatorMode then
@@ -84,11 +176,14 @@ end
 
 function SpectatorSystem:ExitSpectatorMode(reason)
 	self._isSpectating = false
+	self:_disconnectTargetCharacterConnection()
 	self._cameraTarget = nil
+	self._cameraTargetUserId = nil
 	self._distortionState = "none"
 	self._lastEvent = type(reason) == "string" and reason ~= "" and reason or self._lastEvent
 	self._lastReason = type(reason) == "string" and reason ~= "" and reason or self._lastReason
 	self._enteredAt = nil
+	self:_restoreLocalCamera()
 
 	local renderer = self._context.Registry:Get("GhostRenderer")
 	if renderer and renderer.SetSpectatorMode then
@@ -98,7 +193,7 @@ function SpectatorSystem:ExitSpectatorMode(reason)
 end
 
 function SpectatorSystem:_stampRuntimeState()
-	local player = self._context and self._context.LocalPlayer or game:GetService("Players").LocalPlayer
+	local player = self._context and self._context.LocalPlayer or Players.LocalPlayer
 	local camera = workspace.CurrentCamera
 	local targetLabel = resolveTargetLabel(self._cameraTarget)
 	local active = self._isSpectating == true

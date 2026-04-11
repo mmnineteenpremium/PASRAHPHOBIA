@@ -47,6 +47,9 @@
         "ClientBootstrap": {
           "$path": "src/StarterPlayerScripts/ClientBootstrap.client.lua"
         },
+        "StudioRoomSmoke": {
+          "$path": "src/StarterPlayerScripts/StudioRoomSmoke.client.lua"
+        },
         "Client": {
           "$path": "src/client"
         }
@@ -55,6 +58,9 @@
 
     "StarterGui": {
       "$className": "StarterGui",
+      "$properties": {
+        "ScreenOrientation": "LandscapeSensor"
+      },
       "$path": "src/StarterGui"
     },
 

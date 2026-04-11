@@ -1,0 +1,25 @@
+{
+  "Pid": 3804,
+  "Title": "Roblox Studio",
+  "CaptureArea": "client",
+  "ImagePath": "C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\.codex\\legal_runtime_secondary_client.png",
+  "WindowBounds": {
+    "Left": 804,
+    "Top": 1502,
+    "Width": 1720,
+    "Height": 720
+  },
+  "ClientBounds": {
+    "Left": 811,
+    "Top": 1533,
+    "Width": 1705,
+    "Height": 682
+  },
+  "CaptureBounds": {
+    "Left": 811,
+    "Top": 1533,
+    "Width": 1705,
+    "Height": 682
+  },
+  "CapturedAt": "2026-04-11T02:00:14.1648606+07:00"
+}

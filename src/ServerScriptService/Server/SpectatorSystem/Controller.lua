@@ -118,8 +118,6 @@ function Controller:OnPlayerKilled(payload)
         return
     end
 
-    self._service:EnterSpectator(player, matchId, payload)
-
     self._service:ProcessGhostActivity(matchId, {
         activityType = "player_killed",
         player = player,

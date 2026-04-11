@@ -10,7 +10,8 @@
 Status proyek sekarang:
 
 - `code/system readiness`: tinggi
-- `publish readiness`: mendekati akhir, tetapi belum `one-click publish`
+- `technical/platform publish readiness`: `REOPENED`
+- `public launch / owner-brand readiness`: `NO-GO`
 
 ## Yang Sudah Tertutup
 
@@ -34,32 +35,28 @@ Status proyek sekarang:
 - blueprint retention final
 - polish FPV / camera / flashlight baseline
 
-## Yang Masih Manual Sebelum Publish
+## Lane Manual Yang Sudah Ditutup
 
 1. `Creator Hub marketplaceId` final yang valid
-   - isi hanya `GamePassId / ProductId` nyata
-   - jangan pakai `UserId/account id`
-   - gunakan:
-     - `CREATOR_HUB_MARKETPLACE_MAPPING_2026-04-06.md`
+   - status: `PASS`
 
 2. smoke test `2 client` nyata
-   - gunakan:
-     - `QA_MULTIPLAYER_MANUAL_CHECKLIST_2026-04-06.md`
+   - status: `PASS` untuk core flow
+
+2a. forced reset / respawn guard path
+   - status: `PATCHED, RETEST PENDING`
 
 3. final check persistence non-mock
-   - validasi environment target di luar Studio mock
-   - gunakan:
-     - `PERSISTENCE_MANUAL_CHECKLIST_2026-04-06.md`
+   - status: `PASS`
 
 4. final asset/legal review
-   - cek attribution dan ledger asset eksternal
+   - status: `PASS`
 
 5. store/prompt review Roblox
-   - pastikan offer `Robux` yang visible memang punya mapping Creator Hub resmi
+   - status: `PASS`
 
 6. visual runtime spot-check
-   - gunakan:
-     - `VISUAL_RUNTIME_VERIFICATION_2026-04-06.md`
+   - status: `PASS`
 
 7. live publish gate spot-check
    - status terakhir:
@@ -69,21 +66,14 @@ Status proyek sekarang:
 
 ## Go / No-Go Saat Ini
 
-- `NO-GO` untuk publish final publik jika:
-  - `marketplaceId` resmi belum ada
-  - multiplayer smoke test belum dijalankan
-  - persistence target belum divalidasi di luar mock
-
-- `GO` untuk lanjut ke final verification jika:
-  - tiga poin di atas sudah beres
+- `REOPENED` untuk lane technical/platform publish sampai forced-reset retest ditutup
+- `NO-GO` untuk peluncuran publik penuh sampai owner/brand quality lane ditutup
+- blocker manual utama yang dulu menahan publish teknis memang hampir seluruhnya tertutup, tetapi forced-reset edge case masih butuh retest selain blocker kualitas produk/brand di luar lane ini
 
 ## Rekomendasi Urutan Terakhir
 
-1. isi `Creator Hub marketplaceId` resmi
-2. jalankan multiplayer manual checklist
-3. validasi persistence non-mock
-4. cek legal/licensing final
-5. baru publish review terakhir
+1. rerun forced-reset / respawn guard check pada `2` client nyata
+2. jika retest `PASS`, gunakan bundle evidence terbaru untuk release ops / publish decision
 
 Checklist operasional final:
 
@@ -91,9 +81,10 @@ Checklist operasional final:
 
 ## Catatan
 
-- ini bukan tanda proyek gagal publish
-- ini hanya berarti pekerjaan coding/arsitektur utama sudah sangat jauh, dan sisa risiko sekarang terkonsentrasi di lane manual/compliance/publish ops
-- preflight lokal terbaru sudah bersih di sisi build/report; blocker yang tersisa memang manual platform Roblox
+- lane manual/compliance/publish ops yang dulu menjadi blocker sudah ditutup
+- forced-reset regression ditemukan sesudah PASS core flow dan dibuka ulang pada `2026-04-11`; lihat `RESPAWN_GUARD_AND_FORCED_RESET_FIX_2026-04-11.md`
+- dokumen ini tidak boleh dibaca sebagai persetujuan final kualitas UI/GUI/UX/gameplay/content/brand
+- lihat `OWNER_BRAND_RELEASE_POSITION_2026-04-11.md` untuk posisi owner dan brand yang lebih tepat
 
 ## Referensi Resmi Roblox
 

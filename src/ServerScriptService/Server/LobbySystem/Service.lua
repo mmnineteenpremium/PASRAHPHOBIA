@@ -1086,8 +1086,15 @@ function Service:BindQueueTrigger()
 		if self:_isTouchDebounced(player) then
 			return
 		end
-		self:QueueFromRoomBrowser(player, {
-			source = "QueueTrigger",
+		self:_publish("LobbyWorldSurfaceRequested", {
+			eventName = "LobbyWorldSurfaceRequested",
+			player = player,
+			recipients = { player },
+			zoneName = "MatchmakingZone",
+			title = "Room Browser dibuka",
+			message = "Buat room, join room, lalu host start dari Room Browser sebelum match dimulai.",
+			surface = "RoomBrowser",
+			source = "QueueTriggerTouch",
 		})
 	end))
 	self._state:Set("queueTriggerConnections", connections)
@@ -1170,7 +1177,6 @@ function Service:OnPlayerRemoved(player)
 end
 
 return Service
-
 
 
 

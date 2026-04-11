@@ -2,6 +2,7 @@ local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local SpectatorEffects = {}
 SpectatorEffects.__index = SpectatorEffects
@@ -19,6 +20,41 @@ local DISTORTION_EVENT_NAMES = {
 	SpectatorDistortionGenerated = true,
 	GhostDistortionPulse = true,
 }
+
+local UI_GRAPHICS_MODE_ATTR = "PasrahGraphicsMode"
+
+local GRAPHICS_POST_PROFILES = {
+	Performance = {
+		blurScale = 0.45,
+		colorScale = 0.72,
+	},
+	Balanced = {
+		blurScale = 0.74,
+		colorScale = 0.88,
+	},
+	Quality = {
+		blurScale = 1,
+		colorScale = 1,
+	},
+}
+
+local function normalizeGraphicsMode(mode)
+	local normalized = tostring(mode or ""):lower()
+	if normalized == "performance" then
+		return "Performance"
+	end
+	if normalized == "quality" then
+		return "Quality"
+	end
+	return "Balanced"
+end
+
+local function resolveDefaultGraphicsMode()
+	if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled and not UserInputService.GamepadEnabled then
+		return "Balanced"
+	end
+	return "Quality"
+end
 
 local function ensureOverlayFrame(parent, name, backgroundTransparency)
 	local overlay = parent:FindFirstChild(name)
@@ -83,6 +119,8 @@ function SpectatorEffects:Init(context)
 	self._lastReason = "Idle"
 	self._staticOverlay = nil
 	self._desaturationOverlay = nil
+	self._graphicsMode = resolveDefaultGraphicsMode()
+	self._graphicsProfile = GRAPHICS_POST_PROFILES[self._graphicsMode] or GRAPHICS_POST_PROFILES.Balanced
 
 	self._blur = Lighting:FindFirstChild("SpectatorBlurEffect")
 	if not self._blur then
@@ -108,6 +146,13 @@ function SpectatorEffects:Init(context)
 end
 
 function SpectatorEffects:Start()
+	local localPlayer = Players.LocalPlayer
+	if localPlayer then
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal(UI_GRAPHICS_MODE_ATTR):Connect(function()
+			self:_refreshGraphicsModeState()
+		end))
+	end
+
 	local matchEvent = self._remotes.MatchEvent
 	if matchEvent and matchEvent.OnClientEvent then
 		table.insert(self._connections, matchEvent.OnClientEvent:Connect(function(payload)
@@ -125,6 +170,45 @@ function SpectatorEffects:Start()
 	table.insert(self._connections, RunService.Heartbeat:Connect(function()
 		self:_onHeartbeat()
 	end))
+end
+
+function SpectatorEffects:_syncGraphicsMode()
+	local player = Players.LocalPlayer
+	local rawMode = player and player:GetAttribute(UI_GRAPHICS_MODE_ATTR) or nil
+	local mode = rawMode ~= nil and normalizeGraphicsMode(rawMode) or resolveDefaultGraphicsMode()
+	self._graphicsMode = mode
+	self._graphicsProfile = GRAPHICS_POST_PROFILES[mode] or GRAPHICS_POST_PROFILES.Balanced
+	if player then
+		player:SetAttribute("PasrahSpectatorGraphicsMode", mode)
+	end
+	return self._graphicsProfile
+end
+
+function SpectatorEffects:_scaleBlurSize(blurSize)
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
+	return math.max(0, math.floor((tonumber(blurSize) or 0) * (graphicsProfile.blurScale or 1) + 0.5))
+end
+
+function SpectatorEffects:_scaleColorValue(value)
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
+	return (tonumber(value) or 0) * (graphicsProfile.colorScale or 1)
+end
+
+function SpectatorEffects:_refreshGraphicsModeState()
+	self:_syncGraphicsMode()
+	if not self._isSpectating then
+		self:_stampRuntimeState()
+		return
+	end
+	if self._lastOutcome == "fake" then
+		self:_setPostEffects(10, -0.35, 0.2)
+	elseif self._lastOutcome == "uncertain" then
+		self:_setPostEffects(6, -0.55, 0.12)
+	elseif self._lastOutcome == "real" then
+		self:_setPostEffects(3, -0.2, 0.08)
+	else
+		self:_setPostEffects(2, -0.15, 0.05)
+	end
 end
 
 function SpectatorEffects:_onMatchEvent(payload)
@@ -190,12 +274,15 @@ function SpectatorEffects:ExitSpectatorMode()
 end
 
 function SpectatorEffects:_setPostEffects(blurSize, saturation, contrast)
-	self._blur.Enabled = blurSize > 0
-	self._blur.Size = blurSize
+	local scaledBlur = self:_scaleBlurSize(blurSize)
+	local scaledSaturation = self:_scaleColorValue(saturation)
+	local scaledContrast = self:_scaleColorValue(contrast)
+	self._blur.Enabled = scaledBlur > 0
+	self._blur.Size = scaledBlur
 
-	self._color.Enabled = saturation ~= 0 or contrast ~= 0
-	self._color.Saturation = saturation
-	self._color.Contrast = contrast
+	self._color.Enabled = scaledSaturation ~= 0 or scaledContrast ~= 0
+	self._color.Saturation = scaledSaturation
+	self._color.Contrast = scaledContrast
 	self:_stampRuntimeState()
 end
 
@@ -253,7 +340,7 @@ function SpectatorEffects:_triggerDistortion(_reason)
 		local tween = TweenService:Create(
 			self._blur,
 			TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-			{ Size = 2 }
+			{ Size = self:_scaleBlurSize(2) }
 		)
 		tween:Play()
 		self:_setPostEffects(2, -0.15, 0.05)

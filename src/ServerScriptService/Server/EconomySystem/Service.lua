@@ -24,6 +24,7 @@ local MATCH_PP_THRESHOLD_A = 70
 local MATCH_PP_THRESHOLD_B = 90
 local MATCH_PP_EXTRACT_BONUS = 1
 local MATCH_PP_MAX = 4
+local WALLET_PERSIST_DEBOUNCE_SECONDS = 1
 local MM_UNCAPPED_REASONS = {
     ShopPurchaseRefund = true,
     GiftPurchaseRefund = true,
@@ -55,6 +56,22 @@ local function resolveEventBus(deps)
     return nil
 end
 
+local function resolvePersistenceService(deps)
+    local persistence = Services.Get(deps, "DataPersistenceService")
+    if type(persistence) ~= "table" then
+        return nil
+    end
+    if type(persistence.LoadProfile) == "function" and type(persistence.SaveProfile) == "function" then
+        return persistence
+    end
+    if type(persistence.Service) == "table"
+        and type(persistence.Service.LoadProfile) == "function"
+        and type(persistence.Service.SaveProfile) == "function" then
+        return persistence.Service
+    end
+    return nil
+end
+
 local function toUserId(playerOrUserId)
     if type(playerOrUserId) == "number" then
         return playerOrUserId
@@ -78,8 +95,10 @@ function Service.new(state, deps)
     self._state = state
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
+    self._persistence = resolvePersistenceService(self._deps)
     self._rng = self._deps.Random or Random.new()
     self._maxWalletBalance = tonumber(self._deps.MaxWalletBalance) or MAX_WALLET_BALANCE
+    self._walletPersistScheduledByUserId = {}
     self._integrations = IntegrationModule.new({
         EventBus = self._eventBus,
         MatchSystem = Services.Get(self._deps, "MatchSystem"),
@@ -167,6 +186,95 @@ end
 
 function Service:_setWallets(wallets)
     self._state:Set("walletByUserId", wallets)
+end
+
+function Service:_resolvePersistence()
+    if self._persistence then
+        return self._persistence
+    end
+    self._persistence = resolvePersistenceService(self._deps)
+    return self._persistence
+end
+
+function Service:_sanitizeWallet(source)
+    local wallet = type(source) == "table" and source or {}
+    return {
+        MM = math.max(0, math.floor(tonumber(wallet.MM) or DEFAULT_STARTING_MM)),
+        PP = math.max(0, math.floor(tonumber(wallet.PP) or DEFAULT_STARTING_PP)),
+        Robux = math.max(0, math.floor(tonumber(wallet.Robux) or DEFAULT_STARTING_ROBUX)),
+    }
+end
+
+function Service:_setWalletForUser(userId, source)
+    if type(userId) ~= "number" then
+        return nil
+    end
+    local wallets = self:_wallets()
+    wallets[userId] = self:_sanitizeWallet(source)
+    self:_setWallets(wallets)
+    return wallets[userId]
+end
+
+function Service:_walletPersistencePayload(userId)
+    return {
+        profile = {
+            wallet = self:_sanitizeWallet(self:_ensureWallet(userId)),
+        },
+    }
+end
+
+function Service:LoadPlayerData(playerOrUserId)
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return false, "invalid_player"
+    end
+
+    local persistence = self:_resolvePersistence()
+    if type(persistence) ~= "table" or type(persistence.LoadProfile) ~= "function" then
+        self:_ensureWallet(userId)
+        return false, "missing_persistence"
+    end
+
+    local data = persistence:LoadProfile(userId)
+    local wallet = type(data) == "table"
+        and type(data.profile) == "table"
+        and type(data.profile.wallet) == "table"
+        and data.profile.wallet
+        or nil
+    if type(wallet) == "table" then
+        self:_setWalletForUser(userId, wallet)
+        return true, "loaded"
+    end
+
+    self:_ensureWallet(userId)
+    return true, "default_wallet"
+end
+
+function Service:SavePlayerData(playerOrUserId)
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return false, "invalid_player"
+    end
+
+    local persistence = self:_resolvePersistence()
+    if type(persistence) ~= "table" or type(persistence.SaveProfile) ~= "function" then
+        return false, "missing_persistence"
+    end
+
+    return persistence:SaveProfile(userId, self:_walletPersistencePayload(userId))
+end
+
+function Service:_scheduleWalletPersist(playerOrUserId)
+    local userId = toUserId(playerOrUserId)
+    if not userId or self._walletPersistScheduledByUserId[userId] == true then
+        return
+    end
+
+    self._walletPersistScheduledByUserId[userId] = true
+    task.delay(WALLET_PERSIST_DEBOUNCE_SECONDS, function()
+        self._walletPersistScheduledByUserId[userId] = nil
+        self:SavePlayerData(userId)
+    end)
 end
 
 function Service:_daily()
@@ -292,6 +400,7 @@ function Service:_addMMWithCap(player, amount, reason)
         balance = wallet.MM,
         reason = reason or "reward",
     })
+    self:_scheduleWalletPersist(userId)
 
     return allowed
 end
@@ -361,6 +470,7 @@ function Service:AddCurrency(player, currencyOrAmount, amountOrReason, reasonOrN
                 balance = wallet.MM,
                 reason = reason,
             })
+            self:_scheduleWalletPersist(userId)
             return true, nil, capped
         end
         local granted = self:_addMMWithCap(player, amount, reason or "manual_add")
@@ -381,6 +491,7 @@ function Service:AddCurrency(player, currencyOrAmount, amountOrReason, reasonOrN
             balance = wallet.Robux,
             reason = reason or "manual_add",
         })
+        self:_scheduleWalletPersist(userId)
         return true, nil, capped
     end
 
@@ -394,6 +505,7 @@ function Service:AddCurrency(player, currencyOrAmount, amountOrReason, reasonOrN
         balance = wallet[currency],
         reason = reason or "manual_add",
     })
+    self:_scheduleWalletPersist(userId)
     return true, nil, amount
 end
 
@@ -435,6 +547,7 @@ function Service:SpendCurrency(player, currencyOrAmount, amountOrReason, reasonO
         balance = wallet[currency],
         reason = reason or "spend",
     })
+    self:_scheduleWalletPersist(userId)
     return true
 end
 
@@ -472,6 +585,18 @@ function Service:SetPassOwnership(player, passState)
         pass[key] = value == true
     end
     return true
+end
+
+function Service:OnPlayerAdded(player)
+    self:LoadPlayerData(player)
+end
+
+function Service:OnPlayerRemoving(player)
+    local userId = toUserId(player)
+    if userId then
+        self._walletPersistScheduledByUserId[userId] = nil
+    end
+    self:SavePlayerData(player)
 end
 
 function Service:GetPassOwnership(player)

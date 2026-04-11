@@ -1,0 +1,25 @@
+{
+  "Pid": 36444,
+  "Title": "Place1 - Roblox Studio",
+  "CaptureArea": "client",
+  "ImagePath": "C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\.codex\\mp_clientB_before_actions.png",
+  "WindowBounds": {
+    "Left": -4,
+    "Top": 702,
+    "Width": 1715,
+    "Height": 693
+  },
+  "ClientBounds": {
+    "Left": 4,
+    "Top": 733,
+    "Width": 1699,
+    "Height": 654
+  },
+  "CaptureBounds": {
+    "Left": 4,
+    "Top": 733,
+    "Width": 1699,
+    "Height": 654
+  },
+  "CapturedAt": "2026-04-11T08:45:02.0224358+07:00"
+}

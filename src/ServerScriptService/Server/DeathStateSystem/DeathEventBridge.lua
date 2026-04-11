@@ -42,9 +42,12 @@ function DeathEventBridge.Start(deathService)
 			
 			-- ✅ NOW safe to fire event
 			local matchId = deathService._state:Get("activeMatchId")
-			deathService:HandleEvent("PlayerDied", {
+			deathService:PublishPlayerDied({
 				matchId = matchId,
 				userId = player.UserId,
+				player = player,
+				reason = "character_death",
+				source = "DeathEventBridge",
 			})
 		end)
 	end
@@ -56,6 +59,9 @@ function DeathEventBridge.Start(deathService)
 
 		player.CharacterAdded:Connect(function(character)
 			hookCharacter(player, character)
+			if type(deathService.HandleCharacterAdded) == "function" and deathService:HandleCharacterAdded(player, character) == true then
+				return
+			end
 			if shouldEmitRespawn(player) then
 				local matchId = deathService._state:Get("activeMatchId")
 				if type(matchId) == "string" then

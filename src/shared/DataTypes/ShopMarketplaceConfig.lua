@@ -10,46 +10,46 @@ local ShopMarketplaceConfig = {
     items = {
         -- GamePass
         royalpass_premium_track = {
-            marketplaceId = 0,
+            marketplaceId = 3573231558,
             enabled = false,
         },
         class_dukun_unlock = {
-            marketplaceId = 0,
+            marketplaceId = 3573231828,
             enabled = false,
         },
         class_detective_unlock = {
-            marketplaceId = 0,
+            marketplaceId = 3573232123,
             enabled = false,
         },
         lifetime_bonus_pass = {
-            marketplaceId = 0,
+            marketplaceId = 3573232383,
             enabled = false,
         },
 
         -- DeveloperProduct
         pp_pack_small = {
-            marketplaceId = 0,
-            enabled = false,
+            marketplaceId = 3573224039,
+            enabled = true,
         },
         mm_pack_small = {
-            marketplaceId = 0,
-            enabled = false,
+            marketplaceId = 3573226842,
+            enabled = true,
         },
         mm_pack_medium = {
-            marketplaceId = 0,
-            enabled = false,
+            marketplaceId = 3573227690,
+            enabled = true,
         },
         mm_pack_large = {
-            marketplaceId = 0,
-            enabled = false,
+            marketplaceId = 3573228070,
+            enabled = true,
         },
         pp_pack_standard = {
-            marketplaceId = 0,
-            enabled = false,
+            marketplaceId = 3573225850,
+            enabled = true,
         },
         pp_pack_large = {
-            marketplaceId = 0,
-            enabled = false,
+            marketplaceId = 3573226462,
+            enabled = true,
         },
     },
 }

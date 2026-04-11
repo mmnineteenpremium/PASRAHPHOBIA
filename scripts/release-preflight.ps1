@@ -26,6 +26,24 @@ $missingReports = @(
         Where-Object { -not (Test-Path (Join-Path $repoRoot $_)) }
 )
 
+$persistenceReportPath = Join-Path $repoRoot 'DOCUMENTATION\SOURCE OF TRUTH\reports\PERSISTENCE_RESULT_2026-04-11_REAL_DATASTORE.md'
+$persistenceValidated = $false
+if (Test-Path $persistenceReportPath) {
+    $persistenceReportText = Get-Content -Path $persistenceReportPath -Raw
+    if ($persistenceReportText -match 'status:\s*`PASS`') {
+        $persistenceValidated = $true
+    }
+}
+
+$legalReviewPath = Join-Path $repoRoot 'DOCUMENTATION\SOURCE OF TRUTH\reports\LEGAL_RUNTIME_REVIEW_2026-04-11.md'
+$legalReviewValidated = $false
+if (Test-Path $legalReviewPath) {
+    $legalReviewText = Get-Content -Path $legalReviewPath -Raw
+    if ($legalReviewText -match 'status:\s*`PASS`') {
+        $legalReviewValidated = $true
+    }
+}
+
 $buildOk = $false
 $buildError = $null
 try {
@@ -42,12 +60,19 @@ try {
 $mappingRaw = & pwsh $auditScript -Json
 $mapping = $mappingRaw | ConvertFrom-Json
 
-$manualBlockers = @(
-    'Creator Hub marketplaceId resmi belum diisi'
-    'smoke test 2 client nyata belum dijalankan'
-    'persistence non-mock belum divalidasi'
-    'legal/licensing final review belum dikonfirmasi'
-)
+$manualBlockers = New-Object System.Collections.Generic.List[string]
+
+if (($mapping.summary.safeItemsMissingMarketplaceId -gt 0) -or ($mapping.summary.safeItemsStillDisabled -gt 0) -or ($mapping.summary.holdItemsAccidentallyEnabled -gt 0) -or ($mapping.summary.unclassifiedItems -gt 0)) {
+    $manualBlockers.Add('Creator Hub marketplace mapping belum final (cek missing/disabled/hold/unclassified).')
+}
+
+$manualBlockers.Add('smoke test 2 client nyata belum dijalankan')
+if (-not $persistenceValidated) {
+    $manualBlockers.Add('persistence non-mock belum divalidasi')
+}
+if (-not $legalReviewValidated) {
+    $manualBlockers.Add('legal/licensing final review belum dikonfirmasi')
+}
 
 $summary = [pscustomobject]@{
     buildOk = $buildOk
@@ -55,7 +80,7 @@ $summary = [pscustomobject]@{
     buildError = $buildError
     missingReports = @($missingReports)
     mapping = $mapping.summary
-    manualBlockers = @($manualBlockers)
+    manualBlockers = @($manualBlockers.ToArray())
 }
 
 if ($Json) {

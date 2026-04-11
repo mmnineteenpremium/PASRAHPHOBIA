@@ -1,5 +1,7 @@
 local Controller = {}
 Controller.__index = Controller
+local Players = game:GetService("Players")
+local bindToCloseRegistered = false
 
 local function resolveEventBus(deps)
     local eventBus = (type(deps) == "table" and type(deps.Services) == "table" and type(deps.Services.Get) == "function" and deps.Services:Get("EventBus")) or (type(deps) == "table" and type(deps.ServiceRegistry) == "table" and type(deps.ServiceRegistry.Get) == "function" and deps.ServiceRegistry:Get("EventBus")) or (deps and deps.EventBus or nil)
@@ -31,6 +33,8 @@ function Controller.new(state, service, deps)
     self._service = service
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
+    self._players = self._deps.Players or Players
+    self._connections = {}
     self._subscriptions = {}
     self._handlersRegistered = false
     return self
@@ -44,12 +48,34 @@ function Controller:RegisterEventHandlers()
     if self._handlersRegistered then
         return
     end
+    if self._players then
+        table.insert(self._connections, self._players.PlayerAdded:Connect(function(player)
+            self._service:OnPlayerAdded(player)
+        end))
+        table.insert(self._connections, self._players.PlayerRemoving:Connect(function(player)
+            self._service:OnPlayerRemoving(player)
+        end))
+        for _, player in ipairs(self._players:GetPlayers()) do
+            self._service:OnPlayerAdded(player)
+        end
+    end
     if self._eventBus then
         self:_subscribe("DailyMissionCompleted", function(payload)
             self:OnDailyMissionCompleted(payload)
         end)
         self:_subscribe("DailyCheckinClaimed", function(payload)
             self:OnDailyCheckinClaimed(payload)
+        end)
+    end
+    if not bindToCloseRegistered then
+        bindToCloseRegistered = true
+        game:BindToClose(function()
+            if not self._players then
+                return
+            end
+            for _, player in ipairs(self._players:GetPlayers()) do
+                self._service:OnPlayerRemoving(player)
+            end
         end)
     end
     self._handlersRegistered = true
@@ -59,6 +85,10 @@ function Controller:UnregisterEventHandlers()
     if not self._handlersRegistered then
         return
     end
+    for _, connection in ipairs(self._connections) do
+        connection:Disconnect()
+    end
+    table.clear(self._connections)
     if self._eventBus then
         for _, sub in ipairs(self._subscriptions) do
             self._eventBus:Unsubscribe(sub.eventName, sub.callback)

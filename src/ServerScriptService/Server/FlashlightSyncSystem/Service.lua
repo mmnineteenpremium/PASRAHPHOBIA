@@ -48,6 +48,16 @@ local BOOST_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.boostBrightness) or 8
 local FILL_RANGE = tonumber(REMOTE_LIGHT_CONFIG.fillRange) or 13
 local FILL_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.fillBrightness) or 3
 
+local function toUserId(player)
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        return player.UserId
+    end
+    if type(player) == "number" then
+        return player
+    end
+    return nil
+end
+
 local function stampRemoteFlashlightInstance(instance, channel, data, player)
     if not instance then
         return
@@ -93,16 +103,6 @@ local function resolveEventBus(deps)
     end
     if type(eventBus.Service) == "table" and type(eventBus.Service.Publish) == "function" then
         return eventBus.Service
-    end
-    return nil
-end
-
-local function toUserId(player)
-    if typeof(player) == "Instance" and player:IsA("Player") then
-        return player.UserId
-    end
-    if type(player) == "number" then
-        return player
     end
     return nil
 end

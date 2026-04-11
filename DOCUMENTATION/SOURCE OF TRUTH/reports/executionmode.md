@@ -27,7 +27,7 @@ Environment berikut SELALU aktif dan tersedia:
 - Published cloud session canonical →
   - `PlaceId = 113010869463813`
   - `GameId = 9802743087`
-  - `Name = Place2`
+  - `Name = PASRAHPHOBIA`
   - `CreatorId = 10576163165`
 - Rojo Serve → BERJALAN
 - Rojo Connect (Studio) → TERHUBUNG & AKTIF
