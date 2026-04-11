@@ -6,9 +6,16 @@ args = ["/c", "%LOCALAPPDATA%\\Roblox\\mcp.bat"]
 startup_timeout_sec = 20
 tool_timeout_sec = 180
 
-[mcp_servers.mobile-mcp]
+[mcp_servers.mobile-mcp-android]
 command = "C:\\Program Files\\nodejs\\node.exe"
 args = ["C:\\Users\\User\\.codex\\memories\\mobile-mcp-local\\lib\\index.js"]
 startup_timeout_sec = 30
 tool_timeout_sec = 180
 env = { ANDROID_HOME = "C:\\Users\\User\\AppData\\Local\\Android\\Sdk", MOBILEMCP_DISABLE_TELEMETRY = "1" }
+
+[mcp_servers.mobile-mcp-ios]
+command = "C:\\Program Files\\nodejs\\node.exe"
+args = ["C:\\Users\\User\\.codex\\memories\\mobile-mcp-local\\lib\\index.js"]
+startup_timeout_sec = 30
+tool_timeout_sec = 180
+env = { MOBILEMCP_DISABLE_TELEMETRY = "1", GO_IOS_PATH = "C:\\Users\\User\\go\\bin\\go-ios.exe" }
