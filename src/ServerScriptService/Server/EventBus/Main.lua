@@ -24,6 +24,34 @@ function EventBus:Start()
     self.Service:Start()
 end
 
+function EventBus:Publish(eventName, payload)
+    return self.Service:Publish(eventName, payload)
+end
+
+function EventBus:Subscribe(eventName, callback, tag)
+    return self.Service:Subscribe(eventName, callback, tag)
+end
+
+function EventBus:SubscribeOnce(eventName, callback, tag)
+    return self.Service:SubscribeOnce(eventName, callback, tag)
+end
+
+function EventBus:Unsubscribe(eventName, listenerIdOrCallback)
+    return self.Service:Unsubscribe(eventName, listenerIdOrCallback)
+end
+
+function EventBus:GetListenerReport()
+    return self.Service:GetListenerReport()
+end
+
+function EventBus:GetRecentLog(count)
+    return self.Service:GetRecentLog(count)
+end
+
+function EventBus:SetDebugMode(enabled)
+    self.Service:SetDebugMode(enabled)
+end
+
 function EventBus:Stop()
     self.Controller:UnregisterEventHandlers()
     self.Service:Stop()
