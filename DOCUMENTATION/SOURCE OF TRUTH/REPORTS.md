@@ -1,5 +1,15 @@
 # PASRAHPHOBIA REPORTS
 
+## Scope Note
+
+- This file is a broad architecture/runtime audit snapshot with `Last updated: 2026-04-01`.
+- It is not the final release-readiness authority for `2026-04-11`.
+- For current publish status, use:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/SOURCE_OF_TRUTH_RECONCILIATION_2026-04-11.md`
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/PUBLISH_REVIEW_FINAL_2026-04-06.md`
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/MANUAL_PUBLISH_HANDOFF_2026-04-09.md`
+  - the latest lane result reports in `DOCUMENTATION/SOURCE OF TRUTH/reports/`
+
 Last updated: 2026-04-01
 Audit type: runtime truth audit based on current code, not historical notes
 This file supersedes the previous report files in this folder.

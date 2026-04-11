@@ -2496,7 +2496,7 @@ local function applyMainHubVisualPatch()
         canTouch = true,
         castShadow = false,
     })
-    applyPrompt(ensurePrompt(queueTrigger, "InteractPrompt"), "Queue Hub", "Join Queue", 14)
+    applyPrompt(ensurePrompt(queueTrigger, "InteractPrompt"), "Queue Hub", "Open Room Browser", 14)
 
     local pillar = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME)
     applyPartProps(pillar, {
@@ -5029,8 +5029,8 @@ function LobbyService:_bindWorldPrompts()
     end
 
     self:_connectWorldPrompt("QueueTrigger", function(player)
-        if lobbyController and type(lobbyController.OnQueueFromRoomBrowser) == "function" then
-            lobbyController:OnQueueFromRoomBrowser(player, {
+        if lobbyController and type(lobbyController.OnRequestRoomBrowserSnapshot) == "function" then
+            lobbyController:OnRequestRoomBrowserSnapshot(player, {
                 source = "QueueTriggerPrompt",
             })
         end
@@ -5039,8 +5039,8 @@ function LobbyService:_bindWorldPrompts()
             player,
             "LobbyWorldSurfaceRequested",
             "MatchmakingZone",
-            "Queue pad aktif",
-            "Queue dijalankan dan Room Browser dibuka untuk memantau state room.",
+            "Room Browser dibuka",
+            "Buat room, join room, atau cek state room dari browser sebelum mulai match.",
             {
                 surface = "RoomBrowser",
             }

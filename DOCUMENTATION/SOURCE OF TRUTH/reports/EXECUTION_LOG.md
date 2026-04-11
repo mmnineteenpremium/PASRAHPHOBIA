@@ -10,6 +10,123 @@ Setiap entry mencatat:
 - validasi
 - blocker atau next step
 
+## 2026-04-11 02:44 ICT
+
+### Task
+
+Tutup legal/licensing runtime review di published place dan pulihkan module load `UI` client yang sempat gagal.
+
+### Linked Issues
+
+- `require(Client.UI.Main)` gagal di published place runtime sehingga `UI` service tidak ter-register
+- `MainMenuUI` tidak muncul di `PlayerGui`, sehingga attribution footer tidak bisa dibuktikan secara player-facing
+- `release-preflight` masih menandai legal review sebagai blocker statis
+
+### Files Changed
+
+- `src/client/UI/Main.lua`
+- `src/client/UI/GraphicsSupport.lua`
+- `src/client/UI/CharacterPreviewSupport.lua`
+- `scripts/release-preflight.ps1`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/LEGAL_RUNTIME_REVIEW_2026-04-11.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/README.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `UI.Main.lua` dipecah agar helper graphics dan preview karakter keluar ke module terpisah:
+  - `GraphicsSupport`
+  - `CharacterPreviewSupport`
+- published place runtime kemudian berhasil memuat `Client.UI.Main` lagi (`require ok=true`)
+- probe runtime membuktikan `MainMenuUI` kembali hadir di `PlayerGui`
+- attribution footer legal kembali terlihat di `QUICK MENU`
+- `LegacyDisabled` diverifikasi inert:
+  - folder runtime kosong
+  - tidak ada referensi live script aktif
+- `release-preflight.ps1` sekarang tidak lagi menandai legal review sebagai blocker statis jika report legal terbaru sudah `PASS`
+
+### Validation
+
+- published place runtime:
+  - `require(Client.UI.Main) => ok=true`
+  - `ClientBootstrap stage = started`
+- legal probe:
+  - `guiParent = PlayerGui`
+  - `guiEnabled = true`
+  - `title = QUICK MENU`
+  - `footer visible = true`
+  - footer text legal:
+    - `Pocong model by alterego.visual (Sketchfab) - CC BY 4.0`
+- screenshot capture:
+  - `.codex/legal_runtime_attribution_visible.png`
+  - `.codex/legal_runtime_attribution_visible.json`
+- legacy disposition:
+  - `StarterPlayer.StarterPlayerScripts.Client.LegacyDisabled` has `0` children
+  - `script_grep LegacyDisabled => 0 match`
+
+### Next Step
+
+- jalankan smoke test `2` client nyata
+- catat hasil PASS/FAIL ke sheet multiplayer manual
+
+## 2026-04-11 01:54 ICT
+
+### Task
+
+Tutup bug persistence wallet `MM/PP` di published place dan sinkronkan audit hotkey UI dengan default toggle Roblox.
+
+### Linked Issues
+
+- wallet `MM/PP` reset saat reconnect meskipun profile dan inventory persist
+- `release-preflight` masih menulis blocker persistence seolah belum pernah divalidasi
+- `Esc` bentrok dengan menu default Roblox
+
+### Files Changed
+
+- `src/ServerScriptService/Server/EconomySystem/Service.lua`
+- `src/ServerScriptService/Server/EconomySystem/Controller.lua`
+- `src/client/UI/Main.lua`
+- `scripts/release-preflight.ps1`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/PERSISTENCE_RESULT_2026-04-11_REAL_DATASTORE.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/UI_TOGGLE_KEY_AUDIT_2026-04-11.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/README.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EXECUTION_LOG.md`
+
+### Change Summary
+
+- `EconomySystem.Service` sekarang:
+  - load wallet dari persistence saat `PlayerAdded`
+  - simpan wallet secara debounced setelah grant/spend currency
+  - flush wallet saat `PlayerRemoving`
+- `EconomySystem.Controller` sekarang:
+  - menghubungkan `PlayerAdded` / `PlayerRemoving`
+  - menambah `BindToClose` save loop untuk runtime Studio
+- `Main.lua` hotkey close auxiliary window dipindah dari `Esc` ke `X`
+- semua lane toggle auxiliary/match/close sekarang menghormati `gameProcessed`
+- `release-preflight.ps1` tidak lagi boleh menandai persistence sebagai blocker statis jika report real DataStore terbaru sudah `PASS`
+
+### Validation
+
+- published Studio place:
+  - `PlaceId = 113010869463813`
+  - `GameId = 9802743087`
+- real datastore rerun:
+  - sebelum disconnect: `MM=4094 PP=26 Robux=0`
+  - sesudah reconnect: `MM=4094 PP=26 Robux=0`
+  - profile `bio=persist-wallet-fix-1775847013` tetap sama
+  - `cos_head_duskmask` tetap owned dan equipped
+- local preflight:
+  - `Build ok: True`
+  - `Missing reports: 0`
+  - `Safe items missing ID: 0`
+  - `Safe items disabled: 0`
+  - `Hold items enabled: 0`
+
+### Next Step
+
+- jalankan smoke test `2` client nyata
+- tutup legal/licensing final review dan bukti visual runtime
+
 ## 2026-04-08 17:11 ICT
 
 ### Task
@@ -14507,3 +14624,749 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Note:
   - this lane is only marked DONE after running the full MM purchase -> equip -> unequip cycle. A snapshot-only proof would have been too weak for this owner.
 - Roblox Studio was returned to STOP TEST before logging.
+
+## 2026-04-09 21:42:24 +07:00 - Runtime Verification Refresh
+- Status: DONE.
+- Scope:
+  - re-verified the latest live `CosmeticSystem` and `SpectatorSystem` owner lanes in the active `PASRAHPHOBIA.rbxlx` Studio session through `StudioE2EControlSystem`
+  - kept the session lightweight by logging only the operational proof, not full inline screenshots or giant payloads
+- Live proof in Play Solo:
+  - cosmetic cycle stayed healthy:
+    - `ok=true | action=GetWallet | result=MM=1200 PP=12 Robux=0`
+    - `ok=true | action=GrantCurrency | result=currency=MM granted=1000 MM=2200 PP=12 Robux=0`
+    - `ok=true | action=ProcessShopPurchase | result=item=cos_accessory_wardingcharm MM=1500 PP=12 Robux=0 ownedCount=1`
+    - `ok=true | action=GetShopPlayerSnapshot | result=MM=1500 PP=12 Robux=0 inventory=1 cosmetics=1 ownedCount=1 item=cos_accessory_wardingcharm hasItem=true ownsCosmetic=true ownedSnapshot=true`
+    - `ok=true | action=GetCosmeticSnapshot | result=owned=1 equipped=0`
+    - `ok=true | action=EquipCosmeticSnapshot | result=cosmetic=cos_accessory_wardingcharm slot=accessory owned=1 equipped=1`
+    - `ok=true | action=GetCosmeticSnapshot | result=owned=1 equipped=1`
+    - `ok=true | action=UnequipCosmeticSnapshot | result=slot=accessory owned=1 equipped=0`
+    - `ok=true | action=GetCosmeticSnapshot | result=owned=1 equipped=0`
+  - cosmetic runtime attrs stayed truthful after the cycle:
+    - `PasrahCosmeticOwner=CosmeticSystem`
+    - `PasrahCosmeticOwnedCount=1`
+    - `PasrahCosmeticEquippedCount=0`
+    - `PasrahCosmeticLastCosmeticId=cos_accessory_wardingcharm`
+    - `PasrahCosmeticLastSlot=accessory`
+    - `PasrahCosmeticLastReason=unequip`
+    - `PasrahCosmeticAppliedToLobby=true`
+    - `PasrahCosmeticLastEvent=CosmeticSnapshotBuilt`
+  - spectator vision still boots from a fresh solo match:
+    - `ok=true | action=StartSoloMatch | result=match=match_1 map=HauntedHouse mode=Classic difficulty=Mudah players=1`
+    - player runtime moved into `MatchLifecyclePhase=PreparationPhase`
+    - `ok=true | action=SimulateSpectatorVision | result=match=match_1 events=1 outcome=uncertain signal=UncertainGhost room=Room_LivingRoom target=950001 voice=true hint=uncertain`
+    - `ok=true | action=EndSpectatorVision | result=match=match_1 spectator_vision_ended`
+  - spectator runtime attrs stayed truthful:
+    - hot:
+      - `PasrahSpectatorVisionOwner=SpectatorSystem`
+      - `PasrahSpectatorVisionActive=true`
+      - `PasrahSpectatorVisionTargetUserId=950001`
+      - `PasrahSpectatorVisionLastOutcome=uncertain`
+      - `PasrahSpectatorVisionLastSignalType=UncertainGhost`
+      - `PasrahSpectatorVisionLastRoomId=Room_LivingRoom`
+      - `PasrahSpectatorVisionReliability=low`
+      - `PasrahSpectatorVisionVoiceAllowed=true`
+      - `PasrahSpectatorVisionDistortionHint=uncertain`
+      - `PasrahSpectatorVisionLikelyMisleading=true`
+      - `PasrahSpectatorVisionLastEvent=SpectatorVisionUpdated`
+      - `PasrahSpectatorVisionReason=uncertain`
+    - cooled:
+      - `PasrahSpectatorVisionOwner=SpectatorSystem`
+      - `PasrahSpectatorVisionActive=false`
+      - `PasrahSpectatorVisionVoiceAllowed=false`
+      - `PasrahSpectatorVisionLastEvent=SpectatorExited`
+      - `PasrahSpectatorVisionReason=spectator_exited`
+- Console sanity:
+  - boot completed cleanly and no error blocker surfaced in the Play Solo console during this verification pass
+  - residual noise still exists from `HidingSystem` debug prints (`[HidingSystem][Debug] service:start`, `[HidingSystem][Debug] tick:no_match`), but this did not block the verified flows above
+- Roblox Studio was returned to STOP TEST after verification.
+
+## 2026-04-09 22:01:57 +07:00 - Final Release Checklist Stage 1 Batch Refresh
+- Status: DONE.
+- Scope:
+  - took the 5-item automatic gate batch from `FINAL_RELEASE_CHECKLIST_2026-04-06.md`
+  - re-ran local preflight before and after runtime fixes to keep the batch tied to current source, not stale report state
+- Local preflight:
+  - `Build ok: True`
+  - `Missing reports: 0`
+  - `Robux items: 10`
+  - `Safe items missing ID: 6`
+  - `Safe items disabled: 6`
+  - `Hold items enabled: 0`
+- First gate run exposed two real runtime regressions:
+  - `Players.ZyraaaVex.PlayerScripts.Client.FlashlightController:32: attempt to call a nil value`
+  - `ServerScriptService.Server.FlashlightSyncSystem.Service:55: attempt to call a nil value`
+- Source fixes:
+  - moved `isPlayerInMatch` / `shouldShowToggleUI` above the first caller in `src/client/FlashlightController.client.lua`
+  - moved `toUserId` above the first caller in `src/ServerScriptService/Server/FlashlightSyncSystem/Service.lua`
+- Live place cleanup:
+  - removed stray edit-time folder `Workspace.ActiveMatches.Match_asset_probe` from `PASRAHPHOBIA.rbxlx`
+  - this probe was not backed by `src`, kept `activeMatches=1` at boot, and inflated the QA memory baseline
+- Final gate run after the fixes:
+  - `GetQAGateSnapshot`
+    - `players=1 activeMatches=0 currentMatch=none phase=none`
+    - `scriptMemoryMb=8.29 totalMemoryMb=2211.40 physicsFps=60.00`
+    - `warnings=0 errors=0 logSample=clean`
+  - `GetQAGateReadiness`
+    - `overall=pass_with_manual_multiplayer`
+    - `solo=true`
+    - `memoryOk=true fpsOk=true logOk=true`
+  - `GetPublishReadiness`
+    - `overall=fail`
+    - `qaSolo=true`
+    - `multiplayer=manual_check_required`
+    - `persistence=mock persistenceReady=false`
+    - `commerceReady=true`
+    - `robuxVisible=0 robuxMissingId=10`
+  - `GetShopReadiness`
+    - `total=31 MM=14 PP=7 Robux=10 disabled=10 robuxMissingId=10`
+  - `GetPersistenceMode`
+    - `mode=mock hasDataStore=false allowStudioDataStore=false trackedPlayers=1 schemaVersion=2`
+- Result:
+  - Stage 1 automatic gate returned to the expected state from the release docs: QA is green for solo and blocked only by manual multiplayer, while publish remains red only because persistence is still mock and Creator Hub IDs are still missing
+- Roblox Studio was returned to STOP TEST after the batch.
+
+## 2026-04-09 22:13:43 +07:00 - Manual Publish Prep Batch
+- Status: DONE.
+- Scope:
+  - took the next publish-ops batch after technical gate recovery instead of inventing fake completion for manual Roblox lanes
+  - focused on reducing manual execution friction across Creator Hub, multiplayer, persistence, and legal review
+- Batch results:
+  - Creator Hub mapping re-audited with `pwsh ./scripts/audit-marketplace-mapping.ps1`
+    - `10` Robux items classified
+    - `6` safe currency items still missing real Creator Hub IDs
+    - `4` hold items still correctly disabled
+    - `0` hold items accidentally enabled
+    - `0` unclassified items
+  - created manual publish handoff:
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/MANUAL_PUBLISH_HANDOFF_2026-04-09.md`
+  - created prefilled multiplayer result sheet:
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/QA_MULTIPLAYER_RESULT_2026-04-09_PREP.md`
+  - created prefilled persistence result sheet:
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/PERSISTENCE_RESULT_2026-04-09_PREP.md`
+  - updated reports entrypoint:
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/README.md` now points to the new handoff and prefilled result sheets
+- Legal/licensing state after this prep batch:
+  - `Pocong` provenance remains closed (`alterego.visual`, `CC BY 4.0`)
+  - attribution catalog is source-controlled in `src/shared/DataTypes/AssetAttributionCatalog.lua`
+  - active UI still loads required attribution entries from that catalog
+  - remaining legal lane is now operational review, not provenance discovery:
+    - confirm attribution surface remains visible in the final experience
+    - decide final disposition for legacy-disabled assets before public publish
+- Result:
+  - the remaining publish blockers stay honest and narrow:
+    - real Creator Hub IDs
+    - real 2-client multiplayer smoke
+    - non-mock persistence validation
+    - final legal review signoff
+
+## 2026-04-09 23:29:14 +07:00 - Mobile-First Hardening Batch
+- Status: DONE.
+- Scope:
+  - applied the newly added mobile-first release requirement directly into source and active Studio state instead of leaving it as a note-only request
+  - kept the write-set limited to orientation, main-menu/mobile UI behavior, and a real graphics-quality control path
+- Source changes:
+  - locked `StarterGui` orientation to landscape in:
+    - `default.project.json`
+    - `PASRAHPHOBIA.rbxlx`
+  - updated `src/client/UI/Main.lua` to add:
+    - client-side graphics mode state: `Performance`, `Balanced`, `Quality`
+    - real visual behavior for the quality cycle:
+      - lower atmosphere cost in lower modes
+      - replace expensive 3D UI previews with flat fallback cards in `Performance`
+    - a new `GraphicsButton` in `MainMenuUI`
+    - revised mobile menu layout math so the extra action still fits short landscape mobile viewports
+- Runtime verification:
+  - Play Solo started successfully and was returned to STOP TEST
+  - live runtime was forced through the mobile override lane:
+    - `PasrahUIInputProfileOverride = mobile`
+    - `PasrahUIViewportOverrideX = 844`
+    - `PasrahUIViewportOverrideY = 390`
+  - live Studio reported:
+    - `StarterGui.ScreenOrientation = Enum.ScreenOrientation.LandscapeSensor`
+  - console remained free of new blocker errors during this batch
+- Honest caveat:
+  - the current Studio inspector/tool path did not expose the locally constructed `ScreenGui` tree for screenshot-style proof
+  - mobile-fit confidence for this batch therefore comes from:
+    - source-path math review for the `844x390` landscape lane
+    - successful Play Solo boot
+    - live orientation verification
+    - absence of new console blockers
+- Result:
+  - mobile-first is now encoded in source and the active workspace, but final publish confidence still expects one real-device touch/readability smoke during the manual multiplayer/persistence pass window
+
+## 2026-04-10 00:15:57 +07:00 - Mobile Graphics Runtime Follow-Through
+- Status: DONE.
+- Scope:
+  - continued the mobile-first hardening pass with a `3d-games` execution lens instead of stopping at the menu toggle
+  - kept the write-set limited to the client VFX lanes that actually spend the visual budget during play
+- Source changes:
+  - updated `src/client/Controllers/Sensory/VFXController.luau` so `PasrahGraphicsMode` now directly scales:
+    - horror atmosphere density / haze / glare
+    - map bloom
+    - sun rays
+    - depth of field
+    - blur-heavy threat and transient shock effects
+    - shadow cost via local `Lighting.GlobalShadows` / `ShadowSoftness`
+  - updated `src/client/SpectatorEffects/Main.lua` so spectator/death distortion now follows the same graphics mode instead of always paying full blur/color cost
+- Implementation intent:
+  - `Performance` is now a real low-cost lane for 3D horror visuals, not just a UI label
+  - `Balanced` keeps horror readability while still dropping the most expensive post stack
+  - `Quality` preserves the full authored look for PC / console / manual high-detail users
+- Verification note:
+  - this pass was validated by source-path review and focused diff inspection inside the current session
+  - live Studio smoke for the new VFX scaling still needs a direct script-sync/runtime probe before claiming stronger proof than source verification
+
+## 2026-04-10 00:15:57 +07:00 - Mobile Graphics Live Smoke And UI Repair
+- Status: DONE.
+- Scope:
+  - ran the live Play Solo smoke for the new mobile graphics pipeline instead of stopping at source diff review
+  - fixed the one runtime blocker exposed by that smoke before closing the batch
+- Live VFX proof:
+  - `VFXController` was live in `game.StarterPlayer.StarterPlayerScripts.Client.Controllers.Sensory.VFXController`
+  - switching `PasrahGraphicsMode` in play changed Lighting state as intended:
+    - baseline / quality:
+      - `GlobalShadows=true`
+      - `ShadowSoftness=0.75`
+      - `SensoryMapBloom.Intensity=0.18`
+      - `SensoryMapSunRays.Intensity=0.068`
+      - `HorrorAtmosphere.Density=0.24`
+    - performance:
+      - `GlobalShadows=false`
+      - `ShadowSoftness=0.45`
+      - `SensoryMapBloom.Intensity≈0.0324`
+      - `SensoryMapSunRays.Intensity=0`
+      - `HorrorAtmosphere.Density≈0.1968`
+- Live spectator proof:
+  - `SpectatorEffects` was live in `game.StarterPlayer.StarterPlayerScripts.Client.SpectatorEffects.Main`
+  - after proper `Init()` + `Start()` in the smoke harness:
+    - performance:
+      - `PasrahSpectatorGraphicsMode=Performance`
+      - `SpectatorBlurEffect.Size=1`
+      - `SpectatorColorCorrection.Saturation≈-0.108`
+      - `SpectatorColorCorrection.Contrast≈0.036`
+    - quality:
+      - `PasrahSpectatorGraphicsMode=Quality`
+      - `SpectatorBlurEffect.Size=2`
+      - `SpectatorColorCorrection.Saturation≈-0.15`
+      - `SpectatorColorCorrection.Contrast≈0.05`
+- Runtime blocker found and fixed during the smoke:
+  - Play Solo console exposed a real parse error in `src/client/UI/Main.lua`:
+    - `Expected 'end' (to close 'function' at line 13551)`
+  - root cause:
+    - `_ensureBasicUIs()` was missing one closing `end` after the refresh calls
+  - fix:
+    - restored the missing `end` in `src/client/UI/Main.lua`
+  - post-fix console result:
+    - the `Failed to require UI` / `System disabled: UI` error disappeared on the next Play Solo boot
+    - remaining console noise stayed limited to existing `HidingSystem` debug prints
+- Result:
+  - the mobile graphics control is now verified in live runtime for both horror VFX and spectator distortion lanes
+  - the UI bootstrap regression discovered during verification was fixed in the same batch instead of being deferred
+
+## 2026-04-10 00:28:41 +07:00 - Release Preflight Snapshot Refresh
+- Status: DONE.
+- Scope:
+  - resumed from the latest mobile hardening batches and refreshed the release preflight snapshot to confirm the real publish blockers remained unchanged
+  - captured the marketplace mapping audit in the same pass so manual Creator Hub work can continue from current facts, not stale notes
+- Commands executed:
+  - `pwsh ./scripts/release-preflight.ps1`
+  - `pwsh ./scripts/audit-marketplace-mapping.ps1`
+- Latest preflight result:
+  - `Build ok: True`
+  - `Missing reports: 0`
+  - `Robux items: 10`
+  - `Safe items missing ID: 6`
+  - `Safe items disabled: 6`
+  - `Hold items enabled: 0`
+- Latest marketplace audit result:
+  - `Catalog Robux items: 10`
+  - `Safe enable now: 6`
+  - `Keep disabled: 4`
+  - safe items still missing real `marketplaceId`:
+    - `pp_pack_small`
+    - `pp_pack_standard`
+    - `pp_pack_large`
+    - `mm_pack_small`
+    - `mm_pack_medium`
+    - `mm_pack_large`
+  - hold items remain correctly disabled:
+    - `royalpass_premium_track`
+    - `class_dukun_unlock`
+    - `class_detective_unlock`
+    - `lifetime_bonus_pass`
+- Result:
+  - no new automatic regression was introduced in this continuation pass
+  - the publish state remains `NO-GO` strictly because the known manual lanes are still open:
+    - real Creator Hub IDs for 6 safe products
+    - real 2-client multiplayer smoke
+    - non-mock persistence validation
+    - legal/licensing final review confirmation
+
+## 2026-04-10 13:38:59 +07:00 - Creator Hub ID Fill + Commerce Gate Unblock
+- Status: DONE.
+- Scope:
+  - filled real Creator Hub IDs provided for all `10` Robux catalog entries in source config
+  - kept fairness guardrail intact by enabling only the `6` safe currency DeveloperProducts and keeping `4` hold GamePass items disabled
+  - removed stale false-positive wording from release preflight so manual blocker output follows current mapping state instead of static text
+- Files changed:
+  - `src/shared/DataTypes/ShopMarketplaceConfig.lua`
+  - `scripts/release-preflight.ps1`
+  - `scripts/set-marketplace-product-ids.ps1`
+  - `asset mentah/creator-hub-product-icons/*.png`
+- Marketplace IDs applied:
+  - DeveloperProduct (enabled):
+    - `pp_pack_small = 3573224039`
+    - `pp_pack_standard = 3573225850`
+    - `pp_pack_large = 3573226462`
+    - `mm_pack_small = 3573226842`
+    - `mm_pack_medium = 3573227690`
+    - `mm_pack_large = 3573228070`
+  - GamePass (disabled by policy hold):
+    - `royalpass_premium_track = 3573231558`
+    - `class_dukun_unlock = 3573231828`
+    - `class_detective_unlock = 3573232123`
+    - `lifetime_bonus_pass = 3573232383`
+- Gate proof:
+  - `pwsh ./scripts/audit-marketplace-mapping.ps1`:
+    - `Safe items missing marketplaceId: 0`
+    - `Safe items still disabled: 0`
+    - `Hold items accidentally enabled: 0`
+    - `Unclassified items: 0`
+  - `pwsh ./scripts/release-preflight.ps1`:
+    - `Build ok: True`
+    - `Safe items missing ID: 0`
+    - `Safe items disabled: 0`
+    - `Hold items enabled: 0`
+    - remaining blockers now only:
+      - real `2`-client smoke
+      - non-mock persistence validation
+      - legal/licensing final review
+- Result:
+  - Creator Hub marketplace mapping lane is no longer a publish blocker
+  - publish `NO-GO` now narrowed to the last three manual lanes only
+
+## 2026-04-10 13:50:58 +07:00 - Monetization Decision Lock + Next-Lane Continuation
+- Status: DONE (decision lock), PARTIAL (next-lane runtime proof).
+- Scope:
+  - locked monetization architecture decision to prevent post-publish drift/refactor pressure
+  - refreshed publish handoff docs so Creator Hub lane is not listed as pending anymore
+  - started continuation to next lane (legal attribution visibility runtime proof) in active `rbxlx` Studio
+- Files added/updated:
+  - added `DOCUMENTATION/SOURCE OF TRUTH/reports/MONETIZATION_DECISION_RECORD_2026-04-10.md`
+  - updated `DOCUMENTATION/SOURCE OF TRUTH/reports/README.md`
+  - updated `DOCUMENTATION/SOURCE OF TRUTH/reports/MANUAL_PUBLISH_HANDOFF_2026-04-09.md`
+- Decision lock summary:
+  - v1 release keeps:
+    - `DeveloperProduct` for repeatable currency packs
+    - `GamePass` for permanent entitlement lanes
+    - `Subscription` excluded from v1 scope
+  - purpose:
+    - avoid monetization schema drift during remaining publish gates
+    - isolate any subscription migration to explicit v2 backlog
+- Runtime continuation result (legal lane):
+  - attempted live Play Solo proof on `PASRAHPHOBIA.rbxlx`
+  - attribution catalog still resolves in runtime module load:
+    - `Pocong | alterego.visual | CC BY 4.0`
+  - but player-facing UI surface did not appear in this session (PlayerGui only showed `Freecam` and `FPVCursorToggleUI`)
+  - console showed blocker:
+    - `Players.ZyraaaVex.PlayerScripts.Client.UI.Main:4218: Out of local registers when trying to allocate loadShopCatalog: exceeded limit 200`
+  - local source build remains healthy in preflight (`Build ok: True`), indicating this runtime lane is currently a Studio sync/runtime-state issue to clear before claiming legal visual `PASS`
+- Result:
+  - Creator Hub lane stays closed
+  - next executable publish lanes remain:
+    - real 2-client multiplayer smoke
+    - non-mock persistence validation
+    - legal final review (currently blocked by runtime UI visibility issue in active Studio session)
+
+## 2026-04-10 13:53:49 +07:00 - UI Runtime Compile Blocker Follow-Up
+- Status: DONE (blocker clear), PARTIAL (legal visual proof still pending).
+- Scope:
+  - traced the legal-lane runtime failure source in active `PASRAHPHOBIA.rbxlx` session
+  - confirmed Studio script drift versus source and applied matching patch directly to active Studio script for immediate runtime verification
+- Findings:
+  - before patch, active Studio `StarterPlayerScripts.Client.UI.Main` still had old declaration (`local function loadShopCatalog`) and threw:
+    - `Out of local registers when trying to allocate loadShopCatalog: exceeded limit 200`
+  - source already contained the reduced-local helper naming lane (`pasrahLoadShopCatalog` family), but active Studio had not yet mirrored it
+- Action:
+  - patched active Studio `Main` script with the same helper rename set used in source:
+    - `pasrahLoadShopCatalog`
+    - `pasrahLoadAssetAttributionCatalog`
+    - `pasrahBuildAttributionFooterText`
+  - reran Play Solo and confirmed the compile error no longer appeared in console
+- Current legal lane state:
+  - module-level attribution metadata remains valid (`Pocong | alterego.visual | CC BY 4.0`)
+  - full player-visible attribution surface proof is still pending a dedicated manual UI navigation capture path in the same runtime session
+- Result:
+  - UI compile blocker that prevented legal-lane runtime checks is cleared
+  - release blockers remain unchanged in count (multiplayer, persistence, legal visual confirmation)
+
+## 2026-04-10 20:14:28 +07:00 - Local Multiplayer Smoke Harness + Precheck
+- Status: DONE (local precheck), NOT FINAL (publish gate still pending).
+- Scope:
+  - added Studio-only multiplayer smoke harness to remove blind/manual lobby clicking during `Server + 2 Clients` local validation
+  - reran local multiplayer smoke after clean relaunch and captured client/server evidence
+- Files added/updated:
+  - added `src/StarterPlayerScripts/StudioRoomSmoke.client.lua`
+  - added `DOCUMENTATION/SOURCE OF TRUTH/reports/LOCAL_MULTIPLAYER_SMOKE_2026-04-10.md`
+  - updated `DOCUMENTATION/SOURCE OF TRUTH/reports/README.md`
+- Harness behavior:
+  - gated by `RunService:IsStudio()` plus `ReplicatedStorage.PasrahAutoRoomSmoke == true`
+  - `Player1` auto `CreateRoom` + `HostStart`
+  - `Player2` auto `JoinRoom` + `SetReady(true)`
+  - flag disabled again after verification so future Studio runs do not auto-fire unexpectedly
+- Local smoke result:
+  - fresh `Server + 2 Clients` relaunch succeeded
+  - both clients transitioned from lobby into the same match interior
+  - server boot stayed clean in console probe (no new fatal runtime error surfaced)
+  - expected Studio note remains: persistence still uses in-memory mock during this local smoke
+- Result:
+  - local two-client multiplayer precheck is now reproducible and passes with automation support
+  - publish blockers remain:
+    - real `2`-client smoke on actual Roblox clients
+    - non-mock persistence validation
+    - legal/licensing final visual confirmation
+
+## 2026-04-10 22:53:04 +07:00 - Persistence Override Attempt + UI Preview Compile Fix
+- Status: PARTIAL.
+- Persistence lane result:
+  - verified `DataPersistenceService` supports Studio override through `PasrahUseStudioDataStore`
+  - attempted non-mock boot from active local `PASRAHPHOBIA.rbxlx`
+  - runtime identity during attempt was still `PlaceId=0`, `GameId=0`
+  - when override was enabled, server boot failed with concrete environment error:
+    - `You must publish this place to the web to access DataStore.`
+  - conclusion:
+    - local `rbxlx` session cannot close non-mock persistence gate
+    - real persistence validation must move to a published cloud place / real DataStore target
+- Files added/updated:
+  - added `DOCUMENTATION/SOURCE OF TRUTH/reports/PERSISTENCE_STUDIO_OVERRIDE_BLOCKER_2026-04-10.md`
+- Legal/UI follow-up in same run:
+  - cleared another Luau register-pressure compile blocker in `src/client/UI/Main.lua`
+  - converted preview helper cluster away from `local function` allocation pressure:
+    - `pasrahFindPlayerByUserId`
+    - `pasrahStripScripts`
+    - `pasrahBuildPreviewCharacterModel`
+    - `pasrahRenderCharacterPreview`
+  - mirrored the same patch into active Studio script and reran Play Solo
+  - result:
+    - previous compile blocker on `findPlayerByUserId` no longer appeared in console
+    - however player-facing legal surface proof is still not closed from this session because the required menu surface did not become visible in the captured runtime
+- Publish blockers after this run:
+  - real `2`-client smoke on actual Roblox clients
+  - persistence non-mock on published cloud target
+  - legal/licensing final visual confirmation
+
+## 2026-04-11 01:08:40 +07:00 - Toggle Key Audit + Real DataStore Persistence Run
+- Status: PARTIAL.
+- Toggle-key audit:
+  - scanned project UI toggle bindings in `src/client/UI/Main.lua`, plus related input toggles in `CameraController.client.lua` and `FlashlightController.client.lua`
+  - verified against official Roblox sources:
+    - Creator Hub input docs (`https://create.roblox.com/docs/input`)
+    - Roblox support chat/backpack/leave articles
+  - concrete conflict found:
+    - `Esc` was being used for local UI close while Roblox reserves `Esc` for the Roblox menu
+  - action taken:
+    - changed keyboard close hotkey from `Esc` to `X`
+    - updated close hint text
+    - made auxiliary/match/close toggle handlers return early when `gameProcessed == true`
+  - sync verification:
+    - published place `PlaceId=113010869463813` was open
+    - live Studio script confirmed the new `X` binding and updated handlers after sync
+  - report added:
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/UI_TOGGLE_KEY_AUDIT_2026-04-11.md`
+- Persistence run on published cloud target:
+  - enabled `ReplicatedStorage.PasrahUseStudioDataStore = true` in published Studio place
+  - confirmed real datastore mode via `StudioE2EControl`:
+    - `mode=datastore hasDataStore=true allowStudioDataStore=true trackedPlayers=1 schemaVersion=2 lastLoadSchema=2 lastSaveSchema=none`
+  - mutation set used for reconnect proof:
+    - granted `MM +3000`
+    - granted `PP +5`
+    - updated profile bio/favorite tool/gallery
+    - purchased cosmetic `cos_emote_steadybreath`
+    - equipped the same cosmetic in slot `emote`
+  - reconnect result:
+    - profile changes persisted
+    - inventory/cosmetic ownership persisted
+    - cosmetic equip persisted
+    - wallet reverted from `MM=3700 PP=17` back to `MM=1200 PP=12`
+  - interpretation:
+    - real datastore path is valid
+    - persistence gate still FAIL overall because wallet `MM/PP` does not survive reconnect
+  - reports added:
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/PERSISTENCE_RESULT_2026-04-11_REAL_DATASTORE.md`
+- Runtime gate snapshot during same session:
+  - `GetShopReadiness`:
+    - `total=31 MM=14 PP=7 Robux=10 disabled=0 robuxMissingId=0`
+  - `GetPublishReadiness`:
+    - `overall=fail qaSolo=false multiplayer=manual_check_required persistence=datastore persistenceReady=true commerceReady=true robuxVisible=10 robuxMissingId=0 totalMemoryMb=1780.99 physicsFps=59.97 warnings=2 errors=1 phase=none currentMatch=none`
+- Publish blockers after this run:
+  - wallet persistence fix + rerun on published cloud target
+  - real `2`-client smoke on actual Roblox clients
+  - legal/licensing final visual confirmation
+
+## 2026-04-11 04:28:22 +07:00 - Mobile Room Browser Landscape Fix For Real iPhone Smoke
+- Status: PASS.
+- Trigger:
+  - real `2`-iPhone manual smoke exposed a mobile-first UX blocker:
+    - landscape was already correct after cold reopen
+    - but Room Browser host flow was not
+    - `Create Room` sat too low on mobile landscape and could not be tapped reliably
+  - `quick queue` was explicitly rejected as the substitute smoke path because it does not guarantee both real devices enter the same investigation room through the intended room flow
+- Action taken in `src/client/UI/Main.lua`:
+  - added dedicated wide-mobile Room Browser layout for compact mobile landscape
+  - moved browser state into a left/right split:
+    - left = preview
+    - right = room list + primary actions
+  - kept primary CTA lane visible:
+    - `JOIN ROOM`
+    - `REFRESH`
+    - `BUAT ROOM`
+  - hid `QuickJoinClassic` and `QuickJoinRanked` for this mobile-wide browser state so the valid room-flow CTA is no longer pushed below the fold
+  - shortened room row copy into a denser two-line mobile summary
+  - added a wide-mobile in-room panel layout so `READY` / `MULAI PERMAINAN` / `KELUAR ROOM` sit earlier in the action lane
+  - updated CTA copy:
+    - `JOIN` -> `JOIN ROOM`
+    - `Buat Room` -> `BUAT ROOM`
+- Verification:
+  - active Studio published-place runtime kept viewport override at:
+    - `PasrahUIViewportOverrideX = 844`
+    - `PasrahUIViewportOverrideY = 390`
+  - Room Browser browser-state probe confirmed:
+    - `RoomList` visible on right column
+    - `JOIN ROOM` visible with size `414x40`
+    - `BUAT ROOM` visible with size `204x36`
+    - `QuickJoinClassic` hidden
+    - `QuickJoinRanked` hidden
+  - no new boot/runtime blocker appeared in Studio console during the verification pass
+- Report added:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/MOBILE_ROOM_BROWSER_FIX_2026-04-11.md`
+- Remaining publish blocker after this run:
+  - real `2`-client smoke on actual Roblox clients
+
+## 2026-04-11 05:12:11 +07:00 - UI Build Signature And Publish Propagation Check
+- Status: PASS.
+- Trigger:
+  - after the mobile Room Browser fix, runtime on iPhone still appeared stale even after a publish attempt
+  - needed a deterministic visual signature to prove whether the latest UI build was actually loaded on-device
+- Action taken in `src/client/UI/Main.lua`:
+  - added `UI_BUILD_SIGNATURE = PHB-20260411-UI1`
+  - added helper text wiring so the signature appears in:
+    - lobby hint line
+    - quick menu footer
+    - room browser status line
+  - added `PasrahBuildSignature` attributes on the relevant UI instances for live inspection
+- Verification:
+  - local source contains `PHB-20260411-UI1`
+  - active Studio attached to cloud `PlaceId=113010869463813` also contains the same signature token and updated UI wiring
+  - `release-preflight.ps1` remained green after the patch:
+    - `Build ok: True`
+    - `Missing reports: 0`
+    - `Safe items missing ID: 0`
+    - `Safe items disabled: 0`
+    - `Hold items enabled: 0`
+- Official publish finding:
+  - Roblox Creator Hub docs do not document a generic review delay for publishing a new version of an already public experience
+  - the documented blockers are eligibility/compliance requirements for making a new or existing public experience update eligible
+  - the same docs explicitly recommend restarting servers when changing the start place of a live experience
+  - interpretation for this project:
+    - stale iPhone UI after verified script updates is more likely runtime/server propagation or joining an older live server than missing local/source patch
+- Report added:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/BUILD_SIGNATURE_AND_PUBLISH_PROPAGATION_2026-04-11.md`
+
+## 2026-04-11 05:31:48 +07:00 - Room Browser Fullscreen Touch Shield Fix For iPhone
+- Status: PASS.
+- Trigger:
+  - real iPhone feedback proved the previous Room Browser patch was still wrong in one important way:
+    - it still behaved like a floating desktop panel
+    - touch gestures inside the browser could still leak into camera movement
+  - owner clarified the intended pattern:
+    - lobby launcher may stay compact
+    - opened Room Browser must become a fullscreen mobile-first landscape overlay with mild transparency
+- Action taken in `src/client/UI/Main.lua`:
+  - added a fullscreen `Backdrop` under `RoomBrowserUI`
+  - reparented the main Room Browser panel under that backdrop
+  - made the backdrop and panel `Active=true`
+  - marked the main touch surfaces `Active=true`:
+    - room list
+    - room preview panel
+    - room preview map
+    - room preview player list
+    - room players list
+    - modal layers/cards
+    - room map preview
+  - mobile sizing now uses the full safe-area viewport
+  - drag bar is hidden on mobile so the browser behaves like a fixed landscape sheet instead of a draggable desktop panel
+  - mobile root transparency now stays lightly translucent in both browser and in-room state
+- Verification:
+  - local `release-preflight.ps1` remained green
+  - active cloud-attached Studio script already reflected the same fullscreen/touch-shield patch
+- Report added:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/ROOM_BROWSER_FULLSCREEN_TOUCH_FIX_2026-04-11.md`
+
+## 2026-04-11 06:59:54 +07:00 - Room Browser Landscape Runtime Fix And Studio Verification
+- Status: PASS.
+- Trigger:
+  - owner surfaced the exact client console error from Studio runtime:
+    - `Out of local registers when trying to allocate fadeGuiObject`
+    - `ClientBootstrap` then disabled `UI`
+  - after bootstrap was repaired, Room Browser still showed a second real bug:
+    - landscape sizing kept portrait-biased minimum heights
+    - Studio visual simulation clipped the overlay because the simulated viewport exceeded the actual visible Studio viewport
+- Action taken:
+  - created `src/client/UI/UISupport.lua`
+  - moved these helpers out of `src/client/UI/Main.lua` so top-level `local` count dropped from `203` to `199`:
+    - `disconnectAll`
+    - `destroyAll`
+    - `fadeGuiObject`
+    - `resolveSafeInsets`
+    - `createDeviceProfile`
+  - updated `Main.lua` call sites to use `UISupport.*`
+  - corrected mobile landscape sizing in Room Browser:
+    - removed portrait-biased minimum height behavior for landscape mobile
+    - clamped Studio override viewport against the actual camera viewport so visible Studio testing no longer lies about what fits on-screen
+- Studio runtime verification:
+  - test started from `STOP TEST`, then rerun with:
+    - `PasrahUIInputProfileOverride = mobile`
+    - `PasrahUIViewportOverrideX = 844`
+    - `PasrahUIViewportOverrideY = 390`
+    - `PasrahUIForceCompact = true`
+  - `PasrahClientBootstrapStage = started`
+  - `PlayerGui` now contains expected client UIs again, including:
+    - `LobbyUI`
+    - `MainMenuUI`
+    - `RoomBrowserUI`
+  - after clicking `LobbyUI.MainPanel.OpenRoomBrowserButton`:
+    - `RoomBrowserUI.Enabled = true`
+    - `Panel size = 733 x 371`
+    - `Backdrop size = 733 x 371`
+    - `QueueButton size = 361 x 40`
+    - `CreateRoomButton size = 177 x 36`
+  - drag test inside `RoomList` left `CurrentCamera.CFrame` unchanged before vs after
+  - interpretation:
+    - UI bootstrap restored
+    - landscape overlay now fits the visible Studio viewport
+    - drag on Room Browser no longer leaked into camera movement in Studio verification
+- Report added:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/ROOM_BROWSER_LANDSCAPE_RUNTIME_FIX_2026-04-11.md`
+
+## 2026-04-11 08:26:46 +07:00 - Multiplayer Queue Hub And Spectator Runtime Fix
+- Status: CODE FIX PASS, DEVICE RETEST PENDING.
+- Trigger:
+  - first real iPhone multiplayer run exposed two gameplay blockers after publish:
+    - `Queue Hub` behavior could jump players straight into queue/pre-match flow instead of the clean room-browser lane
+    - spectator/death handling could settle into an invalid loop after player death
+- Action taken:
+  - `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+    - changed `QueueTrigger` prompt text from `Join Queue` to `Open Room Browser`
+    - changed `QueueTrigger` callback from `OnQueueFromRoomBrowser(...)` to `OnRequestRoomBrowserSnapshot(...)`
+    - updated the published board/event copy so the world surface now points players toward create/join/ready flow instead of queue activation
+  - `src/ServerScriptService/Server/SpectatorModeSystem/Service.lua`
+    - made spectator registration idempotent for an already-active match/user pair
+    - made spectator removal publish `SpectatorModeEnded` only when the spectator was actually active
+  - `src/ServerScriptService/Server/SpectatorSystem/Controller.lua`
+    - removed the direct `EnterSpectator(...)` call from `OnPlayerKilled(...)`
+  - `src/ServerScriptService/Server/SpectatorSystem/SpectatorService.lua`
+    - subscribed to `SpectatorModeEnded`
+    - made `EnterSpectator(...)` reuse an existing spectator session instead of rebuilding it
+- Live verification:
+  - verified in the cloud-attached Studio session for:
+    - `PlaceId = 113010869463813`
+    - `GameId = 9802743087`
+  - `LobbyService` live script now shows:
+    - prompt action text `Open Room Browser`
+    - `QueueTrigger` opens room-browser snapshot path, not queue path
+  - live spectator scripts now reflect the dedupe/exit-mirroring patch
+  - Studio was kept in `STOP TEST` / edit state after verification
+- Interpretation:
+  - the first real-device multiplayer blockers now have concrete source fixes
+  - the remaining task is to rerun `2` iPhones through the proper room flow and confirm:
+    - both players see each other in-map
+    - death transitions to spectator cleanly instead of falling-loop
+- Report added:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/MULTIPLAYER_QUEUE_AND_SPECTATOR_FIX_2026-04-11.md`
+
+## 2026-04-11 12:13:46 +07:00 - Final Real 2-Client Multiplayer Smoke Closed
+- Status: PASS.
+- Trigger:
+  - owner confirmed the final real-device multiplayer run passed after the `Queue Hub` and spectator fixes.
+- Result recorded in:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/QA_MULTIPLAYER_RESULT_2026-04-09_PREP.md`
+- Interpretation:
+  - the final remaining manual multiplayer publish lane is now closed
+  - prior PASS lanes already on record remain:
+    - commerce
+    - persistence real datastore
+    - legal/runtime review
+    - mobile-first implementation
+  - publish readiness no longer depends on a pending multiplayer smoke gate
+
+## 2026-04-11 13:42:00 +07:00 - Respawn Guard And Forced Reset Regression Reopened
+- Status: CODE FIX PASS, RETEST PENDING.
+- Trigger:
+  - owner reported `2` additional in-game issues discovered after following the final multiplayer run:
+    - built-in Roblox reset/respawn was still available during match
+    - forced respawn on the remaining alive player could fall into a loop instead of closing the match into results
+- Action taken:
+  - added client reset guard:
+    - `src/client/RespawnGuard/Main.lua`
+    - `src/client/Core/ClientBootstrap.lua`
+  - changed server death bridge routing:
+    - `src/ServerScriptService/Server/DeathStateSystem/Service.lua`
+    - `src/ServerScriptService/Server/DeathStateSystem/DeathEventBridge.lua`
+  - `DeathEventBridge` now publishes canonical `PlayerDied` through `EventBus` so `MatchSystem` and `PlayerDeathSystem` receive forced reset as a real elimination path
+- Studio verification:
+  - cloud canonical Studio session confirmed:
+    - `RespawnGuard` exists in live client tree
+    - live `ClientBootstrap` registers it
+    - live `DeathEventBridge` now uses `PublishPlayerDied(...)`
+  - playtest probe confirmed:
+    - `PasrahClientBootstrapStage = started`
+    - `PasrahResetGuardSetCoreReady = true`
+    - `PasrahResetGuardDisabled = true` while `InMatch=true`
+    - `PasrahResetGuardDisabled = false` again after leaving the mock match state
+  - Studio returned to `STOP TEST` before logging
+- Interpretation:
+  - multiplayer core room flow remains previously recorded as PASS
+  - forced-reset / respawn guard path is now a separate reopened edge-case lane until a real `2`-client retest confirms:
+    - reset is blocked during active match
+    - no falling loop remains if a reset slips through
+- Report added:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/RESPAWN_GUARD_AND_FORCED_RESET_FIX_2026-04-11.md`
+
+## 2026-04-11 14:08:00 +07:00 - QA Playthrough Workflow Read
+- Status: PASS AS EXPERIENCE AUDIT.
+- Trigger:
+  - owner requested a concrete explanation of the actual in-game workflow, durations, and early-session friction from a human-QA point of view rather than a pure system summary
+- Action taken:
+  - ran a live Studio playthrough from lobby into room flow and active investigation
+  - observed:
+    - lobby action hierarchy
+    - room browser create/start semantics
+    - visible room-start countdown
+    - staging/preparation arrival
+    - investigation anchor/tool/journal stack
+  - Studio was returned to `STOP TEST` before logging
+- Main findings:
+  - real workflow read is:
+    - lobby
+    - room browser
+    - create room
+    - host action
+    - room countdown
+    - preparation
+    - investigation
+    - hunt
+    - endgame/results
+    - lobby
+  - default configured in-match durations remain:
+    - `PreparationPhase = 30`
+    - `InvestigationPhase = 480`
+    - `HuntPhase = 60`
+    - `EndgamePhase = 30`
+  - strongest early friction observed:
+    - too many equal-priority lobby actions
+    - host/start semantics not instantly obvious
+    - staging spawn framing too close to props/boards
+    - investigation HUD overload versus room readability
+    - world visuals still read as unfinished compared with the intended premium horror fantasy
+- Report added:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/QA_PLAYTHROUGH_WORKFLOW_2026-04-11.md`

@@ -26,6 +26,15 @@ local toggleGui = nil
 local toggleButton = nil
 local toggleFlashlight
 
+local function isPlayerInMatch()
+	return player:GetAttribute("InMatch") == true
+		or tostring(player:GetAttribute("MatchId") or "") ~= ""
+end
+
+local function shouldShowToggleUI()
+	return UserInputService.TouchEnabled == true and isPlayerInMatch()
+end
+
 local function stampFlashlightClientState()
 	player:SetAttribute("PasrahFlashlightClientEnabled", flashlightOn == true)
 	player:SetAttribute("PasrahFlashlightClientTouchEligible", UserInputService.TouchEnabled == true)
@@ -47,15 +56,6 @@ local function stampToggleRuntime()
 		toggleButton:SetAttribute("PasrahFlashlightInputMode", UserInputService.TouchEnabled == true and "Touch" or "Keyboard")
 	end
 	stampFlashlightClientState()
-end
-
-local function isPlayerInMatch()
-	return player:GetAttribute("InMatch") == true
-		or tostring(player:GetAttribute("MatchId") or "") ~= ""
-end
-
-local function shouldShowToggleUI()
-	return UserInputService.TouchEnabled == true and isPlayerInMatch()
 end
 
 local function makeButtonDraggable(button)

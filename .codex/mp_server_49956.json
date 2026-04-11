@@ -1,0 +1,25 @@
+{
+  "Pid": 49956,
+  "Title": "Server - Roblox Studio",
+  "CaptureArea": "window",
+  "ImagePath": "C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\.codex\\mp_server_49956.png",
+  "WindowBounds": {
+    "Left": 1709,
+    "Top": 1,
+    "Width": 1732,
+    "Height": 706
+  },
+  "ClientBounds": {
+    "Left": 1717,
+    "Top": 32,
+    "Width": 1716,
+    "Height": 667
+  },
+  "CaptureBounds": {
+    "Left": 1709,
+    "Top": 1,
+    "Width": 1732,
+    "Height": 706
+  },
+  "CapturedAt": "2026-04-11T08:43:40.1822255+07:00"
+}

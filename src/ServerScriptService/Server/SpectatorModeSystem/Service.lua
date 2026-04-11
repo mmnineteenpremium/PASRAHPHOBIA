@@ -139,9 +139,19 @@ function Service:_getBounds(matchId)
 end
 
 function Service:_registerSpectator(matchId, userId, player, reason)
-    print("[SpectatorModeSystem] Spectator enabled for", userId)
     local spectators = self:_spectatorMap()
     spectators[matchId] = spectators[matchId] or {}
+    if spectators[matchId][userId] == true then
+        stampSpectatorRuntime(player, {
+            matchId = matchId,
+            reason = reason or "death",
+            mode = "FreeCamera",
+            active = true,
+            limitedAwareness = true,
+        })
+        return
+    end
+    print("[SpectatorModeSystem] Spectator enabled for", userId)
     spectators[matchId][userId] = true
     self:_setSpectatorMap(spectators)
 
@@ -180,6 +190,7 @@ end
 
 function Service:_removeSpectator(matchId, userId, player, reason)
     local spectators = self:_spectatorMap()
+    local wasActive = type(spectators[matchId]) == "table" and spectators[matchId][userId] == true
     if type(spectators[matchId]) == "table" then
         spectators[matchId][userId] = nil
     end
@@ -191,13 +202,15 @@ function Service:_removeSpectator(matchId, userId, player, reason)
     end
     self:_setMetaMap(metadata)
 
-    self:_publish("SpectatorModeEnded", {
-        matchId = matchId,
-        userId = userId,
-        player = player,
-        reason = reason or "exit",
-        source = "SpectatorModeSystem",
-    })
+    if wasActive then
+        self:_publish("SpectatorModeEnded", {
+            matchId = matchId,
+            userId = userId,
+            player = player,
+            reason = reason or "exit",
+            source = "SpectatorModeSystem",
+        })
+    end
     stampSpectatorRuntime(player, {
         matchId = matchId,
         reason = reason or "exit",

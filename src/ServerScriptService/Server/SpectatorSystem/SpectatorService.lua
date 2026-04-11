@@ -182,6 +182,18 @@ function SpectatorService:Start()
 			end
 			self:EnterSpectator(player, matchId, payload)
 		end)
+		eventBus:Subscribe("SpectatorModeEnded", function(payload)
+			local matchId = payload and payload.matchId
+			local player = payload and payload.player
+			if not player and payload and payload.userId then
+				local Players = game:GetService("Players")
+				player = Players:GetPlayerByUserId(payload.userId)
+			end
+			if not player or not matchId then
+				return
+			end
+			self:ExitSpectator(player, matchId)
+		end)
 	end
 end
 
@@ -371,6 +383,12 @@ function SpectatorService:EnterSpectator(player, matchId, payload)
 	match.aliveByUserId[player.UserId] = false
 	match.spectators[player.UserId] = true
 	match.alive[player.UserId] = false
+	local existingSpectator = match.spectatorsByUserId[player.UserId]
+	if existingSpectator then
+		existingSpectator.player = player
+		self:_refreshSpectatorTargets(match)
+		return existingSpectator
+	end
 
 	if payload and payload.playerRooms then
 		for userId, roomId in pairs(payload.playerRooms) do

@@ -7,11 +7,15 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
 
 local UISystem = {}
 UISystem.__index = UISystem
 
 local RoomBrowserController = require(script.Parent.RoomBrowserController)
+local GraphicsSupport = require(script.Parent.GraphicsSupport)
+local CharacterPreviewSupport = require(script.Parent.CharacterPreviewSupport)
+local UISupport = require(script.Parent.UISupport)
 
 local UI_MODULES = {
 	"JournalUI",
@@ -29,9 +33,13 @@ local UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
 local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
 local UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
 local UI_VIEWPORT_OVERRIDE_Y_ATTR = "PasrahUIViewportOverrideY"
+local UI_GRAPHICS_MODE_ATTR = GraphicsSupport.MODE_ATTR
+local UI_GRAPHICS_SOURCE_ATTR = GraphicsSupport.SOURCE_ATTR
+local UI_GRAPHICS_APPLIED_AT_ATTR = GraphicsSupport.APPLIED_AT_ATTR
 local SHOP_SHOW_DISABLED_DEBUG_ATTR = "PasrahShowDisabledShopItems"
 local REINFORCED_SALT_OWNED_ATTR = "PasrahOwnsReinforcedSaltBag"
 local MATCH_MODE_ATTR = "MatchMode"
+local UI_BUILD_SIGNATURE = "PHB-20260411-UI1"
 local ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
 local MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
 local BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
@@ -186,9 +194,9 @@ local MATCH_PHASE = {
 	END = "End",
 }
 
-local CLOSE_KEYBOARD_KEY = Enum.KeyCode.Escape
+local CLOSE_KEYBOARD_KEY = Enum.KeyCode.X
 local CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
-local CLOSE_HINT_TEXT = "[Esc] / [B] / [X] untuk tutup"
+local CLOSE_HINT_TEXT = "[X] / [B] untuk tutup"
 local JOURNAL_TOOL_TYPE = "JejakEnergi"
 local FIELD_KIT_TOOL_ORDER = {
 	"JejakEnergi",
@@ -368,6 +376,19 @@ local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 		distanceScale = 1.18,
 	},
 }
+
+local function pasrahGetBuildSignatureText()
+	return "BUILD " .. UI_BUILD_SIGNATURE
+end
+
+local function pasrahAppendBuildSignature(text, separator)
+	local base = tostring(text or "")
+	local signatureText = pasrahGetBuildSignatureText()
+	if base == "" then
+		return signatureText
+	end
+	return base .. (separator or " | ") .. signatureText
+end
 local FIELD_KIT_DESKTOP_MAX_COLUMNS = 5
 local FIELD_KIT_MOBILE_MAX_COLUMNS = 3
 
@@ -464,6 +485,8 @@ local function safeRequire(moduleScript)
 	return nil
 end
 
+local PLATFORM_VISUAL_CONFIG = GraphicsSupport.PlatformVisualConfig
+
 local function loadMapMetadata()
 	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
 	if not shared then
@@ -491,6 +514,7 @@ local function loadMapMetadata()
 end
 
 local MAP_METADATA = loadMapMetadata()
+
 local function coercePreviewVector3(value)
 	if typeof(value) == "Vector3" then
 		return value
@@ -1330,6 +1354,21 @@ local function renderFieldKitToolPreview(viewportFrame, toolType, accentColor, p
 
 	styleFieldKitToolPreview(viewportFrame, accentColor, previewState)
 
+	if not GraphicsSupport.shouldUseHighCostViewportPreview() then
+		local simplifiedSignature = string.format("%s|%s|flat", tostring(toolType), tostring(previewState or "ready"))
+		if viewportFrame:GetAttribute("PreviewSignature") ~= simplifiedSignature then
+			GraphicsSupport.renderPreviewFallback(
+				viewportFrame,
+				(FIELD_KIT_TOOL_CONFIG[toolType] and FIELD_KIT_TOOL_CONFIG[toolType].glyph) or toolType,
+				accentColor,
+				"LOW POWER"
+			)
+			viewportFrame:SetAttribute("PreviewSignature", simplifiedSignature)
+		end
+		viewportFrame.Visible = true
+		return true
+	end
+
 	local previewSignature = string.format("%s|%s|%s", tostring(toolType), tostring(previewState or "ready"), usingFallback and "fallback" or "asset")
 	if viewportFrame:GetAttribute("PreviewSignature") == previewSignature then
 		local worldModel = viewportFrame:FindFirstChild("PreviewWorld")
@@ -1402,6 +1441,15 @@ local function renderLobbyTrainingGhostPreview(viewportFrame, ghostType, accentC
 
 	local previewSignature = string.format("%s|%d", tostring(ghostType or ""), math.floor((tonumber(aggression) or 0) + 0.5))
 	styleLobbyGhostPreview(viewportFrame, accentColor, aggression)
+	if not GraphicsSupport.shouldUseHighCostViewportPreview() then
+		local simplifiedSignature = previewSignature .. "|flat"
+		if viewportFrame:GetAttribute("PreviewSignature") ~= simplifiedSignature then
+			GraphicsSupport.renderPreviewFallback(viewportFrame, ghostType ~= "" and ghostType or "GHOST", accentColor, "LOW POWER")
+			viewportFrame:SetAttribute("PreviewSignature", simplifiedSignature)
+		end
+		viewportFrame.Visible = true
+		return true
+	end
 	if viewportFrame:GetAttribute("PreviewSignature") == previewSignature then
 		local template, profile = getGhostPreviewAssetTemplate(ghostType)
 		local worldModel = viewportFrame:FindFirstChild("GhostPreviewWorld")
@@ -4062,7 +4110,7 @@ local function resolveToolFeedback(toolType, success, reason, data, eventName)
 	return status, detail
 end
 
-local function loadShopCatalog()
+function pasrahLoadShopCatalog()
 	local shared = ReplicatedStorage:FindFirstChild("Shared")
 	if not shared then
 		return {}
@@ -4098,7 +4146,7 @@ local function loadShopCatalog()
 	return {}
 end
 
-local function loadAssetAttributionCatalog()
+function pasrahLoadAssetAttributionCatalog()
 	local shared = ReplicatedStorage:FindFirstChild("Shared")
 	if not shared then
 		return {}
@@ -4118,7 +4166,7 @@ local function loadAssetAttributionCatalog()
 	return {}
 end
 
-local function buildAttributionFooterText(entries)
+function pasrahBuildAttributionFooterText(entries)
 	if type(entries) ~= "table" then
 		return ""
 	end
@@ -4135,99 +4183,6 @@ local function buildAttributionFooterText(entries)
 		end
 	end
 	return table.concat(lines, " | ")
-end
-
-local function findPlayerByUserId(userId)
-	local target = tonumber(userId)
-	if not target then
-		return nil
-	end
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr.UserId == target then
-			return plr
-		end
-	end
-	return nil
-end
-
-local function stripScripts(root)
-	for _, child in ipairs(root:GetDescendants()) do
-		if child:IsA("BaseScript") then
-			child:Destroy()
-		end
-	end
-end
-
-local function buildPreviewCharacterModel(userId)
-	local livePlayer = findPlayerByUserId(userId)
-	if livePlayer and livePlayer.Character then
-		local okClone, clone = pcall(function()
-			return livePlayer.Character:Clone()
-		end)
-		if okClone and clone then
-			stripScripts(clone)
-			for _, d in ipairs(clone:GetDescendants()) do
-				if d:IsA("BasePart") then
-					d.Anchored = true
-					d.CanCollide = false
-				end
-			end
-			return clone
-		end
-	end
-
-	local numeric = tonumber(userId)
-	if numeric then
-		local okModel, model = pcall(function()
-			return Players:CreateHumanoidModelFromUserId(numeric)
-		end)
-		if okModel and model then
-			for _, d in ipairs(model:GetDescendants()) do
-				if d:IsA("BasePart") then
-					d.Anchored = true
-					d.CanCollide = false
-				end
-			end
-			return model
-		end
-	end
-
-	return nil
-end
-
-local function renderCharacterPreview(viewportFrame, userId)
-	for _, child in ipairs(viewportFrame:GetChildren()) do
-		child:Destroy()
-	end
-
-	local cam = Instance.new("Camera")
-	cam.Name = "PreviewCamera"
-	cam.Parent = viewportFrame
-	viewportFrame.CurrentCamera = cam
-
-	local model = buildPreviewCharacterModel(userId)
-	if not model then
-		local fallback = Instance.new("Part")
-		fallback.Anchored = true
-		fallback.CanCollide = false
-		fallback.Size = Vector3.new(1.8, 2.8, 1)
-		fallback.Color = Color3.fromRGB(95, 95, 95)
-		fallback.Parent = viewportFrame
-		cam.CFrame = CFrame.new(Vector3.new(0, 1.3, 4), Vector3.new(0, 1.3, 0))
-		return
-	end
-
-	model.Parent = viewportFrame
-	local root = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
-	if not root then
-		return
-	end
-	model.PrimaryPart = root
-	model:PivotTo(CFrame.new(0, 0, 0) * CFrame.Angles(0, math.rad(180), 0))
-	local extents = model:GetExtentsSize()
-	local focusY = math.max(extents.Y * 0.45, 1.4)
-	local distance = math.max(extents.X, extents.Y, extents.Z) * 1.8
-	cam.CFrame = CFrame.new(Vector3.new(0, focusY, distance), Vector3.new(0, focusY, 0))
 end
 
 local function connectButtonPress(button, callback)
@@ -4306,147 +4261,6 @@ local function makeFloatingButtonDraggable(button)
 	end)
 end
 
-local function disconnectAll(connections)
-	for _, connection in ipairs(connections) do
-		if connection then
-			connection:Disconnect()
-		end
-	end
-	table.clear(connections)
-end
-
-local function destroyAll(instances)
-	for _, instance in ipairs(instances) do
-		if instance and instance.Parent then
-			instance:Destroy()
-		end
-	end
-	table.clear(instances)
-end
-
-local function fadeGuiObject(guiObject, transparency, duration)
-	if not guiObject then
-		return
-	end
-	local tweenInfo = TweenInfo.new(duration or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	if guiObject:IsA("Frame") or guiObject:IsA("TextButton") or guiObject:IsA("TextBox") then
-		TweenService:Create(guiObject, tweenInfo, { BackgroundTransparency = transparency }):Play()
-	elseif guiObject:IsA("TextLabel") then
-		TweenService:Create(guiObject, tweenInfo, { TextTransparency = transparency }):Play()
-	elseif guiObject:IsA("ImageLabel") or guiObject:IsA("ImageButton") then
-		TweenService:Create(guiObject, tweenInfo, { ImageTransparency = transparency }):Play()
-	end
-end
-
-local function resolveSafeInsets()
-	local ok, insetA, insetB = pcall(function()
-		return GuiService:GetSafeZoneInsets()
-	end)
-	if ok then
-		if typeof(insetA) == "Vector2" and typeof(insetB) == "Vector2" then
-			return insetA, insetB
-		end
-		if typeof(insetA) == "Rect" then
-			return Vector2.new(insetA.Min.X, insetA.Min.Y), Vector2.new(insetA.Max.X, insetA.Max.Y)
-		end
-	end
-	return Vector2.new(0, 0), Vector2.new(0, 0)
-end
-
-local function createDeviceProfile()
-	local function resolveInputOverride()
-		local raw = ReplicatedStorage:GetAttribute(UI_INPUT_PROFILE_OVERRIDE_ATTR)
-		if type(raw) ~= "string" then
-			return nil
-		end
-		local token = string.lower(raw)
-		if token == "mobile" or token == "console" or token == "pc" then
-			return token
-		end
-		return nil
-	end
-
-	local profile = {
-		isMobile = false,
-		isPC = true,
-		isConsole = false,
-		_inputType = "PC",
-		overrideInput = nil,
-	}
-
-	function profile:Refresh(lastInputType)
-		local overrideInput = resolveInputOverride()
-		self.overrideInput = overrideInput
-		if overrideInput == "mobile" then
-			self.isMobile = true
-			self.isConsole = false
-			self.isPC = false
-			self._inputType = "Mobile"
-			return
-		end
-		if overrideInput == "console" then
-			self.isMobile = false
-			self.isConsole = true
-			self.isPC = false
-			self._inputType = "Console"
-			return
-		end
-		if overrideInput == "pc" then
-			self.isMobile = false
-			self.isConsole = false
-			self.isPC = true
-			self._inputType = "PC"
-			return
-		end
-
-		local inputName = lastInputType and tostring(lastInputType) or ""
-		local usingTouch = inputName == tostring(Enum.UserInputType.Touch)
-		local usingGamepad = string.find(inputName, "Gamepad", 1, true) ~= nil
-		local usingKeyboardMouse = inputName == tostring(Enum.UserInputType.MouseButton1)
-			or inputName == tostring(Enum.UserInputType.MouseMovement)
-			or inputName == tostring(Enum.UserInputType.Keyboard)
-
-		self.isMobile = UserInputService.TouchEnabled and (usingTouch or (not usingGamepad and not usingKeyboardMouse))
-		self.isConsole = UserInputService.GamepadEnabled and (usingGamepad or (not UserInputService.KeyboardEnabled and not UserInputService.TouchEnabled))
-		self.isPC = UserInputService.KeyboardEnabled and not self.isMobile and not self.isConsole
-
-		if self.isMobile then
-			self._inputType = "Mobile"
-		elseif self.isConsole then
-			self._inputType = "Console"
-		else
-			self._inputType = "PC"
-		end
-	end
-
-	function profile:GetTextSize()
-		if self._inputType == "Mobile" then
-			return 22
-		end
-		if self._inputType == "Console" then
-			return 24
-		end
-		return 18
-	end
-
-	function profile:GetButtonSize()
-		if self._inputType == "Mobile" then
-			return Vector2.new(220, 80)
-		end
-		if self._inputType == "Console" then
-			return Vector2.new(260, 72)
-		end
-		return Vector2.new(180, 42)
-	end
-
-	function profile:GetInputType()
-		return self._inputType
-	end
-
-	profile:Refresh(UserInputService:GetLastInputType())
-	return profile
-end
-
 function UISystem:Init(context)
 	self._context = context
 	self._remotes = context.Remotes
@@ -4479,7 +4293,7 @@ function UISystem:Init(context)
 	self._lobbyZoneFocus = nil
 	self._activeInviteId = nil
 	self._uxReady = false
-	self._deviceProfile = createDeviceProfile()
+	self._deviceProfile = UISupport.createDeviceProfile(ReplicatedStorage, UserInputService, UI_INPUT_PROFILE_OVERRIDE_ATTR)
 	self._uiStateManager = { state = "Lobby" }
 	self._matchPhase = MATCH_PHASE.LOBBY
 	self._phaseStartTime = 0
@@ -4489,6 +4303,10 @@ function UISystem:Init(context)
 	self._phaseTimerRunning = false
 	self._loadingTransitionRunning = false
 	self._loadingStartTime = 0
+	self._graphicsMode = nil
+	self._graphicsModeSource = nil
+	self._graphicsAppliedMode = nil
+	self._graphicsAtmosphereDefaults = nil
 	self._hasPostTeleportLoaded = false
 	self._postTeleportFlowRunning = false
 	self._awaitingPostTeleportFlow = false
@@ -4502,7 +4320,7 @@ function UISystem:Init(context)
 	self._lastFieldKitTemporalRefreshAt = 0
 	self._fieldKitTemporalRefreshArmed = false
 	self._matchWindowDismissed = false
-	self._matchControlsHintText = "[1-9] Field Kit   [J] Journal   [F] Flashlight   [K] Match   [Esc] Tutup UI"
+	self._matchControlsHintText = "[1-9] Field Kit   [J] Journal   [F] Flashlight   [K] Match   [X] Tutup UI"
 	self._uxWidgets = {
 		match = {},
 		lobby = {},
@@ -4548,7 +4366,7 @@ function UISystem:Init(context)
 	}
 	self._shopState = {
 		lastEvent = "Idle",
-		catalog = loadShopCatalog(),
+		catalog = pasrahLoadShopCatalog(),
 		lastPurchase = nil,
 		lastMessage = "Pilih item untuk dibeli.",
 		pendingMarketplacePrompt = nil,
@@ -4563,7 +4381,7 @@ function UISystem:Init(context)
 		filterKey = "All",
 	}
 	self._legalState = {
-		attributions = loadAssetAttributionCatalog(),
+		attributions = pasrahLoadAssetAttributionCatalog(),
 	}
 	self._royalPassState = {
 		lastEvent = "Idle",
@@ -4601,6 +4419,90 @@ function UISystem:Init(context)
 	self._matchResult = createDefaultMatchResult()
 end
 
+function UISystem:_resolveDefaultGraphicsMode()
+	local inputType = self._deviceProfile and self._deviceProfile:GetInputType() or "Unknown"
+	local perfMap = PLATFORM_VISUAL_CONFIG.PerformanceTier or {}
+	local tier = string.lower(tostring(perfMap[inputType] or perfMap.Unknown or (inputType == "Mobile" and "Medium" or "High")))
+	if tier == "low" then
+		return "Performance", "auto_low"
+	end
+	if tier == "high" then
+		if inputType == "Mobile" then
+			return "Balanced", "auto_mobile_high"
+		end
+		return "Quality", "auto_high"
+	end
+	return "Balanced", inputType == "Mobile" and "auto_mobile" or "auto_medium"
+end
+
+function UISystem:_syncGraphicsMode(forceAuto)
+	local player = Players.LocalPlayer
+	local mode = nil
+	local source = nil
+	if player and forceAuto ~= true then
+		mode = GraphicsSupport.normalizeMode(player:GetAttribute(UI_GRAPHICS_MODE_ATTR))
+		source = player:GetAttribute(UI_GRAPHICS_SOURCE_ATTR)
+	end
+	if not mode then
+		mode, source = self:_resolveDefaultGraphicsMode()
+		if player then
+			player:SetAttribute(UI_GRAPHICS_MODE_ATTR, mode)
+			player:SetAttribute(UI_GRAPHICS_SOURCE_ATTR, source)
+		end
+	end
+	self._graphicsMode = mode
+	self._graphicsModeSource = tostring(source or "auto")
+	return GraphicsSupport.getModeMeta(mode)
+end
+
+function UISystem:_applyGraphicsMode(force)
+	local modeMeta = self:_syncGraphicsMode(force == true and self._graphicsModeSource ~= "manual")
+	local mode = self._graphicsMode or "Balanced"
+	local atmosphere = Lighting:FindFirstChild("GlobalAtmosphere")
+	if atmosphere and atmosphere:IsA("Atmosphere") then
+		if not self._graphicsAtmosphereDefaults then
+			self._graphicsAtmosphereDefaults = {
+				Density = atmosphere.Density,
+				Haze = atmosphere.Haze,
+				Glare = atmosphere.Glare,
+				Offset = atmosphere.Offset,
+			}
+		end
+		local defaults = self._graphicsAtmosphereDefaults
+		atmosphere.Density = math.max(0, defaults.Density * (modeMeta.atmosphereDensityScale or 1))
+		atmosphere.Haze = math.max(0, defaults.Haze * (modeMeta.atmosphereHazeScale or 1))
+		atmosphere.Glare = math.max(0, defaults.Glare)
+		atmosphere.Offset = defaults.Offset
+	end
+
+	local player = Players.LocalPlayer
+	if player then
+		player:SetAttribute(UI_GRAPHICS_MODE_ATTR, mode)
+		player:SetAttribute(UI_GRAPHICS_SOURCE_ATTR, self._graphicsModeSource or "auto")
+		player:SetAttribute(UI_GRAPHICS_APPLIED_AT_ATTR, os.clock())
+	end
+
+	self._graphicsAppliedMode = mode
+	if self._uxReady then
+		self:_refreshMainMenuPanel()
+		self:_refreshLobbyEvidenceTrainingPanel()
+		self:_refreshFieldKitPanel()
+		self:_refreshRoomBrowserView()
+	end
+end
+
+function UISystem:_cycleGraphicsMode()
+	local nextMode = GraphicsSupport.getNextMode(self._graphicsMode)
+	local player = Players.LocalPlayer
+	self._graphicsMode = nextMode
+	self._graphicsModeSource = "manual"
+	if player then
+		player:SetAttribute(UI_GRAPHICS_MODE_ATTR, nextMode)
+		player:SetAttribute(UI_GRAPHICS_SOURCE_ATTR, "manual")
+	end
+	self:_applyGraphicsMode(true)
+end
+
 function UISystem:Start()
 	for _, remoteName in ipairs(REMOTE_NAMES) do
 		if remoteName == "LobbyEvent" then
@@ -4631,6 +4533,7 @@ function UISystem:Start()
 		self._roomBrowser:Start()
 	end
 
+	self:_applyGraphicsMode(true)
 	self:_requestShopSnapshot(true)
 	self:_requestCosmeticSnapshot(true)
 	self:_ensureBasicUIs()
@@ -5569,7 +5472,7 @@ function UISystem:_layoutLobbyFloatRail()
 		pushButton(shopButton)
 	end
 
-	local topLeftInset, bottomRightInset = resolveSafeInsets()
+	local topLeftInset, bottomRightInset = UISupport.resolveSafeInsets(GuiService)
 	local railX = -(18 + bottomRightInset.X)
 	local railTop = topLeftInset.Y + (profile.isMobile and 96 or 88)
 	local gap = profile.isMobile and 12 or 10
@@ -7121,10 +7024,13 @@ function UISystem:_refreshBasicLobbyPanel()
 		lobby.BasicSecondaryLabel.Text = secondaryText
 	end
 	if lobby.BasicHintLabel then
-		lobby.BasicHintLabel.Text = hintText
+		lobby.BasicHintLabel.Text = pasrahAppendBuildSignature(hintText)
 		lobby.BasicHintLabel.TextColor3 = (type(zoneFocus) == "table" and not currentRoom and not state.lastError and typeof(zoneFocus.accentColor) == "Color3")
 			and zoneFocus.accentColor:Lerp(Color3.fromRGB(240, 244, 248), 0.4)
 			or Color3.fromRGB(156, 170, 192)
+	end
+	if lobby.BasicPanel then
+		lobby.BasicPanel:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 	end
 	if lobby.BasicModePill then
 		lobby.BasicModePill.Text = string.upper(selectedMode)
@@ -7218,11 +7124,13 @@ function UISystem:_refreshMainMenuPanel()
 	local currentRoom = type(state.currentRoom) == "table" and state.currentRoom or nil
 	local selectedMode = tostring(state.selectedMode or "Classic")
 	local selectedMap = tostring(state.selectedMap or MAPS[1] or "HauntedHouse")
+	local graphicsMode = self._graphicsMode or GraphicsSupport.resolveAppliedMode()
+	local graphicsMeta = GraphicsSupport.getModeMeta(graphicsMode)
 	local statusText = "QUICK ACCESS"
 	local badgeColor = Color3.fromRGB(60, 92, 132)
 	local primaryText = "Panel navigasi cepat untuk test lobby flow tanpa mengandalkan hotkey."
-	local secondaryText = string.format("Mode %s | Map %s | %d room aktif", selectedMode, selectedMap, #rooms)
-	local attributionFooter = buildAttributionFooterText(self._legalState and self._legalState.attributions)
+	local secondaryText = string.format("Mode %s | Map %s | %d room aktif | Visual %s", selectedMode, selectedMap, #rooms, graphicsMeta.label)
+	local attributionFooter = pasrahBuildAttributionFooterText(self._legalState and self._legalState.attributions)
 
 	if currentRoom and currentRoom.roomId then
 		local playerCount = type(currentRoom.players) == "table" and #currentRoom.players or 0
@@ -7230,10 +7138,11 @@ function UISystem:_refreshMainMenuPanel()
 		badgeColor = state.matchStarting == true and Color3.fromRGB(126, 84, 48) or Color3.fromRGB(54, 110, 86)
 		primaryText = string.format("Room #%s aktif. Semua akses dasar lobby ada di panel ini.", tostring(currentRoom.roomId))
 		secondaryText = string.format(
-			"%s | %s | %d pemain",
+			"%s | %s | %d pemain | Visual %s",
 			tostring(currentRoom.mode or selectedMode),
 			tostring(currentRoom.mapId or selectedMap),
-			playerCount
+			playerCount,
+			graphicsMeta.label
 		)
 	end
 
@@ -7251,11 +7160,13 @@ function UISystem:_refreshMainMenuPanel()
 		window.SecondaryLabel.Text = secondaryText
 	end
 	if window.FooterLabel then
+		local graphicsFooter = string.format("Visual %s [%s]. Mobile default tetap landscape dan toggle ini murni client-side.", graphicsMeta.label, graphicsMeta.footer)
 		if attributionFooter ~= "" then
-			window.FooterLabel.Text = attributionFooter .. "\nTombol di bawah benar-benar menggerakkan UI terkait. X untuk minimize ke float MENU."
+			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. pasrahGetBuildSignatureText()
 		else
-			window.FooterLabel.Text = "Tombol di bawah benar-benar menggerakkan UI terkait. X untuk minimize ke float MENU."
+			window.FooterLabel.Text = graphicsFooter .. "\n" .. pasrahGetBuildSignatureText()
 		end
+		window.FooterLabel:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 	end
 
 	local profileOpen = self._uiState.ProfileUI and self._uiState.ProfileUI.visible == true and self._windowDismissed.ProfileUI ~= true
@@ -7287,6 +7198,10 @@ function UISystem:_refreshMainMenuPanel()
 			and Color3.fromRGB(98, 104, 62)
 			or Color3.fromRGB(78, 84, 50)
 	end
+	if window.GraphicsButton then
+		window.GraphicsButton.Text = string.format("VISUAL: %s", graphicsMeta.label)
+		window.GraphicsButton.BackgroundColor3 = graphicsMeta.buttonColor
+	end
 
 	local function stamp(instance, channel)
 		if not instance then
@@ -7314,6 +7229,7 @@ function UISystem:_refreshMainMenuPanel()
 	stamp(window.ProfileButton, "MainMenuProfileButton")
 	stamp(window.ShopButton, "MainMenuShopButton")
 	stamp(window.RankButton, "MainMenuRankButton")
+	stamp(window.GraphicsButton, "MainMenuGraphicsButton")
 end
 
 function UISystem:_ensureLeaderboardWidgets(window)
@@ -8813,7 +8729,7 @@ function UISystem:_reloadShopCatalog()
 	if type(self._shopState) ~= "table" then
 		return
 	end
-	self._shopState.catalog = loadShopCatalog()
+	self._shopState.catalog = pasrahLoadShopCatalog()
 	if not shouldShowShopFilter(self._shopState.filterKey, self._shopState.catalog, self._shopState.ownedItemIds) then
 		self._shopState.filterKey = "All"
 	end
@@ -10168,7 +10084,7 @@ function UISystem:_trackUXInstance(instance)
 end
 
 function UISystem:_clearUXInstances()
-	destroyAll(self._uxInstances)
+	UISupport.destroyAll(self._uxInstances)
 	local matchWidgets = self._uxWidgets.match
 	if matchWidgets and matchWidgets.PulseConnection then
 		matchWidgets.PulseConnection:Disconnect()
@@ -10211,11 +10127,13 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 
 	local panel = widgets.RootPanel
+	local backdrop = widgets.Backdrop
 	local title = widgets.HeaderTitle
 	local titleGlow = widgets.HeaderTitleGlow
 	local statusLabel = widgets.Status
 	local closeButton = panel:FindFirstChild("CloseButton")
 	local dragBar = panel:FindFirstChild("DragBar")
+	local panelCorner = panel:FindFirstChildOfClass("UICorner")
 	local panelScale = panel:FindFirstChildOfClass("UIScale")
 	local roomList = widgets.RoomList
 	local roomPreviewPanel = widgets.RoomPreviewPanel
@@ -10264,6 +10182,8 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local roomPreviewPlayersTitle = roomPreviewPanel and roomPreviewPanel:FindFirstChild("PlayersTitle")
 	local roomPreviewPlayersLayout = roomPreviewPlayersList and roomPreviewPlayersList:FindFirstChildOfClass("UIGridLayout")
 	local playersListLayout = playersList and playersList:FindFirstChildOfClass("UIGridLayout")
+	local roomListLayout = roomList and roomList:FindFirstChildOfClass("UIListLayout")
+	local leaveRoomButton = roomPanel and roomPanel:FindFirstChild("LeaveRoomButton")
 	local modeClassicOption = modeDropdown and modeDropdown:FindFirstChild("ClassicOption")
 	local modeRankedOption = modeDropdown and modeDropdown:FindFirstChild("RankedOption")
 	local mapOptions = {}
@@ -10278,11 +10198,12 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		end)
 	end
 
-	local margin = profile.isMobile and 2 or 14
+	local isLandscapeMobile = profile.isMobile and viewportSize.X > viewportSize.Y
+	local margin = profile.isMobile and 0 or 14
 	local availableWidth = math.max(320, viewportSize.X - (topLeftInset.X + bottomRightInset.X))
-	local availableHeight = math.max(420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y))
+	local availableHeight = math.max((profile.isMobile and isLandscapeMobile) and 300 or 420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y))
 	local usableWidth = math.max(profile.isMobile and 320 or 360, availableWidth - margin * 2)
-	local usableHeight = math.max(profile.isMobile and 460 or 420, availableHeight - margin * 2)
+	local usableHeight = math.max(profile.isMobile and (isLandscapeMobile and 300 or 460) or 420, availableHeight - margin * 2)
 	local forceCompact = ReplicatedStorage:GetAttribute(UI_FORCE_COMPACT_ATTR) == true
 	-- Force compact layout for short viewports so room controls do not overlap
 	-- host action buttons (Start/Leave) in the room detail panel.
@@ -10292,16 +10213,26 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local panelWidth = isCompact and usableWidth or math.min(1080, usableWidth)
 	local panelHeight = isCompact and usableHeight or math.min(668, usableHeight)
 	if profile.isMobile then
-		panelWidth = math.min(availableWidth, math.max(332, availableWidth - 8))
-		panelHeight = math.min(availableHeight, math.max(460, availableHeight - 8))
+		panelWidth = availableWidth
+		panelHeight = availableHeight
+	end
+	local useWideMobileLayout = profile.isMobile and isCompact and panelWidth >= 700 and panelHeight >= 320
+	self._roomBrowserWideMobile = useWideMobileLayout
+	if backdrop then
+		backdrop.BackgroundTransparency = profile.isMobile and 0.3 or 0.42
+		backdrop.Active = true
 	end
 	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
 	panel.Position = UDim2.fromOffset(
 		topLeftInset.X + margin + math.floor(panelWidth * 0.5),
 		topLeftInset.Y + margin + math.floor(panelHeight * 0.5)
 	)
-	panel.BackgroundTransparency = profile.isMobile and 0.04 or (isCompact and 0.14 or 0.18)
+	panel.BackgroundTransparency = profile.isMobile and 0.12 or (isCompact and 0.14 or 0.18)
+	panel.Active = true
 	panel.ClipsDescendants = true
+	if panelCorner then
+		panelCorner.CornerRadius = profile.isMobile and UDim.new(0, 0) or UDim.new(0, 12)
+	end
 	if panelScale then
 		panelScale.Scale = 1
 	end
@@ -10311,6 +10242,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	if dragBar then
 		setOffsetBounds(dragBar, 0, 0, panelWidth, isCompact and 52 or 44)
 		dragBar.Active = not profile.isMobile
+		dragBar.Visible = not profile.isMobile
 	end
 	if closeButton then
 		setOffsetBounds(closeButton, panelWidth - (profile.isMobile and 52 or 46), 10, profile.isMobile and 40 or 34, profile.isMobile and 32 or 28)
@@ -10357,6 +10289,59 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local contentTop = controlsY + tabHeight + 12
 	local actionStackHeight = profile.isMobile and 154 or (isCompact and 130 or 128)
 	if isCompact then
+		if useWideMobileLayout then
+			local columnGap = 12
+			local leftWidth = math.max(280, math.floor((panelWidth - (headerPadding * 2) - columnGap) * 0.48))
+			local rightX = headerPadding + leftWidth + columnGap
+			local rightWidth = panelWidth - rightX - headerPadding
+			local previewHeight = panelHeight - contentTop - headerPadding
+			local actionRowHeight = 36
+			local joinHeight = 40
+			local roomListHeight = math.max(132, previewHeight - (joinHeight + actionRowHeight + 18))
+			local actionY = contentTop + roomListHeight + 10
+
+			setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, leftWidth, previewHeight)
+			setOffsetBounds(roomList, rightX, contentTop, rightWidth, roomListHeight)
+			setOffsetBounds(joinPassword, rightX, actionY - 42, rightWidth, 32)
+			setOffsetBounds(queueButton, rightX, actionY, rightWidth, joinHeight)
+			setOffsetBounds(refreshButton, rightX, actionY + joinHeight + 6, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
+			setOffsetBounds(createRoomButton, rightX + math.floor((rightWidth - 6) * 0.5) + 6, actionY + joinHeight + 6, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
+			setOffsetBounds(quickClassicButton, rightX, actionY + joinHeight + actionRowHeight + 12, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
+			setOffsetBounds(quickRankedButton, rightX + math.floor((rightWidth - 6) * 0.5) + 6, actionY + joinHeight + actionRowHeight + 12, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
+
+			local previewMapHeight = math.clamp(math.floor(previewHeight * 0.34), 108, 136)
+			setOffsetBounds(roomPreviewTitle, 12, 10, leftWidth - 24, 18)
+			setOffsetBounds(roomPreviewInfo, 12, 30, leftWidth - 24, 34)
+			setOffsetBounds(roomPreviewMap, 12, 70, leftWidth - 24, previewMapHeight)
+			setOffsetBounds(roomPreviewPlayersTitle, 12, 70 + previewMapHeight + 8, leftWidth - 24, 16)
+			setOffsetBounds(roomPreviewPlayersList, 12, 70 + previewMapHeight + 28, leftWidth - 24, previewHeight - (70 + previewMapHeight + 40))
+			if previewMapTitle then
+				setOffsetBounds(previewMapTitle, 16, 8, leftWidth - 48, 14)
+				previewMapTitle.TextSize = 10
+			end
+			if previewMapMood then
+				setOffsetBounds(previewMapMood, leftWidth - 24 - 144, 8, 144, 18)
+				previewMapMood.TextSize = 10
+			end
+			if previewMapFooter then
+				setOffsetBounds(previewMapFooter, 16, 28, leftWidth - 48, 44)
+				previewMapFooter.TextSize = 13
+			end
+			if previewMapStats then
+				setOffsetBounds(previewMapStats, 16, previewMapHeight - 24, leftWidth - 48, 16)
+				previewMapStats.TextSize = 10
+			end
+			if previewMapAccent then
+				setOffsetBounds(previewMapAccent, 0, 0, 6, previewMapHeight)
+			end
+			if previewMapGradient then
+				previewMapGradient.Rotation = 14
+			end
+			if roomPreviewPlayersLayout then
+				roomPreviewPlayersLayout.FillDirectionMaxCells = 1
+				roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(leftWidth - 36, 72)
+			end
+		else
 		local previewWidth = panelWidth - headerPadding * 2
 		local previewHeight = math.clamp(math.floor(panelHeight * (profile.isMobile and 0.33 or 0.36)), profile.isMobile and 236 or 254, profile.isMobile and 304 or 320)
 		local actionY = panelHeight - actionStackHeight
@@ -10411,6 +10396,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			roomPreviewPlayersLayout.FillDirectionMaxCells = 1
 			roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(previewWidth - 36, profile.isMobile and 82 or 74)
 		end
+		end
 	else
 		local listWidth = math.clamp(math.floor(panelWidth * 0.39), 380, 432)
 		local previewX = headerPadding + listWidth + 16
@@ -10462,6 +10448,9 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	if roomList then
 		roomList.ScrollBarThickness = isCompact and 6 or 4
 	end
+	if roomListLayout then
+		roomListLayout.Padding = UDim.new(0, useWideMobileLayout and 6 or 4)
+	end
 	if joinPassword then
 		joinPassword.TextSize = profile.isMobile and 15 or (isCompact and 14 or 12)
 	end
@@ -10488,6 +10477,63 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 
 	if isCompact then
+		if useWideMobileLayout then
+			local columnGap = 12
+			local leftWidth = math.max(280, math.floor((panelWidth - (headerPadding * 2) - columnGap) * 0.48))
+			local rightX = headerPadding + leftWidth + columnGap
+			local rightWidth = panelWidth - rightX - headerPadding
+			local mapPreviewHeight = 144
+			local actionY = 72 + mapPreviewHeight + 12
+			local leaveY = actionY + 46
+			local controlsY = leaveY + 48
+			local mapSelectorY = controlsY + 126
+			local setPasswordY = mapSelectorY + 178
+			local kickRowY = setPasswordY + 40
+			local roomCanvasHeight = kickRowY + 84
+
+			setOffsetBounds(roomTitle, headerPadding, 12, leftWidth, 24)
+			setOffsetBounds(roomHost, headerPadding, 38, leftWidth, 18)
+			setOffsetBounds(mapPreview, headerPadding, 72, leftWidth, mapPreviewHeight)
+			if playersLabel then
+				setOffsetBounds(playersLabel, rightX, 12, rightWidth, 18)
+				playersLabel.TextSize = 12
+			end
+			setOffsetBounds(playersList, rightX, 34, rightWidth, panelHeight - 84)
+			if playersListLayout then
+				playersListLayout.FillDirectionMaxCells = 1
+				playersListLayout.CellSize = UDim2.fromOffset(rightWidth - 14, 92)
+			end
+			setOffsetBounds(modeSelector, headerPadding, controlsY, leftWidth, 36)
+			setOffsetBounds(modeDropdown, headerPadding, controlsY + 40, leftWidth, 72)
+			if modeClassicOption then
+				setOffsetBounds(modeClassicOption, 8, 8, leftWidth - 16, 26)
+				modeClassicOption.TextSize = 12
+			end
+			if modeRankedOption then
+				setOffsetBounds(modeRankedOption, 8, 38, leftWidth - 16, 26)
+				modeRankedOption.TextSize = 12
+			end
+			setOffsetBounds(mapSelector, headerPadding, mapSelectorY, leftWidth, 36)
+			setOffsetBounds(rankedTierLabel, headerPadding, mapSelectorY, leftWidth, 36)
+			setOffsetBounds(mapDropdown, headerPadding, mapSelectorY + 40, leftWidth, 112)
+			for index, option in ipairs(mapOptions) do
+				setOffsetBounds(option, 8, 8 + (index - 1) * 26, leftWidth - 16, 22)
+				option.TextSize = 12
+			end
+			setOffsetBounds(setPasswordBox, headerPadding, setPasswordY, leftWidth - 122, 34)
+			setOffsetBounds(setPasswordButton, headerPadding + leftWidth - 116, setPasswordY, 116, 34)
+			setOffsetBounds(kickNameBox, headerPadding, kickRowY, leftWidth - 122, 34)
+			setOffsetBounds(kickButton, headerPadding + leftWidth - 116, kickRowY, 116, 34)
+			setOffsetBounds(inviteButton, rightX, panelHeight - 42, rightWidth, 34)
+			setOffsetBounds(inviteDropdown, rightX, math.max(92, panelHeight - 254), rightWidth, 206)
+			setOffsetBounds(readyButton, headerPadding, actionY, leftWidth, 40)
+			setOffsetBounds(startButton, headerPadding, actionY, leftWidth, 40)
+			setOffsetBounds(cancelStartButton, headerPadding, actionY + 44, leftWidth, 34)
+			if leaveRoomButton then
+				setOffsetBounds(leaveRoomButton, headerPadding, leaveY, leftWidth, 36)
+			end
+			roomPanel.CanvasSize = UDim2.fromOffset(0, math.max(roomCanvasHeight, panelHeight + bottomRightInset.Y + 20))
+		else
 		local contentWidth = panelWidth - headerPadding * 2
 		local mapPreviewHeight = profile.isMobile and 188 or 176
 		local playersY = 72 + mapPreviewHeight + 30
@@ -10539,10 +10585,13 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		setOffsetBounds(readyButton, headerPadding, readyY, contentWidth, profile.isMobile and 46 or 42)
 		setOffsetBounds(startButton, headerPadding, readyY, contentWidth, profile.isMobile and 46 or 42)
 		setOffsetBounds(cancelStartButton, headerPadding, readyY + (profile.isMobile and 50 or 46), contentWidth, profile.isMobile and 38 or 34)
-		setOffsetBounds(panel:FindFirstChild("RoomPanel"):FindFirstChild("LeaveRoomButton"), headerPadding, leaveY, contentWidth, profile.isMobile and 40 or 36)
+		if leaveRoomButton then
+			setOffsetBounds(leaveRoomButton, headerPadding, leaveY, contentWidth, profile.isMobile and 40 or 36)
+		end
 		roomCanvasHeight = math.max(roomCanvasHeight, inviteY + (profile.isMobile and 224 or 204))
 		local compactCanvasHeight = roomCanvasHeight + (profile.isMobile and (bottomRightInset.Y + 36) or 0)
 		roomPanel.CanvasSize = UDim2.fromOffset(0, compactCanvasHeight)
+		end
 	end
 
 	if not isCompact then
@@ -10587,7 +10636,9 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		setOffsetBounds(readyButton, headerPadding, panelHeight - 80, leftWidth, 36)
 		setOffsetBounds(startButton, headerPadding, panelHeight - 80, leftWidth, 36)
 		setOffsetBounds(cancelStartButton, headerPadding, panelHeight - 40, leftWidth, 28)
-		setOffsetBounds(panel:FindFirstChild("RoomPanel"):FindFirstChild("LeaveRoomButton"), headerPadding, panelHeight - 40, leftWidth, 28)
+		if leaveRoomButton then
+			setOffsetBounds(leaveRoomButton, headerPadding, panelHeight - 40, leftWidth, 28)
+		end
 		roomPanel.CanvasSize = UDim2.fromOffset(0, panelHeight)
 	end
 
@@ -10647,12 +10698,16 @@ function UISystem:_applyDeviceSizing()
 	if camera and typeof(camera.ViewportSize) == "Vector2" then
 		viewportSize = camera.ViewportSize
 	end
+	local actualViewportSize = viewportSize
 	local viewportOverrideX = tonumber(ReplicatedStorage:GetAttribute(UI_VIEWPORT_OVERRIDE_X_ATTR))
 	local viewportOverrideY = tonumber(ReplicatedStorage:GetAttribute(UI_VIEWPORT_OVERRIDE_Y_ATTR))
 	if viewportOverrideX and viewportOverrideY and viewportOverrideX > 0 and viewportOverrideY > 0 then
-		viewportSize = Vector2.new(math.floor(viewportOverrideX), math.floor(viewportOverrideY))
+		viewportSize = Vector2.new(
+			math.min(actualViewportSize.X, math.floor(viewportOverrideX)),
+			math.min(actualViewportSize.Y, math.floor(viewportOverrideY))
+		)
 	end
-	local topLeftInset, bottomRightInset = resolveSafeInsets()
+	local topLeftInset, bottomRightInset = UISupport.resolveSafeInsets(GuiService)
 	local lobby = self._uxWidgets.lobby
 	if lobby and lobby.PlayButton and lobby.FeedbackLabel then
 		local buttonSize = profile:GetButtonSize()
@@ -11157,7 +11212,7 @@ function UISystem:_applyDeviceSizing()
 				local availableWidth = viewportSize.X - (topLeftInset.X + bottomRightInset.X)
 				local availableHeight = viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y)
 				local panelWidth = math.max(352, math.floor(availableWidth))
-				local panelHeight = isMenu and math.min(428, math.max(404, availableHeight)) or math.max(560, math.floor(availableHeight))
+				local panelHeight = isMenu and math.max(360, math.floor(availableHeight)) or math.max(560, math.floor(availableHeight))
 				window.Panel.AnchorPoint = Vector2.new(0, 0)
 				window.Panel.Position = UDim2.fromOffset(topLeftInset.X, topLeftInset.Y)
 				window.Panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
@@ -11183,22 +11238,30 @@ function UISystem:_applyDeviceSizing()
 				end
 				if isMenu then
 					local buttonWidth = math.floor((panelWidth - 36) * 0.5)
-					local buttonHeight = 54
+					local buttonHeight = panelHeight <= 392 and 46 or 54
+					local footerHeight = panelHeight <= 392 and 40 or 52
+					local footerY = panelHeight - footerHeight - 10
+					local graphicsY = footerY - buttonHeight - 10
+					local rowTwoY = graphicsY - buttonHeight - 10
+					local rowOneY = rowTwoY - buttonHeight - 10
 					local rightX = 12 + buttonWidth + 12
 					if window.RoomBrowserButton then
-						setOffsetBounds(window.RoomBrowserButton, 12, 168, buttonWidth, buttonHeight)
+						setOffsetBounds(window.RoomBrowserButton, 12, rowOneY, buttonWidth, buttonHeight)
 					end
 					if window.ProfileButton then
-						setOffsetBounds(window.ProfileButton, rightX, 168, buttonWidth, buttonHeight)
+						setOffsetBounds(window.ProfileButton, rightX, rowOneY, buttonWidth, buttonHeight)
 					end
 					if window.ShopButton then
-						setOffsetBounds(window.ShopButton, 12, 232, buttonWidth, buttonHeight)
+						setOffsetBounds(window.ShopButton, 12, rowTwoY, buttonWidth, buttonHeight)
 					end
 					if window.RankButton then
-						setOffsetBounds(window.RankButton, rightX, 232, buttonWidth, buttonHeight)
+						setOffsetBounds(window.RankButton, rightX, rowTwoY, buttonWidth, buttonHeight)
+					end
+					if window.GraphicsButton then
+						setOffsetBounds(window.GraphicsButton, 12, graphicsY, panelWidth - 24, buttonHeight)
 					end
 					if window.FooterLabel then
-						setOffsetBounds(window.FooterLabel, 12, panelHeight - 60, panelWidth - 24, 44)
+						setOffsetBounds(window.FooterLabel, 12, footerY, panelWidth - 24, footerHeight)
 					end
 				else
 					local contentHeight = math.max(260, panelHeight - 256)
@@ -12172,15 +12235,18 @@ end
 
 function UISystem:_bindInputProfileUpdates()
 	self._deviceProfile:Refresh(UserInputService:GetLastInputType())
+	self:_applyGraphicsMode(self._graphicsModeSource ~= "manual")
 	self:_applyDeviceSizing()
 
 	table.insert(self._uxConnections, UserInputService.LastInputTypeChanged:Connect(function(lastInputType)
 		self._deviceProfile:Refresh(lastInputType)
+		self:_applyGraphicsMode(self._graphicsModeSource ~= "manual")
 		self:_applyDeviceSizing()
 	end))
 
 	table.insert(self._uxConnections, ReplicatedStorage:GetAttributeChangedSignal(UI_INPUT_PROFILE_OVERRIDE_ATTR):Connect(function()
 		self._deviceProfile:Refresh(UserInputService:GetLastInputType())
+		self:_applyGraphicsMode(self._graphicsModeSource ~= "manual")
 		self:_applyDeviceSizing()
 	end))
 
@@ -12219,7 +12285,7 @@ function UISystem:_ensureUXLayers()
 		container.Parent = playerGui
 	end
 
-	local topLeftInset, bottomRightInset = resolveSafeInsets()
+	local topLeftInset, bottomRightInset = UISupport.resolveSafeInsets(GuiService)
 
 	local function ensureSafeLayer(parentInstance, name)
 		local layer = parentInstance:FindFirstChild(name)
@@ -12957,7 +13023,7 @@ function UISystem:TransitionTo(state, payload)
 	if state == "Preparation" then
 		match.MessageLabel.Text = "Masuk ke lokasi..."
 		match.MessageLabel.Visible = true
-		fadeGuiObject(match.MessageLabel, 0, 0.2)
+		UISupport.fadeGuiObject(match.MessageLabel, 0, 0.2, TweenService)
 	elseif state == "Investigation" then
 		match.MessageLabel.Text = ""
 		match.MessageLabel.Visible = false
@@ -14632,7 +14698,7 @@ function UISystem:_ensureBasicUIs()
 					title = "QUICK MENU",
 					panelAnchorPoint = Vector2.new(0.5, 0),
 					panelPosition = UDim2.new(0.5, 0, 0, 16),
-					panelSize = Vector2.new(340, 318),
+					panelSize = Vector2.new(340, 376),
 					panelColor = Color3.fromRGB(18, 26, 34),
 					badgeColor = Color3.fromRGB(60, 92, 132),
 					floatPosition = UDim2.new(1, -18, 0.36, 0),
@@ -14777,6 +14843,7 @@ function UISystem:_ensureBasicUIs()
 			local profileButton = nil
 			local shopButton = nil
 			local rankButton = nil
+			local graphicsButton = nil
 			local contentFrame = nil
 			local contentText = nil
 			local menuButton = nil
@@ -14847,8 +14914,32 @@ function UISystem:_ensureBasicUIs()
 					table.insert(actionButtons, button)
 				end
 
-				footerLabel.Position = UDim2.fromOffset(12, 284)
-				footerLabel.Size = UDim2.new(1, -24, 0, 44)
+				graphicsButton = panel:FindFirstChild("GraphicsButton")
+				if not graphicsButton then
+					graphicsButton = Instance.new("TextButton")
+					graphicsButton.Name = "GraphicsButton"
+					graphicsButton.Position = UDim2.fromOffset(12, 282)
+					graphicsButton.Size = UDim2.fromOffset(316, 44)
+					styleButton(graphicsButton, "VISUAL: SEIMBANG")
+					graphicsButton.BackgroundColor3 = GraphicsSupport.MODE_META.Balanced.buttonColor
+					graphicsButton.TextWrapped = true
+					graphicsButton.Parent = panel
+
+					local buttonCorner = Instance.new("UICorner")
+					buttonCorner.CornerRadius = UDim.new(0, 10)
+					buttonCorner.Parent = graphicsButton
+
+					self:_setSelectableStyle(graphicsButton)
+				else
+					graphicsButton.Position = UDim2.fromOffset(12, 282)
+					graphicsButton.Size = UDim2.fromOffset(316, 44)
+					graphicsButton.BackgroundColor3 = GraphicsSupport.MODE_META.Balanced.buttonColor
+					graphicsButton.TextWrapped = true
+				end
+				table.insert(actionButtons, graphicsButton)
+
+				footerLabel.Position = UDim2.fromOffset(12, 334)
+				footerLabel.Size = UDim2.new(1, -24, 0, 34)
 			else
 				local contentFrameHeight = guiName == "LeaderboardUI" and 214 or 112
 				local actionRowY = guiName == "LeaderboardUI" and 378 or 276
@@ -15013,6 +15104,12 @@ function UISystem:_ensureBasicUIs()
 					self:_toggleBasicWindow("LeaderboardUI")
 				end)
 			end
+			if graphicsButton and graphicsButton:GetAttribute("Bound") ~= true then
+				graphicsButton:SetAttribute("Bound", true)
+				connectButtonPress(graphicsButton, function()
+					self:_cycleGraphicsMode()
+				end)
+			end
 			if menuButton and menuButton:GetAttribute("Bound") ~= true then
 				menuButton:SetAttribute("Bound", true)
 				connectButtonPress(menuButton, function()
@@ -15037,9 +15134,10 @@ function UISystem:_ensureBasicUIs()
 				ProfileButton = profileButton,
 				ShopButton = shopButton,
 				RankButton = rankButton,
+				GraphicsButton = graphicsButton,
 				MenuButton = menuButton,
-		}
-	end
+			}
+		end
 
 	self:_refreshBasicLobbyPanel()
 	self:_refreshBasicMatchPanel("Lobby")
@@ -15106,6 +15204,15 @@ function UISystem:_ensureRoomBrowserGui()
 	floatGui.Enabled = true
 	floatGui.Parent = playerGui
 
+	local backdrop = Instance.new("Frame")
+	backdrop.Name = "Backdrop"
+	backdrop.Size = UDim2.fromScale(1, 1)
+	backdrop.BackgroundColor3 = Color3.fromRGB(4, 6, 10)
+	backdrop.BackgroundTransparency = 0.42
+	backdrop.BorderSizePixel = 0
+	backdrop.Active = true
+	backdrop.Parent = gui
+
 	local panel = Instance.new("Frame")
 	panel.Name = "Panel"
 	panel.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -15114,7 +15221,8 @@ function UISystem:_ensureRoomBrowserGui()
 	panel.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
 	panel.BackgroundTransparency = 0.5
 	panel.BorderSizePixel = 0
-	panel.Parent = gui
+	panel.Active = true
+	panel.Parent = backdrop
 
 	local panelScale = Instance.new("UIScale")
 	panelScale.Parent = panel
@@ -15244,6 +15352,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomList.ScrollBarThickness = 4
 	roomList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	roomList.CanvasSize = UDim2.fromOffset(0, 0)
+	roomList.Active = true
 	roomList.Parent = panel
 
 	local roomListCorner = Instance.new("UICorner")
@@ -15268,6 +15377,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewPanel.Size = UDim2.fromOffset(480, 384)
 	roomPreviewPanel.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
 	roomPreviewPanel.BorderSizePixel = 0
+	roomPreviewPanel.Active = true
 	roomPreviewPanel.Parent = panel
 	local roomPreviewCorner = Instance.new("UICorner")
 	roomPreviewCorner.CornerRadius = UDim.new(0, 10)
@@ -15307,6 +15417,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewMap.Size = UDim2.fromOffset(456, 112)
 	roomPreviewMap.BackgroundColor3 = Color3.fromRGB(18, 24, 32)
 	roomPreviewMap.BorderSizePixel = 0
+	roomPreviewMap.Active = true
 	roomPreviewMap.Parent = roomPreviewPanel
 	local roomPreviewMapCorner = Instance.new("UICorner")
 	roomPreviewMapCorner.CornerRadius = UDim.new(0, 8)
@@ -15407,6 +15518,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewPlayersList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	roomPreviewPlayersList.CanvasSize = UDim2.fromOffset(0, 0)
 	roomPreviewPlayersList.ScrollBarThickness = 4
+	roomPreviewPlayersList.Active = true
 	roomPreviewPlayersList.Parent = roomPreviewPanel
 	local roomPreviewPlayersCorner = Instance.new("UICorner")
 	roomPreviewPlayersCorner.CornerRadius = UDim.new(0, 8)
@@ -15449,6 +15561,7 @@ function UISystem:_ensureRoomBrowserGui()
 	passwordModal.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	passwordModal.BackgroundTransparency = 0.35
 	passwordModal.ZIndex = 25
+	passwordModal.Active = true
 	passwordModal.Visible = false
 	passwordModal.Parent = gui
 
@@ -15460,6 +15573,7 @@ function UISystem:_ensureRoomBrowserGui()
 	passwordCard.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
 	passwordCard.BorderSizePixel = 0
 	passwordCard.ZIndex = 26
+	passwordCard.Active = true
 	passwordCard.Parent = passwordModal
 	local passwordCardCorner = Instance.new("UICorner")
 	passwordCardCorner.CornerRadius = UDim.new(0, 10)
@@ -15519,6 +15633,7 @@ function UISystem:_ensureRoomBrowserGui()
 	kickNoticeModal.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	kickNoticeModal.BackgroundTransparency = 0.35
 	kickNoticeModal.ZIndex = 28
+	kickNoticeModal.Active = true
 	kickNoticeModal.Visible = false
 	kickNoticeModal.Parent = gui
 
@@ -15529,6 +15644,7 @@ function UISystem:_ensureRoomBrowserGui()
 	kickNoticeCard.BackgroundColor3 = Color3.fromRGB(24, 20, 20)
 	kickNoticeCard.BorderSizePixel = 0
 	kickNoticeCard.ZIndex = 29
+	kickNoticeCard.Active = true
 	kickNoticeCard.Parent = kickNoticeModal
 	local kickNoticeCorner = Instance.new("UICorner")
 	kickNoticeCorner.CornerRadius = UDim.new(0, 10)
@@ -15565,7 +15681,7 @@ function UISystem:_ensureRoomBrowserGui()
 	createRoomBtn.Name = "CreateRoomButton"
 	createRoomBtn.Position = UDim2.fromOffset(282, 456)
 	createRoomBtn.Size = UDim2.fromOffset(126, 38)
-	styleButton(createRoomBtn, "Buat Room")
+	styleButton(createRoomBtn, "BUAT ROOM")
 	createRoomBtn.BackgroundColor3 = Color3.fromRGB(50, 90, 140)
 	createRoomBtn.Parent = panel
 
@@ -15573,7 +15689,7 @@ function UISystem:_ensureRoomBrowserGui()
 	queueBtn.Name = "QueueButton"
 	queueBtn.Position = UDim2.fromOffset(16, 506)
 	queueBtn.Size = UDim2.fromOffset(126, 38)
-	styleButton(queueBtn, "JOIN")
+	styleButton(queueBtn, "JOIN ROOM")
 	queueBtn.BackgroundColor3 = Color3.fromRGB(46, 112, 168)
 	queueBtn.Parent = panel
 
@@ -15657,6 +15773,7 @@ function UISystem:_ensureRoomBrowserGui()
 	playersList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	playersList.CanvasSize = UDim2.fromOffset(0, 0)
 	playersList.ScrollBarThickness = 4
+	playersList.Active = true
 	playersList.Parent = roomPanel
 	local playersListCorner = Instance.new("UICorner")
 	playersListCorner.CornerRadius = UDim.new(0, 8)
@@ -15785,6 +15902,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreview.Size = UDim2.fromOffset(380, 208)
 	mapPreview.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
 	mapPreview.BorderSizePixel = 0
+	mapPreview.Active = true
 	mapPreview.Parent = roomPanel
 	local mapPreviewCorner = Instance.new("UICorner")
 	mapPreviewCorner.CornerRadius = UDim.new(0, 8)
@@ -16128,7 +16246,7 @@ function UISystem:_ensureRoomBrowserGui()
 	inviteDeclineBtn.Parent = invitePopup
 
 	local function updateInvitePopupLayout()
-		local topLeftInset, _ = resolveSafeInsets()
+		local topLeftInset, _ = UISupport.resolveSafeInsets(GuiService)
 		local viewport = Vector2.new(1920, 1080)
 		local camera = Workspace.CurrentCamera
 		if camera and typeof(camera.ViewportSize) == "Vector2" then
@@ -16155,6 +16273,19 @@ function UISystem:_ensureRoomBrowserGui()
 	local dragInput = nil
 
 	local function roomRowText(room)
+		if self._roomBrowserWideMobile == true then
+			local status = room.inGame and "IN GAME" or (room.starting and "COUNTDOWN" or tostring(room.mode or "Classic"))
+			local lock = room.hasPassword and "PWD • " or ""
+			return string.format(
+				"  %sRoom %d • %d/%d\n  Host %s • %s",
+				lock,
+				room.roomId,
+				room.playerCount or 0,
+				room.maxPlayers or 4,
+				room.hostName or "?",
+				status
+			)
+		end
 		if room.inGame then
 			return string.format("  Room %d | %s | %d/%d | IN GAME", room.roomId, room.hostName or "?", room.playerCount or 0, room.maxPlayers or 4)
 		end
@@ -16394,7 +16525,7 @@ function UISystem:_ensureRoomBrowserGui()
 			local previewCorner = Instance.new("UICorner")
 			previewCorner.CornerRadius = UDim.new(0, 6)
 			previewCorner.Parent = preview
-			renderCharacterPreview(preview, info.userId)
+			CharacterPreviewSupport.render(preview, info.userId)
 
 			local nameLabel = Instance.new("TextLabel")
 			nameLabel.BackgroundTransparency = 1
@@ -16425,6 +16556,7 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local function renderRoomList(rooms)
 		local compactRoomBrowser = self._roomBrowserCompact == true
+		local wideMobileRoomBrowser = self._roomBrowserWideMobile == true
 		local roomIdSet = {}
 		for _, room in ipairs(rooms or {}) do
 			roomIdSet[tostring(room.roomId)] = true
@@ -16441,14 +16573,14 @@ function UISystem:_ensureRoomBrowserGui()
 		for _, room in ipairs(rooms or {}) do
 			local row = Instance.new("TextButton")
 			row.Name = "Room_" .. tostring(room.roomId)
-			row.Size = UDim2.new(1, -8, 0, compactRoomBrowser and 56 or 36)
+			row.Size = UDim2.new(1, -8, 0, wideMobileRoomBrowser and 66 or (compactRoomBrowser and 56 or 36))
 			row.LayoutOrder = room.roomId
 			row.BorderSizePixel = 0
 			row.Font = Enum.Font.Gotham
-			row.TextSize = compactRoomBrowser and 14 or 13
+			row.TextSize = wideMobileRoomBrowser and 13 or (compactRoomBrowser and 14 or 13)
 			row.TextXAlignment = Enum.TextXAlignment.Left
 			row.TextYAlignment = Enum.TextYAlignment.Center
-			row.TextWrapped = compactRoomBrowser
+			row.TextWrapped = compactRoomBrowser or wideMobileRoomBrowser
 			row.Text = roomRowText(room)
 			row:SetAttribute("RoomId", room.roomId)
 			row:SetAttribute("InGame", room.inGame == true)
@@ -16480,7 +16612,7 @@ function UISystem:_ensureRoomBrowserGui()
 				elseif row:GetAttribute("Starting") then
 					statusLabel.Text = string.format("Room #%s sedang countdown.", tostring(selectedRoomId))
 				else
-					statusLabel.Text = string.format("Room #%s dipilih. Klik JOIN untuk masuk.", tostring(selectedRoomId))
+					statusLabel.Text = string.format("Room #%s dipilih. Klik JOIN ROOM untuk masuk.", tostring(selectedRoomId))
 				end
 				renderRoomSelectionPreview(rooms)
 			end)
@@ -16611,7 +16743,7 @@ function UISystem:_ensureRoomBrowserGui()
 			end
 		end
 		if not selectedRoom then
-			statusLabel.Text = "Pilih room dulu, lalu klik JOIN."
+			statusLabel.Text = "Pilih room dulu, lalu klik JOIN ROOM."
 			return
 		end
 		if selectedRoom.inGame or selectedRoom.starting then
@@ -16989,6 +17121,7 @@ function UISystem:_ensureRoomBrowserGui()
 	self._roomBrowserGui = gui
 	self._roomBrowserFloatGui = floatGui
 	self._roomBrowserWidgets = {
+		Backdrop = backdrop,
 		RootPanel = panel,
 		HeaderTitle = title,
 		HeaderTitleGlow = titleGlow,
@@ -17159,14 +17292,14 @@ function UISystem:_bindAuxiliaryToggleInput()
 	end
 	self._auxiliaryInputBound = true
 	table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then
+			return
+		end
 		if UserInputService:GetFocusedTextBox() then
 			return
 		end
 		for guiName, keyCode in pairs(AUXILIARY_WINDOW_TOGGLE_KEYS) do
 			if input.KeyCode == keyCode then
-				if gameProcessed and self._matchPhase == MATCH_PHASE.LOBBY then
-					return
-				end
 				self:_toggleAuxiliaryWindow(guiName)
 				break
 			end
@@ -17179,7 +17312,10 @@ function UISystem:_bindMatchPanelToggleInput()
 		return
 	end
 	self._matchPanelToggleBound = true
-	table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, _gameProcessed)
+	table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then
+			return
+		end
 		if UserInputService:GetFocusedTextBox() then
 			return
 		end
@@ -17224,15 +17360,18 @@ function UISystem:_bindWindowCloseInput()
 		return
 	end
 	self._windowCloseInputBound = true
-	table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, _gameProcessed)
+	table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then
+			return
+		end
 		if input.KeyCode ~= CLOSE_KEYBOARD_KEY and input.KeyCode ~= CLOSE_GAMEPAD_KEY then
+			return
+		end
+		if UserInputService:GetFocusedTextBox() then
 			return
 		end
 		if input.KeyCode == CLOSE_KEYBOARD_KEY and self:_isMatchPanelOpen() then
 			self:_setMatchWindowDismissed(true)
-			return
-		end
-		if UserInputService:GetFocusedTextBox() then
 			return
 		end
 		self:_closeTopmostWindow()
@@ -17293,7 +17432,8 @@ function UISystem:_refreshRoomBrowserView()
 	elseif queueInfo then
 		statusText = statusText .. " | Queue: " .. tostring(queueInfo.queueType or queueInfo.mode or "started")
 	end
-	self._roomBrowserWidgets.Status.Text = statusText
+	self._roomBrowserWidgets.Status.Text = pasrahAppendBuildSignature(statusText)
+	self._roomBrowserWidgets.Status:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 
 	self:_setButtonSelected(self._roomBrowserWidgets.AllModesButton, viewMode == "All")
 	self:_setButtonSelected(self._roomBrowserWidgets.ClassicButton, viewMode ~= "All" and selectedMode == "Classic")
@@ -17318,7 +17458,8 @@ function UISystem:_refreshRoomBrowserView()
 	local showRoomPanel = roomData ~= nil
 	panel.Visible = showRoomPanel
 	if self._roomBrowserWidgets.RootPanel then
-		self._roomBrowserWidgets.RootPanel.BackgroundTransparency = showRoomPanel and 1 or 0.5
+		local profile = self._deviceProfile or {}
+		self._roomBrowserWidgets.RootPanel.BackgroundTransparency = profile.isMobile and (showRoomPanel and 0.08 or 0.12) or (showRoomPanel and 1 or 0.5)
 	end
 	if self._roomBrowserWidgets.HeaderTitle then
 		self._roomBrowserWidgets.HeaderTitle.Visible = not showRoomPanel
@@ -17337,8 +17478,8 @@ function UISystem:_refreshRoomBrowserView()
 	self._roomBrowserWidgets.RefreshButton.Visible = not showRoomPanel
 	self._roomBrowserWidgets.CreateRoomButton.Visible = not showRoomPanel
 	self._roomBrowserWidgets.QueueButton.Visible = not showRoomPanel
-	self._roomBrowserWidgets.QuickJoinClassicButton.Visible = not showRoomPanel
-	self._roomBrowserWidgets.QuickJoinRankedButton.Visible = not showRoomPanel
+	self._roomBrowserWidgets.QuickJoinClassicButton.Visible = not showRoomPanel and self._roomBrowserWideMobile ~= true
+	self._roomBrowserWidgets.QuickJoinRankedButton.Visible = not showRoomPanel and self._roomBrowserWideMobile ~= true
 	self._roomBrowserWidgets.ModeSelector.Visible = false
 	self._roomBrowserWidgets.RankedTierLabel.Visible = false
 	self._roomBrowserWidgets.ModeDropdown.Visible = false
@@ -17433,7 +17574,7 @@ function UISystem:_refreshRoomBrowserView()
 			local previewCorner = Instance.new("UICorner")
 			previewCorner.CornerRadius = UDim.new(0, 6)
 			previewCorner.Parent = preview
-			renderCharacterPreview(preview, info.userId)
+			CharacterPreviewSupport.render(preview, info.userId)
 
 			local displayNameLabel = Instance.new("TextLabel")
 			displayNameLabel.BackgroundTransparency = 1
@@ -17735,8 +17876,8 @@ function UISystem:Stop()
 		self._lobbyConnection:Disconnect()
 		self._lobbyConnection = nil
 	end
-	disconnectAll(self._uxConnections)
-	disconnectAll(self._connections)
+	UISupport.disconnectAll(self._uxConnections)
+	UISupport.disconnectAll(self._connections)
 	self:_clearMatchUX()
 	self:_clearUXInstances()
 end

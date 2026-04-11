@@ -167,6 +167,45 @@
         "clear": true
       },
       "problemMatcher": []
+    },
+    {
+      "type": "shell",
+      "command": "pwsh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "clear": true,
+        "panel": "shared"
+      },
+      "args": [
+        "-NoLogo",
+        "-File",
+        "scripts/resolve-mobile-mcp-stack.ps1"
+      ],
+      "label": "Mobile MCP: Resolve PASRAH Android Pair",
+      "problemMatcher": []
+    },
+    {
+      "type": "shell",
+      "command": "pwsh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "clear": true,
+        "panel": "shared"
+      },
+      "args": [
+        "-NoLogo",
+        "-File",
+        "scripts/resolve-mobile-mcp-stack.ps1",
+        "-Strict"
+      ],
+      "label": "Mobile MCP: Verify PASRAH Multiplayer Stack",
+      "problemMatcher": []
     }
   ]
 }

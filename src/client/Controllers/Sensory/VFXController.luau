@@ -1,6 +1,7 @@
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local VFXController = {}
 VFXController.__index = VFXController
@@ -232,6 +233,62 @@ local DEFAULT_MAP_DOF = {
 local DEFAULT_MAP_SUNRAYS = {
 	Intensity = 0.03,
 	Spread = 0.82,
+}
+
+local UI_GRAPHICS_MODE_ATTR = "PasrahGraphicsMode"
+
+local GRAPHICS_VISUAL_PROFILES = {
+	Performance = {
+		atmosphereDensityScale = 0.82,
+		atmosphereDeltaScale = 0.68,
+		atmosphereGlareScale = 0.68,
+		atmosphereHazeScale = 0.78,
+		blurScale = 0.42,
+		lightingDiffuseScale = 0.9,
+		lightingSpecularScale = 0.55,
+		mapBloomIntensityScale = 0.18,
+		mapBloomSizeScale = 0.72,
+		mapDOFEnabled = false,
+		mapDOFIntensityScale = 0,
+		mapSunRaysEnabled = false,
+		mapSunRaysIntensityScale = 0,
+		shadowSoftnessScale = 0.6,
+		useGlobalShadows = false,
+	},
+	Balanced = {
+		atmosphereDensityScale = 0.92,
+		atmosphereDeltaScale = 0.84,
+		atmosphereGlareScale = 0.86,
+		atmosphereHazeScale = 0.9,
+		blurScale = 0.74,
+		lightingDiffuseScale = 0.96,
+		lightingSpecularScale = 0.78,
+		mapBloomIntensityScale = 0.62,
+		mapBloomSizeScale = 0.88,
+		mapDOFEnabled = false,
+		mapDOFIntensityScale = 0,
+		mapSunRaysEnabled = true,
+		mapSunRaysIntensityScale = 0.58,
+		shadowSoftnessScale = 0.84,
+		useGlobalShadows = true,
+	},
+	Quality = {
+		atmosphereDensityScale = 1,
+		atmosphereDeltaScale = 1,
+		atmosphereGlareScale = 1,
+		atmosphereHazeScale = 1,
+		blurScale = 1,
+		lightingDiffuseScale = 1,
+		lightingSpecularScale = 1,
+		mapBloomIntensityScale = 1,
+		mapBloomSizeScale = 1,
+		mapDOFEnabled = true,
+		mapDOFIntensityScale = 1,
+		mapSunRaysEnabled = true,
+		mapSunRaysIntensityScale = 1,
+		shadowSoftnessScale = 1,
+		useGlobalShadows = true,
+	},
 }
 
 local MAP_ATMOSPHERE_PROFILES = {
@@ -494,6 +551,24 @@ local PREPARATION_TOOL_VISUAL_ACCENTS = {
 
 local PREPARATION_VISUAL_TWEEN = TweenInfo.new(0.48, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
+local function normalizeGraphicsMode(mode)
+	local normalized = tostring(mode or ""):lower()
+	if normalized == "performance" then
+		return "Performance"
+	end
+	if normalized == "quality" then
+		return "Quality"
+	end
+	return "Balanced"
+end
+
+local function resolveDefaultGraphicsMode()
+	if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled and not UserInputService.GamepadEnabled then
+		return "Balanced"
+	end
+	return "Quality"
+end
+
 local function ensureSanityColorCorrection()
 	local effect = Lighting:FindFirstChild("SensorySanityGrading")
 	if not effect then
@@ -673,6 +748,8 @@ function VFXController:Init(context)
 	self._baseLightingSpecularScale = Lighting.EnvironmentSpecularScale
 	self._baseLightingColorShiftTop = Lighting.ColorShift_Top
 	self._baseLightingColorShiftBottom = Lighting.ColorShift_Bottom
+	self._baseLightingGlobalShadows = Lighting.GlobalShadows
+	self._baseLightingShadowSoftness = Lighting.ShadowSoftness
 	self._baseMapGradeBrightness = self._mapCorrection and self._mapCorrection.Brightness or DEFAULT_MAP_GRADE.Brightness
 	self._baseMapGradeContrast = self._mapCorrection and self._mapCorrection.Contrast or DEFAULT_MAP_GRADE.Contrast
 	self._baseMapGradeSaturation = self._mapCorrection and self._mapCorrection.Saturation or DEFAULT_MAP_GRADE.Saturation
@@ -693,6 +770,8 @@ function VFXController:Init(context)
 	self._transientTweens = nil
 	self._preparationTweens = nil
 	self._transientEffectToken = 0
+	self._graphicsMode = resolveDefaultGraphicsMode()
+	self._graphicsProfile = GRAPHICS_VISUAL_PROFILES[self._graphicsMode] or GRAPHICS_VISUAL_PROFILES.Balanced
 end
 
 function VFXController:Start()
@@ -712,6 +791,9 @@ function VFXController:Start()
 
 	local localPlayer = Players.LocalPlayer
 	if localPlayer then
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal(UI_GRAPHICS_MODE_ATTR):Connect(function()
+			self:_applyGraphicsModeState()
+		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("InMatch"):Connect(function()
 			self:_syncMapVisualProfileFromPlayerState()
 		end))
@@ -728,7 +810,56 @@ function VFXController:Start()
 			self:_syncMapVisualProfileFromPlayerState()
 		end))
 	end
-	self:_syncMapVisualProfileFromPlayerState()
+	self:_applyGraphicsModeState()
+end
+
+function VFXController:_syncGraphicsMode()
+	local localPlayer = Players.LocalPlayer
+	local rawMode = localPlayer and localPlayer:GetAttribute(UI_GRAPHICS_MODE_ATTR) or nil
+	local mode = rawMode ~= nil and normalizeGraphicsMode(rawMode) or resolveDefaultGraphicsMode()
+	self._graphicsMode = mode
+	self._graphicsProfile = GRAPHICS_VISUAL_PROFILES[mode] or GRAPHICS_VISUAL_PROFILES.Balanced
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahVFXGraphicsMode", mode)
+	end
+	return self._graphicsProfile
+end
+
+function VFXController:_scaleBlurSize(size)
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
+	return math.max(0, math.floor((tonumber(size) or 0) * (graphicsProfile.blurScale or 1) + 0.5))
+end
+
+function VFXController:_scaleAtmosphereDensity(baseDensity, delta)
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
+	local density = math.max(0, (tonumber(baseDensity) or 0) * (graphicsProfile.atmosphereDensityScale or 1))
+	return math.max(0, density + ((tonumber(delta) or 0) * (graphicsProfile.atmosphereDeltaScale or 1)))
+end
+
+function VFXController:_scaleMapBloomIntensity(intensity)
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
+	return math.max(0, (tonumber(intensity) or 0) * (graphicsProfile.mapBloomIntensityScale or 1))
+end
+
+function VFXController:_scaleMapBloomSize(size)
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
+	return math.max(0, (tonumber(size) or 0) * (graphicsProfile.mapBloomSizeScale or 1))
+end
+
+function VFXController:_scaleMapDOFIntensity(intensity)
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
+	return math.max(0, (tonumber(intensity) or 0) * (graphicsProfile.mapDOFIntensityScale or 1))
+end
+
+function VFXController:_scaleMapSunRaysIntensity(intensity)
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
+	return math.max(0, (tonumber(intensity) or 0) * (graphicsProfile.mapSunRaysIntensityScale or 1))
+end
+
+function VFXController:_applyGraphicsModeState()
+	self:_syncGraphicsMode()
+	self:_applyMapVisualProfile(self:_resolveAuthoritativeMapProfile())
+	self:_applyThreatBaseline(0)
 end
 
 function VFXController:_stampPersistentVFXIdentity()
@@ -1130,14 +1261,16 @@ function VFXController:_applyThreatBaseline(duration)
 
 	local profile = self:_currentThreatProfile()
 	local tweenDuration = duration or 0.25
+	local blurSize = self:_scaleBlurSize(profile.BlurSize)
+	local atmosphereDensity = self:_scaleAtmosphereDensity(self._baseAtmosphereDensity, profile.AtmosphereDensityDelta or 0)
 	if tweenDuration <= 0 then
-		self._ghostBlur.Size = profile.BlurSize
+		self._ghostBlur.Size = blurSize
 		self._threatCorrection.Brightness = profile.Brightness
 		self._threatCorrection.Contrast = profile.Contrast
 		self._threatCorrection.Saturation = profile.Saturation
 		self._threatCorrection.TintColor = profile.Tint
 		if self._atmosphere then
-			self._atmosphere.Density = self._baseAtmosphereDensity + (profile.AtmosphereDensityDelta or 0)
+			self._atmosphere.Density = atmosphereDensity
 			self._atmosphere.Offset = self._baseAtmosphereOffset
 		end
 		return
@@ -1146,7 +1279,7 @@ function VFXController:_applyThreatBaseline(duration)
 	local blurTween = TweenService:Create(
 		self._ghostBlur,
 		TweenInfo.new(tweenDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-		{ Size = profile.BlurSize }
+		{ Size = blurSize }
 	)
 	local threatTween = TweenService:Create(
 		self._threatCorrection,
@@ -1169,7 +1302,7 @@ function VFXController:_applyThreatBaseline(duration)
 			self._atmosphere,
 			TweenInfo.new(tweenDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
 			{
-				Density = self._baseAtmosphereDensity + (profile.AtmosphereDensityDelta or 0),
+				Density = atmosphereDensity,
 				Offset = self._baseAtmosphereOffset,
 			}
 		)
@@ -1187,14 +1320,16 @@ function VFXController:_playTransientShock(profile)
 	local riseTime = profile.riseTime or 0.1
 	local releaseTime = profile.releaseTime or 0.3
 	local activeThreat = self:_currentThreatProfile()
-	local atmosphereDensity = self._baseAtmosphereDensity
-		+ (activeThreat.AtmosphereDensityDelta or 0)
-		+ (profile.AtmosphereDensityDelta or 0)
+	local blurSize = self:_scaleBlurSize(profile.BlurSize or 0)
+	local atmosphereDensity = self:_scaleAtmosphereDensity(
+		self._baseAtmosphereDensity,
+		(activeThreat.AtmosphereDensityDelta or 0) + (profile.AtmosphereDensityDelta or 0)
+	)
 
 	local blurTween = TweenService:Create(
 		self._ghostBlur,
 		TweenInfo.new(riseTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ Size = profile.BlurSize or 0 }
+		{ Size = blurSize }
 	)
 	local threatTween = TweenService:Create(
 		self._threatCorrection,
@@ -1360,32 +1495,38 @@ end
 function VFXController:_applyMapAtmosphere(mapName)
 	local profile = MAP_ATMOSPHERE_PROFILES[mapName] or DEFAULT_MAP_ATMOSPHERE
 	if self._atmosphere then
+		local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
 		self._baseAtmosphereDensity = profile.Density or DEFAULT_MAP_ATMOSPHERE.Density
 		self._baseAtmosphereOffset = profile.Offset or DEFAULT_MAP_ATMOSPHERE.Offset
 		self._baseAtmosphereColor = profile.Color or DEFAULT_MAP_ATMOSPHERE.Color
 		self._baseAtmosphereDecay = profile.Decay or DEFAULT_MAP_ATMOSPHERE.Decay
 		self._baseAtmosphereGlare = profile.Glare or DEFAULT_MAP_ATMOSPHERE.Glare
 		self._baseAtmosphereHaze = profile.Haze or DEFAULT_MAP_ATMOSPHERE.Haze
-		self._atmosphere.Density = self._baseAtmosphereDensity
+		self._atmosphere.Density = self:_scaleAtmosphereDensity(self._baseAtmosphereDensity, 0)
 		self._atmosphere.Offset = self._baseAtmosphereOffset
 		self._atmosphere.Color = self._baseAtmosphereColor
 		self._atmosphere.Decay = self._baseAtmosphereDecay
-		self._atmosphere.Glare = self._baseAtmosphereGlare
-		self._atmosphere.Haze = self._baseAtmosphereHaze
+		self._atmosphere.Glare = math.max(0, self._baseAtmosphereGlare * (graphicsProfile.atmosphereGlareScale or 1))
+		self._atmosphere.Haze = math.max(0, self._baseAtmosphereHaze * (graphicsProfile.atmosphereHazeScale or 1))
 	end
 end
 
 function VFXController:_applyMapLighting(mapName)
 	local profile = MAP_LIGHTING_PROFILES[mapName] or DEFAULT_MAP_LIGHTING
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
 	Lighting.ClockTime = profile.ClockTime or self._baseLightingClockTime or DEFAULT_MAP_LIGHTING.ClockTime
 	Lighting.Brightness = profile.Brightness or self._baseLightingBrightness or DEFAULT_MAP_LIGHTING.Brightness
 	Lighting.ExposureCompensation = profile.ExposureCompensation or self._baseLightingExposure or DEFAULT_MAP_LIGHTING.ExposureCompensation
 	Lighting.Ambient = profile.Ambient or self._baseLightingAmbient or DEFAULT_MAP_LIGHTING.Ambient
 	Lighting.OutdoorAmbient = profile.OutdoorAmbient or self._baseLightingOutdoorAmbient or DEFAULT_MAP_LIGHTING.OutdoorAmbient
-	Lighting.EnvironmentDiffuseScale = profile.EnvironmentDiffuseScale or self._baseLightingDiffuseScale or DEFAULT_MAP_LIGHTING.EnvironmentDiffuseScale
-	Lighting.EnvironmentSpecularScale = profile.EnvironmentSpecularScale or self._baseLightingSpecularScale or DEFAULT_MAP_LIGHTING.EnvironmentSpecularScale
+	Lighting.EnvironmentDiffuseScale = (profile.EnvironmentDiffuseScale or self._baseLightingDiffuseScale or DEFAULT_MAP_LIGHTING.EnvironmentDiffuseScale)
+		* (graphicsProfile.lightingDiffuseScale or 1)
+	Lighting.EnvironmentSpecularScale = (profile.EnvironmentSpecularScale or self._baseLightingSpecularScale or DEFAULT_MAP_LIGHTING.EnvironmentSpecularScale)
+		* (graphicsProfile.lightingSpecularScale or 1)
 	Lighting.ColorShift_Top = profile.ColorShift_Top or self._baseLightingColorShiftTop or DEFAULT_MAP_LIGHTING.ColorShift_Top
 	Lighting.ColorShift_Bottom = profile.ColorShift_Bottom or self._baseLightingColorShiftBottom or DEFAULT_MAP_LIGHTING.ColorShift_Bottom
+	Lighting.GlobalShadows = graphicsProfile.useGlobalShadows == true and self._baseLightingGlobalShadows ~= false
+	Lighting.ShadowSoftness = math.clamp((self._baseLightingShadowSoftness or 0.5) * (graphicsProfile.shadowSoftnessScale or 1), 0, 1)
 end
 
 function VFXController:_applyMapGrade(mapName)
@@ -1408,8 +1549,9 @@ function VFXController:_applyMapBloom(mapName)
 		self._baseMapBloomIntensity = profile.Intensity or DEFAULT_MAP_BLOOM.Intensity
 		self._baseMapBloomSize = profile.Size or DEFAULT_MAP_BLOOM.Size
 		self._baseMapBloomThreshold = profile.Threshold or DEFAULT_MAP_BLOOM.Threshold
-		self._mapBloom.Intensity = self._baseMapBloomIntensity
-		self._mapBloom.Size = self._baseMapBloomSize
+		self._mapBloom.Enabled = self:_scaleMapBloomIntensity(self._baseMapBloomIntensity) > 0.01
+		self._mapBloom.Intensity = self:_scaleMapBloomIntensity(self._baseMapBloomIntensity)
+		self._mapBloom.Size = self:_scaleMapBloomSize(self._baseMapBloomSize)
 		self._mapBloom.Threshold = self._baseMapBloomThreshold
 	end
 end
@@ -1417,23 +1559,27 @@ end
 function VFXController:_applyMapDepthOfField(mapName)
 	local profile = MAP_DOF_PROFILES[mapName] or DEFAULT_MAP_DOF
 	if self._mapDepthOfField then
+		local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
 		self._baseMapDOFFarIntensity = profile.FarIntensity or DEFAULT_MAP_DOF.FarIntensity
 		self._baseMapDOFFocusDistance = profile.FocusDistance or DEFAULT_MAP_DOF.FocusDistance
 		self._baseMapDOFInFocusRadius = profile.InFocusRadius or DEFAULT_MAP_DOF.InFocusRadius
 		self._baseMapDOFNearIntensity = profile.NearIntensity or DEFAULT_MAP_DOF.NearIntensity
-		self._mapDepthOfField.FarIntensity = self._baseMapDOFFarIntensity
+		self._mapDepthOfField.Enabled = graphicsProfile.mapDOFEnabled ~= false and self:_scaleMapDOFIntensity(self._baseMapDOFFarIntensity) > 0.01
+		self._mapDepthOfField.FarIntensity = self:_scaleMapDOFIntensity(self._baseMapDOFFarIntensity)
 		self._mapDepthOfField.FocusDistance = self._baseMapDOFFocusDistance
 		self._mapDepthOfField.InFocusRadius = self._baseMapDOFInFocusRadius
-		self._mapDepthOfField.NearIntensity = self._baseMapDOFNearIntensity
+		self._mapDepthOfField.NearIntensity = self:_scaleMapDOFIntensity(self._baseMapDOFNearIntensity)
 	end
 end
 
 function VFXController:_applyMapSunRays(mapName)
 	local profile = MAP_SUNRAYS_PROFILES[mapName] or DEFAULT_MAP_SUNRAYS
 	if self._mapSunRays then
+		local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
 		self._baseMapSunRaysIntensity = profile.Intensity or DEFAULT_MAP_SUNRAYS.Intensity
 		self._baseMapSunRaysSpread = profile.Spread or DEFAULT_MAP_SUNRAYS.Spread
-		self._mapSunRays.Intensity = self._baseMapSunRaysIntensity
+		self._mapSunRays.Enabled = graphicsProfile.mapSunRaysEnabled ~= false and self:_scaleMapSunRaysIntensity(self._baseMapSunRaysIntensity) > 0.01
+		self._mapSunRays.Intensity = self:_scaleMapSunRaysIntensity(self._baseMapSunRaysIntensity)
 		self._mapSunRays.Spread = self._baseMapSunRaysSpread
 	end
 end
@@ -1448,19 +1594,27 @@ function VFXController:_applyPreparationVisualProfile(mapName)
 	local focusAccent = PREPARATION_TOOL_VISUAL_ACCENTS[focusTool]
 	local tintTarget = self._baseMapGradeTint
 	local exposureTarget = self._baseLightingExposure
-	local bloomTarget = self._baseMapBloomIntensity
-	local raysTarget = self._baseMapSunRaysIntensity
-	local atmosphereTarget = self._baseAtmosphereDensity
+	local bloomTarget = self:_scaleMapBloomIntensity(self._baseMapBloomIntensity)
+	local raysTarget = self:_scaleMapSunRaysIntensity(self._baseMapSunRaysIntensity)
+	local atmosphereTarget = self:_scaleAtmosphereDensity(self._baseAtmosphereDensity, 0)
+	local graphicsProfile = self._graphicsProfile or self:_syncGraphicsMode()
 
 	if isPreparation and profile then
 		tintTarget = profile.GradeTint or tintTarget
 		exposureTarget = (profile.Exposure or 0) + self._baseLightingExposure
-		bloomTarget = profile.BloomIntensity or bloomTarget
-		raysTarget = profile.SunRaysIntensity or raysTarget
-		atmosphereTarget = self._baseAtmosphereDensity + (profile.AtmosphereDensityDelta or 0)
+		bloomTarget = self:_scaleMapBloomIntensity(profile.BloomIntensity or self._baseMapBloomIntensity)
+		raysTarget = self:_scaleMapSunRaysIntensity(profile.SunRaysIntensity or self._baseMapSunRaysIntensity)
+		atmosphereTarget = self:_scaleAtmosphereDensity(self._baseAtmosphereDensity, profile.AtmosphereDensityDelta or 0)
 		if focusAccent then
 			tintTarget = tintTarget:Lerp(focusAccent, 0.28)
 		end
+	end
+
+	if self._mapBloom then
+		self._mapBloom.Enabled = self:_scaleMapBloomIntensity(self._baseMapBloomIntensity) > 0.01
+	end
+	if self._mapSunRays then
+		self._mapSunRays.Enabled = graphicsProfile.mapSunRaysEnabled ~= false and self:_scaleMapSunRaysIntensity(self._baseMapSunRaysIntensity) > 0.01
 	end
 
 	self:_cancelTweenSet(self._preparationTweens)

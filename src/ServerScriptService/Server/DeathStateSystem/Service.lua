@@ -159,6 +159,47 @@ local function clearDeathRuntime(target)
     target:SetAttribute("PasrahDeathAt", nil)
     target:SetAttribute("PasrahDeathActive", nil)
 end
+local function shouldRetainSpectatorCharacter(player)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return false
+    end
+    if player:GetAttribute("InMatch") ~= true then
+        return false
+    end
+    return player:GetAttribute("PasrahDeathActive") == true or player:GetAttribute("PasrahSpectatorActive") == true
+end
+local function parkSpectatorCharacter(character)
+    if typeof(character) ~= "Instance" or not character:IsA("Model") then
+        return false
+    end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local root = character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart or character:FindFirstChildWhichIsA("BasePart")
+    if humanoid then
+        humanoid.WalkSpeed = 0
+        humanoid.JumpPower = 0
+        humanoid.AutoRotate = false
+        pcall(function()
+            humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+        end)
+    end
+    for _, descendant in ipairs(character:GetDescendants()) do
+        if descendant:IsA("BasePart") then
+            descendant.CanCollide = false
+            descendant.AssemblyLinearVelocity = Vector3.zero
+            descendant.AssemblyAngularVelocity = Vector3.zero
+            descendant.Transparency = 1
+        elseif descendant:IsA("Decal") then
+            descendant.Transparency = 1
+        elseif descendant:IsA("ParticleEmitter") or descendant:IsA("Trail") then
+            descendant.Enabled = false
+        end
+    end
+    if root and root:IsA("BasePart") then
+        root.Anchored = true
+    end
+    character:SetAttribute("PasrahSpectatorShell", true)
+    return true
+end
 function Service.new(state, deps)
     local self = setmetatable({}, Service)
     self._state = state
@@ -180,6 +221,32 @@ function Service:Init()
 end
 function Service:Start() end
 function Service:Stop() self._state:Clear() end
+function Service:HandleCharacterAdded(player, character)
+    if not shouldRetainSpectatorCharacter(player) then
+        return false
+    end
+    return parkSpectatorCharacter(character)
+end
+
+function Service:PublishPlayerDied(payload)
+    local matchId = payload and payload.matchId or self._state:Get("activeMatchId")
+    local player = resolvePlayerFromPayload(payload)
+    local userId = toUserId(player or (payload and payload.userId))
+    if type(matchId) ~= "string" or not userId then
+        return false
+    end
+
+    self:_publish("PlayerDied", {
+        matchId = matchId,
+        userId = userId,
+        player = player or (payload and payload.player),
+        reason = payload and payload.reason or "unknown",
+        source = payload and payload.source or "DeathStateSystem",
+        context = payload and payload.context,
+    })
+    return true
+end
+
 function Service:_publish(eventName, payload)
     if self._eventBus then self._eventBus:Publish(eventName, payload) end
 end
@@ -215,11 +282,28 @@ function Service:HandleEvent(eventName, payload)
         self._state:Set("deathStateByPlayer", {})
         self._state:Set("lastDeathEventAtByPlayer", {})
     elseif eventName == "MatchEnded" then
+        local states = self._state:Get("deathStateByPlayer") or {}
         if type(payload) == "table" and type(payload.players) == "table" then
             for _, player in ipairs(payload.players) do
+                local userId = toUserId(player)
+                local shouldReloadCharacter = userId ~= nil
+                    and (states[userId] == "Dead"
+                        or player:GetAttribute("PasrahDeathActive") == true
+                        or player:GetAttribute("PasrahSpectatorActive") == true)
                 clearDeathRuntime(player)
+                if shouldReloadCharacter and player.Parent and player:GetAttribute("InMatch") ~= true then
+                    task.defer(function()
+                        if player.Parent and player:GetAttribute("InMatch") ~= true then
+                            pcall(function()
+                                player:LoadCharacter()
+                            end)
+                        end
+                    end)
+                end
             end
         end
+        self._state:Set("deathStateByPlayer", {})
+        self._state:Set("lastDeathEventAtByPlayer", {})
     elseif eventName == "PlayerDied" then
         local matchId = payload and payload.matchId or self._state:Get("activeMatchId")
         if type(matchId) ~= "string" then

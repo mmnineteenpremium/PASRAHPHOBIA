@@ -828,19 +828,28 @@ local function setFpvLocked(enabled)
 end
 
 local matchAttributeConnection = nil
+local spectatorAttributeConnection = nil
+local spectatorClientAttributeConnection = nil
+
+local function shouldLockForMatchCamera()
+	if player:GetAttribute("PasrahSpectatorActive") == true then
+		return false
+	end
+	if player:GetAttribute("PasrahSpectatorClientActive") == true then
+		return false
+	end
+	return player:GetAttribute("InMatch") == true
+end
+
 local function bindMatchAttribute()
 	if matchAttributeConnection then
 		return
 	end
-	local inMatch = player:GetAttribute("InMatch") == true
-	if player.Character then
-		setFpvLocked(inMatch)
-	end
-	matchAttributeConnection = player:GetAttributeChangedSignal("InMatch"):Connect(function()
-		local shouldLock = player:GetAttribute("InMatch") == true
+	local function syncMatchCameraLock()
+		local shouldLock = shouldLockForMatchCamera()
 		if shouldLock then
 			task.wait(0.5)
-			if player:GetAttribute("InMatch") ~= true then
+			if shouldLockForMatchCamera() ~= true then
 				shouldLock = false
 			end
 		end
@@ -849,7 +858,14 @@ local function bindMatchAttribute()
 		else
 			FPV_LOCKED = shouldLock
 		end
-	end)
+	end
+	local inMatch = shouldLockForMatchCamera()
+	if player.Character then
+		setFpvLocked(inMatch)
+	end
+	matchAttributeConnection = player:GetAttributeChangedSignal("InMatch"):Connect(syncMatchCameraLock)
+	spectatorAttributeConnection = player:GetAttributeChangedSignal("PasrahSpectatorActive"):Connect(syncMatchCameraLock)
+	spectatorClientAttributeConnection = player:GetAttributeChangedSignal("PasrahSpectatorClientActive"):Connect(syncMatchCameraLock)
 end
 
 bindMatchAttribute()
@@ -868,7 +884,7 @@ player.CharacterAdded:Connect(function(character)
 
 	lastArmCamCF = nil
 	clearFpvArms()
-	setFpvLocked(player:GetAttribute("InMatch") == true)
+	setFpvLocked(shouldLockForMatchCamera())
 	bindMatchAttribute()
 end)
 
@@ -911,7 +927,7 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 		camera = workspace.CurrentCamera or camera
 	end
 
-	local shouldLockFromState = player:GetAttribute("InMatch") == true
+	local shouldLockFromState = shouldLockForMatchCamera()
 	if shouldLockFromState ~= FPV_LOCKED then
 		setFpvLocked(shouldLockFromState)
 	elseif shouldLockFromState
