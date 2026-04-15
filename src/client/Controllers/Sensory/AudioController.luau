@@ -1,8 +1,7 @@
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
 
 local MAP_REVERB = {
 	LobbySocialHub = Enum.ReverbType.Room,
@@ -37,10 +36,19 @@ local LOBBY_AMBIENT_PROFILE = {
 	PlaybackSpeed = 0.98,
 }
 
+local RESULTS_BGM_SOUND_ID = "rbxassetid://95027410279438"
+local RESULTS_BGM_PROFILE = {
+	Volume = 0.2,
+	PlaybackSpeed = 1.0,
+	HoldSeconds = 6,
+}
+
 local PREPARATION_AMBIENT_TWEEN_IN = TweenInfo.new(0.65, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 local PREPARATION_AMBIENT_TWEEN_OUT = TweenInfo.new(0.45, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
 local LOBBY_AMBIENT_TWEEN_IN = TweenInfo.new(0.72, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 local LOBBY_AMBIENT_TWEEN_OUT = TweenInfo.new(0.48, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+local RESULTS_BGM_TWEEN_IN = TweenInfo.new(0.42, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+local RESULTS_BGM_TWEEN_OUT = TweenInfo.new(0.32, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
 
 local HEARTBEAT_SPEED_RANGE = {
 	min = 1.0,
@@ -126,6 +134,13 @@ local function lookupLobbyAmbientSound()
 	return sound
 end
 
+local function lookupResultsBgmSound()
+	local sound = Instance.new("Sound")
+	sound.Name = "ResultsBGM"
+	sound.SoundId = RESULTS_BGM_SOUND_ID
+	return sound
+end
+
 local function stampManagedAudioIdentity(sound, owner, category, cue, eventType)
 	if typeof(sound) ~= "Instance" or not sound:IsA("Sound") then
 		return
@@ -150,26 +165,41 @@ function AudioController:Init(context)
 	self._preparationAmbientTween = nil
 	self._lobbyAmbientTargetVolume = 0
 	self._lobbyAmbientTween = nil
+	self._resultsBgmTargetVolume = 0
+	self._resultsBgmTween = nil
+	self._resultsBgmHoldActive = false
+	self._resultsBgmHoldToken = 0
+
 	self._heartbeatSound = lookupHeartbeatSound()
 	self._heartbeatSound.Looped = true
 	self._heartbeatSound.Volume = 0
 	stampManagedAudioIdentity(self._heartbeatSound, "AudioController", "FearAudio", "heartbeat_rise", "HeartbeatLoop")
 	self._heartbeatSound:SetAttribute("MissingSourceAsset", self._heartbeatSound.SoundId == "")
+
 	self._preparationAmbientSound = lookupPreparationAmbientSound()
 	self._preparationAmbientSound.Looped = true
 	self._preparationAmbientSound.Volume = 0
 	stampManagedAudioIdentity(self._preparationAmbientSound, "AudioController", "AmbientAudio", "ambient_investigation", "PreparationAmbientLoop")
 	self._preparationAmbientSound:SetAttribute("MissingSourceAsset", self._preparationAmbientSound.SoundId == "")
+
 	self._lobbyAmbientSound = lookupLobbyAmbientSound()
 	self._lobbyAmbientSound.Looped = true
 	self._lobbyAmbientSound.Volume = 0
 	self._lobbyAmbientSound.PlaybackSpeed = LOBBY_AMBIENT_PROFILE.PlaybackSpeed
 	stampManagedAudioIdentity(self._lobbyAmbientSound, "AudioController", "AmbientAudio", "bgm_lobby_ambient", "LobbyAmbientLoop")
 	self._lobbyAmbientSound:SetAttribute("MissingSourceAsset", self._lobbyAmbientSound.SoundId == "")
-	local camera = Workspace.CurrentCamera or Workspace:FindFirstChildWhichIsA("Camera")
-	self._heartbeatSound.Parent = camera or Workspace
-	self._preparationAmbientSound.Parent = camera or Workspace
-	self._lobbyAmbientSound.Parent = camera or Workspace
+
+	self._resultsBgmSound = lookupResultsBgmSound()
+	self._resultsBgmSound.Looped = true
+	self._resultsBgmSound.Volume = 0
+	self._resultsBgmSound.PlaybackSpeed = RESULTS_BGM_PROFILE.PlaybackSpeed
+	stampManagedAudioIdentity(self._resultsBgmSound, "AudioController", "ResultsAudio", "bgm_gameover", "ResultsBGMLoop")
+	self._resultsBgmSound:SetAttribute("MissingSourceAsset", self._resultsBgmSound.SoundId == "")
+
+	self._heartbeatSound.Parent = SoundService
+	self._preparationAmbientSound.Parent = SoundService
+	self._lobbyAmbientSound.Parent = SoundService
+	self._resultsBgmSound.Parent = SoundService
 end
 
 function AudioController:Start()
@@ -190,9 +220,13 @@ function AudioController:Start()
 	local localPlayer = self._player or Players.LocalPlayer
 	if localPlayer then
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("InMatch"):Connect(function()
+			if localPlayer:GetAttribute("InMatch") == true then
+				self:_clearResultsBgmHold()
+			end
 			self:_syncMapReverbFromPlayerState()
 			self:_updatePreparationAmbient()
 			self:_updateLobbyAmbient()
+			self:_updateResultsBgm()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchMapId"):Connect(function()
 			self:_syncMapReverbFromPlayerState()
@@ -207,11 +241,14 @@ function AudioController:Start()
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
 			self:_updatePreparationAmbient()
 			self:_updateLobbyAmbient()
+			self:_updateResultsBgm()
 		end))
 	end
+
 	self:_syncMapReverbFromPlayerState()
 	self:_updatePreparationAmbient()
 	self:_updateLobbyAmbient()
+	self:_updateResultsBgm()
 end
 
 function AudioController:Stop()
@@ -220,6 +257,7 @@ function AudioController:Stop()
 	end
 	table.clear(self._connections)
 	self._connections = {}
+
 	if self._preparationAmbientTween then
 		self._preparationAmbientTween:Cancel()
 		self._preparationAmbientTween = nil
@@ -227,6 +265,10 @@ function AudioController:Stop()
 	if self._lobbyAmbientTween then
 		self._lobbyAmbientTween:Cancel()
 		self._lobbyAmbientTween = nil
+	end
+	if self._resultsBgmTween then
+		self._resultsBgmTween:Cancel()
+		self._resultsBgmTween = nil
 	end
 
 	if self._heartbeatSound and self._heartbeatSound.Parent then
@@ -238,6 +280,10 @@ function AudioController:Stop()
 	if self._lobbyAmbientSound and self._lobbyAmbientSound.Parent then
 		self._lobbyAmbientSound:Stop()
 	end
+	if self._resultsBgmSound and self._resultsBgmSound.Parent then
+		self._resultsBgmSound:Stop()
+	end
+
 	local localPlayer = self._player or Players.LocalPlayer
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahHeartbeatActive", nil)
@@ -251,6 +297,8 @@ function AudioController:Stop()
 		localPlayer:SetAttribute("PasrahLobbyAmbientActive", nil)
 		localPlayer:SetAttribute("PasrahLobbyAmbientSoundId", nil)
 		localPlayer:SetAttribute("PasrahLobbyAmbientMap", nil)
+		localPlayer:SetAttribute("PasrahResultsBgmActive", nil)
+		localPlayer:SetAttribute("PasrahResultsBgmSoundId", nil)
 	end
 end
 
@@ -310,6 +358,34 @@ function AudioController:_tweenLobbyAmbient(targetVolume, tweenInfo, stopAfterFa
 	tween:Play()
 end
 
+function AudioController:_tweenResultsBgm(targetVolume, tweenInfo, stopAfterFade)
+	if not self._resultsBgmSound then
+		return
+	end
+
+	if self._resultsBgmTween then
+		self._resultsBgmTween:Cancel()
+		self._resultsBgmTween = nil
+	end
+
+	self._resultsBgmTargetVolume = targetVolume
+	local tween = TweenService:Create(self._resultsBgmSound, tweenInfo or RESULTS_BGM_TWEEN_IN, {
+		Volume = targetVolume,
+	})
+	self._resultsBgmTween = tween
+	tween.Completed:Connect(function(playbackState)
+		if self._resultsBgmTween == tween then
+			self._resultsBgmTween = nil
+		end
+		if stopAfterFade and playbackState == Enum.PlaybackState.Completed then
+			if self._resultsBgmSound and self._resultsBgmSound.Volume <= 0.001 then
+				self._resultsBgmSound:Stop()
+			end
+		end
+	end)
+	tween:Play()
+end
+
 function AudioController:_applyMapReverb(mapName)
 	local desired = MAP_REVERB[mapName] or Enum.ReverbType.Room
 	if SoundService.AmbientReverb ~= desired then
@@ -337,6 +413,29 @@ function AudioController:_syncMapReverbFromPlayerState()
 	self:_applyMapReverb(self:_resolveAuthoritativeMapProfile())
 end
 
+function AudioController:_clearResultsBgmHold()
+	self._resultsBgmHoldToken += 1
+	self._resultsBgmHoldActive = false
+	self:_updateResultsBgm()
+	self:_updateLobbyAmbient()
+end
+
+function AudioController:_armResultsBgmHold(seconds)
+	self._resultsBgmHoldToken += 1
+	local holdToken = self._resultsBgmHoldToken
+	self._resultsBgmHoldActive = true
+	self:_updateResultsBgm()
+	self:_updateLobbyAmbient()
+	task.delay(seconds or RESULTS_BGM_PROFILE.HoldSeconds, function()
+		if self._resultsBgmHoldToken ~= holdToken then
+			return
+		end
+		self._resultsBgmHoldActive = false
+		self:_updateResultsBgm()
+		self:_updateLobbyAmbient()
+	end)
+end
+
 function AudioController:_onSanityEvent(payload)
 	local sanity = tonumber((payload and payload.newSanity) or (payload and payload.sanity) or payload) or 100
 	self._currentSanity = math.clamp(sanity, 0, 100)
@@ -350,10 +449,14 @@ function AudioController:_onMatchEvent(payload)
 	end
 
 	if eventName == "MatchStarted" then
+		self:_clearResultsBgmHold()
 		local mapName = normalizeMapProfileName((payload and payload.mapName) or (payload and payload.mapId) or (payload and payload.map) or payload.mapType)
 		self:_applyMapReverb(mapName or self:_resolveAuthoritativeMapProfile())
 	elseif eventName == "PhaseChanged" then
 		local phaseToken = normalizePhaseToken(payload)
+		if phaseToken ~= "result" and phaseToken ~= "end" then
+			self:_clearResultsBgmHold()
+		end
 		local mapName = normalizeMapProfileName((payload and payload.mapName) or (payload and payload.mapId) or (payload and payload.map) or payload.mapType)
 		if mapName then
 			self:_applyMapReverb(mapName)
@@ -382,9 +485,14 @@ function AudioController:_onMatchEvent(payload)
 		self._ghostHuntActive = false
 		self:_syncMapReverbFromPlayerState()
 		self:_updateHeartbeat()
+		self:_armResultsBgmHold(RESULTS_BGM_PROFILE.HoldSeconds)
+	elseif eventName == "ReturnedToLobby" or eventName == "LobbyEntered" then
+		self:_clearResultsBgmHold()
 	end
+
 	self:_updatePreparationAmbient()
 	self:_updateLobbyAmbient()
+	self:_updateResultsBgm()
 end
 
 function AudioController:_updateHeartbeat()
@@ -478,6 +586,17 @@ function AudioController:_updatePreparationAmbient()
 	end
 end
 
+function AudioController:_isResultsSurfaceVisible()
+	local localPlayer = self._player or Players.LocalPlayer
+	local playerGui = localPlayer and localPlayer:FindFirstChildOfClass("PlayerGui")
+	if not playerGui then
+		return false
+	end
+
+	local resultsPanel = playerGui:FindFirstChild("ResultsPanel", true)
+	return resultsPanel ~= nil and resultsPanel:IsA("GuiObject") and resultsPanel.Visible == true
+end
+
 function AudioController:_updateLobbyAmbient()
 	if not self._lobbyAmbientSound or self._lobbyAmbientSound.SoundId == "" then
 		return
@@ -486,12 +605,17 @@ function AudioController:_updateLobbyAmbient()
 	local localPlayer = self._player or Players.LocalPlayer
 	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
 	local mapProfile = self:_resolveAuthoritativeMapProfile()
-	local shouldPlay = (not inMatch) and mapProfile == "LobbySocialHub"
+	local resultsSurfaceVisible = self:_isResultsSurfaceVisible()
+	local shouldPlay = (not inMatch)
+		and mapProfile == "LobbySocialHub"
+		and self._resultsBgmHoldActive ~= true
+		and resultsSurfaceVisible ~= true
 
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahLobbyAmbientActive", shouldPlay and true or nil)
 		localPlayer:SetAttribute("PasrahLobbyAmbientSoundId", shouldPlay and tostring(self._lobbyAmbientSound.SoundId or "") or nil)
 		localPlayer:SetAttribute("PasrahLobbyAmbientMap", shouldPlay and tostring(mapProfile or "") or nil)
+		localPlayer:SetAttribute("PasrahLobbyAmbientSuppressedByResults", resultsSurfaceVisible and true or nil)
 	end
 
 	if shouldPlay then
@@ -508,6 +632,42 @@ function AudioController:_updateLobbyAmbient()
 		self._lobbyAmbientSound:SetAttribute("PasrahAudioMapProfile", nil)
 		if self._lobbyAmbientSound.IsPlaying or self._lobbyAmbientSound.Volume > 0.001 then
 			self:_tweenLobbyAmbient(0, LOBBY_AMBIENT_TWEEN_OUT, true)
+		end
+	end
+end
+
+function AudioController:_updateResultsBgm()
+	if not self._resultsBgmSound then
+		return
+	end
+
+	local localPlayer = self._player or Players.LocalPlayer
+	if self._resultsBgmSound.SoundId == "" then
+		if localPlayer then
+			localPlayer:SetAttribute("PasrahResultsBgmActive", nil)
+			localPlayer:SetAttribute("PasrahResultsBgmSoundId", nil)
+		end
+		return
+	end
+
+	local shouldPlay = self._resultsBgmHoldActive == true or self:_isResultsSurfaceVisible()
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahResultsBgmActive", shouldPlay and true or nil)
+		localPlayer:SetAttribute("PasrahResultsBgmSoundId", shouldPlay and tostring(self._resultsBgmSound.SoundId or "") or nil)
+	end
+
+	if shouldPlay then
+		self._resultsBgmSound.PlaybackSpeed = RESULTS_BGM_PROFILE.PlaybackSpeed
+		if not self._resultsBgmSound.IsPlaying then
+			self._resultsBgmSound.Volume = 0
+			self._resultsBgmSound:Play()
+		end
+		if math.abs(self._resultsBgmTargetVolume - RESULTS_BGM_PROFILE.Volume) > 0.001 or not self._resultsBgmTween then
+			self:_tweenResultsBgm(RESULTS_BGM_PROFILE.Volume, RESULTS_BGM_TWEEN_IN, false)
+		end
+	else
+		if self._resultsBgmSound.IsPlaying or self._resultsBgmSound.Volume > 0.001 then
+			self:_tweenResultsBgm(0, RESULTS_BGM_TWEEN_OUT, true)
 		end
 	end
 end

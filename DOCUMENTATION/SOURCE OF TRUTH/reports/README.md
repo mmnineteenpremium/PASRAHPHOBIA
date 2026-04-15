@@ -59,6 +59,8 @@ Catatan penting:
 - Baca `MULTIPLAYER_QUEUE_AND_SPECTATOR_FIX_2026-04-11.md` untuk root cause server-side setelah run dua iPhone pertama, perbaikan `Queue Hub` agar tidak auto-queue, dan deduplikasi flow spectator yang sebelumnya bisa masuk ganda.
 - Baca `RESPAWN_GUARD_AND_FORCED_RESET_FIX_2026-04-11.md` untuk regression tambahan yang ditemukan setelah run multiplayer real-client, root cause jalur reset bawaan Roblox, dan patch kanonik `PlayerDied` + reset guard client.
 - Baca `QA_PLAYTHROUGH_WORKFLOW_2026-04-11.md` untuk urutan workflow in-game yang dialami langsung di Studio, durasi tiap phase, dan daftar kebingungan/roughness/rage-quit risk dari sudut pandang QA manusia.
+- Baca `FINAL_SOURCE_OF_TRUTH_RUNTIME_SMOKE_2026-04-16.md` untuk smoke recovery terbaru pada branch `final-source-of-truth`, termasuk perbaikan bootstrap `SocialCommerceSystem`, hilangnya falling loop, verifikasi room flow, results BGM, dan mobile quest surface override.
+- Baca `NEW_PLAYER_SINGLEPLAYER_TUTORIAL_2026-04-16.md` untuk tutorial pemain baru yang sudah disejajarkan dengan smoke live branch `final-source-of-truth`, termasuk urutan room flow, cara baca evidence, cue hunt, dan jalur identifikasi Pocong.
 - Baca `SOURCE_OF_TRUTH_RECONCILIATION_2026-04-11.md` untuk rekonsiliasi final antara report snapshot lama yang masih memuat blocker historis vs lane PASS terbaru yang menjadi dasar status publish saat ini.
 - Baca `OWNER_BRAND_RELEASE_POSITION_2026-04-11.md` untuk pemisahan tegas antara `technical/platform GO` vs `public launch NO-GO` dari sudut owner dan brand.
 - Baca `QA_MULTIPLAYER_MANUAL_CHECKLIST_2026-04-06.md` dan `PERSISTENCE_MANUAL_CHECKLIST_2026-04-06.md` untuk gate manual terakhir.

@@ -12,6 +12,10 @@ Runtime source-of-truth for execution must follow:
 - `REPORTS.md` for current implementation status
 - `CANONICAL_SPECIFICATIONS_v2.md` for canonical design targets
 
+[2026-04-16 NOTE]
+For the latest verified live smoke on branch `final-source-of-truth`, read:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/FINAL_SOURCE_OF_TRUTH_RUNTIME_SMOKE_2026-04-16.md`
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 
@@ -15670,4 +15674,63 @@ New ghosts
 New maps
 New modifiers
 New gameplay systems
+
+---
+
+# 26. PLAYER ONBOARDING LOOP
+
+Urutan onboarding pemain yang sudah diverifikasi di branch `final-source-of-truth`:
+
+Lobby  
+Open Room Browser  
+Buat Room  
+Mulai Permainan  
+Preparation / Staging  
+Investigation  
+Hunt  
+Results  
+Kembali ke Lobby
+
+Pemain baru harus bisa menyelesaikan loop dasar berikut:
+
+1. masuk room sendiri dari lobby
+2. review objective dan field kit
+3. dekati room target
+4. kumpulkan evidence
+5. survive hunt
+6. simpulkan ghost
+
+---
+
+# 27. FIELD KIT EVIDENCE RULE
+
+Evidence untuk identifikasi ghost tidak boleh di-lock dari payload gagal sementara.
+
+Aturan HUD yang benar:
+
+- evidence lock hanya boleh ikut jika response valid
+- nested `result.evidenceType` boleh dipakai hanya saat response valid atau `already_collected`
+- response gagal seperti `tool_pending_delay` tidak boleh membuat HUD menampilkan evidence seolah-olah sudah pasti
+
+Contoh jalur Pocong yang sudah lolos smoke:
+
+- `SCAN -> MEDOK`
+- `THERMO -> Suhu`
+- `WRITING -> BukuTerkutuk`
+
+---
+
+# 28. MOBILE-FIRST SINGLEPLAYER SMOKE NOTES
+
+Smoke live `2026-04-16` menegaskan:
+
+- room browser landscape mobile sudah full-fit
+- CTA quest berubah ke `MISSION`
+- countdown / staging tampil
+- hunt overlay tampil
+- cue sensory utama hidup:
+  - light flicker
+  - object throw
+  - ghost whisper
+  - writing scratch
 

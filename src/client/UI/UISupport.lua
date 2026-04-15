@@ -1,4 +1,9 @@
 local UISupport = {}
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local STUDIO_TOUCH_MOBILE_MAX_VIEWPORT_X = 900
+local STUDIO_TOUCH_MOBILE_MAX_VIEWPORT_Y = 430
 
 function UISupport.disconnectAll(connections)
 	for _, connection in ipairs(connections) do
@@ -51,6 +56,10 @@ function UISupport.createDeviceProfile(replicationRoot, userInputService, overri
 	local function resolveInputOverride()
 		local raw = replicationRoot:GetAttribute(overrideAttrName)
 		if type(raw) ~= "string" then
+			local localPlayer = Players.LocalPlayer
+			raw = localPlayer and localPlayer:GetAttribute(overrideAttrName) or nil
+		end
+		if type(raw) ~= "string" then
 			return nil
 		end
 		local token = string.lower(raw)
@@ -90,6 +99,21 @@ function UISupport.createDeviceProfile(replicationRoot, userInputService, overri
 			self.isConsole = false
 			self.isPC = true
 			self._inputType = "PC"
+			return
+		end
+
+		local camera = Workspace.CurrentCamera
+		local viewport = camera and camera.ViewportSize or Vector2.zero
+		local studioTouchLandscapePreview = RunService:IsStudio()
+			and userInputService.TouchEnabled == true
+			and viewport.X > viewport.Y
+			and viewport.X <= STUDIO_TOUCH_MOBILE_MAX_VIEWPORT_X
+			and viewport.Y <= STUDIO_TOUCH_MOBILE_MAX_VIEWPORT_Y
+		if studioTouchLandscapePreview then
+			self.isMobile = true
+			self.isConsole = false
+			self.isPC = false
+			self._inputType = "Mobile"
 			return
 		end
 

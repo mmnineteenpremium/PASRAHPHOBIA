@@ -15370,3 +15370,75 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - world visuals still read as unfinished compared with the intended premium horror fantasy
 - Report added:
   - `DOCUMENTATION/SOURCE OF TRUTH/reports/QA_PLAYTHROUGH_WORKFLOW_2026-04-11.md`
+
+## 2026-04-16 01:59:33 +07:00 - Final Source Of Truth Runtime Smoke Recovery
+- Status: PASS FOR SINGLE-CLIENT STUDIO SMOKE.
+- Trigger:
+  - owner requested full live smoke on branch `final-source-of-truth` with Rojo connected and explicit focus on falling loop, room browser flow, countdown, audio, results, and mobile landscape UI.
+- Action taken:
+  - fixed bootstrap blocker by normalizing `SocialCommerceSystem/Service.lua`
+  - added case-insensitive module fallback in `SocialCommerceSystem/Main.lua`
+  - updated `AudioController` so `ResultsBGM` follows visible `ResultsPanel` and suppresses `LobbyAmbient` while results remain on screen
+  - updated `QuestJournal` and `QuestTracker` to honor canonical Studio mobile override attributes
+- Studio verification:
+  - bootstrap now reaches `All systems started`
+  - player spawn now lands on lobby concrete instead of `Freefall`
+  - room browser flow verified:
+    - open browser
+    - `BUAT ROOM`
+    - `MULAI PERMAINAN`
+    - transition to `PreparationPhase`
+    - transition to `InvestigationPhase`
+  - results flow verified:
+    - `ResultsPanelVisible = true`
+    - `ResultsBGM` active with `rbxassetid://95027410279438`
+    - `LobbyAmbientSuppressedByResults = true`
+    - return to lobby still completes
+  - mobile-wide override verified at `844x390`:
+    - room browser panel fits viewport
+    - quick join buttons hidden
+    - quest journal button reads `MISSION`
+    - quest surfaces resize into compact mobile lane
+- Report added:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/FINAL_SOURCE_OF_TRUTH_RUNTIME_SMOKE_2026-04-16.md`
+
+## 2026-04-16 03:12:00 +07:00 - Extended Single-Player Smoke, Field-Kit Cue Fix, And New-Player Tutorial
+- Status: PASS FOR SINGLE-CLIENT INVESTIGATION FLOW.
+- Trigger:
+  - owner requested continuation of the live smoke with emphasis on:
+    - mobile-first UI not bypassed
+    - hunt visibility
+    - Pocong manifestation/evidence readability
+    - flashlight flicker
+    - object movement
+    - ghost whisper
+    - ghost-writing audio
+    - a practical tutorial for new players
+- Action taken:
+  - re-ran manual room flow from lobby:
+    - `OPEN ROOM BROWSER`
+    - `BUAT ROOM`
+    - `MULAI PERMAINAN`
+  - verified mobile landscape lane again in live Studio
+  - confirmed single-player investigation path and hunt overlay
+  - patched `src/client/UI/Main.lua` twice:
+    - restored `WritingScratch` runtime cue when `BukuTerkutuk` locks evidence
+    - corrected field-kit response flattening so nested `result.evidenceType` no longer leaks into the HUD on transient failed responses such as `tool_pending_delay`
+  - re-ran the live test after each patch until:
+    - `WRITING -> WRITE / INK LOCK`
+    - `THERMO -> -5C / SUHU LOCK`
+    - `SCAN -> EMF 5 / MEDOK LOCK`
+    - `PasrahUILastSoundKey = WritingScratch`
+  - verified sensory runtime cues:
+    - `env_lightflicker`
+    - `env_objectthrow`
+    - `ghost_whisper`
+  - wrote a new player tutorial aligned to the verified single-player loop
+- Studio verification:
+  - room browser remained playable in mobile-first landscape after restart
+  - hunt overlay and safe-zone guidance were visible in-match
+  - writing cue now plays on valid cursed-writing evidence
+  - false evidence lock drift from nested payloads no longer reproduces in the patched HUD lane
+- Reports added:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/NEW_PLAYER_SINGLEPLAYER_TUTORIAL_2026-04-16.md`
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/FINAL_SOURCE_OF_TRUTH_RUNTIME_SMOKE_2026-04-16.md` updated with extended single-player findings

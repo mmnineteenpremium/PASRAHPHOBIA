@@ -14,6 +14,13 @@ local function resolveModule(container, childName)
         end
     end
 
+    local targetName = string.lower(tostring(childName))
+    for _, candidate in ipairs(container:GetChildren()) do
+        if candidate:IsA("ModuleScript") and string.lower(candidate.Name) == targetName then
+            return candidate
+        end
+    end
+
     error(string.format("[SocialCommerceSystem] Missing module child: %s", tostring(childName)))
 end
 

@@ -5780,7 +5780,10 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 		if data.visualPlaced ~= nil then
 			toolState.visualPlaced = data.visualPlaced == true
 		end
-		if type(data.evidenceType) == "string" and data.evidenceType ~= "" then
+		if (success == true or data.validated == true)
+			and type(data.evidenceType) == "string"
+			and data.evidenceType ~= ""
+		then
 			toolState.lastEvidenceType = data.evidenceType
 		end
 		if toolType == "Garam" then
@@ -5847,7 +5850,29 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 		toolState.chargesRemaining = nil
 	end
 
-	self:_playFieldKitEvidenceCueIfNeeded(toolType, toolState, success, reason, data, eventName)
+	local playedCueKey = self:_playFieldKitEvidenceCueIfNeeded(toolType, toolState, success, reason, data, eventName)
+	if playedCueKey == nil and toolType == "BukuTerkutuk" then
+		local writingConfirmed = tostring(toolState.lastEvidenceType or "") == "BukuTerkutuk"
+		if writingConfirmed == false and type(data) == "table" then
+			writingConfirmed = data.writingAppeared == true or tostring(data.evidenceType or "") == "BukuTerkutuk"
+		end
+		if writingConfirmed == true then
+			local fallbackSignature = string.format(
+				"%s|%s|%s",
+				tostring(toolType),
+				tostring(eventName or reason or "writing_fallback"),
+				tostring(toolState.lastEvidenceType or "BukuTerkutuk")
+			)
+			if toolState.lastCueSignature ~= fallbackSignature then
+				toolState.lastCueSignature = fallbackSignature
+				playRuntimeUISound("WritingScratch", {
+					SingleInstance = true,
+					VolumeScale = 0.96,
+					PlaybackJitter = 0.03,
+				})
+			end
+		end
+	end
 end
 
 function UISystem:_resolveFieldKitMeta(toolType, toolState)
@@ -6036,10 +6061,19 @@ function UISystem:_playFieldKitEvidenceCueIfNeeded(toolType, toolState, success,
 
 	local cueKey = nil
 	local cueSignature = nil
-	local evidenceType = type(data) == "table" and tostring(data.evidenceType or "") or ""
-	local motionDetected = type(data) == "table" and data.motionDetected == true
-	local writingAppeared = type(data) == "table" and data.writingAppeared == true
-	local temperatureC = type(data) == "table" and tonumber(data.temperatureC) or nil
+	local responseData = type(data) == "table" and data or nil
+	local feedback = type(toolState.lastFeedback) == "table" and toolState.lastFeedback or nil
+	local feedbackData = feedback and type(feedback.data) == "table" and feedback.data or feedback
+	local evidenceType = responseData and tostring(responseData.evidenceType or "") or ""
+	if evidenceType == "" then
+		evidenceType = feedbackData and tostring(feedbackData.evidenceType or "") or ""
+	end
+	if evidenceType == "" then
+		evidenceType = tostring(toolState.lastEvidenceType or "")
+	end
+	local motionDetected = (responseData and responseData.motionDetected == true) or (feedbackData and feedbackData.motionDetected == true) or false
+	local writingAppeared = (responseData and responseData.writingAppeared == true) or (feedbackData and feedbackData.writingAppeared == true) or false
+	local temperatureC = responseData and tonumber(responseData.temperatureC) or (feedbackData and tonumber(feedbackData.temperatureC) or nil)
 
 	if toolType == "SuhuMembeku" and (temperatureC ~= nil or evidenceType == "Suhu") then
 		cueKey = "ThermometerRead"
@@ -6053,7 +6087,7 @@ function UISystem:_playFieldKitEvidenceCueIfNeeded(toolType, toolState, success,
 	end
 
 	if not cueKey or not cueSignature or toolState.lastCueSignature == cueSignature then
-		return
+		return nil
 	end
 
 	toolState.lastCueSignature = cueSignature
@@ -6062,6 +6096,7 @@ function UISystem:_playFieldKitEvidenceCueIfNeeded(toolType, toolState, success,
 		VolumeScale = 0.96,
 		PlaybackJitter = 0.03,
 	})
+	return cueKey
 end
 
 function UISystem:_useInvestigationTool(toolType, options)
@@ -6106,7 +6141,27 @@ function UISystem:_useInvestigationTool(toolType, options)
 		state.toolSuccess = false
 		self:_applyFieldKitToolUpdate(toolType, false, tostring(success), nil, nil)
 	else
-		local responseData = type(response) == "table" and ((type(response.data) == "table" and response.data.result) or response.result or response.data) or nil
+		local responseData = nil
+		if type(response) == "table" then
+			local envelopeData = type(response.data) == "table" and response.data or nil
+			local nestedResult = envelopeData and type(envelopeData.result) == "table" and envelopeData.result
+				or (type(response.result) == "table" and response.result or nil)
+			if envelopeData then
+				responseData = table.clone(envelopeData)
+				local nestedResultAllowed = success == true
+					or envelopeData.validated == true
+					or tostring(reason or response.reason or envelopeData.reason or "") == "already_collected"
+				if nestedResultAllowed and nestedResult then
+					for key, value in pairs(nestedResult) do
+						if responseData[key] == nil then
+							responseData[key] = value
+						end
+					end
+				end
+			else
+				responseData = nestedResult
+			end
+		end
 		local statusText, detailText = resolveToolFeedback(toolType, success == true, reason or (response and response.reason), responseData, nil)
 		state.toolSuccess = success == true
 		state.toolStatus = statusText
@@ -12250,6 +12305,15 @@ function UISystem:_bindInputProfileUpdates()
 		self:_applyDeviceSizing()
 	end))
 
+	local player = Players.LocalPlayer
+	if player then
+		table.insert(self._uxConnections, player:GetAttributeChangedSignal(UI_INPUT_PROFILE_OVERRIDE_ATTR):Connect(function()
+			self._deviceProfile:Refresh(UserInputService:GetLastInputType())
+			self:_applyGraphicsMode(self._graphicsModeSource ~= "manual")
+			self:_applyDeviceSizing()
+		end))
+	end
+
 	table.insert(self._uxConnections, ReplicatedStorage:GetAttributeChangedSignal(UI_FORCE_COMPACT_ATTR):Connect(function()
 		self:_applyDeviceSizing()
 	end))
@@ -17478,8 +17542,10 @@ function UISystem:_refreshRoomBrowserView()
 	self._roomBrowserWidgets.RefreshButton.Visible = not showRoomPanel
 	self._roomBrowserWidgets.CreateRoomButton.Visible = not showRoomPanel
 	self._roomBrowserWidgets.QueueButton.Visible = not showRoomPanel
-	self._roomBrowserWidgets.QuickJoinClassicButton.Visible = not showRoomPanel and self._roomBrowserWideMobile ~= true
-	self._roomBrowserWidgets.QuickJoinRankedButton.Visible = not showRoomPanel and self._roomBrowserWideMobile ~= true
+	local hideQuickJoinForSmoke = self._roomBrowserWideMobile == true
+		or (self._deviceProfile and self._deviceProfile.isMobile == true)
+	self._roomBrowserWidgets.QuickJoinClassicButton.Visible = not showRoomPanel and not hideQuickJoinForSmoke
+	self._roomBrowserWidgets.QuickJoinRankedButton.Visible = not showRoomPanel and not hideQuickJoinForSmoke
 	self._roomBrowserWidgets.ModeSelector.Visible = false
 	self._roomBrowserWidgets.RankedTierLabel.Visible = false
 	self._roomBrowserWidgets.ModeDropdown.Visible = false

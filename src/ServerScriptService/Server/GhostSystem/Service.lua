@@ -206,17 +206,18 @@ end
 
 local function resolveGhostVisualStateName(ghostState)
 	local actualStateName = ghostState and ghostState.state or nil
+	local normalizedActualStateName = normalizeGhostVisualState(actualStateName)
 	local overrideStateName = nil
 	if RunService:IsStudio() then
 		overrideStateName = normalizeGhostVisualState(ReplicatedStorage:GetAttribute(GHOST_FORCE_VISUAL_STATE_ATTRIBUTE))
 	end
 
-	local stateName = overrideStateName or actualStateName
+	local stateName = overrideStateName or normalizedActualStateName or actualStateName
 	if not overrideStateName and ghostState and ghostState.huntActive == true then
 		stateName = "Hunting"
 	end
 
-	return stateName, actualStateName, overrideStateName
+	return stateName, normalizedActualStateName or actualStateName, overrideStateName
 end
 
 local function shouldHideGhostControlPart(part)
