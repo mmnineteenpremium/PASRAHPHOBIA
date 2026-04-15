@@ -1,3 +1,6 @@
+local OverlayController = require(script.Parent.UI.OverlayController)
+local QuestUIController = require(script.Parent.UI.QuestUIController)
+
 local ClientBootstrap = require(script.Parent.Core.ClientBootstrap)
 
 local ClientMain = {}
@@ -7,6 +10,8 @@ ClientMain._sharedInstance = nil
 function ClientMain.new(deps)
 	local self = setmetatable({}, ClientMain)
 	self._bootstrap = ClientBootstrap.new(deps)
+	self._overlayController = OverlayController.shared()
+	self._questUIController = QuestUIController.shared()
 	return self
 end
 
@@ -20,10 +25,14 @@ end
 
 function ClientMain:Init()
 	self._bootstrap:Init()
+	self._overlayController:Init()
+	self._questUIController:Init()
 end
 
 function ClientMain:Start()
 	self._bootstrap:Start()
+	self._overlayController:Start()
+	self._questUIController:Start()
 end
 
 return ClientMain

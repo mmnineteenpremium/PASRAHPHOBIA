@@ -1,14 +1,55 @@
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
 local Services = require(script.Parent.Parent.Core.Services)
 
 local Service = {}
 Service.__index = Service
 
 local DAILY_MISSIONS = {
-    { id = "IdentifyGhost", target = 1, reward = { currency = 200, xp = 80 } },
-    { id = "CollectEvidence", target = 3, reward = { currency = 150, xp = 60 } },
-    { id = "SurviveHunt", target = 1, reward = { currency = 175, xp = 70 } },
-    { id = "CompleteContract", target = 1, reward = { currency = 250, xp = 100 } },
+    {
+        id = "IdentifyGhost",
+        title = "Identifikasi Ghost",
+        description = "Tentukan jenis ghost yang benar sebelum kontrak berakhir.",
+        objectiveLabel = "Ghost teridentifikasi",
+        target = 1,
+        reward = { currency = 200, xp = 80 },
+    },
+    {
+        id = "CollectEvidence",
+        title = "Kumpulkan Evidence",
+        description = "Kumpulkan tiga bukti investigasi dalam satu sesi.",
+        objectiveLabel = "Evidence terkumpul",
+        target = 3,
+        reward = { currency = 150, xp = 60 },
+    },
+    {
+        id = "SurviveHunt",
+        title = "Bertahan Dari Hunt",
+        description = "Lolos dari satu fase hunt tanpa mati.",
+        objectiveLabel = "Hunt survived",
+        target = 1,
+        reward = { currency = 175, xp = 70 },
+    },
+    {
+        id = "CompleteContract",
+        title = "Selesaikan Kontrak",
+        description = "Tuntaskan investigasi dan akhiri match dengan sukses tim.",
+        objectiveLabel = "Kontrak selesai",
+        target = 1,
+        reward = { currency = 250, xp = 100 },
+    },
 }
+
+local QUEST_OWNER_ATTR = "PasrahQuestOwner"
+local QUEST_DATA_ATTR = "PasrahQuestData"
+local QUEST_UPDATED_AT_ATTR = "PasrahQuestDataUpdatedAt"
+local QUEST_ACTIVE_COUNT_ATTR = "PasrahQuestActiveCount"
+local QUEST_COMPLETED_COUNT_ATTR = "PasrahQuestCompletedCount"
+local QUEST_LAST_COMPLETED_ID_ATTR = "PasrahQuestLastCompletedId"
+local QUEST_LAST_COMPLETED_TITLE_ATTR = "PasrahQuestLastCompletedTitle"
+local QUEST_LAST_COMPLETED_XP_ATTR = "PasrahQuestLastCompletedXP"
+local QUEST_LAST_COMPLETED_AT_ATTR = "PasrahQuestLastCompletedAt"
 
 local function toUserId(playerOrUserId)
     if type(playerOrUserId) == "number" then
@@ -16,6 +57,25 @@ local function toUserId(playerOrUserId)
     end
     if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
         return playerOrUserId.UserId
+    end
+    return nil
+end
+
+local function toPlayer(playerOrUserId)
+    if typeof(playerOrUserId) == "Instance" and playerOrUserId:IsA("Player") then
+        return playerOrUserId
+    end
+
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return nil
+    end
+
+    local ok, player = pcall(function()
+        return Players:GetPlayerByUserId(userId)
+    end)
+    if ok then
+        return player
     end
     return nil
 end
@@ -29,6 +89,26 @@ local function deepCopy(value)
         copy[key] = deepCopy(nested)
     end
     return copy
+end
+
+local function disconnectAll(connections)
+    for _, connection in ipairs(connections or {}) do
+        connection:Disconnect()
+    end
+    table.clear(connections)
+end
+
+local function findMissionTemplate(missionId)
+    for _, template in ipairs(DAILY_MISSIONS) do
+        if template.id == missionId then
+            return template
+        end
+    end
+    return nil
+end
+
+local function nowMillis()
+    return DateTime.now().UnixTimestampMillis
 end
 
 local function safeCall(target, methodName, ...)
@@ -66,6 +146,7 @@ function Service.new(state, deps)
     self._deps = deps or {}
     self._eventBus = nil
     self._dependencies = {}
+    self._connections = {}
     return self
 end
 
@@ -87,10 +168,21 @@ function Service:Init()
 end
 
 function Service:Start()
-    -- Event-driven service.
+    disconnectAll(self._connections)
+
+    table.insert(self._connections, Players.PlayerAdded:Connect(function(player)
+        self:GenerateDailyMissions(player)
+        self:SyncPlayer(player)
+    end))
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        self:GenerateDailyMissions(player)
+        self:SyncPlayer(player)
+    end
 end
 
 function Service:Stop()
+    disconnectAll(self._connections)
     self._state:Clear()
 end
 
@@ -136,6 +228,7 @@ function Service:GenerateDailyMissions(player)
     local today = self:_todayKey()
     local missionDate = self._state:Get("missionDate") or {}
     if missionDate[userId] == today then
+        self:SyncPlayer(player)
         return true, nil, self:GetDailyMissions(player)
     end
 
@@ -169,6 +262,7 @@ function Service:GenerateDailyMissions(player)
     self._state:Set("missionProgress", missionProgress)
     self._state:Set("missionDate", missionDate)
 
+    self:SyncPlayer(player)
     return true, nil, self:GetDailyMissions(player)
 end
 
@@ -179,6 +273,108 @@ function Service:GetDailyMissions(player)
     end
     local activeMissions = self._state:Get("activeMissions") or {}
     return deepCopy(activeMissions[userId] or {})
+end
+
+function Service:_buildQuestEntry(template, progressValue)
+    local clampedProgress = math.max(0, math.floor(tonumber(progressValue) or 0))
+    local required = math.max(1, math.floor(tonumber(template.target) or 1))
+    return {
+        id = template.id,
+        title = template.title or template.id,
+        description = template.description or "",
+        type = "DAILY",
+        objectives = {
+            {
+                id = template.id,
+                label = template.objectiveLabel or template.id,
+                required = required,
+            },
+        },
+        progress = {
+            [template.id] = math.min(clampedProgress, required),
+        },
+        rewards = {
+            xp = math.max(0, math.floor(tonumber(template.reward and template.reward.xp) or 0)),
+            currency = math.max(0, math.floor(tonumber(template.reward and template.reward.currency) or 0)),
+            currencyType = "MM",
+        },
+    }
+end
+
+function Service:_buildQuestPayload(playerOrUserId)
+    local userId = toUserId(playerOrUserId)
+    if not userId then
+        return {
+            active = {},
+            completed = {},
+            updatedAt = nowMillis(),
+        }
+    end
+
+    local activeMissions = self._state:Get("activeMissions") or {}
+    local completedMissions = self._state:Get("completedMissions") or {}
+    local missionProgress = self._state:Get("missionProgress") or {}
+    local missionDate = self._state:Get("missionDate") or {}
+
+    local playerActiveMissions = activeMissions[userId] or {}
+    local playerCompletedMissions = completedMissions[userId] or {}
+    local playerProgress = missionProgress[userId] or {}
+    local active = {}
+    local completed = {}
+
+    for _, template in ipairs(DAILY_MISSIONS) do
+        local progressValue = tonumber(playerProgress[template.id]) or 0
+        local isCompleted = playerCompletedMissions[template.id] == true
+        if playerActiveMissions[template.id] ~= nil and not isCompleted then
+            table.insert(active, self:_buildQuestEntry(template, progressValue))
+        end
+        if isCompleted then
+            table.insert(completed, self:_buildQuestEntry(template, template.target))
+        end
+    end
+
+    return {
+        active = active,
+        completed = completed,
+        date = missionDate[userId],
+        updatedAt = nowMillis(),
+    }
+end
+
+function Service:SyncPlayer(playerOrUserId)
+    local player = toPlayer(playerOrUserId)
+    if not player then
+        return false, "missing_player"
+    end
+
+    local payload = self:_buildQuestPayload(player)
+    local ok, encoded = pcall(function()
+        return HttpService:JSONEncode(payload)
+    end)
+    if not ok then
+        warn(("[DailyMissionSystem] Failed to encode quest payload for %s: %s"):format(player.Name, tostring(encoded)))
+        return false, "encode_failed"
+    end
+
+    player:SetAttribute(QUEST_OWNER_ATTR, "DailyMissionSystem")
+    player:SetAttribute(QUEST_DATA_ATTR, encoded)
+    player:SetAttribute(QUEST_UPDATED_AT_ATTR, payload.updatedAt)
+    player:SetAttribute(QUEST_ACTIVE_COUNT_ATTR, #(payload.active or {}))
+    player:SetAttribute(QUEST_COMPLETED_COUNT_ATTR, #(payload.completed or {}))
+    return true
+end
+
+function Service:_stampCompletedMission(playerOrUserId, missionId)
+    local player = toPlayer(playerOrUserId)
+    local template = findMissionTemplate(missionId)
+    if not player or not template then
+        return
+    end
+
+    player:SetAttribute(QUEST_LAST_COMPLETED_ID_ATTR, template.id)
+    player:SetAttribute(QUEST_LAST_COMPLETED_TITLE_ATTR, template.title or template.id)
+    player:SetAttribute(QUEST_LAST_COMPLETED_XP_ATTR, math.max(0, math.floor(tonumber(template.reward and template.reward.xp) or 0)))
+    player:SetAttribute(QUEST_LAST_COMPLETED_AT_ATTR, nowMillis())
 end
 
 function Service:_grantRewards(player, reward)
@@ -228,14 +424,20 @@ function Service:CompleteMission(player, missionId)
     completedMissions[userId][missionId] = true
     self._state:Set("completedMissions", completedMissions)
 
-    self:_grantRewards(player, mission.reward or {})
+    local livePlayer = toPlayer(player)
+    if livePlayer then
+        self:_grantRewards(livePlayer, mission.reward or {})
+    end
 
     self:_publish("MissionCompleted", {
-        player = player,
+        player = livePlayer or player,
         userId = userId,
         missionId = missionId,
         reward = deepCopy(mission.reward or {}),
     })
+
+    self:_stampCompletedMission(livePlayer or player, missionId)
+    self:SyncPlayer(livePlayer or player)
 
     return true
 end
@@ -264,7 +466,7 @@ function Service:UpdateMissionProgress(player, missionId, amount)
     self._state:Set("missionProgress", missionProgress)
 
     self:_publish("MissionProgress", {
-        player = player,
+        player = toPlayer(player) or player,
         userId = userId,
         missionId = missionId,
         progress = nextValue,
@@ -273,6 +475,8 @@ function Service:UpdateMissionProgress(player, missionId, amount)
 
     if nextValue >= (mission.target or 1) then
         self:CompleteMission(player, missionId)
+    else
+        self:SyncPlayer(player)
     end
 
     return true
@@ -282,6 +486,7 @@ function Service:OnPlayerJoinedLobby(payload)
     local player = payload and payload.player or payload
     if player then
         self:GenerateDailyMissions(player)
+        self:SyncPlayer(player)
     end
 end
 

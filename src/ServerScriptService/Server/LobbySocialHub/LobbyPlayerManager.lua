@@ -8,17 +8,15 @@ local LOBBY_SPAWN_OFFSET = Vector3.new(0, 3, 0)
 local LOBBY_SPAWN_PART_HEIGHT_FROM_FLOOR = 3.5
 local LOBBY_SPAWN_PROTECTION_SECONDS = 3
 local EXPECTED_SPAWN_COUNT = 4
+local SPAWN_CLEARANCE_HEIGHT = 6
+local SAFE_SPAWN_RAYCAST_DEPTH = 64
+local SAFE_SPAWN_SHIFT_X = 5
+local MAX_COLLIDABLE_RAYCAST_PASSES = 12
 local SPAWN_OFFSETS = {
     Vector3.new(-10, 0, -10),
     Vector3.new(10, 0, -10),
     Vector3.new(-10, 0, 10),
     Vector3.new(10, 0, 10),
-}
-local LOBBY_VISUAL_SPAWN_OFFSETS = {
-    Vector3.new(-4, 0, 26),
-    Vector3.new(4, 0, 26),
-    Vector3.new(-4, 0, 34),
-    Vector3.new(4, 0, 34),
 }
 
 local function resolvePlayersService(deps)
@@ -177,19 +175,116 @@ local function resolveLobbyLookTarget(lobbyRoot)
 end
 
 local function resolveLobbyVisualSpawnPosition(lobbyRoot, spawnPart)
-    if not (lobbyRoot and spawnPart and spawnPart:IsA("BasePart")) then
+    -- LobbySocialHub owns lobby-facing spawn composition. Keep marker-relative
+    -- placement disabled here so the authoritative marker stays the single source.
+    return nil
+end
+
+local function raycastFirstCollidable(origin, direction, excludeInstances)
+    local filter = {}
+    for _, instance in ipairs(excludeInstances or {}) do
+        if typeof(instance) == "Instance" then
+            table.insert(filter, instance)
+        end
+    end
+
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.IgnoreWater = true
+
+    for _ = 1, MAX_COLLIDABLE_RAYCAST_PASSES do
+        params.FilterDescendantsInstances = filter
+        local result = workspace:Raycast(origin, direction, params)
+        if not result then
+            return nil
+        end
+
+        local hit = result.Instance
+        if hit and hit:IsA("BasePart") and hit.CanCollide then
+            return result
+        end
+        if typeof(hit) ~= "Instance" then
+            return nil
+        end
+        table.insert(filter, hit)
+    end
+
+    return nil
+end
+
+local function hasOverheadClearance(position, excludeInstances, clearanceNeeded)
+    local clearance = tonumber(clearanceNeeded) or SPAWN_CLEARANCE_HEIGHT
+    return raycastFirstCollidable(position, Vector3.new(0, clearance, 0), excludeInstances) == nil
+end
+
+local function buildFlatLookVector(position, lookTarget, fallbackPart)
+    local flatLook = typeof(lookTarget) == "Vector3"
+        and Vector3.new(lookTarget.X - position.X, 0, lookTarget.Z - position.Z)
+        or Vector3.zero
+    if flatLook.Magnitude <= 1e-4 and fallbackPart and fallbackPart:IsA("BasePart") then
+        flatLook = Vector3.new(fallbackPart.CFrame.LookVector.X, 0, fallbackPart.CFrame.LookVector.Z)
+    end
+    if flatLook.Magnitude <= 1e-4 then
+        return Vector3.new(0, 0, -1)
+    end
+    return flatLook.Unit
+end
+
+local function buildSafeSpawnPosition(lobbyRoot, markerPart, excludeInstances, positionX, positionZ)
+    local origin = Vector3.new(positionX, markerPart.Position.Y + math.max(markerPart.Size.Y, 2), positionZ)
+    local floorResult = raycastFirstCollidable(origin, Vector3.new(0, -SAFE_SPAWN_RAYCAST_DEPTH, 0), excludeInstances)
+    local floorY = resolvePrimaryFloorTopY(lobbyRoot)
+    if floorResult then
+        floorY = floorResult.Position.Y
+    end
+    if floorY == nil then
+        floorY = markerPart.Position.Y
+    end
+    return Vector3.new(positionX, floorY + LOBBY_SPAWN_OFFSET.Y, positionZ), floorResult ~= nil
+end
+
+local function getSafeSpawnCFrame(lobbyRoot, markerPart, lookTarget, character)
+    if not (markerPart and markerPart:IsA("BasePart")) then
         return nil
     end
 
-    local matchmakingDoor = lobbyRoot:FindFirstChild("Door_NorthEvidenceBuilding", true)
-    if not (matchmakingDoor and matchmakingDoor:IsA("BasePart")) then
-        return nil
+    local excludeInstances = { markerPart }
+    if typeof(character) == "Instance" then
+        table.insert(excludeInstances, character)
     end
 
-    local spawnIndex = tonumber(string.match(spawnPart.Name, "PlayerSpawn_(%d+)")) or 1
-    local offset = LOBBY_VISUAL_SPAWN_OFFSETS[((spawnIndex - 1) % #LOBBY_VISUAL_SPAWN_OFFSETS) + 1]
-    local targetXZ = matchmakingDoor.Position + Vector3.new(offset.X, 0, offset.Z)
-    return Vector3.new(targetXZ.X, spawnPart.Position.Y, targetXZ.Z)
+    local safePosition, hitFloor = buildSafeSpawnPosition(
+        lobbyRoot,
+        markerPart,
+        excludeInstances,
+        markerPart.Position.X,
+        markerPart.Position.Z
+    )
+    if not hitFloor then
+        warn(string.format(
+            "[LobbyPlayerManager] Safe spawn raycast missed floor for %s. Using marker height fallback.",
+            markerPart.Name
+        ))
+    end
+
+    if not hasOverheadClearance(safePosition, excludeInstances, SPAWN_CLEARANCE_HEIGHT) then
+        local shiftedPosition = buildSafeSpawnPosition(
+            lobbyRoot,
+            markerPart,
+            excludeInstances,
+            markerPart.Position.X + SAFE_SPAWN_SHIFT_X,
+            markerPart.Position.Z
+        )
+        safePosition = shiftedPosition
+        warn(string.format(
+            "[LobbyPlayerManager] Overhead obstruction at %s. Shifting spawn to X+%d.",
+            markerPart.Name,
+            SAFE_SPAWN_SHIFT_X
+        ))
+    end
+
+    local flatLook = buildFlatLookVector(safePosition, lookTarget, markerPart)
+    return CFrame.lookAt(safePosition, safePosition + flatLook, Vector3.yAxis)
 end
 
 local function raycastSpawnY(lobbyRoot, targetXZ, fallbackY)
@@ -244,6 +339,12 @@ local function spawnPartsAreHealthy(lobbyRoot, spawnParts)
             if heightAboveFloor < 1 or heightAboveFloor > 6 then
                 return false, "spawn_height_invalid"
             end
+        end
+
+        local spawnY = (floorTopY or spawnPart.Position.Y) + LOBBY_SPAWN_OFFSET.Y
+        local clearanceOrigin = Vector3.new(spawnPart.Position.X, spawnY, spawnPart.Position.Z)
+        if not hasOverheadClearance(clearanceOrigin, { spawnPart }, SPAWN_CLEARANCE_HEIGHT) then
+            return false, "spawn_overhead_blocked"
         end
     end
 
@@ -458,20 +559,11 @@ function LobbyPlayerManager:_spawnPlayer(player, character)
     local spawnCFrame = nil
     if typeof(visualSpawnPosition) == "Vector3" then
         local position = visualSpawnPosition + LOBBY_SPAWN_OFFSET
-        local flatLook = typeof(lookTarget) == "Vector3"
-            and Vector3.new(lookTarget.X - position.X, 0, lookTarget.Z - position.Z)
-            or Vector3.zero
-        if flatLook.Magnitude <= 1e-4 then
-            flatLook = Vector3.new(spawnPart.CFrame.LookVector.X, 0, spawnPart.CFrame.LookVector.Z)
-        end
-        if flatLook.Magnitude <= 1e-4 then
-            flatLook = Vector3.new(0, 0, -1)
-        else
-            flatLook = flatLook.Unit
-        end
-        spawnCFrame = CFrame.new(position, position + flatLook)
+        local flatLook = buildFlatLookVector(position, lookTarget, spawnPart)
+        spawnCFrame = CFrame.lookAt(position, position + flatLook, Vector3.yAxis)
     else
-        spawnCFrame = buildUprightPartCFrame(spawnPart, LOBBY_SPAWN_OFFSET, lookTarget)
+        spawnCFrame = getSafeSpawnCFrame(lobbyRoot, spawnPart, lookTarget, resolvedCharacter)
+            or buildUprightPartCFrame(spawnPart, LOBBY_SPAWN_OFFSET, lookTarget)
     end
     root.CFrame = spawnCFrame or (spawnPart.CFrame + LOBBY_SPAWN_OFFSET)
     applyLobbySpawnState(player)

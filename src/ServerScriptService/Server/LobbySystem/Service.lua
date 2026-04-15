@@ -213,48 +213,8 @@ local function isValidLobbySpawnPart(lobbyRoot, spawnPart)
 end
 
 local function resolveLobbySpawnParts()
-	local lobbyRoot = resolveLobbyRoot()
-	if lobbyRoot then
-		local lobbySpawn = lobbyRoot:FindFirstChild("LobbySpawn", true)
-		if isValidLobbySpawnPart(lobbyRoot, lobbySpawn) then
-			return { lobbySpawn }
-		end
-
-		local spawnFolders = {}
-		for _, descendant in ipairs(lobbyRoot:GetDescendants()) do
-			if descendant.Name == "SpawnPoints" and (descendant:IsA("Folder") or descendant:IsA("Model")) then
-				table.insert(spawnFolders, descendant)
-			end
-		end
-
-		for _, spawnFolder in ipairs(spawnFolders) do
-			local spawnParts = collectSpawnParts(spawnFolder, {})
-			table.sort(spawnParts, function(a, b)
-				return a.Name < b.Name
-			end)
-
-			local validSpawnParts = {}
-			for _, spawnPart in ipairs(spawnParts) do
-				if isValidLobbySpawnPart(lobbyRoot, spawnPart) then
-					table.insert(validSpawnParts, spawnPart)
-				end
-			end
-			if #validSpawnParts > 0 then
-				return validSpawnParts
-			end
-		end
-
-		local spawnLocation = lobbyRoot:FindFirstChildWhichIsA("SpawnLocation", true)
-		if isValidLobbySpawnPart(lobbyRoot, spawnLocation) then
-			return { spawnLocation }
-		end
-	end
-
-	local directSpawn = workspace:FindFirstChild("LobbySpawn")
-	if isValidLobbySpawnPart(lobbyRoot, directSpawn) then
-		return { directSpawn }
-	end
-
+	-- LobbySocialHub/LobbyPlayerManager is the authoritative spawn owner.
+	-- Keep this helper inert so LobbySystem cannot reintroduce a competing spawn path.
 	return {}
 end
 
