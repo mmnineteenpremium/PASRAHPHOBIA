@@ -15,6 +15,11 @@ local EVENT_LIBRARY = {
 	{ eventType = "TemperatureDrop", interaction = nil, objectType = nil, baseIntensity = 0.60, cooldown = 6 },
 }
 
+local EVENT_TYPE_ALIASES = {
+	ObjectMovement = "ObjectThrow",
+	RadioNoise = "RadioStatic",
+}
+
 local function resolveEventBus(deps)
 	local eventBus = Services.Get(deps, "EventBus")
 	if type(eventBus) ~= "table" then
@@ -30,6 +35,7 @@ local function resolveEventBus(deps)
 end
 
 local function findEventConfig(eventType)
+	eventType = EVENT_TYPE_ALIASES[eventType] or eventType
 	for _, config in ipairs(EVENT_LIBRARY) do
 		if config.eventType == eventType then
 			return config
@@ -65,6 +71,19 @@ local function pickFromArray(rng, list)
 		return nil
 	end
 	return list[rng:NextInteger(1, #list)]
+end
+
+local function listRegisteredObjects(mapInteractionSystem)
+	if type(mapInteractionSystem) ~= "table" then
+		return {}
+	end
+	if type(mapInteractionSystem.ListObjects) == "function" then
+		return mapInteractionSystem:ListObjects()
+	end
+	if type(mapInteractionSystem.Service) == "table" and type(mapInteractionSystem.Service.ListObjects) == "function" then
+		return mapInteractionSystem.Service:ListObjects()
+	end
+	return {}
 end
 
 function Service.new(state, deps)
@@ -214,6 +233,32 @@ function Service:ApplyEventEffect(eventData)
 	return true
 end
 
+function Service:_resolveTargetObject(eventData, eventConfig)
+	if type(eventData.targetObject) == "string" and eventData.targetObject ~= "" then
+		return eventData.targetObject, eventData.roomId
+	end
+	if not eventConfig or not eventConfig.objectType then
+		return nil, eventData.roomId
+	end
+
+	local candidates = {}
+	local roomScoped = {}
+	for _, objectData in ipairs(listRegisteredObjects(self._dependencies.MapInteractionSystem)) do
+		if type(objectData) == "table" and objectData.type == eventConfig.objectType then
+			candidates[#candidates + 1] = objectData
+			if type(eventData.roomId) == "string" and eventData.roomId ~= "" and objectData.roomId == eventData.roomId then
+				roomScoped[#roomScoped + 1] = objectData
+			end
+		end
+	end
+
+	local chosen = pickFromArray(self._rng, #roomScoped > 0 and roomScoped or candidates)
+	if type(chosen) ~= "table" then
+		return nil, eventData.roomId
+	end
+	return chosen.id, chosen.roomId or eventData.roomId
+end
+
 function Service:TriggerEvent(eventData)
 	local context = self:_baseContext()
 	local payload = {}
@@ -227,6 +272,7 @@ function Service:TriggerEvent(eventData)
 	if type(payload.eventType) ~= "string" then
 		payload.eventType = self:SelectRandomEvent(payload)
 	end
+	payload.eventType = EVENT_TYPE_ALIASES[payload.eventType] or payload.eventType
 
 	local valid, reason = self:ValidateEventConditions(payload)
 	if not valid then
@@ -234,11 +280,13 @@ function Service:TriggerEvent(eventData)
 	end
 
 	local eventConfig = findEventConfig(payload.eventType)
+	payload.targetObject, payload.roomId = self:_resolveTargetObject(payload, eventConfig)
 	local eventRecord = {
 		eventType = payload.eventType,
 		targetObject = payload.targetObject,
 		intensity = tonumber(payload.intensity) or eventConfig.baseIntensity,
 		position = payload.position,
+		roomId = payload.roomId,
 		source = payload.source or "MapEventSystem",
 		time = payload.now or os.clock(),
 		matchId = payload.matchId,

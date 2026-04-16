@@ -15,16 +15,7 @@ local HIDE_PROXY_NAME_PREFIX = "HideSpotProxy_"
 local HIDE_PROXY_OUTWARD_OFFSET = 4
 local HIDE_PROXY_HEIGHT_OFFSET = 3.5
 local HIDE_PROXY_POSITION_OVERRIDES = {
-	hauntedhouse = {
-		Room_ClosetA = {
-			roomName = "Room_LivingRoom",
-			offset = Vector3.new(8, 3.5, 12),
-		},
-		Room_ClosetB = {
-			roomName = "Room_LivingRoom",
-			offset = Vector3.new(-8, 3.5, -12),
-		},
-	},
+	hauntedhouse = {},
 }
 local HIDE_SPOT_MARKER_FOLDER_NAME = "HideSpotRuntimeMarker"
 local HIDE_SPOT_MARKER_OUTLINE_NAME = "Outline"

@@ -417,22 +417,173 @@ local function ensurePathfindingModifier(part)
 	return modifier
 end
 
-local function getDoorPlane(part)
-	if part.Size.X <= part.Size.Z then
+local function parseVector3String(serialized)
+	if type(serialized) ~= "string" or serialized == "" then
+		return nil
+	end
+	local x, y, z = serialized:match("^%s*([%-%d%.eE]+),%s*([%-%d%.eE]+),%s*([%-%d%.eE]+)%s*$")
+	x = tonumber(x)
+	y = tonumber(y)
+	z = tonumber(z)
+	if x and y and z then
+		return Vector3.new(x, y, z)
+	end
+	return nil
+end
+
+local function getInstanceCFrame(instance)
+	if typeof(instance) ~= "Instance" then
+		return nil
+	end
+	if instance:IsA("Model") then
+		local ok, pivot = pcall(function()
+			return instance:GetPivot()
+		end)
+		if ok then
+			return pivot
+		end
+	elseif instance:IsA("BasePart") then
+		return instance.CFrame
+	end
+	return nil
+end
+
+local function getInstanceSize(instance)
+	if typeof(instance) ~= "Instance" then
+		return nil
+	end
+	if instance:IsA("Model") then
+		local ok, size = pcall(function()
+			return instance:GetExtentsSize()
+		end)
+		if ok then
+			return size
+		end
+	elseif instance:IsA("BasePart") then
+		return instance.Size
+	end
+	return nil
+end
+
+local function setInstanceCollision(instance, canCollide, canTouch)
+	if typeof(instance) ~= "Instance" then
+		return
+	end
+	if instance:IsA("BasePart") then
+		instance.CanCollide = canCollide
+		instance.CanTouch = canTouch
+		instance.CanQuery = true
+		return
+	end
+	for _, descendant in ipairs(instance:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.Anchored = true
+			descendant.CanCollide = canCollide
+			descendant.CanTouch = canTouch
+			descendant.CanQuery = true
+		end
+	end
+end
+
+local function applyInstanceTransform(instance, targetCFrame)
+	if typeof(instance) ~= "Instance" or typeof(targetCFrame) ~= "CFrame" then
+		return
+	end
+	if instance:IsA("Model") then
+		pcall(function()
+			instance:PivotTo(targetCFrame)
+		end)
+	elseif instance:IsA("BasePart") then
+		instance.CFrame = targetCFrame
+	end
+end
+
+local function getDoorPlaneFromSize(size)
+	if typeof(size) ~= "Vector3" then
+		return "thin_x"
+	end
+	if size.X <= size.Z then
 		return "thin_x"
 	end
 	return "thin_z"
 end
 
-local function buildOpenCFrame(part, closedCFrame)
-	local plane = getDoorPlane(part)
+local function getDoorPlane(part)
+	if not (part and part:IsA("BasePart")) then
+		return "thin_x"
+	end
+	return getDoorPlaneFromSize(part.Size)
+end
+
+local function findNearestNamedInstance(root, targetName, expectedPosition, className)
+	if typeof(root) ~= "Instance" or type(targetName) ~= "string" or targetName == "" then
+		return nil
+	end
+	local best = nil
+	local bestDistance = math.huge
+	for _, descendant in ipairs(root:GetDescendants()) do
+		if descendant.Name == targetName and (className == nil or descendant.ClassName == className) then
+			local candidateCFrame = getInstanceCFrame(descendant)
+			if candidateCFrame then
+				local distance = expectedPosition and (candidateCFrame.Position - expectedPosition).Magnitude or 0
+				if best == nil or distance < bestDistance then
+					best = descendant
+					bestDistance = distance
+				end
+			end
+		end
+	end
+	return best
+end
+
+local function resolveDoorVisualTarget(mapClone, proxyPart)
+	if typeof(proxyPart) ~= "Instance" or typeof(mapClone) ~= "Instance" then
+		return proxyPart
+	end
+	local targetRootName = proxyPart:GetAttribute("PasrahTargetRootName")
+	if type(targetRootName) ~= "string" or targetRootName == "" then
+		return proxyPart
+	end
+	local expectedPosition = parseVector3String(proxyPart:GetAttribute("PasrahTargetPosition"))
+	local root = findNearestNamedInstance(mapClone, targetRootName, expectedPosition)
+	if not root then
+		return proxyPart
+	end
+	local targetName = proxyPart:GetAttribute("PasrahTargetName")
+	if type(targetName) ~= "string" or targetName == "" then
+		return root
+	end
+	return findNearestNamedInstance(root, targetName, expectedPosition) or root
+end
+
+local function buildOpenCFrame(instance, closedCFrame, mode)
+	local size = getInstanceSize(instance)
+	local plane = getDoorPlaneFromSize(size)
+	if mode == "Slide" and typeof(size) == "Vector3" then
+		local slideDistance = math.max(1.8, math.min(math.max(size.X, size.Z) * 0.45, 4.5))
+		local axis = size.X >= size.Z and closedCFrame.RightVector or closedCFrame.LookVector
+		return closedCFrame + (axis * slideDistance)
+	end
+
+	if instance and instance:IsA("Model") then
+		local hinge = findNearestNamedInstance(instance, "PrimaryHinge", closedCFrame.Position, "Part")
+			or findNearestNamedInstance(instance, "Hinge", closedCFrame.Position, "Part")
+		if hinge then
+			local hingeWorld = hinge.CFrame
+			return hingeWorld * CFrame.Angles(0, OPEN_ANGLE, 0) * hingeWorld:Inverse() * closedCFrame
+		end
+	end
+
+	if typeof(size) ~= "Vector3" then
+		return closedCFrame
+	end
 	if plane == "thin_x" then
-		local hingeLocal = Vector3.new(0, 0, -(part.Size.Z * 0.5) + (part.Size.X * 0.5))
+		local hingeLocal = Vector3.new(0, 0, -(size.Z * 0.5) + (size.X * 0.5))
 		local hingeWorld = closedCFrame * CFrame.new(hingeLocal)
 		return hingeWorld * CFrame.Angles(0, OPEN_ANGLE, 0) * CFrame.new(-hingeLocal)
 	end
 
-	local hingeLocal = Vector3.new(-(part.Size.X * 0.5) + (part.Size.Z * 0.5), 0, 0)
+	local hingeLocal = Vector3.new(-(size.X * 0.5) + (size.Z * 0.5), 0, 0)
 	local hingeWorld = closedCFrame * CFrame.new(hingeLocal)
 	return hingeWorld * CFrame.Angles(0, -OPEN_ANGLE, 0) * CFrame.new(-hingeLocal)
 end
@@ -529,19 +680,22 @@ local function applyDoorState(doorRecord, interactionType, suppressSound)
 	if not part or part.Parent == nil then
 		return
 	end
+	local targetInstance = doorRecord.targetInstance or part
 
 	if interactionType == "Open" then
-		part.CFrame = doorRecord.openCFrame
+		applyInstanceTransform(targetInstance, doorRecord.openCFrame)
 		part.CanCollide = false
 		part.CanTouch = false
+		setInstanceCollision(targetInstance, false, false)
 		part:SetAttribute("DoorIsOpen", true)
 		if suppressSound ~= true then
 			playDoorSound(doorRecord.openSound, 1)
 		end
 	elseif interactionType == "Close" or interactionType == "Slam" then
-		part.CFrame = doorRecord.closedCFrame
+		applyInstanceTransform(targetInstance, doorRecord.closedCFrame)
 		part.CanCollide = true
 		part.CanTouch = true
+		setInstanceCollision(targetInstance, true, true)
 		part:SetAttribute("DoorIsOpen", false)
 		if suppressSound ~= true then
 			playDoorSound(doorRecord.closeSound, interactionType == "Slam" and 0.9 or 1)
@@ -645,6 +799,13 @@ local function executeDoorInteraction(doorRecord, interactionType, interactionSo
 	end
 
 	applyDoorState(doorRecord, interactionType)
+	if interactionType == "Open"
+		and doorRecord.part:GetAttribute("PasrahPreparationAdvanceDoor") == true
+		and type(doorRecord.match) == "table"
+		and tostring(doorRecord.match.phase or "") == "PreparationPhase"
+		and type(doorRecord.match.requestAdvancePhase) == "function" then
+		doorRecord.match.requestAdvancePhase(nil, "InvestigationPhase")
+	end
 	local interactionSystem = doorRecord.mapInteractionSystem
 	if interactionSystem then
 		if type(interactionSystem.Service) == "table"
@@ -735,15 +896,18 @@ function DoorRuntime.Attach(match, mapClone, deps)
 		if isDoorPart(descendant) then
 			local doorLabel = resolveDoorLabel(descendant)
 			local prompt = ensurePrompt(descendant, doorLabel)
-			local closedCFrame = descendant.CFrame
+			local targetInstance = resolveDoorVisualTarget(mapClone, descendant)
+			local closedCFrame = getInstanceCFrame(targetInstance) or descendant.CFrame
 			local initialState = readInitialDoorState(descendant)
 			local record = {
 				part = descendant,
+				targetInstance = targetInstance,
 				prompt = prompt,
 				label = doorLabel,
+				match = match,
 				matchId = matchId ~= "" and matchId or nil,
 				closedCFrame = closedCFrame,
-				openCFrame = buildOpenCFrame(descendant, closedCFrame),
+				openCFrame = buildOpenCFrame(targetInstance, closedCFrame, descendant:GetAttribute("PasrahTargetMode")),
 				policy = normalizePolicy(initialState.policy),
 				openSound = ensureDoorSound(descendant, OPEN_SOUND_NAME, descendant:GetAttribute(OPEN_SOUND_ATTR_NAME) or DEFAULT_OPEN_SOUND_ID),
 				closeSound = ensureDoorSound(descendant, CLOSE_SOUND_NAME, descendant:GetAttribute(CLOSE_SOUND_ATTR_NAME) or DEFAULT_CLOSE_SOUND_ID),

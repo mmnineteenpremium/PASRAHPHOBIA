@@ -68,6 +68,8 @@ local function normalizeObjectData(objectData)
 		id = objectId,
 		type = objectType,
 		position = objectData.position,
+		roomId = objectData.roomId,
+		metadata = type(objectData.metadata) == "table" and objectData.metadata or {},
 		interactions = interactions,
 		interactionSet = listToSet(interactions),
 	}, nil
@@ -155,6 +157,17 @@ function Service:GetObject(objectId)
 		return nil
 	end
 	return self:_getRegisteredObjects()[objectId]
+end
+
+function Service:ListObjects()
+	local out = {}
+	for _, objectData in pairs(self:_getRegisteredObjects()) do
+		out[#out + 1] = objectData
+	end
+	table.sort(out, function(a, b)
+		return tostring(a.id) < tostring(b.id)
+	end)
+	return out
 end
 
 function Service:UpdateObjectState(objectId, newState, metadata)

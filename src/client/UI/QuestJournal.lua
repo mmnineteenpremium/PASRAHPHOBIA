@@ -6,6 +6,8 @@ local Workspace = game:GetService("Workspace")
 
 local QUEST_DATA_ATTR = "PasrahQuestData"
 local QUEST_UPDATED_AT_ATTR = "PasrahQuestDataUpdatedAt"
+local MATCH_LIFECYCLE_PHASE_ATTR = "MatchLifecyclePhase"
+local LEGACY_MATCH_PHASE_ATTR = "MatchPhase"
 local JOURNAL_TOGGLE_KEY = Enum.KeyCode.Q
 local UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
 local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
@@ -27,6 +29,16 @@ local TAB_EMPTY_MESSAGES = {
 	STORY = "Story mission belum diaktifkan di runtime branch ini.",
 	DAILY = "Belum ada misi aktif hari ini.",
 	WEEKLY = "Weekly challenge belum diaktifkan di runtime branch ini.",
+}
+local ACTIVE_MATCH_PHASES = {
+	PreparationPhase = true,
+	InvestigationPhase = true,
+	HuntPhase = true,
+	Preparing = true,
+	Briefing = true,
+	InGame = true,
+	Escalation = true,
+	Hunt = true,
 }
 
 local QuestJournal = {}
@@ -144,7 +156,7 @@ function QuestJournal:BuildUI()
 	local openButton = Instance.new("TextButton")
 	openButton.Name = "OpenButton"
 	openButton.AnchorPoint = Vector2.new(1, 0)
-	openButton.Position = UDim2.new(1, -16, 0, 92)
+	openButton.Position = UDim2.new(1, -16, 0, 82)
 	openButton.Size = UDim2.fromOffset(144, 34)
 	openButton.BackgroundColor3 = Color3.fromRGB(35, 46, 68)
 	openButton.BorderSizePixel = 0
@@ -305,6 +317,14 @@ function QuestJournal:BuildUI()
 	self:SetTab("DAILY")
 end
 
+function QuestJournal:_getMatchPhaseToken()
+	local lifecyclePhase = tostring(self.player:GetAttribute(MATCH_LIFECYCLE_PHASE_ATTR) or "")
+	if lifecyclePhase ~= "" then
+		return lifecyclePhase
+	end
+	return tostring(self.player:GetAttribute(LEGACY_MATCH_PHASE_ATTR) or "")
+end
+
 function QuestJournal:ApplyLayout()
 	local touchLayout = isTouchLayout()
 	local viewport = getViewportOverrideSize()
@@ -315,8 +335,8 @@ function QuestJournal:ApplyLayout()
 
 	self._openButton.Text = touchLayout and "MISSION" or "MISSIONS [Q]"
 	self._openButton.TextSize = touchLayout and 13 or 12
-	self._openButton.Size = UDim2.fromOffset(touchLayout and 120 or 144, touchLayout and 38 or 34)
-	self._openButton.Position = UDim2.new(1, -16, 0, compactLayout and 76 or 92)
+	self._openButton.Size = UDim2.fromOffset(touchLayout and 116 or 144, touchLayout and 36 or 34)
+	self._openButton.Position = UDim2.new(1, -14, 0, compactLayout and 72 or 92)
 
 	self._header.TextSize = touchLayout and 18 or 24
 	self._closeButton.Size = UDim2.fromOffset(touchLayout and 34 or 38, touchLayout and 34 or 38)
@@ -331,6 +351,23 @@ function QuestJournal:ApplyLayout()
 	self._tabBar.Position = UDim2.fromOffset(12, touchLayout and 82 or 88)
 	self._content.Position = UDim2.fromOffset(12, touchLayout and 124 or 132)
 	self._content.Size = UDim2.new(1, -24, 1, touchLayout and -128 or -136)
+	self:_syncVisibility()
+end
+
+function QuestJournal:_isActiveMatchPhase()
+	local phase = self:_getMatchPhaseToken()
+	return ACTIVE_MATCH_PHASES[phase] == true
+end
+
+function QuestJournal:_syncVisibility()
+	local activeMatchMobile = isTouchLayout() and self:_isActiveMatchPhase()
+	self._openButton.Visible = true
+	if activeMatchMobile then
+		self._openButton.Text = "MISSION"
+		self._openButton.TextSize = 12
+		self._openButton.Size = UDim2.fromOffset(100, 32)
+		self._openButton.Position = UDim2.new(1, -14, 0, 68)
+	end
 end
 
 function QuestJournal:SetTab(tabName)
@@ -548,6 +585,12 @@ function QuestJournal:Connect()
 	table.insert(self._connections, self.player:GetAttributeChangedSignal(UI_INPUT_PROFILE_OVERRIDE_ATTR):Connect(function()
 		self:ApplyLayout()
 	end))
+
+	for _, attributeName in ipairs({ MATCH_LIFECYCLE_PHASE_ATTR, LEGACY_MATCH_PHASE_ATTR }) do
+		table.insert(self._connections, self.player:GetAttributeChangedSignal(attributeName):Connect(function()
+			self:ApplyLayout()
+		end))
+	end
 
 	local currentCamera = Workspace.CurrentCamera
 	if currentCamera then

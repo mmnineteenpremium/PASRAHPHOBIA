@@ -1,6 +1,10 @@
 local MapRuntimePatches = {}
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local AbandonedPalaceMapScaffold = require(script.Parent.AbandonedPalaceMapScaffold)
+local EmptyBuildingMapScaffold = require(script.Parent.EmptyBuildingMapScaffold)
+local HauntedHouseMapScaffold = require(script.Parent.HauntedHouseMapScaffold)
+local StudioMMNineteenMapScaffold = require(script.Parent.StudioMMNineteenMapScaffold)
 
 local FLOOR_PATCH_ATTR = "SecondFloorRuntimePatched"
 local INTERACTION_PATCH_ATTR = "InteractionPointsRuntimePatched"
@@ -10,6 +14,8 @@ local MATERIAL_PATCH_ATTR = "MapMaterialRuntimePatched"
 local TRAVERSAL_GUIDE_PATCH_ATTR = "TraversalGuideRuntimePatched"
 local LOGIC_VOLUME_PATCH_ATTR = "LogicVolumesRuntimeHidden"
 local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
+local MAINFLOOR_PATCH_ATTR = "RuntimeMainfloorPatched"
+local BOUNDARY_PATCH_ATTR = "RuntimeBoundaryPatched"
 local PREPARATION_STAGING_FOLDER_NAME = "PreparationStagingRuntime"
 local PREPARATION_STAGING_DEBUG_ATTR = "PreparationStagingRuntimeDebug"
 local PREPARATION_LANE_STATE_ATTR = "PreparationEntryLaneState"
@@ -72,14 +78,8 @@ local INTERACTION_DOOR_OVERRIDES = {
 }
 local SAFE_ZONE_POSITION_OVERRIDES = {
 	hauntedhouse = {
-		SafeZone_1 = {
-			roomName = "Room_LivingRoom",
-			offset = Vector3.new(9.5, 3.5, -9),
-		},
-		SafeZone_2 = {
-			roomName = "Room_LivingRoom",
-			offset = Vector3.new(-6, 3.5, 7),
-		},
+		SafeZone_1 = Vector3.new(-30.5, 50.5, -25.0),
+		SafeZone_2 = Vector3.new(-16.5, 50.5, -25.0),
 	},
 	abandonedpalace = {
 		SafeZone_1 = Vector3.new(-63.2, 4, 32.4),
@@ -89,23 +89,49 @@ local SAFE_ZONE_POSITION_OVERRIDES = {
 		SafeZone_2 = Vector3.new(824, 4, -20),
 	},
 	studiommnineteen = {
-		SafeZone_1 = Vector3.new(369.4, 4, 18.2),
+		SafeZone_1 = Vector3.new(-19.0, 10.2, -20.5),
+		SafeZone_2 = Vector3.new(-15.8, 10.2, -22.3),
 	},
+}
+local NO_OUTDOOR_MAINFLOOR_TOKENS = {
+	hauntedhouse = true,
+	studiommnineteen = true,
+	emptybuilding = true,
+}
+local PRIMARY_ENTRY_DOOR_BY_TOKEN = {
+	hauntedhouse = "Door_FrontEntry",
+	studiommnineteen = "Door_FrontEntry",
+	emptybuilding = "Door_Lobby",
+	abandonedpalace = "Door_GrandHall",
 }
 
 local SPAWN_POINT_OVERRIDES = {
 	hauntedhouse = {
 		PlayerSpawn_1 = {
-			position = Vector3.new(1178, 4, 4),
+			position = Vector3.new(-19.2, 50.5, -26.5),
 		},
 		PlayerSpawn_2 = {
-			position = Vector3.new(1174, 4, 8),
+			position = Vector3.new(-22.1, 50.5, -28.2),
 		},
 		PlayerSpawn_3 = {
-			position = Vector3.new(1166, 4, -4),
+			position = Vector3.new(-25.0, 50.5, -28.2),
 		},
 		PlayerSpawn_4 = {
-			position = Vector3.new(1166, 4, -8),
+			position = Vector3.new(-27.9, 50.5, -26.5),
+		},
+	},
+	studiommnineteen = {
+		PlayerSpawn_1 = {
+			position = Vector3.new(-20.8, 10.2, -22.8),
+		},
+		PlayerSpawn_2 = {
+			position = Vector3.new(-18.4, 10.2, -24.1),
+		},
+		PlayerSpawn_3 = {
+			position = Vector3.new(-16.0, 10.2, -25.3),
+		},
+		PlayerSpawn_4 = {
+			position = Vector3.new(-13.6, 10.2, -26.5),
 		},
 	},
 }
@@ -171,8 +197,8 @@ local MAP_MATERIAL_POLISH = {
 
 local PREPARATION_STAGING_PROFILES = {
 	hauntedhouse = {
-		anchorRoomName = "Room_LivingRoom",
-		anchorDoorName = "Door_LivingRoom",
+		anchorRoomName = "Room_Foyer",
+		anchorDoorName = "Door_FrontEntry",
 		platformWidth = 28,
 		platformDepth = 18,
 		stagingDistance = 18,
@@ -284,19 +310,19 @@ local PREPARATION_STAGING_PROFILES = {
 		propVariant = "industrial",
 	},
 	studiommnineteen = {
-		anchorRoomName = "Room_ControlRoom",
-		anchorDoorName = "Door_ControlRoom",
+		anchorRoomName = "Room_LivingRoom",
+		anchorDoorName = "Door_FrontEntry",
 		platformWidth = 26,
 		platformDepth = 16,
 		stagingDistance = 16,
-		siteLabel = "CONTROL ACCESS",
+		siteLabel = "FRONT GATE",
 		siteSubtitle = "Plan • Tools • Entry",
-		entryTitle = "ACCESS POINT",
-		entryReadyBody = "Review board lalu breach dari akses kontrol.",
+		entryTitle = "FRONT ENTRY",
+		entryReadyBody = "Review board lalu breach dari pintu depan.",
 		entryArmedBodyTemplate = "Aktifkan breach untuk sweep awal dengan %s.",
-		entryOpenBody = "Masuk ke area kontrol dan mulai investigasi.",
+		entryOpenBody = "Buka pintu depan lalu mulai investigasi.",
 		propStyle = "facility",
-		propVariant = "control",
+		propVariant = "residential",
 	},
 }
 
@@ -3299,7 +3325,9 @@ local function patchDoorTraversal(mapClone)
 			descendant.CanQuery = true
 			descendant:SetAttribute("DoorLocked", false)
 			descendant:SetAttribute("DoorIsOpen", false)
-			descendant:SetAttribute(DOOR_POLICY_ATTR, DEFAULT_DOOR_POLICY)
+			if type(descendant:GetAttribute(DOOR_POLICY_ATTR)) ~= "string" or descendant:GetAttribute(DOOR_POLICY_ATTR) == "" then
+				descendant:SetAttribute(DOOR_POLICY_ATTR, DEFAULT_DOOR_POLICY)
+			end
 			descendant:SetAttribute(DOOR_OPEN_SOUND_ATTR, DEFAULT_DOOR_OPEN_SOUND_ID)
 			descendant:SetAttribute(DOOR_CLOSE_SOUND_ATTR, DEFAULT_DOOR_CLOSE_SOUND_ID)
 			ensureDoorPathModifier(descendant)
@@ -3992,6 +4020,9 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			end
 		end)
 	end
+	if (token == "hauntedhouse" or token == "studiommnineteen" or token == "emptybuilding" or token == "abandonedpalace") and breachPrompt then
+		breachPrompt.Enabled = false
+	end
 
 	if RunService:IsStudio() then
 		studioManifestPrompt = ensurePrompt(entrySign, "StudioManifestPrompt", "Paksa Manifest", "Studio Ghost Probe")
@@ -4202,6 +4233,304 @@ local function patchMapMaterials(mapId, mapClone)
 	return patchedAny
 end
 
+local function collectMapBounds(mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return nil
+	end
+
+	local minV
+	local maxV
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("BasePart") and descendant.Parent ~= nil then
+			local half = descendant.Size * 0.5
+			local mn = descendant.Position - half
+			local mx = descendant.Position + half
+			if not minV then
+				minV = mn
+				maxV = mx
+			else
+				minV = Vector3.new(
+					math.min(minV.X, mn.X),
+					math.min(minV.Y, mn.Y),
+					math.min(minV.Z, mn.Z)
+				)
+				maxV = Vector3.new(
+					math.max(maxV.X, mx.X),
+					math.max(maxV.Y, mx.Y),
+					math.max(maxV.Z, mx.Z)
+				)
+			end
+		end
+	end
+
+	if not minV or not maxV then
+		return nil
+	end
+
+	return {
+		min = minV,
+		max = maxV,
+	}
+end
+
+local function resolvePrimaryDoorForRuntime(token, mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return nil
+	end
+
+	local doorsFolder = mapClone:FindFirstChild("Doors", true)
+	if not doorsFolder then
+		return nil
+	end
+
+	local explicitName = token and PRIMARY_ENTRY_DOOR_BY_TOKEN[token] or nil
+	if type(explicitName) == "string" and explicitName ~= "" then
+		local door = doorsFolder:FindFirstChild(explicitName)
+		if door and door:IsA("BasePart") then
+			return door
+		end
+	end
+
+	for _, door in ipairs(doorsFolder:GetChildren()) do
+		if door:IsA("BasePart") and door:GetAttribute("PasrahPreparationAdvanceDoor") == true then
+			return door
+		end
+	end
+	for _, door in ipairs(doorsFolder:GetChildren()) do
+		if door:IsA("BasePart") and string.find(string.lower(door.Name), "front", 1, true) then
+			return door
+		end
+	end
+	for _, door in ipairs(doorsFolder:GetChildren()) do
+		if door:IsA("BasePart") and string.find(string.lower(door.Name), "lobby", 1, true) then
+			return door
+		end
+	end
+	return nil
+end
+
+local function patchRuntimeMainfloor(mapId, mapClone)
+	if not mapClone or mapClone:GetAttribute(MAINFLOOR_PATCH_ATTR) == true then
+		return false
+	end
+
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if not token or NO_OUTDOOR_MAINFLOOR_TOKENS[token] ~= true then
+		return false
+	end
+
+	local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
+	if not spawnFolder then
+		return false
+	end
+
+	local spawnPoints = {}
+	for _, candidate in ipairs(spawnFolder:GetChildren()) do
+		if candidate:IsA("BasePart") and string.find(candidate.Name, "PlayerSpawn_", 1, true) then
+			spawnPoints[#spawnPoints + 1] = candidate
+		end
+	end
+	if #spawnPoints == 0 then
+		return false
+	end
+
+	local minX, maxX = math.huge, -math.huge
+	local minZ, maxZ = math.huge, -math.huge
+	local sum = Vector3.zero
+	for _, spawn in ipairs(spawnPoints) do
+		local p = spawn.Position
+		minX = math.min(minX, p.X)
+		maxX = math.max(maxX, p.X)
+		minZ = math.min(minZ, p.Z)
+		maxZ = math.max(maxZ, p.Z)
+		sum += p
+	end
+	local center = sum / #spawnPoints
+	local spawnY = center.Y
+
+	local folder = ensureFolder(mapClone, "RuntimeMainfloor")
+	if not folder then
+		return false
+	end
+
+	local spawnPad = ensurePart(folder, "MainfloorSpawnPad")
+	configurePart(
+		spawnPad,
+		{
+			Anchored = true,
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+			Transparency = 0,
+			CastShadow = true,
+			Material = Enum.Material.Concrete,
+			Color = Color3.fromRGB(82, 84, 92),
+			Size = Vector3.new(
+				math.clamp((maxX - minX) + 18, 26, 120),
+				1,
+				math.clamp((maxZ - minZ) + 18, 24, 120)
+			),
+			CFrame = CFrame.new(center.X, spawnY - 0.6, center.Z),
+		}
+	)
+
+	local primaryDoor = resolvePrimaryDoorForRuntime(token, mapClone)
+	if primaryDoor then
+		local doorPos = primaryDoor.Position
+		local pathVector = Vector3.new(doorPos.X - center.X, 0, doorPos.Z - center.Z)
+		local pathLength = math.max(8, pathVector.Magnitude)
+		local pathDir = pathLength > 0.1 and pathVector.Unit or Vector3.new(0, 0, -1)
+		local laneCenter = Vector3.new(center.X, spawnY - 0.45, center.Z) + (pathDir * (pathLength * 0.5))
+
+		local lane = ensurePart(folder, "MainfloorPrepLane")
+		configurePart(
+			lane,
+			{
+				Anchored = true,
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+				Transparency = 0,
+				CastShadow = true,
+				Material = Enum.Material.Asphalt,
+				Color = Color3.fromRGB(62, 64, 72),
+				Size = Vector3.new(10, 0.8, pathLength + 6),
+				CFrame = CFrame.lookAt(laneCenter, laneCenter + pathDir, Vector3.yAxis),
+			}
+		)
+
+		local right = lane.CFrame.RightVector
+		for index, side in ipairs({ -1, 1 }) do
+			local rail = ensurePart(folder, "MainfloorLaneRail_" .. tostring(index))
+			configurePart(
+				rail,
+				{
+					Anchored = true,
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+					Transparency = 0,
+					CastShadow = true,
+					Material = Enum.Material.Metal,
+					Color = Color3.fromRGB(94, 98, 108),
+					Size = Vector3.new(0.45, 2.4, pathLength + 6),
+					CFrame = lane.CFrame + (right * side * 5.35) + Vector3.new(0, 1.2, 0),
+				}
+			)
+		end
+	end
+
+	mapClone:SetAttribute(MAINFLOOR_PATCH_ATTR, true)
+	return true
+end
+
+local function patchRuntimeBoundary(mapClone)
+	if not mapClone or mapClone:GetAttribute(BOUNDARY_PATCH_ATTR) == true then
+		return false
+	end
+
+	local bounds = collectMapBounds(mapClone)
+	if not bounds then
+		return false
+	end
+
+	local minV = bounds.min
+	local maxV = bounds.max
+	local margin = 26
+	local wallThickness = 6
+	local wallBottom = minV.Y - 4
+	local wallTop = maxV.Y + 28
+	local wallHeight = math.max(36, wallTop - wallBottom)
+	local wallMidY = wallBottom + (wallHeight * 0.5)
+
+	local minX = minV.X - margin
+	local maxX = maxV.X + margin
+	local minZ = minV.Z - margin
+	local maxZ = maxV.Z + margin
+	local spanX = maxX - minX
+	local spanZ = maxZ - minZ
+	local centerX = (minX + maxX) * 0.5
+	local centerZ = (minZ + maxZ) * 0.5
+
+	local folder = ensureFolder(mapClone, "RuntimeBoundary")
+	if not folder then
+		return false
+	end
+
+	local function configureBoundary(part, size, cframe)
+		configurePart(
+			part,
+			{
+				Anchored = true,
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+				Transparency = 1,
+				CastShadow = false,
+				Material = Enum.Material.ForceField,
+				Size = size,
+				CFrame = cframe,
+			}
+		)
+	end
+
+	configureBoundary(
+		ensurePart(folder, "Boundary_North"),
+		Vector3.new(spanX, wallHeight, wallThickness),
+		CFrame.new(centerX, wallMidY, minZ)
+	)
+	configureBoundary(
+		ensurePart(folder, "Boundary_South"),
+		Vector3.new(spanX, wallHeight, wallThickness),
+		CFrame.new(centerX, wallMidY, maxZ)
+	)
+	configureBoundary(
+		ensurePart(folder, "Boundary_West"),
+		Vector3.new(wallThickness, wallHeight, spanZ),
+		CFrame.new(minX, wallMidY, centerZ)
+	)
+	configureBoundary(
+		ensurePart(folder, "Boundary_East"),
+		Vector3.new(wallThickness, wallHeight, spanZ),
+		CFrame.new(maxX, wallMidY, centerZ)
+	)
+
+	mapClone:SetAttribute(BOUNDARY_PATCH_ATTR, true)
+	return true
+end
+
+local function patchHauntedHouseScaffold(mapId, mapClone)
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if token ~= "hauntedhouse" or mapClone == nil then
+		return false
+	end
+	return HauntedHouseMapScaffold.Build(mapClone) == true
+end
+
+local function patchStudioMMNineteenScaffold(mapId, mapClone)
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if token ~= "studiommnineteen" or mapClone == nil then
+		return false
+	end
+	return StudioMMNineteenMapScaffold.Build(mapClone) == true
+end
+
+local function patchAbandonedPalaceScaffold(mapId, mapClone)
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if token ~= "abandonedpalace" or mapClone == nil then
+		return false
+	end
+	return AbandonedPalaceMapScaffold.Build(mapClone) == true
+end
+
+local function patchEmptyBuildingScaffold(mapId, mapClone)
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if token ~= "emptybuilding" or mapClone == nil then
+		return false
+	end
+	return EmptyBuildingMapScaffold.Build(mapClone) == true
+end
+
 function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	local token = resolveMapOverrideToken(mapId, mapClone)
 	if token == nil or mapClone == nil then
@@ -4209,6 +4538,10 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	end
 
 	local didPatch = false
+	didPatch = patchHauntedHouseScaffold(mapId, mapClone) or didPatch
+	didPatch = patchStudioMMNineteenScaffold(mapId, mapClone) or didPatch
+	didPatch = patchAbandonedPalaceScaffold(mapId, mapClone) or didPatch
+	didPatch = patchEmptyBuildingScaffold(mapId, mapClone) or didPatch
 	didPatch = patchSecondFloor(mapClone) or didPatch
 	didPatch = patchLogicVolumes(mapClone) or didPatch
 	didPatch = patchMapMaterials(mapId, mapClone) or didPatch
@@ -4216,6 +4549,8 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
 	didPatch = patchSpawnPoints(mapId, mapClone) or didPatch
+	didPatch = patchRuntimeMainfloor(mapId, mapClone) or didPatch
+	didPatch = patchRuntimeBoundary(mapClone) or didPatch
 	didPatch = patchPreparationStaging(mapId, mapClone, matchContext) or didPatch
 	didPatch = patchTraversalGuides(mapClone) or didPatch
 	return didPatch

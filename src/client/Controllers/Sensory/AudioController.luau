@@ -169,6 +169,9 @@ function AudioController:Init(context)
 	self._resultsBgmTween = nil
 	self._resultsBgmHoldActive = false
 	self._resultsBgmHoldToken = 0
+	self._resultsPanel = nil
+	self._resultsPanelVisibilityConnection = nil
+	self._resultsPanelDiscoveryConnection = nil
 
 	self._heartbeatSound = lookupHeartbeatSound()
 	self._heartbeatSound.Looped = true
@@ -223,6 +226,7 @@ function AudioController:Start()
 			if localPlayer:GetAttribute("InMatch") == true then
 				self:_clearResultsBgmHold()
 			end
+			self:_updateHeartbeat()
 			self:_syncMapReverbFromPlayerState()
 			self:_updatePreparationAmbient()
 			self:_updateLobbyAmbient()
@@ -239,11 +243,17 @@ function AudioController:Start()
 			self:_updateLobbyAmbient()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
+			self:_updateHeartbeat()
 			self:_updatePreparationAmbient()
 			self:_updateLobbyAmbient()
 			self:_updateResultsBgm()
 		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("PasrahResultsSurfaceVisible"):Connect(function()
+			self:_refreshPostResultsAudioState()
+		end))
 	end
+
+	self:_bindResultsPanelVisibilityWatcher()
 
 	self:_syncMapReverbFromPlayerState()
 	self:_updatePreparationAmbient()
@@ -257,6 +267,16 @@ function AudioController:Stop()
 	end
 	table.clear(self._connections)
 	self._connections = {}
+
+	if self._resultsPanelVisibilityConnection then
+		self._resultsPanelVisibilityConnection:Disconnect()
+		self._resultsPanelVisibilityConnection = nil
+	end
+	if self._resultsPanelDiscoveryConnection then
+		self._resultsPanelDiscoveryConnection:Disconnect()
+		self._resultsPanelDiscoveryConnection = nil
+	end
+	self._resultsPanel = nil
 
 	if self._preparationAmbientTween then
 		self._preparationAmbientTween:Cancel()
@@ -386,6 +406,34 @@ function AudioController:_tweenResultsBgm(targetVolume, tweenInfo, stopAfterFade
 	tween:Play()
 end
 
+function AudioController:_stopLobbyAmbientImmediate()
+	if self._lobbyAmbientTween then
+		self._lobbyAmbientTween:Cancel()
+		self._lobbyAmbientTween = nil
+	end
+	self._lobbyAmbientTargetVolume = 0
+	if self._lobbyAmbientSound then
+		self._lobbyAmbientSound.Volume = 0
+		if self._lobbyAmbientSound.IsPlaying then
+			self._lobbyAmbientSound:Stop()
+		end
+	end
+end
+
+function AudioController:_stopResultsBgmImmediate()
+	if self._resultsBgmTween then
+		self._resultsBgmTween:Cancel()
+		self._resultsBgmTween = nil
+	end
+	self._resultsBgmTargetVolume = 0
+	if self._resultsBgmSound then
+		self._resultsBgmSound.Volume = 0
+		if self._resultsBgmSound.IsPlaying then
+			self._resultsBgmSound:Stop()
+		end
+	end
+end
+
 function AudioController:_applyMapReverb(mapName)
 	local desired = MAP_REVERB[mapName] or Enum.ReverbType.Room
 	if SoundService.AmbientReverb ~= desired then
@@ -411,6 +459,61 @@ end
 
 function AudioController:_syncMapReverbFromPlayerState()
 	self:_applyMapReverb(self:_resolveAuthoritativeMapProfile())
+end
+
+function AudioController:_refreshPostResultsAudioState()
+	self:_updateHeartbeat()
+	self:_updatePreparationAmbient()
+	self:_updateLobbyAmbient()
+	self:_updateResultsBgm()
+end
+
+function AudioController:_bindResultsPanelVisibilityWatcher()
+	local localPlayer = self._player or Players.LocalPlayer
+	local playerGui = localPlayer and localPlayer:FindFirstChildOfClass("PlayerGui")
+	if not playerGui then
+		return
+	end
+
+	if self._resultsPanelVisibilityConnection then
+		self._resultsPanelVisibilityConnection:Disconnect()
+		self._resultsPanelVisibilityConnection = nil
+	end
+	if self._resultsPanelDiscoveryConnection then
+		self._resultsPanelDiscoveryConnection:Disconnect()
+		self._resultsPanelDiscoveryConnection = nil
+	end
+
+	local function bindPanel(panel)
+		if panel == self._resultsPanel then
+			return
+		end
+		if self._resultsPanelVisibilityConnection then
+			self._resultsPanelVisibilityConnection:Disconnect()
+			self._resultsPanelVisibilityConnection = nil
+		end
+		self._resultsPanel = panel
+		if panel and panel:IsA("GuiObject") then
+			self._resultsPanelVisibilityConnection = panel:GetPropertyChangedSignal("Visible"):Connect(function()
+				self:_refreshPostResultsAudioState()
+			end)
+		end
+	end
+
+	bindPanel(playerGui:FindFirstChild("ResultsPanel", true))
+	self._resultsPanelDiscoveryConnection = playerGui.DescendantAdded:Connect(function(descendant)
+		if descendant.Name == "ResultsPanel" and descendant:IsA("GuiObject") then
+			bindPanel(descendant)
+			self:_refreshPostResultsAudioState()
+		end
+	end)
+end
+
+function AudioController:_isStableLobbyState()
+	local localPlayer = self._player or Players.LocalPlayer
+	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
+	local resultsSurfaceVisible = self:_isResultsSurfaceVisible()
+	return (not inMatch) and resultsSurfaceVisible ~= true
 end
 
 function AudioController:_clearResultsBgmHold()
@@ -487,6 +590,8 @@ function AudioController:_onMatchEvent(payload)
 		self:_updateHeartbeat()
 		self:_armResultsBgmHold(RESULTS_BGM_PROFILE.HoldSeconds)
 	elseif eventName == "ReturnedToLobby" or eventName == "LobbyEntered" then
+		self._ghostHuntActive = false
+		self._currentSanity = 100
 		self:_clearResultsBgmHold()
 	end
 
@@ -501,6 +606,22 @@ function AudioController:_updateHeartbeat()
 	end
 	local localPlayer = self._player or Players.LocalPlayer
 	if self._heartbeatSound.SoundId == "" then
+		if localPlayer then
+			localPlayer:SetAttribute("PasrahHeartbeatActive", nil)
+			localPlayer:SetAttribute("PasrahHeartbeatSoundId", nil)
+			localPlayer:SetAttribute("PasrahHeartbeatPlaybackSpeed", nil)
+			localPlayer:SetAttribute("PasrahHeartbeatReason", nil)
+		end
+		return
+	end
+
+	if self:_isStableLobbyState() then
+		self._ghostHuntActive = false
+		self._currentSanity = 100
+		if self._heartbeatSound.IsPlaying then
+			self._heartbeatSound:Stop()
+		end
+		self._heartbeatSound:SetAttribute("PasrahHeartbeatReason", nil)
 		if localPlayer then
 			localPlayer:SetAttribute("PasrahHeartbeatActive", nil)
 			localPlayer:SetAttribute("PasrahHeartbeatSoundId", nil)
@@ -588,6 +709,12 @@ end
 
 function AudioController:_isResultsSurfaceVisible()
 	local localPlayer = self._player or Players.LocalPlayer
+	if localPlayer then
+		local attributedVisibility = localPlayer:GetAttribute("PasrahResultsSurfaceVisible")
+		if attributedVisibility ~= nil then
+			return attributedVisibility == true
+		end
+	end
 	local playerGui = localPlayer and localPlayer:FindFirstChildOfClass("PlayerGui")
 	if not playerGui then
 		return false
@@ -606,6 +733,7 @@ function AudioController:_updateLobbyAmbient()
 	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
 	local mapProfile = self:_resolveAuthoritativeMapProfile()
 	local resultsSurfaceVisible = self:_isResultsSurfaceVisible()
+	local suppressImmediately = resultsSurfaceVisible == true or self._resultsBgmHoldActive == true
 	local shouldPlay = (not inMatch)
 		and mapProfile == "LobbySocialHub"
 		and self._resultsBgmHoldActive ~= true
@@ -630,7 +758,9 @@ function AudioController:_updateLobbyAmbient()
 		end
 	else
 		self._lobbyAmbientSound:SetAttribute("PasrahAudioMapProfile", nil)
-		if self._lobbyAmbientSound.IsPlaying or self._lobbyAmbientSound.Volume > 0.001 then
+		if suppressImmediately then
+			self:_stopLobbyAmbientImmediate()
+		elseif self._lobbyAmbientSound.IsPlaying or self._lobbyAmbientSound.Volume > 0.001 then
 			self:_tweenLobbyAmbient(0, LOBBY_AMBIENT_TWEEN_OUT, true)
 		end
 	end
@@ -650,7 +780,15 @@ function AudioController:_updateResultsBgm()
 		return
 	end
 
-	local shouldPlay = self._resultsBgmHoldActive == true or self:_isResultsSurfaceVisible()
+	local resultsSurfaceVisible = self:_isResultsSurfaceVisible()
+	local stableLobbyState = self:_isStableLobbyState()
+	if stableLobbyState and self._resultsBgmHoldActive == true then
+		self._resultsBgmHoldToken += 1
+		self._resultsBgmHoldActive = false
+		self:_updateLobbyAmbient()
+	end
+
+	local shouldPlay = (self._resultsBgmHoldActive == true or resultsSurfaceVisible) and not stableLobbyState
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahResultsBgmActive", shouldPlay and true or nil)
 		localPlayer:SetAttribute("PasrahResultsBgmSoundId", shouldPlay and tostring(self._resultsBgmSound.SoundId or "") or nil)
@@ -666,7 +804,9 @@ function AudioController:_updateResultsBgm()
 			self:_tweenResultsBgm(RESULTS_BGM_PROFILE.Volume, RESULTS_BGM_TWEEN_IN, false)
 		end
 	else
-		if self._resultsBgmSound.IsPlaying or self._resultsBgmSound.Volume > 0.001 then
+		if stableLobbyState then
+			self:_stopResultsBgmImmediate()
+		elseif self._resultsBgmSound.IsPlaying or self._resultsBgmSound.Volume > 0.001 then
 			self:_tweenResultsBgm(0, RESULTS_BGM_TWEEN_OUT, true)
 		end
 	end

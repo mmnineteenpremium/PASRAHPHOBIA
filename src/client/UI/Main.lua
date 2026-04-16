@@ -565,7 +565,15 @@ local PANEL_REVEAL_TWEEN_INFO = TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum
 local UI_SOUND_PATHS = {
 	ButtonClick = { "Assets", "Audio", "UI", "ButtonClick_01" },
 	CountdownTick = { "Assets", "Audio", "UI", "CountdownTick_01" },
+	Error = { "Assets", "Audio", "UI", "Error_01" },
+	MotionTrigger = { "Assets", "Audio", "UI", "MotionTrigger_01" },
+	Notification = { "Assets", "Audio", "UI", "Notification_01" },
+	ObjectiveUpdate = { "Assets", "Audio", "UI", "ObjectiveUpdate_01" },
+	PanelOpen = { "Assets", "Audio", "UI", "PanelOpen_01" },
+	PanelSoftClose = { "Assets", "Audio", "UI", "PanelClose_01" },
+	ThermometerRead = { "Assets", "Audio", "UI", "ThermometerRead_01" },
 	TeleportDrop = { "Assets", "Audio", "UI", "TeleportDrop_01" },
+	WritingScratch = { "Assets", "Audio", "UI", "WritingScratch_01" },
 }
 local UI_SOUND_FALLBACKS = {
 	ButtonClick = {
@@ -586,7 +594,7 @@ local UI_SOUND_FALLBACKS = {
 	},
 	WritingScratch = {
 		SoundId = "rbxassetid://83865030928382",
-		Volume = 0.18,
+		Volume = 0.28,
 	},
 	MotionTrigger = {
 		SoundId = "rbxassetid://97217836947594",
@@ -5867,7 +5875,7 @@ function UISystem:_applyFieldKitToolUpdate(toolType, success, reason, data, even
 				toolState.lastCueSignature = fallbackSignature
 				playRuntimeUISound("WritingScratch", {
 					SingleInstance = true,
-					VolumeScale = 0.96,
+					VolumeScale = 1.06,
 					PlaybackJitter = 0.03,
 				})
 			end
@@ -6093,7 +6101,7 @@ function UISystem:_playFieldKitEvidenceCueIfNeeded(toolType, toolState, success,
 	toolState.lastCueSignature = cueSignature
 	playRuntimeUISound(cueKey, {
 		SingleInstance = true,
-		VolumeScale = 0.96,
+		VolumeScale = cueKey == "WritingScratch" and 1.06 or 0.96,
 		PlaybackJitter = 0.03,
 	})
 	return cueKey
@@ -6345,6 +6353,10 @@ end
 function UISystem:_returnFromResultsToLobby()
 	self._resultsCloseUnlockAt = nil
 	self._roomBrowserSuppressed = false
+	local localPlayer = Players.LocalPlayer
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahResultsSurfaceVisible", false)
+	end
 	self._uiState.MatchUI.visible = false
 	self._uiState.JournalUI.visible = false
 	self._uiState.PASRA_UI.visible = false
@@ -6358,7 +6370,12 @@ end
 
 function UISystem:_syncMatchWindowVisibility()
 	local match = self._uxWidgets and self._uxWidgets.match or nil
+	local localPlayer = Players.LocalPlayer
 	if not match then
+		if localPlayer then
+			localPlayer:SetAttribute("PasrahResultsSurfaceVisible", false)
+			localPlayer:SetAttribute("PasrahMatchWindowVisible", false)
+		end
 		return
 	end
 
@@ -6384,6 +6401,11 @@ function UISystem:_syncMatchWindowVisibility()
 	end
 	if isResultsPhase and match.Layer then
 		match.Layer.Visible = showResults
+	end
+
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahResultsSurfaceVisible", showResults == true)
+		localPlayer:SetAttribute("PasrahMatchWindowVisible", showWindow == true)
 	end
 end
 
@@ -7004,11 +7026,11 @@ function UISystem:_refreshBasicLobbyPanel()
 	local badgeText = "LOBBY"
 	local badgeColor = Color3.fromRGB(54, 116, 82)
 	local glyphText = "LO"
-	local primaryText = "Buka Room Browser, Profile, Shop, Royal Pass, Menu, atau Rank untuk lanjut test E2E."
+	local primaryText = "Tap OPEN ROOM BROWSER, lalu BUAT ROOM, lalu START dari panel room untuk mulai investigasi."
 	local selectedMode = tostring(state.selectedMode or "Classic")
 	local selectedMap = tostring(state.selectedMap or MAPS[1] or "HauntedHouse")
 	local secondaryText = string.format("Mode %s | Map %s | %d room aktif", selectedMode, selectedMap, #rooms)
-	local hintText = "Shortcut: tekan M untuk Room Browser dan R untuk Royal Pass."
+	local hintText = "Alur test: OPEN ROOM BROWSER -> BUAT ROOM -> START -> masuk map -> pakai Field Kit untuk evidence."
 	local zoneFocus = self._lobbyZoneFocus
 	local zoneFocusFallback = (not currentRoom and not state.lastError) and getNearestLobbyZoneInfo() or nil
 	if type(zoneFocus) ~= "table" or tostring(zoneFocus.badge or "") == "" then
@@ -10834,64 +10856,103 @@ function UISystem:_applyDeviceSizing()
 		end
 	end
 	if lobby and lobby.BasicOpenRoomBrowserButton and lobby.BasicPrimaryLabel then
-		local lobbyWidth = (profile.isMobile or viewportSize.X <= 1280)
-			and math.min(viewportSize.X - (profile.isMobile and 12 or 28), profile.isMobile and 408 or 396)
+		local mobileLikeLobby = profile.isMobile
+			or UserInputService.TouchEnabled == true
+			or (viewportSize.X <= 900 and viewportSize.Y <= 430)
+		local compactLandscapeLobby = mobileLikeLobby and viewportSize.X > viewportSize.Y and viewportSize.Y <= 420
+		local lobbyWidth = (mobileLikeLobby or viewportSize.X <= 1280)
+			and math.min(viewportSize.X - (mobileLikeLobby and 16 or 28), compactLandscapeLobby and 336 or (mobileLikeLobby and 408 or 396))
 			or 340
-		local lobbyHeight = profile.isMobile and 424 or ((viewportSize.X <= 1280) and 384 or 368)
-		local panelWidth = math.max(profile.isMobile and 348 or 340, math.floor(lobbyWidth))
-		local panelHeight = math.max(profile.isMobile and 404 or 368, math.floor(lobbyHeight))
+		local lobbyHeight = compactLandscapeLobby and math.min(viewportSize.Y - (topLeftInset.Y + 20), 352)
+			or (mobileLikeLobby and 424 or ((viewportSize.X <= 1280) and 384 or 368))
+		local panelWidth = math.max(compactLandscapeLobby and 320 or (mobileLikeLobby and 348 or 340), math.floor(lobbyWidth))
+		local panelHeight = math.max(compactLandscapeLobby and 332 or (mobileLikeLobby and 404 or 368), math.floor(lobbyHeight))
 		if lobby.BasicPanel then
 			lobby.BasicPanel.Position = UDim2.fromOffset(12 + topLeftInset.X, 12 + topLeftInset.Y)
 			lobby.BasicPanel.Size = UDim2.fromOffset(panelWidth, panelHeight)
 		end
 		if lobby.ToggleButton then
-			lobby.ToggleButton.Position = UDim2.fromOffset(12 + topLeftInset.X + panelWidth + 8, 120 + topLeftInset.Y)
+			lobby.ToggleButton.Position = UDim2.fromOffset(12 + topLeftInset.X + panelWidth + 8, (compactLandscapeLobby and 108 or 120) + topLeftInset.Y)
+			lobby.ToggleButton.Size = UDim2.fromOffset(compactLandscapeLobby and 26 or 28, compactLandscapeLobby and 68 or 78)
 		end
 		if lobby.BasicHeaderCard then
-			lobby.BasicHeaderCard.Size = UDim2.new(1, -24, 0, profile.isMobile and 120 or 112)
+			lobby.BasicHeaderCard.Position = UDim2.fromOffset(12, compactLandscapeLobby and 46 or 54)
+			lobby.BasicHeaderCard.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 100 or (mobileLikeLobby and 120 or 112))
 		end
 		local halfButtonWidth = math.floor((panelWidth - 36) * 0.5)
 		local rightButtonX = 12 + halfButtonWidth + 12
-		lobby.BasicOpenRoomBrowserButton.Size = UDim2.new(1, -24, 0, profile.isMobile and 50 or 42)
+		lobby.BasicOpenRoomBrowserButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 156 or 174)
+		lobby.BasicOpenRoomBrowserButton.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 44 or (mobileLikeLobby and 50 or 42))
 		if lobby.BasicProfileButton then
-			lobby.BasicProfileButton.Position = UDim2.fromOffset(12, profile.isMobile and 222 or 214)
-			lobby.BasicProfileButton.Size = UDim2.fromOffset(halfButtonWidth, profile.isMobile and 40 or 36)
+			lobby.BasicProfileButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 208 or (mobileLikeLobby and 222 or 214))
+			lobby.BasicProfileButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
 		end
 		if lobby.BasicShopButton then
-			lobby.BasicShopButton.Position = UDim2.fromOffset(rightButtonX, profile.isMobile and 222 or 214)
-			lobby.BasicShopButton.Size = UDim2.fromOffset(halfButtonWidth, profile.isMobile and 40 or 36)
+			lobby.BasicShopButton.Position = UDim2.fromOffset(rightButtonX, compactLandscapeLobby and 208 or (mobileLikeLobby and 222 or 214))
+			lobby.BasicShopButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
 		end
 		if lobby.BasicRoyalPassButton then
-			lobby.BasicRoyalPassButton.Position = UDim2.fromOffset(12, profile.isMobile and 272 or 262)
-			lobby.BasicRoyalPassButton.Size = UDim2.new(1, -24, 0, profile.isMobile and 40 or 36)
+			lobby.BasicRoyalPassButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 250 or (mobileLikeLobby and 272 or 262))
+			lobby.BasicRoyalPassButton.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
 		end
 		if lobby.BasicMenuButton then
-			lobby.BasicMenuButton.Position = UDim2.fromOffset(12, profile.isMobile and 320 or 304)
-			lobby.BasicMenuButton.Size = UDim2.fromOffset(halfButtonWidth, profile.isMobile and 40 or 36)
+			lobby.BasicMenuButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 292 or (mobileLikeLobby and 320 or 304))
+			lobby.BasicMenuButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
 		end
 		if lobby.BasicRankButton then
-			lobby.BasicRankButton.Position = UDim2.fromOffset(rightButtonX, profile.isMobile and 320 or 304)
-			lobby.BasicRankButton.Size = UDim2.fromOffset(halfButtonWidth, profile.isMobile and 40 or 36)
+			lobby.BasicRankButton.Position = UDim2.fromOffset(rightButtonX, compactLandscapeLobby and 292 or (mobileLikeLobby and 320 or 304))
+			lobby.BasicRankButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
 		end
 		if lobby.BasicHintLabel then
-			lobby.BasicHintLabel.Position = UDim2.fromOffset(12, profile.isMobile and 370 or 348)
-			lobby.BasicHintLabel.Size = UDim2.new(1, -24, 0, profile.isMobile and 28 or 22)
+			lobby.BasicHintLabel.Position = UDim2.fromOffset(12, compactLandscapeLobby and 332 or (mobileLikeLobby and 370 or 348))
+			lobby.BasicHintLabel.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 16 or (mobileLikeLobby and 28 or 22))
 		end
-		lobby.BasicOpenRoomBrowserButton.TextSize = profile.isMobile and math.max(15, profile:GetTextSize() - 1) or math.max(14, profile:GetTextSize() - 2)
+		if compactLandscapeLobby then
+			if lobby.BasicLobbyGlyph then
+				lobby.BasicLobbyGlyph.Position = UDim2.new(1, -12, 0, 6)
+				lobby.BasicLobbyGlyph.Size = UDim2.fromOffset(76, 56)
+				lobby.BasicLobbyGlyph.TextSize = 40
+			end
+			if lobby.BasicStatusBadge then
+				lobby.BasicStatusBadge.Position = UDim2.fromOffset(12, 8)
+				lobby.BasicStatusBadge.Size = UDim2.fromOffset(102, 22)
+			end
+			if lobby.BasicPrimaryLabel then
+				lobby.BasicPrimaryLabel.Position = UDim2.fromOffset(12, 34)
+				lobby.BasicPrimaryLabel.Size = UDim2.new(1, -100, 0, 28)
+			end
+			if lobby.BasicSecondaryLabel then
+				lobby.BasicSecondaryLabel.Position = UDim2.fromOffset(12, 60)
+				lobby.BasicSecondaryLabel.Size = UDim2.new(1, -100, 0, 18)
+			end
+			if lobby.BasicModePill then
+				lobby.BasicModePill.Position = UDim2.fromOffset(12, 78)
+				lobby.BasicModePill.Size = UDim2.fromOffset(66, 16)
+			end
+			if lobby.BasicMapPill then
+				lobby.BasicMapPill.Position = UDim2.fromOffset(84, 78)
+				lobby.BasicMapPill.Size = UDim2.fromOffset(112, 16)
+			end
+			if lobby.BasicRoomPill then
+				lobby.BasicRoomPill.Position = UDim2.fromOffset(202, 78)
+				lobby.BasicRoomPill.Size = UDim2.fromOffset(96, 16)
+			end
+		end
+		lobby.BasicOpenRoomBrowserButton.TextSize = mobileLikeLobby and math.max(15, profile:GetTextSize() - 1) or math.max(14, profile:GetTextSize() - 2)
 		if lobby.BasicProfileButton then
-			lobby.BasicProfileButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicProfileButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicShopButton then
-			lobby.BasicShopButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicShopButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicRoyalPassButton then
-			lobby.BasicRoyalPassButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicRoyalPassButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicMenuButton then
-			lobby.BasicMenuButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicMenuButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicRankButton then
-			lobby.BasicRankButton.TextSize = profile.isMobile and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+			lobby.BasicRankButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicPrimaryLabel then
 			lobby.BasicPrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 2)
@@ -12292,6 +12353,12 @@ function UISystem:_bindInputProfileUpdates()
 	self._deviceProfile:Refresh(UserInputService:GetLastInputType())
 	self:_applyGraphicsMode(self._graphicsModeSource ~= "manual")
 	self:_applyDeviceSizing()
+	task.defer(function()
+		self:_applyDeviceSizing()
+	end)
+	task.delay(0.2, function()
+		self:_applyDeviceSizing()
+	end)
 
 	table.insert(self._uxConnections, UserInputService.LastInputTypeChanged:Connect(function(lastInputType)
 		self._deviceProfile:Refresh(lastInputType)
@@ -12328,6 +12395,22 @@ function UISystem:_bindInputProfileUpdates()
 
 	table.insert(self._uxConnections, ReplicatedStorage:GetAttributeChangedSignal(SHOP_SHOW_DISABLED_DEBUG_ATTR):Connect(function()
 		self:_reloadShopCatalog()
+	end))
+
+	local currentCamera = Workspace.CurrentCamera
+	if currentCamera then
+		table.insert(self._uxConnections, currentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+			self:_applyDeviceSizing()
+		end))
+	end
+	table.insert(self._uxConnections, Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+		local nextCamera = Workspace.CurrentCamera
+		if nextCamera then
+			table.insert(self._uxConnections, nextCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+				self:_applyDeviceSizing()
+			end))
+		end
+		self:_applyDeviceSizing()
 	end))
 end
 
@@ -12997,6 +13080,12 @@ function UISystem:_clearMatchUX()
 	local match = self._uxWidgets.match
 	if not match then
 		return
+	end
+
+	local localPlayer = Players.LocalPlayer
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahResultsSurfaceVisible", false)
+		localPlayer:SetAttribute("PasrahMatchWindowVisible", false)
 	end
 
 	if match.PulseConnection then

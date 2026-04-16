@@ -103,7 +103,7 @@ local DEFAULT_MODE_CONFIG = {
 }
 
 local DEFAULT_PHASE_DURATIONS = {
-	PreparationPhase = 30,
+	PreparationPhase = -1,
 	InvestigationPhase = 480,
 	HuntPhase = 60,
 	EndgamePhase = 30,

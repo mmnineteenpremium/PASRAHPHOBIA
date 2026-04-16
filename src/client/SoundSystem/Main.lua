@@ -373,8 +373,13 @@ local function resolveEnvironmentalTemplate(root, payload)
 		return resolveFolderTemplate(root, "Footsteps", "Woodstep_01")
 			or resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
 	end
+	if string.find(cueToken, "light", 1, true) or string.find(cueToken, "flicker", 1, true) then
+		return resolveFolderTemplate(root, "Environment", "LightFlicker_01")
+			or resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
+	end
 	if string.find(cueToken, "object", 1, true) or string.find(cueToken, "throw", 1, true) then
-		return resolveFolderTemplate(root, "Footsteps", "ConcreteStep_01")
+		return resolveFolderTemplate(root, "Environment", "ObjectThrow_01")
+			or resolveFolderTemplate(root, "Footsteps", "ConcreteStep_01")
 			or resolveFolderTemplate(root, "Environment", "EnvironmentalCreak_01")
 	end
 	if string.find(cueToken, "door", 1, true) or string.find(cueToken, "slam", 1, true) then

@@ -102,7 +102,13 @@ function MapEventSystem:Stop()
 	self.Service:Stop()
 end
 
-function MapEventSystem:TriggerEvent(eventData)
+function MapEventSystem:TriggerEvent(eventData, legacyEventType)
+	if type(eventData) ~= "table" then
+		eventData = {
+			matchId = eventData,
+			eventType = legacyEventType,
+		}
+	end
 	return self.Service:TriggerEvent(eventData)
 end
 

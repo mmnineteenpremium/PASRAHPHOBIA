@@ -65,6 +65,8 @@ return {
         "Doors",
         "Lights",
         "Props",
+        "Electronics",
+        "Windows",
         "InteractionPoints",
         "SafeZones",
     },

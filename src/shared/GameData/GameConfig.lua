@@ -1,7 +1,7 @@
 return {
     matchTimers = {
         lobbyCountdownSeconds = 45,
-        preparationSeconds = 90,
+        preparationSeconds = 0,
         investigationSeconds = 720,
         extractionSeconds = 90,
         resultsSeconds = 20,

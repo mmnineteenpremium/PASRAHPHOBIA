@@ -6,6 +6,42 @@ args = ["/c", "%LOCALAPPDATA%\\Roblox\\mcp.bat"]
 startup_timeout_sec = 20
 tool_timeout_sec = 180
 
+[mcp_servers.Roblox_Studio.tools.list_roblox_studios]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.set_active_studio]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.get_console_output]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.execute_luau]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.screen_capture]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.start_stop_play]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.user_mouse_input]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.script_grep]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.script_read]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.inspect_instance]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.search_game_tree]
+approval_mode = "approve"
+
+[mcp_servers.Roblox_Studio.tools.script_search]
+approval_mode = "approve"
+
 [mcp_servers.mobile-mcp]
 command = "C:\\Program Files\\nodejs\\node.exe"
 args = ["C:\\Users\\User\\.codex\\memories\\mobile-mcp-local\\lib\\index.js"]

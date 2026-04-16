@@ -10,12 +10,24 @@ local QUEST_LAST_COMPLETED_ID_ATTR = "PasrahQuestLastCompletedId"
 local QUEST_LAST_COMPLETED_TITLE_ATTR = "PasrahQuestLastCompletedTitle"
 local QUEST_LAST_COMPLETED_XP_ATTR = "PasrahQuestLastCompletedXP"
 local QUEST_LAST_COMPLETED_AT_ATTR = "PasrahQuestLastCompletedAt"
+local MATCH_LIFECYCLE_PHASE_ATTR = "MatchLifecyclePhase"
+local LEGACY_MATCH_PHASE_ATTR = "MatchPhase"
 local UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
 local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
 local UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
 local UI_VIEWPORT_OVERRIDE_Y_ATTR = "PasrahUIViewportOverrideY"
 
 local MAX_VISIBLE = 3
+local ACTIVE_MATCH_PHASES = {
+	PreparationPhase = true,
+	InvestigationPhase = true,
+	HuntPhase = true,
+	Preparing = true,
+	Briefing = true,
+	InGame = true,
+	Escalation = true,
+	Hunt = true,
+}
 
 local QuestTracker = {}
 QuestTracker.__index = QuestTracker
@@ -91,6 +103,8 @@ function QuestTracker.new(playerGui)
 	self.player = Players.LocalPlayer
 	self._connections = {}
 	self._lastCompletedAt = tonumber(self.player:GetAttribute(QUEST_LAST_COMPLETED_AT_ATTR)) or 0
+	self._collapsed = isTouchLayout()
+	self._manualExpandedDuringMatch = false
 	self:BuildUI()
 	self:Connect()
 	self:RefreshFromAttributes()
@@ -109,7 +123,7 @@ function QuestTracker:BuildUI()
 	container.Name = "QuestContainer"
 	container.AnchorPoint = Vector2.new(1, 1)
 	container.Position = UDim2.new(1, -18, 1, -18)
-	container.Size = UDim2.fromOffset(isTouchLayout() and 238 or 280, isTouchLayout() and 214 or 228)
+	container.Size = UDim2.fromOffset(isTouchLayout() and 232 or 280, isTouchLayout() and 192 or 228)
 	container.BackgroundTransparency = 1
 	container.Parent = screenGui
 
@@ -125,7 +139,7 @@ function QuestTracker:BuildUI()
 
 	local header = Instance.new("TextLabel")
 	header.Name = "Header"
-	header.Size = UDim2.new(1, 0, 0, 22)
+	header.Size = UDim2.new(1, -42, 0, 22)
 	header.LayoutOrder = 0
 	header.BackgroundTransparency = 1
 	header.Font = Enum.Font.GothamBold
@@ -135,11 +149,64 @@ function QuestTracker:BuildUI()
 	header.TextXAlignment = Enum.TextXAlignment.Left
 	header.Parent = container
 
+	local collapseButton = Instance.new("TextButton")
+	collapseButton.Name = "CollapseButton"
+	collapseButton.AnchorPoint = Vector2.new(1, 0)
+	collapseButton.Position = UDim2.new(1, 0, 0, 0)
+	collapseButton.Size = UDim2.fromOffset(34, 22)
+	collapseButton.BackgroundColor3 = Color3.fromRGB(32, 38, 54)
+	collapseButton.BorderSizePixel = 0
+	collapseButton.Font = Enum.Font.GothamBold
+	collapseButton.Text = "X"
+	collapseButton.TextColor3 = Color3.fromRGB(235, 238, 246)
+	collapseButton.TextSize = 11
+	collapseButton.Parent = container
+
+	local collapseCorner = Instance.new("UICorner")
+	collapseCorner.CornerRadius = UDim.new(0, 6)
+	collapseCorner.Parent = collapseButton
+
+	local reopenButton = Instance.new("TextButton")
+	reopenButton.Name = "ReopenButton"
+	reopenButton.AnchorPoint = Vector2.new(1, 1)
+	reopenButton.Position = UDim2.new(1, -12, 1, -12)
+	reopenButton.Size = UDim2.fromOffset(112, 34)
+	reopenButton.BackgroundColor3 = Color3.fromRGB(28, 34, 50)
+	reopenButton.BorderSizePixel = 0
+	reopenButton.Font = Enum.Font.GothamBold
+	reopenButton.Text = "TRACKER"
+	reopenButton.TextColor3 = Color3.fromRGB(255, 210, 92)
+	reopenButton.TextSize = 12
+	reopenButton.Visible = false
+	reopenButton.Parent = screenGui
+
+	local reopenCorner = Instance.new("UICorner")
+	reopenCorner.CornerRadius = UDim.new(0, 8)
+	reopenCorner.Parent = reopenButton
+
+	collapseButton.MouseButton1Click:Connect(function()
+		self:SetCollapsed(true, false)
+	end)
+
+	reopenButton.MouseButton1Click:Connect(function()
+		self:SetCollapsed(false, true)
+	end)
+
 	self._screenGui = screenGui
 	self._container = container
 	self._sizeConstraint = sizeConstraint
 	self._header = header
+	self._collapseButton = collapseButton
+	self._reopenButton = reopenButton
 	self:ApplyLayout()
+end
+
+function QuestTracker:_getMatchPhaseToken()
+	local lifecyclePhase = tostring(self.player:GetAttribute(MATCH_LIFECYCLE_PHASE_ATTR) or "")
+	if lifecyclePhase ~= "" then
+		return lifecyclePhase
+	end
+	return tostring(self.player:GetAttribute(LEGACY_MATCH_PHASE_ATTR) or "")
 end
 
 function QuestTracker:ApplyLayout()
@@ -150,14 +217,50 @@ function QuestTracker:ApplyLayout()
 		or viewport.X <= 900
 		or viewport.Y <= 520
 
-	self._container.Position = UDim2.new(1, compactLayout and -12 or -18, 1, compactLayout and -12 or -18)
+	self._container.Position = UDim2.new(1, compactLayout and -12 or -18, 1, touchLayout and -16 or (compactLayout and -12 or -18))
 	self._container.Size = UDim2.fromOffset(
-		touchLayout and math.min(248, math.max(214, viewport.X - 28)) or 280,
-		touchLayout and (compactLayout and 198 or 214) or 228
+		touchLayout and math.min(232, math.max(210, viewport.X - 32)) or 280,
+		touchLayout and (compactLayout and 182 or 194) or 228
 	)
-	self._sizeConstraint.MinSize = Vector2.new(210, touchLayout and 164 or 180)
-	self._sizeConstraint.MaxSize = Vector2.new(touchLayout and 280 or 300, touchLayout and 230 or 260)
+	self._sizeConstraint.MinSize = Vector2.new(204, touchLayout and 156 or 180)
+	self._sizeConstraint.MaxSize = Vector2.new(touchLayout and 248 or 300, touchLayout and 206 or 260)
 	self._header.TextSize = touchLayout and 12 or 13
+	self._reopenButton.Position = UDim2.new(1, compactLayout and -12 or -18, 1, touchLayout and -16 or (compactLayout and -12 or -18))
+	self._reopenButton.Size = UDim2.fromOffset(touchLayout and 96 or 116, touchLayout and 32 or 36)
+	self:_syncVisibility()
+end
+
+function QuestTracker:_isActiveMatchPhase()
+	local phase = self:_getMatchPhaseToken()
+	return ACTIVE_MATCH_PHASES[phase] == true
+end
+
+function QuestTracker:SetCollapsed(collapsed, markManualOpen)
+	self._collapsed = collapsed == true
+	if markManualOpen == true then
+		self._manualExpandedDuringMatch = true
+	elseif self._collapsed then
+		self._manualExpandedDuringMatch = false
+	end
+	self:_syncVisibility()
+end
+
+function QuestTracker:_syncVisibility()
+	local touchLayout = isTouchLayout()
+	local activeMatchMobile = touchLayout and self:_isActiveMatchPhase()
+	if touchLayout then
+		if activeMatchMobile and self._manualExpandedDuringMatch ~= true then
+			self._collapsed = true
+		elseif not activeMatchMobile then
+			self._collapsed = true
+			self._manualExpandedDuringMatch = false
+		end
+	elseif not activeMatchMobile then
+		self._manualExpandedDuringMatch = false
+	end
+
+	self._container.Visible = not self._collapsed
+	self._reopenButton.Visible = self._collapsed and (not touchLayout or activeMatchMobile)
 end
 
 function QuestTracker:_clearCards()
@@ -361,6 +464,12 @@ function QuestTracker:Connect()
 	table.insert(self._connections, self.player:GetAttributeChangedSignal(UI_INPUT_PROFILE_OVERRIDE_ATTR):Connect(function()
 		self:ApplyLayout()
 	end))
+
+	for _, attributeName in ipairs({ MATCH_LIFECYCLE_PHASE_ATTR, LEGACY_MATCH_PHASE_ATTR }) do
+		table.insert(self._connections, self.player:GetAttributeChangedSignal(attributeName):Connect(function()
+			self:ApplyLayout()
+		end))
+	end
 
 	local currentCamera = Workspace.CurrentCamera
 	if currentCamera then

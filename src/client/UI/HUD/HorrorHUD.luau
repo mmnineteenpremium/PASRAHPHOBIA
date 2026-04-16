@@ -8,6 +8,9 @@ local HorrorHUD = {}
 HorrorHUD.__index = HorrorHUD
 
 local ACTIVE_MATCH_PHASES = {
+	PreparationPhase = true,
+	InvestigationPhase = true,
+	HuntPhase = true,
 	InGame = true,
 	Escalation = true,
 	Hunt = true,
@@ -31,6 +34,10 @@ end
 local function isActiveMatchPhase(player)
 	if not player then
 		return false
+	end
+	local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+	if lifecyclePhase ~= "" then
+		return ACTIVE_MATCH_PHASES[lifecyclePhase] == true
 	end
 	return ACTIVE_MATCH_PHASES[tostring(player:GetAttribute("MatchPhase") or "")] == true
 end
@@ -152,6 +159,9 @@ function HorrorHUD:Start()
 		self:_syncHudPresence()
 	end))
 	table.insert(self._connections, self._player:GetAttributeChangedSignal("MatchPhase"):Connect(function()
+		self:_syncHudPresence()
+	end))
+	table.insert(self._connections, self._player:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
 		self:_syncHudPresence()
 	end))
 

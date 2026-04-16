@@ -110,6 +110,10 @@ function MapInteractionSystem:GetObject(objectId)
 	return self.Service:GetObject(objectId)
 end
 
+function MapInteractionSystem:ListObjects()
+	return self.Service:ListObjects()
+end
+
 function MapInteractionSystem:ExecuteInteraction(objectId, interactionType)
 	return self.Service:ExecuteInteraction(objectId, interactionType, {
 		source = "MapInteractionSystem",

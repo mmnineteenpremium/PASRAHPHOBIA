@@ -2,6 +2,7 @@ local MatchTeleport = {}
 MatchTeleport.__index = MatchTeleport
 
 local DoorRuntime = require(script.Parent.DoorRuntime)
+local EnvironmentalObjectRuntime = require(script.Parent.EnvironmentalObjectRuntime)
 local MapRuntimePatches = require(script.Parent.MapRuntimePatches)
 
 local Workspace = game:GetService("Workspace")
@@ -812,6 +813,7 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 			warn("[MatchTeleport] Unable to apply map offset (no pivotable part):", mapClone:GetFullName())
 		end
 		DoorRuntime.Attach(match, mapClone, self._deps)
+		EnvironmentalObjectRuntime.Attach(match, mapClone, self._deps)
 
 		local teleportTrace = {
 			string.format("match=%s", tostring(match and (match.matchId or match.id) or "nil")),
