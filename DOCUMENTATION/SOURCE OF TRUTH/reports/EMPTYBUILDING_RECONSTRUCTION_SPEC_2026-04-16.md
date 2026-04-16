@@ -124,6 +124,25 @@ Improvisation scope is constrained to physical readability and traversal only; n
 - Trigger phase sudah dipindah ke `Door_Lobby`.
 - Structural decor untuk akses lantai 2 dan density ruangan sudah ditambahkan via scaffold.
 
+## Owner-Approved Density + Wiring Syncback (2026-04-16)
+
+- Interior density pass aktif pada source-of-truth runtime map:
+  - `DecorFill`
+  - `Partitions`
+  - `AddedDoors`
+  - `LiftLadder` (ladder-only, lift dekoratif dihapus)
+  - `DecorPlus`
+  - `DecorFloor2Plus`
+  - `DecorBathroomPlus`
+- Event-wiring no-missing-target dikunci:
+  - `Lights`: semua proxy wired ke fallback generated `ceiling_light`
+  - `Props`: semua proxy wired ke fallback generated `prop_box/prop_crate`
+  - `Electronics`: semua proxy wired ke fallback generated `tv/radio`
+  - `Windows`: semua proxy wired ke target fisik `WindowEventTargets` (`12`)
+- Runtime parity source-of-truth telah disinkronkan:
+  - `Workspace.EmptyBuilding_Review` -> `ServerStorage.Maps.EmptyBuilding.EmptyBuilding`
+  - `Workspace.EmptyBuilding_Review` -> `ReplicatedStorage.Maps.EmptyBuilding.EmptyBuilding`
+
 ## Change Log
 
 - `2026-04-16` replaced legacy visual source with imported `EmptyBuilding.rbxm` in `ReplicatedStorage` and `ServerStorage`
@@ -132,3 +151,5 @@ Improvisation scope is constrained to physical readability and traversal only; n
 - `2026-04-16` preserved canonical room topology to `14` rooms across `2` floors (`9 + 5`)
 - `2026-04-16` disabled timer-based preparation countdown and moved investigation start to `Door_Lobby`
 - `2026-04-16` added approved structural improv (`stairs/ladder/filler props`) via `RuntimeDecor` to ensure floor-2 access and sensible visual occupancy
+- `2026-04-16` finalized owner-approved interior density set (`DecorFill`, `Partitions`, `AddedDoors`, `LiftLadder`, `DecorPlus`, `DecorFloor2Plus`, `DecorBathroomPlus`) on runtime source map
+- `2026-04-16` finalized no-missing-target environmental wiring (`Lights/Props/Electronics/Windows`) and synced parity to both storage roots

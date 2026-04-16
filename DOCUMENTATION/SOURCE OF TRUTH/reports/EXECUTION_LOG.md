@@ -15720,3 +15720,41 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `Props=14`
     - `Electronics=6`
     - `Windows=12`
+
+## 2026-04-16 19:57:44 +07:00 - EmptyBuilding Interior Density + Event Wiring + Syncback
+- Status: PASS FOR SOURCE-OF-TRUTH SYNCBACK.
+- Trigger:
+  - owner approved bathroom pass and requested wiring kebutuhan, syncback, commit, and append report.
+- Action taken:
+  - added approved interior density layers on active review map:
+    - `DecorFill` (room baseline), `Partitions`, `AddedDoors`, `LiftLadder` (ladder-only), `DecorPlus`, `DecorFloor2Plus`, `DecorBathroomPlus`.
+  - wired environmental runtime proxies so event targets always resolve:
+    - `Lights`: `14/14` stamped with `PasrahGeneratedKind=ceiling_light`
+    - `Props`: `14/14` stamped with `PasrahGeneratedKind=prop_box/prop_crate`
+    - `Electronics`: `6/6` stamped with `PasrahGeneratedKind=tv/radio`
+    - `Windows`: `12/12` stamped to explicit physical targets under `WindowEventTargets` (`12` panes)
+  - maintained existing core gameplay runtime folders and counts:
+    - `Rooms=14`, `Doors=14`, `GhostSpawns=5`, `EvidenceSpawnNodes=9`, `InteractionPoints=14`, `SafeZones=2`, `SpawnPoints=4`, `Lights=14`, `Props=14`, `Electronics=6`, `Windows=12`
+  - re-synced approved review state to canonical runtime roots:
+    - `ServerStorage.Maps.EmptyBuilding.EmptyBuilding`
+    - `ReplicatedStorage.Maps.EmptyBuilding.EmptyBuilding`
+  - generated pre-sync backups in both roots:
+    - `EmptyBuilding_PRESYNC_FROM_REVIEW_<timestamp>`
+- Verification:
+  - wiring audit result:
+    - `Lights noTarget=0/14`
+    - `Props noTarget=0/14`
+    - `Electronics noTarget=0/6`
+    - `Windows noTarget=0/12`
+    - `Doors attrMissing=0/14`
+    - `GhostSpawns offRoom=0/5`
+    - `EvidenceSpawnNodes offRoom=0/9`
+  - parity check review->storage passed (`PARITY=true`) including extra decor folders:
+    - `DecorFill=14`
+    - `Partitions=10`
+    - `AddedDoors=8`
+    - `LiftLadder=2`
+    - `DecorPlus=14`
+    - `DecorFloor2Plus=5`
+    - `DecorBathroomPlus=2`
+    - `WindowEventTargets=12`
