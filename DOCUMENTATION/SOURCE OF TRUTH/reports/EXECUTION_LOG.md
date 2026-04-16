@@ -15442,3 +15442,171 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Reports added:
   - `DOCUMENTATION/SOURCE OF TRUTH/reports/NEW_PLAYER_SINGLEPLAYER_TUTORIAL_2026-04-16.md`
   - `DOCUMENTATION/SOURCE OF TRUTH/reports/FINAL_SOURCE_OF_TRUTH_RUNTIME_SMOKE_2026-04-16.md` updated with extended single-player findings
+
+## 2026-04-16 06:21:59 +07:00 - HauntedHouse Canonical Documentation Sync
+- Status: PASS FOR DOCUMENTATION ALIGNMENT.
+- Trigger:
+  - owner requested canonical documentation, doc index, and map specification to be updated before the next `HauntedHouse` task.
+- Action taken:
+  - updated `DOCUMENTATION/SOURCE OF TRUTH/CANONICAL_SPECIFICATIONS_v2.md`
+  - updated `DOCUMENTATION/SOURCE OF TRUTH/PASRAHPHOBIA_DOC_INDEX.md`
+  - updated `DOCUMENTATION/SOURCE OF TRUTH/REPORTS.md`
+  - rewrote `DOCUMENTATION/SOURCE OF TRUTH/reports/HAUNTEDHOUSE_RECONSTRUCTION_SPEC_2026-04-16.md` from pre-wiring baseline into the active runtime map specification
+  - appended this execution log entry
+- Canonical `HauntedHouse` statements locked by this sync:
+  - runtime map dimensions: `160 x 180`, `2` floors
+  - runtime room count: `20` (`10` floor 1, `10` floor 2)
+  - active support counts:
+    - `Doors=18`
+    - `Lights=20`
+    - `Props=20`
+    - `Electronics=7`
+    - `Windows=6`
+    - `EvidenceSpawnNodes=14`
+    - `GhostSpawns=6`
+    - `SpawnPoints=4`
+    - `SafeZones=2`
+  - preparation staging is outside the house
+  - timer-based preparation countdown is disabled
+  - investigation now begins on `Door_FrontEntry`
+  - environmental trigger targets are documented as requiring either imported assets or generated runtime fallbacks so no event target is left missing
+
+## 2026-04-16 07:18:40 +07:00 - StudioMMNineteen Runtime Canonical Reconstruction
+- Status: PASS FOR SOURCE-OF-TRUTH ALIGNMENT.
+- Trigger:
+  - owner requested StudioMMNineteen to follow the same reconstruction/wiring pattern as HauntedHouse using fresh `.rbxm` source model.
+- Action taken:
+  - replaced active visual source with imported `StudioMMNineteen.rbxm` in both runtime map roots:
+    - `src/ReplicatedStorage/Maps/StudioMMNineteen/StudioMMNineteen.rbxm`
+    - `src/ServerStorage/Maps/StudioMMNineteen/StudioMMNineteen.rbxm`
+  - removed embedded scripts from imported free model in live Studio trees to prevent foreign system drift
+  - added canonical runtime layout and scaffold:
+    - `src/ServerScriptService/Server/MatchSystem/StudioMMNineteenRuntimeLayout.lua`
+    - `src/ServerScriptService/Server/MatchSystem/StudioMMNineteenMapScaffold.lua`
+  - patched runtime router/config:
+    - `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+    - `src/ServerScriptService/Server/MatchSystem/EnvironmentalObjectRuntime.lua`
+    - `src/shared/GameData/Maps/StudioMMNineteen.lua`
+  - updated source-of-truth documentation and index:
+    - `DOCUMENTATION/SOURCE OF TRUTH/CANONICAL_SPECIFICATIONS_v2.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/PASRAHPHOBIA_DOC_INDEX.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/STUDIOMMNINETEEN_RECONSTRUCTION_SPEC_2026-04-16.md`
+  - appended this execution log entry
+- Canonical StudioMMNineteen statements locked by this sync:
+  - runtime map dimensions: `100 x 100`, `3` floors
+  - runtime room count: `12` (`4 + 4 + 4`)
+  - active support counts:
+    - `Doors=10`
+    - `Lights=12`
+    - `Props=12`
+    - `Electronics=6`
+    - `Windows=6`
+    - `EvidenceSpawnNodes=12`
+    - `GhostSpawns=6`
+    - `SpawnPoints=4`
+    - `SafeZones=2`
+  - preparation staging is outside the house
+  - timer-based preparation countdown remains disabled
+  - investigation begins on `Door_FrontEntry` (not countdown)
+  - environmental trigger targets are documented as requiring either imported assets or generated runtime fallbacks so no event target is left missing
+
+## 2026-04-16 08:02:11 +07:00 - EmptyBuilding Runtime Canonical Reconstruction + Structural Fill
+- Status: PASS FOR SOURCE-OF-TRUTH ALIGNMENT.
+- Trigger:
+  - owner requested the same reconstruction pattern for `EmptyBuilding`, then explicitly approved improvisation for missing stairs and empty spaces.
+- Action taken:
+  - replaced active visual source with imported `EmptyBuilding.rbxm` in both runtime map roots:
+    - `src/ReplicatedStorage/Maps/EmptyBuilding/EmptyBuilding.rbxm`
+    - `src/ServerStorage/Maps/EmptyBuilding/EmptyBuilding.rbxm`
+  - disabled legacy json source in both roots:
+    - `EmptyBuilding.model.json.disabled`
+  - added canonical runtime layout and scaffold:
+    - `src/ServerScriptService/Server/MatchSystem/EmptyBuildingRuntimeLayout.lua`
+    - `src/ServerScriptService/Server/MatchSystem/EmptyBuildingMapScaffold.lua`
+  - patched runtime router/config:
+    - `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+    - `src/ServerScriptService/Server/MatchSystem/EnvironmentalObjectRuntime.lua`
+    - `src/shared/GameData/Maps/EmptyBuilding.lua`
+  - implemented approved structural improvisation under `RuntimeDecor`:
+    - `NorthStairs`
+    - `SouthStairs`
+    - `ServiceLadder`
+    - `FillerProps`
+  - updated source-of-truth documentation and index:
+    - `DOCUMENTATION/SOURCE OF TRUTH/CANONICAL_SPECIFICATIONS_v2.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/PASRAHPHOBIA_DOC_INDEX.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/EMPTYBUILDING_RECONSTRUCTION_SPEC_2026-04-16.md`
+  - appended this execution log entry
+- Canonical EmptyBuilding statements locked by this sync:
+  - runtime room topology: `14` rooms across `2` floors (`9 + 5`)
+  - active support counts:
+    - `Doors=14`
+    - `Lights=14`
+    - `Props=14`
+    - `Electronics=6`
+    - `Windows=12`
+    - `EvidenceSpawnNodes=9`
+    - `GhostSpawns=5`
+    - `SpawnPoints=4`
+    - `SafeZones=2`
+    - `RuntimeDecor=4`
+  - timer-based preparation countdown remains disabled
+  - investigation begins on `Door_Lobby` (not countdown)
+  - structural floor-2 access and visual density are now guaranteed by scaffold decor, without introducing a new gameplay system
+
+## 2026-04-16 08:39:22 +07:00 - AbandonedPalace Runtime Canonical Reconstruction
+- Status: PASS FOR SOURCE-OF-TRUTH ALIGNMENT.
+- Trigger:
+  - owner requested the same reconstruction pattern to be applied for `AbandonedPalace`.
+- Action taken:
+  - replaced active visual source with imported `AbandonedPalace.rbxm` in both runtime map roots:
+    - `src/ReplicatedStorage/Maps/AbandonedPalace/AbandonedPalace.rbxm`
+    - `src/ServerStorage/Maps/AbandonedPalace/AbandonedPalace.rbxm`
+  - disabled legacy json source in both roots:
+    - `AbandonedPalace.model.json.disabled`
+  - added canonical runtime layout and scaffold:
+    - `src/ServerScriptService/Server/MatchSystem/AbandonedPalaceRuntimeLayout.lua`
+    - `src/ServerScriptService/Server/MatchSystem/AbandonedPalaceMapScaffold.lua`
+  - patched runtime router/config:
+    - `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+    - `src/ServerScriptService/Server/MatchSystem/EnvironmentalObjectRuntime.lua`
+    - `src/shared/GameData/Maps/AbandonedPalace.lua`
+  - updated source-of-truth documentation and index:
+    - `DOCUMENTATION/SOURCE OF TRUTH/CANONICAL_SPECIFICATIONS_v2.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/PASRAHPHOBIA_DOC_INDEX.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/ABANDONEDPALACE_RECONSTRUCTION_SPEC_2026-04-16.md`
+  - appended this execution log entry
+- Canonical AbandonedPalace statements locked by this sync:
+  - runtime room topology: `18` rooms on `1` floor
+  - active support counts:
+    - `Doors=18`
+    - `Lights=18`
+    - `Props=18`
+    - `Electronics=6`
+    - `Windows=6`
+    - `EvidenceSpawnNodes=14`
+    - `GhostSpawns=5`
+    - `SpawnPoints=4`
+    - `SafeZones=2`
+  - timer-based preparation countdown remains disabled
+  - investigation begins on `Door_GrandHall` (not countdown)
+  - environmental trigger targets resolve via imported assets or generated runtime fallback assets
+
+## 2026-04-16 15:32:07 +07:00 - HauntedHouse Owner-Driven Runtime Sync and Boundary Tightening
+- Status: PASS FOR SOURCE-OF-TRUTH ALIGNMENT.
+- Trigger:
+  - owner completed manual edits in `Workspace.HauntedHouse_Review` and requested immediate sync lock.
+  - owner requested strict boundary behavior: no oversized outdoor floor, no loose boundary distance, no player out-of-map exits.
+- Action taken:
+  - copied runtime state from `Workspace.HauntedHouse_Review` into active source map:
+    - `ServerStorage.Maps.HauntedHouse.HauntedHouse`
+    - mirrored to `ReplicatedStorage.Maps.HauntedHouse.HauntedHouse`
+  - created pre-sync backup:
+    - `HauntedHouse_PRESYNC_FROM_REVIEW_FINAL_20260416_083207`
+  - removed `Runtime.OutdoorBaseplateRuntime.OutdoorMainFloor` for `HauntedHouse` in all active roots by owner request.
+  - rebuilt boundary to house+staging footprint only, then tightened collider size to prevent exit exploits.
+  - realigned realistic `BoundaryTrees` to all four sides (`North/South/West/East`) as direct blocker lines.
+- Canonical statements locked:
+  - `HauntedHouse` no longer depends on `OutdoorMainFloor`.
+  - boundary for `HauntedHouse` is constrained to house+staging scope and kept anti-exit.
+  - runtime map in `ServerStorage` and `ReplicatedStorage` is synchronized to owner-edited workspace state.

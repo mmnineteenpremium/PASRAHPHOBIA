@@ -16,6 +16,55 @@ Runtime source-of-truth for execution must follow:
 For the latest verified live smoke on branch `final-source-of-truth`, read:
 - `DOCUMENTATION/SOURCE OF TRUTH/reports/FINAL_SOURCE_OF_TRUTH_RUNTIME_SMOKE_2026-04-16.md`
 
+[2026-04-16 NOTE - HauntedHouse]
+Before continuing any `HauntedHouse` map work on branch `final-source-of-truth`, use:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/HAUNTEDHOUSE_RECONSTRUCTION_SPEC_2026-04-16.md`
+- `src/shared/GameData/Maps/HauntedHouse.lua`
+
+These are the current room-by-room/runtime references for:
+- `20` rooms split across `2` floors (`10 + 10`)
+- outside-house preparation spawn and safe-zone staging
+- disabled timer-based preparation countdown
+- match advance on `Door_FrontEntry`
+- runtime object/event coverage with no missing target definitions
+
+[2026-04-16 NOTE - StudioMMNineteen]
+Before continuing any `StudioMMNineteen` map work on branch `final-source-of-truth`, use:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/STUDIOMMNINETEEN_RECONSTRUCTION_SPEC_2026-04-16.md`
+- `src/shared/GameData/Maps/StudioMMNineteen.lua`
+
+These are the current room-by-room/runtime references for:
+- `12` rooms split across `3` floors (`4 + 4 + 4`)
+- outside-house preparation spawn and safe-zone staging
+- disabled timer-based preparation countdown
+- match advance on `Door_FrontEntry`
+- runtime object/event coverage with no missing target definitions
+
+[2026-04-16 NOTE - EmptyBuilding]
+Before continuing any `EmptyBuilding` map work on branch `final-source-of-truth`, use:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/EMPTYBUILDING_RECONSTRUCTION_SPEC_2026-04-16.md`
+- `src/shared/GameData/Maps/EmptyBuilding.lua`
+
+These are the current room-by-room/runtime references for:
+- `14` rooms split across `2` floors (`9 + 5`)
+- outside-entry preparation spawn and safe-zone staging
+- disabled timer-based preparation countdown
+- match advance on `Door_Lobby`
+- runtime object/event coverage with no missing target definitions
+- structural decor requirement (`stairs/ladder/filler props`) for floor-2 access and visual density
+
+[2026-04-16 NOTE - AbandonedPalace]
+Before continuing any `AbandonedPalace` map work on branch `final-source-of-truth`, use:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/ABANDONEDPALACE_RECONSTRUCTION_SPEC_2026-04-16.md`
+- `src/shared/GameData/Maps/AbandonedPalace.lua`
+
+These are the current room-by-room/runtime references for:
+- `18` rooms on `1` floor
+- outside-entry preparation spawn and safe-zone staging
+- disabled timer-based preparation countdown
+- match advance on `Door_GrandHall`
+- runtime object/event coverage with no missing target definitions
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 
@@ -15733,4 +15782,16 @@ Smoke live `2026-04-16` menegaskan:
   - object throw
   - ghost whisper
   - writing scratch
+
+---
+
+# 29. HAUNTEDHOUSE RUNTIME SYNC LOCK (2026-04-16)
+
+Status terkunci berdasarkan owner-approved edit:
+
+- sumber edit visual: `Workspace.HauntedHouse_Review`
+- sinkron aktif: `ServerStorage.Maps.HauntedHouse.HauntedHouse` + `ReplicatedStorage.Maps.HauntedHouse.HauntedHouse`
+- `OutdoorMainFloor` khusus `HauntedHouse` dihapus sesuai instruksi owner
+- boundary `HauntedHouse` menggunakan footprint rumah + staging saja
+- blocker pohon realistis disejajarkan ke empat sisi boundary untuk mencegah pemain keluar map
 
