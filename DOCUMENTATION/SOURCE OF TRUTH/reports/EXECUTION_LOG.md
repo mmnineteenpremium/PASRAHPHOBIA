@@ -15689,3 +15689,34 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `Props=18`
     - `Electronics=6`
     - `Windows=6`
+
+## 2026-04-16 17:59:00 +07:00 - EmptyBuilding Final Runtime Fill + Syncback
+- Status: PASS FOR SOURCE-OF-TRUTH SYNCBACK.
+- Trigger:
+  - owner requested last map completion with full runtime coverage and door wiring by naming.
+- Action taken:
+  - created `Workspace.EmptyBuilding_Review` from active source map.
+  - populated complete runtime folders using canonical EmptyBuilding layout:
+    - `Rooms`, `Doors`, `GhostSpawns`, `EvidenceSpawnNodes`, `InteractionPoints`, `SafeZones`, `SpawnPoints`, `Lights`, `Props`, `Electronics`, `Windows`
+  - wired all `Door_*` with logic attributes and traversal contract:
+    - policy, open/close sound ids, path modifier, object id, labels, primary preparation trigger at `Door_Lobby`.
+  - synced approved review map to:
+    - `ServerStorage.Maps.EmptyBuilding.EmptyBuilding`
+    - `ReplicatedStorage.Maps.EmptyBuilding.EmptyBuilding`
+  - created backup snapshot before replace:
+    - `EmptyBuilding_PRESYNC_FROM_REVIEW_20260416_105852` (both storage roots)
+- Verification:
+  - parity check passed review->storage for both roots.
+  - locked parity snapshot:
+    - `BaseParts=829`
+    - `Rooms=14`
+    - `Doors=14`
+    - `GhostSpawns=5`
+    - `EvidenceSpawnNodes=9`
+    - `InteractionPoints=14`
+    - `SafeZones=2`
+    - `SpawnPoints=4`
+    - `Lights=14`
+    - `Props=14`
+    - `Electronics=6`
+    - `Windows=12`
