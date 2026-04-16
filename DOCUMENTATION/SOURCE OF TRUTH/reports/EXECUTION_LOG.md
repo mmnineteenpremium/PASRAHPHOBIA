@@ -15610,3 +15610,25 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `HauntedHouse` no longer depends on `OutdoorMainFloor`.
   - boundary for `HauntedHouse` is constrained to house+staging scope and kept anti-exit.
   - runtime map in `ServerStorage` and `ReplicatedStorage` is synchronized to owner-edited workspace state.
+
+## 2026-04-16 16:24:00 +07:00 - GhostSpawn Zone Height Fix + Door Wiring Validation
+- Status: PASS FOR ACTIVE MAP RUNTIME.
+- Trigger:
+  - owner reported `GhostSpawnZone` terlalu rendah dan meminta wiring logic dipastikan tidak ada yang tertinggal.
+- Action taken:
+  - normalized all active `GhostSpawnZone_*` nodes to consistent spawn volume profile:
+    - `Size = 3,7,3`
+    - `Anchored=true`, `CanCollide=false`, `CanTouch=false`, `CanQuery=true`, `Transparency=1`
+  - lifted low spawn anchors to safe floor-relative height using primary entry door baseline per map.
+  - applied changes across active roots:
+    - `Workspace.HauntedHouse_Review` (`6` zones)
+    - `Workspace.StudioMMNineteen_Review` (`6` zones)
+    - `ServerStorage.Maps.HauntedHouse.HauntedHouse` (`6` zones)
+    - `ServerStorage.Maps.StudioMMNineteen.StudioMMNineteen` (`6` zones)
+    - `ReplicatedStorage.Maps.HauntedHouse.HauntedHouse` (`6` zones)
+    - `ReplicatedStorage.Maps.StudioMMNineteen.StudioMMNineteen` (`6` zones)
+  - validated door wiring coverage against runtime contract (`DoorTraversalPolicy`, sound attrs, `DoorPathModifier`, `DoorObjectId`):
+    - `HauntedHouse`: `18/18` wired
+    - `StudioMMNineteen`: `10/10` wired
+- Note:
+  - `AbandonedPalace` and `EmptyBuilding` currently have no active `Doors/GhostSpawns` folders in storage roots, so no patchable runtime nodes were found for this pass.
