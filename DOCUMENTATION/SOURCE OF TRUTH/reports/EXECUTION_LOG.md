@@ -15632,3 +15632,27 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `StudioMMNineteen`: `10/10` wired
 - Note:
   - `AbandonedPalace` and `EmptyBuilding` currently have no active `Doors/GhostSpawns` folders in storage roots, so no patchable runtime nodes were found for this pass.
+
+## 2026-04-16 17:30:27 +07:00 - Owner Syncback Capture from Workspace Review
+- Status: PASS FOR SOURCE-OF-TRUTH SYNCBACK.
+- Trigger:
+  - owner confirmed manual adjustments were completed and requested immediate pull/syncback, commit, and log append.
+- Action taken:
+  - captured latest state from:
+    - `Workspace.HauntedHouse_Review`
+    - `Workspace.StudioMMNineteen_Review`
+  - synced to canonical runtime roots:
+    - `ServerStorage.Maps.HauntedHouse.HauntedHouse`
+    - `ReplicatedStorage.Maps.HauntedHouse.HauntedHouse`
+    - `ServerStorage.Maps.StudioMMNineteen.StudioMMNineteen`
+    - `ReplicatedStorage.Maps.StudioMMNineteen.StudioMMNineteen`
+  - created pre-sync backups:
+    - `HauntedHouse_PRESYNC_FROM_REVIEW_20260416_103015`
+    - `HauntedHouse_PRESYNC_FROM_REVIEW_20260416_103017`
+    - `StudioMMNineteen_PRESYNC_FROM_REVIEW_20260416_103019`
+    - `StudioMMNineteen_PRESYNC_FROM_REVIEW_20260416_103020`
+- Verification:
+  - parity check review->storage passed for both maps (folder counts and basepart totals matched).
+  - locked parity snapshot:
+    - `HauntedHouse`: `BaseParts=14572`, `Rooms=20`, `Doors=18`, `GhostSpawns=6`, `EvidenceSpawnNodes=14`, `InteractionPoints=20`, `SafeZones=2`, `Lights=20`, `Props=20`, `Electronics=7`
+    - `StudioMMNineteen`: `BaseParts=5798`, `Rooms=12`, `Doors=10`, `GhostSpawns=6`, `EvidenceSpawnNodes=12`, `InteractionPoints=12`, `SafeZones=2`, `Lights=12`, `Props=12`, `Electronics=6`
