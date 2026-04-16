@@ -15656,3 +15656,36 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - locked parity snapshot:
     - `HauntedHouse`: `BaseParts=14572`, `Rooms=20`, `Doors=18`, `GhostSpawns=6`, `EvidenceSpawnNodes=14`, `InteractionPoints=20`, `SafeZones=2`, `Lights=20`, `Props=20`, `Electronics=7`
     - `StudioMMNineteen`: `BaseParts=5798`, `Rooms=12`, `Doors=10`, `GhostSpawns=6`, `EvidenceSpawnNodes=12`, `InteractionPoints=12`, `SafeZones=2`, `Lights=12`, `Props=12`, `Electronics=6`
+
+## 2026-04-16 17:56:29 +07:00 - AbandonedPalace Review Rebuild, Door Snap + Syncback
+- Status: PASS FOR SOURCE-OF-TRUTH SYNCBACK.
+- Trigger:
+  - owner requested AbandonedPalace readiness in workspace with complete runtime markers and door wiring by naming, then approved final result.
+- Action taken:
+  - rebuilt `Workspace.AbandonedPalace_Review` from active storage source and ensured runtime folders complete:
+    - `Rooms`, `Doors`, `GhostSpawns`, `EvidenceSpawnNodes`, `InteractionPoints`, `SafeZones`, `SpawnPoints`, `Lights`, `Props`, `Electronics`, `Windows`
+  - wired all `Door_*` by naming pattern and logic attributes:
+    - traversal policy/sounds/path modifier/object id/labels
+    - primary preparation advance door locked to `Door_GrandHall`
+  - corrected `Door_*` proxies to match physical door area context and adjusted collider sizes per fitted door geometry pass.
+  - synced approved workspace map to:
+    - `ServerStorage.Maps.AbandonedPalace.AbandonedPalace`
+    - `ReplicatedStorage.Maps.AbandonedPalace.AbandonedPalace`
+  - created pre-sync backups:
+    - `AbandonedPalace_PRESYNC_FROM_REVIEW_20260416_105623`
+    - `AbandonedPalace_PRESYNC_FROM_REVIEW_20260416_105624`
+- Verification:
+  - parity check passed review->storage for both roots.
+  - locked parity snapshot:
+    - `BaseParts=4946`
+    - `Rooms=18`
+    - `Doors=18`
+    - `GhostSpawns=5`
+    - `EvidenceSpawnNodes=14`
+    - `InteractionPoints=18`
+    - `SafeZones=2`
+    - `SpawnPoints=4`
+    - `Lights=18`
+    - `Props=18`
+    - `Electronics=6`
+    - `Windows=6`
