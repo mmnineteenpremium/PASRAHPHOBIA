@@ -42,7 +42,7 @@ local LOGIC_VOLUME_VISUAL_TRANSPARENCY = 1
 -- Keep runtime overrides disabled unless explicitly re-enabled for legacy maps.
 local USE_LEGACY_SAFEZONE_OVERRIDES = false
 local USE_LEGACY_SPAWN_OVERRIDES = false
-local USE_LEGACY_SYNTHETIC_STAGING = false
+local USE_LEGACY_SYNTHETIC_STAGING = true
 local LOGIC_VOLUME_FOLDER_NAMES = {
 	"Rooms",
 	"SafeZones",
@@ -309,19 +309,19 @@ local PREPARATION_STAGING_PROFILES = {
 		propVariant = "industrial",
 	},
 	studiommnineteen = {
-		anchorRoomName = "Room_LivingRoom",
-		anchorDoorName = "Door_FrontEntry",
+		anchorRoomName = "Room_FilmStage",
+		anchorDoorName = "Door_FilmStage",
 		platformWidth = 26,
 		platformDepth = 16,
 		stagingDistance = 16,
-		siteLabel = "FRONT GATE",
+		siteLabel = "CONTROL ACCESS",
 		siteSubtitle = "Plan • Tools • Entry",
-		entryTitle = "FRONT ENTRY",
-		entryReadyBody = "Review board lalu breach dari pintu depan.",
+		entryTitle = "ACCESS POINT",
+		entryReadyBody = "Review board lalu breach dari akses kontrol.",
 		entryArmedBodyTemplate = "Aktifkan breach untuk sweep awal dengan %s.",
-		entryOpenBody = "Buka pintu depan lalu mulai investigasi.",
+		entryOpenBody = "Masuk ke area kontrol dan mulai investigasi.",
 		propStyle = "facility",
-		propVariant = "residential",
+		propVariant = "control",
 	},
 }
 
@@ -3613,21 +3613,8 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			baseY - 0.28,
 			anchorDoor.Position.Z
 		) + (outward * stageDistance)
-		local existingBounds = collectMapXZBounds(mapClone, mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME))
-		if existingBounds then
-			local shellPadding = (platformDepth * 0.5) + 12
-			if math.abs(outward.X) >= math.abs(outward.Z) then
-				local targetX = outward.X >= 0
-					and (existingBounds.maxX + shellPadding)
-					or (existingBounds.minX - shellPadding)
-				platformCenter = Vector3.new(targetX, platformCenter.Y, anchorDoor.Position.Z)
-			else
-				local targetZ = outward.Z >= 0
-					and (existingBounds.maxZ + shellPadding)
-					or (existingBounds.minZ - shellPadding)
-				platformCenter = Vector3.new(anchorDoor.Position.X, platformCenter.Y, targetZ)
-			end
-		end
+		-- Keep preparation staging near the entry anchor.
+		-- Do not push platform out to shell bounds to avoid detached staging drift.
 
 		local existingFolder = mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME)
 		if existingFolder then
@@ -4426,7 +4413,7 @@ local function patchRuntimeBoundary(mapClone)
 
 	local minV = bounds.min
 	local maxV = bounds.max
-	local margin = 26
+	local margin = 8
 	local wallThickness = 6
 	local wallBottom = minV.Y - 4
 	local wallTop = maxV.Y + 28
