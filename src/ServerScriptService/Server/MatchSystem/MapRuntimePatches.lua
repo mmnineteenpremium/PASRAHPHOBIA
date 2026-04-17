@@ -43,6 +43,7 @@ local LOGIC_VOLUME_VISUAL_TRANSPARENCY = 1
 local USE_LEGACY_SAFEZONE_OVERRIDES = false
 local USE_LEGACY_SPAWN_OVERRIDES = false
 local USE_LEGACY_SYNTHETIC_STAGING = true
+local MAINFLOOR_PATCH_ATTR = "RuntimeMainfloorPatched"
 local LOGIC_VOLUME_FOLDER_NAMES = {
 	"Rooms",
 	"SafeZones",
@@ -103,6 +104,11 @@ local PRIMARY_ENTRY_DOOR_BY_TOKEN = {
 	emptybuilding = "Door_Lobby",
 	abandonedpalace = "Door_GrandHall",
 }
+local MAINFLOOR_REQUIRED_TOKENS = {
+	studiommnineteen = true,
+	emptybuilding = true,
+	abandonedpalace = true,
+}
 
 local SPAWN_POINT_OVERRIDES = {
 	hauntedhouse = {
@@ -148,7 +154,7 @@ local MAP_MATERIAL_POLISH = {
 		windowTransparency = 0.42,
 		windowReflectance = 0.03,
 		lightColor = Color3.fromRGB(255, 214, 170),
-		lightBrightnessScale = 0.88,
+		lightBrightnessScale = 0.62,
 	},
 	emptybuilding = {
 		floorMaterial = Enum.Material.Concrete,
@@ -3461,7 +3467,15 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		return false
 	end
 
-	if not USE_LEGACY_SYNTHETIC_STAGING then
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if token and PREPARATION_STAGING_PROFILES[token] == nil then
+		token = resolveMapOverrideToken(nil, mapClone)
+	end
+	local profile = token and PREPARATION_STAGING_PROFILES[token] or nil
+
+	-- HauntedHouse uses authored world staging only (no synthetic prep platform/mainfloor).
+	local useNativeMarkerOnly = (not USE_LEGACY_SYNTHETIC_STAGING) or token == "hauntedhouse"
+	if useNativeMarkerOnly then
 		-- Keep a marker folder for world-preparation UI detection, but do not generate synthetic geometry.
 		local markerFolder = mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME)
 		if not markerFolder then
@@ -3474,11 +3488,6 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		end
 		markerFolder:SetAttribute("NativeStagingSourceOfTruth", true)
 
-		local token = resolveMapOverrideToken(mapId, mapClone)
-		if token and PREPARATION_STAGING_PROFILES[token] == nil then
-			token = resolveMapOverrideToken(nil, mapClone)
-		end
-		local profile = token and PREPARATION_STAGING_PROFILES[token] or nil
 		local didReanchor = false
 		local roomsFolder = mapClone:FindFirstChild("Rooms", true)
 		local doorsFolder = mapClone:FindFirstChild("Doors", true)
@@ -3565,11 +3574,6 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		end
 	end
 
-	local token = resolveMapOverrideToken(mapId, mapClone)
-	if token and PREPARATION_STAGING_PROFILES[token] == nil then
-		token = resolveMapOverrideToken(nil, mapClone)
-	end
-	local profile = token and PREPARATION_STAGING_PROFILES[token] or nil
 	if not profile then
 		setPreparationDebug("profile_missing")
 		return false
@@ -4332,25 +4336,56 @@ local function collectMapBounds(mapClone)
 
 	local minV
 	local maxV
-	for _, descendant in ipairs(mapClone:GetDescendants()) do
-		if descendant:IsA("BasePart") and descendant.Parent ~= nil then
-			local half = descendant.Size * 0.5
-			local mn = descendant.Position - half
-			local mx = descendant.Position + half
-			if not minV then
-				minV = mn
-				maxV = mx
-			else
-				minV = Vector3.new(
-					math.min(minV.X, mn.X),
-					math.min(minV.Y, mn.Y),
-					math.min(minV.Z, mn.Z)
-				)
-				maxV = Vector3.new(
-					math.max(maxV.X, mx.X),
-					math.max(maxV.Y, mx.Y),
-					math.max(maxV.Z, mx.Z)
-				)
+	local function absorbPart(part)
+		local half = part.Size * 0.5
+		local mn = part.Position - half
+		local mx = part.Position + half
+		if not minV then
+			minV = mn
+			maxV = mx
+		else
+			minV = Vector3.new(
+				math.min(minV.X, mn.X),
+				math.min(minV.Y, mn.Y),
+				math.min(minV.Z, mn.Z)
+			)
+			maxV = Vector3.new(
+				math.max(maxV.X, mx.X),
+				math.max(maxV.Y, mx.Y),
+				math.max(maxV.Z, mx.Z)
+			)
+		end
+	end
+
+	-- Prefer authored playable folders to avoid outlier parts that bloat boundary size.
+	local preferredFolders = {
+		"PreparationStaging",
+		"PreparationStagingRuntime",
+		"RuntimeMainfloor",
+		"Rooms",
+		"Doors",
+		"SpawnPoints",
+		"SafeZones",
+		"GhostSpawns",
+		"EvidenceSpawnNodes",
+		"InteractionPoints",
+	}
+	for _, folderName in ipairs(preferredFolders) do
+		local folder = mapClone:FindFirstChild(folderName, true)
+		if folder then
+			for _, descendant in ipairs(folder:GetDescendants()) do
+				if descendant:IsA("BasePart") and descendant.Parent ~= nil then
+					absorbPart(descendant)
+				end
+			end
+		end
+	end
+
+	-- Fallback when preferred folders are missing.
+	if not minV or not maxV then
+		for _, descendant in ipairs(mapClone:GetDescendants()) do
+			if descendant:IsA("BasePart") and descendant.Parent ~= nil then
+				absorbPart(descendant)
 			end
 		end
 	end
@@ -4399,6 +4434,55 @@ local function resolvePrimaryDoorForRuntime(token, mapClone)
 		end
 	end
 	return nil
+end
+
+local function patchRuntimeMainfloor(mapId, mapClone)
+	if not mapClone or mapClone:GetAttribute(MAINFLOOR_PATCH_ATTR) == true then
+		return false
+	end
+
+	local token = resolveMapOverrideToken(mapId, mapClone)
+	if not token or MAINFLOOR_REQUIRED_TOKENS[token] ~= true then
+		return false
+	end
+
+	local bounds = collectMapBounds(mapClone)
+	if not bounds then
+		return false
+	end
+
+	local minV = bounds.min
+	local maxV = bounds.max
+	local spanX = math.clamp((maxV.X - minV.X) + 22, 28, 420)
+	local spanZ = math.clamp((maxV.Z - minV.Z) + 22, 28, 420)
+	local centerX = (minV.X + maxV.X) * 0.5
+	local centerZ = (minV.Z + maxV.Z) * 0.5
+	local floorY = minV.Y - 0.8
+
+	local folder = ensureFolder(mapClone, "RuntimeMainfloor")
+	if not folder then
+		return false
+	end
+
+	local pad = ensurePart(folder, "MainfloorPad")
+	configurePart(
+		pad,
+		{
+			Anchored = true,
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = true,
+			Transparency = 0,
+			CastShadow = true,
+			Material = Enum.Material.Concrete,
+			Color = Color3.fromRGB(74, 76, 84),
+			Size = Vector3.new(spanX, 1.2, spanZ),
+			CFrame = CFrame.new(centerX, floorY, centerZ),
+		}
+	)
+
+	mapClone:SetAttribute(MAINFLOOR_PATCH_ATTR, true)
+	return true
 end
 
 local function patchRuntimeBoundary(mapClone)
@@ -4476,9 +4560,45 @@ local function patchRuntimeBoundary(mapClone)
 	return true
 end
 
+local function folderHasBasePart(folder)
+	if typeof(folder) ~= "Instance" then
+		return false
+	end
+	for _, descendant in ipairs(folder:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			return true
+		end
+	end
+	return false
+end
+
+local function shouldRunFallbackScaffold(mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return false
+	end
+	local requiredFolders = {
+		"Rooms",
+		"Doors",
+		"SpawnPoints",
+		"SafeZones",
+		"GhostSpawns",
+		"EvidenceSpawnNodes",
+	}
+	for _, folderName in ipairs(requiredFolders) do
+		local folder = mapClone:FindFirstChild(folderName, true)
+		if not folderHasBasePart(folder) then
+			return true
+		end
+	end
+	return false
+end
+
 local function patchHauntedHouseScaffold(mapId, mapClone)
 	local token = resolveMapOverrideToken(mapId, mapClone)
 	if token ~= "hauntedhouse" or mapClone == nil then
+		return false
+	end
+	if not shouldRunFallbackScaffold(mapClone) then
 		return false
 	end
 	return HauntedHouseMapScaffold.Build(mapClone) == true
@@ -4489,6 +4609,9 @@ local function patchStudioMMNineteenScaffold(mapId, mapClone)
 	if token ~= "studiommnineteen" or mapClone == nil then
 		return false
 	end
+	if not shouldRunFallbackScaffold(mapClone) then
+		return false
+	end
 	return StudioMMNineteenMapScaffold.Build(mapClone) == true
 end
 
@@ -4497,12 +4620,18 @@ local function patchAbandonedPalaceScaffold(mapId, mapClone)
 	if token ~= "abandonedpalace" or mapClone == nil then
 		return false
 	end
+	if not shouldRunFallbackScaffold(mapClone) then
+		return false
+	end
 	return AbandonedPalaceMapScaffold.Build(mapClone) == true
 end
 
 local function patchEmptyBuildingScaffold(mapId, mapClone)
 	local token = resolveMapOverrideToken(mapId, mapClone)
 	if token ~= "emptybuilding" or mapClone == nil then
+		return false
+	end
+	if not shouldRunFallbackScaffold(mapClone) then
 		return false
 	end
 	return EmptyBuildingMapScaffold.Build(mapClone) == true
@@ -4526,6 +4655,7 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
 	didPatch = patchSpawnPoints(mapId, mapClone) or didPatch
+	didPatch = patchRuntimeMainfloor(mapId, mapClone) or didPatch
 	didPatch = patchPreparationStaging(mapId, mapClone, matchContext) or didPatch
 	didPatch = patchRuntimeBoundary(mapClone) or didPatch
 	didPatch = patchTraversalGuides(mapClone) or didPatch
