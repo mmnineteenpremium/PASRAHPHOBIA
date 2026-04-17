@@ -15758,3 +15758,47 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `DecorFloor2Plus=5`
     - `DecorBathroomPlus=2`
     - `WindowEventTargets=12`
+
+## 2026-04-17 12:24:00 +07:00 - Published Runtime Staging Drift Lock (No Synthetic Mainfloor)
+- Status: PASS FOR PUBLISHED RUNTIME DRIFT FIX.
+- Trigger:
+  - owner reported staging in published runtime still separated from map and requested strict return to source-of-truth behavior.
+- Action taken:
+  - switched preparation runtime to native-map authoritative mode in `MapRuntimePatches`:
+    - disabled legacy synthetic staging geometry generation (`PreparationPlatform/Runner/Forecourt/Fence/...`).
+    - disabled legacy `SpawnPoints` and `SafeZones` coordinate override paths.
+    - retained lightweight marker folder `PreparationStagingRuntime` for world-preparation UI compatibility only (no geometry payload).
+  - added native re-anchor safety in `MapRuntimePatches`:
+    - if `PlayerSpawn_1` is far from primary entry door anchor, runtime re-anchors `PlayerSpawn_1..4` and `SafeZone_1..2` near the map's front-entry side.
+  - updated all active map scaffolds (`HauntedHouse`, `StudioMMNineteen`, `EmptyBuilding`, `AbandonedPalace`):
+    - existing authored `SpawnPoints`/`SafeZones` are preserved and no longer forcibly repositioned to static legacy layout coordinates.
+  - built and published to canonical cloud target:
+    - `PlaceId=113010869463813`
+    - `UniverseId=9802743087`
+- Verification:
+  - live multiplayer smoke run (Android + RobloxPlayer PC) reached match staging successfully.
+  - runtime view now resolves around front-entry area instead of detached synthetic prep floor.
+  - remaining visual follow-up:
+    - map signage still shows legacy `FOR SALE` art in current published map asset and needs explicit map-sign art sync to owner-approved board images.
+
+## 2026-04-18 00:01:08 +07:00 - Runtime Recovery Patch: Native Staging + Bounded Mainfloor
+- Status: PASS FOR CLOUD PATCH DEPLOY.
+- Trigger:
+  - owner approved immediate recovery run to stop staging drift, over-broad boundary, floating logic folders, and HauntedHouse overbright runtime.
+- Action taken:
+  - updated `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua` (commit `d5a6a34`):
+    - force HauntedHouse to use authored/native staging marker path (no synthetic prep geometry path for HauntedHouse).
+    - add guarded runtime mainfloor patch only for maps that still require support pad:
+      - `StudioMMNineteen`, `EmptyBuilding`, `AbandonedPalace`.
+    - constrain map-bound computation to authored playable folders first (`Rooms/Doors/SpawnPoints/SafeZones/GhostSpawns/EvidenceSpawnNodes/...`) before full fallback scan, reducing outlier-driven oversized boundary.
+    - gate all fallback map scaffold builders so they only run when required logic folders are actually missing `BasePart`, preventing overwrite/drift over complete authored maps.
+    - lower HauntedHouse runtime light brightness scale (`0.88 -> 0.62`) to reduce overlight in interior.
+  - validated build graph:
+    - `powershell -ExecutionPolicy Bypass -File scripts\Invoke-Rojo.ps1 sourcemap default.project.json` -> exit `0`.
+  - published to canonical cloud target:
+    - `PlaceId=113010869463813`
+    - `UniverseId=9802743087`
+    - `upload` command exit `0`.
+- Verification:
+  - code patch compiled through Rojo sourcemap.
+  - cloud publish completed successfully from current branch state.
