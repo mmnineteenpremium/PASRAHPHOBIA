@@ -14,7 +14,6 @@ local MATERIAL_PATCH_ATTR = "MapMaterialRuntimePatched"
 local TRAVERSAL_GUIDE_PATCH_ATTR = "TraversalGuideRuntimePatched"
 local LOGIC_VOLUME_PATCH_ATTR = "LogicVolumesRuntimeHidden"
 local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
-local MAINFLOOR_PATCH_ATTR = "RuntimeMainfloorPatched"
 local BOUNDARY_PATCH_ATTR = "RuntimeBoundaryPatched"
 local PREPARATION_STAGING_FOLDER_NAME = "PreparationStagingRuntime"
 local PREPARATION_STAGING_DEBUG_ATTR = "PreparationStagingRuntimeDebug"
@@ -39,6 +38,11 @@ local INTERACTION_GUIDE_FOLDER_NAME = "InteractionGuideRuntime"
 local INTERACTION_GUIDE_BILLBOARD_NAME = "Billboard"
 local PLAYER_FACING_GUIDE_VISUALS_ENABLED = false
 local LOGIC_VOLUME_VISUAL_TRANSPARENCY = 1
+-- Canonical source-of-truth maps now author spawn/safezone/staging directly in the map asset.
+-- Keep runtime overrides disabled unless explicitly re-enabled for legacy maps.
+local USE_LEGACY_SAFEZONE_OVERRIDES = false
+local USE_LEGACY_SPAWN_OVERRIDES = false
+local USE_LEGACY_SYNTHETIC_STAGING = false
 local LOGIC_VOLUME_FOLDER_NAMES = {
 	"Rooms",
 	"SafeZones",
@@ -92,11 +96,6 @@ local SAFE_ZONE_POSITION_OVERRIDES = {
 		SafeZone_1 = Vector3.new(-19.0, 10.2, -20.5),
 		SafeZone_2 = Vector3.new(-15.8, 10.2, -22.3),
 	},
-}
-local NO_OUTDOOR_MAINFLOOR_TOKENS = {
-	hauntedhouse = true,
-	studiommnineteen = true,
-	emptybuilding = true,
 }
 local PRIMARY_ENTRY_DOOR_BY_TOKEN = {
 	hauntedhouse = "Door_FrontEntry",
@@ -3343,6 +3342,10 @@ local function patchDoorTraversal(mapClone)
 end
 
 local function patchSafeZones(mapId, mapClone)
+	if not USE_LEGACY_SAFEZONE_OVERRIDES then
+		return false
+	end
+
 	local token = resolveMapOverrideToken(mapId, mapClone)
 	if token and SAFE_ZONE_POSITION_OVERRIDES[token] == nil then
 		token = resolveMapOverrideToken(nil, mapClone)
@@ -3406,6 +3409,10 @@ local function patchSafeZones(mapId, mapClone)
 end
 
 local function patchSpawnPoints(mapId, mapClone)
+	if not USE_LEGACY_SPAWN_OVERRIDES then
+		return false
+	end
+
 	local token = resolveMapOverrideToken(mapId, mapClone)
 	if token and SPAWN_POINT_OVERRIDES[token] == nil then
 		token = resolveMapOverrideToken(nil, mapClone)
@@ -3452,6 +3459,104 @@ end
 local function patchPreparationStaging(mapId, mapClone, matchContext)
 	if not mapClone or mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) == true then
 		return false
+	end
+
+	if not USE_LEGACY_SYNTHETIC_STAGING then
+		-- Keep a marker folder for world-preparation UI detection, but do not generate synthetic geometry.
+		local markerFolder = mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME)
+		if not markerFolder then
+			markerFolder = Instance.new("Folder")
+			markerFolder.Name = PREPARATION_STAGING_FOLDER_NAME
+			markerFolder.Parent = mapClone
+		end
+		for _, child in ipairs(markerFolder:GetChildren()) do
+			child:Destroy()
+		end
+		markerFolder:SetAttribute("NativeStagingSourceOfTruth", true)
+
+		local token = resolveMapOverrideToken(mapId, mapClone)
+		if token and PREPARATION_STAGING_PROFILES[token] == nil then
+			token = resolveMapOverrideToken(nil, mapClone)
+		end
+		local profile = token and PREPARATION_STAGING_PROFILES[token] or nil
+		local didReanchor = false
+		local roomsFolder = mapClone:FindFirstChild("Rooms", true)
+		local doorsFolder = mapClone:FindFirstChild("Doors", true)
+		local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
+		local safeZonesFolder = mapClone:FindFirstChild("SafeZones", true)
+
+		if profile and roomsFolder and doorsFolder and spawnFolder then
+			local anchorRoom = roomsFolder:FindFirstChild(profile.anchorRoomName, true)
+			local anchorDoor = doorsFolder:FindFirstChild(profile.anchorDoorName, true)
+			if anchorRoom and anchorRoom:IsA("BasePart") and anchorDoor and anchorDoor:IsA("BasePart") then
+				local outward = flattenDirection(anchorDoor.Position - anchorRoom.Position)
+				if outward then
+					local right = Vector3.new(-outward.Z, 0, outward.X)
+					local spawnCenter = anchorDoor.Position + (outward * 8.5) + Vector3.new(0, 0.5, 0)
+					local spawnOne = spawnFolder:FindFirstChild("PlayerSpawn_1")
+					local needsSpawnReanchor = not (spawnOne and spawnOne:IsA("BasePart"))
+						or (spawnOne.Position - spawnCenter).Magnitude > 24
+
+					if needsSpawnReanchor then
+						local spawnOffsets = { -5.4, -1.8, 1.8, 5.4 }
+						for index = 1, 4 do
+							local spawnPart = ensurePart(spawnFolder, "PlayerSpawn_" .. tostring(index))
+							local spawnPosition = spawnCenter + (right * spawnOffsets[index])
+							configurePart(
+								spawnPart,
+								{
+									Size = Vector3.new(1, 1, 1),
+									CFrame = CFrame.lookAt(spawnPosition, spawnPosition - outward, Vector3.yAxis),
+									Transparency = 1,
+									CanCollide = false,
+									CanTouch = false,
+									CanQuery = false,
+									Color = Color3.fromRGB(255, 255, 255),
+								}
+							)
+						end
+						didReanchor = true
+					end
+
+					if safeZonesFolder then
+						local safeOne = safeZonesFolder:FindFirstChild("SafeZone_1")
+						local safeCenter = spawnCenter + (outward * 1.8)
+						local needsSafeReanchor = not (safeOne and safeOne:IsA("BasePart"))
+							or (safeOne.Position - safeCenter).Magnitude > 28
+						if needsSafeReanchor then
+							local safeOffsets = { -3.2, 3.2 }
+							for index = 1, 2 do
+								local safePart = ensurePart(safeZonesFolder, "SafeZone_" .. tostring(index))
+								local safePosition = safeCenter + (right * safeOffsets[index])
+								configurePart(
+									safePart,
+									{
+										Size = Vector3.new(4, 7, 4),
+										CFrame = CFrame.lookAt(safePosition, safePosition - outward, Vector3.yAxis),
+										Transparency = 1,
+										CanCollide = false,
+										CanTouch = false,
+										CanQuery = true,
+										Color = Color3.fromRGB(255, 255, 255),
+									}
+								)
+							end
+							didReanchor = true
+						end
+					end
+				end
+			end
+		end
+
+		mapClone:SetAttribute(
+			PREPARATION_STAGING_DEBUG_ATTR,
+			didReanchor and "native_map_reanchored" or "native_map_authoritative"
+		)
+		mapClone:SetAttribute(PREPARATION_STAGING_PATCH_ATTR, true)
+		if type(matchContext) == "table" then
+			matchContext.preparationWorldBoard = true
+		end
+		return true
 	end
 
 	local function setPreparationDebug(stage)
@@ -4309,121 +4414,6 @@ local function resolvePrimaryDoorForRuntime(token, mapClone)
 	return nil
 end
 
-local function patchRuntimeMainfloor(mapId, mapClone)
-	if not mapClone or mapClone:GetAttribute(MAINFLOOR_PATCH_ATTR) == true then
-		return false
-	end
-
-	local token = resolveMapOverrideToken(mapId, mapClone)
-	if not token or NO_OUTDOOR_MAINFLOOR_TOKENS[token] ~= true then
-		return false
-	end
-
-	local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
-	if not spawnFolder then
-		return false
-	end
-
-	local spawnPoints = {}
-	for _, candidate in ipairs(spawnFolder:GetChildren()) do
-		if candidate:IsA("BasePart") and string.find(candidate.Name, "PlayerSpawn_", 1, true) then
-			spawnPoints[#spawnPoints + 1] = candidate
-		end
-	end
-	if #spawnPoints == 0 then
-		return false
-	end
-
-	local minX, maxX = math.huge, -math.huge
-	local minZ, maxZ = math.huge, -math.huge
-	local sum = Vector3.zero
-	for _, spawn in ipairs(spawnPoints) do
-		local p = spawn.Position
-		minX = math.min(minX, p.X)
-		maxX = math.max(maxX, p.X)
-		minZ = math.min(minZ, p.Z)
-		maxZ = math.max(maxZ, p.Z)
-		sum += p
-	end
-	local center = sum / #spawnPoints
-	local spawnY = center.Y
-
-	local folder = ensureFolder(mapClone, "RuntimeMainfloor")
-	if not folder then
-		return false
-	end
-
-	local spawnPad = ensurePart(folder, "MainfloorSpawnPad")
-	configurePart(
-		spawnPad,
-		{
-			Anchored = true,
-			CanCollide = true,
-			CanTouch = false,
-			CanQuery = true,
-			Transparency = 0,
-			CastShadow = true,
-			Material = Enum.Material.Concrete,
-			Color = Color3.fromRGB(82, 84, 92),
-			Size = Vector3.new(
-				math.clamp((maxX - minX) + 18, 26, 120),
-				1,
-				math.clamp((maxZ - minZ) + 18, 24, 120)
-			),
-			CFrame = CFrame.new(center.X, spawnY - 0.6, center.Z),
-		}
-	)
-
-	local primaryDoor = resolvePrimaryDoorForRuntime(token, mapClone)
-	if primaryDoor then
-		local doorPos = primaryDoor.Position
-		local pathVector = Vector3.new(doorPos.X - center.X, 0, doorPos.Z - center.Z)
-		local pathLength = math.max(8, pathVector.Magnitude)
-		local pathDir = pathLength > 0.1 and pathVector.Unit or Vector3.new(0, 0, -1)
-		local laneCenter = Vector3.new(center.X, spawnY - 0.45, center.Z) + (pathDir * (pathLength * 0.5))
-
-		local lane = ensurePart(folder, "MainfloorPrepLane")
-		configurePart(
-			lane,
-			{
-				Anchored = true,
-				CanCollide = true,
-				CanTouch = false,
-				CanQuery = true,
-				Transparency = 0,
-				CastShadow = true,
-				Material = Enum.Material.Asphalt,
-				Color = Color3.fromRGB(62, 64, 72),
-				Size = Vector3.new(10, 0.8, pathLength + 6),
-				CFrame = CFrame.lookAt(laneCenter, laneCenter + pathDir, Vector3.yAxis),
-			}
-		)
-
-		local right = lane.CFrame.RightVector
-		for index, side in ipairs({ -1, 1 }) do
-			local rail = ensurePart(folder, "MainfloorLaneRail_" .. tostring(index))
-			configurePart(
-				rail,
-				{
-					Anchored = true,
-					CanCollide = true,
-					CanTouch = false,
-					CanQuery = true,
-					Transparency = 0,
-					CastShadow = true,
-					Material = Enum.Material.Metal,
-					Color = Color3.fromRGB(94, 98, 108),
-					Size = Vector3.new(0.45, 2.4, pathLength + 6),
-					CFrame = lane.CFrame + (right * side * 5.35) + Vector3.new(0, 1.2, 0),
-				}
-			)
-		end
-	end
-
-	mapClone:SetAttribute(MAINFLOOR_PATCH_ATTR, true)
-	return true
-end
-
 local function patchRuntimeBoundary(mapClone)
 	if not mapClone or mapClone:GetAttribute(BOUNDARY_PATCH_ATTR) == true then
 		return false
@@ -4549,9 +4539,8 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
 	didPatch = patchSpawnPoints(mapId, mapClone) or didPatch
-	didPatch = patchRuntimeMainfloor(mapId, mapClone) or didPatch
-	didPatch = patchRuntimeBoundary(mapClone) or didPatch
 	didPatch = patchPreparationStaging(mapId, mapClone, matchContext) or didPatch
+	didPatch = patchRuntimeBoundary(mapClone) or didPatch
 	didPatch = patchTraversalGuides(mapClone) or didPatch
 	return didPatch
 end

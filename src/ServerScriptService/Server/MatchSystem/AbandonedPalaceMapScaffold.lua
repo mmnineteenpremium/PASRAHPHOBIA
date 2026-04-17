@@ -130,8 +130,19 @@ end
 local function buildSpawnPoints(mapClone)
 	local folder = ensureFolder(mapClone, "SpawnPoints")
 	for _, spawn in ipairs(Layout.spawnPoints) do
-		local part = ensurePart(folder, spawn.name)
-		configureProxyPart(part, spawn.position, Vector3.new(1, 1, 1))
+		local existing = folder:FindFirstChild(spawn.name)
+		if existing and existing:IsA("BasePart") then
+			existing.Anchored = true
+			existing.CanCollide = false
+			existing.CanTouch = false
+			existing.CanQuery = true
+			existing.CastShadow = false
+			existing.Transparency = 1
+			existing.Size = Vector3.new(1, 1, 1)
+		else
+			local part = ensurePart(folder, spawn.name)
+			configureProxyPart(part, spawn.position, Vector3.new(1, 1, 1))
+		end
 	end
 	return folder
 end
@@ -139,8 +150,19 @@ end
 local function buildSafeZones(mapClone)
 	local folder = ensureFolder(mapClone, "SafeZones")
 	for _, safeZone in ipairs(Layout.safeZones) do
-		local part = ensurePart(folder, safeZone.name)
-		configureProxyPart(part, safeZone.position, Vector3.new(4, 7, 4))
+		local existing = folder:FindFirstChild(safeZone.name)
+		if existing and existing:IsA("BasePart") then
+			existing.Anchored = true
+			existing.CanCollide = false
+			existing.CanTouch = false
+			existing.CanQuery = true
+			existing.CastShadow = false
+			existing.Transparency = 1
+			existing.Size = Vector3.new(4, 7, 4)
+		else
+			local part = ensurePart(folder, safeZone.name)
+			configureProxyPart(part, safeZone.position, Vector3.new(4, 7, 4))
+		end
 	end
 	return folder
 end
