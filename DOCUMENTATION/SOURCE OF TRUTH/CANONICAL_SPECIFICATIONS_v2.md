@@ -87,6 +87,21 @@ GhostInteractionRadius = 5 -- studs
 | 9 | Salib | Crucifix | Prevent hunt in range (3 uses) | Protective Item | NO |
 | 10 | Dupa | Smudge Stick | Temporary ghost repellent, sanity boost | Consumable | NO |
 
+**Tool Visual Source Of Truth (Base Runtime Slots):**
+- `JejakEnergi -> 121559455873224`
+- `KotakArwah -> 80024667585179`
+- `SuhuMembeku -> 106744635077484`
+- `BukuTerkutuk -> 123135502718934`
+- `BolaArwah -> 80883221689326`
+- `GerakanGaib -> 109093713235033`
+- `Garam -> 117103968659967`
+- `PilSanity -> 135462688002407`
+- `Salib -> 128686833722709`
+- `Dupa -> 128740632500448`
+- `Flashlight -> 127298509562779`
+- Rarity/support/state variants remain preserved in the imported pool, but the current runtime lane must lock exactly one base asset per tool slot until the rarity/content lane is implemented.
+- Some imported tool templates are not yet synced into `ReplicatedStorage.Assets.Models.Tools`; until that syncback happens, runtime carries authoritative base asset-id metadata but may still render fallback/source placeholders for those slots.
+
 **Tool Unlock Progression:**
 ```
 Level 1: Senter, Detektor MEDOK, Termometer Suhu (default loadout)

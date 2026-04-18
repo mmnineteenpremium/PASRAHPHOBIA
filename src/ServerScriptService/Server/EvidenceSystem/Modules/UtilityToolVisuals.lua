@@ -18,6 +18,41 @@ local function getToolsFolder()
 	return models and models:FindFirstChild("Tools") or nil
 end
 
+local function resolveToolVisualConfig(toolType)
+	if type(toolType) ~= "string" or toolType == "" then
+		return nil
+	end
+
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
+	local gameData = shared and shared:FindFirstChild("GameData")
+	local moduleScript = gameData and gameData:FindFirstChild("ToolVisualConfig")
+	if not (moduleScript and moduleScript:IsA("ModuleScript")) then
+		return nil
+	end
+	local ok, result = pcall(require, moduleScript)
+	if not ok or type(result) ~= "table" then
+		return nil
+	end
+	local tools = type(result.tools) == "table" and result.tools or nil
+	local config = tools and tools[toolType] or nil
+	return type(config) == "table" and config or nil
+end
+
+local function stampToolVisualMetadata(model, toolType, template, visualConfig)
+	if not (model and model:IsA("Model")) then
+		return
+	end
+	local inventoryModelAssetId = type(visualConfig) == "table" and visualConfig.inventoryModelAssetId or nil
+	local sourceLabel = type(visualConfig) == "table" and visualConfig.sourceLabel or nil
+	local variantRole = type(visualConfig) == "table" and visualConfig.variantRole or nil
+	model:SetAttribute(TOOL_TYPE_ATTRIBUTE, tostring(toolType or ""))
+	model:SetAttribute(TOOL_TEMPLATE_ATTRIBUTE, template and template.Name or "Fallback")
+	model:SetAttribute(TOOL_ASSET_ATTRIBUTE, template ~= nil)
+	model:SetAttribute("PasrahToolInventoryModelAssetId", type(inventoryModelAssetId) == "string" and inventoryModelAssetId ~= "" and inventoryModelAssetId or nil)
+	model:SetAttribute("PasrahToolVisualLabel", type(sourceLabel) == "string" and sourceLabel ~= "" and sourceLabel or nil)
+	model:SetAttribute("PasrahToolVariantRole", type(variantRole) == "string" and variantRole ~= "" and variantRole or nil)
+end
+
 local function ensureActiveMatchesFolder()
 	local folder = Workspace:FindFirstChild("ActiveMatches")
 	if not folder then
@@ -194,6 +229,7 @@ function UtilityToolVisuals:PlaceTool(matchId, toolType, placementId, worldCFram
 	end
 
 	local model = nil
+	local visualConfig = resolveToolVisualConfig(toolType)
 	if template and template:IsA("Model") then
 		model = template:Clone()
 	else
@@ -203,10 +239,8 @@ function UtilityToolVisuals:PlaceTool(matchId, toolType, placementId, worldCFram
 		return nil
 	end
 	model.Name = string.format("%s_%s", toolType, tostring(placementId))
-	model:SetAttribute(TOOL_TYPE_ATTRIBUTE, tostring(toolType))
 	model:SetAttribute(TOOL_PLACEMENT_ID_ATTRIBUTE, tostring(placementId))
-	model:SetAttribute(TOOL_ASSET_ATTRIBUTE, template ~= nil)
-	model:SetAttribute(TOOL_TEMPLATE_ATTRIBUTE, template and template.Name or "Fallback")
+	stampToolVisualMetadata(model, toolType, template, visualConfig)
 	setModelState(model, "Placed")
 	setPlacementPhysics(model)
 	model.Parent = container

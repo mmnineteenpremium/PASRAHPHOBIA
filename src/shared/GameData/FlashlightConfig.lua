@@ -1,5 +1,7 @@
 local FlashlightConfig = {
-	assetId = 516522664,
+	assetId = 127298509562779,
+	inventoryModelAssetId = "rbxassetid://127298509562779",
+	sourceLabel = "Flashlight besar hitam",
 	handle = {
 		size = Vector3.new(0.5, 0.5, 2),
 		color = Color3.fromRGB(44, 46, 50),

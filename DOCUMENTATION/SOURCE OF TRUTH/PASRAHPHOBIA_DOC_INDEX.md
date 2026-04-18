@@ -6195,6 +6195,22 @@ JejakEnergi
 KotakArwah
 SuhuMembeku
 
+Tool visual base-slot lock (2026-04-18)
+
+JejakEnergi = 121559455873224
+KotakArwah = 80024667585179
+SuhuMembeku = 106744635077484
+BukuTerkutuk = 123135502718934
+BolaArwah = 80883221689326
+GerakanGaib = 109093713235033
+Garam = 117103968659967
+PilSanity = 135462688002407
+Salib = 128686833722709
+Dupa = 128740632500448
+Flashlight = 127298509562779
+
+Rarity/state/support uploads remain in the imported pool and are not promoted into the base runtime slots unless the rarity/content lane explicitly consumes them.
+
 ---
 
 SANITY SYSTEM INTERFACE

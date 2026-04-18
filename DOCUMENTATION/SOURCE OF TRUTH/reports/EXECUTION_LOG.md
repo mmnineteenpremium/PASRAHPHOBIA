@@ -15922,3 +15922,49 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - repo-wide search confirmed no active source-code use of the deleted wrong `Leak` asset ID `129878813436863`.
   - repo-wide search confirmed legacy Pocong mesh asset IDs were removed from code-side ghost visual profiles; remaining references only exist as nested sub-assets inside the newly imported `Pocong` model payload.
   - published PC player smoke still boots to lobby UI after this asset-source lock.
+
+## 2026-04-18 - Tool base-slot source-of-truth lock
+
+- Context:
+  - owner clarified that the authoritative source for investigation tools is the local `ROBLOX CREATOR HUB` folder plus the local CSV asset manifest
+  - duplicate uploads are intentional and reserved for future rarity/state/support lanes
+  - current gameplay runtime must therefore lock exactly one base/default/common asset per canonical tool slot without inventing placeholders
+- Decisions locked into source:
+  - `JejakEnergi = 121559455873224`
+  - `KotakArwah = 80024667585179`
+  - `SuhuMembeku = 106744635077484`
+  - `BukuTerkutuk = 123135502718934`
+  - `BolaArwah = 80883221689326`
+  - `GerakanGaib = 109093713235033`
+  - `Garam = 117103968659967`
+  - `PilSanity = 135462688002407`
+  - `Salib = 128686833722709`
+  - `Dupa = 128740632500448`
+  - `Flashlight = 127298509562779`
+- Source changes:
+  - added `src/shared/GameData/ToolVisualConfig.lua` as the authoritative base-slot mapping and preserved variant pools for future rarity/content use
+  - updated `src/shared/GameData/FlashlightConfig.lua` to point the base flashlight source-of-truth to the imported owner asset
+  - stamped tool preview/runtime clones with authoritative metadata in:
+    - `src/client/UI/Main.lua`
+    - `src/ServerScriptService/Server/EvidenceSystem/Modules/UtilityToolVisuals.lua`
+    - `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+  - updated canonical/docs:
+    - `DOCUMENTATION/SOURCE OF TRUTH/CANONICAL_SPECIFICATIONS_v2.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/PASRAHPHOBIA_DOC_INDEX.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_AND_ASSET_WIRING_TASK_TRACKER_2026-04-18.md`
+- Verification:
+  - `scripts/Invoke-Rojo.ps1 sourcemap default.project.json` succeeded after the tool-source lock
+  - source tree currently contains canonical tool templates only for:
+    - `Dupa`
+    - `Garam`
+    - `Salib`
+  - source tree does not yet contain synced imported templates for:
+    - `JejakEnergi`
+    - `KotakArwah`
+    - `SuhuMembeku`
+    - `BukuTerkutuk`
+    - `BolaArwah`
+    - `GerakanGaib`
+    - `PilSanity`
+- Remaining blocker:
+  - full visual parity for the missing tool slots cannot be claimed until those imported Studio templates are syncbacked into `src/ReplicatedStorage/Assets/Models/Tools`

@@ -202,7 +202,104 @@ Notes:
 - Confirm whether flashlight and headlamp variants are gameplay variants, cosmetic variants, or support assets.
 - Stop if any canonical tool has no exact owner-imported mapping.
 
-Status: completed for ghost lane
+Status: base-slot mapping locked, template syncback still pending
+
+Owner clarification locked on 2026-04-18:
+
+- `LobbySocialHub` remains the authoritative play-entry lobby and is expected around `x ~= 1600`.
+- Duplicate investigation tool uploads are intentional and will feed future rarity/category expansion.
+- Current runtime lane must therefore lock exactly one `base/default/common` asset per canonical tool for gameplay wiring, while preserving the remaining imported variants as a `rarity pool` for later work.
+- Do not auto-promote alternate tool uploads into live runtime without an explicit base-slot decision.
+
+Confident mappings from local `ROBLOX CREATOR HUB` + `Models & Packages.csv`:
+
+| Canonical Tool | Local Source Pattern | CSV Label | Asset ID | Confidence |
+|---|---|---|---:|---|
+| `SuhuMembeku` | `02 - Termometer Suhu - Thermometer` | `Termometer Suhu` | `106744635077484` | high |
+| `GerakanGaib` | `06 - Sensor Pengganggu - Motion Sensor` | `SensorPengganggu` | `109093713235033` | high |
+| `BolaArwah` | `04 - Kamera To'un - UV Camera - Spirit Orb Camera` | `CameraUV R5` | `80883221689326` | medium-high |
+
+Ambiguous or missing mappings currently blocked:
+
+- `JejakEnergi`
+  - `EMF - MEDOK = 121559455873224`
+  - `EMF - MEDOK = 124662372824994`
+- `KotakArwah`
+  - `ht-KOTAK SUARA = 80024667585179`
+  - `ht-KOTAK SUARA = 103210317836293`
+- `BukuTerkutuk`
+  - `Buku Terkutuk (tertutup) = 123135502718934`
+  - `Buku Terkutuk (Terbuka) = 135643662585349`
+  - `Buku Terkutuk (tertutup) = 108333222574742`
+- `Garam`
+  - `Garam Diawur = 70968882423059`
+  - `Garam = 117103968659967`
+  - `Garam = 85676391823588`
+  - `Garam Diawur = 123531417425505`
+- `Salib`
+  - `salib2 = 118327808345553`
+  - `SALIB KAYU = 128686833722709`
+  - `SALIB KAYU = 74458723326407`
+  - `salib2 = 84267196435822`
+- `Dupa`
+  - `dupastick = 128740632500448`
+  - `dupastick = 116816609439903`
+  - local source also contains `Dupa Pot Merah` and `Dupa pot`, but no confident CSV row has been locked yet
+- `Flashlight`
+  - `Flashlight besar hitam = 127298509562779`
+  - `Flashlight besar hitam = 83570453208896`
+  - `FlashlightHitam Kecil = 86818981706974`
+  - `HeadLamp Biru = 70727435874806`
+  - `HeadLamp Hitam = 139597366473925`
+
+Owner-provided authoritative mapping:
+
+| Canonical Tool | Source | Asset ID | Status |
+|---|---|---:|---|
+| `PilSanity` | owner-provided post-import asset id | `135462688002407` | locked |
+
+Working rule for the next slice:
+
+- `ghost/evidence gameplay runtime` uses one locked base asset per tool slot
+- `rarity variants` stay documented but unwired until the rarity/content lane is implemented
+
+Classification notes from local source folders:
+
+- `BukuTerkutuk`
+  - `tertutup` is the strongest `base/default/common` candidate
+  - `Terbuka` reads as an interaction/state variant, not a separate baseline slot
+- `Garam`
+  - `Garam` is the strongest `base/default/common` candidate
+  - `Garam Diawur` reads as a deployed/used state variant
+- `KotakArwah`
+  - `ht-KOTAK SUARA` is the strongest canonical-name match
+  - `ht` reads as a secondary/short-name upload and should not automatically replace the canonical slot
+- `Dupa`
+  - `dupastick` is the strongest `base/default/common` candidate
+  - `Dupa Pot Merah` and `Dupa pot` read as alternate/support prop variants
+- `Flashlight`
+  - `Flashlight besar hitam` is the strongest main-hand flashlight candidate
+  - `HeadLamp Biru` and `HeadLamp Hitam` read as headlamp/support variants, not primary flashlight baseline
+
+Base-slot defaults locked into source config on 2026-04-18:
+
+| Canonical Tool | Locked Base Asset ID | Basis |
+|---|---:|---|
+| `JejakEnergi` | `121559455873224` | first canonical `EMF - MEDOK` row retained as base |
+| `KotakArwah` | `80024667585179` | first canonical `ht-KOTAK SUARA` row retained as base |
+| `SuhuMembeku` | `106744635077484` | single confident thermometer row |
+| `BukuTerkutuk` | `123135502718934` | `tertutup` retained as base, `Terbuka` demoted to state variant |
+| `BolaArwah` | `80883221689326` | only confident camera row in imported pool |
+| `GerakanGaib` | `109093713235033` | single confident motion-sensor row |
+| `Garam` | `117103968659967` | `Garam` retained as base, `Garam Diawur` demoted to deployed-state variant |
+| `PilSanity` | `135462688002407` | owner-provided post-import authoritative id |
+| `Salib` | `128686833722709` | `SALIB KAYU` retained as base/default crucifix |
+| `Dupa` | `128740632500448` | first `dupastick` row retained as base |
+| `Flashlight` | `127298509562779` | `Flashlight besar hitam` retained as base main-hand light |
+
+Current remaining blocker before full visual parity:
+
+- imported tool models for `JejakEnergi`, `KotakArwah`, `SuhuMembeku`, `BukuTerkutuk`, `BolaArwah`, `GerakanGaib`, and `PilSanity` are still not synced into `src/ReplicatedStorage/Assets/Models/Tools`, so runtime now has authoritative asset-id metadata but not yet the final imported model templates for those slots
 
 ### Phase 5 - Wiring Dependency Audit
 
@@ -290,6 +387,11 @@ Remaining validation slices:
 - start/join room flow on published runtime
 - confirm one live match uses the new ghost template set in runtime
 - continue deeper UI/multiclient smoke only after ghost lane is locked in commit
+- `LobbySocialHub` authoritative world source is still blocked:
+  - published runtime no longer falls into the completely empty gray world
+  - but the restored historical `LobbySocialHub.model.json` still resolves to an incorrect blockout-like lobby state
+  - historical git versions of `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json` do not expose a more complete lobby source
+  - syncback from current `PASRAHPHOBIA.rbxlx` did not provide a healthier `LobbySocialHub` source to restore from
 
 ### Phase 9 - Lock And Report
 

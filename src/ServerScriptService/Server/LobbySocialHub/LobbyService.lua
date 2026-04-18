@@ -1154,6 +1154,21 @@ local function resolveGhostVisualProfileInventoryModelAssetId(ghostType)
     return nil
 end
 
+local function resolveToolVisualProfileConfig(toolType)
+    if type(toolType) ~= "string" or toolType == "" then
+        return nil
+    end
+
+    local sharedConfig = safeRequireModule(resolveSharedGameDataModule("ToolVisualConfig"))
+    local tools = type(sharedConfig) == "table" and sharedConfig.tools or nil
+    local config = type(tools) == "table" and tools[toolType] or nil
+    if type(config) == "table" then
+        return config
+    end
+
+    return nil
+end
+
 local function clampRuntimeModelBounds(model, targetBounds)
     if not (model and model:IsA("Model")) or typeof(targetBounds) ~= "Vector3" then
         return false
@@ -1284,6 +1299,25 @@ local function syncRuntimeAssetModel(parent, runtimeName, categoryName, modelNam
             pcall(function()
                 model:PivotTo(targetCFrame)
             end)
+            changed = true
+        end
+    end
+
+    if tostring(categoryName or "") == "Tools" then
+        local toolConfig = resolveToolVisualProfileConfig(tostring(modelName or ""))
+        local inventoryModelAssetId = type(toolConfig) == "table" and toolConfig.inventoryModelAssetId or nil
+        local sourceLabel = type(toolConfig) == "table" and toolConfig.sourceLabel or nil
+        local variantRole = type(toolConfig) == "table" and toolConfig.variantRole or nil
+        if model:GetAttribute("PasrahToolInventoryModelAssetId") ~= inventoryModelAssetId then
+            model:SetAttribute("PasrahToolInventoryModelAssetId", type(inventoryModelAssetId) == "string" and inventoryModelAssetId ~= "" and inventoryModelAssetId or nil)
+            changed = true
+        end
+        if model:GetAttribute("PasrahToolVisualLabel") ~= sourceLabel then
+            model:SetAttribute("PasrahToolVisualLabel", type(sourceLabel) == "string" and sourceLabel ~= "" and sourceLabel or nil)
+            changed = true
+        end
+        if model:GetAttribute("PasrahToolVariantRole") ~= variantRole then
+            model:SetAttribute("PasrahToolVariantRole", type(variantRole) == "string" and variantRole ~= "" and variantRole or nil)
             changed = true
         end
     end
