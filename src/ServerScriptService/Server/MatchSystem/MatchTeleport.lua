@@ -489,10 +489,38 @@ local function extractSpawnCFrame(spawnNode)
 	return nil
 end
 
+local function getPreparationSpawnCandidates(mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return {}
+	end
+
+	local preparationFolder = mapClone:FindFirstChild("PreparationStagingRuntime", true)
+	local spawnArea = preparationFolder and preparationFolder:FindFirstChild("PreparationSpawnArea", true)
+	if not spawnArea then
+		return {}
+	end
+
+	local candidates = {}
+	for _, child in ipairs(spawnArea:GetDescendants()) do
+		if child:IsA("BasePart") or child:IsA("Model") then
+			table.insert(candidates, child)
+		end
+	end
+	table.sort(candidates, function(a, b)
+		return tostring(a.Name) < tostring(b.Name)
+	end)
+	return candidates
+end
+
 local function getSpawnCandidates(mapClone)
+	local preparationCandidates = getPreparationSpawnCandidates(mapClone)
+	if #preparationCandidates > 0 then
+		return preparationCandidates, "PreparationSpawnArea"
+	end
+
 	local spawnFolder = mapClone and mapClone:FindFirstChild("SpawnPoints", true)
 	if not spawnFolder then
-		return {}
+		return {}, nil
 	end
 
 	local candidates = {}
@@ -501,16 +529,16 @@ local function getSpawnCandidates(mapClone)
 			table.insert(candidates, child)
 		end
 	end
-	return candidates
+	return candidates, "SpawnPoints"
 end
 
 local function waitForSpawnCandidates(mapClone)
 	local deadline = os.clock() + SPAWN_WAIT_TIMEOUT
 	repeat
 		if mapClone and mapClone:IsDescendantOf(Workspace) then
-			local candidates = getSpawnCandidates(mapClone)
+			local candidates, source = getSpawnCandidates(mapClone)
 			if #candidates > 0 then
-				return candidates
+				return candidates, source
 			end
 		end
 		task.wait(SPAWN_WAIT_STEP)
@@ -819,19 +847,23 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 			string.format("match=%s", tostring(match and (match.matchId or match.id) or "nil")),
 			string.format("map=%s", tostring(resolvedMapName or resolvedTemplateName)),
 			"status=map_cloned",
-			"status=waiting_spawn_points",
+			"status=waiting_spawn_candidates",
 		}
 		updateStudioTeleportTrace(teleportTrace, #teleported, nil)
 
-		local spawnPoints = waitForSpawnCandidates(mapClone)
+		local spawnPoints, spawnSource = waitForSpawnCandidates(mapClone)
 		if #spawnPoints == 0 then
-			warn("[MatchTeleport] SpawnPoints missing/empty after map load:", mapClone:GetFullName())
+			warn("[MatchTeleport] Spawn candidates missing/empty after map load:", mapClone:GetFullName())
 		end
 
 		updateStudioTeleportTrace(
 			teleportTrace,
 			#teleported,
-			string.format("status=spawn_points_ready count=%d", #spawnPoints)
+			string.format(
+				"status=spawn_candidates_ready count=%d source=%s",
+				#spawnPoints,
+				tostring(spawnSource or "none")
+			)
 		)
 		for index, player in ipairs(players) do
 			if typeof(player) == "Instance" and player:IsA("Player") then

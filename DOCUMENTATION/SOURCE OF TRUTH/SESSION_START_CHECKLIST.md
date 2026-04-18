@@ -53,6 +53,30 @@ Sesi hanya dianggap siap jika:
 - `Roblox_Studio` terlihat di `/mcp`
 - Studio menunjukkan client MCP terhubung
 
+## Minimum Yang Harus Dibuka Sebelum Interaksi Dengan Codex
+
+Urutan minimum yang aman untuk project ini:
+
+1. Buka `PASRAHPHOBIA.rbxlx`
+2. Pastikan Studio yang terbuka memang project ini, bukan place lain
+3. Pastikan Assistant MCP di Studio sudah terhubung
+4. Pastikan tool `Roblox_Studio` terbaca di sesi Codex
+5. Jangan nyalakan `Rojo` dulu kecuali memang mau kirim perubahan local ke Studio
+6. Jika butuh publish/test cloud, verifikasi dulu identity place:
+   - `PlaceId = 113010869463813`
+   - `GameId = 9802743087`
+7. Jika butuh test multiplayer:
+   - buka Roblox Player PC setelah Studio siap
+   - buka Android client setelah Studio siap
+8. Baru setelah itu beri task ke Codex
+
+Aturan singkat:
+
+- default aman: `Studio + MCP` dulu
+- `Rojo` hanya dinyalakan saat perlu workflow `local -> Studio`
+- jangan anggap state Studio otomatis sudah balik ke repo
+- perubahan Studio final harus dimirror/syncback dengan sengaja, lalu commit
+
 ## Startup Check Cloud Place Identity
 
 Jika task membutuhkan context akun/cloud Roblox, verifikasi identity berikut di Studio:
