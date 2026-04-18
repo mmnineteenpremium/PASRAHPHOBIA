@@ -26,20 +26,13 @@ local DEFAULT_GHOST_TYPES = {
 	"HantuTanah",
 }
 
-local DEFAULT_GHOST_TEMPLATE_VISUAL_OFFSETS = {
-	Pocong = Vector3.new(0, 0.1, 0),
-}
+local DEFAULT_GHOST_TEMPLATE_VISUAL_OFFSETS = {}
 
-local DEFAULT_GHOST_TEMPLATE_ROOT_SIZES = {
-	Pocong = Vector3.new(2, 2, 1),
-}
+local DEFAULT_GHOST_TEMPLATE_ROOT_SIZES = {}
 
-local DEFAULT_GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {
-	Pocong = Vector3.new(0.06, 0.07, 0.07),
-}
+local DEFAULT_GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {}
 
 local DEFAULT_GHOST_TEMPLATE_TARGET_BOUNDS = {
-	Pocong = Vector3.new(1.6, 3.75, 1.18),
 	Kuntilanak = Vector3.new(3.5, 4.8, 1.8),
 	KuntilanakAggressive = Vector3.new(2.2, 5.4, 1.8),
 	Genderuwo = Vector3.new(3.4, 5.8, 2.6),
@@ -57,13 +50,9 @@ local DEFAULT_GHOST_TEMPLATE_GROUNDED = {
 	Leak = true,
 }
 
-local DEFAULT_GHOST_TEMPLATE_MESH_PART_NAMES = {
-	Pocong = "material",
-}
+local DEFAULT_GHOST_TEMPLATE_MESH_PART_NAMES = {}
 
-local DEFAULT_GHOST_TEMPLATE_CAST_SHADOW = {
-	Pocong = false,
-}
+local DEFAULT_GHOST_TEMPLATE_CAST_SHADOW = {}
 
 local GHOST_TEMPLATE_VISUAL_OFFSETS = {}
 local GHOST_TEMPLATE_ROOT_SIZES = {}
@@ -150,6 +139,13 @@ local STUDIO_GHOST_PREVIEW_ORDER = {
 	Leak = 5,
 }
 
+local GHOST_AGGRESSIVE_VISUAL_THRESHOLD = 65
+local GHOST_AGGRESSIVE_SUFFIXES = {
+	"Aggressive",
+	"Agressive",
+	"Angry",
+}
+
 local function normalizeToken(value)
 	if type(value) ~= "string" then
 		return nil
@@ -161,12 +157,90 @@ local function normalizeToken(value)
 	return trimmed:gsub("[%s_%-_%.]+", ""):lower()
 end
 
+local function trimGhostName(value)
+	if type(value) ~= "string" then
+		return nil
+	end
+	local trimmed = value:gsub("^%s+", ""):gsub("%s+$", "")
+	if trimmed == "" then
+		return nil
+	end
+	return trimmed
+end
+
+local function splitGhostTypeVariant(ghostType)
+	local trimmed = trimGhostName(ghostType)
+	if not trimmed then
+		return nil, nil
+	end
+
+	for _, suffix in ipairs(GHOST_AGGRESSIVE_SUFFIXES) do
+		local directToken = suffix .. "$"
+		if trimmed:match(directToken) then
+			local baseName = trimGhostName(trimmed:gsub(directToken, ""))
+			if baseName then
+				return baseName, suffix
+			end
+		end
+
+		local delimitedToken = "[%s_%-]+" .. suffix .. "$"
+		if trimmed:match(delimitedToken) then
+			local baseName = trimGhostName(trimmed:gsub(delimitedToken, ""))
+			if baseName then
+				return baseName, suffix
+			end
+		end
+	end
+
+	return trimmed, nil
+end
+
+local function resolveGhostBaseType(ghostType)
+	local baseName = select(1, splitGhostTypeVariant(ghostType))
+	baseName = baseName or ghostType
+	if type(baseName) == "string" then
+		baseName = baseName:gsub("^Ghost[%s_%-]+", "")
+	end
+	return baseName
+end
+
+local function isAggressiveGhostTypeName(ghostType)
+	local _, suffix = splitGhostTypeVariant(ghostType)
+	return suffix ~= nil
+end
+
+local function resolveGhostTemplateConfigValue(configMap, ghostType)
+	if type(configMap) ~= "table" then
+		return nil
+	end
+	if configMap[ghostType] ~= nil then
+		return configMap[ghostType]
+	end
+
+	local baseGhostType = resolveGhostBaseType(ghostType)
+	if baseGhostType ~= ghostType and configMap[baseGhostType] ~= nil then
+		return configMap[baseGhostType]
+	end
+
+	local baseToken = normalizeToken(baseGhostType)
+	if not baseToken then
+		return nil
+	end
+	for key, value in pairs(configMap) do
+		if normalizeToken(key) == baseToken then
+			return value
+		end
+	end
+	return nil
+end
+
 local function resolveGhostVisualTypeName(ghostModel)
 	if typeof(ghostModel) ~= "Instance" then
 		return nil
 	end
 
 	for _, candidate in ipairs({
+		ghostModel:GetAttribute("VisualGhostType"),
 		ghostModel:GetAttribute("GhostType"),
 		ghostModel:GetAttribute("VisualTemplateName"),
 		ghostModel.Name,
@@ -363,10 +437,73 @@ local function buildGhostTemplateCandidateNames(ghostType, profile)
 	return candidates
 end
 
-local function resolveGhostModelTemplate(ghostType)
-	if type(ghostType) ~= "string" or ghostType == "" then
-		return nil
+local function buildAggressiveGhostTemplateCandidateNames(ghostType)
+	local baseGhostType = resolveGhostBaseType(ghostType)
+	local seen = {}
+	local candidates = {}
+
+	local function addCandidate(name)
+		if type(name) ~= "string" or name == "" or seen[name] then
+			return
+		end
+		seen[name] = true
+		table.insert(candidates, name)
 	end
+
+	for _, suffix in ipairs(GHOST_AGGRESSIVE_SUFFIXES) do
+		addCandidate(baseGhostType .. suffix)
+		addCandidate(baseGhostType .. "_" .. suffix)
+		addCandidate(baseGhostType .. "-" .. suffix)
+		addCandidate("Ghost_" .. baseGhostType .. suffix)
+		addCandidate("Ghost_" .. baseGhostType .. "_" .. suffix)
+		addCandidate("Ghost_" .. baseGhostType .. "-" .. suffix)
+	end
+
+	return candidates
+end
+
+local function shouldUseAggressiveGhostVisualType(ghostType, ghostState, options)
+	if isAggressiveGhostTypeName(ghostType) then
+		return true
+	end
+
+	local context = type(options) == "table" and options or {}
+	local state = type(ghostState) == "table" and ghostState or {}
+	local stateRaw = trimGhostName(state.state)
+	local stateName = stateRaw
+	if stateRaw == "Hunt" then
+		stateName = "Hunting"
+	elseif stateRaw == "Manifest" then
+		stateName = "Manifestation"
+	elseif stateRaw == "Retreat" then
+		stateName = "Cooldown"
+	end
+	local aggression = tonumber(state.aggression)
+	if type(aggression) ~= "number" then
+		aggression = tonumber(context.initialAggression)
+	end
+	local personalityType = type(state.personality) == "table" and tostring(state.personality.type or "") or ""
+	if personalityType == "" then
+		personalityType = tostring(context.personalityType or "")
+	end
+
+	if state.huntActive == true then
+		return true
+	end
+	if stateName == "Hunting" then
+		return true
+	end
+	if type(aggression) == "number" and aggression >= GHOST_AGGRESSIVE_VISUAL_THRESHOLD then
+		return true
+	end
+	if personalityType == "Aggressive" and type(aggression) == "number" and aggression >= 55 then
+		return true
+	end
+
+	return false
+end
+
+local function resolveGhostTemplatesFolder()
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
 	if not assets then
 		return nil
@@ -375,16 +512,45 @@ local function resolveGhostModelTemplate(ghostType)
 	if not models then
 		return nil
 	end
-	local ghosts = models:FindFirstChild("Ghosts")
+	return models:FindFirstChild("Ghosts")
+end
+
+local function resolveGhostModelTemplate(ghostType, options)
+	if type(ghostType) ~= "string" or ghostType == "" then
+		return nil
+	end
+	local ghosts = resolveGhostTemplatesFolder()
 	if not ghosts then
 		return nil
 	end
 
-	local profile = resolveGhostVisualProfile(ghostType)
-	for _, candidateName in ipairs(buildGhostTemplateCandidateNames(ghostType, profile)) do
+	local context = type(options) == "table" and options or {}
+	local baseGhostType = resolveGhostBaseType(ghostType)
+	local profile = resolveGhostVisualProfile(ghostType) or resolveGhostVisualProfile(baseGhostType)
+	local preferredCandidates = {}
+	local seen = {}
+
+	local function appendCandidates(candidates)
+		for _, candidateName in ipairs(candidates or {}) do
+			if type(candidateName) == "string" and candidateName ~= "" and not seen[candidateName] then
+				seen[candidateName] = true
+				table.insert(preferredCandidates, candidateName)
+			end
+		end
+	end
+
+	if shouldUseAggressiveGhostVisualType(ghostType, context.ghostState, context) then
+		appendCandidates(buildAggressiveGhostTemplateCandidateNames(ghostType))
+	end
+	appendCandidates(buildGhostTemplateCandidateNames(ghostType, profile))
+	if baseGhostType ~= ghostType then
+		appendCandidates(buildGhostTemplateCandidateNames(baseGhostType, resolveGhostVisualProfile(baseGhostType)))
+	end
+
+	for _, candidateName in ipairs(preferredCandidates) do
 		local candidate = ghosts:FindFirstChild(candidateName)
 		if candidate and candidate:IsA("Model") then
-			return candidate
+			return candidate, candidateName
 		end
 	end
 
@@ -436,7 +602,7 @@ local function clampGhostTemplateScale(ghostModel, ghostType)
 		return
 	end
 
-	local targetBounds = GHOST_TEMPLATE_TARGET_BOUNDS[ghostType] or Vector3.new(2.8, 5.6, 2.4)
+	local targetBounds = resolveGhostTemplateConfigValue(GHOST_TEMPLATE_TARGET_BOUNDS, ghostType) or Vector3.new(2.8, 5.6, 2.4)
 	local ok, _, currentBounds = pcall(function()
 		return ghostModel:GetBoundingBox()
 	end)
@@ -465,19 +631,27 @@ local function clampGhostTemplateScale(ghostModel, ghostType)
 	end)
 end
 
-local function createGhostFromTemplate(spawnCFrame, ghostType)
-	local template = resolveGhostModelTemplate(ghostType)
+local function createGhostFromTemplate(spawnCFrame, ghostType, options)
+	local context = type(options) == "table" and options or {}
+	local template = context.forcedTemplate
+	local resolvedVisualGhostType = nil
+	if typeof(template) ~= "Instance" then
+		template, resolvedVisualGhostType = resolveGhostModelTemplate(ghostType, context)
+	end
 	if typeof(template) ~= "Instance" or not template:IsA("Model") then
 		return nil
 	end
 
-	local preferredRootSize = GHOST_TEMPLATE_ROOT_SIZES[ghostType]
-	local preferredCastShadow = GHOST_TEMPLATE_CAST_SHADOW[ghostType]
-	local inventoryModelAssetId = GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS[ghostType]
+	local logicalGhostType = context.logicalGhostType or ghostType
+	local visualGhostType = resolvedVisualGhostType or template.Name or ghostType
+	local preferredRootSize = resolveGhostTemplateConfigValue(GHOST_TEMPLATE_ROOT_SIZES, visualGhostType)
+	local preferredCastShadow = resolveGhostTemplateConfigValue(GHOST_TEMPLATE_CAST_SHADOW, visualGhostType)
+	local inventoryModelAssetId = resolveGhostTemplateConfigValue(GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS, visualGhostType)
 
 	local ghostModel = template:Clone()
-	ghostModel.Name = string.format("Ghost_%s", tostring(ghostType or "Unknown"))
-	ghostModel:SetAttribute("GhostType", ghostType)
+	ghostModel.Name = string.format("Ghost_%s", tostring(logicalGhostType or "Unknown"))
+	ghostModel:SetAttribute("GhostType", logicalGhostType)
+	ghostModel:SetAttribute("VisualGhostType", visualGhostType)
 	ghostModel:SetAttribute("PlaceholderVisual", false)
 	ghostModel:SetAttribute("VisualTemplateName", template.Name)
 	ghostModel:SetAttribute("PasrahGhostInventoryModelAssetId", inventoryModelAssetId)
@@ -497,7 +671,7 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 		end
 	end
 
-	clampGhostTemplateScale(ghostModel, ghostType)
+	clampGhostTemplateScale(ghostModel, visualGhostType)
 
 	local root = ghostModel:FindFirstChild("HumanoidRootPart", true)
 	if root and root:IsA("BasePart") then
@@ -522,9 +696,9 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 	end
 
 	if ghostModel.PrimaryPart then
-		local visualOffset = GHOST_TEMPLATE_VISUAL_OFFSETS[ghostType]
+		local visualOffset = resolveGhostTemplateConfigValue(GHOST_TEMPLATE_VISUAL_OFFSETS, visualGhostType)
 		local visualMesh = nil
-		local preferredMeshPartName = GHOST_TEMPLATE_MESH_PART_NAMES[ghostType]
+		local preferredMeshPartName = resolveGhostTemplateConfigValue(GHOST_TEMPLATE_MESH_PART_NAMES, visualGhostType)
 		if type(preferredMeshPartName) == "string" and preferredMeshPartName ~= "" then
 			local candidate = ghostModel:FindFirstChild(preferredMeshPartName, true)
 			if candidate and candidate:IsA("MeshPart") then
@@ -535,7 +709,7 @@ local function createGhostFromTemplate(spawnCFrame, ghostType)
 			visualMesh = ghostModel:FindFirstChildWhichIsA("MeshPart", true)
 		end
 		if visualMesh then
-			local forcedSize = GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES[ghostType]
+			local forcedSize = resolveGhostTemplateConfigValue(GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES, visualGhostType)
 			if typeof(forcedSize) == "Vector3" then
 				visualMesh.Size = forcedSize
 			end
@@ -1143,7 +1317,7 @@ local function resolveGhostMotionProfile(ghostModel, stateName)
 	local ghostTypeName = resolveGhostVisualTypeName(ghostModel)
 	local ghostTypeToken = normalizeToken(ghostTypeName)
 
-	if ghostTypeName and GHOST_TEMPLATE_GROUNDED[ghostTypeName] == true then
+	if ghostTypeName and resolveGhostTemplateConfigValue(GHOST_TEMPLATE_GROUNDED, ghostTypeName) == true then
 		motion.bobAmplitude = 0
 	end
 
@@ -1240,8 +1414,8 @@ local function computeGhostVisualCFrame(match, ghostModel, targetPosition, ghost
 	local bobAmplitude = (motion.bobAmplitude or 0) * math.max(0.3, movementAlpha)
 	local swayAmplitude = (motion.swayAmplitude or 0) * math.max(0.25, movementAlpha)
 	local bobOffset = bobWave * bobAmplitude
-	local maxHoverHeight = ghostTypeName and GHOST_TEMPLATE_MAX_HOVER_HEIGHT[ghostTypeName] or 0.05
-	if ghostTypeName and GHOST_TEMPLATE_GROUNDED[ghostTypeName] == true then
+	local maxHoverHeight = ghostTypeName and resolveGhostTemplateConfigValue(GHOST_TEMPLATE_MAX_HOVER_HEIGHT, ghostTypeName) or 0.05
+	if ghostTypeName and resolveGhostTemplateConfigValue(GHOST_TEMPLATE_GROUNDED, ghostTypeName) == true then
 		bobOffset = 0
 	else
 		bobOffset = math.clamp(bobOffset, 0, math.max(0, maxHoverHeight or 0.05))
@@ -1260,7 +1434,7 @@ local function computeGhostVisualCFrame(match, ghostModel, targetPosition, ghost
 	local floorY = resolveGhostFloorY(match, ghostModel, position)
 	local bottomOffset = resolveGhostBottomOffset(ghostModel)
 	if type(floorY) == "number" and type(bottomOffset) == "number" then
-		local desiredHover = (ghostTypeName and GHOST_TEMPLATE_GROUNDED[ghostTypeName] == true) and 0 or bobOffset
+		local desiredHover = (ghostTypeName and resolveGhostTemplateConfigValue(GHOST_TEMPLATE_GROUNDED, ghostTypeName) == true) and 0 or bobOffset
 		position = Vector3.new(position.X, floorY + desiredHover + bottomOffset, position.Z)
 	end
 
@@ -1625,11 +1799,69 @@ function Service:_applyGhostVisualState(match, ghostState)
 	end
 end
 
+function Service:_tryPromoteGhostVisualVariant(match, ghostState)
+	if type(match) ~= "table" or typeof(match.ghost) ~= "Instance" then
+		return false
+	end
+
+	local currentVisualGhostType = resolveGhostVisualTypeName(match.ghost) or match.ghostType
+	local preferredTemplate, preferredVisualGhostType = resolveGhostModelTemplate(currentVisualGhostType, {
+		ghostState = ghostState,
+		initialAggression = tonumber(match.initialAggression),
+		personalityType = type(ghostState) == "table" and type(ghostState.personality) == "table" and ghostState.personality.type or nil,
+	})
+	if typeof(preferredTemplate) ~= "Instance" then
+		return false
+	end
+	if type(preferredVisualGhostType) ~= "string" or preferredVisualGhostType == "" then
+		preferredVisualGhostType = preferredTemplate.Name
+	end
+	if preferredVisualGhostType == currentVisualGhostType then
+		return false
+	end
+
+	local previousGhost = match.ghost
+	local currentPivot = previousGhost:GetPivot()
+	local logicalGhostType = match.ghostType or previousGhost:GetAttribute("GhostType") or currentVisualGhostType
+	local promotedGhost = createGhostFromTemplate(currentPivot, preferredVisualGhostType, {
+		forcedTemplate = preferredTemplate,
+		logicalGhostType = logicalGhostType,
+	})
+	if typeof(promotedGhost) ~= "Instance" then
+		return false
+	end
+
+	for attributeName, attributeValue in pairs(previousGhost:GetAttributes()) do
+		if attributeName ~= "GhostType" and attributeName ~= "VisualGhostType" and attributeName ~= "VisualTemplateName" then
+			promotedGhost:SetAttribute(attributeName, attributeValue)
+		end
+	end
+
+	local parentTarget = previousGhost.Parent
+	if typeof(parentTarget) ~= "Instance" then
+		promotedGhost:Destroy()
+		return false
+	end
+	local parentOk = pcall(function()
+		promotedGhost.Parent = parentTarget
+	end)
+	if not parentOk then
+		promotedGhost:Destroy()
+		return false
+	end
+
+	match.ghost = promotedGhost
+	previousGhost:Destroy()
+	match.ghostVisualCurrentPosition = currentPivot.Position
+	return true
+end
+
 function Service:_syncGhostVisual(match, ghostState)
 	if type(match) ~= "table" or typeof(match.ghost) ~= "Instance" or type(ghostState) ~= "table" then
 		return false
 	end
 
+	self:_tryPromoteGhostVisualVariant(match, ghostState)
 	ensureGhostPlacement(match)
 	local roomId = ghostState.currentRoomId or ghostState.favoriteRoomId
 	match.ghost:SetAttribute("CurrentRoomId", ghostState.currentRoomId)
@@ -1840,7 +2072,11 @@ function Service:InitializeMatch(match)
 	local spawnPart = resolveSpawnPart(container)
 	local spawnCFrame = spawnPart and spawnPart.CFrame or CFrame.new(0, 5, 0)
 
-	local ghostModel = createGhostFromTemplate(spawnCFrame, ghostType)
+	local ghostModel = createGhostFromTemplate(spawnCFrame, ghostType, {
+		logicalGhostType = ghostType,
+		initialAggression = tonumber(match.initialAggression),
+		personalityType = match.personalityType,
+	})
 		or createVisibleGhostPlaceholder(spawnCFrame, ghostType)
 	local parentOk, parentErr = tryParentGhostModel(ghostModel, container)
 	if not parentOk then
