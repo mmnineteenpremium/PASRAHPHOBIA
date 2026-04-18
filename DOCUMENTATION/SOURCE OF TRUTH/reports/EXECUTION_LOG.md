@@ -16034,3 +16034,46 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - oversized support tool display models no longer appear in the forward camera cone from spawn
   - final local play verification kept spawn at `1610, 3.47, -10`
   - cleaned worktree `.rbxlx` saved locally
+
+## 2026-04-18 - Map source drift cleanup and preparation door smoke
+
+- Scope:
+  - removed `PRESYNC_*` map variants from live `ReplicatedStorage.Maps` and `ServerStorage.Maps`
+  - removed the same binary variants from local source folders under:
+    - `src/ReplicatedStorage/Maps/*`
+    - `src/ServerStorage/Maps/*`
+  - restored host room start countdown to `5` seconds in:
+    - `src/ServerScriptService/Server/LobbySystem/Service.lua`
+    - `src/ServerScriptService/Server/LobbySystem/Controller.lua`
+- Runtime/source fixes kept:
+  - `src/client/UI/Main.lua`
+    - reduced top-level locals so UI no longer fails with Luau local-register overflow
+  - `src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua`
+    - authored preparation runtime is treated as authoritative
+    - synthetic `RuntimeMainfloor` and `RuntimeBoundary` are removed when authored staging exists
+    - authored preparation runtime is re-anchored against the active front door
+  - `src/ServerScriptService/Server/MatchSystem/MatchTeleport.lua`
+    - spawn lift protects authored preparation spawns from low-Y fallback
+- Verification in Studio active place:
+  - edit mode now shows only one authoritative model per investigation map:
+    - `ReplicatedStorage.Maps.HauntedHouse.HauntedHouse`
+    - `ReplicatedStorage.Maps.StudioMMNineteen.StudioMMNineteen`
+    - `ReplicatedStorage.Maps.EmptyBuilding.EmptyBuilding`
+    - `ReplicatedStorage.Maps.AbandonedPalace.AbandonedPalace`
+    - `PowerBreakerSwitch` remains only under `ReplicatedStorage.Maps.AbandonedPalace`
+    - matching single-model state confirmed in `ServerStorage.Maps`
+  - local smoke on `HauntedHouse`:
+    - lobby boot succeeded
+    - room browser could create room and start match
+    - active match contained only:
+      - `Match_match_1.HauntedHouse:Folder`
+      - `Match_match_1.HauntedHouse.HauntedHouse:Model`
+      - `Match_match_1.InvestigationTools:Folder`
+      - `Match_match_1.Ghost_Palasik:Model`
+    - player spawned at authored preparation staging outside the house
+    - front door prompt changed lifecycle from `PreparationPhase` to `InvestigationPhase`
+- Local place file result:
+  - before cleanup save: `PASRAHPHOBIA.rbxlx = 1344.51 MB`
+  - after cleanup save: `PASRAHPHOBIA.rbxlx = 305.64 MB`
+- Repo hygiene:
+  - `.gitignore` now allows authoritative map `.rbxm` files under `src/ReplicatedStorage/Maps/**` and `src/ServerStorage/Maps/**` so this cleanup can be committed instead of living only in local Studio state.

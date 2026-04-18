@@ -3557,7 +3557,10 @@ local function hasAuthoredOutdoorRuntime(mapClone)
 	if typeof(mapClone) ~= "Instance" then
 		return false
 	end
-	local runtimeFolder = mapClone:FindFirstChild("Runtime")
+	if findAuthoredPreparationRuntimeFolder(mapClone) then
+		return true
+	end
+	local runtimeFolder = mapClone:FindFirstChild("Runtime", true)
 	if not runtimeFolder then
 		return false
 	end
@@ -3584,6 +3587,45 @@ local function hasAnyBasePart(folder)
 	return false
 end
 
+local function resolvePreparationAuthoringRoot(mapClone, preparationFolder)
+	if typeof(mapClone) ~= "Instance" or typeof(preparationFolder) ~= "Instance" then
+		return preparationFolder
+	end
+	local cursor = preparationFolder
+	local directChild = preparationFolder
+	while cursor and cursor.Parent and cursor.Parent ~= mapClone do
+		cursor = cursor.Parent
+		directChild = cursor
+	end
+	return directChild
+end
+
+local function applyVectorOffsetRecursive(node, delta)
+	if typeof(node) ~= "Instance" or typeof(delta) ~= "Vector3" or delta.Magnitude <= 1e-4 then
+		return false
+	end
+	if node:IsA("Model") then
+		local ok, pivot = pcall(function()
+			return node:GetPivot()
+		end)
+		if ok then
+			node:PivotTo(pivot + delta)
+			return true
+		end
+	elseif node:IsA("BasePart") then
+		node.CFrame = node.CFrame + delta
+		return true
+	end
+
+	local movedAny = false
+	for _, child in ipairs(node:GetChildren()) do
+		if applyVectorOffsetRecursive(child, delta) then
+			movedAny = true
+		end
+	end
+	return movedAny
+end
+
 local function patchPreparationStaging(mapId, mapClone, matchContext)
 	if not mapClone or mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) == true then
 		return false
@@ -3594,6 +3636,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		token = resolveMapOverrideToken(nil, mapClone)
 	end
 	local profile = token and PREPARATION_STAGING_PROFILES[token] or nil
+	local didReanchor = false
 
 	local authoredPreparationFolder = findAuthoredPreparationRuntimeFolder(mapClone)
 	local useNativeMarkerOnly = (not USE_LEGACY_SYNTHETIC_STAGING) or token == "hauntedhouse" or authoredPreparationFolder ~= nil
@@ -3603,6 +3646,35 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		local didSyncAuthoredPrep = false
 		if authoredPreparationFolder then
 			authoredPreparationFolder:SetAttribute("NativeStagingSourceOfTruth", true)
+			local runtimeMainfloor = mapClone:FindFirstChild("RuntimeMainfloor")
+			if runtimeMainfloor then
+				runtimeMainfloor:Destroy()
+			end
+			local runtimeBoundary = mapClone:FindFirstChild("RuntimeBoundary")
+			if runtimeBoundary then
+				runtimeBoundary:Destroy()
+			end
+			local authoredSpawns = collectAuthoredPreparationSpawns(authoredPreparationFolder)
+			local roomsFolder = mapClone:FindFirstChild("Rooms", true)
+			local doorsFolder = mapClone:FindFirstChild("Doors", true)
+			local anchorRoom = profile and roomsFolder and roomsFolder:FindFirstChild(profile.anchorRoomName, true)
+			local anchorDoor = profile and doorsFolder and doorsFolder:FindFirstChild(profile.anchorDoorName, true)
+			if #authoredSpawns > 0 and anchorRoom and anchorRoom:IsA("BasePart") and anchorDoor and anchorDoor:IsA("BasePart") then
+				local authoredCenter = Vector3.zero
+				for _, authoredSpawn in ipairs(authoredSpawns) do
+					authoredCenter += authoredSpawn.Position
+				end
+				authoredCenter /= #authoredSpawns
+				local outward = flattenDirection(anchorDoor.Position - anchorRoom.Position)
+				if outward then
+					local desiredCenter = anchorDoor.Position + (outward * 8.5) + Vector3.new(0, 0.5, 0)
+					local reanchorDelta = desiredCenter - authoredCenter
+					if reanchorDelta.Magnitude > 16 then
+						local authoredRoot = resolvePreparationAuthoringRoot(mapClone, authoredPreparationFolder)
+						didReanchor = applyVectorOffsetRecursive(authoredRoot, reanchorDelta) or didReanchor
+					end
+				end
+			end
 			if existingSpawnFolder then
 				existingSpawnFolder:Destroy()
 				existingSpawnFolder = nil
@@ -3615,7 +3687,6 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			end
 		end
 
-		local didReanchor = false
 		local roomsFolder = mapClone:FindFirstChild("Rooms", true)
 		local doorsFolder = mapClone:FindFirstChild("Doors", true)
 		local safeZonesFolder = mapClone:FindFirstChild("SafeZones", true)
@@ -4765,8 +4836,8 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
 	didPatch = patchSpawnPoints(mapId, mapClone) or didPatch
-	didPatch = patchRuntimeMainfloor(mapId, mapClone) or didPatch
 	didPatch = patchPreparationStaging(mapId, mapClone, matchContext) or didPatch
+	didPatch = patchRuntimeMainfloor(mapId, mapClone) or didPatch
 	didPatch = patchRuntimeBoundary(mapClone) or didPatch
 	didPatch = patchTraversalGuides(mapClone) or didPatch
 	return didPatch

@@ -7,6 +7,10 @@
 !src/ReplicatedStorage/Assets/Models/Ghosts/*.rbxmx
 !src/ReplicatedStorage/Assets/Models/Tools/*.rbxm
 !src/ReplicatedStorage/Assets/Models/Tools/*.rbxmx
+!src/ReplicatedStorage/Maps/**/*.rbxm
+!src/ReplicatedStorage/Maps/**/*.rbxmx
+!src/ServerStorage/Maps/**/*.rbxm
+!src/ServerStorage/Maps/**/*.rbxmx
 
 # Rojo cache & generated files
 default.project.json.rojo

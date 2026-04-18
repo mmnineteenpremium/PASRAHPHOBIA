@@ -391,17 +391,71 @@ local function pasrahAppendBuildSignature(text, separator)
 end
 local FIELD_KIT_DESKTOP_MAX_COLUMNS = 5
 local FIELD_KIT_MOBILE_MAX_COLUMNS = 3
+UISystem._alwaysVisibleFieldKitTools = {
+	JejakEnergi = true,
+	KotakArwah = true,
+	SuhuMembeku = true,
+	BukuTerkutuk = true,
+	BolaArwah = true,
+	GerakanGaib = true,
+}
 
-local function getFieldKitLayoutMetrics(isMobile, availableWidth)
-	local toolCount = math.max(1, #FIELD_KIT_TOOL_ORDER)
+function shouldShowFieldKitTool(toolType, toolState)
+	if UISystem._alwaysVisibleFieldKitTools[toolType] then
+		return true
+	end
+	if type(toolState) ~= "table" then
+		return true
+	end
+	if toolState.pending == true or toolState.visualPlaced == true then
+		return true
+	end
+	if type(toolState.placementId) == "string" and toolState.placementId ~= "" then
+		return true
+	end
+	local usesRemaining = tonumber(toolState.usesRemaining)
+	if usesRemaining and usesRemaining > 0 then
+		return true
+	end
+	local chargesRemaining = tonumber(toolState.chargesRemaining)
+	if chargesRemaining and chargesRemaining > 0 then
+		return true
+	end
+	local now = os.clock()
+	local repellentUntil = tonumber(toolState.repellentUntil)
+	if repellentUntil and repellentUntil > now then
+		return true
+	end
+	local repellentUntilLocal = tonumber(toolState.repellentUntilLocal)
+	if repellentUntilLocal and repellentUntilLocal > now then
+		return true
+	end
+	return false
+end
+
+function getVisibleFieldKitToolTypes(toolStates)
+	local visible = {}
+	for _, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+		if shouldShowFieldKitTool(toolType, toolStates and toolStates[toolType] or nil) then
+			table.insert(visible, toolType)
+		end
+	end
+	if #visible == 0 then
+		table.insert(visible, JOURNAL_TOOL_TYPE)
+	end
+	return visible
+end
+
+local function getFieldKitLayoutMetrics(isMobile, availableWidth, toolCount)
+	local resolvedToolCount = math.max(1, tonumber(toolCount) or #FIELD_KIT_TOOL_ORDER)
 	local maxColumns = isMobile and FIELD_KIT_MOBILE_MAX_COLUMNS or FIELD_KIT_DESKTOP_MAX_COLUMNS
-	local columns = math.min(toolCount, maxColumns)
+	local columns = math.min(resolvedToolCount, maxColumns)
 	local cellPaddingX = 6
 	local cellPaddingY = 6
 	local cellHeight = isMobile and 66 or 64
 	local minCellWidth = isMobile and 92 or 58
 	local cellWidth = math.floor((math.max(280, availableWidth) - (cellPaddingX * math.max(0, columns - 1))) / columns)
-	local rows = math.max(1, math.ceil(toolCount / columns))
+	local rows = math.max(1, math.ceil(resolvedToolCount / columns))
 	local buttonsHeight = (rows * cellHeight) + (math.max(0, rows - 1) * cellPaddingY)
 	local statusY = 34 + buttonsHeight + 8
 	local statusHeight = isMobile and 40 or 36
@@ -1060,6 +1114,20 @@ local function getFieldKitToolAssetTemplate(toolType)
 	return nil
 end
 
+function getFieldKitToolVisualConfig(toolType)
+	if type(toolType) ~= "string" or toolType == "" then
+		return nil
+	end
+
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
+	local gameDataFolder = shared and shared:FindFirstChild("GameData") or nil
+	local moduleScript = gameDataFolder and gameDataFolder:FindFirstChild("ToolVisualConfig") or nil
+	local configModule = safeRequire(moduleScript)
+	local toolConfigs = type(configModule) == "table" and configModule.tools or nil
+	local config = type(toolConfigs) == "table" and toolConfigs[toolType] or nil
+	return type(config) == "table" and config or nil
+end
+
 local function getGhostPreviewAssetTemplate(ghostType)
 	if type(ghostType) ~= "string" or ghostType == "" then
 		return nil
@@ -1252,11 +1320,18 @@ local function stampFieldKitPreviewModel(model, toolType, usingFallback, preview
 	if typeof(model) ~= "Instance" or not model:IsA("Model") then
 		return
 	end
+	local visualConfig = getFieldKitToolVisualConfig(toolType)
+	local inventoryModelAssetId = type(visualConfig) == "table" and visualConfig.inventoryModelAssetId or nil
+	local sourceLabel = type(visualConfig) == "table" and visualConfig.sourceLabel or nil
+	local variantRole = type(visualConfig) == "table" and visualConfig.variantRole or nil
 	model:SetAttribute("PasrahPreviewOwner", "UI")
 	model:SetAttribute("PasrahPreviewKind", "FieldKitTool")
 	model:SetAttribute("PasrahPreviewToolType", tostring(toolType or ""))
 	model:SetAttribute("PasrahPreviewUsesAssetTemplate", usingFallback ~= true)
 	model:SetAttribute("PasrahPreviewState", tostring(previewState or "ready"))
+	model:SetAttribute("PasrahToolInventoryModelAssetId", type(inventoryModelAssetId) == "string" and inventoryModelAssetId ~= "" and inventoryModelAssetId or nil)
+	model:SetAttribute("PasrahToolVisualLabel", type(sourceLabel) == "string" and sourceLabel ~= "" and sourceLabel or nil)
+	model:SetAttribute("PasrahToolVariantRole", type(variantRole) == "string" and variantRole ~= "" and variantRole or nil)
 end
 
 local function stampGhostPreviewModel(model, ghostType, template, profile)
@@ -6218,6 +6293,30 @@ function UISystem:_refreshFieldKitPanel()
 	local statusText = tostring(state.toolStatus or "Field kit [1-9] siap.")
 	local isRecent = (os.clock() - (tonumber(state.toolLastUsedAt) or 0)) <= 4
 	local toolStates = self:_ensureFieldKitToolStates()
+	local visibleToolTypes = getVisibleFieldKitToolTypes(toolStates)
+	local visibleToolOrder = {}
+	for order, toolType in ipairs(visibleToolTypes) do
+		visibleToolOrder[toolType] = order
+	end
+	local deviceProfile = self._deviceProfile or {}
+	local layoutWidth = (match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset or 356) - 24
+	local fieldKitLayout = getFieldKitLayoutMetrics(deviceProfile.isMobile == true, layoutWidth, #visibleToolTypes)
+
+	if match.FieldKitFrame then
+		match.FieldKitFrame.Size = UDim2.fromOffset(match.FieldKitFrame.Size.X.Offset, fieldKitLayout.frameHeight)
+	end
+	if match.FieldKitButtonsFrame then
+		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, fieldKitLayout.buttonsHeight)
+	end
+	if match.FieldKitGrid then
+		match.FieldKitGrid.CellPadding = UDim2.fromOffset(fieldKitLayout.cellPaddingX, fieldKitLayout.cellPaddingY)
+		match.FieldKitGrid.CellSize = UDim2.fromOffset(fieldKitLayout.cellWidth, fieldKitLayout.cellHeight)
+		match.FieldKitGrid.FillDirectionMaxCells = fieldKitLayout.columns
+	end
+	if match.FieldKitStatusLabel then
+		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, fieldKitLayout.statusY)
+		match.FieldKitStatusLabel.Size = UDim2.new(1, -24, 0, fieldKitLayout.statusHeight)
+	end
 
 	if match.FieldKitFrame then
 		match.FieldKitFrame.BackgroundColor3 = activeConfig.accent:Lerp(Color3.fromRGB(14, 18, 26), 0.78)
@@ -6237,7 +6336,14 @@ function UISystem:_refreshFieldKitPanel()
 			local toolConfig = FIELD_KIT_TOOL_CONFIG[toolName]
 			local button = widget and (widget.Button or widget) or nil
 			local toolState = toolStates[toolName]
-			if button and toolConfig and toolState then
+			local visibleOrder = visibleToolOrder[toolName]
+			if button then
+				button.Visible = visibleOrder ~= nil
+				if visibleOrder ~= nil then
+					button.LayoutOrder = visibleOrder
+				end
+			end
+			if visibleOrder and button and toolConfig and toolState then
 				local metaText, metaDanger, footerText = self:_resolveFieldKitMeta(toolName, toolState)
 				local selected = activeTool == toolName and (isRecent or toolState.pending or shouldPersistFieldKitSelection(toolName, toolState))
 				local usesRemaining = tonumber(toolState.usesRemaining)
@@ -11112,10 +11218,11 @@ function UISystem:_applyDeviceSizing()
 	if match and match.ControlsHintLabel then
 		match.ControlsHintLabel.TextSize = profile.isMobile and 13 or 12
 	end
+	local visibleFieldKitToolCount = #getVisibleFieldKitToolTypes(self:_ensureFieldKitToolStates())
 	if match and match.FieldKitFrame then
 		local kitWidth = profile.isMobile and math.min(viewportSize.X - 20, 420) or 356
 		local frameWidth = math.max(profile.isMobile and 316 or 332, math.floor(kitWidth))
-		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, frameWidth - 24)
+		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, frameWidth - 24, visibleFieldKitToolCount)
 		match.FieldKitFrame.Size = UDim2.fromOffset(frameWidth, fieldKitLayout.frameHeight)
 		if profile.isMobile then
 			match.FieldKitFrame.AnchorPoint = Vector2.new(0.5, 1)
@@ -11131,18 +11238,18 @@ function UISystem:_applyDeviceSizing()
 		match.FieldKitTitle.TextSize = profile.isMobile and 12 or 11
 	end
 	if match and match.FieldKitButtonsFrame then
-		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset - 24 or 332)
+		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset - 24 or 332, visibleFieldKitToolCount)
 		match.FieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
 		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, fieldKitLayout.buttonsHeight)
 	end
 	if match and match.FieldKitGrid and match.FieldKitFrame then
-		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame.Size.X.Offset - 24)
+		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame.Size.X.Offset - 24, visibleFieldKitToolCount)
 		match.FieldKitGrid.CellPadding = UDim2.fromOffset(fieldKitLayout.cellPaddingX, fieldKitLayout.cellPaddingY)
 		match.FieldKitGrid.CellSize = UDim2.fromOffset(fieldKitLayout.cellWidth, fieldKitLayout.cellHeight)
 		match.FieldKitGrid.FillDirectionMaxCells = fieldKitLayout.columns
 	end
 	if match and match.FieldKitStatusLabel then
-		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset - 24 or 332)
+		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset - 24 or 332, visibleFieldKitToolCount)
 		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, fieldKitLayout.statusY)
 		match.FieldKitStatusLabel.Size = UDim2.new(1, -24, 0, fieldKitLayout.statusHeight)
 		match.FieldKitStatusLabel.TextSize = profile.isMobile and 12 or 11
@@ -17496,7 +17603,8 @@ function UISystem:_bindMatchToolInput()
 			return
 		end
 
-		for _, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+		local visibleToolTypes = getVisibleFieldKitToolTypes(self:_ensureFieldKitToolStates())
+		for _, toolType in ipairs(visibleToolTypes) do
 			local toolConfig = FIELD_KIT_TOOL_CONFIG[toolType]
 			if toolConfig and input.KeyCode == toolConfig.keyCode then
 				self:_useInvestigationTool(toolType, {

@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local SAFE_MIN_SPAWN_Y = 2.5
+local TARGET_MIN_MATCH_SPAWN_Y = 24
 local FLOOR_CHECK_DISTANCE = 50
 local FLOOR_RAY_START_OFFSET = 1.5
 local DEFAULT_FLOOR_CLEARANCE = 3.0
@@ -547,6 +548,23 @@ local function waitForSpawnCandidates(mapClone)
 	return getSpawnCandidates(mapClone)
 end
 
+local function computeSpawnLift(mapClone)
+	local minY = math.huge
+	local candidates, _ = getSpawnCandidates(mapClone)
+	for _, candidate in ipairs(candidates) do
+		local candidateCFrame = extractSpawnCFrame(candidate)
+		if candidateCFrame then
+			minY = math.min(minY, candidateCFrame.Position.Y)
+		end
+	end
+
+	if minY == math.huge or minY >= TARGET_MIN_MATCH_SPAWN_Y then
+		return 0
+	end
+
+	return TARGET_MIN_MATCH_SPAWN_Y - minY
+end
+
 local function resolveUprightForward(rawCFrame)
 	if typeof(rawCFrame) ~= "CFrame" then
 		return DEFAULT_FORWARD
@@ -836,7 +854,7 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 		if type(match) == "table" then
 			match.preparationWorldBoard = mapClone:GetAttribute("PreparationStagingRuntimePatched") == true
 		end
-		local offset = computeMatchOffset(container)
+		local offset = computeMatchOffset(container) + Vector3.new(0, computeSpawnLift(mapClone), 0)
 		if not applyWorldOffset(mapClone, offset) then
 			warn("[MatchTeleport] Unable to apply map offset (no pivotable part):", mapClone:GetFullName())
 		end
