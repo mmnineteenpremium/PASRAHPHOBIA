@@ -16102,3 +16102,21 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - use clean lobby container/source lane for structure and wiring
   - use `MainHubDecorRuntime.rbxm` as donor visual layer for lobby recovery
   - do not promote whole `LobbySocialHub_RuntimeReference(F5...)` exports or legacy playtest containers wholesale
+
+## 2026-04-18 - Lobby donor promoted into source
+
+- Implemented the lobby donor decision in the actual source lane instead of leaving it as documentation-only guidance.
+- Source change:
+  - generated `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.rbxm` as the authoritative lobby source
+  - moved old blockout source to `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json.disabled`
+  - updated `.gitignore` to allow tracked binary lobby sources under `src/Workspace/Maps/**`
+  - updated `.codex/lobbysocialhub_backup_syncback.project.json` to follow the new `LobbySocialHub.rbxm` source file
+- Promotion method:
+  - built a temp lobby-only place from source
+  - injected `MainHubDecorRuntime.rbxm` under `Workspace.Maps.LobbySocialHub.LobbySocialHub`
+  - extracted the resulting lobby model back out as the new authoritative `LobbySocialHub.rbxm`
+- Verification:
+  - fresh `rojo build default.project.json` now yields `Workspace.Maps.LobbySocialHub.LobbySocialHub` with `18` top-level children
+  - `MainHubDecorRuntime` is present as child `18`
+  - `MainHubDecorRuntime` in the built source contains `376` direct children and `1221` descendants
+- This keeps the donor nested under the lobby model so `LobbyService` can reuse/normalize it instead of generating a conflicting sibling source.

@@ -95,6 +95,10 @@ Hard rules for this lane:
 - do not promote legacy playtest containers like `SpawnPoints`, `Rooms`, `GhostSpawns`, `EvidenceSpawnNodes`, or other full-runtime lobby folders
 - treat `MainHubDecorRuntime2.rbxm` as `TrainingGhostVisual` comparison only unless explicitly approved otherwise
 - lobby runtime spawn expectation remains around `1610, 3.47, -10`
+- authoritative source file for this branch is now:
+  - `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.rbxm`
+- disabled legacy reference:
+  - `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json.disabled`
 
 AI agents must read the documents in the following order
 to fully understand the game architecture.

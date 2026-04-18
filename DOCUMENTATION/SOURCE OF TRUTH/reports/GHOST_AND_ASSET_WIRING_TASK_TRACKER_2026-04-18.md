@@ -582,3 +582,16 @@ Every meaningful update for this tracker should state:
 - Canonical/doc index must treat:
   - `MainHubDecorRuntime.rbxm` as authoritative donor visual layer
   - `MainHubDecorRuntime2.rbxm` as `TrainingGhostVisual` comparison reference only
+
+## 2026-04-18 - Lobby donor promoted into source lane
+
+- `MainHubDecorRuntime.rbxm` has been promoted into the actual source lane for `LobbySocialHub`.
+- Authoritative source representation for this branch is now:
+  - `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.rbxm`
+- Disabled legacy blockout reference:
+  - `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json.disabled`
+- Verification from fresh `rojo build` of `default.project.json`:
+  - `Workspace.Maps.LobbySocialHub.LobbySocialHub` now has `18` top-level children
+  - child `18` is `Folder MainHubDecorRuntime`
+  - `MainHubDecorRuntime` count in built output: `376` direct children, `1221` descendants
+- Promotion was done as a nested child under the lobby model so `LobbyService` can reuse and normalize it instead of generating a conflicting sibling source.

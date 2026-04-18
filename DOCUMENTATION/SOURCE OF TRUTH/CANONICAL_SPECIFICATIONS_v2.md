@@ -52,6 +52,9 @@
   - keep the clean lobby container/source lane for core map structure
   - promote only the approved donor visual layer from `MainHubDecorRuntime.rbxm`
   - do not promote legacy playtest containers such as `SpawnPoints`, `Rooms`, `GhostSpawns`, `EvidenceSpawnNodes`, or other full-runtime lobby folders from F5 exports
+- Source implementation lock for this branch:
+  - `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.rbxm` is now the authoritative lobby source file
+  - `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json.disabled` is retained only as disabled legacy blockout reference
 - `MainHubDecorRuntime.rbxm` is approved because it carries the richer plaza/building decor layer without carrying whole-lobby legacy containers or script modules.
 
 ---

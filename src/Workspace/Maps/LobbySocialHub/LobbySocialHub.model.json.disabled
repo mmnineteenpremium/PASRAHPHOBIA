@@ -1,25 +1,18 @@
 {
   "className": "Model",
-  "properties": {
-    "Name": "LobbySocialHub"
-  },
   "children": [
     {
+      "name": "Geometry",
       "className": "Folder",
-      "properties": {
-        "Name": "Geometry"
-      },
       "children": [
         {
+          "name": "Structures",
           "className": "Folder",
-          "properties": {
-            "Name": "Structures"
-          },
           "children": [
             {
+              "name": "Floor_1_Main",
               "className": "Part",
               "properties": {
-                "Name": "Floor_1_Main",
                 "Anchored": true,
                 "CanCollide": true,
                 "Transparency": 0.0,
@@ -42,9 +35,9 @@
               }
             },
             {
+              "name": "NorthWall",
               "className": "Part",
               "properties": {
-                "Name": "NorthWall",
                 "Anchored": true,
                 "CanCollide": true,
                 "Transparency": 0.0,
@@ -67,9 +60,9 @@
               }
             },
             {
+              "name": "SouthWall",
               "className": "Part",
               "properties": {
-                "Name": "SouthWall",
                 "Anchored": true,
                 "CanCollide": true,
                 "Transparency": 0.0,
@@ -92,9 +85,9 @@
               }
             },
             {
+              "name": "WestWall",
               "className": "Part",
               "properties": {
-                "Name": "WestWall",
                 "Anchored": true,
                 "CanCollide": true,
                 "Transparency": 0.0,
@@ -117,9 +110,9 @@
               }
             },
             {
+              "name": "EastWall",
               "className": "Part",
               "properties": {
-                "Name": "EastWall",
                 "Anchored": true,
                 "CanCollide": true,
                 "Transparency": 0.0,
@@ -142,9 +135,9 @@
               }
             },
             {
+              "name": "BoundaryReference",
               "className": "Part",
               "properties": {
-                "Name": "BoundaryReference",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 1.0,
@@ -157,22 +150,17 @@
                   420.0,
                   40.0,
                   420.0
-                ],
-                "Tags": [
-                  "MapBoundary"
                 ]
               }
             },
             {
+              "name": "InteriorWalls",
               "className": "Folder",
-              "properties": {
-                "Name": "InteriorWalls"
-              },
               "children": [
                 {
+                  "name": "Wall_MainHubPlaza_North",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_MainHubPlaza_North",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -195,9 +183,9 @@
                   }
                 },
                 {
+                  "name": "Wall_MainHubPlaza_South",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_MainHubPlaza_South",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -220,9 +208,9 @@
                   }
                 },
                 {
+                  "name": "Wall_MainHubPlaza_West",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_MainHubPlaza_West",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -245,9 +233,9 @@
                   }
                 },
                 {
+                  "name": "Wall_MainHubPlaza_East",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_MainHubPlaza_East",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -270,9 +258,9 @@
                   }
                 },
                 {
+                  "name": "Wall_NorthEvidenceBuilding_North",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_NorthEvidenceBuilding_North",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -295,9 +283,9 @@
                   }
                 },
                 {
+                  "name": "Wall_NorthEvidenceBuilding_South_L",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_NorthEvidenceBuilding_South_L",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -320,9 +308,9 @@
                   }
                 },
                 {
+                  "name": "Wall_NorthEvidenceBuilding_South_R",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_NorthEvidenceBuilding_South_R",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -345,9 +333,9 @@
                   }
                 },
                 {
+                  "name": "Wall_NorthEvidenceBuilding_West",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_NorthEvidenceBuilding_West",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -370,9 +358,9 @@
                   }
                 },
                 {
+                  "name": "Wall_NorthEvidenceBuilding_East",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_NorthEvidenceBuilding_East",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -395,9 +383,9 @@
                   }
                 },
                 {
+                  "name": "Wall_EastShopBuilding_North",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_EastShopBuilding_North",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -420,9 +408,9 @@
                   }
                 },
                 {
+                  "name": "Wall_EastShopBuilding_South",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_EastShopBuilding_South",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -445,9 +433,9 @@
                   }
                 },
                 {
+                  "name": "Wall_EastShopBuilding_West_L",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_EastShopBuilding_West_L",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -470,9 +458,9 @@
                   }
                 },
                 {
+                  "name": "Wall_EastShopBuilding_West_R",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_EastShopBuilding_West_R",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -495,9 +483,9 @@
                   }
                 },
                 {
+                  "name": "Wall_EastShopBuilding_East",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_EastShopBuilding_East",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -520,9 +508,9 @@
                   }
                 },
                 {
+                  "name": "Wall_WestPartyZone_North",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_WestPartyZone_North",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -545,9 +533,9 @@
                   }
                 },
                 {
+                  "name": "Wall_WestPartyZone_South",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_WestPartyZone_South",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -570,9 +558,9 @@
                   }
                 },
                 {
+                  "name": "Wall_WestPartyZone_West",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_WestPartyZone_West",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -595,9 +583,9 @@
                   }
                 },
                 {
+                  "name": "Wall_WestPartyZone_East_L",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_WestPartyZone_East_L",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -620,9 +608,9 @@
                   }
                 },
                 {
+                  "name": "Wall_WestPartyZone_East_R",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_WestPartyZone_East_R",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -645,9 +633,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthSocialGarden_North_L",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthSocialGarden_North_L",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -670,9 +658,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthSocialGarden_North_R",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthSocialGarden_North_R",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -695,9 +683,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthSocialGarden_South",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthSocialGarden_South",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -720,9 +708,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthSocialGarden_West",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthSocialGarden_West",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -745,9 +733,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthSocialGarden_East",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthSocialGarden_East",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -770,9 +758,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthEastFlexZone_North",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthEastFlexZone_North",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -795,9 +783,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthEastFlexZone_South",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthEastFlexZone_South",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -820,9 +808,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthEastFlexZone_West_L",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthEastFlexZone_West_L",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -845,9 +833,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthEastFlexZone_West_R",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthEastFlexZone_West_R",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -870,9 +858,9 @@
                   }
                 },
                 {
+                  "name": "Wall_SouthEastFlexZone_East",
                   "className": "Part",
                   "properties": {
-                    "Name": "Wall_SouthEastFlexZone_East",
                     "Anchored": true,
                     "CanCollide": true,
                     "Transparency": 0.0,
@@ -899,22 +887,17 @@
           ]
         },
         {
-          "className": "Folder",
-          "properties": {
-            "Name": "Decorative"
-          },
-          "children": []
+          "name": "Decorative",
+          "className": "Folder"
         },
         {
+          "name": "Facade",
           "className": "Folder",
-          "properties": {
-            "Name": "Facade"
-          },
           "children": [
             {
+              "name": "Facade_North_1",
               "className": "Part",
               "properties": {
-                "Name": "Facade_North_1",
                 "Anchored": true,
                 "CanCollide": true,
                 "Transparency": 0.0,
@@ -937,9 +920,9 @@
               }
             },
             {
+              "name": "Facade_South_1",
               "className": "Part",
               "properties": {
-                "Name": "Facade_South_1",
                 "Anchored": true,
                 "CanCollide": true,
                 "Transparency": 0.0,
@@ -962,9 +945,9 @@
               }
             },
             {
+              "name": "Facade_West_1",
               "className": "Part",
               "properties": {
-                "Name": "Facade_West_1",
                 "Anchored": true,
                 "CanCollide": true,
                 "Transparency": 0.0,
@@ -987,9 +970,9 @@
               }
             },
             {
+              "name": "Facade_East_1",
               "className": "Part",
               "properties": {
-                "Name": "Facade_East_1",
                 "Anchored": true,
                 "CanCollide": true,
                 "Transparency": 0.0,
@@ -1014,15 +997,13 @@
           ]
         },
         {
+          "name": "Windows",
           "className": "Folder",
-          "properties": {
-            "Name": "Windows"
-          },
           "children": [
             {
+              "name": "Window_N_1_0",
               "className": "Part",
               "properties": {
-                "Name": "Window_N_1_0",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1045,9 +1026,9 @@
               }
             },
             {
+              "name": "Window_S_1_0",
               "className": "Part",
               "properties": {
-                "Name": "Window_S_1_0",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1070,9 +1051,9 @@
               }
             },
             {
+              "name": "Window_N_1_1",
               "className": "Part",
               "properties": {
-                "Name": "Window_N_1_1",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1095,9 +1076,9 @@
               }
             },
             {
+              "name": "Window_S_1_1",
               "className": "Part",
               "properties": {
-                "Name": "Window_S_1_1",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1120,9 +1101,9 @@
               }
             },
             {
+              "name": "Window_N_1_2",
               "className": "Part",
               "properties": {
-                "Name": "Window_N_1_2",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1145,9 +1126,9 @@
               }
             },
             {
+              "name": "Window_S_1_2",
               "className": "Part",
               "properties": {
-                "Name": "Window_S_1_2",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1170,9 +1151,9 @@
               }
             },
             {
+              "name": "Window_W_1_0",
               "className": "Part",
               "properties": {
-                "Name": "Window_W_1_0",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1195,9 +1176,9 @@
               }
             },
             {
+              "name": "Window_E_1_0",
               "className": "Part",
               "properties": {
-                "Name": "Window_E_1_0",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1220,9 +1201,9 @@
               }
             },
             {
+              "name": "Window_W_1_1",
               "className": "Part",
               "properties": {
-                "Name": "Window_W_1_1",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1245,9 +1226,9 @@
               }
             },
             {
+              "name": "Window_E_1_1",
               "className": "Part",
               "properties": {
-                "Name": "Window_E_1_1",
                 "Anchored": true,
                 "CanCollide": false,
                 "Transparency": 0.35,
@@ -1274,15 +1255,13 @@
       ]
     },
     {
+      "name": "Lighting",
       "className": "Folder",
-      "properties": {
-        "Name": "Lighting"
-      },
       "children": [
         {
+          "name": "LightSource_MainHubPlaza",
           "className": "Part",
           "properties": {
-            "Name": "LightSource_MainHubPlaza",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1299,9 +1278,9 @@
           },
           "children": [
             {
+              "name": "PointLight_1",
               "className": "PointLight",
               "properties": {
-                "Name": "PointLight_1",
                 "Brightness": 1.25,
                 "Range": 26.0,
                 "Shadows": false,
@@ -1315,9 +1294,9 @@
           ]
         },
         {
+          "name": "LightSource_NorthEvidenceBuilding",
           "className": "Part",
           "properties": {
-            "Name": "LightSource_NorthEvidenceBuilding",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1334,9 +1313,9 @@
           },
           "children": [
             {
+              "name": "PointLight_2",
               "className": "PointLight",
               "properties": {
-                "Name": "PointLight_2",
                 "Brightness": 1.25,
                 "Range": 26.0,
                 "Shadows": false,
@@ -1350,9 +1329,9 @@
           ]
         },
         {
+          "name": "LightSource_EastShopBuilding",
           "className": "Part",
           "properties": {
-            "Name": "LightSource_EastShopBuilding",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1369,9 +1348,9 @@
           },
           "children": [
             {
+              "name": "PointLight_3",
               "className": "PointLight",
               "properties": {
-                "Name": "PointLight_3",
                 "Brightness": 1.25,
                 "Range": 26.0,
                 "Shadows": false,
@@ -1385,9 +1364,9 @@
           ]
         },
         {
+          "name": "LightSource_WestPartyZone",
           "className": "Part",
           "properties": {
-            "Name": "LightSource_WestPartyZone",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1404,9 +1383,9 @@
           },
           "children": [
             {
+              "name": "PointLight_4",
               "className": "PointLight",
               "properties": {
-                "Name": "PointLight_4",
                 "Brightness": 1.25,
                 "Range": 26.0,
                 "Shadows": false,
@@ -1420,9 +1399,9 @@
           ]
         },
         {
+          "name": "LightSource_SouthSocialGarden",
           "className": "Part",
           "properties": {
-            "Name": "LightSource_SouthSocialGarden",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1439,9 +1418,9 @@
           },
           "children": [
             {
+              "name": "PointLight_5",
               "className": "PointLight",
               "properties": {
-                "Name": "PointLight_5",
                 "Brightness": 1.25,
                 "Range": 26.0,
                 "Shadows": false,
@@ -1455,9 +1434,9 @@
           ]
         },
         {
+          "name": "LightSource_SouthEastFlexZone",
           "className": "Part",
           "properties": {
-            "Name": "LightSource_SouthEastFlexZone",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1474,9 +1453,9 @@
           },
           "children": [
             {
+              "name": "PointLight_6",
               "className": "PointLight",
               "properties": {
-                "Name": "PointLight_6",
                 "Brightness": 1.25,
                 "Range": 26.0,
                 "Shadows": false,
@@ -1492,15 +1471,13 @@
       ]
     },
     {
+      "name": "SpawnPoints",
       "className": "Folder",
-      "properties": {
-        "Name": "SpawnPoints"
-      },
       "children": [
         {
+          "name": "PlayerSpawn_1",
           "className": "Part",
           "properties": {
-            "Name": "PlayerSpawn_1",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1513,16 +1490,13 @@
               2.0,
               1.0,
               2.0
-            ],
-            "Tags": [
-              "PlayerSpawn"
             ]
           }
         },
         {
+          "name": "PlayerSpawn_2",
           "className": "Part",
           "properties": {
-            "Name": "PlayerSpawn_2",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1535,16 +1509,13 @@
               2.0,
               1.0,
               2.0
-            ],
-            "Tags": [
-              "PlayerSpawn"
             ]
           }
         },
         {
+          "name": "PlayerSpawn_3",
           "className": "Part",
           "properties": {
-            "Name": "PlayerSpawn_3",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1557,16 +1528,13 @@
               2.0,
               1.0,
               2.0
-            ],
-            "Tags": [
-              "PlayerSpawn"
             ]
           }
         },
         {
+          "name": "PlayerSpawn_4",
           "className": "Part",
           "properties": {
-            "Name": "PlayerSpawn_4",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1579,24 +1547,19 @@
               2.0,
               1.0,
               2.0
-            ],
-            "Tags": [
-              "PlayerSpawn"
             ]
           }
         }
       ]
     },
     {
+      "name": "GhostSpawnZones",
       "className": "Folder",
-      "properties": {
-        "Name": "GhostSpawnZones"
-      },
       "children": [
         {
+          "name": "GhostSpawnZone_1",
           "className": "Part",
           "properties": {
-            "Name": "GhostSpawnZone_1",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1609,16 +1572,13 @@
               98.875,
               12.0,
               148.875
-            ],
-            "Tags": [
-              "GhostSpawn"
             ]
           }
         },
         {
+          "name": "GhostSpawnZone_2",
           "className": "Part",
           "properties": {
-            "Name": "GhostSpawnZone_2",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1631,24 +1591,19 @@
               98.875,
               12.0,
               148.875
-            ],
-            "Tags": [
-              "GhostSpawn"
             ]
           }
         }
       ]
     },
     {
+      "name": "EvidenceSpawnNodes",
       "className": "Folder",
-      "properties": {
-        "Name": "EvidenceSpawnNodes"
-      },
       "children": [
         {
+          "name": "EvidenceNode_1",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_1",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1661,16 +1616,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_2",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_2",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1683,16 +1635,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_3",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_3",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1705,16 +1654,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_4",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_4",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1727,16 +1673,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_5",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_5",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1749,16 +1692,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_6",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_6",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1771,24 +1711,19 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         }
       ]
     },
     {
+      "name": "InteractionPoints",
       "className": "Folder",
-      "properties": {
-        "Name": "InteractionPoints"
-      },
       "children": [
         {
+          "name": "Interact_MainHubPlaza",
           "className": "Part",
           "properties": {
-            "Name": "Interact_MainHubPlaza",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1801,16 +1736,13 @@
               1.0,
               1.0,
               1.0
-            ],
-            "Tags": [
-              "Interactable"
             ]
           }
         },
         {
+          "name": "Interact_NorthEvidenceBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Interact_NorthEvidenceBuilding",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1823,16 +1755,13 @@
               1.0,
               1.0,
               1.0
-            ],
-            "Tags": [
-              "Interactable"
             ]
           }
         },
         {
+          "name": "Interact_EastShopBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Interact_EastShopBuilding",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1845,16 +1774,13 @@
               1.0,
               1.0,
               1.0
-            ],
-            "Tags": [
-              "Interactable"
             ]
           }
         },
         {
+          "name": "Interact_WestPartyZone",
           "className": "Part",
           "properties": {
-            "Name": "Interact_WestPartyZone",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1867,16 +1793,13 @@
               1.0,
               1.0,
               1.0
-            ],
-            "Tags": [
-              "Interactable"
             ]
           }
         },
         {
+          "name": "Interact_SouthSocialGarden",
           "className": "Part",
           "properties": {
-            "Name": "Interact_SouthSocialGarden",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1889,16 +1812,13 @@
               1.0,
               1.0,
               1.0
-            ],
-            "Tags": [
-              "Interactable"
             ]
           }
         },
         {
+          "name": "Interact_SouthEastFlexZone",
           "className": "Part",
           "properties": {
-            "Name": "Interact_SouthEastFlexZone",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1911,24 +1831,19 @@
               1.0,
               1.0,
               1.0
-            ],
-            "Tags": [
-              "Interactable"
             ]
           }
         }
       ]
     },
     {
+      "name": "SafeZones",
       "className": "Folder",
-      "properties": {
-        "Name": "SafeZones"
-      },
       "children": [
         {
+          "name": "SafeZone_1",
           "className": "Part",
           "properties": {
-            "Name": "SafeZone_1",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1941,16 +1856,13 @@
               18.0,
               8.0,
               18.0
-            ],
-            "Tags": [
-              "SafeZone"
             ]
           }
         },
         {
+          "name": "SafeZone_2",
           "className": "Part",
           "properties": {
-            "Name": "SafeZone_2",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1963,24 +1875,19 @@
               18.0,
               8.0,
               18.0
-            ],
-            "Tags": [
-              "SafeZone"
             ]
           }
         }
       ]
     },
     {
+      "name": "NavigationNodes",
       "className": "Folder",
-      "properties": {
-        "Name": "NavigationNodes"
-      },
       "children": [
         {
+          "name": "NavNode_1",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_1",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -1993,16 +1900,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_2",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_2",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2015,16 +1919,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_3",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_3",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2037,16 +1938,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_4",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_4",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2059,16 +1957,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_5",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_5",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2081,16 +1976,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_6",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_6",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2103,16 +1995,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_7",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_7",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2125,16 +2014,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_8",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_8",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2147,16 +2033,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_9",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_9",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2169,16 +2052,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_10",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_10",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2191,16 +2071,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_11",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_11",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2213,16 +2090,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_12",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_12",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2235,16 +2109,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_13",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_13",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2257,16 +2128,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_14",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_14",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2279,16 +2147,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_15",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_15",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2301,16 +2166,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_16",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_16",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2323,16 +2185,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_17",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_17",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2345,16 +2204,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_18",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_18",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2367,16 +2223,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_19",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_19",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2389,16 +2242,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_20",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_20",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2411,16 +2261,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_21",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_21",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2433,16 +2280,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_22",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_22",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2455,16 +2299,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_23",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_23",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2477,16 +2318,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_24",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_24",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2499,16 +2337,13 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         },
         {
+          "name": "NavNode_25",
           "className": "Part",
           "properties": {
-            "Name": "NavNode_25",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2521,24 +2356,19 @@
               0.6,
               0.6,
               0.6
-            ],
-            "Tags": [
-              "NavigationNode"
             ]
           }
         }
       ]
     },
     {
+      "name": "Floors",
       "className": "Folder",
-      "properties": {
-        "Name": "Floors"
-      },
       "children": [
         {
+          "name": "Floor_1",
           "className": "Part",
           "properties": {
-            "Name": "Floor_1",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -2563,15 +2393,13 @@
       ]
     },
     {
+      "name": "Rooms",
       "className": "Folder",
-      "properties": {
-        "Name": "Rooms"
-      },
       "children": [
         {
+          "name": "Room_MainHubPlaza",
           "className": "Part",
           "properties": {
-            "Name": "Room_MainHubPlaza",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 0.2,
@@ -2594,9 +2422,9 @@
           }
         },
         {
+          "name": "Room_NorthEvidenceBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Room_NorthEvidenceBuilding",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 0.2,
@@ -2619,9 +2447,9 @@
           }
         },
         {
+          "name": "Room_EastShopBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Room_EastShopBuilding",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 0.2,
@@ -2644,9 +2472,9 @@
           }
         },
         {
+          "name": "Room_WestPartyZone",
           "className": "Part",
           "properties": {
-            "Name": "Room_WestPartyZone",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 0.2,
@@ -2669,9 +2497,9 @@
           }
         },
         {
+          "name": "Room_SouthSocialGarden",
           "className": "Part",
           "properties": {
-            "Name": "Room_SouthSocialGarden",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 0.2,
@@ -2694,9 +2522,9 @@
           }
         },
         {
+          "name": "Room_SouthEastFlexZone",
           "className": "Part",
           "properties": {
-            "Name": "Room_SouthEastFlexZone",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 0.2,
@@ -2721,15 +2549,13 @@
       ]
     },
     {
+      "name": "Doors",
       "className": "Folder",
-      "properties": {
-        "Name": "Doors"
-      },
       "children": [
         {
+          "name": "Door_NorthEvidenceBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Door_NorthEvidenceBuilding",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -2752,9 +2578,9 @@
           }
         },
         {
+          "name": "Door_EastShopBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Door_EastShopBuilding",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -2777,9 +2603,9 @@
           }
         },
         {
+          "name": "Door_WestPartyZone",
           "className": "Part",
           "properties": {
-            "Name": "Door_WestPartyZone",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -2802,9 +2628,9 @@
           }
         },
         {
+          "name": "Door_SouthSocialGarden",
           "className": "Part",
           "properties": {
-            "Name": "Door_SouthSocialGarden",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -2827,9 +2653,9 @@
           }
         },
         {
+          "name": "Door_SouthEastFlexZone",
           "className": "Part",
           "properties": {
-            "Name": "Door_SouthEastFlexZone",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -2854,15 +2680,13 @@
       ]
     },
     {
+      "name": "Lights",
       "className": "Folder",
-      "properties": {
-        "Name": "Lights"
-      },
       "children": [
         {
+          "name": "Light_MainHubPlaza",
           "className": "Part",
           "properties": {
-            "Name": "Light_MainHubPlaza",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2899,9 +2723,9 @@
           ]
         },
         {
+          "name": "Light_NorthEvidenceBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Light_NorthEvidenceBuilding",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2938,9 +2762,9 @@
           ]
         },
         {
+          "name": "Light_EastShopBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Light_EastShopBuilding",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -2977,9 +2801,9 @@
           ]
         },
         {
+          "name": "Light_WestPartyZone",
           "className": "Part",
           "properties": {
-            "Name": "Light_WestPartyZone",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3016,9 +2840,9 @@
           ]
         },
         {
+          "name": "Light_SouthSocialGarden",
           "className": "Part",
           "properties": {
-            "Name": "Light_SouthSocialGarden",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3055,9 +2879,9 @@
           ]
         },
         {
+          "name": "Light_SouthEastFlexZone",
           "className": "Part",
           "properties": {
-            "Name": "Light_SouthEastFlexZone",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3096,15 +2920,13 @@
       ]
     },
     {
+      "name": "Props",
       "className": "Folder",
-      "properties": {
-        "Name": "Props"
-      },
       "children": [
         {
+          "name": "Prop_MainHubPlaza",
           "className": "Part",
           "properties": {
-            "Name": "Prop_MainHubPlaza",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3127,9 +2949,9 @@
           }
         },
         {
+          "name": "Prop_NorthEvidenceBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Prop_NorthEvidenceBuilding",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3152,9 +2974,9 @@
           }
         },
         {
+          "name": "Prop_EastShopBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Prop_EastShopBuilding",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3177,9 +2999,9 @@
           }
         },
         {
+          "name": "Prop_WestPartyZone",
           "className": "Part",
           "properties": {
-            "Name": "Prop_WestPartyZone",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3202,9 +3024,9 @@
           }
         },
         {
+          "name": "Prop_SouthSocialGarden",
           "className": "Part",
           "properties": {
-            "Name": "Prop_SouthSocialGarden",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3227,9 +3049,9 @@
           }
         },
         {
+          "name": "Prop_SouthEastFlexZone",
           "className": "Part",
           "properties": {
-            "Name": "Prop_SouthEastFlexZone",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3252,9 +3074,9 @@
           }
         },
         {
+          "name": "Prop_Room_MainHubPlaza_Statue",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_MainHubPlaza_Statue",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3277,9 +3099,9 @@
           }
         },
         {
+          "name": "Prop_Room_MainHubPlaza_Bench",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_MainHubPlaza_Bench",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3302,9 +3124,9 @@
           }
         },
         {
+          "name": "Prop_Room_NorthEvidenceBuilding_Crate",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_NorthEvidenceBuilding_Crate",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3327,9 +3149,9 @@
           }
         },
         {
+          "name": "Prop_Room_NorthEvidenceBuilding_Chair",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_NorthEvidenceBuilding_Chair",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3352,9 +3174,9 @@
           }
         },
         {
+          "name": "Prop_Room_EastShopBuilding_Counter",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_EastShopBuilding_Counter",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3377,9 +3199,9 @@
           }
         },
         {
+          "name": "Prop_Room_EastShopBuilding_Shelf",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_EastShopBuilding_Shelf",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3402,9 +3224,9 @@
           }
         },
         {
+          "name": "Prop_Room_WestPartyZone_Crate",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_WestPartyZone_Crate",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3427,9 +3249,9 @@
           }
         },
         {
+          "name": "Prop_Room_WestPartyZone_Chair",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_WestPartyZone_Chair",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3452,9 +3274,9 @@
           }
         },
         {
+          "name": "Prop_Room_SouthSocialGarden_Fountain",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_SouthSocialGarden_Fountain",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3477,9 +3299,9 @@
           }
         },
         {
+          "name": "Prop_Room_SouthSocialGarden_Bench",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_SouthSocialGarden_Bench",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3502,9 +3324,9 @@
           }
         },
         {
+          "name": "Prop_Room_SouthEastFlexZone_Crate",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_SouthEastFlexZone_Crate",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3527,9 +3349,9 @@
           }
         },
         {
+          "name": "Prop_Room_SouthEastFlexZone_Chair",
           "className": "Part",
           "properties": {
-            "Name": "Prop_Room_SouthEastFlexZone_Chair",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3554,15 +3376,13 @@
       ]
     },
     {
+      "name": "GhostSpawns",
       "className": "Folder",
-      "properties": {
-        "Name": "GhostSpawns"
-      },
       "children": [
         {
+          "name": "GhostSpawnZone_1",
           "className": "Part",
           "properties": {
-            "Name": "GhostSpawnZone_1",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3575,16 +3395,13 @@
               98.875,
               12.0,
               148.875
-            ],
-            "Tags": [
-              "GhostSpawn"
             ]
           }
         },
         {
+          "name": "GhostSpawnZone_2",
           "className": "Part",
           "properties": {
-            "Name": "GhostSpawnZone_2",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3597,24 +3414,19 @@
               98.875,
               12.0,
               148.875
-            ],
-            "Tags": [
-              "GhostSpawn"
             ]
           }
         }
       ]
     },
     {
+      "name": "EvidenceSpawns",
       "className": "Folder",
-      "properties": {
-        "Name": "EvidenceSpawns"
-      },
       "children": [
         {
+          "name": "EvidenceNode_1",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_1",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3627,16 +3439,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_2",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_2",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3649,16 +3458,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_3",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_3",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3671,16 +3477,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_4",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_4",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3693,16 +3496,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_5",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_5",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3715,16 +3515,13 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         },
         {
+          "name": "EvidenceNode_6",
           "className": "Part",
           "properties": {
-            "Name": "EvidenceNode_6",
             "Anchored": true,
             "CanCollide": false,
             "Transparency": 1.0,
@@ -3737,24 +3534,19 @@
               0.5,
               0.5,
               0.5
-            ],
-            "Tags": [
-              "EvidenceSpawn"
             ]
           }
         }
       ]
     },
     {
+      "name": "Roofs",
       "className": "Folder",
-      "properties": {
-        "Name": "Roofs"
-      },
       "children": [
         {
+          "name": "Roof_MainHubPlaza",
           "className": "Part",
           "properties": {
-            "Name": "Roof_MainHubPlaza",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3777,9 +3569,9 @@
           }
         },
         {
+          "name": "Roof_NorthEvidenceBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Roof_NorthEvidenceBuilding",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3802,9 +3594,9 @@
           }
         },
         {
+          "name": "Roof_EastShopBuilding",
           "className": "Part",
           "properties": {
-            "Name": "Roof_EastShopBuilding",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3827,9 +3619,9 @@
           }
         },
         {
+          "name": "Roof_WestPartyZone",
           "className": "Part",
           "properties": {
-            "Name": "Roof_WestPartyZone",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3852,9 +3644,9 @@
           }
         },
         {
+          "name": "Roof_SouthSocialGarden",
           "className": "Part",
           "properties": {
-            "Name": "Roof_SouthSocialGarden",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3877,9 +3669,9 @@
           }
         },
         {
+          "name": "Roof_SouthEastFlexZone",
           "className": "Part",
           "properties": {
-            "Name": "Roof_SouthEastFlexZone",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3904,15 +3696,13 @@
       ]
     },
     {
+      "name": "DoorFrames",
       "className": "Folder",
-      "properties": {
-        "Name": "DoorFrames"
-      },
       "children": [
         {
+          "name": "Door_NorthEvidenceBuilding_FrameL",
           "className": "Part",
           "properties": {
-            "Name": "Door_NorthEvidenceBuilding_FrameL",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3935,9 +3725,9 @@
           }
         },
         {
+          "name": "Door_NorthEvidenceBuilding_FrameR",
           "className": "Part",
           "properties": {
-            "Name": "Door_NorthEvidenceBuilding_FrameR",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3960,9 +3750,9 @@
           }
         },
         {
+          "name": "Door_NorthEvidenceBuilding_FrameTop",
           "className": "Part",
           "properties": {
-            "Name": "Door_NorthEvidenceBuilding_FrameTop",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -3985,9 +3775,9 @@
           }
         },
         {
+          "name": "Door_EastShopBuilding_FrameL",
           "className": "Part",
           "properties": {
-            "Name": "Door_EastShopBuilding_FrameL",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4010,9 +3800,9 @@
           }
         },
         {
+          "name": "Door_EastShopBuilding_FrameR",
           "className": "Part",
           "properties": {
-            "Name": "Door_EastShopBuilding_FrameR",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4035,9 +3825,9 @@
           }
         },
         {
+          "name": "Door_EastShopBuilding_FrameTop",
           "className": "Part",
           "properties": {
-            "Name": "Door_EastShopBuilding_FrameTop",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4060,9 +3850,9 @@
           }
         },
         {
+          "name": "Door_WestPartyZone_FrameL",
           "className": "Part",
           "properties": {
-            "Name": "Door_WestPartyZone_FrameL",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4085,9 +3875,9 @@
           }
         },
         {
+          "name": "Door_WestPartyZone_FrameR",
           "className": "Part",
           "properties": {
-            "Name": "Door_WestPartyZone_FrameR",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4110,9 +3900,9 @@
           }
         },
         {
+          "name": "Door_WestPartyZone_FrameTop",
           "className": "Part",
           "properties": {
-            "Name": "Door_WestPartyZone_FrameTop",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4135,9 +3925,9 @@
           }
         },
         {
+          "name": "Door_SouthSocialGarden_FrameL",
           "className": "Part",
           "properties": {
-            "Name": "Door_SouthSocialGarden_FrameL",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4160,9 +3950,9 @@
           }
         },
         {
+          "name": "Door_SouthSocialGarden_FrameR",
           "className": "Part",
           "properties": {
-            "Name": "Door_SouthSocialGarden_FrameR",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4185,9 +3975,9 @@
           }
         },
         {
+          "name": "Door_SouthSocialGarden_FrameTop",
           "className": "Part",
           "properties": {
-            "Name": "Door_SouthSocialGarden_FrameTop",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4210,9 +4000,9 @@
           }
         },
         {
+          "name": "Door_SouthEastFlexZone_FrameL",
           "className": "Part",
           "properties": {
-            "Name": "Door_SouthEastFlexZone_FrameL",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4235,9 +4025,9 @@
           }
         },
         {
+          "name": "Door_SouthEastFlexZone_FrameR",
           "className": "Part",
           "properties": {
-            "Name": "Door_SouthEastFlexZone_FrameR",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,
@@ -4260,9 +4050,9 @@
           }
         },
         {
+          "name": "Door_SouthEastFlexZone_FrameTop",
           "className": "Part",
           "properties": {
-            "Name": "Door_SouthEastFlexZone_FrameTop",
             "Anchored": true,
             "CanCollide": true,
             "Transparency": 0.0,

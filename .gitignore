@@ -11,6 +11,8 @@
 !src/ReplicatedStorage/Maps/**/*.rbxmx
 !src/ServerStorage/Maps/**/*.rbxm
 !src/ServerStorage/Maps/**/*.rbxmx
+!src/Workspace/Maps/**/*.rbxm
+!src/Workspace/Maps/**/*.rbxmx
 
 # Rojo cache & generated files
 default.project.json.rojo
