@@ -377,13 +377,13 @@ local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 	},
 }
 
-local function pasrahGetBuildSignatureText()
+function UISystem._getBuildSignatureText()
 	return "BUILD " .. UI_BUILD_SIGNATURE
 end
 
-local function pasrahAppendBuildSignature(text, separator)
+function UISystem._appendBuildSignature(text, separator)
 	local base = tostring(text or "")
-	local signatureText = pasrahGetBuildSignatureText()
+	local signatureText = UISystem._getBuildSignatureText()
 	if base == "" then
 		return signatureText
 	end
@@ -7271,7 +7271,7 @@ function UISystem:_refreshBasicLobbyPanel()
 		lobby.BasicSecondaryLabel.Text = secondaryText
 	end
 	if lobby.BasicHintLabel then
-		lobby.BasicHintLabel.Text = pasrahAppendBuildSignature(hintText)
+		lobby.BasicHintLabel.Text = UISystem._appendBuildSignature(hintText)
 		lobby.BasicHintLabel.TextColor3 = (type(zoneFocus) == "table" and not currentRoom and not state.lastError and typeof(zoneFocus.accentColor) == "Color3")
 			and zoneFocus.accentColor:Lerp(Color3.fromRGB(240, 244, 248), 0.4)
 			or Color3.fromRGB(156, 170, 192)
@@ -7409,9 +7409,9 @@ function UISystem:_refreshMainMenuPanel()
 	if window.FooterLabel then
 		local graphicsFooter = string.format("Visual %s [%s]. Mobile default tetap landscape dan toggle ini murni client-side.", graphicsMeta.label, graphicsMeta.footer)
 		if attributionFooter ~= "" then
-			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. pasrahGetBuildSignatureText()
+			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. UISystem._getBuildSignatureText()
 		else
-			window.FooterLabel.Text = graphicsFooter .. "\n" .. pasrahGetBuildSignatureText()
+			window.FooterLabel.Text = graphicsFooter .. "\n" .. UISystem._getBuildSignatureText()
 		end
 		window.FooterLabel:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 	end
@@ -17757,7 +17757,7 @@ function UISystem:_refreshRoomBrowserView()
 	elseif queueInfo then
 		statusText = statusText .. " | Queue: " .. tostring(queueInfo.queueType or queueInfo.mode or "started")
 	end
-	self._roomBrowserWidgets.Status.Text = pasrahAppendBuildSignature(statusText)
+	self._roomBrowserWidgets.Status.Text = UISystem._appendBuildSignature(statusText)
 	self._roomBrowserWidgets.Status:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 
 	self:_setButtonSelected(self._roomBrowserWidgets.AllModesButton, viewMode == "All")

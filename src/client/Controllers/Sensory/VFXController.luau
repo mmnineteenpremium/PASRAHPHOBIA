@@ -337,12 +337,12 @@ local MAP_ATMOSPHERE_PROFILES = {
 local MAP_LIGHTING_PROFILES = {
 	LobbySocialHub = {
 		ClockTime = 14.6,
-		Brightness = 2.25,
+		Brightness = 1.82,
 		ExposureCompensation = 0,
-		Ambient = Color3.fromRGB(128, 136, 150),
-		OutdoorAmbient = Color3.fromRGB(146, 152, 166),
-		EnvironmentDiffuseScale = 0.34,
-		EnvironmentSpecularScale = 0.22,
+		Ambient = Color3.fromRGB(118, 126, 140),
+		OutdoorAmbient = Color3.fromRGB(134, 140, 154),
+		EnvironmentDiffuseScale = 0.28,
+		EnvironmentSpecularScale = 0.16,
 		ColorShift_Top = Color3.fromRGB(10, 8, 4),
 		ColorShift_Bottom = Color3.fromRGB(6, 4, 2),
 	},
@@ -427,9 +427,9 @@ local MAP_GRADE_PROFILES = {
 
 local MAP_BLOOM_PROFILES = {
 	LobbySocialHub = {
-		Intensity = 0.18,
-		Size = 20,
-		Threshold = 1.18,
+		Intensity = 0.08,
+		Size = 16,
+		Threshold = 1.28,
 	},
 	AbandonedPalace = {
 		Intensity = 0.08,
@@ -455,7 +455,7 @@ local MAP_BLOOM_PROFILES = {
 
 local MAP_DOF_PROFILES = {
 	LobbySocialHub = {
-		FarIntensity = 0.06,
+		FarIntensity = 0,
 		FocusDistance = 52,
 		InFocusRadius = 34,
 		NearIntensity = 0,
@@ -488,7 +488,7 @@ local MAP_DOF_PROFILES = {
 
 local MAP_SUNRAYS_PROFILES = {
 	LobbySocialHub = {
-		Intensity = 0.068,
+		Intensity = 0.03,
 		Spread = 0.88,
 	},
 	AbandonedPalace = {
@@ -664,15 +664,20 @@ end
 local function ensureAtmosphere()
 	local atmosphere = Lighting:FindFirstChild("HorrorAtmosphere")
 	if not atmosphere then
-		atmosphere = Instance.new("Atmosphere")
-		atmosphere.Name = "HorrorAtmosphere"
-		atmosphere.Density = DEFAULT_MAP_ATMOSPHERE.Density
-		atmosphere.Offset = DEFAULT_MAP_ATMOSPHERE.Offset
-		atmosphere.Color = DEFAULT_MAP_ATMOSPHERE.Color
-		atmosphere.Decay = DEFAULT_MAP_ATMOSPHERE.Decay
-		atmosphere.Glare = DEFAULT_MAP_ATMOSPHERE.Glare
-		atmosphere.Haze = DEFAULT_MAP_ATMOSPHERE.Haze
-		atmosphere.Parent = Lighting
+		local existingGlobal = Lighting:FindFirstChild("GlobalAtmosphere")
+		if existingGlobal and existingGlobal:IsA("Atmosphere") then
+			atmosphere = existingGlobal
+		else
+			atmosphere = Instance.new("Atmosphere")
+			atmosphere.Name = "HorrorAtmosphere"
+			atmosphere.Density = DEFAULT_MAP_ATMOSPHERE.Density
+			atmosphere.Offset = DEFAULT_MAP_ATMOSPHERE.Offset
+			atmosphere.Color = DEFAULT_MAP_ATMOSPHERE.Color
+			atmosphere.Decay = DEFAULT_MAP_ATMOSPHERE.Decay
+			atmosphere.Glare = DEFAULT_MAP_ATMOSPHERE.Glare
+			atmosphere.Haze = DEFAULT_MAP_ATMOSPHERE.Haze
+			atmosphere.Parent = Lighting
+		end
 	end
 	return atmosphere
 end

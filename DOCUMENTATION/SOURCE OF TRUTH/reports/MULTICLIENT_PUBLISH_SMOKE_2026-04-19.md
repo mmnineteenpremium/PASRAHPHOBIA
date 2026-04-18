@@ -71,3 +71,17 @@
 - PC published lobby now reflects the normalized badge copy.
 - Android enters Roblox native runtime, but visual verification through MCP screenshots is still partially unreliable on this device lane.
 - Next bounded check should continue from published `Room Browser -> create room -> staging` with PC-host validation.
+
+## Local Studio Follow-up
+
+- A separate local Studio blocker was found in `Client.UI.Main`:
+  - `Out of local registers when trying to allocate connectButtonPress: exceeded limit 200`
+- Source fix reduced top-level local bindings and restored:
+  - `LobbyUI`
+  - `RoomBrowserUI`
+- Lobby lighting stack was also reduced locally:
+  - `Atmosphere` count in lobby runtime dropped from `2` to `1`
+  - lobby `Brightness` dropped from `2.25` to `1.82`
+  - counts stayed stable over `15s`, so idle lobby did not show effect growth after the fix
+- Local evidence:
+  - `.codex/evidence/lobby_lighting_after_vfx_tone_20260419.png`

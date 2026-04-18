@@ -16147,3 +16147,33 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `.codex/evidence/published_pc_20260419_v526.png`
   - `.codex/evidence/published_pc_room_browser_20260419_v526.png`
   - `.codex/evidence/published_pc_room_browser_key_20260419_v526.png`
+
+## 2026-04-19 - UI register overflow fix and lobby lighting stack reduction
+
+- Found a hard local Studio blocker in `StarterPlayerScripts.Client.UI.Main`:
+  - Luau compile/load failed with `Out of local registers when trying to allocate connectButtonPress: exceeded limit 200`
+  - result: `LobbyUI` and `RoomBrowserUI` never instantiated in Studio local play, making local lobby validation misleading
+- Fixed source by reducing top-level local bindings in:
+  - `src/client/UI/Main.lua`
+  - moved build-signature helpers off top-level local declarations and kept behavior unchanged
+- Fresh Studio local play after patch:
+  - `LobbyUI=true`
+  - `RoomBrowserUI=true`
+- Investigated suspected lighting duplication in lobby:
+  - idle lobby snapshot over `15s` showed no runtime growth in light/effect counts
+  - however baseline stack was too heavy and included `2 Atmosphere` layers before fix
+- Reduced lobby visual stack in:
+  - `src/client/Controllers/Sensory/VFXController.luau`
+  - `ensureAtmosphere()` now reuses `GlobalAtmosphere` instead of creating an extra `HorrorAtmosphere` when the global one already exists
+  - toned down `LobbySocialHub` lighting profile:
+    - `Brightness 2.25 -> 1.82`
+    - lower ambient/specular
+    - `Bloom 0.18 -> 0.08`
+    - lobby DOF disabled by profile
+    - `SunRays 0.068 -> 0.03`
+- Fresh Studio local play after tone-down:
+  - `Atmosphere 2 -> 1`
+  - `Brightness 1.82`
+  - `Lighting` child/effect counts stable over `15s`
+- Evidence:
+  - `.codex/evidence/lobby_lighting_after_vfx_tone_20260419.png`
