@@ -35,6 +35,25 @@
   - `SundelBolongAggressive=113356865728207`
 - No new variant switching system may be introduced for ghost visuals. Only the current canonical base slots and the existing aggressive-suffix runtime lane may be used.
 
+## 2026-04-18 Addendum - Lobby Visual Donor Source Of Truth
+
+- `LobbySocialHub` remains the authoritative play-entry lobby and runtime spawn is expected near `1610, 3.47, -10`.
+- The richer lobby seen during play is not represented by the current low-detail/blockout `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json` alone.
+- Authoritative donor for lobby visual recovery is:
+  - `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\LobbySocialHub\MainHubDecorRuntime.rbxm`
+- Comparison-only donor is:
+  - `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\LobbySocialHub\MainHubDecorRuntime2.rbxm`
+- `MainHubDecorRuntime2.rbxm` differs mainly in `TrainingGhostVisual` pose/rig payload from the client-view export and must not replace the authoritative donor by default.
+- The following files are not authoritative whole-lobby sources and must not be promoted wholesale:
+  - `LobbySocialHub_EditMode.rbxm`
+  - `LobbySocialHub_RuntimeReference(F5 Test - Client View).rbxm`
+  - `LobbySocialHub_RuntimeReference(F5 test - ServerView).rbxm`
+- Promotion rule for lobby recovery:
+  - keep the clean lobby container/source lane for core map structure
+  - promote only the approved donor visual layer from `MainHubDecorRuntime.rbxm`
+  - do not promote legacy playtest containers such as `SpawnPoints`, `Rooms`, `GhostSpawns`, `EvidenceSpawnNodes`, or other full-runtime lobby folders from F5 exports
+- `MainHubDecorRuntime.rbxm` is approved because it carries the richer plaza/building decor layer without carrying whole-lobby legacy containers or script modules.
+
 ---
 
 ## **1. EVIDENCE TYPES (6 TOTAL)**
@@ -268,6 +287,11 @@ Path Width: 12 studs (connects all zones)
 Ceiling Height: 28 studs
 Lobby Ceiling Clearance: 28 studs
 ```
+
+**Lobby Visual Recovery Rule (2026-04-18):**
+- If lobby visual parity drifts again, inspect/promote `asset mentah\LobbySocialHub\MainHubDecorRuntime.rbxm` first.
+- Use `MainHubDecorRuntime2.rbxm` only as a comparison reference when `TrainingGhostVisual` specifically needs richer pose data.
+- Do not use whole `LobbySocialHub_RuntimeReference(F5...)` exports as direct replacement sources because they carry playtest-built runtime state.
 
 ---
 

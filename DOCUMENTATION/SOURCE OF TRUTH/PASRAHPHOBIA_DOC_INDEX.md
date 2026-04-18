@@ -82,6 +82,20 @@ Hard rules for this lane:
 - use current base slots plus the existing aggressive suffix runtime lane only
 - do not invent a new ghost variant switching architecture
 
+[2026-04-18 NOTE - Lobby Visual Donor]
+Before continuing any `LobbySocialHub` visual recovery or parity work on branch `final-source-of-truth`, use:
+- authoritative donor visual layer:
+  - `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\LobbySocialHub\MainHubDecorRuntime.rbxm`
+- comparison-only donor:
+  - `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\LobbySocialHub\MainHubDecorRuntime2.rbxm`
+- keep current clean lobby container/source lane for structure and wiring
+
+Hard rules for this lane:
+- do not promote `LobbySocialHub_RuntimeReference(F5...)` wholesale as the new lobby source
+- do not promote legacy playtest containers like `SpawnPoints`, `Rooms`, `GhostSpawns`, `EvidenceSpawnNodes`, or other full-runtime lobby folders
+- treat `MainHubDecorRuntime2.rbxm` as `TrainingGhostVisual` comparison only unless explicitly approved otherwise
+- lobby runtime spawn expectation remains around `1610, 3.47, -10`
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

@@ -16077,3 +16077,28 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - after cleanup save: `PASRAHPHOBIA.rbxlx = 305.64 MB`
 - Repo hygiene:
   - `.gitignore` now allows authoritative map `.rbxm` files under `src/ReplicatedStorage/Maps/**` and `src/ServerStorage/Maps/**` so this cleanup can be committed instead of living only in local Studio state.
+
+## 2026-04-18 - Lobby donor visual audit lock
+
+- Audited local lobby exports under `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\LobbySocialHub`.
+- Results:
+  - `LobbySocialHub_EditMode.rbxm`
+    - remains low-detail/blockout only
+    - `17` top-level folders, `199` descendants
+  - `LobbySocialHub_RuntimeReference(F5 Test - Client View).rbxm`
+    - richer runtime snapshot but not safe as a whole-lobby replacement
+  - `LobbySocialHub_RuntimeReference(F5 test - ServerView).rbxm`
+    - richer runtime snapshot but not safe as a whole-lobby replacement
+  - `MainHubDecorRuntime.rbxm`
+    - approved as authoritative donor visual layer
+    - `376` top-level children, `1221` descendants
+    - carries rich plaza/building decor without whole-lobby legacy containers
+    - carries no `Script`, `LocalScript`, `ModuleScript`, `RemoteEvent`, or `RemoteFunction`
+  - `MainHubDecorRuntime2.rbxm`
+    - same decor layout class counts and top-level shape
+    - differs mainly in richer `TrainingGhostVisual` pose/rig payload from client-view export
+    - locked as comparison-only reference, not the default authoritative donor
+- Canonical lock:
+  - use clean lobby container/source lane for structure and wiring
+  - use `MainHubDecorRuntime.rbxm` as donor visual layer for lobby recovery
+  - do not promote whole `LobbySocialHub_RuntimeReference(F5...)` exports or legacy playtest containers wholesale

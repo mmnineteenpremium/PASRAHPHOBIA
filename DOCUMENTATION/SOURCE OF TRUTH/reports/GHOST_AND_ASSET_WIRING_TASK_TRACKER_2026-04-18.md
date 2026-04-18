@@ -562,3 +562,23 @@ Every meaningful update for this tracker should state:
 - Remaining work is validation depth, not mapping uncertainty:
   - full published room flow smoke
   - confirm in-match ghost visual replacement through a live match
+
+## 2026-04-18 - Lobby donor audit lock
+
+- `LobbySocialHub_EditMode.rbxm` is confirmed as low-detail/blockout only:
+  - `17` top-level folders
+  - `199` descendants
+- `LobbySocialHub_RuntimeReference(F5...)` exports are richer but are not authoritative whole-lobby sources because they carry playtest-built runtime state.
+- `MainHubDecorRuntime.rbxm` is now locked as the authoritative donor visual layer for lobby parity recovery:
+  - root `Folder MainHubDecorRuntime`
+  - `376` top-level children
+  - `1221` descendants
+  - no `Script`, `LocalScript`, `ModuleScript`, `RemoteEvent`, `RemoteFunction`
+  - no whole-lobby legacy containers like `SpawnPoints`, `Rooms`, `GhostSpawns`, `EvidenceSpawnNodes`, `SafeZones`
+- `MainHubDecorRuntime2.rbxm` is comparison-only:
+  - same overall lobby decor layout
+  - main difference is richer `TrainingGhostVisual` pose/rig payload from client-view export
+  - not authoritative by default
+- Canonical/doc index must treat:
+  - `MainHubDecorRuntime.rbxm` as authoritative donor visual layer
+  - `MainHubDecorRuntime2.rbxm` as `TrainingGhostVisual` comparison reference only
