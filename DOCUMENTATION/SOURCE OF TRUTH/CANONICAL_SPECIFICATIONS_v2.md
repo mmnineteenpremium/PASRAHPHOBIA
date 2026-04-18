@@ -1,6 +1,6 @@
 # PASRAHPHOBIA — CANONICAL SPECIFICATIONS v2.0
 
-**Last Updated:** 2026-03-17 | Session 5 — Full GDD Synchronization  
+**Last Updated:** 2026-04-16 | Session 7 — StudioMMNineteen Runtime Alignment  
 **Purpose:** Authoritative reference for ALL game specifications  
 **Source:** Synchronized from 23 GDD files + project documentation
 
@@ -152,7 +152,7 @@ Map                  | Roaming Radius | Hunt Detection Range
 ---------------------|----------------|---------------------
 StudioMMNineteen     | 20-25 studs    | 22-26 studs
 EmptyBuilding        | 25-30 studs    | 28-32 studs
-HauntedHouse         | 25-30 studs    | 30 studs
+HauntedHouse         | 25-32 studs    | 30 studs
 AbandonedPalace      | 35-45 studs    | 40 studs
 ```
 
@@ -166,9 +166,9 @@ AbandonedPalace      | 35-45 studs    | 40 studs
 |----------|------|--------------|--------|------------|-------|-------------------|------------|
 | LobbySocialHub | Social Lobby | 420×420 | 1 | 176,400 studs² | N/A | 0 (test zones only) | N/A |
 | AbandonedPalace | Investigation | 180×180 | 1 | 32,400 studs² | 18-25 | 5-7 | Large/Hard |
-| HauntedHouse | Investigation | 140×140 | 2 | 39,200 studs² (19,600 per floor) | 12-16 | 4-6 | Medium |
+| HauntedHouse | Investigation | 160×180 | 2 | 57,600 studs² (28,800 per floor) | 20 | 6 | Medium |
 | EmptyBuilding | Investigation | 100×100 | 2 | 20,000 studs² (10,000 per floor) | 10-14 | 5-7 | Medium-Small |
-| StudioMMNineteen | Investigation | 90×90 | 2 | 16,200 studs² (8,100 per floor) | 6-10 | 3-5 | Small/Easy |
+| StudioMMNineteen | Investigation | 100×100 | 3 | 30,000 studs² (10,000 per floor) | 12 | 6 | Medium-Small |
 
 **Map Size Categories:**
 - Small: 80-100 studs (solo/duo friendly)
@@ -176,8 +176,42 @@ AbandonedPalace      | 35-45 studs    | 40 studs
 - Large: 160-200 studs (4 players recommended)
 - Hub: 350-450 studs (lobby/social area)
 
+**HauntedHouse Runtime Canonical (2026-04-16):**
+- Floor 1 rooms: `Foyer`, `DiningRoom`, `Bathroom1`, `StairHall`, `LaundryRoom`, `Bathroom2`, `Kitchen`, `Pantry`, `LivingRoom`, `Garage`
+- Floor 2 rooms: `HallwayMain`, `Bathroom3`, `Bedroom1`, `ClosetA`, `Bedroom2`, `LinenCloset`, `Bedroom3`, `ClosetB`, `Bathroom4`, `BonusRoom`
+- Preparation phase uses outside-house staging via `Runtime.PreparationStagingRuntime.PreparationSpawnArea` (`4` prep spawn nodes) and `SafeZone_1..2`
+- Legacy investigation-map `SpawnPoints` are removed; runtime spawn source is `PreparationSpawnArea`
+- Timer-based preparation countdown is disabled; investigation begins when `Door_FrontEntry` is opened
+- Required HauntedHouse runtime object coverage: `Doors=18`, `Lights=20`, `Props=20`, `Electronics=7`, `Windows=6`, `EvidenceSpawnNodes=14`, `GhostSpawns=6`
+- Environmental event targets must resolve to either an imported map asset or a generated runtime fallback so `LightFlicker`, `TV/Radio`, `ObjectMove/ObjectThrow`, and `WindowKnock` never bind to a missing target
+
+**StudioMMNineteen Runtime Canonical (2026-04-16):**
+- Floor 1 rooms: `FrontPorch`, `LivingRoom`, `LaundryRoom`, `StairHallL1`
+- Floor 2 rooms: `Kitchen`, `DiningArea`, `Bathroom`, `StairHallL2`
+- Floor 3 rooms: `UpperHall`, `Bedroom1`, `Bedroom2`, `StairHallL3`
+- Preparation phase uses outside-house staging via `Runtime.PreparationStagingRuntime.PreparationSpawnArea` (`4` prep spawn nodes) and `SafeZone_1..2`
+- Legacy investigation-map `SpawnPoints` are removed; runtime spawn source is `PreparationSpawnArea`
+- Timer-based preparation countdown is disabled; investigation begins when `Door_FrontEntry` is opened
+- Required StudioMMNineteen runtime object coverage: `Doors=10`, `Lights=12`, `Props=12`, `Electronics=6`, `Windows=6`, `EvidenceSpawnNodes=12`, `GhostSpawns=6`
+
+**EmptyBuilding Runtime Canonical (2026-04-16):**
+- Floor 1 rooms: `Lobby`, `SecurityRoom`, `Storage`, `ElectricalRoom`, `OfficeA`, `OfficeB`, `Bathroom1`, `StaircaseNorth`, `StaircaseSouth`
+- Floor 2 rooms: `WorkspaceOpen`, `MeetingRoom`, `ServerRoom`, `ArchiveRoom`, `Bathroom2`
+- Preparation phase uses outside-entry staging via `Runtime.PreparationStagingRuntime.PreparationSpawnArea` (`4` prep spawn nodes) and `SafeZone_1..2`
+- Legacy investigation-map `SpawnPoints` are removed; runtime spawn source is `PreparationSpawnArea`
+- Timer-based preparation countdown is disabled; investigation begins when `Door_Lobby` is opened
+- Required EmptyBuilding runtime object coverage: `Doors=14`, `Lights=14`, `Props=14`, `Electronics=6`, `Windows=12`, `EvidenceSpawnNodes=9`, `GhostSpawns=5`
+- Structural decor requirement for this map: `RuntimeDecor` must include staircase/ladder access to floor 2 and sensible filler props to avoid empty-space drift
+
+**AbandonedPalace Runtime Canonical (2026-04-16):**
+- Floor 1 rooms: `GrandHall`, `RoyalCorridor`, `DiningHall`, `Library`, `GuestRoomA`, `GuestRoomB`, `GuestRoomC`, `ServantRoomA`, `ServantRoomB`, `ServantRoomC`, `Basement`, `Courtyard`, `Armory`, `Chapel`, `Ballroom`, `Observatory`, `StorageWing`, `CeremonyRoom`
+- Preparation phase uses outside-entry staging via `Runtime.PreparationStagingRuntime.PreparationSpawnArea` (`4` prep spawn nodes) and `SafeZone_1..2`
+- Legacy investigation-map `SpawnPoints` are removed; runtime spawn source is `PreparationSpawnArea`
+- Timer-based preparation countdown is disabled; investigation begins when `Door_GrandHall` is opened
+- Required AbandonedPalace runtime object coverage: `Doors=18`, `Lights=18`, `Props=18`, `Electronics=6`, `Windows=6`, `EvidenceSpawnNodes=14`, `GhostSpawns=5`
+
 **Lobby Layout (LobbySocialHub 420×420):**
-```
+``` 
 Orientation:
 - Center: Main Hub (MatchQueue, Spawn Point)
 - North (+Y): Evidence Test Building (70×70 studs)
@@ -679,3 +713,15 @@ Based on canonical specifications, Phase 7 should prioritize:
 **Next Step:** Use this document as the SINGLE SOURCE OF TRUTH for all development, documentation updates, and AI-assisted code generation.
 
 **Miftah, this document is now synchronized with ALL your GDD files. Any conflicts have been resolved in favor of the original GDD source material.**
+
+---
+
+## 2026-04-16 Addendum - HauntedHouse Runtime Boundary and Staging Lock
+
+- Active `HauntedHouse` state is now locked to owner-approved runtime sync from `Workspace.HauntedHouse_Review`.
+- Runtime sync path: `Workspace -> ServerStorage.Maps.HauntedHouse.HauntedHouse -> ReplicatedStorage.Maps.HauntedHouse.HauntedHouse`.
+- `OutdoorMainFloor` for `HauntedHouse` is explicitly removed by owner instruction; canonical base uses native map geometry only.
+- Boundary policy for `HauntedHouse`:
+  - computed from house+staging footprint only
+  - runtime collider walls are tight (anti-exit)
+  - realistic tree blockers are aligned per side (`North/South/West/East`) to stop out-of-map movement.

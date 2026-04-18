@@ -86,9 +86,6 @@ local function normalizeMapDefinition(raw, fallbackKey)
     if #rooms == 0 then
         return nil, "map_missing_rooms"
     end
-    if #spawnPoints == 0 then
-        return nil, "map_missing_spawn_points"
-    end
     if #ghostCandidatesRaw > 0 and #ghostCandidates == 0 then
         return nil, "ghost_candidates_not_in_rooms"
     end
