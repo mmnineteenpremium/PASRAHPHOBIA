@@ -202,7 +202,7 @@ Notes:
 - Confirm whether flashlight and headlamp variants are gameplay variants, cosmetic variants, or support assets.
 - Stop if any canonical tool has no exact owner-imported mapping.
 
-Status: base-slot mapping locked, template syncback still pending
+Status: base-slot mapping locked, template syncback completed
 
 Owner clarification locked on 2026-04-18:
 
@@ -219,7 +219,7 @@ Confident mappings from local `ROBLOX CREATOR HUB` + `Models & Packages.csv`:
 | `GerakanGaib` | `06 - Sensor Pengganggu - Motion Sensor` | `SensorPengganggu` | `109093713235033` | high |
 | `BolaArwah` | `04 - Kamera To'un - UV Camera - Spirit Orb Camera` | `CameraUV R5` | `80883221689326` | medium-high |
 
-Ambiguous or missing mappings currently blocked:
+Historical ambiguity resolved into base-slot lock:
 
 - `JejakEnergi`
   - `EMF - MEDOK = 121559455873224`
@@ -297,9 +297,23 @@ Base-slot defaults locked into source config on 2026-04-18:
 | `Dupa` | `128740632500448` | first `dupastick` row retained as base |
 | `Flashlight` | `127298509562779` | `Flashlight besar hitam` retained as base main-hand light |
 
-Current remaining blocker before full visual parity:
+Syncback completion on 2026-04-18:
 
-- imported tool models for `JejakEnergi`, `KotakArwah`, `SuhuMembeku`, `BukuTerkutuk`, `BolaArwah`, `GerakanGaib`, and `PilSanity` are still not synced into `src/ReplicatedStorage/Assets/Models/Tools`, so runtime now has authoritative asset-id metadata but not yet the final imported model templates for those slots
+- active Studio loaded the owner-imported tool assets directly from asset ids into `ReplicatedStorage.Assets.Models.Tools`
+- place file `PASRAHPHOBIA.rbxlx` was saved after the live import pass
+- syncback completed into `src/ReplicatedStorage/Assets/Models/Tools`
+- source tree now contains canonical tool templates for all base slots:
+  - `JejakEnergi`
+  - `KotakArwah`
+  - `SuhuMembeku`
+  - `BukuTerkutuk`
+  - `BolaArwah`
+  - `GerakanGaib`
+  - `Garam`
+  - `PilSanity`
+  - `Salib`
+  - `Dupa`
+  - `Flashlight`
 
 ### Phase 5 - Wiring Dependency Audit
 

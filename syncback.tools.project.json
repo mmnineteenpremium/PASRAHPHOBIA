@@ -1,0 +1,29 @@
+{
+  "name": "PASRAHPHOBIA",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Assets": {
+        "$className": "Folder",
+        "Models": {
+          "$className": "Folder",
+          "Tools": {
+            "$path": "src/ReplicatedStorage/Assets/Models/Tools"
+          }
+        }
+      },
+      "$attributes": {
+        "PasrahAutoRoomSmoke": false,
+        "PasrahForceGhostType": "Pocong",
+        "PasrahRoomTrace": false,
+        "PasrahStudioLobbyGhostPreview": true
+      }
+    }
+  },
+  "syncbackRules": {
+    "syncCurrentCamera": false,
+    "syncUnscriptable": true,
+    "ignoreReferents": false
+  }
+}

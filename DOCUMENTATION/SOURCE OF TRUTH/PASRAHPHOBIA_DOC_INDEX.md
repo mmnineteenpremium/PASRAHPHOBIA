@@ -6210,6 +6210,7 @@ Dupa = 128740632500448
 Flashlight = 127298509562779
 
 Rarity/state/support uploads remain in the imported pool and are not promoted into the base runtime slots unless the rarity/content lane explicitly consumes them.
+Base template syncback completed on 2026-04-18: `ReplicatedStorage.Assets.Models.Tools` now contains canonical base templates for all 11 current tool slots.
 
 ---
 

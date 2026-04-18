@@ -100,7 +100,7 @@ GhostInteractionRadius = 5 -- studs
 - `Dupa -> 128740632500448`
 - `Flashlight -> 127298509562779`
 - Rarity/support/state variants remain preserved in the imported pool, but the current runtime lane must lock exactly one base asset per tool slot until the rarity/content lane is implemented.
-- Some imported tool templates are not yet synced into `ReplicatedStorage.Assets.Models.Tools`; until that syncback happens, runtime carries authoritative base asset-id metadata but may still render fallback/source placeholders for those slots.
+- Imported base tool templates are now synced into `ReplicatedStorage.Assets.Models.Tools`; runtime and source both carry the same canonical base-slot tool models for the current gameplay lane.
 
 **Tool Unlock Progression:**
 ```

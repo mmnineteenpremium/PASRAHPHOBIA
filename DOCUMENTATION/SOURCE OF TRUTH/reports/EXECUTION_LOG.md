@@ -15968,3 +15968,38 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `PilSanity`
 - Remaining blocker:
   - full visual parity for the missing tool slots cannot be claimed until those imported Studio templates are syncbacked into `src/ReplicatedStorage/Assets/Models/Tools`
+
+## 2026-04-18 - Tool template syncback completed
+
+- Context:
+  - the saved worktree place file initially still carried only `Dupa`, `Garam`, and `Salib` under `ReplicatedStorage.Assets.Models.Tools`
+  - live Studio inspection confirmed the missing tool templates had not yet been inserted into the canonical tool template folder
+- Live Studio action:
+  - opened `PASRAHPHOBIA.rbxlx` from the active worktree
+  - loaded owner-imported base tool assets directly by authoritative asset id into `ReplicatedStorage.Assets.Models.Tools`
+  - replaced/created canonical tool templates for:
+    - `JejakEnergi`
+    - `KotakArwah`
+    - `SuhuMembeku`
+    - `BukuTerkutuk`
+    - `BolaArwah`
+    - `GerakanGaib`
+    - `Garam`
+    - `PilSanity`
+    - `Salib`
+    - `Dupa`
+    - `Flashlight`
+  - saved the live Studio place back to `PASRAHPHOBIA.rbxlx`
+- Syncback:
+  - used `syncback.tools.project.json` to pull only `ReplicatedStorage.Assets.Models.Tools` from the saved place file back into source
+- Verification:
+  - `src/ReplicatedStorage/Assets/Models/Tools` now contains all 11 canonical base-slot tool templates
+  - missing slots now exist in source as synced `.rbxm` files:
+    - `JejakEnergi.rbxm`
+    - `KotakArwah.rbxm`
+    - `SuhuMembeku.rbxm`
+    - `BukuTerkutuk.rbxm`
+    - `BolaArwah.rbxm`
+    - `GerakanGaib.rbxm`
+    - `PilSanity.rbxm`
+    - `Flashlight.rbxm`

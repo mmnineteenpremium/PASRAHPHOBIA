@@ -5,6 +5,8 @@
 *.rbxmx
 !src/ReplicatedStorage/Assets/Models/Ghosts/*.rbxm
 !src/ReplicatedStorage/Assets/Models/Ghosts/*.rbxmx
+!src/ReplicatedStorage/Assets/Models/Tools/*.rbxm
+!src/ReplicatedStorage/Assets/Models/Tools/*.rbxmx
 
 # Rojo cache & generated files
 default.project.json.rojo
