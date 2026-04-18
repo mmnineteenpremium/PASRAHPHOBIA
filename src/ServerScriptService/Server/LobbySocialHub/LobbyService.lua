@@ -655,6 +655,10 @@ local LOBBY_ZONE_GUIDE_STYLE = {
 }
 
 local LOBBY_ZONE_ENTRY_COPY = {
+    SpawnPlaza = {
+        title = "LOBBY",
+        subtitle = "Hub utama dan quick access",
+    },
     MatchmakingZone = {
         title = "PLAY",
         subtitle = "Contract board & start match",

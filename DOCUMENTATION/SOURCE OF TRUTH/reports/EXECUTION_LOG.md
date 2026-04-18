@@ -16120,3 +16120,30 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `MainHubDecorRuntime` is present as child `18`
   - `MainHubDecorRuntime` in the built source contains `376` direct children and `1221` descendants
 - This keeps the donor nested under the lobby model so `LobbyService` can reuse/normalize it instead of generating a conflicting sibling source.
+
+## 2026-04-19 - Fresh publish lobby badge parity fix
+
+- Started from a fully closed state:
+  - Roblox Studio closed
+  - Roblox PC player closed
+  - Android Roblox app terminated
+- Reproduced current published/client mismatch and isolated one concrete source bug:
+  - `LobbyService.publishLobbyZoneFocus(...)` sent raw badge `SpawnPlaza` when `SpawnPlaza` had no `LOBBY_ZONE_ENTRY_COPY`
+  - client fallback metadata used `LOBBY`
+  - result: some clients showed `LOBBY/LO`, others could show `SpawnPlaza/SP`
+- Fixed source in:
+  - `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+    - added `SpawnPlaza = { title = "LOBBY", subtitle = "Hub utama dan quick access" }` to `LOBBY_ZONE_ENTRY_COPY`
+- Fresh publish completed successfully:
+  - PlaceId: `113010869463813`
+  - UniverseId: `9802743087`
+  - Published version: `526`
+- Fresh validation:
+  - PC published client now shows normalized lobby badge `LOBBY` with glyph `LO`
+  - Android launch path reaches `com.roblox.client/.ActivityNativeMain`
+  - Android MCP screenshot lane still intermittently captures stale overlay/page content instead of the live game surface, so Android runtime presence for this slice was confirmed by activity focus rather than screenshot text
+- Evidence:
+  - `DOCUMENTATION/SOURCE OF TRUTH/reports/MULTICLIENT_PUBLISH_SMOKE_2026-04-19.md`
+  - `.codex/evidence/published_pc_20260419_v526.png`
+  - `.codex/evidence/published_pc_room_browser_20260419_v526.png`
+  - `.codex/evidence/published_pc_room_browser_key_20260419_v526.png`
