@@ -15802,3 +15802,46 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Verification:
   - code patch compiled through Rojo sourcemap.
   - cloud publish completed successfully from current branch state.
+
+## 2026-04-18 13:29:47 +07:00 - PreparationSpawnArea Canonical Alignment + Source-of-Truth Lock
+- Status: PASS FOR SOURCE-OF-TRUTH LOCK.
+- Trigger:
+  - owner approved canonical/doc-index alignment, syncback from active `PASRAHPHOBIA.rbxlx`, commit, push, publish, and workspace review cleanup.
+- Action taken:
+  - verified live Studio map state in both runtime roots:
+    - `ReplicatedStorage.Maps.{HauntedHouse,StudioMMNineteen,EmptyBuilding,AbandonedPalace}`
+    - `ServerStorage.Maps.{HauntedHouse,StudioMMNineteen,EmptyBuilding,AbandonedPalace}`
+  - confirmed all four investigation maps now resolve preparation spawn from:
+    - `Runtime.PreparationStagingRuntime.PreparationSpawnArea`
+    - with `prepSpawnParts=4`
+    - and no legacy `SpawnPoints` folder.
+  - confirmed required runtime coverage stays complete on all four investigation maps:
+    - `Rooms`, `Doors`, `GhostSpawns`, `EvidenceSpawnNodes`, `InteractionPoints`, `Lights`, `Props`, `Electronics`, `Windows`, `SafeZones`.
+  - synced active Studio snapshot back into repo through local place save:
+    - `PASRAHPHOBIA.rbxlx`
+  - updated canonical source files to remove legacy investigation-map `spawnPoints` assumptions:
+    - `src/shared/GameData/Maps/HauntedHouse.lua`
+    - `src/shared/GameData/Maps/StudioMMNineteen.lua`
+    - `src/shared/GameData/Maps/EmptyBuilding.lua`
+    - `src/shared/GameData/Maps/AbandonedPalace.lua`
+    - `src/ServerScriptService/Server/MapConfigSystem/Service.lua`
+  - updated documentation to match runtime truth:
+    - `DOCUMENTATION/SOURCE OF TRUTH/CANONICAL_SPECIFICATIONS_v2.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/PASRAHPHOBIA_DOC_INDEX.md`
+  - preserved the already-committed runtime logic patch baseline:
+    - `f9cbfb6` `Fix preparation spawn runtime and session checklist`
+  - committed source-of-truth alignment snapshot:
+    - `eb46b31` `Align investigation prep runtime to PreparationSpawnArea`
+  - published branch state to canonical cloud target:
+    - `PlaceId=113010869463813`
+    - `UniverseId=9802743087`
+- Verification:
+  - live Studio audit result:
+    - `HauntedHouse complete=true prepSpawnParts=4 spawnPoints=false`
+    - `StudioMMNineteen complete=true prepSpawnParts=4 spawnPoints=false`
+    - `EmptyBuilding complete=true prepSpawnParts=4 spawnPoints=false`
+    - `AbandonedPalace complete=true prepSpawnParts=4 spawnPoints=false`
+  - validation performed on both:
+    - `ReplicatedStorage`
+    - `ServerStorage`
+  - publish command completed from current branch using Open Cloud API key in environment.
