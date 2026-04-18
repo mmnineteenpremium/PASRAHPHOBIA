@@ -1169,6 +1169,15 @@ local function resolveToolVisualProfileConfig(toolType)
     return nil
 end
 
+local function resolveToolVisualProfileTargetBounds(toolType)
+    local config = resolveToolVisualProfileConfig(toolType)
+    if type(config) ~= "table" then
+        return nil
+    end
+
+    return coerceProfileVector3(config.targetBounds) or coerceProfileVector3(config.meshSize)
+end
+
 local function clampRuntimeModelBounds(model, targetBounds)
     if not (model and model:IsA("Model")) or typeof(targetBounds) ~= "Vector3" then
         return false
@@ -1305,6 +1314,7 @@ local function syncRuntimeAssetModel(parent, runtimeName, categoryName, modelNam
 
     if tostring(categoryName or "") == "Tools" then
         local toolConfig = resolveToolVisualProfileConfig(tostring(modelName or ""))
+        local targetBounds = resolveToolVisualProfileTargetBounds(tostring(modelName or ""))
         local inventoryModelAssetId = type(toolConfig) == "table" and toolConfig.inventoryModelAssetId or nil
         local sourceLabel = type(toolConfig) == "table" and toolConfig.sourceLabel or nil
         local variantRole = type(toolConfig) == "table" and toolConfig.variantRole or nil
@@ -1318,6 +1328,9 @@ local function syncRuntimeAssetModel(parent, runtimeName, categoryName, modelNam
         end
         if model:GetAttribute("PasrahToolVariantRole") ~= variantRole then
             model:SetAttribute("PasrahToolVariantRole", type(variantRole) == "string" and variantRole ~= "" and variantRole or nil)
+            changed = true
+        end
+        if targetBounds and clampRuntimeModelBounds(model, targetBounds) then
             changed = true
         end
     end

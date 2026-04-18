@@ -16003,3 +16003,34 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `GerakanGaib.rbxm`
     - `PilSanity.rbxm`
     - `Flashlight.rbxm`
+
+## 2026-04-18 - Lobby spawn parity cleanup in worktree place
+
+- Root baseline validated from `C:\Projects\ROBLOX\PASRAHPHOBIA\PASRAHPHOBIA.rbxlx`:
+  - local play reaches `Workspace.Maps.LobbySocialHub.LobbySocialHub`
+  - spawn stays at approximately `1610, 3.47, -10`
+- Worktree issue reproduced in `final-source-of-truth\PASRAHPHOBIA.rbxlx`:
+  - spawn coordinates were still correct
+  - opening lobby view was polluted by `StudioGhostPreviewGallery`
+  - lobby support display props `ToolDisplayGaram`, `ToolDisplaySalib`, `ToolDisplayDupa` were oversized because newly imported tool assets were being rendered at raw scale
+- Root causes:
+  - dirty local place attribute `ReplicatedStorage.PasrahStudioLobbyGhostPreview = true`
+  - dirty local place attribute `ReplicatedStorage.PasrahForceGhostType = Pocong`
+  - no clamp for lobby support tool runtime asset models
+- Corrections:
+  - removed local worktree place attributes:
+    - `PasrahStudioLobbyGhostPreview`
+    - `PasrahForceGhostType`
+    - `PasrahForceGhostVisualState`
+    - `PasrahRoomTrace`
+    - `PasrahAutoRoomSmoke`
+  - source patch:
+    - `src/shared/GameData/ToolVisualConfig.lua`
+    - `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+  - live Studio place patch:
+    - `ServerScriptService.Server.LobbySocialHub.LobbyService`
+- Verification:
+  - `StudioGhostPreviewGallery` no longer spawns in front of lobby spawn
+  - oversized support tool display models no longer appear in the forward camera cone from spawn
+  - final local play verification kept spawn at `1610, 3.47, -10`
+  - cleaned worktree `.rbxlx` saved locally

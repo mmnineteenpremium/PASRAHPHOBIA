@@ -59,6 +59,7 @@ return {
 			inventoryModelAssetId = "rbxassetid://117103968659967",
 			sourceLabel = "Garam",
 			variantRole = "base",
+			targetBounds = { x = 0.82, y = 0.58, z = 0.82 },
 			stateVariants = {
 				Deployed = "rbxassetid://70968882423059",
 			},
@@ -81,6 +82,7 @@ return {
 			inventoryModelAssetId = "rbxassetid://128686833722709",
 			sourceLabel = "SALIB KAYU",
 			variantRole = "base",
+			targetBounds = { x = 0.72, y = 1.18, z = 0.28 },
 			variantPool = {
 				"rbxassetid://128686833722709",
 				"rbxassetid://74458723326407",
@@ -92,6 +94,7 @@ return {
 			inventoryModelAssetId = "rbxassetid://128740632500448",
 			sourceLabel = "dupastick",
 			variantRole = "base",
+			targetBounds = { x = 0.86, y = 0.64, z = 0.86 },
 			variantPool = {
 				"rbxassetid://128740632500448",
 				"rbxassetid://116816609439903",

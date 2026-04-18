@@ -2,10 +2,10 @@
 
 ## Status
 
-- Overall progress: 84%
-- Current lane: ghost asset source-of-truth remap + runtime template replacement lock
-- Current state: authoritative CSV mapping locked, wrong Leak row removed from local CSV, live ghost template replacement synced back to source, cloud publish completed
-- Runtime wiring execution: ghost asset lane completed, deeper runtime validation still continuing
+- Overall progress: 87%
+- Current lane: published runtime parity smoke for lobby -> room browser -> preparation staging
+- Current state: authoritative CSV mapping locked, wrong Leak row removed from local CSV, live ghost/template replacement synced back to source, canonical tool templates synced back, cloud publish completed
+- Runtime wiring execution: ghost asset lane completed, runtime parity validation still continuing
 
 ## Goal
 
@@ -21,6 +21,31 @@ Replace ghost assets and related investigation assets end-to-end using the owner
 - Use default imported size first for all ghost assets.
 - Keep Pocong on default uploaded size baseline for this new replacement pass.
 - Treat all local assets in `ROBLOX CREATOR HUB` as the intended source pool because the owner stated they are already bulk imported to Roblox Studio with custom rig where applicable.
+
+## 2026-04-18 Lobby Parity Investigation
+
+- Root clue validated:
+  - `C:\Projects\ROBLOX\PASRAHPHOBIA\PASRAHPHOBIA.rbxlx` playtest still spawns correctly into `LobbySocialHub` at `x ~= 1610, y ~= 3.47, z ~= -10`
+- Worktree drift reproduced:
+  - `C:\Projects\ROBLOX\PASRAHPHOBIA\.codex\worktrees\final-source-of-truth\PASRAHPHOBIA.rbxlx` also spawned at the same lobby coordinates, but the opening view was polluted by non-authoritative Studio test state and over-scaled display assets
+- Root causes locked:
+  - `ReplicatedStorage.PasrahStudioLobbyGhostPreview = true` was dirty in the local worktree place and caused `GhostSystem` to spawn `StudioGhostPreviewGallery` directly around the lobby spawn plaza
+  - `MainHubDecorRuntime.ToolDisplayGaram`, `ToolDisplaySalib`, and `ToolDisplayDupa` were using newly imported owner assets at raw scale, creating oversized lobby display props in front of spawn
+- Corrections applied:
+  - cleared dirty local Studio-only test attributes from the worktree place:
+    - `PasrahStudioLobbyGhostPreview`
+    - `PasrahForceGhostType`
+    - `PasrahForceGhostVisualState`
+    - `PasrahRoomTrace`
+    - `PasrahAutoRoomSmoke`
+  - patched source `LobbyService.lua` so lobby tool display models clamp to canonical target bounds
+  - patched source `ToolVisualConfig.lua` with authoritative target bounds for `Garam`, `Salib`, and `Dupa`
+  - patched live worktree place `ServerScriptService.Server.LobbySocialHub.LobbyService` with the same lobby tool clamp so the currently opened `.rbxlx` behaves correctly without waiting for Rojo sync
+- Verification:
+  - after cleanup, `StudioGhostPreviewGallery` no longer appears at lobby spawn
+  - after tool clamp, no oversized tool models remain in the player camera forward cone from spawn
+  - validated lobby spawn remains `1610, 3.47, -10`
+  - saved the cleaned worktree place locally
 
 ## Source Of Truth Inputs
 
@@ -257,6 +282,77 @@ Owner-provided authoritative mapping:
 | Canonical Tool | Source | Asset ID | Status |
 |---|---|---:|---|
 | `PilSanity` | owner-provided post-import asset id | `135462688002407` | locked |
+
+Base-slot lock finalized for current gameplay wiring:
+
+| Canonical Tool | Base Asset ID | Notes |
+|---|---:|---|
+| `JejakEnergi` | `121559455873224` | base/common EMF reader |
+| `KotakArwah` | `80024667585179` | base/common spirit box |
+| `SuhuMembeku` | `106744635077484` | base/common thermometer |
+| `BukuTerkutuk` | `123135502718934` | closed/default book state |
+| `BolaArwah` | `80883221689326` | base camera |
+| `GerakanGaib` | `109093713235033` | base motion sensor |
+| `Garam` | `117103968659967` | held/default salt |
+| `PilSanity` | `135462688002407` | authoritative owner import |
+| `Salib` | `128686833722709` | base crucifix |
+| `Dupa` | `128740632500448` | held/default smudge stick |
+| `Flashlight` | `127298509562779` | base flashlight |
+
+Template syncback result:
+
+- `src/ReplicatedStorage/Assets/Models/Tools` now contains canonical source templates for all 11 base-slot tools.
+- Existing json-backed templates updated: `Dupa`, `Garam`, `Salib`
+- New source templates synced as `.rbxm`: `BolaArwah`, `BukuTerkutuk`, `Flashlight`, `GerakanGaib`, `JejakEnergi`, `KotakArwah`, `PilSanity`, `SuhuMembeku`
+
+### Phase 5 - Published Runtime Validation
+
+- Validate published runtime on fresh PC RobloxPlayer.
+- Validate published runtime on Android client.
+- Confirm lobby spawn, room browser transition, room creation, and staging transition.
+- Separate client mismatch from source/publish drift.
+
+Status: in progress
+
+Fresh smoke findings on 2026-04-18:
+
+- PC and Android now both boot consistently into the same published `LobbySocialHub` runtime.
+- The published lobby still renders the current source blockout lane around `x ~= 1600`, not a richer/finalized lobby art pass.
+- Android `Room Browser` is now confirmed working again.
+- Android can create a room successfully and start a match successfully.
+- Android match flow reaches preparation staging with live text:
+  - `Review board luar sebelum`
+  - `Preparation aktif di staging luar.`
+  - bottom prompt: `Review CONTRACT / OBJECTIVES / TOOLS di staging luar, lalu aktifkan BREACH di MAIN ENTRY.`
+- PC room-browser button is still not proven operational through current OS click automation.
+- Current fresh smoke therefore separates the remaining problems into:
+  - `LobbySocialHub` source/published visual parity is still wrong
+  - PC host-side room-browser interaction still needs verification
+
+Published runtime evidence captured:
+
+- PC:
+  - `.codex/evidence/pc_fresh_launch.png`
+  - `.codex/evidence/pc_after_boot_wait.png`
+  - `.codex/evidence/pc_room_browser_after_click.png`
+  - `.codex/evidence/pc_after_android_create_room.png`
+  - `.codex/evidence/pc_after_android_start.png`
+- Android:
+  - fresh published lobby screenshot
+  - room browser screenshot
+  - room-created screenshot
+  - preparation staging screenshot
+
+Blocking findings discovered during fresh smoke:
+
+- `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json` is still an authoritative blockout/low-poly lobby source, and the published runtime currently reflects that source faithfully.
+- Fresh player log did not show `LobbySocialHub` bootstrap/service crash; the published lobby problem is therefore not currently explained by a startup failure.
+- Published player log still shows unauthorized audio asset failures:
+  - `412892754`
+  - `188608071`
+  - `3225480278`
+  - `510111269`
+  - `1013366831`
 
 Working rule for the next slice:
 
