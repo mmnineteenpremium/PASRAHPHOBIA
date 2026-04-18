@@ -16177,3 +16177,39 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `Lighting` child/effect counts stable over `15s`
 - Evidence:
   - `.codex/evidence/lobby_lighting_after_vfx_tone_20260419.png`
+
+## 2026-04-19 - LobbySocialHub central blockout cleanup and fresh publish parity
+
+- Root cause for the boxed/void lobby spawn was confirmed in `Workspace.Maps.LobbySocialHub.LobbySocialHub`:
+  - `MainHubDecorRuntime` donor was present
+  - but legacy `MainHubPlaza` blockout geometry still enclosed the spawn area
+  - overlapping legacy parts made fresh published PC and Android spawn looking into bland slate walls / roof
+- Cleaned the authoritative lobby source by removing only the overlapping legacy center shell:
+  - `Geometry.Structures.InteriorWalls.Wall_MainHubPlaza_North`
+  - `Geometry.Structures.InteriorWalls.Wall_MainHubPlaza_South`
+  - `Geometry.Structures.InteriorWalls.Wall_MainHubPlaza_East`
+  - `Geometry.Structures.InteriorWalls.Wall_MainHubPlaza_West`
+  - `Roofs.Roof_MainHubPlaza`
+- Reoriented the four lobby `SpawnPoints.PlayerSpawn_*` to face the `Directory/Queue` approach instead of an interior wall.
+- Saved the edited Studio place, syncbacked through `syncback.studio-safe.project.json`, and confirmed the resulting source model still contains:
+  - `LobbySocialHub` root children: `18`
+  - `MainHubDecorRuntime` descendants: `1221`
+  - `Roofs` count reduced from `6 -> 5`
+  - `Geometry` descendants reduced from `54 -> 50`
+- Re-applied the intended client-side graphics defaults after syncback:
+  - `src/client/UI/Main.lua`
+    - mobile default graphics now resolves to `Quality`
+  - `src/client/UI/GraphicsSupport.lua`
+    - `Balanced` footer now reads `Balanced manual`
+- Closed Studio + PC client + Android app, published fresh, and reopened both clients.
+- Fresh published results:
+  - PC lobby now spawns facing the lobby directory/queue area, not a boxed wall
+  - Android lobby now also spawns into the same open center area and shows the same directory/queue composition
+  - Android `Open Room Browser` succeeded and displayed `RUANG INVESTIGASI`
+  - PC screenshot lane still showed the lobby panel after automation clicks; this remains inconclusive as an OS automation interaction issue, not a source/runtime regression
+- Evidence:
+  - `.codex/evidence/studio_after_lobby_cleanup_20260419.png`
+  - `.codex/evidence/published_pc_player_post_lobby_cleanup_20260419.png`
+  - `.codex/evidence/published_pc_player_post_lobby_cleanup_settled_20260419.png`
+  - `.codex/evidence/published_android_lobby_post_cleanup_20260419.png`
+  - `.codex/evidence/published_pc_room_browser_retry_20260419.png`

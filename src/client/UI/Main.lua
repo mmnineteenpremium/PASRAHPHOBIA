@@ -4573,10 +4573,10 @@ function UISystem:_resolveDefaultGraphicsMode()
 	if tier == "low" then
 		return "Performance", "auto_low"
 	end
+	if inputType == "Mobile" then
+		return "Quality", tier == "high" and "auto_mobile_high" or "auto_mobile_quality"
+	end
 	if tier == "high" then
-		if inputType == "Mobile" then
-			return "Balanced", "auto_mobile_high"
-		end
 		return "Quality", "auto_high"
 	end
 	return "Balanced", inputType == "Mobile" and "auto_mobile" or "auto_medium"

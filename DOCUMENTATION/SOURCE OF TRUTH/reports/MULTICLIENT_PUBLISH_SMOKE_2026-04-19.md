@@ -85,3 +85,59 @@
   - counts stayed stable over `15s`, so idle lobby did not show effect growth after the fix
 - Local evidence:
   - `.codex/evidence/lobby_lighting_after_vfx_tone_20260419.png`
+
+## Follow-up - LobbySocialHub cleanup publish
+
+### Source cleanup applied
+
+- removed overlapping legacy center shell from `LobbySocialHub`:
+  - `Wall_MainHubPlaza_North`
+  - `Wall_MainHubPlaza_South`
+  - `Wall_MainHubPlaza_East`
+  - `Wall_MainHubPlaza_West`
+  - `Roof_MainHubPlaza`
+- rotated all four lobby `SpawnPoints.PlayerSpawn_*` to face the `Directory/Queue` approach
+- retained `MainHubDecorRuntime` donor in source
+
+### Fresh boot procedure
+
+- closed Roblox Studio
+- closed Roblox PC client
+- terminated Android Roblox app
+- rebuilt from source
+- published fresh
+- reopened PC player from `roblox://placeId=113010869463813`
+- reopened Android from Roblox app detail page and pressed play
+
+### Fresh published results
+
+#### PC
+
+- initial published spawn no longer faced a blank boxed wall
+- published camera now opens toward `Lobby Directory / Queue` composition
+- `LOBBY PANEL` still visible and normalized
+- settled screenshot also shows right-side `DAILY MISSIONS`
+- evidence:
+  - `.codex/evidence/published_pc_player_post_lobby_cleanup_20260419.png`
+  - `.codex/evidence/published_pc_player_post_lobby_cleanup_settled_20260419.png`
+
+#### Android
+
+- initial published spawn now matches the same open lobby center area as PC
+- `MISSION` and `TRACKER` side buttons visible
+- `Open Room Browser` succeeded and displayed `RUANG INVESTIGASI`
+- evidence:
+  - `.codex/evidence/published_android_lobby_post_cleanup_20260419.png`
+
+#### Room Browser follow-up
+
+- Android room browser opened successfully after the lobby cleanup publish
+- PC OS-level click automation still did not visibly toggle room browser in this slice
+- evidence:
+  - `.codex/evidence/published_pc_room_browser_retry_20260419.png`
+
+### Conclusion
+
+- The lobby no longer boots into the central boxed-wall state on either PC or Android.
+- Fresh published parity for the lobby spawn orientation is now materially improved across both clients.
+- Remaining uncertainty is limited to PC automation opening `Room Browser`; the Android lane confirms the room browser path itself still works after the cleanup.
