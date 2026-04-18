@@ -1,71 +1,144 @@
 {
   "className": "Model",
-  "properties": {
-    "Name": "Pocong"
-  },
   "children": [
     {
+      "name": "HumanoidRootPart",
       "className": "Part",
       "properties": {
-        "Name": "HumanoidRootPart",
-        "Anchored": true,
-        "CanCollide": false,
         "CanTouch": false,
         "CanQuery": false,
-        "Transparency": 1.0,
-        "Position": [
-          0.0,
-          0.0,
-          0.0
-        ],
         "Size": [
           2.0,
           2.0,
           1.0
         ],
-        "Material": "SmoothPlastic",
-        "Color": [
-          0.31,
-          0.34,
-          0.38
-        ]
+        "CanCollide": false,
+        "Transparency": 1.0
+      },
+      "attributes": {
+        "Rojo_Id": "13bd4cc0acbd194e09f4aa480003603f"
       }
     },
     {
-      "className": "MeshPart",
-      "properties": {
-        "Name": "material",
-        "Anchored": true,
-        "CanCollide": false,
-        "CanTouch": false,
-        "CanQuery": false,
-        "Transparency": 0.0,
-        "Position": [
-          0.0,
-          0.1,
-          0.0
-        ],
-        "Size": [
-          0.06,
-          0.07,
-          0.07
-        ],
-        "MeshId": "rbxassetid://118360815663860",
-        "TextureID": ""
-      },
+      "name": "Visual",
+      "className": "Model",
       "children": [
         {
-          "className": "SurfaceAppearance",
+          "name": "material",
+          "className": "MeshPart",
+          "children": [
+            {
+              "name": "SurfaceAppearance",
+              "className": "SurfaceAppearance",
+              "properties": {
+                "ResampleMode": {
+                  "Enum": 0
+                },
+                "RoughnessMapContent": "rbxassetid://108763420495258",
+                "MetalnessMapContent": "rbxassetid://112794460017202",
+                "TexturePack": "rbxassetid://127485540392281",
+                "ColorMapContent": "rbxassetid://119582538265133",
+                "NormalMapContent": "rbxassetid://133491195386808"
+              }
+            }
+          ],
           "properties": {
-            "Name": "SurfaceAppearance",
-            "ColorMap": "rbxassetid://119582538265133",
-            "NormalMap": "rbxassetid://133491195386808",
-            "RoughnessMap": "rbxassetid://108763420495258",
-            "MetalnessMap": "rbxassetid://112794460017202"
+            "Size": [
+              33.14360046386719,
+              115.18770599365234,
+              26.709495544433594
+            ],
+            "UnscaledVolInertiaDiags": [
+              5663147.5,
+              715951.0625,
+              5782352.5
+            ],
+            "MeshContent": "rbxassetid://118360815663860",
+            "UnscaledVolume": 5706.08154296875,
+            "UnscaledVolInertiaOffDiags": [
+              49340.26171875,
+              6815.52099609375,
+              -183674.0625
+            ],
+            "InertiaMigrated": false,
+            "PivotOffset": [
+              0.06360054016113281,
+              -57.59385299682617,
+              -1.0741524696350098,
+              1.0,
+              1.2246467202362698e-16,
+              -1.2246468525851679e-16,
+              -1.2246468525851679e-16,
+              1.0,
+              -7.549790126404332e-8,
+              1.2246467202362698e-16,
+              7.549790126404332e-8,
+              1.0
+            ],
+            "CFrame": [
+              -0.06360054016113281,
+              57.59385299682617,
+              1.0741524696350098,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "PhysicalConfigData": {
+              "SharedString": "Q1NHUEhTAAAAAEJMT0NL"
+            },
+            "UnscaledCofm": [
+              -0.19563372433185577,
+              -8.108025550842285,
+              -0.10877978801727295
+            ],
+            "InitialSize": [
+              33.14360046386719,
+              115.18770599365234,
+              26.709495544433594
+            ]
           }
         }
-      ]
+      ],
+      "properties": {
+        "WorldPivotData": {
+          "OptionalCFrame": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        }
+      }
     }
-  ]
+  ],
+  "attributes": {
+    "GhostAssetId": "123151303766691",
+    "GhostImportedAt": 1776497630.0,
+    "GhostSourceCsvLabel": "pocong PASRAHPHOBIA",
+    "Rojo_Target_PrimaryPart": "13bd4cc0acbd194e09f4aa480003603f"
+  }
 }
-

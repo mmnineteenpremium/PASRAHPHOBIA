@@ -15845,3 +15845,80 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
     - `ReplicatedStorage`
     - `ServerStorage`
   - publish command completed from current branch using Open Cloud API key in environment.
+
+## 2026-04-18 15:04:18 +07:00 - Ghost Source-Of-Truth Lock From Local Roblox Creator Hub
+- Status: PASS FOR GHOST ASSET SOURCE LOCK.
+- Trigger:
+  - owner declared ghost source of truth is local `ROBLOX CREATOR HUB`, ordered removal of the wrong `Leak` CSV row, and required old ghost asset IDs in code/runtime to be replaced by the latest imported IDs.
+- Action taken:
+  - audited authoritative local source:
+    - `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\ROBLOX CREATOR HUB\GHOST`
+    - `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\ROBLOX CREATOR HUB\[ASSETID]\Models & Packages.csv`
+  - removed invalid `Leak` CSV mapping row from the owner local CSV:
+    - `dark+armored+knight+more+spikey (129878813436863)`
+  - locked canonical ghost asset IDs from local source for:
+    - `Banaspati=91700421463863`
+    - `Genderuwo=117009327297852`
+    - `HantuTanah=79247394068873`
+    - `Jerangkong=78522466547915`
+    - `Kuntilanak=93357688576883`
+    - `Leak=99042834683066`
+    - `Palasik=107658913093426`
+    - `Pocong=123151303766691`
+    - `SilumanUlar=93238005114915`
+    - `SundelBolong=77251173218842`
+    - `Tuyul=108895029067567`
+    - `WeweGombel=115717855449052`
+  - locked approved existing aggressive/event suffix lane variants for:
+    - `BanaspatiAggressive=117153307100171`
+    - `GenderuwoAggressive=138432330933642`
+    - `KuntilanakAggressive=118867381731250`
+    - `LeakAggressive=115214614318321`
+    - `PalasikAngry=95122370433014`
+    - `SundelBolongAggressive=113356865728207`
+  - replaced live `ReplicatedStorage.Assets.Models.Ghosts` templates in active Studio with canonical wrappers for:
+    - all `12` base ghosts
+    - `6` approved aggressive/event variants already supported by the existing runtime naming lane
+  - each new runtime ghost template wrapper now carries:
+    - `GhostAssetId`
+    - `GhostImportedAt`
+    - `GhostSourceCsvLabel`
+  - removed old code-side Pocong single-mesh dependency:
+    - `src/ReplicatedStorage/Assets/GhostVisualProfiles/Pocong.lua` -> `RuntimeModel`
+    - removed Pocong-only hardcoded template offsets / mesh-part overrides from `src/ServerScriptService/Server/GhostSystem/Service.lua`
+  - updated canonical ghost asset ID references in:
+    - `src/shared/GameData/GhostVisualTuning.lua`
+  - saved active Studio place to:
+    - `PASRAHPHOBIA.rbxlx`
+  - synced ghost template replacements back into source with:
+    - `scripts/pull-from-studio.ps1 -ProjectPath syncback.ghosts.project.json`
+  - updated source-of-truth documents:
+    - `DOCUMENTATION/SOURCE OF TRUTH/CANONICAL_SPECIFICATIONS_v2.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/PASRAHPHOBIA_DOC_INDEX.md`
+    - `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_AND_ASSET_WIRING_TASK_TRACKER_2026-04-18.md`
+  - published current branch source to canonical cloud target:
+    - `PlaceId=113010869463813`
+    - `UniverseId=9802743087`
+- Verification:
+  - source tree now contains canonical ghost templates for:
+    - `Banaspati`
+    - `BanaspatiAggressive`
+    - `Genderuwo`
+    - `GenderuwoAggressive`
+    - `HantuTanah`
+    - `Jerangkong`
+    - `Kuntilanak`
+    - `KuntilanakAggressive`
+    - `Leak`
+    - `LeakAggressive`
+    - `Palasik`
+    - `PalasikAngry`
+    - `Pocong`
+    - `SilumanUlar`
+    - `SundelBolong`
+    - `SundelBolongAggressive`
+    - `Tuyul`
+    - `WeweGombel`
+  - repo-wide search confirmed no active source-code use of the deleted wrong `Leak` asset ID `129878813436863`.
+  - repo-wide search confirmed legacy Pocong mesh asset IDs were removed from code-side ghost visual profiles; remaining references only exist as nested sub-assets inside the newly imported `Pocong` model payload.
+  - published PC player smoke still boots to lobby UI after this asset-source lock.

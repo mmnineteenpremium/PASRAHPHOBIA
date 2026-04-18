@@ -6,6 +6,35 @@
 
 **⚠️ AI & DEVELOPERS:** This document is the SINGLE SOURCE OF TRUTH. All conflicting information in other files must defer to this specification.
 
+## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
+
+- Ghost asset source of truth is now explicitly:
+  - local folder `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\ROBLOX CREATOR HUB\GHOST`
+  - local CSV `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\ROBLOX CREATOR HUB\[ASSETID]\Models & Packages.csv`
+- For ghost visuals, old hardcoded ghost asset IDs in code must be replaced by the owner-imported asset IDs from that CSV.
+- Wrong `Leak` CSV row `dark+armored+knight+more+spikey (129878813436863)` is invalid and must not be used.
+- Canonical base ghost asset IDs for this branch are:
+  - `Pocong=123151303766691`
+  - `Kuntilanak=93357688576883`
+  - `Genderuwo=117009327297852`
+  - `Tuyul=108895029067567`
+  - `Leak=99042834683066`
+  - `Banaspati=91700421463863`
+  - `Jerangkong=78522466547915`
+  - `WeweGombel=115717855449052`
+  - `Palasik=107658913093426`
+  - `SilumanUlar=93238005114915`
+  - `SundelBolong=77251173218842`
+  - `HantuTanah=79247394068873`
+- Canonical runtime-ready aggressive / event variants already approved for the existing naming lane are:
+  - `BanaspatiAggressive=117153307100171`
+  - `GenderuwoAggressive=138432330933642`
+  - `KuntilanakAggressive=118867381731250`
+  - `LeakAggressive=115214614318321`
+  - `PalasikAngry=95122370433014`
+  - `SundelBolongAggressive=113356865728207`
+- No new variant switching system may be introduced for ghost visuals. Only the current canonical base slots and the existing aggressive-suffix runtime lane may be used.
+
 ---
 
 ## **1. EVIDENCE TYPES (6 TOTAL)**

@@ -69,6 +69,19 @@ These are the current room-by-room/runtime references for:
 - match advance on `Door_GrandHall`
 - runtime object/event coverage with no missing target definitions
 
+[2026-04-18 NOTE - Ghost Asset Source Of Truth]
+Before continuing any ghost visual, ghost template, or ghost asset ID work on branch `final-source-of-truth`, use:
+- local folder `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\ROBLOX CREATOR HUB\GHOST`
+- local CSV `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\ROBLOX CREATOR HUB\[ASSETID]\Models & Packages.csv`
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_AND_ASSET_WIRING_TASK_TRACKER_2026-04-18.md`
+- `src/shared/GameData/GhostVisualTuning.lua`
+
+Hard rules for this lane:
+- do not use deleted/wrong `Leak` row `129878813436863`
+- replace old ghost asset IDs in code with owner-imported asset IDs from the CSV
+- use current base slots plus the existing aggressive suffix runtime lane only
+- do not invent a new ghost variant switching architecture
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 
