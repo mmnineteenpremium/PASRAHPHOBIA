@@ -153,6 +153,9 @@ local LOBBY_TRAINING_GHOST_PLAQUE_NAME = "TrainingGhostPlaque"
 local LOBBY_TRAINING_GHOST_VISUAL_NAME = "TrainingGhostVisual"
 local LOBBY_TRAINING_GHOST_VISUAL_HIGHLIGHT_NAME = "TrainingGhostHighlight"
 local LOBBY_TRAINING_GHOST_VISUAL_LIGHT_NAME = "TrainingGhostVisualGlow"
+local LOBBY_DECOR_LIGHT_BRIGHTNESS_SCALE = 0.7
+local LOBBY_DECOR_LIGHT_RANGE_SCALE = 0.88
+local LOBBY_GUIDE_BILLBOARD_BRIGHTNESS = 1.2
 local LOBBY_TRAINING_TOOL_SPECS = {
 	{
 		partName = "Table_Tools_1",
@@ -2006,16 +2009,18 @@ local function applyMainHubVisualPatch()
 
     local function applyDecorPointLight(part, name, props)
         local light = ensurePointLight(part, name)
+        local targetBrightness = math.max(0.15, (tonumber(props.brightness) or 0) * LOBBY_DECOR_LIGHT_BRIGHTNESS_SCALE)
+        local targetRange = math.max(6, math.floor(((tonumber(props.range) or 0) * LOBBY_DECOR_LIGHT_RANGE_SCALE) + 0.5))
         if light.Color ~= props.color then
             light.Color = props.color
             changed = true
         end
-        if light.Brightness ~= props.brightness then
-            light.Brightness = props.brightness
+        if light.Brightness ~= targetBrightness then
+            light.Brightness = targetBrightness
             changed = true
         end
-        if light.Range ~= props.range then
-            light.Range = props.range
+        if light.Range ~= targetRange then
+            light.Range = targetRange
             changed = true
         end
         if light.Enabled ~= true then
@@ -5896,7 +5901,7 @@ function LobbyService:_ensureZoneGuide(zoneName, zonePart)
     billboard.Active = false
     billboard.Adornee = zonePart
     billboard.AlwaysOnTop = true
-    billboard.Brightness = 2
+    billboard.Brightness = LOBBY_GUIDE_BILLBOARD_BRIGHTNESS
     billboard.ClipsDescendants = false
     billboard.Enabled = true
     billboard.LightInfluence = 0
@@ -6046,7 +6051,7 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     billboard.Active = false
     billboard.Adornee = anchorPart
     billboard.AlwaysOnTop = true
-    billboard.Brightness = 2
+    billboard.Brightness = LOBBY_GUIDE_BILLBOARD_BRIGHTNESS
     billboard.ClipsDescendants = false
     billboard.Enabled = true
     billboard.LightInfluence = 0

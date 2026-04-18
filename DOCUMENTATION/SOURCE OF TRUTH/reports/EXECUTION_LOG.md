@@ -16213,3 +16213,20 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
   - `.codex/evidence/published_pc_player_post_lobby_cleanup_settled_20260419.png`
   - `.codex/evidence/published_android_lobby_post_cleanup_20260419.png`
   - `.codex/evidence/published_pc_room_browser_retry_20260419.png`
+
+## 2026-04-19 - Lobby parity follow-up: trace cleanup and glow reduction
+
+- Removed temporary room-browser trace forcing from source and kept only the proven mobile room-browser layout fix.
+- Re-published a trace-free build from a fully closed Studio + PC + Android state.
+- Audited `LobbySocialHub` source in Studio and confirmed the current authoritative donor is still visually sparse by itself; no richer lobby source was discovered in this slice.
+- Reduced lobby baseline glow in `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`:
+  - decor point lights now scale down brightness and range
+  - guide / entry billboards brightness reduced to `1.2`
+- Fresh published results after the lighting patch:
+  - PC remains normalized to `LOBBY / LO`
+  - Android remains normalized to `LOBBY / LO`
+  - Android `MISSION` and `TRACKER` buttons are visible on fresh spawn
+  - center-lobby glow is calmer on both clients than the previous publish
+- Evidence:
+  - `.codex/evidence/pc_fresh_after_trace_cleanup_20260419.png`
+  - `.codex/evidence/pc_lobby_after_lighting_patch_20260419_c.png`

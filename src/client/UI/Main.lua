@@ -89,6 +89,7 @@ local LOBBY_ZONE_CLIENT_META = {
 		accentColor = Color3.fromRGB(138, 228, 178),
 	},
 }
+
 local LOBBY_ZONE_CLIENT_CANDIDATES = {
 	SpawnPlaza = { "SpawnPlaza", "Room_MainHubPlaza", "Interact_MainHubPlaza", "Prop_MainHubPlaza", "PlayerSpawn_1" },
 	MatchmakingZone = { "MatchmakingZone", "Room_NorthEvidenceBuilding", "Interact_NorthEvidenceBuilding", "Door_NorthEvidenceBuilding", "Prop_NorthEvidenceBuilding" },
@@ -377,13 +378,13 @@ local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 	},
 }
 
-function UISystem._getBuildSignatureText()
+local function pasrahGetBuildSignatureText()
 	return "BUILD " .. UI_BUILD_SIGNATURE
 end
 
-function UISystem._appendBuildSignature(text, separator)
+local function pasrahAppendBuildSignature(text, separator)
 	local base = tostring(text or "")
-	local signatureText = UISystem._getBuildSignatureText()
+	local signatureText = pasrahGetBuildSignatureText()
 	if base == "" then
 		return signatureText
 	end
@@ -1115,20 +1116,6 @@ local function getFieldKitToolAssetTemplate(toolType)
 	return nil
 end
 
-function getFieldKitToolVisualConfig(toolType)
-	if type(toolType) ~= "string" or toolType == "" then
-		return nil
-	end
-
-	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
-	local gameDataFolder = shared and shared:FindFirstChild("GameData") or nil
-	local moduleScript = gameDataFolder and gameDataFolder:FindFirstChild("ToolVisualConfig") or nil
-	local configModule = safeRequire(moduleScript)
-	local toolConfigs = type(configModule) == "table" and configModule.tools or nil
-	local config = type(toolConfigs) == "table" and toolConfigs[toolType] or nil
-	return type(config) == "table" and config or nil
-end
-
 local function getGhostPreviewAssetTemplate(ghostType)
 	if type(ghostType) ~= "string" or ghostType == "" then
 		return nil
@@ -1321,18 +1308,11 @@ local function stampFieldKitPreviewModel(model, toolType, usingFallback, preview
 	if typeof(model) ~= "Instance" or not model:IsA("Model") then
 		return
 	end
-	local visualConfig = getFieldKitToolVisualConfig(toolType)
-	local inventoryModelAssetId = type(visualConfig) == "table" and visualConfig.inventoryModelAssetId or nil
-	local sourceLabel = type(visualConfig) == "table" and visualConfig.sourceLabel or nil
-	local variantRole = type(visualConfig) == "table" and visualConfig.variantRole or nil
 	model:SetAttribute("PasrahPreviewOwner", "UI")
 	model:SetAttribute("PasrahPreviewKind", "FieldKitTool")
 	model:SetAttribute("PasrahPreviewToolType", tostring(toolType or ""))
 	model:SetAttribute("PasrahPreviewUsesAssetTemplate", usingFallback ~= true)
 	model:SetAttribute("PasrahPreviewState", tostring(previewState or "ready"))
-	model:SetAttribute("PasrahToolInventoryModelAssetId", type(inventoryModelAssetId) == "string" and inventoryModelAssetId ~= "" and inventoryModelAssetId or nil)
-	model:SetAttribute("PasrahToolVisualLabel", type(sourceLabel) == "string" and sourceLabel ~= "" and sourceLabel or nil)
-	model:SetAttribute("PasrahToolVariantRole", type(variantRole) == "string" and variantRole ~= "" and variantRole or nil)
 end
 
 local function stampGhostPreviewModel(model, ghostType, template, profile)
@@ -3125,6 +3105,117 @@ local function getActiveMatchMapModel()
 	return nil
 end
 
+local PREPARATION_CAMERA_TARGET_NAMES = {
+	"PreparationEntrySign",
+	"PreparationRoadsideSign",
+	"PreparationSignalDisplay",
+	"PreparationGuideStrip",
+}
+
+local function getCameraTargetWorldPosition(instance)
+	if not instance then
+		return nil
+	end
+	if instance:IsA("BasePart") then
+		return instance.Position
+	end
+	if instance:IsA("Attachment") then
+		return instance.WorldPosition
+	end
+	if instance:IsA("Model") then
+		return instance:GetPivot().Position
+	end
+	return nil
+end
+
+local function resolvePreparationCameraLookVector(rootPosition)
+	if typeof(rootPosition) ~= "Vector3" then
+		return nil
+	end
+
+	local mapModel = getActiveMatchMapModel()
+	if not mapModel then
+		return nil
+	end
+
+	for _, targetName in ipairs(PREPARATION_CAMERA_TARGET_NAMES) do
+		local candidate = mapModel:FindFirstChild(targetName, true)
+		local targetPosition = getCameraTargetWorldPosition(candidate)
+		if typeof(targetPosition) == "Vector3" then
+			local flatOffset = Vector3.new(targetPosition.X - rootPosition.X, 0, targetPosition.Z - rootPosition.Z)
+			if flatOffset.Magnitude > 1e-3 then
+				return flatOffset.Unit
+			end
+		end
+	end
+
+	return nil
+end
+
+local function snapPreparationCameraToWorldTarget()
+	local player = Players.LocalPlayer
+	if not player or player:GetAttribute("InMatch") ~= true then
+		return false
+	end
+	local character = player.Character
+	local camera = Workspace.CurrentCamera
+	if not (character and camera) then
+		return false
+	end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not (humanoid and rootPart) then
+		return false
+	end
+
+	local flatLook = resolvePreparationCameraLookVector(rootPart.Position)
+	if not flatLook then
+		return false
+	end
+
+	local focus = rootPart.Position + Vector3.new(0, 2.25, 0)
+	local targetCamera = CFrame.lookAt(focus - (flatLook * 10) + Vector3.new(0, 3.6, 0), focus, Vector3.yAxis)
+	camera.CameraType = Enum.CameraType.Scriptable
+	camera.CFrame = targetCamera
+
+	task.spawn(function()
+		for _ = 1, 10 do
+			RunService.RenderStepped:Wait()
+			local currentCamera = Workspace.CurrentCamera
+			if not currentCamera then
+				return
+			end
+			currentCamera.CameraType = Enum.CameraType.Scriptable
+			currentCamera.CFrame = targetCamera
+		end
+		local currentCamera = Workspace.CurrentCamera
+		if currentCamera then
+			currentCamera.CameraType = Enum.CameraType.Custom
+			currentCamera.CameraSubject = humanoid
+		end
+	end)
+
+	return true
+end
+
+local function schedulePreparationCameraSnap()
+	task.spawn(function()
+		for _, delaySeconds in ipairs({ 0.05, 0.18, 0.42, 0.9, 1.6, 2.4, 3.2 }) do
+			task.wait(delaySeconds)
+			local player = Players.LocalPlayer
+			if not player or player:GetAttribute("InMatch") ~= true then
+				return
+			end
+			local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+			if lifecyclePhase ~= "PreparationPhase" then
+				return
+			end
+			snapPreparationCameraToWorldTarget()
+		end
+	end)
+end
+
 local function getRuntimeHideSpotLabel(zoneId)
 	if type(zoneId) ~= "string" or zoneId == "" then
 		return nil
@@ -4573,10 +4664,10 @@ function UISystem:_resolveDefaultGraphicsMode()
 	if tier == "low" then
 		return "Performance", "auto_low"
 	end
-	if inputType == "Mobile" then
-		return "Quality", tier == "high" and "auto_mobile_high" or "auto_mobile_quality"
-	end
 	if tier == "high" then
+		if inputType == "Mobile" then
+			return "Quality", "auto_mobile_high"
+		end
 		return "Quality", "auto_high"
 	end
 	return "Balanced", inputType == "Mobile" and "auto_mobile" or "auto_medium"
@@ -7271,7 +7362,7 @@ function UISystem:_refreshBasicLobbyPanel()
 		lobby.BasicSecondaryLabel.Text = secondaryText
 	end
 	if lobby.BasicHintLabel then
-		lobby.BasicHintLabel.Text = UISystem._appendBuildSignature(hintText)
+		lobby.BasicHintLabel.Text = pasrahAppendBuildSignature(hintText)
 		lobby.BasicHintLabel.TextColor3 = (type(zoneFocus) == "table" and not currentRoom and not state.lastError and typeof(zoneFocus.accentColor) == "Color3")
 			and zoneFocus.accentColor:Lerp(Color3.fromRGB(240, 244, 248), 0.4)
 			or Color3.fromRGB(156, 170, 192)
@@ -7409,9 +7500,9 @@ function UISystem:_refreshMainMenuPanel()
 	if window.FooterLabel then
 		local graphicsFooter = string.format("Visual %s [%s]. Mobile default tetap landscape dan toggle ini murni client-side.", graphicsMeta.label, graphicsMeta.footer)
 		if attributionFooter ~= "" then
-			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. UISystem._getBuildSignatureText()
+			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. pasrahGetBuildSignatureText()
 		else
-			window.FooterLabel.Text = graphicsFooter .. "\n" .. UISystem._getBuildSignatureText()
+			window.FooterLabel.Text = graphicsFooter .. "\n" .. pasrahGetBuildSignatureText()
 		end
 		window.FooterLabel:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 	end
@@ -10544,8 +10635,9 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			local previewHeight = panelHeight - contentTop - headerPadding
 			local actionRowHeight = 36
 			local joinHeight = 40
-			local roomListHeight = math.max(132, previewHeight - (joinHeight + actionRowHeight + 18))
-			local actionY = contentTop + roomListHeight + 10
+			local roomListBottomGap = 34
+			local roomListHeight = math.max(132, previewHeight - (joinHeight + actionRowHeight + roomListBottomGap))
+			local actionY = contentTop + roomListHeight + 18
 
 			setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, leftWidth, previewHeight)
 			setOffsetBounds(roomList, rightX, contentTop, rightWidth, roomListHeight)
@@ -11855,6 +11947,9 @@ function UISystem:_setPhase(newPhase, payload)
 
 	self:_syncRoomBrowserSuppressionFromMatchContext()
 	self:_renderPhase(newPhase, payload)
+	if phaseChanged and newPhase == MATCH_PHASE.PREPARING then
+		schedulePreparationCameraSnap()
+	end
 end
 
 function UISystem:_ensureLoadingScreen()
@@ -15606,6 +15701,7 @@ function UISystem:_ensureRoomBrowserGui()
 	closeBtn.Position = UDim2.fromOffset(852, 8)
 	closeBtn.Size = UDim2.fromOffset(34, 28)
 	styleButton(closeBtn, "X")
+	closeBtn.ZIndex = 8
 	closeBtn.Parent = panel
 
 	local floatButton = Instance.new("TextButton")
@@ -15999,6 +16095,7 @@ function UISystem:_ensureRoomBrowserGui()
 	refreshBtn.Position = UDim2.fromOffset(149, 456)
 	refreshBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(refreshBtn, "Refresh")
+	refreshBtn.ZIndex = 6
 	refreshBtn.Parent = panel
 
 	local createRoomBtn = Instance.new("TextButton")
@@ -16007,6 +16104,7 @@ function UISystem:_ensureRoomBrowserGui()
 	createRoomBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(createRoomBtn, "BUAT ROOM")
 	createRoomBtn.BackgroundColor3 = Color3.fromRGB(50, 90, 140)
+	createRoomBtn.ZIndex = 6
 	createRoomBtn.Parent = panel
 
 	local queueBtn = Instance.new("TextButton")
@@ -16015,6 +16113,7 @@ function UISystem:_ensureRoomBrowserGui()
 	queueBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(queueBtn, "JOIN ROOM")
 	queueBtn.BackgroundColor3 = Color3.fromRGB(46, 112, 168)
+	queueBtn.ZIndex = 6
 	queueBtn.Parent = panel
 
 	local quickClassicBtn = Instance.new("TextButton")
@@ -16023,6 +16122,7 @@ function UISystem:_ensureRoomBrowserGui()
 	quickClassicBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(quickClassicBtn, "QUICK CLASSIC")
 	quickClassicBtn.BackgroundColor3 = Color3.fromRGB(70, 120, 84)
+	quickClassicBtn.ZIndex = 6
 	quickClassicBtn.Parent = panel
 
 	local quickRankedBtn = Instance.new("TextButton")
@@ -16031,6 +16131,7 @@ function UISystem:_ensureRoomBrowserGui()
 	quickRankedBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(quickRankedBtn, "QUICK RANKED")
 	quickRankedBtn.BackgroundColor3 = Color3.fromRGB(108, 78, 132)
+	quickRankedBtn.ZIndex = 6
 	quickRankedBtn.Parent = panel
 
 	local roomPanel = Instance.new("ScrollingFrame")
@@ -17757,7 +17858,7 @@ function UISystem:_refreshRoomBrowserView()
 	elseif queueInfo then
 		statusText = statusText .. " | Queue: " .. tostring(queueInfo.queueType or queueInfo.mode or "started")
 	end
-	self._roomBrowserWidgets.Status.Text = UISystem._appendBuildSignature(statusText)
+	self._roomBrowserWidgets.Status.Text = pasrahAppendBuildSignature(statusText)
 	self._roomBrowserWidgets.Status:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 
 	self:_setButtonSelected(self._roomBrowserWidgets.AllModesButton, viewMode == "All")

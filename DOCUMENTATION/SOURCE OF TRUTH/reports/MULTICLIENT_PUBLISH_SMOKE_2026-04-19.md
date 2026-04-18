@@ -141,3 +141,36 @@
 - The lobby no longer boots into the central boxed-wall state on either PC or Android.
 - Fresh published parity for the lobby spawn orientation is now materially improved across both clients.
 - Remaining uncertainty is limited to PC automation opening `Room Browser`; the Android lane confirms the room browser path itself still works after the cleanup.
+
+## Follow-up - trace-free publish and lobby glow reduction
+
+### Scope
+
+- removed temporary room-browser trace forcing from source
+- preserved the mobile room-browser spacing / `ZIndex` fix
+- reduced lobby decor point-light intensity and guide billboard brightness
+- republished again from a fully closed Studio + PC + Android state
+
+### Fresh published results
+
+#### PC
+
+- `LOBBY PANEL` stays normalized as `LOBBY / LO`
+- center lobby glow is lower than the prior publish
+- evidence:
+  - `.codex/evidence/pc_fresh_after_trace_cleanup_20260419.png`
+  - `.codex/evidence/pc_lobby_after_lighting_patch_20260419_c.png`
+
+#### Android
+
+- `LOBBY PANEL` stays normalized as `LOBBY / LO`
+- `MISSION` and `TRACKER` side buttons are visible on fresh spawn
+- center lobby glow is lower than the prior publish
+
+### Conclusion
+
+- The current published lobby is cleaner from a systems / presentation perspective:
+  - no forced room trace instrumentation
+  - mobile room-browser fix preserved
+  - lower lobby glow on both clients
+- The remaining unresolved slice is no longer UI mismatch, but the underlying `LobbySocialHub` content still being visually sparse because the current authoritative donor itself is sparse.
