@@ -179,7 +179,8 @@ AbandonedPalace      | 35-45 studs    | 40 studs
 **HauntedHouse Runtime Canonical (2026-04-16):**
 - Floor 1 rooms: `Foyer`, `DiningRoom`, `Bathroom1`, `StairHall`, `LaundryRoom`, `Bathroom2`, `Kitchen`, `Pantry`, `LivingRoom`, `Garage`
 - Floor 2 rooms: `HallwayMain`, `Bathroom3`, `Bedroom1`, `ClosetA`, `Bedroom2`, `LinenCloset`, `Bedroom3`, `ClosetB`, `Bathroom4`, `BonusRoom`
-- Preparation phase uses outside-house staging via `PlayerSpawn_1..4` and `SafeZone_1..2`
+- Preparation phase uses outside-house staging via `Runtime.PreparationStagingRuntime.PreparationSpawnArea` (`4` prep spawn nodes) and `SafeZone_1..2`
+- Legacy investigation-map `SpawnPoints` are removed; runtime spawn source is `PreparationSpawnArea`
 - Timer-based preparation countdown is disabled; investigation begins when `Door_FrontEntry` is opened
 - Required HauntedHouse runtime object coverage: `Doors=18`, `Lights=20`, `Props=20`, `Electronics=7`, `Windows=6`, `EvidenceSpawnNodes=14`, `GhostSpawns=6`
 - Environmental event targets must resolve to either an imported map asset or a generated runtime fallback so `LightFlicker`, `TV/Radio`, `ObjectMove/ObjectThrow`, and `WindowKnock` never bind to a missing target
@@ -188,21 +189,24 @@ AbandonedPalace      | 35-45 studs    | 40 studs
 - Floor 1 rooms: `FrontPorch`, `LivingRoom`, `LaundryRoom`, `StairHallL1`
 - Floor 2 rooms: `Kitchen`, `DiningArea`, `Bathroom`, `StairHallL2`
 - Floor 3 rooms: `UpperHall`, `Bedroom1`, `Bedroom2`, `StairHallL3`
-- Preparation phase uses outside-house staging via `PlayerSpawn_1..4` and `SafeZone_1..2`
+- Preparation phase uses outside-house staging via `Runtime.PreparationStagingRuntime.PreparationSpawnArea` (`4` prep spawn nodes) and `SafeZone_1..2`
+- Legacy investigation-map `SpawnPoints` are removed; runtime spawn source is `PreparationSpawnArea`
 - Timer-based preparation countdown is disabled; investigation begins when `Door_FrontEntry` is opened
 - Required StudioMMNineteen runtime object coverage: `Doors=10`, `Lights=12`, `Props=12`, `Electronics=6`, `Windows=6`, `EvidenceSpawnNodes=12`, `GhostSpawns=6`
 
 **EmptyBuilding Runtime Canonical (2026-04-16):**
 - Floor 1 rooms: `Lobby`, `SecurityRoom`, `Storage`, `ElectricalRoom`, `OfficeA`, `OfficeB`, `Bathroom1`, `StaircaseNorth`, `StaircaseSouth`
 - Floor 2 rooms: `WorkspaceOpen`, `MeetingRoom`, `ServerRoom`, `ArchiveRoom`, `Bathroom2`
-- Preparation phase uses outside-entry staging via `PlayerSpawn_1..4` and `SafeZone_1..2`
+- Preparation phase uses outside-entry staging via `Runtime.PreparationStagingRuntime.PreparationSpawnArea` (`4` prep spawn nodes) and `SafeZone_1..2`
+- Legacy investigation-map `SpawnPoints` are removed; runtime spawn source is `PreparationSpawnArea`
 - Timer-based preparation countdown is disabled; investigation begins when `Door_Lobby` is opened
 - Required EmptyBuilding runtime object coverage: `Doors=14`, `Lights=14`, `Props=14`, `Electronics=6`, `Windows=12`, `EvidenceSpawnNodes=9`, `GhostSpawns=5`
 - Structural decor requirement for this map: `RuntimeDecor` must include staircase/ladder access to floor 2 and sensible filler props to avoid empty-space drift
 
 **AbandonedPalace Runtime Canonical (2026-04-16):**
 - Floor 1 rooms: `GrandHall`, `RoyalCorridor`, `DiningHall`, `Library`, `GuestRoomA`, `GuestRoomB`, `GuestRoomC`, `ServantRoomA`, `ServantRoomB`, `ServantRoomC`, `Basement`, `Courtyard`, `Armory`, `Chapel`, `Ballroom`, `Observatory`, `StorageWing`, `CeremonyRoom`
-- Preparation phase uses outside-entry staging via `PlayerSpawn_1..4` and `SafeZone_1..2`
+- Preparation phase uses outside-entry staging via `Runtime.PreparationStagingRuntime.PreparationSpawnArea` (`4` prep spawn nodes) and `SafeZone_1..2`
+- Legacy investigation-map `SpawnPoints` are removed; runtime spawn source is `PreparationSpawnArea`
 - Timer-based preparation countdown is disabled; investigation begins when `Door_GrandHall` is opened
 - Required AbandonedPalace runtime object coverage: `Doors=18`, `Lights=18`, `Props=18`, `Electronics=6`, `Windows=6`, `EvidenceSpawnNodes=14`, `GhostSpawns=5`
 

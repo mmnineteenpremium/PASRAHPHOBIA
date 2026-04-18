@@ -23,7 +23,8 @@ Before continuing any `HauntedHouse` map work on branch `final-source-of-truth`,
 
 These are the current room-by-room/runtime references for:
 - `20` rooms split across `2` floors (`10 + 10`)
-- outside-house preparation spawn and safe-zone staging
+- outside-house preparation spawn via `PreparationSpawnArea` and safe-zone staging
+- investigation-map `SpawnPoints` removed
 - disabled timer-based preparation countdown
 - match advance on `Door_FrontEntry`
 - runtime object/event coverage with no missing target definitions
@@ -35,7 +36,8 @@ Before continuing any `StudioMMNineteen` map work on branch `final-source-of-tru
 
 These are the current room-by-room/runtime references for:
 - `12` rooms split across `3` floors (`4 + 4 + 4`)
-- outside-house preparation spawn and safe-zone staging
+- outside-house preparation spawn via `PreparationSpawnArea` and safe-zone staging
+- investigation-map `SpawnPoints` removed
 - disabled timer-based preparation countdown
 - match advance on `Door_FrontEntry`
 - runtime object/event coverage with no missing target definitions
@@ -47,7 +49,8 @@ Before continuing any `EmptyBuilding` map work on branch `final-source-of-truth`
 
 These are the current room-by-room/runtime references for:
 - `14` rooms split across `2` floors (`9 + 5`)
-- outside-entry preparation spawn and safe-zone staging
+- outside-entry preparation spawn via `PreparationSpawnArea` and safe-zone staging
+- investigation-map `SpawnPoints` removed
 - disabled timer-based preparation countdown
 - match advance on `Door_Lobby`
 - runtime object/event coverage with no missing target definitions
@@ -60,7 +63,8 @@ Before continuing any `AbandonedPalace` map work on branch `final-source-of-trut
 
 These are the current room-by-room/runtime references for:
 - `18` rooms on `1` floor
-- outside-entry preparation spawn and safe-zone staging
+- outside-entry preparation spawn via `PreparationSpawnArea` and safe-zone staging
+- investigation-map `SpawnPoints` removed
 - disabled timer-based preparation countdown
 - match advance on `Door_GrandHall`
 - runtime object/event coverage with no missing target definitions

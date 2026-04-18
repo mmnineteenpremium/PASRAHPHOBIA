@@ -7,12 +7,6 @@ return {
         depth = 180,
         floors = 1,
     },
-    spawnPoints = {
-        "PlayerSpawn_1",
-        "PlayerSpawn_2",
-        "PlayerSpawn_3",
-        "PlayerSpawn_4",
-    },
     rooms = {
         "GrandHall",
         "RoyalCorridor",
