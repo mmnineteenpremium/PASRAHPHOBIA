@@ -7242,6 +7242,30 @@ function LobbyService:Stop()
     end
 end
 
+local function publishLobbyZoneFocus(service, player, zoneName)
+    if not (service and player and type(zoneName) == "string" and zoneName ~= "") then
+        return
+    end
+
+    local zoneFeedback = LOBBY_ZONE_FEEDBACK[zoneName]
+    if type(zoneFeedback) ~= "table" then
+        return
+    end
+
+    local zoneStyle = LOBBY_ZONE_GUIDE_STYLE[zoneName]
+    local zoneEntryCopy = LOBBY_ZONE_ENTRY_COPY[zoneName]
+    service:_publish("LobbyZoneFocused", {
+        eventName = "LobbyZoneFocused",
+        zoneName = zoneName,
+        title = zoneFeedback.title,
+        hint = zoneFeedback.hint,
+        badge = type(zoneEntryCopy) == "table" and zoneEntryCopy.title or zoneName,
+        subtitle = type(zoneStyle) == "table" and zoneStyle.subtitle or "",
+        accentColor = type(zoneStyle) == "table" and zoneStyle.color or nil,
+        recipients = { player },
+    })
+end
+
 function LobbyService:RegisterPlayer(player)
     local alreadyInLobby = self._playerManager:IsInLobby(player)
     local ok, reason = self._playerManager:RegisterPlayer(player)
@@ -7256,6 +7280,7 @@ function LobbyService:RegisterPlayer(player)
     self:_publish("PlayerEnteredLobby", {
         player = player,
     })
+    publishLobbyZoneFocus(self, player, "SpawnPlaza")
     local flexState = self:_getFlexState()
     if type(flexState.lastPayload) == "table" and type(flexState.lastPayload.eventName) == "string" then
         local replayPayload = cloneMap(flexState.lastPayload)
@@ -7339,21 +7364,7 @@ function LobbyService:OnPlayerEnteredZone(player, zoneName)
     end
 
     self._interaction:HandleZoneEntry(player, zoneName)
-    local zoneFeedback = LOBBY_ZONE_FEEDBACK[zoneName]
-    local zoneStyle = LOBBY_ZONE_GUIDE_STYLE[zoneName]
-    local zoneEntryCopy = LOBBY_ZONE_ENTRY_COPY[zoneName]
-    if type(zoneFeedback) == "table" then
-        self:_publish("LobbyZoneFocused", {
-            eventName = "LobbyZoneFocused",
-            zoneName = zoneName,
-            title = zoneFeedback.title,
-            hint = zoneFeedback.hint,
-            badge = type(zoneEntryCopy) == "table" and zoneEntryCopy.title or zoneName,
-            subtitle = type(zoneStyle) == "table" and zoneStyle.subtitle or "",
-            accentColor = type(zoneStyle) == "table" and zoneStyle.color or nil,
-            recipients = { player },
-        })
-    end
+    publishLobbyZoneFocus(self, player, zoneName)
 
     if zoneName == "FlexZone" then
         self:_activateFlexSpotlight(player, "zone_entered")

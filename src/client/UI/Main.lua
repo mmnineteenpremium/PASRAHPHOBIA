@@ -474,6 +474,7 @@ local function getFieldKitLayoutMetrics(isMobile, availableWidth, toolCount)
 	}
 end
 local lobbyZonePartCache = {}
+local lobbySpawnPartCache = nil
 
 local function createDefaultFieldKitToolState(toolType)
 	local config = FIELD_KIT_TOOL_CONFIG[toolType] or {}
@@ -3452,6 +3453,69 @@ local function resolveLobbyZonePart(zoneName)
 	return nil
 end
 
+local function resolveLobbySpawnParts()
+	local validParts = {}
+	if type(lobbySpawnPartCache) == "table" then
+		for _, cached in ipairs(lobbySpawnPartCache) do
+			if typeof(cached) == "Instance" and cached.Parent ~= nil and cached:IsA("BasePart") then
+				table.insert(validParts, cached)
+			end
+		end
+		if #validParts > 0 then
+			lobbySpawnPartCache = validParts
+			return validParts
+		end
+	end
+
+	local collected = {}
+	local searchRoot = Workspace:FindFirstChild("Maps") or Workspace
+	local lobbyContainer = searchRoot:FindFirstChild("LobbySocialHub", true)
+	local spawnFolder = lobbyContainer and lobbyContainer:FindFirstChild("SpawnPoints", true)
+	if spawnFolder then
+		for _, child in ipairs(spawnFolder:GetChildren()) do
+			if child:IsA("BasePart") and child.Name:match("^PlayerSpawn_%d+$") then
+				table.insert(collected, child)
+			end
+		end
+	end
+
+	if #collected == 0 then
+		for _, descendant in ipairs(searchRoot:GetDescendants()) do
+			if descendant:IsA("BasePart") and descendant.Name:match("^PlayerSpawn_%d+$") then
+				table.insert(collected, descendant)
+			end
+		end
+	end
+
+	lobbySpawnPartCache = collected
+	return collected
+end
+
+local function resolveLobbyZonePosition(zoneName, referencePosition)
+	if zoneName == "SpawnPlaza" then
+		local spawnParts = resolveLobbySpawnParts()
+		local bestPosition = nil
+		local bestDistance = nil
+		for _, spawnPart in ipairs(spawnParts) do
+			local distance = referencePosition and (referencePosition - spawnPart.Position).Magnitude or 0
+			if bestPosition == nil or bestDistance == nil or distance < bestDistance then
+				bestPosition = spawnPart.Position
+				bestDistance = distance
+			end
+		end
+		if bestPosition then
+			return bestPosition
+		end
+	end
+
+	local zonePart = resolveLobbyZonePart(zoneName)
+	if zonePart and zonePart:IsA("BasePart") then
+		return zonePart.Position
+	end
+
+	return nil
+end
+
 local function getLobbyZoneDistanceText(zoneName)
 	local player = Players.LocalPlayer
 	local character = player and player.Character
@@ -3460,12 +3524,12 @@ local function getLobbyZoneDistanceText(zoneName)
 		return nil
 	end
 
-	local zonePart = resolveLobbyZonePart(zoneName)
-	if not (zonePart and zonePart:IsA("BasePart")) then
+	local zonePosition = resolveLobbyZonePosition(zoneName, root.Position)
+	if typeof(zonePosition) ~= "Vector3" then
 		return nil
 	end
 
-	local distance = (root.Position - zonePart.Position).Magnitude
+	local distance = (root.Position - zonePosition).Magnitude
 	local rounded = math.max(1, math.floor(distance + 0.5))
 	return string.format("%dm", rounded)
 end
@@ -3480,9 +3544,9 @@ local function getNearestLobbyZoneInfo()
 
 	local nearest = nil
 	for zoneName, meta in pairs(LOBBY_ZONE_CLIENT_META) do
-		local zonePart = resolveLobbyZonePart(zoneName)
-		if zonePart and zonePart:IsA("BasePart") then
-			local distance = (root.Position - zonePart.Position).Magnitude
+		local zonePosition = resolveLobbyZonePosition(zoneName, root.Position)
+		if typeof(zonePosition) == "Vector3" then
+			local distance = (root.Position - zonePosition).Magnitude
 			if nearest == nil or distance < nearest.distance then
 				nearest = {
 					zoneName = zoneName,

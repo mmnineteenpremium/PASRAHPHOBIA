@@ -252,7 +252,6 @@ function QuestTracker:_syncVisibility()
 		if activeMatchMobile and self._manualExpandedDuringMatch ~= true then
 			self._collapsed = true
 		elseif not activeMatchMobile then
-			self._collapsed = true
 			self._manualExpandedDuringMatch = false
 		end
 	elseif not activeMatchMobile then
@@ -260,7 +259,7 @@ function QuestTracker:_syncVisibility()
 	end
 
 	self._container.Visible = not self._collapsed
-	self._reopenButton.Visible = self._collapsed and (not touchLayout or activeMatchMobile)
+	self._reopenButton.Visible = self._collapsed
 end
 
 function QuestTracker:_clearCards()
