@@ -33,11 +33,12 @@ local SPAWN_FORWARD_RAY_HEIGHT = 1.9
 -- Without this, clients can briefly have no colliders at the destination and the character can drift/fling.
 local STREAM_AROUND_TIMEOUT = 8
 local STREAM_AROUND_HARD_TIMEOUT = 10
-local POST_TELEPORT_FREEZE_OK_SECONDS = 0.12
-local POST_TELEPORT_FREEZE_TIMEOUT_SECONDS = 0.35
-local POST_TELEPORT_SERVER_OWNERSHIP_STREAMING_SECONDS = 1.25
-local POST_TELEPORT_SERVER_OWNERSHIP_NON_STREAMING_SECONDS = 0.75
+local POST_TELEPORT_FREEZE_OK_SECONDS = 0.22
+local POST_TELEPORT_FREEZE_TIMEOUT_SECONDS = 0.65
+local POST_TELEPORT_SERVER_OWNERSHIP_STREAMING_SECONDS = 1.8
+local POST_TELEPORT_SERVER_OWNERSHIP_NON_STREAMING_SECONDS = 1.1
 local REQUEST_STREAM_API_MISSING_WARNED = false
+local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
 
 local function getActiveMatchesFolder()
 	local folder = Workspace:FindFirstChild("ActiveMatches")
@@ -111,27 +112,52 @@ local function findMapTemplateInFolder(mapsFolder, normalizedName, normalizedTok
 		return nil, nil
 	end
 
+	local function resolveTemplateCandidate(candidate)
+		if not candidate then
+			return nil
+		end
+		if candidate:IsA("Folder") then
+			local nestedDirect = candidate:FindFirstChild(normalizedName)
+			if nestedDirect and not nestedDirect:IsA("Folder") then
+				return nestedDirect
+			end
+			for _, nested in ipairs(candidate:GetChildren()) do
+				if not nested:IsA("Folder") then
+					return nested
+				end
+			end
+			return nil
+		end
+		return candidate
+	end
+
 	local directMatch = mapsFolder:FindFirstChild(normalizedName)
 	if directMatch then
-		return directMatch, directMatch.Name
+		local resolved = resolveTemplateCandidate(directMatch)
+		if resolved then
+			return resolved, resolved.Name
+		end
 	end
 
 	for _, child in ipairs(mapsFolder:GetChildren()) do
 		local _, childToken = normalizeMapName(child.Name)
 		if childToken and childToken == normalizedToken then
-			return child, child.Name
+			local resolved = resolveTemplateCandidate(child)
+			if resolved then
+				return resolved, resolved.Name
+			end
 		end
 
 		-- Support maps wrapped in a folder where the root map model is one level deeper.
 		if child:IsA("Folder") then
 			local nestedDirect = child:FindFirstChild(normalizedName)
-			if nestedDirect then
+			if nestedDirect and not nestedDirect:IsA("Folder") then
 				return nestedDirect, nestedDirect.Name
 			end
 
 			for _, nested in ipairs(child:GetChildren()) do
 				local _, nestedToken = normalizeMapName(nested.Name)
-				if nestedToken and nestedToken == normalizedToken then
+				if nestedToken and nestedToken == normalizedToken and not nested:IsA("Folder") then
 					return nested, nested.Name
 				end
 			end
@@ -268,10 +294,14 @@ local function getCharacterRoot(character)
 	if not character then
 		return nil
 	end
-	if character.PrimaryPart then
+	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+	if humanoidRootPart and humanoidRootPart:IsA("BasePart") then
+		return humanoidRootPart
+	end
+	if character.PrimaryPart and character.PrimaryPart:IsA("BasePart") then
 		return character.PrimaryPart
 	end
-	return character:FindFirstChild("HumanoidRootPart") or character:FindFirstChildWhichIsA("BasePart")
+	return character:FindFirstChildWhichIsA("BasePart")
 end
 
 local function waitForCharacterRoot(player, timeoutSeconds)
@@ -404,6 +434,29 @@ local function requestStreamAroundPlayer(player, position)
 	return completed
 end
 
+local function resolveHorizontalForward(rawCFrame)
+	if typeof(rawCFrame) ~= "CFrame" then
+		return DEFAULT_FORWARD
+	end
+
+	local flatLook = Vector3.new(rawCFrame.LookVector.X, 0, rawCFrame.LookVector.Z)
+	if flatLook.Magnitude > 1e-4 then
+		return flatLook.Unit
+	end
+
+	local flatRight = Vector3.new(rawCFrame.RightVector.X, 0, rawCFrame.RightVector.Z)
+	if flatRight.Magnitude > 1e-4 then
+		return flatRight.Unit
+	end
+
+	return DEFAULT_FORWARD
+end
+
+local function buildUprightCFrame(position, rawCFrame)
+	local forward = resolveHorizontalForward(rawCFrame)
+	return CFrame.lookAt(position, position + forward, Vector3.yAxis)
+end
+
 local function safeTeleportCharacter(player, targetCFrame)
 	if typeof(player) ~= "Instance" or not player:IsA("Player") then
 		return false, "invalid_player"
@@ -421,15 +474,39 @@ local function safeTeleportCharacter(player, targetCFrame)
 	if not (root and root:IsA("BasePart")) then
 		return false, "missing_root"
 	end
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
 
 	local ownershipDuration = Workspace.StreamingEnabled
 		and POST_TELEPORT_SERVER_OWNERSHIP_STREAMING_SECONDS
 		or POST_TELEPORT_SERVER_OWNERSHIP_NON_STREAMING_SECONDS
 	withServerNetworkOwnership(root, ownershipDuration)
 
+	local uprightTargetCFrame = buildUprightCFrame(targetCFrame.Position, targetCFrame)
+	local function applyUprightPose()
+		if not (character and character.Parent and root and root.Parent) then
+			return
+		end
+		local rootPosition = root.Position
+		local uprightAtRoot = buildUprightCFrame(rootPosition, uprightTargetCFrame)
+		local pivotOk = pcall(function()
+			character:PivotTo(uprightAtRoot)
+		end)
+		if not pivotOk then
+			root.CFrame = uprightAtRoot
+		end
+		clearAssemblyVelocities(root)
+	end
+
 	local previousAnchored = root.Anchored
 	root.Anchored = true
 	clearAssemblyVelocities(root)
+	if humanoid then
+		pcall(function()
+			humanoid.PlatformStand = false
+			humanoid.Sit = false
+			humanoid.AutoRotate = true
+		end)
+	end
 
 	local streamStart = os.clock()
 	local streamedOk = requestStreamAroundPlayer(player, targetCFrame.Position)
@@ -444,11 +521,12 @@ local function safeTeleportCharacter(player, targetCFrame)
 	end
 
 	local pivotOk = pcall(function()
-		character:PivotTo(targetCFrame)
+		character:PivotTo(uprightTargetCFrame)
 	end)
 	if not pivotOk then
-		root.CFrame = targetCFrame
+		root.CFrame = uprightTargetCFrame
 	end
+	applyUprightPose()
 
 	clearAssemblyVelocities(root)
 	if Workspace.StreamingEnabled then
@@ -459,12 +537,34 @@ local function safeTeleportCharacter(player, targetCFrame)
 	task.wait()
 	root.Anchored = previousAnchored
 	clearAssemblyVelocities(root)
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if humanoid then
+		pcall(function()
+			humanoid.PlatformStand = false
+			humanoid.Sit = false
+			humanoid.AutoRotate = true
+			humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+		end)
 		pcall(function()
 			humanoid:ChangeState(Enum.HumanoidStateType.Running)
 		end)
 	end
+	applyUprightPose()
+	task.delay(0.12, function()
+		if not (character and character.Parent and root and root.Parent) then
+			return
+		end
+		if root.CFrame.UpVector.Y < 0.7 then
+			applyUprightPose()
+		end
+	end)
+	task.delay(0.3, function()
+		if not (character and character.Parent and root and root.Parent) then
+			return
+		end
+		if root.CFrame.UpVector.Y < 0.85 then
+			applyUprightPose()
+		end
+	end)
 
 	return true
 end
@@ -490,6 +590,38 @@ local function extractSpawnCFrame(spawnNode)
 	return nil
 end
 
+local function isPreparationSpawnName(name)
+	name = tostring(name or "")
+	return string.find(name, "PreparationSpawn_", 1, true) == 1
+		or name == "PreparationSpawn"
+end
+
+local function hasPreparationStagingRuntime(mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return false
+	end
+	if mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) == true then
+		return true
+	end
+	if mapClone:FindFirstChild("PreparationStagingRuntime", true) ~= nil then
+		return true
+	end
+	if mapClone:FindFirstChild("PreparationStaging", true) ~= nil then
+		return true
+	end
+	return false
+end
+
+local function isExplicitPreparationSpawnNode(node)
+	if typeof(node) ~= "Instance" then
+		return false
+	end
+	if node:GetAttribute("PasrahPreparationSpawn") == true then
+		return true
+	end
+	return isPreparationSpawnName(node.Name)
+end
+
 local function getPreparationSpawnCandidates(mapClone)
 	if typeof(mapClone) ~= "Instance" then
 		return {}
@@ -497,40 +629,83 @@ local function getPreparationSpawnCandidates(mapClone)
 
 	local preparationFolder = mapClone:FindFirstChild("PreparationStagingRuntime", true)
 	local spawnArea = preparationFolder and preparationFolder:FindFirstChild("PreparationSpawnArea", true)
-	if not spawnArea then
-		return {}
-	end
 
+	local seen = {}
+	local explicitCandidates = {}
 	local candidates = {}
-	for _, child in ipairs(spawnArea:GetDescendants()) do
-		if child:IsA("BasePart") or child:IsA("Model") then
-			table.insert(candidates, child)
+
+	local function pushCandidate(node, explicitOnly)
+		if not (node:IsA("BasePart") or node:IsA("Model")) then
+			return
+		end
+		if seen[node] then
+			return
+		end
+		seen[node] = true
+		if isExplicitPreparationSpawnNode(node) then
+			table.insert(explicitCandidates, node)
+			return
+		end
+		if not explicitOnly then
+			table.insert(candidates, node)
 		end
 	end
-	table.sort(candidates, function(a, b)
-		return tostring(a.Name) < tostring(b.Name)
-	end)
-	return candidates
+
+	if spawnArea then
+		for _, child in ipairs(spawnArea:GetDescendants()) do
+			pushCandidate(child, true)
+		end
+		if #explicitCandidates == 0 then
+			for _, child in ipairs(spawnArea:GetDescendants()) do
+				pushCandidate(child, false)
+			end
+		end
+	end
+
+	if preparationFolder then
+		for _, child in ipairs(preparationFolder:GetDescendants()) do
+			pushCandidate(child, true)
+		end
+	end
+
+	if #explicitCandidates > 0 then
+		table.sort(explicitCandidates, function(a, b)
+			return tostring(a.Name) < tostring(b.Name)
+		end)
+		return explicitCandidates
+	end
+
+	if #candidates > 0 then
+		table.sort(candidates, function(a, b)
+			return tostring(a.Name) < tostring(b.Name)
+		end)
+		return candidates
+	end
+
+	local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
+	if spawnFolder and hasPreparationStagingRuntime(mapClone) then
+		for _, child in ipairs(spawnFolder:GetDescendants()) do
+			if child:GetAttribute("PasrahPreparationSpawn") == true then
+				pushCandidate(child, true)
+			end
+		end
+		if #explicitCandidates > 0 then
+			table.sort(explicitCandidates, function(a, b)
+				return tostring(a.Name) < tostring(b.Name)
+			end)
+			return explicitCandidates
+		end
+	end
+
+	return {}
 end
 
 local function getSpawnCandidates(mapClone)
 	local preparationCandidates = getPreparationSpawnCandidates(mapClone)
 	if #preparationCandidates > 0 then
-		return preparationCandidates, "PreparationSpawnArea"
+		return preparationCandidates, "PreparationStagingRuntime"
 	end
-
-	local spawnFolder = mapClone and mapClone:FindFirstChild("SpawnPoints", true)
-	if not spawnFolder then
-		return {}, nil
-	end
-
-	local candidates = {}
-	for _, child in ipairs(spawnFolder:GetChildren()) do
-		if child:IsA("BasePart") or child:IsA("Model") then
-			table.insert(candidates, child)
-		end
-	end
-	return candidates, "SpawnPoints"
+	return {}, nil
 end
 
 local function waitForSpawnCandidates(mapClone)
@@ -566,21 +741,7 @@ local function computeSpawnLift(mapClone)
 end
 
 local function resolveUprightForward(rawCFrame)
-	if typeof(rawCFrame) ~= "CFrame" then
-		return DEFAULT_FORWARD
-	end
-
-	local flatLook = Vector3.new(rawCFrame.LookVector.X, 0, rawCFrame.LookVector.Z)
-	if flatLook.Magnitude > 1e-4 then
-		return flatLook.Unit
-	end
-
-	local flatRight = Vector3.new(rawCFrame.RightVector.X, 0, rawCFrame.RightVector.Z)
-	if flatRight.Magnitude > 1e-4 then
-		return flatRight.Unit
-	end
-
-	return DEFAULT_FORWARD
+	return resolveHorizontalForward(rawCFrame)
 end
 
 local function isPointInsideRoomPart(part, worldPosition)
@@ -594,6 +755,27 @@ local function isPointInsideRoomPart(part, worldPosition)
 	return math.abs(localPosition.X) <= (half.X + 2)
 		and math.abs(localPosition.Y) <= verticalTolerance
 		and math.abs(localPosition.Z) <= (half.Z + 2)
+end
+
+local function isPositionInsideAnyRoom(mapClone, worldPosition)
+	if typeof(mapClone) ~= "Instance" or typeof(worldPosition) ~= "Vector3" then
+		return false, nil
+	end
+
+	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
+	if not roomsFolder then
+		return false, nil
+	end
+
+	for _, room in ipairs(roomsFolder:GetDescendants()) do
+		if room:IsA("BasePart")
+			and string.find(room.Name, "Room_", 1, true) == 1
+			and isPointInsideRoomPart(room, worldPosition) then
+			return true, room
+		end
+	end
+
+	return false, nil
 end
 
 local function resolveSpawnFacingForward(mapClone, position, rawCFrame)
@@ -673,6 +855,26 @@ local function buildUprightFacingCFrame(mapClone, position, rawCFrame)
 	return CFrame.lookAt(position, position + forward, Vector3.yAxis)
 end
 
+local function isPreparationSpawnCandidate(spawnCandidate)
+	if typeof(spawnCandidate) ~= "Instance" then
+		return false
+	end
+	if spawnCandidate:GetAttribute("PasrahPreparationSpawn") == true then
+		return true
+	end
+	if isPreparationSpawnName(spawnCandidate.Name) then
+		return true
+	end
+	local parent = spawnCandidate.Parent
+	while parent do
+		if parent.Name == "PreparationSpawnArea" or parent.Name == "PreparationStagingRuntime" then
+			return true
+		end
+		parent = parent.Parent
+	end
+	return false
+end
+
 local function resolveSpawnForwardOffset(mapClone, position, forward)
 	if not mapClone or typeof(position) ~= "Vector3" or typeof(forward) ~= "Vector3" or forward.Magnitude <= 1e-4 then
 		return 0
@@ -695,7 +897,7 @@ local function resolveSpawnForwardOffset(mapClone, position, forward)
 	return math.clamp(clearance - SPAWN_FORWARD_OFFSET_MIN_CLEARANCE, 0, SPAWN_FORWARD_OFFSET_MAX)
 end
 
-local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance)
+local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance, spawnCandidate)
 	if not rawCFrame then
 		return nil, "missing_spawn_cframe"
 	end
@@ -752,10 +954,22 @@ local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance)
 		correctedPosition.Z
 	)
 
-	local forward = resolveSpawnFacingForward(mapClone, finalPosition, rawCFrame)
+	local forward = if isPreparationSpawnCandidate(spawnCandidate)
+		then resolveUprightForward(rawCFrame)
+		else resolveSpawnFacingForward(mapClone, finalPosition, rawCFrame)
 	local forwardOffset = resolveSpawnForwardOffset(mapClone, finalPosition, forward)
 	if forwardOffset > 0 then
 		finalPosition += (forward * forwardOffset)
+	end
+
+	if isPreparationSpawnCandidate(spawnCandidate) then
+		local insideRoom, roomPart = isPositionInsideAnyRoom(mapClone, finalPosition)
+		if insideRoom then
+			return nil, string.format(
+				"preparation_spawn_inside_room:%s",
+				tostring(roomPart and roomPart.Name or "unknown")
+			)
+		end
 	end
 
 	return CFrame.lookAt(finalPosition, finalPosition + forward, Vector3.yAxis), nil
@@ -785,12 +999,14 @@ local function resolveSafeSpawnCFrame(mapClone, spawnCandidates, preferredIndex,
 
 	for _, candidate in ipairs(orderedCandidates) do
 		local candidateCFrame = extractSpawnCFrame(candidate)
-		local safeCFrame, reason = buildSafeSpawnCFrame(mapClone, candidateCFrame, floorClearance)
+		local safeCFrame, reason = buildSafeSpawnCFrame(mapClone, candidateCFrame, floorClearance, candidate)
 		if safeCFrame then
 			return safeCFrame, candidate
 		end
 		if reason == "spawn_below_zero_y" then
 			warn("[MatchTeleport] Invalid spawn Y<0 for candidate:", candidate:GetFullName())
+		elseif type(reason) == "string" and string.find(reason, "preparation_spawn_inside_room", 1, true) == 1 then
+			warn("[MatchTeleport] Rejected preparation spawn inside room:", candidate:GetFullName(), reason)
 		end
 	end
 
@@ -852,7 +1068,7 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 		mapClone.Parent = container
 		MapRuntimePatches.Apply(resolvedMapName or resolvedTemplateName, mapClone, match)
 		if type(match) == "table" then
-			match.preparationWorldBoard = mapClone:GetAttribute("PreparationStagingRuntimePatched") == true
+			match.preparationWorldBoard = hasPreparationStagingRuntime(mapClone)
 		end
 		local offset = computeMatchOffset(container) + Vector3.new(0, computeSpawnLift(mapClone), 0)
 		if not applyWorldOffset(mapClone, offset) then
@@ -869,10 +1085,13 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 		}
 		updateStudioTeleportTrace(teleportTrace, #teleported, nil)
 
-		local spawnPoints, spawnSource = waitForSpawnCandidates(mapClone)
-		if #spawnPoints == 0 then
-			warn("[MatchTeleport] Spawn candidates missing/empty after map load:", mapClone:GetFullName())
-		end
+			local spawnPoints, spawnSource = waitForSpawnCandidates(mapClone)
+			if #spawnPoints == 0 then
+				error(string.format(
+					"[MatchTeleport] Preparation spawn candidates missing/empty after map load: %s",
+					mapClone:GetFullName()
+				))
+			end
 
 		updateStudioTeleportTrace(
 			teleportTrace,
@@ -883,8 +1102,17 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 				tostring(spawnSource or "none")
 			)
 		)
+		local teleportedUserIds = {}
 		for index, player in ipairs(players) do
 			if typeof(player) == "Instance" and player:IsA("Player") then
+				if teleportedUserIds[player.UserId] == true then
+					updateStudioTeleportTrace(
+						teleportTrace,
+						#teleported,
+						string.format("player=%s status=skip_duplicate", player.Name)
+					)
+					continue
+				end
 				updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=resolve_root", player.Name))
 				local character, root = waitForCharacterRoot(player, CHARACTER_WAIT_TIMEOUT)
 				local floorClearance = resolveHumanoidFloorClearance(character)
@@ -917,22 +1145,18 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 						string.format("player=%s status=spawn_error", player.Name)
 					)
 				end
-				if not safeSpawnCFrame then
-					warn("[MatchTeleport] HARD FAIL SAFE SPAWN TRIGGERED")
-					local fallbackPart = mapClone:FindFirstChildWhichIsA("BasePart", true)
-					if fallbackPart then
-						safeSpawnCFrame = fallbackPart.CFrame + Vector3.new(0, 6, 0)
-						table.insert(teleportTrace, string.format("%s:fallbackPart=%s", player.Name, fallbackPart:GetFullName()))
-						updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=fallback_spawn", player.Name))
-					else
-						warn("[MatchTeleport] NO VALID SPAWN, SKIP PLAYER")
-						table.insert(teleportTrace, string.format("%s:skip_no_spawn", player.Name))
-						updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=skip_no_spawn", player.Name))
+					if not safeSpawnCFrame then
+						warn("[MatchTeleport] NO VALID PREPARATION SPAWN, SKIP PLAYER")
+						table.insert(teleportTrace, string.format("%s:skip_no_preparation_spawn", player.Name))
+						updateStudioTeleportTrace(
+							teleportTrace,
+							#teleported,
+							string.format("player=%s status=skip_no_preparation_spawn", player.Name)
+						)
 						continue
+					elseif spawnCandidate then
+						table.insert(teleportTrace, string.format("%s:spawnCandidate=%s", player.Name, spawnCandidate:GetFullName()))
 					end
-				elseif spawnCandidate then
-					table.insert(teleportTrace, string.format("%s:spawnCandidate=%s", player.Name, spawnCandidate:GetFullName()))
-				end
 
 				if not root then
 					local playerName = player and player.Name or "Unknown"
@@ -964,13 +1188,17 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 					player:SetAttribute("MatchId", tostring(match.matchId or match.id))
 				end
 				table.insert(teleported, player)
+				teleportedUserIds[player.UserId] = true
 				updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=teleported_counted", player.Name))
 			end
 		end
 
-		setStudioTeleportTrace(table.concat(teleportTrace, " | "), #teleported)
-		return teleported
-	end
+			if #players > 0 and #teleported == 0 then
+				error("[MatchTeleport] no_players_teleported_from_preparation_spawns")
+			end
+			setStudioTeleportTrace(table.concat(teleportTrace, " | "), #teleported)
+			return teleported
+		end
 
 	local sourceLabel = mapSource or "ServerStorage.Maps"
 	warn(string.format("[MatchTeleport] Map template not found in %s: %s", sourceLabel, tostring(resolvedMapName)))

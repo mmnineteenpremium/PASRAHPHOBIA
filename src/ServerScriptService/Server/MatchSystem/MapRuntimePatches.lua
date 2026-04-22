@@ -1,4 +1,5 @@
 local MapRuntimePatches = {}
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local AbandonedPalaceMapScaffold = require(script.Parent.AbandonedPalaceMapScaffold)
@@ -29,6 +30,10 @@ local DEFAULT_DOOR_CLOSE_SOUND_ID = "rbxassetid://78764817933410"
 local MIN_SEGMENT_SIZE = 0.25
 local PREPARATION_TWEEN_INFO = TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local PREPARATION_FAST_TWEEN_INFO = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local PREPARATION_TOOL_PROXIMITY_RADIUS = 3.25
+local PREPARATION_TOOL_AUTOSELECT_DELAY = 2.5
+local PREPARATION_STAGING_ROOM_ESCAPE_STEP = 8
+local PREPARATION_STAGING_ROOM_ESCAPE_MAX_STEPS = 8
 local STAIR_MARGIN = 0.75
 local INTERACTION_HEIGHT_OFFSET = 1.5
 local TRAVERSAL_GUIDE_FOLDER_NAME = "TraversalGuideRuntime"
@@ -315,7 +320,7 @@ local PREPARATION_STAGING_PROFILES = {
 		propVariant = "industrial",
 	},
 	studiommnineteen = {
-		anchorRoomName = "Room_FrontPorch",
+		anchorRoomName = "Room_LivingRoom",
 		anchorDoorName = "Door_FrontEntry",
 		platformWidth = 26,
 		platformDepth = 16,
@@ -3626,6 +3631,89 @@ local function applyVectorOffsetRecursive(node, delta)
 	return movedAny
 end
 
+local function isInsideRoomVolume(roomsFolder, worldPosition)
+	if typeof(roomsFolder) ~= "Instance" or typeof(worldPosition) ~= "Vector3" then
+		return false, nil
+	end
+
+	for _, room in ipairs(roomsFolder:GetDescendants()) do
+		if room:IsA("BasePart") and string.find(room.Name, "Room_", 1, true) == 1 then
+			local localPosition = room.CFrame:PointToObjectSpace(worldPosition)
+			local half = room.Size * 0.5
+			local verticalTolerance = math.max(half.Y, 8)
+			if math.abs(localPosition.X) <= half.X
+				and math.abs(localPosition.Y) <= verticalTolerance
+				and math.abs(localPosition.Z) <= half.Z then
+				return true, room
+			end
+		end
+	end
+
+	return false, nil
+end
+
+local function resolvePreparationStagingPlacement(anchorDoor, baseY, outward, stageDistance, roomsFolder)
+	if not (anchorDoor and anchorDoor:IsA("BasePart") and typeof(outward) == "Vector3") then
+		return nil, nil, nil, nil
+	end
+
+	local baseCenter = Vector3.new(
+		anchorDoor.Position.X,
+		baseY - 0.28,
+		anchorDoor.Position.Z
+	)
+	local spawnOffsets = { -5.4, -1.8, 1.8, 5.4 }
+	local spawnY = anchorDoor.Position.Y + 0.5
+
+	local function probeDirection(direction)
+		local right = Vector3.new(-direction.Z, 0, direction.X)
+		local blockedRoomName = nil
+		for step = 0, PREPARATION_STAGING_ROOM_ESCAPE_MAX_STEPS do
+			local distance = stageDistance + (step * PREPARATION_STAGING_ROOM_ESCAPE_STEP)
+			local center = baseCenter + (direction * distance)
+			local blocked = false
+			for _, offset in ipairs(spawnOffsets) do
+				local spawnPosition = Vector3.new(center.X, spawnY, center.Z) + (direction * 5.8) + (right * offset)
+				local insideRoom, room = isInsideRoomVolume(roomsFolder, spawnPosition)
+				if insideRoom then
+					blocked = true
+					blockedRoomName = room and room.Name or blockedRoomName
+					break
+				end
+			end
+			if not blocked then
+				return {
+					center = center,
+					outward = direction,
+					steps = step,
+				}
+			end
+		end
+		return nil, blockedRoomName
+	end
+
+	if typeof(roomsFolder) ~= "Instance" then
+		return baseCenter + (outward * stageDistance), outward, 0, nil
+	end
+
+	local positive, positiveBlockedRoom = probeDirection(outward)
+	local negative, negativeBlockedRoom = probeDirection(-outward)
+	if positive and negative then
+		if negative.steps < positive.steps then
+			return negative.center, negative.outward, negative.steps, nil
+		end
+		return positive.center, positive.outward, positive.steps, nil
+	end
+	if positive then
+		return positive.center, positive.outward, positive.steps, nil
+	end
+	if negative then
+		return negative.center, negative.outward, negative.steps, nil
+	end
+
+	return baseCenter + (outward * stageDistance), outward, nil, (positiveBlockedRoom or negativeBlockedRoom)
+end
+
 local function patchPreparationStaging(mapId, mapClone, matchContext)
 	if not mapClone or mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) == true then
 		return false
@@ -3639,7 +3727,14 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	local didReanchor = false
 
 	local authoredPreparationFolder = findAuthoredPreparationRuntimeFolder(mapClone)
-	local useNativeMarkerOnly = (not USE_LEGACY_SYNTHETIC_STAGING) or token == "hauntedhouse" or authoredPreparationFolder ~= nil
+	local authoredSpawns = collectAuthoredPreparationSpawns(authoredPreparationFolder)
+	-- Native staging is only authoritative when an authored preparation runtime folder exists
+	-- and it already has valid preparation spawn nodes.
+	-- Otherwise we must build synthetic staging so players spawn outside consistently.
+	local useNativeMarkerOnly = authoredPreparationFolder ~= nil and #authoredSpawns > 0
+	if USE_LEGACY_SYNTHETIC_STAGING then
+		useNativeMarkerOnly = false
+	end
 	if useNativeMarkerOnly then
 		local existingSpawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
 		local existingSafeZonesFolder = mapClone:FindFirstChild("SafeZones", true)
@@ -3654,7 +3749,9 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			if runtimeBoundary then
 				runtimeBoundary:Destroy()
 			end
-			local authoredSpawns = collectAuthoredPreparationSpawns(authoredPreparationFolder)
+			for _, authoredSpawn in ipairs(authoredSpawns) do
+				authoredSpawn:SetAttribute("PasrahPreparationSpawn", true)
+			end
 			local roomsFolder = mapClone:FindFirstChild("Rooms", true)
 			local doorsFolder = mapClone:FindFirstChild("Doors", true)
 			local anchorRoom = profile and roomsFolder and roomsFolder:FindFirstChild(profile.anchorRoomName, true)
@@ -3669,7 +3766,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				if outward then
 					local desiredCenter = anchorDoor.Position + (outward * 8.5) + Vector3.new(0, 0.5, 0)
 					local reanchorDelta = desiredCenter - authoredCenter
-					if reanchorDelta.Magnitude > 16 then
+					if reanchorDelta.Magnitude > 0.5 then
 						local authoredRoot = resolvePreparationAuthoringRoot(mapClone, authoredPreparationFolder)
 						didReanchor = applyVectorOffsetRecursive(authoredRoot, reanchorDelta) or didReanchor
 					end
@@ -3755,7 +3852,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 
 	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
 	local doorsFolder = mapClone:FindFirstChild("Doors", true)
-	local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
+	local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true) or ensureFolder(mapClone, "SpawnPoints")
 	if not (roomsFolder and doorsFolder and spawnFolder) then
 		setPreparationDebug("folder_missing")
 		return false
@@ -3780,17 +3877,28 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	end
 	local ok, result = xpcall(function()
 		setPreparationDebug("start|" .. tostring(token))
-		local right = Vector3.new(-outward.Z, 0, outward.X)
 		local stageDistance = tonumber(profile.stagingDistance) or 18
 		local platformWidth = tonumber(profile.platformWidth) or 28
 		local platformDepth = tonumber(profile.platformDepth) or 18
 		local boardData = buildPreparationBoardContent(mapId, matchContext)
 		local baseY = anchorRoom.Position.Y
-		local platformCenter = Vector3.new(
-			anchorDoor.Position.X,
-			baseY - 0.28,
-			anchorDoor.Position.Z
-		) + (outward * stageDistance)
+		local platformCenter, resolvedOutward, roomEscapeSteps, blockedRoomName = resolvePreparationStagingPlacement(
+			anchorDoor,
+			baseY,
+			outward,
+			stageDistance,
+			roomsFolder
+		)
+		if typeof(resolvedOutward) == "Vector3" then
+			outward = resolvedOutward
+		end
+		local right = Vector3.new(-outward.Z, 0, outward.X)
+		local roomEscapeDebugSuffix = ""
+		if type(roomEscapeSteps) == "number" and roomEscapeSteps > 0 then
+			roomEscapeDebugSuffix = string.format("|room_escape_steps=%d", roomEscapeSteps)
+		elseif type(blockedRoomName) == "string" and blockedRoomName ~= "" then
+			roomEscapeDebugSuffix = "|room_overlap_unresolved=" .. tostring(blockedRoomName)
+		end
 		-- Keep preparation staging near the entry anchor.
 		-- Do not push platform out to shell bounds to avoid detached staging drift.
 
@@ -4232,18 +4340,37 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	end
 
 	local function resolvePreparationBreachOpen()
-		if type(matchContext) == "table" then
-			local phaseToken = tostring(matchContext.phase or "")
-			if phaseToken ~= "" and phaseToken ~= "PreparationPhase" then
-				return true
+		local function classifyPhaseToken(token)
+			token = tostring(token or "")
+			if token == "PreparationPhase" or token == "Preparation" then
+				return "Preparation"
 			end
+			if token == "InvestigationPhase" or token == "Investigation" then
+				return "Investigation"
+			end
+			if token == "HuntPhase" or token == "Hunt" then
+				return "Hunt"
+			end
+			if token == "EndgamePhase" or token == "Endgame" then
+				return "Endgame"
+			end
+			return nil
+		end
+
+		local function isBreachLivePhase(token)
+			local phaseClass = classifyPhaseToken(token)
+			return phaseClass == "Investigation" or phaseClass == "Hunt" or phaseClass == "Endgame"
+		end
+
+		if type(matchContext) == "table" and isBreachLivePhase(matchContext.phase) then
+			return true
 		end
 
 		if type(matchContext) == "table" then
 			for _, participant in ipairs(matchContext.players or {}) do
 				if typeof(participant) == "Instance" and participant:IsA("Player") then
-					local lifecyclePhase = tostring(participant:GetAttribute("MatchLifecyclePhase") or "")
-					if lifecyclePhase ~= "" and lifecyclePhase ~= "PreparationPhase" then
+					local lifecyclePhase = participant:GetAttribute("MatchLifecyclePhase")
+					if isBreachLivePhase(lifecyclePhase) then
 						return true
 					end
 				end
@@ -4253,9 +4380,36 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		return false
 	end
 
+	local function resolvePreparationBreachReady(selectedTool)
+		if type(selectedTool) ~= "string" or selectedTool == "" then
+			return false
+		end
+		if type(matchContext) ~= "table" then
+			return true
+		end
+
+		local hasParticipant = false
+		for _, participant in ipairs(matchContext.players or {}) do
+			if typeof(participant) == "Instance" and participant:IsA("Player") then
+				hasParticipant = true
+				local lifecyclePhase = tostring(participant:GetAttribute("MatchLifecyclePhase") or "")
+				if lifecyclePhase ~= "" and lifecyclePhase ~= "PreparationPhase" and lifecyclePhase ~= "Preparation" then
+					return false
+				end
+				local focusTool = participant:GetAttribute("PreparationFocusTool")
+				if type(focusTool) ~= "string" or focusTool == "" then
+					return false
+				end
+			end
+		end
+
+		return hasParticipant
+	end
+
 	local function syncPreparationEntryState()
 		local selectedTool = resolvePreparationSelectedTool()
 		local breachOpen = resolvePreparationBreachOpen()
+		local breachReady = resolvePreparationBreachReady(selectedTool)
 		updatePreparationToolsBoard(toolsBoard, selectedTool)
 		for _, station in ipairs(toolStations) do
 			updatePreparationToolStationState(station.part, station.prompt, station.tool, selectedTool, breachOpen, station.pad)
@@ -4267,11 +4421,11 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		if breachOpen and folder:GetAttribute(PREPARATION_BREACH_MOVED_ATTR) ~= true then
 			movePlayersToPreparationBreachTargets(folder, matchContext, outward)
 		end
-		if breachOpen and breachPrompt and breachPrompt.Parent then
-			breachPrompt:Destroy()
+		if breachPrompt and breachPrompt.Parent then
+			breachPrompt.Enabled = (not breachOpen) and breachReady
 		end
 		if studioManifestPrompt then
-			studioManifestPrompt.Enabled = breachOpen == true
+			studioManifestPrompt.Enabled = (not breachOpen) and breachReady
 		end
 	end
 
@@ -4329,7 +4483,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				Material = Enum.Material.SmoothPlastic,
 				Color = tool.color,
 				CanCollide = true,
-				CanTouch = false,
+				CanTouch = true,
 				CanQuery = true,
 			}
 		)
@@ -4377,12 +4531,134 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				end
 			end)
 		end
+		if toolPart:GetAttribute("PreparationTouchConnected") ~= true then
+			toolPart:SetAttribute("PreparationTouchConnected", true)
+			local touchedAtByUserId = {}
+			toolPart.Touched:Connect(function(hit)
+				local character = hit and hit.Parent
+				if typeof(character) ~= "Instance" then
+					return
+				end
+				local player = Players:GetPlayerFromCharacter(character)
+				if not player then
+					return
+				end
+
+				local isParticipant = false
+				if type(matchContext) == "table" then
+					for _, participant in ipairs(matchContext.players or {}) do
+						if participant == player then
+							isParticipant = true
+							break
+						end
+					end
+				end
+				if not isParticipant then
+					return
+				end
+				if tostring(player:GetAttribute("MatchLifecyclePhase") or "") ~= "PreparationPhase" then
+					return
+				end
+
+				local now = os.clock()
+				local userId = player.UserId
+				local previous = touchedAtByUserId[userId]
+				if type(previous) == "number" and (now - previous) < 0.35 then
+					return
+				end
+				touchedAtByUserId[userId] = now
+
+				if tostring(player:GetAttribute("PreparationFocusTool") or "") ~= tool.title then
+					player:SetAttribute("PreparationFocusTool", tool.title)
+					syncPreparationEntryState()
+				end
+			end)
+		end
 		table.insert(toolStations, {
 			part = toolPart,
 			prompt = prompt,
 			tool = tool,
 			pad = statePad,
 		})
+	end
+
+	local toolProximityConnection
+	local toolAutoselectPendingSinceByUserId = {}
+	local authoritativeMatchId = type(matchContext) == "table" and tostring(matchContext.matchId or matchContext.id or "") or ""
+	if type(matchContext) == "table" then
+		toolProximityConnection = RunService.Heartbeat:Connect(function()
+			if typeof(folder) ~= "Instance" or folder.Parent == nil then
+				if toolProximityConnection then
+					toolProximityConnection:Disconnect()
+					toolProximityConnection = nil
+				end
+				return
+			end
+
+			local now = os.clock()
+			for _, participant in ipairs(matchContext.players or {}) do
+				if not (typeof(participant) == "Instance" and participant:IsA("Player")) then
+					continue
+				end
+				if authoritativeMatchId ~= "" and tostring(participant:GetAttribute("MatchId") or "") ~= authoritativeMatchId then
+					toolAutoselectPendingSinceByUserId[participant.UserId] = nil
+					continue
+				end
+				if tostring(participant:GetAttribute("MatchLifecyclePhase") or "") ~= "PreparationPhase" then
+					toolAutoselectPendingSinceByUserId[participant.UserId] = nil
+					continue
+				end
+
+				local currentFocusTool = participant:GetAttribute("PreparationFocusTool")
+				if type(currentFocusTool) == "string" and currentFocusTool ~= "" then
+					toolAutoselectPendingSinceByUserId[participant.UserId] = nil
+					continue
+				end
+
+				local character = participant.Character
+				local root = character and character:FindFirstChild("HumanoidRootPart")
+				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+				if not root or (humanoid and humanoid.Health <= 0) then
+					continue
+				end
+
+				local selectedToolTitle = nil
+				local nearestDistance = math.huge
+				for _, station in ipairs(toolStations) do
+					local stationPart = station.part
+					if stationPart and stationPart:IsA("BasePart") and stationPart.Parent ~= nil then
+						local distance = (root.Position - stationPart.Position).Magnitude
+						if distance <= PREPARATION_TOOL_PROXIMITY_RADIUS and distance < nearestDistance then
+							nearestDistance = distance
+							selectedToolTitle = type(station.tool) == "table" and station.tool.title or nil
+						end
+					end
+				end
+
+				if type(selectedToolTitle) ~= "string" or selectedToolTitle == "" then
+					local pendingSince = toolAutoselectPendingSinceByUserId[participant.UserId]
+					if type(pendingSince) ~= "number" then
+						toolAutoselectPendingSinceByUserId[participant.UserId] = now
+						continue
+					end
+					if (now - pendingSince) >= PREPARATION_TOOL_AUTOSELECT_DELAY then
+						local fallbackStation = toolStations[1]
+						selectedToolTitle = fallbackStation
+							and type(fallbackStation.tool) == "table"
+							and fallbackStation.tool.title
+							or nil
+					else
+						continue
+					end
+				end
+
+				if type(selectedToolTitle) == "string" and selectedToolTitle ~= "" then
+					participant:SetAttribute("PreparationFocusTool", selectedToolTitle)
+					toolAutoselectPendingSinceByUserId[participant.UserId] = nil
+					syncPreparationEntryState()
+				end
+			end
+		end)
 	end
 
 	if type(matchContext) == "table" then
@@ -4405,18 +4681,19 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				spawnY,
 				platformCenter.Z
 			) + (outward * 5.8) + (right * spawnOffsets[index])
-			configurePart(
-				spawnPart,
-				{
-					Size = Vector3.new(1, 1, 1),
-					CFrame = CFrame.lookAt(spawnPosition, spawnPosition - outward, Vector3.yAxis),
-					Transparency = 1,
-					CanCollide = false,
-					CanTouch = false,
-					CanQuery = false,
-					Color = Color3.fromRGB(255, 255, 255),
-				}
-			)
+				configurePart(
+					spawnPart,
+					{
+						Size = Vector3.new(1, 1, 1),
+						CFrame = CFrame.lookAt(spawnPosition, spawnPosition - outward, Vector3.yAxis),
+						Transparency = 1,
+						CanCollide = false,
+						CanTouch = false,
+						CanQuery = false,
+						Color = Color3.fromRGB(255, 255, 255),
+					}
+				)
+				spawnPart:SetAttribute("PasrahPreparationSpawn", true)
 
 			local breachTarget = ensurePart(folder, "PreparationBreachTarget_" .. tostring(index))
 			local breachPosition = Vector3.new(
@@ -4439,7 +4716,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		end
 
 		mapClone:SetAttribute(PREPARATION_STAGING_PATCH_ATTR, true)
-		setPreparationDebug("complete")
+		setPreparationDebug("complete" .. roomEscapeDebugSuffix)
 		if type(matchContext) == "table" then
 			matchContext.preparationWorldBoard = true
 		end
@@ -4812,10 +5089,46 @@ local function patchEmptyBuildingScaffold(mapId, mapClone)
 	if token ~= "emptybuilding" or mapClone == nil then
 		return false
 	end
-	if not shouldRunFallbackScaffold(mapClone) then
+	-- EmptyBuilding variants frequently ship authored folders (`Rooms`, `Doors`, etc)
+	-- that are present but semantically incomplete for runtime (no Door_* proxies / empty markers).
+	-- Force scaffold materialization so the preparation entry door is always available.
+	return EmptyBuildingMapScaffold.Build(mapClone) == true
+end
+
+local function removeDeprecatedPreparationStaging(mapClone, matchContext)
+	if typeof(mapClone) ~= "Instance" then
 		return false
 	end
-	return EmptyBuildingMapScaffold.Build(mapClone) == true
+
+	local removedAny = false
+	for _, folderName in ipairs({
+		PREPARATION_STAGING_FOLDER_NAME,
+		"PreparationStaging",
+	}) do
+		while true do
+			local folder = mapClone:FindFirstChild(folderName, true)
+			if not folder then
+				break
+			end
+			folder:Destroy()
+			removedAny = true
+		end
+	end
+
+	if mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) ~= nil then
+		mapClone:SetAttribute(PREPARATION_STAGING_PATCH_ATTR, nil)
+		removedAny = true
+	end
+	if mapClone:GetAttribute(PREPARATION_STAGING_DEBUG_ATTR) ~= nil then
+		mapClone:SetAttribute(PREPARATION_STAGING_DEBUG_ATTR, nil)
+		removedAny = true
+	end
+
+	if type(matchContext) == "table" then
+		matchContext.preparationWorldBoard = false
+	end
+
+	return removedAny
 end
 
 function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
@@ -4825,6 +5138,7 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	end
 
 	local didPatch = false
+	didPatch = removeDeprecatedPreparationStaging(mapClone, matchContext) or didPatch
 	didPatch = patchHauntedHouseScaffold(mapId, mapClone) or didPatch
 	didPatch = patchStudioMMNineteenScaffold(mapId, mapClone) or didPatch
 	didPatch = patchAbandonedPalaceScaffold(mapId, mapClone) or didPatch

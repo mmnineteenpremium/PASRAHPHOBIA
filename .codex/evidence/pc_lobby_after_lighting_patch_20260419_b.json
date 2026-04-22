@@ -1,0 +1,25 @@
+{
+    "Pid":  27912,
+    "Title":  "Roblox",
+    "CaptureArea":  "client",
+    "ImagePath":  "C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\.codex\\worktrees\\final-source-of-truth\\.codex\\evidence\\pc_lobby_after_lighting_patch_20260419_b.png",
+    "WindowBounds":  {
+                         "Left":  -7,
+                         "Top":  -7,
+                         "Width":  1550,
+                         "Height":  830
+                     },
+    "ClientBounds":  {
+                         "Left":  0,
+                         "Top":  23,
+                         "Width":  1536,
+                         "Height":  792
+                     },
+    "CaptureBounds":  {
+                          "Left":  0,
+                          "Top":  23,
+                          "Width":  1536,
+                          "Height":  792
+                      },
+    "CapturedAt":  "2026-04-19T05:53:11.2089509+07:00"
+}

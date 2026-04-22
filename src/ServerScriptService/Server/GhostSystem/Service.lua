@@ -1121,12 +1121,104 @@ local function resolvePlayerRootPart(player)
 	return character.PrimaryPart
 end
 
+local function collectMatchSafeZoneParts(match)
+	if type(match) ~= "table" then
+		return nil
+	end
+	local container = match.container
+	if not (typeof(container) == "Instance" and container:IsA("Folder")) then
+		return nil
+	end
+	local safeZonesFolder = container:FindFirstChild("SafeZones", true)
+	if not safeZonesFolder then
+		return nil
+	end
+	local safeZoneParts = {}
+	for _, descendant in ipairs(safeZonesFolder:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			table.insert(safeZoneParts, descendant)
+		end
+	end
+	if #safeZoneParts == 0 then
+		return nil
+	end
+	return safeZoneParts
+end
+
+local function isPositionInsidePartBounds(position, part)
+	if typeof(position) ~= "Vector3" or not (typeof(part) == "Instance" and part:IsA("BasePart")) then
+		return false
+	end
+	local localPosition = part.CFrame:PointToObjectSpace(position)
+	local halfSize = part.Size * 0.5
+	return math.abs(localPosition.X) <= halfSize.X
+		and math.abs(localPosition.Y) <= halfSize.Y
+		and math.abs(localPosition.Z) <= halfSize.Z
+end
+
+local function isRootInsideSafeZone(rootPart, safeZoneParts)
+	if not (rootPart and rootPart:IsA("BasePart")) then
+		return false
+	end
+	if type(safeZoneParts) ~= "table" or #safeZoneParts == 0 then
+		return false
+	end
+	local position = rootPart.Position
+	for _, safeZonePart in ipairs(safeZoneParts) do
+		if isPositionInsidePartBounds(position, safeZonePart) then
+			return true
+		end
+	end
+	return false
+end
+
+local function isPositionInsideSafeZones(position, safeZoneParts)
+	if typeof(position) ~= "Vector3" then
+		return false
+	end
+	if type(safeZoneParts) ~= "table" or #safeZoneParts == 0 then
+		return false
+	end
+	for _, safeZonePart in ipairs(safeZoneParts) do
+		if isPositionInsidePartBounds(position, safeZonePart) then
+			return true
+		end
+	end
+	return false
+end
+
+local function keepGhostOutsideSafeZones(match, currentPosition, desiredPosition)
+	if typeof(desiredPosition) ~= "Vector3" then
+		return desiredPosition
+	end
+
+	local safeZoneParts = collectMatchSafeZoneParts(match)
+	if type(safeZoneParts) ~= "table" or #safeZoneParts == 0 then
+		return desiredPosition
+	end
+
+	if not isPositionInsideSafeZones(desiredPosition, safeZoneParts) then
+		return desiredPosition
+	end
+
+	if typeof(currentPosition) == "Vector3" and not isPositionInsideSafeZones(currentPosition, safeZoneParts) then
+		return currentPosition
+	end
+
+	if typeof(currentPosition) == "Vector3" then
+		return currentPosition
+	end
+
+	return desiredPosition
+end
+
 local function resolveHuntTargetPlayer(match, ghostState)
+	local safeZoneParts = collectMatchSafeZoneParts(match)
 	local preferredUserId = type(ghostState) == "table" and tonumber(ghostState.huntTargetUserId) or nil
 	if preferredUserId then
 		local preferredPlayer = Players:GetPlayerByUserId(preferredUserId)
 		local preferredRoot = resolvePlayerRootPart(preferredPlayer)
-		if preferredRoot and preferredRoot:IsA("BasePart") then
+		if preferredRoot and preferredRoot:IsA("BasePart") and not isRootInsideSafeZone(preferredRoot, safeZoneParts) then
 			return preferredPlayer, preferredRoot, preferredUserId
 		end
 	end
@@ -1153,7 +1245,7 @@ local function resolveHuntTargetPlayer(match, ghostState)
 		if type(playerState) == "table" and playerState.alive ~= false then
 			local candidatePlayer = playerState.player or Players:GetPlayerByUserId(tonumber(userId) or 0)
 			local candidateRoot = resolvePlayerRootPart(candidatePlayer)
-			if candidateRoot and candidateRoot:IsA("BasePart") then
+			if candidateRoot and candidateRoot:IsA("BasePart") and not isRootInsideSafeZone(candidateRoot, safeZoneParts) then
 				local distance = ghostPosition and (candidateRoot.Position - ghostPosition).Magnitude or 0
 				if not bestRoot or distance < bestDistance then
 					bestPlayer = candidatePlayer
@@ -1896,6 +1988,8 @@ function Service:_syncGhostVisual(match, ghostState)
 			currentPosition = match.ghost:GetPivot().Position
 		end
 
+		targetPosition = keepGhostOutsideSafeZones(match, currentPosition, targetPosition)
+
 		match.ghostVisualTargetPosition = targetPosition
 		match.ghostVisualTargetRoomId = roomId
 
@@ -1918,6 +2012,11 @@ function Service:_syncGhostVisual(match, ghostState)
 			else
 				resolvedPosition = moveTowardsVector3(currentPosition, targetPosition, maxStep)
 			end
+		end
+
+		resolvedPosition = keepGhostOutsideSafeZones(match, currentPosition, resolvedPosition)
+		if typeof(resolvedPosition) ~= "Vector3" then
+			resolvedPosition = currentPosition
 		end
 
 		match.ghostVisualCurrentPosition = resolvedPosition

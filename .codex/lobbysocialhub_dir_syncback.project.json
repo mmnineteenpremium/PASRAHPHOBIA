@@ -1,0 +1,76 @@
+{
+  "name": "PASRAHPHOBIA-LobbySocialHub-Dir-Syncback",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Maps": {
+        "$className": "Folder",
+        "LobbySocialHub": {
+          "$path": "../.codex/test_syncback/ReplicatedStorage/Maps/LobbySocialHub"
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "Maps": {
+        "$className": "Folder",
+        "LobbySocialHub": {
+          "$path": "../.codex/test_syncback/Workspace/Maps/LobbySocialHub"
+        }
+      },
+      "$properties": {
+        "EnableSLIMAvatars": {
+          "Enum": 0
+        },
+        "LayeredClothingCacheOptimizations": {
+          "Enum": 0
+        },
+        "NextGenerationReplication": {
+          "Enum": 0
+        },
+        "PlayerScriptsUseInputActionSystem": {
+          "Enum": 0
+        },
+        "SignalBehavior": "Deferred",
+        "StreamOutBehavior": "Opportunistic",
+        "StreamingEnabled": true,
+        "StreamingIntegrityMode": "PauseOutsideLoadedArea",
+        "UseFixedSimulation": {
+          "Enum": 0
+        },
+        "WorldPivotData": {
+          "OptionalCFrame": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+  "syncbackRules": {
+    "syncCurrentCamera": false,
+    "syncUnscriptable": true,
+    "ignoreReferents": false
+  }
+}

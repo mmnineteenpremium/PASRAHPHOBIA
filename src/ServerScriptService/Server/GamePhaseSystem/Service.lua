@@ -46,6 +46,12 @@ function Service.new(state, deps)
     self._eventBus = resolveEventBus(self._deps)
     local config = self._deps.GamePhaseConfig or self._deps.GamePhaseSystemConfig or {}
     self._phaseDurations = config.phaseDurations or DEFAULT_PHASE_DURATIONS
+    if type(self._phaseDurations) == "table" then
+        local configuredPreparation = tonumber(self._phaseDurations.PreparationPhase)
+        if configuredPreparation ~= nil and configuredPreparation >= 0 then
+            self._phaseDurations.PreparationPhase = -1
+        end
+    end
     return self
 end
 

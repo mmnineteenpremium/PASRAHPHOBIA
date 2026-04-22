@@ -29,7 +29,7 @@ return {
         },
         PerformanceTier = {
             PC = "High",
-            Mobile = "Medium",
+            Mobile = "High",
             Console = "High",
             Unknown = "Medium",
         },

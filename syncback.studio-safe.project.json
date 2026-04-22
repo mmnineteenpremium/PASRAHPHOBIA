@@ -1,26 +1,41 @@
 {
   "name": "PASRAHPHOBIA",
-  "syncbackRules": {
-    "ignoreTrees": [],
-    "ignorePaths": [],
-    "ignoreProperties": {},
-    "syncCurrentCamera": false,
-    "syncUnscriptable": true,
-    "ignoreReferents": false
-  },
   "tree": {
     "$className": "DataModel",
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Ambient": [
+          0.47058823704719543,
+          0.47058823704719543,
+          0.47058823704719543
+        ],
+        "Brightness": 2.200000047683716,
+        "ClockTime": 18.0,
+        "EnvironmentDiffuseScale": 0.30000001192092896,
+        "FogColor": [
+          0.3333333432674408,
+          0.37254902720451355,
+          0.4627451002597809
+        ],
+        "FogEnd": 145.0,
+        "FogStart": 100000.0,
+        "GeographicLatitude": 0.0,
+        "GlobalShadows": true,
+        "OutdoorAmbient": [
+          0.47058823704719543,
+          0.47058823704719543,
+          0.47058823704719543
+        ],
+        "Outlines": false,
+        "PrioritizeLightingQuality": true,
+        "ShadowSoftness": 0.75,
+        "Technology": "ShadowMap"
+      },
+      "$path": "src/Lighting"
+    },
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "Shared": {
-        "$path": "src/shared"
-      },
-      "RemoteEvents": {
-        "$path": "src/ReplicatedStorage/RemoteEvents"
-      },
-      "RemoteFunctions": {
-        "$path": "src/ReplicatedStorage/RemoteFunctions"
-      },
       "Assets": {
         "$path": "src/ReplicatedStorage/Assets"
       },
@@ -29,6 +44,15 @@
       },
       "Maps": {
         "$path": "src/ReplicatedStorage/Maps"
+      },
+      "RemoteEvents": {
+        "$path": "src/ReplicatedStorage/RemoteEvents"
+      },
+      "RemoteFunctions": {
+        "$path": "src/ReplicatedStorage/RemoteFunctions"
+      },
+      "Shared": {
+        "$path": "src/shared"
       }
     },
     "ServerStorage": {
@@ -37,6 +61,10 @@
         "$path": "src/ServerStorage/Maps"
       }
     },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$path": "src/StarterGui"
+    },
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
@@ -44,37 +72,77 @@
         "Client": {
           "$path": "src/client"
         }
-      }
-    },
-    "StarterGui": {
-      "$className": "StarterGui",
-      "$path": "src/StarterGui"
-    },
-    "Lighting": {
-      "$className": "Lighting",
-      "$properties": {
-        "Ambient": [0.04, 0.04, 0.05],
-        "OutdoorAmbient": [0.02, 0.02, 0.03],
-        "Brightness": 1,
-        "ClockTime": 18,
-        "FogStart": 18,
-        "FogEnd": 145,
-        "GlobalShadows": true,
-        "ShadowSoftness": 0.75,
-        "Technology": "Future"
       },
-      "$path": "src/Lighting"
+      "$properties": {
+        "CameraMaxZoomDistance": 128.0,
+        "CharacterUseJumpPower": false
+      }
     },
     "Workspace": {
       "$className": "Workspace",
-      "$properties": {
-        "StreamingEnabled": true,
-        "StreamingMinRadius": 64,
-        "StreamingTargetRadius": 192
-      },
       "Maps": {
         "$path": "src/Workspace/Maps"
+      },
+      "$properties": {
+        "EnableSLIMAvatars": {
+          "Enum": 0
+        },
+        "LayeredClothingCacheOptimizations": {
+          "Enum": 0
+        },
+        "MeshStreamingAndImprovedLods": {
+          "Enum": 0
+        },
+        "NextGenerationReplication": {
+          "Enum": 0
+        },
+        "PlayerScriptsUseInputActionSystem": {
+          "Enum": 0
+        },
+        "SignalBehavior": "Deferred",
+        "StreamOutBehavior": "Opportunistic",
+        "StreamingEnabled": true,
+        "StreamingIntegrityMode": "PauseOutsideLoadedArea",
+        "StreamingMinRadius": 64.0,
+        "StreamingTargetRadius": 192.0,
+        "UseFixedSimulation": {
+          "Enum": 0
+        },
+        "ValidateEnabledProximityPrompt": {
+          "Enum": 0
+        },
+        "WorldPivotData": {
+          "OptionalCFrame": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        }
       }
     }
+  },
+  "syncbackRules": {
+    "syncCurrentCamera": false,
+    "syncUnscriptable": true,
+    "ignoreReferents": false
   }
 }

@@ -11,6 +11,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
+local CameraResolver = require(script.Parent:WaitForChild("CameraResolver"))
 
 local REMOTE_NAME = "FlashlightEvent"
 local FLASHLIGHT_ATTRIBUTE = "FlashlightEnabled"
@@ -18,13 +19,33 @@ local remoteFolder = ReplicatedStorage:WaitForChild("RemoteEvents")
 local flashlightRemote = remoteFolder:WaitForChild(REMOTE_NAME)
 
 local AIM_SEND_RATE = 1 / 20
+local AIM_DOT_DELTA_THRESHOLD = 0.001
+local AIM_STATIONARY_KEEPALIVE_SECONDS = 1.2
 
 local flashlightOn = false
 local lastAimSend = 0
+local lastAimTransmitAt = 0
+local lastAimLookVector = nil
 local camera = workspace.CurrentCamera
 local toggleGui = nil
 local toggleButton = nil
 local toggleFlashlight
+local aimRenderConnection = nil
+
+local function setAttributeIfChanged(instance, attributeName, value, numberEpsilon)
+	if not instance then
+		return
+	end
+	local current = instance:GetAttribute(attributeName)
+	if typeof(current) == "number" and typeof(value) == "number" and tonumber(numberEpsilon) then
+		if math.abs(current - value) <= numberEpsilon then
+			return
+		end
+	elseif current == value then
+		return
+	end
+	instance:SetAttribute(attributeName, value)
+end
 
 local function isPlayerInMatch()
 	return player:GetAttribute("InMatch") == true
@@ -35,25 +56,43 @@ local function shouldShowToggleUI()
 	return UserInputService.TouchEnabled == true and isPlayerInMatch()
 end
 
+local function dedupeScreenGuiByName(playerGui, guiName)
+	local keeper = nil
+	for _, child in ipairs(playerGui:GetChildren()) do
+		if child.Name == guiName then
+			if child:IsA("ScreenGui") and not keeper then
+				keeper = child
+			else
+				child:Destroy()
+			end
+		end
+	end
+	return keeper
+end
+
 local function stampFlashlightClientState()
-	player:SetAttribute("PasrahFlashlightClientEnabled", flashlightOn == true)
-	player:SetAttribute("PasrahFlashlightClientTouchEligible", UserInputService.TouchEnabled == true)
-	player:SetAttribute("PasrahFlashlightClientToggleVisible", shouldShowToggleUI())
+	setAttributeIfChanged(player, "PasrahFlashlightClientEnabled", flashlightOn == true)
+	setAttributeIfChanged(player, "PasrahFlashlightClientTouchEligible", UserInputService.TouchEnabled == true)
+	setAttributeIfChanged(player, "PasrahFlashlightClientToggleVisible", shouldShowToggleUI())
 end
 
 local function stampToggleRuntime()
 	if toggleGui then
-		toggleGui:SetAttribute("PasrahFlashlightOwner", "FlashlightController")
-		toggleGui:SetAttribute("PasrahFlashlightChannel", "ToggleUI")
-		toggleGui:SetAttribute("PasrahFlashlightTouchEligible", UserInputService.TouchEnabled == true)
-		toggleGui:SetAttribute("PasrahFlashlightVisible", shouldShowToggleUI())
+		setAttributeIfChanged(toggleGui, "PasrahFlashlightOwner", "FlashlightController")
+		setAttributeIfChanged(toggleGui, "PasrahFlashlightChannel", "ToggleUI")
+		setAttributeIfChanged(toggleGui, "PasrahFlashlightTouchEligible", UserInputService.TouchEnabled == true)
+		setAttributeIfChanged(toggleGui, "PasrahFlashlightVisible", shouldShowToggleUI())
 	end
 	if toggleButton then
-		toggleButton:SetAttribute("PasrahFlashlightOwner", "FlashlightController")
-		toggleButton:SetAttribute("PasrahFlashlightChannel", "ToggleButton")
-		toggleButton:SetAttribute("PasrahFlashlightState", flashlightOn and "On" or "Off")
-		toggleButton:SetAttribute("PasrahFlashlightVisible", shouldShowToggleUI())
-		toggleButton:SetAttribute("PasrahFlashlightInputMode", UserInputService.TouchEnabled == true and "Touch" or "Keyboard")
+		setAttributeIfChanged(toggleButton, "PasrahFlashlightOwner", "FlashlightController")
+		setAttributeIfChanged(toggleButton, "PasrahFlashlightChannel", "ToggleButton")
+		setAttributeIfChanged(toggleButton, "PasrahFlashlightState", flashlightOn and "On" or "Off")
+		setAttributeIfChanged(toggleButton, "PasrahFlashlightVisible", shouldShowToggleUI())
+		setAttributeIfChanged(
+			toggleButton,
+			"PasrahFlashlightInputMode",
+			UserInputService.TouchEnabled == true and "Touch" or "Keyboard"
+		)
 	end
 	stampFlashlightClientState()
 end
@@ -67,6 +106,7 @@ local function makeButtonDraggable(button)
 	local dragging = false
 	local dragStart = nil
 	local startPos = nil
+	local userInputChangedConnection = nil
 
 	local function updateDrag(input)
 		if not dragging or not dragStart or not startPos then
@@ -101,39 +141,90 @@ local function makeButtonDraggable(button)
 		end
 	end)
 
-	UserInputService.InputChanged:Connect(function(input)
+	userInputChangedConnection = UserInputService.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			updateDrag(input)
 		end
 	end)
-end
 
-local function resolveCamera()
-	local cam = workspace.CurrentCamera
-	if cam then
-		return cam
-	end
-
-	local resolved = nil
-	local conn
-	conn = workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
-		if workspace.CurrentCamera then
-			resolved = workspace.CurrentCamera
+	button.Destroying:Connect(function()
+		if userInputChangedConnection then
+			userInputChangedConnection:Disconnect()
+			userInputChangedConnection = nil
 		end
 	end)
-
-	while not resolved do
-		task.wait()
-	end
-
-	if conn then
-		conn:Disconnect()
-	end
-
-	return resolved
 end
 
-camera = resolveCamera()
+local function resolveActiveCamera()
+	local current = workspace.CurrentCamera
+	if current then
+		camera = current
+		return current
+	end
+	camera = CameraResolver.ResolveOrFallback(5, camera)
+	return camera
+end
+
+local function shouldSendAim(now, lookVector)
+	if typeof(lookVector) ~= "Vector3" then
+		return false
+	end
+	if typeof(lastAimLookVector) ~= "Vector3" then
+		return true
+	end
+
+	local dot = math.clamp(lastAimLookVector:Dot(lookVector), -1, 1)
+	local dotDelta = 1 - dot
+	if dotDelta >= AIM_DOT_DELTA_THRESHOLD then
+		return true
+	end
+	return (now - lastAimTransmitAt) >= AIM_STATIONARY_KEEPALIVE_SECONDS
+end
+
+local function stopAimLoop()
+	if aimRenderConnection then
+		aimRenderConnection:Disconnect()
+		aimRenderConnection = nil
+	end
+end
+
+local function sendAimUpdate()
+	if flashlightOn ~= true or isPlayerInMatch() ~= true then
+		return
+	end
+
+	local now = os.clock()
+	if now - lastAimSend < AIM_SEND_RATE then
+		return
+	end
+
+	local activeCamera = resolveActiveCamera()
+	if not activeCamera then
+		return
+	end
+
+	local lookVector = activeCamera.CFrame.LookVector
+	if not shouldSendAim(now, lookVector) then
+		return
+	end
+
+	lastAimSend = now
+	lastAimTransmitAt = now
+	lastAimLookVector = lookVector
+	flashlightRemote:FireServer({
+		action = "Aim",
+		lookVector = lookVector,
+	})
+end
+
+local function syncAimLoop()
+	local shouldRun = flashlightOn == true and isPlayerInMatch() == true
+	if shouldRun and not aimRenderConnection then
+		aimRenderConnection = RunService.RenderStepped:Connect(sendAimUpdate)
+	elseif not shouldRun then
+		stopAimLoop()
+	end
+end
 
 local function updateToggleVisual()
 	if not toggleButton then
@@ -152,7 +243,7 @@ end
 
 local function ensureToggleUI()
 	local playerGui = player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui")
-	local existing = playerGui:FindFirstChild("FlashlightToggleUI")
+	local existing = dedupeScreenGuiByName(playerGui, "FlashlightToggleUI")
 	if UserInputService.TouchEnabled ~= true then
 		if existing then
 			existing:Destroy()
@@ -222,7 +313,7 @@ end
 
 toggleFlashlight = function()
 	flashlightOn = not flashlightOn
-	player:SetAttribute(FLASHLIGHT_ATTRIBUTE, flashlightOn)
+	setAttributeIfChanged(player, FLASHLIGHT_ATTRIBUTE, flashlightOn)
 
 	flashlightRemote:FireServer({
 		action = "Toggle",
@@ -232,19 +323,34 @@ toggleFlashlight = function()
 	stampToggleRuntime()
 
 	if flashlightOn then
+		lastAimSend = 0
+		lastAimTransmitAt = 0
+		lastAimLookVector = nil
 		print("[Flashlight] ON")
 	else
 		print("[Flashlight] OFF")
 	end
+	syncAimLoop()
 end
 
 local function refreshToggleUIVisibility()
+	local inMatch = isPlayerInMatch()
+	if inMatch ~= true and flashlightOn == true then
+		flashlightOn = false
+		setAttributeIfChanged(player, FLASHLIGHT_ATTRIBUTE, false)
+		flashlightRemote:FireServer({
+			action = "Toggle",
+			enabled = false,
+		})
+	end
+
 	if UserInputService.TouchEnabled ~= true then
 		if toggleGui and toggleGui.Parent then
 			toggleGui:Destroy()
 		end
 		toggleGui = nil
 		toggleButton = nil
+		syncAimLoop()
 		return
 	end
 	if not toggleGui or not toggleGui.Parent then
@@ -254,9 +360,10 @@ local function refreshToggleUIVisibility()
 		toggleGui.Enabled = shouldShowToggleUI()
 	end
 	stampToggleRuntime()
+	syncAimLoop()
 end
 
-player:SetAttribute(FLASHLIGHT_ATTRIBUTE, flashlightOn)
+setAttributeIfChanged(player, FLASHLIGHT_ATTRIBUTE, flashlightOn)
 ensureToggleUI()
 refreshToggleUIVisibility()
 stampFlashlightClientState()
@@ -270,29 +377,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	end
 	if input.KeyCode == Enum.KeyCode.F then
 		toggleFlashlight()
-	end
-end)
-
-RunService.RenderStepped:Connect(function()
-	if not flashlightOn then
-		return
-	end
-
-	if camera ~= workspace.CurrentCamera then
-		camera = workspace.CurrentCamera or camera
-	end
-
-	local now = os.clock()
-	if now - lastAimSend < AIM_SEND_RATE then
-		return
-	end
-	lastAimSend = now
-
-	if camera then
-		flashlightRemote:FireServer({
-			action = "Aim",
-			lookVector = camera.CFrame.LookVector,
-		})
 	end
 end)
 

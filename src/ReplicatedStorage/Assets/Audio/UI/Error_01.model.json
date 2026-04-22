@@ -1,10 +1,12 @@
 {
   "className": "Sound",
   "properties": {
-    "SoundId": "rbxassetid://70594579947868",
-    "Looped": false,
-    "RollOffMinDistance": 5.0,
     "RollOffMaxDistance": 40.0,
+    "AudioContent": "rbxassetid://70594579947868",
+    "AcousticSimulationEnabled": {
+      "Bool": true
+    },
+    "RollOffMinDistance": 5.0,
     "Volume": 0.20000000298023224
   }
 }

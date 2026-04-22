@@ -1,0 +1,25 @@
+{
+    "Pid":  23612,
+    "Title":  "Roblox",
+    "CaptureArea":  "client",
+    "ImagePath":  "C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\.codex\\worktrees\\final-source-of-truth\\.codex\\evidence\\pc_publish_smoke_20260419_after_open_room_click.png",
+    "WindowBounds":  {
+                         "Left":  77,
+                         "Top":  77,
+                         "Width":  816,
+                         "Height":  638
+                     },
+    "ClientBounds":  {
+                         "Left":  84,
+                         "Top":  107,
+                         "Width":  801,
+                         "Height":  600
+                     },
+    "CaptureBounds":  {
+                          "Left":  84,
+                          "Top":  107,
+                          "Width":  801,
+                          "Height":  600
+                      },
+    "CapturedAt":  "2026-04-19T10:21:32.7996130+07:00"
+}

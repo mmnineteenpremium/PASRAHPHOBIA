@@ -12,6 +12,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
+local CameraResolver = require(script.Parent:WaitForChild("CameraResolver"))
 local camera = workspace.CurrentCamera
 local DEFAULT_CAMERA_MIN_ZOOM = player.CameraMinZoomDistance
 local DEFAULT_CAMERA_MAX_ZOOM = player.CameraMaxZoomDistance
@@ -41,6 +42,9 @@ local FLASHLIGHT_LIGHT_ENABLED_ATTR = "PasrahFlashlightLightEnabled"
 local FLASHLIGHT_AIM_OFFSET_ATTR = "PasrahFlashlightAimOffset"
 local CURSOR_TOGGLE_GUI_NAME = "FPVCursorToggleUI"
 local CURSOR_TOGGLE_BUTTON_NAME = "CursorToggleButton"
+local CURSOR_RUNTIME_STAMP_INTERVAL = 0.12
+local FPV_RUNTIME_STAMP_INTERVAL = 0.12
+local MOTION_RUNTIME_STAMP_INTERVAL = 0.08
 local function safeRequire(moduleScript)
 	if not moduleScript then
 		return nil
@@ -107,74 +111,128 @@ local fpvCursorToggleGui = nil
 local fpvCursorToggleButton = nil
 local fpvFlashlightVisualAlpha = 0
 local lastLoggedCameraMode = nil
+local windowFocused = true
 local setCursorUnlocked
+local lastCursorRuntimeStampAt = 0
+local lastFpvRuntimeStampAt = 0
+local lastAimOffsetRuntimeStampAt = 0
+local lastHeadBobRuntimeStampAt = 0
 
-local function stampCursorToggleRuntime()
+local function setAttributeIfChanged(instance, attributeName, value, numberEpsilon, vectorEpsilon)
+	if not instance then
+		return
+	end
+	local current = instance:GetAttribute(attributeName)
+	if typeof(current) == "number" and typeof(value) == "number" and tonumber(numberEpsilon) then
+		if math.abs(current - value) <= numberEpsilon then
+			return
+		end
+	elseif typeof(current) == "Vector3" and typeof(value) == "Vector3" and tonumber(vectorEpsilon) then
+		if (current - value).Magnitude <= vectorEpsilon then
+			return
+		end
+	elseif current == value then
+		return
+	end
+	instance:SetAttribute(attributeName, value)
+end
+
+local function stampCursorToggleRuntime(force)
+	local now = os.clock()
+	if force ~= true and (now - lastCursorRuntimeStampAt) < CURSOR_RUNTIME_STAMP_INTERVAL then
+		return
+	end
+	lastCursorRuntimeStampAt = now
+
 	if fpvCursorToggleGui then
-		fpvCursorToggleGui:SetAttribute("PasrahFlashlightOwner", "CameraController")
-		fpvCursorToggleGui:SetAttribute("PasrahFlashlightChannel", "CursorToggleUI")
-		fpvCursorToggleGui:SetAttribute("PasrahCursorMode", tostring(player:GetAttribute(CURSOR_MODE_ATTR) or ""))
-		fpvCursorToggleGui:SetAttribute("PasrahFpvLocked", FPV_LOCKED == true)
-		fpvCursorToggleGui:SetAttribute("PasrahCursorUnlocked", fpvCursorUnlocked == true)
+		setAttributeIfChanged(fpvCursorToggleGui, "PasrahFlashlightOwner", "CameraController")
+		setAttributeIfChanged(fpvCursorToggleGui, "PasrahFlashlightChannel", "CursorToggleUI")
+		setAttributeIfChanged(fpvCursorToggleGui, "PasrahCursorMode", tostring(player:GetAttribute(CURSOR_MODE_ATTR) or ""))
+		setAttributeIfChanged(fpvCursorToggleGui, "PasrahFpvLocked", FPV_LOCKED == true)
+		setAttributeIfChanged(fpvCursorToggleGui, "PasrahCursorUnlocked", fpvCursorUnlocked == true)
 	end
 	if fpvCursorToggleButton then
-		fpvCursorToggleButton:SetAttribute("PasrahFlashlightOwner", "CameraController")
-		fpvCursorToggleButton:SetAttribute("PasrahFlashlightChannel", "CursorToggleButton")
-		fpvCursorToggleButton:SetAttribute("PasrahCursorMode", tostring(player:GetAttribute(CURSOR_MODE_ATTR) or ""))
-		fpvCursorToggleButton:SetAttribute("PasrahFpvLocked", FPV_LOCKED == true)
-		fpvCursorToggleButton:SetAttribute("PasrahCursorUnlocked", fpvCursorUnlocked == true)
-		fpvCursorToggleButton:SetAttribute("PasrahCursorToggleVisible", fpvCursorToggleButton.Visible == true)
+		setAttributeIfChanged(fpvCursorToggleButton, "PasrahFlashlightOwner", "CameraController")
+		setAttributeIfChanged(fpvCursorToggleButton, "PasrahFlashlightChannel", "CursorToggleButton")
+		setAttributeIfChanged(fpvCursorToggleButton, "PasrahCursorMode", tostring(player:GetAttribute(CURSOR_MODE_ATTR) or ""))
+		setAttributeIfChanged(fpvCursorToggleButton, "PasrahFpvLocked", FPV_LOCKED == true)
+		setAttributeIfChanged(fpvCursorToggleButton, "PasrahCursorUnlocked", fpvCursorUnlocked == true)
+		setAttributeIfChanged(fpvCursorToggleButton, "PasrahCursorToggleVisible", fpvCursorToggleButton.Visible == true)
 	end
 end
 
-local function stampFpvRuntime()
+local function stampFpvRuntime(force)
+	local now = os.clock()
+	if force ~= true and (now - lastFpvRuntimeStampAt) < FPV_RUNTIME_STAMP_INTERVAL then
+		return
+	end
+	lastFpvRuntimeStampAt = now
+
 	local flashlightEnabled = player:GetAttribute(FLASHLIGHT_ATTRIBUTE) == true
 	local ownsUvFlashlight = player:GetAttribute(UV_FLASHLIGHT_OWNED_ATTR) == true
 	if fpvArmsModel then
-		fpvArmsModel:SetAttribute("PasrahFlashlightOwner", "CameraController")
-		fpvArmsModel:SetAttribute("PasrahFlashlightChannel", "FPVArms")
-		fpvArmsModel:SetAttribute("PasrahFpvLocked", FPV_LOCKED == true)
-		fpvArmsModel:SetAttribute("PasrahCursorUnlocked", fpvCursorUnlocked == true)
-		fpvArmsModel:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
+		setAttributeIfChanged(fpvArmsModel, "PasrahFlashlightOwner", "CameraController")
+		setAttributeIfChanged(fpvArmsModel, "PasrahFlashlightChannel", "FPVArms")
+		setAttributeIfChanged(fpvArmsModel, "PasrahFpvLocked", FPV_LOCKED == true)
+		setAttributeIfChanged(fpvArmsModel, "PasrahCursorUnlocked", fpvCursorUnlocked == true)
+		setAttributeIfChanged(fpvArmsModel, "PasrahFlashlightEnabled", flashlightEnabled)
 	end
 	if fpvFlashlightModel then
-		fpvFlashlightModel:SetAttribute("PasrahFlashlightOwner", "CameraController")
-		fpvFlashlightModel:SetAttribute("PasrahFlashlightChannel", "FPVFlashlightModel")
-		fpvFlashlightModel:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
-		fpvFlashlightModel:SetAttribute("PasrahFlashlightUsesUV", ownsUvFlashlight)
-		fpvFlashlightModel:SetAttribute("PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha)
+		setAttributeIfChanged(fpvFlashlightModel, "PasrahFlashlightOwner", "CameraController")
+		setAttributeIfChanged(fpvFlashlightModel, "PasrahFlashlightChannel", "FPVFlashlightModel")
+		setAttributeIfChanged(fpvFlashlightModel, "PasrahFlashlightEnabled", flashlightEnabled)
+		setAttributeIfChanged(fpvFlashlightModel, "PasrahFlashlightUsesUV", ownsUvFlashlight)
+		setAttributeIfChanged(fpvFlashlightModel, "PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha, 0.01)
 	end
 	if fpvFlashlightHandle then
-		fpvFlashlightHandle:SetAttribute("PasrahFlashlightOwner", "CameraController")
-		fpvFlashlightHandle:SetAttribute("PasrahFlashlightChannel", "FPVFlashlightHandle")
-		fpvFlashlightHandle:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
-		fpvFlashlightHandle:SetAttribute("PasrahFlashlightUsesUV", ownsUvFlashlight)
-		fpvFlashlightHandle:SetAttribute("PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha)
+		setAttributeIfChanged(fpvFlashlightHandle, "PasrahFlashlightOwner", "CameraController")
+		setAttributeIfChanged(fpvFlashlightHandle, "PasrahFlashlightChannel", "FPVFlashlightHandle")
+		setAttributeIfChanged(fpvFlashlightHandle, "PasrahFlashlightEnabled", flashlightEnabled)
+		setAttributeIfChanged(fpvFlashlightHandle, "PasrahFlashlightUsesUV", ownsUvFlashlight)
+		setAttributeIfChanged(fpvFlashlightHandle, "PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha, 0.01)
 	end
 	if fpvFlashlightLens then
-		fpvFlashlightLens:SetAttribute("PasrahFlashlightOwner", "CameraController")
-		fpvFlashlightLens:SetAttribute("PasrahFlashlightChannel", "FPVFlashlightLens")
-		fpvFlashlightLens:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
-		fpvFlashlightLens:SetAttribute("PasrahFlashlightUsesUV", ownsUvFlashlight)
-		fpvFlashlightLens:SetAttribute("PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha)
+		setAttributeIfChanged(fpvFlashlightLens, "PasrahFlashlightOwner", "CameraController")
+		setAttributeIfChanged(fpvFlashlightLens, "PasrahFlashlightChannel", "FPVFlashlightLens")
+		setAttributeIfChanged(fpvFlashlightLens, "PasrahFlashlightEnabled", flashlightEnabled)
+		setAttributeIfChanged(fpvFlashlightLens, "PasrahFlashlightUsesUV", ownsUvFlashlight)
+		setAttributeIfChanged(fpvFlashlightLens, "PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha, 0.01)
 	end
 	if fpvFlashlightLight then
-		fpvFlashlightLight:SetAttribute("PasrahFlashlightOwner", "CameraController")
-		fpvFlashlightLight:SetAttribute("PasrahFlashlightChannel", "FPVLocalSpotLight")
-		fpvFlashlightLight:SetAttribute("PasrahFlashlightEnabled", flashlightEnabled)
-		fpvFlashlightLight:SetAttribute("PasrahFlashlightUsesUV", ownsUvFlashlight)
-		fpvFlashlightLight:SetAttribute("PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha)
+		setAttributeIfChanged(fpvFlashlightLight, "PasrahFlashlightOwner", "CameraController")
+		setAttributeIfChanged(fpvFlashlightLight, "PasrahFlashlightChannel", "FPVLocalSpotLight")
+		setAttributeIfChanged(fpvFlashlightLight, "PasrahFlashlightEnabled", flashlightEnabled)
+		setAttributeIfChanged(fpvFlashlightLight, "PasrahFlashlightUsesUV", ownsUvFlashlight)
+		setAttributeIfChanged(fpvFlashlightLight, "PasrahFlashlightVisualAlpha", fpvFlashlightVisualAlpha, 0.01)
 	end
+end
+
+local function stampAimOffsetRuntime(value, force)
+	local now = os.clock()
+	if force ~= true and (now - lastAimOffsetRuntimeStampAt) < MOTION_RUNTIME_STAMP_INTERVAL then
+		return
+	end
+	lastAimOffsetRuntimeStampAt = now
+	setAttributeIfChanged(player, FLASHLIGHT_AIM_OFFSET_ATTR, value, nil, 0.008)
+end
+
+local function stampHeadBobRuntime(value, force)
+	local now = os.clock()
+	if force ~= true and (now - lastHeadBobRuntimeStampAt) < MOTION_RUNTIME_STAMP_INTERVAL then
+		return
+	end
+	lastHeadBobRuntimeStampAt = now
+	setAttributeIfChanged(player, HEAD_BOB_OFFSET_ATTR, value, nil, 0.006)
 end
 
 local function lerpNumber(a, b, alpha)
 	return a + ((b - a) * math.clamp(alpha, 0, 1))
 end
 
-player:SetAttribute(FLASHLIGHT_VISUAL_ALPHA_ATTR, 0)
-player:SetAttribute(FLASHLIGHT_LIGHT_ENABLED_ATTR, false)
-player:SetAttribute(CURSOR_MODE_ATTR, "Default")
-player:SetAttribute(FLASHLIGHT_AIM_OFFSET_ATTR, Vector3.zero)
+setAttributeIfChanged(player, FLASHLIGHT_VISUAL_ALPHA_ATTR, 0, 0.001)
+setAttributeIfChanged(player, FLASHLIGHT_LIGHT_ENABLED_ATTR, false)
+setAttributeIfChanged(player, CURSOR_MODE_ATTR, "Default")
+setAttributeIfChanged(player, FLASHLIGHT_AIM_OFFSET_ATTR, Vector3.zero, nil, 0.001)
 
 local function toneMapArmChannel(value)
 	return math.clamp(value, VIEWMODEL_ARM_MIN_CHANNEL, VIEWMODEL_ARM_MAX_CHANNEL)
@@ -272,7 +330,7 @@ local function updateCursorToggleUi()
 	button.Visible = show
 	button.Text = fpvCursorUnlocked and "RETURN FPV [ALT/~]" or "UI CURSOR [ALT/~]"
 	button.BackgroundColor3 = fpvCursorUnlocked and Color3.fromRGB(82, 98, 58) or Color3.fromRGB(48, 64, 84)
-	stampCursorToggleRuntime()
+	stampCursorToggleRuntime(true)
 end
 
 local function applyFpvMouseMode()
@@ -283,14 +341,14 @@ local function applyFpvMouseMode()
 			player.CameraMaxZoomDistance = UNLOCKED_CURSOR_FPV_ZOOM
 			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 			UserInputService.MouseIconEnabled = true
-			player:SetAttribute(CURSOR_MODE_ATTR, "UnlockedUI")
+			setAttributeIfChanged(player, CURSOR_MODE_ATTR, "UnlockedUI")
 		else
 			player.CameraMode = Enum.CameraMode.LockFirstPerson
 			player.CameraMinZoomDistance = DEFAULT_CAMERA_MIN_ZOOM
 			player.CameraMaxZoomDistance = DEFAULT_CAMERA_MAX_ZOOM
 			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 			UserInputService.MouseIconEnabled = false
-			player:SetAttribute(CURSOR_MODE_ATTR, "LockedFPV")
+			setAttributeIfChanged(player, CURSOR_MODE_ATTR, "LockedFPV")
 		end
 	else
 		player.CameraMode = Enum.CameraMode.Classic
@@ -298,11 +356,11 @@ local function applyFpvMouseMode()
 		player.CameraMaxZoomDistance = DEFAULT_CAMERA_MAX_ZOOM
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		UserInputService.MouseIconEnabled = true
-		player:SetAttribute(CURSOR_MODE_ATTR, "Default")
+		setAttributeIfChanged(player, CURSOR_MODE_ATTR, "Default")
 	end
-	player:SetAttribute("PasrahCursorUnlocked", FPV_LOCKED and fpvCursorUnlocked or false)
+	setAttributeIfChanged(player, "PasrahCursorUnlocked", FPV_LOCKED and fpvCursorUnlocked or false)
 	updateCursorToggleUi()
-	stampCursorToggleRuntime()
+	stampCursorToggleRuntime(true)
 end
 
 setCursorUnlocked = function(unlocked)
@@ -320,6 +378,209 @@ local function ensureCameraAuthority(humanoid)
 	end
 end
 
+local PREPARATION_CAMERA_TARGET_NAMES = {
+	"PreparationEntrySign",
+	"PreparationRoadsideSign",
+	"PreparationSignalDisplay",
+	"PreparationGuideStrip",
+}
+
+local function getActiveMatchMapModel()
+	local matchId = tostring(player:GetAttribute("MatchId") or "")
+	if matchId == "" then
+		return nil
+	end
+
+	local activeMatches = workspace:FindFirstChild("ActiveMatches")
+	if not activeMatches then
+		return nil
+	end
+
+	local matchFolder = activeMatches:FindFirstChild("Match_" .. matchId)
+	if not matchFolder then
+		for _, child in ipairs(activeMatches:GetChildren()) do
+			if child:IsA("Folder") and tostring(child:GetAttribute("MatchId") or "") == matchId then
+				matchFolder = child
+				break
+			end
+		end
+	end
+	if not matchFolder then
+		return nil
+	end
+
+	for _, child in ipairs(matchFolder:GetChildren()) do
+		if (child:IsA("Model") or child:IsA("Folder"))
+			and not child.Name:match("^GhostPlaceholder_")
+			and not child.Name:match("^Ghost_") then
+			return child
+		end
+	end
+
+	return nil
+end
+
+local function getInstanceWorldPosition(instance)
+	if not instance then
+		return nil
+	end
+	if instance:IsA("BasePart") then
+		return instance.Position
+	end
+	if instance:IsA("Attachment") then
+		return instance.WorldPosition
+	end
+	if instance:IsA("Model") then
+		return instance:GetPivot().Position
+	end
+	return nil
+end
+
+local function resolvePreparationCameraLookVector(rootPart)
+	if not rootPart then
+		return nil
+	end
+	if tostring(player:GetAttribute("MatchLifecyclePhase") or "") ~= "PreparationPhase" then
+		return nil
+	end
+
+	local mapModel = getActiveMatchMapModel()
+	if not mapModel then
+		return nil
+	end
+
+	for _, targetName in ipairs(PREPARATION_CAMERA_TARGET_NAMES) do
+		local target = mapModel:FindFirstChild(targetName, true)
+		local targetPosition = getInstanceWorldPosition(target)
+		if typeof(targetPosition) == "Vector3" then
+			local flatOffset = Vector3.new(
+				targetPosition.X - rootPart.Position.X,
+				0,
+				targetPosition.Z - rootPart.Position.Z
+			)
+			if flatOffset.Magnitude > 1e-3 then
+				return flatOffset.Unit
+			end
+		end
+	end
+
+	return nil
+end
+
+local function shouldRealignMatchCamera()
+	if player:GetAttribute("InMatch") ~= true then
+		return false
+	end
+	local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+	return lifecyclePhase == "PreparationPhase"
+		or lifecyclePhase == "InvestigationPhase"
+		or lifecyclePhase == "HuntPhase"
+end
+
+local function realignCameraToCharacter()
+	local character = player.Character
+	if not character then
+		return
+	end
+
+	if camera ~= workspace.CurrentCamera then
+		camera = workspace.CurrentCamera or camera
+	end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	local head = character:FindFirstChild("Head")
+	if not (camera and humanoid and rootPart) then
+		return
+	end
+
+	ensureCameraAuthority(humanoid)
+
+	local flatLook = resolvePreparationCameraLookVector(rootPart)
+	if not flatLook then
+		flatLook = Vector3.new(rootPart.CFrame.LookVector.X, 0, rootPart.CFrame.LookVector.Z)
+	end
+	if flatLook.Magnitude <= 1e-4 then
+		return
+	end
+	flatLook = flatLook.Unit
+
+	if player.CameraMode == Enum.CameraMode.LockFirstPerson and head then
+		local eye = head.Position + Vector3.new(0, 0.18, 0)
+		local targetCamera = CFrame.lookAt(eye, eye + flatLook, Vector3.yAxis)
+		camera.CameraType = Enum.CameraType.Scriptable
+		camera.CFrame = targetCamera
+		task.spawn(function()
+			for _ = 1, 2 do
+				RunService.RenderStepped:Wait()
+				if camera ~= workspace.CurrentCamera then
+					camera = workspace.CurrentCamera or camera
+				end
+				if camera then
+					camera.CameraType = Enum.CameraType.Scriptable
+					camera.CFrame = targetCamera
+				end
+			end
+			if camera then
+				camera.CameraType = Enum.CameraType.Custom
+				ensureCameraAuthority(humanoid)
+			end
+		end)
+		return
+	end
+
+	local focus = rootPart.Position + Vector3.new(0, 2.25, 0)
+	local cameraDistance = math.clamp((camera.CFrame.Position - camera.Focus.Position).Magnitude, 8, 14)
+	local cameraHeight = math.clamp(cameraDistance * 0.32, 2.8, 5)
+	local cameraPosition = focus - (flatLook * cameraDistance) + Vector3.new(0, cameraHeight, 0)
+	local targetCamera = CFrame.lookAt(cameraPosition, focus, Vector3.yAxis)
+	camera.CameraType = Enum.CameraType.Scriptable
+	camera.CFrame = targetCamera
+	task.spawn(function()
+		for _ = 1, 3 do
+			RunService.RenderStepped:Wait()
+			if camera ~= workspace.CurrentCamera then
+				camera = workspace.CurrentCamera or camera
+			end
+			if camera then
+				camera.CameraType = Enum.CameraType.Scriptable
+				camera.CFrame = targetCamera
+			end
+		end
+		if camera then
+			camera.CameraType = Enum.CameraType.Custom
+			ensureCameraAuthority(humanoid)
+		end
+	end)
+end
+
+local matchCameraRealignToken = 0
+
+local function scheduleMatchCameraRealign()
+	if not shouldRealignMatchCamera() then
+		return
+	end
+	matchCameraRealignToken += 1
+	local token = matchCameraRealignToken
+
+	task.spawn(function()
+		local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+		local delays = lifecyclePhase == "PreparationPhase"
+			and { 0.05, 0.18, 0.42, 0.9, 1.6, 2.4, 3.2 }
+			or { 0.05, 0.18, 0.42, 0.9 }
+		for _, delaySeconds in ipairs(delays) do
+			task.wait(delaySeconds)
+			if token ~= matchCameraRealignToken then
+				return
+			end
+			if not shouldRealignMatchCamera() then
+				return
+			end
+			realignCameraToCharacter()
+		end
+	end)
+end
+
 local function clearFpvArms()
 	if fpvArmsModel and fpvArmsModel.Parent then
 		fpvArmsModel:Destroy()
@@ -330,8 +591,8 @@ local function clearFpvArms()
 	fpvFlashlightLens = nil
 	fpvFlashlightLight = nil
 	fpvFlashlightVisualAlpha = 0
-	player:SetAttribute(FLASHLIGHT_VISUAL_ALPHA_ATTR, 0)
-	player:SetAttribute(FLASHLIGHT_LIGHT_ENABLED_ATTR, false)
+	setAttributeIfChanged(player, FLASHLIGHT_VISUAL_ALPHA_ATTR, 0, 0.001)
+	setAttributeIfChanged(player, FLASHLIGHT_LIGHT_ENABLED_ATTR, false)
 
 	for _, info in ipairs(fpvArmsSourceParts) do
 		local sourcePart = info.part
@@ -565,8 +826,8 @@ local function updateFpvFlashlightVisual(deltaTime)
 		fpvFlashlightLight.Angle = lerpNumber(LOCAL_LIGHT_OFF_ANGLE, LOCAL_LIGHT_ON_ANGLE, fpvFlashlightVisualAlpha)
 		fpvFlashlightLight.Enabled = fpvFlashlightVisualAlpha > 0.02
 	end
-	player:SetAttribute(FLASHLIGHT_VISUAL_ALPHA_ATTR, fpvFlashlightVisualAlpha)
-	player:SetAttribute(FLASHLIGHT_LIGHT_ENABLED_ATTR, fpvFlashlightVisualAlpha > 0.02)
+	setAttributeIfChanged(player, FLASHLIGHT_VISUAL_ALPHA_ATTR, fpvFlashlightVisualAlpha, 0.01)
+	setAttributeIfChanged(player, FLASHLIGHT_LIGHT_ENABLED_ATTR, fpvFlashlightVisualAlpha > 0.02)
 	stampFpvRuntime()
 end
 
@@ -757,33 +1018,12 @@ local function ensureFpvArms(character)
 	updateFpvFlashlightVisual()
 	model.PrimaryPart = viewRoot
 	fpvArmsModel = model
-	stampFpvRuntime()
+	stampFpvRuntime(true)
 	return true
 end
 
 -- Detect map and set camera mode
-local function resolveCamera()
-	local cam = workspace.CurrentCamera
-	if cam then
-		return cam
-	end
-	local resolved = nil
-	local conn
-	conn = workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
-		if workspace.CurrentCamera then
-			resolved = workspace.CurrentCamera
-		end
-	end)
-	while not resolved do
-		task.wait()
-	end
-	if conn then
-		conn:Disconnect()
-	end
-	return resolved
-end
-
-camera = resolveCamera()
+camera = CameraResolver.ResolveOrFallback(5, camera)
 
 local function logCameraMode(modeLabel, message)
 	if lastLoggedCameraMode == modeLabel then
@@ -794,9 +1034,13 @@ local function logCameraMode(modeLabel, message)
 end
 
 local function setFpvLocked(enabled)
-	FPV_LOCKED = enabled == true
+	local shouldLock = enabled == true
+	local wasLocked = FPV_LOCKED
+	FPV_LOCKED = shouldLock
 	if FPV_LOCKED then
-		fpvCursorUnlocked = false
+		if not wasLocked then
+			fpvCursorUnlocked = false
+		end
 		local character = player.Character
 		if not character then
 			applyFpvMouseMode()
@@ -812,8 +1056,10 @@ local function setFpvLocked(enabled)
 		player.CameraMode = Enum.CameraMode.LockFirstPerson
 		camera.CameraType = Enum.CameraType.Custom
 		ensureCameraAuthority(humanoid)
-		_fpvJustActivated = true
-		lastArmCamCF = nil
+		if not wasLocked then
+			_fpvJustActivated = true
+			lastArmCamCF = nil
+		end
 		applyFpvMouseMode()
 		logCameraMode("FPV", "[CameraController] FPV LOCKED (Match)")
 	else
@@ -830,6 +1076,7 @@ end
 local matchAttributeConnection = nil
 local spectatorAttributeConnection = nil
 local spectatorClientAttributeConnection = nil
+local lifecyclePhaseConnection = nil
 
 local function shouldLockForMatchCamera()
 	if player:GetAttribute("PasrahSpectatorActive") == true then
@@ -858,6 +1105,9 @@ local function bindMatchAttribute()
 		else
 			FPV_LOCKED = shouldLock
 		end
+		if shouldLock then
+			scheduleMatchCameraRealign()
+		end
 	end
 	local inMatch = shouldLockForMatchCamera()
 	if player.Character then
@@ -866,6 +1116,13 @@ local function bindMatchAttribute()
 	matchAttributeConnection = player:GetAttributeChangedSignal("InMatch"):Connect(syncMatchCameraLock)
 	spectatorAttributeConnection = player:GetAttributeChangedSignal("PasrahSpectatorActive"):Connect(syncMatchCameraLock)
 	spectatorClientAttributeConnection = player:GetAttributeChangedSignal("PasrahSpectatorClientActive"):Connect(syncMatchCameraLock)
+	if not lifecyclePhaseConnection then
+		lifecyclePhaseConnection = player:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
+			if shouldLockForMatchCamera() then
+				scheduleMatchCameraRealign()
+			end
+		end)
+	end
 end
 
 bindMatchAttribute()
@@ -886,7 +1143,22 @@ player.CharacterAdded:Connect(function(character)
 	clearFpvArms()
 	setFpvLocked(shouldLockForMatchCamera())
 	bindMatchAttribute()
+	scheduleMatchCameraRealign()
 end)
+
+if UserInputService.WindowFocusReleased then
+	UserInputService.WindowFocusReleased:Connect(function()
+		windowFocused = false
+	end)
+end
+if UserInputService.WindowFocused then
+	UserInputService.WindowFocused:Connect(function()
+		windowFocused = true
+		if FPV_LOCKED then
+			applyFpvMouseMode()
+		end
+	end)
+end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then
@@ -932,10 +1204,13 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 		setFpvLocked(shouldLockFromState)
 	elseif shouldLockFromState
 		and (not fpvCursorUnlocked)
+		and windowFocused
 		and (player.CameraMode ~= Enum.CameraMode.LockFirstPerson
-			or UserInputService.MouseBehavior ~= Enum.MouseBehavior.LockCenter)
+			or UserInputService.MouseBehavior ~= Enum.MouseBehavior.LockCenter
+			or UserInputService.MouseIconEnabled ~= false)
 	then
-		setFpvLocked(true)
+		applyFpvMouseMode()
+		ensureCameraAuthority(humanoid)
 	elseif shouldLockFromState
 		and fpvCursorUnlocked
 		and (player.CameraMode ~= Enum.CameraMode.Classic
@@ -978,7 +1253,7 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 	else
 		humanoid.CameraOffset = Vector3.zero
 	end
-	player:SetAttribute(HEAD_BOB_OFFSET_ATTR, humanoid.CameraOffset)
+	stampHeadBobRuntime(humanoid.CameraOffset, false)
 
 	if FPV_LOCKED and camera and ensureFpvArms(character) and fpvArmsModel and fpvArmsModel.PrimaryPart then
 		updateFpvFlashlightVisual(deltaTime)
@@ -1006,18 +1281,16 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 		local bobCF = CFrame.new(bobOffset.X * 0.6, bobOffset.Y * 0.6, 0)
 		local pitchCF = CFrame.new(0, pitchOffset, 0)
 		local moveSwayCF = CFrame.new(planarVelocity.X * 0.0012 * MOTION_MOVE_SWAY_SCALE, 0, -planarVelocity.Magnitude * 0.0006 * MOTION_MOVE_SWAY_SCALE)
-		player:SetAttribute(FLASHLIGHT_AIM_OFFSET_ATTR, Vector3.new(-look.X * MOTION_LOOK_SWAY_X, -look.Y * MOTION_LOOK_SWAY_Y, 0))
+		stampAimOffsetRuntime(Vector3.new(-look.X * MOTION_LOOK_SWAY_X, -look.Y * MOTION_LOOK_SWAY_Y, 0), false)
 		fpvArmsModel:PivotTo(lastArmCamCF * FPV_BASE_OFFSET * carryCF * pitchCF * bobCF * moveSwayCF * swayOffset)
 	else
 		_fpvJustActivated = false
 		lastArmCamCF = nil
-		player:SetAttribute(FLASHLIGHT_AIM_OFFSET_ATTR, Vector3.zero)
+		stampAimOffsetRuntime(Vector3.zero, true)
 		if not FPV_LOCKED then
 			clearFpvArms()
 		end
 	end
-	stampCursorToggleRuntime()
-	stampFpvRuntime()
 end)
 
 print("[Phase7.1] Camera Controller initialized")

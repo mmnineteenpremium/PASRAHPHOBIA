@@ -28,24 +28,34 @@ local UI_MODULES = {
 	"SpectatorUI",
 }
 
-local REMOTE_NAMES = { "MatchEvent", "LobbyEvent", "EvidenceEvent", "PurchaseEvent", "RoyalPassEvent", "SanityEvent", "CosmeticEvent" }
-local UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
-local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
-local UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
-local UI_VIEWPORT_OVERRIDE_Y_ATTR = "PasrahUIViewportOverrideY"
-local UI_GRAPHICS_MODE_ATTR = GraphicsSupport.MODE_ATTR
-local UI_GRAPHICS_SOURCE_ATTR = GraphicsSupport.SOURCE_ATTR
-local UI_GRAPHICS_APPLIED_AT_ATTR = GraphicsSupport.APPLIED_AT_ATTR
-local SHOP_SHOW_DISABLED_DEBUG_ATTR = "PasrahShowDisabledShopItems"
-local REINFORCED_SALT_OWNED_ATTR = "PasrahOwnsReinforcedSaltBag"
-local MATCH_MODE_ATTR = "MatchMode"
-local UI_BUILD_SIGNATURE = "PHB-20260411-UI1"
-local ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
-local MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
-local BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
-local CONFLICT_BASIC_GUI_NAMES = { "MainMenuUI", "LeaderboardUI" }
-local MAPS = { "HauntedHouse", "AbandonedPalace", "EmptyBuilding", "StudioMMNineteen" }
-local LOBBY_ZONE_CLIENT_META = {
+REMOTE_NAMES = { "MatchEvent", "LobbyEvent", "EvidenceEvent", "PurchaseEvent", "RoyalPassEvent", "SanityEvent", "CosmeticEvent" }
+UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
+UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
+UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
+UI_VIEWPORT_OVERRIDE_Y_ATTR = "PasrahUIViewportOverrideY"
+UI_GRAPHICS_MODE_ATTR = GraphicsSupport.MODE_ATTR
+UI_GRAPHICS_SOURCE_ATTR = GraphicsSupport.SOURCE_ATTR
+UI_GRAPHICS_APPLIED_AT_ATTR = GraphicsSupport.APPLIED_AT_ATTR
+SHOP_SHOW_DISABLED_DEBUG_ATTR = "PasrahShowDisabledShopItems"
+REINFORCED_SALT_OWNED_ATTR = "PasrahOwnsReinforcedSaltBag"
+MATCH_MODE_ATTR = "MatchMode"
+UI_BUILD_SIGNATURE = "PHB-20260411-UI1"
+ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
+MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
+BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
+CONFLICT_BASIC_GUI_NAMES = { "MainMenuUI", "LeaderboardUI" }
+STRICT_SINGLE_SCREEN_GUI_NAMES = {
+	"RoomBrowserUI",
+	"RoomBrowserFloatUI",
+	"MatchLoadingUI",
+	"TeleportScreen",
+	"LobbyUI",
+	"MatchUI",
+	"MainMenuUI",
+	"LeaderboardUI",
+}
+MAPS = { "HauntedHouse", "AbandonedPalace", "EmptyBuilding", "StudioMMNineteen" }
+LOBBY_ZONE_CLIENT_META = {
 	SpawnPlaza = {
 		badge = "LOBBY",
 		title = "Lobby plaza aktif.",
@@ -90,7 +100,7 @@ local LOBBY_ZONE_CLIENT_META = {
 	},
 }
 
-local LOBBY_ZONE_CLIENT_CANDIDATES = {
+LOBBY_ZONE_CLIENT_CANDIDATES = {
 	SpawnPlaza = { "SpawnPlaza", "Room_MainHubPlaza", "Interact_MainHubPlaza", "Prop_MainHubPlaza", "PlayerSpawn_1" },
 	MatchmakingZone = { "MatchmakingZone", "Room_NorthEvidenceBuilding", "Interact_NorthEvidenceBuilding", "Door_NorthEvidenceBuilding", "Prop_NorthEvidenceBuilding" },
 	ShopZone = { "ShopZone", "Room_EastShopBuilding", "Interact_EastShopBuilding", "Door_EastShopBuilding", "Prop_EastShopBuilding" },
@@ -98,7 +108,7 @@ local LOBBY_ZONE_CLIENT_CANDIDATES = {
 	DailyRewardZone = { "DailyRewardZone", "Room_SouthSocialGarden", "Interact_SouthSocialGarden", "Door_SouthSocialGarden", "Prop_SouthSocialGarden" },
 	FlexZone = { "FlexZone", "Room_SouthEastFlexZone", "Interact_SouthEastFlexZone", "Door_SouthEastFlexZone", "Prop_SouthEastFlexZone" },
 }
-local LOBBY_ONLY_GUI_NAMES = {
+LOBBY_ONLY_GUI_NAMES = {
 	LobbyUI = true,
 	ProfileUI = true,
 	RoyalPassUI = true,
@@ -106,8 +116,21 @@ local LOBBY_ONLY_GUI_NAMES = {
 	LeaderboardUI = true,
 	MainMenuUI = true,
 }
-local AUXILIARY_UI_NAMES = { "JournalUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI" }
-local AUXILIARY_WINDOW_TOGGLE_KEYS = {
+AUXILIARY_UI_NAMES = { "JournalUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI" }
+SINGLE_WINDOW_PRIORITY = {
+	"RoomBrowser",
+	"MatchUI",
+	"JournalUI",
+	"ProfileUI",
+	"ShopUI",
+	"RoyalPassUI",
+	"PASRA_UI",
+	"SpectatorUI",
+	"MainMenuUI",
+	"LeaderboardUI",
+	"LobbyUI",
+}
+AUXILIARY_WINDOW_TOGGLE_KEYS = {
 	JournalUI = Enum.KeyCode.J,
 	ProfileUI = Enum.KeyCode.P,
 	ShopUI = Enum.KeyCode.B,
@@ -115,7 +138,7 @@ local AUXILIARY_WINDOW_TOGGLE_KEYS = {
 	PASRA_UI = Enum.KeyCode.U,
 	SpectatorUI = Enum.KeyCode.V,
 }
-local AUXILIARY_WINDOW_CONFIG = {
+AUXILIARY_WINDOW_CONFIG = {
 	JournalUI = {
 		title = "JURNAL",
 		badgeText = "EVIDENCE",
@@ -183,7 +206,7 @@ local AUXILIARY_WINDOW_CONFIG = {
 		footer = "Info spectator basic. Tutup jika mengganggu, buka lagi dari tombol float.",
 	},
 }
-local MATCH_PHASE = {
+MATCH_PHASE = {
 	LOBBY = "Lobby",
 	PREPARING = "Preparing",
 	LOADING = "Loading",
@@ -195,11 +218,11 @@ local MATCH_PHASE = {
 	END = "End",
 }
 
-local CLOSE_KEYBOARD_KEY = Enum.KeyCode.X
-local CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
-local CLOSE_HINT_TEXT = "[X] / [B] untuk tutup"
-local JOURNAL_TOOL_TYPE = "JejakEnergi"
-local FIELD_KIT_TOOL_ORDER = {
+CLOSE_KEYBOARD_KEY = Enum.KeyCode.X
+CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
+CLOSE_HINT_TEXT = "[X] / [B] untuk tutup"
+JOURNAL_TOOL_TYPE = "JejakEnergi"
+FIELD_KIT_TOOL_ORDER = {
 	"JejakEnergi",
 	"Garam",
 	"Salib",
@@ -210,7 +233,7 @@ local FIELD_KIT_TOOL_ORDER = {
 	"BolaArwah",
 	"GerakanGaib",
 }
-local FIELD_KIT_TOOL_CONFIG = {
+FIELD_KIT_TOOL_CONFIG = {
 	JejakEnergi = {
 		accent = Color3.fromRGB(66, 104, 146),
 		glyph = "JN",
@@ -321,7 +344,7 @@ local FIELD_KIT_TOOL_CONFIG = {
 		keyCode = Enum.KeyCode.Nine,
 	},
 }
-local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
+FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 	JejakEnergi = {
 		rotation = Vector3.new(-10, -22, 0),
 		focusOffset = Vector3.new(0, 0.08, 0),
@@ -378,13 +401,13 @@ local FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 	},
 }
 
-local function pasrahGetBuildSignatureText()
+function UISystem._getBuildSignatureText()
 	return "BUILD " .. UI_BUILD_SIGNATURE
 end
 
-local function pasrahAppendBuildSignature(text, separator)
+function UISystem._appendBuildSignature(text, separator)
 	local base = tostring(text or "")
-	local signatureText = pasrahGetBuildSignatureText()
+	local signatureText = UISystem._getBuildSignatureText()
 	if base == "" then
 		return signatureText
 	end
@@ -2734,11 +2757,26 @@ local function buildRoomBrowserRenderKey(state)
 		return "invalid"
 	end
 
-	local roomTokens = {}
+	local orderedRooms = {}
 	for _, room in ipairs(state.rooms or {}) do
+		table.insert(orderedRooms, room)
+	end
+	table.sort(orderedRooms, function(a, b)
+		local roomIdA = tostring((type(a) == "table" and (a.roomId or a.id)) or "")
+		local roomIdB = tostring((type(b) == "table" and (b.roomId or b.id)) or "")
+		if roomIdA == roomIdB then
+			local hostA = tostring(type(a) == "table" and a.hostUserId or "")
+			local hostB = tostring(type(b) == "table" and b.hostUserId or "")
+			return hostA < hostB
+		end
+		return roomIdA < roomIdB
+	end)
+
+	local roomTokens = {}
+	for _, room in ipairs(orderedRooms) do
 		table.insert(roomTokens, string.format(
 			"%s:%s:%s:%s:%s:%s",
-			tostring(room.roomId or "?"),
+			tostring(room.roomId or room.id or "?"),
 			tostring(room.mode or "?"),
 			tostring(room.mapId or "?"),
 			tostring(room.playerCount or "?"),
@@ -2757,7 +2795,6 @@ local function buildRoomBrowserRenderKey(state)
 		tostring(state.isReady == true),
 		tostring(state.allReady == true),
 		tostring(state.matchStarting == true),
-		tostring(state.countdownSecondsLeft or state.countdownTotal or "-"),
 		table.concat(roomTokens, "|"),
 	}, "::")
 end
@@ -3103,117 +3140,6 @@ local function getActiveMatchMapModel()
 	end
 
 	return nil
-end
-
-local PREPARATION_CAMERA_TARGET_NAMES = {
-	"PreparationEntrySign",
-	"PreparationRoadsideSign",
-	"PreparationSignalDisplay",
-	"PreparationGuideStrip",
-}
-
-local function getCameraTargetWorldPosition(instance)
-	if not instance then
-		return nil
-	end
-	if instance:IsA("BasePart") then
-		return instance.Position
-	end
-	if instance:IsA("Attachment") then
-		return instance.WorldPosition
-	end
-	if instance:IsA("Model") then
-		return instance:GetPivot().Position
-	end
-	return nil
-end
-
-local function resolvePreparationCameraLookVector(rootPosition)
-	if typeof(rootPosition) ~= "Vector3" then
-		return nil
-	end
-
-	local mapModel = getActiveMatchMapModel()
-	if not mapModel then
-		return nil
-	end
-
-	for _, targetName in ipairs(PREPARATION_CAMERA_TARGET_NAMES) do
-		local candidate = mapModel:FindFirstChild(targetName, true)
-		local targetPosition = getCameraTargetWorldPosition(candidate)
-		if typeof(targetPosition) == "Vector3" then
-			local flatOffset = Vector3.new(targetPosition.X - rootPosition.X, 0, targetPosition.Z - rootPosition.Z)
-			if flatOffset.Magnitude > 1e-3 then
-				return flatOffset.Unit
-			end
-		end
-	end
-
-	return nil
-end
-
-local function snapPreparationCameraToWorldTarget()
-	local player = Players.LocalPlayer
-	if not player or player:GetAttribute("InMatch") ~= true then
-		return false
-	end
-	local character = player.Character
-	local camera = Workspace.CurrentCamera
-	if not (character and camera) then
-		return false
-	end
-
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
-	local rootPart = character:FindFirstChild("HumanoidRootPart")
-	if not (humanoid and rootPart) then
-		return false
-	end
-
-	local flatLook = resolvePreparationCameraLookVector(rootPart.Position)
-	if not flatLook then
-		return false
-	end
-
-	local focus = rootPart.Position + Vector3.new(0, 2.25, 0)
-	local targetCamera = CFrame.lookAt(focus - (flatLook * 10) + Vector3.new(0, 3.6, 0), focus, Vector3.yAxis)
-	camera.CameraType = Enum.CameraType.Scriptable
-	camera.CFrame = targetCamera
-
-	task.spawn(function()
-		for _ = 1, 10 do
-			RunService.RenderStepped:Wait()
-			local currentCamera = Workspace.CurrentCamera
-			if not currentCamera then
-				return
-			end
-			currentCamera.CameraType = Enum.CameraType.Scriptable
-			currentCamera.CFrame = targetCamera
-		end
-		local currentCamera = Workspace.CurrentCamera
-		if currentCamera then
-			currentCamera.CameraType = Enum.CameraType.Custom
-			currentCamera.CameraSubject = humanoid
-		end
-	end)
-
-	return true
-end
-
-local function schedulePreparationCameraSnap()
-	task.spawn(function()
-		for _, delaySeconds in ipairs({ 0.05, 0.18, 0.42, 0.9, 1.6, 2.4, 3.2 }) do
-			task.wait(delaySeconds)
-			local player = Players.LocalPlayer
-			if not player or player:GetAttribute("InMatch") ~= true then
-				return
-			end
-			local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
-			if lifecyclePhase ~= "PreparationPhase" then
-				return
-			end
-			snapPreparationCameraToWorldTarget()
-		end
-	end)
 end
 
 local function getRuntimeHideSpotLabel(zoneId)
@@ -4423,7 +4349,7 @@ function pasrahBuildAttributionFooterText(entries)
 	return table.concat(lines, " | ")
 end
 
-local function connectButtonPress(button, callback)
+function connectButtonPress(button, callback)
 	if not button or type(callback) ~= "function" then
 		return
 	end
@@ -4449,7 +4375,7 @@ local function connectButtonPress(button, callback)
 	button.Activated:Connect(invoke)
 end
 
-local function makeFloatingButtonDraggable(button)
+function makeFloatingButtonDraggable(button)
 	if not button or button:GetAttribute("DragBound") == true then
 		return
 	end
@@ -4517,11 +4443,14 @@ function UISystem:Init(context)
 	self._roomBrowserVisible = false
 	self._roomBrowserSuppressed = false
 	self._roomBrowserInputBound = false
+	self._roomBrowserToggleCooldownUntil = 0
 	self._auxiliaryInputBound = false
 	self._windowCloseInputBound = false
 	self._lobbyPanelCollapsed = false
 	self._roomBrowserMissingWidgetsLogged = false
 	self._roomBrowserModeView = "Selected"
+	self._singleWindowStrict = true
+	self._singleWindowEnforcing = false
 	self._passwordJoinPendingRoomId = nil
 	self._passwordJoinSubmitting = false
 	self._kickNoticeVisible = false
@@ -4771,6 +4700,7 @@ function UISystem:Start()
 		self._roomBrowser:Start()
 	end
 
+	self:_recoverCoreUiScaffold()
 	self:_applyGraphicsMode(true)
 	self:_requestShopSnapshot(true)
 	self:_requestCosmeticSnapshot(true)
@@ -5127,6 +5057,11 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self:_refreshBasicMatchPanel("Preparation", payload)
 		elseif eventName == "ReturnedToLobby" or eventName == "RoomBrowserRoomLeft" then
 			local keepResultsVisible = (self._resultsCloseUnlockAt or 0) > tick() and self:_isMatchResultsPhase()
+			self._roomBrowserSuppressed = false
+			if self._roomBrowser and type(self._roomBrowser.ResetForMatchStart) == "function" then
+				self._roomBrowser:ResetForMatchStart()
+			end
+			self:_setRoomBrowserVisible(false)
 			self._uiState.MatchUI.visible = keepResultsVisible
 			self._uiState.JournalUI.visible = false
 			self._uiState.PASRA_UI.visible = false
@@ -5250,7 +5185,68 @@ function UISystem:_getPlayerGui()
 	if not player then
 		return nil
 	end
-	return player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui", 5)
+	return player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui", 15)
+end
+
+function UISystem:_recoverCoreUiScaffold()
+	task.spawn(function()
+		local deadline = os.clock() + 15
+		while os.clock() < deadline do
+			local playerGui = self:_getPlayerGui()
+			if playerGui then
+				local hasLobby = playerGui:FindFirstChild("LobbyUI") ~= nil
+				local hasRoomBrowser = playerGui:FindFirstChild("RoomBrowserUI") ~= nil
+				if not hasLobby then
+					pcall(function()
+						self:_ensureBasicUIs()
+					end)
+				end
+				if not hasRoomBrowser then
+					pcall(function()
+						self:_ensureRoomBrowserGui()
+					end)
+				end
+				pcall(function()
+					self:_refreshRoomBrowserView()
+					self:_applyVisibility()
+				end)
+				if playerGui:FindFirstChild("LobbyUI") and playerGui:FindFirstChild("RoomBrowserUI") then
+					local player = Players.LocalPlayer
+					if player then
+						player:SetAttribute("PasrahUIBootstrapRecoveredAt", os.clock())
+					end
+					return
+				end
+			end
+			task.wait(0.5)
+		end
+		warn("[UISystem] UI bootstrap recovery timeout: LobbyUI/RoomBrowserUI still missing")
+	end)
+end
+
+function UISystem:_dedupeScreenGuiByName(guiName)
+	local playerGui = self:_getPlayerGui()
+	if not playerGui then
+		return nil
+	end
+
+	local keeper = nil
+	for _, child in ipairs(playerGui:GetChildren()) do
+		if child.Name == guiName then
+			if child:IsA("ScreenGui") and not keeper then
+				keeper = child
+			else
+				child:Destroy()
+			end
+		end
+	end
+	return keeper
+end
+
+function UISystem:_enforceStrictSingleScreenGuiInstances()
+	for _, guiName in ipairs(STRICT_SINGLE_SCREEN_GUI_NAMES) do
+		self:_dedupeScreenGuiByName(guiName)
+	end
 end
 
 function UISystem:_resolveEffectiveUIVisibility(instance, fallbackVisible)
@@ -5286,6 +5282,7 @@ function UISystem:_applyVisibility()
 	if not playerGui then
 		return
 	end
+	self:_enforceStrictSingleScreenGuiInstances()
 	for _, guiName in ipairs(BASIC_GUI_NAMES) do
 		local gui = playerGui:FindFirstChild(guiName)
 		local state = self._uiState[guiName]
@@ -5305,6 +5302,7 @@ function UISystem:_applyVisibility()
 	self:_refreshBasicLobbyPanel()
 	self:_refreshBasicWindows()
 	self:_layoutLobbyFloatRail()
+	self:_enforceSingleWindowPolicy()
 end
 
 function UISystem:SetState(state)
@@ -5433,6 +5431,90 @@ function UISystem:_closeConflictingWindows(activeWindowName)
 	self:_layoutLobbyFloatRail()
 end
 
+function UISystem:_resolveSingleWindowKeepName(openByName)
+	for _, name in ipairs(SINGLE_WINDOW_PRIORITY) do
+		if openByName[name] == true then
+			return name
+		end
+	end
+	return nil
+end
+
+function UISystem:_enforceSingleWindowPolicy()
+	if self._singleWindowStrict ~= true or self._singleWindowEnforcing == true then
+		return
+	end
+	self._singleWindowEnforcing = true
+
+	local openByName = {}
+	local openCount = 0
+	local function markOpen(name, isOpen)
+		if isOpen == true and openByName[name] ~= true then
+			openByName[name] = true
+			openCount += 1
+		end
+	end
+
+	markOpen("RoomBrowser", self._roomBrowserVisible == true and self._roomBrowserSuppressed ~= true)
+	markOpen("MatchUI", self._uiState.MatchUI and self._uiState.MatchUI.visible == true and self._matchWindowDismissed ~= true)
+	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
+		markOpen(guiName, self._uiState[guiName] and self._uiState[guiName].visible == true and self._windowDismissed[guiName] ~= true)
+	end
+	local _, mainMenuPanel = self:_getBasicWindowState("MainMenuUI")
+	local _, leaderboardPanel = self:_getBasicWindowState("LeaderboardUI")
+	markOpen("MainMenuUI", mainMenuPanel and mainMenuPanel.Visible == true)
+	markOpen("LeaderboardUI", leaderboardPanel and leaderboardPanel.Visible == true)
+	markOpen(
+		"LobbyUI",
+		self._matchPhase == MATCH_PHASE.LOBBY
+			and self._uiState.LobbyUI
+			and self._uiState.LobbyUI.visible == true
+			and self._lobbyPanelCollapsed ~= true
+	)
+
+	if openCount <= 1 then
+		self._singleWindowEnforcing = false
+		return
+	end
+
+	local keepName = self:_resolveSingleWindowKeepName(openByName)
+	if keepName == nil then
+		self._singleWindowEnforcing = false
+		return
+	end
+
+	if keepName ~= "RoomBrowser" then
+		self._roomBrowserVisible = false
+	end
+	if keepName ~= "MatchUI" then
+		self._matchWindowDismissed = true
+	end
+	if keepName ~= "LobbyUI" then
+		self._lobbyPanelCollapsed = true
+	end
+	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
+		if guiName ~= keepName then
+			self._windowDismissed[guiName] = true
+		end
+	end
+	if keepName ~= "MainMenuUI" then
+		self:_setBasicWindowPanelVisible("MainMenuUI", false)
+	end
+	if keepName ~= "LeaderboardUI" then
+		self:_setBasicWindowPanelVisible("LeaderboardUI", false)
+	end
+
+	self:_syncLobbyPanelVisibility()
+	self:_updateRoomBrowserVisibility()
+	self:_syncMatchWindowVisibility()
+	self:_syncAuxiliaryWindowVisibility()
+	self:_syncLobbyAuxiliaryWindowVisibility()
+	self:_refreshBasicLobbyPanel()
+	self:_refreshBasicWindows()
+	self:_layoutLobbyFloatRail()
+	self._singleWindowEnforcing = false
+end
+
 function UISystem:_closeTopmostWindow()
 	if self._roomBrowserVisible == true then
 		self:_setRoomBrowserVisible(false)
@@ -5479,12 +5561,15 @@ function UISystem:_isMatchPanelOpen()
 end
 
 function UISystem:_syncRoomBrowserSuppressionFromMatchContext()
-	local localPlayer = Players.LocalPlayer
-	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true or false
-	local suppressForPhase = self._matchPhase ~= nil and self._matchPhase ~= MATCH_PHASE.LOBBY
+	local inMatch = self:_isLocalPlayerStillInMatch()
+	local suppressForPhase = inMatch and self._matchPhase ~= nil and self._matchPhase ~= MATCH_PHASE.LOBBY
+	local nextSuppressed = inMatch or suppressForPhase
+	if self._roomBrowserSuppressed == nextSuppressed then
+		return
+	end
 
-	self._roomBrowserSuppressed = inMatch or suppressForPhase
-	if self._roomBrowserSuppressed then
+	self._roomBrowserSuppressed = nextSuppressed
+	if nextSuppressed then
 		self._roomBrowserVisible = false
 		if self._roomBrowserWidgets and self._roomBrowserWidgets.CountdownOverlay then
 			self._roomBrowserWidgets.CountdownOverlay.Visible = false
@@ -6608,7 +6693,23 @@ function UISystem:_isLocalPlayerStillInMatch()
 		return false
 	end
 
-	return localPlayer:GetAttribute("InMatch") == true or localPlayer:GetAttribute("MatchId") ~= nil
+	if localPlayer:GetAttribute("InMatch") == true then
+		return true
+	end
+
+	if localPlayer:GetAttribute("MatchId") == nil then
+		return false
+	end
+
+	local lifecyclePhase = tostring(localPlayer:GetAttribute("MatchLifecyclePhase") or "")
+	return lifecyclePhase == "PreparationPhase"
+		or lifecyclePhase == "Preparation"
+		or lifecyclePhase == "InvestigationPhase"
+		or lifecyclePhase == "Investigation"
+		or lifecyclePhase == "HuntPhase"
+		or lifecyclePhase == "Hunt"
+		or lifecyclePhase == "EndgamePhase"
+		or lifecyclePhase == "Endgame"
 end
 
 function UISystem:_returnFromResultsToLobby()
@@ -7362,7 +7463,7 @@ function UISystem:_refreshBasicLobbyPanel()
 		lobby.BasicSecondaryLabel.Text = secondaryText
 	end
 	if lobby.BasicHintLabel then
-		lobby.BasicHintLabel.Text = pasrahAppendBuildSignature(hintText)
+		lobby.BasicHintLabel.Text = UISystem._appendBuildSignature(hintText)
 		lobby.BasicHintLabel.TextColor3 = (type(zoneFocus) == "table" and not currentRoom and not state.lastError and typeof(zoneFocus.accentColor) == "Color3")
 			and zoneFocus.accentColor:Lerp(Color3.fromRGB(240, 244, 248), 0.4)
 			or Color3.fromRGB(156, 170, 192)
@@ -7500,9 +7601,9 @@ function UISystem:_refreshMainMenuPanel()
 	if window.FooterLabel then
 		local graphicsFooter = string.format("Visual %s [%s]. Mobile default tetap landscape dan toggle ini murni client-side.", graphicsMeta.label, graphicsMeta.footer)
 		if attributionFooter ~= "" then
-			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. pasrahGetBuildSignatureText()
+			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. UISystem._getBuildSignatureText()
 		else
-			window.FooterLabel.Text = graphicsFooter .. "\n" .. pasrahGetBuildSignatureText()
+			window.FooterLabel.Text = graphicsFooter .. "\n" .. UISystem._getBuildSignatureText()
 		end
 		window.FooterLabel:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 	end
@@ -10537,19 +10638,23 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 
 	local isLandscapeMobile = profile.isMobile and viewportSize.X > viewportSize.Y
-	local margin = profile.isMobile and 0 or 14
-	local availableWidth = math.max(320, viewportSize.X - (topLeftInset.X + bottomRightInset.X))
-	local availableHeight = math.max((profile.isMobile and isLandscapeMobile) and 300 or 420, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y))
+	local roomTopLeftInset = Vector2.zero
+	local roomBottomRightInset = Vector2.zero
+	local margin = profile.isMobile and 0 or 6
+	local availableWidth = math.max(1, viewportSize.X - (roomTopLeftInset.X + roomBottomRightInset.X))
+	local availableHeight = math.max(1, viewportSize.Y - (roomTopLeftInset.Y + roomBottomRightInset.Y))
 	local usableWidth = math.max(profile.isMobile and 320 or 360, availableWidth - margin * 2)
-	local usableHeight = math.max(profile.isMobile and (isLandscapeMobile and 300 or 460) or 420, availableHeight - margin * 2)
+	local usableHeight = math.max(profile.isMobile and (isLandscapeMobile and 300 or 460) or 300, availableHeight - margin * 2)
+	usableWidth = math.min(usableWidth, availableWidth)
+	usableHeight = math.min(usableHeight, availableHeight)
 	local forceCompact = ReplicatedStorage:GetAttribute(UI_FORCE_COMPACT_ATTR) == true
 	-- Force compact layout for short viewports so room controls do not overlap
 	-- host action buttons (Start/Leave) in the room detail panel.
 	local isCompact = forceCompact or profile.isMobile or viewportSize.X <= 980 or usableHeight <= 700
 	self._roomBrowserCompact = isCompact
 
-	local panelWidth = isCompact and usableWidth or math.min(1080, usableWidth)
-	local panelHeight = isCompact and usableHeight or math.min(668, usableHeight)
+	local panelWidth = usableWidth
+	local panelHeight = usableHeight
 	if profile.isMobile then
 		panelWidth = availableWidth
 		panelHeight = availableHeight
@@ -10562,8 +10667,8 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
 	panel.Position = UDim2.fromOffset(
-		topLeftInset.X + margin + math.floor(panelWidth * 0.5),
-		topLeftInset.Y + margin + math.floor(panelHeight * 0.5)
+		roomTopLeftInset.X + margin + math.floor(panelWidth * 0.5),
+		roomTopLeftInset.Y + margin + math.floor(panelHeight * 0.5)
 	)
 	panel.BackgroundTransparency = profile.isMobile and 0.12 or (isCompact and 0.14 or 0.18)
 	panel.Active = true
@@ -11906,8 +12011,16 @@ function UISystem:_syncPhaseFromAuthoritativeLifecycle()
 				phase = MATCH_PHASE.INGAME,
 				phaseName = MATCH_PHASE.INGAME,
 			})
+			self:_hideTeleportOverlay()
 			return true
 		end
+		self:_stopLoadingScreenLoop(false)
+		local loadingUI = self:_ensureLoadingScreen()
+		if loadingUI and loadingUI:IsA("ScreenGui") then
+			loadingUI.Enabled = false
+		end
+		self:_hideTeleportOverlay()
+		return true
 	elseif resolvedPhase == MATCH_PHASE.HUNT then
 		self:_cancelPostTeleportLoadingFlow(true)
 		self:_setPhase(MATCH_PHASE.HUNT, {
@@ -11915,6 +12028,7 @@ function UISystem:_syncPhaseFromAuthoritativeLifecycle()
 			phase = MATCH_PHASE.HUNT,
 			phaseName = MATCH_PHASE.HUNT,
 		})
+		self:_hideTeleportOverlay()
 		return true
 	elseif resolvedPhase == MATCH_PHASE.RESULT then
 		self:_cancelPostTeleportLoadingFlow(true)
@@ -11923,6 +12037,7 @@ function UISystem:_syncPhaseFromAuthoritativeLifecycle()
 			phase = MATCH_PHASE.RESULT,
 			phaseName = MATCH_PHASE.RESULT,
 		})
+		self:_hideTeleportOverlay()
 		return true
 	end
 
@@ -11947,9 +12062,6 @@ function UISystem:_setPhase(newPhase, payload)
 
 	self:_syncRoomBrowserSuppressionFromMatchContext()
 	self:_renderPhase(newPhase, payload)
-	if phaseChanged and newPhase == MATCH_PHASE.PREPARING then
-		schedulePreparationCameraSnap()
-	end
 end
 
 function UISystem:_ensureLoadingScreen()
@@ -12355,6 +12467,7 @@ function UISystem:_renderPhase(phase, payload)
 			if (type(payload) == "table" and payload.preparationWorldBoard == true) or self:_hasWorldPreparationStaging() then
 				self:_stopLoadingScreenLoop(false)
 				loadingUI.Enabled = false
+				self:_hideTeleportOverlay()
 			else
 				self:_startLoadingScreenLoop(payload)
 				self:_setLoadingScreenContent("Preparing Investigation...", payload, 0.18, "Mempersiapkan sesi investigasi...")
@@ -12612,6 +12725,8 @@ function UISystem:_bindRoomBrowserMatchVisibility()
 	end
 
 	table.insert(self._connections, player:GetAttributeChangedSignal("InMatch"):Connect(syncFromAttribute))
+	table.insert(self._connections, player:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(syncFromAttribute))
+	table.insert(self._connections, player:GetAttributeChangedSignal("MatchId"):Connect(syncFromAttribute))
 	syncFromAttribute()
 end
 
@@ -13773,7 +13888,11 @@ function UISystem:_ensureBasicUIs()
 	end
 
 	for _, guiName in ipairs(BASIC_GUI_NAMES) do
-		local gui = playerGui:FindFirstChild(guiName)
+		local gui = self:_dedupeScreenGuiByName(guiName) or playerGui:FindFirstChild(guiName)
+		if gui and not gui:IsA("ScreenGui") then
+			gui:Destroy()
+			gui = nil
+		end
 		if not gui then
 			gui = Instance.new("ScreenGui")
 			gui.Name = guiName
@@ -15583,13 +15702,6 @@ function UISystem:_ensureRoomBrowserGui()
 		self._roomBrowserFloatGui = nil
 	end
 
-	local existingPrimary = playerGui:FindFirstChild("RoomBrowserUI")
-	if existingPrimary and self._roomBrowserGui and existingPrimary ~= self._roomBrowserGui then
-		existingPrimary:Destroy()
-	elseif existingPrimary and not self._roomBrowserGui then
-		existingPrimary:Destroy()
-	end
-
 	local lobbyUi = playerGui:FindFirstChild("LobbyUI")
 	if not lobbyUi then
 		lobbyUi = playerGui:WaitForChild("LobbyUI", 10)
@@ -15599,7 +15711,7 @@ function UISystem:_ensureRoomBrowserGui()
 	end
 
 	for _, guiName in ipairs({ "RoomBrowserUI", "RoomBrowserDebugUI", "RoomBrowserFloatUI" }) do
-		local existing = playerGui:FindFirstChild(guiName)
+		local existing = self:_dedupeScreenGuiByName(guiName)
 		if existing then
 			existing:Destroy()
 		end
@@ -15645,14 +15757,7 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local panelScale = Instance.new("UIScale")
 	panelScale.Parent = panel
-
-	local function updateRoomBrowserPanelScale()
-		panelScale.Scale = 1
-	end
-	updateRoomBrowserPanelScale()
-	if Workspace.CurrentCamera then
-		table.insert(self._connections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateRoomBrowserPanelScale))
-	end
+	panelScale.Scale = 1
 
 	local panelCorner = Instance.new("UICorner")
 	panelCorner.CornerRadius = UDim.new(0, 12)
@@ -17623,6 +17728,7 @@ function UISystem:_setButtonSelected(button, selected)
 end
 
 function UISystem:_updateRoomBrowserVisibility()
+	self:_enforceStrictSingleScreenGuiInstances()
 	local playerGui = self:_getPlayerGui()
 	if playerGui then
 		self._roomBrowserGui = playerGui:FindFirstChild("RoomBrowserUI") or self._roomBrowserGui
@@ -17634,7 +17740,7 @@ function UISystem:_updateRoomBrowserVisibility()
 	local roomBrowserEnabled = (not suppressed) and self._roomBrowserVisible
 	if self._roomBrowserGui then
 		self._roomBrowserGui.Enabled = roomBrowserEnabled
-		local rootPanel = self._roomBrowserGui:FindFirstChild("Panel")
+		local rootPanel = self._roomBrowserGui:FindFirstChild("Panel", true)
 		if rootPanel and rootPanel:IsA("GuiObject") then
 			rootPanel.Visible = roomBrowserEnabled
 		end
@@ -17658,25 +17764,35 @@ function UISystem:_updateRoomBrowserVisibility()
 end
 
 function UISystem:_setRoomBrowserVisible(visible)
-	if self._roomBrowserSuppressed == true and visible == true then
+	local requestedVisible = visible == true
+	if self._roomBrowserSuppressed == true and requestedVisible == true then
 		return
 	end
-	if visible == true then
-		self:_closeConflictingWindows("RoomBrowser")
+	local now = os.clock()
+	if now < (self._roomBrowserToggleCooldownUntil or 0) then
+		return
 	end
 	local previousVisible = self._roomBrowserVisible == true
-	self._roomBrowserVisible = visible == true
+	if previousVisible == requestedVisible then
+		-- Idempotent call; avoid replaying panel reveal/fx that looks like UI flicker.
+		self:_updateRoomBrowserVisibility()
+		return
+	end
+	self._roomBrowserToggleCooldownUntil = now + 0.12
+
+	if requestedVisible == true then
+		self:_closeConflictingWindows("RoomBrowser")
+	end
+	self._roomBrowserVisible = requestedVisible
 	self:_updateRoomBrowserVisibility()
-	if self._roomBrowserVisible and self._roomBrowserWidgets and self._roomBrowserWidgets.RootPanel then
+	if requestedVisible and self._roomBrowserWidgets and self._roomBrowserWidgets.RootPanel then
 		animatePanelReveal(self._roomBrowserWidgets.RootPanel, false)
 	end
-	if previousVisible ~= self._roomBrowserVisible then
-		playRuntimeUISound(self._roomBrowserVisible and "PanelOpen" or "PanelSoftClose", {
-			SingleInstance = true,
-			VolumeScale = self._roomBrowserVisible and 0.78 or 0.9,
-			PlaybackJitter = 0.02,
-		})
-	end
+	playRuntimeUISound(requestedVisible and "PanelOpen" or "PanelSoftClose", {
+		SingleInstance = true,
+		VolumeScale = requestedVisible and 0.78 or 0.9,
+		PlaybackJitter = 0.02,
+	})
 	self:_syncAuxiliaryWindowVisibility()
 	self:_syncLobbyAuxiliaryWindowVisibility()
 	self:_refreshBasicLobbyPanel()
@@ -17858,7 +17974,7 @@ function UISystem:_refreshRoomBrowserView()
 	elseif queueInfo then
 		statusText = statusText .. " | Queue: " .. tostring(queueInfo.queueType or queueInfo.mode or "started")
 	end
-	self._roomBrowserWidgets.Status.Text = pasrahAppendBuildSignature(statusText)
+	self._roomBrowserWidgets.Status.Text = UISystem._appendBuildSignature(statusText)
 	self._roomBrowserWidgets.Status:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 
 	self:_setButtonSelected(self._roomBrowserWidgets.AllModesButton, viewMode == "All")

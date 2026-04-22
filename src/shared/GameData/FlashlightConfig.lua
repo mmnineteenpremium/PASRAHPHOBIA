@@ -1,7 +1,5 @@
 local FlashlightConfig = {
-	assetId = 127298509562779,
-	inventoryModelAssetId = "rbxassetid://127298509562779",
-	sourceLabel = "Flashlight besar hitam",
+	assetId = 516522664,
 	handle = {
 		size = Vector3.new(0.5, 0.5, 2),
 		color = Color3.fromRGB(44, 46, 50),
@@ -39,14 +37,19 @@ local FlashlightConfig = {
 		color = Color3.fromRGB(255, 244, 214),
 	},
 	remoteLight = {
-		range = 50,
-		angle = 30,
-		brightness = 8,
-		boostRange = 25,
-		boostAngle = 55,
-		boostBrightness = 8,
-		fillRange = 13,
-		fillBrightness = 3,
+		-- Tuned for multi-client parity: reduce overbright + mobile GPU pressure.
+		range = 32,
+		angle = 26,
+		brightness = 3.6,
+		boostRange = 16,
+		boostAngle = 42,
+		boostBrightness = 1.8,
+		fillRange = 8,
+		fillBrightness = 0.6,
+		-- Aim sync tuning for parity: higher speed/lower interval reduces remote lag.
+		aimUpdateMinInterval = 1 / 45,
+		aimSmoothSpeed = 8,
+		aimMaxAlpha = 0.45,
 		color = Color3.fromRGB(255, 250, 230),
 	},
 	viewmodel = {

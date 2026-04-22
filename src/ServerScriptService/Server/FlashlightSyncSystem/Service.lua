@@ -13,9 +13,9 @@ local REMOTE_AIM_ATTACHMENT = "FlashlightRemoteAim"
 local REMOTE_HANDLE_NAME = "FlashlightHandle"
 local TOGGLE_SOUND_NAME = "FlashlightToggleClick"
 
-local AIM_UPDATE_MIN_INTERVAL = 1 / 30
-local AIM_SMOOTH_SPEED = 3 -- lower = more delay/lag
-local AIM_MAX_ALPHA = 0.2
+local DEFAULT_AIM_UPDATE_MIN_INTERVAL = 1 / 30
+local DEFAULT_AIM_SMOOTH_SPEED = 3 -- lower = more delay/lag
+local DEFAULT_AIM_MAX_ALPHA = 0.2
 
 local function safeRequire(moduleScript)
     if not moduleScript then
@@ -39,6 +39,13 @@ local FLASHLIGHT_CONFIG = resolveFlashlightConfig()
 local HANDLE_CONFIG = FLASHLIGHT_CONFIG.handle or {}
 local SOUND_CONFIG = FLASHLIGHT_CONFIG.sound or {}
 local REMOTE_LIGHT_CONFIG = FLASHLIGHT_CONFIG.remoteLight or {}
+local AIM_UPDATE_MIN_INTERVAL = math.clamp(
+    tonumber(REMOTE_LIGHT_CONFIG.aimUpdateMinInterval) or DEFAULT_AIM_UPDATE_MIN_INTERVAL,
+    1 / 120,
+    1 / 10
+)
+local AIM_SMOOTH_SPEED = math.max(0.1, tonumber(REMOTE_LIGHT_CONFIG.aimSmoothSpeed) or DEFAULT_AIM_SMOOTH_SPEED)
+local AIM_MAX_ALPHA = math.clamp(tonumber(REMOTE_LIGHT_CONFIG.aimMaxAlpha) or DEFAULT_AIM_MAX_ALPHA, 0.05, 1)
 local FLASHLIGHT_RANGE = tonumber(REMOTE_LIGHT_CONFIG.range) or 50
 local FLASHLIGHT_ANGLE = tonumber(REMOTE_LIGHT_CONFIG.angle) or 30
 local FLASHLIGHT_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.brightness) or 8

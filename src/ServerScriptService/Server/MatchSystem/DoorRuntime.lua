@@ -1,4 +1,5 @@
 local Services = require(script.Parent.Parent.Core.Services)
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local DoorRuntime = {}
@@ -27,6 +28,15 @@ local HYBRID_CLOSE_DELAY = 1.15
 local MANUAL_OVERRIDE_SECONDS = 1.8
 local LOCAL_PROMPT_SOURCE = "DoorRuntimePrompt"
 local LOCAL_AUTO_SOURCE = "DoorRuntimeAuto"
+local LOCAL_PREPARATION_PROXIMITY_SOURCE = "DoorRuntimePreparationProximity"
+local PREPARATION_ADVANCE_APPROACH_DEPTH = 2.75
+local PREPARATION_ADVANCE_LATERAL_PADDING = 2.35
+local PREPARATION_ADVANCE_HOLD_SECONDS = 0.32
+-- Staging-side interaction is often blocked by front-door collision/gate parts,
+-- so center-distance fallback must cover realistic reachable player positions.
+local PREPARATION_ADVANCE_RADIUS_FALLBACK = 9.5
+local PREPARATION_ADVANCE_FAILSAFE_SECONDS = 1.6
+local PREPARATION_ADVANCE_PROXIMITY_GRACE_SECONDS = 1.25
 local DEFAULT_OPEN_SOUND_ID = "rbxassetid://83005562781593"
 local DEFAULT_CLOSE_SOUND_ID = "rbxassetid://78764817933410"
 local DEFAULT_SOUND_VOLUME = 0.45
@@ -672,7 +682,9 @@ local function normalizePolicy(policy)
 end
 
 local function isLocalDoorSource(source)
-	return source == LOCAL_PROMPT_SOURCE or source == LOCAL_AUTO_SOURCE
+	return source == LOCAL_PROMPT_SOURCE
+		or source == LOCAL_AUTO_SOURCE
+		or source == LOCAL_PREPARATION_PROXIMITY_SOURCE
 end
 
 local function applyDoorState(doorRecord, interactionType, suppressSound)
@@ -735,7 +747,11 @@ local function getPlayerDoorApproachDistance(doorRecord, player, depthThreshold,
 
 	local referenceCFrame = doorRecord.closedCFrame or part.CFrame
 	local localPosition = referenceCFrame:PointToObjectSpace(root.Position)
-	if math.abs(localPosition.Y) > HYBRID_VERTICAL_TOLERANCE then
+	local verticalTolerance = HYBRID_VERTICAL_TOLERANCE
+	if typeof(part.Size) == "Vector3" then
+		verticalTolerance = math.max(verticalTolerance, (part.Size.Y * 0.5) + 1.5)
+	end
+	if math.abs(localPosition.Y) > verticalTolerance then
 		return nil
 	end
 
@@ -762,14 +778,32 @@ local function getPlayerDoorApproachDistance(doorRecord, player, depthThreshold,
 	return normalDistance
 end
 
+local ACTIVE_MATCH_PHASES = {
+	PreparationPhase = true,
+	InvestigationPhase = true,
+	HuntPhase = true,
+	EndgamePhase = true,
+}
+
+local function isRuntimeMatchParticipant(player, matchId)
+	if not (typeof(player) == "Instance" and player:IsA("Player")) then
+		return false
+	end
+	if matchId ~= nil and tostring(player:GetAttribute("MatchId") or "") ~= tostring(matchId) then
+		return false
+	end
+	if player:GetAttribute("InMatch") == true then
+		return true
+	end
+	local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+	return ACTIVE_MATCH_PHASES[lifecyclePhase] == true
+end
+
 local function getNearestPlayerApproachDistance(doorRecord, players, matchId, depthThreshold, widthPadding)
 	local nearest = nil
 
 	for _, player in ipairs(players or {}) do
-		if typeof(player) == "Instance"
-			and player:IsA("Player")
-			and (matchId == nil or tostring(player:GetAttribute("MatchId") or "") == tostring(matchId))
-			and player:GetAttribute("InMatch") == true then
+		if isRuntimeMatchParticipant(player, matchId) then
 			local distance = getPlayerDoorApproachDistance(doorRecord, player, depthThreshold, widthPadding)
 			if distance and (nearest == nil or distance < nearest) then
 				nearest = distance
@@ -778,6 +812,77 @@ local function getNearestPlayerApproachDistance(doorRecord, players, matchId, de
 	end
 
 	return nearest
+end
+
+local function getNearestPlayerCenterDistance(doorRecord, players, matchId)
+	if type(doorRecord) ~= "table" or typeof(doorRecord.part) ~= "Instance" then
+		return nil
+	end
+	local part = doorRecord.part
+	local nearest = nil
+	for _, player in ipairs(players or {}) do
+		if not isRuntimeMatchParticipant(player, matchId) then
+			continue
+		end
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if root and not (humanoid and humanoid.Health <= 0) then
+			local distance = (root.Position - part.Position).Magnitude
+			if nearest == nil or distance < nearest then
+				nearest = distance
+			end
+		end
+	end
+	return nearest
+end
+
+local function hasPreparationFocusTool(players, matchId)
+	for _, player in ipairs(players or {}) do
+		local lifecyclePhase = tostring(player and player:GetAttribute("MatchLifecyclePhase") or "")
+		if isRuntimeMatchParticipant(player, matchId) or lifecyclePhase == "PreparationPhase" then
+			local focusTool = player:GetAttribute("PreparationFocusTool")
+			if type(focusTool) == "string" and focusTool ~= "" then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+local function resolvePreparationAdvancePlayers(players, matchId)
+	local resolved = {}
+	local seen = {}
+	local expectedMatchId = matchId ~= nil and tostring(matchId) or nil
+
+	local function includePlayer(player)
+		if not (typeof(player) == "Instance" and player:IsA("Player")) then
+			return
+		end
+		if seen[player] == true then
+			return
+		end
+
+		local playerLifecycle = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+		local playerMatchId = tostring(player:GetAttribute("MatchId") or "")
+		local eligible = isRuntimeMatchParticipant(player, matchId)
+			or playerLifecycle == "PreparationPhase"
+			or (expectedMatchId ~= nil and expectedMatchId ~= "" and playerMatchId == expectedMatchId)
+		if not eligible then
+			return
+		end
+
+		seen[player] = true
+		table.insert(resolved, player)
+	end
+
+	for _, player in ipairs(players or {}) do
+		includePlayer(player)
+	end
+	for _, player in ipairs(Players:GetPlayers()) do
+		includePlayer(player)
+	end
+	return resolved
 end
 
 local function executeDoorInteraction(doorRecord, interactionType, interactionSource)
@@ -800,6 +905,7 @@ local function executeDoorInteraction(doorRecord, interactionType, interactionSo
 
 	applyDoorState(doorRecord, interactionType)
 	if interactionType == "Open"
+		and interactionSource ~= LOCAL_AUTO_SOURCE
 		and doorRecord.part:GetAttribute("PasrahPreparationAdvanceDoor") == true
 		and type(doorRecord.match) == "table"
 		and tostring(doorRecord.match.phase or "") == "PreparationPhase"
@@ -919,6 +1025,8 @@ function DoorRuntime.Attach(match, mapClone, deps)
 				lastNearestApproachDistance = nil,
 				manualOverrideUntil = 0,
 				manualOverrideState = nil,
+				preparationAdvanceArmedAt = nil,
+				lastPreparationNearbyAt = 0,
 			}
 			doorLookup[descendant.Name] = record
 			descendant.Anchored = true
@@ -951,7 +1059,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 		match._doorRuntimeHeartbeat = nil
 	end
 
-	if next(doorLookup) ~= nil and match and type(match.players) == "table" then
+if next(doorLookup) ~= nil and match then
 		match._doorRuntimeHeartbeat = RunService.Heartbeat:Connect(function()
 			if typeof(mapClone) ~= "Instance" or mapClone.Parent == nil then
 				if match._doorRuntimeHeartbeat then
@@ -963,16 +1071,81 @@ function DoorRuntime.Attach(match, mapClone, deps)
 
 			local now = os.clock()
 			for _, doorRecord in pairs(doorLookup) do
-				if doorRecord.policy ~= POLICY_HYBRID_RADIUS_PROMPT then
-					continue
-				end
-
 				local part = doorRecord.part
 				if not part or part.Parent == nil or part:GetAttribute("DoorLocked") == true then
 					continue
 				end
 
 				local currentOpen = part:GetAttribute("DoorIsOpen") == true
+				if part:GetAttribute("PasrahPreparationAdvanceDoor") == true
+					and tostring(match.phase or "") == "PreparationPhase" then
+					local preparationPlayers = resolvePreparationAdvancePlayers(
+						match.players,
+						matchId ~= "" and matchId or nil
+					)
+					-- Keep door as the phase trigger, but add a server-side proximity fallback.
+					-- Use center distance as the primary metric so door orientation/mesh variance
+					-- across maps does not block the preparation gate.
+					local nearestPreparationDistance = getNearestPlayerCenterDistance(
+						doorRecord,
+						preparationPlayers,
+						nil
+					)
+					local nearestApproachDistance = getNearestPlayerApproachDistance(
+						doorRecord,
+						preparationPlayers,
+						nil,
+						PREPARATION_ADVANCE_APPROACH_DEPTH,
+						PREPARATION_ADVANCE_LATERAL_PADDING
+					)
+					if type(nearestApproachDistance) == "number" then
+						if type(nearestPreparationDistance) == "number" then
+							nearestPreparationDistance = math.min(nearestPreparationDistance, nearestApproachDistance)
+						else
+							nearestPreparationDistance = nearestApproachDistance
+						end
+					end
+					if type(nearestPreparationDistance) == "number"
+						and nearestPreparationDistance > PREPARATION_ADVANCE_RADIUS_FALLBACK then
+						nearestPreparationDistance = nil
+					end
+					doorRecord.lastNearestApproachDistance = nearestPreparationDistance
+					local nearbyNow = type(nearestPreparationDistance) == "number"
+					if nearbyNow then
+						doorRecord.lastPreparationNearbyAt = now
+					end
+					local proximityActive = nearbyNow
+						or ((now - (doorRecord.lastPreparationNearbyAt or 0)) <= PREPARATION_ADVANCE_PROXIMITY_GRACE_SECONDS)
+					local hasFocusTool = hasPreparationFocusTool(preparationPlayers, nil)
+					part:SetAttribute("PasrahPrepAdvanceNearest", type(nearestPreparationDistance) == "number" and nearestPreparationDistance or nil)
+					part:SetAttribute("PasrahPrepAdvanceHasFocus", hasFocusTool == true)
+					part:SetAttribute("PasrahPrepAdvanceNearby", proximityActive == true)
+
+					if currentOpen then
+						doorRecord.preparationAdvanceArmedAt = nil
+					elseif hasFocusTool and proximityActive then
+						local requiredHoldSeconds = nearbyNow
+							and PREPARATION_ADVANCE_HOLD_SECONDS
+							or PREPARATION_ADVANCE_FAILSAFE_SECONDS
+						if type(doorRecord.preparationAdvanceArmedAt) ~= "number" then
+							doorRecord.preparationAdvanceArmedAt = now
+						elseif (now - doorRecord.preparationAdvanceArmedAt) >= requiredHoldSeconds then
+							executeDoorInteraction(doorRecord, "Open", LOCAL_PREPARATION_PROXIMITY_SOURCE)
+							doorRecord.preparationAdvanceArmedAt = nil
+						end
+					else
+						doorRecord.preparationAdvanceArmedAt = nil
+					end
+					part:SetAttribute("PasrahPrepAdvanceArmed", type(doorRecord.preparationAdvanceArmedAt) == "number")
+					stampDoorRuntime(doorRecord, doorRecord.lastNearestApproachDistance)
+					continue
+				end
+
+				if doorRecord.policy ~= POLICY_HYBRID_RADIUS_PROMPT then
+					stampDoorRuntime(doorRecord, doorRecord.lastNearestApproachDistance)
+					continue
+				end
+
 				local nearestOpenDistance = getNearestPlayerApproachDistance(
 					doorRecord,
 					match.players,

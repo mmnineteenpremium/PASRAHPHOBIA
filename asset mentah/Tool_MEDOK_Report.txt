@@ -1,6 +1,0 @@
-Tool MEDOK build summary
-Triangles: 784
-Materials: MEDOK_Main + MEDOK_Screen
-Pivot target: center grip at object origin
-Export axis: Forward Y, Up Z
-Texture set: Albedo + Roughness + Normal(optional)

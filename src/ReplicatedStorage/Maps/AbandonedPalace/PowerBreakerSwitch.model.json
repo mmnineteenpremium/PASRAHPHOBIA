@@ -2,9 +2,9 @@
   "className": "Model",
   "children": [
     {
+      "name": "IsPowerOn",
       "className": "BoolValue",
       "properties": {
-        "Name": "IsPowerOn",
         "Value": false
       }
     }

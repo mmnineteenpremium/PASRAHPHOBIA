@@ -1,0 +1,25 @@
+{
+  "Pid": 29972,
+  "Title": "Roblox",
+  "CaptureArea": "client",
+  "ImagePath": "C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\.codex\\worktrees\\final-source-of-truth\\artifacts\\pc_player_lobby_after_lobby_restore.png",
+  "WindowBounds": {
+    "Left": -7,
+    "Top": -7,
+    "Width": 1550,
+    "Height": 830
+  },
+  "ClientBounds": {
+    "Left": 0,
+    "Top": 23,
+    "Width": 1536,
+    "Height": 792
+  },
+  "CaptureBounds": {
+    "Left": 0,
+    "Top": 23,
+    "Width": 1536,
+    "Height": 792
+  },
+  "CapturedAt": "2026-04-18T15:05:16.1301918+07:00"
+}

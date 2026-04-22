@@ -83,6 +83,34 @@ local function normalizeMapProfileName(mapName)
 	return normalized
 end
 
+local function isLifecycleActivePhase(lifecyclePhase)
+	local token = tostring(lifecyclePhase or "")
+	return token == "PreparationPhase"
+		or token == "Preparation"
+		or token == "InvestigationPhase"
+		or token == "Investigation"
+		or token == "HuntPhase"
+		or token == "Hunt"
+		or token == "EndgamePhase"
+		or token == "Endgame"
+end
+
+local function isPreparationLifecyclePhase(lifecyclePhase)
+	local token = tostring(lifecyclePhase or "")
+	return token == "PreparationPhase" or token == "Preparation"
+end
+
+local function isAuthoritativeInMatch(localPlayer)
+	if typeof(localPlayer) ~= "Instance" or not localPlayer:IsA("Player") then
+		return false
+	end
+	if localPlayer:GetAttribute("InMatch") == true then
+		return true
+	end
+	local lifecyclePhase = tostring(localPlayer:GetAttribute("MatchLifecyclePhase") or "")
+	return localPlayer:GetAttribute("MatchId") ~= nil and isLifecycleActivePhase(lifecyclePhase)
+end
+
 local function lookupHeartbeatSound()
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
 	local audioFolder = assets and assets:FindFirstChild("Audio")
@@ -244,6 +272,13 @@ function AudioController:Start()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
 			self:_updateHeartbeat()
+			self:_updatePreparationAmbient()
+			self:_updateLobbyAmbient()
+			self:_updateResultsBgm()
+		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchId"):Connect(function()
+			self:_updateHeartbeat()
+			self:_syncMapReverbFromPlayerState()
 			self:_updatePreparationAmbient()
 			self:_updateLobbyAmbient()
 			self:_updateResultsBgm()
@@ -448,7 +483,11 @@ end
 
 function AudioController:_resolveAuthoritativeMapProfile()
 	local localPlayer = self._player or Players.LocalPlayer
-	if not localPlayer or localPlayer:GetAttribute("InMatch") ~= true then
+	if not localPlayer then
+		return "LobbySocialHub"
+	end
+	local inMatch = isAuthoritativeInMatch(localPlayer)
+	if not inMatch then
 		return "LobbySocialHub"
 	end
 
@@ -511,7 +550,7 @@ end
 
 function AudioController:_isStableLobbyState()
 	local localPlayer = self._player or Players.LocalPlayer
-	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
+	local inMatch = isAuthoritativeInMatch(localPlayer)
 	local resultsSurfaceVisible = self:_isResultsSurfaceVisible()
 	return (not inMatch) and resultsSurfaceVisible ~= true
 end
@@ -676,11 +715,11 @@ function AudioController:_updatePreparationAmbient()
 	end
 
 	local localPlayer = self._player or Players.LocalPlayer
-	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
 	local lifecyclePhase = tostring(localPlayer and localPlayer:GetAttribute("MatchLifecyclePhase") or "")
+	local inMatch = isAuthoritativeInMatch(localPlayer)
 	local mapProfile = self:_resolveAuthoritativeMapProfile()
 	local profile = PREPARATION_AMBIENT_PROFILE[mapProfile] or PREPARATION_AMBIENT_PROFILE.HauntedHouse
-	local shouldPlay = inMatch and lifecyclePhase == "PreparationPhase"
+	local shouldPlay = inMatch and isPreparationLifecyclePhase(lifecyclePhase)
 
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahPreparationAmbientActive", shouldPlay and true or nil)
@@ -730,7 +769,7 @@ function AudioController:_updateLobbyAmbient()
 	end
 
 	local localPlayer = self._player or Players.LocalPlayer
-	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
+	local inMatch = isAuthoritativeInMatch(localPlayer)
 	local mapProfile = self:_resolveAuthoritativeMapProfile()
 	local resultsSurfaceVisible = self:_isResultsSurfaceVisible()
 	local suppressImmediately = resultsSurfaceVisible == true or self._resultsBgmHoldActive == true

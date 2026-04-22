@@ -17,7 +17,7 @@ GraphicsSupport.MODE_META = {
 	},
 	Balanced = {
 		label = "SEIMBANG",
-		footer = "Balanced manual",
+		footer = "Default mobile",
 		buttonColor = Color3.fromRGB(74, 102, 126),
 		atmosphereDensityScale = 0.7,
 		atmosphereHazeScale = 0.64,

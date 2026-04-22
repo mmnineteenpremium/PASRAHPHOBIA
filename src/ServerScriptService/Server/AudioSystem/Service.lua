@@ -19,6 +19,7 @@ local AMBIENT_EVENT_ROTATION = {
 	hauntedhouse = {
 		{ category = "GhostAudio", cue = "ghost_whisper", intensityMin = 0.2, intensityMax = 0.3 },
 		{ category = "EnvironmentalAudio", eventType = "WindowKnock", cue = "env_windowknock", intensityMin = 0.22, intensityMax = 0.34 },
+		{ category = "EnvironmentalAudio", eventType = "ObjectThrow", cue = "env_objectthrow", intensityMin = 0.2, intensityMax = 0.32 },
 		{ category = "EnvironmentalAudio", eventType = "LightFlicker", cue = "env_lightflicker", intensityMin = 0.18, intensityMax = 0.28 },
 		{ category = "EnvironmentalAudio", eventType = "TemperatureDrop", cue = "env_temperaturedrop", intensityMin = 0.18, intensityMax = 0.26 },
 	},

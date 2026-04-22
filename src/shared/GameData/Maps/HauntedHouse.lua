@@ -7,6 +7,12 @@ return {
 		depth = 180,
 		floors = 2,
 	},
+	spawnPoints = {
+		"PlayerSpawn_1",
+		"PlayerSpawn_2",
+		"PlayerSpawn_3",
+		"PlayerSpawn_4",
+	},
 	rooms = {
 		"Foyer",
 		"DiningRoom",

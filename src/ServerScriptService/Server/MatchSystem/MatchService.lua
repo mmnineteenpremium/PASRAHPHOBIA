@@ -116,6 +116,8 @@ local CLIENT_PHASE_BY_MATCH_PHASE = {
 	HuntPhase = "Hunt",
 	EndgamePhase = "Endgame",
 }
+local PREPARATION_FOCUS_TOOL_FALLBACK = "EMF"
+local PREPARATION_FOCUS_TOOL_FALLBACK_DELAY = 2.5
 
 local function resolveGhostSystem(deps)
 	local ghostSystem = nil
@@ -909,6 +911,9 @@ function MatchService:_hydrateMatchMapData(match)
 end
 
 function MatchService:_getPhaseDuration(phaseName)
+	if phaseName == "PreparationPhase" or phaseName == "Preparation" then
+		return nil
+	end
 	local duration = self._phaseDurations and self._phaseDurations[phaseName]
 	if type(duration) == "number" and duration >= 0 then
 		return duration
@@ -1174,6 +1179,29 @@ function MatchService:StartMatch(matchId)
 		return forced or true
 	end
 
+	local function schedulePreparationFocusFallback(player)
+		task.delay(PREPARATION_FOCUS_TOOL_FALLBACK_DELAY, function()
+			local currentMatch = self:_matches()[matchId]
+			if currentMatch ~= match then
+				return
+			end
+			if not (typeof(player) == "Instance" and player:IsA("Player")) then
+				return
+			end
+			if tostring(player:GetAttribute("MatchId") or "") ~= authoritativeMatchId then
+				return
+			end
+			if tostring(player:GetAttribute("MatchLifecyclePhase") or "") ~= "PreparationPhase" then
+				return
+			end
+			local focusTool = player:GetAttribute("PreparationFocusTool")
+			if type(focusTool) == "string" and focusTool ~= "" then
+				return
+			end
+			player:SetAttribute("PreparationFocusTool", PREPARATION_FOCUS_TOOL_FALLBACK)
+		end)
+	end
+
 	for _, player in ipairs(match.players or {}) do
 		if typeof(player) == "Instance" and player:IsA("Player") then
 			player:SetAttribute("InMatch", true)
@@ -1183,6 +1211,7 @@ function MatchService:StartMatch(matchId)
 			player:SetAttribute("MatchMapId", tostring(match.mapId or match.map or ""))
 			player:SetAttribute("MatchLifecyclePhase", tostring(match.phase or "PreparationPhase"))
 			player:SetAttribute("PreparationFocusTool", nil)
+			schedulePreparationFocusFallback(player)
 		end
 	end
 
@@ -1204,15 +1233,21 @@ function MatchService:StartMatch(matchId)
 			setStudioMatchStartStage(string.format("match=%s stage=preparing_wait_complete", tostring(matchId)))
 
 			setStudioMatchStartStage(string.format("match=%s stage=teleport_begin", tostring(matchId)))
-			local teleportOk, teleportedPlayersOrErr = pcall(function()
-				return self._teleport:TeleportPlayers(match)
-			end)
-			if not teleportOk then
-				local teleportErr = tostring(teleportedPlayersOrErr)
-				setStudioMatchStartStage(string.format("match=%s stage=teleport_error err=%s", tostring(matchId), teleportErr))
-				setStudioMatchStartTrace(string.format("match=%s error=teleport_failed err=%s", tostring(matchId), teleportErr))
-				return
-			end
+				local teleportOk, teleportedPlayersOrErr = pcall(function()
+					return self._teleport:TeleportPlayers(match)
+				end)
+				if not teleportOk then
+					local teleportErr = tostring(teleportedPlayersOrErr)
+					setStudioMatchStartStage(string.format("match=%s stage=teleport_error err=%s", tostring(matchId), teleportErr))
+					setStudioMatchStartTrace(string.format("match=%s error=teleport_failed err=%s", tostring(matchId), teleportErr))
+					pcall(function()
+						self:EndMatch(matchId, {
+							reason = "teleport_failed",
+							teleportError = teleportErr,
+						})
+					end)
+					return
+				end
 
 			currentMatch = self:_matches()[matchId]
 			if currentMatch ~= match then
@@ -1221,10 +1256,20 @@ function MatchService:StartMatch(matchId)
 				return
 			end
 
-			local phaseNow = getNow()
-			local teleportedPlayers = teleportedPlayersOrErr
-			setStudioMatchStartTrace(string.format(
-				"match=%s players=%d teleported=%d phase=%s map=%s mode=%s",
+				local phaseNow = getNow()
+				local teleportedPlayers = teleportedPlayersOrErr
+				if #teleportedPlayers == 0 and #(match.players or {}) > 0 then
+					setStudioMatchStartStage(string.format("match=%s stage=teleport_zero_players", tostring(matchId)))
+					setStudioMatchStartTrace(string.format("match=%s error=teleport_zero_players", tostring(matchId)))
+					pcall(function()
+						self:EndMatch(matchId, {
+							reason = "teleport_zero_players",
+						})
+					end)
+					return
+				end
+				setStudioMatchStartTrace(string.format(
+					"match=%s players=%d teleported=%d phase=%s map=%s mode=%s",
 				tostring(match.matchId),
 				#(match.players or {}),
 				#(teleportedPlayers or {}),

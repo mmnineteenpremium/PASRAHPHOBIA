@@ -1,0 +1,25 @@
+{
+    "Pid":  33020,
+    "Title":  "Roblox",
+    "CaptureArea":  "client",
+    "ImagePath":  "C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\.codex\\worktrees\\final-source-of-truth\\.codex\\evidence\\pc_manual_click_baseline_20260419.png",
+    "WindowBounds":  {
+                         "Left":  77,
+                         "Top":  77,
+                         "Width":  816,
+                         "Height":  638
+                     },
+    "ClientBounds":  {
+                         "Left":  84,
+                         "Top":  107,
+                         "Width":  801,
+                         "Height":  600
+                     },
+    "CaptureBounds":  {
+                          "Left":  84,
+                          "Top":  107,
+                          "Width":  801,
+                          "Height":  600
+                      },
+    "CapturedAt":  "2026-04-19T18:43:09.8024798+07:00"
+}

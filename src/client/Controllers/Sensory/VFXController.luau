@@ -337,12 +337,12 @@ local MAP_ATMOSPHERE_PROFILES = {
 local MAP_LIGHTING_PROFILES = {
 	LobbySocialHub = {
 		ClockTime = 14.6,
-		Brightness = 1.82,
+		Brightness = 2.25,
 		ExposureCompensation = 0,
-		Ambient = Color3.fromRGB(118, 126, 140),
-		OutdoorAmbient = Color3.fromRGB(134, 140, 154),
-		EnvironmentDiffuseScale = 0.28,
-		EnvironmentSpecularScale = 0.16,
+		Ambient = Color3.fromRGB(128, 136, 150),
+		OutdoorAmbient = Color3.fromRGB(146, 152, 166),
+		EnvironmentDiffuseScale = 0.34,
+		EnvironmentSpecularScale = 0.22,
 		ColorShift_Top = Color3.fromRGB(10, 8, 4),
 		ColorShift_Bottom = Color3.fromRGB(6, 4, 2),
 	},
@@ -427,9 +427,9 @@ local MAP_GRADE_PROFILES = {
 
 local MAP_BLOOM_PROFILES = {
 	LobbySocialHub = {
-		Intensity = 0.08,
-		Size = 16,
-		Threshold = 1.28,
+		Intensity = 0.18,
+		Size = 20,
+		Threshold = 1.18,
 	},
 	AbandonedPalace = {
 		Intensity = 0.08,
@@ -455,7 +455,7 @@ local MAP_BLOOM_PROFILES = {
 
 local MAP_DOF_PROFILES = {
 	LobbySocialHub = {
-		FarIntensity = 0,
+		FarIntensity = 0.06,
 		FocusDistance = 52,
 		InFocusRadius = 34,
 		NearIntensity = 0,
@@ -488,7 +488,7 @@ local MAP_DOF_PROFILES = {
 
 local MAP_SUNRAYS_PROFILES = {
 	LobbySocialHub = {
-		Intensity = 0.03,
+		Intensity = 0.068,
 		Spread = 0.88,
 	},
 	AbandonedPalace = {
@@ -664,20 +664,15 @@ end
 local function ensureAtmosphere()
 	local atmosphere = Lighting:FindFirstChild("HorrorAtmosphere")
 	if not atmosphere then
-		local existingGlobal = Lighting:FindFirstChild("GlobalAtmosphere")
-		if existingGlobal and existingGlobal:IsA("Atmosphere") then
-			atmosphere = existingGlobal
-		else
-			atmosphere = Instance.new("Atmosphere")
-			atmosphere.Name = "HorrorAtmosphere"
-			atmosphere.Density = DEFAULT_MAP_ATMOSPHERE.Density
-			atmosphere.Offset = DEFAULT_MAP_ATMOSPHERE.Offset
-			atmosphere.Color = DEFAULT_MAP_ATMOSPHERE.Color
-			atmosphere.Decay = DEFAULT_MAP_ATMOSPHERE.Decay
-			atmosphere.Glare = DEFAULT_MAP_ATMOSPHERE.Glare
-			atmosphere.Haze = DEFAULT_MAP_ATMOSPHERE.Haze
-			atmosphere.Parent = Lighting
-		end
+		atmosphere = Instance.new("Atmosphere")
+		atmosphere.Name = "HorrorAtmosphere"
+		atmosphere.Density = DEFAULT_MAP_ATMOSPHERE.Density
+		atmosphere.Offset = DEFAULT_MAP_ATMOSPHERE.Offset
+		atmosphere.Color = DEFAULT_MAP_ATMOSPHERE.Color
+		atmosphere.Decay = DEFAULT_MAP_ATMOSPHERE.Decay
+		atmosphere.Glare = DEFAULT_MAP_ATMOSPHERE.Glare
+		atmosphere.Haze = DEFAULT_MAP_ATMOSPHERE.Haze
+		atmosphere.Parent = Lighting
 	end
 	return atmosphere
 end
@@ -713,6 +708,34 @@ local function normalizeMapProfileName(mapName)
 		return "LobbySocialHub"
 	end
 	return normalized
+end
+
+local function isLifecycleActivePhase(lifecyclePhase)
+	local token = tostring(lifecyclePhase or "")
+	return token == "PreparationPhase"
+		or token == "Preparation"
+		or token == "InvestigationPhase"
+		or token == "Investigation"
+		or token == "HuntPhase"
+		or token == "Hunt"
+		or token == "EndgamePhase"
+		or token == "Endgame"
+end
+
+local function isPreparationLifecyclePhase(lifecyclePhase)
+	local token = tostring(lifecyclePhase or "")
+	return token == "PreparationPhase" or token == "Preparation"
+end
+
+local function isAuthoritativeInMatch(localPlayer)
+	if typeof(localPlayer) ~= "Instance" or not localPlayer:IsA("Player") then
+		return false
+	end
+	if localPlayer:GetAttribute("InMatch") == true then
+		return true
+	end
+	local lifecyclePhase = tostring(localPlayer:GetAttribute("MatchLifecyclePhase") or "")
+	return localPlayer:GetAttribute("MatchId") ~= nil and isLifecycleActivePhase(lifecyclePhase)
 end
 
 local function stampVFXInstance(effect, channel, mapProfile, lifecyclePhase, preparationTool)
@@ -809,6 +832,9 @@ function VFXController:Start()
 			self:_syncMapVisualProfileFromPlayerState()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
+			self:_syncMapVisualProfileFromPlayerState()
+		end))
+		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("MatchId"):Connect(function()
 			self:_syncMapVisualProfileFromPlayerState()
 		end))
 		table.insert(self._connections, localPlayer:GetAttributeChangedSignal("PreparationFocusTool"):Connect(function()
@@ -1591,9 +1617,9 @@ end
 
 function VFXController:_applyPreparationVisualProfile(mapName)
 	local localPlayer = Players.LocalPlayer
-	local inMatch = localPlayer and localPlayer:GetAttribute("InMatch") == true
 	local lifecyclePhase = tostring(localPlayer and localPlayer:GetAttribute("MatchLifecyclePhase") or "")
-	local isPreparation = inMatch and lifecyclePhase == "PreparationPhase"
+	local inMatch = isAuthoritativeInMatch(localPlayer)
+	local isPreparation = inMatch and isPreparationLifecyclePhase(lifecyclePhase)
 	local profile = PREPARATION_VISUAL_PROFILES[mapName]
 	local focusTool = tostring(localPlayer and localPlayer:GetAttribute("PreparationFocusTool") or "")
 	local focusAccent = PREPARATION_TOOL_VISUAL_ACCENTS[focusTool]
@@ -1674,7 +1700,11 @@ end
 
 function VFXController:_resolveAuthoritativeMapProfile()
 	local localPlayer = Players.LocalPlayer
-	if not localPlayer or localPlayer:GetAttribute("InMatch") ~= true then
+	if not localPlayer then
+		return "LobbySocialHub"
+	end
+	local inMatch = isAuthoritativeInMatch(localPlayer)
+	if not inMatch then
 		return "LobbySocialHub"
 	end
 

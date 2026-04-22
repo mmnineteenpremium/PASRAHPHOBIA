@@ -174,3 +174,110 @@
   - mobile room-browser fix preserved
   - lower lobby glow on both clients
 - The remaining unresolved slice is no longer UI mismatch, but the underlying `LobbySocialHub` content still being visually sparse because the current authoritative donor itself is sparse.
+
+## Follow-up - Batch B-G runtime smoke (2026-04-19, PC + Android)
+
+### Environment gate
+
+- `scripts/resolve-mobile-mcp-stack.ps1 -Strict` failed because the script still expects legacy emulator aliases (`Samsung-NOTE10`, `S22-ultra`) not present in this lane.
+- `scripts/require-mobile-lane.ps1 -Lane both` failed due missing `iPhone-14-Pro-Max`.
+- `scripts/require-mobile-lane.ps1 -Lane android` passed (`Samsung-N960` / `266a038c0a017ece` ready).
+
+### Publish under test
+
+- command:
+  - `powershell -ExecutionPolicy Bypass -File scripts\Invoke-Rojo.ps1 upload --api_key $env:ROBLOX_OPEN_CLOUD_API_KEY --asset_id 113010869463813 --universe_id 9802743087 default.project.json`
+- result: exit code `0`.
+
+### 2-client fresh boot
+
+- PC launched via:
+  - `roblox://placeId=113010869463813`
+- Android launched via ADB deep link:
+  - `roblox://placeId=113010869463813`
+- both clients reached published lobby.
+
+### Android host flow
+
+- `OPEN ROOM BROWSER`: success (`RUANG INVESTIGASI` rendered).
+- `BUAT ROOM`: success (host room panel rendered, `MULAI PERMAINAN` visible).
+- host start trigger (`MULAI PERMAINAN`) moved runtime into in-match loading/match panel overlay (`Masuk ke lokasi...`, map target `Haunted House`).
+
+### Host-start countdown verification
+
+- source lock remains:
+  - `HOST_START_COUNTDOWN_SECONDS = 5` in lobby controller/service paths.
+- no `30s` host-start countdown lane was observed in this smoke pass.
+- countdown numeral (`5..1`) was not captured as a stable on-screen frame in this automation slice because transition moved quickly to loading overlay.
+
+### PC follow-up
+
+- PC OS-level click/keypress automation still did not visibly toggle Room Browser in this slice (known automation limitation lane).
+
+### Evidence
+
+- `.codex/evidence/pc_publish_smoke_20260419_lobby_boot.png`
+- `.codex/evidence/android_publish_smoke_20260419_lobby_boot.png`
+- `.codex/evidence/android_publish_smoke_20260419_room_created.png`
+- `.codex/evidence/android_publish_smoke_20260419_after_host_start_loading.png`
+- `.codex/evidence/pc_publish_smoke_20260419_after_android_start.png`
+- `.codex/evidence/pc_publish_smoke_20260419_room_browser_toggle.png`
+- `.codex/evidence/pc_publish_smoke_20260419_after_open_room_click.png`
+- `.codex/evidence/android_publish_smoke_20260419_countdown.mp4`
+- `.codex/evidence/android_publish_smoke_20260419_countdown_pass2.mp4`
+
+### Conclusion
+
+- manual blocker `smoke test 2 client nyata` for `PC + Android` was executed on the latest publish lane.
+- iOS lane was not executable in this session due missing `iPhone-14-Pro-Max`.
+
+## Follow-up - PC extended-display window-click validation (2026-04-19)
+
+### Goal
+
+- Run the PC Room Browser click flow with strict window targeting on extended dual-monitor setup.
+- Ensure click is sent to the actual Roblox Player window, not Roblox Studio or other windows.
+
+### Monitor topology
+
+- `DISPLAY1` (extended): `X=-844, Y=-1440, Width=3440, Height=1440`
+- `DISPLAY2` (primary): `X=0, Y=0, Width=1536, Height=864`
+- Active Roblox Player window under test:
+  - process: `RobloxPlayerBeta`
+  - `WindowPid=44888`
+  - resolved display: `DISPLAY2` (primary)
+  - client bounds during test: `Left=84, Top=107, Width=801, Height=600`
+
+### Method
+
+- forced all actions by explicit `WindowPid=44888` (no title-pattern fallback):
+  - capture baseline
+  - click on `OPEN ROOM BROWSER` button area
+  - click on top-left Roblox menu icon
+  - click on `DAILY MISSIONS` close button
+  - keyboard injection (`{ESC}`)
+- additional click lanes tested:
+  - message-based click (`PostMessage WM_LBUTTONDOWN/UP`) directly to HWND
+  - `SendInput` left-click after setting cursor to exact client->screen coordinates
+
+### Result
+
+- no visual state change was observed on PC for all synthetic input methods above.
+- `OPEN ROOM BROWSER` remained closed in every after-capture frame.
+- because the window PID, foreground focus, display target, and coordinates were all verified, this slice is **not** caused by wrong monitor/window selection.
+
+### Evidence
+
+- `.codex/evidence/pc_extdisplay_pid44888_before_click.png`
+- `.codex/evidence/pc_extdisplay_pid44888_after_click1.png`
+- `.codex/evidence/pc_extdisplay_pid44888_after_multiclick.png`
+- `.codex/evidence/pc_extdisplay_pid44888_after_topmenu_click.png`
+- `.codex/evidence/pc_extdisplay_pid44888_after_daily_x_click.png`
+- `.codex/evidence/pc_extdisplay_pid44888_after_sendinput_click.png`
+- `.codex/evidence/pc_extdisplay_pid44888_after_postmessage_click.png`
+- `.codex/evidence/pc_extdisplay_pid44888_after_esc.png`
+
+### Conclusion
+
+- PC automation gap remains specific to synthetic input acceptance in Roblox Player on this machine/session.
+- Android lane remains valid for Room Browser create/start validation.

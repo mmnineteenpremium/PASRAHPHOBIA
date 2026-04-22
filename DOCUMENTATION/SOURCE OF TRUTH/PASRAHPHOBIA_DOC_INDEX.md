@@ -100,6 +100,16 @@ Hard rules for this lane:
 - disabled legacy reference:
   - `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.model.json.disabled`
 
+[2026-04-19 NOTE - Active Execution Lane]
+Before continuing runtime stabilization work, use:
+- `DOCUMENTATION/SOURCE OF TRUTH/TASK_ACTIVE.md`
+
+Hard execution lane:
+- prioritize Studio-first fixes
+- publish only for publish-specific blockers
+- no architecture changes or new systems without explicit owner approval
+- ghost visual validation must follow behavior-state rule (hidden state is valid; manifest/hunt non-render is bug)
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

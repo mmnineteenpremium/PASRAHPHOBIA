@@ -1,4 +1,5 @@
 local Services = require(script.Parent.Parent.Core.Services)
+local Players = game:GetService("Players")
 
 local Service = {}
 Service.__index = Service
@@ -284,9 +285,24 @@ function Service:HandleEvent(eventName, payload)
         if type(matchId) ~= "string" then
             return
         end
+        local resetPlayers = {}
+        for _, player in ipairs(type(payload and payload.players) == "table" and payload.players or {}) do
+            if typeof(player) == "Instance" and player:IsA("Player") then
+                resetPlayers[player] = true
+            end
+        end
+        if next(resetPlayers) == nil then
+            for _, player in ipairs(Players:GetPlayers()) do
+                resetPlayers[player] = true
+            end
+        end
+
         local cameraMap = self:_cameraStateMap()
         for userId, state in pairs(cameraMap) do
             local player = Players:GetPlayerByUserId(userId)
+            if player then
+                resetPlayers[player] = nil
+            end
             self:_stampRuntime(player, {
                 matchId = matchId,
                 mode = nil,
@@ -297,6 +313,17 @@ function Service:HandleEvent(eventName, payload)
                 canObserveGhost = state.canObserveGhost,
                 limitedAwareness = state.limitedAwareness,
                 bounds = state.bounds,
+                lastEvent = "MatchEnded",
+                reason = "match_ended",
+                active = false,
+            })
+        end
+        for player in pairs(resetPlayers) do
+            self:_stampRuntime(player, {
+                matchId = matchId,
+                mode = nil,
+                targetUserId = nil,
+                bounds = self:_getBounds(matchId),
                 lastEvent = "MatchEnded",
                 reason = "match_ended",
                 active = false,
