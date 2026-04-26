@@ -192,6 +192,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - offset vertikal `JoinPassword` terhadap `Queue` pada lane extra-compact dipadatkan tipis agar grup input+aksi lebih menyatu.
   - tinggi field tetap dipertahankan; perubahan hanya pada positioning agar hierarchy aksi utama lebih jelas.
   - tetap visual-only tanpa perubahan logic mode selection/room flow/runtime.
+- Batch visual T49 untuk RoomBrowser preview-playerlist top-gap trim sudah masuk:
+  - jarak vertikal dari `Map Preview` ke `Room Preview PlayersList` pada lane extra-compact dipadatkan tipis.
+  - posisi title pemain tetap; list pemain naik sedikit agar area konten bawah lebih efisien di viewport pendek.
+  - tetap visual-only tanpa perubahan logic room preview/player data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

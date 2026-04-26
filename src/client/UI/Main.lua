@@ -11286,11 +11286,12 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			setOffsetBounds(quickRankedButton, rightX + math.floor((rightWidth - actionColumnGap) * 0.5) + actionColumnGap, actionY + joinHeight + actionRowHeight + (actionRowGap * 2), math.floor((rightWidth - actionColumnGap) * 0.5), actionRowHeight)
 
 			local previewMapHeight = math.clamp(math.floor(previewHeight * 0.34), 108, 136)
+			local previewPlayersTopGap = extraCompactMobile and 26 or 28
 			setOffsetBounds(roomPreviewTitle, 12, 10, leftWidth - 24, 18)
 			setOffsetBounds(roomPreviewInfo, 12, 30, leftWidth - 24, extraCompactMobile and 30 or 34)
 			setOffsetBounds(roomPreviewMap, 12, 70, leftWidth - 24, previewMapHeight)
 			setOffsetBounds(roomPreviewPlayersTitle, 12, 70 + previewMapHeight + 8, leftWidth - 24, 16)
-			setOffsetBounds(roomPreviewPlayersList, 12, 70 + previewMapHeight + 28, leftWidth - 24, previewHeight - (70 + previewMapHeight + 40))
+			setOffsetBounds(roomPreviewPlayersList, 12, 70 + previewMapHeight + previewPlayersTopGap, leftWidth - 24, previewHeight - (70 + previewMapHeight + 40))
 			if previewMapTitle then
 				setOffsetBounds(previewMapTitle, 16, 8, leftWidth - 48, 14)
 				previewMapTitle.TextSize = 10

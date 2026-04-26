@@ -16292,3 +16292,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - tinggi field tidak berubah; penyesuaian hanya pada anchor positioning untuk hierarchy aksi yang lebih jelas.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
 
+---
+
+# 52. VISUAL BATCH T49 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak vertikal dari `Map Preview` ke `Room Preview PlayersList` pada lane extra-compact dipadatkan tipis.
+- anchor `PlayersList` dinaikkan ringan sementara anchor title pemain dipertahankan, untuk pemakaian ruang vertikal yang lebih efisien.
+- tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
+
