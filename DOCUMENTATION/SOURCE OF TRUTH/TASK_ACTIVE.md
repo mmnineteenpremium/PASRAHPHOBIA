@@ -120,6 +120,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `CountdownOverlay` mendapat tuning lane `compact/extra-compact` untuk `CountdownLabel` dan tombol `CancelCountdown`.
   - ukuran/posisi countdown number + tombol cancel dipadatkan agar hierarchy tetap jelas di viewport mobile pendek.
   - tetap visual-only tanpa perubahan logic countdown/start-flow/runtime.
+- Batch visual T31 untuk RoomBrowser inline kick/password row compact sudah masuk:
+  - baris inline `SetPassword` dan `Kick` pada layout compact kini punya lebar tombol kanan + tinggi field khusus lane extra-compact.
+  - placeholder field dipersingkat pada lane extra-compact untuk menjaga keterbacaan tanpa overflow.
+  - tetap visual-only tanpa perubahan logic host controls/kick/password/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

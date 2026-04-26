@@ -11425,6 +11425,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		roomListLayout.Padding = UDim.new(0, useWideMobileLayout and 6 or 4)
 	end
 	local inviteListLayout = inviteList and inviteList:FindFirstChildOfClass("UIListLayout")
+	local compactInlineActionWidth = extraCompactMobile and 104 or 116
+	local compactInlineGap = 6
+	local compactInlineFieldOffset = compactInlineActionWidth + compactInlineGap
+	local compactInlineFieldHeight = extraCompactMobile and 34 or (profile.isMobile and 38 or 34)
 	if inviteList then
 		inviteList.ScrollBarThickness = extraCompactMobile and 3 or 4
 	end
@@ -11475,12 +11479,14 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 	if setPasswordBox then
 		setPasswordBox.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or 12)
+		setPasswordBox.PlaceholderText = extraCompactMobile and "Set PWD (4 digit)" or "Set Password (4 digit)"
 	end
 	if setPasswordButton then
 		setPasswordButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
 	end
 	if kickNameBox then
 		kickNameBox.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or 12)
+		kickNameBox.PlaceholderText = extraCompactMobile and "Nama target kick" or "Nama pemain untuk di-kick"
 	end
 	if kickButton then
 		kickButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
@@ -11545,10 +11551,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 				setOffsetBounds(option, 8, 8 + (index - 1) * 26, leftWidth - 16, 22)
 				option.TextSize = 12
 			end
-			setOffsetBounds(setPasswordBox, headerPadding, setPasswordY, leftWidth - 122, 34)
-			setOffsetBounds(setPasswordButton, headerPadding + leftWidth - 116, setPasswordY, 116, 34)
-			setOffsetBounds(kickNameBox, headerPadding, kickRowY, leftWidth - 122, 34)
-			setOffsetBounds(kickButton, headerPadding + leftWidth - 116, kickRowY, 116, 34)
+			setOffsetBounds(setPasswordBox, headerPadding, setPasswordY, leftWidth - compactInlineFieldOffset, compactInlineFieldHeight)
+			setOffsetBounds(setPasswordButton, headerPadding + leftWidth - compactInlineActionWidth, setPasswordY, compactInlineActionWidth, compactInlineFieldHeight)
+			setOffsetBounds(kickNameBox, headerPadding, kickRowY, leftWidth - compactInlineFieldOffset, compactInlineFieldHeight)
+			setOffsetBounds(kickButton, headerPadding + leftWidth - compactInlineActionWidth, kickRowY, compactInlineActionWidth, compactInlineFieldHeight)
 			setOffsetBounds(inviteButton, rightX, panelHeight - 42, rightWidth, 34)
 			setOffsetBounds(inviteDropdown, rightX, math.max(92, panelHeight - 254), rightWidth, 206)
 			setOffsetBounds(readyButton, headerPadding, actionY, leftWidth, 40)
@@ -11601,10 +11607,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 				setOffsetBounds(option, 8, 8 + (index - 1) * (profile.isMobile and 30 or 26), contentWidth - 16, profile.isMobile and 26 or 22)
 				option.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
 			end
-		setOffsetBounds(setPasswordBox, headerPadding, setPasswordY, contentWidth - 122, profile.isMobile and 38 or 34)
-		setOffsetBounds(setPasswordButton, headerPadding + contentWidth - 116, setPasswordY, 116, profile.isMobile and 38 or 34)
-		setOffsetBounds(kickNameBox, headerPadding, kickRowY, contentWidth - 122, profile.isMobile and 38 or 34)
-		setOffsetBounds(kickButton, headerPadding + contentWidth - 116, kickRowY, 116, profile.isMobile and 38 or 34)
+		setOffsetBounds(setPasswordBox, headerPadding, setPasswordY, contentWidth - compactInlineFieldOffset, compactInlineFieldHeight)
+		setOffsetBounds(setPasswordButton, headerPadding + contentWidth - compactInlineActionWidth, setPasswordY, compactInlineActionWidth, compactInlineFieldHeight)
+		setOffsetBounds(kickNameBox, headerPadding, kickRowY, contentWidth - compactInlineFieldOffset, compactInlineFieldHeight)
+		setOffsetBounds(kickButton, headerPadding + contentWidth - compactInlineActionWidth, kickRowY, compactInlineActionWidth, compactInlineFieldHeight)
 		setOffsetBounds(inviteButton, headerPadding, inviteY, contentWidth, profile.isMobile and 40 or 36)
 		setOffsetBounds(inviteDropdown, headerPadding, inviteY + (profile.isMobile and 44 or 40), contentWidth, profile.isMobile and 176 or 156)
 		setOffsetBounds(readyButton, headerPadding, readyY, contentWidth, profile.isMobile and 46 or 42)

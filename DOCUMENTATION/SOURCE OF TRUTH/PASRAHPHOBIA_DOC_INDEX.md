@@ -16112,3 +16112,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - ukuran/posisi angka countdown serta tombol cancel dipadatkan untuk viewport mobile pendek.
 - tidak ada perubahan logic countdown/start-flow/runtime, sesuai lock visual-only.
 
+---
+
+# 34. VISUAL BATCH T31 INLINE KICK PASSWORD ROW COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- baris host control inline `SetPassword` dan `Kick` kini punya dimensi field/tombol khusus lane extra-compact.
+- placeholder field dipersingkat pada lane extra-compact agar tetap terbaca di viewport pendek.
+- tidak ada perubahan logic host controls/kick/password/runtime, sesuai lock visual-only.
+

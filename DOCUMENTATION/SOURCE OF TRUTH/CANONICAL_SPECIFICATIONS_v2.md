@@ -975,3 +975,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser `CountdownOverlay` now has compact-tuned hierarchy for constrained mobile viewports.
 - Countdown overlay tuning is visual-only: countdown number bounds/position plus cancel button size/position/typography.
 - No countdown start/cancel flow or runtime-authority behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T31 Inline Kick/Password Row Compact
+
+- RoomBrowser compact host-control row for `SetPassword` and `Kick` now has extra-compact-specific inline field/button sizing.
+- Inline control tuning is visual-only: right action width, field height rhythm, and extra-compact placeholder shortening for readability.
+- No host-control logic, password submission flow, or kick handling/runtime behavior changes in this batch.
