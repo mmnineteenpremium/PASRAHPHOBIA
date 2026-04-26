@@ -216,6 +216,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - lebar mood chip Map Preview lane extra-compact dipadatkan tipis untuk memberi ruang text strip.
   - perubahan bounds horizontal ini menjaga hierarchy visual tanpa menyentuh logic data map.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T55 untuk RoomBrowser roombrowser-map-footer-height-micro-trim sudah masuk:
+  - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ritme vertikal panel.
+  - ukuran teks footer tetap dipertahankan agar keterbacaan tetap aman.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

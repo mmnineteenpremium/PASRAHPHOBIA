@@ -1120,3 +1120,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser map preview mood chip now has extra-compact-specific width micro trim.
 - Map-mood tuning is visual-only: slight width reduction for tighter strip composition while preserving truncation behavior.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T55 Map-Footer Height Micro Trim
+
+- RoomBrowser map preview footer now has an additional extra-compact height micro trim.
+- Map-footer tuning is visual-only: slightly reduced footer height while preserving existing footer text behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
