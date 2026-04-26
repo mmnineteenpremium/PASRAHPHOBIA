@@ -16412,3 +16412,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - anchor Y action lane extra-compact dipadatkan tipis lanjutan untuk continuity vertikal panel kanan.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+
+
+---
+
+# 64. VISUAL BATCH T61 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM II (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- offset vertikal JoinPassword lane extra-compact dipadatkan tipis lanjutan terhadap baris aksi utama.
+- tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
