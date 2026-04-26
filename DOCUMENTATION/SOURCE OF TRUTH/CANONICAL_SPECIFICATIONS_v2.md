@@ -95,6 +95,12 @@
 - Secondary/footer mobile typography for both panels is tuned for compact viewport stability.
 - This addendum remains visual-only and does not alter evidence logic, result logic, or runtime gameplay systems.
 
+## 2026-04-26 Addendum - Visual Batch T16 Spectator Mobile Stability
+
+- `SpectatorUI` mobile lane now has dedicated footer reserve and content-frame balance to keep spectator/distortion text readable in compact viewports.
+- Secondary/footer mobile typography for spectator panel is tuned to reduce overflow risk.
+- This addendum remains visual-only and does not alter spectator behavior logic, match state logic, or runtime gameplay systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

@@ -226,6 +226,15 @@ Status ringkas batch T15:
 - `JournalUI` mobile mendapat tuning strip scan (action/status) dan area konten agar tidak overlap di viewport sempit
 - tetap visual-only, tanpa perubahan sistem evidence/result/runtime
 
+[2026-04-26 NOTE - Visual Batch T16]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T16_SPECTATOR_MOBILE_STABILITY_2026-04-26.md`
+
+Status ringkas batch T16:
+- `SpectatorUI` mobile mendapat reserve footer + rebalance area konten agar copy spectator/distortion tetap jelas
+- tuning text-size secondary/footer mobile mengurangi risiko overflow saat state spectator padat
+- tetap visual-only, tanpa perubahan logic spectator/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

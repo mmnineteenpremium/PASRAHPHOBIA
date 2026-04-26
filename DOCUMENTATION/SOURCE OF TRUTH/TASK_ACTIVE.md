@@ -60,6 +60,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `PASRA_UI` mobile mendapat reserve footer + ukuran konten yang lebih aman untuk copy snapshot panjang.
   - `JournalUI` mobile mendapat tuning area scan (`ToolActionButton` + `ToolStatusLabel`) agar tidak overlap saat panel padat.
   - tuning text-size secondary/footer mobile untuk kedua panel tetap di lane visual-only tanpa ubah runtime logic.
+- Batch visual T16 untuk SpectatorUI mobile stability sudah masuk:
+  - `SpectatorUI` mobile mendapat reserve footer khusus agar copy distorsi/spectate tidak menabrak area konten.
+  - `ContentFrame` mobile `SpectatorUI` di-rebalance untuk hierarchy header-content-footer yang lebih stabil.
+  - tuning text-size secondary/footer mobile tetap visual-only tanpa ubah behavior spectator.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

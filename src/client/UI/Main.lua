@@ -12085,11 +12085,13 @@ function UISystem:_applyDeviceSizing()
 						local footerHeight = guiName == "ShopUI" and 50
 							or (guiName == "RoyalPassUI" and 44
 								or (guiName == "PASRA_UI" and 42
-									or (guiName == "ProfileUI" and 40 or 36)))
+									or (guiName == "SpectatorUI" and 40
+										or (guiName == "ProfileUI" and 40 or 36))))
 						local footerOffset = guiName == "ShopUI" and 62
 							or (guiName == "RoyalPassUI" and 58
 								or (guiName == "PASRA_UI" and 56
-									or (guiName == "ProfileUI" and 54 or 48)))
+									or (guiName == "SpectatorUI" and 54
+										or (guiName == "ProfileUI" and 54 or 48))))
 						window.FooterLabel.Position = UDim2.fromOffset(12, window.Panel.Size.Y.Offset - footerOffset)
 						window.FooterLabel.Size = UDim2.new(1, -24, 0, footerHeight)
 					end
@@ -12125,6 +12127,11 @@ function UISystem:_applyDeviceSizing()
 						window.ToolStatusLabel.Size = UDim2.new(1, -180, 0, 44)
 						window.ToolActionButton.TextSize = math.max(10, profile:GetTextSize() - 8)
 						window.ToolStatusLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
+					end
+					if profile.isMobile and guiName == "SpectatorUI" and window.ContentFrame then
+						window.ContentFrame.Position = UDim2.fromOffset(12, 154)
+						window.ContentFrame.Size = UDim2.new(1, -24, 1, -226)
+						window.ContentFrame.ScrollBarThickness = 8
 					end
 					end
 				if window.PrimaryLabel then
@@ -12281,6 +12288,14 @@ function UISystem:_applyDeviceSizing()
 						end
 					end
 					if guiName == "JournalUI" and profile.isMobile then
+						if window.SecondaryLabel then
+							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
+						if window.FooterLabel then
+							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
+						end
+					end
+					if guiName == "SpectatorUI" and profile.isMobile then
 						if window.SecondaryLabel then
 							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
 						end
