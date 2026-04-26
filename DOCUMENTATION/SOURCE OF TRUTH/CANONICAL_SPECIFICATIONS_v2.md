@@ -951,3 +951,9 @@ Based on canonical specifications, Phase 7 should prioritize:
   - computed from house+staging footprint only
   - runtime collider walls are tight (anti-exit)
   - realistic tree blockers are aligned per side (`North/South/West/East`) to stop out-of-map movement.
+
+## 2026-04-26 Addendum - Visual Batch T27 Invite Popup Compact
+
+- RoomBrowser `InvitePopup` now has explicit `compact` and `extra-compact` visual lanes for short mobile viewports.
+- Invite popup hierarchy tuning is visual-only: panel size, text area spacing, and accept/decline button sizing/typography.
+- No matchmaking/invite/runtime behavior changes in this batch; runtime-authority lock remains unchanged.

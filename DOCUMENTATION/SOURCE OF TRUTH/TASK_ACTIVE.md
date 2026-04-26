@@ -104,6 +104,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `InviteDropdown` RoomBrowser kini punya lane extra-compact eksplisit pada row broadcast + row pemain.
   - tinggi row/text/spacing/scrollbar invite list dipadatkan, dengan truncate untuk menjaga keterbacaan nama.
   - tetap visual-only tanpa perubahan logic invite/matchmaking/runtime.
+- Batch visual T27 untuk RoomBrowser invite popup compact sudah masuk:
+  - `InvitePopup` mendapat lane `compact` dan `extra-compact` berbasis viewport untuk merapikan hierarchy text + tombol terima/tolak.
+  - ukuran panel, spacing internal, dan typography popup dipadatkan agar tetap terbaca di viewport mobile pendek.
+  - tetap visual-only tanpa perubahan logic invite flow/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

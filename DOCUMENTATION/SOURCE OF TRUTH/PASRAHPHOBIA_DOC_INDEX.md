@@ -16072,3 +16072,13 @@ Status terkunci berdasarkan owner-approved edit:
 - boundary `HauntedHouse` menggunakan footprint rumah + staging saja
 - blocker pohon realistis disejajarkan ke empat sisi boundary untuk mencegah pemain keluar map
 
+---
+
+# 30. VISUAL BATCH T27 INVITE POPUP COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- `InvitePopup` kini memiliki lane `compact` dan `extra-compact` berdasarkan viewport.
+- ukuran popup, area teks, dan tombol `TERIMA/TOLAK` dipadatkan agar hierarchy tetap jelas pada mobile pendek.
+- tidak ada perubahan logic invite flow/runtime, sesuai lock visual-only.
+

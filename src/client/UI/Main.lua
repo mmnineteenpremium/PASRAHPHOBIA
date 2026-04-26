@@ -17618,8 +17618,64 @@ function UISystem:_ensureRoomBrowserGui()
 		if camera and typeof(camera.ViewportSize) == "Vector2" then
 			viewport = camera.ViewportSize
 		end
-		local scaleX = (viewport.X - 24) / 408
-		local scaleY = (viewport.Y - (topLeftInset.Y + 24)) / 66
+
+		local popupWidth = 408
+		local popupHeight = 66
+		local textSize = 11
+		local buttonTextSize = 11
+		local textPositionX = 10
+		local textPositionY = 7
+		local textWidth = 286
+		local textHeight = 50
+		local buttonPositionX = 302
+		local acceptPositionY = 9
+		local declinePositionY = 35
+		local buttonWidth = 96
+		local buttonHeight = 22
+
+		local compactInvitePopup = viewport.X <= 820 or viewport.Y <= 520
+		local extraCompactInvitePopup = viewport.X <= 690 or viewport.Y <= 430
+		if extraCompactInvitePopup then
+			popupWidth = 360
+			popupHeight = 58
+			textSize = 10
+			buttonTextSize = 10
+			textPositionX = 8
+			textPositionY = 6
+			textWidth = 236
+			textHeight = 44
+			buttonPositionX = 252
+			acceptPositionY = 7
+			declinePositionY = 30
+			buttonWidth = 100
+			buttonHeight = 20
+		elseif compactInvitePopup then
+			popupWidth = 388
+			popupHeight = 62
+			textPositionX = 9
+			textPositionY = 6
+			textWidth = 268
+			textHeight = 48
+			buttonPositionX = 286
+			acceptPositionY = 8
+			declinePositionY = 33
+			buttonWidth = 94
+			buttonHeight = 21
+		end
+
+		invitePopup.Size = UDim2.fromOffset(popupWidth, popupHeight)
+		invitePopupText.Position = UDim2.fromOffset(textPositionX, textPositionY)
+		invitePopupText.Size = UDim2.fromOffset(textWidth, textHeight)
+		invitePopupText.TextSize = textSize
+		inviteAcceptBtn.Position = UDim2.fromOffset(buttonPositionX, acceptPositionY)
+		inviteAcceptBtn.Size = UDim2.fromOffset(buttonWidth, buttonHeight)
+		inviteAcceptBtn.TextSize = buttonTextSize
+		inviteDeclineBtn.Position = UDim2.fromOffset(buttonPositionX, declinePositionY)
+		inviteDeclineBtn.Size = UDim2.fromOffset(buttonWidth, buttonHeight)
+		inviteDeclineBtn.TextSize = buttonTextSize
+
+		local scaleX = (viewport.X - 24) / popupWidth
+		local scaleY = (viewport.Y - (topLeftInset.Y + 24)) / popupHeight
 		invitePopupScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.68, 1)
 		invitePopup.Position = UDim2.new(0.5, 0, 0, 10 + topLeftInset.Y)
 	end
