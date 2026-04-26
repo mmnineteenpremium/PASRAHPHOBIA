@@ -17499,3 +17499,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - gap bawah room list dirapatkan tipis lanjutan untuk mengurangi slack sebelum stack aksi.
 - flow daftar ke kontrol bawah tetap dipertahankan agar pemisahan section masih terbaca.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 178. VISUAL BATCH T175 ROOMBROWSER MAP TITLE WIDTH RECLAIM XVI (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+- ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.

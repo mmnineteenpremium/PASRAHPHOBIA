@@ -696,6 +696,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - gap bawah room list dirapatkan tipis lanjutan untuk mengurangi slack sebelum stack aksi.
   - flow daftar ke kontrol bawah tetap dipertahankan agar pemisahan section masih terbaca.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T175 untuk RoomBrowser roombrowser-map-title-width-reclaim-16 sudah masuk:
+  - lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+  - ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
