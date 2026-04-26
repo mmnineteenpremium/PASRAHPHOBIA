@@ -69,6 +69,13 @@
 - Mobile text sizing for `ShopUI` filter, secondary, and footer labels is tuned down for stability and readability on narrow resolutions.
 - This addendum remains visual-only and does not introduce new shop systems, currency systems, or runtime gameplay logic.
 
+## 2026-04-26 Addendum - Visual Batch T12 Profile + RoyalPass Mobile Stability
+
+- `ProfileUI` and `RoyalPassUI` mobile lanes now reserve larger footer spacing so footer lines do not overlap with dynamic content.
+- `ProfileUI` and `RoyalPassUI` mobile `ContentFrame` size/offset are rebalanced to maintain clear header-content-footer hierarchy on compact viewports.
+- Mobile text sizing for profile/royalpass secondary and footer labels is tuned for readability stability in narrow resolutions.
+- This addendum remains visual-only and does not introduce new progression systems, economy systems, or runtime gameplay logic.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

@@ -44,6 +44,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - tinggi panel mobile `ShopUI` ditambah agar area footer tidak menabrak konten saat copy state panjang.
   - area `ContentFrame` + footer mobile diatur ulang spacing-nya untuk lane filter/item list.
   - text size filter/secondary/footer `ShopUI` mobile diturunkan sedikit agar stabil di viewport sempit.
+- Batch visual T12 untuk ProfileUI + RoyalPassUI mobile stability sudah masuk:
+  - footer mobile `ProfileUI` dan `RoyalPassUI` diberi reserve spacing lebih longgar agar tidak tabrakan dengan konten.
+  - `ContentFrame` mobile kedua panel di-offset ulang untuk menjaga hierarki header-content-footer tetap bersih.
+  - tuning text-size secondary/footer mobile diturunkan ringan agar copy canonical tetap terbaca pada viewport sempit.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

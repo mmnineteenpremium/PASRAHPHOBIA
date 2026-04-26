@@ -190,6 +190,15 @@ Status ringkas batch T11:
 - area `ContentFrame` mobile `ShopUI` di-offset ulang supaya daftar tetap terbaca saat compact viewport
 - tuning text-size filter/secondary/footer khusus mobile menjaga keterbacaan tanpa ubah sistem/runtime logic
 
+[2026-04-26 NOTE - Visual Batch T12]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T12_PROFILE_ROYALPASS_MOBILE_STABILITY_2026-04-26.md`
+
+Status ringkas batch T12:
+- `ProfileUI` dan `RoyalPassUI` mobile diberi ruang footer lebih aman agar copy footer tidak menabrak list konten
+- `ContentFrame` mobile kedua panel di-offset ulang untuk menjaga ritme hierarchy header-content-footer
+- tuning text-size secondary/footer mobile menurunkan risiko overflow tanpa menambah sistem/runtime baru
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

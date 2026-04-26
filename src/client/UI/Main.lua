@@ -12082,8 +12082,8 @@ function UISystem:_applyDeviceSizing()
 						window.Panel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0.5, 0)
 					end
 					if profile.isMobile and window.FooterLabel then
-						local footerHeight = guiName == "ShopUI" and 50 or 36
-						local footerOffset = guiName == "ShopUI" and 62 or 48
+						local footerHeight = guiName == "ShopUI" and 50 or (guiName == "RoyalPassUI" and 44 or (guiName == "ProfileUI" and 40 or 36))
+						local footerOffset = guiName == "ShopUI" and 62 or (guiName == "RoyalPassUI" and 58 or (guiName == "ProfileUI" and 54 or 48))
 						window.FooterLabel.Position = UDim2.fromOffset(12, window.Panel.Size.Y.Offset - footerOffset)
 						window.FooterLabel.Size = UDim2.new(1, -24, 0, footerHeight)
 					end
@@ -12092,7 +12092,17 @@ function UISystem:_applyDeviceSizing()
 						window.ContentFrame.Size = UDim2.new(1, -24, 1, -236)
 						window.ContentFrame.ScrollBarThickness = 8
 					end
-				end
+					if profile.isMobile and guiName == "ProfileUI" and window.ContentFrame then
+						window.ContentFrame.Position = UDim2.fromOffset(12, 154)
+						window.ContentFrame.Size = UDim2.new(1, -24, 1, -224)
+						window.ContentFrame.ScrollBarThickness = 8
+					end
+					if profile.isMobile and guiName == "RoyalPassUI" and window.ContentFrame then
+						window.ContentFrame.Position = UDim2.fromOffset(12, 156)
+						window.ContentFrame.Size = UDim2.new(1, -24, 1, -244)
+						window.ContentFrame.ScrollBarThickness = 8
+					end
+					end
 				if window.PrimaryLabel then
 					window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
 					if guiName == "RoyalPassUI" then
@@ -12209,24 +12219,40 @@ function UISystem:_applyDeviceSizing()
 						end
 					end
 				end
-				if guiName == "ShopUI" and window.ShopFilterButtons then
-					for _, filterButton in pairs(window.ShopFilterButtons) do
-						if filterButton and filterButton:IsA("TextButton") then
-							filterButton.TextSize = profile.isMobile and math.max(9, profile:GetTextSize() - 9) or math.max(10, profile:GetTextSize() - 8)
+					if guiName == "ShopUI" and window.ShopFilterButtons then
+						for _, filterButton in pairs(window.ShopFilterButtons) do
+							if filterButton and filterButton:IsA("TextButton") then
+								filterButton.TextSize = profile.isMobile and math.max(9, profile:GetTextSize() - 9) or math.max(10, profile:GetTextSize() - 8)
+							end
+						end
+						if window.SecondaryLabel and profile.isMobile then
+							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
+						if window.FooterLabel and profile.isMobile then
+							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
 						end
 					end
-					if window.SecondaryLabel and profile.isMobile then
-						window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+					if guiName == "ProfileUI" and profile.isMobile then
+						if window.SecondaryLabel then
+							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
+						if window.FooterLabel then
+							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
+						end
 					end
-					if window.FooterLabel and profile.isMobile then
-						window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
+					if guiName == "RoyalPassUI" and profile.isMobile then
+						if window.SecondaryLabel then
+							window.SecondaryLabel.TextSize = math.max(11, profile:GetTextSize() - 7)
+						end
+						if window.FooterLabel then
+							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
 					end
 				end
 			end
 		end
-	end
-	if self._uxWidgets and self._uxWidgets.basicWindows then
-		for guiName, window in pairs(self._uxWidgets.basicWindows) do
+		if self._uxWidgets and self._uxWidgets.basicWindows then
+			for guiName, window in pairs(self._uxWidgets.basicWindows) do
 			if window.PrimaryLabel then
 				window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
 				if profile.isMobile and guiName == "MainMenuUI" then
