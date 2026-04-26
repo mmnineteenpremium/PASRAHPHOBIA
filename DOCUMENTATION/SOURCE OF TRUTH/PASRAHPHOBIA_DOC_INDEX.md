@@ -17603,3 +17603,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
 - struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 191. VISUAL BATCH T188 ROOMBROWSER PREVIEW MAP MAX HEIGHT TRIM X (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+- hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.

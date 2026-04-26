@@ -11350,7 +11350,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		setOffsetBounds(refreshButton, headerPadding, stackSecondRowY, math.floor((previewWidth - 3) * 0.5), stackButtonHeight)
 		setOffsetBounds(createRoomButton, headerPadding + math.floor((previewWidth - 3) * 0.5) + 3, stackSecondRowY, math.floor((previewWidth - 3) * 0.5), stackButtonHeight)
 
-		local previewMapHeight = math.clamp(math.floor(previewHeight * (profile.isMobile and 0.43 or 0.45)), profile.isMobile and 120 or 112, profile.isMobile and 139 or 136)
+		local previewMapHeight = math.clamp(math.floor(previewHeight * (profile.isMobile and 0.43 or 0.45)), profile.isMobile and 120 or 112, profile.isMobile and 138 or 136)
 		setOffsetBounds(roomPreviewTitle, 12, 10, previewWidth - 24, profile.isMobile and 20 or 18)
 		setOffsetBounds(roomPreviewInfo, 12, profile.isMobile and 32 or 30, previewWidth - 24, extraCompactMobile and 26 or (profile.isMobile and 34 or 30))
 		setOffsetBounds(roomPreviewMap, 12, profile.isMobile and 72 or 66, previewWidth - 24, previewMapHeight)
