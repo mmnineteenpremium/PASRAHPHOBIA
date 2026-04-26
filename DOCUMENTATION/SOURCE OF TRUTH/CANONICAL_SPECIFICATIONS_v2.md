@@ -1023,3 +1023,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser map preview strip (`Mood`, `Stats`, `Footer`) now has extra-compact bounds and typography tuning.
 - Map preview strip tuning is visual-only: compact widths/heights plus truncation behavior to avoid text overflow.
 - No map preview data flow or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T39 Room List Row Compact
+
+- RoomBrowser room-list rows now have compact/extra-compact adaptive row padding and compact-aware text vertical alignment.
+- Room-list tuning is visual-only: row readability rhythm and multi-line scan clarity for host/status text.
+- No room selection/join logic or runtime behavior changes in this batch.

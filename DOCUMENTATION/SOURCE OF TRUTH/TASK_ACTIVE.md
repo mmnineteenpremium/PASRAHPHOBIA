@@ -152,6 +152,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - strip `Map Preview` (mood chip + stats + footer) pada lane extra-compact mendapat tuning width/height/text-size agar copy tidak menekan konten utama.
   - truncation ditambahkan pada elemen strip preview map untuk menjaga keterbacaan tanpa overflow di viewport pendek.
   - tetap visual-only tanpa perubahan logic map preview/runtime.
+- Batch visual T39 untuk RoomBrowser room-list row compact sudah masuk:
+  - row daftar room kini mendapat `UIPadding` adaptif per lane compact/extra-compact agar ritme baca lebih stabil.
+  - alignment teks row multi-line di compact/wide disetel top-aligned untuk scan host/status yang lebih cepat.
+  - tetap visual-only tanpa perubahan logic room select/join/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

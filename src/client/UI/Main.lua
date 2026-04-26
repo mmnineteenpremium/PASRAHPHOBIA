@@ -18193,10 +18193,16 @@ function UISystem:_ensureRoomBrowserGui()
 			row.Font = Enum.Font.Gotham
 				row.TextSize = wideMobileRoomBrowser and 13 or (extraCompactRoomBrowser and 12 or (compactRoomBrowser and 14 or 13))
 			row.TextXAlignment = Enum.TextXAlignment.Left
-			row.TextYAlignment = Enum.TextYAlignment.Center
+			row.TextYAlignment = (wideMobileRoomBrowser or compactRoomBrowser) and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
 				row.TextWrapped = (not extraCompactRoomBrowser) and (compactRoomBrowser or wideMobileRoomBrowser)
 				row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 				row.Text = roomRowText(room)
+			local rowPadding = Instance.new("UIPadding")
+			rowPadding.PaddingTop = UDim.new(0, wideMobileRoomBrowser and 6 or (extraCompactRoomBrowser and 4 or 5))
+			rowPadding.PaddingBottom = UDim.new(0, extraCompactRoomBrowser and 4 or 5)
+			rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 8 or 10)
+			rowPadding.PaddingRight = UDim.new(0, 8)
+			rowPadding.Parent = row
 			row:SetAttribute("RoomId", room.roomId)
 			row:SetAttribute("InGame", room.inGame == true)
 			row:SetAttribute("Starting", room.starting == true)

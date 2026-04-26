@@ -16192,3 +16192,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - ukuran elemen dan truncation text dituning agar copy strip tetap terbaca tanpa overflow di viewport pendek.
 - tidak ada perubahan logic map preview/runtime, sesuai lock visual-only.
 
+---
+
+# 42. VISUAL BATCH T39 ROOM LIST ROW COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- row daftar room mendapat `UIPadding` adaptif untuk lane compact/extra-compact.
+- alignment teks row multi-line dituning agar host/status lebih mudah discan pada viewport pendek.
+- tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
+
