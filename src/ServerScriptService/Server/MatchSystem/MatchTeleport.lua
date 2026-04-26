@@ -654,19 +654,39 @@ local function resolveRuntimeBoundaryFolder(mapClone)
 	if typeof(mapClone) ~= "Instance" then
 		return nil
 	end
+
 	local runtimeFolder = mapClone:FindFirstChild("Runtime", true)
-	local boundaryFolder = runtimeFolder and runtimeFolder:FindFirstChild("MapBoundaryRuntime")
-	if boundaryFolder and boundaryFolder:IsA("Folder") then
-		return boundaryFolder
+	local candidates = {}
+	local seen = {}
+	local function pushCandidate(folder)
+		if typeof(folder) ~= "Instance" or not folder:IsA("Folder") then
+			return
+		end
+		if seen[folder] then
+			return
+		end
+		seen[folder] = true
+		table.insert(candidates, folder)
 	end
-	boundaryFolder = runtimeFolder and runtimeFolder:FindFirstChild("RuntimeBoundary")
-	if boundaryFolder and boundaryFolder:IsA("Folder") then
-		return boundaryFolder
+
+	pushCandidate(runtimeFolder and runtimeFolder:FindFirstChild("MapBoundaryRuntime"))
+	pushCandidate(runtimeFolder and runtimeFolder:FindFirstChild("RuntimeBoundary"))
+	pushCandidate(mapClone:FindFirstChild("RuntimeBoundary", true))
+
+	if runtimeFolder then
+		for _, descendant in ipairs(runtimeFolder:GetDescendants()) do
+			if descendant:IsA("Folder") and string.find(string.lower(descendant.Name), "boundary", 1, true) then
+				pushCandidate(descendant)
+			end
+		end
 	end
-	boundaryFolder = mapClone:FindFirstChild("RuntimeBoundary", true)
-	if boundaryFolder and boundaryFolder:IsA("Folder") then
-		return boundaryFolder
+
+	for _, folder in ipairs(candidates) do
+		if hasAnyBasePart(folder) then
+			return folder
+		end
 	end
+
 	return nil
 end
 

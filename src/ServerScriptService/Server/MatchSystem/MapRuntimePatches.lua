@@ -3670,6 +3670,45 @@ local function hasAnyBasePart(folder)
 	return false
 end
 
+local function resolveAuthoredRuntimeBoundaryFolder(mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return nil
+	end
+
+	local runtimeFolder = mapClone:FindFirstChild("Runtime", true)
+	local candidates = {}
+	local seen = {}
+	local function pushCandidate(folder)
+		if typeof(folder) ~= "Instance" or not folder:IsA("Folder") then
+			return
+		end
+		if seen[folder] then
+			return
+		end
+		seen[folder] = true
+		table.insert(candidates, folder)
+	end
+
+	pushCandidate(runtimeFolder and runtimeFolder:FindFirstChild("MapBoundaryRuntime"))
+	pushCandidate(runtimeFolder and runtimeFolder:FindFirstChild("RuntimeBoundary"))
+	pushCandidate(mapClone:FindFirstChild("RuntimeBoundary", true))
+
+	if runtimeFolder then
+		for _, descendant in ipairs(runtimeFolder:GetDescendants()) do
+			if descendant:IsA("Folder") and string.find(string.lower(descendant.Name), "boundary", 1, true) then
+				pushCandidate(descendant)
+			end
+		end
+	end
+
+	for _, folder in ipairs(candidates) do
+		if hasAnyBasePart(folder) then
+			return folder
+		end
+	end
+	return nil
+end
+
 local function resolvePreparationAuthoringRoot(mapClone, preparationFolder)
 	if typeof(mapClone) ~= "Instance" or typeof(preparationFolder) ~= "Instance" then
 		return preparationFolder
@@ -3847,12 +3886,8 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		mapClone:SetAttribute("PreparationAdvanceDoorSource", "Unspecified")
 	end
 
-	local runtimeFolder = mapClone:FindFirstChild("Runtime", true)
-	local boundaryFolder = runtimeFolder and (runtimeFolder:FindFirstChild("MapBoundaryRuntime") or runtimeFolder:FindFirstChild("RuntimeBoundary"))
-	if not boundaryFolder then
-		boundaryFolder = mapClone:FindFirstChild("RuntimeBoundary", true)
-	end
-	if hasAnyBasePart(boundaryFolder) then
+	local boundaryFolder = resolveAuthoredRuntimeBoundaryFolder(mapClone)
+	if boundaryFolder then
 		mapClone:SetAttribute("RuntimeBoundarySource", "Authored")
 	else
 		mapClone:SetAttribute("RuntimeBoundarySource", "Missing")

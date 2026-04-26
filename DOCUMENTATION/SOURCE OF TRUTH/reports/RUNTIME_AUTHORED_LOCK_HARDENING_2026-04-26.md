@@ -36,6 +36,10 @@
      - strict debug marker
      - boundary source/authored boundary parts
      - canonical preparation entry door exists and tagged
+   - authored boundary resolver now accepts canonical boundary folders under runtime tree, including:
+     - `Runtime.MapBoundaryRuntime`
+     - `Runtime.RuntimeBoundary`
+     - `Runtime.OutdoorBaseplateRuntime.Boundary_*` (when those folders contain `BasePart` descendants)
    - if validation fails, teleport flow aborts with explicit runtime error.
 
 4. Removed direct CFrame teleport fallback branch in player teleport loop:
