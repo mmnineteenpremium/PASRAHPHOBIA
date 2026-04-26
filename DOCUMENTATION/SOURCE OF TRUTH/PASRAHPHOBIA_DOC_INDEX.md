@@ -16422,3 +16422,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - offset vertikal JoinPassword lane extra-compact dipadatkan tipis lanjutan terhadap baris aksi utama.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+
+
+---
+
+# 65. VISUAL BATCH T62 ROOMBROWSER ROOMLIST MIN HEIGHT MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- minimum tinggi room-list kolom kanan dipadatkan tipis untuk lane compact.
+- tidak ada perubahan logic room list/runtime, sesuai lock visual-only.
