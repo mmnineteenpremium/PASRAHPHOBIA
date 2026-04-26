@@ -1077,3 +1077,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser action-lane paired buttons now have extra-compact-specific horizontal column-gap tuning.
 - Action-column tuning is visual-only: paired button widths recomputed with tighter extra-compact gap for consistent control rhythm.
 - No mode selection, room flow, or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T48 Join-Password Anchor Trim
+
+- RoomBrowser join-password field now has extra-compact-specific vertical anchor trim relative to the queue action row.
+- Join-password anchor tuning is visual-only: tighter extra-compact input-to-action grouping while preserving existing field height.
+- No mode selection, room flow, password-validation, or runtime behavior changes in this batch.

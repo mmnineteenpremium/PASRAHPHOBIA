@@ -16282,3 +16282,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - lebar tombol pasangan dihitung ulang mengikuti gap baru agar komposisi kolom aksi tetap seimbang.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
 
+---
+
+# 51. VISUAL BATCH T48 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- offset vertikal `JoinPassword` terhadap baris `Queue` di lane extra-compact dipadatkan tipis agar grup input+aksi lebih menyatu.
+- tinggi field tidak berubah; penyesuaian hanya pada anchor positioning untuk hierarchy aksi yang lebih jelas.
+- tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+
