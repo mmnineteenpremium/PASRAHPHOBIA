@@ -24,6 +24,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `ProfileUI`: hierarchy visual untuk Rank/EXP, Daily Quest, Daily Check-In, Daily Spin, Inventory/Gacha, dan cap messaging `PP 3/hari`.
   - `RoyalPassUI`: tab/row/card wording diseragamkan ke lane `Daily Check-In` dan `Daily Quest` tanpa sistem baru.
   - wording lobby daily reward diselaraskan ke istilah `Daily check-in`.
+- Batch visual T7 untuk hidden gems + daily lane clarity sudah masuk:
+  - tracker visual `Hidden Gems` sekarang membaca snapshot `ppBreakdown` (jika ada) untuk progress `x/3` tanpa menambah sistem ekonomi baru.
+  - `ShopUI` dan `PASRA_UI` menampilkan cap lane hidden gems dengan wording yang konsisten.
+  - `DailyRewardZone` lobby copy dan tombol `Royal Pass` diselaraskan ke konteks `Daily Check-In`/harian.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

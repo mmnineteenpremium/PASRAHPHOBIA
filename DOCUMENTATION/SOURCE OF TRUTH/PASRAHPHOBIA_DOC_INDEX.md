@@ -145,6 +145,15 @@ Status ringkas batch T6:
 - wording dan lane visual `RoyalPassUI` diseragamkan ke `Daily Check-In` dan `Daily Quest` tanpa menambah sistem
 - wording lobby daily feedback disejajarkan ke istilah `Daily check-in`
 
+[2026-04-26 NOTE - Visual Batch T7]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T7_HIDDEN_GEMS_DAILY_LANE_2026-04-26.md`
+
+Status ringkas batch T7:
+- tracker visual hidden gems sekarang menampilkan progress `x/3` bila data `ppBreakdown` tersedia (snapshot-only)
+- copy `DailyRewardZone` + tombol lobby `Royal Pass` disejajarkan ke konteks harian (`Daily Check-In`/spin)
+- `ShopUI` dan `PASRA_UI` menampilkan cap hidden gems dengan wording konsisten
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

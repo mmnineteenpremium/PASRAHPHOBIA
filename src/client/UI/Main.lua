@@ -93,9 +93,9 @@ LOBBY_ZONE_CLIENT_META = {
 	},
 	DailyRewardZone = {
 		badge = "GARDEN",
-		title = "Area social garden aktif.",
-		hint = "Zona ini dipakai sebagai anchor reward/social sampai pass restruktur visual final selesai.",
-		subtitle = "Reward dan social anchor",
+		title = "Area daily check-in aktif.",
+		hint = "Zona ini jadi anchor visual untuk daily check-in, daily spin, dan lane RoyalPass harian.",
+		subtitle = "Daily check-in, spin, dan social anchor",
 		accentColor = Color3.fromRGB(138, 228, 178),
 	},
 }
@@ -2288,6 +2288,55 @@ local function formatPPBreakdown(ppReward, ppBreakdown)
 	end
 
 	return "PP: " .. table.concat(parts, " • ")
+end
+
+local function resolveHiddenGemsDailyProgress(ppBreakdown)
+	local cap = 3
+	local gained = 0
+	local found = false
+	local entries = type(ppBreakdown) == "table" and ppBreakdown or nil
+	if not entries then
+		return gained, cap, found
+	end
+
+	for _, entry in ipairs(entries) do
+		if type(entry) == "table" then
+			local label = string.lower(tostring(entry.label or entry.reason or entry.source or ""))
+			local key = string.lower(tostring(entry.key or entry.id or ""))
+			local isHiddenGem = string.find(label, "hidden", 1, true)
+				or string.find(label, "gem", 1, true)
+				or string.find(key, "hidden", 1, true)
+				or string.find(key, "gem", 1, true)
+			if isHiddenGem then
+				found = true
+				gained += math.max(0, math.floor(tonumber(entry.amount) or 0))
+				local capCandidate = tonumber(entry.cap or entry.dailyCap or entry.limit or entry.maxDaily)
+				if capCandidate and capCandidate > 0 then
+					cap = math.max(1, math.floor(capCandidate))
+				end
+			end
+		end
+	end
+
+	return gained, cap, found
+end
+
+local function formatHiddenGemsDailyLane(ppBreakdown)
+	local gained, cap, found = resolveHiddenGemsDailyProgress(ppBreakdown)
+	if found then
+		local progress = math.min(gained, cap)
+		local remaining = math.max(0, cap - progress)
+		return string.format("Hidden Gems MM/PP %d/%d PP coin hari ini (sisa %d).", progress, cap, remaining)
+	end
+	return string.format("Hidden Gems MM/PP dibatasi maks %d PP coin per hari.", cap)
+end
+
+local function formatHiddenGemsCompact(ppBreakdown)
+	local gained, cap, found = resolveHiddenGemsDailyProgress(ppBreakdown)
+	if found then
+		return string.format("Hidden %d/%d", math.min(gained, cap), cap)
+	end
+	return string.format("Hidden <=%d/hari", cap)
 end
 
 local function formatJoinedValues(values, fallback)
@@ -7538,10 +7587,12 @@ function UISystem:_renderResultsPanel(payload)
 			self._matchResult and self._matchResult.ppBreakdown or nil
 		)
 		local rewardResult = self._matchResult or createDefaultMatchResult()
+		local hiddenGemCompact = formatHiddenGemsCompact(rewardResult.ppBreakdown)
 		local progressionFooter = string.format(
-			" RP XP %d | Daily %d",
+			" RP XP %d | Daily %d | %s",
 			math.floor(tonumber(rewardResult.royalPassXP or 0) or 0),
-			math.floor(tonumber(rewardResult.dailyProgress or 0) or 0)
+			math.floor(tonumber(rewardResult.dailyProgress or 0) or 0),
+			hiddenGemCompact
 		)
 		match.ResultsFooter.Text = closeUnlocked
 			and (ppFooter .. progressionFooter .. " Tekan tombol lanjut untuk kembali ke lobby flow.")
@@ -7746,8 +7797,11 @@ function UISystem:_refreshBasicLobbyPanel()
 	end
 	if lobby.BasicRoyalPassButton then
 		local royalPassOpen = self._uiState.RoyalPassUI and self._uiState.RoyalPassUI.visible == true and self._windowDismissed.RoyalPassUI ~= true
-		lobby.BasicRoyalPassButton.Text = royalPassOpen and "TUTUP ROYAL PASS" or "ROYAL PASS"
-		setButtonTone(lobby.BasicRoyalPassButton, "pass", royalPassOpen or (type(zoneFocus) == "table" and zoneFocus.zoneName == "DailyRewardZone"))
+		local dailyZoneFocused = type(zoneFocus) == "table" and zoneFocus.zoneName == "DailyRewardZone"
+		lobby.BasicRoyalPassButton.Text = royalPassOpen
+			and "TUTUP ROYAL PASS"
+			or (dailyZoneFocused and "DAILY CHECK-IN / PASS" or "ROYAL PASS")
+		setButtonTone(lobby.BasicRoyalPassButton, dailyZoneFocused and "daily" or "pass", royalPassOpen or dailyZoneFocused)
 	end
 	if lobby.BasicMenuButton then
 		local _, menuPanel = self:_getBasicWindowState("MainMenuUI")
@@ -9686,6 +9740,8 @@ function UISystem:_refreshShopPanel()
 	local statusText = "STORE"
 	local badgeColor = Color3.fromRGB(124, 92, 48)
 	local secondaryText = self._shopState.lastMessage or "Pilih item untuk test shop."
+	local hiddenGemsCompact = formatHiddenGemsCompact(self._matchResult and self._matchResult.ppBreakdown or nil)
+	local hiddenGemsLaneText = formatHiddenGemsDailyLane(self._matchResult and self._matchResult.ppBreakdown or nil)
 	local walletSummary = formatShopWalletSummary(self._shopState.wallet, self._shopState.catalog)
 	local ownedCount = 0
 	local activeFilter = tostring(self._shopState.filterKey or "All")
@@ -9728,30 +9784,36 @@ function UISystem:_refreshShopPanel()
 		statusText = "PROMPT"
 		badgeColor = Color3.fromRGB(82, 94, 126)
 	end
+	secondaryText = string.format("%s | %s", secondaryText, hiddenGemsCompact)
 
 	local footerText = string.format(
-		"Owned %d item. MM dan PP tetap currency in-game. Item bantuan bertanda CLASSIC ONLY tidak memberi bonus di Ranked. SETUP berarti slot Robux belum siap atau marketplaceId Creator Hub belum valid.",
-		ownedCount
+		"Owned %d item. MM dan PP tetap currency in-game. Item bantuan bertanda CLASSIC ONLY tidak memberi bonus di Ranked. SETUP berarti slot Robux belum siap atau marketplaceId Creator Hub belum valid. %s",
+		ownedCount,
+		hiddenGemsLaneText
 	)
 	if activeFilter == "PP" then
 		footerText = string.format(
-			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Paket Robux PP tetap hanya berlaku di game ini, lalu dipakai untuk prestige/cosmetic/exchange lokal. Hidden Gems MM/PP dibatasi maks 3 PP coin per hari.",
-			ownedCount
+			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Paket Robux PP tetap hanya berlaku di game ini, lalu dipakai untuk prestige/cosmetic/exchange lokal. %s",
+			ownedCount,
+			hiddenGemsLaneText
 		)
 	elseif activeFilter == "MM" then
 		footerText = string.format(
-			"Owned %d item. MM bisa didapat dari main, dari exchange PP, atau dari pack Robux yang compliant. Semua tetap currency in-game, bukan saldo lintas experience. Hidden Gems MM/PP dibatasi maks 3 PP coin per hari.",
-			ownedCount
+			"Owned %d item. MM bisa didapat dari main, dari exchange PP, atau dari pack Robux yang compliant. Semua tetap currency in-game, bukan saldo lintas experience. %s",
+			ownedCount,
+			hiddenGemsLaneText
 		)
 	elseif activeFilter == "Robux" then
 		footerText = string.format(
-			"Owned %d item. Robux di shop ini hanya boleh memberi currency in-game MM/PP atau entitlement yang compliant. Ranked tetap fair: pembelian tidak boleh memberi keunggulan kemenangan.",
-			ownedCount
+			"Owned %d item. Robux di shop ini hanya boleh memberi currency in-game MM/PP atau entitlement yang compliant. Ranked tetap fair: pembelian tidak boleh memberi keunggulan kemenangan. %s",
+			ownedCount,
+			hiddenGemsLaneText
 		)
 	elseif activeFilter == "Owned" then
 		footerText = string.format(
-			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini. Jika item bertanda CLASSIC ONLY, efek bantuannya hanya boleh hidup di Classic. Hidden Gems MM/PP dibatasi maks 3 PP coin per hari.",
-			ownedCount
+			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini. Jika item bertanda CLASSIC ONLY, efek bantuannya hanya boleh hidup di Classic. %s",
+			ownedCount,
+			hiddenGemsLaneText
 		)
 	end
 
@@ -10674,6 +10736,7 @@ function UISystem:_refreshPasraPanel()
 	local ownedInventoryCount = countLookupEntries(shopState.ownedItemIds)
 	local equippedCosmeticCount = countLookupEntries(profile.equippedCosmetics)
 	local gachaState = ownedInventoryCount > 0 and "COLLECTED" or "EMPTY"
+	local hiddenGemsLaneText = formatHiddenGemsDailyLane(result.ppBreakdown)
 	local statusText = result.correctGuess and "SUCCESS" or "RESULT"
 	local badgeColor = result.correctGuess and Color3.fromRGB(58, 116, 90) or Color3.fromRGB(58, 100, 88)
 	local primaryText = self._pasraState.status or "Belum ada hasil match."
@@ -10699,7 +10762,7 @@ function UISystem:_refreshPasraPanel()
 		string.format("Hadiah PP: %s", tostring(math.floor(tonumber(result.ppReward or 0) or 0))),
 		string.format("Hadiah XP: %s", tostring(math.floor(tonumber(result.xpReward or 0) or 0))),
 		string.format("Item Owned: %d • Equipped Cosmetic: %d • Gacha: %s", ownedInventoryCount, equippedCosmeticCount, gachaState),
-		"Hidden Gems MM/PP: maks 3 PP coin per hari.",
+		hiddenGemsLaneText,
 		string.format("Last Event: %s", tostring(self._pasraState.lastEvent or "Idle")),
 	}, "\n")
 	self:_refreshWindowText(

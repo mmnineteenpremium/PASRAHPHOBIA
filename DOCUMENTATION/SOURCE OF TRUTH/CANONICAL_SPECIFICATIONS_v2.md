@@ -36,6 +36,13 @@
   - daily spin/gacha context in visual copy only
 - This addendum is visual presentation alignment only and does not introduce new progression systems, new economy systems, or new runtime architecture.
 
+## 2026-04-26 Addendum - Visual Batch T7 Hidden Gems + Daily Lane Clarity
+
+- Hidden gems cap messaging is standardized in visual lanes (`ShopUI`, `PASRA_UI`, results footer) using existing snapshot payloads.
+- If `ppBreakdown` contains hidden gems entries, visual copy may show progress `x/3`; if absent, fallback copy remains cap-only.
+- `DailyRewardZone` and lobby daily-entry button wording now explicitly reflect daily check-in/spin context.
+- This addendum remains visual-only and does not add new reward systems, cap logic, or server-side progression flows.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:
