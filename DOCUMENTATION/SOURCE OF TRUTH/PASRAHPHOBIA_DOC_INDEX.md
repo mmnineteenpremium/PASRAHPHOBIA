@@ -280,6 +280,15 @@ Status ringkas batch T21:
 - label host-room dan opsi dropdown map/mode ikut dituning agar panel kontrol tidak sesak
 - tetap visual-only, tanpa perubahan logic room browser/runtime
 
+[2026-04-26 NOTE - Visual Batch T22]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T22_ROOMBROWSER_PREVIEW_COUNTDOWN_COMPACT_2026-04-26.md`
+
+Status ringkas batch T22:
+- map preview RoomBrowser pada lane extra-compact mendapat tuning typography dan densitas visual agar tetap jelas di viewport pendek
+- kontrol overlay float/countdown/cancel dipadatkan agar komposisi visual mobile lebih seimbang
+- tetap visual-only, tanpa perubahan logic room browser/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

@@ -84,6 +84,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - kontrol host-room (`mode/map/password/invite/ready/start/cancel/leave`) mendapat baseline typography compact khusus lane extra-compact.
   - label judul/host/players + opsi dropdown map/mode turut dituning agar area kontrol tidak sesak.
   - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
+- Batch visual T22 untuk RoomBrowser preview/countdown compact sudah masuk:
+  - map preview (`title/label/chip/stats/footer/glyph`) pada lane extra-compact dituning supaya tetap terbaca di viewport pendek.
+  - kontrol overlay (`float/countdown/cancel`) dipadatkan agar tidak mendominasi ruang visual pada mobile sempit.
+  - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

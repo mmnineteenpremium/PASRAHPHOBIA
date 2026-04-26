@@ -11662,44 +11662,44 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 	if mapPreviewTitle then
 		setOffsetBounds(mapPreviewTitle, 10, 8, mapPreview.AbsoluteSize.X - 20, 14)
-		mapPreviewTitle.TextSize = isCompact and 10 or 10
+		mapPreviewTitle.TextSize = extraCompactMobile and 9 or (isCompact and 10 or 10)
 	end
 	if mapPreviewLabel then
 		setOffsetBounds(mapPreviewLabel, 10, 26, mapPreview.AbsoluteSize.X - 20, 16)
-		mapPreviewLabel.TextSize = isCompact and 12 or 12
+		mapPreviewLabel.TextSize = extraCompactMobile and 11 or (isCompact and 12 or 12)
 	end
 	if mapPreviewImage then
 		local imageWidth = math.min(math.floor((mapPreview.AbsoluteSize.X or 200) - 24), isCompact and 240 or 220)
-		local imageHeight = isCompact and 126 or 150
+		local imageHeight = extraCompactMobile and 114 or (isCompact and 126 or 150)
 		setOffsetBounds(mapPreviewImage, math.floor(((mapPreview.AbsoluteSize.X or imageWidth) - imageWidth) * 0.5), isCompact and 48 or 46, imageWidth, imageHeight)
 	end
 	if mapPreviewImageChip and mapPreviewImage then
 		setOffsetBounds(mapPreviewImageChip, 12, 10, math.min(140, mapPreviewImage.AbsoluteSize.X - 24), 18)
-		mapPreviewImageChip.TextSize = 10
+		mapPreviewImageChip.TextSize = extraCompactMobile and 9 or 10
 	end
 	if mapPreviewImageLabel and mapPreviewImage then
 		setOffsetBounds(mapPreviewImageLabel, 12, 28, mapPreviewImage.AbsoluteSize.X - 24, isCompact and 58 or 76)
-		mapPreviewImageLabel.TextSize = isCompact and 36 or 42
+		mapPreviewImageLabel.TextSize = extraCompactMobile and 30 or (isCompact and 36 or 42)
 	end
 	if mapPreviewImageStats and mapPreviewImage then
 		setOffsetBounds(mapPreviewImageStats, 12, mapPreviewImage.AbsoluteSize.Y - 42, mapPreviewImage.AbsoluteSize.X - 24, 16)
-		mapPreviewImageStats.TextSize = 10
+		mapPreviewImageStats.TextSize = extraCompactMobile and 9 or 10
 	end
 	if mapPreviewImageFooter and mapPreviewImage then
 		setOffsetBounds(mapPreviewImageFooter, 12, mapPreviewImage.AbsoluteSize.Y - 24, mapPreviewImage.AbsoluteSize.X - 24, 18)
-		mapPreviewImageFooter.TextSize = 12
+		mapPreviewImageFooter.TextSize = extraCompactMobile and 10 or 12
 	end
 	if floatButton then
 		local floatSize = profile.isConsole and 84 or (profile.isMobile and 72 or 68)
 		floatButton.Size = UDim2.fromOffset(floatSize, floatSize)
 		floatButton.Position = UDim2.new(1, -(16 + bottomRightInset.X), isCompact and 0.72 or 0.56, 0)
-		floatButton.TextSize = profile.isMobile and 11 or 12
+		floatButton.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 12)
 	end
 	if countdownLabel then
-		countdownLabel.TextSize = isCompact and 72 or 96
+		countdownLabel.TextSize = extraCompactMobile and 60 or (isCompact and 72 or 96)
 	end
 	if cancelCountdown then
-		cancelCountdown.Size = UDim2.fromOffset(isCompact and 240 or 220, isCompact and 42 or 38)
+		cancelCountdown.Size = UDim2.fromOffset(extraCompactMobile and 216 or (isCompact and 240 or 220), extraCompactMobile and 38 or (isCompact and 42 or 38))
 	end
 	if countdownOverlay then
 		countdownOverlay.ZIndex = 40

@@ -131,6 +131,12 @@
 - Host-room labels and dropdown option typography are tuned to reduce control-panel crowding.
 - This addendum remains visual-only and does not alter room browser logic, matchmaking logic, or runtime systems.
 
+## 2026-04-26 Addendum - Visual Batch T22 RoomBrowser Preview + Countdown Compact
+
+- RoomBrowser extra-compact lane now tunes map-preview typography and visual density (title/label/chip/stats/footer/glyph) for short-height mobile viewports.
+- Float/countdown overlay controls are compacted in the same lane for better readability balance.
+- This addendum remains visual-only and does not alter room browser logic, matchmaking logic, or runtime systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:
