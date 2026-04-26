@@ -11273,7 +11273,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			local actionRowGap = extraCompactMobile and 4 or 6
 			local actionColumnGap = extraCompactMobile and 1 or 6
 			local roomListBottomGap = extraCompactMobile and 24 or 34
-			local roomListHeight = math.max(129, previewHeight - (joinHeight + actionRowHeight + roomListBottomGap))
+			local roomListHeight = math.max(128, previewHeight - (joinHeight + actionRowHeight + roomListBottomGap))
 			local actionY = contentTop + roomListHeight + (extraCompactMobile and 12 or 18)
 
 			setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, leftWidth, previewHeight)

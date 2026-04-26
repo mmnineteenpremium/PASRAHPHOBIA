@@ -388,6 +388,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - anchor vertikal JoinPassword lane extra-compact dipadatkan tipis lanjutan terhadap action row.
   - tinggi input dipertahankan; grouping input+aksi makin konsisten.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T98 untuk RoomBrowser roombrowser-roomlist-min-height-trim-4 sudah masuk:
+  - minimum tinggi room-list kolom kanan dipadatkan tipis lanjutan.
+  - fleksibilitas density naik tanpa mengubah perilaku list.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
