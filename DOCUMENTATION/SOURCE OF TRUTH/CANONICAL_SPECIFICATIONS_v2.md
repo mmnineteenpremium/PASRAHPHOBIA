@@ -1815,3 +1815,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser received another extra-compact visual micro-adjustment in the map-footer y align trim lane.
 - Footer copy sits slightly tighter under the title lane.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-27 Addendum - Visual Batch T156 Map-Stats Anchor Trim IV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-stats anchor trim lane.
+- Stats placement trims spare bottom margin while preserving utility hierarchy.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
