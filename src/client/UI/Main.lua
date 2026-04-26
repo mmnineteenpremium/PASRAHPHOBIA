@@ -11272,7 +11272,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			local joinHeight = extraCompactMobile and 38 or 40
 			local actionRowGap = extraCompactMobile and 4 or 6
 			local actionColumnGap = extraCompactMobile and 2 or 6
-			local roomListBottomGap = extraCompactMobile and 27 or 34
+			local roomListBottomGap = extraCompactMobile and 26 or 34
 			local roomListHeight = math.max(131, previewHeight - (joinHeight + actionRowHeight + roomListBottomGap))
 			local actionY = contentTop + roomListHeight + (extraCompactMobile and 15 or 18)
 
