@@ -11424,6 +11424,13 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	if roomListLayout then
 		roomListLayout.Padding = UDim.new(0, useWideMobileLayout and 6 or 4)
 	end
+	local inviteListLayout = inviteList and inviteList:FindFirstChildOfClass("UIListLayout")
+	if inviteList then
+		inviteList.ScrollBarThickness = extraCompactMobile and 3 or 4
+	end
+	if inviteListLayout then
+		inviteListLayout.Padding = UDim.new(0, extraCompactMobile and 3 or 4)
+	end
 	if joinPassword then
 		joinPassword.TextSize = extraCompactMobile and 13 or (profile.isMobile and 15 or (isCompact and 14 or 12))
 	end
@@ -17992,6 +17999,7 @@ function UISystem:_ensureRoomBrowserGui()
 	logRoomClickConnected("JoinRoomButton(RoomRowActivated)")
 
 	local function rebuildInviteList()
+		local extraCompactRoomBrowser = self._roomBrowserExtraCompact == true
 		for _, child in ipairs(inviteList:GetChildren()) do
 			if child:IsA("TextButton") then
 				child:Destroy()
@@ -18008,13 +18016,14 @@ function UISystem:_ensureRoomBrowserGui()
 
 		local inviteAllRow = Instance.new("TextButton")
 		inviteAllRow.Name = "InviteAll"
-		inviteAllRow.Size = UDim2.new(1, -4, 0, 24)
+		inviteAllRow.Size = UDim2.new(1, -4, 0, extraCompactRoomBrowser and 22 or 24)
 		inviteAllRow.BackgroundColor3 = Color3.fromRGB(58, 98, 136)
 		inviteAllRow.BorderSizePixel = 0
 		inviteAllRow.Font = Enum.Font.GothamBold
-		inviteAllRow.TextSize = 12
+		inviteAllRow.TextSize = extraCompactRoomBrowser and 11 or 12
 		inviteAllRow.TextColor3 = Color3.fromRGB(245, 245, 245)
 		inviteAllRow.Text = "INVITE ALL (BROADCAST)"
+		inviteAllRow.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 		inviteAllRow.ZIndex = 26
 		inviteAllRow.Parent = inviteList
 		local inviteAllCorner = Instance.new("UICorner")
@@ -18032,14 +18041,15 @@ function UISystem:_ensureRoomBrowserGui()
 				local nameText = tostring(lobbyPlayer.displayName or lobbyPlayer.name or ("User " .. tostring(userId)))
 				local row = Instance.new("TextButton")
 				row.Name = "Invite_" .. tostring(userId)
-				row.Size = UDim2.new(1, -4, 0, 24)
+				row.Size = UDim2.new(1, -4, 0, extraCompactRoomBrowser and 22 or 24)
 				row.BackgroundColor3 = Color3.fromRGB(40, 52, 68)
 				row.BorderSizePixel = 0
 				row.Font = Enum.Font.Gotham
-				row.TextSize = 12
+				row.TextSize = extraCompactRoomBrowser and 11 or 12
 				row.TextColor3 = Color3.fromRGB(230, 235, 245)
 				row.TextXAlignment = Enum.TextXAlignment.Left
 				row.Text = "  " .. nameText
+				row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 				row.ZIndex = 26
 				row.Parent = inviteList
 				local rowCorner = Instance.new("UICorner")

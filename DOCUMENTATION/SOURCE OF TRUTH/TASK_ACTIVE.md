@@ -100,6 +100,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - tab mode RoomBrowser extra-compact dipadatkan (height/gap) untuk membuka ruang vertikal.
   - row list RoomBrowser extra-compact kini single-line truncate + padding agar lebih mudah discan.
   - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
+- Batch visual T26 untuk RoomBrowser invite list extra compact sudah masuk:
+  - `InviteDropdown` RoomBrowser kini punya lane extra-compact eksplisit pada row broadcast + row pemain.
+  - tinggi row/text/spacing/scrollbar invite list dipadatkan, dengan truncate untuk menjaga keterbacaan nama.
+  - tetap visual-only tanpa perubahan logic invite/matchmaking/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

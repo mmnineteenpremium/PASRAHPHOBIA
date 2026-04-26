@@ -316,6 +316,15 @@ Status ringkas batch T25:
 - row list RoomBrowser extra-compact beralih ke single-line truncate + padding untuk scan cepat
 - tetap visual-only, tanpa perubahan logic room browser/runtime
 
+[2026-04-26 NOTE - Visual Batch T26]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T26_ROOMBROWSER_INVITE_LIST_EXTRA_COMPACT_2026-04-26.md`
+
+Status ringkas batch T26:
+- `InviteDropdown` RoomBrowser mendapat lane extra-compact eksplisit untuk row broadcast + row pemain
+- row invite list dipadatkan (height/text/spacing/scrollbar) dan truncate diaktifkan untuk nama panjang
+- tetap visual-only, tanpa perubahan logic invite/matchmaking/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

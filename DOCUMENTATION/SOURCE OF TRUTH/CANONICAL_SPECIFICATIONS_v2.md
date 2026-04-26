@@ -155,6 +155,12 @@
 - Room list rows in this lane now prioritize single-line scannability with truncation and horizontal padding.
 - This addendum remains visual-only and does not alter room browser logic, matchmaking logic, or runtime systems.
 
+## 2026-04-26 Addendum - Visual Batch T26 RoomBrowser Invite List Extra Compact
+
+- RoomBrowser invite dropdown now applies explicit extra-compact row typography/sizing for short-height mobile profiles.
+- Invite list spacing/scrollbar and row truncation are tuned for faster scan and reduced clipping risk.
+- This addendum remains visual-only and does not alter invite logic, matchmaking logic, or runtime systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:
