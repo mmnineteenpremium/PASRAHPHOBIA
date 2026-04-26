@@ -217,6 +217,15 @@ Status ringkas batch T14:
 - text-size tombol aksi utama dituning khusus compact mobile untuk menjaga keterbacaan tanpa terasa padat
 - tetap visual-only, tanpa perubahan flow menu atau logic runtime
 
+[2026-04-26 NOTE - Visual Batch T15]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T15_PASRA_JOURNAL_MOBILE_READABILITY_2026-04-26.md`
+
+Status ringkas batch T15:
+- `PASRA_UI` mobile mendapat reserve footer + rebalance area konten agar copy snapshot panjang tetap rapi
+- `JournalUI` mobile mendapat tuning strip scan (action/status) dan area konten agar tidak overlap di viewport sempit
+- tetap visual-only, tanpa perubahan sistem evidence/result/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

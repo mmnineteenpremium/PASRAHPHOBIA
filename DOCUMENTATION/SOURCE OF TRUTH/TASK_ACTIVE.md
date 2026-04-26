@@ -56,6 +56,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - ritme vertical stack tombol + footer `MainMenuUI` mobile dipadatkan terkontrol khusus viewport tinggi sempit.
   - text-size tombol aksi `Room/Profile/Shop/Rank/Graphics` dituning khusus lane compact agar tidak sesak.
   - perubahan tetap murni visual tanpa perubahan logic sistem/menu flow.
+- Batch visual T15 untuk PASRA_UI + JournalUI mobile readability sudah masuk:
+  - `PASRA_UI` mobile mendapat reserve footer + ukuran konten yang lebih aman untuk copy snapshot panjang.
+  - `JournalUI` mobile mendapat tuning area scan (`ToolActionButton` + `ToolStatusLabel`) agar tidak overlap saat panel padat.
+  - tuning text-size secondary/footer mobile untuk kedua panel tetap di lane visual-only tanpa ubah runtime logic.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

@@ -88,6 +88,13 @@
 - Main menu action button text sizes are tuned in compact mobile mode to preserve readability under dense vertical composition.
 - This addendum remains visual-only and does not alter menu flow logic, system architecture, or runtime gameplay behavior.
 
+## 2026-04-26 Addendum - Visual Batch T15 PASRA + Journal Mobile Readability
+
+- `PASRA_UI` mobile lane now has dedicated footer reserve and content-frame balance to protect readability for dense snapshot text.
+- `JournalUI` mobile lane now has tuned content-frame and scan strip (`ToolActionButton`/`ToolStatusLabel`) spacing to avoid overlap.
+- Secondary/footer mobile typography for both panels is tuned for compact viewport stability.
+- This addendum remains visual-only and does not alter evidence logic, result logic, or runtime gameplay systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:
