@@ -16232,3 +16232,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - padding kiri/kanan row extra-compact serta gap antar row list dipadatkan untuk densitas informasi yang lebih baik.
 - tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
 
+---
+
+# 46. VISUAL BATCH T43 ROOMBROWSER STATUS HEADER COMPACT TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- baris status header RoomBrowser lane extra-compact dipadatkan (tinggi + text-size) untuk hierarchy yang lebih stabil di viewport pendek.
+- truncation status diaktifkan khusus lane extra-compact agar pesan panjang tidak overflow.
+- tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
+

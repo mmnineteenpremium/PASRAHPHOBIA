@@ -11230,8 +11230,9 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		titleGlow.TextSize = title.TextSize
 	end
 	if statusLabel then
-		setOffsetBounds(statusLabel, headerPadding, isCompact and 40 or 44, panelWidth - headerPadding * 2, 24)
-		statusLabel.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 12))
+		setOffsetBounds(statusLabel, headerPadding, isCompact and 40 or 44, panelWidth - headerPadding * 2, extraCompactMobile and 22 or 24)
+		statusLabel.TextSize = extraCompactMobile and 11 or (profile.isMobile and 14 or (isCompact and 13 or 12))
+		statusLabel.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 	end
 
 	local controlsY = profile.isMobile and 78 or (isCompact and 72 or 74)

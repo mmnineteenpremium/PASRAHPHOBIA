@@ -1047,3 +1047,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser room-list rows now have extra-compact-specific horizontal inset trim for short mobile viewports.
 - Horizontal density tuning is visual-only: extra-compact row width inset trim plus left/right internal padding trim and tighter list row gap.
 - No room selection/join logic or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T43 Status Header Compact Trim
+
+- RoomBrowser status header now has extra-compact-specific height and text-size tuning for short mobile viewports.
+- Status-header tuning is visual-only: extra-compact status-line truncation to prevent long-message overflow in constrained width.
+- No room selection/join logic or runtime behavior changes in this batch.
