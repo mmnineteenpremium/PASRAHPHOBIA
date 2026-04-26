@@ -32,6 +32,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `Lobby Panel` sekarang menampilkan micro-state wallet MM/PP + daily quest/check-in + hidden gems + gacha snapshot untuk lane harian.
   - `Quick Menu` menampilkan micro-state canonical (wallet, daily, gacha, hidden gems) di secondary/footer.
   - `ShopUI` menambahkan detail visual gacha snapshot (`owned/equipped`) di lane secondary/footer dan attribute stamp.
+- Batch visual T9 untuk mobile readability tuning sudah masuk:
+  - copy micro-state di `Lobby Panel`, `Quick Menu`, dan `ShopUI` dipadatkan khusus mode mobile agar tidak overflow.
+  - sizing/text scale pada lane lobby header hint + menu mobile disetel ulang untuk readability lintas rasio layar.
+  - semua tuning tetap visual-only berbasis snapshot runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
@@ -115,7 +119,7 @@ Semua dokumen harus menyatakan lock runtime-spawn authored + visual-only executi
 
 ## Remaining Work (Excluding Owner 2-Client Smoke)
 
-- Final pass visual canonical UI dari referensi `asset mentah/ref ui/*.html` untuk panel yang masih perlu penyetaraan akhir layout/spacing/typography lintas device (terutama fine-tuning readability mobile vs desktop) tanpa menambah sistem baru.
+- Final pass visual canonical UI dari referensi `asset mentah/ref ui/*.html` untuk panel yang masih perlu penyetaraan akhir layout/spacing/typography lintas device (terutama verifikasi akhir readability pada device nyata setelah T9) tanpa menambah sistem baru.
 - Bukti visual + catatan perubahan per panel canonical perlu terus ditambah per batch report source-of-truth agar tidak ada drift antara implementasi aktif dan indeks dokumen.
 
 ## Definition Of Done

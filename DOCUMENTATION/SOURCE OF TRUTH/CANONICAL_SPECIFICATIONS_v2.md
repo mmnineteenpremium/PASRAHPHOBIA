@@ -50,6 +50,12 @@
 - Additional UI attributes for main menu/shop lanes are stamped for visual QA traceability only.
 - This addendum remains presentation-only and does not introduce new purchasing logic, progression logic, or backend state.
 
+## 2026-04-26 Addendum - Visual Batch T9 Mobile Readability
+
+- Mobile/compact wording for `Lobby Panel`, `Quick Menu`, and `ShopUI` is shortened to keep canonical micro-state readable in narrow viewports.
+- Lobby/menu sizing/text tuning for compact lanes is adjusted to reduce overflow risk when daily/gacha/hidden state strings are active.
+- This addendum remains visual-only and does not alter runtime logic, reward logic, or persistence state.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

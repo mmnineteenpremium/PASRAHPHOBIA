@@ -163,6 +163,15 @@ Status ringkas batch T8:
 - `DailyRewardZone` fokus harian membawa copy quest/check-in yang lebih eksplisit
 - `ShopUI` menambahkan detail gacha snapshot (`owned/equipped`) + stamp attribute visual hidden gems/gacha
 
+[2026-04-26 NOTE - Visual Batch T9]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T9_MOBILE_READABILITY_TUNING_2026-04-26.md`
+
+Status ringkas batch T9:
+- copy micro-state untuk `Lobby Panel`, `Quick Menu`, dan `ShopUI` dipadatkan khusus mobile/compact viewport
+- tuning sizing/text pada lane lobby + menu mobile mengurangi risiko overflow saat state daily/gacha/hidden aktif
+- tetap tidak ada sistem baru; murni presentasi visual snapshot runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

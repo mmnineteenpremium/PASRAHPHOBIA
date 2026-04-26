@@ -7664,6 +7664,7 @@ function UISystem:_refreshBasicLobbyPanel()
 	local gachaState = ownedInventoryCount > 0 and "COLLECTED" or "EMPTY"
 	local rewardSnapshot = self._matchResult or createDefaultMatchResult()
 	local hiddenGemsCompact = formatHiddenGemsCompact(rewardSnapshot.ppBreakdown)
+	local isMobileUi = self._deviceProfile and self._deviceProfile.isMobile == true
 	local royalPassState = self._royalPassState or {}
 	local currentTier = math.max(1, math.floor(tonumber(royalPassState.currentTier or 1) or 1))
 	local dailyCheckInState = string.format("DAY %02d", math.min(30, currentTier))
@@ -7675,13 +7676,17 @@ function UISystem:_refreshBasicLobbyPanel()
 	local primaryText = "Tap OPEN ROOM BROWSER, lalu BUAT ROOM, lalu START dari panel room untuk mulai investigasi."
 	local selectedMode = tostring(state.selectedMode or "Classic")
 	local selectedMap = tostring(state.selectedMap or MAPS[1] or "HauntedHouse")
-	local secondaryText = string.format("Mode %s | Map %s | %d room aktif | Wallet %s", selectedMode, selectedMap, #rooms, walletMicro)
-	local hintText = string.format(
-		"Alur test: OPEN ROOM BROWSER -> BUAT ROOM -> START -> masuk map -> pakai Field Kit untuk evidence. Daily %s • %s • %s",
-		dailyQuestState,
-		dailyCheckInState,
-		hiddenGemsCompact
-	)
+	local secondaryText = isMobileUi
+		and string.format("%s | %s | %d room | %s", selectedMode, selectedMap, #rooms, walletMicro)
+		or string.format("Mode %s | Map %s | %d room aktif | Wallet %s", selectedMode, selectedMap, #rooms, walletMicro)
+	local hintText = isMobileUi
+		and string.format("Flow: ROOM BROWSER -> START. %s • %s • %s", dailyQuestState, dailyCheckInState, hiddenGemsCompact)
+		or string.format(
+			"Alur test: OPEN ROOM BROWSER -> BUAT ROOM -> START -> masuk map -> pakai Field Kit untuk evidence. Daily %s • %s • %s",
+			dailyQuestState,
+			dailyCheckInState,
+			hiddenGemsCompact
+		)
 	local zoneFocus = self._lobbyZoneFocus
 	local zoneFocusFallback = (not currentRoom and not state.lastError) and getNearestLobbyZoneInfo() or nil
 	if type(zoneFocus) ~= "table" or tostring(zoneFocus.badge or "") == "" then
@@ -7696,7 +7701,9 @@ function UISystem:_refreshBasicLobbyPanel()
 		badgeColor = state.matchStarting == true and Color3.fromRGB(126, 84, 48) or Color3.fromRGB(62, 96, 132)
 		glyphText = state.matchStarting == true and "GO" or "RM"
 		primaryText = string.format("Room #%s siap. Lanjutkan kontrol host atau ready dari Room Browser.", tostring(currentRoom.roomId))
-		secondaryText = string.format("%s | %s | %d pemain | Wallet %s", roomMode, roomMap, playerCount, walletMicro)
+		secondaryText = isMobileUi
+			and string.format("%s | %s | %dp | %s", roomMode, roomMap, playerCount, walletMicro)
+			or string.format("%s | %s | %d pemain | Wallet %s", roomMode, roomMap, playerCount, walletMicro)
 		if state.matchStarting == true then
 			local countdown = state.countdownSecondsLeft or state.countdownTotal
 			hintText = countdown and ("Countdown aktif: " .. formatCountdown(countdown)) or "Countdown aktif..."
@@ -7717,27 +7724,32 @@ function UISystem:_refreshBasicLobbyPanel()
 			secondaryText = subtitle
 				.. (distanceText and (" | " .. distanceText) or "")
 				.. " | "
-				.. string.format("%d room aktif | Wallet %s", #rooms, walletMicro)
+				.. (isMobileUi and string.format("%d room | %s", #rooms, walletMicro) or string.format("%d room aktif | Wallet %s", #rooms, walletMicro))
 		end
 		local hint = tostring(zoneFocus.hint or "")
 		if hint ~= "" then
 			hintText = distanceText and (hint .. " • " .. distanceText) or hint
 		end
 		if tostring(zoneFocus.zoneName or "") == "DailyRewardZone" then
-			secondaryText = string.format(
-				"%s | Quest %s • %s",
-				secondaryText,
-				dailyQuestState,
-				dailyCheckInState
-			)
-			hintText = string.format(
-				"%s • Gacha %s (%d/%d) • %s",
-				hintText,
-				gachaState,
-				ownedInventoryCount,
-				equippedInventoryCount,
-				hiddenGemsCompact
-			)
+			if isMobileUi then
+				secondaryText = string.format("%s | Q %s • %s", secondaryText, dailyQuestState, dailyCheckInState)
+				hintText = string.format("%s • Gacha %s %d/%d • %s", hintText, gachaState, ownedInventoryCount, equippedInventoryCount, hiddenGemsCompact)
+			else
+				secondaryText = string.format(
+					"%s | Quest %s • %s",
+					secondaryText,
+					dailyQuestState,
+					dailyCheckInState
+				)
+				hintText = string.format(
+					"%s • Gacha %s (%d/%d) • %s",
+					hintText,
+					gachaState,
+					ownedInventoryCount,
+					equippedInventoryCount,
+					hiddenGemsCompact
+				)
+			end
 		end
 	end
 
@@ -7876,6 +7888,7 @@ function UISystem:_refreshMainMenuPanel()
 	local gachaState = ownedInventoryCount > 0 and "COLLECTED" or "EMPTY"
 	local rewardSnapshot = self._matchResult or createDefaultMatchResult()
 	local hiddenGemsCompact = formatHiddenGemsCompact(rewardSnapshot.ppBreakdown)
+	local isMobileUi = self._deviceProfile and self._deviceProfile.isMobile == true
 	local royalPassState = self._royalPassState or {}
 	local currentTier = math.max(1, math.floor(tonumber(royalPassState.currentTier or 1) or 1))
 	local dailyCheckInState = string.format("DAY %02d", math.min(30, currentTier))
@@ -7886,15 +7899,17 @@ function UISystem:_refreshMainMenuPanel()
 	local statusText = "QUICK ACCESS"
 	local badgeColor = Color3.fromRGB(62, 132, 188)
 	local primaryText = "Hub visual canonical: Room, Rank/EXP, Profile, Shop, Royal Pass, Daily & Reward flow."
-	local secondaryText = string.format(
-		"Mode %s | Map %s | %d room aktif | Visual %s | Wallet %s | %s",
-		selectedMode,
-		selectedMap,
-		#rooms,
-		graphicsMeta.label,
-		walletMicro,
-		hiddenGemsCompact
-	)
+	local secondaryText = isMobileUi
+		and string.format("Mode %s | %s | %d room | %s | %s", selectedMode, selectedMap, #rooms, walletMicro, hiddenGemsCompact)
+		or string.format(
+			"Mode %s | Map %s | %d room aktif | Visual %s | Wallet %s | %s",
+			selectedMode,
+			selectedMap,
+			#rooms,
+			graphicsMeta.label,
+			walletMicro,
+			hiddenGemsCompact
+		)
 	local attributionFooter = pasrahBuildAttributionFooterText(self._legalState and self._legalState.attributions)
 
 	if currentRoom and currentRoom.roomId then
@@ -7902,14 +7917,23 @@ function UISystem:_refreshMainMenuPanel()
 		statusText = state.matchStarting == true and "COUNTDOWN" or "ROOM ACTIVE"
 		badgeColor = state.matchStarting == true and Color3.fromRGB(182, 130, 56) or Color3.fromRGB(58, 156, 122)
 		primaryText = string.format("Room #%s aktif. Semua akses dasar lobby ada di panel ini.", tostring(currentRoom.roomId))
-		secondaryText = string.format(
-			"%s | %s | %d pemain | Visual %s | Wallet %s",
-			tostring(currentRoom.mode or selectedMode),
-			tostring(currentRoom.mapId or selectedMap),
-			playerCount,
-			graphicsMeta.label,
-			walletMicro
-		)
+		secondaryText = isMobileUi
+			and string.format(
+				"%s | %s | %dp | %s | %s",
+				tostring(currentRoom.mode or selectedMode),
+				tostring(currentRoom.mapId or selectedMap),
+				playerCount,
+				walletMicro,
+				hiddenGemsCompact
+			)
+			or string.format(
+				"%s | %s | %d pemain | Visual %s | Wallet %s",
+				tostring(currentRoom.mode or selectedMode),
+				tostring(currentRoom.mapId or selectedMap),
+				playerCount,
+				graphicsMeta.label,
+				walletMicro
+			)
 	end
 
 	if window.Title then
@@ -7927,15 +7951,25 @@ function UISystem:_refreshMainMenuPanel()
 	end
 	if window.FooterLabel then
 		local graphicsFooter = string.format("Visual %s [%s]. Mobile default tetap landscape dan toggle ini murni client-side.", graphicsMeta.label, graphicsMeta.footer)
-		local canonicalFooter = string.format(
-			"Daily %s • %s • Gacha %s (%d/%d) • %s.",
-			dailyQuestState,
-			dailyCheckInState,
-			gachaState,
-			ownedInventoryCount,
-			equippedInventoryCount,
-			hiddenGemsCompact
-		)
+		local canonicalFooter = isMobileUi
+			and string.format(
+				"Daily %s • %s • Gacha %s %d/%d • %s.",
+				dailyQuestState,
+				dailyCheckInState,
+				gachaState,
+				ownedInventoryCount,
+				equippedInventoryCount,
+				hiddenGemsCompact
+			)
+			or string.format(
+				"Daily %s • %s • Gacha %s (%d/%d) • %s.",
+				dailyQuestState,
+				dailyCheckInState,
+				gachaState,
+				ownedInventoryCount,
+				equippedInventoryCount,
+				hiddenGemsCompact
+			)
 		if attributionFooter ~= "" then
 			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. canonicalFooter .. "\n" .. UISystem._getBuildSignatureText()
 		else
@@ -9829,6 +9863,7 @@ function UISystem:_refreshShopPanel()
 	local statusText = "STORE"
 	local badgeColor = Color3.fromRGB(124, 92, 48)
 	local secondaryText = self._shopState.lastMessage or "Pilih item untuk test shop."
+	local isMobileUi = self._deviceProfile and self._deviceProfile.isMobile == true
 	local profileState = self._profileState or {}
 	local equippedInventoryCount = countLookupEntries(profileState.equippedCosmetics)
 	local hiddenGemsCompact = formatHiddenGemsCompact(self._matchResult and self._matchResult.ppBreakdown or nil)
@@ -9840,7 +9875,9 @@ function UISystem:_refreshShopPanel()
 		ownedCount += 1
 	end
 	local gachaState = ownedCount > 0 and "COLLECTED" or "EMPTY"
-	local gachaLaneText = string.format("Gacha snapshot %s (%d owned / %d equipped).", gachaState, ownedCount, equippedInventoryCount)
+	local gachaLaneText = isMobileUi
+		and string.format("Gacha %s %d/%d.", gachaState, ownedCount, equippedInventoryCount)
+		or string.format("Gacha snapshot %s (%d owned / %d equipped).", gachaState, ownedCount, equippedInventoryCount)
 	if not shouldShowShopFilter(activeFilter, self._shopState.catalog, self._shopState.ownedItemIds) then
 		activeFilter = "All"
 		self._shopState.filterKey = activeFilter
@@ -9877,7 +9914,9 @@ function UISystem:_refreshShopPanel()
 		statusText = "PROMPT"
 		badgeColor = Color3.fromRGB(82, 94, 126)
 	end
-	secondaryText = string.format("%s | %s | %s", secondaryText, hiddenGemsCompact, gachaState)
+	secondaryText = isMobileUi
+		and string.format("%s | %s | Gacha %s", secondaryText, hiddenGemsCompact, gachaState)
+		or string.format("%s | %s | %s", secondaryText, hiddenGemsCompact, gachaState)
 
 	local footerText = string.format(
 		"Owned %d item. MM dan PP tetap currency in-game. Item bantuan bertanda CLASSIC ONLY tidak memberi bonus di Ranked. SETUP berarti slot Robux belum siap atau marketplaceId Creator Hub belum valid. %s %s",
@@ -11720,7 +11759,7 @@ function UISystem:_applyDeviceSizing()
 		end
 		if lobby.BasicHintLabel then
 			lobby.BasicHintLabel.Position = UDim2.fromOffset(12, compactLandscapeLobby and 332 or (mobileLikeLobby and 370 or 348))
-			lobby.BasicHintLabel.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 16 or (mobileLikeLobby and 28 or 22))
+			lobby.BasicHintLabel.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 22 or (mobileLikeLobby and 34 or 24))
 		end
 		if compactLandscapeLobby then
 			if lobby.BasicLobbyGlyph then
@@ -11734,11 +11773,11 @@ function UISystem:_applyDeviceSizing()
 			end
 			if lobby.BasicPrimaryLabel then
 				lobby.BasicPrimaryLabel.Position = UDim2.fromOffset(12, 34)
-				lobby.BasicPrimaryLabel.Size = UDim2.new(1, -100, 0, 28)
+				lobby.BasicPrimaryLabel.Size = UDim2.new(1, -100, 0, 30)
 			end
 			if lobby.BasicSecondaryLabel then
 				lobby.BasicSecondaryLabel.Position = UDim2.fromOffset(12, 60)
-				lobby.BasicSecondaryLabel.Size = UDim2.new(1, -100, 0, 18)
+				lobby.BasicSecondaryLabel.Size = UDim2.new(1, -100, 0, 20)
 			end
 			if lobby.BasicModePill then
 				lobby.BasicModePill.Position = UDim2.fromOffset(12, 78)
@@ -11770,13 +11809,13 @@ function UISystem:_applyDeviceSizing()
 			lobby.BasicRankButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicPrimaryLabel then
-			lobby.BasicPrimaryLabel.TextSize = compactLandscapeLobby and 13 or math.max(15, profile:GetTextSize() - 2)
+			lobby.BasicPrimaryLabel.TextSize = compactLandscapeLobby and 12 or math.max(14, profile:GetTextSize() - 3)
 		end
 		if lobby.BasicSecondaryLabel then
-			lobby.BasicSecondaryLabel.TextSize = compactLandscapeLobby and 10 or math.max(12, profile:GetTextSize() - 5)
+			lobby.BasicSecondaryLabel.TextSize = compactLandscapeLobby and 9 or math.max(11, profile:GetTextSize() - 6)
 		end
 		if lobby.BasicHintLabel then
-			lobby.BasicHintLabel.TextSize = math.max(11, profile:GetTextSize() - 6)
+			lobby.BasicHintLabel.TextSize = compactLandscapeLobby and math.max(9, profile:GetTextSize() - 8) or math.max(10, profile:GetTextSize() - 7)
 		end
 		if lobby.BasicStatusBadge then
 			lobby.BasicStatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
@@ -12127,15 +12166,24 @@ function UISystem:_applyDeviceSizing()
 		for guiName, window in pairs(self._uxWidgets.basicWindows) do
 			if window.PrimaryLabel then
 				window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
+				if profile.isMobile and guiName == "MainMenuUI" then
+					window.PrimaryLabel.TextSize = math.max(13, profile:GetTextSize() - 4)
+				end
 			end
 			if window.SecondaryLabel then
 				window.SecondaryLabel.TextSize = math.max(12, profile:GetTextSize() - 5)
+				if profile.isMobile and guiName == "MainMenuUI" then
+					window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+				end
 			end
 			if window.ContentText then
 				window.ContentText.TextSize = math.max(12, profile:GetTextSize() - 5)
 			end
 			if window.FooterLabel then
 				window.FooterLabel.TextSize = math.max(11, profile:GetTextSize() - 6)
+				if profile.isMobile and guiName == "MainMenuUI" then
+					window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+				end
 			end
 			if window.StatusBadge then
 				window.StatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
@@ -12168,10 +12216,10 @@ function UISystem:_applyDeviceSizing()
 					window.StatusBadge.TextSize = 12
 				end
 				if window.PrimaryLabel then
-					setOffsetBounds(window.PrimaryLabel, 12, 76, panelWidth - 24, 38)
+					setOffsetBounds(window.PrimaryLabel, 12, 76, panelWidth - 24, isMenu and 34 or 38)
 				end
 				if window.SecondaryLabel then
-					setOffsetBounds(window.SecondaryLabel, 12, 118, panelWidth - 24, 34)
+					setOffsetBounds(window.SecondaryLabel, 12, isMenu and 112 or 118, panelWidth - 24, isMenu and 28 or 34)
 				end
 				if isMenu then
 					local buttonWidth = math.floor((panelWidth - 36) * 0.5)
