@@ -17563,3 +17563,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
 - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 186. VISUAL BATCH T183 ROOMBROWSER MAP TITLE WIDTH RECLAIM XVII (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+- ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
