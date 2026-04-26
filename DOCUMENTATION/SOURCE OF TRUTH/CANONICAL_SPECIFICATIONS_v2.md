@@ -1372,3 +1372,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser map preview now has a third compact-lane maximum-height micro trim.
 - Preview-map tuning is visual-only: slight max-height reduction to rebalance vertical section usage.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T91 Map-Mood Width Micro Trim IV
+
+- RoomBrowser map preview mood chip now has a fourth extra-compact width micro trim.
+- Map-mood tuning is visual-only: slight width reduction with unchanged truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
