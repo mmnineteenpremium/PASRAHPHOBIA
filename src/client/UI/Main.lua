@@ -11343,7 +11343,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		local stackButtonHeight = extraCompactMobile and 36 or (profile.isMobile and 40 or 36)
 		local stackFirstRowY = actionY + (extraCompactMobile and 46 or (profile.isMobile and 50 or 46))
 		local stackSecondRowY = actionY + (extraCompactMobile and 86 or (profile.isMobile and 94 or 86))
-		setOffsetBounds(joinPassword, headerPadding, actionY - (profile.isMobile and 41 or 42), previewWidth, extraCompactMobile and 34 or (profile.isMobile and 38 or 34))
+		setOffsetBounds(joinPassword, headerPadding, actionY - (profile.isMobile and 40 or 42), previewWidth, extraCompactMobile and 34 or (profile.isMobile and 38 or 34))
 		setOffsetBounds(queueButton, headerPadding, actionY, previewWidth, queueHeight)
 		setOffsetBounds(quickClassicButton, headerPadding, stackFirstRowY, math.floor((previewWidth - 3) * 0.5), stackButtonHeight)
 		setOffsetBounds(quickRankedButton, headerPadding + math.floor((previewWidth - 3) * 0.5) + 3, stackFirstRowY, math.floor((previewWidth - 3) * 0.5), stackButtonHeight)
