@@ -16522,3 +16522,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip yang lebih efisien.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 75. VISUAL BATCH T72 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM III (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ritme vertikal yang lebih ringkas.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
