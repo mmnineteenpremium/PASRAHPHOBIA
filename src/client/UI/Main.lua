@@ -11294,7 +11294,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			setOffsetBounds(roomPreviewPlayersTitle, 12, 70 + previewMapHeight + 8, leftWidth - 24, 16)
 			setOffsetBounds(roomPreviewPlayersList, 12, 70 + previewMapHeight + previewPlayersTopGap, leftWidth - 24, previewHeight - (70 + previewMapHeight + previewPlayersBottomInset))
 			if previewMapTitle then
-				setOffsetBounds(previewMapTitle, 16, 8, leftWidth - 48, 14)
+				setOffsetBounds(previewMapTitle, 16, 8, leftWidth - 46, 14)
 				previewMapTitle.TextSize = 10
 			end
 			if previewMapMood then

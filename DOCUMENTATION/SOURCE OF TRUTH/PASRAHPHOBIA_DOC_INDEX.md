@@ -16492,3 +16492,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - anchor Y footer Map Preview lane extra-compact dipadatkan tipis untuk alignment strip bawah yang lebih rapat.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 72. VISUAL BATCH T69 ROOMBROWSER MAP TITLE WIDTH RECLAIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar Map Preview title lane compact direclaim tipis untuk headroom teks yang lebih aman.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.

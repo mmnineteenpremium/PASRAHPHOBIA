@@ -1218,3 +1218,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser map preview footer now has extra-compact-specific Y-anchor micro trim.
 - Map-footer tuning is visual-only: slight vertical alignment adjustment with unchanged footer size/typography.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T69 Map-Title Width Reclaim
+
+- RoomBrowser map preview title now has a compact-lane width reclaim micro trim.
+- Map-title tuning is visual-only: slight horizontal bounds expansion with unchanged title typography.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
