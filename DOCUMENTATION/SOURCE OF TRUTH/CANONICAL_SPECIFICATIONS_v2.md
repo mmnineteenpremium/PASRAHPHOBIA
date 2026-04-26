@@ -1337,3 +1337,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser action-lane paired buttons now have a fourth extra-compact column-gap micro trim.
 - Action-column tuning is visual-only: tighter paired spacing with balanced width recompute.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T86 RoomList Bottom-Gap Trim III
+
+- RoomBrowser room-list to action-lane transition now has a third extra-compact bottom-gap micro trim.
+- Transition tuning is visual-only: tighter vertical continuity with unchanged interaction flow.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.

@@ -340,6 +340,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - gap kolom tombol action lane extra-compact dipadatkan tipis lanjutan.
   - lebar tombol pasangan tetap dihitung ulang agar komposisi tetap seimbang.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T86 untuk RoomBrowser roombrowser-roomlist-bottom-gap-trim-3 sudah masuk:
+  - bottom-gap transisi room-list ke action lane extra-compact dipadatkan tipis lanjutan.
+  - continuity list-to-action lebih rapat tanpa ubah flow interaksi.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
