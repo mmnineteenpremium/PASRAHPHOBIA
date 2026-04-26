@@ -16152,3 +16152,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - canvas height compact ikut menyesuaikan tinggi dropdown agar konten invite tidak terpotong.
 - tidak ada perubahan logic invite/matchmaking/runtime, sesuai lock visual-only.
 
+---
+
+# 38. VISUAL BATCH T35 PREVIEW PLAYER CARD COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- kartu pemain pada `Room Preview` dipadatkan untuk lane compact/extra-compact (ukuran card, viewport avatar, dan area teks).
+- lane extra-compact memakai truncation nama/status serta grid padding yang lebih rapat agar tidak overflow.
+- tidak ada perubahan logic data pemain/room preview/runtime, sesuai lock visual-only.
+

@@ -136,6 +136,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `InviteDropdown` pada lane compact/extra-compact kini memakai tinggi dropdown responsif dan offset vertikal yang lebih rapat ke tombol invite.
   - room canvas compact disesuaikan mengikuti tinggi dropdown dinamis agar konten tidak terpotong di viewport pendek.
   - tetap visual-only tanpa perubahan logic invite/matchmaking/runtime.
+- Batch visual T35 untuk RoomBrowser preview-player card compact sudah masuk:
+  - card pemain di `Room Preview` mendapat tuning khusus compact/extra-compact pada ukuran card, ukuran viewport avatar, serta area label nama/status.
+  - lane extra-compact kini memakai truncation pada nama/status dan density grid yang lebih rapat agar tidak wrap berlebih.
+  - tetap visual-only tanpa perubahan logic data pemain/room preview/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

@@ -11314,6 +11314,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			if roomPreviewPlayersLayout then
 				roomPreviewPlayersLayout.FillDirectionMaxCells = 1
 				roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(leftWidth - 36, 72)
+				roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(6, extraCompactMobile and 4 or 6)
 			end
 		else
 		local previewWidth = panelWidth - headerPadding * 2
@@ -11373,6 +11374,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		if roomPreviewPlayersLayout then
 			roomPreviewPlayersLayout.FillDirectionMaxCells = 1
 			roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(previewWidth - 36, profile.isMobile and 82 or 74)
+			roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(6, extraCompactMobile and 4 or 6)
 		end
 		end
 	else
@@ -11417,6 +11419,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			local cellWidth = math.max(186, math.floor((previewWidth - 38) * 0.5))
 			roomPreviewPlayersLayout.FillDirectionMaxCells = 2
 			roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(cellWidth, 78)
+			roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(8, 8)
 		end
 	end
 
@@ -18070,14 +18073,19 @@ function UISystem:_ensureRoomBrowserGui()
 
 		local compactPreview = self._roomBrowserCompact == true
 		local extraCompactPreview = self._roomBrowserExtraCompact == true
+		local cardHeight = extraCompactPreview and 62 or (compactPreview and 74 or 78)
+		local previewWidth = extraCompactPreview and 50 or (compactPreview and 52 or 54)
+		local previewHeight = extraCompactPreview and 50 or (compactPreview and 62 or 66)
+		local textStartX = extraCompactPreview and 60 or 66
+		local nameWidth = compactPreview and (extraCompactPreview and 232 or 226) or 146
+		local stateY = extraCompactPreview and 40 or 44
+		local nameTextSize = extraCompactPreview and 10 or (compactPreview and 11 or 10)
+		local stateTextSize = extraCompactPreview and 9 or (compactPreview and 11 or 10)
 		for _, info in ipairs(players) do
 			local card = Instance.new("Frame")
 			card.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
 			card.BorderSizePixel = 0
-			card.Size = UDim2.fromOffset(
-				compactPreview and 320 or 220,
-				extraCompactPreview and 66 or (compactPreview and 74 or 78)
-			)
+			card.Size = UDim2.fromOffset(compactPreview and 320 or 220, cardHeight)
 			card.Parent = roomPreviewPlayersList
 			local cardCorner = Instance.new("UICorner")
 			cardCorner.CornerRadius = UDim.new(0, 8)
@@ -18091,10 +18099,7 @@ function UISystem:_ensureRoomBrowserGui()
 			preview.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
 			preview.BorderSizePixel = 0
 			preview.Position = UDim2.fromOffset(6, 6)
-			preview.Size = UDim2.fromOffset(
-				compactPreview and 52 or 54,
-				extraCompactPreview and 54 or (compactPreview and 62 or 66)
-			)
+			preview.Size = UDim2.fromOffset(previewWidth, previewHeight)
 			preview.Parent = card
 			local previewCorner = Instance.new("UICorner")
 			previewCorner.CornerRadius = UDim.new(0, 6)
@@ -18103,13 +18108,14 @@ function UISystem:_ensureRoomBrowserGui()
 
 			local nameLabel = Instance.new("TextLabel")
 			nameLabel.BackgroundTransparency = 1
-			nameLabel.Position = UDim2.fromOffset(66, 7)
-			nameLabel.Size = UDim2.fromOffset(compactPreview and 226 or 146, 32)
+			nameLabel.Position = UDim2.fromOffset(textStartX, 7)
+			nameLabel.Size = UDim2.fromOffset(nameWidth, extraCompactPreview and 28 or 32)
 			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 			nameLabel.TextYAlignment = Enum.TextYAlignment.Top
 			nameLabel.Font = Enum.Font.GothamBold
-			nameLabel.TextSize = extraCompactPreview and 10 or (compactPreview and 11 or 10)
-			nameLabel.TextWrapped = true
+			nameLabel.TextSize = nameTextSize
+			nameLabel.TextWrapped = not extraCompactPreview
+			nameLabel.TextTruncate = extraCompactPreview and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 			nameLabel.TextColor3 = Color3.fromRGB(236, 240, 245)
 			local roleTag = info.isHost and "[HOST]" or "[MEMBER]"
 			nameLabel.Text = string.format("%s %s", roleTag, tostring(info.displayName or info.name or "?"))
@@ -18117,11 +18123,12 @@ function UISystem:_ensureRoomBrowserGui()
 
 			local stateLabel = Instance.new("TextLabel")
 			stateLabel.BackgroundTransparency = 1
-			stateLabel.Position = UDim2.fromOffset(66, 44)
-			stateLabel.Size = UDim2.fromOffset(compactPreview and 226 or 146, 20)
+			stateLabel.Position = UDim2.fromOffset(textStartX, stateY)
+			stateLabel.Size = UDim2.fromOffset(nameWidth, 18)
 			stateLabel.TextXAlignment = Enum.TextXAlignment.Left
 			stateLabel.Font = Enum.Font.GothamSemibold
-			stateLabel.TextSize = extraCompactPreview and 10 or (compactPreview and 11 or 10)
+			stateLabel.TextSize = stateTextSize
+			stateLabel.TextTruncate = extraCompactPreview and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 			stateLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 220, 145) or Color3.fromRGB(255, 195, 120)
 			stateLabel.Text = info.isReady and "READY" or "NOT READY"
 			stateLabel.Parent = card
