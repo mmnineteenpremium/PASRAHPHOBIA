@@ -576,6 +576,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
   - ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T145 untuk RoomBrowser roombrowser-preview-playerlist-top-gap-trim-7 sudah masuk:
+  - jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+  - judul players tetap dipertahankan agar section break tetap jelas.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
