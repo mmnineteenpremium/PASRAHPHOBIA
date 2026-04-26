@@ -17483,3 +17483,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
 - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 176. VISUAL BATCH T173 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM IX (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+- tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
