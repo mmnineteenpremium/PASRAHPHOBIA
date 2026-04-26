@@ -16102,3 +16102,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - ukuran `KickNoticeCard`, blok pesan, dan tombol `OK` dipadatkan agar alert tetap jelas di mobile pendek.
 - tidak ada perubahan logic kick handling/runtime, sesuai lock visual-only.
 
+---
+
+# 33. VISUAL BATCH T30 COUNTDOWN OVERLAY COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- `CountdownOverlay` mendapat tuning compact pada `CountdownLabel` dan tombol `CancelCountdown`.
+- ukuran/posisi angka countdown serta tombol cancel dipadatkan untuk viewport mobile pendek.
+- tidak ada perubahan logic countdown/start-flow/runtime, sesuai lock visual-only.
+

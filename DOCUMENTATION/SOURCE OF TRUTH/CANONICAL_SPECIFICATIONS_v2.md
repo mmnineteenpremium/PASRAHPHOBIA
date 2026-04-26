@@ -969,3 +969,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser `KickNoticeModal` now has explicit `compact` and `extra-compact` visual lanes for constrained mobile viewports.
 - Kick notice hierarchy tuning is visual-only: card bounds, message block spacing, and `OK` button sizing/typography.
 - No kick handling/runtime behavior changes in this batch; runtime-authority lock remains unchanged.
+
+## 2026-04-26 Addendum - Visual Batch T30 Countdown Overlay Compact
+
+- RoomBrowser `CountdownOverlay` now has compact-tuned hierarchy for constrained mobile viewports.
+- Countdown overlay tuning is visual-only: countdown number bounds/position plus cancel button size/position/typography.
+- No countdown start/cancel flow or runtime-authority behavior changes in this batch.

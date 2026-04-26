@@ -116,6 +116,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `KickNoticeModal` kini memiliki lane `compact` dan `extra-compact` berbasis viewport pada `KickNoticeCard`.
   - hierarchy pesan + tombol `OK` dipadatkan (card bounds, text block, button sizing/typography) agar alert tetap jelas di mobile pendek.
   - tetap visual-only tanpa perubahan logic kick handling/runtime.
+- Batch visual T30 untuk RoomBrowser countdown overlay compact sudah masuk:
+  - `CountdownOverlay` mendapat tuning lane `compact/extra-compact` untuk `CountdownLabel` dan tombol `CancelCountdown`.
+  - ukuran/posisi countdown number + tombol cancel dipadatkan agar hierarchy tetap jelas di viewport mobile pendek.
+  - tetap visual-only tanpa perubahan logic countdown/start-flow/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

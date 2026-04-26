@@ -11703,10 +11703,14 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		floatButton.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 12)
 	end
 	if countdownLabel then
-		countdownLabel.TextSize = extraCompactMobile and 60 or (isCompact and 72 or 96)
+		countdownLabel.TextSize = extraCompactMobile and 56 or (isCompact and 72 or 96)
+		countdownLabel.Size = UDim2.fromOffset(extraCompactMobile and 320 or (isCompact and 360 or 400), extraCompactMobile and 100 or (isCompact and 112 or 120))
+		countdownLabel.Position = UDim2.fromScale(0.5, extraCompactMobile and 0.42 or 0.45)
 	end
 	if cancelCountdown then
 		cancelCountdown.Size = UDim2.fromOffset(extraCompactMobile and 216 or (isCompact and 240 or 220), extraCompactMobile and 38 or (isCompact and 42 or 38))
+		cancelCountdown.Position = UDim2.new(0.5, 0, extraCompactMobile and 0.68 or 0.70, 0)
+		cancelCountdown.TextSize = extraCompactMobile and 11 or (isCompact and 12 or 13)
 	end
 	if countdownOverlay then
 		countdownOverlay.ZIndex = 40
