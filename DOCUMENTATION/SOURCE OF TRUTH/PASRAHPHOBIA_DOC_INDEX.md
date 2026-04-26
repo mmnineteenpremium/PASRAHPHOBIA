@@ -127,6 +127,15 @@ Visual lane aktif sekarang juga dikunci:
   - `asset mentah/ref ui/*.html`
   - konversi HTML -> Roblox hanya pada visual layer (tanpa penambahan logic system baru).
 
+[2026-04-26 NOTE - Visual Batch T5]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T5_TOUCH_SCOPE_AND_RANK_PALETTE_2026-04-26.md`
+
+Status ringkas batch T5:
+- suppress header body text di touch sekarang dibatasi ke fase `Preparation/Loading` (staging readability lane)
+- aksen warna rank board + tier host room browser disejajarkan ke token rank palette dari referensi HTML canonical
+- gate `smoke test 2 client` tetap owner manual lane
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

@@ -52,8 +52,8 @@
   - `buildOk=true`
   - `canonicalMirrorOk=true`
   - manual blocker remains:
-    - `smoke test 2 client nyata belum dijalankan`
+    - `smoke test 2 client nyata: owner task manual (eksekusi user)`
 
 ## Pending Operational Closure
 
-- Run `smoke test 2 client nyata` to verify end-to-end runtime behavior on active device lane.
+- `smoke test 2 client nyata` tetap dibutuhkan untuk verifikasi end-to-end runtime behavior pada active device lane, dan eksekusinya berada di owner/user lane.

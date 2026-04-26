@@ -20,8 +20,8 @@ Task aktif saat ini dikunci ke dua hal berikut:
 - Runtime authoritative gate ditambah di teleport:
   - match gagal lanjut jika `PreparationStagingRuntime` tidak lolos validasi strict authored (spawn/door/boundary).
 - Override hardcoded legacy untuk spawn points (`PlayerSpawn_*`) dinonaktifkan dari lane aktif.
-- Pending closure operasional tetap:
-  - `smoke test 2 client nyata` untuk verifikasi end-to-end runtime + visual di device lane aktif.
+- Pending closure operasional (owner-manual lane):
+  - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
 ## Runtime Authority Lock (Non-Negotiable)
 
@@ -100,6 +100,12 @@ Wajib sinkron pada dokumen source-of-truth:
 - `DOCUMENTATION/SOURCE OF TRUTH/PASRAHPHOBIA_DOC_INDEX.md`
 
 Semua dokumen harus menyatakan lock runtime-spawn authored + visual-only execution lane.
+
+## Remaining Work (Excluding Owner 2-Client Smoke)
+
+- Touch-scope guard untuk match header `STAGING` sudah diterapkan di source; pending owner visual retest non-touch/desktop agar tidak ada regresi readability di layar besar.
+- Final pass visual canonical UI dari referensi `asset mentah/ref ui/*.html` untuk seluruh panel scope (Rank/EXP/Profiling/Daily/Gacha/Shop/RoyalPass/MM/PP/Item/Hidden Gems) tanpa menambah sistem baru.
+- Bukti visual + catatan perubahan per panel canonical di report source-of-truth agar tidak ada drift antara implementasi aktif dan indeks dokumen.
 
 ## Definition Of Done
 

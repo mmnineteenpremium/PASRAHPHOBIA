@@ -1,7 +1,8 @@
 param(
     [switch]$Strict,
     [switch]$Json,
-    [string]$BuildOutput = '_tmp_release_preflight_build.rbxlx'
+    [string]$BuildOutput = '_tmp_release_preflight_build.rbxlx',
+    [string]$CanonicalPlaceOutput = 'PASRAHPHOBIA.rbxlx'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -46,10 +47,26 @@ if (Test-Path $legalReviewPath) {
 
 $buildOk = $false
 $buildError = $null
+$canonicalMirrorPath = $null
+$canonicalMirrorOk = $false
+$canonicalMirrorError = $null
 try {
     & $invokeRojo 'build' 'default.project.json' '--output' $BuildOutput
     if ($LASTEXITCODE -eq 0) {
         $buildOk = $true
+        if (-not [string]::IsNullOrWhiteSpace($CanonicalPlaceOutput)) {
+            $canonicalMirrorPath = $CanonicalPlaceOutput
+            try {
+                if (([System.IO.Path]::GetFullPath($BuildOutput)) -eq ([System.IO.Path]::GetFullPath($CanonicalPlaceOutput))) {
+                    $canonicalMirrorOk = $true
+                } else {
+                    Copy-Item -LiteralPath $BuildOutput -Destination $CanonicalPlaceOutput -Force
+                    $canonicalMirrorOk = $true
+                }
+            } catch {
+                $canonicalMirrorError = $_.Exception.Message
+            }
+        }
     } else {
         $buildError = "rojo_build_exit_$LASTEXITCODE"
     }
@@ -66,7 +83,7 @@ if (($mapping.summary.safeItemsMissingMarketplaceId -gt 0) -or ($mapping.summary
     $manualBlockers.Add('Creator Hub marketplace mapping belum final (cek missing/disabled/hold/unclassified).')
 }
 
-$manualBlockers.Add('smoke test 2 client nyata belum dijalankan')
+$manualBlockers.Add('smoke test 2 client nyata: owner task manual (eksekusi user)')
 if (-not $persistenceValidated) {
     $manualBlockers.Add('persistence non-mock belum divalidasi')
 }
@@ -78,6 +95,9 @@ $summary = [pscustomobject]@{
     buildOk = $buildOk
     buildOutput = $BuildOutput
     buildError = $buildError
+    canonicalMirrorPath = $canonicalMirrorPath
+    canonicalMirrorOk = $canonicalMirrorOk
+    canonicalMirrorError = $canonicalMirrorError
     missingReports = @($missingReports)
     mapping = $mapping.summary
     manualBlockers = @($manualBlockers.ToArray())
@@ -98,6 +118,13 @@ Write-Host ("Build ok:              {0}" -f $buildOk)
 Write-Host ("Build output:          {0}" -f $BuildOutput)
 if ($buildError) {
     Write-Host ("Build error:           {0}" -f $buildError) -ForegroundColor Yellow
+}
+if ($canonicalMirrorPath) {
+    Write-Host ("Canonical mirror:      {0}" -f $canonicalMirrorPath)
+    Write-Host ("Canonical mirror ok:   {0}" -f $canonicalMirrorOk)
+    if ($canonicalMirrorError) {
+        Write-Host ("Canonical mirror err:  {0}" -f $canonicalMirrorError) -ForegroundColor Yellow
+    }
 }
 Write-Host ("Missing reports:       {0}" -f $missingReports.Count)
 Write-Host ("Robux items:           {0}" -f $mapping.summary.catalogRobuxItems)

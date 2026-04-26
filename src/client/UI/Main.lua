@@ -655,6 +655,52 @@ local UI_BRAND = {
 	pass = Color3.fromRGB(176, 132, 52),
 	daily = Color3.fromRGB(86, 154, 230),
 }
+local RANK_VISUAL_COLORS = {
+	bronze = Color3.fromRGB(200, 121, 65),
+	silver = Color3.fromRGB(143, 168, 184),
+	gold = Color3.fromRGB(212, 168, 32),
+	platinum = Color3.fromRGB(64, 200, 224),
+	diamond = Color3.fromRGB(64, 160, 255),
+	oni = Color3.fromRGB(224, 64, 32),
+	dragon = Color3.fromRGB(32, 224, 128),
+	legend = Color3.fromRGB(224, 192, 64),
+	master = Color3.fromRGB(224, 128, 255),
+	unranked = Color3.fromRGB(106, 126, 148),
+}
+local function resolveRankVisualAccent(rankLabel)
+	local token = string.lower(tostring(rankLabel or ""))
+	if token == "" then
+		return RANK_VISUAL_COLORS.unranked
+	end
+	if string.find(token, "master", 1, true) or string.find(token, "sang ahli", 1, true) then
+		return RANK_VISUAL_COLORS.master
+	end
+	if string.find(token, "legend", 1, true) or string.find(token, "legenda", 1, true) then
+		return RANK_VISUAL_COLORS.legend
+	end
+	if string.find(token, "dragon", 1, true) or string.find(token, "naga", 1, true) then
+		return RANK_VISUAL_COLORS.dragon
+	end
+	if string.find(token, "oni", 1, true) then
+		return RANK_VISUAL_COLORS.oni
+	end
+	if string.find(token, "diamond", 1, true) then
+		return RANK_VISUAL_COLORS.diamond
+	end
+	if string.find(token, "platinum", 1, true) or string.find(token, "platina", 1, true) then
+		return RANK_VISUAL_COLORS.platinum
+	end
+	if string.find(token, "gold", 1, true) or string.find(token, "emas", 1, true) then
+		return RANK_VISUAL_COLORS.gold
+	end
+	if string.find(token, "silver", 1, true) or string.find(token, "perak", 1, true) then
+		return RANK_VISUAL_COLORS.silver
+	end
+	if string.find(token, "bronze", 1, true) or string.find(token, "perunggu", 1, true) or string.find(token, "bayi", 1, true) then
+		return RANK_VISUAL_COLORS.bronze
+	end
+	return RANK_VISUAL_COLORS.unranked
+end
 local BUTTON_TONES = {
 	default = {
 		background = Color3.fromRGB(16, 30, 40),
@@ -680,12 +726,12 @@ local BUTTON_TONES = {
 		text = Color3.fromRGB(248, 230, 194),
 		stroke = Color3.fromRGB(222, 164, 48),
 	},
-	rank = {
-		background = Color3.fromRGB(44, 54, 28),
-		backgroundActive = Color3.fromRGB(62, 74, 34),
-		text = Color3.fromRGB(226, 238, 210),
-		stroke = Color3.fromRGB(168, 196, 100),
-	},
+		rank = {
+			background = Color3.fromRGB(58, 44, 20),
+			backgroundActive = Color3.fromRGB(82, 58, 24),
+			text = Color3.fromRGB(245, 228, 176),
+			stroke = Color3.fromRGB(212, 168, 32),
+		},
 	pass = {
 		background = Color3.fromRGB(56, 42, 26),
 		backgroundActive = Color3.fromRGB(74, 52, 28),
@@ -7104,8 +7150,12 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState, payload)
 	end
 end
 
-function UISystem:_suppressTouchMatchHeaderBodyText()
+function UISystem:_suppressTouchMatchHeaderBodyText(viewState)
 	if UserInputService.TouchEnabled ~= true then
+		return
+	end
+	local shouldSuppress = viewState == "Preparation" or viewState == "Loading"
+	if not shouldSuppress then
 		return
 	end
 	local playerGui = self:_getPlayerGui()
@@ -7149,7 +7199,8 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	)
 	payload = payload or self._phasePayload
 	local profile = self._deviceProfile or {}
-	local hideHeaderBodyText = UserInputService.TouchEnabled == true and viewState ~= "Results"
+	local hideHeaderBodyText = UserInputService.TouchEnabled == true
+		and (viewState == "Preparation" or viewState == "Loading")
 	local huntAssistSnapshot = viewState == "Hunt" and getHuntAssistSnapshot() or nil
 	local huntStatusSnapshot = viewState == "Hunt" and getHuntStatusSnapshot() or nil
 	local navigationAnchor = nil
@@ -7296,7 +7347,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	if match.SummaryFrame then
 		match.SummaryFrame.BackgroundColor3 = summaryFill
 	end
-	self:_suppressTouchMatchHeaderBodyText()
+	self:_suppressTouchMatchHeaderBodyText(viewState)
 	if match.TimerLabel then
 		match.TimerLabel.Visible = timerVisible and viewState ~= "Lobby" and not self:_isMatchResultsPhase()
 		match.TimerLabel.Text = timerVisible and timerText or ""
@@ -7988,6 +8039,7 @@ function UISystem:_refreshLeaderboardPanel()
 	local totalGames = math.max(0, math.floor(tonumber(profile.totalGames or 0) or 0))
 	local sanity = math.max(0, math.floor(tonumber(profile.sanity or 100) or 100))
 	local rankName = tostring(profile.rank or "Bayi III")
+	local rankAccent = resolveRankVisualAccent(rankName)
 	local victories = math.max(0, math.floor(tonumber(profile.victories or 0) or 0))
 	local leaderboardLabel = string.match(string.lower(rankName), "^sang ahli")
 		and string.format("Sang Ahli x%d", victories)
@@ -7996,7 +8048,7 @@ function UISystem:_refreshLeaderboardPanel()
 	local rooms = type(state.rooms) == "table" and state.rooms or {}
 	local currentRoom = type(state.currentRoom) == "table" and state.currentRoom or nil
 	local badgeText = "LOCAL SNAPSHOT"
-	local badgeColor = Color3.fromRGB(92, 104, 60)
+	local badgeColor = rankAccent:Lerp(Color3.fromRGB(24, 30, 40), 0.34)
 	local secondaryText = string.format("Rank %s | Match %d | Snapshot Lokal", leaderboardLabel, totalGames)
 	local roomLine = string.format("Room Browser %s | %d room terlihat", self._roomBrowserVisible and "terbuka" or "tertutup", #rooms)
 	local roomMode = currentRoom and tostring(currentRoom.mode or state.selectedMode or "Classic") or tostring(state.selectedMode or "Classic")
@@ -8017,7 +8069,7 @@ function UISystem:_refreshLeaderboardPanel()
 	if currentRoom and currentRoom.roomId then
 		badgeText = string.upper(roomMode) .. " ROOM"
 		badgeColor = roomModeLower == "ranked"
-			and Color3.fromRGB(132, 96, 52)
+			and rankAccent:Lerp(Color3.fromRGB(28, 22, 18), 0.22)
 			or Color3.fromRGB(60, 96, 132)
 		roomLine = string.format(
 			"Room #%s | %s | %d pemain",
@@ -8047,7 +8099,7 @@ function UISystem:_refreshLeaderboardPanel()
 	local widgets = self:_ensureLeaderboardWidgets(window)
 	if widgets then
 		local roomBadgeText = currentRoom and (string.upper(roomMode) .. " ROOM") or "LOCAL SNAPSHOT"
-		local roomBadgeColor = currentRoom and badgeColor or Color3.fromRGB(92, 104, 60)
+		local roomBadgeColor = currentRoom and badgeColor or rankAccent:Lerp(Color3.fromRGB(24, 30, 40), 0.34)
 		local roomGlyph = roomModeLower == "ranked" and "RK" or "CL"
 		local victoryRate = totalGames > 0 and math.floor((victories / math.max(totalGames, 1)) * 100 + 0.5) or 0
 		local sanityPercent = math.clamp(sanity / 100, 0.08, 1)
@@ -8073,16 +8125,18 @@ function UISystem:_refreshLeaderboardPanel()
 		widgets.ProgressCaption.Text = string.format("Sanity live %d%% • Status %s • %s", sanity, statusLabel, roomSummary)
 
 		local rowData = {
-			{
-				badge = "RANK",
-				glyph = rankGlyph,
-				title = "Tier status",
-				meta = string.format("Rank aktif %s • raw tier %s", leaderboardLabel, rankName),
-				pill = string.format("LV %d", level),
-				button = "LOCAL",
-				accent = roomBadgeColor,
-				preview = roomModeLower == "ranked" and Color3.fromRGB(62, 48, 30) or Color3.fromRGB(40, 52, 70),
-			},
+				{
+					badge = "RANK",
+					glyph = rankGlyph,
+					title = "Tier status",
+					meta = string.format("Rank aktif %s • raw tier %s", leaderboardLabel, rankName),
+					pill = string.format("LV %d", level),
+					button = "LOCAL",
+					accent = rankAccent,
+					preview = roomModeLower == "ranked"
+						and rankAccent:Lerp(Color3.fromRGB(18, 24, 32), 0.66)
+						or Color3.fromRGB(40, 52, 70),
+				},
 			{
 				badge = "MIND",
 				glyph = "SN",
@@ -8096,13 +8150,15 @@ function UISystem:_refreshLeaderboardPanel()
 			{
 				badge = roomModeLower == "ranked" and "MODE" or "ROOM",
 				glyph = roomGlyph,
-				title = currentRoom and "Live room pulse" or "Room browser pulse",
-				meta = roomSummary,
-				pill = currentRoom and string.format("%d/%d", playerCount, maxPlayers) or string.format("%d ROOM", #rooms),
-				button = self._roomBrowserVisible and "OPEN" or "IDLE",
-				accent = badgeColor,
-				preview = roomModeLower == "ranked" and Color3.fromRGB(58, 46, 32) or Color3.fromRGB(38, 52, 70),
-			},
+					title = currentRoom and "Live room pulse" or "Room browser pulse",
+					meta = roomSummary,
+					pill = currentRoom and string.format("%d/%d", playerCount, maxPlayers) or string.format("%d ROOM", #rooms),
+					button = self._roomBrowserVisible and "OPEN" or "IDLE",
+					accent = badgeColor,
+					preview = roomModeLower == "ranked"
+						and rankAccent:Lerp(Color3.fromRGB(20, 26, 34), 0.62)
+						or Color3.fromRGB(38, 52, 70),
+				},
 			{
 				badge = "WIN",
 				glyph = "VG",
@@ -8126,13 +8182,13 @@ function UISystem:_refreshLeaderboardPanel()
 				row.PreviewBadge.Text = data.badge
 				row.PreviewGlyph.TextColor3 = UI_BRAND.text
 				row.PreviewGlyph.Text = data.glyph
-				row.Title.Text = data.title
-				row.Meta.Text = data.meta
-				applyPricePillVisual(row.PricePill, data.pill, data.accent, UI_BRAND.text)
-				row.Button.Text = data.button
-				setButtonTone(row.Button, index == 2 and "warning" or "focus", false)
+					row.Title.Text = data.title
+					row.Meta.Text = data.meta
+					applyPricePillVisual(row.PricePill, data.pill, data.accent, UI_BRAND.text)
+					row.Button.Text = data.button
+					setButtonTone(row.Button, index == 1 and "rank" or (index == 2 and "warning" or "focus"), false)
+				end
 			end
-		end
 	end
 
 	local _, menuPanel = self:_getBasicWindowState("MainMenuUI")
@@ -16639,6 +16695,11 @@ function UISystem:_ensureRoomBrowserGui()
 	local rankedTierCorner = Instance.new("UICorner")
 	rankedTierCorner.CornerRadius = UDim.new(0, 6)
 	rankedTierCorner.Parent = rankedTierLabel
+	local rankedTierStroke = Instance.new("UIStroke")
+	rankedTierStroke.Name = "TierStroke"
+	rankedTierStroke.Thickness = 1
+	rankedTierStroke.Color = UI_BRAND.focusSoft
+	rankedTierStroke.Parent = rankedTierLabel
 
 	local mapPreview = Instance.new("Frame")
 	mapPreview.Name = "MapPreview"
@@ -18285,22 +18346,29 @@ function UISystem:_refreshRoomBrowserView()
 		end
 		self._roomBrowserWidgets.ModeSelector.Text = "MODE: " .. string.upper(roomMode)
 		self._roomBrowserWidgets.MapSelector.Text = "MAP: " .. tostring(roomMapId)
-		if roomMode == "Ranked" and hostCanControl then
-			local tierText = "UNRANKED"
-			local localPlayer = Players.LocalPlayer
-			if localPlayer then
-				for _, attrName in ipairs({ "RankTier", "Tier", "RankedTier", "HostTier" }) do
-					local value = localPlayer:GetAttribute(attrName)
-					if value ~= nil and tostring(value) ~= "" then
-						tierText = string.upper(tostring(value))
-						break
+			if roomMode == "Ranked" and hostCanControl then
+				local tierText = "UNRANKED"
+				local localPlayer = Players.LocalPlayer
+				if localPlayer then
+					for _, attrName in ipairs({ "RankTier", "Tier", "RankedTier", "HostTier" }) do
+						local value = localPlayer:GetAttribute(attrName)
+						if value ~= nil and tostring(value) ~= "" then
+							tierText = string.upper(tostring(value))
+							break
+						end
 					end
 				end
+				self._roomBrowserWidgets.RankedTierLabel.Text = "TIER HOST: " .. tierText
+				local tierAccent = resolveRankVisualAccent(tierText)
+				self._roomBrowserWidgets.RankedTierLabel.BackgroundColor3 = tierAccent:Lerp(UI_BRAND.bgCard, 0.58)
+				self._roomBrowserWidgets.RankedTierLabel.TextColor3 = tierAccent:Lerp(Color3.fromRGB(244, 248, 255), 0.36)
+				local tierStroke = self._roomBrowserWidgets.RankedTierLabel:FindFirstChild("TierStroke")
+				if tierStroke and tierStroke:IsA("UIStroke") then
+					tierStroke.Color = tierAccent:Lerp(Color3.fromRGB(24, 30, 40), 0.18)
+				end
+				self._roomBrowserWidgets.RankedTierLabel.Visible = true
 			end
-			self._roomBrowserWidgets.RankedTierLabel.Text = "TIER HOST: " .. tierText
-			self._roomBrowserWidgets.RankedTierLabel.Visible = true
-		end
-		self._roomBrowserWidgets.ModeSelector.Visible = hostCanControl
+			self._roomBrowserWidgets.ModeSelector.Visible = hostCanControl
 		self._roomBrowserWidgets.MapSelector.Visible = hostCanControl and roomMode ~= "Ranked"
 		self._roomBrowserWidgets.ModeDropdown.Visible = hostCanControl and self._roomModeDropdownOpen == true
 		self._roomBrowserWidgets.MapDropdown.Visible = hostCanControl and roomMode ~= "Ranked" and self._roomMapDropdownOpen == true
