@@ -11447,10 +11447,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		roomPreviewPlayersTitle.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 	end
 	if roomList then
-		roomList.ScrollBarThickness = isCompact and 6 or 4
+		roomList.ScrollBarThickness = extraCompactMobile and 5 or (isCompact and 6 or 4)
 	end
 	if roomListLayout then
-		roomListLayout.Padding = UDim.new(0, useWideMobileLayout and 6 or 4)
+		roomListLayout.Padding = UDim.new(0, extraCompactMobile and 3 or (useWideMobileLayout and 6 or 4))
 	end
 	local inviteListLayout = inviteList and inviteList:FindFirstChildOfClass("UIListLayout")
 	local compactInlineActionWidth = extraCompactMobile and 104 or 116
@@ -18223,7 +18223,7 @@ function UISystem:_ensureRoomBrowserGui()
 				row.BackgroundColor3 = Color3.fromRGB(63, 92, 138)
 			end
 			local rowCorner = Instance.new("UICorner")
-			rowCorner.CornerRadius = UDim.new(0, 6)
+			rowCorner.CornerRadius = UDim.new(0, extraCompactRoomBrowser and 5 or 6)
 			rowCorner.Parent = row
 
 			connectButtonPress(row, function()

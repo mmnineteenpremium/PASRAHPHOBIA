@@ -16202,3 +16202,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - alignment teks row multi-line dituning agar host/status lebih mudah discan pada viewport pendek.
 - tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
 
+---
+
+# 43. VISUAL BATCH T40 ROOM LIST DENSITY POLISH (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- `RoomList` pada lane extra-compact memakai scrollbar lebih tipis agar area list lebih efisien di viewport pendek.
+- gap antar row dan radius sudut row extra-compact dipadatkan untuk ritme scan daftar room yang lebih rapat.
+- tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
+

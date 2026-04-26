@@ -156,6 +156,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - row daftar room kini mendapat `UIPadding` adaptif per lane compact/extra-compact agar ritme baca lebih stabil.
   - alignment teks row multi-line di compact/wide disetel top-aligned untuk scan host/status yang lebih cepat.
   - tetap visual-only tanpa perubahan logic room select/join/runtime.
+- Batch visual T40 untuk RoomBrowser list-density polish sudah masuk:
+  - `RoomList` lane extra-compact kini memakai scrollbar lebih tipis agar list lebih efisien pada viewport pendek.
+  - jarak antar row list extra-compact dipadatkan dan radius sudut row diturunkan tipis untuk ritme scan yang lebih rapat.
+  - tetap visual-only tanpa perubahan logic room select/join/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
