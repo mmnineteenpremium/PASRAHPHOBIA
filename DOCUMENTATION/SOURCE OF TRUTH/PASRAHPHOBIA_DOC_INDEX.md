@@ -16925,3 +16925,15 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - ukuran teks footer dipertahankan agar hierarchy metadata map tetap stabil.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
 
+
+
+---
+
+# 114. VISUAL BATCH T111 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM VIII (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip dipertahankan agar keterbacaan label tetap stabil.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
