@@ -298,6 +298,15 @@ Status ringkas batch T23:
 - typography/ukuran `Results`, `Timer`, `Evidence Quick`, dan `Hint Bar` dipadatkan agar lebih jelas tanpa overflow
 - tetap visual-only, tanpa perubahan logic gameplay/runtime
 
+[2026-04-26 NOTE - Visual Batch T24]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T24_ROOMBROWSER_PLAYER_CARD_EXTRA_COMPACT_2026-04-26.md`
+
+Status ringkas batch T24:
+- card preview pemain di RoomBrowser mendapat lane extra-compact agar tetap muat dan terbaca pada viewport mobile pendek
+- ukuran kartu/viewport serta text-size name/state dipadatkan untuk menekan risiko clipping
+- tetap visual-only, tanpa perubahan logic room browser/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

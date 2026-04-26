@@ -143,6 +143,12 @@
 - Results typography plus timer/quick-action/hint controls are tuned to reduce overflow and lower-screen crowding.
 - This addendum remains visual-only and does not alter gameplay logic, economy logic, or runtime systems.
 
+## 2026-04-26 Addendum - Visual Batch T24 RoomBrowser Player Card Extra Compact
+
+- RoomBrowser room-preview player cards now apply extra-compact sizing/typography adjustments for short-height mobile profiles.
+- Card viewport and label density are reduced to preserve readability without clipping.
+- This addendum remains visual-only and does not alter room browser logic, matchmaking logic, or runtime systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

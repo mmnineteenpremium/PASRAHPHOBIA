@@ -92,6 +92,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - lane `compactMobileHud` ditambahkan untuk viewport mobile pendek pada panel hasil + HUD bawah.
   - typography/ukuran `Results`, `Timer`, `Evidence Quick`, `Hint Bar` dipadatkan agar tetap jelas tanpa overflow.
   - tetap visual-only tanpa perubahan logic gameplay/runtime.
+- Batch visual T24 untuk RoomBrowser player-card extra compact sudah masuk:
+  - card preview pemain di RoomBrowser mendapat lane extra-compact khusus viewport pendek.
+  - tinggi kartu + ukuran preview + text-size name/state dipadatkan agar tidak clipping.
+  - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

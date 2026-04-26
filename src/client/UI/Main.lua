@@ -17861,11 +17861,15 @@ function UISystem:_ensureRoomBrowserGui()
 		end
 
 		local compactPreview = self._roomBrowserCompact == true
+		local extraCompactPreview = self._roomBrowserExtraCompact == true
 		for _, info in ipairs(players) do
 			local card = Instance.new("Frame")
 			card.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
 			card.BorderSizePixel = 0
-			card.Size = UDim2.fromOffset(compactPreview and 320 or 220, compactPreview and 74 or 78)
+			card.Size = UDim2.fromOffset(
+				compactPreview and 320 or 220,
+				extraCompactPreview and 66 or (compactPreview and 74 or 78)
+			)
 			card.Parent = roomPreviewPlayersList
 			local cardCorner = Instance.new("UICorner")
 			cardCorner.CornerRadius = UDim.new(0, 8)
@@ -17879,7 +17883,10 @@ function UISystem:_ensureRoomBrowserGui()
 			preview.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
 			preview.BorderSizePixel = 0
 			preview.Position = UDim2.fromOffset(6, 6)
-			preview.Size = UDim2.fromOffset(compactPreview and 52 or 54, compactPreview and 62 or 66)
+			preview.Size = UDim2.fromOffset(
+				compactPreview and 52 or 54,
+				extraCompactPreview and 54 or (compactPreview and 62 or 66)
+			)
 			preview.Parent = card
 			local previewCorner = Instance.new("UICorner")
 			previewCorner.CornerRadius = UDim.new(0, 6)
@@ -17893,7 +17900,7 @@ function UISystem:_ensureRoomBrowserGui()
 			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 			nameLabel.TextYAlignment = Enum.TextYAlignment.Top
 			nameLabel.Font = Enum.Font.GothamBold
-			nameLabel.TextSize = compactPreview and 11 or 10
+			nameLabel.TextSize = extraCompactPreview and 10 or (compactPreview and 11 or 10)
 			nameLabel.TextWrapped = true
 			nameLabel.TextColor3 = Color3.fromRGB(236, 240, 245)
 			local roleTag = info.isHost and "[HOST]" or "[MEMBER]"
@@ -17906,7 +17913,7 @@ function UISystem:_ensureRoomBrowserGui()
 			stateLabel.Size = UDim2.fromOffset(compactPreview and 226 or 146, 20)
 			stateLabel.TextXAlignment = Enum.TextXAlignment.Left
 			stateLabel.Font = Enum.Font.GothamSemibold
-			stateLabel.TextSize = compactPreview and 11 or 10
+			stateLabel.TextSize = extraCompactPreview and 10 or (compactPreview and 11 or 10)
 			stateLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 220, 145) or Color3.fromRGB(255, 195, 120)
 			stateLabel.Text = info.isReady and "READY" or "NOT READY"
 			stateLabel.Parent = card
