@@ -316,6 +316,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - minimum tinggi room-list kolom kanan dipadatkan tipis lanjutan untuk fleksibilitas density.
   - tidak mengubah flow list, hanya batas minimum layout.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T80 untuk RoomBrowser roombrowser-preview-map-max-height-trim-2 sudah masuk:
+  - maksimum tinggi Map Preview lane compact dipadatkan tipis lanjutan untuk balance section.
+  - memberi headroom tambahan kecil untuk area players list di viewport pendek.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

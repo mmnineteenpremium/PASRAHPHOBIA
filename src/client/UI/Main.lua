@@ -11285,7 +11285,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			setOffsetBounds(quickClassicButton, rightX, actionY + joinHeight + actionRowHeight + (actionRowGap * 2), math.floor((rightWidth - actionColumnGap) * 0.5), actionRowHeight)
 			setOffsetBounds(quickRankedButton, rightX + math.floor((rightWidth - actionColumnGap) * 0.5) + actionColumnGap, actionY + joinHeight + actionRowHeight + (actionRowGap * 2), math.floor((rightWidth - actionColumnGap) * 0.5), actionRowHeight)
 
-			local previewMapHeight = math.clamp(math.floor(previewHeight * 0.34), 107, 135)
+			local previewMapHeight = math.clamp(math.floor(previewHeight * 0.34), 107, 134)
 			local previewPlayersTopGap = extraCompactMobile and 22 or 28
 			local previewPlayersBottomInset = extraCompactMobile and 35 or 40
 			setOffsetBounds(roomPreviewTitle, 12, 10, leftWidth - 24, 18)
