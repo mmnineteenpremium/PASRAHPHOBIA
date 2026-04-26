@@ -172,6 +172,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - baris status header RoomBrowser lane extra-compact dipadatkan (tinggi + text-size) agar hierarchy header lebih stabil pada viewport pendek.
   - truncation status diaktifkan khusus lane extra-compact untuk mencegah overflow pesan panjang.
   - tetap visual-only tanpa perubahan logic room select/join/runtime.
+- Batch visual T44 untuk RoomBrowser tab-strip vertical compact sudah masuk:
+  - baris kontrol tab mode (`Classic / All / Ranked`) lane extra-compact dinaikkan tipis agar ruang konten bawah lebih lega.
+  - gap horizontal antar tab lane extra-compact dipadatkan untuk ritme header-control yang lebih rapat.
+  - tetap visual-only tanpa perubahan logic mode selection/room flow/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

@@ -16242,3 +16242,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - truncation status diaktifkan khusus lane extra-compact agar pesan panjang tidak overflow.
 - tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
 
+---
+
+# 47. VISUAL BATCH T44 ROOMBROWSER TAB STRIP VERTICAL COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- baris tab mode (`Classic / All / Ranked`) lane extra-compact dinaikkan tipis agar ruang konten bawah lebih lega.
+- gap horizontal antar tab lane extra-compact dipadatkan untuk ritme kontrol header yang lebih rapat.
+- tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+

@@ -1053,3 +1053,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser status header now has extra-compact-specific height and text-size tuning for short mobile viewports.
 - Status-header tuning is visual-only: extra-compact status-line truncation to prevent long-message overflow in constrained width.
 - No room selection/join logic or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T44 Tab Strip Vertical Compact
+
+- RoomBrowser mode tab strip now has extra-compact-specific vertical offset tuning for short mobile viewports.
+- Tab-strip tuning is visual-only: extra-compact tab-gap trim plus slight upward control-row placement for better content breathing room.
+- No mode selection, room flow, or runtime behavior changes in this batch.

@@ -11235,9 +11235,9 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		statusLabel.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 	end
 
-	local controlsY = profile.isMobile and 78 or (isCompact and 72 or 74)
+	local controlsY = profile.isMobile and (extraCompactMobile and 76 or 78) or (isCompact and 72 or 74)
 	local tabHeight = extraCompactMobile and 34 or (profile.isMobile and 40 or (isCompact and 36 or 30))
-	local tabGap = extraCompactMobile and 4 or 6
+	local tabGap = extraCompactMobile and 3 or 6
 	local tabWidth = math.floor((panelWidth - headerPadding * 2 - (tabGap * 2)) / 3)
 	setOffsetBounds(widgets.ClassicButton, headerPadding, controlsY, tabWidth, tabHeight)
 	setOffsetBounds(widgets.AllModesButton, headerPadding + tabWidth + tabGap, controlsY, tabWidth, tabHeight)
