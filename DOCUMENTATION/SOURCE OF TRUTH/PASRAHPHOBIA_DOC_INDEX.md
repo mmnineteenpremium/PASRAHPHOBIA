@@ -16312,3 +16312,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - inset bawah list lane extra-compact dipangkas ringan agar tinggi viewport list pemain sedikit bertambah.
 - tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
 
+---
+
+# 54. VISUAL BATCH T51 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- inset bawah `Room Preview PlayersList` lane extra-compact dipadatkan tipis lanjutan untuk reclaim tinggi list pemain.
+- hierarchy section tetap dipertahankan; perubahan hanya pada density viewport list.
+- tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
+
