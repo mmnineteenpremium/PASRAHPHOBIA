@@ -20,6 +20,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
 - Runtime authoritative gate ditambah di teleport:
   - match gagal lanjut jika `PreparationStagingRuntime` tidak lolos validasi strict authored (spawn/door/boundary).
 - Override hardcoded legacy untuk spawn points (`PlayerSpawn_*`) dinonaktifkan dari lane aktif.
+- Batch visual T6 untuk panel canonical berbasis snapshot runtime sudah masuk:
+  - `ProfileUI`: hierarchy visual untuk Rank/EXP, Daily Quest, Daily Check-In, Daily Spin, Inventory/Gacha, dan cap messaging `PP 3/hari`.
+  - `RoyalPassUI`: tab/row/card wording diseragamkan ke lane `Daily Check-In` dan `Daily Quest` tanpa sistem baru.
+  - wording lobby daily reward diselaraskan ke istilah `Daily check-in`.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
@@ -103,9 +107,8 @@ Semua dokumen harus menyatakan lock runtime-spawn authored + visual-only executi
 
 ## Remaining Work (Excluding Owner 2-Client Smoke)
 
-- Touch-scope guard untuk match header `STAGING` sudah diterapkan di source; pending owner visual retest non-touch/desktop agar tidak ada regresi readability di layar besar.
-- Final pass visual canonical UI dari referensi `asset mentah/ref ui/*.html` untuk seluruh panel scope (Rank/EXP/Profiling/Daily/Gacha/Shop/RoyalPass/MM/PP/Item/Hidden Gems) tanpa menambah sistem baru.
-- Bukti visual + catatan perubahan per panel canonical di report source-of-truth agar tidak ada drift antara implementasi aktif dan indeks dokumen.
+- Final pass visual canonical UI dari referensi `asset mentah/ref ui/*.html` untuk panel yang belum finishing polish penuh (terutama DailyReward lane, Gacha detail lane, wallet MM/PP micro-state, dan hidden gems presentation) tanpa menambah sistem baru.
+- Bukti visual + catatan perubahan per panel canonical perlu terus ditambah per batch report source-of-truth agar tidak ada drift antara implementasi aktif dan indeks dokumen.
 
 ## Definition Of Done
 

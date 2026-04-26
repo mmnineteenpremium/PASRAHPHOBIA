@@ -136,6 +136,15 @@ Status ringkas batch T5:
 - aksen warna rank board + tier host room browser disejajarkan ke token rank palette dari referensi HTML canonical
 - gate `smoke test 2 client` tetap owner manual lane
 
+[2026-04-26 NOTE - Visual Batch T6]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T6_PROFILE_DAILY_ROYALPASS_2026-04-26.md`
+
+Status ringkas batch T6:
+- hierarchy visual `ProfileUI` dirapikan untuk Rank/EXP + Daily Quest/Check-In/Spin + Inventory/Gacha (snapshot-only)
+- wording dan lane visual `RoyalPassUI` diseragamkan ke `Daily Check-In` dan `Daily Quest` tanpa menambah sistem
+- wording lobby daily feedback disejajarkan ke istilah `Daily check-in`
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

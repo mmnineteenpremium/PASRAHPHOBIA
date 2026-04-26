@@ -303,7 +303,7 @@ FIELD_KIT_TOOL_CONFIG = {
 		hint = "Cold sweep",
 		openJournal = false,
 		readyMeta = "COLD",
-		readyFooter = "TEMP ARC",
+		readyFooter = "SUHU ARC",
 		role = "Freeze",
 		shortcut = "6",
 		keyCode = Enum.KeyCode.Six,
@@ -726,17 +726,23 @@ local BUTTON_TONES = {
 		text = Color3.fromRGB(248, 230, 194),
 		stroke = Color3.fromRGB(222, 164, 48),
 	},
-		rank = {
-			background = Color3.fromRGB(58, 44, 20),
-			backgroundActive = Color3.fromRGB(82, 58, 24),
-			text = Color3.fromRGB(245, 228, 176),
-			stroke = Color3.fromRGB(212, 168, 32),
-		},
+	rank = {
+		background = Color3.fromRGB(58, 44, 20),
+		backgroundActive = Color3.fromRGB(82, 58, 24),
+		text = Color3.fromRGB(245, 228, 176),
+		stroke = Color3.fromRGB(212, 168, 32),
+	},
 	pass = {
 		background = Color3.fromRGB(56, 42, 26),
 		backgroundActive = Color3.fromRGB(74, 52, 28),
 		text = Color3.fromRGB(246, 232, 202),
 		stroke = Color3.fromRGB(198, 156, 74),
+	},
+	daily = {
+		background = Color3.fromRGB(24, 52, 74),
+		backgroundActive = Color3.fromRGB(30, 68, 96),
+		text = Color3.fromRGB(220, 238, 252),
+		stroke = Color3.fromRGB(92, 164, 232),
 	},
 	success = {
 		background = Color3.fromRGB(24, 66, 50),
@@ -6457,7 +6463,7 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 			return string.format("%dC", displayTemp), false, "SUHU LOCK"
 		end
 		if toolState.lastSuccess == false and toolState.lastReason == "ghost_out_of_range" then
-			return "WARM", false, "TEMP NULL"
+			return "WARM", false, "SUHU NULL"
 		end
 		return tostring(config.readyMeta or "COLD"), false, tostring(config.readyFooter or config.role or "UTILITY")
 	end
@@ -9199,6 +9205,7 @@ end
 function UISystem:_refreshProfilePanel()
 	local player = Players.LocalPlayer
 	local profile = self._profileState or {}
+	local royalPass = self._royalPassState or {}
 	local playerName = player and (player.DisplayName or player.Name) or "Player"
 	local sanity = math.floor(tonumber(profile.sanity or 100) or 100)
 	local statusToken = tostring(profile.status or "safe")
@@ -9211,12 +9218,29 @@ function UISystem:_refreshProfilePanel()
 	elseif statusToken == "unstable" then
 		badgeColor = Color3.fromRGB(82, 94, 126)
 	end
+	local currentTier = math.max(1, math.floor(tonumber(royalPass.currentTier or 1) or 1))
+	local totalRoyalPassXP = math.max(0, math.floor(tonumber(royalPass.totalXP or 0) or 0))
+	local dailyProgress = math.max(0, math.floor(tonumber((self._matchResult and self._matchResult.dailyProgress) or 0) or 0))
+	local profileOwnedCount = countLookupEntries(profile.ownedCosmeticIds)
+	local shopOwnedCount = countLookupEntries(self._shopState and self._shopState.ownedItemIds or {})
+	local ownedInventoryCount = math.max(profileOwnedCount, shopOwnedCount)
+	local equippedInventoryCount = countLookupEntries(profile.equippedCosmetics)
+	local dailyQuestState = dailyProgress > 0 and string.format("PROG %d", dailyProgress) or "PENDING"
+	local checkInState = string.format("DAY %02d", math.min(30, currentTier))
+	local spinState = tostring(royalPass.lastEvent or "Idle") ~= "Idle"
+		and titleCaseToken(tostring(royalPass.lastEvent or "Idle"))
+		or "Idle"
+	local gachaState = ownedInventoryCount > 0 and "COLLECTED" or "EMPTY"
 
 	local contentLines = {
 		string.format("Player: %s", playerName),
 		string.format("UserId: %s", tostring(player and player.UserId or "-")),
 		string.format("Level: %s", tostring(profile.level or 1)),
 		string.format("Rank: %s", tostring(profile.rank or "Bayi III")),
+		string.format("RoyalPass Tier: %d | XP %d", currentTier, totalRoyalPassXP),
+		string.format("Daily Quest: %s | Check-In: %s", dailyQuestState, checkInState),
+		string.format("Daily Spin: %s | Gacha: %s", spinState, gachaState),
+		string.format("Inventory Item: %d owned | %d equipped", ownedInventoryCount, equippedInventoryCount),
 		string.format("Sanity: %d", sanity),
 		string.format("Total Match: %s", tostring(profile.totalGames or 0)),
 		string.format("Favorite Tool: %s", tostring(profile.favoriteTool or "-")),
@@ -9239,7 +9263,7 @@ function UISystem:_refreshProfilePanel()
 		string.format("%s | Lv %s", playerName, tostring(profile.level or 1)),
 		string.format("Rank %s | Sanity %d", tostring(profile.rank or "Bayi III"), sanity),
 		nil,
-		"Profile basic ini menampilkan data client yang tersedia tanpa asumsi server tambahan.",
+		"Profile visual tracker canonical aktif: Rank/EXP, Daily Quest/Check-In/Spin, Inventory/Gacha. Semua tetap snapshot runtime tanpa sistem baru.",
 		badgeColor
 	)
 
@@ -9255,20 +9279,32 @@ function UISystem:_refreshProfilePanel()
 	widgets.AvatarGlyph.Text = string.upper(string.sub(playerName, 1, 1))
 	widgets.ProfileTitle.Text = string.format("%s  •  LV %s", playerName, tostring(profile.level or 1))
 	widgets.ProfileMeta.Text = string.format(
-		"%s • %s • %s",
+		"%s • T%02d • %s",
 		tostring(profile.rank or "Bayi III"),
-		tostring(self:GetInputType()),
-		tostring(player and player.UserId or "-")
+		currentTier,
+		tostring(self:GetInputType())
 	)
 	widgets.StatusPill.BackgroundColor3 = heroAccent
 	widgets.StatusPill.Text = badgeText
 	setButtonTone(widgets.ActionButton, "focus", self._roomBrowserVisible == true)
+	local dailyVisualLine = string.format(
+		"Daily %s • Check-In %s • Spin %s • Gacha %s",
+		dailyQuestState,
+		checkInState,
+		spinState,
+		gachaState
+	)
 	widgets.Spotlight.Text = featuredFlex and string.format(
-		"Spotlight %s • WR %s%% • %s match",
+		"Spotlight %s • WR %s%% • %s match • %s",
 		tostring(featuredFlex.displayName or "Player"),
 		tostring(featuredFlex.winRate or 0),
-		tostring(featuredFlex.totalMatches or 0)
-	) or tostring(profile.lastCosmeticMessage or "Belum ada spotlight. Profile ini memakai snapshot client yang aktif.")
+		tostring(featuredFlex.totalMatches or 0),
+		dailyVisualLine
+	) or string.format(
+		"%s • %s",
+		tostring(profile.lastCosmeticMessage or "Belum ada spotlight. Profile ini memakai snapshot client yang aktif."),
+		dailyVisualLine
+	)
 
 	local rows = widgets.Rows or {}
 	local statRows = {
@@ -9285,27 +9321,28 @@ function UISystem:_refreshProfilePanel()
 		},
 		{
 			key = "match",
-			badge = "RUN",
-			glyph = "MM",
-			title = "Match footprint",
-			meta = string.format("Rank %s • input %s", tostring(profile.rank or "Bayi III"), tostring(self:GetInputType())),
-			pill = string.format("%s GAME", tostring(profile.totalGames or 0)),
-			button = "LIVE",
-			accent = Color3.fromRGB(76, 96, 126),
-			preview = Color3.fromRGB(40, 52, 68),
+			badge = "DAILY",
+			glyph = "DQ",
+			title = "Daily progression",
+			meta = string.format("Rank %s • Tier %d • RP XP %d", tostring(profile.rank or "Bayi III"), currentTier, totalRoyalPassXP),
+			pill = dailyQuestState,
+			button = checkInState,
+			accent = UI_BRAND.daily,
+			preview = Color3.fromRGB(34, 52, 72),
 		},
 		{
 			key = "favorite",
-			badge = "TOOL",
-			glyph = "WR",
-			title = "Wardrobe sync",
+			badge = "ITEM",
+			glyph = "GC",
+			title = "Inventory + gacha",
 			meta = string.format(
-				"%s • visitors %s",
-				tostring(profile.lastCosmeticMessage or "Wardrobe belum sinkron."),
-				tostring(featuredFlex and featuredFlex.activeVisitorCount or 0)
+				"Owned %d • Equipped %d • Daily Spin %s • PP cap 3/hari",
+				ownedInventoryCount,
+				equippedInventoryCount,
+				spinState
 			),
-			pill = string.format("%d OWNED", countLookupEntries(profile.ownedCosmeticIds)),
-			button = string.format("%d EQ", countLookupEntries(profile.equippedCosmetics)),
+			pill = gachaState,
+			button = "INV",
 			accent = Color3.fromRGB(118, 88, 52),
 			preview = Color3.fromRGB(54, 44, 32),
 		},
@@ -9326,7 +9363,7 @@ function UISystem:_refreshProfilePanel()
 			row.Meta.Text = data.meta
 			applyPricePillVisual(row.PricePill, data.pill, data.accent, UI_BRAND.text)
 			row.Button.Text = data.button
-			local rowTone = data.key == "favorite" and "shop" or (data.key == "match" and "focus" or "profile")
+			local rowTone = data.key == "favorite" and "shop" or (data.key == "match" and "daily" or "profile")
 			setButtonTone(row.Button, rowTone, false)
 		end
 	end
@@ -9734,15 +9771,15 @@ function UISystem:_refreshShopPanel()
 			if button then
 				local selected = activeFilter == filter.key
 				local tone = "default"
-					if filter.key == "MM" then
-						tone = "focus"
-					elseif filter.key == "PP" then
-						tone = "pass"
-					elseif filter.key == "Robux" then
-						tone = "warning"
-					elseif filter.key == "Owned" then
-						tone = "profile"
-					end
+				if filter.key == "MM" then
+					tone = "focus"
+				elseif filter.key == "PP" then
+					tone = "pass"
+				elseif filter.key == "Robux" then
+					tone = "warning"
+				elseif filter.key == "Owned" then
+					tone = "profile"
+				end
 				setButtonTone(button, tone, selected)
 			end
 		end
@@ -9985,7 +10022,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	rewardTab.Name = "RewardTab"
 	rewardTab.Position = UDim2.fromOffset(0, 0)
 	rewardTab.Size = UDim2.new(0.5, -4, 1, 0)
-	styleButton(rewardTab, "30 DAY REWARD")
+	styleButton(rewardTab, "DAILY CHECK-IN")
 	rewardTab.BackgroundColor3 = Color3.fromRGB(74, 92, 118)
 	rewardTab.Parent = trackTabs
 	local rewardTabCorner = Instance.new("UICorner")
@@ -9998,7 +10035,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	missionTab.AnchorPoint = Vector2.new(1, 0)
 	missionTab.Position = UDim2.new(1, 0, 0, 0)
 	missionTab.Size = UDim2.new(0.5, -4, 1, 0)
-	styleButton(missionTab, "30 DAY MISSION")
+	styleButton(missionTab, "DAILY QUEST")
 	missionTab.BackgroundColor3 = Color3.fromRGB(52, 62, 78)
 	missionTab.Parent = trackTabs
 	local missionTabCorner = Instance.new("UICorner")
@@ -10015,7 +10052,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	trackHint.TextSize = 11
 	trackHint.TextXAlignment = Enum.TextXAlignment.Left
 	trackHint.TextColor3 = Color3.fromRGB(170, 184, 202)
-	trackHint.Text = "Geser horizontal untuk melihat 30 hari. Hari ke-30 menampilkan teaser hadiah karakter rarity 5."
+	trackHint.Text = "Geser horizontal untuk melihat lane check-in/quest 30 hari. Hari ke-30 menampilkan teaser karakter rarity 5."
 	trackHint.Parent = deck
 
 	local trackScroller = Instance.new("ScrollingFrame")
@@ -10232,6 +10269,7 @@ function UISystem:_refreshRoyalPassPanel()
 
 	local state = self._royalPassState or {}
 	local currentTier = math.max(1, math.floor(tonumber(state.currentTier or 1) or 1))
+	local dailyCheckInDay = math.min(30, currentTier)
 	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or 50) or 50))
 	local xpPerTier = math.max(1, math.floor(tonumber(state.xpPerTier or 200) or 200))
 	local currentTierXP = math.clamp(math.floor(tonumber(state.currentTierXP or 0) or 0), 0, xpPerTier)
@@ -10239,16 +10277,20 @@ function UISystem:_refreshRoyalPassPanel()
 	local remainingXP = math.max(0, math.floor(tonumber(state.remainingXP or 0) or 0))
 	local premiumOwned = state.premiumOwned == true
 	local progressPercent = math.clamp(tonumber(state.progressPercent or 0) or 0, 0, 1)
+	local dailyQuestProgress = math.max(0, math.floor(tonumber((self._matchResult and self._matchResult.dailyProgress) or 0) or 0))
+	local dailyQuestState = dailyQuestProgress > 0 and string.format("PROG %d", dailyQuestProgress) or "PENDING"
+	local gachaSnapshotState = countLookupEntries(self._shopState and self._shopState.ownedItemIds or {}) > 0 and "COLLECTED" or "EMPTY"
 	local _, premiumOfferReady = self:_getRoyalPassPremiumOffer()
 
 	local badgeText = premiumOwned and "PREMIUM" or "FREE TRACK"
 	local badgeColor = premiumOwned and Color3.fromRGB(136, 102, 48) or Color3.fromRGB(78, 92, 118)
 	local primaryText = string.format("Season %s | Tier %d/%d", tostring(state.seasonId or "S1"), currentTier, maxTier)
 	local secondaryText = string.format(
-		"Progress %d/%d XP | Total %d XP",
+		"Progress %d/%d XP | Total %d XP | Daily Quest %s",
 		currentTierXP,
 		xpPerTier,
-		totalXP
+		totalXP,
+		dailyQuestState
 	)
 
 	local unlockedPreview = "-"
@@ -10286,6 +10328,8 @@ function UISystem:_refreshRoyalPassPanel()
 	local contentText = table.concat({
 		string.format("Track: %s", premiumOwned and "Premium aktif" or "Free only"),
 		string.format("Tier saat ini: %d", currentTier),
+		string.format("Daily Check-In: DAY %02d", math.min(30, currentTier)),
+		string.format("Daily Quest: %s • Spin: %s • Gacha: %s", dailyQuestState, premiumOwned and "PREMIUM POOL" or "FREE POOL", gachaSnapshotState),
 		string.format("Sisa XP ke tier berikutnya: %d", remainingXP),
 		string.format("Tier terbuka: %d", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0))),
 		string.format("Preview tier terbuka: %s", unlockedPreview),
@@ -10297,8 +10341,8 @@ function UISystem:_refreshRoyalPassPanel()
 	local footerText = premiumOwned
 		and "Premium track aktif. Bonus currency premium khusus dimatikan; jalur ini harus tetap cosmetic/progression-safe."
 		or (premiumOfferReady
-			and "Premium track tersedia lewat purchase prompt Roblox resmi dan tidak boleh memberi bonus pay-to-win."
-			or "Premium track masih pending compliance/setup. Jangan anggap siap jual sampai track cosmetic-safe dan Creator Hub benar-benar siap.")
+			and "Premium track tersedia lewat purchase prompt Roblox resmi; lane daily check-in/quest/spin tetap wajib cosmetic-safe."
+			or "Premium track masih pending compliance/setup. Daily check-in/quest tetap visual preview sampai Creator Hub benar-benar siap.")
 
 	self:_refreshWindowText(
 		"RoyalPassUI",
@@ -10325,10 +10369,12 @@ function UISystem:_refreshRoyalPassPanel()
 	widgets.HeroBadge.Text = premiumOwned and "PREMIUM ACTIVE" or "FREE TRACK"
 	widgets.HeroTitle.Text = string.format("SEASON %s  •  TIER %02d", tostring(state.seasonId or "S1"), currentTier)
 	widgets.HeroMeta.Text = string.format(
-		"%d / %d XP on current tier  •  %d total XP",
+		"%d / %d XP  •  %d total XP  •  Day %02d  •  Quest %s",
 		currentTierXP,
 		xpPerTier,
-		totalXP
+		totalXP,
+		dailyCheckInDay,
+		dailyQuestState
 	)
 	widgets.ProgressFill.BackgroundColor3 = premiumOwned and Color3.fromRGB(220, 178, 92) or Color3.fromRGB(104, 148, 220)
 	widgets.ProgressFill.Size = UDim2.fromScale(math.max(0.06, progressPercent), 1)
@@ -10357,8 +10403,8 @@ function UISystem:_refreshRoyalPassPanel()
 		end
 		unlockedPreview = table.concat(recent, ", ")
 	end
+	local spinVisualState = premiumOwned and "PREMIUM POOL" or "FREE POOL"
 
-	local nextRewardTitle = state.nextTier and ("Tier " .. tostring(state.nextTier) .. " reward") or "MAX TIER"
 	local nextRewardMeta = state.nextReward
 		and string.format(
 			"%d MM + %d XP bonus menunggu di track berikutnya.",
@@ -10380,24 +10426,24 @@ function UISystem:_refreshRoyalPassPanel()
 			preview = premiumOwned and Color3.fromRGB(66, 54, 32) or Color3.fromRGB(46, 58, 78),
 		},
 		{
-			badge = "NEXT",
-			glyph = state.nextTier and string.format("T%02d", state.nextTier) or "MAX",
-			title = nextRewardTitle,
-			meta = nextRewardMeta,
+			badge = "CHECK",
+			glyph = string.format("D%02d", dailyCheckInDay),
+			title = "Daily check-in",
+			meta = string.format("%s • %s", nextRewardMeta, state.nextTier and ("target day " .. tostring(state.nextTier)) or "max day tercapai"),
 			pill = state.nextReward and string.format("+%d MM", math.max(0, math.floor(tonumber(state.nextReward.currency) or 0))) or "CLEAR",
-			button = state.nextReward and "READY" or "DONE",
-			accent = Color3.fromRGB(118, 88, 46),
-			preview = Color3.fromRGB(60, 50, 34),
+			button = state.nextReward and "CLAIM" or "DONE",
+			accent = UI_BRAND.daily,
+			preview = Color3.fromRGB(34, 52, 72),
 		},
 		{
 			badge = "TRACK",
-			glyph = premiumOwned and "RP" or "FT",
-			title = premiumOwned and "Premium trajectory" or "Free trajectory",
+			glyph = "QST",
+			title = "Daily quest / spin / gacha",
 			meta = premiumOfferReady
-				and string.format("Unlocked %d tier • preview %s", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0)), unlockedPreview)
-				or "Premium track belum dijual. Jalur ini tetap pending sampai compliant.",
+				and string.format("Unlocked %d tier • spin %s • preview %s", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0)), spinVisualState, unlockedPreview)
+				or "Premium track belum dijual. Lane quest/spin tetap visual sampai compliant.",
 			pill = string.format("%d LEFT", remainingXP),
-			button = premiumOwned and "OWNED" or (premiumOfferReady and "SHOP" or "PENDING"),
+			button = premiumOwned and "ACTIVE" or (premiumOfferReady and "SHOP" or "PENDING"),
 			accent = premiumOwned and Color3.fromRGB(90, 126, 88) or Color3.fromRGB(74, 92, 118),
 			preview = premiumOwned and Color3.fromRGB(42, 58, 40) or Color3.fromRGB(38, 48, 62),
 		},
@@ -10418,7 +10464,7 @@ function UISystem:_refreshRoyalPassPanel()
 			row.Meta.Text = data.meta
 			applyPricePillVisual(row.PricePill, data.pill, data.accent, UI_BRAND.text)
 			row.Button.Text = data.button
-			local rowTone = index == 1 and "focus" or (index == 2 and "pass" or "shop")
+			local rowTone = index == 1 and "focus" or (index == 2 and "daily" or "shop")
 			setButtonTone(row.Button, rowTone, false)
 		end
 	end
@@ -10430,11 +10476,11 @@ function UISystem:_refreshRoyalPassPanel()
 	end
 	if widgets.TrackHint then
 		if premiumOfferReady ~= true and premiumOwned ~= true then
-			widgets.TrackHint.Text = "Premium track masih pending. Reward view ini hanya preview sampai entitlement Roblox benar-benar siap."
+			widgets.TrackHint.Text = "Premium track masih pending. Daily check-in/quest tetap visual preview sampai entitlement Roblox siap."
 		else
 			widgets.TrackHint.Text = state.viewMode == "Missions"
-				and "Geser horizontal untuk melihat 30 hari misi. Hari ke-30 menjaga finale hadiah karakter rarity 5."
-				or "Geser horizontal untuk melihat 30 hari reward. Hari ke-30 menampilkan teaser hadiah karakter rarity 5."
+				and "Geser horizontal untuk melihat 30 hari daily quest. Hari ke-30 menjaga finale hadiah karakter rarity 5."
+				or "Geser horizontal untuk melihat 30 hari daily check-in. Hari ke-30 menampilkan teaser hadiah karakter rarity 5."
 		end
 	end
 
@@ -10463,7 +10509,7 @@ function UISystem:_refreshRoyalPassPanel()
 				"Gunakan tool investigasi 3 kali",
 				"Bermain bersama 1 teman",
 			}
-			titleText = isFinalDay and "MISSION 30 • GRAND FINALE" or string.format("MISSION %02d", index)
+			titleText = isFinalDay and "DAILY QUEST 30 • GRAND FINALE" or string.format("DAILY QUEST %02d", index)
 			metaText = isFinalDay
 				and "Selesaikan misi penutup season untuk membuka teaser hadiah karakter rarity 5."
 				or missionTemplates[((index - 1) % #missionTemplates) + 1]
@@ -10473,9 +10519,9 @@ function UISystem:_refreshRoyalPassPanel()
 			badgeColor = isFinalDay and Color3.fromRGB(108, 78, 46) or Color3.fromRGB(76, 58, 102)
 			cardBackground = isFinalDay and Color3.fromRGB(40, 30, 22) or Color3.fromRGB(32, 28, 42)
 		else
-			titleText = isFinalDay and "DAY 30 • CHARACTER R5" or string.format("DAY %02d REWARD", index)
+			titleText = isFinalDay and "CHECK-IN DAY 30 • CHARACTER R5" or string.format("CHECK-IN DAY %02d", index)
 			metaText = isFinalDay
-				and "Border finale untuk hadiah karakter rarity 5 di penghujung 30 hari season."
+				and "Border finale untuk hadiah karakter rarity 5 di penghujung 30 hari check-in season."
 				or string.format("Claim harian untuk ritme login. Bonus tier mengikuti season %s.", tostring(state.seasonId or "S1"))
 			rewardText = isFinalDay and "R5 BORDER" or string.format("+%d MM", 120 + ((index - 1) * 20))
 			accentColor = isFinalDay and Color3.fromRGB(224, 170, 88) or (premiumOwned and Color3.fromRGB(126, 98, 52) or Color3.fromRGB(82, 110, 162))
@@ -10611,22 +10657,49 @@ end
 
 function UISystem:_refreshPasraPanel()
 	local result = self._matchResult or createDefaultMatchResult()
+	local profile = self._profileState or {}
+	local royalPassState = self._royalPassState or {}
+	local shopState = self._shopState or {}
+	local wallet = type(shopState.wallet) == "table" and shopState.wallet or {}
+	local walletMM = math.max(0, math.floor(tonumber(wallet.MM) or 0))
+	local walletPP = math.max(0, math.floor(tonumber(wallet.PP) or 0))
+	local rankLabel = tostring(profile.rank or "Bayi III")
+	local level = math.max(1, math.floor(tonumber(profile.level or 1) or 1))
+	local royalPassTier = math.max(1, math.floor(tonumber(royalPassState.currentTier or 1) or 1))
+	local royalPassXP = math.max(0, math.floor(tonumber(royalPassState.totalXP or 0) or 0))
+	local dailyQuestProgress = math.max(0, math.floor(tonumber(result.dailyProgress or 0) or 0))
+	local dailyQuestState = dailyQuestProgress > 0 and string.format("PROG %d", dailyQuestProgress) or "PENDING"
+	local dailyCheckInState = string.format("DAY %02d", math.min(30, royalPassTier))
+	local dailySpinState = tostring(royalPassState.lastEvent or "Idle")
+	local ownedInventoryCount = countLookupEntries(shopState.ownedItemIds)
+	local equippedCosmeticCount = countLookupEntries(profile.equippedCosmetics)
+	local gachaState = ownedInventoryCount > 0 and "COLLECTED" or "EMPTY"
 	local statusText = result.correctGuess and "SUCCESS" or "RESULT"
 	local badgeColor = result.correctGuess and Color3.fromRGB(58, 116, 90) or Color3.fromRGB(58, 100, 88)
 	local primaryText = self._pasraState.status or "Belum ada hasil match."
 	local secondaryText = self._pasraState.subtitle or "Panel ini akan terisi saat match selesai."
 	local contentText = table.concat({
+		"Match Core",
 		string.format("Ghost: %s", tostring(result.ghostType or "Unknown")),
 		string.format("Tebakan: %s", result.correctGuess and "BENAR" or "BELUM / SALAH"),
 		string.format("Evidence: %s", tostring(result.evidenceCollected or 0)),
 		string.format("Pemain Selamat: %s", tostring(result.playersSurvived or 0)),
 		string.format("Pemain Mati: %s", tostring(result.playersDead or 0)),
 		string.format("Durasi: %s", formatMatchDuration(result.matchDuration)),
+		"",
+		"Progress Canonical",
+		string.format("Rank/Level: %s / Lv %d", rankLabel, level),
+		string.format("Royal Pass: Tier %d • XP %d", royalPassTier, royalPassXP),
+		string.format("Daily Quest: %s • Check-In: %s", dailyQuestState, dailyCheckInState),
+		string.format("Daily Spin: %s", dailySpinState),
+		"",
+		"Economy + Inventory",
+		string.format("Wallet: MM %d • PP %d", walletMM, walletPP),
 		string.format("Hadiah MM: %s", tostring(math.floor(tonumber(result.currencyReward or 0) or 0))),
 		string.format("Hadiah PP: %s", tostring(math.floor(tonumber(result.ppReward or 0) or 0))),
 		string.format("Hadiah XP: %s", tostring(math.floor(tonumber(result.xpReward or 0) or 0))),
-		string.format("Royal Pass XP: %s", tostring(math.floor(tonumber(result.royalPassXP or 0) or 0))),
-		string.format("Daily Progress: %s", tostring(math.floor(tonumber(result.dailyProgress or 0) or 0))),
+		string.format("Item Owned: %d • Equipped Cosmetic: %d • Gacha: %s", ownedInventoryCount, equippedCosmeticCount, gachaState),
+		"Hidden Gems MM/PP: maks 3 PP coin per hari.",
 		string.format("Last Event: %s", tostring(self._pasraState.lastEvent or "Idle")),
 	}, "\n")
 	self:_refreshWindowText(
@@ -10635,7 +10708,7 @@ function UISystem:_refreshPasraPanel()
 		primaryText,
 		secondaryText,
 		contentText,
-		"Summary hasil ini basic, visual, dan cukup untuk test E2E return flow.",
+		"Ringkasan visual canonical (Rank/EXP/Daily/Reward/Gacha/Shop/MM/PP/Item) berbasis snapshot runtime, tanpa sistem baru.",
 		badgeColor
 	)
 
@@ -14000,21 +14073,21 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 			lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
 		end
 		lobby.FeedbackLabel.Text = message ~= "" and (title .. " • " .. message) or title
-	elseif eventName == "DailyRewardAvailable" then
-		local reward = type(payload and payload.reward) == "table" and payload.reward or {}
-		local currencyText = formatCurrencyAndPrestigeReward(tonumber(reward.currency) or 0, 0)
-		local xpText = tostring(math.max(0, math.floor(tonumber(reward.xp) or 0)))
-		local streakText = tostring(math.max(1, math.floor(tonumber(payload and payload.streak) or 1)))
-		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(214, 244, 196)
-		lobby.FeedbackLabel.Text = string.format("Daily reward siap • streak %s • %s • XP %s", streakText, currencyText, xpText)
-	elseif eventName == "DailyRewardClaimed" then
-		local reward = type(payload and payload.reward) == "table" and payload.reward or {}
-		local currencyText = formatCurrencyAndPrestigeReward(tonumber(reward.currency) or 0, 0)
-		local xpText = tostring(math.max(0, math.floor(tonumber(reward.xp) or 0)))
-		local streakText = tostring(math.max(1, math.floor(tonumber(payload and payload.streak) or 1)))
-		local cosmeticText = type(reward.cosmetic) == "string" and reward.cosmetic ~= "" and (" • " .. tostring(reward.cosmetic)) or ""
-		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(214, 244, 196)
-		lobby.FeedbackLabel.Text = string.format("Daily reward claimed • streak %s • %s • XP %s%s", streakText, currencyText, xpText, cosmeticText)
+		elseif eventName == "DailyRewardAvailable" then
+			local reward = type(payload and payload.reward) == "table" and payload.reward or {}
+			local currencyText = formatCurrencyAndPrestigeReward(tonumber(reward.currency) or 0, 0)
+			local xpText = tostring(math.max(0, math.floor(tonumber(reward.xp) or 0)))
+			local streakText = tostring(math.max(1, math.floor(tonumber(payload and payload.streak) or 1)))
+			lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(214, 244, 196)
+			lobby.FeedbackLabel.Text = string.format("Daily check-in siap • streak %s • %s • XP %s", streakText, currencyText, xpText)
+		elseif eventName == "DailyRewardClaimed" then
+			local reward = type(payload and payload.reward) == "table" and payload.reward or {}
+			local currencyText = formatCurrencyAndPrestigeReward(tonumber(reward.currency) or 0, 0)
+			local xpText = tostring(math.max(0, math.floor(tonumber(reward.xp) or 0)))
+			local streakText = tostring(math.max(1, math.floor(tonumber(payload and payload.streak) or 1)))
+			local cosmeticText = type(reward.cosmetic) == "string" and reward.cosmetic ~= "" and (" • " .. tostring(reward.cosmetic)) or ""
+			lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(214, 244, 196)
+			lobby.FeedbackLabel.Text = string.format("Daily check-in claimed • streak %s • %s • XP %s%s", streakText, currencyText, xpText, cosmeticText)
 	elseif eventName == "LobbyFlexSpotlightUpdated" then
 		lobby.FeedbackLabel.TextColor3 = Color3.fromRGB(240, 244, 248)
 		local spotlight = payload and payload.spotlight or {}

@@ -21,6 +21,21 @@
   - `asset mentah/ref ui/*.html`
   - translasi referensi HTML ke Roblox ScreenGui/Frame hanya di visual layer (tanpa penambahan logic sistem baru).
 
+## 2026-04-26 Addendum - Visual Batch T6 Panel Hierarchy Alignment
+
+- `ProfileUI` canonical visual lane now explicitly tracks snapshot states for:
+  - Rank/EXP context
+  - Daily Quest
+  - Daily Check-In
+  - Daily Spin
+  - Inventory/Gacha status
+  - PP hidden-gems cap messaging (`maks 3 PP coin per hari`) in visual copy lane
+- `RoyalPassUI` canonical wording/hierarchy is aligned to:
+  - `Daily Check-In` lane
+  - `Daily Quest` lane
+  - daily spin/gacha context in visual copy only
+- This addendum is visual presentation alignment only and does not introduce new progression systems, new economy systems, or new runtime architecture.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:
