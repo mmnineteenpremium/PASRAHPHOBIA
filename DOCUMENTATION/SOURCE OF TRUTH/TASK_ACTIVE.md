@@ -36,6 +36,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - copy micro-state di `Lobby Panel`, `Quick Menu`, dan `ShopUI` dipadatkan khusus mode mobile agar tidak overflow.
   - sizing/text scale pada lane lobby header hint + menu mobile disetel ulang untuk readability lintas rasio layar.
   - semua tuning tetap visual-only berbasis snapshot runtime.
+- Batch visual T10 untuk footer compaction mobile sudah masuk:
+  - footer `Quick Menu` mobile disederhanakan ke format ringkas + build signature agar tidak overpadat.
+  - footer `ShopUI` mobile dipadatkan per-filter (`MM/PP/Robux/Owned`) dengan arti tetap sama.
+  - lane desktop tetap mempertahankan copy detail penuh.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

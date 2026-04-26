@@ -172,6 +172,15 @@ Status ringkas batch T9:
 - tuning sizing/text pada lane lobby + menu mobile mengurangi risiko overflow saat state daily/gacha/hidden aktif
 - tetap tidak ada sistem baru; murni presentasi visual snapshot runtime
 
+[2026-04-26 NOTE - Visual Batch T10]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T10_FOOTER_COMPACTION_2026-04-26.md`
+
+Status ringkas batch T10:
+- footer mobile `Quick Menu` dipadatkan agar ringkas namun tetap menjaga lane canonical + build signature
+- footer mobile `ShopUI` dipadatkan per filter (`MM/PP/Robux/Owned`) dengan makna tetap sama
+- desktop copy detail tetap dipertahankan
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

@@ -7970,7 +7970,12 @@ function UISystem:_refreshMainMenuPanel()
 				equippedInventoryCount,
 				hiddenGemsCompact
 			)
-		if attributionFooter ~= "" then
+		if isMobileUi then
+			local attributionCompact = attributionFooter ~= "" and "Attribution: lihat lane legal/report." or ""
+			window.FooterLabel.Text = attributionCompact ~= ""
+				and (canonicalFooter .. "\n" .. attributionCompact .. "\n" .. UISystem._getBuildSignatureText())
+				or (canonicalFooter .. "\n" .. UISystem._getBuildSignatureText())
+		elseif attributionFooter ~= "" then
 			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. canonicalFooter .. "\n" .. UISystem._getBuildSignatureText()
 		else
 			window.FooterLabel.Text = graphicsFooter .. "\n" .. canonicalFooter .. "\n" .. UISystem._getBuildSignatureText()
@@ -9918,40 +9923,75 @@ function UISystem:_refreshShopPanel()
 		and string.format("%s | %s | Gacha %s", secondaryText, hiddenGemsCompact, gachaState)
 		or string.format("%s | %s | %s", secondaryText, hiddenGemsCompact, gachaState)
 
-	local footerText = string.format(
-		"Owned %d item. MM dan PP tetap currency in-game. Item bantuan bertanda CLASSIC ONLY tidak memberi bonus di Ranked. SETUP berarti slot Robux belum siap atau marketplaceId Creator Hub belum valid. %s %s",
-		ownedCount,
-		gachaLaneText,
-		hiddenGemsLaneText
-	)
+	local footerText = isMobileUi
+		and string.format(
+			"Owned %d. MM/PP tetap in-game. CLASSIC ONLY non-Ranked. SETUP = slot Robux belum siap. %s %s",
+			ownedCount,
+			gachaLaneText,
+			hiddenGemsLaneText
+		)
+		or string.format(
+			"Owned %d item. MM dan PP tetap currency in-game. Item bantuan bertanda CLASSIC ONLY tidak memberi bonus di Ranked. SETUP berarti slot Robux belum siap atau marketplaceId Creator Hub belum valid. %s %s",
+			ownedCount,
+			gachaLaneText,
+			hiddenGemsLaneText
+		)
 	if activeFilter == "PP" then
-		footerText = string.format(
-			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Paket Robux PP tetap hanya berlaku di game ini, lalu dipakai untuk prestige/cosmetic/exchange lokal. %s %s",
-			ownedCount,
-			gachaLaneText,
-			hiddenGemsLaneText
-		)
+		footerText = isMobileUi
+			and string.format(
+				"Owned %d. PP dari reward match/survive/ekstraksi/tebakan. Pack Robux PP tetap lokal game. %s %s",
+				ownedCount,
+				gachaLaneText,
+				hiddenGemsLaneText
+			)
+			or string.format(
+				"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Paket Robux PP tetap hanya berlaku di game ini, lalu dipakai untuk prestige/cosmetic/exchange lokal. %s %s",
+				ownedCount,
+				gachaLaneText,
+				hiddenGemsLaneText
+			)
 	elseif activeFilter == "MM" then
-		footerText = string.format(
-			"Owned %d item. MM bisa didapat dari main, dari exchange PP, atau dari pack Robux yang compliant. Semua tetap currency in-game, bukan saldo lintas experience. %s %s",
-			ownedCount,
-			gachaLaneText,
-			hiddenGemsLaneText
-		)
+		footerText = isMobileUi
+			and string.format(
+				"Owned %d. MM dari main/exchange PP/pack compliant. Tetap currency in-game. %s %s",
+				ownedCount,
+				gachaLaneText,
+				hiddenGemsLaneText
+			)
+			or string.format(
+				"Owned %d item. MM bisa didapat dari main, dari exchange PP, atau dari pack Robux yang compliant. Semua tetap currency in-game, bukan saldo lintas experience. %s %s",
+				ownedCount,
+				gachaLaneText,
+				hiddenGemsLaneText
+			)
 	elseif activeFilter == "Robux" then
-		footerText = string.format(
-			"Owned %d item. Robux di shop ini hanya boleh memberi currency in-game MM/PP atau entitlement yang compliant. Ranked tetap fair: pembelian tidak boleh memberi keunggulan kemenangan. %s %s",
-			ownedCount,
-			gachaLaneText,
-			hiddenGemsLaneText
-		)
+		footerText = isMobileUi
+			and string.format(
+				"Owned %d. Robux hanya untuk MM/PP in-game atau entitlement compliant. Ranked tetap fair. %s %s",
+				ownedCount,
+				gachaLaneText,
+				hiddenGemsLaneText
+			)
+			or string.format(
+				"Owned %d item. Robux di shop ini hanya boleh memberi currency in-game MM/PP atau entitlement yang compliant. Ranked tetap fair: pembelian tidak boleh memberi keunggulan kemenangan. %s %s",
+				ownedCount,
+				gachaLaneText,
+				hiddenGemsLaneText
+			)
 	elseif activeFilter == "Owned" then
-		footerText = string.format(
-			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini. Jika item bertanda CLASSIC ONLY, efek bantuannya hanya boleh hidup di Classic. %s %s",
-			ownedCount,
-			gachaLaneText,
-			hiddenGemsLaneText
-		)
+		footerText = isMobileUi
+			and string.format(
+				"Owned %d. Ringkasan item aktif snapshot. CLASSIC ONLY hanya hidup di Classic. %s %s",
+				ownedCount,
+				gachaLaneText,
+				hiddenGemsLaneText
+			)
+			or string.format(
+				"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini. Jika item bertanda CLASSIC ONLY, efek bantuannya hanya boleh hidup di Classic. %s %s",
+				ownedCount,
+				gachaLaneText,
+				hiddenGemsLaneText
+			)
 	end
 
 	self:_refreshWindowText(

@@ -56,6 +56,12 @@
 - Lobby/menu sizing/text tuning for compact lanes is adjusted to reduce overflow risk when daily/gacha/hidden state strings are active.
 - This addendum remains visual-only and does not alter runtime logic, reward logic, or persistence state.
 
+## 2026-04-26 Addendum - Visual Batch T10 Footer Compaction
+
+- Mobile footer lane for `Quick Menu` and `ShopUI` is compacted to reduce density while preserving canonical meaning.
+- Desktop lanes retain full detail copy for explanatory clarity.
+- This addendum remains visual-only and does not change economy, entitlement, or progression logic.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:
