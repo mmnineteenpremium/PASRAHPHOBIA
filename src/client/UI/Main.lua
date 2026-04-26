@@ -11304,7 +11304,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 				previewMapMood.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 			end
 			if previewMapFooter then
-				setOffsetBounds(previewMapFooter, 16, 27, leftWidth - 48, extraCompactMobile and 34 or 44)
+				setOffsetBounds(previewMapFooter, 16, 27, leftWidth - 48, extraCompactMobile and 33 or 44)
 				previewMapFooter.TextSize = extraCompactMobile and 12 or 13
 				previewMapFooter.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 			end
