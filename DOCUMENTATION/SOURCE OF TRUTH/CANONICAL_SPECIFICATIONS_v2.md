@@ -1500,3 +1500,11 @@ Based on canonical specifications, Phase 7 should prioritize:
 - Map-mood tuning is visual-only: slight width reduction with existing truncation behavior preserved.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
 
+
+
+## 2026-04-26 Addendum - Visual Batch T109 Map-Title Width Reclaim V
+
+- RoomBrowser map preview title now has a fifth compact-lane width reclaim micro trim.
+- Map-title tuning is visual-only: slight horizontal bounds expansion with unchanged title typography.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
