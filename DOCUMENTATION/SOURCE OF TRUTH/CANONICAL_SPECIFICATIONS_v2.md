@@ -2025,3 +2025,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser received another extra-compact visual micro-adjustment in the join password anchor trim lane.
 - The lower control stack tightens slightly while preserving mobile input ergonomics.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-27 Addendum - Visual Batch T191 Map-Title Width Reclaim XVIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-title width reclaim lane.
+- Title bounds gain a little more horizontal headroom.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
