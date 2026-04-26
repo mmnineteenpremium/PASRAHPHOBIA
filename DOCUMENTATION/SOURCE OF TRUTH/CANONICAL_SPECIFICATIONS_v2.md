@@ -1176,3 +1176,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser room-list right-column minimum height now has a micro trim.
 - Room-list tuning is visual-only: subtle min-height adjustment for compact density flexibility.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T63 Preview-Map Min-Height Micro Trim
+
+- RoomBrowser map preview now has an extra-compact-aware minimum height micro trim.
+- Preview-map tuning is visual-only: subtle min-height adjustment to rebalance vertical space.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.

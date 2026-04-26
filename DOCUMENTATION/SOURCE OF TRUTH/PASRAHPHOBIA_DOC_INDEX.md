@@ -16432,3 +16432,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - minimum tinggi room-list kolom kanan dipadatkan tipis untuk lane compact.
 - tidak ada perubahan logic room list/runtime, sesuai lock visual-only.
+
+
+---
+
+# 66. VISUAL BATCH T63 ROOMBROWSER PREVIEW MAP MIN HEIGHT MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- minimum tinggi Map Preview dipadatkan tipis lanjutan untuk lane extra-compact.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
