@@ -1041,3 +1041,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser room-list rows now have extra-compact-specific row height trim for short mobile viewports.
 - Row micro-density tuning is visual-only: extra-compact internal padding trim (`top/bottom/right`) to keep list scan rhythm tighter.
 - No room selection/join logic or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T42 Horizontal Space Reclaim
+
+- RoomBrowser room-list rows now have extra-compact-specific horizontal inset trim for short mobile viewports.
+- Horizontal density tuning is visual-only: extra-compact row width inset trim plus left/right internal padding trim and tighter list row gap.
+- No room selection/join logic or runtime behavior changes in this batch.

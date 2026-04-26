@@ -11450,7 +11450,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		roomList.ScrollBarThickness = extraCompactMobile and 5 or (isCompact and 6 or 4)
 	end
 	if roomListLayout then
-		roomListLayout.Padding = UDim.new(0, extraCompactMobile and 3 or (useWideMobileLayout and 6 or 4))
+		roomListLayout.Padding = UDim.new(0, extraCompactMobile and 2 or (useWideMobileLayout and 6 or 4))
 	end
 	local inviteListLayout = inviteList and inviteList:FindFirstChildOfClass("UIListLayout")
 	local compactInlineActionWidth = extraCompactMobile and 104 or 116
@@ -18187,7 +18187,7 @@ function UISystem:_ensureRoomBrowserGui()
 		for _, room in ipairs(rooms or {}) do
 			local row = Instance.new("TextButton")
 			row.Name = "Room_" .. tostring(room.roomId)
-				row.Size = UDim2.new(1, -8, 0, wideMobileRoomBrowser and 66 or (extraCompactRoomBrowser and 50 or (compactRoomBrowser and 56 or 36)))
+				row.Size = UDim2.new(1, extraCompactRoomBrowser and -6 or -8, 0, wideMobileRoomBrowser and 66 or (extraCompactRoomBrowser and 50 or (compactRoomBrowser and 56 or 36)))
 			row.LayoutOrder = room.roomId
 			row.BorderSizePixel = 0
 			row.Font = Enum.Font.Gotham
@@ -18200,8 +18200,8 @@ function UISystem:_ensureRoomBrowserGui()
 			local rowPadding = Instance.new("UIPadding")
 			rowPadding.PaddingTop = UDim.new(0, wideMobileRoomBrowser and 6 or (extraCompactRoomBrowser and 3 or 5))
 			rowPadding.PaddingBottom = UDim.new(0, extraCompactRoomBrowser and 3 or 5)
-			rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 8 or 10)
-			rowPadding.PaddingRight = UDim.new(0, extraCompactRoomBrowser and 6 or 8)
+			rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 7 or 10)
+			rowPadding.PaddingRight = UDim.new(0, extraCompactRoomBrowser and 5 or 8)
 			rowPadding.Parent = row
 			row:SetAttribute("RoomId", room.roomId)
 			row:SetAttribute("InGame", room.inGame == true)

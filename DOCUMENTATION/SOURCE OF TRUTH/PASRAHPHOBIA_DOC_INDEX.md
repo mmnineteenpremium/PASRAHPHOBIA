@@ -16222,3 +16222,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - padding internal row extra-compact (`top/bottom/right`) dipangkas untuk ritme scan daftar room yang lebih rapat.
 - tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
 
+---
+
+# 45. VISUAL BATCH T42 ROOM LIST HORIZONTAL SPACE RECLAIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- row daftar room lane extra-compact memakai inset horizontal lebih tipis agar area copy per row lebih lega.
+- padding kiri/kanan row extra-compact serta gap antar row list dipadatkan untuk densitas informasi yang lebih baik.
+- tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
+
