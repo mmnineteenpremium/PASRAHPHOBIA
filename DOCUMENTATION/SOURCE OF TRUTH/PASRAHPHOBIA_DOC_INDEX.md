@@ -16592,3 +16592,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - anchor vertikal JoinPassword lane extra-compact dipadatkan tipis lanjutan terhadap action row.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+
+
+---
+
+# 82. VISUAL BATCH T79 ROOMBROWSER ROOMLIST MIN HEIGHT TRIM II (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- minimum tinggi room-list kolom kanan dipadatkan tipis lanjutan untuk fleksibilitas density.
+- tidak ada perubahan logic room list/runtime, sesuai lock visual-only.

@@ -1288,3 +1288,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser join-password field now has a third extra-compact vertical anchor micro trim.
 - Join-password tuning is visual-only: tighter input-to-action grouping with unchanged field height.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T79 RoomList Min-Height Trim II
+
+- RoomBrowser room-list right-column minimum height now has a second micro trim.
+- Room-list tuning is visual-only: subtle min-height reduction for compact density flexibility.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
