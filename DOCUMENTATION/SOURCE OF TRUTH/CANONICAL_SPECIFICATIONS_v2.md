@@ -1089,3 +1089,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser preview player-list now has extra-compact-specific top-gap trim relative to the map preview block.
 - Preview-list spacing tuning is visual-only: extra-compact list anchor shift upward while preserving player-title anchor.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T50 Preview PlayerList Height Reclaim
+
+- RoomBrowser preview player-list now has extra-compact-specific top-gap continuation trim plus bottom inset trim.
+- Preview-list height tuning is visual-only: extra-compact list viewport height reclaimed while preserving preview title anchor behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.

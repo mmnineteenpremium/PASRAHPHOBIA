@@ -16302,3 +16302,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - anchor `PlayersList` dinaikkan ringan sementara anchor title pemain dipertahankan, untuk pemakaian ruang vertikal yang lebih efisien.
 - tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
 
+---
+
+# 53. VISUAL BATCH T50 ROOMBROWSER PREVIEW PLAYERLIST HEIGHT RECLAIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor atas `Room Preview PlayersList` lane extra-compact dipadatkan tipis lanjutan untuk ritme section yang lebih rapat.
+- inset bawah list lane extra-compact dipangkas ringan agar tinggi viewport list pemain sedikit bertambah.
+- tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
+
