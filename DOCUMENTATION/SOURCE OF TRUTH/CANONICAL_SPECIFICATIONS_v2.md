@@ -1971,3 +1971,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser received another extra-compact visual micro-adjustment in the roomlist min height trim lane.
 - Room-list scanning stays stable while vertical flexibility increases slightly.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-27 Addendum - Visual Batch T182 Join Password Anchor Trim X
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the join password anchor trim lane.
+- The lower control stack tightens slightly while preserving mobile input ergonomics.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.

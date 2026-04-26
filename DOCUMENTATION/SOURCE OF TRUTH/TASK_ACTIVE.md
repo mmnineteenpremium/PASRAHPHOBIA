@@ -724,6 +724,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
   - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T182 untuk RoomBrowser roombrowser-join-password-anchor-trim-10 sudah masuk:
+  - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+  - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
