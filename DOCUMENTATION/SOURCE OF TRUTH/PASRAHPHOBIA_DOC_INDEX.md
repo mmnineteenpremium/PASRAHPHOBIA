@@ -16252,3 +16252,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - gap horizontal antar tab lane extra-compact dipadatkan untuk ritme kontrol header yang lebih rapat.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
 
+---
+
+# 48. VISUAL BATCH T45 ROOMBROWSER CONTENT STACK VERTICAL TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak vertikal dari tab-strip ke area konten lane extra-compact dipadatkan tipis agar komposisi panel lebih rapat.
+- tinggi action-stack lane extra-compact dipangkas ringan untuk menambah ruang efektif list/preview di viewport pendek.
+- tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+

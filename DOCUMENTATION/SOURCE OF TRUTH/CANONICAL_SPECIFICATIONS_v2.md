@@ -1059,3 +1059,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser mode tab strip now has extra-compact-specific vertical offset tuning for short mobile viewports.
 - Tab-strip tuning is visual-only: extra-compact tab-gap trim plus slight upward control-row placement for better content breathing room.
 - No mode selection, room flow, or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T45 Content Stack Vertical Trim
+
+- RoomBrowser content stack now has extra-compact-specific top spacing trim below the mode tab strip.
+- Content-stack tuning is visual-only: extra-compact action-stack height trim for tighter vertical composition in short mobile viewports.
+- No mode selection, room flow, or runtime behavior changes in this batch.

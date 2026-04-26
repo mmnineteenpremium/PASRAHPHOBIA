@@ -176,6 +176,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - baris kontrol tab mode (`Classic / All / Ranked`) lane extra-compact dinaikkan tipis agar ruang konten bawah lebih lega.
   - gap horizontal antar tab lane extra-compact dipadatkan untuk ritme header-control yang lebih rapat.
   - tetap visual-only tanpa perubahan logic mode selection/room flow/runtime.
+- Batch visual T45 untuk RoomBrowser content-stack vertical trim sudah masuk:
+  - jarak vertikal dari tab-strip ke area konten lane extra-compact dipadatkan tipis agar komposisi panel lebih rapat.
+  - tinggi action-stack lane extra-compact dipangkas ringan untuk menambah ruang efektif list/preview pada viewport pendek.
+  - tetap visual-only tanpa perubahan logic mode selection/room flow/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

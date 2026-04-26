@@ -11259,8 +11259,8 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local previewMapAccent = roomPreviewMap and roomPreviewMap:FindFirstChild("Accent")
 	local previewMapGradient = roomPreviewMap and roomPreviewMap:FindFirstChild("PreviewGradient")
 
-	local contentTop = controlsY + tabHeight + 12
-	local actionStackHeight = profile.isMobile and 154 or (isCompact and 130 or 128)
+	local contentTop = controlsY + tabHeight + (extraCompactMobile and 10 or 12)
+	local actionStackHeight = profile.isMobile and (extraCompactMobile and 150 or 154) or (isCompact and 130 or 128)
 	if isCompact then
 		if useWideMobileLayout then
 			local columnGap = 12
