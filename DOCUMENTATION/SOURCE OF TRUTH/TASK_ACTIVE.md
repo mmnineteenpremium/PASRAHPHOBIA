@@ -88,6 +88,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - map preview (`title/label/chip/stats/footer/glyph`) pada lane extra-compact dituning supaya tetap terbaca di viewport pendek.
   - kontrol overlay (`float/countdown/cancel`) dipadatkan agar tidak mendominasi ruang visual pada mobile sempit.
   - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
+- Batch visual T23 untuk results/HUD compact mobile sudah masuk:
+  - lane `compactMobileHud` ditambahkan untuk viewport mobile pendek pada panel hasil + HUD bawah.
+  - typography/ukuran `Results`, `Timer`, `Evidence Quick`, `Hint Bar` dipadatkan agar tetap jelas tanpa overflow.
+  - tetap visual-only tanpa perubahan logic gameplay/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

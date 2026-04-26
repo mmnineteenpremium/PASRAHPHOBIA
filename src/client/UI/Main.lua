@@ -11726,6 +11726,7 @@ function UISystem:_applyDeviceSizing()
 		)
 	end
 	local topLeftInset, bottomRightInset = UISupport.resolveSafeInsets(GuiService)
+	local compactMobileHud = profile.isMobile and viewportSize.Y <= 760
 	local lobby = self._uxWidgets.lobby
 	if lobby and lobby.PlayButton and lobby.FeedbackLabel then
 		local buttonSize = profile:GetButtonSize()
@@ -12041,41 +12042,41 @@ function UISystem:_applyDeviceSizing()
 		end
 	end
 	if match and match.ResultsTitle and match.ResultsStatus then
-		match.ResultsTitle.TextSize = math.max(22, profile:GetTextSize() + 6)
-		match.ResultsStatus.TextSize = math.max(12, profile:GetTextSize() - 3)
+		match.ResultsTitle.TextSize = compactMobileHud and math.max(20, profile:GetTextSize() + 4) or math.max(22, profile:GetTextSize() + 6)
+		match.ResultsStatus.TextSize = compactMobileHud and math.max(11, profile:GetTextSize() - 4) or math.max(12, profile:GetTextSize() - 3)
 		if match.ResultsSubtitle then
-			match.ResultsSubtitle.TextSize = math.max(15, profile:GetTextSize() - 1)
+			match.ResultsSubtitle.TextSize = compactMobileHud and math.max(14, profile:GetTextSize() - 2) or math.max(15, profile:GetTextSize() - 1)
 		end
 		if match.ResultsFooter then
-			match.ResultsFooter.TextSize = math.max(13, profile:GetTextSize() - 2)
+			match.ResultsFooter.TextSize = compactMobileHud and math.max(12, profile:GetTextSize() - 4) or math.max(13, profile:GetTextSize() - 2)
 		end
 	end
 	if match and match.TimerLabel then
-		local timerWidth = profile.isMobile and 148 or 126
-		local timerHeight = profile.isMobile and 44 or 40
+		local timerWidth = profile.isMobile and (compactMobileHud and 138 or 148) or 126
+		local timerHeight = profile.isMobile and (compactMobileHud and 40 or 44) or 40
 		match.TimerLabel.Size = UDim2.fromOffset(timerWidth, timerHeight)
 		match.TimerLabel.Position = UDim2.new(0.5, 0, 0, 14 + topLeftInset.Y)
-		match.TimerLabel.TextSize = profile.isMobile and 26 or 24
+		match.TimerLabel.TextSize = profile.isMobile and (compactMobileHud and 24 or 26) or 24
 	end
 	if match and match.TimerCaption then
-		match.TimerCaption.Position = UDim2.new(0.5, 0, 0, (profile.isMobile and 60 or 58) + topLeftInset.Y)
-		match.TimerCaption.Size = UDim2.fromOffset(profile.isMobile and 190 or 170, 18)
-		match.TimerCaption.TextSize = profile.isMobile and 12 or 11
+		match.TimerCaption.Position = UDim2.new(0.5, 0, 0, (profile.isMobile and (compactMobileHud and 56 or 60) or 58) + topLeftInset.Y)
+		match.TimerCaption.Size = UDim2.fromOffset(profile.isMobile and (compactMobileHud and 176 or 190) or 170, 18)
+		match.TimerCaption.TextSize = profile.isMobile and (compactMobileHud and 11 or 12) or 11
 	end
 	if match and match.EvidenceQuickButton then
-		local quickWidth = profile.isMobile and math.min(viewportSize.X - 24, 188) or 142
-		local quickHeight = profile.isMobile and 52 or 48
+		local quickWidth = profile.isMobile and math.min(viewportSize.X - 24, compactMobileHud and 176 or 188) or 142
+		local quickHeight = profile.isMobile and (compactMobileHud and 48 or 52) or 48
 		match.EvidenceQuickButton.Size = UDim2.fromOffset(math.floor(quickWidth), quickHeight)
 		match.EvidenceQuickButton.Position = UDim2.new(1, -(14 + bottomRightInset.X), 1, -(14 + bottomRightInset.Y))
-		match.EvidenceQuickButton.TextSize = profile.isMobile and 13 or 12
+		match.EvidenceQuickButton.TextSize = profile.isMobile and (compactMobileHud and 12 or 13) or 12
 	end
 	if match and match.ControlsHintBar then
 		local hintWidth = math.min(viewportSize.X - (profile.isMobile and 20 or 40), 620)
-		match.ControlsHintBar.Size = UDim2.fromOffset(math.max(280, math.floor(hintWidth)), profile.isMobile and 40 or 34)
+		match.ControlsHintBar.Size = UDim2.fromOffset(math.max(280, math.floor(hintWidth)), profile.isMobile and (compactMobileHud and 36 or 40) or 34)
 		match.ControlsHintBar.Position = UDim2.new(0.5, 0, 1, -(12 + bottomRightInset.Y))
 	end
 	if match and match.ControlsHintLabel then
-		match.ControlsHintLabel.TextSize = profile.isMobile and 13 or 12
+		match.ControlsHintLabel.TextSize = profile.isMobile and (compactMobileHud and 12 or 13) or 12
 	end
 	local visibleFieldKitToolCount = #getVisibleFieldKitToolTypes(self:_ensureFieldKitToolStates())
 	if match and match.FieldKitFrame then

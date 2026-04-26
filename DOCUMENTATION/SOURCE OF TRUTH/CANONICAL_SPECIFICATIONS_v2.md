@@ -137,6 +137,12 @@
 - Float/countdown overlay controls are compacted in the same lane for better readability balance.
 - This addendum remains visual-only and does not alter room browser logic, matchmaking logic, or runtime systems.
 
+## 2026-04-26 Addendum - Visual Batch T23 Results + HUD Compact Mobile
+
+- A compact mobile HUD lane is applied to short-height viewports for results and bottom HUD controls.
+- Results typography plus timer/quick-action/hint controls are tuned to reduce overflow and lower-screen crowding.
+- This addendum remains visual-only and does not alter gameplay logic, economy logic, or runtime systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

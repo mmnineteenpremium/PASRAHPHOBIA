@@ -289,6 +289,15 @@ Status ringkas batch T22:
 - kontrol overlay float/countdown/cancel dipadatkan agar komposisi visual mobile lebih seimbang
 - tetap visual-only, tanpa perubahan logic room browser/runtime
 
+[2026-04-26 NOTE - Visual Batch T23]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T23_RESULTS_HUD_COMPACT_MOBILE_2026-04-26.md`
+
+Status ringkas batch T23:
+- lane `compactMobileHud` menata ulang densitas visual panel hasil + HUD bawah untuk viewport mobile pendek
+- typography/ukuran `Results`, `Timer`, `Evidence Quick`, dan `Hint Bar` dipadatkan agar lebih jelas tanpa overflow
+- tetap visual-only, tanpa perubahan logic gameplay/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 
