@@ -692,6 +692,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
   - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T174 untuk RoomBrowser roombrowser-roomlist-bottom-gap-trim-8 sudah masuk:
+  - gap bawah room list dirapatkan tipis lanjutan untuk mengurangi slack sebelum stack aksi.
+  - flow daftar ke kontrol bawah tetap dipertahankan agar pemisahan section masih terbaca.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

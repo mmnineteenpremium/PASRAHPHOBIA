@@ -17491,3 +17491,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
 - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 177. VISUAL BATCH T174 ROOMBROWSER ROOMLIST BOTTOM GAP TRIM VIII (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- gap bawah room list dirapatkan tipis lanjutan untuk mengurangi slack sebelum stack aksi.
+- flow daftar ke kontrol bawah tetap dipertahankan agar pemisahan section masih terbaca.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
