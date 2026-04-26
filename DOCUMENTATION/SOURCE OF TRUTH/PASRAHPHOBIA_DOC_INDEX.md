@@ -16372,3 +16372,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - top-gap Room Preview PlayersList lane extra-compact dipadatkan tipis lanjutan.
 - tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 60. VISUAL BATCH T57 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET TRIM II (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- bottom inset Room Preview PlayersList lane extra-compact dipadatkan tipis lanjutan untuk reclaim tinggi list.
+- tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.

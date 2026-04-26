@@ -1134,3 +1134,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser preview player-list now has a second extra-compact top-gap micro trim.
 - Preview-list tuning is visual-only: slight upward list shift while preserving preview-title anchor behavior.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T57 Preview PlayerList Bottom Inset Trim II
+
+- RoomBrowser preview player-list now has a second extra-compact bottom inset micro trim.
+- Preview-list tuning is visual-only: slight list height reclaim while preserving title/list anchor structure.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
