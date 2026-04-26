@@ -39,6 +39,17 @@ local POST_TELEPORT_SERVER_OWNERSHIP_STREAMING_SECONDS = 1.8
 local POST_TELEPORT_SERVER_OWNERSHIP_NON_STREAMING_SECONDS = 1.1
 local REQUEST_STREAM_API_MISSING_WARNED = false
 local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
+local PREPARATION_STAGING_DEBUG_ATTR = "PreparationStagingRuntimeDebug"
+local RUNTIME_BOUNDARY_SOURCE_ATTR = "RuntimeBoundarySource"
+local PREPARATION_ADVANCE_DOOR_SOURCE_ATTR = "PreparationAdvanceDoorSource"
+local PREPARATION_ADVANCE_DOOR_ATTR = "PasrahPreparationAdvanceDoor"
+local STRICT_NATIVE_RUNTIME_DEBUG_STATE = "strict_native_runtime_authoritative"
+local CANONICAL_PREPARATION_DOOR_BY_TOKEN = {
+	hauntedhouse = "Door_FrontEntry",
+	studiommnineteen = "Door_FrontEntry",
+	emptybuilding = "Door_Lobby",
+	abandonedpalace = "Door_GrandHall",
+}
 
 local function getActiveMatchesFolder()
 	local folder = Workspace:FindFirstChild("ActiveMatches")
@@ -620,6 +631,92 @@ local function hasPreparationStagingRuntime(mapClone)
 	return false
 end
 
+local function hasAnyBasePart(instance)
+	if typeof(instance) ~= "Instance" then
+		return false
+	end
+	for _, descendant in ipairs(instance:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			return true
+		end
+	end
+	return false
+end
+
+local function resolveCanonicalPreparationEntryDoor(mapToken)
+	if type(mapToken) ~= "string" then
+		return nil
+	end
+	return CANONICAL_PREPARATION_DOOR_BY_TOKEN[mapToken]
+end
+
+local function resolveRuntimeBoundaryFolder(mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return nil
+	end
+	local runtimeFolder = mapClone:FindFirstChild("Runtime", true)
+	local boundaryFolder = runtimeFolder and runtimeFolder:FindFirstChild("MapBoundaryRuntime")
+	if boundaryFolder and boundaryFolder:IsA("Folder") then
+		return boundaryFolder
+	end
+	boundaryFolder = runtimeFolder and runtimeFolder:FindFirstChild("RuntimeBoundary")
+	if boundaryFolder and boundaryFolder:IsA("Folder") then
+		return boundaryFolder
+	end
+	boundaryFolder = mapClone:FindFirstChild("RuntimeBoundary", true)
+	if boundaryFolder and boundaryFolder:IsA("Folder") then
+		return boundaryFolder
+	end
+	return nil
+end
+
+local function validateAuthoredPreparationRuntime(mapName, mapClone)
+	local _, token = normalizeMapName(mapName)
+	local expectedEntryDoorName = resolveCanonicalPreparationEntryDoor(token)
+	if not expectedEntryDoorName then
+		return true
+	end
+	if typeof(mapClone) ~= "Instance" then
+		return false, "invalid_map_clone"
+	end
+
+	local patched = mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) == true
+	if not patched then
+		return false, "strict_preparation_runtime_unpatched"
+	end
+
+	local debugState = tostring(mapClone:GetAttribute(PREPARATION_STAGING_DEBUG_ATTR) or "")
+	if debugState ~= STRICT_NATIVE_RUNTIME_DEBUG_STATE then
+		return false, string.format("strict_preparation_runtime_debug=%s", debugState ~= "" and debugState or "nil")
+	end
+
+	local boundarySource = tostring(mapClone:GetAttribute(RUNTIME_BOUNDARY_SOURCE_ATTR) or "")
+	if boundarySource ~= "Authored" then
+		return false, string.format("runtime_boundary_source=%s", boundarySource ~= "" and boundarySource or "nil")
+	end
+
+	local boundaryFolder = resolveRuntimeBoundaryFolder(mapClone)
+	if not hasAnyBasePart(boundaryFolder) then
+		return false, "runtime_boundary_missing_baseparts"
+	end
+
+	local doorSource = tostring(mapClone:GetAttribute(PREPARATION_ADVANCE_DOOR_SOURCE_ATTR) or "")
+	if doorSource ~= "Authored" then
+		return false, string.format("preparation_advance_door_source=%s", doorSource ~= "" and doorSource or "nil")
+	end
+
+	local doorsFolder = mapClone:FindFirstChild("Doors", true)
+	local entryDoor = doorsFolder and doorsFolder:FindFirstChild(expectedEntryDoorName, true) or nil
+	if not (entryDoor and entryDoor:IsA("BasePart")) then
+		return false, string.format("entry_door_missing:%s", expectedEntryDoorName)
+	end
+	if entryDoor:GetAttribute(PREPARATION_ADVANCE_DOOR_ATTR) ~= true then
+		return false, string.format("entry_door_not_tagged:%s", expectedEntryDoorName)
+	end
+
+	return true
+end
+
 local function resolveCanonicalPreparationSpawnArea(mapClone)
 	if typeof(mapClone) ~= "Instance" then
 		return nil, nil
@@ -1030,6 +1127,14 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 		local mapClone = mapTemplate:Clone()
 		mapClone.Parent = container
 		MapRuntimePatches.Apply(resolvedMapName or resolvedTemplateName, mapClone, match)
+		local runtimeOk, runtimeErr = validateAuthoredPreparationRuntime(resolvedMapName or resolvedTemplateName, mapClone)
+		if not runtimeOk then
+			error(string.format(
+				"[MatchTeleport] strict authored runtime validation failed (%s): %s",
+				tostring(runtimeErr),
+				mapClone:GetFullName()
+			))
+		end
 		if type(match) == "table" then
 			match.preparationWorldBoard = hasPreparationStagingRuntime(mapClone)
 		end
@@ -1133,13 +1238,16 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 				player:SetAttribute("SpawnProtectedUntil", os.clock() + 3)
 
 				updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=teleporting", player.Name))
-				local teleOk = safeTeleportCharacter(player, safeSpawnCFrame)
+				local teleOk, teleErr = safeTeleportCharacter(player, safeSpawnCFrame)
 				if not teleOk then
-					-- Fallback: keep legacy behavior if character is in a strange state.
-					root.CFrame = safeSpawnCFrame
-					clearAssemblyVelocities(root)
-					table.insert(teleportTrace, string.format("%s:teleportFallbackDirectCFrame", player.Name))
-					updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=fallback_cframe", player.Name))
+					local reason = tostring(teleErr or "unknown")
+					table.insert(teleportTrace, string.format("%s:teleportFailed=%s", player.Name, reason))
+					updateStudioTeleportTrace(
+						teleportTrace,
+						#teleported,
+						string.format("player=%s status=teleport_failed reason=%s", player.Name, reason)
+					)
+					continue
 				else
 					table.insert(teleportTrace, string.format("%s:teleportOk", player.Name))
 					updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=teleport_ok", player.Name))

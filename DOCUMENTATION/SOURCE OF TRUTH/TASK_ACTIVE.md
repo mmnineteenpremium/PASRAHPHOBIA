@@ -12,6 +12,17 @@ Task aktif saat ini dikunci ke dua hal berikut:
 1. Runtime map/spawn wajib 100% mengikuti authored map source-of-truth di `ServerStorage`/`ReplicatedStorage`.
 2. Penyempurnaan visual total lintas canonical UI/GUI/UX tanpa membuat sistem baru.
 
+## Execution Update (2026-04-26)
+
+- Runtime spawn fallback/recreate lane di source sudah dipangkas:
+  - `MapRuntimePatches.patchPreparationStaging` sekarang strict-authored only (tanpa synthetic staging builder).
+  - Jalur teleport fallback direct CFrame pada spawn gagal dihapus.
+- Runtime authoritative gate ditambah di teleport:
+  - match gagal lanjut jika `PreparationStagingRuntime` tidak lolos validasi strict authored (spawn/door/boundary).
+- Override hardcoded legacy untuk spawn points (`PlayerSpawn_*`) dinonaktifkan dari lane aktif.
+- Pending closure operasional tetap:
+  - `smoke test 2 client nyata` untuk verifikasi end-to-end runtime + visual di device lane aktif.
+
 ## Runtime Authority Lock (Non-Negotiable)
 
 - Spawn source satu-satunya untuk match:  
