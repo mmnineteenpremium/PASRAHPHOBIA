@@ -16342,3 +16342,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - typography footer dipertahankan; perubahan hanya pada bounds untuk ritme vertikal section yang lebih rapat.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
 
+
+
+---
+
+# 57. VISUAL BATCH T54 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis untuk memberi ruang text strip.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
