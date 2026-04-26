@@ -17435,3 +17435,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
 - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 170. VISUAL BATCH T167 ROOMBROWSER MAP FOOTER Y ALIGN TRIM V (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+- height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
