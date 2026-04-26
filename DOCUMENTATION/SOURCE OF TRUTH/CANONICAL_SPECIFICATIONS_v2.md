@@ -1316,3 +1316,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser map preview footer now has a fourth extra-compact height micro trim.
 - Map-footer tuning is visual-only: slight height reduction with unchanged footer text sizing.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T83 Preview PlayerList Top-Gap Trim IV
+
+- RoomBrowser preview player-list now has a fourth extra-compact top-gap micro trim.
+- Preview-list tuning is visual-only: slight upward list shift while preserving title anchor.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
