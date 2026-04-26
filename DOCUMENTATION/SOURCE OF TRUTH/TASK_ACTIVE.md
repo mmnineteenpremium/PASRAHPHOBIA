@@ -572,6 +572,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
   - height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T144 untuk RoomBrowser roombrowser-map-stats-anchor-trim-3 sudah masuk:
+  - anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+  - ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
