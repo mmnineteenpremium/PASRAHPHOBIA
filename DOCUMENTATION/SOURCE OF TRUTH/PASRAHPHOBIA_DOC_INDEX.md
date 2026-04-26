@@ -16332,3 +16332,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - anchor title pemain tetap dipertahankan sehingga hierarchy label tetap stabil.
 - tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
 
+---
+
+# 56. VISUAL BATCH T53 ROOMBROWSER MAP FOOTER COMPACT TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer `Map Preview` lane extra-compact dipadatkan tipis agar blok preview lebih ringkas.
+- typography footer dipertahankan; perubahan hanya pada bounds untuk ritme vertikal section yang lebih rapat.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+

@@ -208,6 +208,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - top-gap `Room Preview PlayersList` lane extra-compact dipadatkan tipis lanjutan agar section preview lebih rapat.
   - anchor title pemain tetap dipertahankan sehingga hierarchy label tetap stabil.
   - tetap visual-only tanpa perubahan logic room preview/player data/runtime.
+- Batch visual T53 untuk RoomBrowser map-footer compact trim sudah masuk:
+  - tinggi `Map Preview` footer lane extra-compact dipadatkan tipis untuk menurunkan tekanan vertikal di blok preview.
+  - typography footer tetap dipertahankan; perubahan hanya pada bounds untuk ritme section yang lebih rapat.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
