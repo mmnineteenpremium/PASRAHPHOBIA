@@ -16262,3 +16262,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - tinggi action-stack lane extra-compact dipangkas ringan untuk menambah ruang efektif list/preview di viewport pendek.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
 
+---
+
+# 49. VISUAL BATCH T46 ROOMBROWSER ACTION LANE TRANSITION TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak transisi vertikal dari room-list ke action lane lane extra-compact dipadatkan tipis.
+- bottom-gap list serta anchor offset action lane extra-compact dipangkas agar ritme vertikal panel lebih menyatu.
+- tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+

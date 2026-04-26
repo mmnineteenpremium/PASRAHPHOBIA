@@ -1065,3 +1065,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser content stack now has extra-compact-specific top spacing trim below the mode tab strip.
 - Content-stack tuning is visual-only: extra-compact action-stack height trim for tighter vertical composition in short mobile viewports.
 - No mode selection, room flow, or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T46 Action-Lane Transition Trim
+
+- RoomBrowser wide-compact content column now has extra-compact-specific transition spacing trim between room list and action lane.
+- Transition tuning is visual-only: extra-compact room-list bottom gap trim plus action-lane anchor offset trim for tighter vertical continuity.
+- No mode selection, room flow, or runtime behavior changes in this batch.
