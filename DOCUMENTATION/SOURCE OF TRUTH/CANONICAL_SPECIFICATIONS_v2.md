@@ -1005,3 +1005,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser `Room Preview` player cards now have compact/extra-compact-specific card bounds, avatar preview bounds, and text-block rhythm.
 - Preview card tuning is visual-only: grid cell padding and extra-compact truncation for name/state readability.
 - No player-state logic, room preview data flow, or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T36 Preview Header Compact
+
+- RoomBrowser `Room Preview` header (`Title` + `Info`) now has compact/extra-compact typography tuning.
+- Preview header tuning is visual-only: info-row bounds plus extra-compact truncation behavior for summary text.
+- No room preview selection/data logic or runtime behavior changes in this batch.

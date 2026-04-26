@@ -140,6 +140,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - card pemain di `Room Preview` mendapat tuning khusus compact/extra-compact pada ukuran card, ukuran viewport avatar, serta area label nama/status.
   - lane extra-compact kini memakai truncation pada nama/status dan density grid yang lebih rapat agar tidak wrap berlebih.
   - tetap visual-only tanpa perubahan logic data pemain/room preview/runtime.
+- Batch visual T36 untuk RoomBrowser preview-header compact sudah masuk:
+  - header `Room Preview` (`Title` + `Info`) pada lane compact/extra-compact mendapat tuning text-size dan behavior truncation.
+  - area `Info` compact dipadatkan agar ringkasan host/mode/player/status tetap terbaca di viewport pendek.
+  - tetap visual-only tanpa perubahan logic room preview/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

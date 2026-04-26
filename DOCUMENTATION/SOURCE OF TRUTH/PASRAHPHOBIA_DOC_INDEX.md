@@ -16162,3 +16162,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - lane extra-compact memakai truncation nama/status serta grid padding yang lebih rapat agar tidak overflow.
 - tidak ada perubahan logic data pemain/room preview/runtime, sesuai lock visual-only.
 
+---
+
+# 39. VISUAL BATCH T36 PREVIEW HEADER COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- header `Room Preview` (`Title` dan `Info`) dipadatkan untuk lane compact/extra-compact.
+- text-size dan truncation `Info` dituning agar ringkasan host/mode/player/status tetap terbaca di viewport pendek.
+- tidak ada perubahan logic room preview/runtime, sesuai lock visual-only.
+

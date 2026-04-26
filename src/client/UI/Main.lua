@@ -11285,7 +11285,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 			local previewMapHeight = math.clamp(math.floor(previewHeight * 0.34), 108, 136)
 			setOffsetBounds(roomPreviewTitle, 12, 10, leftWidth - 24, 18)
-			setOffsetBounds(roomPreviewInfo, 12, 30, leftWidth - 24, 34)
+			setOffsetBounds(roomPreviewInfo, 12, 30, leftWidth - 24, extraCompactMobile and 30 or 34)
 			setOffsetBounds(roomPreviewMap, 12, 70, leftWidth - 24, previewMapHeight)
 			setOffsetBounds(roomPreviewPlayersTitle, 12, 70 + previewMapHeight + 8, leftWidth - 24, 16)
 			setOffsetBounds(roomPreviewPlayersList, 12, 70 + previewMapHeight + 28, leftWidth - 24, previewHeight - (70 + previewMapHeight + 40))
@@ -11344,7 +11344,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 		local previewMapHeight = math.clamp(math.floor(previewHeight * (profile.isMobile and 0.43 or 0.45)), profile.isMobile and 120 or 112, profile.isMobile and 144 or 136)
 		setOffsetBounds(roomPreviewTitle, 12, 10, previewWidth - 24, profile.isMobile and 20 or 18)
-		setOffsetBounds(roomPreviewInfo, 12, profile.isMobile and 32 or 30, previewWidth - 24, profile.isMobile and 34 or 30)
+		setOffsetBounds(roomPreviewInfo, 12, profile.isMobile and 32 or 30, previewWidth - 24, extraCompactMobile and 26 or (profile.isMobile and 34 or 30))
 		setOffsetBounds(roomPreviewMap, 12, profile.isMobile and 72 or 66, previewWidth - 24, previewMapHeight)
 		setOffsetBounds(roomPreviewPlayersTitle, 12, (profile.isMobile and 72 or 66) + previewMapHeight + 10, previewWidth - 24, 16)
 		setOffsetBounds(roomPreviewPlayersList, 12, (profile.isMobile and 72 or 66) + previewMapHeight + 30, previewWidth - 24, previewHeight - ((profile.isMobile and 72 or 66) + previewMapHeight + 40))
@@ -11470,6 +11470,15 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 	if roomTitle then
 		roomTitle.TextSize = extraCompactMobile and 16 or (profile.isMobile and 18 or 16)
+	end
+	if roomPreviewTitle then
+		roomPreviewTitle.TextSize = extraCompactMobile and 13 or (isCompact and 14 or 15)
+		roomPreviewTitle.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+	end
+	if roomPreviewInfo then
+		roomPreviewInfo.TextSize = extraCompactMobile and 10 or (isCompact and 11 or 11)
+		roomPreviewInfo.TextWrapped = not extraCompactMobile
+		roomPreviewInfo.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 	end
 	if roomHost then
 		roomHost.TextSize = extraCompactMobile and 11 or (profile.isMobile and 12 or 11)
