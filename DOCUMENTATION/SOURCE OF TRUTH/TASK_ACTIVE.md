@@ -776,6 +776,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
   - struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T195 untuk RoomBrowser roombrowser-preview-map-max-height-trim-11 sudah masuk:
+  - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+  - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
