@@ -400,7 +400,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - lebar bounds Map Preview title direclaim tipis lanjutan untuk headroom teks.
   - ukuran teks title tetap; perubahan hanya pada bounds horizontal.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
-- Pending closure operasional (owner-manual lane):
+- Batch visual T101 untuk RoomBrowser map-mood-width-micro-trim-5 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk memberi ruang horizontal copy map.
+  - perilaku truncation tetap dipertahankan agar keterbacaan tetap stabil di viewport sempit.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.- Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
 ## Runtime Authority Lock (Non-Negotiable)

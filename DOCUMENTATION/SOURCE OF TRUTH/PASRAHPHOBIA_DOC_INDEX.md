@@ -16812,3 +16812,14 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - lebar bounds Map Preview title direclaim tipis lanjutan untuk headroom teks.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 104. VISUAL BATCH T101 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM V (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk memberi ruang horizontal copy map.
+- perilaku truncation tetap dipertahankan agar keterbacaan tetap stabil di viewport sempit.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
