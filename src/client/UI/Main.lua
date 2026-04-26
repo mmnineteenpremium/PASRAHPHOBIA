@@ -16976,6 +16976,75 @@ function UISystem:_ensureRoomBrowserGui()
 	passwordCancelBtn.ZIndex = 27
 	passwordCancelBtn.Parent = passwordCard
 
+	local function updatePasswordModalLayout()
+		local viewport = Vector2.new(1920, 1080)
+		local camera = Workspace.CurrentCamera
+		if camera and typeof(camera.ViewportSize) == "Vector2" then
+			viewport = camera.ViewportSize
+		end
+
+		local cardWidth = 320
+		local cardHeight = 180
+		local titleHeight = 24
+		local titleSize = 16
+		local inputHeight = 36
+		local inputSize = 14
+		local buttonY = 102
+		local buttonWidth = 144
+		local buttonHeight = 34
+		local buttonGap = 8
+		local buttonSize = 12
+
+		local compactPasswordModal = viewport.X <= 860 or viewport.Y <= 560
+		local extraCompactPasswordModal = viewport.X <= 700 or viewport.Y <= 440
+		if extraCompactPasswordModal then
+			cardWidth = 284
+			cardHeight = 156
+			titleHeight = 20
+			titleSize = 13
+			inputHeight = 30
+			inputSize = 12
+			buttonY = 90
+			buttonWidth = 126
+			buttonHeight = 28
+			buttonGap = 6
+			buttonSize = 11
+		elseif compactPasswordModal then
+			cardWidth = 304
+			cardHeight = 168
+			titleHeight = 22
+			titleSize = 14
+			inputHeight = 32
+			inputSize = 13
+			buttonY = 96
+			buttonWidth = 136
+			buttonHeight = 30
+			buttonGap = 8
+			buttonSize = 11
+		end
+
+		local cardPadding = 12
+		local contentWidth = cardWidth - (cardPadding * 2)
+
+		passwordCard.Size = UDim2.fromOffset(cardWidth, cardHeight)
+		passwordTitle.Position = UDim2.fromOffset(cardPadding, 10)
+		passwordTitle.Size = UDim2.fromOffset(contentWidth, titleHeight)
+		passwordTitle.TextSize = titleSize
+		passwordInput.Position = UDim2.fromOffset(cardPadding, 46)
+		passwordInput.Size = UDim2.fromOffset(contentWidth, inputHeight)
+		passwordInput.TextSize = inputSize
+		passwordJoinBtn.Position = UDim2.fromOffset(cardPadding, buttonY)
+		passwordJoinBtn.Size = UDim2.fromOffset(buttonWidth, buttonHeight)
+		passwordJoinBtn.TextSize = buttonSize
+		passwordCancelBtn.Position = UDim2.fromOffset(cardPadding + buttonWidth + buttonGap, buttonY)
+		passwordCancelBtn.Size = UDim2.fromOffset(buttonWidth, buttonHeight)
+		passwordCancelBtn.TextSize = buttonSize
+	end
+	updatePasswordModalLayout()
+	if Workspace.CurrentCamera then
+		table.insert(self._connections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updatePasswordModalLayout))
+	end
+
 	local kickNoticeModal = Instance.new("Frame")
 	kickNoticeModal.Name = "KickNoticeModal"
 	kickNoticeModal.Size = UDim2.fromScale(1, 1)

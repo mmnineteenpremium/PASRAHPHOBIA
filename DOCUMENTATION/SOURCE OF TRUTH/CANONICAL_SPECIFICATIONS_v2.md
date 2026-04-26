@@ -957,3 +957,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser `InvitePopup` now has explicit `compact` and `extra-compact` visual lanes for short mobile viewports.
 - Invite popup hierarchy tuning is visual-only: panel size, text area spacing, and accept/decline button sizing/typography.
 - No matchmaking/invite/runtime behavior changes in this batch; runtime-authority lock remains unchanged.
+
+## 2026-04-26 Addendum - Visual Batch T28 Password Modal Compact
+
+- RoomBrowser `PasswordModal` now has explicit `compact` and `extra-compact` visual lanes for constrained mobile viewports.
+- Password modal hierarchy tuning is visual-only: card bounds, title/input/button spacing, and typography sizing.
+- No join-room/password validation/runtime behavior changes in this batch; runtime-authority lock remains unchanged.

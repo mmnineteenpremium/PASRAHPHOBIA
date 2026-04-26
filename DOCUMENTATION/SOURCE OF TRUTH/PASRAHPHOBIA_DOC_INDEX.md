@@ -16082,3 +16082,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - ukuran popup, area teks, dan tombol `TERIMA/TOLAK` dipadatkan agar hierarchy tetap jelas pada mobile pendek.
 - tidak ada perubahan logic invite flow/runtime, sesuai lock visual-only.
 
+---
+
+# 31. VISUAL BATCH T28 PASSWORD MODAL COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- `PasswordModal` kini memiliki lane `compact` dan `extra-compact` berdasarkan viewport.
+- ukuran `PasswordCard`, title/input, dan tombol `JOIN ROOM/BATAL` dipadatkan agar tetap terbaca di mobile pendek.
+- tidak ada perubahan logic join/password/runtime, sesuai lock visual-only.
+

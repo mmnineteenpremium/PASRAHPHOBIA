@@ -108,6 +108,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `InvitePopup` mendapat lane `compact` dan `extra-compact` berbasis viewport untuk merapikan hierarchy text + tombol terima/tolak.
   - ukuran panel, spacing internal, dan typography popup dipadatkan agar tetap terbaca di viewport mobile pendek.
   - tetap visual-only tanpa perubahan logic invite flow/runtime.
+- Batch visual T28 untuk RoomBrowser password modal compact sudah masuk:
+  - `PasswordModal` kini memiliki lane `compact` dan `extra-compact` berbasis viewport pada `PasswordCard`.
+  - hierarchy title/input/button dipadatkan (card size, field height, button row rhythm, typography) agar tetap nyaman di mobile pendek.
+  - tetap visual-only tanpa perubahan logic join-room/password/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
