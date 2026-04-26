@@ -16322,3 +16322,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - hierarchy section tetap dipertahankan; perubahan hanya pada density viewport list.
 - tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
 
+---
+
+# 55. VISUAL BATCH T52 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- top-gap `Room Preview PlayersList` lane extra-compact dipadatkan tipis lanjutan agar section preview lebih rapat.
+- anchor title pemain tetap dipertahankan sehingga hierarchy label tetap stabil.
+- tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
+
