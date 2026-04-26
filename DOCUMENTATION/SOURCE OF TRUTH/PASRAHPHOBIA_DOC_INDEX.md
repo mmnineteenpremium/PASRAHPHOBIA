@@ -17116,3 +17116,10 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - perilaku truncation mood chip dipertahankan agar keterbacaan label tetap stabil.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
 
+# 130. VISUAL BATCH T127 ROOMBROWSER MAP TITLE WIDTH RECLAIM XI (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+- ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.

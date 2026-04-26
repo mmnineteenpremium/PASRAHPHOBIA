@@ -504,6 +504,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
   - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T127 untuk RoomBrowser roombrowser-map-title-width-reclaim-11 sudah masuk:
+  - lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+  - ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
