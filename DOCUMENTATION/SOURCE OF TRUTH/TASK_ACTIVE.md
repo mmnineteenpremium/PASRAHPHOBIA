@@ -792,6 +792,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
   - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T199 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-22 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

@@ -17691,3 +17691,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
 - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 202. VISUAL BATCH T199 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXII (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
