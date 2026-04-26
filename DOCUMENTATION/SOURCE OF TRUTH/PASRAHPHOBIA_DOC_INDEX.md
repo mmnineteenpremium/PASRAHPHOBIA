@@ -123,6 +123,9 @@ Visual lane aktif sekarang juga dikunci:
 - tidak membuat arsitektur gameplay/economy baru
 - hanya penyempurnaan visual total (UI/GUI/UX) untuk panel canonical:
   - Rank, EXP, Profiling, Daily Quest/Reward/Check-In/Spin, Gacha, Shop, RoyalPass, MM/PP, Item, Hidden Gems.
+- referensi visual mentah wajib:
+  - `asset mentah/ref ui/*.html`
+  - konversi HTML -> Roblox hanya pada visual layer (tanpa penambahan logic system baru).
 
 AI agents must read the documents in the following order
 to fully understand the game architecture.

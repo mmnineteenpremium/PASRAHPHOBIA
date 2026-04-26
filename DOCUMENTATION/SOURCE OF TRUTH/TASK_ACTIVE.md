@@ -48,6 +48,13 @@ Task aktif saat ini dikunci ke dua hal berikut:
 - Tidak menambah arsitektur lane baru.
 - Fokus 100% ke kualitas visual manusia (readability, hierarchy, consistency, layout, spacing, state clarity, motion clarity).
 
+### Visual Reference Source (Wajib)
+
+- Referensi visual utama diambil dari:
+  - `asset mentah/ref ui/*.html`
+- Konversi dari HTML ke Roblox UI hanya di level visual (komposisi, warna, hierarchy, readability, state clarity).
+- Tidak boleh menyuntik logic sistem baru saat proses konversi visual.
+
 ## Total Visual Scope (Canonical UI/GUI/UX)
 
 - Rank

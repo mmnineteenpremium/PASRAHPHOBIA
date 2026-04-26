@@ -17,6 +17,9 @@
   - tidak membuat sistem baru
   - tidak membuat gameplay/economy architecture baru
   - hanya polishing visual, readability, hierarchy, dan consistency.
+- Referensi visual mentah wajib untuk lane ini:
+  - `asset mentah/ref ui/*.html`
+  - translasi referensi HTML ke Roblox ScreenGui/Frame hanya di visual layer (tanpa penambahan logic sistem baru).
 
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 

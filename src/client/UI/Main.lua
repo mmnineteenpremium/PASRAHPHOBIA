@@ -221,6 +221,7 @@ MATCH_PHASE = {
 CLOSE_KEYBOARD_KEY = Enum.KeyCode.X
 CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
 CLOSE_HINT_TEXT = "[X] / [B] untuk tutup"
+USE_NATIVE_BACKPACK_TOOLS = true
 JOURNAL_TOOL_TYPE = "JejakEnergi"
 FIELD_KIT_TOOL_ORDER = {
 	"JejakEnergi",
@@ -631,13 +632,110 @@ end
 local GHOST_VISUAL_PROFILE_METADATA = loadGhostVisualProfileMetadata()
 
 local UI_BRAND = {
-	text = Color3.fromRGB(244, 241, 234),
-	muted = Color3.fromRGB(184, 194, 208),
-	ink = Color3.fromRGB(18, 22, 30),
-	focus = Color3.fromRGB(236, 196, 116),
-	focusSoft = Color3.fromRGB(132, 101, 58),
-	sheen = Color3.fromRGB(255, 237, 199),
+	bgVoid = Color3.fromRGB(2, 4, 8),
+	bgPanel = Color3.fromRGB(6, 13, 18),
+	bgCard = Color3.fromRGB(12, 22, 30),
+	bgCardSoft = Color3.fromRGB(16, 28, 38),
+	borderDim = Color3.fromRGB(56, 102, 126),
+	borderSoft = Color3.fromRGB(70, 128, 156),
+	text = Color3.fromRGB(200, 221, 232),
+	muted = Color3.fromRGB(146, 176, 198),
+	ghost = Color3.fromRGB(118, 150, 170),
+	ink = Color3.fromRGB(8, 12, 18),
+	focus = Color3.fromRGB(10, 170, 255),
+	focusStrong = Color3.fromRGB(60, 208, 255),
+	focusSoft = Color3.fromRGB(42, 112, 148),
+	sheen = Color3.fromRGB(112, 218, 255),
+	success = Color3.fromRGB(34, 160, 112),
+	warning = Color3.fromRGB(206, 150, 38),
+	danger = Color3.fromRGB(166, 74, 74),
+	profile = Color3.fromRGB(70, 132, 100),
+	shop = Color3.fromRGB(212, 146, 10),
+	rank = Color3.fromRGB(136, 164, 90),
+	pass = Color3.fromRGB(176, 132, 52),
+	daily = Color3.fromRGB(86, 154, 230),
 }
+local BUTTON_TONES = {
+	default = {
+		background = Color3.fromRGB(16, 30, 40),
+		backgroundActive = Color3.fromRGB(20, 42, 56),
+		text = Color3.fromRGB(200, 221, 232),
+		stroke = Color3.fromRGB(52, 114, 148),
+	},
+	focus = {
+		background = Color3.fromRGB(20, 50, 72),
+		backgroundActive = Color3.fromRGB(24, 66, 94),
+		text = Color3.fromRGB(212, 236, 248),
+		stroke = Color3.fromRGB(66, 180, 232),
+	},
+	profile = {
+		background = Color3.fromRGB(26, 60, 48),
+		backgroundActive = Color3.fromRGB(30, 78, 62),
+		text = Color3.fromRGB(218, 240, 230),
+		stroke = Color3.fromRGB(82, 178, 136),
+	},
+	shop = {
+		background = Color3.fromRGB(58, 44, 22),
+		backgroundActive = Color3.fromRGB(78, 56, 22),
+		text = Color3.fromRGB(248, 230, 194),
+		stroke = Color3.fromRGB(222, 164, 48),
+	},
+	rank = {
+		background = Color3.fromRGB(44, 54, 28),
+		backgroundActive = Color3.fromRGB(62, 74, 34),
+		text = Color3.fromRGB(226, 238, 210),
+		stroke = Color3.fromRGB(168, 196, 100),
+	},
+	pass = {
+		background = Color3.fromRGB(56, 42, 26),
+		backgroundActive = Color3.fromRGB(74, 52, 28),
+		text = Color3.fromRGB(246, 232, 202),
+		stroke = Color3.fromRGB(198, 156, 74),
+	},
+	success = {
+		background = Color3.fromRGB(24, 66, 50),
+		backgroundActive = Color3.fromRGB(30, 88, 64),
+		text = Color3.fromRGB(214, 246, 232),
+		stroke = Color3.fromRGB(84, 204, 152),
+	},
+	warning = {
+		background = Color3.fromRGB(66, 48, 24),
+		backgroundActive = Color3.fromRGB(82, 58, 26),
+		text = Color3.fromRGB(248, 236, 204),
+		stroke = Color3.fromRGB(222, 172, 72),
+	},
+	danger = {
+		background = Color3.fromRGB(70, 28, 30),
+		backgroundActive = Color3.fromRGB(88, 32, 34),
+		text = Color3.fromRGB(248, 220, 220),
+		stroke = Color3.fromRGB(206, 104, 104),
+	},
+}
+local function resolveButtonTone(toneKey, isActive)
+	local tone = BUTTON_TONES[tostring(toneKey or "default")] or BUTTON_TONES.default
+	local background = isActive == true and tone.backgroundActive or tone.background
+	return background, tone.text, tone.stroke
+end
+local function applyButtonToneVisual(button, parts)
+	if not button then
+		return
+	end
+	local toneKey = tostring(button:GetAttribute("PasrahButtonTone") or "default")
+	local isActive = button:GetAttribute("PasrahButtonActive") == true
+	local background, textColor, strokeColor = resolveButtonTone(toneKey, isActive)
+	button.BackgroundColor3 = background
+	button.TextColor3 = textColor
+	if parts and parts.Stroke then
+		parts.Stroke.Color = strokeColor
+	end
+	if parts and parts.Gradient then
+		parts.Gradient.Rotation = 90
+		parts.Gradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, background:Lerp(Color3.fromRGB(220, 244, 255), 0.22)),
+			ColorSequenceKeypoint.new(1, background:Lerp(Color3.fromRGB(2, 4, 8), 0.48)),
+		})
+	end
+end
 local BUTTON_TWEEN_INFO = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local BUTTON_PRESS_TWEEN_INFO = TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local PANEL_REVEAL_TWEEN_INFO = TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
@@ -932,7 +1030,7 @@ local function ensureButtonPolish(button)
 		overlay = Instance.new("Frame")
 		overlay.Name = "BrandOverlay"
 		overlay.BackgroundColor3 = UI_BRAND.sheen
-		overlay.BackgroundTransparency = 0.95
+		overlay.BackgroundTransparency = 0.94
 		overlay.BorderSizePixel = 0
 		overlay.Size = UDim2.fromScale(1, 1)
 		overlay.ZIndex = math.max(0, button.ZIndex - 1)
@@ -948,8 +1046,8 @@ local function ensureButtonPolish(button)
 		stroke.Name = "BrandStroke"
 		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		stroke.LineJoinMode = Enum.LineJoinMode.Round
-		stroke.Thickness = 1
-		stroke.Transparency = 0.34
+		stroke.Thickness = 1.1
+		stroke.Transparency = 0.26
 		stroke.Color = UI_BRAND.focusSoft
 		stroke.Parent = button
 	end
@@ -960,22 +1058,24 @@ local function ensureButtonPolish(button)
 		gradient.Name = "BrandGradient"
 		gradient.Rotation = 90
 		gradient.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(210, 220, 236)),
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 188, 222)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 24, 34)),
 		})
 		gradient.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.12),
-			NumberSequenceKeypoint.new(1, 0.34),
+			NumberSequenceKeypoint.new(0, 0.2),
+			NumberSequenceKeypoint.new(1, 0.4),
 		})
 		gradient.Parent = button
 	end
 
-	return {
+	local parts = {
 		Scale = scale,
 		Overlay = overlay,
 		Stroke = stroke,
 		Gradient = gradient,
 	}
+	applyButtonToneVisual(button, parts)
+	return parts
 end
 
 local function refreshButtonPolish(button, immediate)
@@ -983,6 +1083,7 @@ local function refreshButtonPolish(button, immediate)
 	if not parts then
 		return
 	end
+	applyButtonToneVisual(button, parts)
 
 	local hovered = button:GetAttribute("BrandHovered") == true
 	local focused = button:GetAttribute("BrandFocused") == true
@@ -1032,6 +1133,17 @@ local function refreshButtonPolish(button, immediate)
 		})
 		tweenInstance(parts.Scale, tweenInfo, { Scale = scaleTarget })
 	end
+end
+
+local function setButtonTone(button, toneKey, isActive)
+	if not button then
+		return
+	end
+	button:SetAttribute("PasrahButtonTone", tostring(toneKey or "default"))
+	button:SetAttribute("PasrahButtonActive", isActive == true)
+	local parts = ensureButtonPolish(button)
+	applyButtonToneVisual(button, parts)
+	refreshButtonPolish(button, true)
 end
 
 local function bindButtonPolish(button)
@@ -1114,12 +1226,14 @@ local function styleButton(button, text)
 	button.Text = text
 	button.TextColor3 = UI_BRAND.text
 	button.Font = Enum.Font.GothamSemibold
-	button.TextSize = 14
+	button.TextSize = 13
 	button.BorderSizePixel = 0
-	button.BackgroundColor3 = Color3.fromRGB(46, 57, 73)
+	button.BackgroundColor3 = UI_BRAND.bgCardSoft
 	button.AutoButtonColor = false
-	button.TextStrokeTransparency = 0.92
+	button.TextStrokeTransparency = 0.9
 	button.TextStrokeColor3 = UI_BRAND.ink
+	button:SetAttribute("PasrahButtonTone", "default")
+	button:SetAttribute("PasrahButtonActive", false)
 	bindButtonPolish(button)
 	refreshButtonPolish(button, true)
 end
@@ -1946,25 +2060,27 @@ local function styleFloatingButton(button, labelText, accentColor)
 	button.AutoButtonColor = false
 	button.TextScaled = false
 	button.TextWrapped = false
-	button.BackgroundColor3 = Color3.fromRGB(18, 24, 33)
-	button.BackgroundTransparency = 0.08
+	button.BackgroundColor3 = UI_BRAND.bgCard
+	button.BackgroundTransparency = 0.03
 	button.BorderSizePixel = 0
 	button.ClipsDescendants = true
 	ensureCorner(button, "FloatButtonCorner", UDim.new(0, 18))
+	button:SetAttribute("PasrahButtonTone", "focus")
+	button:SetAttribute("PasrahButtonActive", false)
 	local polish = ensureButtonPolish(button)
 	if polish and polish.Stroke then
-		polish.Stroke.Color = accent:Lerp(Color3.fromRGB(255, 248, 236), 0.2)
+		polish.Stroke.Color = accent:Lerp(Color3.fromRGB(224, 248, 255), 0.16)
 	end
 	if polish and polish.Gradient then
 		polish.Gradient.Rotation = 32
 		polish.Gradient.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, accent:Lerp(Color3.fromRGB(255, 248, 236), 0.18)),
-			ColorSequenceKeypoint.new(0.55, Color3.fromRGB(44, 56, 74)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 24, 33)),
+			ColorSequenceKeypoint.new(0, accent:Lerp(Color3.fromRGB(232, 250, 255), 0.22)),
+			ColorSequenceKeypoint.new(0.55, Color3.fromRGB(18, 38, 52)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 16, 24)),
 		})
 		polish.Gradient.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.18),
-			NumberSequenceKeypoint.new(1, 0.36),
+			NumberSequenceKeypoint.new(0, 0.16),
+			NumberSequenceKeypoint.new(1, 0.34),
 		})
 	end
 
@@ -1994,7 +2110,7 @@ local function styleFloatingButton(button, labelText, accentColor)
 	glyph.Position = UDim2.new(0.08, 0, 0.12, 0)
 	glyph.Size = UDim2.new(0.84, 0, 0.48, 0)
 	glyph.Text = deriveFloatGlyph(captionText)
-	glyph.TextColor3 = accent:Lerp(Color3.fromRGB(255, 245, 228), 0.35)
+	glyph.TextColor3 = accent:Lerp(Color3.fromRGB(234, 248, 255), 0.3)
 	glyph.TextTransparency = 0.18
 	glyph.TextScaled = false
 	glyph.TextSize = 22
@@ -2033,7 +2149,7 @@ local function styleFloatingButton(button, labelText, accentColor)
 	subcaption.Position = UDim2.new(0.12, 0, 0.83, 0)
 	subcaption.Size = UDim2.new(0.76, 0, 0.12, 0)
 	subcaption.Text = "OPEN"
-	subcaption.TextColor3 = accent:Lerp(Color3.fromRGB(255, 248, 236), 0.25)
+	subcaption.TextColor3 = accent:Lerp(Color3.fromRGB(234, 248, 255), 0.2)
 	subcaption.TextTransparency = 0.22
 	subcaption.TextScaled = false
 	subcaption.TextSize = 8
@@ -2046,7 +2162,7 @@ end
 
 local function styleLabel(label, text, size)
 	label.Text = text
-	label.TextColor3 = Color3.fromRGB(235, 240, 245)
+	label.TextColor3 = UI_BRAND.text
 	label.Font = Enum.Font.Gotham
 	label.TextSize = size or 14
 	label.BackgroundTransparency = 1
@@ -2342,50 +2458,50 @@ end
 
 local SHOP_CATEGORY_THEMES = {
 	Cosmetic = {
-		background = Color3.fromRGB(44, 30, 46),
-		preview = Color3.fromRGB(76, 48, 82),
-		accent = Color3.fromRGB(208, 126, 182),
-		text = Color3.fromRGB(248, 228, 242),
+		background = Color3.fromRGB(32, 22, 44),
+		preview = Color3.fromRGB(58, 34, 76),
+		accent = Color3.fromRGB(184, 112, 224),
+		text = Color3.fromRGB(240, 224, 252),
 	},
 	Equipment = {
-		background = Color3.fromRGB(28, 36, 44),
-		preview = Color3.fromRGB(44, 62, 78),
-		accent = Color3.fromRGB(118, 178, 214),
-		text = Color3.fromRGB(228, 240, 248),
+		background = Color3.fromRGB(14, 30, 40),
+		preview = Color3.fromRGB(26, 52, 70),
+		accent = Color3.fromRGB(62, 182, 232),
+		text = Color3.fromRGB(220, 242, 252),
 	},
 	default = {
-		background = Color3.fromRGB(24, 30, 40),
-		preview = Color3.fromRGB(38, 52, 74),
-		accent = Color3.fromRGB(86, 116, 152),
-		text = Color3.fromRGB(236, 242, 250),
+		background = Color3.fromRGB(12, 24, 34),
+		preview = Color3.fromRGB(22, 44, 62),
+		accent = Color3.fromRGB(52, 138, 196),
+		text = Color3.fromRGB(214, 232, 246),
 	},
 }
 
 local SHOP_CURRENCY_THEMES = {
 	MM = {
-		background = Color3.fromRGB(42, 66, 98),
-		text = Color3.fromRGB(236, 244, 252),
+		background = Color3.fromRGB(24, 72, 108),
+		text = Color3.fromRGB(220, 244, 255),
 	},
 	PP = {
-		background = Color3.fromRGB(102, 76, 28),
-		text = Color3.fromRGB(250, 238, 206),
+		background = Color3.fromRGB(94, 66, 22),
+		text = Color3.fromRGB(252, 238, 198),
 	},
 	Robux = {
-		background = Color3.fromRGB(30, 88, 60),
-		text = Color3.fromRGB(228, 248, 236),
+		background = Color3.fromRGB(26, 96, 74),
+		text = Color3.fromRGB(224, 248, 238),
 	},
 	default = {
-		background = Color3.fromRGB(60, 88, 128),
-		text = Color3.fromRGB(245, 245, 245),
+		background = Color3.fromRGB(24, 62, 96),
+		text = Color3.fromRGB(224, 238, 250),
 	},
 }
 
 local SHOP_RARITY_COLORS = {
-	R1 = Color3.fromRGB(126, 144, 170),
-	R2 = Color3.fromRGB(90, 156, 120),
-	R3 = Color3.fromRGB(82, 136, 196),
-	R4 = Color3.fromRGB(160, 110, 196),
-	R5 = Color3.fromRGB(216, 162, 84),
+	R1 = Color3.fromRGB(132, 150, 178),
+	R2 = Color3.fromRGB(56, 172, 118),
+	R3 = Color3.fromRGB(64, 154, 222),
+	R4 = Color3.fromRGB(178, 118, 226),
+	R5 = Color3.fromRGB(222, 170, 76),
 }
 
 local function resolveShopCategoryTheme(item)
@@ -2901,8 +3017,8 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	local row = Instance.new("Frame")
 	row.Name = rowName
 	row.Size = UDim2.new(1, 0, 0, 72)
-	row.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
-	row.BackgroundTransparency = 0.06
+	row.BackgroundColor3 = UI_BRAND.bgCard
+	row.BackgroundTransparency = 0.03
 	row.BorderSizePixel = 0
 	row.Parent = parent
 
@@ -2913,7 +3029,7 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	local accent = Instance.new("Frame")
 	accent.Name = "Accent"
 	accent.Size = UDim2.fromOffset(6, 72)
-	accent.BackgroundColor3 = Color3.fromRGB(86, 116, 152)
+	accent.BackgroundColor3 = UI_BRAND.focusSoft
 	accent.BorderSizePixel = 0
 	accent.Parent = row
 
@@ -2921,7 +3037,7 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	preview.Name = "Preview"
 	preview.Position = UDim2.fromOffset(14, 8)
 	preview.Size = UDim2.fromOffset(52, 56)
-	preview.BackgroundColor3 = Color3.fromRGB(38, 52, 74)
+	preview.BackgroundColor3 = UI_BRAND.bgCardSoft
 	preview.BorderSizePixel = 0
 	preview.Parent = row
 	local previewCorner = Instance.new("UICorner")
@@ -2930,13 +3046,13 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 
 	local previewBadge = Instance.new("TextLabel")
 	previewBadge.Name = "PreviewBadge"
-	previewBadge.BackgroundColor3 = Color3.fromRGB(58, 76, 102)
+	previewBadge.BackgroundColor3 = UI_BRAND.focusSoft
 	previewBadge.BackgroundTransparency = 0.12
 	previewBadge.Position = UDim2.fromOffset(4, 4)
 	previewBadge.Size = UDim2.new(1, -8, 0, 14)
 	previewBadge.Font = Enum.Font.GothamBold
 	previewBadge.TextSize = 8
-	previewBadge.TextColor3 = Color3.fromRGB(236, 242, 250)
+	previewBadge.TextColor3 = UI_BRAND.text
 	previewBadge.BorderSizePixel = 0
 	previewBadge.Text = "ITEM"
 	previewBadge.Parent = preview
@@ -2951,7 +3067,7 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	previewGlyph.Size = UDim2.new(1, -12, 0, 34)
 	previewGlyph.Font = Enum.Font.GothamBold
 	previewGlyph.TextSize = 24
-	previewGlyph.TextColor3 = Color3.fromRGB(236, 242, 250)
+	previewGlyph.TextColor3 = UI_BRAND.text
 	previewGlyph.TextXAlignment = Enum.TextXAlignment.Left
 	previewGlyph.TextYAlignment = Enum.TextYAlignment.Center
 	previewGlyph.Text = "IT"
@@ -2963,7 +3079,7 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	title.Size = UDim2.new(1, -176, 0, 20)
 	title.BackgroundTransparency = 1
 	title.Text = defaultTitle or "ITEM"
-	title.TextColor3 = Color3.fromRGB(240, 244, 248)
+	title.TextColor3 = UI_BRAND.text
 	title.Font = Enum.Font.GothamSemibold
 	title.TextSize = 13
 	title.TextXAlignment = Enum.TextXAlignment.Left
@@ -2975,7 +3091,7 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	meta.Size = UDim2.new(1, -176, 0, 18)
 	meta.BackgroundTransparency = 1
 	meta.Text = defaultMeta or "-"
-	meta.TextColor3 = Color3.fromRGB(176, 190, 212)
+	meta.TextColor3 = UI_BRAND.muted
 	meta.Font = Enum.Font.Gotham
 	meta.TextSize = 11
 	meta.TextXAlignment = Enum.TextXAlignment.Left
@@ -2984,13 +3100,13 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 
 	local pricePill = Instance.new("TextLabel")
 	pricePill.Name = "PricePill"
-	pricePill.BackgroundColor3 = Color3.fromRGB(60, 88, 128)
+	pricePill.BackgroundColor3 = Color3.fromRGB(22, 50, 72)
 	pricePill.BackgroundTransparency = 0.08
 	pricePill.Position = UDim2.fromOffset(78, 50)
 	pricePill.Size = UDim2.fromOffset(92, 16)
 	pricePill.Font = Enum.Font.GothamBold
 	pricePill.TextSize = 9
-	pricePill.TextColor3 = Color3.fromRGB(245, 245, 245)
+	pricePill.TextColor3 = UI_BRAND.text
 	pricePill.Text = "-"
 	pricePill.BorderSizePixel = 0
 	pricePill.Parent = row
@@ -3004,7 +3120,7 @@ local function createActionRow(parent, rowName, defaultTitle, defaultMeta, butto
 	button.Position = UDim2.new(1, -10, 0.5, 0)
 	button.Size = UDim2.fromOffset(86, 32)
 	styleButton(button, buttonText or "AKSI")
-	button.BackgroundColor3 = Color3.fromRGB(60, 88, 128)
+	setButtonTone(button, "focus", false)
 	button.Parent = row
 
 	local buttonCorner = Instance.new("UICorner")
@@ -5781,7 +5897,6 @@ function UISystem:_layoutLobbyFloatRail()
 
 	if profile.isMobile then
 		-- Keep the rail concise on phones/tablets: primary navigation only.
-		pushButton(roomsButton)
 		pushButton(passButton)
 		pushButton(menuButton)
 		pushButton(rankButton)
@@ -5789,7 +5904,6 @@ function UISystem:_layoutLobbyFloatRail()
 		-- Desktop order is fixed top-to-bottom for deterministic scanning.
 		pushButton(menuButton)
 		pushButton(passButton)
-		pushButton(roomsButton)
 		pushButton(rankButton)
 		pushButton(profileButton)
 		pushButton(shopButton)
@@ -5808,6 +5922,17 @@ function UISystem:_layoutLobbyFloatRail()
 		button.AnchorPoint = Vector2.new(1, 0)
 		button.Position = UDim2.new(1, railX, 0, railTop)
 		railTop += height + gap
+	end
+
+	if roomsButton and roomsButton.Parent and roomsButton.Visible == true then
+		local roomHeight = roomsButton.AbsoluteSize.Y
+		if roomHeight <= 0 then
+			roomHeight = roomsButton.Size.Y.Offset > 0 and roomsButton.Size.Y.Offset or (profile.isMobile and 68 or 60)
+		end
+		local leftMargin = topLeftInset.X + 14
+		local bottomMargin = bottomRightInset.Y + (profile.isMobile and 90 or 118)
+		roomsButton.AnchorPoint = Vector2.new(0, 1)
+		roomsButton.Position = UDim2.new(0, leftMargin, 1, -bottomMargin - roomHeight)
 	end
 end
 
@@ -6524,6 +6649,9 @@ function UISystem:_refreshFieldKitPanel()
 		and (self._matchPhase == MATCH_PHASE.INGAME or self._matchPhase == MATCH_PHASE.ESCALATION or self._matchPhase == MATCH_PHASE.HUNT)
 		and not authoritativePreparation
 		and not self:_isMatchResultsPhase()
+	if USE_NATIVE_BACKPACK_TOOLS == true then
+		showFieldKit = false
+	end
 	match.FieldKitFrame.Visible = showFieldKit
 
 	local state = self._journalState or {}
@@ -6976,6 +7104,33 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState, payload)
 	end
 end
 
+function UISystem:_suppressTouchMatchHeaderBodyText()
+	if UserInputService.TouchEnabled ~= true then
+		return
+	end
+	local playerGui = self:_getPlayerGui()
+	if not playerGui then
+		return
+	end
+	for _, descendant in ipairs(playerGui:GetDescendants()) do
+		if descendant:IsA("ScreenGui") then
+			local panel = descendant:FindFirstChild("MainPanel")
+			local title = panel and panel:FindFirstChild("Title") or nil
+			if panel and panel:IsA("Frame") and title and title:IsA("TextLabel") then
+				local titleText = string.upper(tostring(title.Text or ""))
+				if string.find(titleText, "PANEL MATCH", 1, true) then
+					for _, panelDescendant in ipairs(panel:GetDescendants()) do
+						if panelDescendant:IsA("TextLabel") and (panelDescendant.Name == "PrimaryLabel" or panelDescendant.Name == "SecondaryLabel") then
+							panelDescendant.Text = ""
+							panelDescendant.Visible = false
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	local match = self._uxWidgets and self._uxWidgets.match or nil
 	if not match or not match.BasicPanel then
@@ -6993,6 +7148,8 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		or "Lobby"
 	)
 	payload = payload or self._phasePayload
+	local profile = self._deviceProfile or {}
+	local hideHeaderBodyText = UserInputService.TouchEnabled == true and viewState ~= "Results"
 	local huntAssistSnapshot = viewState == "Hunt" and getHuntAssistSnapshot() or nil
 	local huntStatusSnapshot = viewState == "Hunt" and getHuntStatusSnapshot() or nil
 	local navigationAnchor = nil
@@ -7095,6 +7252,11 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		badgeColor = semanticAccent:Lerp(badgeColor, 0.28)
 	end
 
+	if hideHeaderBodyText then
+		primaryText = ""
+		secondaryText = ""
+	end
+
 	local headerFill = badgeColor:Lerp(Color3.fromRGB(18, 22, 30), 0.72)
 	local summaryFill = badgeColor:Lerp(Color3.fromRGB(20, 27, 36), 0.76)
 	local actionFill = badgeColor:Lerp(Color3.fromRGB(34, 48, 64), 0.42)
@@ -7119,9 +7281,11 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	end
 	if match.BasicPrimaryLabel then
 		match.BasicPrimaryLabel.Text = primaryText
+		match.BasicPrimaryLabel.Visible = not hideHeaderBodyText
 	end
 	if match.BasicSecondaryLabel then
 		match.BasicSecondaryLabel.Text = secondaryText
+		match.BasicSecondaryLabel.Visible = not hideHeaderBodyText
 	end
 	if match.BasicFooterLabel then
 		match.BasicFooterLabel.Text = footerText
@@ -7132,6 +7296,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	if match.SummaryFrame then
 		match.SummaryFrame.BackgroundColor3 = summaryFill
 	end
+	self:_suppressTouchMatchHeaderBodyText()
 	if match.TimerLabel then
 		match.TimerLabel.Visible = timerVisible and viewState ~= "Lobby" and not self:_isMatchResultsPhase()
 		match.TimerLabel.Text = timerVisible and timerText or ""
@@ -7192,13 +7357,8 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			match.ObjectiveLabel.Text = appendPreparationFocusLine(getInvestigationObjectiveText("Investigation"))
 			match.ObjectiveLabel.Visible = true
 		elseif viewState == "Preparation" or viewState == "Loading" then
-			match.ObjectiveLabel.Text = (viewState == "Preparation" and (
-				(type(payload) == "table" and payload.preparationWorldBoard == true)
-				or self:_hasWorldPreparationStaging()
-			))
-				and "STAGING LUAR\nReview board objective dan tools, lalu aktifkan BREACH di MAIN ENTRY."
-				or getInvestigationObjectiveText("Preparation")
-			match.ObjectiveLabel.Visible = true
+			match.ObjectiveLabel.Text = ""
+			match.ObjectiveLabel.Visible = false
 		else
 			match.ObjectiveLabel.Text = ""
 			match.ObjectiveLabel.Visible = false
@@ -7436,8 +7596,8 @@ function UISystem:_refreshBasicLobbyPanel()
 		end
 	end
 
-	local headerFill = badgeColor:Lerp(Color3.fromRGB(18, 26, 34), 0.72)
-	local actionFill = badgeColor:Lerp(Color3.fromRGB(38, 56, 74), 0.42)
+	local headerFill = badgeColor:Lerp(UI_BRAND.bgCard, 0.72)
+	local actionFill = badgeColor:Lerp(Color3.fromRGB(18, 46, 66), 0.4)
 
 	if lobby.BasicTitle then
 		lobby.BasicTitle.Text = "LOBBY PANEL"
@@ -7481,11 +7641,11 @@ function UISystem:_refreshBasicLobbyPanel()
 		if type(zoneFocus) == "table" and not currentRoom and not state.lastError and tostring(zoneFocus.badge or "") ~= "" then
 			lobby.BasicMapPill.Text = tostring(zoneFocus.badge or "FOCUS")
 			lobby.BasicMapPill.BackgroundColor3 = typeof(zoneFocus.accentColor) == "Color3"
-				and zoneFocus.accentColor:Lerp(Color3.fromRGB(70, 86, 64), 0.46)
-				or Color3.fromRGB(70, 86, 64)
+				and zoneFocus.accentColor:Lerp(Color3.fromRGB(44, 68, 90), 0.46)
+				or Color3.fromRGB(44, 68, 90)
 		else
 			lobby.BasicMapPill.Text = tostring(currentRoom and currentRoom.mapId or selectedMap)
-			lobby.BasicMapPill.BackgroundColor3 = Color3.fromRGB(70, 86, 64)
+			lobby.BasicMapPill.BackgroundColor3 = Color3.fromRGB(44, 68, 90)
 		end
 	end
 	if lobby.BasicRoomPill then
@@ -7494,61 +7654,55 @@ function UISystem:_refreshBasicLobbyPanel()
 			local distanceText = getLobbyZoneDistanceText(zoneFocus.zoneName)
 			lobby.BasicRoomPill.Text = distanceText and ("FOCUS " .. string.upper(distanceText)) or "FOCUS ACTIVE"
 			lobby.BasicRoomPill.BackgroundColor3 = typeof(zoneFocus.accentColor) == "Color3"
-				and zoneFocus.accentColor:Lerp(Color3.fromRGB(96, 76, 48), 0.58)
-				or Color3.fromRGB(96, 76, 48)
+				and zoneFocus.accentColor:Lerp(Color3.fromRGB(82, 62, 34), 0.58)
+				or Color3.fromRGB(82, 62, 34)
 		else
 			lobby.BasicRoomPill.Text = roomText
-			lobby.BasicRoomPill.BackgroundColor3 = Color3.fromRGB(96, 76, 48)
+			lobby.BasicRoomPill.BackgroundColor3 = Color3.fromRGB(82, 62, 34)
 		end
 	end
 	if lobby.BasicOpenRoomBrowserButton then
 		local focusedZoneName = type(zoneFocus) == "table" and tostring(zoneFocus.zoneName or "") or ""
 		local roomButtonText = self._roomBrowserVisible and "TUTUP ROOM BROWSER" or "OPEN ROOM BROWSER"
-		local roomButtonColor = self._roomBrowserVisible
-			and badgeColor:Lerp(Color3.fromRGB(72, 118, 160), 0.24)
-			or actionFill
+		local roomTone = "focus"
+		local roomActive = self._roomBrowserVisible
 		if focusedZoneName == "MatchmakingZone" then
 			roomButtonText = self._roomBrowserVisible and "TUTUP PLAY / ROOM" or "PLAY / ROOM BROWSER"
-			roomButtonColor = Color3.fromRGB(58, 98, 142)
+			roomTone = "focus"
 		elseif focusedZoneName == "PartyZone" then
 			roomButtonText = self._roomBrowserVisible and "TUTUP PARTY / ROOM" or "PARTY / ROOM BROWSER"
-			roomButtonColor = Color3.fromRGB(64, 110, 96)
+			roomTone = "profile"
 		end
 		lobby.BasicOpenRoomBrowserButton.Text = roomButtonText
-		lobby.BasicOpenRoomBrowserButton.BackgroundColor3 = roomButtonColor
+		setButtonTone(lobby.BasicOpenRoomBrowserButton, roomTone, roomActive)
 	end
 	if lobby.BasicProfileButton then
 		local profileOpen = self._uiState.ProfileUI and self._uiState.ProfileUI.visible == true and self._windowDismissed.ProfileUI ~= true
 		lobby.BasicProfileButton.Text = profileOpen and "TUTUP PROFILE" or "PROFILE"
-		lobby.BasicProfileButton.BackgroundColor3 = (type(zoneFocus) == "table" and zoneFocus.zoneName == "FlexZone")
-			and Color3.fromRGB(98, 74, 132)
-			or Color3.fromRGB(62, 88, 66)
+		local profileTone = (type(zoneFocus) == "table" and zoneFocus.zoneName == "FlexZone") and "pass" or "profile"
+		setButtonTone(lobby.BasicProfileButton, profileTone, profileOpen)
 	end
 	if lobby.BasicShopButton then
 		local shopOpen = self._uiState.ShopUI and self._uiState.ShopUI.visible == true and self._windowDismissed.ShopUI ~= true
 		lobby.BasicShopButton.Text = shopOpen and "TUTUP SHOP" or ((type(zoneFocus) == "table" and zoneFocus.zoneName == "ShopZone") and "SHOP ACTIVE" or "SHOP")
-		lobby.BasicShopButton.BackgroundColor3 = (type(zoneFocus) == "table" and zoneFocus.zoneName == "ShopZone")
-			and Color3.fromRGB(132, 96, 54)
-			or Color3.fromRGB(108, 82, 48)
+		setButtonTone(lobby.BasicShopButton, "shop", shopOpen or (type(zoneFocus) == "table" and zoneFocus.zoneName == "ShopZone"))
 	end
 	if lobby.BasicRoyalPassButton then
 		local royalPassOpen = self._uiState.RoyalPassUI and self._uiState.RoyalPassUI.visible == true and self._windowDismissed.RoyalPassUI ~= true
 		lobby.BasicRoyalPassButton.Text = royalPassOpen and "TUTUP ROYAL PASS" or "ROYAL PASS"
-		lobby.BasicRoyalPassButton.BackgroundColor3 = (type(zoneFocus) == "table" and zoneFocus.zoneName == "DailyRewardZone")
-			and Color3.fromRGB(124, 98, 52)
-			or Color3.fromRGB(116, 88, 44)
+		setButtonTone(lobby.BasicRoyalPassButton, "pass", royalPassOpen or (type(zoneFocus) == "table" and zoneFocus.zoneName == "DailyRewardZone"))
 	end
 	if lobby.BasicMenuButton then
 		local _, menuPanel = self:_getBasicWindowState("MainMenuUI")
 		local menuOpen = menuPanel and menuPanel.Visible == true
 		lobby.BasicMenuButton.Text = menuOpen and "TUTUP MENU" or "MENU"
-		lobby.BasicMenuButton.BackgroundColor3 = Color3.fromRGB(58, 66, 84)
+		setButtonTone(lobby.BasicMenuButton, "default", menuOpen)
 	end
 	if lobby.BasicRankButton then
 		local _, rankPanel = self:_getBasicWindowState("LeaderboardUI")
 		local rankOpen = rankPanel and rankPanel.Visible == true
 		lobby.BasicRankButton.Text = rankOpen and "TUTUP RANK" or "RANK"
-		lobby.BasicRankButton.BackgroundColor3 = Color3.fromRGB(74, 82, 58)
+		setButtonTone(lobby.BasicRankButton, "rank", rankOpen)
 	end
 end
 
@@ -7566,15 +7720,15 @@ function UISystem:_refreshMainMenuPanel()
 	local graphicsMode = self._graphicsMode or GraphicsSupport.resolveAppliedMode()
 	local graphicsMeta = GraphicsSupport.getModeMeta(graphicsMode)
 	local statusText = "QUICK ACCESS"
-	local badgeColor = Color3.fromRGB(60, 92, 132)
-	local primaryText = "Panel navigasi cepat untuk test lobby flow tanpa mengandalkan hotkey."
-	local secondaryText = string.format("Mode %s | Map %s | %d room aktif | Visual %s", selectedMode, selectedMap, #rooms, graphicsMeta.label)
+	local badgeColor = Color3.fromRGB(62, 132, 188)
+	local primaryText = "Hub visual canonical: Room, Rank/EXP, Profile, Shop, Royal Pass, Daily & Reward flow."
+	local secondaryText = string.format("Mode %s | Map %s | %d room aktif | Visual %s | Wallet MM/PP live", selectedMode, selectedMap, #rooms, graphicsMeta.label)
 	local attributionFooter = pasrahBuildAttributionFooterText(self._legalState and self._legalState.attributions)
 
 	if currentRoom and currentRoom.roomId then
 		local playerCount = type(currentRoom.players) == "table" and #currentRoom.players or 0
 		statusText = state.matchStarting == true and "COUNTDOWN" or "ROOM ACTIVE"
-		badgeColor = state.matchStarting == true and Color3.fromRGB(126, 84, 48) or Color3.fromRGB(54, 110, 86)
+		badgeColor = state.matchStarting == true and Color3.fromRGB(182, 130, 56) or Color3.fromRGB(58, 156, 122)
 		primaryText = string.format("Room #%s aktif. Semua akses dasar lobby ada di panel ini.", tostring(currentRoom.roomId))
 		secondaryText = string.format(
 			"%s | %s | %d pemain | Visual %s",
@@ -7615,31 +7769,23 @@ function UISystem:_refreshMainMenuPanel()
 
 	if window.RoomBrowserButton then
 		window.RoomBrowserButton.Text = self._roomBrowserVisible and "TUTUP ROOM BROWSER" or "OPEN ROOM BROWSER"
-		window.RoomBrowserButton.BackgroundColor3 = self._roomBrowserVisible
-			and Color3.fromRGB(66, 104, 144)
-			or Color3.fromRGB(46, 78, 114)
+		setButtonTone(window.RoomBrowserButton, "focus", self._roomBrowserVisible)
 	end
 	if window.ProfileButton then
 		window.ProfileButton.Text = profileOpen and "TUTUP PROFILE" or "OPEN PROFILE"
-		window.ProfileButton.BackgroundColor3 = profileOpen
-			and Color3.fromRGB(78, 112, 82)
-			or Color3.fromRGB(58, 84, 62)
+		setButtonTone(window.ProfileButton, "profile", profileOpen)
 	end
 	if window.ShopButton then
 		window.ShopButton.Text = shopOpen and "TUTUP SHOP" or "OPEN SHOP"
-		window.ShopButton.BackgroundColor3 = shopOpen
-			and Color3.fromRGB(126, 94, 56)
-			or Color3.fromRGB(104, 78, 48)
+		setButtonTone(window.ShopButton, "shop", shopOpen)
 	end
 	if window.RankButton then
 		window.RankButton.Text = rankOpen and "TUTUP RANK BOARD" or "OPEN RANK BOARD"
-		window.RankButton.BackgroundColor3 = rankOpen
-			and Color3.fromRGB(98, 104, 62)
-			or Color3.fromRGB(78, 84, 50)
+		setButtonTone(window.RankButton, "rank", rankOpen)
 	end
 	if window.GraphicsButton then
 		window.GraphicsButton.Text = string.format("VISUAL: %s", graphicsMeta.label)
-		window.GraphicsButton.BackgroundColor3 = graphicsMeta.buttonColor
+		setButtonTone(window.GraphicsButton, "focus", true)
 	end
 
 	local function stamp(instance, channel)
@@ -7972,20 +8118,19 @@ function UISystem:_refreshLeaderboardPanel()
 		for index, row in ipairs(rows) do
 			local data = rowData[index]
 			if data then
-				row.Root.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+				row.Root.BackgroundColor3 = UI_BRAND.bgCard
 				row.Accent.BackgroundColor3 = data.accent
 				row.Preview.BackgroundColor3 = data.preview
 				row.PreviewBadge.BackgroundColor3 = data.accent
-				row.PreviewBadge.TextColor3 = Color3.fromRGB(247, 243, 236)
+				row.PreviewBadge.TextColor3 = UI_BRAND.text
 				row.PreviewBadge.Text = data.badge
-				row.PreviewGlyph.TextColor3 = Color3.fromRGB(247, 243, 236)
+				row.PreviewGlyph.TextColor3 = UI_BRAND.text
 				row.PreviewGlyph.Text = data.glyph
 				row.Title.Text = data.title
 				row.Meta.Text = data.meta
-				applyPricePillVisual(row.PricePill, data.pill, data.accent, Color3.fromRGB(247, 243, 236))
-				row.Button.BackgroundColor3 = data.preview
-				row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
+				applyPricePillVisual(row.PricePill, data.pill, data.accent, UI_BRAND.text)
 				row.Button.Text = data.button
+				setButtonTone(row.Button, index == 2 and "warning" or "focus", false)
 			end
 		end
 	end
@@ -7995,21 +8140,15 @@ function UISystem:_refreshLeaderboardPanel()
 	local profileOpen = self._uiState.ProfileUI and self._uiState.ProfileUI.visible == true and self._windowDismissed.ProfileUI ~= true
 	if window.ProfileButton then
 		window.ProfileButton.Text = profileOpen and "TUTUP PROFILE" or "PROFILE"
-		window.ProfileButton.BackgroundColor3 = profileOpen
-			and Color3.fromRGB(78, 112, 82)
-			or Color3.fromRGB(58, 84, 62)
+		setButtonTone(window.ProfileButton, "profile", profileOpen)
 	end
 	if window.RoomBrowserButton then
 		window.RoomBrowserButton.Text = self._roomBrowserVisible and "TUTUP ROOMS" or "OPEN ROOMS"
-		window.RoomBrowserButton.BackgroundColor3 = self._roomBrowserVisible
-			and Color3.fromRGB(66, 104, 144)
-			or Color3.fromRGB(46, 78, 114)
+		setButtonTone(window.RoomBrowserButton, "focus", self._roomBrowserVisible)
 	end
 	if window.MenuButton then
 		window.MenuButton.Text = menuOpen and "TUTUP MENU" or "OPEN MENU"
-		window.MenuButton.BackgroundColor3 = menuOpen
-			and Color3.fromRGB(86, 96, 120)
-			or Color3.fromRGB(58, 66, 84)
+		setButtonTone(window.MenuButton, "default", menuOpen)
 	end
 
 	local function stamp(instance, channel)
@@ -8566,7 +8705,7 @@ function UISystem:_ensureProfileWidgets(window)
 	local heroCard = Instance.new("Frame")
 	heroCard.Name = "HeroCard"
 	heroCard.Size = UDim2.new(1, 0, 0, 122)
-	heroCard.BackgroundColor3 = Color3.fromRGB(28, 36, 42)
+	heroCard.BackgroundColor3 = UI_BRAND.bgCard
 	heroCard.BorderSizePixel = 0
 	heroCard.Parent = deck
 
@@ -8577,7 +8716,7 @@ function UISystem:_ensureProfileWidgets(window)
 	local heroStroke = Instance.new("UIStroke")
 	heroStroke.Name = "HeroStroke"
 	heroStroke.Thickness = 1.5
-	heroStroke.Color = Color3.fromRGB(74, 96, 58)
+	heroStroke.Color = UI_BRAND.profile
 	heroStroke.Transparency = 0.18
 	heroStroke.Parent = heroCard
 
@@ -8585,11 +8724,11 @@ function UISystem:_ensureProfileWidgets(window)
 	avatarGlyph.Name = "AvatarGlyph"
 	avatarGlyph.Position = UDim2.fromOffset(12, 16)
 	avatarGlyph.Size = UDim2.fromOffset(58, 58)
-	avatarGlyph.BackgroundColor3 = Color3.fromRGB(62, 84, 70)
+	avatarGlyph.BackgroundColor3 = Color3.fromRGB(28, 74, 58)
 	avatarGlyph.BorderSizePixel = 0
 	avatarGlyph.Font = Enum.Font.GothamBold
 	avatarGlyph.TextSize = 24
-	avatarGlyph.TextColor3 = Color3.fromRGB(244, 244, 238)
+	avatarGlyph.TextColor3 = UI_BRAND.text
 	avatarGlyph.Text = "P"
 	avatarGlyph.Parent = heroCard
 
@@ -8604,7 +8743,7 @@ function UISystem:_ensureProfileWidgets(window)
 	profileTitle.BackgroundTransparency = 1
 	profileTitle.Font = Enum.Font.GothamBold
 	profileTitle.TextSize = 18
-	profileTitle.TextColor3 = Color3.fromRGB(244, 244, 238)
+	profileTitle.TextColor3 = UI_BRAND.text
 	profileTitle.TextXAlignment = Enum.TextXAlignment.Left
 	profileTitle.Text = "PLAYER"
 	profileTitle.Parent = heroCard
@@ -8616,7 +8755,7 @@ function UISystem:_ensureProfileWidgets(window)
 	profileMeta.BackgroundTransparency = 1
 	profileMeta.Font = Enum.Font.Gotham
 	profileMeta.TextSize = 12
-	profileMeta.TextColor3 = Color3.fromRGB(188, 199, 212)
+	profileMeta.TextColor3 = UI_BRAND.muted
 	profileMeta.TextXAlignment = Enum.TextXAlignment.Left
 	profileMeta.Text = "Rank • Level • Input"
 	profileMeta.Parent = heroCard
@@ -8625,11 +8764,11 @@ function UISystem:_ensureProfileWidgets(window)
 	statusPill.Name = "StatusPill"
 	statusPill.Position = UDim2.fromOffset(82, 66)
 	statusPill.Size = UDim2.fromOffset(122, 18)
-	statusPill.BackgroundColor3 = Color3.fromRGB(74, 96, 58)
+	statusPill.BackgroundColor3 = Color3.fromRGB(28, 92, 70)
 	statusPill.BorderSizePixel = 0
 	statusPill.Font = Enum.Font.GothamBold
 	statusPill.TextSize = 9
-	statusPill.TextColor3 = Color3.fromRGB(244, 244, 238)
+	statusPill.TextColor3 = UI_BRAND.text
 	statusPill.Text = "SAFE"
 	statusPill.Parent = heroCard
 
@@ -8644,7 +8783,7 @@ function UISystem:_ensureProfileWidgets(window)
 	spotlight.BackgroundTransparency = 1
 	spotlight.Font = Enum.Font.Gotham
 	spotlight.TextSize = 11
-	spotlight.TextColor3 = Color3.fromRGB(182, 194, 206)
+	spotlight.TextColor3 = UI_BRAND.muted
 	spotlight.TextXAlignment = Enum.TextXAlignment.Left
 	spotlight.TextWrapped = true
 	spotlight.Text = "Spotlight belum tersedia."
@@ -8656,8 +8795,7 @@ function UISystem:_ensureProfileWidgets(window)
 	actionButton.Position = UDim2.new(1, -12, 0, 16)
 	actionButton.Size = UDim2.fromOffset(108, 30)
 	styleButton(actionButton, "OPEN ROOMS")
-	actionButton.BackgroundColor3 = Color3.fromRGB(58, 86, 122)
-	actionButton.TextColor3 = Color3.fromRGB(245, 245, 240)
+	setButtonTone(actionButton, "focus", false)
 	actionButton.Parent = heroCard
 
 	local actionCorner = Instance.new("UICorner")
@@ -8684,7 +8822,7 @@ function UISystem:_ensureProfileWidgets(window)
 	wardrobeHeader.BackgroundTransparency = 1
 	wardrobeHeader.Font = Enum.Font.GothamBold
 	wardrobeHeader.TextSize = 11
-	wardrobeHeader.TextColor3 = Color3.fromRGB(214, 222, 232)
+	wardrobeHeader.TextColor3 = UI_BRAND.text
 	wardrobeHeader.TextXAlignment = Enum.TextXAlignment.Left
 	wardrobeHeader.Text = "WARDROBE"
 	wardrobeHeader.Parent = deck
@@ -8692,12 +8830,12 @@ function UISystem:_ensureProfileWidgets(window)
 	local wardrobeEmpty = Instance.new("TextLabel")
 	wardrobeEmpty.Name = "WardrobeEmpty"
 	wardrobeEmpty.Size = UDim2.new(1, 0, 0, 38)
-	wardrobeEmpty.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+	wardrobeEmpty.BackgroundColor3 = UI_BRAND.bgCardSoft
 	wardrobeEmpty.BackgroundTransparency = 0.08
 	wardrobeEmpty.BorderSizePixel = 0
 	wardrobeEmpty.Font = Enum.Font.Gotham
 	wardrobeEmpty.TextSize = 11
-	wardrobeEmpty.TextColor3 = Color3.fromRGB(184, 196, 208)
+	wardrobeEmpty.TextColor3 = UI_BRAND.muted
 	wardrobeEmpty.TextWrapped = true
 	wardrobeEmpty.Text = "Belum ada cosmetic yang dimiliki. Beli cosmetic di Shop lalu pakai dari sini."
 	wardrobeEmpty.Parent = deck
@@ -8880,7 +9018,7 @@ function UISystem:_refreshProfileWardrobe(widgets)
 			local isEquipped = tostring(equipped[slot] or "") == tostring(item.id)
 			row.Root.Visible = true
 			row.Root.LayoutOrder = index
-			row.Root.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+			row.Root.BackgroundColor3 = UI_BRAND.bgCard
 			row.Root:SetAttribute("CosmeticId", item.id)
 			row.Root:SetAttribute("CosmeticSlot", slot)
 			row.Accent.BackgroundColor3 = accent
@@ -8899,9 +9037,8 @@ function UISystem:_refreshProfileWardrobe(widgets)
 			)
 			applyPricePillVisual(row.PricePill, isEquipped and "AKTIF" or string.upper(humanizeToken(slot)), accent, Color3.fromRGB(247, 243, 236))
 			row.Button.Text = isEquipped and "LEPAS" or "PAKAI"
-			row.Button.BackgroundColor3 = isEquipped and Color3.fromRGB(88, 70, 44) or theme.accent
-			row.Button.TextColor3 = isEquipped and Color3.fromRGB(245, 234, 206) or Color3.fromRGB(244, 244, 240)
 			row.Button.AutoButtonColor = true
+			setButtonTone(row.Button, isEquipped and "warning" or "profile", isEquipped)
 		end
 	end
 
@@ -9069,6 +9206,7 @@ function UISystem:_refreshProfilePanel()
 	)
 	widgets.StatusPill.BackgroundColor3 = heroAccent
 	widgets.StatusPill.Text = badgeText
+	setButtonTone(widgets.ActionButton, "focus", self._roomBrowserVisible == true)
 	widgets.Spotlight.Text = featuredFlex and string.format(
 		"Spotlight %s • WR %s%% • %s match",
 		tostring(featuredFlex.displayName or "Player"),
@@ -9120,20 +9258,20 @@ function UISystem:_refreshProfilePanel()
 	for _, data in ipairs(statRows) do
 		local row = rows[data.key]
 		if row then
-			row.Root.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+			row.Root.BackgroundColor3 = UI_BRAND.bgCard
 			row.Accent.BackgroundColor3 = data.accent
 			row.Preview.BackgroundColor3 = data.preview
 			row.PreviewBadge.BackgroundColor3 = data.accent
-			row.PreviewBadge.TextColor3 = Color3.fromRGB(247, 243, 236)
+			row.PreviewBadge.TextColor3 = UI_BRAND.text
 			row.PreviewBadge.Text = data.badge
-			row.PreviewGlyph.TextColor3 = Color3.fromRGB(247, 243, 236)
+			row.PreviewGlyph.TextColor3 = UI_BRAND.text
 			row.PreviewGlyph.Text = data.glyph
 			row.Title.Text = data.title
 			row.Meta.Text = data.meta
-			applyPricePillVisual(row.PricePill, data.pill, data.accent, Color3.fromRGB(247, 243, 236))
-			row.Button.BackgroundColor3 = data.preview
-			row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
+			applyPricePillVisual(row.PricePill, data.pill, data.accent, UI_BRAND.text)
 			row.Button.Text = data.button
+			local rowTone = data.key == "favorite" and "shop" or (data.key == "match" and "focus" or "profile")
+			setButtonTone(row.Button, rowTone, false)
 		end
 	end
 
@@ -9354,24 +9492,19 @@ function UISystem:_applyShopRowVisual(row, item, index)
 		row.Button:SetAttribute("ShopDisabledReason", blockedReason or "")
 		if owned then
 			row.Button.Text = "OWNED"
-			row.Button.BackgroundColor3 = Color3.fromRGB(62, 98, 80)
-			row.Button.TextColor3 = Color3.fromRGB(235, 245, 240)
+			setButtonTone(row.Button, "success", true)
 		elseif purchasable == true then
 			row.Button.Text = "BELI"
-			row.Button.BackgroundColor3 = theme.accent
-			row.Button.TextColor3 = Color3.fromRGB(245, 245, 245)
+			setButtonTone(row.Button, currency == "PP" and "pass" or "shop", true)
 		elseif blockedReason == "insufficient_currency" then
 			row.Button.Text = "KURANG"
-			row.Button.BackgroundColor3 = Color3.fromRGB(86, 70, 44)
-			row.Button.TextColor3 = Color3.fromRGB(242, 232, 204)
+			setButtonTone(row.Button, "warning", false)
 		elseif blockedReason == "marketplace_id_missing" then
 			row.Button.Text = "SETUP"
-			row.Button.BackgroundColor3 = Color3.fromRGB(78, 72, 48)
-			row.Button.TextColor3 = Color3.fromRGB(238, 230, 192)
+			setButtonTone(row.Button, "warning", false)
 		else
 			row.Button.Text = "LOCK"
-			row.Button.BackgroundColor3 = Color3.fromRGB(70, 70, 78)
-			row.Button.TextColor3 = Color3.fromRGB(216, 216, 224)
+			setButtonTone(row.Button, "default", false)
 		end
 	end
 end
@@ -9496,12 +9629,12 @@ function UISystem:_refreshShopPanel()
 	)
 	if activeFilter == "PP" then
 		footerText = string.format(
-			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Paket Robux PP tetap hanya berlaku di game ini, lalu dipakai untuk prestige/cosmetic/exchange lokal.",
+			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Paket Robux PP tetap hanya berlaku di game ini, lalu dipakai untuk prestige/cosmetic/exchange lokal. Hidden Gems MM/PP dibatasi maks 3 PP coin per hari.",
 			ownedCount
 		)
 	elseif activeFilter == "MM" then
 		footerText = string.format(
-			"Owned %d item. MM bisa didapat dari main, dari exchange PP, atau dari pack Robux yang compliant. Semua tetap currency in-game, bukan saldo lintas experience.",
+			"Owned %d item. MM bisa didapat dari main, dari exchange PP, atau dari pack Robux yang compliant. Semua tetap currency in-game, bukan saldo lintas experience. Hidden Gems MM/PP dibatasi maks 3 PP coin per hari.",
 			ownedCount
 		)
 	elseif activeFilter == "Robux" then
@@ -9511,7 +9644,7 @@ function UISystem:_refreshShopPanel()
 		)
 	elseif activeFilter == "Owned" then
 		footerText = string.format(
-			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini. Jika item bertanda CLASSIC ONLY, efek bantuannya hanya boleh hidup di Classic.",
+			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini. Jika item bertanda CLASSIC ONLY, efek bantuannya hanya boleh hidup di Classic. Hidden Gems MM/PP dibatasi maks 3 PP coin per hari.",
 			ownedCount
 		)
 	end
@@ -9531,8 +9664,17 @@ function UISystem:_refreshShopPanel()
 			local button = window.ShopFilterButtons[filter.key]
 			if button then
 				local selected = activeFilter == filter.key
-				button.BackgroundColor3 = selected and Color3.fromRGB(92, 118, 156) or Color3.fromRGB(42, 54, 72)
-				button.TextColor3 = selected and Color3.fromRGB(248, 248, 244) or Color3.fromRGB(224, 232, 240)
+				local tone = "default"
+				if filter.key == "MM" then
+					tone = "focus"
+				elseif filter.key == "PP" then
+					tone = "pass"
+				elseif filter.key == "Robux" then
+					tone = "success"
+				elseif filter.key == "Owned" then
+					tone = "profile"
+				end
+				setButtonTone(button, tone, selected)
 			end
 		end
 	end
@@ -10131,6 +10273,11 @@ function UISystem:_refreshRoyalPassPanel()
 		or (premiumOfferReady and heroAccent or Color3.fromRGB(72, 70, 76))
 	widgets.PremiumActionButton.Text = premiumOwned and "PREMIUM AKTIF" or (premiumOfferReady and "LIHAT SHOP" or "PENDING")
 	widgets.PremiumActionButton.AutoButtonColor = premiumOwned ~= true and premiumOfferReady == true
+	setButtonTone(
+		widgets.PremiumActionButton,
+		premiumOwned and "success" or (premiumOfferReady and "pass" or "default"),
+		premiumOwned ~= true and premiumOfferReady == true
+	)
 
 	local unlockedPreview = "-"
 	if type(state.unlockedTiers) == "table" and #state.unlockedTiers > 0 then
@@ -10190,29 +10337,27 @@ function UISystem:_refreshRoyalPassPanel()
 	for index, row in ipairs(rows) do
 		local data = rowData[index]
 		if data then
-			row.Root.BackgroundColor3 = Color3.fromRGB(23, 29, 39)
+			row.Root.BackgroundColor3 = UI_BRAND.bgCard
 			row.Accent.BackgroundColor3 = data.accent
 			row.Preview.BackgroundColor3 = data.preview
 			row.PreviewBadge.BackgroundColor3 = data.accent
-			row.PreviewBadge.TextColor3 = Color3.fromRGB(247, 243, 236)
+			row.PreviewBadge.TextColor3 = UI_BRAND.text
 			row.PreviewBadge.Text = data.badge
-			row.PreviewGlyph.TextColor3 = Color3.fromRGB(247, 243, 236)
+			row.PreviewGlyph.TextColor3 = UI_BRAND.text
 			row.PreviewGlyph.Text = data.glyph
 			row.Title.Text = data.title
 			row.Meta.Text = data.meta
-			applyPricePillVisual(row.PricePill, data.pill, data.accent, Color3.fromRGB(247, 243, 236))
+			applyPricePillVisual(row.PricePill, data.pill, data.accent, UI_BRAND.text)
 			row.Button.Text = data.button
-			row.Button.BackgroundColor3 = data.preview
-			row.Button.TextColor3 = Color3.fromRGB(242, 241, 236)
+			local rowTone = index == 1 and "focus" or (index == 2 and "pass" or "shop")
+			setButtonTone(row.Button, rowTone, false)
 		end
 	end
 
 	if widgets.RewardTab and widgets.MissionTab then
 		local rewardsActive = state.viewMode ~= "Missions"
-		widgets.RewardTab.BackgroundColor3 = rewardsActive and Color3.fromRGB(78, 108, 152) or Color3.fromRGB(50, 60, 78)
-		widgets.MissionTab.BackgroundColor3 = rewardsActive and Color3.fromRGB(50, 60, 78) or Color3.fromRGB(92, 76, 126)
-		widgets.RewardTab.TextColor3 = rewardsActive and Color3.fromRGB(246, 242, 234) or Color3.fromRGB(194, 204, 216)
-		widgets.MissionTab.TextColor3 = rewardsActive and Color3.fromRGB(194, 204, 216) or Color3.fromRGB(246, 242, 234)
+		setButtonTone(widgets.RewardTab, "focus", rewardsActive)
+		setButtonTone(widgets.MissionTab, "pass", not rewardsActive)
 	end
 	if widgets.TrackHint then
 		if premiumOfferReady ~= true and premiumOwned ~= true then
@@ -10662,7 +10807,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local useWideMobileLayout = profile.isMobile and isCompact and panelWidth >= 700 and panelHeight >= 320
 	self._roomBrowserWideMobile = useWideMobileLayout
 	if backdrop then
-		backdrop.BackgroundTransparency = profile.isMobile and 0.3 or 0.42
+		backdrop.BackgroundTransparency = 0.5
 		backdrop.Active = true
 	end
 	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
@@ -10670,7 +10815,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		roomTopLeftInset.X + margin + math.floor(panelWidth * 0.5),
 		roomTopLeftInset.Y + margin + math.floor(panelHeight * 0.5)
 	)
-	panel.BackgroundTransparency = profile.isMobile and 0.12 or (isCompact and 0.14 or 0.18)
+	panel.BackgroundTransparency = 0.5
 	panel.Active = true
 	panel.ClipsDescendants = true
 	if panelCorner then
@@ -11322,10 +11467,10 @@ function UISystem:_applyDeviceSizing()
 			lobby.BasicRankButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
 		end
 		if lobby.BasicPrimaryLabel then
-			lobby.BasicPrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 2)
+			lobby.BasicPrimaryLabel.TextSize = compactLandscapeLobby and 13 or math.max(15, profile:GetTextSize() - 2)
 		end
 		if lobby.BasicSecondaryLabel then
-			lobby.BasicSecondaryLabel.TextSize = math.max(12, profile:GetTextSize() - 5)
+			lobby.BasicSecondaryLabel.TextSize = compactLandscapeLobby and 10 or math.max(12, profile:GetTextSize() - 5)
 		end
 		if lobby.BasicHintLabel then
 			lobby.BasicHintLabel.TextSize = math.max(11, profile:GetTextSize() - 6)
@@ -11363,6 +11508,7 @@ function UISystem:_applyDeviceSizing()
 		local summaryHeight = resolvedPanelHeight - summaryY - (matchCompact and 86 or 76)
 		local huntObjectiveWidth = matchCompact and math.max(280, math.floor(viewportSize.X - 48)) or 360
 		local huntAssistWidth = matchCompact and math.max(280, math.floor(viewportSize.X - 48)) or 500
+		local compactHeaderHeight = matchCompact and (profile.isMobile and 154 or 130) or 118
 
 		if match.BasicPanel then
 			if matchCompact then
@@ -11392,7 +11538,7 @@ function UISystem:_applyDeviceSizing()
 		end
 		if match.HeaderCard then
 			match.HeaderCard.Position = UDim2.fromOffset(12, 42)
-			match.HeaderCard.Size = UDim2.new(1, -24, 0, matchCompact and 130 or 118)
+			match.HeaderCard.Size = UDim2.new(1, -24, 0, compactHeaderHeight)
 		end
 		if match.PhaseGlyph then
 			match.PhaseGlyph.Size = UDim2.fromOffset(matchCompact and 96 or 84, matchCompact and 82 or 74)
@@ -11405,11 +11551,15 @@ function UISystem:_applyDeviceSizing()
 		end
 		if match.BasicPrimaryLabel then
 			match.BasicPrimaryLabel.Position = UDim2.fromOffset(14, matchCompact and 50 or 46)
-			match.BasicPrimaryLabel.Size = UDim2.new(1, matchCompact and -122 or -112, 0, matchCompact and 38 or 32)
+			match.BasicPrimaryLabel.Size = UDim2.new(1, matchCompact and -122 or -112, 0, matchCompact and 46 or 32)
+			match.BasicPrimaryLabel.TextYAlignment = Enum.TextYAlignment.Top
+			match.BasicPrimaryLabel.TextWrapped = false
 		end
 		if match.BasicSecondaryLabel then
-			match.BasicSecondaryLabel.Position = UDim2.fromOffset(14, matchCompact and 88 or 78)
-			match.BasicSecondaryLabel.Size = UDim2.new(1, matchCompact and -122 or -112, 0, matchCompact and 34 or 30)
+			match.BasicSecondaryLabel.Position = UDim2.fromOffset(14, matchCompact and 98 or 78)
+			match.BasicSecondaryLabel.Size = UDim2.new(1, matchCompact and -122 or -112, 0, matchCompact and 46 or 30)
+			match.BasicSecondaryLabel.TextYAlignment = Enum.TextYAlignment.Top
+			match.BasicSecondaryLabel.TextWrapped = false
 		end
 		if match.SummaryFrame then
 			match.SummaryFrame.Position = UDim2.fromOffset(12, summaryY)
@@ -11428,8 +11578,8 @@ function UISystem:_applyDeviceSizing()
 			match.BasicCloseButton.Position = UDim2.new(1, -10, 0, 8)
 			match.BasicCloseButton.Size = UDim2.fromOffset(matchCompact and 30 or 28, matchCompact and 30 or 28)
 		end
-		match.BasicPrimaryLabel.TextSize = math.max(16, profile:GetTextSize())
-		match.BasicSecondaryLabel.TextSize = math.max(13, profile:GetTextSize() - 2)
+		match.BasicPrimaryLabel.TextSize = profile.isMobile and 12 or math.max(16, profile:GetTextSize())
+		match.BasicSecondaryLabel.TextSize = profile.isMobile and 10 or math.max(13, profile:GetTextSize() - 2)
 		if match.BasicFooterLabel then
 			match.BasicFooterLabel.TextSize = math.max(12, profile:GetTextSize() - 3)
 		end
@@ -12438,7 +12588,7 @@ function UISystem:_renderPhase(phase, payload)
 			warning.Visible = false
 		end
 	end
-	if matchUX and matchUX.MessageLabel and phase ~= MATCH_PHASE.PREPARING and phase ~= MATCH_PHASE.LOADING and phase ~= MATCH_PHASE.INGAME then
+	if matchUX and matchUX.MessageLabel then
 		matchUX.MessageLabel.Visible = false
 		matchUX.MessageLabel.Text = ""
 	end
@@ -12473,12 +12623,6 @@ function UISystem:_renderPhase(phase, payload)
 				self:_setLoadingScreenContent("Preparing Investigation...", payload, 0.18, "Mempersiapkan sesi investigasi...")
 			end
 		end
-		if matchUX and matchUX.MessageLabel then
-			matchUX.MessageLabel.Text = ((type(payload) == "table" and payload.preparationWorldBoard == true) or self:_hasWorldPreparationStaging())
-				and "Review board luar sebelum breach"
-				or "Bermain"
-			matchUX.MessageLabel.Visible = true
-		end
 		self:_refreshBasicMatchPanel("Preparation", payload)
 		return
 	end
@@ -12493,11 +12637,6 @@ function UISystem:_renderPhase(phase, payload)
 			self:_startLoadingScreenLoop(payload)
 			self:_setLoadingScreenContent("Masuk ke lokasi...", payload, 0.42, "Teleport pemain dan asset match sedang disiapkan...")
 		end
-		if matchUX and matchUX.MessageLabel then
-			matchUX.MessageLabel.Text = "Bermain"
-			matchUX.MessageLabel.Visible = true
-		end
-
 		self:_refreshBasicMatchPanel("Loading", payload)
 		return
 	end
@@ -13555,9 +13694,8 @@ function UISystem:TransitionTo(state, payload)
 	end
 
 	if state == "Preparation" then
-		match.MessageLabel.Text = "Masuk ke lokasi..."
-		match.MessageLabel.Visible = true
-		UISupport.fadeGuiObject(match.MessageLabel, 0, 0.2, TweenService)
+		match.MessageLabel.Text = ""
+		match.MessageLabel.Visible = false
 	elseif state == "Investigation" then
 		match.MessageLabel.Text = ""
 		match.MessageLabel.Visible = false
@@ -13887,6 +14025,54 @@ function UISystem:_ensureBasicUIs()
 		return
 	end
 
+	local function destroyDuplicateNamedChildren(parent, name, keep)
+		if not parent then
+			return
+		end
+		for _, child in ipairs(parent:GetChildren()) do
+			if child.Name == name and child ~= keep then
+				child:Destroy()
+			end
+		end
+	end
+
+	local function destroyDuplicateNamedDescendants(root, name, keep)
+		if not root then
+			return
+		end
+		local duplicates = {}
+		for _, descendant in ipairs(root:GetDescendants()) do
+			if descendant.Name == name and descendant ~= keep then
+				table.insert(duplicates, descendant)
+			end
+		end
+		for _, duplicate in ipairs(duplicates) do
+			duplicate:Destroy()
+		end
+	end
+
+	local function destroyForeignMatchPanelScreenGuis(keeperGui)
+		if not keeperGui then
+			return
+		end
+		local staleGuis = {}
+		for _, descendant in ipairs(playerGui:GetDescendants()) do
+			if descendant:IsA("ScreenGui") and descendant ~= keeperGui then
+				local panel = descendant:FindFirstChild("MainPanel")
+				local title = panel and panel:FindFirstChild("Title") or nil
+				if panel and panel:IsA("Frame") and title and title:IsA("TextLabel") then
+					local titleText = string.upper(tostring(title.Text or ""))
+					if string.find(titleText, "PANEL MATCH", 1, true) then
+						table.insert(staleGuis, descendant)
+					end
+				end
+			end
+		end
+		for _, staleGui in ipairs(staleGuis) do
+			staleGui:Destroy()
+		end
+	end
+
 	for _, guiName in ipairs(BASIC_GUI_NAMES) do
 		local gui = self:_dedupeScreenGuiByName(guiName) or playerGui:FindFirstChild(guiName)
 		if gui and not gui:IsA("ScreenGui") then
@@ -13907,7 +14093,7 @@ function UISystem:_ensureBasicUIs()
 			panel.AnchorPoint = Vector2.new(1, 0)
 			panel.Position = UDim2.new(1, -16, 0, 16)
 			panel.Size = UDim2.fromOffset(260, 320)
-			panel.BackgroundColor3 = Color3.fromRGB(20, 24, 32)
+			panel.BackgroundColor3 = UI_BRAND.bgPanel
 			panel.BorderSizePixel = 0
 			panel.Parent = gui
 
@@ -13928,7 +14114,7 @@ function UISystem:_ensureBasicUIs()
 			panel.AnchorPoint = Vector2.new(0, 0)
 			panel.Position = UDim2.fromOffset(16, 16)
 			panel.Size = UDim2.fromOffset(340, 368)
-			panel.BackgroundColor3 = Color3.fromRGB(18, 26, 34)
+			panel.BackgroundColor3 = UI_BRAND.bgCard
 			panel.BackgroundTransparency = 0.08
 
 			local title = panel:FindFirstChild("Title")
@@ -13938,7 +14124,7 @@ function UISystem:_ensureBasicUIs()
 				title.Size = UDim2.new(1, -24, 0, 24)
 			end
 
-			local statusBadge = panel:FindFirstChild("StatusBadge")
+				local statusBadge = panel:FindFirstChild("StatusBadge", true)
 			if not statusBadge then
 				statusBadge = Instance.new("TextLabel")
 				statusBadge.Name = "StatusBadge"
@@ -13956,7 +14142,7 @@ function UISystem:_ensureBasicUIs()
 				badgeCorner.Parent = statusBadge
 			end
 
-			local primaryLabel = panel:FindFirstChild("PrimaryLabel")
+				local primaryLabel = panel:FindFirstChild("PrimaryLabel", true)
 			if not primaryLabel then
 				primaryLabel = Instance.new("TextLabel")
 				primaryLabel.Name = "PrimaryLabel"
@@ -13973,7 +14159,7 @@ function UISystem:_ensureBasicUIs()
 				primaryLabel.Parent = panel
 			end
 
-			local secondaryLabel = panel:FindFirstChild("SecondaryLabel")
+				local secondaryLabel = panel:FindFirstChild("SecondaryLabel", true)
 			if not secondaryLabel then
 				secondaryLabel = Instance.new("TextLabel")
 				secondaryLabel.Name = "SecondaryLabel"
@@ -14053,10 +14239,17 @@ function UISystem:_ensureBasicUIs()
 			primaryLabel.Size = UDim2.new(1, -110, 0, 24)
 			primaryLabel.TextSize = 15
 
-			secondaryLabel.Parent = headerCard
-			secondaryLabel.Position = UDim2.fromOffset(12, 64)
-			secondaryLabel.Size = UDim2.new(1, -110, 0, 20)
-			secondaryLabel.TextSize = 12
+				secondaryLabel.Parent = headerCard
+				secondaryLabel.Position = UDim2.fromOffset(12, 64)
+				secondaryLabel.Size = UDim2.new(1, -110, 0, 20)
+				secondaryLabel.TextSize = 12
+
+				destroyDuplicateNamedChildren(headerCard, "StatusBadge", statusBadge)
+				destroyDuplicateNamedChildren(headerCard, "PrimaryLabel", primaryLabel)
+				destroyDuplicateNamedChildren(headerCard, "SecondaryLabel", secondaryLabel)
+				destroyDuplicateNamedChildren(panel, "StatusBadge", nil)
+				destroyDuplicateNamedChildren(panel, "PrimaryLabel", nil)
+				destroyDuplicateNamedChildren(panel, "SecondaryLabel", nil)
 
 			local function ensureHeaderPill(name, position, size, backgroundColor)
 				local pill = headerCard:FindFirstChild(name)
@@ -14262,7 +14455,7 @@ function UISystem:_ensureBasicUIs()
 			panel.AnchorPoint = auxiliaryConfig.panelAnchorPoint
 			panel.Position = auxiliaryConfig.panelPosition
 			panel.Size = UDim2.fromOffset(auxiliaryConfig.panelSize.X, auxiliaryConfig.panelSize.Y)
-			panel.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
+			panel.BackgroundColor3 = UI_BRAND.bgCard
 			panel.BackgroundTransparency = 0.08
 
 			local title = panel:FindFirstChild("Title")
@@ -14691,7 +14884,7 @@ function UISystem:_ensureBasicUIs()
 		if guiName == "MatchUI" then
 			panel.Size = UDim2.fromOffset(340, 454)
 			panel.Position = UDim2.new(1, -16, 0, 16)
-			panel.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
+			panel.BackgroundColor3 = UI_BRAND.bgCard
 			panel.BackgroundTransparency = 0.1
 
 			local title = panel:FindFirstChild("Title")
@@ -14719,7 +14912,7 @@ function UISystem:_ensureBasicUIs()
 				self:_setSelectableStyle(closeBtn)
 			end
 
-			local stateBadge = panel:FindFirstChild("StateBadge")
+				local stateBadge = panel:FindFirstChild("StateBadge", true)
 			if not stateBadge then
 				stateBadge = Instance.new("TextLabel")
 				stateBadge.Name = "StateBadge"
@@ -14737,7 +14930,7 @@ function UISystem:_ensureBasicUIs()
 				badgeCorner.Parent = stateBadge
 			end
 
-			local primaryLabel = panel:FindFirstChild("PrimaryLabel")
+				local primaryLabel = panel:FindFirstChild("PrimaryLabel", true)
 			if not primaryLabel then
 				primaryLabel = Instance.new("TextLabel")
 				primaryLabel.Name = "PrimaryLabel"
@@ -14749,11 +14942,12 @@ function UISystem:_ensureBasicUIs()
 				primaryLabel.TextColor3 = Color3.fromRGB(242, 246, 250)
 				primaryLabel.TextWrapped = true
 				primaryLabel.TextXAlignment = Enum.TextXAlignment.Left
+				primaryLabel.TextYAlignment = Enum.TextYAlignment.Top
 				primaryLabel.Text = "Menunggu event match."
 				primaryLabel.Parent = panel
 			end
 
-			local secondaryLabel = panel:FindFirstChild("SecondaryLabel")
+				local secondaryLabel = panel:FindFirstChild("SecondaryLabel", true)
 			if not secondaryLabel then
 				secondaryLabel = Instance.new("TextLabel")
 				secondaryLabel.Name = "SecondaryLabel"
@@ -14832,10 +15026,20 @@ function UISystem:_ensureBasicUIs()
 			primaryLabel.Position = UDim2.fromOffset(14, 46)
 			primaryLabel.Size = UDim2.new(1, -112, 0, 32)
 
-			secondaryLabel.Parent = headerCard
-			secondaryLabel.Position = UDim2.fromOffset(14, 78)
-			secondaryLabel.Size = UDim2.new(1, -112, 0, 30)
-			secondaryLabel.TextSize = 13
+				secondaryLabel.Parent = headerCard
+				secondaryLabel.Position = UDim2.fromOffset(14, 78)
+				secondaryLabel.Size = UDim2.new(1, -112, 0, 30)
+				secondaryLabel.TextSize = 13
+
+				destroyDuplicateNamedChildren(panel, "HeaderCard", headerCard)
+				destroyDuplicateNamedChildren(headerCard, "StateBadge", stateBadge)
+				destroyDuplicateNamedChildren(headerCard, "PrimaryLabel", primaryLabel)
+				destroyDuplicateNamedChildren(headerCard, "SecondaryLabel", secondaryLabel)
+				destroyDuplicateNamedChildren(headerCard, "PhaseGlyph", phaseGlyph)
+				destroyDuplicateNamedDescendants(panel, "StateBadge", stateBadge)
+				destroyDuplicateNamedDescendants(panel, "PrimaryLabel", primaryLabel)
+				destroyDuplicateNamedDescendants(panel, "SecondaryLabel", secondaryLabel)
+				destroyForeignMatchPanelScreenGuis(gui)
 
 			local summaryFrame = panel:FindFirstChild("SummaryFrame")
 			if summaryFrame and not summaryFrame:IsA("ScrollingFrame") then
@@ -15738,8 +15942,8 @@ function UISystem:_ensureRoomBrowserGui()
 	local backdrop = Instance.new("Frame")
 	backdrop.Name = "Backdrop"
 	backdrop.Size = UDim2.fromScale(1, 1)
-	backdrop.BackgroundColor3 = Color3.fromRGB(4, 6, 10)
-	backdrop.BackgroundTransparency = 0.42
+	backdrop.BackgroundColor3 = UI_BRAND.bgVoid
+	backdrop.BackgroundTransparency = 0.5
 	backdrop.BorderSizePixel = 0
 	backdrop.Active = true
 	backdrop.Parent = gui
@@ -15749,8 +15953,8 @@ function UISystem:_ensureRoomBrowserGui()
 	panel.AnchorPoint = Vector2.new(0.5, 0.5)
 	panel.Position = UDim2.fromScale(0.5, 0.5)
 	panel.Size = UDim2.fromOffset(920, 560)
-	panel.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
-	panel.BackgroundTransparency = 0.5
+	panel.BackgroundColor3 = UI_BRAND.bgPanel
+	panel.BackgroundTransparency = 0.32
 	panel.BorderSizePixel = 0
 	panel.Active = true
 	panel.Parent = backdrop
@@ -15771,12 +15975,12 @@ function UISystem:_ensureRoomBrowserGui()
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.Font = Enum.Font.GothamBlack
 	title.TextSize = 25
-	title.TextColor3 = Color3.fromRGB(210, 68, 68)
+	title.TextColor3 = UI_BRAND.focusStrong
 	title.ZIndex = 3
 	title.Parent = panel
 	local titleStroke = Instance.new("UIStroke")
 	titleStroke.Thickness = 1.4
-	titleStroke.Color = Color3.fromRGB(35, 8, 8)
+	titleStroke.Color = Color3.fromRGB(12, 44, 58)
 	titleStroke.Parent = title
 
 	local titleGlow = Instance.new("TextLabel")
@@ -15788,7 +15992,7 @@ function UISystem:_ensureRoomBrowserGui()
 	titleGlow.TextXAlignment = Enum.TextXAlignment.Center
 	titleGlow.Font = title.Font
 	titleGlow.TextSize = 25
-	titleGlow.TextColor3 = Color3.fromRGB(92, 22, 22)
+	titleGlow.TextColor3 = Color3.fromRGB(34, 104, 130)
 	titleGlow.TextTransparency = 0.35
 	titleGlow.ZIndex = 2
 	titleGlow.Parent = panel
@@ -15806,16 +16010,17 @@ function UISystem:_ensureRoomBrowserGui()
 	closeBtn.Position = UDim2.fromOffset(852, 8)
 	closeBtn.Size = UDim2.fromOffset(34, 28)
 	styleButton(closeBtn, "X")
+	setButtonTone(closeBtn, "danger", false)
 	closeBtn.ZIndex = 8
 	closeBtn.Parent = panel
 
 	local floatButton = Instance.new("TextButton")
 	floatButton.Name = "RoomBrowserFloatButton"
-	floatButton.AnchorPoint = Vector2.new(1, 0.5)
-	floatButton.Position = UDim2.new(1, -20, 0.56, 0)
+	floatButton.AnchorPoint = Vector2.new(0, 1)
+	floatButton.Position = UDim2.new(0, 16, 1, -164)
 	floatButton.Size = UDim2.fromOffset(72, 72)
-	floatButton.BackgroundColor3 = Color3.fromRGB(38, 47, 62)
-	floatButton.TextColor3 = Color3.fromRGB(245, 245, 245)
+	floatButton.BackgroundColor3 = UI_BRAND.bgCard
+	floatButton.TextColor3 = UI_BRAND.text
 	floatButton.Font = Enum.Font.GothamBold
 	floatButton.TextSize = 12
 	floatButton.TextScaled = true
@@ -15830,9 +16035,9 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local floatStroke = Instance.new("UIStroke")
 	floatStroke.Thickness = 2
-	floatStroke.Color = Color3.fromRGB(95, 118, 150)
+	floatStroke.Color = UI_BRAND.focusSoft
 	floatStroke.Parent = floatButton
-	styleFloatingButton(floatButton, "RUANG INVESTIGASI", Color3.fromRGB(95, 118, 150))
+	styleFloatingButton(floatButton, "RUANG INVESTIGASI", UI_BRAND.focus)
 	makeFloatingButtonDraggable(floatButton)
 
 	local statusLabel = Instance.new("TextLabel")
@@ -15843,7 +16048,7 @@ function UISystem:_ensureRoomBrowserGui()
 	statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 	statusLabel.Font = Enum.Font.Gotham
 	statusLabel.TextSize = 12
-	statusLabel.TextColor3 = Color3.fromRGB(160, 175, 200)
+	statusLabel.TextColor3 = UI_BRAND.muted
 	statusLabel.Text = "Memuat..."
 	statusLabel.Parent = panel
 
@@ -15852,6 +16057,7 @@ function UISystem:_ensureRoomBrowserGui()
 	classicBtn.Position = UDim2.fromOffset(16, 72)
 	classicBtn.Size = UDim2.fromOffset(132, 30)
 	styleButton(classicBtn, "Classic")
+	setButtonTone(classicBtn, "focus", true)
 	classicBtn.Parent = panel
 
 	local allModesBtn = Instance.new("TextButton")
@@ -15859,6 +16065,7 @@ function UISystem:_ensureRoomBrowserGui()
 	allModesBtn.Position = UDim2.fromOffset(154, 72)
 	allModesBtn.Size = UDim2.fromOffset(132, 30)
 	styleButton(allModesBtn, "SEMUA MODE")
+	setButtonTone(allModesBtn, "default", false)
 	allModesBtn.Parent = panel
 
 	local rankedBtn = Instance.new("TextButton")
@@ -15866,13 +16073,14 @@ function UISystem:_ensureRoomBrowserGui()
 	rankedBtn.Position = UDim2.fromOffset(292, 72)
 	rankedBtn.Size = UDim2.fromOffset(132, 30)
 	styleButton(rankedBtn, "Ranked")
+	setButtonTone(rankedBtn, "rank", false)
 	rankedBtn.Parent = panel
 
 	local roomList = Instance.new("ScrollingFrame")
 	roomList.Name = "RoomList"
 	roomList.Position = UDim2.fromOffset(16, 110)
 	roomList.Size = UDim2.fromOffset(392, 250)
-	roomList.BackgroundColor3 = Color3.fromRGB(26, 32, 42)
+	roomList.BackgroundColor3 = UI_BRAND.bgCard
 	roomList.BorderSizePixel = 0
 	roomList.ScrollBarThickness = 4
 	roomList.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -15900,7 +16108,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewPanel.Name = "RoomPreviewPanel"
 	roomPreviewPanel.Position = UDim2.fromOffset(424, 110)
 	roomPreviewPanel.Size = UDim2.fromOffset(480, 384)
-	roomPreviewPanel.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
+	roomPreviewPanel.BackgroundColor3 = UI_BRAND.bgCard
 	roomPreviewPanel.BorderSizePixel = 0
 	roomPreviewPanel.Active = true
 	roomPreviewPanel.Parent = panel
@@ -15909,7 +16117,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewCorner.Parent = roomPreviewPanel
 	local roomPreviewStroke = Instance.new("UIStroke")
 	roomPreviewStroke.Thickness = 1
-	roomPreviewStroke.Color = Color3.fromRGB(76, 95, 122)
+	roomPreviewStroke.Color = UI_BRAND.focusSoft
 	roomPreviewStroke.Parent = roomPreviewPanel
 
 	local roomPreviewTitle = Instance.new("TextLabel")
@@ -15920,7 +16128,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewTitle.TextXAlignment = Enum.TextXAlignment.Left
 	roomPreviewTitle.Font = Enum.Font.GothamBold
 	roomPreviewTitle.TextSize = 15
-	roomPreviewTitle.TextColor3 = Color3.fromRGB(240, 245, 250)
+	roomPreviewTitle.TextColor3 = UI_BRAND.text
 	roomPreviewTitle.Text = "PREVIEW ROOM"
 	roomPreviewTitle.Parent = roomPreviewPanel
 
@@ -15932,7 +16140,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewInfo.TextXAlignment = Enum.TextXAlignment.Left
 	roomPreviewInfo.Font = Enum.Font.Gotham
 	roomPreviewInfo.TextSize = 11
-	roomPreviewInfo.TextColor3 = Color3.fromRGB(178, 194, 214)
+	roomPreviewInfo.TextColor3 = UI_BRAND.muted
 	roomPreviewInfo.Text = "Klik room di daftar untuk lihat detail."
 	roomPreviewInfo.Parent = roomPreviewPanel
 
@@ -15940,7 +16148,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewMap.Name = "MapPlaceholder"
 	roomPreviewMap.Position = UDim2.fromOffset(12, 58)
 	roomPreviewMap.Size = UDim2.fromOffset(456, 112)
-	roomPreviewMap.BackgroundColor3 = Color3.fromRGB(18, 24, 32)
+	roomPreviewMap.BackgroundColor3 = UI_BRAND.bgPanel
 	roomPreviewMap.BorderSizePixel = 0
 	roomPreviewMap.Active = true
 	roomPreviewMap.Parent = roomPreviewPanel
@@ -15949,14 +16157,14 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewMapCorner.Parent = roomPreviewMap
 	local roomPreviewMapStroke = Instance.new("UIStroke")
 	roomPreviewMapStroke.Thickness = 1
-	roomPreviewMapStroke.Color = Color3.fromRGB(72, 90, 116)
+	roomPreviewMapStroke.Color = UI_BRAND.focusSoft
 	roomPreviewMapStroke.Parent = roomPreviewMap
 	local roomPreviewMapGradient = Instance.new("UIGradient")
 	roomPreviewMapGradient.Name = "PreviewGradient"
 	roomPreviewMapGradient.Rotation = 18
 	roomPreviewMapGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(36, 44, 58)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 18, 24)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 48, 70)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 16, 24)),
 	})
 	roomPreviewMapGradient.Parent = roomPreviewMap
 
@@ -15964,19 +16172,19 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewMapAccent.Name = "Accent"
 	roomPreviewMapAccent.Position = UDim2.fromOffset(0, 0)
 	roomPreviewMapAccent.Size = UDim2.fromOffset(6, 112)
-	roomPreviewMapAccent.BackgroundColor3 = Color3.fromRGB(86, 116, 152)
+	roomPreviewMapAccent.BackgroundColor3 = UI_BRAND.focus
 	roomPreviewMapAccent.BorderSizePixel = 0
 	roomPreviewMapAccent.Parent = roomPreviewMap
 
 	local roomPreviewMapMood = Instance.new("TextLabel")
 	roomPreviewMapMood.Name = "Mood"
-	roomPreviewMapMood.BackgroundColor3 = Color3.fromRGB(38, 52, 74)
+	roomPreviewMapMood.BackgroundColor3 = Color3.fromRGB(22, 56, 80)
 	roomPreviewMapMood.BackgroundTransparency = 0.18
 	roomPreviewMapMood.Position = UDim2.new(1, -164, 0, 8)
 	roomPreviewMapMood.Size = UDim2.fromOffset(148, 18)
 	roomPreviewMapMood.Font = Enum.Font.GothamBold
 	roomPreviewMapMood.TextSize = 10
-	roomPreviewMapMood.TextColor3 = Color3.fromRGB(236, 242, 250)
+	roomPreviewMapMood.TextColor3 = UI_BRAND.text
 	roomPreviewMapMood.Text = "ATMOSPHERE"
 	roomPreviewMapMood.BorderSizePixel = 0
 	roomPreviewMapMood.Parent = roomPreviewMap
@@ -15992,7 +16200,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewMapTitle.TextXAlignment = Enum.TextXAlignment.Left
 	roomPreviewMapTitle.Font = Enum.Font.GothamSemibold
 	roomPreviewMapTitle.TextSize = 11
-	roomPreviewMapTitle.TextColor3 = Color3.fromRGB(196, 210, 228)
+	roomPreviewMapTitle.TextColor3 = UI_BRAND.muted
 	roomPreviewMapTitle.Text = "MAP ROOM"
 	roomPreviewMapTitle.Parent = roomPreviewMap
 
@@ -16006,7 +16214,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewMapLabel.Font = Enum.Font.GothamBold
 	roomPreviewMapLabel.TextSize = 13
 	roomPreviewMapLabel.TextWrapped = true
-	roomPreviewMapLabel.TextColor3 = Color3.fromRGB(236, 242, 250)
+	roomPreviewMapLabel.TextColor3 = UI_BRAND.text
 	roomPreviewMapLabel.Text = "Pilih room untuk lihat detail map."
 	roomPreviewMapLabel.Parent = roomPreviewMap
 
@@ -16018,7 +16226,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewMapStats.TextXAlignment = Enum.TextXAlignment.Left
 	roomPreviewMapStats.Font = Enum.Font.Gotham
 	roomPreviewMapStats.TextSize = 10
-	roomPreviewMapStats.TextColor3 = Color3.fromRGB(196, 210, 228)
+	roomPreviewMapStats.TextColor3 = UI_BRAND.muted
 	roomPreviewMapStats.Text = "DETAIL MAP AKAN MUNCUL SAAT ROOM DIPILIH"
 	roomPreviewMapStats.Parent = roomPreviewMap
 
@@ -16030,7 +16238,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewPlayersTitle.TextXAlignment = Enum.TextXAlignment.Left
 	roomPreviewPlayersTitle.Font = Enum.Font.GothamSemibold
 	roomPreviewPlayersTitle.TextSize = 11
-	roomPreviewPlayersTitle.TextColor3 = Color3.fromRGB(198, 214, 232)
+	roomPreviewPlayersTitle.TextColor3 = UI_BRAND.ghost
 	roomPreviewPlayersTitle.Text = "PLAYER DALAM ROOM"
 	roomPreviewPlayersTitle.Parent = roomPreviewPanel
 
@@ -16038,7 +16246,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPreviewPlayersList.Name = "PlayersList"
 	roomPreviewPlayersList.Position = UDim2.fromOffset(12, 196)
 	roomPreviewPlayersList.Size = UDim2.fromOffset(456, 176)
-	roomPreviewPlayersList.BackgroundColor3 = Color3.fromRGB(19, 25, 34)
+	roomPreviewPlayersList.BackgroundColor3 = UI_BRAND.bgPanel
 	roomPreviewPlayersList.BorderSizePixel = 0
 	roomPreviewPlayersList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	roomPreviewPlayersList.CanvasSize = UDim2.fromOffset(0, 0)
@@ -16068,10 +16276,10 @@ function UISystem:_ensureRoomBrowserGui()
 	joinPwdBox.PlaceholderText = "Password Join (4 digit)"
 	joinPwdBox.Text = ""
 	joinPwdBox.ClearTextOnFocus = false
-	joinPwdBox.TextColor3 = Color3.fromRGB(235, 240, 245)
+	joinPwdBox.TextColor3 = UI_BRAND.text
 	joinPwdBox.Font = Enum.Font.Gotham
 	joinPwdBox.TextSize = 12
-	joinPwdBox.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
+	joinPwdBox.BackgroundColor3 = UI_BRAND.bgCard
 	joinPwdBox.BorderSizePixel = 0
 	joinPwdBox.Visible = false
 	joinPwdBox.Parent = panel
@@ -16095,7 +16303,7 @@ function UISystem:_ensureRoomBrowserGui()
 	passwordCard.AnchorPoint = Vector2.new(0.5, 0.5)
 	passwordCard.Position = UDim2.fromScale(0.5, 0.5)
 	passwordCard.Size = UDim2.fromOffset(320, 180)
-	passwordCard.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
+	passwordCard.BackgroundColor3 = UI_BRAND.bgCard
 	passwordCard.BorderSizePixel = 0
 	passwordCard.ZIndex = 26
 	passwordCard.Active = true
@@ -16112,7 +16320,7 @@ function UISystem:_ensureRoomBrowserGui()
 	passwordTitle.TextXAlignment = Enum.TextXAlignment.Left
 	passwordTitle.Font = Enum.Font.GothamBold
 	passwordTitle.TextSize = 16
-	passwordTitle.TextColor3 = Color3.fromRGB(245, 245, 245)
+	passwordTitle.TextColor3 = UI_BRAND.text
 	passwordTitle.ZIndex = 27
 	passwordTitle.Parent = passwordCard
 
@@ -16125,8 +16333,8 @@ function UISystem:_ensureRoomBrowserGui()
 	passwordInput.ClearTextOnFocus = false
 	passwordInput.Font = Enum.Font.Gotham
 	passwordInput.TextSize = 14
-	passwordInput.TextColor3 = Color3.fromRGB(235, 240, 245)
-	passwordInput.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
+	passwordInput.TextColor3 = UI_BRAND.text
+	passwordInput.BackgroundColor3 = UI_BRAND.bgPanel
 	passwordInput.BorderSizePixel = 0
 	passwordInput.ZIndex = 27
 	passwordInput.Parent = passwordCard
@@ -16139,7 +16347,7 @@ function UISystem:_ensureRoomBrowserGui()
 	passwordJoinBtn.Position = UDim2.fromOffset(12, 102)
 	passwordJoinBtn.Size = UDim2.fromOffset(144, 34)
 	styleButton(passwordJoinBtn, "JOIN ROOM")
-	passwordJoinBtn.BackgroundColor3 = Color3.fromRGB(46, 112, 168)
+	setButtonTone(passwordJoinBtn, "focus", true)
 	passwordJoinBtn.ZIndex = 27
 	passwordJoinBtn.Parent = passwordCard
 
@@ -16148,7 +16356,7 @@ function UISystem:_ensureRoomBrowserGui()
 	passwordCancelBtn.Position = UDim2.fromOffset(164, 102)
 	passwordCancelBtn.Size = UDim2.fromOffset(144, 34)
 	styleButton(passwordCancelBtn, "BATAL")
-	passwordCancelBtn.BackgroundColor3 = Color3.fromRGB(90, 40, 40)
+	setButtonTone(passwordCancelBtn, "danger", false)
 	passwordCancelBtn.ZIndex = 27
 	passwordCancelBtn.Parent = passwordCard
 
@@ -16166,7 +16374,7 @@ function UISystem:_ensureRoomBrowserGui()
 	kickNoticeCard.AnchorPoint = Vector2.new(0.5, 0.5)
 	kickNoticeCard.Position = UDim2.fromScale(0.5, 0.5)
 	kickNoticeCard.Size = UDim2.fromOffset(320, 140)
-	kickNoticeCard.BackgroundColor3 = Color3.fromRGB(24, 20, 20)
+	kickNoticeCard.BackgroundColor3 = Color3.fromRGB(34, 20, 22)
 	kickNoticeCard.BorderSizePixel = 0
 	kickNoticeCard.ZIndex = 29
 	kickNoticeCard.Active = true
@@ -16180,7 +16388,7 @@ function UISystem:_ensureRoomBrowserGui()
 	kickNoticeText.Position = UDim2.fromOffset(12, 20)
 	kickNoticeText.Size = UDim2.fromOffset(296, 50)
 	kickNoticeText.Text = "ANDA TELAH DI KICK"
-	kickNoticeText.TextColor3 = Color3.fromRGB(255, 180, 180)
+	kickNoticeText.TextColor3 = Color3.fromRGB(245, 206, 206)
 	kickNoticeText.Font = Enum.Font.GothamBold
 	kickNoticeText.TextSize = 20
 	kickNoticeText.TextWrapped = true
@@ -16191,7 +16399,7 @@ function UISystem:_ensureRoomBrowserGui()
 	kickNoticeOk.Position = UDim2.fromOffset(88, 86)
 	kickNoticeOk.Size = UDim2.fromOffset(144, 34)
 	styleButton(kickNoticeOk, "OK")
-	kickNoticeOk.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+	setButtonTone(kickNoticeOk, "danger", true)
 	kickNoticeOk.ZIndex = 30
 	kickNoticeOk.Parent = kickNoticeCard
 
@@ -16200,6 +16408,7 @@ function UISystem:_ensureRoomBrowserGui()
 	refreshBtn.Position = UDim2.fromOffset(149, 456)
 	refreshBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(refreshBtn, "Refresh")
+	setButtonTone(refreshBtn, "default", false)
 	refreshBtn.ZIndex = 6
 	refreshBtn.Parent = panel
 
@@ -16208,7 +16417,7 @@ function UISystem:_ensureRoomBrowserGui()
 	createRoomBtn.Position = UDim2.fromOffset(282, 456)
 	createRoomBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(createRoomBtn, "BUAT ROOM")
-	createRoomBtn.BackgroundColor3 = Color3.fromRGB(50, 90, 140)
+	setButtonTone(createRoomBtn, "focus", true)
 	createRoomBtn.ZIndex = 6
 	createRoomBtn.Parent = panel
 
@@ -16217,7 +16426,7 @@ function UISystem:_ensureRoomBrowserGui()
 	queueBtn.Position = UDim2.fromOffset(16, 506)
 	queueBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(queueBtn, "JOIN ROOM")
-	queueBtn.BackgroundColor3 = Color3.fromRGB(46, 112, 168)
+	setButtonTone(queueBtn, "focus", true)
 	queueBtn.ZIndex = 6
 	queueBtn.Parent = panel
 
@@ -16226,7 +16435,7 @@ function UISystem:_ensureRoomBrowserGui()
 	quickClassicBtn.Position = UDim2.fromOffset(149, 506)
 	quickClassicBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(quickClassicBtn, "QUICK CLASSIC")
-	quickClassicBtn.BackgroundColor3 = Color3.fromRGB(70, 120, 84)
+	setButtonTone(quickClassicBtn, "profile", false)
 	quickClassicBtn.ZIndex = 6
 	quickClassicBtn.Parent = panel
 
@@ -16235,7 +16444,7 @@ function UISystem:_ensureRoomBrowserGui()
 	quickRankedBtn.Position = UDim2.fromOffset(282, 506)
 	quickRankedBtn.Size = UDim2.fromOffset(126, 38)
 	styleButton(quickRankedBtn, "QUICK RANKED")
-	quickRankedBtn.BackgroundColor3 = Color3.fromRGB(108, 78, 132)
+	setButtonTone(quickRankedBtn, "rank", false)
 	quickRankedBtn.ZIndex = 6
 	quickRankedBtn.Parent = panel
 
@@ -16243,7 +16452,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomPanel.Name = "RoomPanel"
 	roomPanel.Position = UDim2.fromOffset(0, 0)
 	roomPanel.Size = UDim2.fromScale(1, 1)
-	roomPanel.BackgroundColor3 = Color3.fromRGB(26, 32, 42)
+	roomPanel.BackgroundColor3 = UI_BRAND.bgCard
 	roomPanel.BackgroundTransparency = 0
 	roomPanel.BorderSizePixel = 0
 	roomPanel.AutomaticCanvasSize = Enum.AutomaticSize.None
@@ -16266,7 +16475,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomTitle.TextXAlignment = Enum.TextXAlignment.Left
 	roomTitle.Font = Enum.Font.GothamBold
 	roomTitle.TextSize = 17
-	roomTitle.TextColor3 = Color3.fromRGB(245, 245, 245)
+	roomTitle.TextColor3 = UI_BRAND.text
 	roomTitle.Text = "RUANG"
 	roomTitle.Parent = roomPanel
 
@@ -16278,7 +16487,7 @@ function UISystem:_ensureRoomBrowserGui()
 	roomHost.TextXAlignment = Enum.TextXAlignment.Left
 	roomHost.Font = Enum.Font.Gotham
 	roomHost.TextSize = 12
-	roomHost.TextColor3 = Color3.fromRGB(160, 175, 200)
+	roomHost.TextColor3 = UI_BRAND.muted
 	roomHost.Text = "Host: -"
 	roomHost.Parent = roomPanel
 
@@ -16290,13 +16499,13 @@ function UISystem:_ensureRoomBrowserGui()
 	playersLabel.TextXAlignment = Enum.TextXAlignment.Left
 	playersLabel.Font = Enum.Font.GothamSemibold
 	playersLabel.TextSize = 12
-	playersLabel.TextColor3 = Color3.fromRGB(200, 215, 235)
+	playersLabel.TextColor3 = UI_BRAND.ghost
 	playersLabel.Text = "Anggota Ruangan"
 	playersLabel.Parent = roomPanel
 
 	local playersList = Instance.new("ScrollingFrame")
 	playersList.Name = "PlayersList"
-	playersList.BackgroundColor3 = Color3.fromRGB(21, 27, 36)
+	playersList.BackgroundColor3 = UI_BRAND.bgPanel
 	playersList.BorderSizePixel = 0
 	playersList.Position = UDim2.fromOffset(454, 34)
 	playersList.Size = UDim2.fromOffset(420, 408)
@@ -16326,13 +16535,14 @@ function UISystem:_ensureRoomBrowserGui()
 	modeSelector.Position = UDim2.fromOffset(14, 348)
 	modeSelector.Size = UDim2.fromOffset(380, 30)
 	styleButton(modeSelector, "MODE: CLASSIC")
+	setButtonTone(modeSelector, "focus", false)
 	modeSelector.Parent = roomPanel
 
 	local modeDropdown = Instance.new("Frame")
 	modeDropdown.Name = "ModeDropdown"
 	modeDropdown.Position = UDim2.fromOffset(14, 382)
 	modeDropdown.Size = UDim2.fromOffset(380, 72)
-	modeDropdown.BackgroundColor3 = Color3.fromRGB(26, 33, 43)
+	modeDropdown.BackgroundColor3 = UI_BRAND.bgCard
 	modeDropdown.BorderSizePixel = 0
 	modeDropdown.Visible = false
 	modeDropdown.Active = true
@@ -16343,7 +16553,7 @@ function UISystem:_ensureRoomBrowserGui()
 	modeDropdownCorner.Parent = modeDropdown
 	local modeDropdownStroke = Instance.new("UIStroke")
 	modeDropdownStroke.Thickness = 1
-	modeDropdownStroke.Color = Color3.fromRGB(78, 100, 128)
+	modeDropdownStroke.Color = UI_BRAND.focusSoft
 	modeDropdownStroke.Parent = modeDropdown
 
 	local modeClassicBtn = Instance.new("TextButton")
@@ -16351,6 +16561,7 @@ function UISystem:_ensureRoomBrowserGui()
 	modeClassicBtn.Position = UDim2.fromOffset(8, 8)
 	modeClassicBtn.Size = UDim2.fromOffset(364, 26)
 	styleButton(modeClassicBtn, "CLASSIC")
+	setButtonTone(modeClassicBtn, "focus", true)
 	modeClassicBtn.ZIndex = 25
 	modeClassicBtn.Parent = modeDropdown
 	local modeClassicCorner = Instance.new("UICorner")
@@ -16362,6 +16573,7 @@ function UISystem:_ensureRoomBrowserGui()
 	modeRankedBtn.Position = UDim2.fromOffset(8, 38)
 	modeRankedBtn.Size = UDim2.fromOffset(364, 26)
 	styleButton(modeRankedBtn, "RANKED")
+	setButtonTone(modeRankedBtn, "rank", false)
 	modeRankedBtn.ZIndex = 25
 	modeRankedBtn.Parent = modeDropdown
 	local modeRankedCorner = Instance.new("UICorner")
@@ -16373,13 +16585,14 @@ function UISystem:_ensureRoomBrowserGui()
 	mapSelector.Position = UDim2.fromOffset(14, 422)
 	mapSelector.Size = UDim2.fromOffset(380, 30)
 	styleButton(mapSelector, "MAP: " .. tostring(MAPS[1]))
+	setButtonTone(mapSelector, "focus", false)
 	mapSelector.Parent = roomPanel
 
 	local mapDropdown = Instance.new("Frame")
 	mapDropdown.Name = "MapDropdown"
 	mapDropdown.Position = UDim2.fromOffset(14, 446)
 	mapDropdown.Size = UDim2.fromOffset(380, 112)
-	mapDropdown.BackgroundColor3 = Color3.fromRGB(26, 33, 43)
+	mapDropdown.BackgroundColor3 = UI_BRAND.bgCard
 	mapDropdown.BorderSizePixel = 0
 	mapDropdown.Visible = false
 	mapDropdown.Active = true
@@ -16390,7 +16603,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapDropdownCorner.Parent = mapDropdown
 	local mapDropdownStroke = Instance.new("UIStroke")
 	mapDropdownStroke.Thickness = 1
-	mapDropdownStroke.Color = Color3.fromRGB(78, 100, 128)
+	mapDropdownStroke.Color = UI_BRAND.focusSoft
 	mapDropdownStroke.Parent = mapDropdown
 
 	local mapOptionButtons = {}
@@ -16400,6 +16613,7 @@ function UISystem:_ensureRoomBrowserGui()
 		option.Position = UDim2.fromOffset(8, 8 + (idx - 1) * 26)
 		option.Size = UDim2.fromOffset(364, 22)
 		styleButton(option, mapName)
+		setButtonTone(option, "default", false)
 		option.TextSize = 12
 		option.ZIndex = 25
 		option.Parent = mapDropdown
@@ -16411,14 +16625,14 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local rankedTierLabel = Instance.new("TextLabel")
 	rankedTierLabel.Name = "RankedTierLabel"
-	rankedTierLabel.BackgroundColor3 = Color3.fromRGB(31, 35, 48)
+	rankedTierLabel.BackgroundColor3 = Color3.fromRGB(24, 30, 42)
 	rankedTierLabel.BorderSizePixel = 0
 	rankedTierLabel.Position = UDim2.fromOffset(14, 422)
 	rankedTierLabel.Size = UDim2.fromOffset(380, 30)
 	rankedTierLabel.TextXAlignment = Enum.TextXAlignment.Left
 	rankedTierLabel.Font = Enum.Font.GothamSemibold
 	rankedTierLabel.TextSize = 12
-	rankedTierLabel.TextColor3 = Color3.fromRGB(215, 224, 236)
+	rankedTierLabel.TextColor3 = UI_BRAND.text
 	rankedTierLabel.Text = "TIER HOST: UNRANKED"
 	rankedTierLabel.Visible = false
 	rankedTierLabel.Parent = roomPanel
@@ -16430,7 +16644,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreview.Name = "MapPreview"
 	mapPreview.Position = UDim2.fromOffset(14, 72)
 	mapPreview.Size = UDim2.fromOffset(380, 208)
-	mapPreview.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
+	mapPreview.BackgroundColor3 = UI_BRAND.bgCard
 	mapPreview.BorderSizePixel = 0
 	mapPreview.Active = true
 	mapPreview.Parent = roomPanel
@@ -16439,7 +16653,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewCorner.Parent = mapPreview
 	local mapPreviewStroke = Instance.new("UIStroke")
 	mapPreviewStroke.Thickness = 1
-	mapPreviewStroke.Color = Color3.fromRGB(75, 92, 120)
+	mapPreviewStroke.Color = UI_BRAND.focusSoft
 	mapPreviewStroke.Parent = mapPreview
 
 	local mapPreviewTitle = Instance.new("TextLabel")
@@ -16450,7 +16664,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewTitle.TextXAlignment = Enum.TextXAlignment.Left
 	mapPreviewTitle.Font = Enum.Font.GothamSemibold
 	mapPreviewTitle.TextSize = 10
-	mapPreviewTitle.TextColor3 = Color3.fromRGB(190, 205, 225)
+	mapPreviewTitle.TextColor3 = UI_BRAND.ghost
 	mapPreviewTitle.Text = "PREVIEW"
 	mapPreviewTitle.Parent = mapPreview
 
@@ -16464,7 +16678,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewLabel.Font = Enum.Font.GothamBold
 	mapPreviewLabel.TextSize = 12
 	mapPreviewLabel.TextWrapped = true
-	mapPreviewLabel.TextColor3 = Color3.fromRGB(235, 240, 245)
+	mapPreviewLabel.TextColor3 = UI_BRAND.text
 	mapPreviewLabel.Text = formatMapSummary(MAPS[1])
 	mapPreviewLabel.Parent = mapPreview
 
@@ -16473,7 +16687,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewImage.AnchorPoint = Vector2.new(0.5, 0)
 	mapPreviewImage.Position = UDim2.new(0.5, 0, 0, 46)
 	mapPreviewImage.Size = UDim2.fromOffset(200, 150)
-	mapPreviewImage.BackgroundColor3 = Color3.fromRGB(15, 20, 28)
+	mapPreviewImage.BackgroundColor3 = UI_BRAND.bgPanel
 	mapPreviewImage.BorderSizePixel = 0
 	mapPreviewImage.Parent = mapPreview
 	local mapPreviewImageCorner = Instance.new("UICorner")
@@ -16481,14 +16695,14 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewImageCorner.Parent = mapPreviewImage
 	local mapPreviewImageStroke = Instance.new("UIStroke")
 	mapPreviewImageStroke.Thickness = 1
-	mapPreviewImageStroke.Color = Color3.fromRGB(83, 101, 128)
+	mapPreviewImageStroke.Color = UI_BRAND.focusSoft
 	mapPreviewImageStroke.Parent = mapPreviewImage
 	local mapPreviewImageGradient = Instance.new("UIGradient")
 	mapPreviewImageGradient.Name = "PreviewGradient"
 	mapPreviewImageGradient.Rotation = 18
 	mapPreviewImageGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(42, 54, 72)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 18, 24)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 52, 74)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 16, 24)),
 	})
 	mapPreviewImageGradient.Parent = mapPreviewImage
 
@@ -16496,19 +16710,19 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewImageAccent.Name = "AccentBar"
 	mapPreviewImageAccent.Position = UDim2.fromOffset(0, 0)
 	mapPreviewImageAccent.Size = UDim2.fromOffset(8, 150)
-	mapPreviewImageAccent.BackgroundColor3 = Color3.fromRGB(96, 128, 164)
+	mapPreviewImageAccent.BackgroundColor3 = UI_BRAND.focus
 	mapPreviewImageAccent.BorderSizePixel = 0
 	mapPreviewImageAccent.Parent = mapPreviewImage
 
 	local mapPreviewImageChip = Instance.new("TextLabel")
 	mapPreviewImageChip.Name = "MoodChip"
-	mapPreviewImageChip.BackgroundColor3 = Color3.fromRGB(38, 52, 74)
+	mapPreviewImageChip.BackgroundColor3 = Color3.fromRGB(24, 58, 84)
 	mapPreviewImageChip.BackgroundTransparency = 0.12
 	mapPreviewImageChip.Position = UDim2.fromOffset(12, 10)
 	mapPreviewImageChip.Size = UDim2.fromOffset(128, 18)
 	mapPreviewImageChip.Font = Enum.Font.GothamBold
 	mapPreviewImageChip.TextSize = 10
-	mapPreviewImageChip.TextColor3 = Color3.fromRGB(236, 242, 250)
+	mapPreviewImageChip.TextColor3 = UI_BRAND.text
 	mapPreviewImageChip.Text = "ATMOSPHERE"
 	mapPreviewImageChip.BorderSizePixel = 0
 	mapPreviewImageChip.Parent = mapPreviewImage
@@ -16523,7 +16737,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewImageLabel.Size = UDim2.new(1, -24, 0, 76)
 	mapPreviewImageLabel.Font = Enum.Font.GothamBold
 	mapPreviewImageLabel.TextSize = 42
-	mapPreviewImageLabel.TextColor3 = Color3.fromRGB(228, 236, 246)
+	mapPreviewImageLabel.TextColor3 = UI_BRAND.text
 	mapPreviewImageLabel.TextWrapped = false
 	mapPreviewImageLabel.TextYAlignment = Enum.TextYAlignment.Center
 	mapPreviewImageLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -16537,7 +16751,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewImageStats.Size = UDim2.new(1, -24, 0, 16)
 	mapPreviewImageStats.Font = Enum.Font.GothamSemibold
 	mapPreviewImageStats.TextSize = 10
-	mapPreviewImageStats.TextColor3 = Color3.fromRGB(210, 220, 236)
+	mapPreviewImageStats.TextColor3 = UI_BRAND.muted
 	mapPreviewImageStats.TextXAlignment = Enum.TextXAlignment.Left
 	mapPreviewImageStats.Text = "DETAIL"
 	mapPreviewImageStats.Parent = mapPreviewImage
@@ -16549,7 +16763,7 @@ function UISystem:_ensureRoomBrowserGui()
 	mapPreviewImageFooter.Size = UDim2.new(1, -24, 0, 20)
 	mapPreviewImageFooter.Font = Enum.Font.GothamBold
 	mapPreviewImageFooter.TextSize = 12
-	mapPreviewImageFooter.TextColor3 = Color3.fromRGB(236, 242, 250)
+	mapPreviewImageFooter.TextColor3 = UI_BRAND.text
 	mapPreviewImageFooter.TextXAlignment = Enum.TextXAlignment.Left
 	mapPreviewImageFooter.Text = getMapDisplayName(MAPS[1])
 	mapPreviewImageFooter.Parent = mapPreviewImage
@@ -16561,10 +16775,10 @@ function UISystem:_ensureRoomBrowserGui()
 	setPwdBox.PlaceholderText = "Set Password (4 digit)"
 	setPwdBox.Text = ""
 	setPwdBox.ClearTextOnFocus = false
-	setPwdBox.TextColor3 = Color3.fromRGB(235, 240, 245)
+	setPwdBox.TextColor3 = UI_BRAND.text
 	setPwdBox.Font = Enum.Font.Gotham
 	setPwdBox.TextSize = 12
-	setPwdBox.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
+	setPwdBox.BackgroundColor3 = UI_BRAND.bgPanel
 	setPwdBox.BorderSizePixel = 0
 	setPwdBox.Parent = roomPanel
 
@@ -16577,6 +16791,7 @@ function UISystem:_ensureRoomBrowserGui()
 	setPwdBtn.Position = UDim2.fromOffset(278, 184)
 	setPwdBtn.Size = UDim2.fromOffset(116, 32)
 	styleButton(setPwdBtn, "Set PWD")
+	setButtonTone(setPwdBtn, "default", false)
 	setPwdBtn.TextSize = 12
 	setPwdBtn.Parent = roomPanel
 
@@ -16585,7 +16800,7 @@ function UISystem:_ensureRoomBrowserGui()
 	readyBtn.Position = UDim2.fromOffset(14, 264)
 	readyBtn.Size = UDim2.fromOffset(380, 36)
 	styleButton(readyBtn, "READY")
-	readyBtn.BackgroundColor3 = Color3.fromRGB(40, 120, 60)
+	setButtonTone(readyBtn, "success", false)
 	readyBtn.Parent = roomPanel
 
 	local startBtn = Instance.new("TextButton")
@@ -16593,7 +16808,7 @@ function UISystem:_ensureRoomBrowserGui()
 	startBtn.Position = UDim2.fromOffset(14, 264)
 	startBtn.Size = UDim2.fromOffset(380, 36)
 	styleButton(startBtn, "MULAI PERMAINAN")
-	startBtn.BackgroundColor3 = Color3.fromRGB(180, 80, 30)
+	setButtonTone(startBtn, "warning", true)
 	startBtn.Visible = false
 	startBtn.Parent = roomPanel
 
@@ -16603,7 +16818,7 @@ function UISystem:_ensureRoomBrowserGui()
 	cancelStartBtn.Size = UDim2.fromOffset(380, 28)
 	styleButton(cancelStartBtn, "BATALKAN COUNTDOWN")
 	cancelStartBtn.TextSize = 12
-	cancelStartBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+	setButtonTone(cancelStartBtn, "danger", true)
 	cancelStartBtn.Visible = false
 	cancelStartBtn.Parent = roomPanel
 
@@ -16613,7 +16828,7 @@ function UISystem:_ensureRoomBrowserGui()
 	leaveRoomBtn.Size = UDim2.fromOffset(380, 30)
 	styleButton(leaveRoomBtn, "Keluar Room")
 	leaveRoomBtn.TextSize = 12
-	leaveRoomBtn.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
+	setButtonTone(leaveRoomBtn, "danger", false)
 	leaveRoomBtn.Parent = roomPanel
 
 	local inviteBtn = Instance.new("TextButton")
@@ -16622,7 +16837,7 @@ function UISystem:_ensureRoomBrowserGui()
 	inviteBtn.Size = UDim2.fromOffset(420, 30)
 	styleButton(inviteBtn, "INVITE PLAYER")
 	inviteBtn.TextSize = 12
-	inviteBtn.BackgroundColor3 = Color3.fromRGB(52, 92, 128)
+	setButtonTone(inviteBtn, "focus", false)
 	inviteBtn.Visible = false
 	inviteBtn.Parent = roomPanel
 
@@ -16630,7 +16845,7 @@ function UISystem:_ensureRoomBrowserGui()
 	inviteDropdown.Name = "InviteDropdown"
 	inviteDropdown.Position = UDim2.fromOffset(454, 220)
 	inviteDropdown.Size = UDim2.fromOffset(420, 220)
-	inviteDropdown.BackgroundColor3 = Color3.fromRGB(26, 33, 43)
+	inviteDropdown.BackgroundColor3 = UI_BRAND.bgCard
 	inviteDropdown.BorderSizePixel = 0
 	inviteDropdown.Visible = false
 	inviteDropdown.Active = true
@@ -16641,7 +16856,7 @@ function UISystem:_ensureRoomBrowserGui()
 	inviteDropdownCorner.Parent = inviteDropdown
 	local inviteDropdownStroke = Instance.new("UIStroke")
 	inviteDropdownStroke.Thickness = 1
-	inviteDropdownStroke.Color = Color3.fromRGB(78, 100, 128)
+	inviteDropdownStroke.Color = UI_BRAND.focusSoft
 	inviteDropdownStroke.Parent = inviteDropdown
 
 	local inviteList = Instance.new("ScrollingFrame")
@@ -16666,10 +16881,10 @@ function UISystem:_ensureRoomBrowserGui()
 	kickNameBox.PlaceholderText = "Nama pemain untuk di-kick"
 	kickNameBox.Text = ""
 	kickNameBox.ClearTextOnFocus = false
-	kickNameBox.TextColor3 = Color3.fromRGB(235, 240, 245)
+	kickNameBox.TextColor3 = UI_BRAND.text
 	kickNameBox.Font = Enum.Font.Gotham
 	kickNameBox.TextSize = 12
-	kickNameBox.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
+	kickNameBox.BackgroundColor3 = UI_BRAND.bgPanel
 	kickNameBox.BorderSizePixel = 0
 	kickNameBox.Visible = false
 	kickNameBox.Parent = roomPanel
@@ -16683,7 +16898,7 @@ function UISystem:_ensureRoomBrowserGui()
 	kickBtn.Size = UDim2.fromOffset(116, 28)
 	styleButton(kickBtn, "KICK")
 	kickBtn.TextSize = 12
-	kickBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+	setButtonTone(kickBtn, "danger", false)
 	kickBtn.Visible = false
 	kickBtn.Parent = roomPanel
 
@@ -16705,7 +16920,7 @@ function UISystem:_ensureRoomBrowserGui()
 	countdownLabel.Text = "5"
 	countdownLabel.Font = Enum.Font.GothamBold
 	countdownLabel.TextSize = 96
-	countdownLabel.TextColor3 = Color3.fromRGB(255, 80, 60)
+	countdownLabel.TextColor3 = Color3.fromRGB(255, 134, 86)
 	countdownLabel.ZIndex = 11
 	countdownLabel.Parent = countdownOverlay
 
@@ -16715,7 +16930,7 @@ function UISystem:_ensureRoomBrowserGui()
 	cancelCountdownBtn.Position = UDim2.fromScale(0.5, 0.70)
 	cancelCountdownBtn.Size = UDim2.fromOffset(220, 38)
 	styleButton(cancelCountdownBtn, "BATALKAN")
-	cancelCountdownBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+	setButtonTone(cancelCountdownBtn, "danger", true)
 	cancelCountdownBtn.ZIndex = 11
 	cancelCountdownBtn.Visible = false
 	cancelCountdownBtn.Parent = countdownOverlay
@@ -16725,7 +16940,7 @@ function UISystem:_ensureRoomBrowserGui()
 	invitePopup.AnchorPoint = Vector2.new(0.5, 0)
 	invitePopup.Position = UDim2.new(0.5, 0, 0, 18)
 	invitePopup.Size = UDim2.fromOffset(408, 66)
-	invitePopup.BackgroundColor3 = Color3.fromRGB(20, 30, 40)
+	invitePopup.BackgroundColor3 = UI_BRAND.bgCard
 	invitePopup.BorderSizePixel = 0
 	invitePopup.ZIndex = 12
 	invitePopup.Visible = false
@@ -16737,7 +16952,7 @@ function UISystem:_ensureRoomBrowserGui()
 	invitePopupCorner.Parent = invitePopup
 	local invitePopupStroke = Instance.new("UIStroke")
 	invitePopupStroke.Thickness = 1
-	invitePopupStroke.Color = Color3.fromRGB(86, 128, 170)
+	invitePopupStroke.Color = UI_BRAND.focus
 	invitePopupStroke.Parent = invitePopup
 
 	local invitePopupText = Instance.new("TextLabel")
@@ -16750,7 +16965,7 @@ function UISystem:_ensureRoomBrowserGui()
 	invitePopupText.Font = Enum.Font.GothamSemibold
 	invitePopupText.TextSize = 11
 	invitePopupText.TextWrapped = true
-	invitePopupText.TextColor3 = Color3.fromRGB(235, 240, 245)
+	invitePopupText.TextColor3 = UI_BRAND.text
 	invitePopupText.Text = "Invite"
 	invitePopupText.ZIndex = 13
 	invitePopupText.Parent = invitePopup
@@ -16761,7 +16976,7 @@ function UISystem:_ensureRoomBrowserGui()
 	inviteAcceptBtn.Size = UDim2.fromOffset(96, 22)
 	styleButton(inviteAcceptBtn, "TERIMA")
 	inviteAcceptBtn.TextSize = 11
-	inviteAcceptBtn.BackgroundColor3 = Color3.fromRGB(45, 120, 70)
+	setButtonTone(inviteAcceptBtn, "success", true)
 	inviteAcceptBtn.ZIndex = 13
 	inviteAcceptBtn.Parent = invitePopup
 
@@ -16771,7 +16986,7 @@ function UISystem:_ensureRoomBrowserGui()
 	inviteDeclineBtn.Size = UDim2.fromOffset(96, 22)
 	styleButton(inviteDeclineBtn, "TOLAK")
 	inviteDeclineBtn.TextSize = 11
-	inviteDeclineBtn.BackgroundColor3 = Color3.fromRGB(120, 46, 46)
+	setButtonTone(inviteDeclineBtn, "danger", false)
 	inviteDeclineBtn.ZIndex = 13
 	inviteDeclineBtn.Parent = invitePopup
 
@@ -16958,13 +17173,13 @@ function UISystem:_ensureRoomBrowserGui()
 			roomPreviewMapTitle.Text = "MAP ROOM"
 			roomPreviewMapStats.Text = "DETAIL MAP AKAN MUNCUL SAAT ROOM DIPILIH"
 			roomPreviewMapMood.Text = "ATMOSPHERE"
-			roomPreviewMap.BackgroundColor3 = Color3.fromRGB(18, 24, 32)
-			roomPreviewMapStroke.Color = Color3.fromRGB(72, 90, 116)
-			roomPreviewMapAccent.BackgroundColor3 = Color3.fromRGB(86, 116, 152)
-			roomPreviewMapMood.BackgroundColor3 = Color3.fromRGB(38, 52, 74)
+			roomPreviewMap.BackgroundColor3 = UI_BRAND.bgPanel
+			roomPreviewMapStroke.Color = UI_BRAND.focusSoft
+			roomPreviewMapAccent.BackgroundColor3 = UI_BRAND.focus
+			roomPreviewMapMood.BackgroundColor3 = Color3.fromRGB(22, 56, 80)
 			roomPreviewMapGradient.Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, Color3.fromRGB(36, 44, 58)),
-				ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 18, 24)),
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 48, 68)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 16, 24)),
 			})
 			local empty = Instance.new("TextLabel")
 			empty.BackgroundTransparency = 1
@@ -16973,7 +17188,7 @@ function UISystem:_ensureRoomBrowserGui()
 			empty.TextYAlignment = Enum.TextYAlignment.Center
 			empty.Font = Enum.Font.Gotham
 			empty.TextSize = 12
-			empty.TextColor3 = Color3.fromRGB(182, 198, 216)
+			empty.TextColor3 = UI_BRAND.muted
 			empty.Text = "Belum ada room dipilih."
 			empty.Parent = roomPreviewPlayersList
 			return
@@ -17877,6 +18092,9 @@ function UISystem:_bindMatchToolInput()
 	end
 	self._matchToolInputBound = true
 	table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if USE_NATIVE_BACKPACK_TOOLS == true then
+			return
+		end
 		if gameProcessed or UserInputService:GetFocusedTextBox() then
 			return
 		end
@@ -18096,7 +18314,7 @@ function UISystem:_refreshRoomBrowserView()
 		end
 		for _, info in ipairs(roomPlayersData) do
 			local card = Instance.new("Frame")
-			card.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
+			card.BackgroundColor3 = UI_BRAND.bgCard
 			card.BorderSizePixel = 0
 			card.Size = UDim2.fromOffset(202, 132)
 			card.Parent = self._roomBrowserWidgets.PlayersList
@@ -18105,12 +18323,12 @@ function UISystem:_refreshRoomBrowserView()
 			cardCorner.Parent = card
 			local cardStroke = Instance.new("UIStroke")
 			cardStroke.Thickness = info.isReady and 2 or 1
-			cardStroke.Color = info.isReady and Color3.fromRGB(82, 179, 108) or Color3.fromRGB(74, 88, 112)
+			cardStroke.Color = info.isReady and Color3.fromRGB(62, 194, 142) or Color3.fromRGB(64, 126, 166)
 			cardStroke.Parent = card
 
 			local preview = Instance.new("ViewportFrame")
 			preview.Name = "Preview"
-			preview.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
+			preview.BackgroundColor3 = UI_BRAND.bgPanel
 			preview.BorderSizePixel = 0
 			preview.Position = UDim2.fromOffset(6, 8)
 			preview.Size = UDim2.fromOffset(84, 116)
@@ -18127,7 +18345,7 @@ function UISystem:_refreshRoomBrowserView()
 			displayNameLabel.TextXAlignment = Enum.TextXAlignment.Left
 			displayNameLabel.Font = Enum.Font.GothamBold
 			displayNameLabel.TextSize = 10
-			displayNameLabel.TextColor3 = Color3.fromRGB(236, 240, 245)
+			displayNameLabel.TextColor3 = UI_BRAND.text
 			displayNameLabel.TextWrapped = true
 			local roleTag = info.isHost and "[HOST]" or "[MEMBER]"
 			displayNameLabel.Text = string.format("%s %s", roleTag, tostring(info.displayName or info.name or "?"))
@@ -18140,7 +18358,7 @@ function UISystem:_refreshRoomBrowserView()
 			readyLabel.TextXAlignment = Enum.TextXAlignment.Left
 			readyLabel.Font = Enum.Font.GothamSemibold
 			readyLabel.TextSize = 10
-			readyLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 220, 145) or Color3.fromRGB(255, 195, 120)
+			readyLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 228, 170) or Color3.fromRGB(236, 194, 110)
 			readyLabel.Text = info.isReady and "READY" or "NOT READY"
 			readyLabel.Parent = card
 
@@ -18156,6 +18374,7 @@ function UISystem:_refreshRoomBrowserView()
 			kickInline.Text = "X"
 			kickInline.Visible = canKickThis
 			kickInline.Parent = card
+			setButtonTone(kickInline, "danger", false)
 			local kickCorner = Instance.new("UICorner")
 			kickCorner.CornerRadius = UDim.new(1, 0)
 			kickCorner.Parent = kickInline
@@ -18198,28 +18417,28 @@ function UISystem:_refreshRoomBrowserView()
 		if state.isHost == true then
 			if state.matchStarting == true then
 				self._roomBrowserWidgets.ReadyButton.Text = "BATALKAN COUNTDOWN"
-				self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+				setButtonTone(self._roomBrowserWidgets.ReadyButton, "danger", true)
 				self._roomBrowserWidgets.ReadyButton.Active = true
 				self._roomBrowserWidgets.ReadyButton.AutoButtonColor = true
 			elseif (playerCount or 0) <= 1 then
 				self._roomBrowserWidgets.ReadyButton.Text = "MULAI PERMAINAN"
-				self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = Color3.fromRGB(180, 80, 30)
+				setButtonTone(self._roomBrowserWidgets.ReadyButton, "warning", true)
 				self._roomBrowserWidgets.ReadyButton.Active = true
 				self._roomBrowserWidgets.ReadyButton.AutoButtonColor = true
 			elseif allReadyComputed == true then
 				self._roomBrowserWidgets.ReadyButton.Text = "MULAI PERMAINAN"
-				self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = Color3.fromRGB(180, 80, 30)
+				setButtonTone(self._roomBrowserWidgets.ReadyButton, "warning", true)
 				self._roomBrowserWidgets.ReadyButton.Active = true
 				self._roomBrowserWidgets.ReadyButton.AutoButtonColor = true
 			else
 				self._roomBrowserWidgets.ReadyButton.Text = "BELUM SIAP SEMUA"
-				self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = Color3.fromRGB(82, 82, 82)
+				setButtonTone(self._roomBrowserWidgets.ReadyButton, "default", false)
 				self._roomBrowserWidgets.ReadyButton.Active = false
 				self._roomBrowserWidgets.ReadyButton.AutoButtonColor = false
 			end
 		else
 			self._roomBrowserWidgets.ReadyButton.Text = isReady and "BATALKAN" or "SIAP"
-			self._roomBrowserWidgets.ReadyButton.BackgroundColor3 = isReady and Color3.fromRGB(80, 80, 40) or Color3.fromRGB(40, 120, 60)
+			setButtonTone(self._roomBrowserWidgets.ReadyButton, isReady and "warning" or "success", isReady)
 			self._roomBrowserWidgets.ReadyButton.Active = true
 			self._roomBrowserWidgets.ReadyButton.AutoButtonColor = true
 		end
