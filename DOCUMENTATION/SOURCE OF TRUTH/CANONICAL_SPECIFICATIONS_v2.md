@@ -1785,3 +1785,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser received another extra-compact visual micro-adjustment in the roomlist bottom gap trim lane.
 - The transition from list content into the lower action stack tightens slightly.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-27 Addendum - Visual Batch T151 Action Column Gap Trim VI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the action column gap trim lane.
+- Buttons gain a little more usable width while preserving action grouping.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
