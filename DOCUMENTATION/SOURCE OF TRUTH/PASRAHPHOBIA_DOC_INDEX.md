@@ -17211,3 +17211,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - gap bawah room list dirapatkan tipis lanjutan untuk mengurangi slack sebelum stack aksi.
 - flow daftar ke kontrol bawah tetap dipertahankan agar pemisahan section masih terbaca.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 142. VISUAL BATCH T139 ROOMBROWSER ACTION COLUMN GAP TRIM V (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- gap horizontal antar tombol aksi dua-kolom dirapatkan tipis lanjutan untuk reclaim lebar tombol.
+- hierarchy aksi tetap dipertahankan agar layout bawah tetap cepat dipindai di mobile.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
