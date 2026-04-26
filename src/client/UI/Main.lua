@@ -9659,6 +9659,19 @@ function UISystem:_refreshShopPanel()
 		activeFilter = "All"
 		self._shopState.filterKey = activeFilter
 	end
+	if activeFilter == "MM" then
+		statusText = "STORE MM"
+		badgeColor = Color3.fromRGB(56, 120, 188)
+	elseif activeFilter == "PP" then
+		statusText = "STORE PP"
+		badgeColor = Color3.fromRGB(176, 132, 52)
+	elseif activeFilter == "Robux" then
+		statusText = "STORE R$"
+		badgeColor = Color3.fromRGB(182, 78, 64)
+	elseif activeFilter == "Owned" then
+		statusText = "STORE OWNED"
+		badgeColor = Color3.fromRGB(76, 124, 102)
+	end
 	if lastPurchase and lastPurchase.success == true then
 		statusText = "PURCHASE OK"
 		badgeColor = Color3.fromRGB(58, 116, 90)
@@ -9721,15 +9734,15 @@ function UISystem:_refreshShopPanel()
 			if button then
 				local selected = activeFilter == filter.key
 				local tone = "default"
-				if filter.key == "MM" then
-					tone = "focus"
-				elseif filter.key == "PP" then
-					tone = "pass"
-				elseif filter.key == "Robux" then
-					tone = "success"
-				elseif filter.key == "Owned" then
-					tone = "profile"
-				end
+					if filter.key == "MM" then
+						tone = "focus"
+					elseif filter.key == "PP" then
+						tone = "pass"
+					elseif filter.key == "Robux" then
+						tone = "warning"
+					elseif filter.key == "Owned" then
+						tone = "profile"
+					end
 				setButtonTone(button, tone, selected)
 			end
 		end

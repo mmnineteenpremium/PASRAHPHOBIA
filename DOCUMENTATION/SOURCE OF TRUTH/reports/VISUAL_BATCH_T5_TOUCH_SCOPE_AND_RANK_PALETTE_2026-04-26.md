@@ -50,6 +50,10 @@ Token alignment used from reference root variables:
 4. Rank action tone alignment:
    - `BUTTON_TONES.rank` updated from older green-leaning tone to gold rank-accent tone aligned with reference token direction.
 
+5. Shop filter visual hierarchy:
+   - `ShopUI` status badge base color now follows active filter (`MM`, `PP`, `Robux`, `Owned`) for faster context scanning.
+   - Filter button tone for `Robux` changed from success-like green to warning lane to avoid misleading safe-state visual semantics.
+
 ## Verification
 
 - `scripts/release-preflight.ps1 -Json`
