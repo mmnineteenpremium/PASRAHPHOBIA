@@ -11294,16 +11294,20 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 				previewMapTitle.TextSize = 10
 			end
 			if previewMapMood then
-				setOffsetBounds(previewMapMood, leftWidth - 24 - 144, 8, 144, 18)
-				previewMapMood.TextSize = 10
+				local moodWidth = extraCompactMobile and 126 or 144
+				setOffsetBounds(previewMapMood, leftWidth - 24 - moodWidth, 8, moodWidth, 18)
+				previewMapMood.TextSize = extraCompactMobile and 9 or 10
+				previewMapMood.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 			end
 			if previewMapFooter then
-				setOffsetBounds(previewMapFooter, 16, 28, leftWidth - 48, 44)
-				previewMapFooter.TextSize = 13
+				setOffsetBounds(previewMapFooter, 16, 28, leftWidth - 48, extraCompactMobile and 40 or 44)
+				previewMapFooter.TextSize = extraCompactMobile and 12 or 13
+				previewMapFooter.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 			end
 			if previewMapStats then
 				setOffsetBounds(previewMapStats, 16, previewMapHeight - 24, leftWidth - 48, 16)
-				previewMapStats.TextSize = 10
+				previewMapStats.TextSize = extraCompactMobile and 9 or 10
+				previewMapStats.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 			end
 			if previewMapAccent then
 				setOffsetBounds(previewMapAccent, 0, 0, 6, previewMapHeight)
@@ -11353,16 +11357,20 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			previewMapTitle.TextSize = profile.isMobile and 11 or 10
 		end
 		if previewMapMood then
-			setOffsetBounds(previewMapMood, previewWidth - 24 - 144, 8, 144, 18)
-			previewMapMood.TextSize = profile.isMobile and 11 or 10
+			local moodWidth = extraCompactMobile and 126 or 144
+			setOffsetBounds(previewMapMood, previewWidth - 24 - moodWidth, 8, moodWidth, 18)
+			previewMapMood.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 10)
+			previewMapMood.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 		end
 		if previewMapFooter then
-			setOffsetBounds(previewMapFooter, 16, 30, previewWidth - 48, 44)
-			previewMapFooter.TextSize = profile.isMobile and 14 or 13
+			setOffsetBounds(previewMapFooter, 16, 30, previewWidth - 48, extraCompactMobile and 40 or 44)
+			previewMapFooter.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or 13)
+			previewMapFooter.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 		end
 		if previewMapStats then
 			setOffsetBounds(previewMapStats, 16, previewMapHeight - 24, previewWidth - 48, 16)
-			previewMapStats.TextSize = profile.isMobile and 11 or 10
+			previewMapStats.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 10)
+			previewMapStats.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 		end
 		if previewMapAccent then
 			setOffsetBounds(previewMapAccent, 0, 0, 6, previewMapHeight)
@@ -11721,8 +11729,9 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		setOffsetBounds(mapPreviewImage, math.floor(((mapPreview.AbsoluteSize.X or imageWidth) - imageWidth) * 0.5), isCompact and 48 or 46, imageWidth, imageHeight)
 	end
 	if mapPreviewImageChip and mapPreviewImage then
-		setOffsetBounds(mapPreviewImageChip, 12, 10, math.min(140, mapPreviewImage.AbsoluteSize.X - 24), 18)
+		setOffsetBounds(mapPreviewImageChip, 12, 10, math.min(extraCompactMobile and 124 or 140, mapPreviewImage.AbsoluteSize.X - 24), 18)
 		mapPreviewImageChip.TextSize = extraCompactMobile and 9 or 10
+		mapPreviewImageChip.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 	end
 	if mapPreviewImageLabel and mapPreviewImage then
 		setOffsetBounds(mapPreviewImageLabel, 12, 28, mapPreviewImage.AbsoluteSize.X - 24, isCompact and 58 or 76)
@@ -11731,10 +11740,12 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	if mapPreviewImageStats and mapPreviewImage then
 		setOffsetBounds(mapPreviewImageStats, 12, mapPreviewImage.AbsoluteSize.Y - 42, mapPreviewImage.AbsoluteSize.X - 24, 16)
 		mapPreviewImageStats.TextSize = extraCompactMobile and 9 or 10
+		mapPreviewImageStats.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 	end
 	if mapPreviewImageFooter and mapPreviewImage then
 		setOffsetBounds(mapPreviewImageFooter, 12, mapPreviewImage.AbsoluteSize.Y - 24, mapPreviewImage.AbsoluteSize.X - 24, 18)
 		mapPreviewImageFooter.TextSize = extraCompactMobile and 10 or 12
+		mapPreviewImageFooter.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 	end
 	if floatButton then
 		local floatSize = profile.isConsole and 84 or (profile.isMobile and 72 or 68)

@@ -1017,3 +1017,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser `Room Preview` player list now has compact/extra-compact scrollbar and inner padding tuning.
 - Player-list tuning is visual-only: list density plus extra-compact title truncation behavior.
 - No room preview data flow or player-state runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T38 Map Preview Strip Compact
+
+- RoomBrowser map preview strip (`Mood`, `Stats`, `Footer`) now has extra-compact bounds and typography tuning.
+- Map preview strip tuning is visual-only: compact widths/heights plus truncation behavior to avoid text overflow.
+- No map preview data flow or runtime behavior changes in this batch.

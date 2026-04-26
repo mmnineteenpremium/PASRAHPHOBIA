@@ -148,6 +148,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `RoomPreviewPlayersList` pada lane compact/extra-compact mendapat tuning scrollbar thickness + padding internal agar density lebih konsisten.
   - `RoomPreviewPlayersTitle` mendapat tuning text-size/truncation pada lane extra-compact untuk menjaga header tetap ringkas.
   - tetap visual-only tanpa perubahan logic room preview/player runtime.
+- Batch visual T38 untuk RoomBrowser map-preview strip compact sudah masuk:
+  - strip `Map Preview` (mood chip + stats + footer) pada lane extra-compact mendapat tuning width/height/text-size agar copy tidak menekan konten utama.
+  - truncation ditambahkan pada elemen strip preview map untuk menjaga keterbacaan tanpa overflow di viewport pendek.
+  - tetap visual-only tanpa perubahan logic map preview/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

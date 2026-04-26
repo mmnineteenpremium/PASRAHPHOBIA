@@ -16182,3 +16182,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - `RoomPreviewPlayersTitle` dituning text-size + truncation pada lane extra-compact agar header list lebih ringkas.
 - tidak ada perubahan logic room preview/player runtime, sesuai lock visual-only.
 
+---
+
+# 41. VISUAL BATCH T38 MAP PREVIEW STRIP COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- strip `Map Preview` (`Mood`, `Stats`, `Footer`) dipadatkan pada lane extra-compact.
+- ukuran elemen dan truncation text dituning agar copy strip tetap terbaca tanpa overflow di viewport pendek.
+- tidak ada perubahan logic map preview/runtime, sesuai lock visual-only.
+
