@@ -1155,3 +1155,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser wide-compact room-list bottom gap now has an extra-compact micro trim.
 - Transition tuning is visual-only: slightly tighter list-to-action spacing continuity.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T60 Action-Y Anchor Micro Trim
+
+- RoomBrowser action lane now has extra-compact-specific Y-anchor micro trim.
+- Action-lane tuning is visual-only: slightly tighter transition from room list to action controls.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
