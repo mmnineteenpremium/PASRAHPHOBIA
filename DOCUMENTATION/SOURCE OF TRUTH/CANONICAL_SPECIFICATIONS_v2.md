@@ -1183,3 +1183,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser map preview now has an extra-compact-aware minimum height micro trim.
 - Preview-map tuning is visual-only: subtle min-height adjustment to rebalance vertical space.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T64 Preview-Map Max-Height Micro Trim
+
+- RoomBrowser map preview now has a maximum height micro trim in the compact lane.
+- Preview-map tuning is visual-only: subtle max-height reduction for better section balance.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.

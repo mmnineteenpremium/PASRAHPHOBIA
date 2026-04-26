@@ -252,6 +252,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - minimum tinggi Map Preview dipadatkan tipis lanjutan untuk lane extra-compact.
   - membuka sedikit ruang vertikal ekstra untuk section bawah preview.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T64 untuk RoomBrowser roombrowser-preview-map-max-height-micro-trim sudah masuk:
+  - maksimum tinggi Map Preview dipadatkan tipis untuk menjaga balance panel saat viewport pendek.
+  - menekan dominasi blok map preview pada kasus tinggi panel terbatas.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

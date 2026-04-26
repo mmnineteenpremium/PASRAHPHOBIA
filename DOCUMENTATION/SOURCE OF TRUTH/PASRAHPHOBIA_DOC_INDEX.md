@@ -16442,3 +16442,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - minimum tinggi Map Preview dipadatkan tipis lanjutan untuk lane extra-compact.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 67. VISUAL BATCH T64 ROOMBROWSER PREVIEW MAP MAX HEIGHT MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- maksimum tinggi Map Preview dipadatkan tipis untuk menjaga balance panel saat viewport pendek.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
