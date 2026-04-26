@@ -304,6 +304,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - bottom-gap transisi room-list ke action lane extra-compact dipadatkan tipis lanjutan.
   - continuity list-to-action lebih rapat dengan flow interaksi tetap sama.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T77 untuk RoomBrowser roombrowser-action-y-anchor-trim-2 sudah masuk:
+  - anchor Y action lane extra-compact dipadatkan tipis lanjutan untuk rhythm panel kanan.
+  - grup kontrol tetap sama, hanya jarak transisi yang dipoles.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
