@@ -17587,3 +17587,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
 - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 189. VISUAL BATCH T186 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM XI (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+- judul players tetap dipertahankan agar section break tetap jelas.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.

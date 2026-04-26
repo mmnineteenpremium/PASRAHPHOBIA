@@ -740,6 +740,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
   - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T186 untuk RoomBrowser roombrowser-preview-playerlist-top-gap-trim-11 sudah masuk:
+  - jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+  - judul players tetap dipertahankan agar section break tetap jelas.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
