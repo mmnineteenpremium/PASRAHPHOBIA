@@ -16502,3 +16502,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - lebar Map Preview title lane compact direclaim tipis untuk headroom teks yang lebih aman.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 73. VISUAL BATCH T70 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM II (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk menjaga density akhir seri T54-T70.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.

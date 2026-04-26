@@ -276,6 +276,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - lebar Map Preview title lane compact direclaim tipis untuk headroom teks yang lebih aman.
   - ukuran teks title tetap; perubahan hanya pada bounds horizontal.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T70 untuk RoomBrowser roombrowser-map-footer-height-micro-trim-2 sudah masuk:
+  - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk menjaga density akhir seri T54-T70.
+  - text footer tetap sama, hanya bounds tinggi yang dipoles.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
