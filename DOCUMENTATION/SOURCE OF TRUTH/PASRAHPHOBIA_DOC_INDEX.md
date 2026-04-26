@@ -110,6 +110,20 @@ Hard execution lane:
 - no architecture changes or new systems without explicit owner approval
 - ghost visual validation must follow behavior-state rule (hidden state is valid; manifest/hunt non-render is bug)
 
+[2026-04-26 NOTE - Runtime Spawn Authority + Visual-Only Scope]
+Task lane aktif sekarang dikunci ke:
+- runtime spawn authored map saja:
+  - `ServerStorage.Maps.<Map>.<Map>.Runtime.PreparationStagingRuntime.PreparationSpawnArea`
+- tanpa fallback/recreate spawn otomatis
+- boundary anti-staging ghost wajib ada
+- trigger phase by-door wajib ada
+
+Visual lane aktif sekarang juga dikunci:
+- tidak membuat sistem baru
+- tidak membuat arsitektur gameplay/economy baru
+- hanya penyempurnaan visual total (UI/GUI/UX) untuk panel canonical:
+  - Rank, EXP, Profiling, Daily Quest/Reward/Check-In/Spin, Gacha, Shop, RoyalPass, MM/PP, Item, Hidden Gems.
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

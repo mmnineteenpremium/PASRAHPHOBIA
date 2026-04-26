@@ -603,23 +603,46 @@ local function hasPreparationStagingRuntime(mapClone)
 	if mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) == true then
 		return true
 	end
-	if mapClone:FindFirstChild("PreparationStagingRuntime", true) ~= nil then
+	local runtimeFolder = mapClone:FindFirstChild("Runtime")
+	local preparationFolder = runtimeFolder and runtimeFolder:FindFirstChild("PreparationStagingRuntime")
+	if preparationFolder and preparationFolder:IsA("Folder") then
 		return true
 	end
-	if mapClone:FindFirstChild("PreparationStaging", true) ~= nil then
-		return true
+
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("Folder") and descendant.Name == "Runtime" then
+			local nestedPreparation = descendant:FindFirstChild("PreparationStagingRuntime")
+			if nestedPreparation and nestedPreparation:IsA("Folder") then
+				return true
+			end
+		end
 	end
 	return false
 end
 
-local function isExplicitPreparationSpawnNode(node)
-	if typeof(node) ~= "Instance" then
-		return false
+local function resolveCanonicalPreparationSpawnArea(mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return nil, nil
 	end
-	if node:GetAttribute("PasrahPreparationSpawn") == true then
-		return true
+
+	local runtimeFolder = mapClone:FindFirstChild("Runtime")
+	local preparationFolder = runtimeFolder and runtimeFolder:FindFirstChild("PreparationStagingRuntime")
+	local spawnArea = preparationFolder and preparationFolder:FindFirstChild("PreparationSpawnArea", true)
+	if preparationFolder and preparationFolder:IsA("Folder") and spawnArea then
+		return preparationFolder, spawnArea
 	end
-	return isPreparationSpawnName(node.Name)
+
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("Folder") and descendant.Name == "Runtime" then
+			local nestedPreparation = descendant:FindFirstChild("PreparationStagingRuntime")
+			local nestedSpawnArea = nestedPreparation and nestedPreparation:FindFirstChild("PreparationSpawnArea", true)
+			if nestedPreparation and nestedPreparation:IsA("Folder") and nestedSpawnArea then
+				return nestedPreparation, nestedSpawnArea
+			end
+		end
+	end
+
+	return nil, nil
 end
 
 local function getPreparationSpawnCandidates(mapClone)
@@ -627,77 +650,26 @@ local function getPreparationSpawnCandidates(mapClone)
 		return {}
 	end
 
-	local preparationFolder = mapClone:FindFirstChild("PreparationStagingRuntime", true)
-	local spawnArea = preparationFolder and preparationFolder:FindFirstChild("PreparationSpawnArea", true)
+	local _, spawnArea = resolveCanonicalPreparationSpawnArea(mapClone)
+	if not spawnArea then
+		return {}
+	end
 
-	local seen = {}
-	local explicitCandidates = {}
 	local candidates = {}
-
-	local function pushCandidate(node, explicitOnly)
-		if not (node:IsA("BasePart") or node:IsA("Model")) then
-			return
-		end
-		if seen[node] then
-			return
-		end
-		seen[node] = true
-		if isExplicitPreparationSpawnNode(node) then
-			table.insert(explicitCandidates, node)
-			return
-		end
-		if not explicitOnly then
-			table.insert(candidates, node)
+	for _, child in ipairs(spawnArea:GetDescendants()) do
+		if child:IsA("BasePart") then
+			candidates[#candidates + 1] = child
 		end
 	end
-
-	if spawnArea then
-		for _, child in ipairs(spawnArea:GetDescendants()) do
-			pushCandidate(child, true)
+	table.sort(candidates, function(a, b)
+		local aName = tostring(a.Name)
+		local bName = tostring(b.Name)
+		if aName == bName then
+			return a:GetFullName() < b:GetFullName()
 		end
-		if #explicitCandidates == 0 then
-			for _, child in ipairs(spawnArea:GetDescendants()) do
-				pushCandidate(child, false)
-			end
-		end
-	end
-
-	if preparationFolder then
-		for _, child in ipairs(preparationFolder:GetDescendants()) do
-			pushCandidate(child, true)
-		end
-	end
-
-	if #explicitCandidates > 0 then
-		table.sort(explicitCandidates, function(a, b)
-			return tostring(a.Name) < tostring(b.Name)
-		end)
-		return explicitCandidates
-	end
-
-	if #candidates > 0 then
-		table.sort(candidates, function(a, b)
-			return tostring(a.Name) < tostring(b.Name)
-		end)
-		return candidates
-	end
-
-	local spawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
-	if spawnFolder and hasPreparationStagingRuntime(mapClone) then
-		for _, child in ipairs(spawnFolder:GetDescendants()) do
-			if child:GetAttribute("PasrahPreparationSpawn") == true then
-				pushCandidate(child, true)
-			end
-		end
-		if #explicitCandidates > 0 then
-			table.sort(explicitCandidates, function(a, b)
-				return tostring(a.Name) < tostring(b.Name)
-			end)
-			return explicitCandidates
-		end
-	end
-
-	return {}
+		return aName < bName
+	end)
+	return candidates
 end
 
 local function getSpawnCandidates(mapClone)
@@ -982,19 +954,10 @@ local function resolveSafeSpawnCFrame(mapClone, spawnCandidates, preferredIndex,
 		table.insert(orderedCandidates, preferred)
 	end
 
-	local explicitSpawn = mapClone and mapClone:FindFirstChild("SpawnLocation", true)
-	if explicitSpawn and explicitSpawn:IsA("BasePart") then
-		table.insert(orderedCandidates, explicitSpawn)
-	end
-
 	for _, candidate in ipairs(spawnCandidates) do
 		if candidate ~= preferred then
 			table.insert(orderedCandidates, candidate)
 		end
-	end
-
-	if mapClone and mapClone:IsA("Model") then
-		table.insert(orderedCandidates, mapClone)
 	end
 
 	for _, candidate in ipairs(orderedCandidates) do

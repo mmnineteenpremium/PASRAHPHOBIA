@@ -34,6 +34,10 @@ local PREPARATION_TOOL_PROXIMITY_RADIUS = 3.25
 local PREPARATION_TOOL_AUTOSELECT_DELAY = 2.5
 local PREPARATION_STAGING_ROOM_ESCAPE_STEP = 8
 local PREPARATION_STAGING_ROOM_ESCAPE_MAX_STEPS = 8
+local PREPARATION_FORCE_MAINFLOOR_STAGING = true
+local PREPARATION_MAINFLOOR_STAGE_DISTANCE = 8.5
+local PREPARATION_MAINFLOOR_ESCAPE_MAX_STEPS = 0
+local PREPARATION_HIDE_SYNTHETIC_FLOOR = true
 local STAIR_MARGIN = 0.75
 local INTERACTION_HEIGHT_OFFSET = 1.5
 local TRAVERSAL_GUIDE_FOLDER_NAME = "TraversalGuideRuntime"
@@ -48,6 +52,7 @@ local LOGIC_VOLUME_VISUAL_TRANSPARENCY = 1
 local USE_LEGACY_SAFEZONE_OVERRIDES = false
 local USE_LEGACY_SPAWN_OVERRIDES = false
 local USE_LEGACY_SYNTHETIC_STAGING = false
+local STRICT_AUTHORED_MAP_RUNTIME = true
 local MAINFLOOR_PATCH_ATTR = "RuntimeMainfloorPatched"
 local LOGIC_VOLUME_FOLDER_NAMES = {
 	"Rooms",
@@ -349,12 +354,60 @@ local PREPARATION_OBJECTIVE_TEMPLATE = {
 }
 
 local PREPARATION_TOOL_STATIONS = {
-	{ name = "ToolStation_EMF", title = "EMF", subtitle = "Medok sweep", color = Color3.fromRGB(132, 186, 255) },
-	{ name = "ToolStation_UV", title = "UV CAM", subtitle = "To'un trace", color = Color3.fromRGB(214, 146, 255) },
-	{ name = "ToolStation_THERMO", title = "THERMO", subtitle = "Freeze check", color = Color3.fromRGB(142, 214, 198) },
-	{ name = "ToolStation_BOX", title = "BOX", subtitle = "Voice bait", color = Color3.fromRGB(255, 196, 118) },
-	{ name = "ToolStation_WRITING", title = "WRITING", subtitle = "Book proof", color = Color3.fromRGB(150, 189, 255) },
-	{ name = "ToolStation_SENSOR", title = "SENSOR", subtitle = "Movement read", color = Color3.fromRGB(255, 130, 130) },
+	{
+		name = "ToolStation_EMF",
+		title = "EMF",
+		subtitle = "Medok sweep",
+		color = Color3.fromRGB(132, 186, 255),
+		modelName = "JejakEnergi",
+		modelLift = 0.63,
+		modelYaw = 90,
+	},
+	{
+		name = "ToolStation_UV",
+		title = "UV CAM",
+		subtitle = "To'un trace",
+		color = Color3.fromRGB(214, 146, 255),
+		modelName = "BolaArwah",
+		modelLift = 0.64,
+		modelYaw = 90,
+	},
+	{
+		name = "ToolStation_THERMO",
+		title = "THERMO",
+		subtitle = "Freeze check",
+		color = Color3.fromRGB(142, 214, 198),
+		modelName = "SuhuMembeku",
+		modelLift = 0.63,
+		modelYaw = 90,
+	},
+	{
+		name = "ToolStation_BOX",
+		title = "BOX",
+		subtitle = "Voice bait",
+		color = Color3.fromRGB(255, 196, 118),
+		modelName = "KotakArwah",
+		modelLift = 0.62,
+		modelYaw = 90,
+	},
+	{
+		name = "ToolStation_WRITING",
+		title = "WRITING",
+		subtitle = "Book proof",
+		color = Color3.fromRGB(150, 189, 255),
+		modelName = "BukuTerkutuk",
+		modelLift = 0.6,
+		modelYaw = 90,
+	},
+	{
+		name = "ToolStation_SENSOR",
+		title = "SENSOR",
+		subtitle = "Movement read",
+		color = Color3.fromRGB(255, 130, 130),
+		modelName = "GerakanGaib",
+		modelLift = 0.63,
+		modelYaw = 90,
+	},
 }
 
 local function normalizeToken(value)
@@ -881,6 +934,104 @@ local function resolveReplicatedAssetModelTemplate(categoryName, modelName)
 	return nil
 end
 
+local toolVisualConfigCache = nil
+
+local function safeRequireModule(moduleScript)
+	if not (moduleScript and moduleScript:IsA("ModuleScript")) then
+		return nil
+	end
+	local ok, result = pcall(require, moduleScript)
+	if ok then
+		return result
+	end
+	return nil
+end
+
+local function coerceConfigVector3(value)
+	if typeof(value) == "Vector3" then
+		return value
+	end
+	if type(value) ~= "table" then
+		return nil
+	end
+	local x = tonumber(value.x or value.X or value[1])
+	local y = tonumber(value.y or value.Y or value[2])
+	local z = tonumber(value.z or value.Z or value[3])
+	if x and y and z then
+		return Vector3.new(x, y, z)
+	end
+	return nil
+end
+
+local function resolveToolTargetBounds(toolType)
+	if type(toolType) ~= "string" or toolType == "" then
+		return nil
+	end
+
+	if toolVisualConfigCache == nil then
+		local replicatedStorage = game:GetService("ReplicatedStorage")
+		local shared = replicatedStorage:FindFirstChild("Shared") or replicatedStorage:FindFirstChild("shared")
+		local gameData = shared and shared:FindFirstChild("GameData")
+		local moduleScript = gameData and gameData:FindFirstChild("ToolVisualConfig")
+		local configModule = safeRequireModule(moduleScript)
+		local tools = type(configModule) == "table" and type(configModule.tools) == "table" and configModule.tools or false
+		toolVisualConfigCache = tools
+	end
+
+	if toolVisualConfigCache == false then
+		return nil
+	end
+
+	local config = toolVisualConfigCache[toolType]
+	if type(config) ~= "table" then
+		return nil
+	end
+	return coerceConfigVector3(config.targetBounds)
+end
+
+local function clampRuntimeModelBounds(model, targetBounds)
+	if not (model and model:IsA("Model")) or typeof(targetBounds) ~= "Vector3" then
+		return false
+	end
+
+	local okExtents, extents = pcall(function()
+		return model:GetExtentsSize()
+	end)
+	if not okExtents or typeof(extents) ~= "Vector3" then
+		return false
+	end
+
+	if extents.X <= 0 or extents.Y <= 0 or extents.Z <= 0 then
+		return false
+	end
+
+	local factor = math.min(
+		targetBounds.X / extents.X,
+		targetBounds.Y / extents.Y,
+		targetBounds.Z / extents.Z
+	)
+	if factor <= 0 then
+		return false
+	end
+	if factor >= 0.98 and factor <= 1.02 then
+		return true
+	end
+
+	local currentScale = 1
+	local okScale, scale = pcall(function()
+		return model:GetScale()
+	end)
+	if okScale and type(scale) == "number" and scale > 0 then
+		currentScale = scale
+	end
+
+	local nextScale = math.max(0.01, currentScale * factor)
+	local okApply = pcall(function()
+		model:ScaleTo(nextScale)
+	end)
+	return okApply
+end
+
 local function configureRuntimeModel(model, options)
 	if not (model and model:IsA("Model")) then
 		return model
@@ -932,6 +1083,13 @@ local function syncRuntimeAssetModel(parent, runtimeName, categoryName, modelNam
 		pcall(function()
 			model:ScaleTo(options.scale)
 		end)
+	end
+	local targetBounds = type(options) == "table" and coerceConfigVector3(options.targetBounds) or nil
+	if targetBounds == nil and tostring(categoryName or "") == "Tools" then
+		targetBounds = resolveToolTargetBounds(tostring(modelName or ""))
+	end
+	if targetBounds then
+		clampRuntimeModelBounds(model, targetBounds)
 	end
 	if typeof(targetCFrame) == "CFrame" then
 		pcall(function()
@@ -3476,9 +3634,14 @@ local function findAuthoredPreparationRuntimeFolder(mapClone)
 	if preparationFolder and preparationFolder:IsA("Folder") then
 		return preparationFolder
 	end
-	local recursive = mapClone:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME, true)
-	if recursive and recursive:IsA("Folder") then
-		return recursive
+
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("Folder") and descendant.Name == "Runtime" then
+			local nestedPreparation = descendant:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME)
+			if nestedPreparation and nestedPreparation:IsA("Folder") then
+				return nestedPreparation
+			end
+		end
 	end
 	return nil
 end
@@ -3652,10 +3815,15 @@ local function isInsideRoomVolume(roomsFolder, worldPosition)
 	return false, nil
 end
 
-local function resolvePreparationStagingPlacement(anchorDoor, baseY, outward, stageDistance, roomsFolder)
+local function resolvePreparationStagingPlacement(anchorDoor, baseY, outward, stageDistance, roomsFolder, maxEscapeSteps)
 	if not (anchorDoor and anchorDoor:IsA("BasePart") and typeof(outward) == "Vector3") then
 		return nil, nil, nil, nil
 	end
+
+	local resolvedEscapeSteps = math.max(
+		0,
+		math.floor(tonumber(maxEscapeSteps) or PREPARATION_STAGING_ROOM_ESCAPE_MAX_STEPS)
+	)
 
 	local baseCenter = Vector3.new(
 		anchorDoor.Position.X,
@@ -3668,7 +3836,7 @@ local function resolvePreparationStagingPlacement(anchorDoor, baseY, outward, st
 	local function probeDirection(direction)
 		local right = Vector3.new(-direction.Z, 0, direction.X)
 		local blockedRoomName = nil
-		for step = 0, PREPARATION_STAGING_ROOM_ESCAPE_MAX_STEPS do
+		for step = 0, resolvedEscapeSteps do
 			local distance = stageDistance + (step * PREPARATION_STAGING_ROOM_ESCAPE_STEP)
 			local center = baseCenter + (direction * distance)
 			local blocked = false
@@ -3717,6 +3885,69 @@ end
 local function patchPreparationStaging(mapId, mapClone, matchContext)
 	if not mapClone or mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) == true then
 		return false
+	end
+
+	if STRICT_AUTHORED_MAP_RUNTIME then
+		local authoredPreparationFolder = findAuthoredPreparationRuntimeFolder(mapClone)
+		if not authoredPreparationFolder then
+			mapClone:SetAttribute(PREPARATION_STAGING_DEBUG_ATTR, "strict_missing_authored_preparation_runtime")
+			return false
+		end
+		local spawnArea = authoredPreparationFolder:FindFirstChild("PreparationSpawnArea", true)
+		if not spawnArea then
+			mapClone:SetAttribute(PREPARATION_STAGING_DEBUG_ATTR, "strict_missing_preparation_spawn_area")
+			return false
+		end
+		local authoredSpawns = collectAuthoredPreparationSpawns(authoredPreparationFolder)
+		if #authoredSpawns == 0 then
+			mapClone:SetAttribute(PREPARATION_STAGING_DEBUG_ATTR, "strict_missing_preparation_spawns")
+			return false
+		end
+
+		for _, authoredSpawn in ipairs(authoredSpawns) do
+			authoredSpawn:SetAttribute("PasrahPreparationSpawn", true)
+		end
+
+		local legacySpawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
+		if legacySpawnFolder then
+			legacySpawnFolder:Destroy()
+		end
+
+		local strictToken = resolveMapOverrideToken(mapId, mapClone) or resolveMapOverrideToken(nil, mapClone)
+		local expectedEntryDoor = strictToken and PRIMARY_ENTRY_DOOR_BY_TOKEN[strictToken] or nil
+		local doorsFolder = mapClone:FindFirstChild("Doors", true)
+		local entryDoor = expectedEntryDoor and doorsFolder and doorsFolder:FindFirstChild(expectedEntryDoor, true) or nil
+		if entryDoor and entryDoor:IsA("BasePart") then
+			entryDoor:SetAttribute("PasrahPreparationAdvanceDoor", true)
+			mapClone:SetAttribute("PreparationAdvanceDoorSource", "Authored")
+		elseif expectedEntryDoor then
+			mapClone:SetAttribute("PreparationAdvanceDoorSource", "Missing")
+			mapClone:SetAttribute(PREPARATION_STAGING_DEBUG_ATTR, "strict_missing_preparation_advance_door")
+			return false
+		else
+			mapClone:SetAttribute("PreparationAdvanceDoorSource", "Unspecified")
+		end
+
+		local runtimeFolder = mapClone:FindFirstChild("Runtime", true)
+		local boundaryFolder = runtimeFolder and (runtimeFolder:FindFirstChild("MapBoundaryRuntime") or runtimeFolder:FindFirstChild("RuntimeBoundary"))
+		if not boundaryFolder then
+			boundaryFolder = mapClone:FindFirstChild("RuntimeBoundary", true)
+		end
+		if hasAnyBasePart(boundaryFolder) then
+			mapClone:SetAttribute("RuntimeBoundarySource", "Authored")
+		else
+			mapClone:SetAttribute("RuntimeBoundarySource", "Missing")
+			mapClone:SetAttribute(PREPARATION_STAGING_DEBUG_ATTR, "strict_missing_runtime_boundary")
+			return false
+		end
+
+		authoredPreparationFolder:SetAttribute("NativeStagingSourceOfTruth", true)
+		mapClone:SetAttribute(PREPARATION_STAGING_DEBUG_ATTR, "strict_native_runtime_authoritative")
+		mapClone:SetAttribute(PREPARATION_STAGING_PATCH_ATTR, true)
+		if type(matchContext) == "table" then
+			matchContext.preparationWorldBoard = true
+		end
+		return true
 	end
 
 	local token = resolveMapOverrideToken(mapId, mapClone)
@@ -3877,17 +4108,24 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	end
 	local ok, result = xpcall(function()
 		setPreparationDebug("start|" .. tostring(token))
+		local enforceMainfloorStaging = PREPARATION_FORCE_MAINFLOOR_STAGING == true
 		local stageDistance = tonumber(profile.stagingDistance) or 18
+		if enforceMainfloorStaging then
+			stageDistance = PREPARATION_MAINFLOOR_STAGE_DISTANCE
+		end
 		local platformWidth = tonumber(profile.platformWidth) or 28
 		local platformDepth = tonumber(profile.platformDepth) or 18
 		local boardData = buildPreparationBoardContent(mapId, matchContext)
-		local baseY = anchorRoom.Position.Y
+		local baseY = anchorDoor.Position.Y
+		local escapeMaxSteps = enforceMainfloorStaging and PREPARATION_MAINFLOOR_ESCAPE_MAX_STEPS
+			or PREPARATION_STAGING_ROOM_ESCAPE_MAX_STEPS
 		local platformCenter, resolvedOutward, roomEscapeSteps, blockedRoomName = resolvePreparationStagingPlacement(
 			anchorDoor,
 			baseY,
 			outward,
 			stageDistance,
-			roomsFolder
+			roomsFolder,
+			escapeMaxSteps
 		)
 		if typeof(resolvedOutward) == "Vector3" then
 			outward = resolvedOutward
@@ -3898,6 +4136,9 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			roomEscapeDebugSuffix = string.format("|room_escape_steps=%d", roomEscapeSteps)
 		elseif type(blockedRoomName) == "string" and blockedRoomName ~= "" then
 			roomEscapeDebugSuffix = "|room_overlap_unresolved=" .. tostring(blockedRoomName)
+		end
+		if enforceMainfloorStaging then
+			roomEscapeDebugSuffix = roomEscapeDebugSuffix .. "|mainfloor_locked"
 		end
 		-- Keep preparation staging near the entry anchor.
 		-- Do not push platform out to shell bounds to avoid detached staging drift.
@@ -3912,7 +4153,16 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			return false
 		end
 		setPreparationDebug("folder_ready")
+		local hideSyntheticFloor = enforceMainfloorStaging and PREPARATION_HIDE_SYNTHETIC_FLOOR == true
+		local runnerLength = math.max(10, (platformCenter - anchorDoor.Position).Magnitude - 2)
+		local runnerCenter = Vector3.new(
+			(platformCenter.X + anchorDoor.Position.X) * 0.5,
+			baseY - 0.32,
+			(platformCenter.Z + anchorDoor.Position.Z) * 0.5
+		)
+		local buildDetachedStagingGeometry = not hideSyntheticFloor
 
+		if buildDetachedStagingGeometry then
 		local platformCFrame = CFrame.lookAt(platformCenter, platformCenter - outward, Vector3.yAxis)
 		configurePart(
 			ensurePart(folder, "PreparationPlatform"),
@@ -3921,18 +4171,14 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				CFrame = platformCFrame,
 				Material = type(profile) == "table" and profile.platformMaterial or Enum.Material.Concrete,
 				Color = type(profile) == "table" and profile.platformColor or Color3.fromRGB(64, 66, 74),
-				CanCollide = true,
+				CanCollide = not hideSyntheticFloor,
 				CanTouch = false,
-				CanQuery = true,
+				CanQuery = not hideSyntheticFloor,
+				CastShadow = not hideSyntheticFloor,
+				Transparency = hideSyntheticFloor and 1 or 0,
 			}
 		)
 
-		local runnerLength = math.max(10, (platformCenter - anchorDoor.Position).Magnitude - 2)
-		local runnerCenter = Vector3.new(
-			(platformCenter.X + anchorDoor.Position.X) * 0.5,
-			baseY - 0.32,
-			(platformCenter.Z + anchorDoor.Position.Z) * 0.5
-		)
 		configurePart(
 			ensurePart(folder, "PreparationRunner"),
 			{
@@ -3940,9 +4186,11 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				CFrame = CFrame.lookAt(runnerCenter, runnerCenter - outward, Vector3.yAxis),
 				Material = type(profile) == "table" and profile.runnerMaterial or Enum.Material.Slate,
 				Color = Color3.fromRGB(88, 92, 102),
-				CanCollide = true,
+				CanCollide = not hideSyntheticFloor,
 				CanTouch = false,
-				CanQuery = true,
+				CanQuery = not hideSyntheticFloor,
+				CastShadow = not hideSyntheticFloor,
+				Transparency = hideSyntheticFloor and 1 or 0,
 			}
 		)
 
@@ -3953,9 +4201,11 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 			CFrame = CFrame.lookAt(platformCenter + (outward * 2.8) + Vector3.new(0, -0.12, 0), platformCenter - outward, Vector3.yAxis),
 			Material = type(profile) == "table" and profile.forecourtMaterial or Enum.Material.Asphalt,
 			Color = type(profile) == "table" and profile.forecourtColor or Color3.fromRGB(52, 56, 64),
-			CanCollide = true,
+			CanCollide = not hideSyntheticFloor,
 			CanTouch = false,
-			CanQuery = true,
+			CanQuery = not hideSyntheticFloor,
+			CastShadow = not hideSyntheticFloor,
+			Transparency = hideSyntheticFloor and 1 or 0,
 		}
 	)
 
@@ -4131,6 +4381,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		light.Color = Color3.fromRGB(255, 214, 170)
 		light.Shadows = false
 	end
+	end
 
 	local contractBoard = ensurePart(folder, "PreparationContractBoard")
 	configurePart(
@@ -4285,7 +4536,9 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		)
 	end
 
-		buildPreparationStageDecor(folder, profile, platformCenter, runnerCenter, right, outward)
+		if buildDetachedStagingGeometry then
+			buildPreparationStageDecor(folder, profile, platformCenter, runnerCenter, right, outward)
+		end
 		setPreparationDebug("decor_ready")
 
 	local entrySign = ensurePart(folder, "PreparationEntrySign")
@@ -4475,23 +4728,25 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		local offset = (index - ((#PREPARATION_TOOL_STATIONS + 1) * 0.5)) * 2.18
 		local toolPart = ensurePart(folder, tool.name)
 		local toolPosition = rackCenter + (right * offset)
+		local stationCFrame = CFrame.lookAt(toolPosition, toolPosition + outward, Vector3.yAxis)
 		configurePart(
 			toolPart,
 			{
-				Size = Vector3.new(1.2, 1.0, 1.2),
-				CFrame = CFrame.lookAt(toolPosition, toolPosition + outward, Vector3.yAxis),
+				Size = Vector3.new(1.05, 0.86, 1.05),
+				CFrame = stationCFrame,
 				Material = Enum.Material.SmoothPlastic,
 				Color = tool.color,
 				CanCollide = true,
 				CanTouch = true,
 				CanQuery = true,
+				Transparency = 0.12,
 			}
 		)
 		local statePad = ensurePart(folder, tool.name .. "_Pad")
 		configurePart(
 			statePad,
 			{
-				Size = Vector3.new(1.6, 0.06, 1.6),
+				Size = Vector3.new(1.42, 0.06, 1.42),
 				CFrame = CFrame.lookAt(toolPosition + Vector3.new(0, -0.48, 0), toolPosition + outward, Vector3.yAxis),
 				Material = Enum.Material.Neon,
 				Color = tool.color:Lerp(Color3.fromRGB(28, 34, 44), 0.62),
@@ -4501,6 +4756,27 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 				Transparency = 0.3,
 			}
 		)
+		if type(tool.modelName) == "string" and tool.modelName ~= "" then
+			syncRuntimeAssetModel(
+				folder,
+				tool.name .. "_Model",
+				"Tools",
+				tool.modelName,
+				stationCFrame
+					* CFrame.new(0, tonumber(tool.modelLift) or 0.62, 0)
+					* CFrame.Angles(
+						math.rad(tonumber(tool.modelPitch) or 0),
+						math.rad(tonumber(tool.modelYaw) or 0),
+						math.rad(tonumber(tool.modelRoll) or 0)
+					),
+				{
+					scale = tonumber(tool.modelScale) or 1,
+					canCollide = false,
+					canQuery = false,
+					castShadow = false,
+				}
+			)
+		end
 
 		ensureBoardSurface(
 			toolPart,
@@ -4891,6 +5167,12 @@ local function patchRuntimeMainfloor(mapId, mapClone)
 	if not mapClone or mapClone:GetAttribute(MAINFLOOR_PATCH_ATTR) == true then
 		return false
 	end
+	if STRICT_AUTHORED_MAP_RUNTIME then
+		if hasAuthoredOutdoorRuntime(mapClone) then
+			mapClone:SetAttribute(MAINFLOOR_PATCH_ATTR, true)
+		end
+		return false
+	end
 	if hasAuthoredOutdoorRuntime(mapClone) then
 		mapClone:SetAttribute(MAINFLOOR_PATCH_ATTR, true)
 		return false
@@ -4942,6 +5224,12 @@ end
 
 local function patchRuntimeBoundary(mapClone)
 	if not mapClone or mapClone:GetAttribute(BOUNDARY_PATCH_ATTR) == true then
+		return false
+	end
+	if STRICT_AUTHORED_MAP_RUNTIME then
+		if hasAuthoredOutdoorRuntime(mapClone) then
+			mapClone:SetAttribute(BOUNDARY_PATCH_ATTR, true)
+		end
 		return false
 	end
 	if hasAuthoredOutdoorRuntime(mapClone) then
@@ -5101,15 +5389,19 @@ local function removeDeprecatedPreparationStaging(mapClone, matchContext)
 	end
 
 	local removedAny = false
-	for _, folderName in ipairs({
-		PREPARATION_STAGING_FOLDER_NAME,
-		"PreparationStaging",
-	}) do
-		while true do
-			local folder = mapClone:FindFirstChild(folderName, true)
-			if not folder then
-				break
+	local deprecatedFolders = {}
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("Folder") then
+			local isDeprecatedLegacy = descendant.Name == "PreparationStaging"
+			local isSyntheticRuntime = descendant.Name == PREPARATION_STAGING_FOLDER_NAME
+				and not (descendant.Parent ~= nil and descendant.Parent.Name == "Runtime")
+			if isDeprecatedLegacy or isSyntheticRuntime then
+				deprecatedFolders[#deprecatedFolders + 1] = descendant
 			end
+		end
+	end
+	for _, folder in ipairs(deprecatedFolders) do
+		if folder.Parent ~= nil then
 			folder:Destroy()
 			removedAny = true
 		end
@@ -5139,10 +5431,12 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 
 	local didPatch = false
 	didPatch = removeDeprecatedPreparationStaging(mapClone, matchContext) or didPatch
-	didPatch = patchHauntedHouseScaffold(mapId, mapClone) or didPatch
-	didPatch = patchStudioMMNineteenScaffold(mapId, mapClone) or didPatch
-	didPatch = patchAbandonedPalaceScaffold(mapId, mapClone) or didPatch
-	didPatch = patchEmptyBuildingScaffold(mapId, mapClone) or didPatch
+	if not STRICT_AUTHORED_MAP_RUNTIME then
+		didPatch = patchHauntedHouseScaffold(mapId, mapClone) or didPatch
+		didPatch = patchStudioMMNineteenScaffold(mapId, mapClone) or didPatch
+		didPatch = patchAbandonedPalaceScaffold(mapId, mapClone) or didPatch
+		didPatch = patchEmptyBuildingScaffold(mapId, mapClone) or didPatch
+	end
 	didPatch = patchSecondFloor(mapClone) or didPatch
 	didPatch = patchLogicVolumes(mapClone) or didPatch
 	didPatch = patchMapMaterials(mapId, mapClone) or didPatch

@@ -6,6 +6,18 @@
 
 **⚠️ AI & DEVELOPERS:** This document is the SINGLE SOURCE OF TRUTH. All conflicting information in other files must defer to this specification.
 
+## 2026-04-26 Addendum - Runtime Spawn Authority + Visual-Only Lane Lock
+
+- Runtime spawn source-of-truth untuk 4 map canonical dikunci ke authored path:
+  - `ServerStorage.Maps.<Map>.<Map>.Runtime.PreparationStagingRuntime.PreparationSpawnArea`
+- Hardcoded fallback/recreate otomatis untuk spawn tidak boleh dipakai.
+- Runtime wajib fail-fast jika authored preparation spawn / entry door / boundary runtime tidak ada.
+- Boundary anti-staging untuk ghost dan trigger by-door tetap wajib ada di semua map canonical.
+- Eksekusi lane aktif saat ini untuk scope UI/GUI/UX adalah visual-only:
+  - tidak membuat sistem baru
+  - tidak membuat gameplay/economy architecture baru
+  - hanya polishing visual, readability, hierarchy, dan consistency.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:
