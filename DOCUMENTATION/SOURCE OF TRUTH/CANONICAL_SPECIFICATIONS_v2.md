@@ -107,6 +107,12 @@
 - Mobile close/float controls are tuned for clearer tap targets and text readability.
 - This addendum remains visual-only and does not alter gameplay logic, economy logic, or runtime systems.
 
+## 2026-04-26 Addendum - Visual Batch T18 Basic Header Compact Rhythm
+
+- `MainMenuUI` and `LeaderboardUI` mobile lanes now apply compact-header profile for title/close/status-badge sizing when viewport height is tight.
+- `LeaderboardUI` mobile action button typography is tuned specifically for compact readability.
+- This addendum remains visual-only and does not alter gameplay logic, economy logic, or runtime systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

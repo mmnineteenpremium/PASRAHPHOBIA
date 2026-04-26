@@ -244,6 +244,15 @@ Status ringkas batch T17:
 - kontrol `CloseButton`/`FloatButton` mobile dituning ukuran dan text-size untuk keterbacaan + tap target
 - tetap visual-only, tanpa perubahan logic gameplay/runtime
 
+[2026-04-26 NOTE - Visual Batch T18]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T18_BASIC_HEADER_COMPACT_RHYTHM_2026-04-26.md`
+
+Status ringkas batch T18:
+- `MainMenuUI` + `LeaderboardUI` mobile mendapat profile compact-header untuk title/badge/close saat viewport tinggi sempit
+- action button `LeaderboardUI` mobile dituning text-size khusus agar tetap jelas pada lane compact
+- tetap visual-only, tanpa perubahan logic runtime/gameplay
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

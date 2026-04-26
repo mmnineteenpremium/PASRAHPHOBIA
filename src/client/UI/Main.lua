@@ -12375,6 +12375,7 @@ function UISystem:_applyDeviceSizing()
 				local availableHeight = viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y)
 				local panelWidth = math.max(352, math.floor(availableWidth))
 				local panelHeight = isMenu and math.max(360, math.floor(availableHeight)) or math.max(560, math.floor(availableHeight))
+				local compactHeader = panelHeight <= (isMenu and 392 or 612)
 				window.Panel.AnchorPoint = Vector2.new(0, 0)
 				window.Panel.Position = UDim2.fromOffset(topLeftInset.X, topLeftInset.Y)
 				window.Panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
@@ -12382,15 +12383,15 @@ function UISystem:_applyDeviceSizing()
 
 				if window.Title then
 					setOffsetBounds(window.Title, 12, 10, panelWidth - 60, 26)
-					window.Title.TextSize = 20
+					window.Title.TextSize = compactHeader and 18 or 20
 				end
 				if window.CloseButton then
-					setOffsetBounds(window.CloseButton, panelWidth - 46, 10, 34, 30)
-					window.CloseButton.TextSize = 16
+					setOffsetBounds(window.CloseButton, panelWidth - 44, 10, compactHeader and 32 or 34, compactHeader and 28 or 30)
+					window.CloseButton.TextSize = compactHeader and 14 or 16
 				end
 				if window.StatusBadge then
-					setOffsetBounds(window.StatusBadge, 12, 44, 140, 24)
-					window.StatusBadge.TextSize = 12
+					setOffsetBounds(window.StatusBadge, 12, 44, compactHeader and 132 or 140, compactHeader and 22 or 24)
+					window.StatusBadge.TextSize = compactHeader and 11 or 12
 				end
 				if window.PrimaryLabel then
 					setOffsetBounds(window.PrimaryLabel, 12, 76, panelWidth - 24, isMenu and 34 or 38)
@@ -12459,6 +12460,8 @@ function UISystem:_applyDeviceSizing()
 					if button then
 						if profile.isMobile and guiName == "MainMenuUI" then
 							button.TextSize = math.max(11, profile:GetTextSize() - 7)
+						elseif profile.isMobile and guiName == "LeaderboardUI" then
+							button.TextSize = math.max(11, profile:GetTextSize() - 6)
 						else
 							button.TextSize = profile.isMobile and math.max(13, profile:GetTextSize() - 4) or math.max(12, profile:GetTextSize() - 5)
 						end

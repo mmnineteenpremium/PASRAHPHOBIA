@@ -68,6 +68,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - ritme header mobile lintas auxiliary (`StatusBadge`, `PrimaryLabel`, `SecondaryLabel`) disejajarkan agar hierarchy lebih konsisten.
   - kontrol `CloseButton` + `FloatButton` mobile dituning ukuran/text-size untuk tap-target dan readability yang lebih stabil.
   - tetap visual-only tanpa perubahan logic sistem/runtime.
+- Batch visual T18 untuk basic header compact rhythm sudah masuk:
+  - `MainMenuUI` dan `LeaderboardUI` mobile kini punya profile compact-header untuk title/badge/close agar top-bar tidak sesak.
+  - text-size action buttons `LeaderboardUI` mobile mendapat tuning khusus agar konsisten dengan lane compact.
+  - tetap visual-only tanpa perubahan logic gameplay/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
