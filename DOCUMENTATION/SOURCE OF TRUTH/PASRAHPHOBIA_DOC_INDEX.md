@@ -17163,3 +17163,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
 - ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 136. VISUAL BATCH T133 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM VI (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+- judul players tetap dipertahankan agar section break tetap jelas.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
