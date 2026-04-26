@@ -16272,3 +16272,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - bottom-gap list serta anchor offset action lane extra-compact dipangkas agar ritme vertikal panel lebih menyatu.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
 
+---
+
+# 50. VISUAL BATCH T47 ROOMBROWSER ACTION COLUMN GAP COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- gap horizontal antar tombol pasangan di action lane extra-compact dipadatkan untuk ritme kontrol yang lebih rapat.
+- lebar tombol pasangan dihitung ulang mengikuti gap baru agar komposisi kolom aksi tetap seimbang.
+- tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+

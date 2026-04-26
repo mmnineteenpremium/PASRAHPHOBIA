@@ -11271,6 +11271,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			local actionRowHeight = extraCompactMobile and 34 or 36
 			local joinHeight = extraCompactMobile and 38 or 40
 			local actionRowGap = extraCompactMobile and 4 or 6
+			local actionColumnGap = extraCompactMobile and 4 or 6
 			local roomListBottomGap = extraCompactMobile and 28 or 34
 			local roomListHeight = math.max(132, previewHeight - (joinHeight + actionRowHeight + roomListBottomGap))
 			local actionY = contentTop + roomListHeight + (extraCompactMobile and 16 or 18)
@@ -11279,10 +11280,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			setOffsetBounds(roomList, rightX, contentTop, rightWidth, roomListHeight)
 			setOffsetBounds(joinPassword, rightX, actionY - 42, rightWidth, extraCompactMobile and 30 or 32)
 			setOffsetBounds(queueButton, rightX, actionY, rightWidth, joinHeight)
-			setOffsetBounds(refreshButton, rightX, actionY + joinHeight + actionRowGap, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
-			setOffsetBounds(createRoomButton, rightX + math.floor((rightWidth - 6) * 0.5) + 6, actionY + joinHeight + actionRowGap, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
-			setOffsetBounds(quickClassicButton, rightX, actionY + joinHeight + actionRowHeight + (actionRowGap * 2), math.floor((rightWidth - 6) * 0.5), actionRowHeight)
-			setOffsetBounds(quickRankedButton, rightX + math.floor((rightWidth - 6) * 0.5) + 6, actionY + joinHeight + actionRowHeight + (actionRowGap * 2), math.floor((rightWidth - 6) * 0.5), actionRowHeight)
+			setOffsetBounds(refreshButton, rightX, actionY + joinHeight + actionRowGap, math.floor((rightWidth - actionColumnGap) * 0.5), actionRowHeight)
+			setOffsetBounds(createRoomButton, rightX + math.floor((rightWidth - actionColumnGap) * 0.5) + actionColumnGap, actionY + joinHeight + actionRowGap, math.floor((rightWidth - actionColumnGap) * 0.5), actionRowHeight)
+			setOffsetBounds(quickClassicButton, rightX, actionY + joinHeight + actionRowHeight + (actionRowGap * 2), math.floor((rightWidth - actionColumnGap) * 0.5), actionRowHeight)
+			setOffsetBounds(quickRankedButton, rightX + math.floor((rightWidth - actionColumnGap) * 0.5) + actionColumnGap, actionY + joinHeight + actionRowHeight + (actionRowGap * 2), math.floor((rightWidth - actionColumnGap) * 0.5), actionRowHeight)
 
 			local previewMapHeight = math.clamp(math.floor(previewHeight * 0.34), 108, 136)
 			setOffsetBounds(roomPreviewTitle, 12, 10, leftWidth - 24, 18)

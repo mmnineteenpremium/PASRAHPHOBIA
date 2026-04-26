@@ -1071,3 +1071,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser wide-compact content column now has extra-compact-specific transition spacing trim between room list and action lane.
 - Transition tuning is visual-only: extra-compact room-list bottom gap trim plus action-lane anchor offset trim for tighter vertical continuity.
 - No mode selection, room flow, or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T47 Action-Column Gap Compact
+
+- RoomBrowser action-lane paired buttons now have extra-compact-specific horizontal column-gap tuning.
+- Action-column tuning is visual-only: paired button widths recomputed with tighter extra-compact gap for consistent control rhythm.
+- No mode selection, room flow, or runtime behavior changes in this batch.
