@@ -62,6 +62,13 @@
 - Desktop lanes retain full detail copy for explanatory clarity.
 - This addendum remains visual-only and does not change economy, entitlement, or progression logic.
 
+## 2026-04-26 Addendum - Visual Batch T11 Shop Mobile Layout Stability
+
+- `ShopUI` mobile lane now has increased panel headroom and footer spacing to prevent overlap between title/filter/content/footer regions on compact viewports.
+- `ShopUI` mobile `ContentFrame` positioning and size are rebalanced to keep category lists readable after footer compaction changes from T10.
+- Mobile text sizing for `ShopUI` filter, secondary, and footer labels is tuned down for stability and readability on narrow resolutions.
+- This addendum remains visual-only and does not introduce new shop systems, currency systems, or runtime gameplay logic.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

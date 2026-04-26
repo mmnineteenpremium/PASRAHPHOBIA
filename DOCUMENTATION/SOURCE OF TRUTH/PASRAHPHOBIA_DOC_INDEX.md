@@ -181,6 +181,15 @@ Status ringkas batch T10:
 - footer mobile `ShopUI` dipadatkan per filter (`MM/PP/Robux/Owned`) dengan makna tetap sama
 - desktop copy detail tetap dipertahankan
 
+[2026-04-26 NOTE - Visual Batch T11]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T11_SHOP_MOBILE_LAYOUT_STABILITY_2026-04-26.md`
+
+Status ringkas batch T11:
+- panel `ShopUI` mobile ditambah headroom tinggi agar lane title, filter, dan footer tidak bertumpuk
+- area `ContentFrame` mobile `ShopUI` di-offset ulang supaya daftar tetap terbaca saat compact viewport
+- tuning text-size filter/secondary/footer khusus mobile menjaga keterbacaan tanpa ubah sistem/runtime logic
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

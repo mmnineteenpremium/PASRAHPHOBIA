@@ -40,6 +40,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - footer `Quick Menu` mobile disederhanakan ke format ringkas + build signature agar tidak overpadat.
   - footer `ShopUI` mobile dipadatkan per-filter (`MM/PP/Robux/Owned`) dengan arti tetap sama.
   - lane desktop tetap mempertahankan copy detail penuh.
+- Batch visual T11 untuk ShopUI mobile layout stability sudah masuk:
+  - tinggi panel mobile `ShopUI` ditambah agar area footer tidak menabrak konten saat copy state panjang.
+  - area `ContentFrame` + footer mobile diatur ulang spacing-nya untuk lane filter/item list.
+  - text size filter/secondary/footer `ShopUI` mobile diturunkan sedikit agar stabil di viewport sempit.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

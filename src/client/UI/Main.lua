@@ -12060,7 +12060,10 @@ function UISystem:_applyDeviceSizing()
 						width = math.min(availableWindowWidth, math.max(320, availableWindowWidth - 8))
 						height = math.min(
 							availableWindowHeight,
-							math.max(guiName == "RoyalPassUI" and 460 or 400, availableWindowHeight - 8)
+							math.max(
+								guiName == "RoyalPassUI" and 460 or (guiName == "ShopUI" and 430 or 400),
+								availableWindowHeight - 8
+							)
 						)
 					elseif guiName == "RoyalPassUI" and viewportSize.X <= 1280 then
 						width = math.min(viewportSize.X - 28, 436)
@@ -12079,8 +12082,15 @@ function UISystem:_applyDeviceSizing()
 						window.Panel.Position = UDim2.new(1, -(16 + bottomRightInset.X), 0.5, 0)
 					end
 					if profile.isMobile and window.FooterLabel then
-						window.FooterLabel.Position = UDim2.fromOffset(12, window.Panel.Size.Y.Offset - 48)
-						window.FooterLabel.Size = UDim2.new(1, -24, 0, 36)
+						local footerHeight = guiName == "ShopUI" and 50 or 36
+						local footerOffset = guiName == "ShopUI" and 62 or 48
+						window.FooterLabel.Position = UDim2.fromOffset(12, window.Panel.Size.Y.Offset - footerOffset)
+						window.FooterLabel.Size = UDim2.new(1, -24, 0, footerHeight)
+					end
+					if profile.isMobile and guiName == "ShopUI" and window.ContentFrame then
+						window.ContentFrame.Position = UDim2.fromOffset(12, 156)
+						window.ContentFrame.Size = UDim2.new(1, -24, 1, -236)
+						window.ContentFrame.ScrollBarThickness = 8
 					end
 				end
 				if window.PrimaryLabel then
@@ -12197,6 +12207,19 @@ function UISystem:_applyDeviceSizing()
 						if row.Button then
 							row.Button.TextSize = math.max(12, profile:GetTextSize() - 6)
 						end
+					end
+				end
+				if guiName == "ShopUI" and window.ShopFilterButtons then
+					for _, filterButton in pairs(window.ShopFilterButtons) do
+						if filterButton and filterButton:IsA("TextButton") then
+							filterButton.TextSize = profile.isMobile and math.max(9, profile:GetTextSize() - 9) or math.max(10, profile:GetTextSize() - 8)
+						end
+					end
+					if window.SecondaryLabel and profile.isMobile then
+						window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+					end
+					if window.FooterLabel and profile.isMobile then
+						window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
 					end
 				end
 			end
