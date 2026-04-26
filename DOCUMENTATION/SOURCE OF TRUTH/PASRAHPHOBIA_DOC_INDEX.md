@@ -16823,3 +16823,14 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk memberi ruang horizontal copy map.
 - perilaku truncation tetap dipertahankan agar keterbacaan tetap stabil di viewport sempit.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 105. VISUAL BATCH T102 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM VI (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+- hierarchy teks footer map dipertahankan agar readability metadata tetap stabil.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.

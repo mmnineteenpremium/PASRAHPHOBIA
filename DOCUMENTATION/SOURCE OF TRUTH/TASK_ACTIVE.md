@@ -403,7 +403,12 @@ Task aktif saat ini dikunci ke dua hal berikut:
 - Batch visual T101 untuk RoomBrowser map-mood-width-micro-trim-5 sudah masuk:
   - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk memberi ruang horizontal copy map.
   - perilaku truncation tetap dipertahankan agar keterbacaan tetap stabil di viewport sempit.
-  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.- Pending closure operasional (owner-manual lane):
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T102 untuk RoomBrowser map-footer-height-micro-trim-6 sudah masuk:
+  - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+  - ukuran teks footer tetap dipertahankan agar hierarchy copy map tetap stabil.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
 ## Runtime Authority Lock (Non-Negotiable)
