@@ -1953,3 +1953,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist top gap trim lane.
 - Player list starts slightly closer to the map preview while preserving hierarchy.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-27 Addendum - Visual Batch T179 Preview Playerlist Bottom Inset Trim X
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist bottom inset trim lane.
+- Player-card lane gains slightly more usable height while preserving panel balance.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
