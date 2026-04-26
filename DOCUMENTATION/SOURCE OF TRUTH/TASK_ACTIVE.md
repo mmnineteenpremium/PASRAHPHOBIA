@@ -648,6 +648,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - gap bawah room list dirapatkan tipis lanjutan untuk mengurangi slack sebelum stack aksi.
   - flow daftar ke kontrol bawah tetap dipertahankan agar pemisahan section masih terbaca.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T163 untuk RoomBrowser roombrowser-action-column-gap-trim-7 sudah masuk:
+  - gap horizontal antar tombol aksi dua-kolom dirapatkan tipis lanjutan untuk reclaim lebar tombol.
+  - hierarchy aksi tetap dipertahankan agar layout bawah tetap cepat dipindai di mobile.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
