@@ -16452,3 +16452,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - maksimum tinggi Map Preview dipadatkan tipis untuk menjaga balance panel saat viewport pendek.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 68. VISUAL BATCH T65 ROOMBROWSER PREVIEW PLAYER CARD PADDING MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- cell padding vertikal list pemain preview lane extra-compact dipadatkan tipis.
+- tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.

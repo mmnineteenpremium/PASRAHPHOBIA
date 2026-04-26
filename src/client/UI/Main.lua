@@ -11322,7 +11322,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			if roomPreviewPlayersLayout then
 				roomPreviewPlayersLayout.FillDirectionMaxCells = 1
 				roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(leftWidth - 36, 72)
-				roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(6, extraCompactMobile and 4 or 6)
+				roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(6, extraCompactMobile and 3 or 6)
 			end
 		else
 		local previewWidth = panelWidth - headerPadding * 2
@@ -11386,7 +11386,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		if roomPreviewPlayersLayout then
 			roomPreviewPlayersLayout.FillDirectionMaxCells = 1
 			roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(previewWidth - 36, profile.isMobile and 82 or 74)
-			roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(6, extraCompactMobile and 4 or 6)
+			roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(6, extraCompactMobile and 3 or 6)
 		end
 		end
 	else
