@@ -12319,33 +12319,40 @@ function UISystem:_applyDeviceSizing()
 				if window.SecondaryLabel then
 					setOffsetBounds(window.SecondaryLabel, 12, isMenu and 112 or 118, panelWidth - 24, isMenu and 28 or 34)
 				end
-				if isMenu then
-					local buttonWidth = math.floor((panelWidth - 36) * 0.5)
-					local buttonHeight = panelHeight <= 392 and 46 or 54
-					local footerHeight = panelHeight <= 392 and 40 or 52
-					local footerY = panelHeight - footerHeight - 10
-					local graphicsY = footerY - buttonHeight - 10
-					local rowTwoY = graphicsY - buttonHeight - 10
-					local rowOneY = rowTwoY - buttonHeight - 10
-					local rightX = 12 + buttonWidth + 12
-					if window.RoomBrowserButton then
-						setOffsetBounds(window.RoomBrowserButton, 12, rowOneY, buttonWidth, buttonHeight)
-					end
-					if window.ProfileButton then
-						setOffsetBounds(window.ProfileButton, rightX, rowOneY, buttonWidth, buttonHeight)
-					end
-					if window.ShopButton then
-						setOffsetBounds(window.ShopButton, 12, rowTwoY, buttonWidth, buttonHeight)
-					end
-					if window.RankButton then
-						setOffsetBounds(window.RankButton, rightX, rowTwoY, buttonWidth, buttonHeight)
-					end
-					if window.GraphicsButton then
-						setOffsetBounds(window.GraphicsButton, 12, graphicsY, panelWidth - 24, buttonHeight)
-					end
-					if window.FooterLabel then
-						setOffsetBounds(window.FooterLabel, 12, footerY, panelWidth - 24, footerHeight)
-					end
+					if isMenu then
+						local compactMenu = panelHeight <= 392
+						local buttonWidth = math.floor((panelWidth - 36) * 0.5)
+						local rowGap = compactMenu and 8 or 10
+						local buttonHeight = compactMenu and 44 or 54
+						local footerHeight = compactMenu and 46 or 52
+						local footerY = panelHeight - footerHeight - (compactMenu and 8 or 10)
+						local graphicsY = footerY - buttonHeight - rowGap
+						local rowTwoY = graphicsY - buttonHeight - rowGap
+						local rowOneY = rowTwoY - buttonHeight - rowGap
+						local rightX = 12 + buttonWidth + 12
+						if window.RoomBrowserButton then
+							setOffsetBounds(window.RoomBrowserButton, 12, rowOneY, buttonWidth, buttonHeight)
+							window.RoomBrowserButton.TextSize = compactMenu and 11 or 13
+						end
+						if window.ProfileButton then
+							setOffsetBounds(window.ProfileButton, rightX, rowOneY, buttonWidth, buttonHeight)
+							window.ProfileButton.TextSize = compactMenu and 11 or 13
+						end
+						if window.ShopButton then
+							setOffsetBounds(window.ShopButton, 12, rowTwoY, buttonWidth, buttonHeight)
+							window.ShopButton.TextSize = compactMenu and 11 or 13
+						end
+						if window.RankButton then
+							setOffsetBounds(window.RankButton, rightX, rowTwoY, buttonWidth, buttonHeight)
+							window.RankButton.TextSize = compactMenu and 11 or 13
+						end
+						if window.GraphicsButton then
+							setOffsetBounds(window.GraphicsButton, 12, graphicsY, panelWidth - 24, buttonHeight)
+							window.GraphicsButton.TextSize = compactMenu and 11 or 13
+						end
+						if window.FooterLabel then
+							setOffsetBounds(window.FooterLabel, 12, footerY, panelWidth - 24, footerHeight)
+						end
 					else
 						local contentHeight = math.max(248, panelHeight - 276)
 						local actionY = panelHeight - 86
@@ -12371,7 +12378,11 @@ function UISystem:_applyDeviceSizing()
 			if window.ActionButtons then
 				for _, button in ipairs(window.ActionButtons) do
 					if button then
-						button.TextSize = profile.isMobile and math.max(13, profile:GetTextSize() - 4) or math.max(12, profile:GetTextSize() - 5)
+						if profile.isMobile and guiName == "MainMenuUI" then
+							button.TextSize = math.max(11, profile:GetTextSize() - 7)
+						else
+							button.TextSize = profile.isMobile and math.max(13, profile:GetTextSize() - 4) or math.max(12, profile:GetTextSize() - 5)
+						end
 					end
 				end
 			end

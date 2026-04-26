@@ -208,6 +208,15 @@ Status ringkas batch T13:
 - layout `ContentFrame`, row aksi bawah, dan footer mobile `LeaderboardUI` diseimbangkan untuk mengurangi tabrakan area bawah
 - tetap visual-only, tanpa perubahan sistem rank/progression/runtime
 
+[2026-04-26 NOTE - Visual Batch T14]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T14_MAINMENU_MOBILE_STACK_DENSITY_2026-04-26.md`
+
+Status ringkas batch T14:
+- `MainMenuUI` mobile compact lane mendapat tuning ritme stack vertikal (gap/tombol/footer) agar lebih stabil di layar pendek
+- text-size tombol aksi utama dituning khusus compact mobile untuk menjaga keterbacaan tanpa terasa padat
+- tetap visual-only, tanpa perubahan flow menu atau logic runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

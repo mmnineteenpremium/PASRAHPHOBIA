@@ -82,6 +82,12 @@
 - `LeaderboardUI` mobile content/action/footer spacing is rebalanced to reduce lower-panel crowding and improve visual hierarchy.
 - This addendum remains visual-only and does not alter rank calculation logic, progression logic, or runtime gameplay systems.
 
+## 2026-04-26 Addendum - Visual Batch T14 MainMenu Mobile Stack Density
+
+- `MainMenuUI` mobile compact lane now has dedicated stack rhythm tuning (row gap, button height, footer spacing) for narrow-height screens.
+- Main menu action button text sizes are tuned in compact mobile mode to preserve readability under dense vertical composition.
+- This addendum remains visual-only and does not alter menu flow logic, system architecture, or runtime gameplay behavior.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

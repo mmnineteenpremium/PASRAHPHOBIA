@@ -52,6 +52,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - text sizing mobile `Primary/Secondary/Footer` pada `LeaderboardUI` dituning agar copy snapshot tetap terbaca saat padat.
   - `ContentFrame` + action-row + footer `LeaderboardUI` mobile diatur ulang untuk mengurangi tabrakan area bawah panel.
   - semua perubahan tetap visual-only tanpa ubah logic rank/progression.
+- Batch visual T14 untuk MainMenuUI mobile stack density sudah masuk:
+  - ritme vertical stack tombol + footer `MainMenuUI` mobile dipadatkan terkontrol khusus viewport tinggi sempit.
+  - text-size tombol aksi `Room/Profile/Shop/Rank/Graphics` dituning khusus lane compact agar tidak sesak.
+  - perubahan tetap murni visual tanpa perubahan logic sistem/menu flow.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
