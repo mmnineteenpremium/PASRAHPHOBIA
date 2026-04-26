@@ -268,6 +268,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - anchor vertikal Map Preview Stats dipoles tipis pada lane compact untuk alignment footer-strip yang lebih rapi.
   - ukuran teks stats dipertahankan, hanya posisi vertikal yang disesuaikan.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T68 untuk RoomBrowser roombrowser-map-footer-y-align-trim sudah masuk:
+  - anchor Y footer Map Preview lane extra-compact dipadatkan tipis untuk alignment strip bawah yang lebih rapat.
+  - height dan text-size footer tetap sehingga keterbacaan terjaga.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

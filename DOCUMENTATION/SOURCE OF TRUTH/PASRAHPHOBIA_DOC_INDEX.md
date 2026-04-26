@@ -16482,3 +16482,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - anchor vertikal Map Preview Stats dipoles tipis pada lane compact untuk alignment footer-strip yang lebih rapi.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 71. VISUAL BATCH T68 ROOMBROWSER MAP FOOTER Y ALIGN MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor Y footer Map Preview lane extra-compact dipadatkan tipis untuk alignment strip bawah yang lebih rapat.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
