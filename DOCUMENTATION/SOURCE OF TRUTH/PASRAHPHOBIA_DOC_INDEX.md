@@ -17283,3 +17283,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
 - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 151. VISUAL BATCH T148 ROOMBROWSER ROOMLIST MIN HEIGHT TRIM VI (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+- struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.

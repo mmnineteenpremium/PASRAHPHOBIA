@@ -588,6 +588,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
   - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T148 untuk RoomBrowser roombrowser-roomlist-min-height-trim-6 sudah masuk:
+  - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+  - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
