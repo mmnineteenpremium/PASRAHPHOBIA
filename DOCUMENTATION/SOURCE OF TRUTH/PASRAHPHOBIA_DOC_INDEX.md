@@ -16092,3 +16092,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - ukuran `PasswordCard`, title/input, dan tombol `JOIN ROOM/BATAL` dipadatkan agar tetap terbaca di mobile pendek.
 - tidak ada perubahan logic join/password/runtime, sesuai lock visual-only.
 
+---
+
+# 32. VISUAL BATCH T29 KICK NOTICE COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- `KickNoticeModal` kini memiliki lane `compact` dan `extra-compact` berdasarkan viewport.
+- ukuran `KickNoticeCard`, blok pesan, dan tombol `OK` dipadatkan agar alert tetap jelas di mobile pendek.
+- tidak ada perubahan logic kick handling/runtime, sesuai lock visual-only.
+

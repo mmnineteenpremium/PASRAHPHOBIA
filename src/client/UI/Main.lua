@@ -17088,6 +17088,62 @@ function UISystem:_ensureRoomBrowserGui()
 	kickNoticeOk.ZIndex = 30
 	kickNoticeOk.Parent = kickNoticeCard
 
+	local function updateKickNoticeLayout()
+		local viewport = Vector2.new(1920, 1080)
+		local camera = Workspace.CurrentCamera
+		if camera and typeof(camera.ViewportSize) == "Vector2" then
+			viewport = camera.ViewportSize
+		end
+
+		local cardWidth = 320
+		local cardHeight = 140
+		local textY = 20
+		local textHeight = 50
+		local textSize = 20
+		local buttonY = 86
+		local buttonWidth = 144
+		local buttonHeight = 34
+		local buttonTextSize = 12
+
+		local compactKickNotice = viewport.X <= 860 or viewport.Y <= 560
+		local extraCompactKickNotice = viewport.X <= 700 or viewport.Y <= 440
+		if extraCompactKickNotice then
+			cardWidth = 284
+			cardHeight = 126
+			textY = 14
+			textHeight = 42
+			textSize = 16
+			buttonY = 76
+			buttonWidth = 128
+			buttonHeight = 28
+			buttonTextSize = 11
+		elseif compactKickNotice then
+			cardWidth = 304
+			cardHeight = 132
+			textY = 16
+			textHeight = 46
+			textSize = 18
+			buttonY = 80
+			buttonWidth = 136
+			buttonHeight = 30
+			buttonTextSize = 11
+		end
+
+		local cardPadding = 12
+		local contentWidth = cardWidth - (cardPadding * 2)
+		kickNoticeCard.Size = UDim2.fromOffset(cardWidth, cardHeight)
+		kickNoticeText.Position = UDim2.fromOffset(cardPadding, textY)
+		kickNoticeText.Size = UDim2.fromOffset(contentWidth, textHeight)
+		kickNoticeText.TextSize = textSize
+		kickNoticeOk.Position = UDim2.fromOffset(math.floor((cardWidth - buttonWidth) * 0.5), buttonY)
+		kickNoticeOk.Size = UDim2.fromOffset(buttonWidth, buttonHeight)
+		kickNoticeOk.TextSize = buttonTextSize
+	end
+	updateKickNoticeLayout()
+	if Workspace.CurrentCamera then
+		table.insert(self._connections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateKickNoticeLayout))
+	end
+
 	local refreshBtn = Instance.new("TextButton")
 	refreshBtn.Name = "RefreshButton"
 	refreshBtn.Position = UDim2.fromOffset(149, 456)

@@ -112,6 +112,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `PasswordModal` kini memiliki lane `compact` dan `extra-compact` berbasis viewport pada `PasswordCard`.
   - hierarchy title/input/button dipadatkan (card size, field height, button row rhythm, typography) agar tetap nyaman di mobile pendek.
   - tetap visual-only tanpa perubahan logic join-room/password/runtime.
+- Batch visual T29 untuk RoomBrowser kick notice compact sudah masuk:
+  - `KickNoticeModal` kini memiliki lane `compact` dan `extra-compact` berbasis viewport pada `KickNoticeCard`.
+  - hierarchy pesan + tombol `OK` dipadatkan (card bounds, text block, button sizing/typography) agar alert tetap jelas di mobile pendek.
+  - tetap visual-only tanpa perubahan logic kick handling/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

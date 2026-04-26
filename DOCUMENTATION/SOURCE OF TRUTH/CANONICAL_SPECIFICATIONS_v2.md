@@ -963,3 +963,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser `PasswordModal` now has explicit `compact` and `extra-compact` visual lanes for constrained mobile viewports.
 - Password modal hierarchy tuning is visual-only: card bounds, title/input/button spacing, and typography sizing.
 - No join-room/password validation/runtime behavior changes in this batch; runtime-authority lock remains unchanged.
+
+## 2026-04-26 Addendum - Visual Batch T29 Kick Notice Compact
+
+- RoomBrowser `KickNoticeModal` now has explicit `compact` and `extra-compact` visual lanes for constrained mobile viewports.
+- Kick notice hierarchy tuning is visual-only: card bounds, message block spacing, and `OK` button sizing/typography.
+- No kick handling/runtime behavior changes in this batch; runtime-authority lock remains unchanged.
