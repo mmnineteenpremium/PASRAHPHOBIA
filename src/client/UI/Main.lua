@@ -11275,7 +11275,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 			setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, leftWidth, previewHeight)
 			setOffsetBounds(roomList, rightX, contentTop, rightWidth, roomListHeight)
-			setOffsetBounds(joinPassword, rightX, actionY - 42, rightWidth, 32)
+			setOffsetBounds(joinPassword, rightX, actionY - 42, rightWidth, extraCompactMobile and 30 or 32)
 			setOffsetBounds(queueButton, rightX, actionY, rightWidth, joinHeight)
 			setOffsetBounds(refreshButton, rightX, actionY + joinHeight + 6, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
 			setOffsetBounds(createRoomButton, rightX + math.floor((rightWidth - 6) * 0.5) + 6, actionY + joinHeight + 6, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
@@ -11329,7 +11329,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 		setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, previewWidth, previewHeight)
 		setOffsetBounds(roomList, headerPadding, roomListY, previewWidth, roomListHeight)
-		setOffsetBounds(joinPassword, headerPadding, actionY - (profile.isMobile and 46 or 42), previewWidth, profile.isMobile and 38 or 34)
+		setOffsetBounds(joinPassword, headerPadding, actionY - (profile.isMobile and 46 or 42), previewWidth, extraCompactMobile and 34 or (profile.isMobile and 38 or 34))
 		setOffsetBounds(queueButton, headerPadding, actionY, previewWidth, profile.isMobile and 46 or 42)
 		setOffsetBounds(quickClassicButton, headerPadding, actionY + (profile.isMobile and 50 or 46), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
 		setOffsetBounds(quickRankedButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, actionY + (profile.isMobile and 50 or 46), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
@@ -11379,7 +11379,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 		setOffsetBounds(roomList, headerPadding, contentTop, listWidth, roomListHeight)
 		setOffsetBounds(roomPreviewPanel, previewX, contentTop, previewWidth, panelHeight - contentTop - headerPadding)
-		setOffsetBounds(joinPassword, headerPadding, actionY - 40, listWidth, 30)
+		setOffsetBounds(joinPassword, headerPadding, actionY - 40, listWidth, extraCompactMobile and 28 or 30)
 		setOffsetBounds(queueButton, headerPadding, actionY, listWidth, 40)
 		setOffsetBounds(quickClassicButton, headerPadding, actionY + 44, math.floor((listWidth - 6) * 0.5), 38)
 		setOffsetBounds(quickRankedButton, headerPadding + math.floor((listWidth - 6) * 0.5) + 6, actionY + 44, math.floor((listWidth - 6) * 0.5), 38)
@@ -11437,6 +11437,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 	if joinPassword then
 		joinPassword.TextSize = extraCompactMobile and 13 or (profile.isMobile and 15 or (isCompact and 14 or 12))
+		joinPassword.PlaceholderText = extraCompactMobile and "PWD Join (4 digit)" or "Password Join (4 digit)"
 	end
 	if refreshButton then
 		refreshButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 12))
@@ -19570,3 +19571,4 @@ function UISystem:RoomBrowserRespondRoomInvite(inviteId, accept)
 end
 
 return setmetatable({}, UISystem)
+

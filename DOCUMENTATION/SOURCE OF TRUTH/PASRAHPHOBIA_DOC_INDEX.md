@@ -16122,3 +16122,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - placeholder field dipersingkat pada lane extra-compact agar tetap terbaca di viewport pendek.
 - tidak ada perubahan logic host controls/kick/password/runtime, sesuai lock visual-only.
 
+---
+
+# 35. VISUAL BATCH T32 JOIN PASSWORD COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- field `JoinPassword` mendapat tuning tinggi field di lane compact/extra-compact.
+- placeholder `JoinPassword` dipersingkat pada lane extra-compact agar tetap terbaca.
+- tidak ada perubahan logic join-room/password/runtime, sesuai lock visual-only.
+

@@ -981,3 +981,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser compact host-control row for `SetPassword` and `Kick` now has extra-compact-specific inline field/button sizing.
 - Inline control tuning is visual-only: right action width, field height rhythm, and extra-compact placeholder shortening for readability.
 - No host-control logic, password submission flow, or kick handling/runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T32 Join Password Compact
+
+- RoomBrowser `JoinPassword` field now has compact-tuned height in constrained viewport lanes.
+- Join-password tuning is visual-only: field height rhythm plus extra-compact placeholder shortening for readability.
+- No room-join/password validation/runtime behavior changes in this batch.

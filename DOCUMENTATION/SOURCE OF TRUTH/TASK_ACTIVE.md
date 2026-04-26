@@ -124,6 +124,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - baris inline `SetPassword` dan `Kick` pada layout compact kini punya lebar tombol kanan + tinggi field khusus lane extra-compact.
   - placeholder field dipersingkat pada lane extra-compact untuk menjaga keterbacaan tanpa overflow.
   - tetap visual-only tanpa perubahan logic host controls/kick/password/runtime.
+- Batch visual T32 untuk RoomBrowser join-password compact sudah masuk:
+  - field `JoinPassword` di lane compact/extra-compact mendapat tuning tinggi field agar ritme action stack lebih rapat.
+  - placeholder `JoinPassword` dipersingkat pada lane extra-compact untuk mencegah clipping teks.
+  - tetap visual-only tanpa perubahan logic join-room/password/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
