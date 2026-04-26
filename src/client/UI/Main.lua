@@ -11267,9 +11267,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			local rightX = headerPadding + leftWidth + columnGap
 			local rightWidth = panelWidth - rightX - headerPadding
 			local previewHeight = panelHeight - contentTop - headerPadding
-			local actionRowHeight = 36
-			local joinHeight = 40
-			local roomListBottomGap = 34
+			local actionRowHeight = extraCompactMobile and 34 or 36
+			local joinHeight = extraCompactMobile and 38 or 40
+			local actionRowGap = extraCompactMobile and 4 or 6
+			local roomListBottomGap = extraCompactMobile and 30 or 34
 			local roomListHeight = math.max(132, previewHeight - (joinHeight + actionRowHeight + roomListBottomGap))
 			local actionY = contentTop + roomListHeight + 18
 
@@ -11277,10 +11278,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			setOffsetBounds(roomList, rightX, contentTop, rightWidth, roomListHeight)
 			setOffsetBounds(joinPassword, rightX, actionY - 42, rightWidth, extraCompactMobile and 30 or 32)
 			setOffsetBounds(queueButton, rightX, actionY, rightWidth, joinHeight)
-			setOffsetBounds(refreshButton, rightX, actionY + joinHeight + 6, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
-			setOffsetBounds(createRoomButton, rightX + math.floor((rightWidth - 6) * 0.5) + 6, actionY + joinHeight + 6, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
-			setOffsetBounds(quickClassicButton, rightX, actionY + joinHeight + actionRowHeight + 12, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
-			setOffsetBounds(quickRankedButton, rightX + math.floor((rightWidth - 6) * 0.5) + 6, actionY + joinHeight + actionRowHeight + 12, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
+			setOffsetBounds(refreshButton, rightX, actionY + joinHeight + actionRowGap, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
+			setOffsetBounds(createRoomButton, rightX + math.floor((rightWidth - 6) * 0.5) + 6, actionY + joinHeight + actionRowGap, math.floor((rightWidth - 6) * 0.5), actionRowHeight)
+			setOffsetBounds(quickClassicButton, rightX, actionY + joinHeight + actionRowHeight + (actionRowGap * 2), math.floor((rightWidth - 6) * 0.5), actionRowHeight)
+			setOffsetBounds(quickRankedButton, rightX + math.floor((rightWidth - 6) * 0.5) + 6, actionY + joinHeight + actionRowHeight + (actionRowGap * 2), math.floor((rightWidth - 6) * 0.5), actionRowHeight)
 
 			local previewMapHeight = math.clamp(math.floor(previewHeight * 0.34), 108, 136)
 			setOffsetBounds(roomPreviewTitle, 12, 10, leftWidth - 24, 18)
@@ -11329,12 +11330,16 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 		setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, previewWidth, previewHeight)
 		setOffsetBounds(roomList, headerPadding, roomListY, previewWidth, roomListHeight)
+		local queueHeight = extraCompactMobile and 42 or (profile.isMobile and 46 or 42)
+		local stackButtonHeight = extraCompactMobile and 36 or (profile.isMobile and 40 or 36)
+		local stackFirstRowY = actionY + (extraCompactMobile and 46 or (profile.isMobile and 50 or 46))
+		local stackSecondRowY = actionY + (extraCompactMobile and 86 or (profile.isMobile and 94 or 86))
 		setOffsetBounds(joinPassword, headerPadding, actionY - (profile.isMobile and 46 or 42), previewWidth, extraCompactMobile and 34 or (profile.isMobile and 38 or 34))
-		setOffsetBounds(queueButton, headerPadding, actionY, previewWidth, profile.isMobile and 46 or 42)
-		setOffsetBounds(quickClassicButton, headerPadding, actionY + (profile.isMobile and 50 or 46), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
-		setOffsetBounds(quickRankedButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, actionY + (profile.isMobile and 50 or 46), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
-		setOffsetBounds(refreshButton, headerPadding, actionY + (profile.isMobile and 94 or 86), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
-		setOffsetBounds(createRoomButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, actionY + (profile.isMobile and 94 or 86), math.floor((previewWidth - 6) * 0.5), profile.isMobile and 40 or 36)
+		setOffsetBounds(queueButton, headerPadding, actionY, previewWidth, queueHeight)
+		setOffsetBounds(quickClassicButton, headerPadding, stackFirstRowY, math.floor((previewWidth - 6) * 0.5), stackButtonHeight)
+		setOffsetBounds(quickRankedButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, stackFirstRowY, math.floor((previewWidth - 6) * 0.5), stackButtonHeight)
+		setOffsetBounds(refreshButton, headerPadding, stackSecondRowY, math.floor((previewWidth - 6) * 0.5), stackButtonHeight)
+		setOffsetBounds(createRoomButton, headerPadding + math.floor((previewWidth - 6) * 0.5) + 6, stackSecondRowY, math.floor((previewWidth - 6) * 0.5), stackButtonHeight)
 
 		local previewMapHeight = math.clamp(math.floor(previewHeight * (profile.isMobile and 0.43 or 0.45)), profile.isMobile and 120 or 112, profile.isMobile and 144 or 136)
 		setOffsetBounds(roomPreviewTitle, 12, 10, previewWidth - 24, profile.isMobile and 20 or 18)
@@ -11440,19 +11445,19 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		joinPassword.PlaceholderText = extraCompactMobile and "PWD Join (4 digit)" or "Password Join (4 digit)"
 	end
 	if refreshButton then
-		refreshButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 12))
+		refreshButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 14 or (isCompact and 13 or 12))
 	end
 	if createRoomButton then
-		createRoomButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 12))
+		createRoomButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 14 or (isCompact and 13 or 12))
 	end
 	if queueButton then
-		queueButton.TextSize = extraCompactMobile and 13 or (profile.isMobile and 15 or (isCompact and 14 or 12))
+		queueButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 15 or (isCompact and 14 or 12))
 	end
 	if quickClassicButton then
-		quickClassicButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 11))
+		quickClassicButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 14 or (isCompact and 13 or 11))
 	end
 	if quickRankedButton then
-		quickRankedButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 11))
+		quickRankedButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 14 or (isCompact and 13 or 11))
 	end
 
 	if roomPanel then

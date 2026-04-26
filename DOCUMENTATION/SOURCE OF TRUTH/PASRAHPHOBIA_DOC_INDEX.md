@@ -16132,3 +16132,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - placeholder `JoinPassword` dipersingkat pada lane extra-compact agar tetap terbaca.
 - tidak ada perubahan logic join-room/password/runtime, sesuai lock visual-only.
 
+---
+
+# 36. VISUAL BATCH T33 ACTION STACK COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- block action stack (`Queue`, `Quick Classic`, `Quick Ranked`, `Refresh`, `Create Room`) dipadatkan untuk lane compact/extra-compact.
+- tinggi tombol, jarak antar row, dan text-size extra-compact dituning agar block aksi tetap jelas di viewport pendek.
+- tidak ada perubahan logic matchmaking/room actions/runtime, sesuai lock visual-only.
+
