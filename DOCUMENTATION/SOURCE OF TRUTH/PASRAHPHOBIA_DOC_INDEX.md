@@ -16472,3 +16472,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - lebar cell pemain preview lane compact direbalance tipis untuk align dengan density terbaru.
 - tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 70. VISUAL BATCH T67 ROOMBROWSER MAP STATS ANCHOR MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor vertikal Map Preview Stats dipoles tipis pada lane compact untuk alignment footer-strip yang lebih rapi.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.

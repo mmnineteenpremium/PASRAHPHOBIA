@@ -264,6 +264,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - lebar cell pemain preview lane compact direbalance tipis untuk align dengan density terbaru.
   - tinggi cell tetap, perubahan fokus ke horizontal breathing room.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T67 untuk RoomBrowser roombrowser-map-stats-anchor-trim sudah masuk:
+  - anchor vertikal Map Preview Stats dipoles tipis pada lane compact untuk alignment footer-strip yang lebih rapi.
+  - ukuran teks stats dipertahankan, hanya posisi vertikal yang disesuaikan.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
