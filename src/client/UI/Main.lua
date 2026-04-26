@@ -11832,22 +11832,40 @@ function UISystem:_applyDeviceSizing()
 				lobby.BasicRoomPill.Size = UDim2.fromOffset(96, 16)
 			end
 		end
-		lobby.BasicOpenRoomBrowserButton.TextSize = mobileLikeLobby and math.max(15, profile:GetTextSize() - 1) or math.max(14, profile:GetTextSize() - 2)
-		if lobby.BasicProfileButton then
-			lobby.BasicProfileButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
-		end
-		if lobby.BasicShopButton then
-			lobby.BasicShopButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
-		end
-		if lobby.BasicRoyalPassButton then
-			lobby.BasicRoyalPassButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
-		end
-		if lobby.BasicMenuButton then
-			lobby.BasicMenuButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
-		end
-		if lobby.BasicRankButton then
-			lobby.BasicRankButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
-		end
+			lobby.BasicOpenRoomBrowserButton.TextSize = mobileLikeLobby and math.max(15, profile:GetTextSize() - 1) or math.max(14, profile:GetTextSize() - 2)
+			if compactLandscapeLobby and lobby.BasicOpenRoomBrowserButton then
+				lobby.BasicOpenRoomBrowserButton.TextSize = math.max(12, profile:GetTextSize() - 5)
+			end
+			if lobby.BasicProfileButton then
+				lobby.BasicProfileButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+				if compactLandscapeLobby then
+					lobby.BasicProfileButton.TextSize = math.max(11, profile:GetTextSize() - 6)
+				end
+			end
+			if lobby.BasicShopButton then
+				lobby.BasicShopButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+				if compactLandscapeLobby then
+					lobby.BasicShopButton.TextSize = math.max(11, profile:GetTextSize() - 6)
+				end
+			end
+			if lobby.BasicRoyalPassButton then
+				lobby.BasicRoyalPassButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+				if compactLandscapeLobby then
+					lobby.BasicRoyalPassButton.TextSize = math.max(11, profile:GetTextSize() - 6)
+				end
+			end
+			if lobby.BasicMenuButton then
+				lobby.BasicMenuButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+				if compactLandscapeLobby then
+					lobby.BasicMenuButton.TextSize = math.max(11, profile:GetTextSize() - 6)
+				end
+			end
+			if lobby.BasicRankButton then
+				lobby.BasicRankButton.TextSize = mobileLikeLobby and math.max(14, profile:GetTextSize() - 2) or math.max(13, profile:GetTextSize() - 4)
+				if compactLandscapeLobby then
+					lobby.BasicRankButton.TextSize = math.max(11, profile:GetTextSize() - 6)
+				end
+			end
 		if lobby.BasicPrimaryLabel then
 			lobby.BasicPrimaryLabel.TextSize = compactLandscapeLobby and 12 or math.max(14, profile:GetTextSize() - 3)
 		end
@@ -11857,9 +11875,9 @@ function UISystem:_applyDeviceSizing()
 		if lobby.BasicHintLabel then
 			lobby.BasicHintLabel.TextSize = compactLandscapeLobby and math.max(9, profile:GetTextSize() - 8) or math.max(10, profile:GetTextSize() - 7)
 		end
-		if lobby.BasicStatusBadge then
-			lobby.BasicStatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
-		end
+			if lobby.BasicStatusBadge then
+				lobby.BasicStatusBadge.TextSize = compactLandscapeLobby and math.max(10, profile:GetTextSize() - 8) or math.max(11, profile:GetTextSize() - 7)
+			end
 	end
 
 	local match = self._uxWidgets.match
@@ -11947,24 +11965,25 @@ function UISystem:_applyDeviceSizing()
 			match.SummaryFrame.Position = UDim2.fromOffset(12, summaryY)
 			match.SummaryFrame.Size = UDim2.new(1, -24, 0, math.max(152, summaryHeight))
 		end
-		if match.BasicHideButton then
-			match.BasicHideButton.Position = UDim2.fromOffset(12, bottomActionY)
-			match.BasicHideButton.Size = UDim2.fromOffset(matchCompact and 156 or 144, matchCompact and 38 or 40)
-			match.BasicHideButton.TextSize = math.max(12, profile:GetTextSize() - 4)
-		end
+			if match.BasicHideButton then
+				match.BasicHideButton.Position = UDim2.fromOffset(12, bottomActionY)
+				match.BasicHideButton.Size = UDim2.fromOffset(matchCompact and 156 or 144, matchCompact and 38 or 40)
+				match.BasicHideButton.TextSize = matchCompact and math.max(11, profile:GetTextSize() - 6) or math.max(12, profile:GetTextSize() - 4)
+			end
 		if match.BasicFooterLabel then
 			match.BasicFooterLabel.Position = UDim2.fromOffset(footerX, bottomActionY)
 			match.BasicFooterLabel.Size = UDim2.fromOffset(math.max(124, footerWidth), matchCompact and 38 or 40)
 		end
-		if match.BasicCloseButton then
-			match.BasicCloseButton.Position = UDim2.new(1, -10, 0, 8)
-			match.BasicCloseButton.Size = UDim2.fromOffset(matchCompact and 30 or 28, matchCompact and 30 or 28)
-		end
+			if match.BasicCloseButton then
+				match.BasicCloseButton.Position = UDim2.new(1, -10, 0, 8)
+				match.BasicCloseButton.Size = UDim2.fromOffset(matchCompact and 30 or 28, matchCompact and 30 or 28)
+				match.BasicCloseButton.TextSize = matchCompact and math.max(12, profile:GetTextSize() - 6) or 14
+			end
 		match.BasicPrimaryLabel.TextSize = profile.isMobile and 12 or math.max(16, profile:GetTextSize())
 		match.BasicSecondaryLabel.TextSize = profile.isMobile and 10 or math.max(13, profile:GetTextSize() - 2)
-		if match.BasicFooterLabel then
-			match.BasicFooterLabel.TextSize = math.max(12, profile:GetTextSize() - 3)
-		end
+			if match.BasicFooterLabel then
+				match.BasicFooterLabel.TextSize = matchCompact and math.max(11, profile:GetTextSize() - 5) or math.max(12, profile:GetTextSize() - 3)
+			end
 		if match.BasicStateBadge then
 			match.BasicStateBadge.TextSize = math.max(11, profile:GetTextSize() - 4)
 		end

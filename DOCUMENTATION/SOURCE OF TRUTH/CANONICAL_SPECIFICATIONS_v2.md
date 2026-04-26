@@ -113,6 +113,12 @@
 - `LeaderboardUI` mobile action button typography is tuned specifically for compact readability.
 - This addendum remains visual-only and does not alter gameplay logic, economy logic, or runtime systems.
 
+## 2026-04-26 Addendum - Visual Batch T19 Lobby + Match Compact Typography
+
+- `LobbyUI` compact lanes now use tighter action-button/badge typography to preserve readability in short-height mobile viewports.
+- `MatchUI` compact lanes now tune hide/close/footer typography to reduce lower-panel crowding.
+- This addendum remains visual-only and does not alter match flow logic, evidence logic, or runtime systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

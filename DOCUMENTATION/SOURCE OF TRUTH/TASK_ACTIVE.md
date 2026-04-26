@@ -72,6 +72,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `MainMenuUI` dan `LeaderboardUI` mobile kini punya profile compact-header untuk title/badge/close agar top-bar tidak sesak.
   - text-size action buttons `LeaderboardUI` mobile mendapat tuning khusus agar konsisten dengan lane compact.
   - tetap visual-only tanpa perubahan logic gameplay/runtime.
+- Batch visual T19 untuk lobby/match compact typography sudah masuk:
+  - `LobbyUI` compact lane mendapat tuning text-size tombol aksi + status badge agar lebih fit di viewport sempit.
+  - `MatchUI` compact lane mendapat tuning text-size hide/close/footer untuk menurunkan kepadatan area bawah panel.
+  - tetap visual-only tanpa perubahan logic match flow/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

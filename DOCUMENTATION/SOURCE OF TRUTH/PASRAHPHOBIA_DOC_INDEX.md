@@ -253,6 +253,15 @@ Status ringkas batch T18:
 - action button `LeaderboardUI` mobile dituning text-size khusus agar tetap jelas pada lane compact
 - tetap visual-only, tanpa perubahan logic runtime/gameplay
 
+[2026-04-26 NOTE - Visual Batch T19]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T19_LOBBY_MATCH_COMPACT_TYPOGRAPHY_2026-04-26.md`
+
+Status ringkas batch T19:
+- `LobbyUI` compact lane mendapat tuning text-size tombol aksi + badge agar tetap terbaca di viewport sempit
+- `MatchUI` compact lane mendapat tuning text-size hide/close/footer agar area bawah panel tidak terlalu padat
+- tetap visual-only, tanpa perubahan logic gameplay/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 
