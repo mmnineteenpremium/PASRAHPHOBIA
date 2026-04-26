@@ -96,6 +96,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - card preview pemain di RoomBrowser mendapat lane extra-compact khusus viewport pendek.
   - tinggi kartu + ukuran preview + text-size name/state dipadatkan agar tidak clipping.
   - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
+- Batch visual T25 untuk RoomBrowser list density trim sudah masuk:
+  - tab mode RoomBrowser extra-compact dipadatkan (height/gap) untuk membuka ruang vertikal.
+  - row list RoomBrowser extra-compact kini single-line truncate + padding agar lebih mudah discan.
+  - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

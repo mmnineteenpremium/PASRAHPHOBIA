@@ -11235,8 +11235,8 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 
 	local controlsY = profile.isMobile and 78 or (isCompact and 72 or 74)
-	local tabHeight = profile.isMobile and 40 or (isCompact and 36 or 30)
-	local tabGap = 6
+	local tabHeight = extraCompactMobile and 34 or (profile.isMobile and 40 or (isCompact and 36 or 30))
+	local tabGap = extraCompactMobile and 4 or 6
 	local tabWidth = math.floor((panelWidth - headerPadding * 2 - (tabGap * 2)) / 3)
 	setOffsetBounds(widgets.ClassicButton, headerPadding, controlsY, tabWidth, tabHeight)
 	setOffsetBounds(widgets.AllModesButton, headerPadding + tabWidth + tabGap, controlsY, tabWidth, tabHeight)
@@ -17947,8 +17947,9 @@ function UISystem:_ensureRoomBrowserGui()
 				row.TextSize = wideMobileRoomBrowser and 13 or (extraCompactRoomBrowser and 12 or (compactRoomBrowser and 14 or 13))
 			row.TextXAlignment = Enum.TextXAlignment.Left
 			row.TextYAlignment = Enum.TextYAlignment.Center
-				row.TextWrapped = extraCompactRoomBrowser or compactRoomBrowser or wideMobileRoomBrowser
-			row.Text = roomRowText(room)
+				row.TextWrapped = (not extraCompactRoomBrowser) and (compactRoomBrowser or wideMobileRoomBrowser)
+				row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+				row.Text = roomRowText(room)
 			row:SetAttribute("RoomId", room.roomId)
 			row:SetAttribute("InGame", room.inGame == true)
 			row:SetAttribute("Starting", room.starting == true)
@@ -18044,6 +18045,12 @@ function UISystem:_ensureRoomBrowserGui()
 				local rowCorner = Instance.new("UICorner")
 				rowCorner.CornerRadius = UDim.new(0, 6)
 				rowCorner.Parent = row
+				if extraCompactRoomBrowser then
+					local rowPadding = Instance.new("UIPadding")
+					rowPadding.PaddingLeft = UDim.new(0, 8)
+					rowPadding.PaddingRight = UDim.new(0, 6)
+					rowPadding.Parent = row
+				end
 				connectButtonPress(row, function()
 					self:RoomBrowserInvitePlayerToRoom(userId)
 					statusLabel.Text = string.format("Invite terkirim ke %s.", nameText)

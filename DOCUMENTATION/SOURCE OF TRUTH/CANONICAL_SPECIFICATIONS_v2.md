@@ -149,6 +149,12 @@
 - Card viewport and label density are reduced to preserve readability without clipping.
 - This addendum remains visual-only and does not alter room browser logic, matchmaking logic, or runtime systems.
 
+## 2026-04-26 Addendum - Visual Batch T25 RoomBrowser List Density Trim
+
+- RoomBrowser extra-compact mode tabs are tightened (height/gap) to preserve vertical room.
+- Room list rows in this lane now prioritize single-line scannability with truncation and horizontal padding.
+- This addendum remains visual-only and does not alter room browser logic, matchmaking logic, or runtime systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

@@ -307,6 +307,15 @@ Status ringkas batch T24:
 - ukuran kartu/viewport serta text-size name/state dipadatkan untuk menekan risiko clipping
 - tetap visual-only, tanpa perubahan logic room browser/runtime
 
+[2026-04-26 NOTE - Visual Batch T25]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T25_ROOMBROWSER_LIST_DENSITY_TRIM_2026-04-26.md`
+
+Status ringkas batch T25:
+- tab mode RoomBrowser pada lane extra-compact dipadatkan agar ruang vertikal lebih lega
+- row list RoomBrowser extra-compact beralih ke single-line truncate + padding untuk scan cepat
+- tetap visual-only, tanpa perubahan logic room browser/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 
