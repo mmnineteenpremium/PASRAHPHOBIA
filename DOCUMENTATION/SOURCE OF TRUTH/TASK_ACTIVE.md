@@ -384,6 +384,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - anchor Y action lane extra-compact dipadatkan tipis lanjutan untuk rhythm panel kanan.
   - grup kontrol tetap konsisten; spacing transisi yang dipoles.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T97 untuk RoomBrowser roombrowser-join-password-anchor-trim-5 sudah masuk:
+  - anchor vertikal JoinPassword lane extra-compact dipadatkan tipis lanjutan terhadap action row.
+  - tinggi input dipertahankan; grouping input+aksi makin konsisten.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

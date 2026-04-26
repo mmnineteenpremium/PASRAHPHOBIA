@@ -1414,3 +1414,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser action-lane anchor now has a fourth extra-compact Y-offset micro trim.
 - Action-lane tuning is visual-only: tighter list-to-action transition with unchanged grouping behavior.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T97 Join-Password Anchor Trim V
+
+- RoomBrowser join-password field now has a fifth extra-compact vertical anchor micro trim.
+- Join-password tuning is visual-only: tighter input-to-action grouping with unchanged field height.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
