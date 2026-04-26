@@ -260,6 +260,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - cell padding vertikal list pemain preview lane extra-compact dipadatkan tipis.
   - membuat ritme antar kartu pemain lebih rapat dengan hierarchy tetap konsisten.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T66 untuk RoomBrowser roombrowser-preview-player-card-width-rebalance sudah masuk:
+  - lebar cell pemain preview lane compact direbalance tipis untuk align dengan density terbaru.
+  - tinggi cell tetap, perubahan fokus ke horizontal breathing room.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

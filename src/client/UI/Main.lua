@@ -11321,7 +11321,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			end
 			if roomPreviewPlayersLayout then
 				roomPreviewPlayersLayout.FillDirectionMaxCells = 1
-				roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(leftWidth - 36, 72)
+				roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(leftWidth - 35, 72)
 				roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(6, extraCompactMobile and 3 or 6)
 			end
 		else

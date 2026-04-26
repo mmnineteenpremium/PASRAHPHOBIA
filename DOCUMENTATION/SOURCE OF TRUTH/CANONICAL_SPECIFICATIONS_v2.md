@@ -1197,3 +1197,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser preview players grid now has extra-compact-specific cell-padding micro trim.
 - Preview-player card tuning is visual-only: slightly tighter vertical card spacing for compact density.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T66 Preview Player-Card Width Rebalance
+
+- RoomBrowser preview players grid now has a micro width rebalance for player card cells.
+- Preview-player card tuning is visual-only: slight card width adjustment with unchanged card height.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.

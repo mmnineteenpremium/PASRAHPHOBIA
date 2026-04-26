@@ -16462,3 +16462,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - cell padding vertikal list pemain preview lane extra-compact dipadatkan tipis.
 - tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 69. VISUAL BATCH T66 ROOMBROWSER PREVIEW PLAYER CARD WIDTH REBALANCE (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar cell pemain preview lane compact direbalance tipis untuk align dengan density terbaru.
+- tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
