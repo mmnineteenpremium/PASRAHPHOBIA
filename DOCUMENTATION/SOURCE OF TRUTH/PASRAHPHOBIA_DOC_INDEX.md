@@ -16984,3 +16984,15 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - ukuran teks title dipertahankan agar hierarchy label map tetap stabil.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
 
+
+
+---
+
+# 119. VISUAL BATCH T116 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM XI (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+- ukuran teks footer dipertahankan agar hierarchy metadata map tetap stabil.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
