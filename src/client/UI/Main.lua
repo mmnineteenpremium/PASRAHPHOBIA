@@ -12134,31 +12134,52 @@ function UISystem:_applyDeviceSizing()
 						window.ContentFrame.ScrollBarThickness = 8
 					end
 					end
-				if window.PrimaryLabel then
-					window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
-					if guiName == "RoyalPassUI" then
-						window.PrimaryLabel.TextSize = math.max(window.PrimaryLabel.TextSize, 17)
+					if window.PrimaryLabel then
+						window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
+						if guiName == "RoyalPassUI" then
+							window.PrimaryLabel.TextSize = math.max(window.PrimaryLabel.TextSize, 17)
+						end
+						if profile.isMobile then
+							window.PrimaryLabel.Position = UDim2.fromOffset(12, 74)
+							window.PrimaryLabel.Size = UDim2.new(1, -24, 0, 36)
+						end
 					end
-				end
-				if window.SecondaryLabel then
-					window.SecondaryLabel.TextSize = math.max(12, profile:GetTextSize() - 5)
-					if guiName == "RoyalPassUI" then
-						window.SecondaryLabel.TextSize = math.max(window.SecondaryLabel.TextSize, 13)
+					if window.SecondaryLabel then
+						window.SecondaryLabel.TextSize = math.max(12, profile:GetTextSize() - 5)
+						if guiName == "RoyalPassUI" then
+							window.SecondaryLabel.TextSize = math.max(window.SecondaryLabel.TextSize, 13)
+						end
+						if profile.isMobile then
+							window.SecondaryLabel.Position = UDim2.fromOffset(12, 112)
+							window.SecondaryLabel.Size = UDim2.new(1, -24, 0, 36)
+						end
 					end
-				end
-				if window.ContentText then
-					window.ContentText.TextSize = math.max(12, profile:GetTextSize() - 5)
-				end
-				if window.FooterLabel then
-					window.FooterLabel.TextSize = math.max(11, profile:GetTextSize() - 6)
-				end
-				if window.StatusBadge then
-					window.StatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
-				end
-				if window.FloatButton then
-					local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
-					window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
-				end
+					if window.ContentText then
+						window.ContentText.TextSize = math.max(12, profile:GetTextSize() - 5)
+					end
+					if window.FooterLabel then
+						window.FooterLabel.TextSize = math.max(11, profile:GetTextSize() - 6)
+					end
+					if window.StatusBadge then
+						window.StatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
+						if profile.isMobile then
+							window.StatusBadge.Size = UDim2.fromOffset(124, 22)
+							window.StatusBadge.Position = UDim2.fromOffset(12, 44)
+							window.StatusBadge.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
+					end
+					if window.FloatButton then
+						local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
+						window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
+						if profile.isMobile then
+							window.FloatButton.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
+					end
+					if window.CloseButton and profile.isMobile then
+						window.CloseButton.Size = UDim2.fromOffset(30, 30)
+						window.CloseButton.Position = UDim2.new(1, -10, 0, 8)
+						window.CloseButton.TextSize = math.max(12, profile:GetTextSize() - 6)
+					end
 				if guiName == "RoyalPassUI" and window.RoyalPassWidgets then
 					local widgets = window.RoyalPassWidgets
 					local passMobile = profile.isMobile or viewportSize.X <= 960
@@ -12341,10 +12362,13 @@ function UISystem:_applyDeviceSizing()
 			if window.StatusBadge then
 				window.StatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
 			end
-			if window.FloatButton then
-				local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
-				window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
-			end
+				if window.FloatButton then
+					local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
+					window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
+					if profile.isMobile then
+						window.FloatButton.TextSize = math.max(10, profile:GetTextSize() - 8)
+					end
+				end
 			if window.Panel and (guiName == "MainMenuUI" or guiName == "LeaderboardUI") and profile.isMobile then
 				local isMenu = guiName == "MainMenuUI"
 				local availableWidth = viewportSize.X - (topLeftInset.X + bottomRightInset.X)

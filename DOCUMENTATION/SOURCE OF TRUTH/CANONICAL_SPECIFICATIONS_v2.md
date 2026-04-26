@@ -101,6 +101,12 @@
 - Secondary/footer mobile typography for spectator panel is tuned to reduce overflow risk.
 - This addendum remains visual-only and does not alter spectator behavior logic, match state logic, or runtime gameplay systems.
 
+## 2026-04-26 Addendum - Visual Batch T17 Mobile Header Control Consistency
+
+- Mobile header rhythm for auxiliary panels is normalized (badge/title/subtitle alignment) to keep panel hierarchy consistent across compact viewports.
+- Mobile close/float controls are tuned for clearer tap targets and text readability.
+- This addendum remains visual-only and does not alter gameplay logic, economy logic, or runtime systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

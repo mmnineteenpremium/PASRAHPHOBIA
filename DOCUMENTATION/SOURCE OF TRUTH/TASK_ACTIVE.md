@@ -64,6 +64,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `SpectatorUI` mobile mendapat reserve footer khusus agar copy distorsi/spectate tidak menabrak area konten.
   - `ContentFrame` mobile `SpectatorUI` di-rebalance untuk hierarchy header-content-footer yang lebih stabil.
   - tuning text-size secondary/footer mobile tetap visual-only tanpa ubah behavior spectator.
+- Batch visual T17 untuk mobile header control consistency sudah masuk:
+  - ritme header mobile lintas auxiliary (`StatusBadge`, `PrimaryLabel`, `SecondaryLabel`) disejajarkan agar hierarchy lebih konsisten.
+  - kontrol `CloseButton` + `FloatButton` mobile dituning ukuran/text-size untuk tap-target dan readability yang lebih stabil.
+  - tetap visual-only tanpa perubahan logic sistem/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

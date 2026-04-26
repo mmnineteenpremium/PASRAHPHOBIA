@@ -235,6 +235,15 @@ Status ringkas batch T16:
 - tuning text-size secondary/footer mobile mengurangi risiko overflow saat state spectator padat
 - tetap visual-only, tanpa perubahan logic spectator/runtime
 
+[2026-04-26 NOTE - Visual Batch T17]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T17_MOBILE_HEADER_CONTROL_CONSISTENCY_2026-04-26.md`
+
+Status ringkas batch T17:
+- header mobile lintas panel auxiliary disejajarkan ritmenya (`badge/title/subtitle`) untuk hierarchy yang konsisten
+- kontrol `CloseButton`/`FloatButton` mobile dituning ukuran dan text-size untuk keterbacaan + tap target
+- tetap visual-only, tanpa perubahan logic gameplay/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 
