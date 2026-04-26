@@ -16392,3 +16392,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - gap kolom action lane extra-compact dipadatkan tipis lanjutan untuk ritme kontrol lebih rapat.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+
+
+---
+
+# 62. VISUAL BATCH T59 ROOMBROWSER ROOMLIST BOTTOM GAP MICRO TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- bottom-gap transisi dari room-list ke action lane extra-compact dipadatkan tipis lanjutan.
+- tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
