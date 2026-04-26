@@ -11188,6 +11188,8 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 	local useWideMobileLayout = profile.isMobile and isCompact and panelWidth >= 700 and panelHeight >= 320
 	self._roomBrowserWideMobile = useWideMobileLayout
+	local extraCompactMobile = profile.isMobile and not useWideMobileLayout and panelHeight <= 520
+	self._roomBrowserExtraCompact = extraCompactMobile
 	if backdrop then
 		backdrop.BackgroundTransparency = 0.5
 		backdrop.Active = true
@@ -11216,11 +11218,11 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 	if closeButton then
 		setOffsetBounds(closeButton, panelWidth - (profile.isMobile and 52 or 46), 10, profile.isMobile and 40 or 34, profile.isMobile and 32 or 28)
-		closeButton.TextSize = profile.isMobile and 16 or (isCompact and 14 or 13)
+		closeButton.TextSize = extraCompactMobile and 14 or (profile.isMobile and 16 or (isCompact and 14 or 13))
 	end
 	if title then
 		setOffsetBounds(title, headerPadding, 8, headerWidth, isCompact and 28 or 30)
-		title.TextSize = profile.isMobile and 26 or (isCompact and 22 or 25)
+		title.TextSize = extraCompactMobile and 22 or (profile.isMobile and 26 or (isCompact and 22 or 25))
 	end
 	if titleGlow and title then
 		titleGlow.Position = title.Position + UDim2.fromOffset(2, 2)
@@ -11229,7 +11231,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 	if statusLabel then
 		setOffsetBounds(statusLabel, headerPadding, isCompact and 40 or 44, panelWidth - headerPadding * 2, 24)
-		statusLabel.TextSize = profile.isMobile and 14 or (isCompact and 13 or 12)
+		statusLabel.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 12))
 	end
 
 	local controlsY = profile.isMobile and 78 or (isCompact and 72 or 74)
@@ -11240,13 +11242,13 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	setOffsetBounds(widgets.AllModesButton, headerPadding + tabWidth + tabGap, controlsY, tabWidth, tabHeight)
 	setOffsetBounds(widgets.RankedButton, headerPadding + (tabWidth + tabGap) * 2, controlsY, tabWidth, tabHeight)
 	if widgets.ClassicButton then
-		widgets.ClassicButton.TextSize = isCompact and 13 or 12
+		widgets.ClassicButton.TextSize = extraCompactMobile and 11 or (isCompact and 13 or 12)
 	end
 	if widgets.AllModesButton then
-		widgets.AllModesButton.TextSize = isCompact and 13 or 12
+		widgets.AllModesButton.TextSize = extraCompactMobile and 11 or (isCompact and 13 or 12)
 	end
 	if widgets.RankedButton then
-		widgets.RankedButton.TextSize = isCompact and 13 or 12
+		widgets.RankedButton.TextSize = extraCompactMobile and 11 or (isCompact and 13 or 12)
 	end
 
 	local previewMapTitle = roomPreviewMap and roomPreviewMap:FindFirstChild("MapTitle")
@@ -11423,22 +11425,22 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		roomListLayout.Padding = UDim.new(0, useWideMobileLayout and 6 or 4)
 	end
 	if joinPassword then
-		joinPassword.TextSize = profile.isMobile and 15 or (isCompact and 14 or 12)
+		joinPassword.TextSize = extraCompactMobile and 13 or (profile.isMobile and 15 or (isCompact and 14 or 12))
 	end
 	if refreshButton then
-		refreshButton.TextSize = profile.isMobile and 14 or (isCompact and 13 or 12)
+		refreshButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 12))
 	end
 	if createRoomButton then
-		createRoomButton.TextSize = profile.isMobile and 14 or (isCompact and 13 or 12)
+		createRoomButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 12))
 	end
 	if queueButton then
-		queueButton.TextSize = profile.isMobile and 15 or (isCompact and 14 or 12)
+		queueButton.TextSize = extraCompactMobile and 13 or (profile.isMobile and 15 or (isCompact and 14 or 12))
 	end
 	if quickClassicButton then
-		quickClassicButton.TextSize = profile.isMobile and 14 or (isCompact and 13 or 11)
+		quickClassicButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 11))
 	end
 	if quickRankedButton then
-		quickRankedButton.TextSize = profile.isMobile and 14 or (isCompact and 13 or 11)
+		quickRankedButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or (isCompact and 13 or 11))
 	end
 
 	if roomPanel then
@@ -17865,10 +17867,11 @@ function UISystem:_ensureRoomBrowserGui()
 		end
 	end
 
-	local function renderRoomList(rooms)
-		local compactRoomBrowser = self._roomBrowserCompact == true
-		local wideMobileRoomBrowser = self._roomBrowserWideMobile == true
-		local roomIdSet = {}
+		local function renderRoomList(rooms)
+			local compactRoomBrowser = self._roomBrowserCompact == true
+			local wideMobileRoomBrowser = self._roomBrowserWideMobile == true
+			local extraCompactRoomBrowser = self._roomBrowserExtraCompact == true
+			local roomIdSet = {}
 		for _, room in ipairs(rooms or {}) do
 			roomIdSet[tostring(room.roomId)] = true
 		end
@@ -17884,14 +17887,14 @@ function UISystem:_ensureRoomBrowserGui()
 		for _, room in ipairs(rooms or {}) do
 			local row = Instance.new("TextButton")
 			row.Name = "Room_" .. tostring(room.roomId)
-			row.Size = UDim2.new(1, -8, 0, wideMobileRoomBrowser and 66 or (compactRoomBrowser and 56 or 36))
+				row.Size = UDim2.new(1, -8, 0, wideMobileRoomBrowser and 66 or (extraCompactRoomBrowser and 52 or (compactRoomBrowser and 56 or 36)))
 			row.LayoutOrder = room.roomId
 			row.BorderSizePixel = 0
 			row.Font = Enum.Font.Gotham
-			row.TextSize = wideMobileRoomBrowser and 13 or (compactRoomBrowser and 14 or 13)
+				row.TextSize = wideMobileRoomBrowser and 13 or (extraCompactRoomBrowser and 12 or (compactRoomBrowser and 14 or 13))
 			row.TextXAlignment = Enum.TextXAlignment.Left
 			row.TextYAlignment = Enum.TextYAlignment.Center
-			row.TextWrapped = compactRoomBrowser or wideMobileRoomBrowser
+				row.TextWrapped = extraCompactRoomBrowser or compactRoomBrowser or wideMobileRoomBrowser
 			row.Text = roomRowText(room)
 			row:SetAttribute("RoomId", room.roomId)
 			row:SetAttribute("InGame", room.inGame == true)

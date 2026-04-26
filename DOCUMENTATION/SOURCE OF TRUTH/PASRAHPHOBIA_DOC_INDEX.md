@@ -262,6 +262,15 @@ Status ringkas batch T19:
 - `MatchUI` compact lane mendapat tuning text-size hide/close/footer agar area bawah panel tidak terlalu padat
 - tetap visual-only, tanpa perubahan logic gameplay/runtime
 
+[2026-04-26 NOTE - Visual Batch T20]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T20_ROOMBROWSER_EXTRA_COMPACT_MOBILE_2026-04-26.md`
+
+Status ringkas batch T20:
+- RoomBrowser mobile mendapat lane `extra compact` khusus viewport pendek non-wide agar panel tidak terlalu padat
+- header/tab/action/list typography dituning turun untuk menjaga readability pada layout extra compact
+- tetap visual-only, tanpa perubahan logic room browser/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

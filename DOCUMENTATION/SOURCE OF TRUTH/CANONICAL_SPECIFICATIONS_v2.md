@@ -119,6 +119,12 @@
 - `MatchUI` compact lanes now tune hide/close/footer typography to reduce lower-panel crowding.
 - This addendum remains visual-only and does not alter match flow logic, evidence logic, or runtime systems.
 
+## 2026-04-26 Addendum - Visual Batch T20 RoomBrowser Extra Compact Mobile
+
+- RoomBrowser now has an extra-compact mobile visual lane for short-height non-wide viewport profiles.
+- Header/tab/action/list typography in this lane is tuned down to reduce density while preserving readability.
+- This addendum remains visual-only and does not alter room browser logic, matchmaking logic, or runtime systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

@@ -76,6 +76,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `LobbyUI` compact lane mendapat tuning text-size tombol aksi + status badge agar lebih fit di viewport sempit.
   - `MatchUI` compact lane mendapat tuning text-size hide/close/footer untuk menurunkan kepadatan area bawah panel.
   - tetap visual-only tanpa perubahan logic match flow/runtime.
+- Batch visual T20 untuk RoomBrowser extra compact mobile sudah masuk:
+  - lane `extra compact` RoomBrowser ditambahkan untuk mobile non-wide dengan tinggi viewport pendek.
+  - header/tab/action/list typography dituning turun agar panel tidak padat dan tetap terbaca.
+  - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
