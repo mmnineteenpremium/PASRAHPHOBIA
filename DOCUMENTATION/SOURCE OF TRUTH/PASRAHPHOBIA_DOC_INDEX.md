@@ -16672,3 +16672,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - bottom-gap transisi room-list ke action lane extra-compact dipadatkan tipis lanjutan.
 - tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
+
+
+---
+
+# 90. VISUAL BATCH T87 ROOMBROWSER ACTION Y ANCHOR TRIM III (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor Y action lane extra-compact dipadatkan tipis lanjutan untuk rhythm panel kanan.
+- tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.

@@ -1344,3 +1344,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser room-list to action-lane transition now has a third extra-compact bottom-gap micro trim.
 - Transition tuning is visual-only: tighter vertical continuity with unchanged interaction flow.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T87 Action-Y Anchor Trim III
+
+- RoomBrowser action-lane anchor now has a third extra-compact Y-offset micro trim.
+- Action-lane tuning is visual-only: tighter list-to-action transition while preserving grouping.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
