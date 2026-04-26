@@ -1602,3 +1602,11 @@ Based on canonical specifications, Phase 7 should prioritize:
 - Map-title tuning is visual-only: slight horizontal bounds expansion with unchanged title typography.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
 
+
+
+## 2026-04-26 Addendum - Visual Batch T122 Map-Footer Height Micro Trim XIII
+
+- RoomBrowser map preview footer now has a thirteenth extra-compact height micro trim.
+- Map-footer tuning is visual-only: slight height reduction with unchanged footer text hierarchy.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
