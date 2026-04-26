@@ -17363,3 +17363,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
 - judul players tetap dipertahankan agar section break tetap jelas.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 161. VISUAL BATCH T158 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET TRIM VIII (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+- struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
