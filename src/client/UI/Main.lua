@@ -11278,7 +11278,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 
 			setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, leftWidth, previewHeight)
 			setOffsetBounds(roomList, rightX, contentTop, rightWidth, roomListHeight)
-			setOffsetBounds(joinPassword, rightX, actionY - (extraCompactMobile and 38 or 42), rightWidth, extraCompactMobile and 30 or 32)
+			setOffsetBounds(joinPassword, rightX, actionY - (extraCompactMobile and 37 or 42), rightWidth, extraCompactMobile and 30 or 32)
 			setOffsetBounds(queueButton, rightX, actionY, rightWidth, joinHeight)
 			setOffsetBounds(refreshButton, rightX, actionY + joinHeight + actionRowGap, math.floor((rightWidth - actionColumnGap) * 0.5), actionRowHeight)
 			setOffsetBounds(createRoomButton, rightX + math.floor((rightWidth - actionColumnGap) * 0.5) + actionColumnGap, actionY + joinHeight + actionRowGap, math.floor((rightWidth - actionColumnGap) * 0.5), actionRowHeight)
