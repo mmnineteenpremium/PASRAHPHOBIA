@@ -1141,3 +1141,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser preview player-list now has a second extra-compact bottom inset micro trim.
 - Preview-list tuning is visual-only: slight list height reclaim while preserving title/list anchor structure.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T58 Action-Column Gap Trim II
+
+- RoomBrowser action-lane paired buttons now have a second extra-compact column-gap micro trim.
+- Action-column tuning is visual-only: tighter paired-button spacing with balanced width recompute.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.

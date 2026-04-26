@@ -16382,3 +16382,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - bottom inset Room Preview PlayersList lane extra-compact dipadatkan tipis lanjutan untuk reclaim tinggi list.
 - tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 61. VISUAL BATCH T58 ROOMBROWSER ACTION COLUMN GAP TRIM II (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- gap kolom action lane extra-compact dipadatkan tipis lanjutan untuk ritme kontrol lebih rapat.
+- tidak ada perubahan logic mode selection/room flow/runtime, sesuai lock visual-only.
