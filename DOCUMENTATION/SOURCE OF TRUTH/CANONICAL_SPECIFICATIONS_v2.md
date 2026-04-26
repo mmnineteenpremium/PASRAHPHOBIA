@@ -1695,3 +1695,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser received another extra-compact visual micro-adjustment in the preview map max height trim lane.
 - Map block remains the focal area while releasing a small amount of space to lower content.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-27 Addendum - Visual Batch T136 RoomList Min Height Trim V
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the roomlist min height trim lane.
+- Room-list scanning stays stable while vertical flexibility increases slightly.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
