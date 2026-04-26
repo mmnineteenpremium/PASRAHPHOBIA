@@ -16362,3 +16362,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ritme vertikal panel.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 59. VISUAL BATCH T56 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM II (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- top-gap Room Preview PlayersList lane extra-compact dipadatkan tipis lanjutan.
+- tidak ada perubahan logic room preview/player data/runtime, sesuai lock visual-only.
