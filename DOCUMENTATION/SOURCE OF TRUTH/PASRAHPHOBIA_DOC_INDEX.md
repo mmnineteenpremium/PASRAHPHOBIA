@@ -16834,3 +16834,14 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
 - hierarchy teks footer map dipertahankan agar readability metadata tetap stabil.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 106. VISUAL BATCH T103 ROOMBROWSER MAP TITLE WIDTH RECLAIM III (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk menambah headroom horizontal judul map.
+- ukuran teks title dipertahankan agar hierarchy label map tetap stabil.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
