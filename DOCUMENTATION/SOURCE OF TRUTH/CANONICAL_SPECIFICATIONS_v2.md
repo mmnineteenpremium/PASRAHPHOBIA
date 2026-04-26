@@ -1400,3 +1400,10 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser preview player-list now has a fifth extra-compact bottom inset micro trim.
 - Preview-list tuning is visual-only: slight list height reclaim with unchanged anchor structure.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+
+## 2026-04-26 Addendum - Visual Batch T95 RoomList Bottom-Gap Trim IV
+
+- RoomBrowser room-list to action-lane transition now has a fourth extra-compact bottom-gap micro trim.
+- Transition tuning is visual-only: tighter vertical continuity with unchanged interaction flow.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
