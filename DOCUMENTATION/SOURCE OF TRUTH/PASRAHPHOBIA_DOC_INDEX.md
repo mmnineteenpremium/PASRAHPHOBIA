@@ -271,6 +271,15 @@ Status ringkas batch T20:
 - header/tab/action/list typography dituning turun untuk menjaga readability pada layout extra compact
 - tetap visual-only, tanpa perubahan logic room browser/runtime
 
+[2026-04-26 NOTE - Visual Batch T21]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T21_ROOMBROWSER_HOST_CONTROLS_COMPACT_2026-04-26.md`
+
+Status ringkas batch T21:
+- area host-room RoomBrowser (mode/map/password/invite/ready/start/cancel/leave) mendapat tuning typography compact khusus lane extra-compact
+- label host-room dan opsi dropdown map/mode ikut dituning agar panel kontrol tidak sesak
+- tetap visual-only, tanpa perubahan logic room browser/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

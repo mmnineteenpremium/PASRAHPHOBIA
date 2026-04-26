@@ -80,6 +80,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - lane `extra compact` RoomBrowser ditambahkan untuk mobile non-wide dengan tinggi viewport pendek.
   - header/tab/action/list typography dituning turun agar panel tidak padat dan tetap terbaca.
   - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
+- Batch visual T21 untuk RoomBrowser host controls compact sudah masuk:
+  - kontrol host-room (`mode/map/password/invite/ready/start/cancel/leave`) mendapat baseline typography compact khusus lane extra-compact.
+  - label judul/host/players + opsi dropdown map/mode turut dituning agar area kontrol tidak sesak.
+  - tetap visual-only tanpa perubahan logic room browser/matchmaking/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

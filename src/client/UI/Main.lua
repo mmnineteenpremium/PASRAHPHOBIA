@@ -11448,6 +11448,51 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		roomPanel.Size = UDim2.fromScale(1, 1)
 		roomPanel.ScrollBarThickness = isCompact and 6 or 4
 	end
+	if roomTitle then
+		roomTitle.TextSize = extraCompactMobile and 16 or (profile.isMobile and 18 or 16)
+	end
+	if roomHost then
+		roomHost.TextSize = extraCompactMobile and 11 or (profile.isMobile and 12 or 11)
+	end
+	if playersLabel then
+		playersLabel.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+	end
+	if modeSelector then
+		modeSelector.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+	end
+	if rankedTierLabel then
+		rankedTierLabel.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+	end
+	if mapSelector then
+		mapSelector.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+	end
+	if setPasswordBox then
+		setPasswordBox.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or 12)
+	end
+	if setPasswordButton then
+		setPasswordButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+	end
+	if kickNameBox then
+		kickNameBox.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or 12)
+	end
+	if kickButton then
+		kickButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+	end
+	if inviteButton then
+		inviteButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+	end
+	if readyButton then
+		readyButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or 12)
+	end
+	if startButton then
+		startButton.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or 12)
+	end
+	if cancelStartButton then
+		cancelStartButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+	end
+	if leaveRoomButton then
+		leaveRoomButton.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+	end
 
 	if isCompact then
 		if useWideMobileLayout then
@@ -11528,27 +11573,27 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			playersLabel.TextSize = 13
 		end
 		setOffsetBounds(playersList, headerPadding, playersY, contentWidth, playersHeight)
-		if playersListLayout then
-			playersListLayout.FillDirectionMaxCells = 1
-			playersListLayout.CellSize = UDim2.fromOffset(contentWidth - 16, profile.isMobile and 124 or 108)
-		end
+			if playersListLayout then
+				playersListLayout.FillDirectionMaxCells = 1
+				playersListLayout.CellSize = UDim2.fromOffset(contentWidth - 16, extraCompactMobile and 112 or (profile.isMobile and 124 or 108))
+			end
 		setOffsetBounds(modeSelector, headerPadding, controlsY, contentWidth, profile.isMobile and 40 or 36)
 		setOffsetBounds(modeDropdown, headerPadding, controlsY + (profile.isMobile and 44 or 40), contentWidth, profile.isMobile and 80 or 72)
-		if modeClassicOption then
-			setOffsetBounds(modeClassicOption, 8, 8, contentWidth - 16, 26)
-			modeClassicOption.TextSize = 12
-		end
-		if modeRankedOption then
-			setOffsetBounds(modeRankedOption, 8, 38, contentWidth - 16, 26)
-			modeRankedOption.TextSize = 12
-		end
+			if modeClassicOption then
+				setOffsetBounds(modeClassicOption, 8, 8, contentWidth - 16, 26)
+				modeClassicOption.TextSize = extraCompactMobile and 11 or 12
+			end
+			if modeRankedOption then
+				setOffsetBounds(modeRankedOption, 8, 38, contentWidth - 16, 26)
+				modeRankedOption.TextSize = extraCompactMobile and 11 or 12
+			end
 		setOffsetBounds(mapSelector, headerPadding, mapSelectorY, contentWidth, profile.isMobile and 40 or 36)
 		setOffsetBounds(rankedTierLabel, headerPadding, mapSelectorY, contentWidth, profile.isMobile and 40 or 36)
 		setOffsetBounds(mapDropdown, headerPadding, mapSelectorY + (profile.isMobile and 44 or 40), contentWidth, profile.isMobile and 132 or 112)
-		for index, option in ipairs(mapOptions) do
-			setOffsetBounds(option, 8, 8 + (index - 1) * (profile.isMobile and 30 or 26), contentWidth - 16, profile.isMobile and 26 or 22)
-			option.TextSize = profile.isMobile and 13 or 12
-		end
+			for index, option in ipairs(mapOptions) do
+				setOffsetBounds(option, 8, 8 + (index - 1) * (profile.isMobile and 30 or 26), contentWidth - 16, profile.isMobile and 26 or 22)
+				option.TextSize = extraCompactMobile and 11 or (profile.isMobile and 13 or 12)
+			end
 		setOffsetBounds(setPasswordBox, headerPadding, setPasswordY, contentWidth - 122, profile.isMobile and 38 or 34)
 		setOffsetBounds(setPasswordButton, headerPadding + contentWidth - 116, setPasswordY, 116, profile.isMobile and 38 or 34)
 		setOffsetBounds(kickNameBox, headerPadding, kickRowY, contentWidth - 122, profile.isMobile and 38 or 34)
