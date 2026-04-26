@@ -7653,14 +7653,35 @@ function UISystem:_refreshBasicLobbyPanel()
 	local state = self:GetRoomBrowserState() or {}
 	local rooms = type(state.rooms) == "table" and state.rooms or {}
 	local currentRoom = type(state.currentRoom) == "table" and state.currentRoom or nil
+	local shopState = self._shopState or {}
+	local profileState = self._profileState or {}
+	local wallet = type(shopState.wallet) == "table" and shopState.wallet or {}
+	local walletMM = math.max(0, math.floor(tonumber(wallet.MM) or 0))
+	local walletPP = math.max(0, math.floor(tonumber(wallet.PP) or 0))
+	local walletMicro = string.format("MM %d • PP %d", walletMM, walletPP)
+	local ownedInventoryCount = countLookupEntries(shopState.ownedItemIds)
+	local equippedInventoryCount = countLookupEntries(profileState.equippedCosmetics)
+	local gachaState = ownedInventoryCount > 0 and "COLLECTED" or "EMPTY"
+	local rewardSnapshot = self._matchResult or createDefaultMatchResult()
+	local hiddenGemsCompact = formatHiddenGemsCompact(rewardSnapshot.ppBreakdown)
+	local royalPassState = self._royalPassState or {}
+	local currentTier = math.max(1, math.floor(tonumber(royalPassState.currentTier or 1) or 1))
+	local dailyCheckInState = string.format("DAY %02d", math.min(30, currentTier))
+	local dailyQuestProgress = math.max(0, math.floor(tonumber(rewardSnapshot.dailyProgress or 0) or 0))
+	local dailyQuestState = dailyQuestProgress > 0 and string.format("PROG %d", dailyQuestProgress) or "PENDING"
 	local badgeText = "LOBBY"
 	local badgeColor = Color3.fromRGB(54, 116, 82)
 	local glyphText = "LO"
 	local primaryText = "Tap OPEN ROOM BROWSER, lalu BUAT ROOM, lalu START dari panel room untuk mulai investigasi."
 	local selectedMode = tostring(state.selectedMode or "Classic")
 	local selectedMap = tostring(state.selectedMap or MAPS[1] or "HauntedHouse")
-	local secondaryText = string.format("Mode %s | Map %s | %d room aktif", selectedMode, selectedMap, #rooms)
-	local hintText = "Alur test: OPEN ROOM BROWSER -> BUAT ROOM -> START -> masuk map -> pakai Field Kit untuk evidence."
+	local secondaryText = string.format("Mode %s | Map %s | %d room aktif | Wallet %s", selectedMode, selectedMap, #rooms, walletMicro)
+	local hintText = string.format(
+		"Alur test: OPEN ROOM BROWSER -> BUAT ROOM -> START -> masuk map -> pakai Field Kit untuk evidence. Daily %s • %s • %s",
+		dailyQuestState,
+		dailyCheckInState,
+		hiddenGemsCompact
+	)
 	local zoneFocus = self._lobbyZoneFocus
 	local zoneFocusFallback = (not currentRoom and not state.lastError) and getNearestLobbyZoneInfo() or nil
 	if type(zoneFocus) ~= "table" or tostring(zoneFocus.badge or "") == "" then
@@ -7675,7 +7696,7 @@ function UISystem:_refreshBasicLobbyPanel()
 		badgeColor = state.matchStarting == true and Color3.fromRGB(126, 84, 48) or Color3.fromRGB(62, 96, 132)
 		glyphText = state.matchStarting == true and "GO" or "RM"
 		primaryText = string.format("Room #%s siap. Lanjutkan kontrol host atau ready dari Room Browser.", tostring(currentRoom.roomId))
-		secondaryText = string.format("%s | %s | %d pemain", roomMode, roomMap, playerCount)
+		secondaryText = string.format("%s | %s | %d pemain | Wallet %s", roomMode, roomMap, playerCount, walletMicro)
 		if state.matchStarting == true then
 			local countdown = state.countdownSecondsLeft or state.countdownTotal
 			hintText = countdown and ("Countdown aktif: " .. formatCountdown(countdown)) or "Countdown aktif..."
@@ -7696,11 +7717,27 @@ function UISystem:_refreshBasicLobbyPanel()
 			secondaryText = subtitle
 				.. (distanceText and (" | " .. distanceText) or "")
 				.. " | "
-				.. string.format("%d room aktif", #rooms)
+				.. string.format("%d room aktif | Wallet %s", #rooms, walletMicro)
 		end
 		local hint = tostring(zoneFocus.hint or "")
 		if hint ~= "" then
 			hintText = distanceText and (hint .. " • " .. distanceText) or hint
+		end
+		if tostring(zoneFocus.zoneName or "") == "DailyRewardZone" then
+			secondaryText = string.format(
+				"%s | Quest %s • %s",
+				secondaryText,
+				dailyQuestState,
+				dailyCheckInState
+			)
+			hintText = string.format(
+				"%s • Gacha %s (%d/%d) • %s",
+				hintText,
+				gachaState,
+				ownedInventoryCount,
+				equippedInventoryCount,
+				hiddenGemsCompact
+			)
 		end
 	end
 
@@ -7828,12 +7865,36 @@ function UISystem:_refreshMainMenuPanel()
 	local currentRoom = type(state.currentRoom) == "table" and state.currentRoom or nil
 	local selectedMode = tostring(state.selectedMode or "Classic")
 	local selectedMap = tostring(state.selectedMap or MAPS[1] or "HauntedHouse")
+	local shopState = self._shopState or {}
+	local profileState = self._profileState or {}
+	local wallet = type(shopState.wallet) == "table" and shopState.wallet or {}
+	local walletMM = math.max(0, math.floor(tonumber(wallet.MM) or 0))
+	local walletPP = math.max(0, math.floor(tonumber(wallet.PP) or 0))
+	local walletMicro = string.format("MM %d • PP %d", walletMM, walletPP)
+	local ownedInventoryCount = countLookupEntries(shopState.ownedItemIds)
+	local equippedInventoryCount = countLookupEntries(profileState.equippedCosmetics)
+	local gachaState = ownedInventoryCount > 0 and "COLLECTED" or "EMPTY"
+	local rewardSnapshot = self._matchResult or createDefaultMatchResult()
+	local hiddenGemsCompact = formatHiddenGemsCompact(rewardSnapshot.ppBreakdown)
+	local royalPassState = self._royalPassState or {}
+	local currentTier = math.max(1, math.floor(tonumber(royalPassState.currentTier or 1) or 1))
+	local dailyCheckInState = string.format("DAY %02d", math.min(30, currentTier))
+	local dailyQuestProgress = math.max(0, math.floor(tonumber(rewardSnapshot.dailyProgress or 0) or 0))
+	local dailyQuestState = dailyQuestProgress > 0 and string.format("PROG %d", dailyQuestProgress) or "PENDING"
 	local graphicsMode = self._graphicsMode or GraphicsSupport.resolveAppliedMode()
 	local graphicsMeta = GraphicsSupport.getModeMeta(graphicsMode)
 	local statusText = "QUICK ACCESS"
 	local badgeColor = Color3.fromRGB(62, 132, 188)
 	local primaryText = "Hub visual canonical: Room, Rank/EXP, Profile, Shop, Royal Pass, Daily & Reward flow."
-	local secondaryText = string.format("Mode %s | Map %s | %d room aktif | Visual %s | Wallet MM/PP live", selectedMode, selectedMap, #rooms, graphicsMeta.label)
+	local secondaryText = string.format(
+		"Mode %s | Map %s | %d room aktif | Visual %s | Wallet %s | %s",
+		selectedMode,
+		selectedMap,
+		#rooms,
+		graphicsMeta.label,
+		walletMicro,
+		hiddenGemsCompact
+	)
 	local attributionFooter = pasrahBuildAttributionFooterText(self._legalState and self._legalState.attributions)
 
 	if currentRoom and currentRoom.roomId then
@@ -7842,11 +7903,12 @@ function UISystem:_refreshMainMenuPanel()
 		badgeColor = state.matchStarting == true and Color3.fromRGB(182, 130, 56) or Color3.fromRGB(58, 156, 122)
 		primaryText = string.format("Room #%s aktif. Semua akses dasar lobby ada di panel ini.", tostring(currentRoom.roomId))
 		secondaryText = string.format(
-			"%s | %s | %d pemain | Visual %s",
+			"%s | %s | %d pemain | Visual %s | Wallet %s",
 			tostring(currentRoom.mode or selectedMode),
 			tostring(currentRoom.mapId or selectedMap),
 			playerCount,
-			graphicsMeta.label
+			graphicsMeta.label,
+			walletMicro
 		)
 	end
 
@@ -7865,10 +7927,19 @@ function UISystem:_refreshMainMenuPanel()
 	end
 	if window.FooterLabel then
 		local graphicsFooter = string.format("Visual %s [%s]. Mobile default tetap landscape dan toggle ini murni client-side.", graphicsMeta.label, graphicsMeta.footer)
+		local canonicalFooter = string.format(
+			"Daily %s • %s • Gacha %s (%d/%d) • %s.",
+			dailyQuestState,
+			dailyCheckInState,
+			gachaState,
+			ownedInventoryCount,
+			equippedInventoryCount,
+			hiddenGemsCompact
+		)
 		if attributionFooter ~= "" then
-			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. UISystem._getBuildSignatureText()
+			window.FooterLabel.Text = attributionFooter .. "\n" .. graphicsFooter .. "\n" .. canonicalFooter .. "\n" .. UISystem._getBuildSignatureText()
 		else
-			window.FooterLabel.Text = graphicsFooter .. "\n" .. UISystem._getBuildSignatureText()
+			window.FooterLabel.Text = graphicsFooter .. "\n" .. canonicalFooter .. "\n" .. UISystem._getBuildSignatureText()
 		end
 		window.FooterLabel:SetAttribute("PasrahBuildSignature", UI_BUILD_SIGNATURE)
 	end
@@ -7911,6 +7982,14 @@ function UISystem:_refreshMainMenuPanel()
 		instance:SetAttribute("PasrahMainMenuRoomCount", #rooms)
 		instance:SetAttribute("PasrahMainMenuCurrentRoomId", currentRoom and tostring(currentRoom.roomId or "") or nil)
 		instance:SetAttribute("PasrahMainMenuRoomBrowserVisible", self._roomBrowserVisible == true)
+		instance:SetAttribute("PasrahMainMenuWalletMM", walletMM)
+		instance:SetAttribute("PasrahMainMenuWalletPP", walletPP)
+		instance:SetAttribute("PasrahMainMenuOwnedInventoryCount", ownedInventoryCount)
+		instance:SetAttribute("PasrahMainMenuEquippedInventoryCount", equippedInventoryCount)
+		instance:SetAttribute("PasrahMainMenuGachaState", gachaState)
+		instance:SetAttribute("PasrahMainMenuDailyQuestState", dailyQuestState)
+		instance:SetAttribute("PasrahMainMenuDailyCheckInState", dailyCheckInState)
+		instance:SetAttribute("PasrahMainMenuHiddenGemsState", hiddenGemsCompact)
 	end
 
 	stamp(window.Gui, "MainMenuGui")
@@ -9663,6 +9742,11 @@ function UISystem:_stampShopUIInstance(instance, channel, uiVisible, shopState, 
 
 	local wallet = type(shopState) == "table" and type(shopState.wallet) == "table" and shopState.wallet or {}
 	local lastPurchase = type(shopState) == "table" and type(shopState.lastPurchase) == "table" and shopState.lastPurchase or nil
+	local matchResult = self._matchResult or {}
+	local hiddenProgress, hiddenCap, hiddenFound = resolveHiddenGemsDailyProgress(matchResult.ppBreakdown)
+	local profileState = self._profileState or {}
+	local equippedInventoryCount = countLookupEntries(profileState.equippedCosmetics)
+	local gachaState = (tonumber(ownedCount) or 0) > 0 and "COLLECTED" or "EMPTY"
 	instance:SetAttribute("PasrahShopUIOwner", "UISystem")
 	instance:SetAttribute("PasrahShopUIChannel", tostring(channel or instance.Name))
 	instance:SetAttribute("PasrahShopUIVisible", self:_resolveEffectiveUIVisibility(instance, uiVisible))
@@ -9675,6 +9759,11 @@ function UISystem:_stampShopUIInstance(instance, channel, uiVisible, shopState, 
 	instance:SetAttribute("PasrahShopLastPurchaseItemId", lastPurchase and tostring(lastPurchase.itemId or "") or nil)
 	instance:SetAttribute("PasrahShopLastPurchaseSuccess", lastPurchase and lastPurchase.success == true or false)
 	instance:SetAttribute("PasrahShopLastPurchaseReason", lastPurchase and tostring(lastPurchase.reason or "") or nil)
+	instance:SetAttribute("PasrahShopGachaState", gachaState)
+	instance:SetAttribute("PasrahShopEquippedInventoryCount", equippedInventoryCount)
+	instance:SetAttribute("PasrahShopHiddenGemsProgress", hiddenProgress)
+	instance:SetAttribute("PasrahShopHiddenGemsCap", hiddenCap)
+	instance:SetAttribute("PasrahShopHiddenGemsSnapshotFound", hiddenFound == true)
 end
 
 function UISystem:_stampShopUIRuntime(window, uiVisible)
@@ -9740,6 +9829,8 @@ function UISystem:_refreshShopPanel()
 	local statusText = "STORE"
 	local badgeColor = Color3.fromRGB(124, 92, 48)
 	local secondaryText = self._shopState.lastMessage or "Pilih item untuk test shop."
+	local profileState = self._profileState or {}
+	local equippedInventoryCount = countLookupEntries(profileState.equippedCosmetics)
 	local hiddenGemsCompact = formatHiddenGemsCompact(self._matchResult and self._matchResult.ppBreakdown or nil)
 	local hiddenGemsLaneText = formatHiddenGemsDailyLane(self._matchResult and self._matchResult.ppBreakdown or nil)
 	local walletSummary = formatShopWalletSummary(self._shopState.wallet, self._shopState.catalog)
@@ -9748,6 +9839,8 @@ function UISystem:_refreshShopPanel()
 	for _ in pairs(self._shopState.ownedItemIds or {}) do
 		ownedCount += 1
 	end
+	local gachaState = ownedCount > 0 and "COLLECTED" or "EMPTY"
+	local gachaLaneText = string.format("Gacha snapshot %s (%d owned / %d equipped).", gachaState, ownedCount, equippedInventoryCount)
 	if not shouldShowShopFilter(activeFilter, self._shopState.catalog, self._shopState.ownedItemIds) then
 		activeFilter = "All"
 		self._shopState.filterKey = activeFilter
@@ -9784,35 +9877,40 @@ function UISystem:_refreshShopPanel()
 		statusText = "PROMPT"
 		badgeColor = Color3.fromRGB(82, 94, 126)
 	end
-	secondaryText = string.format("%s | %s", secondaryText, hiddenGemsCompact)
+	secondaryText = string.format("%s | %s | %s", secondaryText, hiddenGemsCompact, gachaState)
 
 	local footerText = string.format(
-		"Owned %d item. MM dan PP tetap currency in-game. Item bantuan bertanda CLASSIC ONLY tidak memberi bonus di Ranked. SETUP berarti slot Robux belum siap atau marketplaceId Creator Hub belum valid. %s",
+		"Owned %d item. MM dan PP tetap currency in-game. Item bantuan bertanda CLASSIC ONLY tidak memberi bonus di Ranked. SETUP berarti slot Robux belum siap atau marketplaceId Creator Hub belum valid. %s %s",
 		ownedCount,
+		gachaLaneText,
 		hiddenGemsLaneText
 	)
 	if activeFilter == "PP" then
 		footerText = string.format(
-			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Paket Robux PP tetap hanya berlaku di game ini, lalu dipakai untuk prestige/cosmetic/exchange lokal. %s",
+			"Owned %d item. PP didapat dari reward endgame seperti survive, ekstraksi, tebakan benar, dan sebagian result mission. Paket Robux PP tetap hanya berlaku di game ini, lalu dipakai untuk prestige/cosmetic/exchange lokal. %s %s",
 			ownedCount,
+			gachaLaneText,
 			hiddenGemsLaneText
 		)
 	elseif activeFilter == "MM" then
 		footerText = string.format(
-			"Owned %d item. MM bisa didapat dari main, dari exchange PP, atau dari pack Robux yang compliant. Semua tetap currency in-game, bukan saldo lintas experience. %s",
+			"Owned %d item. MM bisa didapat dari main, dari exchange PP, atau dari pack Robux yang compliant. Semua tetap currency in-game, bukan saldo lintas experience. %s %s",
 			ownedCount,
+			gachaLaneText,
 			hiddenGemsLaneText
 		)
 	elseif activeFilter == "Robux" then
 		footerText = string.format(
-			"Owned %d item. Robux di shop ini hanya boleh memberi currency in-game MM/PP atau entitlement yang compliant. Ranked tetap fair: pembelian tidak boleh memberi keunggulan kemenangan. %s",
+			"Owned %d item. Robux di shop ini hanya boleh memberi currency in-game MM/PP atau entitlement yang compliant. Ranked tetap fair: pembelian tidak boleh memberi keunggulan kemenangan. %s %s",
 			ownedCount,
+			gachaLaneText,
 			hiddenGemsLaneText
 		)
 	elseif activeFilter == "Owned" then
 		footerText = string.format(
-			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini. Jika item bertanda CLASSIC ONLY, efek bantuannya hanya boleh hidup di Classic. %s",
+			"Owned %d item. Tab ini merangkum item yang sudah aktif di snapshot player saat ini. Jika item bertanda CLASSIC ONLY, efek bantuannya hanya boleh hidup di Classic. %s %s",
 			ownedCount,
+			gachaLaneText,
 			hiddenGemsLaneText
 		)
 	end

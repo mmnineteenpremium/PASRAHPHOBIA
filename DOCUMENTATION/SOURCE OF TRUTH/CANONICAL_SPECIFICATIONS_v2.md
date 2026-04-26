@@ -43,6 +43,13 @@
 - `DailyRewardZone` and lobby daily-entry button wording now explicitly reflect daily check-in/spin context.
 - This addendum remains visual-only and does not add new reward systems, cap logic, or server-side progression flows.
 
+## 2026-04-26 Addendum - Visual Batch T8 Wallet + Gacha Micro-State
+
+- `Lobby Panel` and `Quick Menu` visual lanes now expose wallet MM/PP micro-state plus daily/check-in/hidden/gacha snapshot context for faster readability.
+- `ShopUI` visual copy now includes gacha snapshot detail (`owned/equipped`) and standardized hidden gems compact/progress state.
+- Additional UI attributes for main menu/shop lanes are stamped for visual QA traceability only.
+- This addendum remains presentation-only and does not introduce new purchasing logic, progression logic, or backend state.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

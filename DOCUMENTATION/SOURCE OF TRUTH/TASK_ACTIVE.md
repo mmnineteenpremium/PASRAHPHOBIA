@@ -28,6 +28,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - tracker visual `Hidden Gems` sekarang membaca snapshot `ppBreakdown` (jika ada) untuk progress `x/3` tanpa menambah sistem ekonomi baru.
   - `ShopUI` dan `PASRA_UI` menampilkan cap lane hidden gems dengan wording yang konsisten.
   - `DailyRewardZone` lobby copy dan tombol `Royal Pass` diselaraskan ke konteks `Daily Check-In`/harian.
+- Batch visual T8 untuk lobby/menu/shop micro-state sudah masuk:
+  - `Lobby Panel` sekarang menampilkan micro-state wallet MM/PP + daily quest/check-in + hidden gems + gacha snapshot untuk lane harian.
+  - `Quick Menu` menampilkan micro-state canonical (wallet, daily, gacha, hidden gems) di secondary/footer.
+  - `ShopUI` menambahkan detail visual gacha snapshot (`owned/equipped`) di lane secondary/footer dan attribute stamp.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
@@ -111,7 +115,7 @@ Semua dokumen harus menyatakan lock runtime-spawn authored + visual-only executi
 
 ## Remaining Work (Excluding Owner 2-Client Smoke)
 
-- Final pass visual canonical UI dari referensi `asset mentah/ref ui/*.html` untuk panel yang belum finishing polish penuh (terutama DailyReward lane, Gacha detail lane, wallet MM/PP micro-state, dan hidden gems presentation) tanpa menambah sistem baru.
+- Final pass visual canonical UI dari referensi `asset mentah/ref ui/*.html` untuk panel yang masih perlu penyetaraan akhir layout/spacing/typography lintas device (terutama fine-tuning readability mobile vs desktop) tanpa menambah sistem baru.
 - Bukti visual + catatan perubahan per panel canonical perlu terus ditambah per batch report source-of-truth agar tidak ada drift antara implementasi aktif dan indeks dokumen.
 
 ## Definition Of Done

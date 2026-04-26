@@ -154,6 +154,15 @@ Status ringkas batch T7:
 - copy `DailyRewardZone` + tombol lobby `Royal Pass` disejajarkan ke konteks harian (`Daily Check-In`/spin)
 - `ShopUI` dan `PASRA_UI` menampilkan cap hidden gems dengan wording konsisten
 
+[2026-04-26 NOTE - Visual Batch T8]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T8_LOBBY_MENU_SHOP_MICROSTATE_2026-04-26.md`
+
+Status ringkas batch T8:
+- `Lobby Panel` dan `Quick Menu` sekarang menampilkan micro-state wallet MM/PP + daily + hidden gems + gacha snapshot
+- `DailyRewardZone` fokus harian membawa copy quest/check-in yang lebih eksplisit
+- `ShopUI` menambahkan detail gacha snapshot (`owned/equipped`) + stamp attribute visual hidden gems/gacha
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 
