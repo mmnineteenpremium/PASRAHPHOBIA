@@ -16172,3 +16172,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - text-size dan truncation `Info` dituning agar ringkasan host/mode/player/status tetap terbaca di viewport pendek.
 - tidak ada perubahan logic room preview/runtime, sesuai lock visual-only.
 
+---
+
+# 40. VISUAL BATCH T37 PREVIEW PLAYER LIST COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- `RoomPreviewPlayersList` mendapat tuning scrollbar dan padding internal untuk lane compact/extra-compact.
+- `RoomPreviewPlayersTitle` dituning text-size + truncation pada lane extra-compact agar header list lebih ringkas.
+- tidak ada perubahan logic room preview/player runtime, sesuai lock visual-only.
+

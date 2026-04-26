@@ -1011,3 +1011,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser `Room Preview` header (`Title` + `Info`) now has compact/extra-compact typography tuning.
 - Preview header tuning is visual-only: info-row bounds plus extra-compact truncation behavior for summary text.
 - No room preview selection/data logic or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T37 Preview Player List Compact
+
+- RoomBrowser `Room Preview` player list now has compact/extra-compact scrollbar and inner padding tuning.
+- Player-list tuning is visual-only: list density plus extra-compact title truncation behavior.
+- No room preview data flow or player-state runtime behavior changes in this batch.

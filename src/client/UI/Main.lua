@@ -11424,7 +11424,19 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	end
 
 	if roomPreviewPlayersList then
-		roomPreviewPlayersList.ScrollBarThickness = isCompact and 6 or 4
+		roomPreviewPlayersList.ScrollBarThickness = extraCompactMobile and 5 or (isCompact and 6 or 4)
+		local roomPreviewPlayersPadding = roomPreviewPlayersList:FindFirstChildOfClass("UIPadding")
+		if roomPreviewPlayersPadding then
+			local compactPadding = extraCompactMobile and 4 or (isCompact and 5 or 6)
+			roomPreviewPlayersPadding.PaddingTop = UDim.new(0, compactPadding)
+			roomPreviewPlayersPadding.PaddingBottom = UDim.new(0, compactPadding)
+			roomPreviewPlayersPadding.PaddingLeft = UDim.new(0, compactPadding)
+			roomPreviewPlayersPadding.PaddingRight = UDim.new(0, compactPadding)
+		end
+	end
+	if roomPreviewPlayersTitle then
+		roomPreviewPlayersTitle.TextSize = extraCompactMobile and 10 or (isCompact and 11 or 11)
+		roomPreviewPlayersTitle.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 	end
 	if roomList then
 		roomList.ScrollBarThickness = isCompact and 6 or 4
