@@ -11361,7 +11361,7 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			previewMapTitle.TextSize = profile.isMobile and 11 or 10
 		end
 		if previewMapMood then
-			local moodWidth = extraCompactMobile and 107 or 144
+			local moodWidth = extraCompactMobile and 106 or 144
 			setOffsetBounds(previewMapMood, previewWidth - 24 - moodWidth, 8, moodWidth, 18)
 			previewMapMood.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 10)
 			previewMapMood.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
