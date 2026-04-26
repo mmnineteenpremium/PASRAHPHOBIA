@@ -132,6 +132,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - action stack bawah (`Queue`, `Quick Classic`, `Quick Ranked`, `Refresh`, `Create Room`) di lane compact/extra-compact mendapat rebalance tinggi tombol + vertical spacing.
   - lane wide-compact mendapat gap row yang lebih rapat untuk menjaga block aksi tetap muat di viewport pendek.
   - tetap visual-only tanpa perubahan logic matchmaking/room actions/runtime.
+- Batch visual T34 untuk RoomBrowser invite-dropdown compact sudah masuk:
+  - `InviteDropdown` pada lane compact/extra-compact kini memakai tinggi dropdown responsif dan offset vertikal yang lebih rapat ke tombol invite.
+  - room canvas compact disesuaikan mengikuti tinggi dropdown dinamis agar konten tidak terpotong di viewport pendek.
+  - tetap visual-only tanpa perubahan logic invite/matchmaking/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

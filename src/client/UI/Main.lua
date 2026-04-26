@@ -11561,8 +11561,9 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 			setOffsetBounds(setPasswordButton, headerPadding + leftWidth - compactInlineActionWidth, setPasswordY, compactInlineActionWidth, compactInlineFieldHeight)
 			setOffsetBounds(kickNameBox, headerPadding, kickRowY, leftWidth - compactInlineFieldOffset, compactInlineFieldHeight)
 			setOffsetBounds(kickButton, headerPadding + leftWidth - compactInlineActionWidth, kickRowY, compactInlineActionWidth, compactInlineFieldHeight)
+			local compactInviteHeight = extraCompactMobile and 186 or 206
 			setOffsetBounds(inviteButton, rightX, panelHeight - 42, rightWidth, 34)
-			setOffsetBounds(inviteDropdown, rightX, math.max(92, panelHeight - 254), rightWidth, 206)
+			setOffsetBounds(inviteDropdown, rightX, math.max(92, panelHeight - (compactInviteHeight + 48)), rightWidth, compactInviteHeight)
 			setOffsetBounds(readyButton, headerPadding, actionY, leftWidth, 40)
 			setOffsetBounds(startButton, headerPadding, actionY, leftWidth, 40)
 			setOffsetBounds(cancelStartButton, headerPadding, actionY + 44, leftWidth, 34)
@@ -11617,15 +11618,18 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		setOffsetBounds(setPasswordButton, headerPadding + contentWidth - compactInlineActionWidth, setPasswordY, compactInlineActionWidth, compactInlineFieldHeight)
 		setOffsetBounds(kickNameBox, headerPadding, kickRowY, contentWidth - compactInlineFieldOffset, compactInlineFieldHeight)
 		setOffsetBounds(kickButton, headerPadding + contentWidth - compactInlineActionWidth, kickRowY, compactInlineActionWidth, compactInlineFieldHeight)
-		setOffsetBounds(inviteButton, headerPadding, inviteY, contentWidth, profile.isMobile and 40 or 36)
-		setOffsetBounds(inviteDropdown, headerPadding, inviteY + (profile.isMobile and 44 or 40), contentWidth, profile.isMobile and 176 or 156)
+		local compactInviteButtonHeight = extraCompactMobile and 36 or (profile.isMobile and 40 or 36)
+		local compactInviteOffsetY = extraCompactMobile and 40 or (profile.isMobile and 44 or 40)
+		local compactInviteHeight = extraCompactMobile and 156 or (profile.isMobile and 176 or 156)
+		setOffsetBounds(inviteButton, headerPadding, inviteY, contentWidth, compactInviteButtonHeight)
+		setOffsetBounds(inviteDropdown, headerPadding, inviteY + compactInviteOffsetY, contentWidth, compactInviteHeight)
 		setOffsetBounds(readyButton, headerPadding, readyY, contentWidth, profile.isMobile and 46 or 42)
 		setOffsetBounds(startButton, headerPadding, readyY, contentWidth, profile.isMobile and 46 or 42)
 		setOffsetBounds(cancelStartButton, headerPadding, readyY + (profile.isMobile and 50 or 46), contentWidth, profile.isMobile and 38 or 34)
 		if leaveRoomButton then
 			setOffsetBounds(leaveRoomButton, headerPadding, leaveY, contentWidth, profile.isMobile and 40 or 36)
 		end
-		roomCanvasHeight = math.max(roomCanvasHeight, inviteY + (profile.isMobile and 224 or 204))
+		roomCanvasHeight = math.max(roomCanvasHeight, inviteY + compactInviteOffsetY + compactInviteHeight + 8)
 		local compactCanvasHeight = roomCanvasHeight + (profile.isMobile and (bottomRightInset.Y + 36) or 0)
 		roomPanel.CanvasSize = UDim2.fromOffset(0, compactCanvasHeight)
 		end

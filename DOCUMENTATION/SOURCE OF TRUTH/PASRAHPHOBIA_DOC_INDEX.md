@@ -16142,3 +16142,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - tinggi tombol, jarak antar row, dan text-size extra-compact dituning agar block aksi tetap jelas di viewport pendek.
 - tidak ada perubahan logic matchmaking/room actions/runtime, sesuai lock visual-only.
 
+---
+
+# 37. VISUAL BATCH T34 INVITE DROPDOWN COMPACT (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- `InviteDropdown` kini memakai tinggi dropdown dan offset vertikal yang responsif pada lane compact/extra-compact.
+- canvas height compact ikut menyesuaikan tinggi dropdown agar konten invite tidak terpotong.
+- tidak ada perubahan logic invite/matchmaking/runtime, sesuai lock visual-only.
+

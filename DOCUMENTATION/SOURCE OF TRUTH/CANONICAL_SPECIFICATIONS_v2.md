@@ -993,3 +993,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser compact action stack (`Queue`, `Quick Classic`, `Quick Ranked`, `Refresh`, `Create Room`) now has extra-compact-specific sizing and vertical rhythm.
 - Action-stack tuning is visual-only: button heights, row gaps, and extra-compact button typography for short viewports.
 - No matchmaking flow, room action authority, or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T34 Invite Dropdown Compact
+
+- RoomBrowser `InviteDropdown` now has compact/extra-compact responsive dropdown height and vertical offset tuning.
+- Invite list container tuning is visual-only: dropdown bounds plus compact canvas alignment for short viewports.
+- No invite flow, matchmaking authority, or runtime behavior changes in this batch.
