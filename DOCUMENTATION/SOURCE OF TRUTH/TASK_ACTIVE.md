@@ -160,6 +160,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - `RoomList` lane extra-compact kini memakai scrollbar lebih tipis agar list lebih efisien pada viewport pendek.
   - jarak antar row list extra-compact dipadatkan dan radius sudut row diturunkan tipis untuk ritme scan yang lebih rapat.
   - tetap visual-only tanpa perubahan logic room select/join/runtime.
+- Batch visual T41 untuk RoomBrowser row micro-density trim sudah masuk:
+  - tinggi row daftar room lane extra-compact dipadatkan tipis agar lebih banyak room terlihat tanpa scroll berlebih.
+  - padding internal row extra-compact (top/bottom/right) dipangkas untuk menjaga ritme scan tetap rapat namun terbaca.
+  - tetap visual-only tanpa perubahan logic room select/join/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

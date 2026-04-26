@@ -1035,3 +1035,9 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser `RoomList` now has extra-compact-specific scrollbar thickness tuning for short mobile viewports.
 - Room-list density tuning is visual-only: extra-compact row gap tightening plus subtle row-corner radius trim for scan rhythm.
 - No room selection/join logic or runtime behavior changes in this batch.
+
+## 2026-04-26 Addendum - Visual Batch T41 Row Micro-Density Trim
+
+- RoomBrowser room-list rows now have extra-compact-specific row height trim for short mobile viewports.
+- Row micro-density tuning is visual-only: extra-compact internal padding trim (`top/bottom/right`) to keep list scan rhythm tighter.
+- No room selection/join logic or runtime behavior changes in this batch.

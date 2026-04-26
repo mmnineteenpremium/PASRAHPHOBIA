@@ -16212,3 +16212,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - gap antar row dan radius sudut row extra-compact dipadatkan untuk ritme scan daftar room yang lebih rapat.
 - tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
 
+---
+
+# 44. VISUAL BATCH T41 ROOM LIST ROW MICRO DENSITY TRIM (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi row daftar room lane extra-compact dipadatkan tipis agar lebih banyak row terlihat tanpa scroll berlebih.
+- padding internal row extra-compact (`top/bottom/right`) dipangkas untuk ritme scan daftar room yang lebih rapat.
+- tidak ada perubahan logic room select/join/runtime, sesuai lock visual-only.
+
