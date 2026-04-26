@@ -76,6 +76,12 @@
 - Mobile text sizing for profile/royalpass secondary and footer labels is tuned for readability stability in narrow resolutions.
 - This addendum remains visual-only and does not introduce new progression systems, economy systems, or runtime gameplay logic.
 
+## 2026-04-26 Addendum - Visual Batch T13 Leaderboard Mobile Clarity
+
+- `LeaderboardUI` mobile lane receives dedicated text-size tuning for primary/secondary/footer labels to keep snapshot copy readable under dense states.
+- `LeaderboardUI` mobile content/action/footer spacing is rebalanced to reduce lower-panel crowding and improve visual hierarchy.
+- This addendum remains visual-only and does not alter rank calculation logic, progression logic, or runtime gameplay systems.
+
 ## 2026-04-18 Addendum - Ghost Asset Source Of Truth Lock
 
 - Ghost asset source of truth is now explicitly:

@@ -199,6 +199,15 @@ Status ringkas batch T12:
 - `ContentFrame` mobile kedua panel di-offset ulang untuk menjaga ritme hierarchy header-content-footer
 - tuning text-size secondary/footer mobile menurunkan risiko overflow tanpa menambah sistem/runtime baru
 
+[2026-04-26 NOTE - Visual Batch T13]
+Untuk lanjutan polish visual lane aktif (non-system), gunakan:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/VISUAL_BATCH_T13_LEADERBOARD_MOBILE_CLARITY_2026-04-26.md`
+
+Status ringkas batch T13:
+- `LeaderboardUI` mobile mendapat tuning text-size khusus agar label utama/sekunder/footer tetap jelas saat state padat
+- layout `ContentFrame`, row aksi bawah, dan footer mobile `LeaderboardUI` diseimbangkan untuk mengurangi tabrakan area bawah
+- tetap visual-only, tanpa perubahan sistem rank/progression/runtime
+
 AI agents must read the documents in the following order
 to fully understand the game architecture.
 

@@ -12253,27 +12253,36 @@ function UISystem:_applyDeviceSizing()
 		end
 		if self._uxWidgets and self._uxWidgets.basicWindows then
 			for guiName, window in pairs(self._uxWidgets.basicWindows) do
-			if window.PrimaryLabel then
-				window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
-				if profile.isMobile and guiName == "MainMenuUI" then
-					window.PrimaryLabel.TextSize = math.max(13, profile:GetTextSize() - 4)
+				if window.PrimaryLabel then
+					window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
+					if profile.isMobile and guiName == "MainMenuUI" then
+						window.PrimaryLabel.TextSize = math.max(13, profile:GetTextSize() - 4)
+					end
+					if profile.isMobile and guiName == "LeaderboardUI" then
+						window.PrimaryLabel.TextSize = math.max(14, profile:GetTextSize() - 3)
+					end
 				end
-			end
-			if window.SecondaryLabel then
-				window.SecondaryLabel.TextSize = math.max(12, profile:GetTextSize() - 5)
-				if profile.isMobile and guiName == "MainMenuUI" then
-					window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+				if window.SecondaryLabel then
+					window.SecondaryLabel.TextSize = math.max(12, profile:GetTextSize() - 5)
+					if profile.isMobile and guiName == "MainMenuUI" then
+						window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+					end
+					if profile.isMobile and guiName == "LeaderboardUI" then
+						window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+					end
 				end
-			end
 			if window.ContentText then
 				window.ContentText.TextSize = math.max(12, profile:GetTextSize() - 5)
 			end
-			if window.FooterLabel then
-				window.FooterLabel.TextSize = math.max(11, profile:GetTextSize() - 6)
-				if profile.isMobile and guiName == "MainMenuUI" then
-					window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+				if window.FooterLabel then
+					window.FooterLabel.TextSize = math.max(11, profile:GetTextSize() - 6)
+					if profile.isMobile and guiName == "MainMenuUI" then
+						window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+					end
+					if profile.isMobile and guiName == "LeaderboardUI" then
+						window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+					end
 				end
-			end
 			if window.StatusBadge then
 				window.StatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
 			end
@@ -12337,27 +12346,27 @@ function UISystem:_applyDeviceSizing()
 					if window.FooterLabel then
 						setOffsetBounds(window.FooterLabel, 12, footerY, panelWidth - 24, footerHeight)
 					end
-				else
-					local contentHeight = math.max(260, panelHeight - 256)
-					local actionY = panelHeight - 74
-					local buttonWidth = math.floor((panelWidth - 36) / 3)
-					if window.ContentFrame then
-						setOffsetBounds(window.ContentFrame, 12, 156, panelWidth - 24, contentHeight)
-						window.ContentFrame.ScrollBarThickness = 8
+					else
+						local contentHeight = math.max(248, panelHeight - 276)
+						local actionY = panelHeight - 86
+						local buttonWidth = math.floor((panelWidth - 36) / 3)
+						if window.ContentFrame then
+							setOffsetBounds(window.ContentFrame, 12, 154, panelWidth - 24, contentHeight)
+							window.ContentFrame.ScrollBarThickness = 8
+						end
+						if window.ProfileButton then
+							setOffsetBounds(window.ProfileButton, 12, actionY, buttonWidth, 40)
+						end
+						if window.RoomBrowserButton then
+							setOffsetBounds(window.RoomBrowserButton, 18 + buttonWidth, actionY, buttonWidth, 40)
+						end
+						if window.MenuButton then
+							setOffsetBounds(window.MenuButton, 24 + buttonWidth * 2, actionY, buttonWidth, 40)
+						end
+						if window.FooterLabel then
+							setOffsetBounds(window.FooterLabel, 12, panelHeight - 44, panelWidth - 24, 30)
+						end
 					end
-					if window.ProfileButton then
-						setOffsetBounds(window.ProfileButton, 12, actionY, buttonWidth, 42)
-					end
-					if window.RoomBrowserButton then
-						setOffsetBounds(window.RoomBrowserButton, 18 + buttonWidth, actionY, buttonWidth, 42)
-					end
-					if window.MenuButton then
-						setOffsetBounds(window.MenuButton, 24 + buttonWidth * 2, actionY, buttonWidth, 42)
-					end
-					if window.FooterLabel then
-						setOffsetBounds(window.FooterLabel, 12, panelHeight - 26, panelWidth - 24, 18)
-					end
-				end
 			end
 			if window.ActionButtons then
 				for _, button in ipairs(window.ActionButtons) do

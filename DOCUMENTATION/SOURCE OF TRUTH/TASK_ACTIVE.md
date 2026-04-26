@@ -48,6 +48,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - footer mobile `ProfileUI` dan `RoyalPassUI` diberi reserve spacing lebih longgar agar tidak tabrakan dengan konten.
   - `ContentFrame` mobile kedua panel di-offset ulang untuk menjaga hierarki header-content-footer tetap bersih.
   - tuning text-size secondary/footer mobile diturunkan ringan agar copy canonical tetap terbaca pada viewport sempit.
+- Batch visual T13 untuk LeaderboardUI mobile clarity sudah masuk:
+  - text sizing mobile `Primary/Secondary/Footer` pada `LeaderboardUI` dituning agar copy snapshot tetap terbaca saat padat.
+  - `ContentFrame` + action-row + footer `LeaderboardUI` mobile diatur ulang untuk mengurangi tabrakan area bawah panel.
+  - semua perubahan tetap visual-only tanpa ubah logic rank/progression.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
