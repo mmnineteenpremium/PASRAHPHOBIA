@@ -17443,3 +17443,11 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
 - height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 171. VISUAL BATCH T168 ROOMBROWSER MAP STATS ANCHOR TRIM V (2026-04-27)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+- ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
