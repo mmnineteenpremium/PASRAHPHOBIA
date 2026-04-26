@@ -11330,11 +11330,11 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		local actionY = panelHeight - actionStackHeight
 		local roomListY = contentTop + previewHeight + 12
 		local roomListHeight = actionY - roomListY - 7
-		if roomListHeight < (profile.isMobile and 153 or 140) then
-			local deficit = (profile.isMobile and 153 or 140) - roomListHeight
+		if roomListHeight < (profile.isMobile and 152 or 140) then
+			local deficit = (profile.isMobile and 152 or 140) - roomListHeight
 			previewHeight = math.max(profile.isMobile and 212 or 224, previewHeight - deficit)
 			roomListY = contentTop + previewHeight + 12
-			roomListHeight = math.max(profile.isMobile and 153 or 140, actionY - roomListY - 7)
+			roomListHeight = math.max(profile.isMobile and 152 or 140, actionY - roomListY - 7)
 		end
 
 		setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, previewWidth, previewHeight)
