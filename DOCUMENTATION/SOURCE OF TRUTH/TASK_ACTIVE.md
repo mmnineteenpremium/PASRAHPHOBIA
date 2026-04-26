@@ -296,6 +296,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - bottom inset Room Preview PlayersList lane extra-compact dipadatkan tipis lanjutan untuk reclaim tinggi list.
   - struktur title/list dipertahankan; perubahan fokus ke viewport density.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T75 untuk RoomBrowser roombrowser-action-column-gap-trim-3 sudah masuk:
+  - gap kolom pasangan tombol action lane extra-compact dipadatkan tipis lanjutan.
+  - perhitungan lebar tombol tetap mengikuti gap baru agar komposisi seimbang.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
