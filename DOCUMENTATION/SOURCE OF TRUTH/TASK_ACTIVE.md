@@ -396,6 +396,10 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - maksimum tinggi Map Preview lane compact dipadatkan tipis lanjutan untuk balance section.
   - memberi headroom tambahan kecil untuk area players list di viewport pendek.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T100 untuk RoomBrowser roombrowser-map-title-width-reclaim-2 sudah masuk:
+  - lebar bounds Map Preview title direclaim tipis lanjutan untuk headroom teks.
+  - ukuran teks title tetap; perubahan hanya pada bounds horizontal.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 

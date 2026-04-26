@@ -16802,3 +16802,13 @@ Batch visual-only lanjutan untuk RoomBrowser:
 
 - maksimum tinggi Map Preview lane compact dipadatkan tipis lanjutan untuk balance section.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+
+---
+
+# 103. VISUAL BATCH T100 ROOMBROWSER MAP TITLE WIDTH RECLAIM II (2026-04-26)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds Map Preview title direclaim tipis lanjutan untuk headroom teks.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
