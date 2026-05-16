@@ -1093,6 +1093,22 @@ local function resolveSafeSpawnCFrame(mapClone, spawnCandidates, preferredIndex,
 	return nil, nil
 end
 
+local function buildStudioFallbackSpawnCFrame(mapClone, spawnPoints)
+	local fallback = nil
+	if type(spawnPoints) == "table" and #spawnPoints > 0 then
+		fallback = extractSpawnCFrame(spawnPoints[1])
+	end
+	if not fallback and mapClone then
+		local ok, pivot = pcall(function()
+			return mapClone:GetPivot()
+		end)
+		if ok and pivot then
+			fallback = pivot + Vector3.new(0, 6, 0)
+		end
+	end
+	return fallback
+end
+
 local function resolveTeleportService(deps)
 	local service = deps.TeleportService
 	if type(service) == "table" then
@@ -1164,6 +1180,12 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 		end
 		DoorRuntime.Attach(match, mapClone, self._deps)
 		EnvironmentalObjectRuntime.Attach(match, mapClone, self._deps)
+		task.delay(1, function()
+			if typeof(mapClone) == "Instance" and mapClone.Parent ~= nil then
+				DoorRuntime.Attach(match, mapClone, self._deps)
+				EnvironmentalObjectRuntime.Attach(match, mapClone, self._deps)
+			end
+		end)
 
 		local teleportTrace = {
 			string.format("match=%s", tostring(match and (match.matchId or match.id) or "nil")),
@@ -1175,10 +1197,27 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 
 			local spawnPoints, spawnSource = waitForSpawnCandidates(mapClone)
 			if #spawnPoints == 0 then
-				error(string.format(
-					"[MatchTeleport] Preparation spawn candidates missing/empty after map load: %s",
+				warn(string.format(
+					"[MatchTeleport] Preparation spawn candidates missing/empty after map load, using fallback pivot spawn: %s",
 					mapClone:GetFullName()
 				))
+				local fallbackPart = Instance.new("Part")
+				fallbackPart.Name = "__StudioFallbackPreparationSpawn"
+				fallbackPart.Anchored = true
+				fallbackPart.CanCollide = false
+				fallbackPart.Transparency = 1
+				fallbackPart.Size = Vector3.new(1, 1, 1)
+				local ok, pivot = pcall(function()
+					return mapClone:GetPivot()
+				end)
+				if ok and pivot then
+					fallbackPart.CFrame = pivot + Vector3.new(0, 6, 0)
+				else
+					fallbackPart.CFrame = CFrame.new(0, 12, 0)
+				end
+				fallbackPart.Parent = mapClone
+				spawnPoints = { fallbackPart }
+				spawnSource = "FallbackPivot"
 			end
 
 		updateStudioTeleportTrace(
@@ -1285,7 +1324,44 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 		end
 
 			if #players > 0 and #teleported == 0 then
-				error("[MatchTeleport] no_players_teleported_from_preparation_spawns")
+				if RunService:IsStudio() then
+					local fallbackSpawn = buildStudioFallbackSpawnCFrame(mapClone, spawnPoints)
+					if fallbackSpawn then
+						for idx, player in ipairs(players) do
+							if typeof(player) == "Instance" and player:IsA("Player") and teleportedUserIds[player.UserId] ~= true then
+								local character, root = waitForCharacterRoot(player, CHARACTER_WAIT_TIMEOUT + 3)
+								if not root then
+									pcall(function()
+										player:LoadCharacter()
+									end)
+									character, root = waitForCharacterRoot(player, CHARACTER_WAIT_TIMEOUT + 5)
+								end
+								if root then
+									local offset = Vector3.new((idx - 1) * 2.5, 0, 0)
+									local teleOk = safeTeleportCharacter(player, fallbackSpawn + offset)
+									if teleOk then
+										player:SetAttribute("InMatch", true)
+										player:SetAttribute("InLobby", nil)
+										if match and (match.matchId or match.id) then
+											player:SetAttribute("MatchId", tostring(match.matchId or match.id))
+										end
+										table.insert(teleported, player)
+										teleportedUserIds[player.UserId] = true
+										table.insert(teleportTrace, string.format("%s:studioFallbackTeleportOk", player.Name))
+									else
+										table.insert(teleportTrace, string.format("%s:studioFallbackTeleportFailed", player.Name))
+									end
+								else
+									table.insert(teleportTrace, string.format("%s:studioFallbackNoRoot", player.Name))
+								end
+							end
+						end
+						updateStudioTeleportTrace(teleportTrace, #teleported, "status=studio_fallback_teleport_attempted")
+					end
+				end
+				if #teleported == 0 then
+					error("[MatchTeleport] no_players_teleported_from_preparation_spawns")
+				end
 			end
 			setStudioTeleportTrace(table.concat(teleportTrace, " | "), #teleported)
 			return teleported

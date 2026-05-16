@@ -18,6 +18,7 @@ local EVENT_LIBRARY = {
 local EVENT_TYPE_ALIASES = {
 	ObjectMovement = "ObjectThrow",
 	RadioNoise = "RadioStatic",
+	ShadowMovement = "ShadowApparition",
 }
 
 local function resolveEventBus(deps)
@@ -42,6 +43,21 @@ local function findEventConfig(eventType)
 		end
 	end
 	return nil
+end
+
+local function resolveMapInteractionSystem(deps)
+	local interactionSystem = Services.Get(deps, "MapInteractionSystem")
+	if type(interactionSystem) ~= "table" then
+		local registry = rawget(_G, "SystemRegistry")
+		if type(registry) == "table" then
+			if type(registry.Get) == "function" then
+				interactionSystem = registry:Get("MapInteractionSystem")
+			elseif type(registry.GetService) == "function" then
+				interactionSystem = registry:GetService("MapInteractionSystem")
+			end
+		end
+	end
+	return type(interactionSystem) == "table" and interactionSystem or nil
 end
 
 local function safeCall(target, methodName, ...)
@@ -194,7 +210,8 @@ function Service:SelectRandomEvent(context)
 end
 
 function Service:ApplyEventEffect(eventData)
-	local mapInteractionSystem = self._dependencies.MapInteractionSystem
+	local mapInteractionSystem = self._dependencies.MapInteractionSystem or resolveMapInteractionSystem(self._deps)
+	self._dependencies.MapInteractionSystem = mapInteractionSystem
 	local eventConfig = findEventConfig(eventData.eventType)
 
 	if not eventConfig or not eventConfig.interaction then
@@ -243,7 +260,9 @@ function Service:_resolveTargetObject(eventData, eventConfig)
 
 	local candidates = {}
 	local roomScoped = {}
-	for _, objectData in ipairs(listRegisteredObjects(self._dependencies.MapInteractionSystem)) do
+	local mapInteractionSystem = self._dependencies.MapInteractionSystem or resolveMapInteractionSystem(self._deps)
+	self._dependencies.MapInteractionSystem = mapInteractionSystem
+	for _, objectData in ipairs(listRegisteredObjects(mapInteractionSystem)) do
 		if type(objectData) == "table" and objectData.type == eventConfig.objectType then
 			candidates[#candidates + 1] = objectData
 			if type(eventData.roomId) == "string" and eventData.roomId ~= "" and objectData.roomId == eventData.roomId then

@@ -372,6 +372,8 @@ function StudioE2EControlSystem.new(deps)
 	self._evidenceService = nil
 	self._lobbyHubService = nil
 	self._ghostSystem = nil
+	self._mapEventSystem = nil
+	self._mapInteractionSystem = nil
 	self._eventBus = nil
 	return self
 end
@@ -393,6 +395,8 @@ function StudioE2EControlSystem:Init()
 	self._evidenceService = resolveService(self._deps, "EvidenceSystem", "ProcessToolUse")
 	self._lobbyHubService = resolveService(self._deps, "LobbySocialHub", "OnPlayerEnteredZone")
 	self._ghostSystem = resolveService(self._deps, "GhostSystem", "GetGhostState")
+	self._mapEventSystem = resolveService(self._deps, "MapEventSystem", "TriggerEvent")
+	self._mapInteractionSystem = resolveService(self._deps, "MapInteractionSystem", "ListObjects")
 	self._eventBus = resolveEventBus(self._deps)
 end
 
@@ -673,6 +677,104 @@ function StudioE2EControlSystem:_handleForceManifest(player, request)
 	return true, string.format("match=%s manifest_forced", matchId)
 end
 
+function StudioE2EControlSystem:_handleTriggerMapEvent(player, request)
+	local mapEventSystem = self._mapEventSystem
+	if type(mapEventSystem) ~= "table" or type(mapEventSystem.TriggerEvent) ~= "function" then
+		return false, "missing_map_event_system"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local eventType = type(request) == "table" and tostring(request.eventType or request.type or "") or ""
+	if eventType == "" then
+		eventType = "LightFlicker"
+	end
+
+	local payload = {
+		matchId = matchId,
+		eventType = eventType,
+		targetObject = type(request) == "table" and (request.targetObject or request.objectId) or nil,
+		roomId = type(request) == "table" and request.roomId or nil,
+		intensity = tonumber(type(request) == "table" and request.intensity) or 0.85,
+		source = "StudioE2EControlSystem",
+		now = os.clock(),
+	}
+
+	local ok, result = mapEventSystem:TriggerEvent(payload)
+	if ok ~= true then
+		return false, tostring(result or "map_event_failed")
+	end
+
+	local targetObject = type(result) == "table" and result.targetObject or payload.targetObject
+	return true, string.format(
+		"match=%s mapEvent=%s target=%s",
+		tostring(matchId),
+		tostring(eventType),
+		tostring(targetObject)
+	)
+end
+
+function StudioE2EControlSystem:_handleGetMapInteractionSnapshot(player, request)
+	local mapInteractionSystem = self._mapInteractionSystem
+	if type(mapInteractionSystem) ~= "table" or type(mapInteractionSystem.ListObjects) ~= "function" then
+		return false, "missing_map_interaction_system"
+	end
+
+	local objects = mapInteractionSystem:ListObjects()
+	if type(objects) ~= "table" then
+		return false, "missing_map_interaction_objects"
+	end
+
+	local countsByType = {}
+	local selected = {}
+	local targetObject = type(request) == "table" and tostring(request.targetObject or request.objectId or "") or ""
+	for _, objectData in ipairs(objects) do
+		if type(objectData) == "table" then
+			local objectType = tostring(objectData.type or "Unknown")
+			countsByType[objectType] = (countsByType[objectType] or 0) + 1
+			if #selected < 12
+				or (targetObject ~= "" and tostring(objectData.id or "") == targetObject) then
+				table.insert(selected, {
+					id = tostring(objectData.id or ""),
+					type = objectType,
+					roomId = tostring(objectData.roomId or ""),
+					interactions = objectData.interactions,
+				})
+			end
+		end
+	end
+
+	local snapshot = {
+		objectCount = #objects,
+		countsByType = countsByType,
+		sample = selected,
+		targetObject = targetObject ~= "" and targetObject or nil,
+	}
+	return true, HttpService:JSONEncode(snapshot)
+end
+
+function StudioE2EControlSystem:_handleTriggerMapInteraction(player, request)
+	local mapInteractionSystem = self._mapInteractionSystem
+	if type(mapInteractionSystem) ~= "table" or type(mapInteractionSystem.ExecuteInteraction) ~= "function" then
+		return false, "missing_map_interaction_system"
+	end
+
+	local objectId = type(request) == "table" and tostring(request.objectId or request.targetObject or "") or ""
+	local interactionType = type(request) == "table" and tostring(request.interactionType or request.interaction or "") or ""
+	if objectId == "" or interactionType == "" then
+		return false, "invalid_map_interaction_request"
+	end
+
+	local ok, reason = mapInteractionSystem:ExecuteInteraction(objectId, interactionType)
+	if ok ~= true then
+		return false, tostring(reason or "interaction_failed")
+	end
+	return true, string.format("object=%s interaction=%s", objectId, interactionType)
+end
+
 function StudioE2EControlSystem:_handleGetGhostRuntimeSnapshot(player, request)
 	local matchId = self:_resolveMatchId(player, request)
 	if not matchId then
@@ -733,6 +835,57 @@ function StudioE2EControlSystem:_handleGetGhostRuntimeSnapshot(player, request)
 		snapshot.meshPartName = meshPart.Name
 		snapshot.meshSize = tostring(meshPart.Size)
 		snapshot.meshTransparency = meshPart.Transparency
+		snapshot.meshColor = tostring(meshPart.Color)
+		snapshot.meshMaterial = tostring(meshPart.Material)
+		local textureOk, textureId = pcall(function()
+			return meshPart.TextureID
+		end)
+		if textureOk then
+			snapshot.meshTextureId = tostring(textureId or "")
+		end
+	end
+
+	if typeof(ghostModel) == "Instance" then
+		local surfaceAppearances = {}
+		local decalTextureCount = 0
+		for _, descendant in ipairs(ghostModel:GetDescendants()) do
+			if descendant:IsA("SurfaceAppearance") then
+				local record = {
+					name = descendant.Name,
+					parent = descendant.Parent and descendant.Parent.Name or "",
+				}
+				local colorMapOk, colorMap = pcall(function()
+					return descendant.ColorMap
+				end)
+				if colorMapOk then
+					record.colorMap = tostring(colorMap or "")
+				end
+				local normalMapOk, normalMap = pcall(function()
+					return descendant.NormalMap
+				end)
+				if normalMapOk then
+					record.normalMap = tostring(normalMap or "")
+				end
+				local roughnessMapOk, roughnessMap = pcall(function()
+					return descendant.RoughnessMap
+				end)
+				if roughnessMapOk then
+					record.roughnessMap = tostring(roughnessMap or "")
+				end
+				local metalnessMapOk, metalnessMap = pcall(function()
+					return descendant.MetalnessMap
+				end)
+				if metalnessMapOk then
+					record.metalnessMap = tostring(metalnessMap or "")
+				end
+				table.insert(surfaceAppearances, record)
+			elseif descendant:IsA("Decal") or descendant:IsA("Texture") then
+				decalTextureCount += 1
+			end
+		end
+		snapshot.surfaceAppearanceCount = #surfaceAppearances
+		snapshot.surfaceAppearances = surfaceAppearances
+		snapshot.decalTextureCount = decalTextureCount
 	end
 
 	local encoded = HttpService:JSONEncode(snapshot)
@@ -2488,6 +2641,12 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleForceHunt(player, request)
 		elseif action == "ForceManifest" then
 			return self:_handleForceManifest(player, request)
+		elseif action == "TriggerMapEvent" then
+			return self:_handleTriggerMapEvent(player, request)
+		elseif action == "GetMapInteractionSnapshot" then
+			return self:_handleGetMapInteractionSnapshot(player, request)
+		elseif action == "TriggerMapInteraction" then
+			return self:_handleTriggerMapInteraction(player, request)
 		elseif action == "GetGhostRuntimeSnapshot" then
 			return self:_handleGetGhostRuntimeSnapshot(player, request)
 		elseif action == "ExtractSelf" then

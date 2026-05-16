@@ -3,11 +3,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local AUTO_ATTR = "PasrahAutoRoomSmoke"
+local SOLO_FALLBACK_ATTR = "PasrahAutoRoomSmokeSoloFallback"
 local TRACE_ATTR = "PasrahRoomTrace"
 local ENABLE_WAIT_SECONDS = 8
 local LOOP_INTERVAL_SECONDS = 0.75
 local SNAPSHOT_REFRESH_SECONDS = 1.5
 local REQUEST_TIMEOUT_SECONDS = 5
+local SOLO_FALLBACK_AFTER_SECONDS = 14
 local DESIRED_MODE = "Classic"
 local DESIRED_MAP = "HauntedHouse"
 
@@ -17,10 +19,6 @@ end
 
 local localPlayer = Players.LocalPlayer
 if not localPlayer then
-	return
-end
-
-if localPlayer.Name ~= "Player1" and localPlayer.Name ~= "Player2" then
 	return
 end
 
@@ -86,6 +84,9 @@ local joinRequestedAt = nil
 local lastRefreshAt = 0
 local readySent = false
 local hostStartSent = false
+local startedAt = os.clock()
+local soloFallbackTriggered = false
+local studioE2ERemote = remoteFolder and remoteFolder:FindFirstChild("StudioE2EControl")
 
 local function roomIdOf(room)
 	if type(room) ~= "table" then
@@ -192,6 +193,22 @@ task.spawn(function()
 				controller:SetReady(true)
 				readySent = true
 				trace("ready requested for room " .. tostring(roomId))
+			end
+		end
+
+		if ReplicatedStorage:GetAttribute(SOLO_FALLBACK_ATTR) == true
+			and not roomId
+			and not soloFallbackTriggered
+			and (now - startedAt) >= SOLO_FALLBACK_AFTER_SECONDS then
+			if studioE2ERemote and studioE2ERemote:IsA("RemoteEvent") then
+				studioE2ERemote:FireServer({
+					action = "StartSoloMatch",
+					mapId = DESIRED_MAP,
+					mode = DESIRED_MODE,
+					difficulty = "Mudah",
+				})
+				soloFallbackTriggered = true
+				trace("solo fallback start requested via StudioE2EControl")
 			end
 		end
 

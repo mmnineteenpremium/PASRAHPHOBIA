@@ -1,4 +1,5 @@
 local Services = require(script.Parent.Parent.Core.Services)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local AbandonedPalaceLayout = require(script.Parent.AbandonedPalaceRuntimeLayout)
@@ -11,6 +12,28 @@ local EnvironmentalObjectRuntime = {}
 local GENERATED_FOLDER_NAME = "GeneratedEventAssets"
 local GENERATED_REVERT_DELAY = 1.6
 local LIGHT_FLICKER_DELAY = 0.08
+local WORLD_POINT_LIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldPointLightTemplate" }
+
+local function resolveChildPath(root, path)
+	local node = root
+	for _, segment in ipairs(path) do
+		if typeof(node) ~= "Instance" then
+			return nil
+		end
+		node = node:FindFirstChild(segment)
+	end
+	return node
+end
+
+local function cloneWorldPointLightTemplate(name)
+	local template = resolveChildPath(ReplicatedStorage, WORLD_POINT_LIGHT_TEMPLATE_PATH)
+	if template and template:IsA("PointLight") then
+		local clone = template:Clone()
+		clone.Name = name
+		return clone
+	end
+	return nil
+end
 
 local function normalizeToken(value)
 	if type(value) ~= "string" then
@@ -102,9 +125,16 @@ end
 local function resolveMapInteractionSystem(deps)
 	local interactionSystem = Services.Get(deps, "MapInteractionSystem")
 	if type(interactionSystem) ~= "table" then
-		return nil
+		local registry = rawget(_G, "SystemRegistry")
+		if type(registry) == "table" then
+			if type(registry.Get) == "function" then
+				interactionSystem = registry:Get("MapInteractionSystem")
+			elseif type(registry.GetService) == "function" then
+				interactionSystem = registry:GetService("MapInteractionSystem")
+			end
+		end
 	end
-	return interactionSystem
+	return type(interactionSystem) == "table" and interactionSystem or nil
 end
 
 local function ensureFolder(parent, name)
@@ -172,14 +202,20 @@ local function createCeilingLight(parent, name, position)
 		if pointLight then
 			pointLight:Destroy()
 		end
-		pointLight = Instance.new("PointLight")
-		pointLight.Name = "Light"
-		pointLight.Parent = bulb
+		pointLight = cloneWorldPointLightTemplate("Light")
+		if pointLight then
+			pointLight.Name = "Light"
+			pointLight.Parent = bulb
+		else
+			warn("[EnvironmentalObjectRuntime] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+		end
 	end
-	pointLight.Range = 18
-	pointLight.Brightness = 1.8
-	pointLight.Color = bulb.Color
-	pointLight.Enabled = true
+	if pointLight then
+		pointLight.Range = 18
+		pointLight.Brightness = 1.8
+		pointLight.Color = bulb.Color
+		pointLight.Enabled = true
+	end
 
 	model.PrimaryPart = cap
 	return model
@@ -245,13 +281,19 @@ local function createTelevision(parent, name, position)
 		if glow then
 			glow:Destroy()
 		end
-		glow = Instance.new("PointLight")
-		glow.Name = "Glow"
-		glow.Parent = screen
+		glow = cloneWorldPointLightTemplate("Glow")
+		if glow then
+			glow.Name = "Glow"
+			glow.Parent = screen
+		else
+			warn("[EnvironmentalObjectRuntime] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+		end
 	end
-	glow.Range = 10
-	glow.Brightness = 0
-	glow.Enabled = false
+	if glow then
+		glow.Range = 10
+		glow.Brightness = 0
+		glow.Enabled = false
+	end
 
 	model.PrimaryPart = frame
 	return model
@@ -294,13 +336,19 @@ local function createRadio(parent, name, position)
 		if glow then
 			glow:Destroy()
 		end
-		glow = Instance.new("PointLight")
-		glow.Name = "Glow"
-		glow.Parent = indicator
+		glow = cloneWorldPointLightTemplate("Glow")
+		if glow then
+			glow.Name = "Glow"
+			glow.Parent = indicator
+		else
+			warn("[EnvironmentalObjectRuntime] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+		end
 	end
-	glow.Range = 6
-	glow.Brightness = 0
-	glow.Enabled = false
+	if glow then
+		glow.Range = 6
+		glow.Brightness = 0
+		glow.Enabled = false
+	end
 
 	model.PrimaryPart = body
 	return model

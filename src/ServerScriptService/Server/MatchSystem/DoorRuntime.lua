@@ -1,5 +1,6 @@
 local Services = require(script.Parent.Parent.Core.Services)
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local DoorRuntime = {}
@@ -35,29 +36,45 @@ local PREPARATION_ADVANCE_HOLD_SECONDS = 0.32
 -- Staging-side interaction is often blocked by front-door collision/gate parts,
 -- so center-distance fallback must cover realistic reachable player positions.
 local PREPARATION_ADVANCE_RADIUS_FALLBACK = 9.5
+local PREPARATION_BREACH_TARGET_RADIUS = 3.75
 local PREPARATION_ADVANCE_FAILSAFE_SECONDS = 1.6
 local PREPARATION_ADVANCE_PROXIMITY_GRACE_SECONDS = 1.25
-local DEFAULT_OPEN_SOUND_ID = "rbxassetid://83005562781593"
-local DEFAULT_CLOSE_SOUND_ID = "rbxassetid://78764817933410"
+local DEFAULT_OPEN_SOUND_ID = "rbxassetid://119680795545028"
+local DEFAULT_CLOSE_SOUND_ID = "rbxassetid://79226838058023"
 local DEFAULT_SOUND_VOLUME = 0.45
 local DEFAULT_SOUND_MAX_DISTANCE = 42
+local DOOR_ROUTE_GUIDE_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldMarkers", "DoorRouteGuideBillboardTemplate" }
+local DOOR_ROUTE_HIGHLIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldHighlightTemplate" }
 
-local function createGuideTextLabel(name, font, textSize, textColor, text, height, position)
-	local label = Instance.new("TextLabel")
-	label.Name = name
-	label.BackgroundTransparency = 1
-	label.BorderSizePixel = 0
-	label.Position = position
-	label.Size = UDim2.new(1, -18, 0, height)
-	label.Font = font
-	label.Text = text
-	label.TextColor3 = textColor
-	label.TextSize = textSize
-	label.TextStrokeTransparency = 0.82
-	label.TextWrapped = true
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.TextYAlignment = Enum.TextYAlignment.Top
-	return label
+local function resolveChildPath(root, path)
+	local node = root
+	for _, segment in ipairs(path) do
+		if typeof(node) ~= "Instance" then
+			return nil
+		end
+		node = node:FindFirstChild(segment)
+	end
+	return node
+end
+
+local function cloneDoorRouteGuideTemplate()
+	local template = resolveChildPath(ReplicatedStorage, DOOR_ROUTE_GUIDE_TEMPLATE_PATH)
+	if template and template:IsA("BillboardGui") then
+		local clone = template:Clone()
+		clone.Name = GUIDE_BILLBOARD_NAME
+		return clone
+	end
+	return nil
+end
+
+local function cloneDoorRouteHighlightTemplate()
+	local template = resolveChildPath(ReplicatedStorage, DOOR_ROUTE_HIGHLIGHT_TEMPLATE_PATH)
+	if template and template:IsA("Highlight") then
+		local clone = template:Clone()
+		clone.Name = GUIDE_HIGHLIGHT_NAME
+		return clone
+	end
+	return nil
 end
 
 local function titleCaseToken(token)
@@ -180,7 +197,11 @@ local function ensureDoorRouteGuide(doorRecord)
 		if highlight then
 			highlight:Destroy()
 		end
-		highlight = Instance.new("Highlight")
+		highlight = cloneDoorRouteHighlightTemplate()
+		if not highlight then
+			warn("[DoorRuntime] Missing authored visual template: WorldEffects.WorldHighlightTemplate")
+			return nil
+		end
 		highlight.Name = GUIDE_HIGHLIGHT_NAME
 		highlight.Parent = folder
 	end
@@ -198,7 +219,11 @@ local function ensureDoorRouteGuide(doorRecord)
 		if billboard then
 			billboard:Destroy()
 		end
-		billboard = Instance.new("BillboardGui")
+		billboard = cloneDoorRouteGuideTemplate()
+		if not billboard then
+			warn("[DoorRuntime] Missing authored visual template: WorldMarkers.DoorRouteGuideBillboardTemplate")
+			return nil
+		end
 		billboard.Name = GUIDE_BILLBOARD_NAME
 		billboard.Parent = folder
 	end
@@ -220,54 +245,8 @@ local function ensureDoorRouteGuide(doorRecord)
 		if panel then
 			panel:Destroy()
 		end
-		panel = Instance.new("Frame")
-		panel.Name = "Panel"
-		panel.Parent = billboard
-
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 10)
-		corner.Parent = panel
-
-		local stroke = Instance.new("UIStroke")
-		stroke.Name = "Stroke"
-		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Color = palette.accent
-		stroke.Transparency = 0.18
-		stroke.Thickness = 1.2
-		stroke.Parent = panel
-
-		local accent = Instance.new("Frame")
-		accent.Name = "Accent"
-		accent.AnchorPoint = Vector2.new(0, 0.5)
-		accent.BackgroundColor3 = palette.accent
-		accent.BorderSizePixel = 0
-		accent.Position = UDim2.new(0, 10, 0.5, 0)
-		accent.Size = UDim2.fromOffset(3, 22)
-		accent.Parent = panel
-
-		local accentCorner = Instance.new("UICorner")
-		accentCorner.CornerRadius = UDim.new(1, 0)
-		accentCorner.Parent = accent
-
-		createGuideTextLabel(
-			"Title",
-			Enum.Font.GothamBold,
-			12,
-			palette.title,
-			doorRecord.label or "Pintu",
-			16,
-			UDim2.new(0, 20, 0, 5)
-		).Parent = panel
-
-		createGuideTextLabel(
-			"Subtitle",
-			Enum.Font.GothamMedium,
-			10,
-			palette.subtitle,
-			guideSubtitle,
-			14,
-			UDim2.new(0, 20, 0, 20)
-		).Parent = panel
+		warn("[DoorRuntime] DoorRouteGuideBillboardTemplate missing required child: Panel")
+		return nil
 	end
 
 	panel.BackgroundColor3 = Color3.fromRGB(10, 18, 28)
@@ -394,9 +373,16 @@ end
 local function resolveMapInteractionSystem(deps)
 	local interactionSystem = Services.Get(deps, "MapInteractionSystem")
 	if type(interactionSystem) ~= "table" then
-		return nil
+		local registry = rawget(_G, "SystemRegistry")
+		if type(registry) == "table" then
+			if type(registry.Get) == "function" then
+				interactionSystem = registry:Get("MapInteractionSystem")
+			elseif type(registry.GetService) == "function" then
+				interactionSystem = registry:GetService("MapInteractionSystem")
+			end
+		end
 	end
-	return interactionSystem
+	return type(interactionSystem) == "table" and interactionSystem or nil
 end
 
 local function ensurePathfindingModifier(part)
@@ -837,6 +823,46 @@ local function getNearestPlayerCenterDistance(doorRecord, players, matchId)
 	return nearest
 end
 
+local function getNearestPreparationBreachTargetDistance(doorRecord, players, matchId)
+	if type(doorRecord) ~= "table" or typeof(doorRecord.mapClone) ~= "Instance" then
+		return nil
+	end
+
+	local stagingFolder = doorRecord.mapClone:FindFirstChild("PreparationStagingRuntime", true)
+	if not stagingFolder then
+		return nil
+	end
+
+	local targets = {}
+	for _, descendant in ipairs(stagingFolder:GetDescendants()) do
+		if descendant:IsA("BasePart") and descendant.Name:match("^PreparationBreachTarget_") then
+			table.insert(targets, descendant)
+		end
+	end
+	if #targets == 0 then
+		return nil
+	end
+
+	local nearest = nil
+	for _, player in ipairs(players or {}) do
+		if not isRuntimeMatchParticipant(player, matchId) then
+			continue
+		end
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if root and not (humanoid and humanoid.Health <= 0) then
+			for _, target in ipairs(targets) do
+				local distance = (root.Position - target.Position).Magnitude
+				if nearest == nil or distance < nearest then
+					nearest = distance
+				end
+			end
+		end
+	end
+	return nearest
+end
+
 local function hasPreparationFocusTool(players, matchId)
 	for _, player in ipairs(players or {}) do
 		local lifecyclePhase = tostring(player and player:GetAttribute("MatchLifecyclePhase") or "")
@@ -1012,6 +1038,7 @@ function DoorRuntime.Attach(match, mapClone, deps)
 				label = doorLabel,
 				match = match,
 				matchId = matchId ~= "" and matchId or nil,
+				mapClone = mapClone,
 				closedCFrame = closedCFrame,
 				openCFrame = buildOpenCFrame(targetInstance, closedCFrame, descendant:GetAttribute("PasrahTargetMode")),
 				policy = normalizePolicy(initialState.policy),
@@ -1098,11 +1125,24 @@ if next(doorLookup) ~= nil and match then
 						PREPARATION_ADVANCE_APPROACH_DEPTH,
 						PREPARATION_ADVANCE_LATERAL_PADDING
 					)
+					local nearestBreachTargetDistance = getNearestPreparationBreachTargetDistance(
+						doorRecord,
+						preparationPlayers,
+						nil
+					)
 					if type(nearestApproachDistance) == "number" then
 						if type(nearestPreparationDistance) == "number" then
 							nearestPreparationDistance = math.min(nearestPreparationDistance, nearestApproachDistance)
 						else
 							nearestPreparationDistance = nearestApproachDistance
+						end
+					end
+					if type(nearestBreachTargetDistance) == "number"
+						and nearestBreachTargetDistance <= PREPARATION_BREACH_TARGET_RADIUS then
+						if type(nearestPreparationDistance) == "number" then
+							nearestPreparationDistance = math.min(nearestPreparationDistance, nearestBreachTargetDistance)
+						else
+							nearestPreparationDistance = nearestBreachTargetDistance
 						end
 					end
 					if type(nearestPreparationDistance) == "number"
@@ -1118,6 +1158,7 @@ if next(doorLookup) ~= nil and match then
 						or ((now - (doorRecord.lastPreparationNearbyAt or 0)) <= PREPARATION_ADVANCE_PROXIMITY_GRACE_SECONDS)
 					local hasFocusTool = hasPreparationFocusTool(preparationPlayers, nil)
 					part:SetAttribute("PasrahPrepAdvanceNearest", type(nearestPreparationDistance) == "number" and nearestPreparationDistance or nil)
+					part:SetAttribute("PasrahPrepAdvanceBreachTargetNearest", type(nearestBreachTargetDistance) == "number" and nearestBreachTargetDistance or nil)
 					part:SetAttribute("PasrahPrepAdvanceHasFocus", hasFocusTool == true)
 					part:SetAttribute("PasrahPrepAdvanceNearby", proximityActive == true)
 

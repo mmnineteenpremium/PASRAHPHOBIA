@@ -1,0 +1,15 @@
+{
+    "className":  "Animation",
+    "children":  [
+                     {
+                         "name":  "Looped",
+                         "className":  "BoolValue",
+                         "properties":  {
+                                            "Value":  true
+                                        }
+                     }
+                 ],
+    "properties":  {
+                       "AnimationId":  "rbxassetid://106762702216006"
+                   }
+}

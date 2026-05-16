@@ -44,6 +44,9 @@
       },
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
+        "ButtonImageTextController": {
+          "$path": "src/StarterPlayerScripts/ButtonImageTextController.client.lua"
+        },
         "ClientBootstrap": {
           "$path": "src/StarterPlayerScripts/ClientBootstrap.client.lua"
         },

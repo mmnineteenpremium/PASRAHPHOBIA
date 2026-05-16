@@ -1,7 +1,16 @@
 local Services = require(script.Parent.Parent.Core.Services)
+local Workspace = game:GetService("Workspace")
 
 local Service = {}
 Service.__index = Service
+
+local RUNTIME_FOLDER_OBJECT_SPECS = {
+	Doors = { objectType = "Door", interactions = { "Open", "Close", "Slam" } },
+	Lights = { objectType = "Light", interactions = { "TurnOn", "TurnOff", "Flicker" } },
+	Props = { objectType = "Object", interactions = { "Move", "Throw", "Rotate" } },
+	Electronics = { objectType = "Radio", interactions = { "TurnOn", "TurnOff", "PlayNoise", "StaticDistortion" } },
+	Windows = { objectType = "Window", interactions = { "Knock" } },
+}
 
 local DEFAULT_INTERACTION_COOLDOWN = 0.75
 
@@ -119,6 +128,59 @@ function Service:_getRegisteredObjects()
 	return self._state:Get("registeredObjects") or {}
 end
 
+function Service:_registerRuntimeFolderObjects(mapModel, folderName, spec)
+	if typeof(mapModel) ~= "Instance" or type(spec) ~= "table" then
+		return 0
+	end
+	local folder = mapModel:FindFirstChild(folderName, true)
+	if not (folder and folder:IsA("Folder")) then
+		return 0
+	end
+
+	local registered = 0
+	for _, child in ipairs(folder:GetChildren()) do
+		if child:IsA("BasePart") then
+			local ok = self:RegisterObject({
+				id = child.Name,
+				type = spec.objectType,
+				position = child.Position,
+				roomId = child:GetAttribute("RoomId") or child:GetAttribute("roomId"),
+				interactions = spec.interactions,
+				metadata = {
+					source = "WorkspaceActiveMatch",
+					map = mapModel.Name,
+					folder = folderName,
+				},
+			})
+			if ok == true then
+				registered += 1
+			end
+		end
+	end
+	return registered
+end
+
+function Service:_rebuildRegisteredObjectsFromActiveMatches()
+	local activeMatches = Workspace:FindFirstChild("ActiveMatches")
+	if not (activeMatches and activeMatches:IsA("Folder")) then
+		return 0
+	end
+
+	local registered = 0
+	for _, matchContainer in ipairs(activeMatches:GetChildren()) do
+		if matchContainer:IsA("Folder") or matchContainer:IsA("Model") then
+			for _, candidateMap in ipairs(matchContainer:GetChildren()) do
+				if candidateMap:IsA("Model") then
+					for folderName, spec in pairs(RUNTIME_FOLDER_OBJECT_SPECS) do
+						registered += self:_registerRuntimeFolderObjects(candidateMap, folderName, spec)
+					end
+				end
+			end
+		end
+	end
+	return registered
+end
+
 function Service:_getObjectStates()
 	return self._state:Get("objectStates") or {}
 end
@@ -156,10 +218,18 @@ function Service:GetObject(objectId)
 	if type(objectId) ~= "string" or objectId == "" then
 		return nil
 	end
-	return self:_getRegisteredObjects()[objectId]
+	local objects = self:_getRegisteredObjects()
+	if next(objects) == nil then
+		self:_rebuildRegisteredObjectsFromActiveMatches()
+		objects = self:_getRegisteredObjects()
+	end
+	return objects[objectId]
 end
 
 function Service:ListObjects()
+	if next(self:_getRegisteredObjects()) == nil then
+		self:_rebuildRegisteredObjectsFromActiveMatches()
+	end
 	local out = {}
 	for _, objectData in pairs(self:_getRegisteredObjects()) do
 		out[#out + 1] = objectData

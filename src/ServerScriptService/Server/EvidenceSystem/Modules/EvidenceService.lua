@@ -449,6 +449,14 @@ local function resolveEvidenceConfigSystem(deps)
 	return nil
 end
 
+local function resolveMatchSystem(deps)
+	local matchSystem = Services.Get(deps, "MatchSystem")
+	if type(matchSystem) ~= "table" then
+		return nil
+	end
+	return matchSystem
+end
+
 local function resolveEvidenceSync(deps)
 	local evidenceSync = Services.Get(deps, "EvidenceSync")
 	if type(evidenceSync) ~= "table" then
@@ -585,6 +593,7 @@ function EvidenceService.new(state, deps)
 	self._inventoryService = resolveInventoryService(self._deps)
 	self._evidenceSync = resolveEvidenceSync(self._deps)
 	self._evidenceConfigSystem = resolveEvidenceConfigSystem(self._deps)
+	self._matchSystem = resolveMatchSystem(self._deps)
 
 	self._deduction = EvidenceDeduction.new(self._dataTypes.EvidenceGhostMap)
 	self._tracker = EvidenceTracker.new()
@@ -826,6 +835,106 @@ function EvidenceService:_getGhostState(matchId)
 		return nil
 	end
 	return self._ghostService:GetGhostState(matchId)
+end
+
+function EvidenceService:_getLiveMatch(matchId)
+	if not matchId or type(self._matchSystem) ~= "table" then
+		return nil
+	end
+	if type(self._matchSystem.GetLiveMatch) == "function" then
+		local ok, match = pcall(function()
+			return self._matchSystem:GetLiveMatch(matchId)
+		end)
+		if ok and type(match) == "table" then
+			return match
+		end
+	end
+	if type(self._matchSystem.Service) == "table" and type(self._matchSystem.Service.GetLiveMatch) == "function" then
+		local ok, match = pcall(function()
+			return self._matchSystem.Service:GetLiveMatch(matchId)
+		end)
+		if ok and type(match) == "table" then
+			return match
+		end
+	end
+	if type(self._matchSystem.GetMatch) == "function" then
+		local ok, match = pcall(function()
+			return self._matchSystem:GetMatch(matchId)
+		end)
+		if ok and type(match) == "table" then
+			return match
+		end
+	end
+	if type(self._matchSystem.Service) == "table" and type(self._matchSystem.Service.GetMatch) == "function" then
+		local ok, match = pcall(function()
+			return self._matchSystem.Service:GetMatch(matchId)
+		end)
+		if ok and type(match) == "table" then
+			return match
+		end
+	end
+	local state = self._matchSystem.State
+	local matches = state and state.Get and state:Get("matches")
+	return type(matches) == "table" and matches[matchId] or nil
+end
+
+function EvidenceService:_resolveAuthoritativeGhostProfile(matchId, payload)
+	local match = self:_getLiveMatch(matchId)
+	if type(match) ~= "table" then
+		return nil
+	end
+	if tostring(match.state or "") == "Completed" then
+		return nil
+	end
+
+	local ghostType = type(match.ghostType) == "string" and match.ghostType or nil
+	if (not ghostType or ghostType == "") and typeof(match.ghost) == "Instance" then
+		ghostType = match.ghost:GetAttribute("GhostType")
+			or match.ghost:GetAttribute("VisualGhostType")
+	end
+
+	local ghostState = nil
+	if not ghostType or ghostType == "" or ghostType == "UnknownGhost" then
+		ghostState = self:_getGhostState(matchId)
+		if type(ghostState) == "table" then
+			ghostType = ghostState.ghostType
+				or ghostState.actualGhostType
+				or ghostState.visualGhostType
+				or ghostType
+		end
+	end
+
+	if type(ghostType) ~= "string" or ghostType == "" or ghostType == "UnknownGhost" then
+		return nil
+	end
+
+	return {
+		ghostType = ghostType,
+		favoriteRoomId = (type(ghostState) == "table" and ghostState.favoriteRoomId)
+			or (match.ghostRoom and match.ghostRoom.Name)
+			or nil,
+		difficulty = match.difficulty,
+		difficultyMode = match.difficultyMode,
+		difficultyProfile = match.difficultyProfile,
+		evidenceCap = match.evidenceCap,
+		ghostSeed = match.ghostSeed,
+		now = payload and payload.now,
+		source = payload and payload.source or "JournalValidationRehydrate",
+	}
+end
+
+function EvidenceService:_ensureJournalValidationSession(matchId, payload)
+	local session = self._engine:GetSession(matchId)
+	local ghostType = session and session.ghostType or nil
+	if type(ghostType) == "string" and ghostType ~= "" and ghostType ~= "UnknownGhost" then
+		return session
+	end
+
+	local profile = self:_resolveAuthoritativeGhostProfile(matchId, payload)
+	if not profile then
+		return session
+	end
+	return self:SetGhostProfile(matchId, profile)
 end
 
 function EvidenceService:_getUtilityToolsByMatch()
@@ -1822,7 +1931,12 @@ function EvidenceService:CollectEvidence(player, matchId, payload)
 end
 
 function EvidenceService:ValidateJournalGuess(player, matchId, payload)
+	self:_ensureJournalValidationSession(matchId, payload or {})
 	local ok, reason, result = self._engine:ValidateJournalGuess(matchId, payload or {})
+	if not ok and reason == "missing_match_session" then
+		self:_ensureJournalValidationSession(matchId, payload or {})
+		ok, reason, result = self._engine:ValidateJournalGuess(matchId, payload or {})
+	end
 	if not ok then
 		return false, reason, result
 	end

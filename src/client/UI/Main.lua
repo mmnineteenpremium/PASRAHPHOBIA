@@ -16,6 +16,8 @@ local RoomBrowserController = require(script.Parent.RoomBrowserController)
 local GraphicsSupport = require(script.Parent.GraphicsSupport)
 local CharacterPreviewSupport = require(script.Parent.CharacterPreviewSupport)
 local UISupport = require(script.Parent.UISupport)
+local LoadingSpriteAnimator = require(script.Parent.LoadingSpriteAnimator)
+local LoadingSpriteAtlas = require(script.Parent.LoadingSpriteAtlas)
 
 local UI_MODULES = {
 	"JournalUI",
@@ -49,10 +51,33 @@ STRICT_SINGLE_SCREEN_GUI_NAMES = {
 	"RoomBrowserFloatUI",
 	"MatchLoadingUI",
 	"TeleportScreen",
-	"LobbyUI",
 	"MatchUI",
 	"MainMenuUI",
 	"LeaderboardUI",
+}
+AUTHORED_OWNER_LAYOUT_LOCK = true
+AUTHORED_OWNER_LAYOUT_SURFACES = {
+	LobbyUI = true,
+	RoomBrowserUI = true,
+	RoomBrowserFloatUI = true,
+	MainMenuUI = true,
+	LeaderboardUI = true,
+	JournalUI = true,
+	ProfileUI = true,
+	ShopUI = true,
+	RoyalPassUI = true,
+	PASRA_UI = true,
+	SpectatorUI = true,
+	MatchUI = true,
+	LobbyUXGui = true,
+	MatchUXGui = true,
+	QuestTrackerGui = true,
+	QuestJournalGui = true,
+	SanityHUDGui = true,
+	MatchLoadingUI = true,
+	TeleportScreen = true,
+	FPVCursorToggleUI = true,
+	FlashlightToggleUI = true,
 }
 MAPS = { "HauntedHouse", "AbandonedPalace", "EmptyBuilding", "StudioMMNineteen" }
 LOBBY_ZONE_CLIENT_META = {
@@ -128,7 +153,6 @@ SINGLE_WINDOW_PRIORITY = {
 	"SpectatorUI",
 	"MainMenuUI",
 	"LeaderboardUI",
-	"LobbyUI",
 }
 AUXILIARY_WINDOW_TOGGLE_KEYS = {
 	JournalUI = Enum.KeyCode.J,
@@ -223,6 +247,43 @@ CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
 CLOSE_HINT_TEXT = "[X] / [B] untuk tutup"
 USE_NATIVE_BACKPACK_TOOLS = true
 JOURNAL_TOOL_TYPE = "JejakEnergi"
+JOURNAL_BACKGROUND_IMAGE_ID = "78469749292028"
+JOURNAL_EVIDENCE_ORDER = {
+	"MEDOK",
+	"Suhu",
+	"BukuTerkutuk",
+	"To'un",
+	"Suara",
+	"Pengganggu",
+}
+JOURNAL_EVIDENCE_LABELS = {
+	MEDOK = "MEDOK",
+	Suhu = "SUHU",
+	BukuTerkutuk = "BUKU TERKUTUK",
+	["To'un"] = "TO'UN",
+	Suara = "SUARA",
+	Pengganggu = "PENGGANGGU",
+}
+JOURNAL_GHOST_ORDER = {
+	"Pocong",
+	"Kuntilanak",
+	"Genderuwo",
+	"Tuyul",
+	"WeweGombel",
+	"Palasik",
+	"Banaspati",
+	"Jerangkong",
+	"Leak",
+	"SilumanUlar",
+	"SundelBolong",
+	"HantuTanah",
+}
+JOURNAL_TUTORIAL_PAGES = {
+	"1/4 Checklist evidence manual. Pilih tepat 3 evidence dari hasil investigasi tim.",
+	"2/4 Pilih 1 ghost sebagai final guess. Tidak ada auto-solve di fase ini.",
+	"3/4 Tekan SUBMIT JOURNAL untuk lock tebakan, lalu END INVESTIGATION saat siap pulang.",
+	"4/4 Server tetap authoritative: ghost asli, benar/salah, dan reward dihitung server.",
+}
 FIELD_KIT_TOOL_ORDER = {
 	"JejakEnergi",
 	"Garam",
@@ -498,6 +559,45 @@ local function getFieldKitLayoutMetrics(isMobile, availableWidth, toolCount)
 		frameHeight = frameHeight,
 	}
 end
+
+local function shouldPreserveAuthoredOwnerLayout(guiName)
+	return AUTHORED_OWNER_LAYOUT_LOCK == true and AUTHORED_OWNER_LAYOUT_SURFACES[guiName] == true
+end
+
+local runtimeButtonBindings = setmetatable({}, { __mode = "k" })
+local runtimeDragBindings = setmetatable({}, { __mode = "k" })
+local runtimeGuiBootstrap = setmetatable({}, { __mode = "k" })
+
+local function isRuntimeButtonBound(button)
+	return button ~= nil and runtimeButtonBindings[button] == true
+end
+
+local function markRuntimeButtonBound(button)
+	if button then
+		runtimeButtonBindings[button] = true
+	end
+end
+
+local function isRuntimeDragBound(button)
+	return button ~= nil and runtimeDragBindings[button] == true
+end
+
+local function markRuntimeDragBound(button)
+	if button then
+		runtimeDragBindings[button] = true
+	end
+end
+
+local function isRuntimeGuiBootstrapped(gui)
+	return gui ~= nil and runtimeGuiBootstrap[gui] == true
+end
+
+local function markRuntimeGuiBootstrapped(gui)
+	if gui then
+		runtimeGuiBootstrap[gui] = true
+	end
+end
+
 local lobbyZonePartCache = {}
 local lobbySpawnPartCache = nil
 
@@ -776,7 +876,9 @@ local function applyButtonToneVisual(button, parts)
 	local isActive = button:GetAttribute("PasrahButtonActive") == true
 	local background, textColor, strokeColor = resolveButtonTone(toneKey, isActive)
 	button.BackgroundColor3 = background
-	button.TextColor3 = textColor
+	if button:IsA("TextButton") then
+		button.TextColor3 = textColor
+	end
 	if parts and parts.Stroke then
 		parts.Stroke.Color = strokeColor
 	end
@@ -791,6 +893,191 @@ end
 local BUTTON_TWEEN_INFO = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local BUTTON_PRESS_TWEEN_INFO = TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local PANEL_REVEAL_TWEEN_INFO = TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local BUTTON_BORDER_IDLE_IMAGE = "rbxthumb://type=Asset&id=96807162342543&w=420&h=420"
+local BUTTON_BORDER_HOVER_IMAGE = "rbxthumb://type=Asset&id=96807162342543&w=420&h=420"
+local BUTTON_BORDER_ACTIVE_IMAGE = "rbxthumb://type=Asset&id=96807162342543&w=420&h=420"
+local ROOM_BROWSER_PANEL_BACKGROUND_IMAGE = "rbxthumb://type=Asset&id=109092248853429&w=1024&h=1024"
+local ROOM_BROWSER_MAP_PHOTOS = {
+	HauntedHouse = "rbxthumb://type=Asset&id=95415512980974&w=1024&h=1024",
+	StudioMMNineteen = "rbxthumb://type=Asset&id=83797117611324&w=1024&h=1024",
+	AbandonedPalace = "rbxthumb://type=Asset&id=117646011293076&w=1024&h=1024",
+}
+local ROOM_BROWSER_TEXT_IMAGE_STATES = {
+	ClassicButton = { idle = "117760951401524", hover = "129015288351024", active = "138617081838094" },
+	ClassicOption = { idle = "117760951401524", hover = "129015288351024", active = "138617081838094" },
+	AllModesButton = { idle = "75636362660244", hover = "97893505198837", active = "71250727262939" },
+	RankedButton = { idle = "92776029802346", hover = "86043176432101", active = "136947178671971" },
+	RankedOption = { idle = "92776029802346", hover = "86043176432101", active = "136947178671971" },
+	RefreshButton = { idle = "122710253904259", hover = "134969787978908", active = "84361805930072" },
+	CreateRoomButton = { idle = "78265579903979", hover = "91383658246484", active = "118305236485541" },
+	JoinButton = { idle = "117884429780350", hover = "83549950348202", active = "104471513845706" },
+	QueueButton = { idle = "117884429780350", hover = "83549950348202", active = "104471513845706" },
+	QuickJoinClassicButton = { idle = "103126601492249", hover = "118376821868501", active = "139918432832626" },
+	QuickJoinRankedButton = { idle = "73702891169263", hover = "118855711808942", active = "77299506660222" },
+	ReadyButton = { idle = "80162729234441", hover = "123954565032294", active = "131702435873347" },
+	StartButton = { idle = "105040736629114", hover = "78774287520098", active = "95317412796782" },
+	CancelStartButton = { idle = "73412200516577", hover = "90025550503883", active = "99098707302919" },
+	LeaveRoomButton = { idle = "80580476454562", hover = "139034140988266", active = "134523480660036" },
+	InviteButton = { idle = "75642756888914", hover = "117728586453608", active = "111443138456845" },
+	KickButton = { idle = "140602269367161", hover = "90835359324112", active = "123718222101364" },
+	SetPasswordButton = { idle = "115749597829280", hover = "115927030315826", active = "104382602356120" },
+	CancelButton = { idle = "72304416615357", hover = "91444456070241", active = "97774322066947" },
+	SaveButton = { idle = "137625844137204", hover = "108891557892147", active = "128898918499055" },
+	OkButton = { idle = "131131528442725", hover = "92932938836672", active = "122482912193368" },
+	AcceptButton = { idle = "136849137495432", hover = "138886948030082", active = "128366030117614" },
+	DeclineButton = { idle = "128216406160776", hover = "130577615241706", active = "89722983867546" },
+	CancelCountdown = { idle = "89007767469101", hover = "92255968205675", active = "74356456014592" },
+	CloseButton = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
+	MenuButton = { idle = "81840234190758", hover = "100554800720547", active = "109153271232438" },
+	BottomNavTriggerButton = { idle = "81840234190758", hover = "100554800720547", active = "109153271232438" },
+	OpenRoomBrowserButton = { idle = "121806831769566", hover = "114260638652413", active = "132315129687773" },
+	RoomBrowserButton = { idle = "121806831769566", hover = "114260638652413", active = "132315129687773" },
+	ProfileButton = { idle = "138788536092713", hover = "101195397941386", active = "92364485405672" },
+	RankButton = { idle = "132541994193262", hover = "78308952430777", active = "137424967951840" },
+	ShopButton = { idle = "133173197641907", hover = "88732046094994", active = "91837126977915" },
+	RoyalPassButton = { idle = "74154323194225", hover = "92445570105509", active = "88526438006690" },
+	MissionTab = { idle = "91316576845536", hover = "96825362275947", active = "82227324051324" },
+	RewardTab = { idle = "91316576845536", hover = "96825362275947", active = "82227324051324" },
+	PremiumActionButton = { idle = "133173197641907", hover = "88732046094994", active = "91837126977915" },
+	PlayButton = { idle = "97619808744728", hover = "101162595389006", active = "124031181308180" },
+	ToolActionButton = { idle = "71874610051324", hover = "128303976874326", active = "109151429365319" },
+	KoleksiButton = { idle = "138104347169386", hover = "92582946322328", active = "112977326396191" },
+	PersiapanButton = { idle = "122961573879784", hover = "72835993341884", active = "77333574657841" },
+	MainMenuButton = { idle = "100188914682058", hover = "135944631095139", active = "86180351762194" },
+	SettingsButton = { idle = "89537724886773", hover = "130532745688521", active = "80626213294091" },
+	GraphicsButton = { idle = "89537724886773", hover = "130532745688521", active = "80626213294091" },
+	ENOption = { idle = "72874112411604", hover = "106537932473563", active = "103268233098031" },
+	IDOption = { idle = "129796813561337", hover = "86296711459938", active = "107260627864416" },
+	RENDAHOption = { idle = "95274965608918", hover = "125082924781174", active = "132991450299147" },
+	SEDANGOption = { idle = "94913337057550", hover = "107952674217542", active = "104814729311590" },
+	TINGGIOption = { idle = "105304300351595", hover = "105304300351595", active = "105304300351595" },
+	ULTRAOption = { idle = "102177609283146", hover = "117578464869913", active = "130828088372612" },
+	CursorToggleButton = { idle = "92060683504611", hover = "98204424974505", active = "81285506892525" },
+	ToggleButton = { idle = "106996620986201", hover = "128353838297791", active = "75271688724464" },
+	HideButton = { idle = "106449517363306", hover = "107558671055493", active = "94285208092044" },
+	EvidenceQuickButton = { idle = "76661174366790", hover = "71133090906987", active = "113787734161193" },
+	ResultsCloseButton = { idle = "86629151641022", hover = "124686987761499", active = "94234777851234" },
+	OpenButton = { idle = "74146227961542", hover = "95903306810711", active = "98565884123985" },
+	DAILYTab = { idle = "91316576845536", hover = "96825362275947", active = "82227324051324" },
+	STORYTab = { idle = "137489635851687", hover = "98503217158561", active = "77447453584064" },
+	WEEKLYTab = { idle = "136762040893669", hover = "127247448482612", active = "128898766382265" },
+	CollapseButton = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
+	ReopenButton = { idle = "103489183789899", hover = "99269259836629", active = "110126978866737" },
+	FilterTemplate = { idle = "75636362660244", hover = "97893505198837", active = "71250727262939" },
+	KickInline = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
+	FilterAll = { idle = "75636362660244", hover = "97893505198837", active = "71250727262939" },
+	FilterOwned = { idle = "138104347169386", hover = "92582946322328", active = "112977326396191" },
+	FilterRobux = { idle = "133173197641907", hover = "88732046094994", active = "91837126977915" },
+}
+
+local ACTION_BUTTON_TEXT_IMAGE_STATES = {
+	["DAY 01"] = { idle = "91316576845536", hover = "96825362275947", active = "82227324051324" },
+	["INV"] = { idle = "75642756888914", hover = "117728586453608", active = "111443138456845" },
+	["OPEN ROOMS"] = { idle = "87917822445882", hover = "86582438290826", active = "86337699956144" },
+	["SAFE"] = { idle = "95774596939688", hover = "117499371608925", active = "75654724905306" },
+	["CLAIM"] = { idle = "131131528442725", hover = "92932938836672", active = "122482912193368" },
+	["LIVE"] = { idle = "119893364681680", hover = "103511682438962", active = "133568679810222" },
+	["SHOP"] = { idle = "133173197641907", hover = "88732046094994", active = "91837126977915" },
+	["BELI"] = { idle = "131131528442725", hover = "92932938836672", active = "122482912193368" },
+	["KURANG"] = { idle = "72304416615357", hover = "91444456070241", active = "97774322066947" },
+	["FRESH"] = { idle = "122710253904259", hover = "134969787978908", active = "84361805930072" },
+	["LOCAL"] = { idle = "95774596939688", hover = "117499371608925", active = "75654724905306" },
+	["TRACK"] = { idle = "103489183789899", hover = "99269259836629", active = "110126978866737" },
+	["PAKAI"] = { idle = "119893364681680", hover = "103511682438962", active = "133568679810222" },
+	["INFO"] = { idle = "131131528442725", hover = "92932938836672", active = "122482912193368" },
+	["LIHAT SHOP"] = { idle = "123823941129089", hover = "138578045095503", active = "140390986903081" },
+	["PENDING"] = { idle = "95774596939688", hover = "117499371608925", active = "75654724905306" },
+	["OPEN PROFILE"] = { idle = "105816021457823", hover = "138336629404370", active = "108485786723336" },
+	["OPEN RANK BOARD"] = { idle = "70851175896471", hover = "113137045182913", active = "111395627991278" },
+	["OPEN ROOM BROWSER"] = { idle = "121806831769566", hover = "114260638652413", active = "132315129687773" },
+	["OPEN SHOP"] = { idle = "123823941129089", hover = "138578045095503", active = "140390986903081" },
+	ALL = { idle = "75636362660244", hover = "97893505198837", active = "71250727262939" },
+	X = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
+	["[X]"] = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
+}
+
+local function toThumbAsset(assetId)
+	return string.format("rbxthumb://type=Asset&id=%s&w=420&h=420", tostring(assetId))
+end
+local function toButtonTextImageAsset(assetId)
+	return string.format("rbxassetid://%s", tostring(assetId))
+end
+local BUTTON_TEXT_IMAGE_SCALE = {
+	idle = 1,
+	hover = 1.3,
+	active = 1.2,
+}
+local function ensureButtonTextImageScale(image)
+	local scale = image and image:FindFirstChild("BrandTextImageStateScale")
+	if scale and scale:IsA("UIScale") then
+		return scale
+	end
+	scale = Instance.new("UIScale")
+	scale.Name = "BrandTextImageStateScale"
+	scale.Scale = BUTTON_TEXT_IMAGE_SCALE.idle
+	scale.Parent = image
+	return scale
+end
+local function setButtonTextImageScale(image, stateName)
+	if not image then
+		return nil, nil
+	end
+	local scale = ensureButtonTextImageScale(image)
+	local target = BUTTON_TEXT_IMAGE_SCALE[stateName or "idle"] or BUTTON_TEXT_IMAGE_SCALE.idle
+	scale.Scale = target
+	return scale, target
+end
+local function setButtonTextImagePassthrough(image)
+	if not (image and (image:IsA("ImageLabel") or image:IsA("ImageButton"))) then
+		return
+	end
+	if image:IsA("ImageButton") then
+		image.AutoButtonColor = false
+	end
+	image.Active = false
+	image.Selectable = false
+	pcall(function()
+		image.Interactable = false
+	end)
+end
+local function isButtonTextImageObject(image)
+	return image and (image:IsA("ImageLabel") or image:IsA("ImageButton"))
+end
+local function replaceWithButtonTextImage(parent, existing)
+	local image = Instance.new("ImageLabel")
+	image.Name = "BrandTextImage"
+	image.BackgroundTransparency = 1
+	image.ScaleType = Enum.ScaleType.Fit
+	setButtonTextImagePassthrough(image)
+	if existing and existing:IsA("GuiObject") then
+		image.Size = existing.Size
+		image.Position = existing.Position
+		image.AnchorPoint = existing.AnchorPoint
+		image.ZIndex = existing.ZIndex
+		image.Visible = existing.Visible
+		image.LayoutOrder = existing.LayoutOrder
+		existing:Destroy()
+	end
+	image.Parent = parent
+	ensureButtonTextImageScale(image)
+	return image
+end
+local function configureButtonTextImage(image, states)
+	if not (image and states) then
+		return
+	end
+	local idle = states.idle or states.active or states.hover
+	local hover = states.hover or idle
+	local active = states.active or hover
+	image.Image = toButtonTextImageAsset(idle)
+	image.ImageTransparency = 0
+	setButtonTextImageScale(image, "idle")
+	if image:IsA("ImageButton") then
+		image.HoverImage = toButtonTextImageAsset(hover)
+		image.PressedImage = toButtonTextImageAsset(active)
+		setButtonTextImagePassthrough(image)
+	end
+end
 local UI_SOUND_PATHS = {
 	ButtonClick = { "Assets", "Audio", "UI", "ButtonClick_01" },
 	CountdownTick = { "Assets", "Audio", "UI", "CountdownTick_01" },
@@ -806,43 +1093,43 @@ local UI_SOUND_PATHS = {
 }
 local UI_SOUND_FALLBACKS = {
 	ButtonClick = {
-		SoundId = "rbxassetid://85056627192723",
+		SoundId = "rbxassetid://127721145035732",
 		Volume = 0.14,
 	},
 	ObjectiveUpdate = {
-		SoundId = "rbxassetid://96021243760086",
+		SoundId = "rbxassetid://83944840031327",
 		Volume = 0.17,
 	},
 	Notification = {
-		SoundId = "rbxassetid://130533639073623",
+		SoundId = "rbxassetid://95263124916270",
 		Volume = 0.18,
 	},
 	ThermometerRead = {
-		SoundId = "rbxassetid://87230026682789",
+		SoundId = "rbxassetid://87937719989711",
 		Volume = 0.2,
 	},
 	WritingScratch = {
-		SoundId = "rbxassetid://83865030928382",
+		SoundId = "rbxassetid://119284790023079",
 		Volume = 0.28,
 	},
 	MotionTrigger = {
-		SoundId = "rbxassetid://97217836947594",
+		SoundId = "rbxassetid://115056813904463",
 		Volume = 0.18,
 	},
 	PanelOpen = {
-		SoundId = "rbxassetid://115397007938540",
+		SoundId = "rbxassetid://108784352030590",
 		Volume = 0.16,
 	},
 	PanelSoftClose = {
-		SoundId = "rbxassetid://73589904561594",
+		SoundId = "rbxassetid://71780731527254",
 		Volume = 0.11,
 	},
 	JournalPage = {
-		SoundId = "rbxassetid://97915135753208",
+		SoundId = "rbxassetid://77863410998621",
 		Volume = 0.16,
 	},
 	Error = {
-		SoundId = "rbxassetid://70594579947868",
+		SoundId = "rbxassetid://113552745198796",
 		Volume = 0.2,
 	},
 }
@@ -854,28 +1141,70 @@ local function logRoomClickConnected(buttonName)
 end
 
 local function ensureCorner(guiObject, name, radius)
-	if not guiObject then
-		return nil
-	end
-
-	local corner = nil
-	if name then
-		corner = guiObject:FindFirstChild(name)
-	end
-	if not corner then
-		corner = guiObject:FindFirstChildOfClass("UICorner")
-	end
-	if not corner then
-		corner = Instance.new("UICorner")
-		if name then
-			corner.Name = name
-		end
-		corner.Parent = guiObject
-	end
-	if radius then
+	local corner = guiObject and (name and guiObject:FindFirstChild(name) or guiObject:FindFirstChildOfClass("UICorner"))
+	if corner and corner:IsA("UICorner") and radius then
 		corner.CornerRadius = radius
 	end
 	return corner
+end
+
+function UISystem:_getUiVisualTemplate(templateName, className)
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	local visualTemplates = assets and assets:FindFirstChild("VisualTemplates")
+	local uiTemplates = visualTemplates and visualTemplates:FindFirstChild("UI")
+	if not (uiTemplates and uiTemplates:IsA("Folder")) then
+		return nil
+	end
+	local template = uiTemplates:FindFirstChild(templateName)
+	if className and template and not template:IsA(className) then
+		return nil
+	end
+	return template
+end
+
+function UISystem:_ensureUiVisualTemplateChildren(target, templateName)
+	local template = self:_getUiVisualTemplate(templateName, "Folder")
+	if not target or not template then
+		return false
+	end
+	for _, child in ipairs(template:GetChildren()) do
+		if not target:FindFirstChild(child.Name) then
+			child:Clone().Parent = target
+		end
+	end
+	return true
+end
+
+function UISystem:_cloneUiVisualTemplateRoot(templateName, parent, newName)
+	local template = self:_getUiVisualTemplate(templateName)
+	if not template or not parent then
+		return nil
+	end
+	local clone = template:Clone()
+	clone.Name = newName or string.gsub(template.Name, "Template$", "")
+	if clone:IsA("GuiObject") then
+		clone.Visible = true
+	end
+	clone.Parent = parent
+	return clone
+end
+
+function UISystem:_cloneSummaryValueTemplate(parent, rowName, labelText)
+	local row = self:_cloneUiVisualTemplateRoot("SummaryRowTemplate", parent, rowName)
+	if not (row and row:IsA("Frame")) then
+		return nil
+	end
+
+	local label = row:FindFirstChild("Label")
+	if label and label:IsA("TextLabel") then
+		label.Text = tostring(labelText or "-")
+	end
+	local value = row:FindFirstChild("Value")
+	if value and value:IsA("TextLabel") then
+		return value
+	end
+	row:Destroy()
+	return nil
 end
 
 local function ensureNamedScale(guiObject, name)
@@ -1071,43 +1400,41 @@ local function ensureButtonPolish(button)
 	if not button then
 		return nil
 	end
+	if button.Name == "BrandTextImage" then
+		return nil
+	end
 
 	button.ClipsDescendants = true
-	ensureCorner(button, "ButtonCorner", UDim.new(0, 8))
+	UISystem:_ensureUiVisualTemplateChildren(button, "ButtonPolishChildrenTemplate")
 
-	local scale = ensureNamedScale(button, "BrandScale")
+	local scale = button:FindFirstChild("BrandScale")
+	if scale and not scale:IsA("UIScale") then
+		scale = nil
+	end
 
 	local overlay = button:FindFirstChild("BrandOverlay")
-	if not overlay or not overlay:IsA("Frame") then
-		overlay = Instance.new("Frame")
-		overlay.Name = "BrandOverlay"
-		overlay.BackgroundColor3 = UI_BRAND.sheen
-		overlay.BackgroundTransparency = 0.94
-		overlay.BorderSizePixel = 0
+	if overlay and overlay:IsA("Frame") then
 		overlay.Size = UDim2.fromScale(1, 1)
 		overlay.ZIndex = math.max(0, button.ZIndex - 1)
 		overlay.Active = false
-		overlay.Parent = button
+		overlay.Selectable = false
+		pcall(function()
+			overlay.Interactable = false
+		end)
+		overlay.BackgroundColor3 = UI_BRAND.sheen
 	end
-	overlay.Size = UDim2.fromScale(1, 1)
-	ensureCorner(overlay, "OverlayCorner", UDim.new(0, 8))
 
 	local stroke = button:FindFirstChild("BrandStroke")
-	if not stroke or not stroke:IsA("UIStroke") then
-		stroke = Instance.new("UIStroke")
-		stroke.Name = "BrandStroke"
+	if stroke and stroke:IsA("UIStroke") then
 		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		stroke.LineJoinMode = Enum.LineJoinMode.Round
 		stroke.Thickness = 1.1
 		stroke.Transparency = 0.26
 		stroke.Color = UI_BRAND.focusSoft
-		stroke.Parent = button
 	end
 
 	local gradient = button:FindFirstChild("BrandGradient")
-	if not gradient or not gradient:IsA("UIGradient") then
-		gradient = Instance.new("UIGradient")
-		gradient.Name = "BrandGradient"
+	if gradient and gradient:IsA("UIGradient") then
 		gradient.Rotation = 90
 		gradient.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 188, 222)),
@@ -1117,7 +1444,52 @@ local function ensureButtonPolish(button)
 			NumberSequenceKeypoint.new(0, 0.2),
 			NumberSequenceKeypoint.new(1, 0.4),
 		})
-		gradient.Parent = button
+	end
+
+	local borderImage = button:FindFirstChild("BrandBorder")
+	if borderImage and borderImage:IsA("ImageLabel") then
+		borderImage.Image = BUTTON_BORDER_IDLE_IMAGE
+		borderImage.ImageTransparency = 0
+		borderImage.ScaleType = Enum.ScaleType.Stretch
+		borderImage.Size = UDim2.fromScale(1, 1)
+		borderImage.Position = UDim2.fromScale(0, 0)
+		borderImage.ZIndex = button.ZIndex + 2
+		borderImage.Active = false
+		borderImage.Selectable = false
+		pcall(function()
+			borderImage.Interactable = false
+		end)
+		borderImage.Visible = true
+	end
+
+	local textImageStates = ACTION_BUTTON_TEXT_IMAGE_STATES[tostring(button.Text or "")]
+		or ROOM_BROWSER_TEXT_IMAGE_STATES[button.Name]
+	local textImage = button:FindFirstChild("BrandTextImage")
+	if textImageStates and (not textImage or not isButtonTextImageObject(textImage)) then
+		textImage = replaceWithButtonTextImage(button, isButtonTextImageObject(textImage) and textImage or nil)
+	elseif textImage and not isButtonTextImageObject(textImage) then
+		textImage = nil
+	end
+	if textImage then
+		textImage.ScaleType = Enum.ScaleType.Fit
+		textImage.AnchorPoint = Vector2.new(0.5, 0.5)
+		textImage.Position = UDim2.fromScale(0.5, 0.5)
+		textImage.Size = UDim2.new(1, -16, 1, -10)
+		textImage.ZIndex = button.ZIndex + 3
+		if textImage:IsA("ImageButton") then
+			setButtonTextImagePassthrough(textImage)
+		else
+			textImage.Active = false
+		end
+	end
+	if textImageStates and textImage then
+		textImage.Visible = true
+		configureButtonTextImage(textImage, textImageStates)
+		if button:IsA("TextButton") then
+			button.TextTransparency = 1
+		end
+	elseif textImage then
+		textImage.Visible = false
 	end
 
 	local parts = {
@@ -1125,6 +1497,9 @@ local function ensureButtonPolish(button)
 		Overlay = overlay,
 		Stroke = stroke,
 		Gradient = gradient,
+		BorderImage = borderImage,
+		TextImage = textImage,
+		TextImageStates = textImageStates,
 	}
 	applyButtonToneVisual(button, parts)
 	return parts
@@ -1132,7 +1507,7 @@ end
 
 local function refreshButtonPolish(button, immediate)
 	local parts = ensureButtonPolish(button)
-	if not parts then
+	if not parts or not parts.Overlay or not parts.Stroke or not parts.Scale then
 		return
 	end
 	applyButtonToneVisual(button, parts)
@@ -1146,29 +1521,60 @@ local function refreshButtonPolish(button, immediate)
 	local strokeTransparency = 0.34
 	local strokeThickness = 1
 	local scaleTarget = 1
+	local borderImageId = BUTTON_BORDER_IDLE_IMAGE
+	local textImageId = nil
+	local textImageScaleTarget = BUTTON_TEXT_IMAGE_SCALE.idle
+	if parts.TextImageStates then
+		textImageId = toButtonTextImageAsset(parts.TextImageStates.idle)
+	end
 
 	if selected then
 		overlayTransparency = 0.9
 		strokeTransparency = 0.12
 		strokeThickness = 1.8
+		scaleTarget = math.max(scaleTarget, 1.018)
+		borderImageId = BUTTON_BORDER_ACTIVE_IMAGE
+		if parts.TextImageStates then
+			textImageId = toButtonTextImageAsset(parts.TextImageStates.active)
+			textImageScaleTarget = BUTTON_TEXT_IMAGE_SCALE.active
+		end
 	end
 	if hovered then
 		overlayTransparency = math.min(overlayTransparency, 0.87)
 		strokeTransparency = math.min(strokeTransparency, 0.22)
 		strokeThickness = math.max(strokeThickness, 1.4)
-		scaleTarget = math.max(scaleTarget, 1.012)
+		scaleTarget = math.max(scaleTarget, 1.026)
+		borderImageId = BUTTON_BORDER_HOVER_IMAGE
+		if parts.TextImageStates then
+			textImageId = toButtonTextImageAsset(parts.TextImageStates.hover)
+			textImageScaleTarget = BUTTON_TEXT_IMAGE_SCALE.hover
+		end
 	end
 	if focused then
 		overlayTransparency = math.min(overlayTransparency, 0.82)
 		strokeTransparency = 0
 		strokeThickness = math.max(strokeThickness, 2.2)
-		scaleTarget = math.max(scaleTarget, 1.02)
+		scaleTarget = math.max(scaleTarget, 1.026)
+		borderImageId = BUTTON_BORDER_HOVER_IMAGE
+		if parts.TextImageStates then
+			textImageId = toButtonTextImageAsset(parts.TextImageStates.hover)
+			textImageScaleTarget = BUTTON_TEXT_IMAGE_SCALE.hover
+		end
 	end
 	if pressed then
 		overlayTransparency = math.min(overlayTransparency, 0.76)
 		strokeTransparency = 0
 		strokeThickness = math.max(strokeThickness, 2.8)
-		scaleTarget = 0.985
+		scaleTarget = math.max(scaleTarget, 1.014)
+		if borderImageId ~= BUTTON_BORDER_HOVER_IMAGE then
+			borderImageId = BUTTON_BORDER_ACTIVE_IMAGE
+		end
+		if parts.TextImageStates and textImageId ~= toButtonTextImageAsset(parts.TextImageStates.hover) then
+			textImageId = toButtonTextImageAsset(parts.TextImageStates.active)
+		end
+		if parts.TextImageStates then
+			textImageScaleTarget = BUTTON_TEXT_IMAGE_SCALE.active
+		end
 	end
 
 	if immediate then
@@ -1176,6 +1582,14 @@ local function refreshButtonPolish(button, immediate)
 		parts.Stroke.Transparency = strokeTransparency
 		parts.Stroke.Thickness = strokeThickness
 		parts.Scale.Scale = scaleTarget
+		if parts.BorderImage then
+			parts.BorderImage.Image = borderImageId
+		end
+		if parts.TextImage and textImageId then
+			parts.TextImage.Image = textImageId
+			local textImageScale = ensureButtonTextImageScale(parts.TextImage)
+			textImageScale.Scale = textImageScaleTarget
+		end
 	else
 		local tweenInfo = pressed and BUTTON_PRESS_TWEEN_INFO or BUTTON_TWEEN_INFO
 		tweenInstance(parts.Overlay, tweenInfo, { BackgroundTransparency = overlayTransparency })
@@ -1184,6 +1598,14 @@ local function refreshButtonPolish(button, immediate)
 			Thickness = strokeThickness,
 		})
 		tweenInstance(parts.Scale, tweenInfo, { Scale = scaleTarget })
+		if parts.BorderImage then
+			parts.BorderImage.Image = borderImageId
+		end
+		if parts.TextImage and textImageId then
+			parts.TextImage.Image = textImageId
+			local textImageScale = ensureButtonTextImageScale(parts.TextImage)
+			tweenInstance(textImageScale, tweenInfo, { Scale = textImageScaleTarget })
+		end
 	end
 end
 
@@ -1199,6 +1621,9 @@ local function setButtonTone(button, toneKey, isActive)
 end
 
 local function bindButtonPolish(button)
+	if button and button.Name == "BrandTextImage" then
+		return
+	end
 	if not button or button:GetAttribute("BrandFeedbackBound") == true then
 		refreshButtonPolish(button, true)
 		return
@@ -1845,6 +2270,7 @@ local function ensureFieldKitButtonVisuals(button, definition, toolType)
 	button.Text = ""
 	button.TextTransparency = 1
 	button.ClipsDescendants = true
+	UISystem:_ensureUiVisualTemplateChildren(button, "FieldKitButtonChildrenTemplate")
 
 	local glyphPlate = button:FindFirstChild("GlyphPlate")
 	if not glyphPlate or not glyphPlate:IsA("Frame") then
@@ -1993,25 +2419,10 @@ local function ensureLobbyTrainingSupportCard(container, toolType)
 	local cardName = toolType .. "SupportCard"
 	local card = container:FindFirstChild(cardName)
 	if not card or not card:IsA("Frame") then
-		card = Instance.new("Frame")
-		card.Name = cardName
-		card.Size = UDim2.fromOffset(108, 42)
-		card.BackgroundColor3 = Color3.fromRGB(22, 28, 38)
-		card.BackgroundTransparency = 0.04
-		card.BorderSizePixel = 0
-		card.ZIndex = 9
-		card.Parent = container
-
-		local cardCorner = Instance.new("UICorner")
-		cardCorner.CornerRadius = UDim.new(0, 10)
-		cardCorner.Parent = card
-
-		local cardStroke = Instance.new("UIStroke")
-		cardStroke.Name = "CardStroke"
-		cardStroke.Thickness = 1
-		cardStroke.Transparency = 0.16
-		cardStroke.Color = config.accent
-		cardStroke.Parent = card
+		card = UISystem:_cloneUiVisualTemplateRoot("LobbyTrainingSupportCardTemplate", container, cardName)
+	end
+	if not (card and card:IsA("Frame")) then
+		return nil
 	end
 
 	local preview = card:FindFirstChild("ToolPreview")
@@ -2136,6 +2547,8 @@ local function styleFloatingButton(button, labelText, accentColor)
 		})
 	end
 
+	UISystem:_ensureUiVisualTemplateChildren(button, "FloatingButtonChildrenTemplate")
+
 	local accentBar = button:FindFirstChild("FloatAccent")
 	if not accentBar or not accentBar:IsA("Frame") then
 		accentBar = Instance.new("Frame")
@@ -2224,6 +2637,9 @@ end
 local function createDefaultMatchResult()
 	return {
 		ghostType = "Unknown",
+		guessedGhostType = nil,
+		guessedEvidence = nil,
+		expectedEvidence = nil,
 		correctGuess = false,
 		evidenceCollected = 0,
 		playersSurvived = 0,
@@ -2604,6 +3020,43 @@ local SHOP_RARITY_COLORS = {
 	R4 = Color3.fromRGB(178, 118, 226),
 	R5 = Color3.fromRGB(222, 170, 76),
 }
+local SHOP_RARITY_TEMPLATE_ASSET_IDS = {
+	R1 = "98127480673917",
+	R2 = "90268220179568",
+	R3 = "79062908978656",
+	R4 = "124067893180355",
+	R5 = "105312181896893",
+}
+
+local function resolveRoyalPassTrackRarityKey(dayIndex, isFinalDay)
+	if isFinalDay == true then
+		return "R5"
+	end
+	local day = tonumber(dayIndex) or 1
+	if day >= 24 then
+		return "R4"
+	end
+	if day >= 16 then
+		return "R3"
+	end
+	if day >= 8 then
+		return "R2"
+	end
+	return "R1"
+end
+
+local function resolveShopRarityKey(item)
+	local rarity = type(item) == "table" and tostring(item.rarity or "") or ""
+	rarity = string.upper(rarity)
+	if SHOP_RARITY_COLORS[rarity] then
+		return rarity
+	end
+	local numeric = tonumber(rarity)
+	if numeric and numeric >= 1 and numeric <= 5 then
+		return "R" .. tostring(math.floor(numeric))
+	end
+	return nil
+end
 
 local function resolveShopCategoryTheme(item)
 	local category = type(item) == "table" and tostring(item.category or "") or ""
@@ -2762,6 +3215,8 @@ local function applyPricePillVisual(pricePill, rawText, backgroundColor, textCol
 	local amount, currency = parseCurrencyPillValue(pillText)
 	pricePill.BackgroundColor3 = backgroundColor
 	pricePill.TextColor3 = textColor
+
+	UISystem:_ensureUiVisualTemplateChildren(pricePill, "PricePillChildrenTemplate")
 
 	local amountLabel = pricePill:FindFirstChild("CurrencyAmount")
 	if not amountLabel or not amountLabel:IsA("TextLabel") then
@@ -3071,174 +3526,6 @@ local function resolvePhaseFromPayload(eventName, payload)
 	end
 
 	return nil
-end
-
-local function createSummaryRow(parent, rowName, labelText)
-	local row = Instance.new("Frame")
-	row.Name = rowName
-	row.Size = UDim2.new(1, 0, 0, 28)
-	row.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
-	row.BackgroundTransparency = 0.08
-	row.BorderSizePixel = 0
-	row.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = row
-
-	local label = Instance.new("TextLabel")
-	label.Name = "Label"
-	label.Position = UDim2.fromOffset(10, 0)
-	label.Size = UDim2.new(0.52, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.Text = labelText
-	label.TextColor3 = Color3.fromRGB(176, 190, 212)
-	label.Font = Enum.Font.Gotham
-	label.TextSize = 12
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = row
-
-	local value = Instance.new("TextLabel")
-	value.Name = "Value"
-	value.AnchorPoint = Vector2.new(1, 0)
-	value.Position = UDim2.new(1, -10, 0, 0)
-	value.Size = UDim2.new(0.45, 0, 1, 0)
-	value.BackgroundTransparency = 1
-	value.Text = "-"
-	value.TextColor3 = Color3.fromRGB(240, 244, 248)
-	value.Font = Enum.Font.GothamSemibold
-	value.TextSize = 12
-	value.TextXAlignment = Enum.TextXAlignment.Right
-	value.Parent = row
-
-	return value
-end
-
-local function createActionRow(parent, rowName, defaultTitle, defaultMeta, buttonText)
-	local row = Instance.new("Frame")
-	row.Name = rowName
-	row.Size = UDim2.new(1, 0, 0, 72)
-	row.BackgroundColor3 = UI_BRAND.bgCard
-	row.BackgroundTransparency = 0.03
-	row.BorderSizePixel = 0
-	row.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = row
-
-	local accent = Instance.new("Frame")
-	accent.Name = "Accent"
-	accent.Size = UDim2.fromOffset(6, 72)
-	accent.BackgroundColor3 = UI_BRAND.focusSoft
-	accent.BorderSizePixel = 0
-	accent.Parent = row
-
-	local preview = Instance.new("Frame")
-	preview.Name = "Preview"
-	preview.Position = UDim2.fromOffset(14, 8)
-	preview.Size = UDim2.fromOffset(52, 56)
-	preview.BackgroundColor3 = UI_BRAND.bgCardSoft
-	preview.BorderSizePixel = 0
-	preview.Parent = row
-	local previewCorner = Instance.new("UICorner")
-	previewCorner.CornerRadius = UDim.new(0, 8)
-	previewCorner.Parent = preview
-
-	local previewBadge = Instance.new("TextLabel")
-	previewBadge.Name = "PreviewBadge"
-	previewBadge.BackgroundColor3 = UI_BRAND.focusSoft
-	previewBadge.BackgroundTransparency = 0.12
-	previewBadge.Position = UDim2.fromOffset(4, 4)
-	previewBadge.Size = UDim2.new(1, -8, 0, 14)
-	previewBadge.Font = Enum.Font.GothamBold
-	previewBadge.TextSize = 8
-	previewBadge.TextColor3 = UI_BRAND.text
-	previewBadge.BorderSizePixel = 0
-	previewBadge.Text = "ITEM"
-	previewBadge.Parent = preview
-	local previewBadgeCorner = Instance.new("UICorner")
-	previewBadgeCorner.CornerRadius = UDim.new(1, 0)
-	previewBadgeCorner.Parent = previewBadge
-
-	local previewGlyph = Instance.new("TextLabel")
-	previewGlyph.Name = "PreviewGlyph"
-	previewGlyph.BackgroundTransparency = 1
-	previewGlyph.Position = UDim2.fromOffset(6, 16)
-	previewGlyph.Size = UDim2.new(1, -12, 0, 34)
-	previewGlyph.Font = Enum.Font.GothamBold
-	previewGlyph.TextSize = 24
-	previewGlyph.TextColor3 = UI_BRAND.text
-	previewGlyph.TextXAlignment = Enum.TextXAlignment.Left
-	previewGlyph.TextYAlignment = Enum.TextYAlignment.Center
-	previewGlyph.Text = "IT"
-	previewGlyph.Parent = preview
-
-	local title = Instance.new("TextLabel")
-	title.Name = "Title"
-	title.Position = UDim2.fromOffset(78, 8)
-	title.Size = UDim2.new(1, -176, 0, 20)
-	title.BackgroundTransparency = 1
-	title.Text = defaultTitle or "ITEM"
-	title.TextColor3 = UI_BRAND.text
-	title.Font = Enum.Font.GothamSemibold
-	title.TextSize = 13
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.Parent = row
-
-	local meta = Instance.new("TextLabel")
-	meta.Name = "Meta"
-	meta.Position = UDim2.fromOffset(78, 28)
-	meta.Size = UDim2.new(1, -176, 0, 18)
-	meta.BackgroundTransparency = 1
-	meta.Text = defaultMeta or "-"
-	meta.TextColor3 = UI_BRAND.muted
-	meta.Font = Enum.Font.Gotham
-	meta.TextSize = 11
-	meta.TextXAlignment = Enum.TextXAlignment.Left
-	meta.TextWrapped = true
-	meta.Parent = row
-
-	local pricePill = Instance.new("TextLabel")
-	pricePill.Name = "PricePill"
-	pricePill.BackgroundColor3 = Color3.fromRGB(22, 50, 72)
-	pricePill.BackgroundTransparency = 0.08
-	pricePill.Position = UDim2.fromOffset(78, 50)
-	pricePill.Size = UDim2.fromOffset(92, 16)
-	pricePill.Font = Enum.Font.GothamBold
-	pricePill.TextSize = 9
-	pricePill.TextColor3 = UI_BRAND.text
-	pricePill.Text = "-"
-	pricePill.BorderSizePixel = 0
-	pricePill.Parent = row
-	local pricePillCorner = Instance.new("UICorner")
-	pricePillCorner.CornerRadius = UDim.new(1, 0)
-	pricePillCorner.Parent = pricePill
-
-	local button = Instance.new("TextButton")
-	button.Name = "ActionButton"
-	button.AnchorPoint = Vector2.new(1, 0.5)
-	button.Position = UDim2.new(1, -10, 0.5, 0)
-	button.Size = UDim2.fromOffset(86, 32)
-	styleButton(button, buttonText or "AKSI")
-	setButtonTone(button, "focus", false)
-	button.Parent = row
-
-	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(0, 8)
-	buttonCorner.Parent = button
-
-	return {
-		Root = row,
-		Accent = accent,
-		Preview = preview,
-		PreviewBadge = previewBadge,
-		PreviewGlyph = previewGlyph,
-		Title = title,
-		Meta = meta,
-		PricePill = pricePill,
-		Button = button,
-	}
 end
 
 local function formatRuntimeAreaLabel(areaId)
@@ -4270,7 +4557,7 @@ local function getHuntAssistSnapshot()
 	}
 end
 
-local function stampMatchSurvivalInstance(instance, channel, viewState, huntSnapshot)
+function UISystem._stampMatchSurvivalInstance(instance, channel, viewState, huntSnapshot)
 	if not instance then
 		return
 	end
@@ -4288,40 +4575,59 @@ local function stampMatchSurvivalInstance(instance, channel, viewState, huntSnap
 	instance:SetAttribute("PasrahHuntThreatDistance", type(huntSnapshot) == "table" and tonumber(huntSnapshot.threatDistance) or nil)
 end
 
-local function stampMatchSurvivalRuntime(match, viewState, huntSnapshot, huntAssistSnapshot)
+function UISystem._stampMatchSurvivalRuntime(match, viewState, huntSnapshot, huntAssistSnapshot)
 	if type(match) ~= "table" then
 		return
 	end
 
-	stampMatchSurvivalInstance(match.BasicPanel, "MatchBasicPanel", viewState, huntSnapshot)
-	stampMatchSurvivalInstance(match.BasicStateBadge, "MatchStateBadge", viewState, huntSnapshot)
-	stampMatchSurvivalInstance(match.ObjectiveLabel, "MatchObjectiveLabel", viewState, huntSnapshot)
-	stampMatchSurvivalInstance(match.ControlsHintBar, "MatchControlsHintBar", viewState, huntSnapshot)
-	stampMatchSurvivalInstance(match.ControlsHintLabel, "MatchControlsHintLabel", viewState, huntSnapshot)
-	stampMatchSurvivalInstance(match.HuntStatusBadge, "HuntStatusBadge", viewState, huntSnapshot)
-	stampMatchSurvivalInstance(match.HuntAssistLabel, "HuntAssistLabel", viewState, huntSnapshot)
-	stampMatchSurvivalInstance(match.HuntOverlay, "HuntOverlay", viewState, huntSnapshot)
+	local channels = {
+		{ "BasicPanel", "MatchBasicPanel" },
+		{ "BasicStateBadge", "MatchStateBadge" },
+		{ "ObjectiveLabel", "MatchObjectiveLabel" },
+		{ "ControlsHintBar", "MatchControlsHintBar" },
+		{ "ControlsHintLabel", "MatchControlsHintLabel" },
+		{ "HuntStatusBadge", "HuntStatusBadge" },
+		{ "HuntAssistLabel", "HuntAssistLabel" },
+		{ "HuntOverlay", "HuntOverlay" },
+	}
+	for _, entry in ipairs(channels) do
+		UISystem._stampMatchSurvivalInstance(match[entry[1]], entry[2], viewState, huntSnapshot)
+	end
 
-	if match.ObjectiveLabel then
-		match.ObjectiveLabel:SetAttribute("PasrahMatchObjectiveText", tostring(match.ObjectiveLabel.Text or ""))
+	local objectiveLabel = match.ObjectiveLabel
+	if objectiveLabel then
+		objectiveLabel:SetAttribute("PasrahMatchObjectiveText", tostring(objectiveLabel.Text or ""))
 	end
-	if match.ControlsHintLabel then
-		match.ControlsHintLabel:SetAttribute("PasrahMatchHintText", tostring(match.ControlsHintLabel.Text or ""))
+	local hintLabel = match.ControlsHintLabel
+	if hintLabel then
+		hintLabel:SetAttribute("PasrahMatchHintText", tostring(hintLabel.Text or ""))
 	end
-	if match.HuntStatusBadge then
-		match.HuntStatusBadge:SetAttribute("PasrahHuntBadgeText", type(huntAssistSnapshot) == "table" and tostring(huntAssistSnapshot.badgeText or "") or nil)
+	local huntStatusBadge = match.HuntStatusBadge
+	if huntStatusBadge then
+		huntStatusBadge:SetAttribute(
+			"PasrahHuntBadgeText",
+			type(huntAssistSnapshot) == "table" and tostring(huntAssistSnapshot.badgeText or "") or nil
+		)
 	end
-	if match.HuntAssistLabel then
-		match.HuntAssistLabel:SetAttribute("PasrahHuntAssistText", tostring(match.HuntAssistLabel.Text or ""))
-		match.HuntAssistLabel:SetAttribute("PasrahHuntAssistRoute", type(huntAssistSnapshot) == "table" and tostring(huntAssistSnapshot.routeText or "") or nil)
-		match.HuntAssistLabel:SetAttribute("PasrahHuntAssistSupport", type(huntAssistSnapshot) == "table" and tostring(huntAssistSnapshot.supportText or "") or nil)
+	local huntAssistLabel = match.HuntAssistLabel
+	if huntAssistLabel then
+		huntAssistLabel:SetAttribute("PasrahHuntAssistText", tostring(huntAssistLabel.Text or ""))
+		huntAssistLabel:SetAttribute(
+			"PasrahHuntAssistRoute",
+			type(huntAssistSnapshot) == "table" and tostring(huntAssistSnapshot.routeText or "") or nil
+		)
+		huntAssistLabel:SetAttribute(
+			"PasrahHuntAssistSupport",
+			type(huntAssistSnapshot) == "table" and tostring(huntAssistSnapshot.supportText or "") or nil
+		)
 	end
-	if match.HuntOverlay then
-		match.HuntOverlay:SetAttribute("PasrahHuntOverlayVisible", viewState == "Hunt" and huntAssistSnapshot ~= nil)
+	local huntOverlay = match.HuntOverlay
+	if huntOverlay then
+		huntOverlay:SetAttribute("PasrahHuntOverlayVisible", viewState == "Hunt" and huntAssistSnapshot ~= nil)
 	end
 end
 
-local function bulletList(list, emptyText)
+function UISystem._bulletList(list, emptyText)
 	if type(list) ~= "table" or #list == 0 then
 		return emptyText or "- Tidak ada"
 	end
@@ -4333,7 +4639,77 @@ local function bulletList(list, emptyText)
 	return table.concat(lines, "\n")
 end
 
-local function titleCaseToken(token)
+function UISystem._normalizeJournalLookupKey(value)
+	if type(value) ~= "string" then
+		return nil
+	end
+	local key = value:gsub("[^%w]", ""):lower()
+	if key == "" then
+		return nil
+	end
+	return key
+end
+
+function UISystem._canonicalJournalEvidence(value)
+	local key = UISystem._normalizeJournalLookupKey(value)
+	if not key then
+		return nil
+	end
+	if key == "medok" or key == "emf" or key == "jejakenergi" then
+		return "MEDOK"
+	elseif key == "suhu" or key == "suhumembeku" or key == "freezing" then
+		return "Suhu"
+	elseif key == "bukuterkutuk" or key == "ghostwriting" or key == "writing" then
+		return "BukuTerkutuk"
+	elseif key == "toun" or key == "bolaarwah" or key == "orb" then
+		return "To'un"
+	elseif key == "suara" or key == "kotakarwah" or key == "spiritbox" then
+		return "Suara"
+	elseif key == "pengganggu" or key == "gerakangaib" or key == "motion" then
+		return "Pengganggu"
+	end
+	return nil
+end
+
+function UISystem._canonicalJournalEvidenceList(values)
+	local list = {}
+	local seen = {}
+	if type(values) ~= "table" then
+		return list
+	end
+	for _, value in ipairs(values) do
+		local evidenceType = UISystem._canonicalJournalEvidence(value)
+		if evidenceType and not seen[evidenceType] then
+			seen[evidenceType] = true
+			table.insert(list, evidenceType)
+		end
+	end
+	return list
+end
+
+function UISystem._buildJournalEvidenceSet(values)
+	local set = {}
+	for _, evidenceType in ipairs(UISystem._canonicalJournalEvidenceList(values)) do
+		set[evidenceType] = true
+	end
+	return set
+end
+
+function UISystem._buildJournalGhostSet(values)
+	local set = {}
+	if type(values) ~= "table" then
+		return set
+	end
+	for _, ghostType in ipairs(values) do
+		local key = UISystem._normalizeJournalLookupKey(ghostType)
+		if key then
+			set[key] = true
+		end
+	end
+	return set
+end
+
+function UISystem._titleCaseToken(token)
 	local raw = tostring(token or "-"):gsub("_", " ")
 	if raw == "" then
 		return "-"
@@ -4341,7 +4717,7 @@ local function titleCaseToken(token)
 	return string.upper(string.sub(raw, 1, 1)) .. string.sub(raw, 2)
 end
 
-local function buildToolContextSummary(data)
+function UISystem._buildToolContextSummary(data)
 	if type(data) ~= "table" then
 		return nil
 	end
@@ -4383,9 +4759,9 @@ local function buildToolContextSummary(data)
 	return table.concat(fragments, " | ")
 end
 
-local function resolveToolFeedback(toolType, success, reason, data, eventName)
+function UISystem._resolveToolFeedback(toolType, success, reason, data, eventName)
 	local toolConfig = FIELD_KIT_TOOL_CONFIG[toolType]
-	local toolLabel = toolConfig and toolConfig.label or titleCaseToken(toolType or "tool")
+	local toolLabel = toolConfig and toolConfig.label or UISystem._titleCaseToken(toolType or "tool")
 	local status = nil
 	local detail = nil
 
@@ -4477,13 +4853,13 @@ local function resolveToolFeedback(toolType, success, reason, data, eventName)
 		detail = "Match aktif tidak terdeteksi."
 	elseif success == false then
 		status = toolLabel .. " ditolak."
-		detail = titleCaseToken(reason or "unknown")
+		detail = UISystem._titleCaseToken(reason or "unknown")
 	else
 		status = toolLabel .. " digunakan."
-		detail = titleCaseToken(reason or "request_sent")
+		detail = UISystem._titleCaseToken(reason or "request_sent")
 	end
 
-	local contextSummary = buildToolContextSummary(data)
+	local contextSummary = UISystem._buildToolContextSummary(data)
 	if contextSummary and contextSummary ~= detail then
 		detail = string.format("%s | %s", tostring(detail or "-"), contextSummary)
 	end
@@ -4571,6 +4947,13 @@ function connectButtonPress(button, callback)
 		return
 	end
 	bindButtonPolish(button)
+	if button:IsA("GuiButton") then
+		button.Active = true
+		button.Modal = false
+		pcall(function()
+			button.Interactable = true
+		end)
+	end
 	local lastPressAt = 0
 	local function invoke()
 		local now = os.clock()
@@ -4590,13 +4973,48 @@ function connectButtonPress(button, callback)
 		callback()
 	end
 	button.Activated:Connect(invoke)
+	button.MouseButton1Click:Connect(invoke)
+	button.MouseButton1Down:Connect(invoke)
+	button.MouseButton1Up:Connect(invoke)
+	button.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or tostring(input.KeyCode) == tostring(Enum.KeyCode.ButtonA)
+		then
+			invoke()
+		end
+	end)
+	button.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or tostring(input.KeyCode) == tostring(Enum.KeyCode.ButtonA)
+		then
+			invoke()
+		end
+	end)
+
+	local brandTextImage = button:FindFirstChild("BrandTextImage")
+	if brandTextImage and brandTextImage:IsA("GuiButton") then
+		setButtonTextImagePassthrough(brandTextImage)
+		brandTextImage.AutoButtonColor = false
+	end
+	for _, childName in ipairs({ "BrandOverlay", "BrandBorder", "BrandTextImage" }) do
+		local child = button:FindFirstChild(childName)
+		if child and child:IsA("GuiObject") then
+			child.Active = false
+			child.Selectable = false
+			pcall(function()
+				child.Interactable = false
+			end)
+		end
+	end
 end
 
 function makeFloatingButtonDraggable(button)
-	if not button or button:GetAttribute("DragBound") == true then
+	if not button or isRuntimeDragBound(button) then
 		return
 	end
-	button:SetAttribute("DragBound", true)
+	markRuntimeDragBound(button)
 
 	local dragging = false
 	local dragStart = nil
@@ -4687,6 +5105,13 @@ function UISystem:Init(context)
 	self._phaseTimerRunning = false
 	self._loadingTransitionRunning = false
 	self._loadingStartTime = 0
+	self._loadingSpriteStop = nil
+	self._loadingSpritePreloadStarted = false
+	self._loadingSpritePreloaded = false
+	self._loadingSpritePreloadError = nil
+	self._lastCountdownCompletionToken = 0
+	self._preTeleportLoadingActiveUntil = 0
+	self._preTeleportLoadingHideText = false
 	self._graphicsMode = nil
 	self._graphicsModeSource = nil
 	self._graphicsAppliedMode = nil
@@ -4725,6 +5150,15 @@ function UISystem:Init(context)
 		discoveredEvidence = {},
 		confirmedEvidence = {},
 		candidates = {},
+		selectedEvidence = {},
+		selectedGhostType = nil,
+		submitPending = false,
+		endPending = false,
+		answerLocked = false,
+		submitStatus = "Pilih 3 evidence dan ghost, lalu submit.",
+		submitReason = nil,
+		submitLastCorrect = nil,
+		tutorialPageIndex = 1,
 		toolType = JOURNAL_TOOL_TYPE,
 		toolStates = createDefaultFieldKitToolStates(),
 		toolStatus = "Tool belum dipakai.",
@@ -5008,7 +5442,11 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self:_closeConflictingWindows("JournalUI")
 		end
 		self._journalState.lastEvent = eventName
-		self._journalState.matchId = payload and payload.matchId or self._journalState.matchId
+		local incomingMatchId = payload and payload.matchId
+		if incomingMatchId ~= nil and self._journalState.matchId ~= nil and tostring(incomingMatchId) ~= tostring(self._journalState.matchId) then
+			self:_resetJournalSubmitState(incomingMatchId)
+		end
+		self._journalState.matchId = incomingMatchId or self._journalState.matchId
 		if eventName == "UIEvidenceUpdated" then
 			self._journalState.discoveredEvidence = payload and payload.discoveredEvidence or self._journalState.discoveredEvidence
 			self._journalState.confirmedEvidence = payload and payload.confirmedEvidence or self._journalState.confirmedEvidence
@@ -5032,7 +5470,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 				self._journalState.candidates = payload.possibleGhosts or payload.candidates
 			end
 			if type(collectedToolType) == "string" and collectedToolType ~= "" then
-				local collectedStatus, collectedDetail = resolveToolFeedback(collectedToolType, true, "collected", {
+				local collectedStatus, collectedDetail = UISystem._resolveToolFeedback(collectedToolType, true, "collected", {
 					evidenceType = collectedEvidenceType,
 				}, eventName)
 				self._journalState.toolType = collectedToolType
@@ -5053,9 +5491,28 @@ function UISystem:_onServerEvent(remoteName, payload)
 					self:_applyFieldKitToolUpdate(collectedToolType, true, "collected", toolData, eventName)
 				end
 			end
+		elseif eventName == "JournalGuessResult" then
+			self._journalState.submitPending = false
+			self._journalState.endPending = false
+			self._journalState.answerLocked = payload and payload.success == true or false
+			self._journalState.submitLastCorrect = payload and (payload.identified == true or payload.correct == true) or false
+			self._journalState.submitReason = payload and payload.reason or nil
+			self._journalState.submitStatus = self._journalState.submitLastCorrect
+				and "Tebakan cocok. Tekan END INVESTIGATION."
+				or "Tebakan terkunci. Tekan END INVESTIGATION saat siap."
+			if payload and type(payload.guessedGhostType) == "string" and payload.guessedGhostType ~= "" then
+				self._journalState.selectedGhostType = payload.guessedGhostType
+			end
+			if payload and type(payload.guessedEvidence) == "table" then
+				self._journalState.selectedEvidence = UISystem._canonicalJournalEvidenceList(payload.guessedEvidence)
+			end
+		elseif eventName == "JournalInvestigationEnded" then
+			self._journalState.endPending = false
+			self._journalState.submitPending = false
+			self._journalState.submitStatus = "Investigasi ditutup. Menunggu result server..."
 		elseif payload and type(payload.toolType) == "string" and FIELD_KIT_TOOL_CONFIG[payload.toolType] then
 			local toolData = payload.result or payload.data or payload
-			local statusText, detailText = resolveToolFeedback(
+			local statusText, detailText = UISystem._resolveToolFeedback(
 				payload.toolType,
 				payload.success ~= false,
 				payload.reason,
@@ -5069,6 +5526,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._journalState.toolSuccess = payload.success ~= false
 			self._journalState.toolLastUsedAt = os.clock()
 		end
+		self:_autoFillJournalSubmitSelection()
 		self:_refreshJournalPanel()
 		self:_refreshFieldKitPanel()
 		self:_applyVisibility()
@@ -5193,6 +5651,9 @@ function UISystem:_onServerEvent(remoteName, payload)
 				local previousResult = self._matchResult or createDefaultMatchResult()
 				self._matchResult = {
 					ghostType = payload.ghostType or "Unknown",
+					guessedGhostType = payload.guessedGhostType,
+					guessedEvidence = payload.guessedEvidence,
+					expectedEvidence = payload.expectedEvidence,
 					correctGuess = payload.correctGuess == true,
 					evidenceCollected = payload.evidenceCollected or 0,
 					playersSurvived = payload.playersSurvived or 0,
@@ -5266,6 +5727,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._journalState.discoveredEvidence = {}
 			self._journalState.confirmedEvidence = {}
 			self._journalState.candidates = {}
+			self:_resetJournalSubmitState(payload and payload.matchId or self._journalState.matchId)
 			self:_resetFieldKitToolStates()
 			self._pasraState.lastEvent = eventName
 			self._pasraState.status = "Match aktif."
@@ -5327,7 +5789,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			elseif payload and payload.reason == "purchase_cancelled" then
 				self._shopState.lastMessage = "Prompt pembelian ditutup."
 			else
-				self._shopState.lastMessage = "Pembelian gagal: " .. titleCaseToken(payload and payload.reason or "unknown")
+				self._shopState.lastMessage = "Pembelian gagal: " .. UISystem._titleCaseToken(payload and payload.reason or "unknown")
 			end
 			local purchasedItem = findShopCatalogItem(self._shopState.catalog, payload and payload.itemId or nil)
 			if payload and payload.success == true and type(purchasedItem) == "table" and purchasedItem.category == "Cosmetic" then
@@ -5358,7 +5820,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 					and "Cosmetic dilepas dari slot."
 					or "Cosmetic dipakai ke slot aktif."
 			else
-				self._profileState.lastCosmeticMessage = "Wardrobe gagal: " .. titleCaseToken(payload and payload.reason or "unknown")
+				self._profileState.lastCosmeticMessage = "Wardrobe gagal: " .. UISystem._titleCaseToken(payload and payload.reason or "unknown")
 			end
 		end
 		self:_refreshProfilePanel()
@@ -5616,10 +6078,6 @@ end
 function UISystem:_closeConflictingWindows(activeWindowName)
 	local activeName = tostring(activeWindowName or "")
 
-	if activeName ~= "LobbyUI" and self._lobbyPanelCollapsed ~= true then
-		self:_setLobbyPanelCollapsed(true)
-	end
-
 	if activeName ~= "RoomBrowser" then
 		self._roomBrowserVisible = false
 	end
@@ -5681,13 +6139,6 @@ function UISystem:_enforceSingleWindowPolicy()
 	local _, leaderboardPanel = self:_getBasicWindowState("LeaderboardUI")
 	markOpen("MainMenuUI", mainMenuPanel and mainMenuPanel.Visible == true)
 	markOpen("LeaderboardUI", leaderboardPanel and leaderboardPanel.Visible == true)
-	markOpen(
-		"LobbyUI",
-		self._matchPhase == MATCH_PHASE.LOBBY
-			and self._uiState.LobbyUI
-			and self._uiState.LobbyUI.visible == true
-			and self._lobbyPanelCollapsed ~= true
-	)
 
 	if openCount <= 1 then
 		self._singleWindowEnforcing = false
@@ -5705,9 +6156,6 @@ function UISystem:_enforceSingleWindowPolicy()
 	end
 	if keepName ~= "MatchUI" then
 		self._matchWindowDismissed = true
-	end
-	if keepName ~= "LobbyUI" then
-		self._lobbyPanelCollapsed = true
 	end
 	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
 		if guiName ~= keepName then
@@ -5979,6 +6427,15 @@ function UISystem:_layoutLobbyFloatRail()
 	if self:_isLobbyFloatRailBlocked() then
 		return
 	end
+	if shouldPreserveAuthoredOwnerLayout("RoomBrowserFloatUI")
+		or shouldPreserveAuthoredOwnerLayout("MainMenuUI")
+		or shouldPreserveAuthoredOwnerLayout("LeaderboardUI")
+		or shouldPreserveAuthoredOwnerLayout("ProfileUI")
+		or shouldPreserveAuthoredOwnerLayout("ShopUI")
+		or shouldPreserveAuthoredOwnerLayout("RoyalPassUI")
+	then
+		return
+	end
 
 	local rightRailButtons = {}
 	local function pushButton(button)
@@ -6002,10 +6459,8 @@ function UISystem:_layoutLobbyFloatRail()
 		pushButton(menuButton)
 		pushButton(rankButton)
 	else
-		-- Desktop order is fixed top-to-bottom for deterministic scanning.
-		pushButton(menuButton)
+		-- Preserve authored desktop positions for menu/rank floats.
 		pushButton(passButton)
-		pushButton(rankButton)
 		pushButton(profileButton)
 		pushButton(shopButton)
 	end
@@ -6026,6 +6481,9 @@ function UISystem:_layoutLobbyFloatRail()
 	end
 
 	if roomsButton and roomsButton.Parent and roomsButton.Visible == true then
+		if profile.isMobile ~= true then
+			return
+		end
 		local roomHeight = roomsButton.AbsoluteSize.Y
 		if roomHeight <= 0 then
 			roomHeight = roomsButton.Size.Y.Offset > 0 and roomsButton.Size.Y.Offset or (profile.isMobile and 68 or 60)
@@ -6038,9 +6496,6 @@ function UISystem:_layoutLobbyFloatRail()
 end
 
 function UISystem:_setLobbyPanelCollapsed(collapsed)
-	if collapsed ~= true then
-		self:_closeConflictingWindows("LobbyUI")
-	end
 	self._lobbyPanelCollapsed = collapsed == true
 	local player = Players.LocalPlayer
 	if player then
@@ -6056,6 +6511,1311 @@ end
 
 function UISystem:_toggleLobbyPanelCollapsed()
 	self:_setLobbyPanelCollapsed(not (self._lobbyPanelCollapsed == true))
+end
+
+function UISystem._getDirectChildOfClass(parent, childName, className)
+	local child = parent and parent:FindFirstChild(childName)
+	if child and child:IsA(className) then
+		return child
+	end
+	return nil
+end
+
+function UISystem._getChildByPath(parent, path)
+	local current = parent
+	for segment in string.gmatch(tostring(path or ""), "[^%.]+") do
+		current = current and current:FindFirstChild(segment)
+		if not current then
+			return nil
+		end
+	end
+	return current
+end
+
+function UISystem._getChildByPathOfClass(parent, path, className)
+	local child = UISystem._getChildByPath(parent, path)
+	if child and child:IsA(className) then
+		return child
+	end
+	return nil
+end
+
+function UISystem:_isNamedGuiTemplate(instance)
+	return instance ~= nil and string.sub(instance.Name or "", -8) == "Template"
+end
+
+function UISystem:_clearGeneratedRoomBrowserGuiChildren(container)
+	if not container then
+		return
+	end
+	for _, child in ipairs(container:GetChildren()) do
+		if (child:IsA("Frame") or child:IsA("TextLabel") or child:IsA("TextButton")) and not self:_isNamedGuiTemplate(child) then
+			child:Destroy()
+		end
+	end
+end
+
+function UISystem:_cloneAuthoredGuiTemplate(template, parent, newName)
+	if not template or not parent then
+		return nil
+	end
+	local clone = template:Clone()
+	clone.Name = newName or string.gsub(template.Name, "Template$", "")
+	if clone:IsA("GuiObject") then
+		clone.Visible = true
+	end
+	clone.Parent = parent
+	return clone
+end
+
+function UISystem:_bindAuthoredActionRow(root)
+	if not root or not root:IsA("Frame") then
+		return nil
+	end
+
+	local preview = UISystem._getDirectChildOfClass(root, "Preview", "Frame")
+	return {
+		Root = root,
+		Accent = UISystem._getDirectChildOfClass(root, "Accent", "Frame"),
+		RarityTemplate = UISystem._getDirectChildOfClass(root, "RarityTemplate", "ImageLabel"),
+		Preview = preview,
+		PreviewBadge = preview and UISystem._getDirectChildOfClass(preview, "PreviewBadge", "TextLabel") or nil,
+		PreviewGlyph = preview and UISystem._getDirectChildOfClass(preview, "PreviewGlyph", "TextLabel") or nil,
+		PreviewImage = preview and UISystem._getDirectChildOfClass(preview, "PreviewImage", "ImageLabel") or nil,
+		Title = UISystem._getDirectChildOfClass(root, "Title", "TextLabel"),
+		Meta = UISystem._getDirectChildOfClass(root, "Meta", "TextLabel"),
+		PricePill = UISystem._getDirectChildOfClass(root, "PricePill", "TextLabel"),
+		Button = UISystem._getDirectChildOfClass(root, "ActionButton", "TextButton"),
+	}
+end
+
+function UISystem:_bindAuthoredRoyalPassTrackCard(root)
+	if not root or not root:IsA("Frame") then
+		return nil
+	end
+
+	return {
+		Root = root,
+		Accent = UISystem._getDirectChildOfClass(root, "Accent", "Frame"),
+		RarityTemplate = UISystem._getDirectChildOfClass(root, "RarityTemplate", "ImageLabel"),
+		Stroke = UISystem._getDirectChildOfClass(root, "CardStroke", "UIStroke"),
+		DayBadge = UISystem._getDirectChildOfClass(root, "DayBadge", "TextLabel"),
+		Title = UISystem._getDirectChildOfClass(root, "Title", "TextLabel"),
+		Meta = UISystem._getDirectChildOfClass(root, "Meta", "TextLabel"),
+		RewardPill = UISystem._getDirectChildOfClass(root, "RewardPill", "TextLabel"),
+		Footer = UISystem._getDirectChildOfClass(root, "Footer", "TextLabel"),
+	}
+end
+
+function UISystem:_bindAuthoredMetricCard(root)
+	if not root or not root:IsA("Frame") then
+		return nil
+	end
+
+	return {
+		Root = root,
+		ValueLabel = UISystem._getDirectChildOfClass(root, "ValueLabel", "TextLabel"),
+		TitleLabel = UISystem._getDirectChildOfClass(root, "TitleLabel", "TextLabel"),
+	}
+end
+
+function UISystem:_bindAuthoredSectionCard(root)
+	if not root or not root:IsA("Frame") then
+		return nil
+	end
+
+	return {
+		Root = root,
+		SectionTitle = UISystem._getDirectChildOfClass(root, "SectionTitle", "TextLabel"),
+		BodyLabel = UISystem._getDirectChildOfClass(root, "BodyLabel", "TextLabel"),
+	}
+end
+
+function UISystem:_tryBindAuthoredLeaderboardWidgets(window, contentFrame)
+	local deck = UISystem._getDirectChildOfClass(contentFrame, "LeaderboardDeck", "Frame")
+	local heroCard = deck and UISystem._getDirectChildOfClass(deck, "HeroCard", "Frame") or nil
+	local tierList = deck and UISystem._getDirectChildOfClass(deck, "TierList", "Frame") or nil
+	local progressTrack = heroCard and UISystem._getDirectChildOfClass(heroCard, "ProgressTrack", "Frame") or nil
+	local heroStroke = heroCard and heroCard:FindFirstChild("HeroStroke") or nil
+	local heroBadge = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroBadge", "TextLabel") or nil
+	local heroTitle = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroTitle", "TextLabel") or nil
+	local heroMeta = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroMeta", "TextLabel") or nil
+	local progressFill = progressTrack and UISystem._getDirectChildOfClass(progressTrack, "ProgressFill", "Frame") or nil
+	local progressCaption = heroCard and UISystem._getDirectChildOfClass(heroCard, "ProgressCaption", "TextLabel") or nil
+	if not (deck and heroCard and tierList and heroStroke and heroBadge and heroTitle and heroMeta and progressTrack and progressFill and progressCaption) then
+		return nil
+	end
+
+	local rows = {}
+	for index = 1, 4 do
+		local row = self:_bindAuthoredActionRow(UISystem._getDirectChildOfClass(tierList, "RankRow" .. tostring(index), "Frame"))
+		if row and row.Button then
+			row.Button.Active = false
+			row.Button.AutoButtonColor = false
+			row.Button.Selectable = false
+			table.insert(rows, row)
+		end
+	end
+
+	return {
+		Deck = deck,
+		HeroCard = heroCard,
+		HeroStroke = heroStroke,
+		HeroBadge = heroBadge,
+		HeroTitle = heroTitle,
+		HeroMeta = heroMeta,
+		ProgressTrack = progressTrack,
+		ProgressFill = progressFill,
+		ProgressCaption = progressCaption,
+		Rows = rows,
+	}
+end
+
+function UISystem:_tryBindAuthoredJournalWidgets(window, contentFrame)
+	local deck = UISystem._getDirectChildOfClass(contentFrame, "JournalDeck", "Frame")
+	local heroCard = deck and UISystem._getDirectChildOfClass(deck, "HeroCard", "Frame") or nil
+	local statRow = deck and UISystem._getDirectChildOfClass(deck, "StatRow", "Frame") or nil
+	local heroStroke = heroCard and heroCard:FindFirstChild("HeroStroke") or nil
+	local heroBadge = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroBadge", "TextLabel") or nil
+	local heroTitle = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroTitle", "TextLabel") or nil
+	local heroMeta = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroMeta", "TextLabel") or nil
+	local heroGlyph = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroGlyph", "TextLabel") or nil
+	local discoveredCard = self:_bindAuthoredMetricCard(statRow and UISystem._getDirectChildOfClass(statRow, "DiscoveredCard", "Frame") or nil)
+	local confirmedCard = self:_bindAuthoredMetricCard(statRow and UISystem._getDirectChildOfClass(statRow, "ConfirmedCard", "Frame") or nil)
+	local candidateCard = self:_bindAuthoredMetricCard(statRow and UISystem._getDirectChildOfClass(statRow, "CandidateCard", "Frame") or nil)
+	local discoveredSection = self:_bindAuthoredSectionCard(deck and UISystem._getDirectChildOfClass(deck, "DiscoveredSection", "Frame") or nil)
+	local confirmedSection = self:_bindAuthoredSectionCard(deck and UISystem._getDirectChildOfClass(deck, "ConfirmedSection", "Frame") or nil)
+	local candidateSection = self:_bindAuthoredSectionCard(deck and UISystem._getDirectChildOfClass(deck, "CandidateSection", "Frame") or nil)
+	if not (deck and heroCard and statRow and heroStroke and heroBadge and heroTitle and heroMeta and heroGlyph and discoveredCard and confirmedCard and candidateCard and discoveredSection and confirmedSection and candidateSection) then
+		return nil
+	end
+
+	return {
+		Deck = deck,
+		HeroCard = heroCard,
+		HeroStroke = heroStroke,
+		HeroBadge = heroBadge,
+		HeroTitle = heroTitle,
+		HeroMeta = heroMeta,
+		HeroGlyph = heroGlyph,
+		DiscoveredCount = discoveredCard.ValueLabel,
+		ConfirmedCount = confirmedCard.ValueLabel,
+		CandidateCount = candidateCard.ValueLabel,
+		DiscoveredBody = discoveredSection.BodyLabel,
+		ConfirmedBody = confirmedSection.BodyLabel,
+		CandidateBody = candidateSection.BodyLabel,
+	}
+end
+
+function UISystem:_tryBindAuthoredProfileWidgets(window, contentFrame)
+	local deck = UISystem._getDirectChildOfClass(contentFrame, "ProfileDeck", "Frame")
+	local heroCard = deck and UISystem._getDirectChildOfClass(deck, "HeroCard", "Frame") or nil
+	local heroStroke = heroCard and heroCard:FindFirstChild("HeroStroke") or nil
+	local avatarGlyph = heroCard and UISystem._getDirectChildOfClass(heroCard, "AvatarGlyph", "TextLabel") or nil
+	local profileTitle = heroCard and UISystem._getDirectChildOfClass(heroCard, "ProfileTitle", "TextLabel") or nil
+	local profileMeta = heroCard and UISystem._getDirectChildOfClass(heroCard, "ProfileMeta", "TextLabel") or nil
+	local statusPill = heroCard and UISystem._getDirectChildOfClass(heroCard, "StatusPill", "TextLabel") or nil
+	local spotlight = heroCard and UISystem._getDirectChildOfClass(heroCard, "Spotlight", "TextLabel") or nil
+	local actionButton = heroCard and UISystem._getDirectChildOfClass(heroCard, "ActionButton", "TextButton") or nil
+	local statList = deck and UISystem._getDirectChildOfClass(deck, "StatList", "Frame") or nil
+	local wardrobeHeader = deck and UISystem._getDirectChildOfClass(deck, "WardrobeHeader", "TextLabel") or nil
+	local wardrobeEmpty = deck and UISystem._getDirectChildOfClass(deck, "WardrobeEmpty", "TextLabel") or nil
+	local wardrobeList = deck and UISystem._getDirectChildOfClass(deck, "WardrobeList", "Frame") or nil
+	local wardrobeRowTemplate = wardrobeList and UISystem._getDirectChildOfClass(wardrobeList, "WardrobeRowTemplate", "Frame") or nil
+	if not (deck and heroCard and heroStroke and avatarGlyph and profileTitle and profileMeta and statusPill and spotlight and actionButton and statList and wardrobeHeader and wardrobeEmpty and wardrobeList and wardrobeRowTemplate) then
+		return nil
+	end
+
+	local rows = {
+		sanity = self:_bindAuthoredActionRow(UISystem._getDirectChildOfClass(statList, "SanityRow", "Frame")),
+		match = self:_bindAuthoredActionRow(UISystem._getDirectChildOfClass(statList, "MatchRow", "Frame")),
+		favorite = self:_bindAuthoredActionRow(UISystem._getDirectChildOfClass(statList, "FavoriteRow", "Frame")),
+	}
+	for _, row in pairs(rows) do
+		if row and row.Button then
+			row.Button.Active = false
+			row.Button.AutoButtonColor = false
+			row.Button.Selectable = false
+		end
+	end
+	self:_setSelectableStyle(actionButton)
+	self:_clearGeneratedRoomBrowserGuiChildren(wardrobeList)
+	if not isRuntimeButtonBound(actionButton) then
+		markRuntimeButtonBound(actionButton)
+		connectButtonPress(actionButton, function()
+			self:_toggleRoomBrowserVisible()
+		end)
+	end
+
+	return {
+		Deck = deck,
+		HeroCard = heroCard,
+		HeroStroke = heroStroke,
+		AvatarGlyph = avatarGlyph,
+		ProfileTitle = profileTitle,
+		ProfileMeta = profileMeta,
+		StatusPill = statusPill,
+		Spotlight = spotlight,
+		ActionButton = actionButton,
+		Rows = rows,
+		WardrobeHeader = wardrobeHeader,
+		WardrobeEmpty = wardrobeEmpty,
+		WardrobeList = wardrobeList,
+		WardrobeRowTemplate = wardrobeRowTemplate,
+		WardrobeRows = {},
+	}
+end
+
+function UISystem:_tryBindAuthoredShopWindowWidgets(window, contentFrame)
+	local missing = {}
+	local filterBar = UISystem._getDirectChildOfClass(contentFrame, "ShopFilterBar", "Frame")
+	if not filterBar then
+		table.insert(missing, "ShopUI.MainPanel.ContentFrame.ShopFilterBar")
+	end
+	local filterTemplate = filterBar and UISystem._getDirectChildOfClass(filterBar, "FilterTemplate", "TextButton") or nil
+	if not filterTemplate then
+		table.insert(missing, "ShopUI.MainPanel.ContentFrame.ShopFilterBar.FilterTemplate")
+	end
+
+	local itemList = UISystem._getDirectChildOfClass(contentFrame, "ItemList", "Frame")
+	if not itemList then
+		table.insert(missing, "ShopUI.MainPanel.ContentFrame.ItemList")
+	end
+	local itemRowTemplateRoot = itemList and UISystem._getDirectChildOfClass(itemList, "ItemRowTemplate", "Frame") or nil
+	if not itemRowTemplateRoot then
+		table.insert(missing, "ShopUI.MainPanel.ContentFrame.ItemList.ItemRowTemplate")
+	end
+	local itemRowTemplate = self:_bindAuthoredActionRow(itemRowTemplateRoot)
+	if itemRowTemplateRoot and not itemRowTemplate then
+		table.insert(missing, "ShopUI.MainPanel.ContentFrame.ItemList.ItemRowTemplate widgets")
+	end
+
+	if #missing > 0 then
+		local warningKey = table.concat(missing, ";")
+		if self._shopUiShellWarningKey ~= warningKey then
+			self._shopUiShellWarningKey = warningKey
+			warn("[UISystem] Authored ShopUI contract mismatch: " .. table.concat(missing, ", "))
+		end
+		return false
+	end
+
+	filterTemplate.Visible = false
+	itemRowTemplateRoot.Visible = false
+
+	window.ShopFilterButtons = {}
+	self:_clearGeneratedRoomBrowserGuiChildren(filterBar)
+	for _, filter in ipairs(SHOP_FILTERS) do
+		if not shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
+			continue
+		end
+		local filterButton = self:_cloneAuthoredGuiTemplate(filterTemplate, filterBar, "Filter" .. filter.key)
+		if not filterButton then
+			continue
+		end
+		filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
+		filterButton.Text = filter.label
+		self:_setSelectableStyle(filterButton)
+		if not isRuntimeButtonBound(filterButton) then
+			markRuntimeButtonBound(filterButton)
+			connectButtonPress(filterButton, function()
+				self:_setShopFilter(filter.key)
+			end)
+		end
+		window.ShopFilterButtons[filter.key] = filterButton
+	end
+
+	window.ItemRows = {}
+	self:_clearGeneratedRoomBrowserGuiChildren(itemList)
+	local displayCount = #self._shopState.catalog
+	for index = 1, displayCount do
+		local rowRoot = self:_cloneAuthoredGuiTemplate(itemRowTemplateRoot, itemList, "ItemRow" .. tostring(index))
+		local row = self:_bindAuthoredActionRow(rowRoot)
+		if not row or not row.Button then
+			if rowRoot then
+				rowRoot:Destroy()
+			end
+			continue
+		end
+		self:_setSelectableStyle(row.Button)
+		local item = self._shopState.catalog[index]
+		if item then
+			self:_applyShopRowVisual(row, item, index)
+		end
+		if not isRuntimeButtonBound(row.Button) then
+			markRuntimeButtonBound(row.Button)
+			connectButtonPress(row.Button, function()
+				local catalogItem = self._shopState.catalog[index]
+				if catalogItem then
+					local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(catalogItem)
+					if not purchasable then
+						self._shopState.lastPurchase = {
+							itemId = catalogItem.id,
+							success = false,
+							reason = blockedReason or "item_disabled",
+						}
+						self._shopState.lastMessage = describeShopPurchaseBlock(catalogItem, blockedReason)
+						self:_openAuxiliaryWindow("ShopUI")
+						return
+					end
+					self:_requestShopPurchase(catalogItem.id)
+				end
+			end)
+		end
+		table.insert(window.ItemRows, row)
+	end
+
+	return true
+end
+
+function UISystem:_tryBindAuthoredRoyalPassWidgets(window, contentFrame)
+	local missing = {}
+	local deck = UISystem._getDirectChildOfClass(contentFrame, "RoyalPassDeck", "Frame")
+	if not deck then
+		table.insert(missing, "RoyalPassUI.MainPanel.ContentFrame.RoyalPassDeck")
+	end
+	local heroCard = deck and UISystem._getDirectChildOfClass(deck, "HeroCard", "Frame") or nil
+	if not heroCard then
+		table.insert(missing, "RoyalPassUI.MainPanel.ContentFrame.RoyalPassDeck.HeroCard")
+	end
+	local heroStroke = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroStroke", "UIStroke") or nil
+	local heroBadge = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroBadge", "TextLabel") or nil
+	local heroTitle = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroTitle", "TextLabel") or nil
+	local heroMeta = heroCard and UISystem._getDirectChildOfClass(heroCard, "HeroMeta", "TextLabel") or nil
+	local progressTrack = heroCard and UISystem._getDirectChildOfClass(heroCard, "ProgressTrack", "Frame") or nil
+	local progressFill = progressTrack and UISystem._getDirectChildOfClass(progressTrack, "ProgressFill", "Frame") or nil
+	local progressCaption = heroCard and UISystem._getDirectChildOfClass(heroCard, "ProgressCaption", "TextLabel") or nil
+	local premiumActionButton = heroCard and UISystem._getDirectChildOfClass(heroCard, "PremiumActionButton", "TextButton") or nil
+	local trackTabs = deck and UISystem._getDirectChildOfClass(deck, "TrackTabs", "Frame") or nil
+	local rewardTab = trackTabs and UISystem._getDirectChildOfClass(trackTabs, "RewardTab", "TextButton") or nil
+	local missionTab = trackTabs and UISystem._getDirectChildOfClass(trackTabs, "MissionTab", "TextButton") or nil
+	local trackHint = deck and UISystem._getDirectChildOfClass(deck, "TrackHint", "TextLabel") or nil
+	local trackScroller = deck and UISystem._getDirectChildOfClass(deck, "TrackScroller", "ScrollingFrame") or nil
+	local dayCardTemplateRoot = trackScroller and UISystem._getDirectChildOfClass(trackScroller, "DayCardTemplate", "Frame") or nil
+	local dayCardTemplate = self:_bindAuthoredRoyalPassTrackCard(dayCardTemplateRoot)
+	local tierList = deck and UISystem._getDirectChildOfClass(deck, "TierList", "Frame") or nil
+	local tierRowTemplateRoot = tierList and UISystem._getDirectChildOfClass(tierList, "TierRowTemplate", "Frame") or nil
+	local tierRowTemplate = self:_bindAuthoredActionRow(tierRowTemplateRoot)
+
+	if not heroStroke then table.insert(missing, "RoyalPassUI...HeroStroke") end
+	if not heroBadge then table.insert(missing, "RoyalPassUI...HeroBadge") end
+	if not heroTitle then table.insert(missing, "RoyalPassUI...HeroTitle") end
+	if not heroMeta then table.insert(missing, "RoyalPassUI...HeroMeta") end
+	if not progressTrack then table.insert(missing, "RoyalPassUI...ProgressTrack") end
+	if not progressFill then table.insert(missing, "RoyalPassUI...ProgressFill") end
+	if not progressCaption then table.insert(missing, "RoyalPassUI...ProgressCaption") end
+	if not premiumActionButton then table.insert(missing, "RoyalPassUI...PremiumActionButton") end
+	if not trackTabs then table.insert(missing, "RoyalPassUI...TrackTabs") end
+	if not rewardTab then table.insert(missing, "RoyalPassUI...RewardTab") end
+	if not missionTab then table.insert(missing, "RoyalPassUI...MissionTab") end
+	if not trackHint then table.insert(missing, "RoyalPassUI...TrackHint") end
+	if not trackScroller then table.insert(missing, "RoyalPassUI...TrackScroller") end
+	if not dayCardTemplateRoot then table.insert(missing, "RoyalPassUI...DayCardTemplate") end
+	if dayCardTemplateRoot and not dayCardTemplate then table.insert(missing, "RoyalPassUI...DayCardTemplate widgets") end
+	if not tierList then table.insert(missing, "RoyalPassUI...TierList") end
+	if not tierRowTemplateRoot then table.insert(missing, "RoyalPassUI...TierRowTemplate") end
+	if tierRowTemplateRoot and not tierRowTemplate then table.insert(missing, "RoyalPassUI...TierRowTemplate widgets") end
+
+	if #missing > 0 then
+		local warningKey = table.concat(missing, ";")
+		if self._royalPassUiShellWarningKey ~= warningKey then
+			self._royalPassUiShellWarningKey = warningKey
+			warn("[UISystem] Authored RoyalPassUI contract mismatch: " .. table.concat(missing, ", "))
+		end
+		return false
+	end
+
+	dayCardTemplateRoot.Visible = false
+	tierRowTemplateRoot.Visible = false
+	self:_setSelectableStyle(premiumActionButton)
+	self:_setSelectableStyle(rewardTab)
+	self:_setSelectableStyle(missionTab)
+
+	local rows = {}
+	self:_clearGeneratedRoomBrowserGuiChildren(tierList)
+	for index = 1, 3 do
+		local rowRoot = self:_cloneAuthoredGuiTemplate(tierRowTemplateRoot, tierList, "TierRow" .. tostring(index))
+		local row = self:_bindAuthoredActionRow(rowRoot)
+		if row and row.Root and row.Button then
+			row.Root.LayoutOrder = index
+			row.Button.Active = false
+			row.Button.AutoButtonColor = false
+			row.Button.Selectable = false
+			table.insert(rows, row)
+		elseif rowRoot then
+			rowRoot:Destroy()
+		end
+	end
+
+	local trackCards = {}
+	self:_clearGeneratedRoomBrowserGuiChildren(trackScroller)
+	for index = 1, 30 do
+		local cardRoot = self:_cloneAuthoredGuiTemplate(dayCardTemplateRoot, trackScroller, "DayCard" .. tostring(index))
+		local card = self:_bindAuthoredRoyalPassTrackCard(cardRoot)
+		if card and card.Root then
+			card.Root.LayoutOrder = index
+			trackCards[index] = card
+		elseif cardRoot then
+			cardRoot:Destroy()
+		end
+	end
+
+	if not isRuntimeButtonBound(rewardTab) then
+		markRuntimeButtonBound(rewardTab)
+		connectButtonPress(rewardTab, function()
+			self._royalPassState.viewMode = "Rewards"
+			self:_refreshRoyalPassPanel()
+		end)
+	end
+	if not isRuntimeButtonBound(missionTab) then
+		markRuntimeButtonBound(missionTab)
+		connectButtonPress(missionTab, function()
+			self._royalPassState.viewMode = "Missions"
+			self:_refreshRoyalPassPanel()
+		end)
+	end
+	if not isRuntimeButtonBound(premiumActionButton) then
+		markRuntimeButtonBound(premiumActionButton)
+		connectButtonPress(premiumActionButton, function()
+			local premiumItem, premiumOfferReady = self:_getRoyalPassPremiumOffer()
+			if self._royalPassState and self._royalPassState.premiumOwned == true then
+				self._royalPassState.lastSource = "premium_already_owned"
+				self._royalPassState.lastAmount = 0
+				self:_refreshRoyalPassPanel()
+				return
+			end
+			if premiumOfferReady ~= true then
+				self._royalPassState.lastSource = premiumItem and "premium_offer_pending" or "premium_offer_hidden"
+				self._royalPassState.lastAmount = 0
+				self:_refreshRoyalPassPanel()
+				return
+			end
+			self:_setShopFilter("Robux")
+			self:_openAuxiliaryWindow("ShopUI")
+		end)
+	end
+
+	window.RoyalPassWidgets = {
+		Deck = deck,
+		HeroCard = heroCard,
+		HeroStroke = heroStroke,
+		HeroBadge = heroBadge,
+		HeroTitle = heroTitle,
+		HeroMeta = heroMeta,
+		ProgressTrack = progressTrack,
+		ProgressFill = progressFill,
+		ProgressCaption = progressCaption,
+		PremiumActionButton = premiumActionButton,
+		Rows = rows,
+		TrackTabs = trackTabs,
+		RewardTab = rewardTab,
+		MissionTab = missionTab,
+		TrackHint = trackHint,
+		TrackScroller = trackScroller,
+		TrackCards = trackCards,
+	}
+	return window.RoyalPassWidgets
+end
+
+function UISystem:_bindAuthoredLobbyUi(gui)
+	if not gui or not gui:IsA("ScreenGui") then
+		return false
+	end
+
+	self._uxWidgets = self._uxWidgets or {}
+	self._uxWidgets.lobby = self._uxWidgets.lobby or {}
+
+	local missing = {}
+	local function requireChild(parent, childName, className, label)
+		local child = UISystem._getDirectChildOfClass(parent, childName, className)
+		if not child then
+			table.insert(missing, label or string.format("%s.%s", parent and parent.Name or "?", childName))
+		end
+		return child
+	end
+
+	local panel = requireChild(gui, "MainPanel", "Frame", "LobbyUI.MainPanel")
+	local toggleBtn = requireChild(gui, "LobbyToggleButton", "TextButton", "LobbyUI.LobbyToggleButton")
+	local title = requireChild(panel, "Title", "TextLabel", "LobbyUI.MainPanel.Title")
+	local headerCard = requireChild(panel, "HeaderCard", "Frame", "LobbyUI.MainPanel.HeaderCard")
+	local lobbyGlyph = requireChild(headerCard, "LobbyGlyph", "TextLabel", "LobbyUI.MainPanel.HeaderCard.LobbyGlyph")
+	local statusBadge = requireChild(headerCard, "StatusBadge", "TextLabel", "LobbyUI.MainPanel.HeaderCard.StatusBadge")
+	local primaryLabel = requireChild(headerCard, "PrimaryLabel", "TextLabel", "LobbyUI.MainPanel.HeaderCard.PrimaryLabel")
+	local secondaryLabel = requireChild(headerCard, "SecondaryLabel", "TextLabel", "LobbyUI.MainPanel.HeaderCard.SecondaryLabel")
+	local modePill = requireChild(headerCard, "ModePill", "TextLabel", "LobbyUI.MainPanel.HeaderCard.ModePill")
+	local mapPill = requireChild(headerCard, "MapPill", "TextLabel", "LobbyUI.MainPanel.HeaderCard.MapPill")
+	local roomPill = requireChild(headerCard, "RoomPill", "TextLabel", "LobbyUI.MainPanel.HeaderCard.RoomPill")
+	local hintLabel = requireChild(panel, "HintLabel", "TextLabel", "LobbyUI.MainPanel.HintLabel")
+	local openRoomBrowserButton = requireChild(panel, "OpenRoomBrowserButton", "TextButton", "LobbyUI.MainPanel.OpenRoomBrowserButton")
+	local profileButton = requireChild(panel, "ProfileButton", "TextButton", "LobbyUI.MainPanel.ProfileButton")
+	local shopButton = requireChild(panel, "ShopButton", "TextButton", "LobbyUI.MainPanel.ShopButton")
+	local royalPassButton = requireChild(panel, "RoyalPassButton", "TextButton", "LobbyUI.MainPanel.RoyalPassButton")
+	local menuButton = requireChild(panel, "MenuButton", "TextButton", "LobbyUI.MainPanel.MenuButton")
+	local rankButton = requireChild(panel, "RankButton", "TextButton", "LobbyUI.MainPanel.RankButton")
+
+	if #missing > 0 then
+		local warningKey = table.concat(missing, ";")
+		if self._lobbyUiShellWarningKey ~= warningKey then
+			self._lobbyUiShellWarningKey = warningKey
+			warn("[UISystem] Authored LobbyUI contract mismatch: " .. table.concat(missing, ", "))
+		end
+	end
+
+	if not (panel and toggleBtn and title and headerCard and lobbyGlyph and statusBadge and primaryLabel and secondaryLabel and modePill and mapPill and roomPill and hintLabel and openRoomBrowserButton and profileButton and shopButton and royalPassButton and menuButton and rankButton) then
+		return false
+	end
+
+	for _, button in ipairs({
+		openRoomBrowserButton,
+		profileButton,
+		shopButton,
+		royalPassButton,
+		menuButton,
+		rankButton,
+		toggleBtn,
+	}) do
+		self:_setSelectableStyle(button)
+	end
+
+	if not isRuntimeButtonBound(openRoomBrowserButton) then
+		markRuntimeButtonBound(openRoomBrowserButton)
+		connectButtonPress(openRoomBrowserButton, function()
+			self:_toggleRoomBrowserVisible()
+			self:_refreshBasicLobbyPanel()
+		end)
+	end
+	if not isRuntimeButtonBound(menuButton) then
+		markRuntimeButtonBound(menuButton)
+		connectButtonPress(menuButton, function()
+			self:_toggleBasicWindow("MainMenuUI")
+		end)
+	end
+	if not isRuntimeButtonBound(profileButton) then
+		markRuntimeButtonBound(profileButton)
+		connectButtonPress(profileButton, function()
+			self:_toggleAuxiliaryWindow("ProfileUI")
+		end)
+	end
+	if not isRuntimeButtonBound(shopButton) then
+		markRuntimeButtonBound(shopButton)
+		connectButtonPress(shopButton, function()
+			self:_toggleAuxiliaryWindow("ShopUI")
+		end)
+	end
+	if not isRuntimeButtonBound(royalPassButton) then
+		markRuntimeButtonBound(royalPassButton)
+		connectButtonPress(royalPassButton, function()
+			self:_toggleAuxiliaryWindow("RoyalPassUI")
+		end)
+	end
+	if not isRuntimeButtonBound(rankButton) then
+		markRuntimeButtonBound(rankButton)
+		connectButtonPress(rankButton, function()
+			self:_toggleBasicWindow("LeaderboardUI")
+		end)
+	end
+	if not isRuntimeButtonBound(toggleBtn) then
+		markRuntimeButtonBound(toggleBtn)
+		connectButtonPress(toggleBtn, function()
+			self:_toggleLobbyPanelCollapsed()
+		end)
+	end
+
+	self._uxWidgets.lobby.BasicGui = gui
+	self._uxWidgets.lobby.BasicPanel = panel
+	self._uxWidgets.lobby.BasicHeaderCard = headerCard
+	self._uxWidgets.lobby.BasicHeaderStroke = UISystem._getDirectChildOfClass(headerCard, "HeaderStroke", "UIStroke")
+	self._uxWidgets.lobby.BasicLobbyGlyph = lobbyGlyph
+	self._uxWidgets.lobby.BasicTitle = title
+	self._uxWidgets.lobby.BasicStatusBadge = statusBadge
+	self._uxWidgets.lobby.BasicPrimaryLabel = primaryLabel
+	self._uxWidgets.lobby.BasicSecondaryLabel = secondaryLabel
+	self._uxWidgets.lobby.BasicModePill = modePill
+	self._uxWidgets.lobby.BasicMapPill = mapPill
+	self._uxWidgets.lobby.BasicRoomPill = roomPill
+	self._uxWidgets.lobby.BasicHintLabel = hintLabel
+	self._uxWidgets.lobby.BasicOpenRoomBrowserButton = openRoomBrowserButton
+	self._uxWidgets.lobby.BasicProfileButton = profileButton
+	self._uxWidgets.lobby.BasicShopButton = shopButton
+	self._uxWidgets.lobby.BasicRoyalPassButton = royalPassButton
+	self._uxWidgets.lobby.BasicMenuButton = menuButton
+	self._uxWidgets.lobby.BasicRankButton = rankButton
+	self._uxWidgets.lobby.ToggleButton = toggleBtn
+	return true
+end
+
+function UISystem:_bindAuthoredBasicWindowUi(guiName, gui)
+	if type(guiName) ~= "string" or not gui or not gui:IsA("ScreenGui") then
+		return false
+	end
+
+	local isMainMenu = guiName == "MainMenuUI"
+	local isLeaderboard = guiName == "LeaderboardUI"
+	if not (isMainMenu or isLeaderboard) then
+		return false
+	end
+
+	self._uxWidgets = self._uxWidgets or {}
+	self._uxWidgets.basicWindows = self._uxWidgets.basicWindows or {}
+
+	local missing = {}
+	local function requireChild(parent, childName, className, label)
+		local child = UISystem._getDirectChildOfClass(parent, childName, className)
+		if not child then
+			table.insert(missing, label or string.format("%s.%s", parent and parent.Name or "?", childName))
+		end
+		return child
+	end
+
+	local panel = requireChild(gui, "MainPanel", "Frame", guiName .. ".MainPanel")
+	local title = requireChild(panel, "Title", "TextLabel", guiName .. ".MainPanel.Title")
+	local statusBadge = requireChild(panel, "StatusBadge", "TextLabel", guiName .. ".MainPanel.StatusBadge")
+	local primaryLabel = requireChild(panel, "PrimaryLabel", "TextLabel", guiName .. ".MainPanel.PrimaryLabel")
+	local secondaryLabel = requireChild(panel, "SecondaryLabel", "TextLabel", guiName .. ".MainPanel.SecondaryLabel")
+	local footerLabel = requireChild(panel, "FooterLabel", "TextLabel", guiName .. ".MainPanel.FooterLabel")
+	local closeButton = requireChild(panel, "CloseButton", "TextButton", guiName .. ".MainPanel.CloseButton")
+	local floatButtonName = isLeaderboard and "LeaderboardFloatButton" or "MainMenuFloatButton"
+	local floatButton = requireChild(gui, floatButtonName, "TextButton", guiName .. "." .. floatButtonName)
+
+	local contentFrame = nil
+	local contentText = nil
+	local roomBrowserButton = requireChild(panel, "RoomBrowserButton", "TextButton", guiName .. ".MainPanel.RoomBrowserButton")
+	local profileButton = requireChild(panel, "ProfileButton", "TextButton", guiName .. ".MainPanel.ProfileButton")
+	local shopButton = nil
+	local rankButton = nil
+	local graphicsButton = nil
+	local menuButton = nil
+	local actionButtons = {}
+
+	if isMainMenu then
+		shopButton = requireChild(panel, "ShopButton", "TextButton", guiName .. ".MainPanel.ShopButton")
+		rankButton = requireChild(panel, "RankButton", "TextButton", guiName .. ".MainPanel.RankButton")
+		graphicsButton = requireChild(panel, "GraphicsButton", "TextButton", guiName .. ".MainPanel.GraphicsButton")
+		actionButtons = { roomBrowserButton, profileButton, shopButton, rankButton, graphicsButton }
+	else
+		contentFrame = requireChild(panel, "ContentFrame", "ScrollingFrame", guiName .. ".MainPanel.ContentFrame")
+		contentText = requireChild(contentFrame, "ContentText", "TextLabel", guiName .. ".MainPanel.ContentFrame.ContentText")
+		menuButton = requireChild(panel, "MenuButton", "TextButton", guiName .. ".MainPanel.MenuButton")
+		actionButtons = { profileButton, roomBrowserButton, menuButton }
+	end
+
+	if #missing > 0 then
+		self._basicWindowUiShellWarningKeys = self._basicWindowUiShellWarningKeys or {}
+		local warningKey = table.concat(missing, ";")
+		if self._basicWindowUiShellWarningKeys[guiName] ~= warningKey then
+			self._basicWindowUiShellWarningKeys[guiName] = warningKey
+			warn(string.format("[UISystem] Authored %s contract mismatch: %s", guiName, table.concat(missing, ", ")))
+		end
+	end
+
+	if not (panel and title and statusBadge and primaryLabel and secondaryLabel and footerLabel and closeButton and floatButton and roomBrowserButton and profileButton) then
+		return false
+	end
+	if isMainMenu and not (shopButton and rankButton and graphicsButton) then
+		return false
+	end
+	if isLeaderboard and not (contentFrame and contentText and menuButton) then
+		return false
+	end
+
+	for _, button in ipairs({
+		closeButton,
+		floatButton,
+		roomBrowserButton,
+		profileButton,
+		shopButton,
+		rankButton,
+		graphicsButton,
+		menuButton,
+	}) do
+		if button then
+			self:_setSelectableStyle(button)
+		end
+	end
+
+	if not isRuntimeGuiBootstrapped(gui) then
+		markRuntimeGuiBootstrapped(gui)
+		panel.Visible = false
+		floatButton.Visible = true
+	end
+	floatButton.Visible = panel.Visible ~= true
+	makeFloatingButtonDraggable(floatButton)
+
+	if not isRuntimeButtonBound(closeButton) then
+		markRuntimeButtonBound(closeButton)
+		connectButtonPress(closeButton, function()
+			self:_setBasicWindowVisible(guiName, false)
+		end)
+	end
+	if not isRuntimeButtonBound(floatButton) then
+		markRuntimeButtonBound(floatButton)
+		connectButtonPress(floatButton, function()
+			self:_setBasicWindowVisible(guiName, true)
+		end)
+	end
+	if not isRuntimeButtonBound(roomBrowserButton) then
+		markRuntimeButtonBound(roomBrowserButton)
+		connectButtonPress(roomBrowserButton, function()
+			self:_toggleRoomBrowserVisible()
+		end)
+	end
+	if not isRuntimeButtonBound(profileButton) then
+		markRuntimeButtonBound(profileButton)
+		connectButtonPress(profileButton, function()
+			self:_toggleAuxiliaryWindow("ProfileUI")
+		end)
+	end
+	if shopButton and not isRuntimeButtonBound(shopButton) then
+		markRuntimeButtonBound(shopButton)
+		connectButtonPress(shopButton, function()
+			self:_toggleAuxiliaryWindow("ShopUI")
+		end)
+	end
+	if rankButton and not isRuntimeButtonBound(rankButton) then
+		markRuntimeButtonBound(rankButton)
+		connectButtonPress(rankButton, function()
+			self:_toggleBasicWindow("LeaderboardUI")
+		end)
+	end
+	if graphicsButton and not isRuntimeButtonBound(graphicsButton) then
+		markRuntimeButtonBound(graphicsButton)
+		connectButtonPress(graphicsButton, function()
+			self:_cycleGraphicsMode()
+		end)
+	end
+	if menuButton and not isRuntimeButtonBound(menuButton) then
+		markRuntimeButtonBound(menuButton)
+		connectButtonPress(menuButton, function()
+			self:_toggleBasicWindow("MainMenuUI")
+		end)
+	end
+
+	self._uxWidgets.basicWindows[guiName] = {
+		Gui = gui,
+		Panel = panel,
+		Title = title,
+		StatusBadge = statusBadge,
+		PrimaryLabel = primaryLabel,
+		SecondaryLabel = secondaryLabel,
+		ContentFrame = contentFrame,
+		ContentText = contentText,
+		FooterLabel = footerLabel,
+		FloatButton = floatButton,
+		CloseButton = closeButton,
+		ActionButtons = actionButtons,
+		RoomBrowserButton = roomBrowserButton,
+		ProfileButton = profileButton,
+		ShopButton = shopButton,
+		RankButton = rankButton,
+		GraphicsButton = graphicsButton,
+		MenuButton = menuButton,
+	}
+
+	return true
+end
+
+function UISystem:_bindAuthoredAuxiliaryWindowUi(guiName, gui)
+	if type(guiName) ~= "string" or not gui or not gui:IsA("ScreenGui") then
+		return false
+	end
+
+	local auxiliaryConfig = AUXILIARY_WINDOW_CONFIG[guiName]
+	if type(auxiliaryConfig) ~= "table" then
+		return false
+	end
+
+	self._uxWidgets = self._uxWidgets or {}
+	self._uxWidgets.windows = self._uxWidgets.windows or {}
+
+	local missing = {}
+	local function requireChild(parent, childName, className, label)
+		local child = UISystem._getDirectChildOfClass(parent, childName, className)
+		if not child then
+			table.insert(missing, label or string.format("%s.%s", parent and parent.Name or "?", childName))
+		end
+		return child
+	end
+
+	local panel = requireChild(gui, "MainPanel", "Frame", guiName .. ".MainPanel")
+	local title = requireChild(panel, "Title", "TextLabel", guiName .. ".MainPanel.Title")
+	local closeBtn = requireChild(panel, "CloseButton", "TextButton", guiName .. ".MainPanel.CloseButton")
+	local statusBadge = requireChild(panel, "StatusBadge", "TextLabel", guiName .. ".MainPanel.StatusBadge")
+	local primaryLabel = requireChild(panel, "PrimaryLabel", "TextLabel", guiName .. ".MainPanel.PrimaryLabel")
+	local secondaryLabel = requireChild(panel, "SecondaryLabel", "TextLabel", guiName .. ".MainPanel.SecondaryLabel")
+	local contentFrame = requireChild(panel, "ContentFrame", "ScrollingFrame", guiName .. ".MainPanel.ContentFrame")
+	local contentText = requireChild(contentFrame, "ContentText", "TextLabel", guiName .. ".MainPanel.ContentFrame.ContentText")
+	local footerLabel = requireChild(panel, "FooterLabel", "TextLabel", guiName .. ".MainPanel.FooterLabel")
+	local floatBtn = requireChild(gui, guiName .. "FloatButton", "TextButton", guiName .. "." .. guiName .. "FloatButton")
+
+	local toolActionButton = nil
+	local toolStatusLabel = nil
+	if guiName == "JournalUI" then
+		toolActionButton = requireChild(panel, "ToolActionButton", "TextButton", guiName .. ".MainPanel.ToolActionButton")
+		toolStatusLabel = requireChild(panel, "ToolStatusLabel", "TextLabel", guiName .. ".MainPanel.ToolStatusLabel")
+	end
+
+	if #missing > 0 then
+		self._auxiliaryUiShellWarningKeys = self._auxiliaryUiShellWarningKeys or {}
+		local warningKey = table.concat(missing, ";")
+		if self._auxiliaryUiShellWarningKeys[guiName] ~= warningKey then
+			self._auxiliaryUiShellWarningKeys[guiName] = warningKey
+			warn(string.format("[UISystem] Authored %s contract mismatch: %s", guiName, table.concat(missing, ", ")))
+		end
+	end
+
+	if not (panel and title and closeBtn and statusBadge and primaryLabel and secondaryLabel and contentFrame and contentText and footerLabel and floatBtn) then
+		return false
+	end
+	if guiName == "JournalUI" and not (toolActionButton and toolStatusLabel) then
+		return false
+	end
+
+	if not isRuntimeGuiBootstrapped(gui) then
+		markRuntimeGuiBootstrapped(gui)
+		gui.Enabled = false
+		panel.Visible = false
+		floatBtn.Visible = false
+	end
+
+	for _, button in ipairs({ closeBtn, floatBtn, toolActionButton }) do
+		if button then
+			self:_setSelectableStyle(button)
+		end
+	end
+	styleFloatingButton(floatBtn, auxiliaryConfig.floatText, auxiliaryConfig.badgeColor)
+	makeFloatingButtonDraggable(floatBtn)
+
+	if not isRuntimeButtonBound(closeBtn) then
+		markRuntimeButtonBound(closeBtn)
+		connectButtonPress(closeBtn, function()
+			self:_setAuxiliaryWindowDismissed(guiName, true)
+		end)
+	end
+	if not isRuntimeButtonBound(floatBtn) then
+		markRuntimeButtonBound(floatBtn)
+		connectButtonPress(floatBtn, function()
+			self:_openAuxiliaryWindow(guiName)
+		end)
+	end
+	if toolActionButton and not isRuntimeButtonBound(toolActionButton) then
+		markRuntimeButtonBound(toolActionButton)
+		connectButtonPress(toolActionButton, function()
+			self:_triggerJournalToolScan()
+		end)
+	end
+
+	self._uxWidgets.windows[guiName] = {
+		Gui = gui,
+		Panel = panel,
+		Title = title,
+		StatusBadge = statusBadge,
+		PrimaryLabel = primaryLabel,
+		SecondaryLabel = secondaryLabel,
+		ContentFrame = contentFrame,
+		ContentText = contentText,
+		FooterLabel = footerLabel,
+		FloatButton = floatBtn,
+		CloseButton = closeBtn,
+		ToolActionButton = toolActionButton,
+		ToolStatusLabel = toolStatusLabel,
+	}
+
+	return true
+end
+
+function UISystem:_ensureAuthoredMatchPanelWidgets(match)
+	if type(match) ~= "table" then
+		return false
+	end
+
+	local summaryFrame = match.SummaryFrame
+	local fieldKitButtonsFrame = match.FieldKitButtonsFrame
+	if not (summaryFrame and fieldKitButtonsFrame) then
+		return false
+	end
+
+	local function ensureSummaryValue(rowName, labelText)
+		local row = summaryFrame:FindFirstChild(rowName)
+		if row and row:IsA("Frame") then
+			local value = row:FindFirstChild("Value")
+			if value and value:IsA("TextLabel") then
+				return value
+			end
+		end
+		return self:_cloneSummaryValueTemplate(summaryFrame, rowName, labelText)
+	end
+
+	match.BasicSummaryRows = {
+		status = ensureSummaryValue("StatusRow", "Status Misi"),
+		ghostType = ensureSummaryValue("GhostRow", "Ghost"),
+		correctGuess = ensureSummaryValue("GuessRow", "Tebakan"),
+		evidenceCollected = ensureSummaryValue("EvidenceRow", "Evidence"),
+		playersSurvived = ensureSummaryValue("SurvivedRow", "Pemain Selamat"),
+		playersDead = ensureSummaryValue("DeadRow", "Pemain Mati"),
+		matchDuration = ensureSummaryValue("DurationRow", "Durasi"),
+		routeFocus = ensureSummaryValue("RouteRow", "Route Aktif"),
+		accessState = ensureSummaryValue("AccessRow", "Akses"),
+		currencyReward = ensureSummaryValue("RewardRow", "Hadiah MM / PP"),
+		xpReward = ensureSummaryValue("XpRow", "Hadiah XP"),
+	}
+
+	local fieldKitButtons = {}
+	for order, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+		local definition = FIELD_KIT_TOOL_CONFIG[toolType]
+		local buttonName = toolType .. "Button"
+		local toolButton = fieldKitButtonsFrame:FindFirstChild(buttonName)
+		if toolButton and not toolButton:IsA("TextButton") then
+			toolButton:Destroy()
+			toolButton = nil
+		end
+		if not toolButton then
+			toolButton = self:_cloneUiVisualTemplateRoot("FieldKitButtonTemplate", fieldKitButtonsFrame, buttonName)
+			if toolButton and toolButton:IsA("TextButton") then
+				styleButton(toolButton, definition.label)
+				toolButton.TextWrapped = true
+				toolButton.BackgroundColor3 = definition.accent:Lerp(Color3.fromRGB(34, 42, 56), 0.44)
+				self:_setSelectableStyle(toolButton)
+			end
+		end
+		if not (toolButton and toolButton:IsA("TextButton")) then
+			continue
+		end
+		toolButton.LayoutOrder = order
+		local fieldKitWidget = ensureFieldKitButtonVisuals(toolButton, definition, toolType)
+		if not isRuntimeButtonBound(toolButton) then
+			local boundToolType = toolType
+			local boundOpenJournal = definition.openJournal == true
+			markRuntimeButtonBound(toolButton)
+			connectButtonPress(toolButton, function()
+				self:_useInvestigationTool(boundToolType, {
+					openJournal = boundOpenJournal,
+				})
+			end)
+		end
+		fieldKitButtons[toolType] = fieldKitWidget
+	end
+
+	match.FieldKitButtons = fieldKitButtons
+	match.FieldKitGrid = fieldKitButtonsFrame:FindFirstChild("Grid")
+	return true
+end
+
+function UISystem:_bindAuthoredMatchUi(gui)
+	if not gui or not gui:IsA("ScreenGui") then
+		return false
+	end
+
+	self._uxWidgets = self._uxWidgets or {}
+	self._uxWidgets.match = self._uxWidgets.match or {}
+
+	local missing = {}
+	local function requireChild(parent, childName, className, label)
+		local child = UISystem._getDirectChildOfClass(parent, childName, className)
+		if not child then
+			table.insert(missing, label or string.format("%s.%s", parent and parent.Name or "?", childName))
+		end
+		return child
+	end
+
+	local panel = requireChild(gui, "MainPanel", "Frame", "MatchUI.MainPanel")
+	local title = requireChild(panel, "Title", "TextLabel", "MatchUI.MainPanel.Title")
+	local closeBtn = requireChild(panel, "CloseButton", "TextButton", "MatchUI.MainPanel.CloseButton")
+	local headerCard = requireChild(panel, "HeaderCard", "Frame", "MatchUI.MainPanel.HeaderCard")
+	local headerStroke = requireChild(headerCard, "HeaderStroke", "UIStroke", "MatchUI.MainPanel.HeaderCard.HeaderStroke")
+	local phaseGlyph = requireChild(headerCard, "PhaseGlyph", "TextLabel", "MatchUI.MainPanel.HeaderCard.PhaseGlyph")
+	local stateBadge = requireChild(headerCard, "StateBadge", "TextLabel", "MatchUI.MainPanel.HeaderCard.StateBadge")
+	local primaryLabel = requireChild(headerCard, "PrimaryLabel", "TextLabel", "MatchUI.MainPanel.HeaderCard.PrimaryLabel")
+	local secondaryLabel = requireChild(headerCard, "SecondaryLabel", "TextLabel", "MatchUI.MainPanel.HeaderCard.SecondaryLabel")
+	local summaryFrame = requireChild(panel, "SummaryFrame", "ScrollingFrame", "MatchUI.MainPanel.SummaryFrame")
+	local hideBtn = requireChild(panel, "HideButton", "TextButton", "MatchUI.MainPanel.HideButton")
+	local footerLabel = requireChild(panel, "FooterLabel", "TextLabel", "MatchUI.MainPanel.FooterLabel")
+	local timerLabel = requireChild(gui, "MatchTimerLabel", "TextLabel", "MatchUI.MatchTimerLabel")
+	local timerCaption = requireChild(gui, "MatchTimerCaption", "TextLabel", "MatchUI.MatchTimerCaption")
+	local evidenceQuickButton = requireChild(gui, "EvidenceQuickButton", "TextButton", "MatchUI.EvidenceQuickButton")
+	local controlsHintBar = requireChild(gui, "ControlsHintBar", "Frame", "MatchUI.ControlsHintBar")
+	local controlsHintLabel = requireChild(controlsHintBar, "Label", "TextLabel", "MatchUI.ControlsHintBar.Label")
+	local fieldKitFrame = requireChild(gui, "FieldKitFrame", "Frame", "MatchUI.FieldKitFrame")
+	local fieldKitTitle = requireChild(fieldKitFrame, "Title", "TextLabel", "MatchUI.FieldKitFrame.Title")
+	local fieldKitButtonsFrame = requireChild(fieldKitFrame, "Buttons", "Frame", "MatchUI.FieldKitFrame.Buttons")
+	local fieldKitGrid = requireChild(fieldKitButtonsFrame, "Grid", "UIGridLayout", "MatchUI.FieldKitFrame.Buttons.Grid")
+	local fieldKitStatusLabel = requireChild(fieldKitFrame, "StatusLabel", "TextLabel", "MatchUI.FieldKitFrame.StatusLabel")
+	local floatBtn = requireChild(gui, "MatchFloatButton", "TextButton", "MatchUI.MatchFloatButton")
+
+	if #missing > 0 then
+		local warningKey = table.concat(missing, ";")
+		if self._matchUiShellWarningKey ~= warningKey then
+			self._matchUiShellWarningKey = warningKey
+			warn("[UISystem] Authored MatchUI contract mismatch: " .. table.concat(missing, ", "))
+		end
+	end
+
+	if not (
+		panel
+		and title
+		and closeBtn
+		and headerCard
+		and headerStroke
+		and phaseGlyph
+		and stateBadge
+		and primaryLabel
+		and secondaryLabel
+		and summaryFrame
+		and hideBtn
+		and footerLabel
+		and timerLabel
+		and timerCaption
+		and evidenceQuickButton
+		and controlsHintBar
+		and controlsHintLabel
+		and fieldKitFrame
+		and fieldKitTitle
+		and fieldKitButtonsFrame
+		and fieldKitGrid
+		and fieldKitStatusLabel
+		and floatBtn
+	) then
+		return false
+	end
+
+	if not isRuntimeGuiBootstrapped(gui) then
+		markRuntimeGuiBootstrapped(gui)
+		gui.Enabled = false
+		panel.Visible = false
+		timerLabel.Visible = false
+		timerCaption.Visible = false
+		evidenceQuickButton.Visible = false
+		controlsHintBar.Visible = false
+		fieldKitFrame.Visible = false
+		floatBtn.Visible = false
+	end
+
+	for _, button in ipairs({ closeBtn, hideBtn, evidenceQuickButton, floatBtn }) do
+		if button then
+			self:_setSelectableStyle(button)
+		end
+	end
+	styleFloatingButton(floatBtn, "MATCH", Color3.fromRGB(98, 122, 154))
+	makeFloatingButtonDraggable(floatBtn)
+
+	if not isRuntimeButtonBound(closeBtn) then
+		markRuntimeButtonBound(closeBtn)
+		connectButtonPress(closeBtn, function()
+			self:_setMatchWindowDismissed(true)
+		end)
+	end
+	if not isRuntimeButtonBound(hideBtn) then
+		markRuntimeButtonBound(hideBtn)
+		connectButtonPress(hideBtn, function()
+			self:_setMatchWindowDismissed(true)
+		end)
+	end
+	if not isRuntimeButtonBound(floatBtn) then
+		markRuntimeButtonBound(floatBtn)
+		connectButtonPress(floatBtn, function()
+			self:_setMatchWindowDismissed(false)
+		end)
+	end
+	if not isRuntimeButtonBound(evidenceQuickButton) then
+		markRuntimeButtonBound(evidenceQuickButton)
+		connectButtonPress(evidenceQuickButton, function()
+			self:_toggleAuxiliaryWindow("JournalUI")
+		end)
+	end
+
+	self._uxWidgets.match.BasicGui = gui
+	self._uxWidgets.match.BasicPanel = panel
+	self._uxWidgets.match.HeaderCard = headerCard
+	self._uxWidgets.match.HeaderStroke = headerStroke
+	self._uxWidgets.match.PhaseGlyph = phaseGlyph
+	self._uxWidgets.match.BasicTitle = title
+	self._uxWidgets.match.BasicStateBadge = stateBadge
+	self._uxWidgets.match.BasicPrimaryLabel = primaryLabel
+	self._uxWidgets.match.BasicSecondaryLabel = secondaryLabel
+	self._uxWidgets.match.BasicFooterLabel = footerLabel
+	self._uxWidgets.match.SummaryFrame = summaryFrame
+	self._uxWidgets.match.TimerLabel = timerLabel
+	self._uxWidgets.match.TimerCaption = timerCaption
+	self._uxWidgets.match.EvidenceQuickButton = evidenceQuickButton
+	self._uxWidgets.match.ControlsHintBar = controlsHintBar
+	self._uxWidgets.match.ControlsHintLabel = controlsHintLabel
+	self._uxWidgets.match.FieldKitFrame = fieldKitFrame
+	self._uxWidgets.match.FieldKitTitle = fieldKitTitle
+	self._uxWidgets.match.FieldKitButtonsFrame = fieldKitButtonsFrame
+	self._uxWidgets.match.FieldKitStatusLabel = fieldKitStatusLabel
+	self._uxWidgets.match.FieldKitGrid = fieldKitGrid
+	self._uxWidgets.match.BasicFloatButton = floatBtn
+	self._uxWidgets.match.BasicCloseButton = closeBtn
+	self._uxWidgets.match.BasicHideButton = hideBtn
+
+	self:_ensureAuthoredMatchPanelWidgets(self._uxWidgets.match)
+	return true
+end
+
+function UISystem:_bindAuthoredRoomBrowserUi(gui, floatGui)
+	if not gui or not gui:IsA("ScreenGui") or not floatGui or not floatGui:IsA("ScreenGui") then
+		return nil
+	end
+
+	local shell = {
+		Gui = gui,
+		FloatGui = floatGui,
+	}
+	local missing = {}
+
+	local function requirePath(root, path, className, label)
+		local child = UISystem._getChildByPathOfClass(root, path, className)
+		if not child then
+			table.insert(missing, label or path)
+		end
+		return child
+	end
+
+	local contract = {
+		{ "Backdrop", gui, "Backdrop", "Frame" },
+		{ "RootPanel", gui, "Backdrop.Panel", "Frame" },
+		{ "HeaderTitle", gui, "Backdrop.Panel.Title", "TextLabel" },
+		{ "HeaderTitleGlow", gui, "Backdrop.Panel.TitleGlow", "TextLabel" },
+		{ "DragBar", gui, "Backdrop.Panel.DragBar", "Frame" },
+		{ "CloseButton", gui, "Backdrop.Panel.CloseButton", "TextButton" },
+		{ "Status", gui, "Backdrop.Panel.Status", "TextLabel" },
+		{ "ClassicButton", gui, "Backdrop.Panel.ClassicButton", "TextButton" },
+		{ "AllModesButton", gui, "Backdrop.Panel.AllModesButton", "TextButton" },
+		{ "RankedButton", gui, "Backdrop.Panel.RankedButton", "TextButton" },
+		{ "RoomList", gui, "Backdrop.Panel.RoomList", "ScrollingFrame" },
+		{ "RoomListRowTemplate", gui, "Backdrop.Panel.RoomList.RowTemplate", "TextButton" },
+		{ "RoomPreviewPanel", gui, "Backdrop.Panel.RoomPreviewPanel", "Frame" },
+		{ "RoomPreviewTitle", gui, "Backdrop.Panel.RoomPreviewPanel.Title", "TextLabel" },
+		{ "RoomPreviewInfo", gui, "Backdrop.Panel.RoomPreviewPanel.Info", "TextLabel" },
+		{ "RoomPreviewMap", gui, "Backdrop.Panel.RoomPreviewPanel.MapPlaceholder", "Frame" },
+		{ "RoomPreviewMapTitle", gui, "Backdrop.Panel.RoomPreviewPanel.MapPlaceholder.MapTitle", "TextLabel" },
+		{ "RoomPreviewMapLabel", gui, "Backdrop.Panel.RoomPreviewPanel.MapPlaceholder.MapLabel", "TextLabel" },
+		{ "RoomPreviewMapStats", gui, "Backdrop.Panel.RoomPreviewPanel.MapPlaceholder.Stats", "TextLabel" },
+		{ "RoomPreviewMapMood", gui, "Backdrop.Panel.RoomPreviewPanel.MapPlaceholder.Mood", "TextLabel" },
+		{ "RoomPreviewMapAccent", gui, "Backdrop.Panel.RoomPreviewPanel.MapPlaceholder.Accent", "Frame" },
+		{ "RoomPreviewMapGradient", gui, "Backdrop.Panel.RoomPreviewPanel.MapPlaceholder.PreviewGradient", "UIGradient" },
+		{ "RoomPreviewPlayersList", gui, "Backdrop.Panel.RoomPreviewPanel.PlayersList", "ScrollingFrame" },
+		{ "RoomPreviewPlayerCardTemplate", gui, "Backdrop.Panel.RoomPreviewPanel.PlayersList.PlayerCardTemplate", "Frame" },
+		{ "RoomPreviewEmptyStateTemplate", gui, "Backdrop.Panel.RoomPreviewPanel.PlayersList.EmptyStateTemplate", "TextLabel" },
+		{ "JoinPassword", gui, "Backdrop.Panel.JoinPassword", "TextBox" },
+		{ "RefreshButton", gui, "Backdrop.Panel.RefreshButton", "TextButton" },
+		{ "CreateRoomButton", gui, "Backdrop.Panel.CreateRoomButton", "TextButton" },
+		{ "QueueButton", gui, "Backdrop.Panel.QueueButton", "TextButton" },
+		{ "QuickJoinClassicButton", gui, "Backdrop.Panel.QuickJoinClassicButton", "TextButton" },
+		{ "QuickJoinRankedButton", gui, "Backdrop.Panel.QuickJoinRankedButton", "TextButton" },
+		{ "RoomPanel", gui, "Backdrop.Panel.RoomPanel", "ScrollingFrame" },
+		{ "RoomTitle", gui, "Backdrop.Panel.RoomPanel.RoomTitle", "TextLabel" },
+		{ "RoomHost", gui, "Backdrop.Panel.RoomPanel.HostLabel", "TextLabel" },
+		{ "PlayersList", gui, "Backdrop.Panel.RoomPanel.PlayersList", "ScrollingFrame" },
+		{ "RoomPanelPlayerCardTemplate", gui, "Backdrop.Panel.RoomPanel.PlayersList.PlayerCardTemplate", "Frame" },
+		{ "RoomPanelEmptyStateTemplate", gui, "Backdrop.Panel.RoomPanel.PlayersList.EmptyStateTemplate", "TextLabel" },
+		{ "ModeSelector", gui, "Backdrop.Panel.RoomPanel.ModeSelector", "TextButton" },
+		{ "ModeDropdown", gui, "Backdrop.Panel.RoomPanel.ModeDropdown", "Frame" },
+		{ "ModeClassicOption", gui, "Backdrop.Panel.RoomPanel.ModeDropdown.ClassicOption", "TextButton" },
+		{ "ModeRankedOption", gui, "Backdrop.Panel.RoomPanel.ModeDropdown.RankedOption", "TextButton" },
+		{ "MapSelector", gui, "Backdrop.Panel.RoomPanel.MapSelector", "TextButton" },
+		{ "MapDropdown", gui, "Backdrop.Panel.RoomPanel.MapDropdown", "Frame" },
+		{ "RankedTierLabel", gui, "Backdrop.Panel.RoomPanel.RankedTierLabel", "TextLabel" },
+		{ "MapPreview", gui, "Backdrop.Panel.RoomPanel.MapPreview", "Frame" },
+		{ "MapPreviewTitle", gui, "Backdrop.Panel.RoomPanel.MapPreview.Title", "TextLabel" },
+		{ "MapPreviewLabel", gui, "Backdrop.Panel.RoomPanel.MapPreview.Label", "TextLabel" },
+		{ "MapPreviewImage", gui, "Backdrop.Panel.RoomPanel.MapPreview.MapImagePlaceholder", "Frame" },
+		{ "MapPreviewImageGradient", gui, "Backdrop.Panel.RoomPanel.MapPreview.MapImagePlaceholder.PreviewGradient", "UIGradient" },
+		{ "MapPreviewImageAccent", gui, "Backdrop.Panel.RoomPanel.MapPreview.MapImagePlaceholder.AccentBar", "Frame" },
+		{ "MapPreviewImageChip", gui, "Backdrop.Panel.RoomPanel.MapPreview.MapImagePlaceholder.MoodChip", "TextLabel" },
+		{ "MapPreviewImageLabel", gui, "Backdrop.Panel.RoomPanel.MapPreview.MapImagePlaceholder.ImageLabel", "TextLabel" },
+		{ "MapPreviewImageStats", gui, "Backdrop.Panel.RoomPanel.MapPreview.MapImagePlaceholder.Stats", "TextLabel" },
+		{ "MapPreviewImageFooter", gui, "Backdrop.Panel.RoomPanel.MapPreview.MapImagePlaceholder.Footer", "TextLabel" },
+		{ "SetPasswordBox", gui, "Backdrop.Panel.RoomPanel.SetPasswordBox", "TextBox" },
+		{ "SetPasswordButton", gui, "Backdrop.Panel.RoomPanel.SetPasswordButton", "TextButton" },
+		{ "ReadyButton", gui, "Backdrop.Panel.RoomPanel.ReadyButton", "TextButton" },
+		{ "StartButton", gui, "Backdrop.Panel.RoomPanel.StartButton", "TextButton" },
+		{ "CancelStartButton", gui, "Backdrop.Panel.RoomPanel.CancelStartButton", "TextButton" },
+		{ "LeaveRoomButton", gui, "Backdrop.Panel.RoomPanel.LeaveRoomButton", "TextButton" },
+		{ "InviteButton", gui, "Backdrop.Panel.RoomPanel.InviteButton", "TextButton" },
+		{ "InviteDropdown", gui, "Backdrop.Panel.RoomPanel.InviteDropdown", "Frame" },
+		{ "InviteList", gui, "Backdrop.Panel.RoomPanel.InviteDropdown.InviteList", "ScrollingFrame" },
+		{ "InviteAllTemplate", gui, "Backdrop.Panel.RoomPanel.InviteDropdown.InviteList.InviteAllTemplate", "TextButton" },
+		{ "InvitePlayerTemplate", gui, "Backdrop.Panel.RoomPanel.InviteDropdown.InviteList.InvitePlayerTemplate", "TextButton" },
+		{ "KickNameBox", gui, "Backdrop.Panel.RoomPanel.KickNameBox", "TextBox" },
+		{ "KickButton", gui, "Backdrop.Panel.RoomPanel.KickButton", "TextButton" },
+		{ "PasswordModal", gui, "PasswordModal", "Frame" },
+		{ "PasswordCard", gui, "PasswordModal.PasswordCard", "Frame" },
+		{ "PasswordTitle", gui, "PasswordModal.PasswordCard.Title", "TextLabel" },
+		{ "PasswordInput", gui, "PasswordModal.PasswordCard.PasswordInput", "TextBox" },
+		{ "PasswordJoinButton", gui, "PasswordModal.PasswordCard.JoinButton", "TextButton" },
+		{ "PasswordCancelButton", gui, "PasswordModal.PasswordCard.CancelButton", "TextButton" },
+		{ "KickNoticeModal", gui, "KickNoticeModal", "Frame" },
+		{ "KickNoticeCard", gui, "KickNoticeModal.KickNoticeCard", "Frame" },
+		{ "KickNoticeText", gui, "KickNoticeModal.KickNoticeCard.KickNoticeText", "TextLabel" },
+		{ "KickNoticeOkButton", gui, "KickNoticeModal.KickNoticeCard.OkButton", "TextButton" },
+		{ "CountdownOverlay", gui, "CountdownOverlay", "Frame" },
+		{ "CountdownLabel", gui, "CountdownOverlay.CountdownLabel", "TextLabel" },
+		{ "CancelCountdown", gui, "CountdownOverlay.CancelCountdown", "TextButton" },
+		{ "InvitePopup", gui, "InvitePopup", "Frame" },
+		{ "InvitePopupScale", gui, "InvitePopup.UIScale", "UIScale" },
+		{ "InvitePopupText", gui, "InvitePopup.Text", "TextLabel" },
+		{ "InviteAcceptButton", gui, "InvitePopup.AcceptButton", "TextButton" },
+		{ "InviteDeclineButton", gui, "InvitePopup.DeclineButton", "TextButton" },
+		{ "FloatButton", floatGui, "RoomBrowserFloatButton", "TextButton" },
+	}
+
+	for _, entry in ipairs(contract) do
+		shell[entry[1]] = requirePath(entry[2], entry[3], entry[4], entry[3])
+	end
+
+	shell.MapOptionButtons = {}
+	for idx = 1, #MAPS do
+		shell.MapOptionButtons[idx] = requirePath(
+			gui,
+			string.format("Backdrop.Panel.RoomPanel.MapDropdown.MapOption_%d", idx),
+			"TextButton",
+			string.format("Backdrop.Panel.RoomPanel.MapDropdown.MapOption_%d", idx)
+		)
+	end
+
+	if #missing > 0 then
+		local warningKey = table.concat(missing, ";")
+		if self._roomBrowserUiShellWarningKey ~= warningKey then
+			self._roomBrowserUiShellWarningKey = warningKey
+			warn("[UISystem] Authored RoomBrowserUI contract mismatch: " .. table.concat(missing, ", "))
+		end
+	end
+
+	if not (
+		shell.Backdrop
+		and shell.RootPanel
+		and shell.CloseButton
+		and shell.Status
+		and shell.ClassicButton
+		and shell.AllModesButton
+		and shell.RankedButton
+		and shell.RoomList
+		and shell.RoomPreviewPanel
+		and shell.RoomPanel
+		and shell.PasswordModal
+		and shell.KickNoticeModal
+		and shell.InvitePopup
+		and shell.FloatButton
+	)
+	then
+		return nil
+	end
+
+	if not isRuntimeGuiBootstrapped(gui) then
+		markRuntimeGuiBootstrapped(gui)
+		gui.Enabled = false
+		floatGui.Enabled = false
+		shell.Backdrop.Visible = false
+		shell.RoomPanel.Visible = false
+		shell.PasswordModal.Visible = false
+		shell.KickNoticeModal.Visible = false
+		shell.CountdownOverlay.Visible = false
+		shell.InvitePopup.Visible = false
+		if shell.FloatButton then
+			shell.FloatButton.Visible = true
+		end
+	end
+
+	return shell
 end
 
 function UISystem:_getClientService(name)
@@ -6711,7 +8471,7 @@ function UISystem:_useInvestigationTool(toolType, options)
 				responseData = nestedResult
 			end
 		end
-		local statusText, detailText = resolveToolFeedback(toolType, success == true, reason or (response and response.reason), responseData, nil)
+		local statusText, detailText = UISystem._resolveToolFeedback(toolType, success == true, reason or (response and response.reason), responseData, nil)
 		state.toolSuccess = success == true
 		state.toolStatus = statusText
 		state.toolReason = detailText
@@ -6977,12 +8737,13 @@ function UISystem:_syncMatchWindowVisibility()
 	local hasDedicatedResultsPanel = match.ResultsPanel ~= nil
 	local showResults = showWindow and isResultsPhase and hasDedicatedResultsPanel
 	local showBasicPanel = showWindow and (not isResultsPhase or not hasDedicatedResultsPanel)
+	local allowResultReopen = isResultsPhase and self:_isLocalPlayerStillInMatch()
 
 	if match.BasicPanel then
 		match.BasicPanel.Visible = showBasicPanel
 	end
 	if match.BasicFloatButton then
-		match.BasicFloatButton.Visible = screenEnabled and self._matchWindowDismissed and not isResultsPhase
+		match.BasicFloatButton.Visible = screenEnabled and self._matchWindowDismissed and (not isResultsPhase or allowResultReopen)
 	end
 	if match.ResultsPanel then
 		match.ResultsPanel.Visible = showResults
@@ -7049,9 +8810,18 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState, payload)
 		or tonumber(result.playersDead or 0) > 0
 
 	if hasResults then
+		local guessedEvidenceText = type(result.guessedEvidence) == "table" and #result.guessedEvidence > 0
+			and table.concat(result.guessedEvidence, " | ")
+			or "-"
+		local expectedEvidenceText = type(result.expectedEvidence) == "table" and #result.expectedEvidence > 0
+			and table.concat(result.expectedEvidence, " | ")
+			or "-"
 		self:_setSummaryValue(rowWidgets.status, result.correctGuess and "BERHASIL" or "GAGAL")
 		self:_setSummaryValue(rowWidgets.ghostType, tostring(result.ghostType or "Unknown"))
 		self:_setSummaryValue(rowWidgets.correctGuess, result.correctGuess and "BENAR" or "SALAH")
+		self:_setSummaryValue(rowWidgets.guessedGhostType, tostring(result.guessedGhostType or "-"))
+		self:_setSummaryValue(rowWidgets.guessedEvidence, guessedEvidenceText)
+		self:_setSummaryValue(rowWidgets.expectedEvidence, expectedEvidenceText)
 		self:_setSummaryValue(rowWidgets.evidenceCollected, tostring(tonumber(result.evidenceCollected or 0) or 0))
 		self:_setSummaryValue(rowWidgets.playersSurvived, tostring(tonumber(result.playersSurvived or 0) or 0))
 		self:_setSummaryValue(rowWidgets.playersDead, tostring(tonumber(result.playersDead or 0) or 0))
@@ -7476,7 +9246,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 			and semanticAccent:Lerp(Color3.fromRGB(235, 240, 245), 0.3)
 			or Color3.fromRGB(235, 240, 245)
 	end
-	stampMatchSurvivalRuntime(match, viewState, huntStatusSnapshot, huntAssistSnapshot)
+	UISystem._stampMatchSurvivalRuntime(match, viewState, huntStatusSnapshot, huntAssistSnapshot)
 	self:_playObjectiveUpdateCueIfNeeded(viewState)
 	self:_updateMatchSummaryRows(match.BasicSummaryRows, viewState, payload)
 	self:_refreshFieldKitPanel()
@@ -7565,7 +9335,9 @@ function UISystem:_renderResultsPanel(payload)
 		match.ResultsStatus.BackgroundColor3 = missionFailed and Color3.fromRGB(120, 48, 48) or Color3.fromRGB(50, 104, 72)
 	end
 	if match.ResultsSubtitle then
-		match.ResultsSubtitle.Text = "Ghost: " .. tostring((self._matchResult and self._matchResult.ghostType) or "Unknown")
+		local resultGhost = tostring((self._matchResult and self._matchResult.ghostType) or "Unknown")
+		local guessedGhost = tostring((self._matchResult and self._matchResult.guessedGhostType) or "-")
+		match.ResultsSubtitle.Text = string.format("Ghost Asli: %s | Tebakan: %s", resultGhost, guessedGhost)
 	end
 	local remainingLock = math.max(0, math.ceil((self._resultsCloseUnlockAt or 0) - tick()))
 	local closeUnlocked = remainingLock <= 0
@@ -8059,6 +9831,11 @@ function UISystem:_ensureLeaderboardWidgets(window)
 	end
 
 	local contentFrame = window.ContentFrame
+	local authoredWidgets = self:_tryBindAuthoredLeaderboardWidgets(window, contentFrame)
+	if authoredWidgets then
+		window.LeaderboardWidgets = authoredWidgets
+		return authoredWidgets
+	end
 	local deck = contentFrame:FindFirstChild("LeaderboardDeck")
 	if deck and not deck:IsA("Frame") then
 		deck:Destroy()
@@ -8234,7 +10011,7 @@ function UISystem:_refreshLeaderboardPanel()
 	local playerCount = currentRoom and (type(currentRoom.players) == "table" and #currentRoom.players or 0) or 0
 	local maxPlayers = currentRoom and math.max(playerCount, math.floor(tonumber(currentRoom.maxPlayers or 4) or 4)) or 4
 	local statusToken = tostring(profile.status or "safe")
-	local statusLabel = titleCaseToken(statusToken)
+	local statusLabel = UISystem._titleCaseToken(statusToken)
 	local statusAccent = Color3.fromRGB(90, 122, 80)
 	if statusToken == "hunt_risk" then
 		statusAccent = Color3.fromRGB(132, 68, 68)
@@ -8504,6 +10281,542 @@ function UISystem:_layoutJournalWindow(window)
 	end
 end
 
+function UISystem:_resetJournalSubmitState(matchId)
+	local state = self._journalState or {}
+	state.matchId = matchId or state.matchId
+	state.selectedEvidence = {}
+	state.selectedGhostType = nil
+	state.submitPending = false
+	state.endPending = false
+	state.answerLocked = false
+	state.submitStatus = "Pilih 3 evidence dan ghost, lalu submit."
+	state.submitReason = nil
+	state.submitLastCorrect = nil
+	state.tutorialPageIndex = 1
+	self._journalState = state
+end
+
+function UISystem:_autoFillJournalSubmitSelection()
+	local state = self._journalState or {}
+	state.selectedEvidence = UISystem._canonicalJournalEvidenceList(state.selectedEvidence)
+	local selectedSet = UISystem._buildJournalEvidenceSet(state.selectedEvidence)
+	local sourceEvidence = type(state.confirmedEvidence) == "table" and #state.confirmedEvidence > 0
+		and state.confirmedEvidence
+		or state.discoveredEvidence
+	for _, evidenceType in ipairs(UISystem._canonicalJournalEvidenceList(sourceEvidence)) do
+		if not selectedSet[evidenceType] and #state.selectedEvidence < 3 then
+			selectedSet[evidenceType] = true
+			table.insert(state.selectedEvidence, evidenceType)
+		end
+	end
+	if (state.selectedGhostType == nil or state.selectedGhostType == "") and type(state.candidates) == "table" and #state.candidates == 1 then
+		state.selectedGhostType = tostring(state.candidates[1])
+	end
+	self._journalState = state
+end
+
+function UISystem:_getJournalSelectedEvidenceList()
+	local state = self._journalState or {}
+	state.selectedEvidence = UISystem._canonicalJournalEvidenceList(state.selectedEvidence)
+	self._journalState = state
+	return state.selectedEvidence
+end
+
+function UISystem:_isJournalEvidenceSelected(evidenceType)
+	local canonical = UISystem._canonicalJournalEvidence(evidenceType)
+	if not canonical then
+		return false
+	end
+	return UISystem._buildJournalEvidenceSet((self._journalState or {}).selectedEvidence)[canonical] == true
+end
+
+function UISystem:_setJournalEvidenceSelected(evidenceType, selected)
+	local canonical = UISystem._canonicalJournalEvidence(evidenceType)
+	if not canonical then
+		return
+	end
+	local state = self._journalState or {}
+	if state.answerLocked == true then
+		state.submitStatus = "Jawaban sudah di-lock. Tekan END INVESTIGATION untuk selesai."
+		self._journalState = state
+		self:_refreshJournalPanel()
+		return
+	end
+	local list = UISystem._canonicalJournalEvidenceList(state.selectedEvidence)
+	local selectedSet = UISystem._buildJournalEvidenceSet(list)
+	if selected == true then
+		if not selectedSet[canonical] then
+			if #list >= 3 then
+				state.submitStatus = "Maksimal 3 evidence untuk submit."
+				state.submitLastCorrect = nil
+				self._journalState = state
+				self:_refreshJournalPanel()
+				return
+			end
+			table.insert(list, canonical)
+		end
+	else
+		for index = #list, 1, -1 do
+			if list[index] == canonical then
+				table.remove(list, index)
+			end
+		end
+	end
+	state.selectedEvidence = list
+	state.submitPending = false
+	state.submitLastCorrect = nil
+	state.submitStatus = "Pilih 3 evidence dan ghost, lalu submit."
+	self._journalState = state
+	self:_refreshJournalPanel()
+end
+
+function UISystem:_selectJournalGhost(ghostType)
+	if type(ghostType) ~= "string" or ghostType == "" then
+		return
+	end
+	local state = self._journalState or {}
+	if state.answerLocked == true then
+		state.submitStatus = "Jawaban sudah di-lock. Tekan END INVESTIGATION untuk selesai."
+		self._journalState = state
+		self:_refreshJournalPanel()
+		return
+	end
+	state.selectedGhostType = ghostType
+	state.submitPending = false
+	state.submitLastCorrect = nil
+	state.submitStatus = "Pilih 3 evidence dan ghost, lalu submit."
+	self._journalState = state
+	self:_refreshJournalPanel()
+end
+
+function UISystem:_ensureJournalBackground(window)
+	if not window or not window.Panel then
+		return
+	end
+	local panel = window.Panel
+	panel.ClipsDescendants = true
+	local background = panel:FindFirstChild("JournalBackground")
+	if background and not background:IsA("ImageLabel") then
+		background:Destroy()
+		background = nil
+	end
+	if not background then
+		background = Instance.new("ImageLabel")
+		background.Name = "JournalBackground"
+		background.Parent = panel
+	end
+	background.BackgroundTransparency = 1
+	background.BorderSizePixel = 0
+	background.Image = "rbxassetid://" .. JOURNAL_BACKGROUND_IMAGE_ID
+	background.ImageTransparency = 0.62
+	background.ScaleType = Enum.ScaleType.Crop
+	background.Position = UDim2.fromScale(0, 0)
+	background.Size = UDim2.fromScale(1, 1)
+	background.ZIndex = 0
+	background.Visible = true
+end
+
+function UISystem:_ensureJournalSubmitWidgets(window, widgets)
+	if not window or type(widgets) ~= "table" or not widgets.Deck then
+		return widgets
+	end
+	local deck = widgets.Deck
+
+	local function ensureChild(parent, name, className)
+		local child = parent and parent:FindFirstChild(name) or nil
+		if child and not child:IsA(className) then
+			child:Destroy()
+			child = nil
+		end
+		if not child then
+			child = Instance.new(className)
+			child.Name = name
+			child.Parent = parent
+		end
+		return child
+	end
+
+	local function ensureCard(name, title, height, layoutOrder, tint)
+		local card = ensureChild(deck, name, "Frame")
+		card.Size = UDim2.new(1, 0, 0, height)
+		card.BackgroundColor3 = Color3.fromRGB(16, 24, 32)
+		card.BackgroundTransparency = 0.08
+		card.BorderSizePixel = 0
+		card.LayoutOrder = layoutOrder
+
+		local corner = card:FindFirstChildOfClass("UICorner") or Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = card
+
+		local stroke = card:FindFirstChildOfClass("UIStroke") or Instance.new("UIStroke")
+		stroke.Thickness = 1
+		stroke.Color = tint
+		stroke.Transparency = 0.22
+		stroke.Parent = card
+
+		local titleLabel = ensureChild(card, "SectionTitle", "TextLabel")
+		titleLabel.Position = UDim2.fromOffset(12, 9)
+		titleLabel.Size = UDim2.new(1, -24, 0, 18)
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Font = Enum.Font.GothamBold
+		titleLabel.TextSize = 11
+		titleLabel.TextColor3 = tint:Lerp(Color3.fromRGB(244, 244, 238), 0.24)
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		titleLabel.Text = title
+		return card
+	end
+
+	local evidenceCard = ensureCard("EvidenceChecklistSection", "CHECKLIST EVIDENCE", 132, 40, Color3.fromRGB(70, 132, 98))
+	local evidenceGrid = ensureChild(evidenceCard, "ButtonGrid", "Frame")
+	evidenceGrid.Position = UDim2.fromOffset(12, 34)
+	evidenceGrid.Size = UDim2.new(1, -24, 1, -46)
+	evidenceGrid.BackgroundTransparency = 1
+	local evidenceLayout = evidenceGrid:FindFirstChildOfClass("UIGridLayout") or Instance.new("UIGridLayout")
+	evidenceLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	evidenceLayout.CellPadding = UDim2.fromOffset(6, 6)
+	evidenceLayout.CellSize = UDim2.new(0.5, -3, 0, 26)
+	evidenceLayout.Parent = evidenceGrid
+	widgets.EvidenceButtons = widgets.EvidenceButtons or {}
+	for index, evidenceType in ipairs(JOURNAL_EVIDENCE_ORDER) do
+		local name = "Evidence_" .. tostring(UISystem._normalizeJournalLookupKey(evidenceType) or index)
+		local button = ensureChild(evidenceGrid, name, "TextButton")
+		button.LayoutOrder = index
+		button.BorderSizePixel = 0
+		button.AutoButtonColor = true
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 10
+		button.TextWrapped = true
+		button.TextColor3 = Color3.fromRGB(238, 242, 244)
+		widgets.EvidenceButtons[evidenceType] = button
+		if not isRuntimeButtonBound(button) then
+			button.MouseButton1Click:Connect(function()
+				self:_setJournalEvidenceSelected(evidenceType, not self:_isJournalEvidenceSelected(evidenceType))
+			end)
+			markRuntimeButtonBound(button)
+		end
+	end
+
+	local ghostCard = ensureCard("GhostChoiceSection", "PILIH GHOST", 178, 50, Color3.fromRGB(120, 96, 58))
+	local ghostGrid = ensureChild(ghostCard, "ButtonGrid", "Frame")
+	ghostGrid.Position = UDim2.fromOffset(12, 34)
+	ghostGrid.Size = UDim2.new(1, -24, 1, -46)
+	ghostGrid.BackgroundTransparency = 1
+	local ghostLayout = ghostGrid:FindFirstChildOfClass("UIGridLayout") or Instance.new("UIGridLayout")
+	ghostLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	ghostLayout.CellPadding = UDim2.fromOffset(6, 6)
+	ghostLayout.CellSize = UDim2.new(0.3333, -4, 0, 25)
+	ghostLayout.Parent = ghostGrid
+	widgets.GhostButtons = widgets.GhostButtons or {}
+	for index, ghostType in ipairs(JOURNAL_GHOST_ORDER) do
+		local name = "Ghost_" .. tostring(UISystem._normalizeJournalLookupKey(ghostType) or index)
+		local button = ensureChild(ghostGrid, name, "TextButton")
+		button.LayoutOrder = index
+		button.BorderSizePixel = 0
+		button.AutoButtonColor = true
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 10
+		button.TextWrapped = true
+		button.TextColor3 = Color3.fromRGB(238, 242, 244)
+		widgets.GhostButtons[ghostType] = button
+		if not isRuntimeButtonBound(button) then
+			button.MouseButton1Click:Connect(function()
+				self:_selectJournalGhost(ghostType)
+			end)
+			markRuntimeButtonBound(button)
+		end
+	end
+
+	local submitCard = ensureCard("JournalSubmitSection", "FINAL SUBMIT", 96, 60, Color3.fromRGB(68, 118, 150))
+	local endButton = ensureChild(submitCard, "EndButton", "TextButton")
+	endButton.Position = UDim2.fromOffset(12, 30)
+	endButton.Size = UDim2.fromOffset(150, 24)
+	endButton.BorderSizePixel = 0
+	endButton.Font = Enum.Font.GothamBold
+	endButton.TextSize = 10
+	endButton.TextColor3 = Color3.fromRGB(244, 244, 238)
+	widgets.EndButton = endButton
+	if not isRuntimeButtonBound(endButton) then
+		endButton.MouseButton1Click:Connect(function()
+			self:_endJournalInvestigation()
+		end)
+		markRuntimeButtonBound(endButton)
+	end
+
+	local submitButton = ensureChild(submitCard, "SubmitButton", "TextButton")
+	submitButton.Position = UDim2.fromOffset(12, 56)
+	submitButton.Size = UDim2.fromOffset(150, 28)
+	submitButton.BorderSizePixel = 0
+	submitButton.Font = Enum.Font.GothamBold
+	submitButton.TextSize = 12
+	submitButton.TextColor3 = Color3.fromRGB(244, 244, 238)
+	widgets.SubmitButton = submitButton
+	if not isRuntimeButtonBound(submitButton) then
+		submitButton.MouseButton1Click:Connect(function()
+			self:_submitJournalGuess()
+		end)
+		markRuntimeButtonBound(submitButton)
+	end
+
+	local statusLabel = ensureChild(submitCard, "SubmitStatusLabel", "TextLabel")
+	statusLabel.Position = UDim2.new(0, 174, 0, 30)
+	statusLabel.Size = UDim2.new(1, -186, 0, 56)
+	statusLabel.BackgroundTransparency = 1
+	statusLabel.Font = Enum.Font.Gotham
+	statusLabel.TextSize = 11
+	statusLabel.TextWrapped = true
+	statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+	statusLabel.TextYAlignment = Enum.TextYAlignment.Center
+	statusLabel.TextColor3 = Color3.fromRGB(200, 210, 222)
+	widgets.SubmitStatusLabel = statusLabel
+
+	local tutorialCard = ensureCard("JournalTutorialSection", "TUTORIAL MATCH", 86, 70, Color3.fromRGB(72, 88, 128))
+	local tutorialLabel = ensureChild(tutorialCard, "TutorialLabel", "TextLabel")
+	tutorialLabel.Position = UDim2.fromOffset(12, 28)
+	tutorialLabel.Size = UDim2.new(1, -24, 0, 34)
+	tutorialLabel.BackgroundTransparency = 1
+	tutorialLabel.Font = Enum.Font.Gotham
+	tutorialLabel.TextSize = 11
+	tutorialLabel.TextWrapped = true
+	tutorialLabel.TextXAlignment = Enum.TextXAlignment.Left
+	tutorialLabel.TextYAlignment = Enum.TextYAlignment.Top
+	tutorialLabel.TextColor3 = Color3.fromRGB(216, 224, 236)
+	widgets.TutorialLabel = tutorialLabel
+	local tutorialPrev = ensureChild(tutorialCard, "TutorialPrevButton", "TextButton")
+	tutorialPrev.Position = UDim2.fromOffset(12, 64)
+	tutorialPrev.Size = UDim2.fromOffset(56, 18)
+	tutorialPrev.BorderSizePixel = 0
+	tutorialPrev.Font = Enum.Font.GothamBold
+	tutorialPrev.TextSize = 10
+	tutorialPrev.Text = "<"
+	tutorialPrev.TextColor3 = Color3.fromRGB(244, 244, 238)
+	if not isRuntimeButtonBound(tutorialPrev) then
+		tutorialPrev.MouseButton1Click:Connect(function()
+			local state = self._journalState or {}
+			state.tutorialPageIndex = math.max(1, (tonumber(state.tutorialPageIndex) or 1) - 1)
+			self._journalState = state
+			self:_refreshJournalPanel()
+		end)
+		markRuntimeButtonBound(tutorialPrev)
+	end
+	local tutorialNext = ensureChild(tutorialCard, "TutorialNextButton", "TextButton")
+	tutorialNext.Position = UDim2.new(1, -68, 1, -22)
+	tutorialNext.Size = UDim2.fromOffset(56, 18)
+	tutorialNext.BorderSizePixel = 0
+	tutorialNext.Font = Enum.Font.GothamBold
+	tutorialNext.TextSize = 10
+	tutorialNext.Text = ">"
+	tutorialNext.TextColor3 = Color3.fromRGB(244, 244, 238)
+	if not isRuntimeButtonBound(tutorialNext) then
+		tutorialNext.MouseButton1Click:Connect(function()
+			local state = self._journalState or {}
+			state.tutorialPageIndex = math.min(#JOURNAL_TUTORIAL_PAGES, (tonumber(state.tutorialPageIndex) or 1) + 1)
+			self._journalState = state
+			self:_refreshJournalPanel()
+		end)
+		markRuntimeButtonBound(tutorialNext)
+	end
+
+	return widgets
+end
+
+function UISystem:_refreshJournalSubmitWidgets(widgets, state, discovered, confirmed, candidates)
+	if type(widgets) ~= "table" then
+		return
+	end
+	state = state or self._journalState or {}
+	local selectedEvidence = self:_getJournalSelectedEvidenceList()
+	local selectedEvidenceSet = UISystem._buildJournalEvidenceSet(selectedEvidence)
+	local discoveredSet = UISystem._buildJournalEvidenceSet(discovered)
+	local confirmedSet = UISystem._buildJournalEvidenceSet(confirmed)
+	local selectedGhostKey = UISystem._normalizeJournalLookupKey(state.selectedGhostType)
+	local candidateSet = UISystem._buildJournalGhostSet(candidates)
+	local hasCandidates = next(candidateSet) ~= nil
+
+	if type(widgets.EvidenceButtons) == "table" then
+		for _, evidenceType in ipairs(JOURNAL_EVIDENCE_ORDER) do
+			local button = widgets.EvidenceButtons[evidenceType]
+			if button then
+				local selected = selectedEvidenceSet[evidenceType] == true
+				local found = confirmedSet[evidenceType] == true or discoveredSet[evidenceType] == true
+				local label = JOURNAL_EVIDENCE_LABELS[evidenceType] or evidenceType
+				button.Text = string.format("%s %s", selected and "[X]" or "[ ]", label)
+				button.BackgroundColor3 = selected and Color3.fromRGB(52, 106, 82)
+					or (found and Color3.fromRGB(38, 68, 76) or Color3.fromRGB(20, 28, 38))
+				button.BackgroundTransparency = selected and 0 or 0.08
+				button.TextColor3 = found and Color3.fromRGB(244, 244, 238) or Color3.fromRGB(190, 202, 214)
+			end
+		end
+	end
+
+	if type(widgets.GhostButtons) == "table" then
+		for _, ghostType in ipairs(JOURNAL_GHOST_ORDER) do
+			local button = widgets.GhostButtons[ghostType]
+			if button then
+				local ghostKey = UISystem._normalizeJournalLookupKey(ghostType)
+				local visible = (not hasCandidates) or candidateSet[ghostKey] == true
+				local selected = selectedGhostKey ~= nil and selectedGhostKey == ghostKey
+				button.Visible = visible
+				button.Text = string.format("%s%s", selected and "[X] " or "", ghostType)
+				button.BackgroundColor3 = selected and Color3.fromRGB(112, 82, 46)
+					or (visible and Color3.fromRGB(24, 32, 42) or Color3.fromRGB(16, 20, 26))
+				button.BackgroundTransparency = selected and 0 or 0.08
+			end
+		end
+	end
+
+	local selectedGhostType = type(state.selectedGhostType) == "string" and state.selectedGhostType or ""
+	local canSubmit = #selectedEvidence == 3 and selectedGhostType ~= "" and state.submitPending ~= true and state.answerLocked ~= true
+	local canEndInvestigation = state.answerLocked == true and state.submitPending ~= true and state.endPending ~= true
+	if widgets.SubmitButton then
+		widgets.SubmitButton.Text = state.submitPending == true and "MENGIRIM..." or (state.answerLocked == true and "LOCKED" or "SUBMIT JOURNAL")
+		widgets.SubmitButton.Active = canSubmit
+		widgets.SubmitButton.AutoButtonColor = canSubmit
+		widgets.SubmitButton.BackgroundColor3 = canSubmit and Color3.fromRGB(52, 106, 82) or Color3.fromRGB(48, 56, 64)
+		widgets.SubmitButton.TextTransparency = canSubmit and 0 or 0.18
+	end
+	if widgets.EndButton then
+		widgets.EndButton.Text = state.endPending == true and "ENDING..." or "END INVESTIGATION"
+		widgets.EndButton.Active = canEndInvestigation
+		widgets.EndButton.AutoButtonColor = canEndInvestigation
+		widgets.EndButton.BackgroundColor3 = canEndInvestigation and Color3.fromRGB(120, 82, 46) or Color3.fromRGB(48, 56, 64)
+		widgets.EndButton.TextTransparency = canEndInvestigation and 0 or 0.18
+	end
+	if widgets.SubmitStatusLabel then
+		local statusText = state.submitStatus
+		if state.submitPending == true then
+			statusText = "Mengirim journal ke server..."
+		elseif state.endPending == true then
+			statusText = "Menutup investigasi..."
+		elseif #selectedEvidence ~= 3 then
+			statusText = string.format("Checklist evidence %d/3 sebelum submit.", #selectedEvidence)
+		elseif selectedGhostType == "" then
+			statusText = "Pilih ghost sebelum submit."
+		elseif state.answerLocked == true then
+			statusText = "Jawaban terkunci. Tekan END INVESTIGATION untuk selesai."
+		elseif statusText == nil or statusText == "" then
+			statusText = "Siap submit. Server akan validasi hasilnya."
+		end
+		widgets.SubmitStatusLabel.Text = statusText
+		widgets.SubmitStatusLabel.TextColor3 = state.submitLastCorrect == true
+			and Color3.fromRGB(150, 232, 178)
+			or (state.submitLastCorrect == false and Color3.fromRGB(232, 176, 150) or Color3.fromRGB(200, 210, 222))
+	end
+	if widgets.TutorialLabel then
+		local pageIndex = math.clamp(tonumber(state.tutorialPageIndex) or 1, 1, #JOURNAL_TUTORIAL_PAGES)
+		widgets.TutorialLabel.Text = JOURNAL_TUTORIAL_PAGES[pageIndex]
+	end
+end
+
+function UISystem:_submitJournalGuess()
+	local state = self._journalState or {}
+	if state.answerLocked == true then
+		state.submitStatus = "Jawaban sudah di-lock. Tekan END INVESTIGATION."
+		self._journalState = state
+		self:_refreshJournalPanel()
+		return
+	end
+	local selectedEvidence = self:_getJournalSelectedEvidenceList()
+	local selectedGhostType = type(state.selectedGhostType) == "string" and state.selectedGhostType or ""
+	if #selectedEvidence ~= 3 then
+		state.submitStatus = string.format("Checklist harus tepat 3 evidence. Saat ini %d/3.", #selectedEvidence)
+		state.submitLastCorrect = nil
+		self._journalState = state
+		self:_refreshJournalPanel()
+		return
+	end
+	if selectedGhostType == "" then
+		state.submitStatus = "Pilih ghost sebelum submit."
+		state.submitLastCorrect = nil
+		self._journalState = state
+		self:_refreshJournalPanel()
+		return
+	end
+
+	local tools = self:_getEvidenceToolsService()
+	if not tools or type(tools.SubmitJournalGuess) ~= "function" then
+		state.submitStatus = "Submit belum siap: EvidenceTools tidak tersedia."
+		state.submitLastCorrect = false
+		self._journalState = state
+		self:_refreshJournalPanel()
+		return
+	end
+
+	state.submitPending = true
+	state.submitStatus = "Mengirim journal ke server..."
+	state.submitLastCorrect = nil
+	self._journalState = state
+	self:_refreshJournalPanel()
+
+	local okCall, success, reason, response = pcall(function()
+		return tools:SubmitJournalGuess({
+			matchId = state.matchId,
+			ghostType = selectedGhostType,
+			evidence = selectedEvidence,
+		})
+	end)
+
+	state = self._journalState or state
+	state.submitPending = false
+	if not okCall then
+		state.submitStatus = "Submit gagal dipanggil client."
+		state.submitReason = "invoke_failed"
+		state.submitLastCorrect = false
+	elseif success ~= true then
+		state.submitStatus = "Submit ditolak server: " .. tostring(reason or "unknown")
+		state.submitReason = reason
+		state.submitLastCorrect = false
+	else
+		local data = type(response) == "table" and (response.data or response.result or response) or {}
+		local identified = type(data) == "table" and (data.identified == true or data.correct == true) or false
+		state.submitReason = type(response) == "table" and response.reason or reason
+		state.submitLastCorrect = identified
+		state.answerLocked = true
+		state.submitStatus = identified
+			and "Tebakan cocok. Lanjutkan END INVESTIGATION."
+			or "Tebakan terkunci. Lanjutkan END INVESTIGATION saat siap."
+	end
+	self._journalState = state
+	self:_refreshJournalPanel()
+end
+
+function UISystem:_endJournalInvestigation()
+	local state = self._journalState or {}
+	if state.answerLocked ~= true then
+		state.submitStatus = "Submit dulu sebelum END INVESTIGATION."
+		self._journalState = state
+		self:_refreshJournalPanel()
+		return
+	end
+	local tools = self:_getEvidenceToolsService()
+	if not tools or type(tools.EndInvestigation) ~= "function" then
+		state.submitStatus = "End investigation belum siap."
+		self._journalState = state
+		self:_refreshJournalPanel()
+		return
+	end
+	state.endPending = true
+	self._journalState = state
+	self:_refreshJournalPanel()
+	local selectedEvidence = self:_getJournalSelectedEvidenceList()
+	local selectedGhostType = type(state.selectedGhostType) == "string" and state.selectedGhostType or ""
+	local okCall, success, reason = pcall(function()
+		return tools:EndInvestigation({
+			matchId = state.matchId,
+			ghostType = selectedGhostType,
+			evidence = selectedEvidence,
+		})
+	end)
+	state = self._journalState or state
+	state.endPending = false
+	if not okCall or success ~= true then
+		state.submitStatus = "End investigation gagal: " .. tostring(reason or "unknown")
+	else
+		state.submitStatus = "Investigasi ditutup. Menunggu result..."
+	end
+	self._journalState = state
+	self:_refreshJournalPanel()
+end
+
 function UISystem:_ensureJournalWidgets(window)
 	if not window or not window.ContentFrame then
 		return nil
@@ -8517,6 +10830,11 @@ function UISystem:_ensureJournalWidgets(window)
 	end
 
 	local contentFrame = window.ContentFrame
+	local authoredWidgets = self:_tryBindAuthoredJournalWidgets(window, contentFrame)
+	if authoredWidgets then
+		window.JournalWidgets = self:_ensureJournalSubmitWidgets(window, authoredWidgets)
+		return window.JournalWidgets
+	end
 	local deck = contentFrame:FindFirstChild("JournalDeck")
 	if deck and not deck:IsA("Frame") then
 		deck:Destroy()
@@ -8735,6 +11053,7 @@ function UISystem:_ensureJournalWidgets(window)
 		ConfirmedBody = confirmedBody,
 		CandidateBody = candidateBody,
 	}
+	window.JournalWidgets = self:_ensureJournalSubmitWidgets(window, window.JournalWidgets)
 
 	return window.JournalWidgets
 end
@@ -8757,6 +11076,9 @@ function UISystem:_stampJournalUIInstance(instance, channel, uiVisible, state, d
 	instance:SetAttribute("PasrahJournalCandidateList", type(candidates) == "table" and #candidates > 0 and table.concat(candidates, " | ") or nil)
 	instance:SetAttribute("PasrahJournalToolType", type(state) == "table" and tostring(state.toolType or "") or nil)
 	instance:SetAttribute("PasrahJournalToolStatus", type(state) == "table" and tostring(state.toolStatus or "") or nil)
+	instance:SetAttribute("PasrahJournalSelectedEvidence", type(state) == "table" and type(state.selectedEvidence) == "table" and #state.selectedEvidence > 0 and table.concat(state.selectedEvidence, " | ") or nil)
+	instance:SetAttribute("PasrahJournalSelectedGhost", type(state) == "table" and tostring(state.selectedGhostType or "") or nil)
+	instance:SetAttribute("PasrahJournalSubmitStatus", type(state) == "table" and tostring(state.submitStatus or "") or nil)
 end
 
 function UISystem:_stampJournalUIRuntime(window, widgets, uiVisible, state, discovered, confirmed, candidates)
@@ -8786,6 +11108,8 @@ function UISystem:_stampJournalUIRuntime(window, widgets, uiVisible, state, disc
 		self:_stampJournalUIInstance(widgets.DiscoveredBody, "JournalDiscoveredBody", uiVisible, state, discovered, confirmed, candidates)
 		self:_stampJournalUIInstance(widgets.ConfirmedBody, "JournalConfirmedBody", uiVisible, state, discovered, confirmed, candidates)
 		self:_stampJournalUIInstance(widgets.CandidateBody, "JournalCandidateBody", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.SubmitButton, "JournalSubmitButton", uiVisible, state, discovered, confirmed, candidates)
+		self:_stampJournalUIInstance(widgets.SubmitStatusLabel, "JournalSubmitStatusLabel", uiVisible, state, discovered, confirmed, candidates)
 	end
 end
 
@@ -8800,8 +11124,8 @@ function UISystem:_refreshJournalPanel()
 	local badgeColor = hasConfirmed and Color3.fromRGB(58, 116, 90) or Color3.fromRGB(56, 92, 128)
 	local glyphText = hasConfirmed and "CF" or (hasDiscovered and "EV" or "JN")
 	local primaryText = hasDiscovered
-		and string.format("%d evidence tercatat. Gunakan ini untuk deduction cepat.", #discovered)
-		or "Belum ada evidence tercatat."
+		and string.format("%d evidence tercatat. Checklist 3 evidence, pilih ghost, lalu submit.", #discovered)
+		or "Belum ada evidence tercatat. Scan dan gunakan tool investigasi."
 	local secondaryText = string.format(
 		"Confirmed %d | Kandidat %d | Event %s",
 		#confirmed,
@@ -8810,13 +11134,13 @@ function UISystem:_refreshJournalPanel()
 	)
 	local contentText = table.concat({
 		"Discovered Evidence",
-		bulletList(discovered, "- Belum ada"),
+		UISystem._bulletList(discovered, "- Belum ada"),
 		"",
 		"Confirmed Evidence",
-		bulletList(confirmed, "- Belum ada"),
+		UISystem._bulletList(confirmed, "- Belum ada"),
 		"",
 		"Ghost Candidates",
-		bulletList(candidates, "- Belum ada"),
+		UISystem._bulletList(candidates, "- Belum ada"),
 		"",
 		"Tool E2E",
 		string.format("- Tool: %s", tostring(state.toolType or JOURNAL_TOOL_TYPE)),
@@ -8829,7 +11153,7 @@ function UISystem:_refreshJournalPanel()
 		primaryText,
 		secondaryText,
 		contentText,
-		"Shortcut: J. Gunakan Field Kit atau tombol SCAN JEJAK untuk uji tool investigasi end-to-end. " .. CLOSE_HINT_TEXT .. ".",
+		"Shortcut: J. Setelah yakin, tekan SUBMIT JOURNAL untuk validasi server. " .. CLOSE_HINT_TEXT .. ".",
 		badgeColor
 	)
 
@@ -8854,6 +11178,7 @@ function UISystem:_refreshJournalPanel()
 	local window = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows.JournalUI
 	if window then
 		self:_layoutJournalWindow(window)
+		self:_ensureJournalBackground(window)
 		local widgets = self:_ensureJournalWidgets(window)
 		if widgets then
 			widgets.HeroStroke.Color = badgeColor
@@ -8873,6 +11198,7 @@ function UISystem:_refreshJournalPanel()
 			widgets.DiscoveredBody.Text = summarizeList(discovered, "Belum ada evidence tercatat.", 4)
 			widgets.ConfirmedBody.Text = summarizeList(confirmed, "Belum ada evidence confirmed.", 3)
 			widgets.CandidateBody.Text = summarizeList(candidates, "Belum ada kandidat ghost.", 4)
+			self:_refreshJournalSubmitWidgets(widgets, state, discovered, confirmed, candidates)
 		end
 	end
 
@@ -8916,6 +11242,11 @@ function UISystem:_ensureProfileWidgets(window)
 	end
 
 	local contentFrame = window.ContentFrame
+	local authoredWidgets = self:_tryBindAuthoredProfileWidgets(window, contentFrame)
+	if authoredWidgets then
+		window.ProfileWidgets = authoredWidgets
+		return authoredWidgets
+	end
 	local deck = contentFrame:FindFirstChild("ProfileDeck")
 	if deck and not deck:IsA("Frame") then
 		deck:Destroy()
@@ -9102,8 +11433,8 @@ function UISystem:_ensureProfileWidgets(window)
 		row.Button.Selectable = false
 	end
 
-	if actionButton:GetAttribute("Bound") ~= true then
-		actionButton:SetAttribute("Bound", true)
+	if not isRuntimeButtonBound(actionButton) then
+		markRuntimeButtonBound(actionButton)
 		connectButtonPress(actionButton, function()
 			self:_toggleRoomBrowserVisible()
 		end)
@@ -9198,12 +11529,25 @@ function UISystem:_ensureProfileWardrobeRow(widgets, index)
 		return existing
 	end
 
-	local row = createActionRow(widgets.WardrobeList, "WardrobeRow" .. tostring(index), "COSMETIC", "-", "PAKAI")
+	local row = nil
+	if widgets.WardrobeRowTemplate and widgets.WardrobeList then
+		local rowRoot = self:_cloneAuthoredGuiTemplate(widgets.WardrobeRowTemplate, widgets.WardrobeList, "WardrobeRow" .. tostring(index))
+		row = self:_bindAuthoredActionRow(rowRoot)
+		if not (row and row.Button) then
+			if rowRoot then
+				rowRoot:Destroy()
+			end
+			row = nil
+		end
+	end
+	if not row then
+		row = createActionRow(widgets.WardrobeList, "WardrobeRow" .. tostring(index), "COSMETIC", "-", "PAKAI")
+	end
 	row.Button.Size = UDim2.fromOffset(92, 32)
 	row.PricePill.Size = UDim2.fromOffset(110, 16)
 	row.Root:SetAttribute("CosmeticRowBound", true)
-	if row.Button:GetAttribute("Bound") ~= true then
-		row.Button:SetAttribute("Bound", true)
+	if not isRuntimeButtonBound(row.Button) then
+		markRuntimeButtonBound(row.Button)
 		connectButtonPress(row.Button, function()
 			local cosmeticId = row.Root:GetAttribute("CosmeticId")
 			local cosmeticSlot = row.Root:GetAttribute("CosmeticSlot")
@@ -9256,6 +11600,17 @@ function UISystem:_refreshProfileWardrobe(widgets)
 			row.Root:SetAttribute("CosmeticId", item.id)
 			row.Root:SetAttribute("CosmeticSlot", slot)
 			row.Accent.BackgroundColor3 = accent
+			if row.RarityTemplate then
+				local rarityKey = resolveShopRarityKey(item)
+				local rarityTemplateAssetId = rarityKey and SHOP_RARITY_TEMPLATE_ASSET_IDS[rarityKey] or nil
+				if type(rarityTemplateAssetId) == "string" and rarityTemplateAssetId ~= "" then
+					row.RarityTemplate.Image = toThumbAsset(rarityTemplateAssetId)
+					row.RarityTemplate.Visible = true
+				else
+					row.RarityTemplate.Visible = false
+					row.RarityTemplate.Image = ""
+				end
+			end
 			row.Preview.BackgroundColor3 = theme.preview
 			row.PreviewBadge.BackgroundColor3 = theme.accent
 			row.PreviewBadge.TextColor3 = theme.text
@@ -9400,7 +11755,7 @@ function UISystem:_refreshProfilePanel()
 	local dailyQuestState = dailyProgress > 0 and string.format("PROG %d", dailyProgress) or "PENDING"
 	local checkInState = string.format("DAY %02d", math.min(30, currentTier))
 	local spinState = tostring(royalPass.lastEvent or "Idle") ~= "Idle"
-		and titleCaseToken(tostring(royalPass.lastEvent or "Idle"))
+		and UISystem._titleCaseToken(tostring(royalPass.lastEvent or "Idle"))
 		or "Idle"
 	local gachaState = ownedInventoryCount > 0 and "COLLECTED" or "EMPTY"
 
@@ -9485,7 +11840,7 @@ function UISystem:_refreshProfilePanel()
 			badge = "MIND",
 			glyph = "SN",
 			title = "Sanity monitor",
-			meta = string.format("Status %s • event %s", titleCaseToken(statusToken), tostring(profile.lastEvent or "Idle")),
+			meta = string.format("Status %s • event %s", UISystem._titleCaseToken(statusToken), tostring(profile.lastEvent or "Idle")),
 			pill = string.format("%d%%", sanity),
 			button = sanity <= 35 and "RISK" or "SAFE",
 			accent = sanity <= 35 and Color3.fromRGB(126, 72, 72) or heroAccent,
@@ -9706,7 +12061,9 @@ function UISystem:_applyShopRowVisual(row, item, index)
 	end
 
 	local theme = resolveShopCategoryTheme(item)
-	local rarityColor = SHOP_RARITY_COLORS[tostring(item and item.rarity or "")] or theme.accent
+	local rarityKey = resolveShopRarityKey(item)
+	local rarityColor = SHOP_RARITY_COLORS[rarityKey or ""] or theme.accent
+	local rarityTemplateAssetId = rarityKey and SHOP_RARITY_TEMPLATE_ASSET_IDS[rarityKey] or nil
 	local currency = tostring(item and item.currency or "MM")
 	local currencyTheme = resolveShopCurrencyTheme(currency)
 	local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(item)
@@ -9718,6 +12075,15 @@ function UISystem:_applyShopRowVisual(row, item, index)
 	end
 	if row.Accent then
 		row.Accent.BackgroundColor3 = rarityColor
+	end
+	if row.RarityTemplate then
+		if type(rarityTemplateAssetId) == "string" and rarityTemplateAssetId ~= "" then
+			row.RarityTemplate.Image = toThumbAsset(rarityTemplateAssetId)
+			row.RarityTemplate.Visible = true
+		else
+			row.RarityTemplate.Visible = false
+			row.RarityTemplate.Image = ""
+		end
 	end
 	if row.Preview then
 		row.Preview.BackgroundColor3 = theme.preview
@@ -9771,6 +12137,140 @@ function UISystem:_applyShopRowVisual(row, item, index)
 			row.Button.Text = "LOCK"
 			setButtonTone(row.Button, "default", false)
 		end
+	end
+end
+
+function UISystem:_ensureAuthoredShopWindowWidgets(window)
+	if type(window) ~= "table" or not window.ContentFrame then
+		return
+	end
+
+	local contentFrame = window.ContentFrame
+	if window.ContentText then
+		window.ContentText.Visible = false
+	end
+	if self:_tryBindAuthoredShopWindowWidgets(window, contentFrame) then
+		return
+	end
+
+	local filterBar = contentFrame:FindFirstChild("ShopFilterBar")
+	if filterBar and not filterBar:IsA("Frame") then
+		filterBar:Destroy()
+		filterBar = nil
+	end
+	if not filterBar then
+		filterBar = Instance.new("Frame")
+		filterBar.Name = "ShopFilterBar"
+		filterBar.Position = UDim2.fromOffset(0, 0)
+		filterBar.Size = UDim2.new(1, -4, 0, 34)
+		filterBar.BackgroundTransparency = 1
+		filterBar.Parent = contentFrame
+
+		local filterLayout = Instance.new("UIListLayout")
+		filterLayout.FillDirection = Enum.FillDirection.Horizontal
+		filterLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		filterLayout.Padding = UDim.new(0, 6)
+		filterLayout.Parent = filterBar
+	end
+
+	local itemList = contentFrame:FindFirstChild("ItemList")
+	if itemList and not itemList:IsA("Frame") then
+		itemList:Destroy()
+		itemList = nil
+	end
+	if not itemList then
+		itemList = Instance.new("Frame")
+		itemList.Name = "ItemList"
+		itemList.Position = UDim2.fromOffset(0, 40)
+		itemList.Size = UDim2.new(1, -4, 0, 0)
+		itemList.BackgroundTransparency = 1
+		itemList.AutomaticSize = Enum.AutomaticSize.Y
+		itemList.Parent = contentFrame
+
+		local itemLayout = Instance.new("UIListLayout")
+		itemLayout.FillDirection = Enum.FillDirection.Vertical
+		itemLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		itemLayout.Padding = UDim.new(0, 6)
+		itemLayout.Parent = itemList
+	end
+
+	window.ShopFilterButtons = {}
+	for _, filter in ipairs(SHOP_FILTERS) do
+		local existingButton = filterBar:FindFirstChild("Filter" .. filter.key)
+		if existingButton then
+			existingButton:Destroy()
+		end
+	end
+	for _, filter in ipairs(SHOP_FILTERS) do
+		if not shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
+			continue
+		end
+		local filterButton = Instance.new("TextButton")
+		filterButton.Name = "Filter" .. filter.key
+		filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
+		filterButton.BackgroundColor3 = Color3.fromRGB(42, 54, 72)
+		filterButton.BorderSizePixel = 0
+		filterButton.Text = filter.label
+		filterButton.TextColor3 = Color3.fromRGB(236, 240, 244)
+		filterButton.Font = Enum.Font.GothamBold
+		filterButton.TextSize = 10
+		filterButton.Parent = filterBar
+		self:_setSelectableStyle(filterButton)
+
+		local filterCorner = Instance.new("UICorner")
+		filterCorner.CornerRadius = UDim.new(1, 0)
+		filterCorner.Parent = filterButton
+
+		local filterStroke = Instance.new("UIStroke")
+		filterStroke.Thickness = 1
+		filterStroke.Transparency = 0.18
+		filterStroke.Color = Color3.fromRGB(92, 116, 150)
+		filterStroke.Parent = filterButton
+
+		if not isRuntimeButtonBound(filterButton) then
+			markRuntimeButtonBound(filterButton)
+			connectButtonPress(filterButton, function()
+				self:_setShopFilter(filter.key)
+			end)
+		end
+
+		window.ShopFilterButtons[filter.key] = filterButton
+	end
+
+	window.ItemRows = {}
+	local displayCount = #self._shopState.catalog
+	for index = 1, displayCount do
+		local existing = itemList:FindFirstChild("ItemRow" .. tostring(index))
+		if existing then
+			existing:Destroy()
+		end
+		local row = createActionRow(itemList, "ItemRow" .. tostring(index), "ITEM", "-", "BELI")
+		self:_setSelectableStyle(row.Button)
+		local item = self._shopState.catalog[index]
+		if item then
+			self:_applyShopRowVisual(row, item, index)
+		end
+		if not isRuntimeButtonBound(row.Button) then
+			markRuntimeButtonBound(row.Button)
+			connectButtonPress(row.Button, function()
+				local catalogItem = self._shopState.catalog[index]
+				if catalogItem then
+					local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(catalogItem)
+					if not purchasable then
+						self._shopState.lastPurchase = {
+							itemId = catalogItem.id,
+							success = false,
+							reason = blockedReason or "item_disabled",
+						}
+						self._shopState.lastMessage = describeShopPurchaseBlock(catalogItem, blockedReason)
+						self:_openAuxiliaryWindow("ShopUI")
+						return
+					end
+					self:_requestShopPurchase(catalogItem.id)
+				end
+			end)
+		end
+		table.insert(window.ItemRows, row)
 	end
 end
 
@@ -9863,6 +12363,7 @@ function UISystem:_refreshShopPanel()
 	if not window then
 		return
 	end
+	self:_ensureAuthoredShopWindowWidgets(window)
 
 	local lastPurchase = self._shopState.lastPurchase
 	local statusText = "STORE"
@@ -9910,7 +12411,7 @@ function UISystem:_refreshShopPanel()
 		secondaryText = string.format(
 			"%s gagal: %s",
 			tostring(lastPurchase.itemId or "-"),
-			titleCaseToken(lastPurchase.reason or "unknown")
+			UISystem._titleCaseToken(lastPurchase.reason or "unknown")
 		)
 	elseif lastPurchase and lastPurchase.reason == "pending" then
 		statusText = "PROCESSING"
@@ -10103,6 +12604,10 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	end
 
 	local contentFrame = window.ContentFrame
+	local authoredWidgets = self:_tryBindAuthoredRoyalPassWidgets(window, contentFrame)
+	if authoredWidgets then
+		return authoredWidgets
+	end
 	local deck = contentFrame:FindFirstChild("RoyalPassDeck")
 	if deck and not deck:IsA("Frame") then
 		deck:Destroy()
@@ -10354,6 +12859,16 @@ function UISystem:_ensureRoyalPassWidgets(window)
 		accent.BorderSizePixel = 0
 		accent.Parent = card
 
+		local rarityTemplate = Instance.new("ImageLabel")
+		rarityTemplate.Name = "RarityTemplate"
+		rarityTemplate.BackgroundTransparency = 1
+		rarityTemplate.Size = UDim2.new(1, 0, 1, 0)
+		rarityTemplate.Position = UDim2.fromOffset(0, 0)
+		rarityTemplate.ScaleType = Enum.ScaleType.Stretch
+		rarityTemplate.ImageTransparency = 0.22
+		rarityTemplate.ZIndex = 2
+		rarityTemplate.Parent = card
+
 		local dayBadge = Instance.new("TextLabel")
 		dayBadge.Name = "DayBadge"
 		dayBadge.Position = UDim2.fromOffset(10, 12)
@@ -10428,6 +12943,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 		trackCards[index] = {
 			Root = card,
 			Accent = accent,
+			RarityTemplate = rarityTemplate,
 			Stroke = cardStroke,
 			DayBadge = dayBadge,
 			Title = titleLabel,
@@ -10437,28 +12953,28 @@ function UISystem:_ensureRoyalPassWidgets(window)
 		}
 	end
 
-	if premiumActionButton:GetAttribute("Bound") ~= true then
-		premiumActionButton:SetAttribute("Bound", true)
+	if not isRuntimeButtonBound(premiumActionButton) then
+		markRuntimeButtonBound(premiumActionButton)
 		connectButtonPress(premiumActionButton, function()
 			self:_toggleAuxiliaryWindow("ShopUI")
 		end)
 	end
-	if rewardTab:GetAttribute("Bound") ~= true then
-		rewardTab:SetAttribute("Bound", true)
+	if not isRuntimeButtonBound(rewardTab) then
+		markRuntimeButtonBound(rewardTab)
 		connectButtonPress(rewardTab, function()
 			self._royalPassState.viewMode = "Rewards"
 			self:_refreshRoyalPassPanel()
 		end)
 	end
-	if missionTab:GetAttribute("Bound") ~= true then
-		missionTab:SetAttribute("Bound", true)
+	if not isRuntimeButtonBound(missionTab) then
+		markRuntimeButtonBound(missionTab)
 		connectButtonPress(missionTab, function()
 			self._royalPassState.viewMode = "Missions"
 			self:_refreshRoyalPassPanel()
 		end)
 	end
-	if premiumActionButton:GetAttribute("Bound") ~= true then
-		premiumActionButton:SetAttribute("Bound", true)
+	if not isRuntimeButtonBound(premiumActionButton) then
+		markRuntimeButtonBound(premiumActionButton)
 		connectButtonPress(premiumActionButton, function()
 			local premiumItem, premiumOfferReady = self:_getRoyalPassPremiumOffer()
 			if self._royalPassState and self._royalPassState.premiumOwned == true then
@@ -10691,8 +13207,19 @@ function UISystem:_refreshRoyalPassPanel()
 	for index, row in ipairs(rows) do
 		local data = rowData[index]
 		if data then
+			local rarityKey = index == 1 and (premiumOwned and "R5" or "R4") or (index == 2 and "R2" or "R3")
+			local rarityTemplateAssetId = SHOP_RARITY_TEMPLATE_ASSET_IDS[rarityKey]
 			row.Root.BackgroundColor3 = UI_BRAND.bgCard
 			row.Accent.BackgroundColor3 = data.accent
+			if row.RarityTemplate then
+				if type(rarityTemplateAssetId) == "string" and rarityTemplateAssetId ~= "" then
+					row.RarityTemplate.Image = toThumbAsset(rarityTemplateAssetId)
+					row.RarityTemplate.Visible = true
+				else
+					row.RarityTemplate.Visible = false
+					row.RarityTemplate.Image = ""
+				end
+			end
 			row.Preview.BackgroundColor3 = data.preview
 			row.PreviewBadge.BackgroundColor3 = data.accent
 			row.PreviewBadge.TextColor3 = UI_BRAND.text
@@ -10739,6 +13266,8 @@ function UISystem:_refreshRoyalPassPanel()
 		local metaText
 		local rewardText
 		local cardBackground = Color3.fromRGB(24, 32, 42)
+		local rarityKey = resolveRoyalPassTrackRarityKey(index, isFinalDay)
+		local rarityTemplateAssetId = SHOP_RARITY_TEMPLATE_ASSET_IDS[rarityKey]
 
 		if state.viewMode == "Missions" then
 			local missionTemplates = {
@@ -10780,6 +13309,15 @@ function UISystem:_refreshRoyalPassPanel()
 
 		card.Root.BackgroundColor3 = cardBackground
 		card.Accent.BackgroundColor3 = accentColor
+		if card.RarityTemplate then
+			if type(rarityTemplateAssetId) == "string" and rarityTemplateAssetId ~= "" then
+				card.RarityTemplate.Image = toThumbAsset(rarityTemplateAssetId)
+				card.RarityTemplate.Visible = true
+			else
+				card.RarityTemplate.Visible = false
+				card.RarityTemplate.Image = ""
+			end
+		end
 		card.Stroke.Color = strokeColor
 		card.Stroke.Thickness = isFinalDay and 2 or 1
 		card.DayBadge.BackgroundColor3 = badgeColor
@@ -11071,12 +13609,10 @@ function UISystem:_setSelectableStyle(guiObject)
 		bindButtonPolish(guiObject)
 		return
 	end
-	local stroke = Instance.new("UIStroke")
-	stroke.Name = "SelectionStroke"
-	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	stroke.Thickness = 0
-	stroke.Color = Color3.fromRGB(255, 220, 120)
-	stroke.Parent = guiObject
+	local stroke = guiObject:FindFirstChild("SelectionStroke")
+	if not (stroke and stroke:IsA("UIStroke")) then
+		return
+	end
 
 	table.insert(self._uxConnections, guiObject.SelectionGained:Connect(function()
 		stroke.Thickness = 3
@@ -11170,6 +13706,10 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	local margin = profile.isMobile and 0 or 6
 	local availableWidth = math.max(1, viewportSize.X - (roomTopLeftInset.X + roomBottomRightInset.X))
 	local availableHeight = math.max(1, viewportSize.Y - (roomTopLeftInset.Y + roomBottomRightInset.Y))
+	if backdrop and backdrop.AbsoluteSize.X > 0 and backdrop.AbsoluteSize.Y > 0 then
+		availableWidth = math.floor(backdrop.AbsoluteSize.X + 0.5)
+		availableHeight = math.floor(backdrop.AbsoluteSize.Y + 0.5)
+	end
 	local usableWidth = math.max(profile.isMobile and 320 or 360, availableWidth - margin * 2)
 	local usableHeight = math.max(profile.isMobile and (isLandscapeMobile and 300 or 460) or 300, availableHeight - margin * 2)
 	usableWidth = math.min(usableWidth, availableWidth)
@@ -11190,23 +13730,49 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 	self._roomBrowserWideMobile = useWideMobileLayout
 	local extraCompactMobile = profile.isMobile and not useWideMobileLayout and panelHeight <= 520
 	self._roomBrowserExtraCompact = extraCompactMobile
+	local preserveAuthoredDesktopRoomBrowserLayout = shouldPreserveAuthoredOwnerLayout("RoomBrowserUI")
 	if backdrop then
 		backdrop.BackgroundTransparency = 0.5
 		backdrop.Active = true
 	end
-	panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
-	panel.Position = UDim2.fromOffset(
-		roomTopLeftInset.X + margin + math.floor(panelWidth * 0.5),
-		roomTopLeftInset.Y + margin + math.floor(panelHeight * 0.5)
-	)
-	panel.BackgroundTransparency = 0.5
-	panel.Active = true
-	panel.ClipsDescendants = true
-	if panelCorner then
-		panelCorner.CornerRadius = profile.isMobile and UDim.new(0, 0) or UDim.new(0, 12)
+	if not preserveAuthoredDesktopRoomBrowserLayout then
+		panel.Size = UDim2.fromOffset(panelWidth, panelHeight)
+		panel.Position = UDim2.fromOffset(
+			roomTopLeftInset.X + margin + math.floor(panelWidth * 0.5),
+			roomTopLeftInset.Y + margin + math.floor(panelHeight * 0.5)
+		)
+		panel.BackgroundTransparency = 0.5
+		panel.Active = true
+		panel.ClipsDescendants = true
+		if panelCorner then
+			panelCorner.CornerRadius = profile.isMobile and UDim.new(0, 0) or UDim.new(0, 12)
+		end
+		if panelScale then
+			panelScale.Scale = 1
+		end
 	end
-	if panelScale then
-		panelScale.Scale = 1
+	if preserveAuthoredDesktopRoomBrowserLayout then
+		if panelScale and panel then
+			local authoredWidth = math.max(1, panel.Size.X.Offset)
+			local authoredHeight = math.max(1, panel.Size.Y.Offset)
+			local viewportWidth = math.max(1, viewportSize.X - (topLeftInset.X + bottomRightInset.X))
+			local viewportHeight = math.max(1, viewportSize.Y - (topLeftInset.Y + bottomRightInset.Y))
+			panelScale.Scale = math.clamp(math.min(viewportWidth / authoredWidth, viewportHeight / authoredHeight), 0.35, 2.5)
+		end
+		if dragBar then
+			dragBar.Active = true
+			dragBar.Visible = true
+		end
+		if roomList then
+			roomList.ScrollBarThickness = 4
+		end
+		if roomPreviewPlayersList then
+			roomPreviewPlayersList.ScrollBarThickness = 4
+		end
+		if playersList then
+			playersList.ScrollBarThickness = 4
+		end
+		return
 	end
 
 	local headerPadding = isCompact and 14 or 16
@@ -11325,60 +13891,70 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 				roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(6, extraCompactMobile and 3 or 6)
 			end
 		else
-		local previewWidth = panelWidth - headerPadding * 2
-		local previewHeight = math.clamp(math.floor(panelHeight * (profile.isMobile and 0.33 or 0.36)), profile.isMobile and 236 or 254, profile.isMobile and 304 or 320)
-		local actionY = panelHeight - actionStackHeight
-		local roomListY = contentTop + previewHeight + 12
-		local roomListHeight = actionY - roomListY - 6
-		if roomListHeight < (profile.isMobile and 150 or 140) then
-			local deficit = (profile.isMobile and 150 or 140) - roomListHeight
-			previewHeight = math.max(profile.isMobile and 212 or 224, previewHeight - deficit)
-			roomListY = contentTop + previewHeight + 12
-			roomListHeight = math.max(profile.isMobile and 150 or 140, actionY - roomListY - 6)
-		end
+			local previewWidth = panelWidth - headerPadding * 2
+			local previewHeight = math.clamp(math.floor(panelHeight * (profile.isMobile and 0.33 or 0.36)), profile.isMobile and 236 or 254, profile.isMobile and 304 or 320)
+			local actionY = panelHeight - actionStackHeight
+			local minimumRoomListHeight = extraCompactMobile and 143 or (profile.isMobile and 150 or 140)
+			local actionColumnGap = extraCompactMobile and 2 or 3
+			local joinPasswordYOffset = extraCompactMobile and 33 or (profile.isMobile and 40 or 42)
+			local previewMapMaxHeight = extraCompactMobile and 129 or 136
+			local previewPlayersTopGap = extraCompactMobile and 18 or 24
+			local previewPlayersBottomInset = extraCompactMobile and 25 or 32
+			local previewMapTitleWidthInset = extraCompactMobile and 4 or 16
+			local previewMapFooterY = extraCompactMobile and 20 or 26
+			local previewMapFooterHeight = extraCompactMobile and 18 or 24
+			local previewMapStatsYOffset = extraCompactMobile and 14 or 20
+			local roomListY = contentTop + previewHeight + 12
+			local roomListHeight = actionY - roomListY - 6
+			if roomListHeight < minimumRoomListHeight then
+				local deficit = minimumRoomListHeight - roomListHeight
+				previewHeight = math.max(profile.isMobile and 212 or 224, previewHeight - deficit)
+				roomListY = contentTop + previewHeight + 12
+				roomListHeight = math.max(minimumRoomListHeight, actionY - roomListY - 6)
+			end
 
-		setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, previewWidth, previewHeight)
-		setOffsetBounds(roomList, headerPadding, roomListY, previewWidth, roomListHeight)
-		local queueHeight = extraCompactMobile and 42 or (profile.isMobile and 46 or 42)
-		local stackButtonHeight = extraCompactMobile and 36 or (profile.isMobile and 40 or 36)
-		local stackFirstRowY = actionY + (extraCompactMobile and 46 or (profile.isMobile and 50 or 46))
-		local stackSecondRowY = actionY + (extraCompactMobile and 86 or (profile.isMobile and 94 or 86))
-		setOffsetBounds(joinPassword, headerPadding, actionY - (profile.isMobile and 40 or 42), previewWidth, extraCompactMobile and 34 or (profile.isMobile and 38 or 34))
-		setOffsetBounds(queueButton, headerPadding, actionY, previewWidth, queueHeight)
-		setOffsetBounds(quickClassicButton, headerPadding, stackFirstRowY, math.floor((previewWidth - 3) * 0.5), stackButtonHeight)
-		setOffsetBounds(quickRankedButton, headerPadding + math.floor((previewWidth - 3) * 0.5) + 3, stackFirstRowY, math.floor((previewWidth - 3) * 0.5), stackButtonHeight)
-		setOffsetBounds(refreshButton, headerPadding, stackSecondRowY, math.floor((previewWidth - 3) * 0.5), stackButtonHeight)
-		setOffsetBounds(createRoomButton, headerPadding + math.floor((previewWidth - 3) * 0.5) + 3, stackSecondRowY, math.floor((previewWidth - 3) * 0.5), stackButtonHeight)
+			setOffsetBounds(roomPreviewPanel, headerPadding, contentTop, previewWidth, previewHeight)
+			setOffsetBounds(roomList, headerPadding, roomListY, previewWidth, roomListHeight)
+			local queueHeight = extraCompactMobile and 42 or (profile.isMobile and 46 or 42)
+			local stackButtonHeight = extraCompactMobile and 36 or (profile.isMobile and 40 or 36)
+			local stackFirstRowY = actionY + (extraCompactMobile and 46 or (profile.isMobile and 50 or 46))
+			local stackSecondRowY = actionY + (extraCompactMobile and 86 or (profile.isMobile and 94 or 86))
+			setOffsetBounds(joinPassword, headerPadding, actionY - joinPasswordYOffset, previewWidth, extraCompactMobile and 34 or (profile.isMobile and 38 or 34))
+			setOffsetBounds(queueButton, headerPadding, actionY, previewWidth, queueHeight)
+			setOffsetBounds(quickClassicButton, headerPadding, stackFirstRowY, math.floor((previewWidth - actionColumnGap) * 0.5), stackButtonHeight)
+			setOffsetBounds(quickRankedButton, headerPadding + math.floor((previewWidth - actionColumnGap) * 0.5) + actionColumnGap, stackFirstRowY, math.floor((previewWidth - actionColumnGap) * 0.5), stackButtonHeight)
+			setOffsetBounds(refreshButton, headerPadding, stackSecondRowY, math.floor((previewWidth - actionColumnGap) * 0.5), stackButtonHeight)
+			setOffsetBounds(createRoomButton, headerPadding + math.floor((previewWidth - actionColumnGap) * 0.5) + actionColumnGap, stackSecondRowY, math.floor((previewWidth - actionColumnGap) * 0.5), stackButtonHeight)
 
-		local previewMapHeight = math.clamp(math.floor(previewHeight * (profile.isMobile and 0.43 or 0.45)), profile.isMobile and 120 or 112, profile.isMobile and 136 or 136)
-		setOffsetBounds(roomPreviewTitle, 12, 10, previewWidth - 24, profile.isMobile and 20 or 18)
-		setOffsetBounds(roomPreviewInfo, 12, profile.isMobile and 32 or 30, previewWidth - 24, extraCompactMobile and 26 or (profile.isMobile and 34 or 30))
-		setOffsetBounds(roomPreviewMap, 12, profile.isMobile and 72 or 66, previewWidth - 24, previewMapHeight)
-		setOffsetBounds(roomPreviewPlayersTitle, 12, (profile.isMobile and 72 or 66) + previewMapHeight + 10, previewWidth - 24, 16)
-		setOffsetBounds(roomPreviewPlayersList, 12, (profile.isMobile and 72 or 66) + previewMapHeight + 24, previewWidth - 24, previewHeight - ((profile.isMobile and 72 or 66) + previewMapHeight + 32))
-		if previewMapTitle then
-			setOffsetBounds(previewMapTitle, 16, 8, previewWidth - 16, 14)
-			previewMapTitle.TextSize = profile.isMobile and 11 or 10
-		end
-		if previewMapMood then
-			local moodWidth = extraCompactMobile and 106 or 144
-			setOffsetBounds(previewMapMood, previewWidth - 24 - moodWidth, 8, moodWidth, 18)
-			previewMapMood.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 10)
-			previewMapMood.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-		end
-		if previewMapFooter then
-			setOffsetBounds(previewMapFooter, 16, 26, previewWidth - 48, extraCompactMobile and 24 or 44)
-			previewMapFooter.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or 13)
-			previewMapFooter.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-		end
-		if previewMapStats then
-			setOffsetBounds(previewMapStats, 16, previewMapHeight - 20, previewWidth - 48, 16)
-			previewMapStats.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 10)
-			previewMapStats.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-		end
-		if previewMapAccent then
-			setOffsetBounds(previewMapAccent, 0, 0, 6, previewMapHeight)
-		end
+			local previewMapHeight = math.clamp(math.floor(previewHeight * (profile.isMobile and 0.43 or 0.45)), profile.isMobile and 120 or 112, previewMapMaxHeight)
+			setOffsetBounds(roomPreviewTitle, 12, 10, previewWidth - 24, profile.isMobile and 20 or 18)
+			setOffsetBounds(roomPreviewInfo, 12, profile.isMobile and 32 or 30, previewWidth - 24, extraCompactMobile and 26 or (profile.isMobile and 34 or 30))
+			setOffsetBounds(roomPreviewMap, 12, profile.isMobile and 72 or 66, previewWidth - 24, previewMapHeight)
+			setOffsetBounds(roomPreviewPlayersTitle, 12, (profile.isMobile and 72 or 66) + previewMapHeight + 10, previewWidth - 24, 16)
+			setOffsetBounds(roomPreviewPlayersList, 12, (profile.isMobile and 72 or 66) + previewMapHeight + previewPlayersTopGap, previewWidth - 24, previewHeight - ((profile.isMobile and 72 or 66) + previewMapHeight + previewPlayersBottomInset))
+			if previewMapTitle then
+				setOffsetBounds(previewMapTitle, 16, 8, previewWidth - previewMapTitleWidthInset, 14)
+				previewMapTitle.TextSize = profile.isMobile and 11 or 10
+			end
+			if previewMapMood then
+				local moodWidth = extraCompactMobile and 97 or 144
+				setOffsetBounds(previewMapMood, previewWidth - 24 - moodWidth, 8, moodWidth, 18)
+				previewMapMood.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 10)
+				previewMapMood.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+			end
+			if previewMapFooter then
+				setOffsetBounds(previewMapFooter, 16, previewMapFooterY, previewWidth - 48, extraCompactMobile and previewMapFooterHeight or 44)
+				previewMapFooter.TextSize = extraCompactMobile and 12 or (profile.isMobile and 14 or 13)
+				previewMapFooter.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+			end
+			if previewMapStats then
+				setOffsetBounds(previewMapStats, 16, previewMapHeight - previewMapStatsYOffset, previewWidth - 48, 16)
+				previewMapStats.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 10)
+				previewMapStats.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+			end
+			if previewMapAccent then
+				setOffsetBounds(previewMapAccent, 0, 0, 6, previewMapHeight)
+			end
 		if previewMapGradient then
 			previewMapGradient.Rotation = 14
 		end
@@ -11751,18 +14327,18 @@ function UISystem:_applyRoomBrowserSizing(profile, viewportSize, topLeftInset, b
 		mapPreviewImageFooter.TextSize = extraCompactMobile and 10 or 12
 		mapPreviewImageFooter.TextTruncate = extraCompactMobile and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
 	end
-	if floatButton then
+	if floatButton and not preserveAuthoredDesktopRoomBrowserLayout then
 		local floatSize = profile.isConsole and 84 or (profile.isMobile and 72 or 68)
 		floatButton.Size = UDim2.fromOffset(floatSize, floatSize)
 		floatButton.Position = UDim2.new(1, -(16 + bottomRightInset.X), isCompact and 0.72 or 0.56, 0)
 		floatButton.TextSize = extraCompactMobile and 10 or (profile.isMobile and 11 or 12)
 	end
-	if countdownLabel then
+	if countdownLabel and not preserveAuthoredDesktopRoomBrowserLayout then
 		countdownLabel.TextSize = extraCompactMobile and 56 or (isCompact and 72 or 96)
 		countdownLabel.Size = UDim2.fromOffset(extraCompactMobile and 320 or (isCompact and 360 or 400), extraCompactMobile and 100 or (isCompact and 112 or 120))
 		countdownLabel.Position = UDim2.fromScale(0.5, extraCompactMobile and 0.42 or 0.45)
 	end
-	if cancelCountdown then
+	if cancelCountdown and not preserveAuthoredDesktopRoomBrowserLayout then
 		cancelCountdown.Size = UDim2.fromOffset(extraCompactMobile and 216 or (isCompact and 240 or 220), extraCompactMobile and 38 or (isCompact and 42 or 38))
 		cancelCountdown.Position = UDim2.new(0.5, 0, extraCompactMobile and 0.68 or 0.70, 0)
 		cancelCountdown.TextSize = extraCompactMobile and 11 or (isCompact and 12 or 13)
@@ -11793,8 +14369,13 @@ function UISystem:_applyDeviceSizing()
 	end
 	local topLeftInset, bottomRightInset = UISupport.resolveSafeInsets(GuiService)
 	local compactMobileHud = profile.isMobile and viewportSize.Y <= 760
+	local preserveAuthoredLobbyOverlayLayout = shouldPreserveAuthoredOwnerLayout("LobbyUXGui")
+	local preserveAuthoredLobbyPanelLayout = shouldPreserveAuthoredOwnerLayout("LobbyUI")
+	local preserveAuthoredRoomBrowserLayout = shouldPreserveAuthoredOwnerLayout("RoomBrowserUI")
+	local preserveAuthoredMatchShellLayout = shouldPreserveAuthoredOwnerLayout("MatchUI")
+	local preserveAuthoredMatchOverlayLayout = shouldPreserveAuthoredOwnerLayout("MatchUXGui")
 	local lobby = self._uxWidgets.lobby
-	if lobby and lobby.PlayButton and lobby.FeedbackLabel then
+	if lobby and lobby.PlayButton and lobby.FeedbackLabel and not preserveAuthoredLobbyOverlayLayout then
 		local buttonSize = profile:GetButtonSize()
 		local trainingWidth = nil
 		lobby.PlayButton.Size = UDim2.fromOffset(buttonSize.X, buttonSize.Y)
@@ -11868,6 +14449,7 @@ function UISystem:_applyDeviceSizing()
 			or UserInputService.TouchEnabled == true
 			or (viewportSize.X <= 900 and viewportSize.Y <= 430)
 		local compactLandscapeLobby = mobileLikeLobby and viewportSize.X > viewportSize.Y and viewportSize.Y <= 420
+		local preserveAuthoredDesktopLobbyLayout = preserveAuthoredLobbyPanelLayout
 		local lobbyWidth = (mobileLikeLobby or viewportSize.X <= 1280)
 			and math.min(viewportSize.X - (mobileLikeLobby and 16 or 28), compactLandscapeLobby and 336 or (mobileLikeLobby and 408 or 396))
 			or 340
@@ -11875,77 +14457,78 @@ function UISystem:_applyDeviceSizing()
 			or (mobileLikeLobby and 424 or ((viewportSize.X <= 1280) and 384 or 368))
 		local panelWidth = math.max(compactLandscapeLobby and 320 or (mobileLikeLobby and 348 or 340), math.floor(lobbyWidth))
 		local panelHeight = math.max(compactLandscapeLobby and 332 or (mobileLikeLobby and 404 or 368), math.floor(lobbyHeight))
-		if lobby.BasicPanel then
-			lobby.BasicPanel.Position = UDim2.fromOffset(12 + topLeftInset.X, 12 + topLeftInset.Y)
-			lobby.BasicPanel.Size = UDim2.fromOffset(panelWidth, panelHeight)
-		end
-		if lobby.ToggleButton then
-			lobby.ToggleButton.Position = UDim2.fromOffset(12 + topLeftInset.X + panelWidth + 8, (compactLandscapeLobby and 108 or 120) + topLeftInset.Y)
-			lobby.ToggleButton.Size = UDim2.fromOffset(compactLandscapeLobby and 26 or 28, compactLandscapeLobby and 68 or 78)
-		end
-		if lobby.BasicHeaderCard then
-			lobby.BasicHeaderCard.Position = UDim2.fromOffset(12, compactLandscapeLobby and 46 or 54)
-			lobby.BasicHeaderCard.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 100 or (mobileLikeLobby and 120 or 112))
-		end
-		local halfButtonWidth = math.floor((panelWidth - 36) * 0.5)
-		local rightButtonX = 12 + halfButtonWidth + 12
-		lobby.BasicOpenRoomBrowserButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 156 or 174)
-		lobby.BasicOpenRoomBrowserButton.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 44 or (mobileLikeLobby and 50 or 42))
-		if lobby.BasicProfileButton then
-			lobby.BasicProfileButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 208 or (mobileLikeLobby and 222 or 214))
-			lobby.BasicProfileButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
-		end
-		if lobby.BasicShopButton then
-			lobby.BasicShopButton.Position = UDim2.fromOffset(rightButtonX, compactLandscapeLobby and 208 or (mobileLikeLobby and 222 or 214))
-			lobby.BasicShopButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
-		end
-		if lobby.BasicRoyalPassButton then
-			lobby.BasicRoyalPassButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 250 or (mobileLikeLobby and 272 or 262))
-			lobby.BasicRoyalPassButton.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
-		end
-		if lobby.BasicMenuButton then
-			lobby.BasicMenuButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 292 or (mobileLikeLobby and 320 or 304))
-			lobby.BasicMenuButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
-		end
-		if lobby.BasicRankButton then
-			lobby.BasicRankButton.Position = UDim2.fromOffset(rightButtonX, compactLandscapeLobby and 292 or (mobileLikeLobby and 320 or 304))
-			lobby.BasicRankButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
-		end
-		if lobby.BasicHintLabel then
-			lobby.BasicHintLabel.Position = UDim2.fromOffset(12, compactLandscapeLobby and 332 or (mobileLikeLobby and 370 or 348))
-			lobby.BasicHintLabel.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 22 or (mobileLikeLobby and 34 or 24))
-		end
-		if compactLandscapeLobby then
-			if lobby.BasicLobbyGlyph then
-				lobby.BasicLobbyGlyph.Position = UDim2.new(1, -12, 0, 6)
-				lobby.BasicLobbyGlyph.Size = UDim2.fromOffset(76, 56)
-				lobby.BasicLobbyGlyph.TextSize = 40
+		if not preserveAuthoredDesktopLobbyLayout then
+			if lobby.BasicPanel then
+				lobby.BasicPanel.Position = UDim2.fromOffset(12 + topLeftInset.X, 12 + topLeftInset.Y)
+				lobby.BasicPanel.Size = UDim2.fromOffset(panelWidth, panelHeight)
 			end
-			if lobby.BasicStatusBadge then
-				lobby.BasicStatusBadge.Position = UDim2.fromOffset(12, 8)
-				lobby.BasicStatusBadge.Size = UDim2.fromOffset(102, 22)
+			if lobby.ToggleButton then
+				lobby.ToggleButton.Position = UDim2.fromOffset(12 + topLeftInset.X + panelWidth + 8, (compactLandscapeLobby and 108 or 120) + topLeftInset.Y)
+				lobby.ToggleButton.Size = UDim2.fromOffset(compactLandscapeLobby and 26 or 28, compactLandscapeLobby and 68 or 78)
 			end
-			if lobby.BasicPrimaryLabel then
-				lobby.BasicPrimaryLabel.Position = UDim2.fromOffset(12, 34)
-				lobby.BasicPrimaryLabel.Size = UDim2.new(1, -100, 0, 30)
+			if lobby.BasicHeaderCard then
+				lobby.BasicHeaderCard.Position = UDim2.fromOffset(12, compactLandscapeLobby and 46 or 54)
+				lobby.BasicHeaderCard.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 100 or (mobileLikeLobby and 120 or 112))
 			end
-			if lobby.BasicSecondaryLabel then
-				lobby.BasicSecondaryLabel.Position = UDim2.fromOffset(12, 60)
-				lobby.BasicSecondaryLabel.Size = UDim2.new(1, -100, 0, 20)
+			local halfButtonWidth = math.floor((panelWidth - 36) * 0.5)
+			local rightButtonX = 12 + halfButtonWidth + 12
+			lobby.BasicOpenRoomBrowserButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 156 or 174)
+			lobby.BasicOpenRoomBrowserButton.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 44 or (mobileLikeLobby and 50 or 42))
+			if lobby.BasicProfileButton then
+				lobby.BasicProfileButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 208 or (mobileLikeLobby and 222 or 214))
+				lobby.BasicProfileButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
 			end
-			if lobby.BasicModePill then
-				lobby.BasicModePill.Position = UDim2.fromOffset(12, 78)
-				lobby.BasicModePill.Size = UDim2.fromOffset(66, 16)
+			if lobby.BasicShopButton then
+				lobby.BasicShopButton.Position = UDim2.fromOffset(rightButtonX, compactLandscapeLobby and 208 or (mobileLikeLobby and 222 or 214))
+				lobby.BasicShopButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
 			end
-			if lobby.BasicMapPill then
-				lobby.BasicMapPill.Position = UDim2.fromOffset(84, 78)
-				lobby.BasicMapPill.Size = UDim2.fromOffset(112, 16)
+			if lobby.BasicRoyalPassButton then
+				lobby.BasicRoyalPassButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 250 or (mobileLikeLobby and 272 or 262))
+				lobby.BasicRoyalPassButton.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
 			end
-			if lobby.BasicRoomPill then
-				lobby.BasicRoomPill.Position = UDim2.fromOffset(202, 78)
-				lobby.BasicRoomPill.Size = UDim2.fromOffset(96, 16)
+			if lobby.BasicMenuButton then
+				lobby.BasicMenuButton.Position = UDim2.fromOffset(12, compactLandscapeLobby and 292 or (mobileLikeLobby and 320 or 304))
+				lobby.BasicMenuButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
 			end
-		end
+			if lobby.BasicRankButton then
+				lobby.BasicRankButton.Position = UDim2.fromOffset(rightButtonX, compactLandscapeLobby and 292 or (mobileLikeLobby and 320 or 304))
+				lobby.BasicRankButton.Size = UDim2.fromOffset(halfButtonWidth, compactLandscapeLobby and 34 or (mobileLikeLobby and 40 or 36))
+			end
+			if lobby.BasicHintLabel then
+				lobby.BasicHintLabel.Position = UDim2.fromOffset(12, compactLandscapeLobby and 332 or (mobileLikeLobby and 370 or 348))
+				lobby.BasicHintLabel.Size = UDim2.new(1, -24, 0, compactLandscapeLobby and 22 or (mobileLikeLobby and 34 or 24))
+			end
+			if compactLandscapeLobby then
+				if lobby.BasicLobbyGlyph then
+					lobby.BasicLobbyGlyph.Position = UDim2.new(1, -12, 0, 6)
+					lobby.BasicLobbyGlyph.Size = UDim2.fromOffset(76, 56)
+					lobby.BasicLobbyGlyph.TextSize = 40
+				end
+				if lobby.BasicStatusBadge then
+					lobby.BasicStatusBadge.Position = UDim2.fromOffset(12, 8)
+					lobby.BasicStatusBadge.Size = UDim2.fromOffset(102, 22)
+				end
+				if lobby.BasicPrimaryLabel then
+					lobby.BasicPrimaryLabel.Position = UDim2.fromOffset(12, 34)
+					lobby.BasicPrimaryLabel.Size = UDim2.new(1, -100, 0, 30)
+				end
+				if lobby.BasicSecondaryLabel then
+					lobby.BasicSecondaryLabel.Position = UDim2.fromOffset(12, 60)
+					lobby.BasicSecondaryLabel.Size = UDim2.new(1, -100, 0, 20)
+				end
+				if lobby.BasicModePill then
+					lobby.BasicModePill.Position = UDim2.fromOffset(12, 78)
+					lobby.BasicModePill.Size = UDim2.fromOffset(66, 16)
+				end
+				if lobby.BasicMapPill then
+					lobby.BasicMapPill.Position = UDim2.fromOffset(84, 78)
+					lobby.BasicMapPill.Size = UDim2.fromOffset(112, 16)
+				end
+				if lobby.BasicRoomPill then
+					lobby.BasicRoomPill.Position = UDim2.fromOffset(202, 78)
+					lobby.BasicRoomPill.Size = UDim2.fromOffset(96, 16)
+				end
+			end
 			lobby.BasicOpenRoomBrowserButton.TextSize = mobileLikeLobby and math.max(15, profile:GetTextSize() - 1) or math.max(14, profile:GetTextSize() - 2)
 			if compactLandscapeLobby and lobby.BasicOpenRoomBrowserButton then
 				lobby.BasicOpenRoomBrowserButton.TextSize = math.max(12, profile:GetTextSize() - 5)
@@ -11980,22 +14563,23 @@ function UISystem:_applyDeviceSizing()
 					lobby.BasicRankButton.TextSize = math.max(11, profile:GetTextSize() - 6)
 				end
 			end
-		if lobby.BasicPrimaryLabel then
-			lobby.BasicPrimaryLabel.TextSize = compactLandscapeLobby and 12 or math.max(14, profile:GetTextSize() - 3)
-		end
-		if lobby.BasicSecondaryLabel then
-			lobby.BasicSecondaryLabel.TextSize = compactLandscapeLobby and 9 or math.max(11, profile:GetTextSize() - 6)
-		end
-		if lobby.BasicHintLabel then
-			lobby.BasicHintLabel.TextSize = compactLandscapeLobby and math.max(9, profile:GetTextSize() - 8) or math.max(10, profile:GetTextSize() - 7)
-		end
+			if lobby.BasicPrimaryLabel then
+				lobby.BasicPrimaryLabel.TextSize = compactLandscapeLobby and 12 or math.max(14, profile:GetTextSize() - 3)
+			end
+			if lobby.BasicSecondaryLabel then
+				lobby.BasicSecondaryLabel.TextSize = compactLandscapeLobby and 9 or math.max(11, profile:GetTextSize() - 6)
+			end
+			if lobby.BasicHintLabel then
+				lobby.BasicHintLabel.TextSize = compactLandscapeLobby and math.max(9, profile:GetTextSize() - 8) or math.max(10, profile:GetTextSize() - 7)
+			end
 			if lobby.BasicStatusBadge then
 				lobby.BasicStatusBadge.TextSize = compactLandscapeLobby and math.max(10, profile:GetTextSize() - 8) or math.max(11, profile:GetTextSize() - 7)
 			end
+		end
 	end
 
 	local match = self._uxWidgets.match
-	if match and match.MessageLabel and match.ObjectiveLabel then
+	if match and match.MessageLabel and match.ObjectiveLabel and not preserveAuthoredMatchOverlayLayout then
 		match.MessageLabel.TextSize = profile:GetTextSize() + 8
 		match.ObjectiveLabel.TextSize = profile:GetTextSize()
 		if match.HuntStatusBadge then
@@ -12005,7 +14589,7 @@ function UISystem:_applyDeviceSizing()
 			match.HuntAssistLabel.TextSize = math.max(12, profile:GetTextSize() - 1)
 		end
 	end
-	if match and match.BasicPrimaryLabel and match.BasicSecondaryLabel then
+	if match and match.BasicPrimaryLabel and match.BasicSecondaryLabel and not preserveAuthoredMatchShellLayout then
 		local matchCompact = profile.isMobile or viewportSize.X <= 960
 		local panelWidth = matchCompact
 			and math.min(viewportSize.X - (profile.isMobile and 12 or 28), profile.isMobile and 420 or 396)
@@ -12107,7 +14691,7 @@ function UISystem:_applyDeviceSizing()
 			match.BasicFloatButton.Position = UDim2.new(1, -(16 + bottomRightInset.X), matchCompact and 0.72 or 0.68, 0)
 		end
 	end
-	if match and match.ResultsTitle and match.ResultsStatus then
+	if match and match.ResultsTitle and match.ResultsStatus and not preserveAuthoredMatchOverlayLayout then
 		match.ResultsTitle.TextSize = compactMobileHud and math.max(20, profile:GetTextSize() + 4) or math.max(22, profile:GetTextSize() + 6)
 		match.ResultsStatus.TextSize = compactMobileHud and math.max(11, profile:GetTextSize() - 4) or math.max(12, profile:GetTextSize() - 3)
 		if match.ResultsSubtitle then
@@ -12117,35 +14701,35 @@ function UISystem:_applyDeviceSizing()
 			match.ResultsFooter.TextSize = compactMobileHud and math.max(12, profile:GetTextSize() - 4) or math.max(13, profile:GetTextSize() - 2)
 		end
 	end
-	if match and match.TimerLabel then
+	if match and match.TimerLabel and not preserveAuthoredMatchShellLayout then
 		local timerWidth = profile.isMobile and (compactMobileHud and 138 or 148) or 126
 		local timerHeight = profile.isMobile and (compactMobileHud and 40 or 44) or 40
 		match.TimerLabel.Size = UDim2.fromOffset(timerWidth, timerHeight)
 		match.TimerLabel.Position = UDim2.new(0.5, 0, 0, 14 + topLeftInset.Y)
 		match.TimerLabel.TextSize = profile.isMobile and (compactMobileHud and 24 or 26) or 24
 	end
-	if match and match.TimerCaption then
+	if match and match.TimerCaption and not preserveAuthoredMatchShellLayout then
 		match.TimerCaption.Position = UDim2.new(0.5, 0, 0, (profile.isMobile and (compactMobileHud and 56 or 60) or 58) + topLeftInset.Y)
 		match.TimerCaption.Size = UDim2.fromOffset(profile.isMobile and (compactMobileHud and 176 or 190) or 170, 18)
 		match.TimerCaption.TextSize = profile.isMobile and (compactMobileHud and 11 or 12) or 11
 	end
-	if match and match.EvidenceQuickButton then
+	if match and match.EvidenceQuickButton and not preserveAuthoredMatchShellLayout then
 		local quickWidth = profile.isMobile and math.min(viewportSize.X - 24, compactMobileHud and 176 or 188) or 142
 		local quickHeight = profile.isMobile and (compactMobileHud and 48 or 52) or 48
 		match.EvidenceQuickButton.Size = UDim2.fromOffset(math.floor(quickWidth), quickHeight)
 		match.EvidenceQuickButton.Position = UDim2.new(1, -(14 + bottomRightInset.X), 1, -(14 + bottomRightInset.Y))
 		match.EvidenceQuickButton.TextSize = profile.isMobile and (compactMobileHud and 12 or 13) or 12
 	end
-	if match and match.ControlsHintBar then
+	if match and match.ControlsHintBar and not preserveAuthoredMatchShellLayout then
 		local hintWidth = math.min(viewportSize.X - (profile.isMobile and 20 or 40), 620)
 		match.ControlsHintBar.Size = UDim2.fromOffset(math.max(280, math.floor(hintWidth)), profile.isMobile and (compactMobileHud and 36 or 40) or 34)
 		match.ControlsHintBar.Position = UDim2.new(0.5, 0, 1, -(12 + bottomRightInset.Y))
 	end
-	if match and match.ControlsHintLabel then
+	if match and match.ControlsHintLabel and not preserveAuthoredMatchShellLayout then
 		match.ControlsHintLabel.TextSize = profile.isMobile and (compactMobileHud and 12 or 13) or 12
 	end
 	local visibleFieldKitToolCount = #getVisibleFieldKitToolTypes(self:_ensureFieldKitToolStates())
-	if match and match.FieldKitFrame then
+	if match and match.FieldKitFrame and not preserveAuthoredMatchShellLayout then
 		local kitWidth = profile.isMobile and math.min(viewportSize.X - 20, 420) or 356
 		local frameWidth = math.max(profile.isMobile and 316 or 332, math.floor(kitWidth))
 		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, frameWidth - 24, visibleFieldKitToolCount)
@@ -12158,23 +14742,23 @@ function UISystem:_applyDeviceSizing()
 			match.FieldKitFrame.Position = UDim2.new(0, 14 + topLeftInset.X, 1, -(58 + bottomRightInset.Y))
 		end
 	end
-	if match and match.FieldKitTitle then
+	if match and match.FieldKitTitle and not preserveAuthoredMatchShellLayout then
 		match.FieldKitTitle.Position = UDim2.fromOffset(12, 10)
 		match.FieldKitTitle.Size = UDim2.new(1, -24, 0, 18)
 		match.FieldKitTitle.TextSize = profile.isMobile and 12 or 11
 	end
-	if match and match.FieldKitButtonsFrame then
+	if match and match.FieldKitButtonsFrame and not preserveAuthoredMatchShellLayout then
 		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset - 24 or 332, visibleFieldKitToolCount)
 		match.FieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
 		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, fieldKitLayout.buttonsHeight)
 	end
-	if match and match.FieldKitGrid and match.FieldKitFrame then
+	if match and match.FieldKitGrid and match.FieldKitFrame and not preserveAuthoredMatchShellLayout then
 		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame.Size.X.Offset - 24, visibleFieldKitToolCount)
 		match.FieldKitGrid.CellPadding = UDim2.fromOffset(fieldKitLayout.cellPaddingX, fieldKitLayout.cellPaddingY)
 		match.FieldKitGrid.CellSize = UDim2.fromOffset(fieldKitLayout.cellWidth, fieldKitLayout.cellHeight)
 		match.FieldKitGrid.FillDirectionMaxCells = fieldKitLayout.columns
 	end
-	if match and match.FieldKitStatusLabel then
+	if match and match.FieldKitStatusLabel and not preserveAuthoredMatchShellLayout then
 		local fieldKitLayout = getFieldKitLayoutMetrics(profile.isMobile, match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset - 24 or 332, visibleFieldKitToolCount)
 		match.FieldKitStatusLabel.Position = UDim2.fromOffset(12, fieldKitLayout.statusY)
 		match.FieldKitStatusLabel.Size = UDim2.new(1, -24, 0, fieldKitLayout.statusHeight)
@@ -12182,9 +14766,13 @@ function UISystem:_applyDeviceSizing()
 	end
 	if self._uxWidgets and self._uxWidgets.windows then
 		for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
-			local window = self._uxWidgets.windows[guiName]
-			if window then
-				if window.Panel and (guiName == "RoyalPassUI" or guiName == "ProfileUI" or guiName == "ShopUI") then
+				local window = self._uxWidgets.windows[guiName]
+				if window then
+					local preserveAuthoredAuxWindowLayout = shouldPreserveAuthoredOwnerLayout(guiName)
+					if preserveAuthoredAuxWindowLayout then
+						continue
+					end
+				if not preserveAuthoredAuxWindowLayout and window.Panel and (guiName == "RoyalPassUI" or guiName == "ProfileUI" or guiName == "ShopUI") then
 					local width = guiName == "ShopUI" and 356 or 364
 					local height = guiName == "ProfileUI" and 320 or 420
 					local availableWindowWidth = math.max(320, viewportSize.X - (topLeftInset.X + bottomRightInset.X))
@@ -12313,7 +14901,7 @@ function UISystem:_applyDeviceSizing()
 						window.CloseButton.Position = UDim2.new(1, -10, 0, 8)
 						window.CloseButton.TextSize = math.max(12, profile:GetTextSize() - 6)
 					end
-				if guiName == "RoyalPassUI" and window.RoyalPassWidgets then
+				if not preserveAuthoredAuxWindowLayout and guiName == "RoyalPassUI" and window.RoyalPassWidgets then
 					local widgets = window.RoyalPassWidgets
 					local passMobile = profile.isMobile or viewportSize.X <= 960
 					local heroHeight = passMobile and 168 or 130
@@ -12391,7 +14979,7 @@ function UISystem:_applyDeviceSizing()
 						end
 					end
 				end
-				if window.ItemRows then
+				if not preserveAuthoredAuxWindowLayout and window.ItemRows then
 					for _, row in ipairs(window.ItemRows) do
 						if row.Title then
 							row.Title.TextSize = math.max(12, profile:GetTextSize() - 6)
@@ -12404,7 +14992,7 @@ function UISystem:_applyDeviceSizing()
 						end
 					end
 				end
-					if guiName == "ShopUI" and window.ShopFilterButtons then
+					if not preserveAuthoredAuxWindowLayout and guiName == "ShopUI" and window.ShopFilterButtons then
 						for _, filterButton in pairs(window.ShopFilterButtons) do
 							if filterButton and filterButton:IsA("TextButton") then
 								filterButton.TextSize = profile.isMobile and math.max(9, profile:GetTextSize() - 9) or math.max(10, profile:GetTextSize() - 8)
@@ -12417,7 +15005,7 @@ function UISystem:_applyDeviceSizing()
 							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
 						end
 					end
-					if guiName == "ProfileUI" and profile.isMobile then
+					if not preserveAuthoredAuxWindowLayout and guiName == "ProfileUI" and profile.isMobile then
 						if window.SecondaryLabel then
 							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
 						end
@@ -12425,7 +15013,7 @@ function UISystem:_applyDeviceSizing()
 							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
 						end
 					end
-					if guiName == "RoyalPassUI" and profile.isMobile then
+					if not preserveAuthoredAuxWindowLayout and guiName == "RoyalPassUI" and profile.isMobile then
 						if window.SecondaryLabel then
 							window.SecondaryLabel.TextSize = math.max(11, profile:GetTextSize() - 7)
 						end
@@ -12433,7 +15021,7 @@ function UISystem:_applyDeviceSizing()
 							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
 						end
 					end
-					if guiName == "PASRA_UI" and profile.isMobile then
+					if not preserveAuthoredAuxWindowLayout and guiName == "PASRA_UI" and profile.isMobile then
 						if window.SecondaryLabel then
 							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
 						end
@@ -12441,7 +15029,7 @@ function UISystem:_applyDeviceSizing()
 							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
 						end
 					end
-					if guiName == "JournalUI" and profile.isMobile then
+					if not preserveAuthoredAuxWindowLayout and guiName == "JournalUI" and profile.isMobile then
 						if window.SecondaryLabel then
 							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
 						end
@@ -12449,7 +15037,7 @@ function UISystem:_applyDeviceSizing()
 							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 9)
 						end
 					end
-					if guiName == "SpectatorUI" and profile.isMobile then
+					if not preserveAuthoredAuxWindowLayout and guiName == "SpectatorUI" and profile.isMobile then
 						if window.SecondaryLabel then
 							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
 						end
@@ -12462,44 +15050,50 @@ function UISystem:_applyDeviceSizing()
 		end
 		if self._uxWidgets and self._uxWidgets.basicWindows then
 			for guiName, window in pairs(self._uxWidgets.basicWindows) do
-				if window.PrimaryLabel then
-					window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
-					if profile.isMobile and guiName == "MainMenuUI" then
-						window.PrimaryLabel.TextSize = math.max(13, profile:GetTextSize() - 4)
-					end
-					if profile.isMobile and guiName == "LeaderboardUI" then
-						window.PrimaryLabel.TextSize = math.max(14, profile:GetTextSize() - 3)
-					end
+				local preserveAuthoredDesktopBasicWindowLayout = shouldPreserveAuthoredOwnerLayout(guiName)
+				if preserveAuthoredDesktopBasicWindowLayout then
+					continue
 				end
-				if window.SecondaryLabel then
-					window.SecondaryLabel.TextSize = math.max(12, profile:GetTextSize() - 5)
-					if profile.isMobile and guiName == "MainMenuUI" then
-						window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+				if not preserveAuthoredDesktopBasicWindowLayout then
+					if window.PrimaryLabel then
+						window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
+						if profile.isMobile and guiName == "MainMenuUI" then
+							window.PrimaryLabel.TextSize = math.max(13, profile:GetTextSize() - 4)
+						end
+						if profile.isMobile and guiName == "LeaderboardUI" then
+							window.PrimaryLabel.TextSize = math.max(14, profile:GetTextSize() - 3)
+						end
 					end
-					if profile.isMobile and guiName == "LeaderboardUI" then
-						window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+					if window.SecondaryLabel then
+						window.SecondaryLabel.TextSize = math.max(12, profile:GetTextSize() - 5)
+						if profile.isMobile and guiName == "MainMenuUI" then
+							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
+						if profile.isMobile and guiName == "LeaderboardUI" then
+							window.SecondaryLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
 					end
-				end
-			if window.ContentText then
-				window.ContentText.TextSize = math.max(12, profile:GetTextSize() - 5)
-			end
-				if window.FooterLabel then
-					window.FooterLabel.TextSize = math.max(11, profile:GetTextSize() - 6)
-					if profile.isMobile and guiName == "MainMenuUI" then
-						window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+					if window.ContentText then
+						window.ContentText.TextSize = math.max(12, profile:GetTextSize() - 5)
 					end
-					if profile.isMobile and guiName == "LeaderboardUI" then
-						window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+					if window.FooterLabel then
+						window.FooterLabel.TextSize = math.max(11, profile:GetTextSize() - 6)
+						if profile.isMobile and guiName == "MainMenuUI" then
+							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
+						if profile.isMobile and guiName == "LeaderboardUI" then
+							window.FooterLabel.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
 					end
-				end
-			if window.StatusBadge then
-				window.StatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
-			end
-				if window.FloatButton then
-					local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
-					window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
-					if profile.isMobile then
-						window.FloatButton.TextSize = math.max(10, profile:GetTextSize() - 8)
+					if window.StatusBadge then
+						window.StatusBadge.TextSize = math.max(11, profile:GetTextSize() - 7)
+					end
+					if window.FloatButton then
+						local floatSize = profile.isConsole and 70 or (profile.isMobile and 64 or 60)
+						window.FloatButton.Size = UDim2.fromOffset(floatSize, floatSize)
+						if profile.isMobile then
+							window.FloatButton.TextSize = math.max(10, profile:GetTextSize() - 8)
+						end
 					end
 				end
 			if window.Panel and (guiName == "MainMenuUI" or guiName == "LeaderboardUI") and profile.isMobile then
@@ -12889,127 +15483,126 @@ function UISystem:_setPhase(newPhase, payload)
 	self:_renderPhase(newPhase, payload)
 end
 
+function UISystem:_isPreTeleportLoadingActive()
+	return (self._preTeleportLoadingActiveUntil or 0) > tick()
+end
+
+function UISystem:_preloadLoadingSpriteAtlases()
+	if self._loadingSpritePreloadStarted then
+		return
+	end
+
+	self._loadingSpritePreloadStarted = true
+	task.spawn(function()
+		local ok, err = LoadingSpriteAnimator.preload(LoadingSpriteAtlas)
+		self._loadingSpritePreloaded = ok == true
+		self._loadingSpritePreloadError = ok and nil or tostring(err)
+	end)
+end
+
+function UISystem:_showPreTeleportLoadingSprite(payload, options)
+	self:_preloadLoadingSpriteAtlases()
+	self:_forceCloseAllPanelsForTeleport()
+	self:_hideTeleportOverlay()
+
+	options = type(options) == "table" and options or {}
+	local holdSeconds = tonumber(options.holdSeconds) or tonumber(payload and payload.preTeleportLoadingSeconds) or 10
+	self._preTeleportLoadingActiveUntil = math.max(self._preTeleportLoadingActiveUntil or 0, tick() + holdSeconds)
+
+	local screen = self:_ensureLoadingScreen()
+	if not screen or not screen:IsA("ScreenGui") then
+		return
+	end
+
+	screen.Enabled = true
+	self._preTeleportLoadingHideText = true
+	self:_setLoadingScreenChromeVisible(screen, false)
+	self:_ensureLoadingSpriteAnimator(screen:FindFirstChild("Background"), true)
+	self:_startLoadingScreenLoop(payload)
+	self:_setLoadingScreenContent(
+		options.title or "Memuat lokasi...",
+		payload,
+		options.progress or 0.22,
+		options.footer or "Countdown selesai. Menyiapkan runtime teleport dan asset map..."
+	)
+end
+
+function UISystem:_syncPreTeleportLoadingFromCountdown(state)
+	if type(state) ~= "table" then
+		return
+	end
+
+	if state.matchStarting == true then
+		self:_preloadLoadingSpriteAtlases()
+		return
+	end
+
+	local token = tonumber(state.countdownCompletionToken) or 0
+	if token <= 0 or token == (self._lastCountdownCompletionToken or 0) then
+		return
+	end
+
+	self._lastCountdownCompletionToken = token
+	self:_showPreTeleportLoadingSprite(state, {
+		title = "Memuat lokasi...",
+		progress = 0.18,
+		holdSeconds = 10,
+		footer = "Loading sprite aktif sambil runtime teleport disiapkan...",
+	})
+end
+
+function UISystem:_ensureLoadingSpriteAnimator(background, restart)
+	if restart and self._loadingSpriteStop then
+		self._loadingSpriteStop()
+		self._loadingSpriteStop = nil
+	end
+
+	if self._loadingSpriteStop then
+		return
+	end
+
+	if not background or not background:IsA("Frame") then
+		return
+	end
+
+	local image = background:FindFirstChild("BackgroundImage")
+	if not image or not image:IsA("ImageLabel") then
+		return
+	end
+
+	local stop = LoadingSpriteAnimator.start(image, LoadingSpriteAtlas)
+	if stop then
+		self._loadingSpriteStop = stop
+	end
+end
+
 function UISystem:_ensureLoadingScreen()
 	local playerGui = self:_getPlayerGui()
 	if not playerGui then
 		return nil
 	end
 
-	local existing = playerGui:FindFirstChild("MatchLoadingUI")
-	if existing and existing:IsA("ScreenGui") then
-		return existing
+	local existing = playerGui:FindFirstChild("MatchLoadingUI") or playerGui:WaitForChild("MatchLoadingUI", 5)
+	if not existing or not existing:IsA("ScreenGui") then
+		if not self._loadingScreenShellWarned then
+			self._loadingScreenShellWarned = true
+			warn("[UISystem] Missing authored MatchLoadingUI ScreenGui; check StarterGui shell contract.")
+		end
+		return nil
 	end
 
-	local screen = Instance.new("ScreenGui")
-	screen.Name = "MatchLoadingUI"
-	screen.IgnoreGuiInset = true
-	screen.ResetOnSpawn = false
-	screen.DisplayOrder = 500
-	screen.Enabled = false
+	local bg = existing:FindFirstChild("Background")
+	if not bg or not bg:IsA("Frame") then
+		if not self._loadingScreenShellWarned then
+			self._loadingScreenShellWarned = true
+			warn("[UISystem] MatchLoadingUI is missing Background frame; preserve canonical widget names.")
+		end
+		return nil
+	end
 
-	local bg = Instance.new("Frame")
-	bg.Name = "Background"
-	bg.Size = UDim2.fromScale(1, 1)
-	bg.BackgroundColor3 = Color3.fromRGB(6, 9, 14)
-	bg.BackgroundTransparency = 0.34
-	bg.BorderSizePixel = 0
-	bg.Parent = screen
+	self:_ensureLoadingSpriteAnimator(bg)
 
-	local shade = Instance.new("Frame")
-	shade.Name = "Shade"
-	shade.Size = UDim2.fromScale(1, 1)
-	shade.BackgroundColor3 = Color3.new(0, 0, 0)
-	shade.BackgroundTransparency = 0.7
-	shade.BorderSizePixel = 0
-	shade.Parent = bg
-
-	local status = Instance.new("TextLabel")
-	status.Name = "StatusLabel"
-	status.AnchorPoint = Vector2.new(0.5, 0)
-	status.Position = UDim2.fromScale(0.5, 0.14)
-	status.Size = UDim2.fromOffset(280, 28)
-	status.BackgroundTransparency = 1
-	status.Text = "BERMAIN"
-	status.TextColor3 = Color3.fromRGB(185, 198, 214)
-	status.Font = Enum.Font.GothamSemibold
-	status.TextSize = 18
-	status.Parent = bg
-
-	local title = Instance.new("TextLabel")
-	title.Name = "TitleLabel"
-	title.AnchorPoint = Vector2.new(0.5, 0)
-	title.Position = UDim2.fromScale(0.5, 0.22)
-	title.Size = UDim2.fromOffset(760, 64)
-	title.BackgroundTransparency = 1
-	title.Text = "Masuk ke lokasi..."
-	title.TextColor3 = Color3.fromRGB(245, 245, 245)
-	title.Font = Enum.Font.GothamBlack
-	title.TextSize = 38
-	title.Parent = bg
-
-	local mapName = Instance.new("TextLabel")
-	mapName.Name = "MapNameLabel"
-	mapName.AnchorPoint = Vector2.new(0.5, 0)
-	mapName.Position = UDim2.fromScale(0.5, 0.33)
-	mapName.Size = UDim2.fromOffset(760, 34)
-	mapName.BackgroundTransparency = 1
-	mapName.Text = "Lokasi: -"
-	mapName.TextColor3 = Color3.fromRGB(202, 214, 228)
-	mapName.Font = Enum.Font.GothamSemibold
-	mapName.TextSize = 20
-	mapName.Parent = bg
-
-	local tip = Instance.new("TextLabel")
-	tip.Name = "TipLabel"
-	tip.AnchorPoint = Vector2.new(0.5, 0)
-	tip.Position = UDim2.fromScale(0.5, 0.46)
-	tip.Size = UDim2.fromOffset(860, 72)
-	tip.BackgroundTransparency = 1
-	tip.TextWrapped = true
-	tip.Text = LOADING_TIPS[1]
-	tip.TextColor3 = Color3.fromRGB(221, 229, 239)
-	tip.Font = Enum.Font.Gotham
-	tip.TextSize = 18
-	tip.Parent = bg
-
-	local progressTrack = Instance.new("Frame")
-	progressTrack.Name = "ProgressTrack"
-	progressTrack.AnchorPoint = Vector2.new(0.5, 0)
-	progressTrack.Position = UDim2.fromScale(0.5, 0.66)
-	progressTrack.Size = UDim2.fromOffset(520, 16)
-	progressTrack.BackgroundColor3 = Color3.fromRGB(34, 42, 56)
-	progressTrack.BorderSizePixel = 0
-	progressTrack.Parent = bg
-
-	local progressTrackCorner = Instance.new("UICorner")
-	progressTrackCorner.CornerRadius = UDim.new(0, 999)
-	progressTrackCorner.Parent = progressTrack
-
-	local progressFill = Instance.new("Frame")
-	progressFill.Name = "ProgressFill"
-	progressFill.Size = UDim2.fromScale(0.08, 1)
-	progressFill.BackgroundColor3 = Color3.fromRGB(84, 142, 114)
-	progressFill.BorderSizePixel = 0
-	progressFill.Parent = progressTrack
-
-	local progressFillCorner = Instance.new("UICorner")
-	progressFillCorner.CornerRadius = UDim.new(0, 999)
-	progressFillCorner.Parent = progressFill
-
-	local footer = Instance.new("TextLabel")
-	footer.Name = "FooterLabel"
-	footer.AnchorPoint = Vector2.new(0.5, 0)
-	footer.Position = UDim2.fromScale(0.5, 0.72)
-	footer.Size = UDim2.fromOffset(620, 28)
-	footer.BackgroundTransparency = 1
-	footer.Text = "Sinkronisasi match sedang berjalan..."
-	footer.TextColor3 = Color3.fromRGB(168, 182, 202)
-	footer.Font = Enum.Font.Gotham
-	footer.TextSize = 15
-	footer.Parent = bg
-
-	screen.Parent = playerGui
-	return screen
+	return existing
 end
 
 function UISystem:_ensureTeleportOverlay()
@@ -13019,35 +15612,22 @@ function UISystem:_ensureTeleportOverlay()
 	end
 
 	local screen = playerGui:FindFirstChild(TELEPORT_OVERLAY_GUI_NAME)
-	if screen and not screen:IsA("ScreenGui") then
-		screen:Destroy()
-		screen = nil
-	end
-	if not screen then
-		screen = Instance.new("ScreenGui")
-		screen.Name = TELEPORT_OVERLAY_GUI_NAME
-		screen.IgnoreGuiInset = true
-		screen.ResetOnSpawn = false
-		screen.DisplayOrder = 10000
-		screen.Enabled = false
-		screen.Parent = playerGui
+		or playerGui:WaitForChild(TELEPORT_OVERLAY_GUI_NAME, 5)
+	if not screen or not screen:IsA("ScreenGui") then
+		if not self._teleportOverlayShellWarned then
+			self._teleportOverlayShellWarned = true
+			warn("[UISystem] Missing authored TeleportScreen ScreenGui; check StarterGui shell contract.")
+		end
+		return nil, nil
 	end
 
 	local overlay = screen:FindFirstChild(TELEPORT_OVERLAY_FRAME_NAME)
-	if overlay and not overlay:IsA("Frame") then
-		overlay:Destroy()
-		overlay = nil
-	end
-	if not overlay then
-		overlay = Instance.new("Frame")
-		overlay.Name = TELEPORT_OVERLAY_FRAME_NAME
-		overlay.Size = UDim2.fromScale(1, 1)
-		overlay.BorderSizePixel = 0
-		overlay.BackgroundColor3 = Color3.new(0, 0, 0)
-		overlay.BackgroundTransparency = 0
-		overlay.Active = false
-		overlay.Selectable = false
-		overlay.Parent = screen
+	if not overlay or not overlay:IsA("Frame") then
+		if not self._teleportOverlayShellWarned then
+			self._teleportOverlayShellWarned = true
+			warn("[UISystem] TeleportScreen is missing LoadingOverlay frame; preserve canonical widget names.")
+		end
+		return nil, nil
 	end
 
 	return screen, overlay
@@ -13128,12 +15708,37 @@ function UISystem:_showTeleportOverlay(durationSeconds, options)
 	end)
 end
 
+function UISystem:_setLoadingScreenChromeVisible(screen, visible)
+	if not screen or not screen:IsA("ScreenGui") then
+		return
+	end
+
+	local bg = screen:FindFirstChild("Background")
+	if not bg or not bg:IsA("Frame") then
+		return
+	end
+
+	for _, name in ipairs({
+		"TitleLabel",
+		"StatusLabel",
+		"MapNameLabel",
+		"TipLabel",
+		"ProgressTrack",
+		"FooterLabel",
+	}) do
+		local child = bg:FindFirstChild(name)
+		if child and child:IsA("GuiObject") then
+			child.Visible = visible == true
+		end
+	end
+end
+
 function UISystem:_setLoadingScreenContent(titleText, payload, progress, footerText)
 	local screen = self:_ensureLoadingScreen()
 	if not screen then
 		return
 	end
-	if self._matchPhase == MATCH_PHASE.PREPARING and self:_hasWorldPreparationStaging() then
+	if self._matchPhase == MATCH_PHASE.PREPARING and self:_hasWorldPreparationStaging() and not self:_isPreTeleportLoadingActive() then
 		screen.Enabled = false
 		return
 	end
@@ -13142,6 +15747,12 @@ function UISystem:_setLoadingScreenContent(titleText, payload, progress, footerT
 	if not bg or not bg:IsA("Frame") then
 		return
 	end
+	if self._preTeleportLoadingHideText == true then
+		self:_setLoadingScreenChromeVisible(screen, false)
+		return
+	end
+
+	self:_setLoadingScreenChromeVisible(screen, true)
 
 	local title = bg:FindFirstChild("TitleLabel")
 	local status = bg:FindFirstChild("StatusLabel")
@@ -13182,7 +15793,7 @@ function UISystem:_startLoadingScreenLoop(payload)
 	if not screen then
 		return
 	end
-	if self._matchPhase == MATCH_PHASE.PREPARING and self:_hasWorldPreparationStaging() then
+	if self._matchPhase == MATCH_PHASE.PREPARING and self:_hasWorldPreparationStaging() and not self:_isPreTeleportLoadingActive() then
 		self._loadingLoopRunning = false
 		screen.Enabled = false
 		return
@@ -13216,6 +15827,8 @@ function UISystem:_stopLoadingScreenLoop(showCompletionMessage)
 	if not screen then
 		return
 	end
+	self._preTeleportLoadingHideText = false
+	self:_setLoadingScreenChromeVisible(screen, true)
 	if showCompletionMessage == true and screen.Enabled then
 		self:_setLoadingScreenContent("Memulai investigasi...", self._phasePayload, 1, "Selesai dimuat.")
 		task.wait(0.12)
@@ -13289,7 +15902,8 @@ function UISystem:_renderPhase(phase, payload)
 			hud.Enabled = false
 		end
 		if loadingUI and loadingUI:IsA("ScreenGui") then
-			if (type(payload) == "table" and payload.preparationWorldBoard == true) or self:_hasWorldPreparationStaging() then
+			local usePreTeleportLoading = self:_isPreTeleportLoadingActive()
+			if ((type(payload) == "table" and payload.preparationWorldBoard == true) or self:_hasWorldPreparationStaging()) and not usePreTeleportLoading then
 				self:_stopLoadingScreenLoop(false)
 				loadingUI.Enabled = false
 				self:_hideTeleportOverlay()
@@ -13412,15 +16026,19 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 	if eventName == "MatchPreparing" then
 		self:_forceCloseAllPanelsForTeleport()
 		self._matchStartTransitionAudioArmed = true
-		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS, {
-			suppressAudio = true,
-			dedupeWindowSeconds = 4,
-		})
 		self._hasPostTeleportLoaded = false
 		self._awaitingPostTeleportFlow = true
+		self:_showPreTeleportLoadingSprite(payload, {
+			title = "Memuat lokasi...",
+			progress = 0.24,
+			holdSeconds = tonumber(payload and payload.preTeleportLoadingSeconds) or 10,
+			footer = "Loading sprite aktif sebelum teleport runtime...",
+		})
 		self:_setPhase(MATCH_PHASE.PREPARING, payload)
 	elseif eventName == "MatchStarted" then
 		self:_forceCloseAllPanelsForTeleport()
+		self._preTeleportLoadingHideText = false
+		self._preTeleportLoadingActiveUntil = 0
 		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS, {
 			suppressAudio = false,
 			forceAudio = true,
@@ -13620,655 +16238,184 @@ function UISystem:_ensureUXLayers()
 		return false
 	end
 
-	local container = playerGui:FindFirstChild("UXLayer")
-	if not container then
-		container = Instance.new("Folder")
-		container.Name = "UXLayer"
-		container.Parent = playerGui
-	end
-
 	local topLeftInset, bottomRightInset = UISupport.resolveSafeInsets(GuiService)
+	self._uxWidgets = self._uxWidgets or {}
+	self._uxWidgets.lobby = self._uxWidgets.lobby or {}
+	self._uxWidgets.match = self._uxWidgets.match or {}
 
-	local function ensureSafeLayer(parentInstance, name)
-		local layer = parentInstance:FindFirstChild(name)
-		if not layer then
-			layer = Instance.new("Frame")
-			layer.Name = name
-			layer.Visible = false
-			layer.Active = false
-			layer.Selectable = false
-			layer.ZIndex = 1
-			layer.BackgroundTransparency = 1
-			layer.Size = UDim2.fromScale(1, 1)
-			layer.Parent = parentInstance
+	local preserveAuthoredLobbyOverlayLayout = shouldPreserveAuthoredOwnerLayout("LobbyUXGui")
+	local preserveAuthoredMatchOverlayLayout = shouldPreserveAuthoredOwnerLayout("MatchUXGui")
 
-			local padding = Instance.new("UIPadding")
-			padding.Name = "SafePadding"
+	local function applySafePadding(layer)
+		local padding = UISystem._getDirectChildOfClass(layer, "SafePadding", "UIPadding")
+		if padding then
 			padding.PaddingTop = UDim.new(0, topLeftInset.Y)
 			padding.PaddingLeft = UDim.new(0, topLeftInset.X)
 			padding.PaddingBottom = UDim.new(0, bottomRightInset.Y)
 			padding.PaddingRight = UDim.new(0, bottomRightInset.X)
-			padding.Parent = layer
 		end
-		return layer
+		return padding
 	end
 
-	local lobbyUXGui = container:FindFirstChild("LobbyUXGui")
-	if not lobbyUXGui then
-		lobbyUXGui = Instance.new("ScreenGui")
-		lobbyUXGui.Name = "LobbyUXGui"
-		lobbyUXGui.ResetOnSpawn = false
-		lobbyUXGui.DisplayOrder = 1
-		lobbyUXGui.IgnoreGuiInset = false
-		lobbyUXGui.Enabled = false
-		lobbyUXGui.Parent = container
-	end
-
-	local matchUXGui = container:FindFirstChild("MatchUXGui")
-	if not matchUXGui then
-		matchUXGui = Instance.new("ScreenGui")
-		matchUXGui.Name = "MatchUXGui"
-		matchUXGui.ResetOnSpawn = false
-		matchUXGui.DisplayOrder = 1
-		matchUXGui.IgnoreGuiInset = false
-		matchUXGui.Enabled = false
-		matchUXGui.Parent = container
-	end
-
-	local lobbyLayer = ensureSafeLayer(lobbyUXGui, "LobbyUXLayer")
-	local matchLayer = ensureSafeLayer(matchUXGui, "MatchUXLayer")
-
-	local lobbyFeedback = lobbyLayer:FindFirstChild("FeedbackLabel")
-	if not lobbyFeedback then
-		lobbyFeedback = Instance.new("TextLabel")
-		lobbyFeedback.Name = "FeedbackLabel"
-		lobbyFeedback.Visible = false
-		lobbyFeedback.Active = false
-		lobbyFeedback.Selectable = false
-		lobbyFeedback.ZIndex = 1
-		lobbyFeedback.BackgroundTransparency = 1
-		lobbyFeedback.AnchorPoint = Vector2.new(0.5, 0)
-		lobbyFeedback.Position = UDim2.fromScale(0.5, 0.06)
-		lobbyFeedback.Size = UDim2.new(0.9, 0, 0, 60)
-		lobbyFeedback.Font = Enum.Font.Gotham
-		lobbyFeedback.TextColor3 = Color3.fromRGB(240, 244, 248)
-		lobbyFeedback.TextWrapped = true
-		lobbyFeedback.Text = "Lobby siap."
-		lobbyFeedback.Parent = lobbyLayer
-	end
-
-	local lobbyTrainingFrame = lobbyLayer:FindFirstChild("TrainingFrame")
-	if not lobbyTrainingFrame then
-		lobbyTrainingFrame = Instance.new("Frame")
-		lobbyTrainingFrame.Name = "TrainingFrame"
-		lobbyTrainingFrame.Visible = false
-		lobbyTrainingFrame.Active = false
-		lobbyTrainingFrame.Selectable = false
-		lobbyTrainingFrame.ZIndex = 8
-		lobbyTrainingFrame.AnchorPoint = Vector2.new(0.5, 0)
-		lobbyTrainingFrame.Position = UDim2.fromScale(0.5, 0.13)
-		lobbyTrainingFrame.Size = UDim2.fromOffset(540, 178)
-		lobbyTrainingFrame.BackgroundColor3 = Color3.fromRGB(18, 26, 36)
-		lobbyTrainingFrame.BackgroundTransparency = 0.08
-		lobbyTrainingFrame.BorderSizePixel = 0
-		lobbyTrainingFrame.Parent = lobbyLayer
-
-		local frameCorner = Instance.new("UICorner")
-		frameCorner.CornerRadius = UDim.new(0, 14)
-		frameCorner.Parent = lobbyTrainingFrame
-
-		local frameStroke = Instance.new("UIStroke")
-		frameStroke.Name = "TrainingStroke"
-		frameStroke.Thickness = 1.25
-		frameStroke.Transparency = 0.18
-		frameStroke.Color = Color3.fromRGB(96, 144, 210)
-		frameStroke.Parent = lobbyTrainingFrame
-
-		local framePadding = Instance.new("UIPadding")
-		framePadding.PaddingTop = UDim.new(0, 10)
-		framePadding.PaddingBottom = UDim.new(0, 10)
-		framePadding.PaddingLeft = UDim.new(0, 14)
-		framePadding.PaddingRight = UDim.new(0, 14)
-		framePadding.Parent = lobbyTrainingFrame
-	end
-
-	local lobbyTrainingBadge = lobbyTrainingFrame:FindFirstChild("TrainingBadge")
-	if not lobbyTrainingBadge then
-		lobbyTrainingBadge = Instance.new("TextLabel")
-		lobbyTrainingBadge.Name = "TrainingBadge"
-		lobbyTrainingBadge.Position = UDim2.fromOffset(0, 0)
-		lobbyTrainingBadge.Size = UDim2.fromOffset(132, 22)
-		lobbyTrainingBadge.BackgroundColor3 = Color3.fromRGB(82, 116, 168)
-		lobbyTrainingBadge.TextColor3 = Color3.fromRGB(246, 248, 250)
-		lobbyTrainingBadge.Font = Enum.Font.GothamBlack
-		lobbyTrainingBadge.TextSize = 11
-		lobbyTrainingBadge.ZIndex = 9
-		lobbyTrainingBadge.Text = "EVIDENCE TRAINING"
-		lobbyTrainingBadge.Parent = lobbyTrainingFrame
-
-		local badgeCorner = Instance.new("UICorner")
-		badgeCorner.CornerRadius = UDim.new(1, 0)
-		badgeCorner.Parent = lobbyTrainingBadge
-	end
-
-	local lobbyTrainingTitle = lobbyTrainingFrame:FindFirstChild("TrainingTitle")
-	if not lobbyTrainingTitle then
-		lobbyTrainingTitle = Instance.new("TextLabel")
-		lobbyTrainingTitle.Name = "TrainingTitle"
-		lobbyTrainingTitle.Position = UDim2.fromOffset(0, 28)
-		lobbyTrainingTitle.Size = UDim2.new(1, -154, 0, 22)
-		lobbyTrainingTitle.BackgroundTransparency = 1
-		lobbyTrainingTitle.Font = Enum.Font.GothamBold
-		lobbyTrainingTitle.TextSize = 18
-		lobbyTrainingTitle.TextColor3 = Color3.fromRGB(240, 244, 248)
-		lobbyTrainingTitle.TextXAlignment = Enum.TextXAlignment.Left
-		lobbyTrainingTitle.ZIndex = 9
-		lobbyTrainingTitle.Text = "Ghost training belum aktif."
-		lobbyTrainingTitle.Parent = lobbyTrainingFrame
-	end
-
-	local lobbyTrainingPreview = lobbyTrainingFrame:FindFirstChild("TrainingPreview")
-	if not lobbyTrainingPreview then
-		lobbyTrainingPreview = Instance.new("ViewportFrame")
-		lobbyTrainingPreview.Name = "TrainingPreview"
-		lobbyTrainingPreview.AnchorPoint = Vector2.new(1, 0)
-		lobbyTrainingPreview.Position = UDim2.new(1, 0, 0, 28)
-		lobbyTrainingPreview.Size = UDim2.fromOffset(108, 78)
-		lobbyTrainingPreview.BackgroundColor3 = Color3.fromRGB(18, 24, 34)
-		lobbyTrainingPreview.BackgroundTransparency = 0.04
-		lobbyTrainingPreview.BorderSizePixel = 0
-		lobbyTrainingPreview.ZIndex = 9
-		lobbyTrainingPreview.Parent = lobbyTrainingFrame
-
-		local previewCorner = Instance.new("UICorner")
-		previewCorner.CornerRadius = UDim.new(0, 10)
-		previewCorner.Parent = lobbyTrainingPreview
-
-		local previewStroke = Instance.new("UIStroke")
-		previewStroke.Name = "PreviewStroke"
-		previewStroke.Thickness = 1
-		previewStroke.Transparency = 0.18
-		previewStroke.Color = Color3.fromRGB(108, 154, 220)
-		previewStroke.Parent = lobbyTrainingPreview
-	end
-
-	local lobbyTrainingAggro = lobbyTrainingFrame:FindFirstChild("AggroLabel")
-	if not lobbyTrainingAggro then
-		lobbyTrainingAggro = Instance.new("TextLabel")
-		lobbyTrainingAggro.Name = "AggroLabel"
-		lobbyTrainingAggro.AnchorPoint = Vector2.new(1, 0)
-		lobbyTrainingAggro.Position = UDim2.new(1, -6, 0, 2)
-		lobbyTrainingAggro.Size = UDim2.fromOffset(118, 22)
-		lobbyTrainingAggro.BackgroundTransparency = 1
-		lobbyTrainingAggro.Font = Enum.Font.GothamBold
-		lobbyTrainingAggro.TextSize = 14
-		lobbyTrainingAggro.TextColor3 = Color3.fromRGB(255, 214, 176)
-		lobbyTrainingAggro.TextXAlignment = Enum.TextXAlignment.Right
-		lobbyTrainingAggro.ZIndex = 9
-		lobbyTrainingAggro.Text = "AGGRO 0%"
-		lobbyTrainingAggro.Parent = lobbyTrainingFrame
-	end
-
-	local lobbyTrainingEvidence = lobbyTrainingFrame:FindFirstChild("EvidenceLabel")
-	if not lobbyTrainingEvidence then
-		lobbyTrainingEvidence = Instance.new("TextLabel")
-		lobbyTrainingEvidence.Name = "EvidenceLabel"
-		lobbyTrainingEvidence.Position = UDim2.fromOffset(0, 54)
-		lobbyTrainingEvidence.Size = UDim2.new(1, -154, 0, 22)
-		lobbyTrainingEvidence.BackgroundTransparency = 1
-		lobbyTrainingEvidence.Font = Enum.Font.GothamSemibold
-		lobbyTrainingEvidence.TextSize = 13
-		lobbyTrainingEvidence.TextColor3 = Color3.fromRGB(214, 224, 236)
-		lobbyTrainingEvidence.TextXAlignment = Enum.TextXAlignment.Left
-		lobbyTrainingEvidence.ZIndex = 9
-		lobbyTrainingEvidence.Text = "Evidence: -"
-		lobbyTrainingEvidence.Parent = lobbyTrainingFrame
-	end
-
-	local lobbyTrainingBar = lobbyTrainingFrame:FindFirstChild("AggroBar")
-	if not lobbyTrainingBar then
-		lobbyTrainingBar = Instance.new("Frame")
-		lobbyTrainingBar.Name = "AggroBar"
-		lobbyTrainingBar.Position = UDim2.fromOffset(0, 82)
-		lobbyTrainingBar.Size = UDim2.new(1, -154, 0, 10)
-		lobbyTrainingBar.BackgroundColor3 = Color3.fromRGB(26, 34, 46)
-		lobbyTrainingBar.BackgroundTransparency = 0.08
-		lobbyTrainingBar.BorderSizePixel = 0
-		lobbyTrainingBar.ZIndex = 9
-		lobbyTrainingBar.Parent = lobbyTrainingFrame
-
-		local barCorner = Instance.new("UICorner")
-		barCorner.CornerRadius = UDim.new(1, 0)
-		barCorner.Parent = lobbyTrainingBar
-
-		local barFill = Instance.new("Frame")
-		barFill.Name = "AggroFill"
-		barFill.Size = UDim2.new(0, 0, 1, 0)
-		barFill.BackgroundColor3 = Color3.fromRGB(118, 176, 244)
-		barFill.BorderSizePixel = 0
-		barFill.ZIndex = 10
-		barFill.Parent = lobbyTrainingBar
-
-		local fillCorner = Instance.new("UICorner")
-		fillCorner.CornerRadius = UDim.new(1, 0)
-		fillCorner.Parent = barFill
-	end
-
-	local lobbyTrainingHint = lobbyTrainingFrame:FindFirstChild("HintLabel")
-	if not lobbyTrainingHint then
-		lobbyTrainingHint = Instance.new("TextLabel")
-		lobbyTrainingHint.Name = "HintLabel"
-		lobbyTrainingHint.Position = UDim2.fromOffset(0, 98)
-		lobbyTrainingHint.Size = UDim2.new(1, -154, 0, 28)
-		lobbyTrainingHint.BackgroundTransparency = 1
-		lobbyTrainingHint.Font = Enum.Font.Gotham
-		lobbyTrainingHint.TextSize = 12
-		lobbyTrainingHint.TextColor3 = Color3.fromRGB(178, 192, 210)
-		lobbyTrainingHint.TextXAlignment = Enum.TextXAlignment.Left
-		lobbyTrainingHint.TextWrapped = true
-		lobbyTrainingHint.ZIndex = 9
-		lobbyTrainingHint.Text = "Gunakan meja tools untuk membaca evidence ghost latihan."
-		lobbyTrainingHint.Parent = lobbyTrainingFrame
-	end
-
-	local lobbyTrainingSupportStrip = lobbyTrainingFrame:FindFirstChild("SupportStrip")
-	if not lobbyTrainingSupportStrip then
-		lobbyTrainingSupportStrip = Instance.new("Frame")
-		lobbyTrainingSupportStrip.Name = "SupportStrip"
-		lobbyTrainingSupportStrip.BackgroundTransparency = 1
-		lobbyTrainingSupportStrip.Position = UDim2.fromOffset(0, 132)
-		lobbyTrainingSupportStrip.Size = UDim2.fromOffset(420, 42)
-		lobbyTrainingSupportStrip.ZIndex = 9
-		lobbyTrainingSupportStrip.Parent = lobbyTrainingFrame
-
-		local supportLayout = Instance.new("UIListLayout")
-		supportLayout.Name = "SupportLayout"
-		supportLayout.FillDirection = Enum.FillDirection.Horizontal
-		supportLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-		supportLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-		supportLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		supportLayout.Padding = UDim.new(0, 8)
-		supportLayout.Parent = lobbyTrainingSupportStrip
-	end
-
-	local lobbyTrainingSupportCards = {
-		Garam = ensureLobbyTrainingSupportCard(lobbyTrainingSupportStrip, "Garam"),
-		Salib = ensureLobbyTrainingSupportCard(lobbyTrainingSupportStrip, "Salib"),
-		Dupa = ensureLobbyTrainingSupportCard(lobbyTrainingSupportStrip, "Dupa"),
-	}
-
-	local playButton = lobbyLayer:FindFirstChild("PlayButton")
-	if not playButton then
-		playButton = Instance.new("TextButton")
-		playButton.Name = "PlayButton"
-		playButton.Visible = false
-		playButton.Active = false
-		playButton.Selectable = false
-		playButton.ZIndex = 1
-		playButton.AnchorPoint = Vector2.new(0.5, 1)
-		playButton.Position = UDim2.fromScale(0.5, 0.92)
-		playButton.BackgroundColor3 = Color3.fromRGB(45, 98, 72)
-		playButton.TextColor3 = Color3.fromRGB(245, 245, 245)
-		playButton.Font = Enum.Font.GothamBold
-		playButton.Text = "PLAY"
-		playButton.AutoButtonColor = true
-		playButton.Parent = lobbyLayer
-		self:_setSelectableStyle(playButton)
-
-	end
-
-	local matchMessage = matchLayer:FindFirstChild("StateMessage")
-	if not matchMessage then
-		matchMessage = Instance.new("TextLabel")
-		matchMessage.Name = "StateMessage"
-		matchMessage.BackgroundTransparency = 1
-		matchMessage.Active = false
-		matchMessage.Selectable = false
-		matchMessage.ZIndex = 1
-		matchMessage.AnchorPoint = Vector2.new(0.5, 0.5)
-		matchMessage.Position = UDim2.fromScale(0.5, 0.5)
-		matchMessage.Size = UDim2.new(0.8, 0, 0, 64)
-		matchMessage.Font = Enum.Font.GothamBold
-		matchMessage.TextColor3 = Color3.fromRGB(245, 245, 245)
-		matchMessage.TextScaled = false
-		matchMessage.Visible = false
-		matchMessage.Parent = matchLayer
-	end
-
-	local objective = matchLayer:FindFirstChild("ObjectiveLabel")
-	if not objective then
-		objective = Instance.new("TextLabel")
-		objective.Name = "ObjectiveLabel"
-		objective.Active = false
-		objective.Selectable = false
-		objective.ZIndex = 2
-		objective.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
-		objective.BackgroundTransparency = 0.2
-		objective.Position = UDim2.fromOffset(24, 24)
-		objective.Size = UDim2.fromOffset(360, 54)
-		objective.Font = Enum.Font.GothamSemibold
-		objective.TextColor3 = Color3.fromRGB(235, 240, 245)
-		objective.TextXAlignment = Enum.TextXAlignment.Left
-		objective.TextWrapped = true
-		objective.Visible = false
-		objective.Parent = matchLayer
-	end
-
-	local huntStatusBadge = matchLayer:FindFirstChild("HuntStatusBadge")
-	if not huntStatusBadge then
-		huntStatusBadge = Instance.new("TextLabel")
-		huntStatusBadge.Name = "HuntStatusBadge"
-		huntStatusBadge.Active = false
-		huntStatusBadge.Selectable = false
-		huntStatusBadge.ZIndex = 3
-		huntStatusBadge.BackgroundColor3 = Color3.fromRGB(164, 62, 62)
-		huntStatusBadge.BackgroundTransparency = 0.1
-		huntStatusBadge.Position = UDim2.fromOffset(392, 24)
-		huntStatusBadge.Size = UDim2.fromOffset(132, 26)
-		huntStatusBadge.Font = Enum.Font.GothamBold
-		huntStatusBadge.Text = "HUNT"
-		huntStatusBadge.TextColor3 = Color3.fromRGB(248, 240, 232)
-		huntStatusBadge.TextSize = 13
-		huntStatusBadge.Visible = false
-		huntStatusBadge.Parent = matchLayer
-
-		local huntStatusCorner = Instance.new("UICorner")
-		huntStatusCorner.CornerRadius = UDim.new(0, 999)
-		huntStatusCorner.Parent = huntStatusBadge
-	end
-
-	local huntAssistLabel = matchLayer:FindFirstChild("HuntAssistLabel")
-	if not huntAssistLabel then
-		huntAssistLabel = Instance.new("TextLabel")
-		huntAssistLabel.Name = "HuntAssistLabel"
-		huntAssistLabel.Active = false
-		huntAssistLabel.Selectable = false
-		huntAssistLabel.ZIndex = 2
-		huntAssistLabel.BackgroundColor3 = Color3.fromRGB(16, 20, 28)
-		huntAssistLabel.BackgroundTransparency = 0.16
-		huntAssistLabel.Position = UDim2.fromOffset(24, 88)
-		huntAssistLabel.Size = UDim2.fromOffset(500, 46)
-		huntAssistLabel.Font = Enum.Font.GothamSemibold
-		huntAssistLabel.Text = ""
-		huntAssistLabel.TextColor3 = Color3.fromRGB(236, 240, 246)
-		huntAssistLabel.TextSize = 14
-		huntAssistLabel.TextWrapped = true
-		huntAssistLabel.TextXAlignment = Enum.TextXAlignment.Left
-		huntAssistLabel.TextYAlignment = Enum.TextYAlignment.Center
-		huntAssistLabel.Visible = false
-		huntAssistLabel.Parent = matchLayer
-
-		local huntAssistCorner = Instance.new("UICorner")
-		huntAssistCorner.CornerRadius = UDim.new(0, 10)
-		huntAssistCorner.Parent = huntAssistLabel
-
-		local huntAssistStroke = Instance.new("UIStroke")
-		huntAssistStroke.Thickness = 1
-		huntAssistStroke.Color = Color3.fromRGB(78, 86, 102)
-		huntAssistStroke.Transparency = 0.26
-		huntAssistStroke.Parent = huntAssistLabel
-	end
-
-	local overlay = matchLayer:FindFirstChild("HuntOverlay")
-	if not overlay then
-		overlay = Instance.new("Frame")
-		overlay.Name = "HuntOverlay"
-		overlay.Active = false
-		overlay.Selectable = false
-		overlay.ZIndex = 1
-		overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		overlay.BackgroundTransparency = 0.6
-		overlay.Size = UDim2.fromScale(1, 1)
-		overlay.Visible = false
-		overlay.Parent = matchLayer
-	end
-
-	local results = matchLayer:FindFirstChild("ResultsPanel")
-	if not results then
-		results = Instance.new("Frame")
-		results.Name = "ResultsPanel"
-		results.Active = true
-		results.Selectable = true
-		results.ZIndex = 3
-		results.AnchorPoint = Vector2.new(0, 0)
-		results.Position = UDim2.fromScale(0, 0)
-		results.Size = UDim2.fromScale(1, 1)
-		results.BackgroundColor3 = Color3.fromRGB(8, 10, 16)
-		results.BackgroundTransparency = 0.22
-		results.Visible = false
-		results.Parent = matchLayer
-
-		local stroke = Instance.new("UIStroke")
-		stroke.Thickness = 1
-		stroke.Color = Color3.fromRGB(82, 96, 120)
-		stroke.Parent = results
-	end
-
-	local resultsCard = results:FindFirstChild("ResultsCard")
-	if not resultsCard then
-		resultsCard = Instance.new("Frame")
-		resultsCard.Name = "ResultsCard"
-		resultsCard.AnchorPoint = Vector2.new(0.5, 0.5)
-		resultsCard.Position = UDim2.fromScale(0.5, 0.5)
-		resultsCard.Size = UDim2.new(0.74, 0, 0, 438)
-		resultsCard.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
-		resultsCard.BackgroundTransparency = 0.02
-		resultsCard.BorderSizePixel = 0
-		resultsCard.Parent = results
-
-		local cardCorner = Instance.new("UICorner")
-		cardCorner.CornerRadius = UDim.new(0, 16)
-		cardCorner.Parent = resultsCard
-
-		local cardStroke = Instance.new("UIStroke")
-		cardStroke.Thickness = 1
-		cardStroke.Color = Color3.fromRGB(82, 96, 120)
-		cardStroke.Parent = resultsCard
-	end
-
-	local resultsTitle = resultsCard:FindFirstChild("ResultsTitle")
-	if not resultsTitle then
-		resultsTitle = Instance.new("TextLabel")
-		resultsTitle.Name = "ResultsTitle"
-		resultsTitle.Position = UDim2.fromOffset(20, 18)
-		resultsTitle.Size = UDim2.new(1, -168, 0, 36)
-		resultsTitle.BackgroundTransparency = 1
-		resultsTitle.Text = "HASIL INVESTIGASI"
-		resultsTitle.TextColor3 = Color3.fromRGB(245, 245, 245)
-		resultsTitle.TextXAlignment = Enum.TextXAlignment.Left
-		resultsTitle.Font = Enum.Font.GothamBlack
-		resultsTitle.TextSize = 28
-		resultsTitle.Parent = resultsCard
-	end
-
-	local resultsStatus = resultsCard:FindFirstChild("ResultsStatus")
-	if not resultsStatus then
-		resultsStatus = Instance.new("TextLabel")
-		resultsStatus.Name = "ResultsStatus"
-		resultsStatus.Position = UDim2.fromOffset(20, 58)
-		resultsStatus.Size = UDim2.fromOffset(132, 26)
-		resultsStatus.BackgroundColor3 = Color3.fromRGB(50, 104, 72)
-		resultsStatus.TextColor3 = Color3.fromRGB(245, 245, 245)
-		resultsStatus.Text = "MISSION COMPLETE"
-		resultsStatus.Font = Enum.Font.GothamBold
-		resultsStatus.TextSize = 12
-		resultsStatus.Parent = resultsCard
-
-		local statusCorner = Instance.new("UICorner")
-		statusCorner.CornerRadius = UDim.new(0, 999)
-		statusCorner.Parent = resultsStatus
-	end
-
-	local resultsClose = resultsCard:FindFirstChild("ResultsCloseButton")
-	if not resultsClose then
-		resultsClose = Instance.new("TextButton")
-		resultsClose.Name = "ResultsCloseButton"
-		resultsClose.AnchorPoint = Vector2.new(1, 0)
-		resultsClose.Position = UDim2.new(1, -20, 0, 18)
-		resultsClose.Size = UDim2.fromOffset(112, 30)
-		styleButton(resultsClose, "TUTUP HASIL")
-		resultsClose.BackgroundColor3 = Color3.fromRGB(48, 60, 78)
-		resultsClose.Parent = resultsCard
-		self:_setSelectableStyle(resultsClose)
-	end
-
-	local resultsSubtitle = resultsCard:FindFirstChild("ResultsSubtitle")
-	if not resultsSubtitle then
-		resultsSubtitle = Instance.new("TextLabel")
-		resultsSubtitle.Name = "ResultsSubtitle"
-		resultsSubtitle.Position = UDim2.fromOffset(164, 58)
-		resultsSubtitle.Size = UDim2.new(1, -184, 0, 26)
-		resultsSubtitle.BackgroundTransparency = 1
-		resultsSubtitle.Text = "Ghost: Unknown"
-		resultsSubtitle.TextColor3 = Color3.fromRGB(196, 210, 228)
-		resultsSubtitle.TextXAlignment = Enum.TextXAlignment.Left
-		resultsSubtitle.Font = Enum.Font.GothamSemibold
-		resultsSubtitle.TextSize = 16
-		resultsSubtitle.Parent = resultsCard
-	end
-
-	local resultsSummary = resultsCard:FindFirstChild("ResultsSummary")
-	if resultsSummary and not resultsSummary:IsA("ScrollingFrame") then
-		resultsSummary:Destroy()
-		resultsSummary = nil
-	end
-	if not resultsSummary then
-		resultsSummary = Instance.new("ScrollingFrame")
-		resultsSummary.Name = "ResultsSummary"
-		resultsSummary.Position = UDim2.fromOffset(20, 96)
-		resultsSummary.Size = UDim2.new(1, -40, 0, 244)
-		resultsSummary.BackgroundColor3 = Color3.fromRGB(20, 27, 36)
-		resultsSummary.BackgroundTransparency = 0.06
-		resultsSummary.BorderSizePixel = 0
-		resultsSummary.ScrollBarThickness = 5
-		resultsSummary.AutomaticCanvasSize = Enum.AutomaticSize.Y
-		resultsSummary.CanvasSize = UDim2.fromOffset(0, 0)
-		resultsSummary.ScrollingDirection = Enum.ScrollingDirection.Y
-		resultsSummary.ElasticBehavior = Enum.ElasticBehavior.Never
-		resultsSummary.ClipsDescendants = true
-		resultsSummary.Parent = resultsCard
-
-		local summaryCorner = Instance.new("UICorner")
-		summaryCorner.CornerRadius = UDim.new(0, 10)
-		summaryCorner.Parent = resultsSummary
-
-		local summaryPadding = Instance.new("UIPadding")
-		summaryPadding.PaddingTop = UDim.new(0, 10)
-		summaryPadding.PaddingBottom = UDim.new(0, 10)
-		summaryPadding.PaddingLeft = UDim.new(0, 10)
-		summaryPadding.PaddingRight = UDim.new(0, 10)
-		summaryPadding.Parent = resultsSummary
-
-		local summaryLayout = Instance.new("UIListLayout")
-		summaryLayout.FillDirection = Enum.FillDirection.Vertical
-		summaryLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		summaryLayout.Padding = UDim.new(0, 6)
-		summaryLayout.Parent = resultsSummary
-	end
-
-	local resultsFooter = resultsCard:FindFirstChild("ResultsFooter")
-	if not resultsFooter then
-		resultsFooter = Instance.new("TextLabel")
-		resultsFooter.Name = "ResultsFooter"
-		resultsFooter.Position = UDim2.fromOffset(20, 348)
-		resultsFooter.Size = UDim2.new(1, -40, 0, 40)
-		resultsFooter.BackgroundTransparency = 1
-		resultsFooter.Text = "Ringkasan ini dibuat untuk test E2E. Tutup jika perlu melihat area sekitar."
-		resultsFooter.TextColor3 = Color3.fromRGB(168, 182, 202)
-		resultsFooter.TextWrapped = true
-		resultsFooter.TextXAlignment = Enum.TextXAlignment.Left
-		resultsFooter.TextYAlignment = Enum.TextYAlignment.Top
-		resultsFooter.Font = Enum.Font.Gotham
-		resultsFooter.TextSize = 13
-		resultsFooter.Parent = resultsCard
-	end
-
-	local resultsLockHint = resultsCard:FindFirstChild("ResultsLockHint")
-	if not resultsLockHint then
-		resultsLockHint = Instance.new("TextLabel")
-		resultsLockHint.Name = "ResultsLockHint"
-		resultsLockHint.AnchorPoint = Vector2.new(0.5, 1)
-		resultsLockHint.Position = UDim2.new(0.5, 0, 1, -18)
-		resultsLockHint.Size = UDim2.new(1, -40, 0, 20)
-		resultsLockHint.BackgroundTransparency = 1
-		resultsLockHint.Text = "Hasil match dikunci beberapa detik..."
-		resultsLockHint.TextColor3 = Color3.fromRGB(196, 210, 228)
-		resultsLockHint.Font = Enum.Font.GothamSemibold
-		resultsLockHint.TextSize = 13
-		resultsLockHint.Parent = resultsCard
-	end
-
-	local function ensureResultSummaryValue(rowName, labelText)
-		local row = resultsSummary:FindFirstChild(rowName)
-		if row and row:IsA("Frame") then
-			local value = row:FindFirstChild("Value")
-			if value and value:IsA("TextLabel") then
-				return value
+	if preserveAuthoredLobbyOverlayLayout or preserveAuthoredMatchOverlayLayout then
+		local missing = {}
+		local function requirePathOfClass(parent, path, className, label)
+			local child = UISystem._getChildByPathOfClass(parent, path, className)
+			if not child then
+				missing[#missing + 1] = label or path
 			end
+			return child
 		end
-		return createSummaryRow(resultsSummary, rowName, labelText)
+
+		local lobbyUXGui = preserveAuthoredLobbyOverlayLayout and (UISystem._getDirectChildOfClass(playerGui, "LobbyUXGui", "ScreenGui")
+			or playerGui:WaitForChild("LobbyUXGui", 5)) or nil
+		local matchUXGui = preserveAuthoredMatchOverlayLayout and (UISystem._getDirectChildOfClass(playerGui, "MatchUXGui", "ScreenGui")
+			or playerGui:WaitForChild("MatchUXGui", 5)) or nil
+
+		if preserveAuthoredLobbyOverlayLayout and not (lobbyUXGui and lobbyUXGui:IsA("ScreenGui")) then
+			missing[#missing + 1] = "LobbyUXGui"
+			lobbyUXGui = nil
+		end
+		if preserveAuthoredMatchOverlayLayout and not (matchUXGui and matchUXGui:IsA("ScreenGui")) then
+			missing[#missing + 1] = "MatchUXGui"
+			matchUXGui = nil
+		end
+
+		local lobbyLayer = lobbyUXGui and requirePathOfClass(lobbyUXGui, "LobbyUXLayer", "Frame") or nil
+		local matchLayer = matchUXGui and requirePathOfClass(matchUXGui, "MatchUXLayer", "Frame") or nil
+		if lobbyLayer then
+			applySafePadding(lobbyLayer)
+		end
+		if matchLayer then
+			applySafePadding(matchLayer)
+		end
+
+		local lobbyFeedback = lobbyLayer and requirePathOfClass(lobbyLayer, "FeedbackLabel", "TextLabel") or nil
+		local lobbyTrainingFrame = lobbyLayer and requirePathOfClass(lobbyLayer, "TrainingFrame", "Frame") or nil
+		local lobbyTrainingBadge = lobbyTrainingFrame and requirePathOfClass(lobbyTrainingFrame, "TrainingBadge", "TextLabel") or nil
+		local lobbyTrainingTitle = lobbyTrainingFrame and requirePathOfClass(lobbyTrainingFrame, "TrainingTitle", "TextLabel") or nil
+		local lobbyTrainingPreview = lobbyTrainingFrame and requirePathOfClass(lobbyTrainingFrame, "TrainingPreview", "ViewportFrame") or nil
+		local lobbyTrainingAggro = lobbyTrainingFrame and requirePathOfClass(lobbyTrainingFrame, "AggroLabel", "TextLabel") or nil
+		local lobbyTrainingEvidence = lobbyTrainingFrame and requirePathOfClass(lobbyTrainingFrame, "EvidenceLabel", "TextLabel") or nil
+		local lobbyTrainingBar = lobbyTrainingFrame and requirePathOfClass(lobbyTrainingFrame, "AggroBar", "Frame") or nil
+		local lobbyTrainingBarFill = lobbyTrainingBar and requirePathOfClass(lobbyTrainingBar, "AggroFill", "Frame") or nil
+		local lobbyTrainingHint = lobbyTrainingFrame and requirePathOfClass(lobbyTrainingFrame, "HintLabel", "TextLabel") or nil
+		local lobbyTrainingSupportStrip = lobbyTrainingFrame and requirePathOfClass(lobbyTrainingFrame, "SupportStrip", "Frame") or nil
+		local lobbyTrainingSupportLayout = lobbyTrainingSupportStrip and requirePathOfClass(lobbyTrainingSupportStrip, "SupportLayout", "UIListLayout") or nil
+		local playButton = lobbyLayer and requirePathOfClass(lobbyLayer, "PlayButton", "TextButton") or nil
+
+		local matchMessage = matchLayer and requirePathOfClass(matchLayer, "StateMessage", "TextLabel") or nil
+		local objective = matchLayer and requirePathOfClass(matchLayer, "ObjectiveLabel", "TextLabel") or nil
+		local huntStatusBadge = matchLayer and requirePathOfClass(matchLayer, "HuntStatusBadge", "TextLabel") or nil
+		local huntAssistLabel = matchLayer and requirePathOfClass(matchLayer, "HuntAssistLabel", "TextLabel") or nil
+		local overlay = matchLayer and requirePathOfClass(matchLayer, "HuntOverlay", "Frame") or nil
+		local results = matchLayer and requirePathOfClass(matchLayer, "ResultsPanel", "Frame") or nil
+		local resultsCard = results and requirePathOfClass(results, "ResultsCard", "Frame") or nil
+		local resultsTitle = resultsCard and requirePathOfClass(resultsCard, "ResultsTitle", "TextLabel") or nil
+		local resultsStatus = resultsCard and requirePathOfClass(resultsCard, "ResultsStatus", "TextLabel") or nil
+		local resultsClose = resultsCard and requirePathOfClass(resultsCard, "ResultsCloseButton", "TextButton") or nil
+		local resultsSubtitle = resultsCard and requirePathOfClass(resultsCard, "ResultsSubtitle", "TextLabel") or nil
+		local resultsSummary = resultsCard and requirePathOfClass(resultsCard, "ResultsSummary", "ScrollingFrame") or nil
+		local resultsFooter = resultsCard and requirePathOfClass(resultsCard, "ResultsFooter", "TextLabel") or nil
+		local resultsLockHint = resultsCard and requirePathOfClass(resultsCard, "ResultsLockHint", "TextLabel") or nil
+
+		if #missing > 0 then
+			warn("[UISystem] Authored UX contract missing: " .. table.concat(missing, ", "))
+			return false
+		end
+
+		local _ = lobbyTrainingSupportLayout
+		local lobbyTrainingSupportCards = {
+			Garam = ensureLobbyTrainingSupportCard(lobbyTrainingSupportStrip, "Garam"),
+			Salib = ensureLobbyTrainingSupportCard(lobbyTrainingSupportStrip, "Salib"),
+			Dupa = ensureLobbyTrainingSupportCard(lobbyTrainingSupportStrip, "Dupa"),
+		}
+
+		if playButton then
+			self:_setSelectableStyle(playButton)
+		end
+		if resultsClose then
+			self:_setSelectableStyle(resultsClose)
+		end
+
+		local function ensureResultSummaryValue(rowName, labelText)
+			local row = resultsSummary:FindFirstChild(rowName)
+			if row and row:IsA("Frame") then
+				local value = row:FindFirstChild("Value")
+				if value and value:IsA("TextLabel") then
+					return value
+				end
+			end
+			return self:_cloneSummaryValueTemplate(resultsSummary, rowName, labelText)
+		end
+
+		local resultsSummaryRows = {
+			status = ensureResultSummaryValue("StatusRow", "Status Misi"),
+			ghostType = ensureResultSummaryValue("GhostRow", "Ghost"),
+			correctGuess = ensureResultSummaryValue("GuessRow", "Tebakan"),
+			guessedGhostType = ensureResultSummaryValue("GuessedGhostRow", "Ghost Tebakan"),
+			guessedEvidence = ensureResultSummaryValue("GuessedEvidenceRow", "Checklist Tebakan"),
+			expectedEvidence = ensureResultSummaryValue("ExpectedEvidenceRow", "Evidence Asli"),
+			evidenceCollected = ensureResultSummaryValue("EvidenceRow", "Evidence"),
+			playersSurvived = ensureResultSummaryValue("SurvivedRow", "Pemain Selamat"),
+			playersDead = ensureResultSummaryValue("DeadRow", "Pemain Mati"),
+			matchDuration = ensureResultSummaryValue("DurationRow", "Durasi"),
+			currencyReward = ensureResultSummaryValue("RewardRow", "Hadiah MM / PP"),
+			xpReward = ensureResultSummaryValue("XpRow", "Hadiah XP"),
+		}
+
+		if not isRuntimeButtonBound(resultsClose) then
+			markRuntimeButtonBound(resultsClose)
+			connectButtonPress(resultsClose, function()
+				if (self._resultsCloseUnlockAt or 0) > tick() then
+					return
+				end
+				if self:_isLocalPlayerStillInMatch() then
+					self:_setMatchWindowDismissed(true)
+					return
+				end
+				self:_returnFromResultsToLobby()
+			end)
+		end
+
+		self._uxWidgets.lobby.FeedbackLabel = lobbyFeedback
+		self._uxWidgets.lobby.TrainingFrame = lobbyTrainingFrame
+		self._uxWidgets.lobby.TrainingBadge = lobbyTrainingBadge
+		self._uxWidgets.lobby.TrainingTitle = lobbyTrainingTitle
+		self._uxWidgets.lobby.TrainingPreview = lobbyTrainingPreview
+		self._uxWidgets.lobby.TrainingEvidenceLabel = lobbyTrainingEvidence
+		self._uxWidgets.lobby.TrainingAggroLabel = lobbyTrainingAggro
+		self._uxWidgets.lobby.TrainingAggroBar = lobbyTrainingBar
+		self._uxWidgets.lobby.TrainingAggroFill = lobbyTrainingBarFill
+		self._uxWidgets.lobby.TrainingHintLabel = lobbyTrainingHint
+		self._uxWidgets.lobby.TrainingSupportStrip = lobbyTrainingSupportStrip
+		self._uxWidgets.lobby.TrainingSupportCards = lobbyTrainingSupportCards
+		self._uxWidgets.lobby.PlayButton = playButton
+		self._uxWidgets.lobby.Gui = lobbyUXGui
+		self._uxWidgets.lobby.Layer = lobbyLayer
+		self._uxWidgets.match.MessageLabel = matchMessage
+		self._uxWidgets.match.ObjectiveLabel = objective
+		self._uxWidgets.match.HuntStatusBadge = huntStatusBadge
+		self._uxWidgets.match.HuntAssistLabel = huntAssistLabel
+		self._uxWidgets.match.HuntOverlay = overlay
+		self._uxWidgets.match.ResultsPanel = results
+		self._uxWidgets.match.ResultsCard = resultsCard
+		self._uxWidgets.match.ResultsTitle = resultsTitle
+		self._uxWidgets.match.ResultsStatus = resultsStatus
+		self._uxWidgets.match.ResultsSubtitle = resultsSubtitle
+		self._uxWidgets.match.ResultsSummaryRows = resultsSummaryRows
+		self._uxWidgets.match.ResultsFooter = resultsFooter
+		self._uxWidgets.match.ResultsLockHint = resultsLockHint
+		self._uxWidgets.match.ResultsCloseButton = resultsClose
+		self._uxWidgets.match.Gui = matchUXGui
+		self._uxWidgets.match.Layer = matchLayer
+
+		self:_applyDeviceSizing()
+		return true
 	end
 
-	local resultsSummaryRows = {
-		status = ensureResultSummaryValue("StatusRow", "Status Misi"),
-		ghostType = ensureResultSummaryValue("GhostRow", "Ghost"),
-		correctGuess = ensureResultSummaryValue("GuessRow", "Tebakan"),
-		evidenceCollected = ensureResultSummaryValue("EvidenceRow", "Evidence"),
-		playersSurvived = ensureResultSummaryValue("SurvivedRow", "Pemain Selamat"),
-		playersDead = ensureResultSummaryValue("DeadRow", "Pemain Mati"),
-		matchDuration = ensureResultSummaryValue("DurationRow", "Durasi"),
-		currencyReward = ensureResultSummaryValue("RewardRow", "Hadiah MM / PP"),
-		xpReward = ensureResultSummaryValue("XpRow", "Hadiah XP"),
-	}
-
-	if resultsClose:GetAttribute("Bound") ~= true then
-		resultsClose:SetAttribute("Bound", true)
-		connectButtonPress(resultsClose, function()
-			if (self._resultsCloseUnlockAt or 0) > tick() then
-				return
-			end
-			if self:_isLocalPlayerStillInMatch() then
-				self:_setMatchWindowDismissed(true)
-				return
-			end
-			self:_returnFromResultsToLobby()
-		end)
-	end
-
-	self._uxWidgets.lobby.FeedbackLabel = lobbyFeedback
-	self._uxWidgets.lobby.TrainingFrame = lobbyTrainingFrame
-	self._uxWidgets.lobby.TrainingBadge = lobbyTrainingBadge
-	self._uxWidgets.lobby.TrainingTitle = lobbyTrainingTitle
-	self._uxWidgets.lobby.TrainingPreview = lobbyTrainingPreview
-	self._uxWidgets.lobby.TrainingEvidenceLabel = lobbyTrainingEvidence
-	self._uxWidgets.lobby.TrainingAggroLabel = lobbyTrainingAggro
-	self._uxWidgets.lobby.TrainingAggroBar = lobbyTrainingBar
-	self._uxWidgets.lobby.TrainingAggroFill = lobbyTrainingBar and lobbyTrainingBar:FindFirstChild("AggroFill") or nil
-	self._uxWidgets.lobby.TrainingHintLabel = lobbyTrainingHint
-	self._uxWidgets.lobby.TrainingSupportStrip = lobbyTrainingSupportStrip
-	self._uxWidgets.lobby.TrainingSupportCards = lobbyTrainingSupportCards
-	self._uxWidgets.lobby.PlayButton = playButton
-	self._uxWidgets.lobby.Gui = lobbyUXGui
-	self._uxWidgets.lobby.Layer = lobbyLayer
-	self._uxWidgets.match.MessageLabel = matchMessage
-	self._uxWidgets.match.ObjectiveLabel = objective
-	self._uxWidgets.match.HuntStatusBadge = huntStatusBadge
-	self._uxWidgets.match.HuntAssistLabel = huntAssistLabel
-	self._uxWidgets.match.HuntOverlay = overlay
-	self._uxWidgets.match.ResultsPanel = results
-	self._uxWidgets.match.ResultsCard = resultsCard
-	self._uxWidgets.match.ResultsTitle = resultsTitle
-	self._uxWidgets.match.ResultsStatus = resultsStatus
-	self._uxWidgets.match.ResultsSubtitle = resultsSubtitle
-	self._uxWidgets.match.ResultsSummaryRows = resultsSummaryRows
-	self._uxWidgets.match.ResultsFooter = resultsFooter
-	self._uxWidgets.match.ResultsLockHint = resultsLockHint
-	self._uxWidgets.match.ResultsCloseButton = resultsClose
-	self._uxWidgets.match.Gui = matchUXGui
-	self._uxWidgets.match.Layer = matchLayer
-
-	self:_applyDeviceSizing()
-	return true
+	warn("[UISystem] Authored UX contract is required.")
+	return false
 end
 
 function UISystem:_clearMatchUX()
@@ -14383,6 +16530,7 @@ function UISystem:TransitionTo(state, payload)
 		match.ObjectiveLabel.Visible = true
 		self:_startHuntPulse()
 	elseif state == "Results" then
+		self._matchWindowDismissed = false
 		self:_startResultsCloseLock(payload)
 		self:_renderResultsPanel(payload)
 	end
@@ -14581,7 +16729,7 @@ function UISystem:_handleLobbyUXEvent(eventName, payload)
 			local toolEventName = tostring(payload and payload.toolEventName or "EvidenceToolResult")
 			local toolSuccess = payload and payload.success ~= false
 			local toolReason = payload and payload.reason or nil
-			local statusText, detailText = resolveToolFeedback(toolType, toolSuccess, toolReason, toolData, toolEventName)
+			local statusText, detailText = UISystem._resolveToolFeedback(toolType, toolSuccess, toolReason, toolData, toolEventName)
 			self:_applyFieldKitToolUpdate(toolType, toolSuccess, toolReason, toolData, toolEventName)
 
 			local journalState = self._journalState or {}
@@ -14754,1812 +16902,66 @@ function UISystem:_ensureBasicUIs()
 			gui:Destroy()
 			gui = nil
 		end
-		if not gui then
-			gui = Instance.new("ScreenGui")
-			gui.Name = guiName
-			gui.ResetOnSpawn = false
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			gui.Parent = playerGui
-		end
-		local panel = gui:FindFirstChild("MainPanel")
-		if not panel then
-			panel = Instance.new("Frame")
-			panel.Name = "MainPanel"
-			panel.AnchorPoint = Vector2.new(1, 0)
-			panel.Position = UDim2.new(1, -16, 0, 16)
-			panel.Size = UDim2.fromOffset(260, 320)
-			panel.BackgroundColor3 = UI_BRAND.bgPanel
-			panel.BorderSizePixel = 0
-			panel.Parent = gui
-
-			local corner = Instance.new("UICorner")
-			corner.CornerRadius = UDim.new(0, 10)
-			corner.Parent = panel
-
-			local title = Instance.new("TextLabel")
-			title.Name = "Title"
-			title.Position = UDim2.fromOffset(12, 10)
-			title.Size = UDim2.fromOffset(236, 22)
-			styleLabel(title, guiName, 16)
-			title.Font = Enum.Font.GothamBold
-			title.Parent = panel
-		end
-
 		if guiName == "LobbyUI" then
-			panel.AnchorPoint = Vector2.new(0, 0)
-			panel.Position = UDim2.fromOffset(16, 16)
-			panel.Size = UDim2.fromOffset(340, 368)
-			panel.BackgroundColor3 = UI_BRAND.bgCard
-			panel.BackgroundTransparency = 0.08
-
-			local title = panel:FindFirstChild("Title")
-			if title and title:IsA("TextLabel") then
-				title.Text = "LOBBY PANEL"
-				title.TextColor3 = Color3.fromRGB(238, 243, 248)
-				title.Size = UDim2.new(1, -24, 0, 24)
+			gui = gui or playerGui:FindFirstChild("LobbyUI") or playerGui:WaitForChild("LobbyUI", 5)
+			if gui and gui:IsA("ScreenGui") then
+				self:_bindAuthoredLobbyUi(gui)
+			elseif not self._lobbyUiShellWarned then
+				self._lobbyUiShellWarned = true
+				warn("[UISystem] Missing authored LobbyUI ScreenGui; check StarterGui shell contract.")
 			end
-
-				local statusBadge = panel:FindFirstChild("StatusBadge", true)
-			if not statusBadge then
-				statusBadge = Instance.new("TextLabel")
-				statusBadge.Name = "StatusBadge"
-				statusBadge.Position = UDim2.fromOffset(12, 42)
-				statusBadge.Size = UDim2.fromOffset(108, 24)
-				statusBadge.BackgroundColor3 = Color3.fromRGB(54, 116, 82)
-				statusBadge.TextColor3 = Color3.fromRGB(245, 245, 245)
-				statusBadge.Font = Enum.Font.GothamBold
-				statusBadge.TextSize = 12
-				statusBadge.Text = "LOBBY"
-				statusBadge.Parent = panel
-
-				local badgeCorner = Instance.new("UICorner")
-				badgeCorner.CornerRadius = UDim.new(0, 999)
-				badgeCorner.Parent = statusBadge
-			end
-
-				local primaryLabel = panel:FindFirstChild("PrimaryLabel", true)
-			if not primaryLabel then
-				primaryLabel = Instance.new("TextLabel")
-				primaryLabel.Name = "PrimaryLabel"
-				primaryLabel.Position = UDim2.fromOffset(12, 76)
-				primaryLabel.Size = UDim2.new(1, -24, 0, 40)
-				primaryLabel.BackgroundTransparency = 1
-				primaryLabel.Font = Enum.Font.GothamBold
-				primaryLabel.TextSize = 16
-				primaryLabel.TextColor3 = Color3.fromRGB(242, 246, 250)
-				primaryLabel.TextWrapped = true
-				primaryLabel.TextXAlignment = Enum.TextXAlignment.Left
-				primaryLabel.TextYAlignment = Enum.TextYAlignment.Top
-				primaryLabel.Text = "Buka Room Browser untuk mulai test flow lobby."
-				primaryLabel.Parent = panel
-			end
-
-				local secondaryLabel = panel:FindFirstChild("SecondaryLabel", true)
-			if not secondaryLabel then
-				secondaryLabel = Instance.new("TextLabel")
-				secondaryLabel.Name = "SecondaryLabel"
-				secondaryLabel.Position = UDim2.fromOffset(12, 120)
-				secondaryLabel.Size = UDim2.new(1, -24, 0, 32)
-				secondaryLabel.BackgroundTransparency = 1
-				secondaryLabel.Font = Enum.Font.Gotham
-				secondaryLabel.TextSize = 13
-				secondaryLabel.TextColor3 = Color3.fromRGB(182, 196, 216)
-				secondaryLabel.TextWrapped = true
-				secondaryLabel.TextXAlignment = Enum.TextXAlignment.Left
-				secondaryLabel.TextYAlignment = Enum.TextYAlignment.Top
-				secondaryLabel.Text = "Mode Classic | Map HauntedHouse | 0 room aktif"
-				secondaryLabel.Parent = panel
-			end
-
-			local panelStroke = panel:FindFirstChild("BrandStroke")
-			if not panelStroke or not panelStroke:IsA("UIStroke") then
-				panelStroke = Instance.new("UIStroke")
-				panelStroke.Name = "BrandStroke"
-				panelStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-				panelStroke.Thickness = 1
-				panelStroke.Transparency = 0.22
-				panelStroke.Color = Color3.fromRGB(82, 116, 94)
-				panelStroke.Parent = panel
-			end
-
-			local headerCard = panel:FindFirstChild("HeaderCard")
-			if not headerCard then
-				headerCard = Instance.new("Frame")
-				headerCard.Name = "HeaderCard"
-				headerCard.Position = UDim2.fromOffset(12, 42)
-				headerCard.Size = UDim2.new(1, -24, 0, 112)
-				headerCard.BackgroundColor3 = Color3.fromRGB(24, 34, 40)
-				headerCard.BackgroundTransparency = 0.04
-				headerCard.BorderSizePixel = 0
-				headerCard.Parent = panel
-
-				local headerCorner = Instance.new("UICorner")
-				headerCorner.CornerRadius = UDim.new(0, 12)
-				headerCorner.Parent = headerCard
-
-				local headerStroke = Instance.new("UIStroke")
-				headerStroke.Name = "HeaderStroke"
-				headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-				headerStroke.Thickness = 1
-				headerStroke.Transparency = 0.18
-				headerStroke.Color = Color3.fromRGB(82, 116, 94)
-				headerStroke.Parent = headerCard
-			end
-
-			local lobbyGlyph = headerCard:FindFirstChild("LobbyGlyph")
-			if not lobbyGlyph then
-				lobbyGlyph = Instance.new("TextLabel")
-				lobbyGlyph.Name = "LobbyGlyph"
-				lobbyGlyph.AnchorPoint = Vector2.new(1, 0)
-				lobbyGlyph.Position = UDim2.new(1, -12, 0, 8)
-				lobbyGlyph.Size = UDim2.fromOffset(84, 64)
-				lobbyGlyph.BackgroundTransparency = 1
-				lobbyGlyph.Font = Enum.Font.GothamBlack
-				lobbyGlyph.TextSize = 46
-				lobbyGlyph.TextColor3 = Color3.fromRGB(88, 122, 100)
-				lobbyGlyph.TextTransparency = 0.38
-				lobbyGlyph.TextXAlignment = Enum.TextXAlignment.Right
-				lobbyGlyph.Text = "LO"
-				lobbyGlyph.Parent = headerCard
-			end
-
-			statusBadge.Parent = headerCard
-			statusBadge.Position = UDim2.fromOffset(12, 10)
-			statusBadge.Size = UDim2.fromOffset(108, 24)
-			statusBadge.Font = Enum.Font.GothamBlack
-			statusBadge.TextSize = 11
-
-			primaryLabel.Parent = headerCard
-			primaryLabel.Position = UDim2.fromOffset(12, 40)
-			primaryLabel.Size = UDim2.new(1, -110, 0, 24)
-			primaryLabel.TextSize = 15
-
-				secondaryLabel.Parent = headerCard
-				secondaryLabel.Position = UDim2.fromOffset(12, 64)
-				secondaryLabel.Size = UDim2.new(1, -110, 0, 20)
-				secondaryLabel.TextSize = 12
-
-				destroyDuplicateNamedChildren(headerCard, "StatusBadge", statusBadge)
-				destroyDuplicateNamedChildren(headerCard, "PrimaryLabel", primaryLabel)
-				destroyDuplicateNamedChildren(headerCard, "SecondaryLabel", secondaryLabel)
-				destroyDuplicateNamedChildren(panel, "StatusBadge", nil)
-				destroyDuplicateNamedChildren(panel, "PrimaryLabel", nil)
-				destroyDuplicateNamedChildren(panel, "SecondaryLabel", nil)
-
-			local function ensureHeaderPill(name, position, size, backgroundColor)
-				local pill = headerCard:FindFirstChild(name)
-				if not pill then
-					pill = Instance.new("TextLabel")
-					pill.Name = name
-					pill.BackgroundColor3 = backgroundColor
-					pill.BackgroundTransparency = 0.08
-					pill.BorderSizePixel = 0
-					pill.Font = Enum.Font.GothamBold
-					pill.TextSize = 10
-					pill.TextColor3 = Color3.fromRGB(242, 246, 250)
-					pill.Text = "-"
-					pill.Parent = headerCard
-
-					local pillCorner = Instance.new("UICorner")
-					pillCorner.CornerRadius = UDim.new(1, 0)
-					pillCorner.Parent = pill
-				end
-				pill.Position = position
-				pill.Size = size
-				return pill
-			end
-
-			local modePill = ensureHeaderPill("ModePill", UDim2.fromOffset(12, 88), UDim2.fromOffset(70, 18), Color3.fromRGB(58, 92, 126))
-			local mapPill = ensureHeaderPill("MapPill", UDim2.fromOffset(88, 88), UDim2.fromOffset(116, 18), Color3.fromRGB(70, 86, 64))
-			local roomPill = ensureHeaderPill("RoomPill", UDim2.fromOffset(210, 88), UDim2.fromOffset(94, 18), Color3.fromRGB(96, 76, 48))
-
-			local openRoomBrowserButton = panel:FindFirstChild("OpenRoomBrowserButton")
-			if not openRoomBrowserButton then
-				openRoomBrowserButton = Instance.new("TextButton")
-				openRoomBrowserButton.Name = "OpenRoomBrowserButton"
-				openRoomBrowserButton.Position = UDim2.fromOffset(12, 162)
-				openRoomBrowserButton.Size = UDim2.new(1, -24, 0, 42)
-				styleButton(openRoomBrowserButton, "OPEN ROOM BROWSER")
-				openRoomBrowserButton.BackgroundColor3 = Color3.fromRGB(46, 78, 114)
-				openRoomBrowserButton.Parent = panel
-				self:_setSelectableStyle(openRoomBrowserButton)
-			end
-
-			local menuButton = panel:FindFirstChild("MenuButton")
-			if not menuButton then
-				menuButton = Instance.new("TextButton")
-				menuButton.Name = "MenuButton"
-				menuButton.Position = UDim2.fromOffset(12, 304)
-				menuButton.Size = UDim2.fromOffset(152, 36)
-				styleButton(menuButton, "MENU")
-				menuButton.BackgroundColor3 = Color3.fromRGB(58, 66, 84)
-				menuButton.Parent = panel
-				self:_setSelectableStyle(menuButton)
-			end
-
-			local rankButton = panel:FindFirstChild("RankButton")
-			if not rankButton then
-				rankButton = Instance.new("TextButton")
-				rankButton.Name = "RankButton"
-				rankButton.Position = UDim2.fromOffset(176, 304)
-				rankButton.Size = UDim2.fromOffset(152, 36)
-				styleButton(rankButton, "RANK")
-				rankButton.BackgroundColor3 = Color3.fromRGB(74, 82, 58)
-				rankButton.Parent = panel
-				self:_setSelectableStyle(rankButton)
-			end
-
-			local profileButton = panel:FindFirstChild("ProfileButton")
-			if not profileButton then
-				profileButton = Instance.new("TextButton")
-				profileButton.Name = "ProfileButton"
-				profileButton.Position = UDim2.fromOffset(12, 212)
-				profileButton.Size = UDim2.fromOffset(152, 36)
-				styleButton(profileButton, "PROFILE")
-				profileButton.BackgroundColor3 = Color3.fromRGB(62, 88, 66)
-				profileButton.Parent = panel
-				self:_setSelectableStyle(profileButton)
-			end
-
-			local shopButton = panel:FindFirstChild("ShopButton")
-			if not shopButton then
-				shopButton = Instance.new("TextButton")
-				shopButton.Name = "ShopButton"
-				shopButton.Position = UDim2.fromOffset(176, 212)
-				shopButton.Size = UDim2.fromOffset(152, 36)
-				styleButton(shopButton, "SHOP")
-				shopButton.BackgroundColor3 = Color3.fromRGB(108, 82, 48)
-				shopButton.Parent = panel
-				self:_setSelectableStyle(shopButton)
-			end
-
-			local royalPassButton = panel:FindFirstChild("RoyalPassButton")
-			if not royalPassButton then
-				royalPassButton = Instance.new("TextButton")
-				royalPassButton.Name = "RoyalPassButton"
-				royalPassButton.Position = UDim2.fromOffset(12, 258)
-				royalPassButton.Size = UDim2.new(1, -24, 0, 36)
-				styleButton(royalPassButton, "ROYAL PASS")
-				royalPassButton.BackgroundColor3 = Color3.fromRGB(116, 88, 44)
-				royalPassButton.Parent = panel
-				self:_setSelectableStyle(royalPassButton)
-			end
-
-			local hintLabel = panel:FindFirstChild("HintLabel")
-			if not hintLabel then
-				hintLabel = Instance.new("TextLabel")
-				hintLabel.Name = "HintLabel"
-				hintLabel.Position = UDim2.fromOffset(12, 348)
-				hintLabel.Size = UDim2.new(1, -24, 0, 16)
-				hintLabel.BackgroundTransparency = 1
-				hintLabel.Font = Enum.Font.Gotham
-				hintLabel.TextSize = 11
-				hintLabel.TextColor3 = Color3.fromRGB(156, 170, 192)
-				hintLabel.TextWrapped = true
-				hintLabel.TextXAlignment = Enum.TextXAlignment.Left
-				hintLabel.Text = "Shortcut: tekan M untuk Room Browser."
-				hintLabel.Parent = panel
-			end
-
-			local toggleBtn = gui:FindFirstChild("LobbyToggleButton")
-			if not toggleBtn then
-				toggleBtn = Instance.new("TextButton")
-				toggleBtn.Name = "LobbyToggleButton"
-				toggleBtn.AnchorPoint = Vector2.new(1, 0)
-				toggleBtn.Position = UDim2.fromOffset(12, 120)
-				toggleBtn.Size = UDim2.fromOffset(28, 78)
-				styleButton(toggleBtn, ">")
-				toggleBtn.BackgroundColor3 = Color3.fromRGB(44, 60, 82)
-				toggleBtn.Parent = gui
-
-				local toggleCorner = Instance.new("UICorner")
-				toggleCorner.CornerRadius = UDim.new(0, 10)
-				toggleCorner.Parent = toggleBtn
-
-				self:_setSelectableStyle(toggleBtn)
-			end
-
-			if openRoomBrowserButton:GetAttribute("Bound") ~= true then
-				openRoomBrowserButton:SetAttribute("Bound", true)
-				connectButtonPress(openRoomBrowserButton, function()
-					self:_toggleRoomBrowserVisible()
-					self:_refreshBasicLobbyPanel()
-				end)
-			end
-			if menuButton:GetAttribute("Bound") ~= true then
-				menuButton:SetAttribute("Bound", true)
-				connectButtonPress(menuButton, function()
-					self:_toggleBasicWindow("MainMenuUI")
-				end)
-			end
-			if profileButton:GetAttribute("Bound") ~= true then
-				profileButton:SetAttribute("Bound", true)
-				connectButtonPress(profileButton, function()
-					self:_toggleAuxiliaryWindow("ProfileUI")
-				end)
-			end
-			if shopButton:GetAttribute("Bound") ~= true then
-				shopButton:SetAttribute("Bound", true)
-				connectButtonPress(shopButton, function()
-					self:_toggleAuxiliaryWindow("ShopUI")
-				end)
-			end
-			if royalPassButton:GetAttribute("Bound") ~= true then
-				royalPassButton:SetAttribute("Bound", true)
-				connectButtonPress(royalPassButton, function()
-					self:_toggleAuxiliaryWindow("RoyalPassUI")
-				end)
-			end
-			if rankButton:GetAttribute("Bound") ~= true then
-				rankButton:SetAttribute("Bound", true)
-				connectButtonPress(rankButton, function()
-					self:_toggleBasicWindow("LeaderboardUI")
-				end)
-			end
-			if toggleBtn:GetAttribute("Bound") ~= true then
-				toggleBtn:SetAttribute("Bound", true)
-				connectButtonPress(toggleBtn, function()
-					self:_toggleLobbyPanelCollapsed()
-				end)
-			end
-
-			self._uxWidgets.lobby.BasicGui = gui
-			self._uxWidgets.lobby.BasicPanel = panel
-			self._uxWidgets.lobby.BasicHeaderCard = headerCard
-			self._uxWidgets.lobby.BasicHeaderStroke = headerCard:FindFirstChild("HeaderStroke")
-			self._uxWidgets.lobby.BasicLobbyGlyph = lobbyGlyph
-			self._uxWidgets.lobby.BasicTitle = title
-			self._uxWidgets.lobby.BasicStatusBadge = statusBadge
-			self._uxWidgets.lobby.BasicPrimaryLabel = primaryLabel
-			self._uxWidgets.lobby.BasicSecondaryLabel = secondaryLabel
-			self._uxWidgets.lobby.BasicModePill = modePill
-			self._uxWidgets.lobby.BasicMapPill = mapPill
-			self._uxWidgets.lobby.BasicRoomPill = roomPill
-			self._uxWidgets.lobby.BasicHintLabel = hintLabel
-			self._uxWidgets.lobby.BasicOpenRoomBrowserButton = openRoomBrowserButton
-			self._uxWidgets.lobby.BasicProfileButton = profileButton
-			self._uxWidgets.lobby.BasicShopButton = shopButton
-			self._uxWidgets.lobby.BasicRoyalPassButton = royalPassButton
-			self._uxWidgets.lobby.BasicMenuButton = menuButton
-			self._uxWidgets.lobby.BasicRankButton = rankButton
-			self._uxWidgets.lobby.ToggleButton = toggleBtn
+			continue
 		end
-
-		local auxiliaryConfig = AUXILIARY_WINDOW_CONFIG[guiName]
-		if auxiliaryConfig then
-			panel.AnchorPoint = auxiliaryConfig.panelAnchorPoint
-			panel.Position = auxiliaryConfig.panelPosition
-			panel.Size = UDim2.fromOffset(auxiliaryConfig.panelSize.X, auxiliaryConfig.panelSize.Y)
-			panel.BackgroundColor3 = UI_BRAND.bgCard
-			panel.BackgroundTransparency = 0.08
-
-			local title = panel:FindFirstChild("Title")
-			if title and title:IsA("TextLabel") then
-				title.Text = auxiliaryConfig.title
-				title.TextColor3 = Color3.fromRGB(238, 243, 248)
-				title.Size = UDim2.new(1, -54, 0, 24)
-			end
-
-			local closeBtn = panel:FindFirstChild("CloseButton")
-			if not closeBtn then
-				closeBtn = Instance.new("TextButton")
-				closeBtn.Name = "CloseButton"
-				closeBtn.AnchorPoint = Vector2.new(1, 0)
-				closeBtn.Position = UDim2.new(1, -10, 0, 8)
-				closeBtn.Size = UDim2.fromOffset(28, 28)
-				styleButton(closeBtn, "X")
-				closeBtn.BackgroundColor3 = Color3.fromRGB(92, 42, 42)
-				closeBtn.Parent = panel
-
-				local closeCorner = Instance.new("UICorner")
-				closeCorner.CornerRadius = UDim.new(1, 0)
-				closeCorner.Parent = closeBtn
-
-				self:_setSelectableStyle(closeBtn)
-			end
-
-			local statusBadge = panel:FindFirstChild("StatusBadge")
-			if not statusBadge then
-				statusBadge = Instance.new("TextLabel")
-				statusBadge.Name = "StatusBadge"
-				statusBadge.Position = UDim2.fromOffset(12, 42)
-				statusBadge.Size = UDim2.fromOffset(128, 24)
-				statusBadge.BackgroundColor3 = auxiliaryConfig.badgeColor
-				statusBadge.TextColor3 = Color3.fromRGB(245, 245, 245)
-				statusBadge.Font = Enum.Font.GothamBold
-				statusBadge.TextSize = 12
-				statusBadge.Text = auxiliaryConfig.badgeText
-				statusBadge.Parent = panel
-
-				local badgeCorner = Instance.new("UICorner")
-				badgeCorner.CornerRadius = UDim.new(0, 999)
-				badgeCorner.Parent = statusBadge
-			end
-
-			local primaryLabel = panel:FindFirstChild("PrimaryLabel")
-			if not primaryLabel then
-				primaryLabel = Instance.new("TextLabel")
-				primaryLabel.Name = "PrimaryLabel"
-				primaryLabel.Position = UDim2.fromOffset(12, 76)
-				primaryLabel.Size = UDim2.new(1, -24, 0, 38)
-				primaryLabel.BackgroundTransparency = 1
-				primaryLabel.Font = Enum.Font.GothamBold
-				primaryLabel.TextSize = 16
-				primaryLabel.TextColor3 = Color3.fromRGB(242, 246, 250)
-				primaryLabel.TextWrapped = true
-				primaryLabel.TextXAlignment = Enum.TextXAlignment.Left
-				primaryLabel.TextYAlignment = Enum.TextYAlignment.Top
-				primaryLabel.Text = auxiliaryConfig.title
-				primaryLabel.Parent = panel
-			end
-
-			local secondaryLabel = panel:FindFirstChild("SecondaryLabel")
-			if not secondaryLabel then
-				secondaryLabel = Instance.new("TextLabel")
-				secondaryLabel.Name = "SecondaryLabel"
-				secondaryLabel.Position = UDim2.fromOffset(12, 118)
-				secondaryLabel.Size = UDim2.new(1, -24, 0, 34)
-				secondaryLabel.BackgroundTransparency = 1
-				secondaryLabel.Font = Enum.Font.Gotham
-				secondaryLabel.TextSize = 13
-				secondaryLabel.TextColor3 = Color3.fromRGB(182, 196, 216)
-				secondaryLabel.TextWrapped = true
-				secondaryLabel.TextXAlignment = Enum.TextXAlignment.Left
-				secondaryLabel.TextYAlignment = Enum.TextYAlignment.Top
-				secondaryLabel.Text = auxiliaryConfig.footer
-				secondaryLabel.Parent = panel
-			end
-
-			local contentFrame = panel:FindFirstChild("ContentFrame")
-			if contentFrame and not contentFrame:IsA("ScrollingFrame") then
-				contentFrame:Destroy()
-				contentFrame = nil
-			end
-			if not contentFrame then
-				contentFrame = Instance.new("ScrollingFrame")
-				contentFrame.Name = "ContentFrame"
-				contentFrame.Position = UDim2.fromOffset(12, 156)
-				contentFrame.Size = UDim2.new(1, -24, 1, -214)
-				contentFrame.BackgroundColor3 = Color3.fromRGB(20, 27, 36)
-				contentFrame.BackgroundTransparency = 0.06
-				contentFrame.BorderSizePixel = 0
-				contentFrame.ScrollBarThickness = 5
-				contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-				contentFrame.CanvasSize = UDim2.fromOffset(0, 0)
-				contentFrame.ScrollingDirection = Enum.ScrollingDirection.Y
-				contentFrame.ElasticBehavior = Enum.ElasticBehavior.Never
-				contentFrame.Parent = panel
-
-				local contentCorner = Instance.new("UICorner")
-				contentCorner.CornerRadius = UDim.new(0, 10)
-				contentCorner.Parent = contentFrame
-
-				local contentPadding = Instance.new("UIPadding")
-				contentPadding.PaddingTop = UDim.new(0, 10)
-				contentPadding.PaddingBottom = UDim.new(0, 10)
-				contentPadding.PaddingLeft = UDim.new(0, 10)
-				contentPadding.PaddingRight = UDim.new(0, 10)
-				contentPadding.Parent = contentFrame
-			end
-
-			local contentText = contentFrame:FindFirstChild("ContentText")
-			if not contentText then
-				contentText = Instance.new("TextLabel")
-				contentText.Name = "ContentText"
-				contentText.Size = UDim2.new(1, -4, 0, 0)
-				contentText.BackgroundTransparency = 1
-				contentText.AutomaticSize = Enum.AutomaticSize.Y
-				contentText.Font = Enum.Font.Gotham
-				contentText.TextSize = 12
-				contentText.TextColor3 = Color3.fromRGB(226, 234, 244)
-				contentText.TextWrapped = true
-				contentText.TextXAlignment = Enum.TextXAlignment.Left
-				contentText.TextYAlignment = Enum.TextYAlignment.Top
-				contentText.Text = ""
-				contentText.Parent = contentFrame
-			end
-
-			local footerLabel = panel:FindFirstChild("FooterLabel")
-			if not footerLabel then
-				footerLabel = Instance.new("TextLabel")
-				footerLabel.Name = "FooterLabel"
-				footerLabel.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 48)
-				footerLabel.Size = UDim2.new(1, -24, 0, 36)
-				footerLabel.BackgroundTransparency = 1
-				footerLabel.Font = Enum.Font.Gotham
-				footerLabel.TextSize = 11
-				footerLabel.TextColor3 = Color3.fromRGB(162, 176, 198)
-				footerLabel.TextWrapped = true
-				footerLabel.TextXAlignment = Enum.TextXAlignment.Left
-				footerLabel.TextYAlignment = Enum.TextYAlignment.Top
-				footerLabel.Text = auxiliaryConfig.footer
-				footerLabel.Parent = panel
-			else
-				footerLabel.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 48)
-				footerLabel.Size = UDim2.new(1, -24, 0, 36)
-			end
-
-			local toolActionButton = nil
-			local toolStatusLabel = nil
-			if guiName == "JournalUI" then
-				contentFrame.Position = UDim2.fromOffset(12, 152)
-				contentFrame.Size = UDim2.new(1, -24, 1, -262)
-
-				toolActionButton = panel:FindFirstChild("ToolActionButton")
-				if not toolActionButton then
-					toolActionButton = Instance.new("TextButton")
-					toolActionButton.Name = "ToolActionButton"
-					toolActionButton.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 102)
-					toolActionButton.Size = UDim2.fromOffset(156, 40)
-					styleButton(toolActionButton, "SCAN JEJAK")
-					toolActionButton.BackgroundColor3 = Color3.fromRGB(56, 92, 128)
-					toolActionButton.Parent = panel
-
-					self:_setSelectableStyle(toolActionButton)
-				end
-				toolActionButton.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 102)
-				toolActionButton.Size = UDim2.fromOffset(156, 40)
-
-				local toolCorner = toolActionButton:FindFirstChild("ButtonCorner")
-				if not toolCorner or not toolCorner:IsA("UICorner") then
-					toolCorner = Instance.new("UICorner")
-					toolCorner.Name = "ButtonCorner"
-					toolCorner.CornerRadius = UDim.new(0, 10)
-					toolCorner.Parent = toolActionButton
-				end
-
-				toolStatusLabel = panel:FindFirstChild("ToolStatusLabel")
-				if not toolStatusLabel then
-					toolStatusLabel = Instance.new("TextLabel")
-					toolStatusLabel.Name = "ToolStatusLabel"
-					toolStatusLabel.Position = UDim2.fromOffset(176, auxiliaryConfig.panelSize.Y - 106)
-					toolStatusLabel.Size = UDim2.new(1, -188, 0, 50)
-					toolStatusLabel.BackgroundColor3 = Color3.fromRGB(20, 28, 38)
-					toolStatusLabel.BackgroundTransparency = 0.06
-					toolStatusLabel.BorderSizePixel = 0
-					toolStatusLabel.Font = Enum.Font.Gotham
-					toolStatusLabel.TextSize = 11
-					toolStatusLabel.TextColor3 = Color3.fromRGB(178, 192, 214)
-					toolStatusLabel.TextWrapped = true
-					toolStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-					toolStatusLabel.TextYAlignment = Enum.TextYAlignment.Top
-					toolStatusLabel.Text = "SCAN STATUS"
-					toolStatusLabel.Parent = panel
-				end
-				toolStatusLabel.Position = UDim2.fromOffset(176, auxiliaryConfig.panelSize.Y - 106)
-				toolStatusLabel.Size = UDim2.new(1, -188, 0, 50)
-				toolStatusLabel.BackgroundColor3 = Color3.fromRGB(20, 28, 38)
-				toolStatusLabel.BackgroundTransparency = 0.06
-				toolStatusLabel.BorderSizePixel = 0
-
-				local statusCorner = toolStatusLabel:FindFirstChild("StatusCorner")
-				if not statusCorner or not statusCorner:IsA("UICorner") then
-					statusCorner = Instance.new("UICorner")
-					statusCorner.Name = "StatusCorner"
-					statusCorner.CornerRadius = UDim.new(0, 10)
-					statusCorner.Parent = toolStatusLabel
-				end
-
-				local statusStroke = toolStatusLabel:FindFirstChild("StatusStroke")
-				if not statusStroke or not statusStroke:IsA("UIStroke") then
-					statusStroke = Instance.new("UIStroke")
-					statusStroke.Name = "StatusStroke"
-					statusStroke.Thickness = 1
-					statusStroke.Color = Color3.fromRGB(58, 92, 128)
-					statusStroke.Transparency = 0.24
-					statusStroke.Parent = toolStatusLabel
-				end
-
-				local statusPadding = toolStatusLabel:FindFirstChild("StatusPadding")
-				if not statusPadding or not statusPadding:IsA("UIPadding") then
-					statusPadding = Instance.new("UIPadding")
-					statusPadding.Name = "StatusPadding"
-					statusPadding.PaddingLeft = UDim.new(0, 10)
-					statusPadding.PaddingRight = UDim.new(0, 8)
-					statusPadding.PaddingTop = UDim.new(0, 8)
-					statusPadding.PaddingBottom = UDim.new(0, 6)
-					statusPadding.Parent = toolStatusLabel
-				end
-
-				footerLabel.Position = UDim2.fromOffset(12, auxiliaryConfig.panelSize.Y - 50)
-				footerLabel.Size = UDim2.new(1, -24, 0, 40)
-			end
-
-			local floatName = guiName .. "FloatButton"
-			local floatBtn = gui:FindFirstChild(floatName)
-			if not floatBtn then
-				floatBtn = Instance.new("TextButton")
-				floatBtn.Name = floatName
-				floatBtn.AnchorPoint = Vector2.new(0.5, 0.5)
-				floatBtn.Position = auxiliaryConfig.floatPosition
-				floatBtn.Size = UDim2.fromOffset(60, 60)
-				floatBtn.BackgroundColor3 = Color3.fromRGB(34, 46, 62)
-				floatBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
-				floatBtn.Font = Enum.Font.GothamBold
-				floatBtn.TextSize = 12
-				floatBtn.TextWrapped = true
-				floatBtn.Text = auxiliaryConfig.floatText
-				floatBtn.Visible = false
-				floatBtn.Parent = gui
-
-				local floatCorner = Instance.new("UICorner")
-				floatCorner.CornerRadius = UDim.new(1, 0)
-				floatCorner.Parent = floatBtn
-
-				local floatStroke = Instance.new("UIStroke")
-				floatStroke.Thickness = 2
-				floatStroke.Color = auxiliaryConfig.badgeColor
-				floatStroke.Parent = floatBtn
-
-				self:_setSelectableStyle(floatBtn)
-			end
-			styleFloatingButton(floatBtn, auxiliaryConfig.floatText, auxiliaryConfig.badgeColor)
-			makeFloatingButtonDraggable(floatBtn)
-
-			local itemRows = nil
-			local shopFilterButtons = nil
-			if guiName == "ShopUI" then
-				contentText.Visible = false
-				local filterBar = contentFrame:FindFirstChild("ShopFilterBar")
-				if filterBar and not filterBar:IsA("Frame") then
-					filterBar:Destroy()
-					filterBar = nil
-				end
-				if not filterBar then
-					filterBar = Instance.new("Frame")
-					filterBar.Name = "ShopFilterBar"
-					filterBar.Position = UDim2.fromOffset(0, 0)
-					filterBar.Size = UDim2.new(1, -4, 0, 34)
-					filterBar.BackgroundTransparency = 1
-					filterBar.Parent = contentFrame
-
-					local filterLayout = Instance.new("UIListLayout")
-					filterLayout.FillDirection = Enum.FillDirection.Horizontal
-					filterLayout.SortOrder = Enum.SortOrder.LayoutOrder
-					filterLayout.Padding = UDim.new(0, 6)
-					filterLayout.Parent = filterBar
-				end
-				local itemList = contentFrame:FindFirstChild("ItemList")
-				if itemList and not itemList:IsA("Frame") then
-					itemList:Destroy()
-					itemList = nil
-				end
-				if not itemList then
-					itemList = Instance.new("Frame")
-					itemList.Name = "ItemList"
-					itemList.Position = UDim2.fromOffset(0, 40)
-					itemList.Size = UDim2.new(1, -4, 0, 0)
-					itemList.BackgroundTransparency = 1
-					itemList.AutomaticSize = Enum.AutomaticSize.Y
-					itemList.Parent = contentFrame
-
-					local itemLayout = Instance.new("UIListLayout")
-					itemLayout.FillDirection = Enum.FillDirection.Vertical
-					itemLayout.SortOrder = Enum.SortOrder.LayoutOrder
-					itemLayout.Padding = UDim.new(0, 6)
-					itemLayout.Parent = itemList
-				end
-				shopFilterButtons = {}
-				for _, filter in ipairs(SHOP_FILTERS) do
-					local existingButton = filterBar:FindFirstChild("Filter" .. filter.key)
-					if existingButton then
-						existingButton:Destroy()
-					end
-				end
-				for _, filter in ipairs(SHOP_FILTERS) do
-					if not shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
-						continue
-					end
-					local filterButton = Instance.new("TextButton")
-					filterButton.Name = "Filter" .. filter.key
-					filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
-					filterButton.BackgroundColor3 = Color3.fromRGB(42, 54, 72)
-					filterButton.BorderSizePixel = 0
-					filterButton.Text = filter.label
-					filterButton.TextColor3 = Color3.fromRGB(236, 240, 244)
-					filterButton.Font = Enum.Font.GothamBold
-					filterButton.TextSize = 10
-					filterButton.Parent = filterBar
-					self:_setSelectableStyle(filterButton)
-
-					local filterCorner = Instance.new("UICorner")
-					filterCorner.CornerRadius = UDim.new(1, 0)
-					filterCorner.Parent = filterButton
-
-					local filterStroke = Instance.new("UIStroke")
-					filterStroke.Thickness = 1
-					filterStroke.Transparency = 0.18
-					filterStroke.Color = Color3.fromRGB(92, 116, 150)
-					filterStroke.Parent = filterButton
-
-					if filterButton:GetAttribute("Bound") ~= true then
-						filterButton:SetAttribute("Bound", true)
-						connectButtonPress(filterButton, function()
-							self:_setShopFilter(filter.key)
-						end)
-					end
-
-					shopFilterButtons[filter.key] = filterButton
-				end
-				itemRows = {}
-				local displayCount = #self._shopState.catalog
-				for index = 1, displayCount do
-					local existing = itemList:FindFirstChild("ItemRow" .. tostring(index))
-					if existing then
-						existing:Destroy()
-					end
-					local row = createActionRow(itemList, "ItemRow" .. tostring(index), "ITEM", "-", "BELI")
-					self:_setSelectableStyle(row.Button)
-					local item = self._shopState.catalog[index]
-					if item then
-						self:_applyShopRowVisual(row, item, index)
-					end
-					if row.Button:GetAttribute("Bound") ~= true then
-						row.Button:SetAttribute("Bound", true)
-						connectButtonPress(row.Button, function()
-							local catalogItem = self._shopState.catalog[index]
-							if catalogItem then
-								local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(catalogItem)
-								if not purchasable then
-									self._shopState.lastPurchase = {
-										itemId = catalogItem.id,
-										success = false,
-										reason = blockedReason or "item_disabled",
-									}
-									self._shopState.lastMessage = describeShopPurchaseBlock(catalogItem, blockedReason)
-									self:_openAuxiliaryWindow("ShopUI")
-									return
-								end
-								self:_requestShopPurchase(catalogItem.id)
-							end
-						end)
-					end
-					table.insert(itemRows, row)
-				end
-			end
-
-			if closeBtn:GetAttribute("Bound") ~= true then
-				closeBtn:SetAttribute("Bound", true)
-				connectButtonPress(closeBtn, function()
-					self:_setAuxiliaryWindowDismissed(guiName, true)
-				end)
-			end
-			if floatBtn:GetAttribute("Bound") ~= true then
-				floatBtn:SetAttribute("Bound", true)
-				connectButtonPress(floatBtn, function()
-					self:_openAuxiliaryWindow(guiName)
-				end)
-			end
-			if toolActionButton and toolActionButton:GetAttribute("Bound") ~= true then
-				toolActionButton:SetAttribute("Bound", true)
-				connectButtonPress(toolActionButton, function()
-					self:_triggerJournalToolScan()
-				end)
-			end
-
-			self._uxWidgets.windows[guiName] = {
-				Gui = gui,
-				Panel = panel,
-				Title = title,
-				StatusBadge = statusBadge,
-				PrimaryLabel = primaryLabel,
-				SecondaryLabel = secondaryLabel,
-				ContentFrame = contentFrame,
-				ContentText = contentText,
-				FooterLabel = footerLabel,
-				FloatButton = floatBtn,
-				CloseButton = closeBtn,
-				ShopFilterButtons = shopFilterButtons,
-				ItemRows = itemRows,
-				ToolActionButton = toolActionButton,
-				ToolStatusLabel = toolStatusLabel,
-			}
-		end
-
-		if guiName == "MatchUI" then
-			panel.Size = UDim2.fromOffset(340, 454)
-			panel.Position = UDim2.new(1, -16, 0, 16)
-			panel.BackgroundColor3 = UI_BRAND.bgCard
-			panel.BackgroundTransparency = 0.1
-
-			local title = panel:FindFirstChild("Title")
-			if title and title:IsA("TextLabel") then
-				title.Text = "PANEL MATCH"
-				title.TextColor3 = Color3.fromRGB(235, 240, 245)
-				title.Size = UDim2.new(1, -54, 0, 24)
-			end
-
-			local closeBtn = panel:FindFirstChild("CloseButton")
-			if not closeBtn then
-				closeBtn = Instance.new("TextButton")
-				closeBtn.Name = "CloseButton"
-				closeBtn.AnchorPoint = Vector2.new(1, 0)
-				closeBtn.Position = UDim2.new(1, -10, 0, 8)
-				closeBtn.Size = UDim2.fromOffset(28, 28)
-				styleButton(closeBtn, "X")
-				closeBtn.BackgroundColor3 = Color3.fromRGB(92, 42, 42)
-				closeBtn.Parent = panel
-
-				local closeCorner = Instance.new("UICorner")
-				closeCorner.CornerRadius = UDim.new(1, 0)
-				closeCorner.Parent = closeBtn
-
-				self:_setSelectableStyle(closeBtn)
-			end
-
-				local stateBadge = panel:FindFirstChild("StateBadge", true)
-			if not stateBadge then
-				stateBadge = Instance.new("TextLabel")
-				stateBadge.Name = "StateBadge"
-				stateBadge.Position = UDim2.fromOffset(12, 42)
-				stateBadge.Size = UDim2.fromOffset(136, 24)
-				stateBadge.BackgroundColor3 = Color3.fromRGB(62, 80, 104)
-				stateBadge.TextColor3 = Color3.fromRGB(245, 245, 245)
-				stateBadge.Font = Enum.Font.GothamBold
-				stateBadge.TextSize = 12
-				stateBadge.Text = "STATUS MATCH"
-				stateBadge.Parent = panel
-
-				local badgeCorner = Instance.new("UICorner")
-				badgeCorner.CornerRadius = UDim.new(0, 999)
-				badgeCorner.Parent = stateBadge
-			end
-
-				local primaryLabel = panel:FindFirstChild("PrimaryLabel", true)
-			if not primaryLabel then
-				primaryLabel = Instance.new("TextLabel")
-				primaryLabel.Name = "PrimaryLabel"
-				primaryLabel.Position = UDim2.fromOffset(12, 76)
-				primaryLabel.Size = UDim2.new(1, -24, 0, 34)
-				primaryLabel.BackgroundTransparency = 1
-				primaryLabel.Font = Enum.Font.GothamBold
-				primaryLabel.TextSize = 18
-				primaryLabel.TextColor3 = Color3.fromRGB(242, 246, 250)
-				primaryLabel.TextWrapped = true
-				primaryLabel.TextXAlignment = Enum.TextXAlignment.Left
-				primaryLabel.TextYAlignment = Enum.TextYAlignment.Top
-				primaryLabel.Text = "Menunggu event match."
-				primaryLabel.Parent = panel
-			end
-
-				local secondaryLabel = panel:FindFirstChild("SecondaryLabel", true)
-			if not secondaryLabel then
-				secondaryLabel = Instance.new("TextLabel")
-				secondaryLabel.Name = "SecondaryLabel"
-				secondaryLabel.Position = UDim2.fromOffset(12, 114)
-				secondaryLabel.Size = UDim2.new(1, -24, 0, 48)
-				secondaryLabel.BackgroundTransparency = 1
-				secondaryLabel.Font = Enum.Font.Gotham
-				secondaryLabel.TextSize = 14
-				secondaryLabel.TextColor3 = Color3.fromRGB(182, 196, 216)
-				secondaryLabel.TextWrapped = true
-				secondaryLabel.TextXAlignment = Enum.TextXAlignment.Left
-				secondaryLabel.TextYAlignment = Enum.TextYAlignment.Top
-				secondaryLabel.Text = "Panel ini bisa ditutup jika menghalangi pandangan."
-				secondaryLabel.Parent = panel
-			end
-
-			local panelStroke = panel:FindFirstChild("BrandStroke")
-			if not panelStroke or not panelStroke:IsA("UIStroke") then
-				panelStroke = Instance.new("UIStroke")
-				panelStroke.Name = "BrandStroke"
-				panelStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-				panelStroke.Thickness = 1
-				panelStroke.Transparency = 0.24
-				panelStroke.Color = Color3.fromRGB(84, 104, 132)
-				panelStroke.Parent = panel
-			end
-
-			local headerCard = panel:FindFirstChild("HeaderCard")
-			if not headerCard then
-				headerCard = Instance.new("Frame")
-				headerCard.Name = "HeaderCard"
-				headerCard.Position = UDim2.fromOffset(12, 42)
-				headerCard.Size = UDim2.new(1, -24, 0, 118)
-				headerCard.BackgroundColor3 = Color3.fromRGB(24, 30, 40)
-				headerCard.BackgroundTransparency = 0.04
-				headerCard.BorderSizePixel = 0
-				headerCard.Parent = panel
-
-				local headerCorner = Instance.new("UICorner")
-				headerCorner.CornerRadius = UDim.new(0, 12)
-				headerCorner.Parent = headerCard
-
-				local headerStroke = Instance.new("UIStroke")
-				headerStroke.Name = "HeaderStroke"
-				headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-				headerStroke.Thickness = 1
-				headerStroke.Transparency = 0.18
-				headerStroke.Color = Color3.fromRGB(84, 104, 132)
-				headerStroke.Parent = headerCard
-			end
-
-			local phaseGlyph = headerCard:FindFirstChild("PhaseGlyph")
-			if not phaseGlyph then
-				phaseGlyph = Instance.new("TextLabel")
-				phaseGlyph.Name = "PhaseGlyph"
-				phaseGlyph.AnchorPoint = Vector2.new(1, 0)
-				phaseGlyph.Position = UDim2.new(1, -12, 0, 8)
-				phaseGlyph.Size = UDim2.fromOffset(84, 74)
-				phaseGlyph.BackgroundTransparency = 1
-				phaseGlyph.Font = Enum.Font.GothamBlack
-				phaseGlyph.TextSize = 52
-				phaseGlyph.TextColor3 = Color3.fromRGB(88, 112, 148)
-				phaseGlyph.TextTransparency = 0.38
-				phaseGlyph.TextXAlignment = Enum.TextXAlignment.Right
-				phaseGlyph.Text = "PR"
-				phaseGlyph.Parent = headerCard
-			end
-
-			stateBadge.Parent = headerCard
-			stateBadge.Position = UDim2.fromOffset(14, 12)
-			stateBadge.Size = UDim2.fromOffset(144, 26)
-			stateBadge.TextSize = 11
-			stateBadge.Font = Enum.Font.GothamBlack
-
-			primaryLabel.Parent = headerCard
-			primaryLabel.Position = UDim2.fromOffset(14, 46)
-			primaryLabel.Size = UDim2.new(1, -112, 0, 32)
-
-				secondaryLabel.Parent = headerCard
-				secondaryLabel.Position = UDim2.fromOffset(14, 78)
-				secondaryLabel.Size = UDim2.new(1, -112, 0, 30)
-				secondaryLabel.TextSize = 13
-
-				destroyDuplicateNamedChildren(panel, "HeaderCard", headerCard)
-				destroyDuplicateNamedChildren(headerCard, "StateBadge", stateBadge)
-				destroyDuplicateNamedChildren(headerCard, "PrimaryLabel", primaryLabel)
-				destroyDuplicateNamedChildren(headerCard, "SecondaryLabel", secondaryLabel)
-				destroyDuplicateNamedChildren(headerCard, "PhaseGlyph", phaseGlyph)
-				destroyDuplicateNamedDescendants(panel, "StateBadge", stateBadge)
-				destroyDuplicateNamedDescendants(panel, "PrimaryLabel", primaryLabel)
-				destroyDuplicateNamedDescendants(panel, "SecondaryLabel", secondaryLabel)
-				destroyForeignMatchPanelScreenGuis(gui)
-
-			local summaryFrame = panel:FindFirstChild("SummaryFrame")
-			if summaryFrame and not summaryFrame:IsA("ScrollingFrame") then
-				summaryFrame:Destroy()
-				summaryFrame = nil
-			end
-			if not summaryFrame then
-				summaryFrame = Instance.new("ScrollingFrame")
-				summaryFrame.Name = "SummaryFrame"
-				summaryFrame.Position = UDim2.fromOffset(12, 168)
-				summaryFrame.Size = UDim2.new(1, -24, 0, 220)
-				summaryFrame.BackgroundColor3 = Color3.fromRGB(20, 27, 36)
-				summaryFrame.BackgroundTransparency = 0.06
-				summaryFrame.BorderSizePixel = 0
-				summaryFrame.ScrollBarThickness = 5
-				summaryFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-				summaryFrame.CanvasSize = UDim2.fromOffset(0, 0)
-				summaryFrame.ScrollingDirection = Enum.ScrollingDirection.Y
-				summaryFrame.ElasticBehavior = Enum.ElasticBehavior.Never
-				summaryFrame.ClipsDescendants = true
-				summaryFrame.Parent = panel
-
-				local summaryCorner = Instance.new("UICorner")
-				summaryCorner.CornerRadius = UDim.new(0, 10)
-				summaryCorner.Parent = summaryFrame
-
-				local summaryStroke = Instance.new("UIStroke")
-				summaryStroke.Name = "BrandStroke"
-				summaryStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-				summaryStroke.Thickness = 1
-				summaryStroke.Transparency = 0.2
-				summaryStroke.Color = Color3.fromRGB(80, 100, 126)
-				summaryStroke.Parent = summaryFrame
-
-				local summaryPadding = Instance.new("UIPadding")
-				summaryPadding.PaddingTop = UDim.new(0, 10)
-				summaryPadding.PaddingBottom = UDim.new(0, 10)
-				summaryPadding.PaddingLeft = UDim.new(0, 10)
-				summaryPadding.PaddingRight = UDim.new(0, 10)
-				summaryPadding.Parent = summaryFrame
-
-				local summaryLayout = Instance.new("UIListLayout")
-				summaryLayout.FillDirection = Enum.FillDirection.Vertical
-				summaryLayout.SortOrder = Enum.SortOrder.LayoutOrder
-				summaryLayout.Padding = UDim.new(0, 6)
-				summaryLayout.Parent = summaryFrame
-			end
-
-			local hideBtn = panel:FindFirstChild("HideButton")
-			if not hideBtn then
-				hideBtn = Instance.new("TextButton")
-				hideBtn.Name = "HideButton"
-				hideBtn.Position = UDim2.fromOffset(12, 396)
-				hideBtn.Size = UDim2.fromOffset(144, 40)
-				styleButton(hideBtn, "SEMBUNYIKAN")
-				hideBtn.BackgroundColor3 = Color3.fromRGB(44, 58, 76)
-				hideBtn.Parent = panel
-				self:_setSelectableStyle(hideBtn)
-			end
-
-			local footerLabel = panel:FindFirstChild("FooterLabel")
-			if not footerLabel then
-				footerLabel = Instance.new("TextLabel")
-				footerLabel.Name = "FooterLabel"
-				footerLabel.Position = UDim2.fromOffset(166, 396)
-				footerLabel.Size = UDim2.new(1, -178, 0, 40)
-				footerLabel.BackgroundTransparency = 1
-				footerLabel.Font = Enum.Font.Gotham
-				footerLabel.TextSize = 12
-				footerLabel.TextColor3 = Color3.fromRGB(162, 176, 198)
-				footerLabel.TextWrapped = true
-				footerLabel.TextXAlignment = Enum.TextXAlignment.Left
-				footerLabel.TextYAlignment = Enum.TextYAlignment.Top
-				footerLabel.Text = CLOSE_HINT_TEXT
-				footerLabel.Parent = panel
-			end
-
-			local timerLabel = gui:FindFirstChild("MatchTimerLabel")
-			if not timerLabel then
-				timerLabel = Instance.new("TextLabel")
-				timerLabel.Name = "MatchTimerLabel"
-				timerLabel.AnchorPoint = Vector2.new(0.5, 0)
-				timerLabel.Position = UDim2.new(0.5, 0, 0, 18)
-				timerLabel.Size = UDim2.fromOffset(126, 40)
-				timerLabel.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
-				timerLabel.BackgroundTransparency = 0.1
-				timerLabel.TextColor3 = Color3.fromRGB(245, 245, 245)
-				timerLabel.Font = Enum.Font.GothamBold
-				timerLabel.TextSize = 24
-				timerLabel.Text = "00:00"
-				timerLabel.Visible = false
-				timerLabel.Parent = gui
-
-				local timerCorner = Instance.new("UICorner")
-				timerCorner.CornerRadius = UDim.new(0, 12)
-				timerCorner.Parent = timerLabel
-			end
-
-			local timerCaption = gui:FindFirstChild("MatchTimerCaption")
-			if not timerCaption then
-				timerCaption = Instance.new("TextLabel")
-				timerCaption.Name = "MatchTimerCaption"
-				timerCaption.AnchorPoint = Vector2.new(0.5, 0)
-				timerCaption.Position = UDim2.new(0.5, 0, 0, 60)
-				timerCaption.Size = UDim2.fromOffset(170, 18)
-				timerCaption.BackgroundTransparency = 1
-				timerCaption.TextColor3 = Color3.fromRGB(190, 204, 224)
-				timerCaption.Font = Enum.Font.GothamSemibold
-				timerCaption.TextSize = 11
-				timerCaption.Text = "PHASE TIMER"
-				timerCaption.Visible = false
-				timerCaption.Parent = gui
-			end
-
-			local evidenceQuickButton = gui:FindFirstChild("EvidenceQuickButton")
-			if not evidenceQuickButton then
-				evidenceQuickButton = Instance.new("TextButton")
-				evidenceQuickButton.Name = "EvidenceQuickButton"
-				evidenceQuickButton.AnchorPoint = Vector2.new(1, 1)
-				evidenceQuickButton.Position = UDim2.new(1, -18, 1, -18)
-				evidenceQuickButton.Size = UDim2.fromOffset(142, 48)
-				styleButton(evidenceQuickButton, "EVIDENCE [J]")
-				evidenceQuickButton.BackgroundColor3 = Color3.fromRGB(52, 82, 118)
-				evidenceQuickButton.Visible = false
-				evidenceQuickButton.Parent = gui
-
-				local evidenceCorner = Instance.new("UICorner")
-				evidenceCorner.CornerRadius = UDim.new(0, 10)
-				evidenceCorner.Parent = evidenceQuickButton
-
-				self:_setSelectableStyle(evidenceQuickButton)
-			end
-
-			local controlsHintBar = gui:FindFirstChild("ControlsHintBar")
-			if not controlsHintBar then
-				controlsHintBar = Instance.new("Frame")
-				controlsHintBar.Name = "ControlsHintBar"
-				controlsHintBar.AnchorPoint = Vector2.new(0.5, 1)
-				controlsHintBar.Position = UDim2.new(0.5, 0, 1, -14)
-				controlsHintBar.Size = UDim2.fromOffset(620, 34)
-				controlsHintBar.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
-				controlsHintBar.BackgroundTransparency = 0.12
-				controlsHintBar.Visible = false
-				controlsHintBar.Parent = gui
-
-				local hintCorner = Instance.new("UICorner")
-				hintCorner.CornerRadius = UDim.new(0, 10)
-				hintCorner.Parent = controlsHintBar
-			end
-
-			local controlsHintLabel = controlsHintBar:FindFirstChild("Label")
-			if not controlsHintLabel then
-				controlsHintLabel = Instance.new("TextLabel")
-				controlsHintLabel.Name = "Label"
-				controlsHintLabel.Position = UDim2.fromOffset(10, 0)
-				controlsHintLabel.Size = UDim2.new(1, -20, 1, 0)
-				controlsHintLabel.BackgroundTransparency = 1
-				controlsHintLabel.Font = Enum.Font.GothamSemibold
-				controlsHintLabel.TextSize = 12
-				controlsHintLabel.TextColor3 = Color3.fromRGB(224, 232, 242)
-				controlsHintLabel.TextXAlignment = Enum.TextXAlignment.Center
-				controlsHintLabel.Text = self._matchControlsHintText
-				controlsHintLabel.Parent = controlsHintBar
-			end
-
-			local fieldKitFrame = gui:FindFirstChild("FieldKitFrame")
-			if not fieldKitFrame then
-				local defaultFieldKitLayout = getFieldKitLayoutMetrics(false, 332)
-				fieldKitFrame = Instance.new("Frame")
-				fieldKitFrame.Name = "FieldKitFrame"
-				fieldKitFrame.AnchorPoint = Vector2.new(0, 1)
-				fieldKitFrame.Position = UDim2.new(0, 16, 1, -60)
-				fieldKitFrame.Size = UDim2.fromOffset(356, defaultFieldKitLayout.frameHeight)
-				fieldKitFrame.BackgroundColor3 = Color3.fromRGB(16, 22, 30)
-				fieldKitFrame.BackgroundTransparency = 0.08
-				fieldKitFrame.BorderSizePixel = 0
-				fieldKitFrame.Visible = false
-				fieldKitFrame.Parent = gui
-
-				local frameCorner = Instance.new("UICorner")
-				frameCorner.CornerRadius = UDim.new(0, 12)
-				frameCorner.Parent = fieldKitFrame
-
-				local frameStroke = Instance.new("UIStroke")
-				frameStroke.Name = "FrameStroke"
-				frameStroke.Thickness = 1
-				frameStroke.Color = Color3.fromRGB(88, 108, 132)
-				frameStroke.Transparency = 0.18
-				frameStroke.Parent = fieldKitFrame
-			end
-
-			local fieldKitTitle = fieldKitFrame:FindFirstChild("Title")
-			if not fieldKitTitle then
-				fieldKitTitle = Instance.new("TextLabel")
-				fieldKitTitle.Name = "Title"
-				fieldKitTitle.Position = UDim2.fromOffset(12, 10)
-				fieldKitTitle.Size = UDim2.new(1, -24, 0, 18)
-				fieldKitTitle.BackgroundTransparency = 1
-				fieldKitTitle.Font = Enum.Font.GothamBold
-				fieldKitTitle.TextSize = 11
-				fieldKitTitle.TextColor3 = Color3.fromRGB(202, 214, 228)
-				fieldKitTitle.TextXAlignment = Enum.TextXAlignment.Left
-				fieldKitTitle.Text = "FIELD KIT"
-				fieldKitTitle.Parent = fieldKitFrame
-			end
-
-			local fieldKitButtonsFrame = fieldKitFrame:FindFirstChild("Buttons")
-			if not fieldKitButtonsFrame then
-				local defaultFieldKitLayout = getFieldKitLayoutMetrics(false, 332)
-				fieldKitButtonsFrame = Instance.new("Frame")
-				fieldKitButtonsFrame.Name = "Buttons"
-				fieldKitButtonsFrame.Position = UDim2.fromOffset(12, 34)
-				fieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, defaultFieldKitLayout.buttonsHeight)
-				fieldKitButtonsFrame.BackgroundTransparency = 1
-				fieldKitButtonsFrame.Parent = fieldKitFrame
-
-				local fieldKitGrid = Instance.new("UIGridLayout")
-				fieldKitGrid.Name = "Grid"
-				fieldKitGrid.CellPadding = UDim2.fromOffset(defaultFieldKitLayout.cellPaddingX, defaultFieldKitLayout.cellPaddingY)
-				fieldKitGrid.CellSize = UDim2.fromOffset(defaultFieldKitLayout.cellWidth, defaultFieldKitLayout.cellHeight)
-				fieldKitGrid.FillDirection = Enum.FillDirection.Horizontal
-				fieldKitGrid.FillDirectionMaxCells = defaultFieldKitLayout.columns
-				fieldKitGrid.HorizontalAlignment = Enum.HorizontalAlignment.Left
-				fieldKitGrid.SortOrder = Enum.SortOrder.LayoutOrder
-				fieldKitGrid.VerticalAlignment = Enum.VerticalAlignment.Top
-				fieldKitGrid.Parent = fieldKitButtonsFrame
-			end
-
-			local fieldKitStatusLabel = fieldKitFrame:FindFirstChild("StatusLabel")
-			if not fieldKitStatusLabel then
-				local defaultFieldKitLayout = getFieldKitLayoutMetrics(false, 332)
-				fieldKitStatusLabel = Instance.new("TextLabel")
-				fieldKitStatusLabel.Name = "StatusLabel"
-				fieldKitStatusLabel.Position = UDim2.fromOffset(12, defaultFieldKitLayout.statusY)
-				fieldKitStatusLabel.Size = UDim2.new(1, -24, 0, defaultFieldKitLayout.statusHeight)
-				fieldKitStatusLabel.BackgroundTransparency = 1
-				fieldKitStatusLabel.Font = Enum.Font.Gotham
-				fieldKitStatusLabel.TextSize = 11
-				fieldKitStatusLabel.TextColor3 = Color3.fromRGB(208, 216, 228)
-				fieldKitStatusLabel.TextWrapped = true
-				fieldKitStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-				fieldKitStatusLabel.TextYAlignment = Enum.TextYAlignment.Top
-				fieldKitStatusLabel.Text = "Field kit [1-9] siap.\nPilih tool untuk lanjut investigasi."
-				fieldKitStatusLabel.Parent = fieldKitFrame
-			end
-
-			local fieldKitButtons = {}
-			for order, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
-				local definition = FIELD_KIT_TOOL_CONFIG[toolType]
-				local buttonName = toolType .. "Button"
-				local toolButton = fieldKitButtonsFrame:FindFirstChild(buttonName)
-				if not toolButton then
-					toolButton = Instance.new("TextButton")
-					toolButton.Name = buttonName
-					toolButton.LayoutOrder = order
-					toolButton.Size = UDim2.fromOffset(79, 56)
-					styleButton(toolButton, definition.label)
-					toolButton.TextWrapped = true
-					toolButton.BackgroundColor3 = definition.accent:Lerp(Color3.fromRGB(34, 42, 56), 0.44)
-					toolButton.Parent = fieldKitButtonsFrame
-					self:_setSelectableStyle(toolButton)
-				end
-				local fieldKitWidget = ensureFieldKitButtonVisuals(toolButton, definition, toolType)
-				if toolButton:GetAttribute("Bound") ~= true then
-					local boundToolType = toolType
-					local boundOpenJournal = definition.openJournal == true
-					toolButton:SetAttribute("Bound", true)
-					connectButtonPress(toolButton, function()
-						self:_useInvestigationTool(boundToolType, {
-							openJournal = boundOpenJournal,
-						})
-					end)
-				end
-				fieldKitButtons[toolType] = fieldKitWidget
-			end
-
-			local floatBtn = gui:FindFirstChild("MatchFloatButton")
-			if not floatBtn then
-				floatBtn = Instance.new("TextButton")
-				floatBtn.Name = "MatchFloatButton"
-				floatBtn.AnchorPoint = Vector2.new(1, 0.5)
-				floatBtn.Position = UDim2.new(1, -18, 0.68, 0)
-				floatBtn.Size = UDim2.fromOffset(66, 66)
-				floatBtn.BackgroundColor3 = Color3.fromRGB(34, 46, 62)
-				floatBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
-				floatBtn.Font = Enum.Font.GothamBold
-				floatBtn.TextSize = 12
-				floatBtn.TextWrapped = true
-				floatBtn.Text = "MATCH"
-				floatBtn.Visible = false
-				floatBtn.Parent = gui
-
-				local floatCorner = Instance.new("UICorner")
-				floatCorner.CornerRadius = UDim.new(1, 0)
-				floatCorner.Parent = floatBtn
-
-				local floatStroke = Instance.new("UIStroke")
-				floatStroke.Thickness = 2
-				floatStroke.Color = Color3.fromRGB(98, 122, 154)
-				floatStroke.Parent = floatBtn
-
-				self:_setSelectableStyle(floatBtn)
-			end
-			styleFloatingButton(floatBtn, "MATCH", Color3.fromRGB(98, 122, 154))
-			makeFloatingButtonDraggable(floatBtn)
-
-			local function ensureSummaryValue(rowName, labelText)
-				local row = summaryFrame:FindFirstChild(rowName)
-				if row and row:IsA("Frame") then
-					local value = row:FindFirstChild("Value")
-					if value and value:IsA("TextLabel") then
-						return value
-					end
-				end
-				return createSummaryRow(summaryFrame, rowName, labelText)
-			end
-
-			local summaryRows = {
-				status = ensureSummaryValue("StatusRow", "Status Misi"),
-				ghostType = ensureSummaryValue("GhostRow", "Ghost"),
-				correctGuess = ensureSummaryValue("GuessRow", "Tebakan"),
-				evidenceCollected = ensureSummaryValue("EvidenceRow", "Evidence"),
-				playersSurvived = ensureSummaryValue("SurvivedRow", "Pemain Selamat"),
-				playersDead = ensureSummaryValue("DeadRow", "Pemain Mati"),
-				matchDuration = ensureSummaryValue("DurationRow", "Durasi"),
-				routeFocus = ensureSummaryValue("RouteRow", "Route Aktif"),
-				accessState = ensureSummaryValue("AccessRow", "Akses"),
-				currencyReward = ensureSummaryValue("RewardRow", "Hadiah MM / PP"),
-				xpReward = ensureSummaryValue("XpRow", "Hadiah XP"),
-			}
-
-			if closeBtn:GetAttribute("Bound") ~= true then
-				closeBtn:SetAttribute("Bound", true)
-				connectButtonPress(closeBtn, function()
-					self:_setMatchWindowDismissed(true)
-				end)
-			end
-			if hideBtn:GetAttribute("Bound") ~= true then
-				hideBtn:SetAttribute("Bound", true)
-				connectButtonPress(hideBtn, function()
-					self:_setMatchWindowDismissed(true)
-				end)
-			end
-			if floatBtn:GetAttribute("Bound") ~= true then
-				floatBtn:SetAttribute("Bound", true)
-				connectButtonPress(floatBtn, function()
-					self:_setMatchWindowDismissed(false)
-				end)
-			end
-			if evidenceQuickButton:GetAttribute("Bound") ~= true then
-				evidenceQuickButton:SetAttribute("Bound", true)
-				connectButtonPress(evidenceQuickButton, function()
-					self:_toggleAuxiliaryWindow("JournalUI")
-				end)
-			end
-
-			self._uxWidgets.match.BasicGui = gui
-			self._uxWidgets.match.BasicPanel = panel
-			self._uxWidgets.match.HeaderCard = headerCard
-			self._uxWidgets.match.HeaderStroke = headerCard:FindFirstChild("HeaderStroke")
-			self._uxWidgets.match.PhaseGlyph = phaseGlyph
-			self._uxWidgets.match.BasicTitle = title
-			self._uxWidgets.match.BasicStateBadge = stateBadge
-			self._uxWidgets.match.BasicPrimaryLabel = primaryLabel
-			self._uxWidgets.match.BasicSecondaryLabel = secondaryLabel
-			self._uxWidgets.match.BasicFooterLabel = footerLabel
-			self._uxWidgets.match.SummaryFrame = summaryFrame
-			self._uxWidgets.match.TimerLabel = timerLabel
-			self._uxWidgets.match.TimerCaption = timerCaption
-			self._uxWidgets.match.EvidenceQuickButton = evidenceQuickButton
-			self._uxWidgets.match.ControlsHintBar = controlsHintBar
-			self._uxWidgets.match.ControlsHintLabel = controlsHintLabel
-			self._uxWidgets.match.FieldKitFrame = fieldKitFrame
-			self._uxWidgets.match.FieldKitTitle = fieldKitTitle
-			self._uxWidgets.match.FieldKitButtonsFrame = fieldKitButtonsFrame
-			self._uxWidgets.match.FieldKitButtons = fieldKitButtons
-			self._uxWidgets.match.FieldKitStatusLabel = fieldKitStatusLabel
-			self._uxWidgets.match.FieldKitGrid = fieldKitButtonsFrame:FindFirstChild("Grid")
-			self._uxWidgets.match.BasicSummaryRows = summaryRows
-			self._uxWidgets.match.BasicFloatButton = floatBtn
-			self._uxWidgets.match.BasicCloseButton = closeBtn
-			self._uxWidgets.match.BasicHideButton = hideBtn
-		end
-
 		if guiName == "MainMenuUI" or guiName == "LeaderboardUI" then
-			local config = guiName == "LeaderboardUI"
-				and {
-					title = "RANK BOARD",
-					panelAnchorPoint = Vector2.new(0.5, 1),
-					panelPosition = UDim2.new(0.5, 0, 1, -16),
-					panelSize = Vector2.new(340, 448),
-					panelColor = Color3.fromRGB(18, 25, 34),
-					badgeColor = Color3.fromRGB(92, 104, 60),
-					floatPosition = UDim2.new(1, -18, 0.64, 0),
-					floatText = "RANK",
-				}
-				or {
-					title = "QUICK MENU",
-					panelAnchorPoint = Vector2.new(0.5, 0),
-					panelPosition = UDim2.new(0.5, 0, 0, 16),
-					panelSize = Vector2.new(340, 376),
-					panelColor = Color3.fromRGB(18, 26, 34),
-					badgeColor = Color3.fromRGB(60, 92, 132),
-					floatPosition = UDim2.new(1, -18, 0.36, 0),
-					floatText = "MENU",
-				}
-			panel.AnchorPoint = config.panelAnchorPoint
-			panel.Position = config.panelPosition
-			panel.Size = UDim2.fromOffset(config.panelSize.X, config.panelSize.Y)
-			panel.BackgroundColor3 = config.panelColor
-			panel.BackgroundTransparency = 0.08
-
-			local title = panel:FindFirstChild("Title")
-			if title and title:IsA("TextLabel") then
-				title.Text = config.title
-				title.Size = UDim2.new(1, -56, 0, 24)
-				title.TextColor3 = Color3.fromRGB(238, 243, 248)
-				title.Font = Enum.Font.GothamBold
-			end
-
-			local statusBadge = panel:FindFirstChild("StatusBadge")
-			if not statusBadge then
-				statusBadge = Instance.new("TextLabel")
-				statusBadge.Name = "StatusBadge"
-				statusBadge.Position = UDim2.fromOffset(12, 42)
-				statusBadge.Size = UDim2.fromOffset(126, 24)
-				statusBadge.BackgroundColor3 = config.badgeColor
-				statusBadge.TextColor3 = Color3.fromRGB(245, 245, 245)
-				statusBadge.Font = Enum.Font.GothamBold
-				statusBadge.TextSize = 12
-				statusBadge.Text = guiName == "LeaderboardUI" and "LOCAL SNAPSHOT" or "QUICK ACCESS"
-				statusBadge.Parent = panel
-
-				local badgeCorner = Instance.new("UICorner")
-				badgeCorner.CornerRadius = UDim.new(0, 999)
-				badgeCorner.Parent = statusBadge
-			end
-
-			local primaryLabel = panel:FindFirstChild("PrimaryLabel")
-			if not primaryLabel then
-				primaryLabel = Instance.new("TextLabel")
-				primaryLabel.Name = "PrimaryLabel"
-				primaryLabel.Position = UDim2.fromOffset(12, 76)
-				primaryLabel.Size = UDim2.new(1, -24, 0, 38)
-				primaryLabel.BackgroundTransparency = 1
-				primaryLabel.Font = Enum.Font.GothamBold
-				primaryLabel.TextSize = 16
-				primaryLabel.TextColor3 = Color3.fromRGB(242, 246, 250)
-				primaryLabel.TextWrapped = true
-				primaryLabel.TextXAlignment = Enum.TextXAlignment.Left
-				primaryLabel.TextYAlignment = Enum.TextYAlignment.Top
-				primaryLabel.Parent = panel
-			end
-
-			local secondaryLabel = panel:FindFirstChild("SecondaryLabel")
-			if not secondaryLabel then
-				secondaryLabel = Instance.new("TextLabel")
-				secondaryLabel.Name = "SecondaryLabel"
-				secondaryLabel.Position = UDim2.fromOffset(12, 118)
-				secondaryLabel.Size = UDim2.new(1, -24, 0, 32)
-				secondaryLabel.BackgroundTransparency = 1
-				secondaryLabel.Font = Enum.Font.Gotham
-				secondaryLabel.TextSize = 13
-				secondaryLabel.TextColor3 = Color3.fromRGB(182, 196, 216)
-				secondaryLabel.TextWrapped = true
-				secondaryLabel.TextXAlignment = Enum.TextXAlignment.Left
-				secondaryLabel.TextYAlignment = Enum.TextYAlignment.Top
-				secondaryLabel.Parent = panel
-			end
-
-			local closeBtn = panel:FindFirstChild("CloseButton")
-			if not closeBtn then
-				closeBtn = Instance.new("TextButton")
-				closeBtn.Name = "CloseButton"
-				closeBtn.AnchorPoint = Vector2.new(1, 0)
-				closeBtn.Position = UDim2.new(1, -8, 0, 8)
-				closeBtn.Size = UDim2.fromOffset(24, 24)
-				closeBtn.BackgroundColor3 = Color3.fromRGB(68, 36, 36)
-				closeBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
-				closeBtn.Font = Enum.Font.GothamBold
-				closeBtn.TextSize = 14
-				closeBtn.Text = "[X]"
-				closeBtn.Parent = panel
-			end
-			closeBtn.Text = "[X]"
-			local closeCorner = closeBtn:FindFirstChildOfClass("UICorner")
-			if not closeCorner then
-				closeCorner = Instance.new("UICorner")
-				closeCorner.Parent = closeBtn
-			end
-			closeCorner.CornerRadius = UDim.new(1, 0)
-
-			local floatName = guiName == "LeaderboardUI" and "LeaderboardFloatButton" or "MainMenuFloatButton"
-			local fallbackFloatName = guiName == "LeaderboardUI" and "MainMenuFloatButton" or "LeaderboardFloatButton"
-			local floatBtn = gui:FindFirstChild(floatName) or gui:FindFirstChild(fallbackFloatName)
-			if not floatBtn then
-				floatBtn = Instance.new("TextButton")
-				floatBtn.Name = floatName
-				floatBtn.AnchorPoint = Vector2.new(1, 0.5)
-				floatBtn.Position = config.floatPosition
-				floatBtn.Size = UDim2.fromOffset(60, 60)
-				floatBtn.BackgroundColor3 = Color3.fromRGB(44, 55, 74)
-				floatBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
-				floatBtn.Font = Enum.Font.GothamBold
-				floatBtn.TextSize = 12
-				floatBtn.TextWrapped = true
-				floatBtn.Text = config.floatText
-				floatBtn.Visible = false
-				floatBtn.Parent = gui
-
-				local floatCorner = Instance.new("UICorner")
-				floatCorner.CornerRadius = UDim.new(1, 0)
-				floatCorner.Parent = floatBtn
-
-				local floatStroke = Instance.new("UIStroke")
-				floatStroke.Thickness = 2
-				floatStroke.Color = Color3.fromRGB(115, 132, 160)
-				floatStroke.Parent = floatBtn
-
-				self:_setSelectableStyle(floatBtn)
-			end
-			floatBtn.Name = floatName
-			floatBtn.Position = config.floatPosition
-			floatBtn.Text = config.floatText
-			styleFloatingButton(floatBtn, config.floatText, config.badgeColor)
-
-			local footerLabel = panel:FindFirstChild("FooterLabel")
-			if not footerLabel then
-				footerLabel = Instance.new("TextLabel")
-				footerLabel.Name = "FooterLabel"
-				footerLabel.BackgroundTransparency = 1
-				footerLabel.Font = Enum.Font.Gotham
-				footerLabel.TextSize = 11
-				footerLabel.TextColor3 = Color3.fromRGB(162, 176, 198)
-				footerLabel.TextWrapped = true
-				footerLabel.TextXAlignment = Enum.TextXAlignment.Left
-				footerLabel.TextYAlignment = Enum.TextYAlignment.Top
-				footerLabel.Parent = panel
-			end
-
-			local actionButtons = {}
-			local roomBrowserButton = nil
-			local profileButton = nil
-			local shopButton = nil
-			local rankButton = nil
-			local graphicsButton = nil
-			local contentFrame = nil
-			local contentText = nil
-			local menuButton = nil
-
-			if guiName == "MainMenuUI" then
-				local buttonWidth = 152
-				local buttonHeight = 52
-				local buttonDefinitions = {
-					{
-						name = "RoomBrowserButton",
-						text = "OPEN ROOM BROWSER",
-						position = UDim2.fromOffset(12, 162),
-						color = Color3.fromRGB(46, 78, 114),
-					},
-					{
-						name = "ProfileButton",
-						text = "OPEN PROFILE",
-						position = UDim2.fromOffset(176, 162),
-						color = Color3.fromRGB(58, 84, 62),
-					},
-					{
-						name = "ShopButton",
-						text = "OPEN SHOP",
-						position = UDim2.fromOffset(12, 222),
-						color = Color3.fromRGB(104, 78, 48),
-					},
-					{
-						name = "RankButton",
-						text = "OPEN RANK BOARD",
-						position = UDim2.fromOffset(176, 222),
-						color = Color3.fromRGB(78, 84, 50),
-					},
-				}
-
-				for _, definition in ipairs(buttonDefinitions) do
-					local button = panel:FindFirstChild(definition.name)
-					if not button then
-						button = Instance.new("TextButton")
-						button.Name = definition.name
-						button.Position = definition.position
-						button.Size = UDim2.fromOffset(buttonWidth, buttonHeight)
-						styleButton(button, definition.text)
-						button.BackgroundColor3 = definition.color
-						button.TextWrapped = true
-						button.Parent = panel
-
-						local buttonCorner = Instance.new("UICorner")
-						buttonCorner.CornerRadius = UDim.new(0, 10)
-						buttonCorner.Parent = button
-
-						self:_setSelectableStyle(button)
-					else
-						button.Position = definition.position
-						button.Size = UDim2.fromOffset(buttonWidth, buttonHeight)
-						button.BackgroundColor3 = definition.color
-						button.TextWrapped = true
-					end
-
-					if definition.name == "RoomBrowserButton" then
-						roomBrowserButton = button
-					elseif definition.name == "ProfileButton" then
-						profileButton = button
-					elseif definition.name == "ShopButton" then
-						shopButton = button
-					elseif definition.name == "RankButton" then
-						rankButton = button
-					end
-					table.insert(actionButtons, button)
-				end
-
-				graphicsButton = panel:FindFirstChild("GraphicsButton")
-				if not graphicsButton then
-					graphicsButton = Instance.new("TextButton")
-					graphicsButton.Name = "GraphicsButton"
-					graphicsButton.Position = UDim2.fromOffset(12, 282)
-					graphicsButton.Size = UDim2.fromOffset(316, 44)
-					styleButton(graphicsButton, "VISUAL: SEIMBANG")
-					graphicsButton.BackgroundColor3 = GraphicsSupport.MODE_META.Balanced.buttonColor
-					graphicsButton.TextWrapped = true
-					graphicsButton.Parent = panel
-
-					local buttonCorner = Instance.new("UICorner")
-					buttonCorner.CornerRadius = UDim.new(0, 10)
-					buttonCorner.Parent = graphicsButton
-
-					self:_setSelectableStyle(graphicsButton)
-				else
-					graphicsButton.Position = UDim2.fromOffset(12, 282)
-					graphicsButton.Size = UDim2.fromOffset(316, 44)
-					graphicsButton.BackgroundColor3 = GraphicsSupport.MODE_META.Balanced.buttonColor
-					graphicsButton.TextWrapped = true
-				end
-				table.insert(actionButtons, graphicsButton)
-
-				footerLabel.Position = UDim2.fromOffset(12, 334)
-				footerLabel.Size = UDim2.new(1, -24, 0, 34)
+			gui = gui or playerGui:FindFirstChild(guiName) or playerGui:WaitForChild(guiName, 5)
+			if gui and gui:IsA("ScreenGui") then
+				self:_bindAuthoredBasicWindowUi(guiName, gui)
 			else
-				local contentFrameHeight = guiName == "LeaderboardUI" and 214 or 112
-				local actionRowY = guiName == "LeaderboardUI" and 378 or 276
-				local footerY = guiName == "LeaderboardUI" and 420 or 318
-				local footerHeight = guiName == "LeaderboardUI" and 18 or 22
-				contentFrame = panel:FindFirstChild("ContentFrame")
-				if contentFrame and not contentFrame:IsA("ScrollingFrame") then
-					contentFrame:Destroy()
-					contentFrame = nil
+				self._basicWindowShellWarned = self._basicWindowShellWarned or {}
+				if self._basicWindowShellWarned[guiName] ~= true then
+					self._basicWindowShellWarned[guiName] = true
+					warn(string.format("[UISystem] Missing authored %s ScreenGui; check StarterGui shell contract.", guiName))
 				end
-				if not contentFrame then
-					contentFrame = Instance.new("ScrollingFrame")
-					contentFrame.Name = "ContentFrame"
-					contentFrame.Position = UDim2.fromOffset(12, 154)
-					contentFrame.Size = UDim2.new(1, -24, 0, contentFrameHeight)
-					contentFrame.BackgroundColor3 = Color3.fromRGB(20, 27, 36)
-					contentFrame.BackgroundTransparency = 0.06
-					contentFrame.BorderSizePixel = 0
-					contentFrame.ScrollBarThickness = 5
-					contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-					contentFrame.CanvasSize = UDim2.fromOffset(0, 0)
-					contentFrame.ScrollingDirection = Enum.ScrollingDirection.Y
-					contentFrame.ElasticBehavior = Enum.ElasticBehavior.Never
-					contentFrame.Parent = panel
-
-					local contentCorner = Instance.new("UICorner")
-					contentCorner.CornerRadius = UDim.new(0, 10)
-					contentCorner.Parent = contentFrame
-
-					local contentPadding = Instance.new("UIPadding")
-					contentPadding.PaddingTop = UDim.new(0, 10)
-					contentPadding.PaddingBottom = UDim.new(0, 10)
-					contentPadding.PaddingLeft = UDim.new(0, 10)
-					contentPadding.PaddingRight = UDim.new(0, 10)
-					contentPadding.Parent = contentFrame
-				end
-				contentFrame.Size = UDim2.new(1, -24, 0, contentFrameHeight)
-
-				contentText = contentFrame:FindFirstChild("ContentText")
-				if not contentText then
-					contentText = Instance.new("TextLabel")
-					contentText.Name = "ContentText"
-					contentText.Size = UDim2.new(1, -4, 0, 0)
-					contentText.BackgroundTransparency = 1
-					contentText.AutomaticSize = Enum.AutomaticSize.Y
-					contentText.Font = Enum.Font.Gotham
-					contentText.TextSize = 12
-					contentText.TextColor3 = Color3.fromRGB(226, 234, 244)
-					contentText.TextWrapped = true
-					contentText.TextXAlignment = Enum.TextXAlignment.Left
-					contentText.TextYAlignment = Enum.TextYAlignment.Top
-					contentText.Parent = contentFrame
-				end
-
-				local profileAction = panel:FindFirstChild("ProfileButton")
-				if not profileAction then
-					profileAction = Instance.new("TextButton")
-					profileAction.Name = "ProfileButton"
-					profileAction.Position = UDim2.fromOffset(12, actionRowY)
-					profileAction.Size = UDim2.fromOffset(98, 36)
-					styleButton(profileAction, "PROFILE")
-					profileAction.BackgroundColor3 = Color3.fromRGB(58, 84, 62)
-					profileAction.Parent = panel
-
-					local buttonCorner = Instance.new("UICorner")
-					buttonCorner.CornerRadius = UDim.new(0, 10)
-					buttonCorner.Parent = profileAction
-
-					self:_setSelectableStyle(profileAction)
-				end
-				profileAction.Position = UDim2.fromOffset(12, actionRowY)
-				profileButton = profileAction
-
-				local roomAction = panel:FindFirstChild("RoomBrowserButton")
-				if not roomAction then
-					roomAction = Instance.new("TextButton")
-					roomAction.Name = "RoomBrowserButton"
-					roomAction.Position = UDim2.fromOffset(120, actionRowY)
-					roomAction.Size = UDim2.fromOffset(98, 36)
-					styleButton(roomAction, "OPEN ROOMS")
-					roomAction.BackgroundColor3 = Color3.fromRGB(46, 78, 114)
-					roomAction.Parent = panel
-
-					local buttonCorner = Instance.new("UICorner")
-					buttonCorner.CornerRadius = UDim.new(0, 10)
-					buttonCorner.Parent = roomAction
-
-					self:_setSelectableStyle(roomAction)
-				end
-				roomAction.Position = UDim2.fromOffset(120, actionRowY)
-				roomBrowserButton = roomAction
-
-				local menuAction = panel:FindFirstChild("MenuButton")
-				if not menuAction then
-					menuAction = Instance.new("TextButton")
-					menuAction.Name = "MenuButton"
-					menuAction.Position = UDim2.fromOffset(228, actionRowY)
-					menuAction.Size = UDim2.fromOffset(98, 36)
-					styleButton(menuAction, "OPEN MENU")
-					menuAction.BackgroundColor3 = Color3.fromRGB(58, 66, 84)
-					menuAction.Parent = panel
-
-					local buttonCorner = Instance.new("UICorner")
-					buttonCorner.CornerRadius = UDim.new(0, 10)
-					buttonCorner.Parent = menuAction
-
-					self:_setSelectableStyle(menuAction)
-				end
-				menuAction.Position = UDim2.fromOffset(228, actionRowY)
-				menuButton = menuAction
-				actionButtons = { profileButton, roomBrowserButton, menuButton }
-
-				footerLabel.Position = UDim2.fromOffset(12, footerY)
-				footerLabel.Size = UDim2.new(1, -24, 0, footerHeight)
 			end
-
-			local initAttribute = guiName == "LeaderboardUI" and "LeaderboardInitDone" or "MainMenuInitDone"
-			if gui:GetAttribute(initAttribute) ~= true then
-				gui:SetAttribute(initAttribute, true)
-				panel.Visible = false
-				floatBtn.Visible = true
-			end
-
-			floatBtn.Visible = panel.Visible ~= true
-			makeFloatingButtonDraggable(floatBtn)
-
-			if closeBtn:GetAttribute("Bound") ~= true then
-				closeBtn:SetAttribute("Bound", true)
-				connectButtonPress(closeBtn, function()
-					self:_setBasicWindowVisible(guiName, false)
-				end)
-			end
-
-			if floatBtn:GetAttribute("Bound") ~= true then
-				floatBtn:SetAttribute("Bound", true)
-				connectButtonPress(floatBtn, function()
-					self:_setBasicWindowVisible(guiName, true)
-				end)
-			end
-
-			if roomBrowserButton and roomBrowserButton:GetAttribute("Bound") ~= true then
-				roomBrowserButton:SetAttribute("Bound", true)
-				connectButtonPress(roomBrowserButton, function()
-					self:_toggleRoomBrowserVisible()
-				end)
-			end
-			if profileButton and profileButton:GetAttribute("Bound") ~= true then
-				profileButton:SetAttribute("Bound", true)
-				connectButtonPress(profileButton, function()
-					self:_toggleAuxiliaryWindow("ProfileUI")
-				end)
-			end
-			if shopButton and shopButton:GetAttribute("Bound") ~= true then
-				shopButton:SetAttribute("Bound", true)
-				connectButtonPress(shopButton, function()
-					self:_toggleAuxiliaryWindow("ShopUI")
-				end)
-			end
-			if rankButton and rankButton:GetAttribute("Bound") ~= true then
-				rankButton:SetAttribute("Bound", true)
-				connectButtonPress(rankButton, function()
-					self:_toggleBasicWindow("LeaderboardUI")
-				end)
-			end
-			if graphicsButton and graphicsButton:GetAttribute("Bound") ~= true then
-				graphicsButton:SetAttribute("Bound", true)
-				connectButtonPress(graphicsButton, function()
-					self:_cycleGraphicsMode()
-				end)
-			end
-			if menuButton and menuButton:GetAttribute("Bound") ~= true then
-				menuButton:SetAttribute("Bound", true)
-				connectButtonPress(menuButton, function()
-					self:_toggleBasicWindow("MainMenuUI")
-				end)
-			end
-
-			self._uxWidgets.basicWindows[guiName] = {
-				Gui = gui,
-				Panel = panel,
-				Title = title,
-				StatusBadge = statusBadge,
-				PrimaryLabel = primaryLabel,
-				SecondaryLabel = secondaryLabel,
-				ContentFrame = contentFrame,
-				ContentText = contentText,
-				FooterLabel = footerLabel,
-				FloatButton = floatBtn,
-				CloseButton = closeBtn,
-				ActionButtons = actionButtons,
-				RoomBrowserButton = roomBrowserButton,
-				ProfileButton = profileButton,
-				ShopButton = shopButton,
-				RankButton = rankButton,
-				GraphicsButton = graphicsButton,
-				MenuButton = menuButton,
-			}
+			continue
 		end
+		if guiName == "MatchUI" then
+			gui = gui or playerGui:FindFirstChild(guiName) or playerGui:WaitForChild("MatchUI", 5)
+			if gui and gui:IsA("ScreenGui") then
+				self:_bindAuthoredMatchUi(gui)
+			else
+				if self._matchUiShellWarned ~= true then
+					self._matchUiShellWarned = true
+					warn("[UISystem] Missing authored MatchUI ScreenGui; check StarterGui shell contract.")
+				end
+			end
+			continue
+		end
+		if guiName == "JournalUI"
+			or guiName == "ProfileUI"
+			or guiName == "ShopUI"
+			or guiName == "RoyalPassUI"
+			or guiName == "PASRA_UI"
+			or guiName == "SpectatorUI"
+		then
+			gui = gui or playerGui:FindFirstChild(guiName) or playerGui:WaitForChild(guiName, 5)
+			if gui and gui:IsA("ScreenGui") then
+				self:_bindAuthoredAuxiliaryWindowUi(guiName, gui)
+			else
+				self._auxiliaryWindowShellWarned = self._auxiliaryWindowShellWarned or {}
+				if self._auxiliaryWindowShellWarned[guiName] ~= true then
+					self._auxiliaryWindowShellWarned[guiName] = true
+					warn(string.format("[UISystem] Missing authored %s ScreenGui; check StarterGui shell contract.", guiName))
+				end
+			end
+			continue
+		end
+		warn(string.format("[UISystem] Unsupported BASIC_GUI_NAMES entry %s; authored shell binding required.", tostring(guiName)))
+	end
 
 	self:_refreshBasicLobbyPanel()
 	self:_refreshBasicMatchPanel("Lobby")
 	self:_applyVisibility()
-end
 end
 
 function UISystem:_ensureRoomBrowserGui()
@@ -16589,453 +16991,172 @@ function UISystem:_ensureRoomBrowserGui()
 		return
 	end
 
-	for _, guiName in ipairs({ "RoomBrowserUI", "RoomBrowserDebugUI", "RoomBrowserFloatUI" }) do
-		local existing = self:_dedupeScreenGuiByName(guiName)
-		if existing then
-			existing:Destroy()
+	local gui = self:_dedupeScreenGuiByName("RoomBrowserUI") or playerGui:FindFirstChild("RoomBrowserUI")
+	if not gui then
+		gui = playerGui:WaitForChild("RoomBrowserUI", 10)
+	end
+	local floatGui = self:_dedupeScreenGuiByName("RoomBrowserFloatUI") or playerGui:FindFirstChild("RoomBrowserFloatUI")
+	if not floatGui then
+		floatGui = playerGui:WaitForChild("RoomBrowserFloatUI", 10)
+	end
+	local shell = self:_bindAuthoredRoomBrowserUi(gui, floatGui)
+	if not shell then
+		-- Fallback wiring for owner-edited RoomBrowserUI contracts.
+		-- Keeps room flow usable even when authored hierarchy drifts from strict contract.
+		self._roomBrowserGui = gui
+		self._roomBrowserFloatGui = floatGui
+		self._roomBrowserWidgets = self._roomBrowserWidgets or {}
+		self._roomBrowserWidgets.Gui = gui
+		if gui and gui:GetAttribute("PasrahRoomBrowserFallbackBound") ~= true then
+			local function bindButtonByName(name, callback)
+				local button = gui:FindFirstChild(name, true)
+				if button and button:IsA("TextButton") and not isRuntimeButtonBound(button) then
+					markRuntimeButtonBound(button)
+					connectButtonPress(button, callback)
+				end
+			end
+			bindButtonByName("CreateRoomButton", function()
+				self:RoomBrowserCreateRoom()
+			end)
+			bindButtonByName("RefreshButton", function()
+				if self._roomBrowser then
+					self._roomBrowser:RequestSnapshot()
+					self._roomBrowser:RequestRoomList()
+				end
+			end)
+			bindButtonByName("ReadyButton", function()
+				local state = self:GetRoomBrowserState() or {}
+				self:RoomBrowserSetReady(not (state.isReady == true))
+			end)
+			bindButtonByName("StartButton", function()
+				local state = self:GetRoomBrowserState() or {}
+				local room = state.currentRoom
+				local mapId = resolveEffectiveMapId(state, room)
+				local mode = (room and room.mode) or state.selectedMode
+				self:RoomBrowserHostStart(mapId, nil, mode)
+			end)
+			bindButtonByName("LeaveRoomButton", function()
+				self:RoomBrowserLeaveRoom()
+			end)
+			bindButtonByName("CloseButton", function()
+				self:_setRoomBrowserVisible(false)
+			end)
+			gui:SetAttribute("PasrahRoomBrowserFallbackBound", true)
 		end
+		if floatGui and floatGui:GetAttribute("PasrahRoomBrowserFloatFallbackBound") ~= true then
+			local floatButton = floatGui:FindFirstChild("RoomBrowserFloatButton", true)
+			if floatButton and floatButton:IsA("TextButton") and not isRuntimeButtonBound(floatButton) then
+				markRuntimeButtonBound(floatButton)
+				connectButtonPress(floatButton, function()
+					self:_toggleRoomBrowserVisible()
+				end)
+			end
+			floatGui:SetAttribute("PasrahRoomBrowserFloatFallbackBound", true)
+		end
+		self:_updateRoomBrowserVisibility()
+		return
 	end
 
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "RoomBrowserUI"
-	gui.ResetOnSpawn = false
-	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	gui.DisplayOrder = 200
-	gui.IgnoreGuiInset = true
-	gui.Enabled = self._roomBrowserVisible
-	gui.Parent = playerGui
+	local backdrop = shell.Backdrop
+	local panel = shell.RootPanel
+	local title = shell.HeaderTitle
+	local titleGlow = shell.HeaderTitleGlow
+	local dragBar = shell.DragBar
+	local closeBtn = shell.CloseButton
+	local floatButton = shell.FloatButton
+	local statusLabel = shell.Status
+	local classicBtn = shell.ClassicButton
+	local allModesBtn = shell.AllModesButton
+	local rankedBtn = shell.RankedButton
+	local roomList = shell.RoomList
+	local roomListRowTemplate = shell.RoomListRowTemplate
+	local roomPreviewPanel = shell.RoomPreviewPanel
+	local roomPreviewTitle = shell.RoomPreviewTitle
+	local roomPreviewInfo = shell.RoomPreviewInfo
+	local roomPreviewMap = shell.RoomPreviewMap
+	local roomPreviewMapTitle = shell.RoomPreviewMapTitle
+	local roomPreviewMapLabel = shell.RoomPreviewMapLabel
+	local roomPreviewMapStats = shell.RoomPreviewMapStats
+	local roomPreviewMapMood = shell.RoomPreviewMapMood
+	local roomPreviewMapAccent = shell.RoomPreviewMapAccent
+	local roomPreviewMapGradient = shell.RoomPreviewMapGradient
+	local roomPreviewPlayersList = shell.RoomPreviewPlayersList
+	local roomPreviewPlayerCardTemplate = shell.RoomPreviewPlayerCardTemplate
+	local roomPreviewEmptyStateTemplate = shell.RoomPreviewEmptyStateTemplate
+	local joinPwdBox = shell.JoinPassword
+	local passwordModal = shell.PasswordModal
+	local passwordCard = shell.PasswordCard
+	local passwordTitle = shell.PasswordTitle
+	local passwordInput = shell.PasswordInput
+	local passwordJoinBtn = shell.PasswordJoinButton
+	local passwordCancelBtn = shell.PasswordCancelButton
+	local kickNoticeModal = shell.KickNoticeModal
+	local kickNoticeCard = shell.KickNoticeCard
+	local kickNoticeText = shell.KickNoticeText
+	local kickNoticeOk = shell.KickNoticeOkButton
+	local refreshBtn = shell.RefreshButton
+	local createRoomBtn = shell.CreateRoomButton
+	local queueBtn = shell.QueueButton
+	local quickClassicBtn = shell.QuickJoinClassicButton
+	local quickRankedBtn = shell.QuickJoinRankedButton
+	local roomPanel = shell.RoomPanel
+	local roomTitle = shell.RoomTitle
+	local roomHost = shell.RoomHost
+	local playersList = shell.PlayersList
+	local roomPanelPlayerCardTemplate = shell.RoomPanelPlayerCardTemplate
+	local roomPanelEmptyStateTemplate = shell.RoomPanelEmptyStateTemplate
+	local modeSelector = shell.ModeSelector
+	local modeDropdown = shell.ModeDropdown
+	local modeClassicBtn = shell.ModeClassicOption
+	local modeRankedBtn = shell.ModeRankedOption
+	local mapSelector = shell.MapSelector
+	local mapDropdown = shell.MapDropdown
+	local mapOptionButtons = shell.MapOptionButtons
+	local rankedTierLabel = shell.RankedTierLabel
+	local mapPreview = shell.MapPreview
+	local mapPreviewTitle = shell.MapPreviewTitle
+	local mapPreviewLabel = shell.MapPreviewLabel
+	local mapPreviewImage = shell.MapPreviewImage
+	local mapPreviewImageGradient = shell.MapPreviewImageGradient
+	local mapPreviewImageAccent = shell.MapPreviewImageAccent
+	local mapPreviewImageChip = shell.MapPreviewImageChip
+	local mapPreviewImageLabel = shell.MapPreviewImageLabel
+	local mapPreviewImageStats = shell.MapPreviewImageStats
+	local mapPreviewImageFooter = shell.MapPreviewImageFooter
+	local setPwdBox = shell.SetPasswordBox
+	local setPwdBtn = shell.SetPasswordButton
+	local readyBtn = shell.ReadyButton
+	local startBtn = shell.StartButton
+	local cancelStartBtn = shell.CancelStartButton
+	local leaveRoomBtn = shell.LeaveRoomButton
+	local inviteBtn = shell.InviteButton
+	local inviteDropdown = shell.InviteDropdown
+	local inviteList = shell.InviteList
+	local inviteAllTemplate = shell.InviteAllTemplate
+	local invitePlayerTemplate = shell.InvitePlayerTemplate
+	local kickNameBox = shell.KickNameBox
+	local kickBtn = shell.KickButton
+	local countdownOverlay = shell.CountdownOverlay
+	local countdownLabel = shell.CountdownLabel
+	local cancelCountdownBtn = shell.CancelCountdown
+	local invitePopup = shell.InvitePopup
+	local invitePopupScale = shell.InvitePopupScale
+	local invitePopupText = shell.InvitePopupText
+	local inviteAcceptBtn = shell.InviteAcceptButton
+	local inviteDeclineBtn = shell.InviteDeclineButton
+	local roomPreviewMapStroke = roomPreviewMap and roomPreviewMap:FindFirstChildOfClass("UIStroke")
+	local mapPreviewStroke = mapPreview and mapPreview:FindFirstChildOfClass("UIStroke")
+	local mapPreviewImageStroke = mapPreviewImage and mapPreviewImage:FindFirstChildOfClass("UIStroke")
+	local cloneAuthoredGuiTemplate = function(template, parent, newName)
+		return self:_cloneAuthoredGuiTemplate(template, parent, newName)
+	end
 
-	local floatGui = Instance.new("ScreenGui")
-	floatGui.Name = "RoomBrowserFloatUI"
-	floatGui.ResetOnSpawn = false
-	floatGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	floatGui.DisplayOrder = 201
-	floatGui.IgnoreGuiInset = true
-	floatGui.Enabled = true
-	floatGui.Parent = playerGui
-
-	local backdrop = Instance.new("Frame")
-	backdrop.Name = "Backdrop"
-	backdrop.Size = UDim2.fromScale(1, 1)
-	backdrop.BackgroundColor3 = UI_BRAND.bgVoid
-	backdrop.BackgroundTransparency = 0.5
-	backdrop.BorderSizePixel = 0
-	backdrop.Active = true
-	backdrop.Parent = gui
-
-	local panel = Instance.new("Frame")
-	panel.Name = "Panel"
-	panel.AnchorPoint = Vector2.new(0.5, 0.5)
-	panel.Position = UDim2.fromScale(0.5, 0.5)
-	panel.Size = UDim2.fromOffset(920, 560)
-	panel.BackgroundColor3 = UI_BRAND.bgPanel
-	panel.BackgroundTransparency = 0.32
-	panel.BorderSizePixel = 0
-	panel.Active = true
-	panel.Parent = backdrop
-
-	local panelScale = Instance.new("UIScale")
-	panelScale.Parent = panel
-	panelScale.Scale = 1
-
-	local panelCorner = Instance.new("UICorner")
-	panelCorner.CornerRadius = UDim.new(0, 12)
-	panelCorner.Parent = panel
-
-	local title = Instance.new("TextLabel")
-	title.BackgroundTransparency = 1
-	title.Position = UDim2.fromOffset(0, 8)
-	title.Size = UDim2.new(1, -48, 0, 30)
-	title.Text = "RUANG INVESTIGASI"
-	title.TextXAlignment = Enum.TextXAlignment.Center
-	title.Font = Enum.Font.GothamBlack
-	title.TextSize = 25
-	title.TextColor3 = UI_BRAND.focusStrong
-	title.ZIndex = 3
-	title.Parent = panel
-	local titleStroke = Instance.new("UIStroke")
-	titleStroke.Thickness = 1.4
-	titleStroke.Color = Color3.fromRGB(12, 44, 58)
-	titleStroke.Parent = title
-
-	local titleGlow = Instance.new("TextLabel")
-	titleGlow.Name = "TitleGlow"
-	titleGlow.BackgroundTransparency = 1
-	titleGlow.Position = UDim2.fromOffset(1, 10)
-	titleGlow.Size = title.Size
-	titleGlow.Text = title.Text
-	titleGlow.TextXAlignment = Enum.TextXAlignment.Center
-	titleGlow.Font = title.Font
-	titleGlow.TextSize = 25
-	titleGlow.TextColor3 = Color3.fromRGB(34, 104, 130)
-	titleGlow.TextTransparency = 0.35
-	titleGlow.ZIndex = 2
-	titleGlow.Parent = panel
-
-	local dragBar = Instance.new("Frame")
-	dragBar.Name = "DragBar"
-	dragBar.BackgroundTransparency = 1
-	dragBar.Position = UDim2.fromOffset(0, 0)
-	dragBar.Size = UDim2.new(1, 0, 0, 42)
-	dragBar.Active = true
-	dragBar.Parent = panel
-
-	local closeBtn = Instance.new("TextButton")
-	closeBtn.Name = "CloseButton"
-	closeBtn.Position = UDim2.fromOffset(852, 8)
-	closeBtn.Size = UDim2.fromOffset(34, 28)
-	styleButton(closeBtn, "X")
-	setButtonTone(closeBtn, "danger", false)
-	closeBtn.ZIndex = 8
-	closeBtn.Parent = panel
-
-	local floatButton = Instance.new("TextButton")
-	floatButton.Name = "RoomBrowserFloatButton"
-	floatButton.AnchorPoint = Vector2.new(0, 1)
-	floatButton.Position = UDim2.new(0, 16, 1, -164)
-	floatButton.Size = UDim2.fromOffset(72, 72)
-	floatButton.BackgroundColor3 = UI_BRAND.bgCard
-	floatButton.TextColor3 = UI_BRAND.text
-	floatButton.Font = Enum.Font.GothamBold
-	floatButton.TextSize = 12
-	floatButton.TextScaled = true
-	floatButton.TextWrapped = true
-	floatButton.Text = "RUANG\nINVESTIGASI"
-	floatButton.ZIndex = 20
-	floatButton.Parent = floatGui
-
-	local floatCorner = Instance.new("UICorner")
-	floatCorner.CornerRadius = UDim.new(1, 0)
-	floatCorner.Parent = floatButton
-
-	local floatStroke = Instance.new("UIStroke")
-	floatStroke.Thickness = 2
-	floatStroke.Color = UI_BRAND.focusSoft
-	floatStroke.Parent = floatButton
-	styleFloatingButton(floatButton, "RUANG INVESTIGASI", UI_BRAND.focus)
 	makeFloatingButtonDraggable(floatButton)
 
-	local statusLabel = Instance.new("TextLabel")
-	statusLabel.Name = "Status"
-	statusLabel.BackgroundTransparency = 1
-	statusLabel.Position = UDim2.fromOffset(16, 44)
-	statusLabel.Size = UDim2.fromOffset(840, 22)
-	statusLabel.TextXAlignment = Enum.TextXAlignment.Left
-	statusLabel.Font = Enum.Font.Gotham
-	statusLabel.TextSize = 12
-	statusLabel.TextColor3 = UI_BRAND.muted
-	statusLabel.Text = "Memuat..."
-	statusLabel.Parent = panel
-
-	local classicBtn = Instance.new("TextButton")
-	classicBtn.Name = "ClassicButton"
-	classicBtn.Position = UDim2.fromOffset(16, 72)
-	classicBtn.Size = UDim2.fromOffset(132, 30)
-	styleButton(classicBtn, "Classic")
-	setButtonTone(classicBtn, "focus", true)
-	classicBtn.Parent = panel
-
-	local allModesBtn = Instance.new("TextButton")
-	allModesBtn.Name = "AllModesButton"
-	allModesBtn.Position = UDim2.fromOffset(154, 72)
-	allModesBtn.Size = UDim2.fromOffset(132, 30)
-	styleButton(allModesBtn, "SEMUA MODE")
-	setButtonTone(allModesBtn, "default", false)
-	allModesBtn.Parent = panel
-
-	local rankedBtn = Instance.new("TextButton")
-	rankedBtn.Name = "RankedButton"
-	rankedBtn.Position = UDim2.fromOffset(292, 72)
-	rankedBtn.Size = UDim2.fromOffset(132, 30)
-	styleButton(rankedBtn, "Ranked")
-	setButtonTone(rankedBtn, "rank", false)
-	rankedBtn.Parent = panel
-
-	local roomList = Instance.new("ScrollingFrame")
-	roomList.Name = "RoomList"
-	roomList.Position = UDim2.fromOffset(16, 110)
-	roomList.Size = UDim2.fromOffset(392, 250)
-	roomList.BackgroundColor3 = UI_BRAND.bgCard
-	roomList.BorderSizePixel = 0
-	roomList.ScrollBarThickness = 4
-	roomList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	roomList.CanvasSize = UDim2.fromOffset(0, 0)
-	roomList.Active = true
-	roomList.Parent = panel
-
-	local roomListCorner = Instance.new("UICorner")
-	roomListCorner.CornerRadius = UDim.new(0, 8)
-	roomListCorner.Parent = roomList
-
-	local roomListLayout = Instance.new("UIListLayout")
-	roomListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	roomListLayout.Padding = UDim.new(0, 4)
-	roomListLayout.Parent = roomList
-
-	local roomListPadding = Instance.new("UIPadding")
-	roomListPadding.PaddingTop = UDim.new(0, 6)
-	roomListPadding.PaddingBottom = UDim.new(0, 6)
-	roomListPadding.PaddingLeft = UDim.new(0, 6)
-	roomListPadding.PaddingRight = UDim.new(0, 6)
-	roomListPadding.Parent = roomList
-
-	local roomPreviewPanel = Instance.new("Frame")
-	roomPreviewPanel.Name = "RoomPreviewPanel"
-	roomPreviewPanel.Position = UDim2.fromOffset(424, 110)
-	roomPreviewPanel.Size = UDim2.fromOffset(480, 384)
-	roomPreviewPanel.BackgroundColor3 = UI_BRAND.bgCard
-	roomPreviewPanel.BorderSizePixel = 0
-	roomPreviewPanel.Active = true
-	roomPreviewPanel.Parent = panel
-	local roomPreviewCorner = Instance.new("UICorner")
-	roomPreviewCorner.CornerRadius = UDim.new(0, 10)
-	roomPreviewCorner.Parent = roomPreviewPanel
-	local roomPreviewStroke = Instance.new("UIStroke")
-	roomPreviewStroke.Thickness = 1
-	roomPreviewStroke.Color = UI_BRAND.focusSoft
-	roomPreviewStroke.Parent = roomPreviewPanel
-
-	local roomPreviewTitle = Instance.new("TextLabel")
-	roomPreviewTitle.Name = "Title"
-	roomPreviewTitle.BackgroundTransparency = 1
-	roomPreviewTitle.Position = UDim2.fromOffset(12, 10)
-	roomPreviewTitle.Size = UDim2.fromOffset(456, 24)
-	roomPreviewTitle.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewTitle.Font = Enum.Font.GothamBold
-	roomPreviewTitle.TextSize = 15
-	roomPreviewTitle.TextColor3 = UI_BRAND.text
-	roomPreviewTitle.Text = "PREVIEW ROOM"
-	roomPreviewTitle.Parent = roomPreviewPanel
-
-	local roomPreviewInfo = Instance.new("TextLabel")
-	roomPreviewInfo.Name = "Info"
-	roomPreviewInfo.BackgroundTransparency = 1
-	roomPreviewInfo.Position = UDim2.fromOffset(12, 34)
-	roomPreviewInfo.Size = UDim2.fromOffset(456, 18)
-	roomPreviewInfo.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewInfo.Font = Enum.Font.Gotham
-	roomPreviewInfo.TextSize = 11
-	roomPreviewInfo.TextColor3 = UI_BRAND.muted
-	roomPreviewInfo.Text = "Klik room di daftar untuk lihat detail."
-	roomPreviewInfo.Parent = roomPreviewPanel
-
-	local roomPreviewMap = Instance.new("Frame")
-	roomPreviewMap.Name = "MapPlaceholder"
-	roomPreviewMap.Position = UDim2.fromOffset(12, 58)
-	roomPreviewMap.Size = UDim2.fromOffset(456, 112)
-	roomPreviewMap.BackgroundColor3 = UI_BRAND.bgPanel
-	roomPreviewMap.BorderSizePixel = 0
-	roomPreviewMap.Active = true
-	roomPreviewMap.Parent = roomPreviewPanel
-	local roomPreviewMapCorner = Instance.new("UICorner")
-	roomPreviewMapCorner.CornerRadius = UDim.new(0, 8)
-	roomPreviewMapCorner.Parent = roomPreviewMap
-	local roomPreviewMapStroke = Instance.new("UIStroke")
-	roomPreviewMapStroke.Thickness = 1
-	roomPreviewMapStroke.Color = UI_BRAND.focusSoft
-	roomPreviewMapStroke.Parent = roomPreviewMap
-	local roomPreviewMapGradient = Instance.new("UIGradient")
-	roomPreviewMapGradient.Name = "PreviewGradient"
-	roomPreviewMapGradient.Rotation = 18
-	roomPreviewMapGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 48, 70)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 16, 24)),
-	})
-	roomPreviewMapGradient.Parent = roomPreviewMap
-
-	local roomPreviewMapAccent = Instance.new("Frame")
-	roomPreviewMapAccent.Name = "Accent"
-	roomPreviewMapAccent.Position = UDim2.fromOffset(0, 0)
-	roomPreviewMapAccent.Size = UDim2.fromOffset(6, 112)
-	roomPreviewMapAccent.BackgroundColor3 = UI_BRAND.focus
-	roomPreviewMapAccent.BorderSizePixel = 0
-	roomPreviewMapAccent.Parent = roomPreviewMap
-
-	local roomPreviewMapMood = Instance.new("TextLabel")
-	roomPreviewMapMood.Name = "Mood"
-	roomPreviewMapMood.BackgroundColor3 = Color3.fromRGB(22, 56, 80)
-	roomPreviewMapMood.BackgroundTransparency = 0.18
-	roomPreviewMapMood.Position = UDim2.new(1, -164, 0, 8)
-	roomPreviewMapMood.Size = UDim2.fromOffset(148, 18)
-	roomPreviewMapMood.Font = Enum.Font.GothamBold
-	roomPreviewMapMood.TextSize = 10
-	roomPreviewMapMood.TextColor3 = UI_BRAND.text
-	roomPreviewMapMood.Text = "ATMOSPHERE"
-	roomPreviewMapMood.BorderSizePixel = 0
-	roomPreviewMapMood.Parent = roomPreviewMap
-	local roomPreviewMapMoodCorner = Instance.new("UICorner")
-	roomPreviewMapMoodCorner.CornerRadius = UDim.new(1, 0)
-	roomPreviewMapMoodCorner.Parent = roomPreviewMapMood
-
-	local roomPreviewMapTitle = Instance.new("TextLabel")
-	roomPreviewMapTitle.Name = "MapTitle"
-	roomPreviewMapTitle.BackgroundTransparency = 1
-	roomPreviewMapTitle.Position = UDim2.fromOffset(16, 8)
-	roomPreviewMapTitle.Size = UDim2.fromOffset(268, 16)
-	roomPreviewMapTitle.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewMapTitle.Font = Enum.Font.GothamSemibold
-	roomPreviewMapTitle.TextSize = 11
-	roomPreviewMapTitle.TextColor3 = UI_BRAND.muted
-	roomPreviewMapTitle.Text = "MAP ROOM"
-	roomPreviewMapTitle.Parent = roomPreviewMap
-
-	local roomPreviewMapLabel = Instance.new("TextLabel")
-	roomPreviewMapLabel.Name = "MapLabel"
-	roomPreviewMapLabel.BackgroundTransparency = 1
-	roomPreviewMapLabel.Position = UDim2.fromOffset(16, 30)
-	roomPreviewMapLabel.Size = UDim2.fromOffset(424, 46)
-	roomPreviewMapLabel.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewMapLabel.TextYAlignment = Enum.TextYAlignment.Top
-	roomPreviewMapLabel.Font = Enum.Font.GothamBold
-	roomPreviewMapLabel.TextSize = 13
-	roomPreviewMapLabel.TextWrapped = true
-	roomPreviewMapLabel.TextColor3 = UI_BRAND.text
-	roomPreviewMapLabel.Text = "Pilih room untuk lihat detail map."
-	roomPreviewMapLabel.Parent = roomPreviewMap
-
-	local roomPreviewMapStats = Instance.new("TextLabel")
-	roomPreviewMapStats.Name = "Stats"
-	roomPreviewMapStats.BackgroundTransparency = 1
-	roomPreviewMapStats.Position = UDim2.fromOffset(16, 84)
-	roomPreviewMapStats.Size = UDim2.fromOffset(424, 18)
-	roomPreviewMapStats.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewMapStats.Font = Enum.Font.Gotham
-	roomPreviewMapStats.TextSize = 10
-	roomPreviewMapStats.TextColor3 = UI_BRAND.muted
-	roomPreviewMapStats.Text = "DETAIL MAP AKAN MUNCUL SAAT ROOM DIPILIH"
-	roomPreviewMapStats.Parent = roomPreviewMap
-
-	local roomPreviewPlayersTitle = Instance.new("TextLabel")
-	roomPreviewPlayersTitle.Name = "PlayersTitle"
-	roomPreviewPlayersTitle.BackgroundTransparency = 1
-	roomPreviewPlayersTitle.Position = UDim2.fromOffset(12, 176)
-	roomPreviewPlayersTitle.Size = UDim2.fromOffset(456, 16)
-	roomPreviewPlayersTitle.TextXAlignment = Enum.TextXAlignment.Left
-	roomPreviewPlayersTitle.Font = Enum.Font.GothamSemibold
-	roomPreviewPlayersTitle.TextSize = 11
-	roomPreviewPlayersTitle.TextColor3 = UI_BRAND.ghost
-	roomPreviewPlayersTitle.Text = "PLAYER DALAM ROOM"
-	roomPreviewPlayersTitle.Parent = roomPreviewPanel
-
-	local roomPreviewPlayersList = Instance.new("ScrollingFrame")
-	roomPreviewPlayersList.Name = "PlayersList"
-	roomPreviewPlayersList.Position = UDim2.fromOffset(12, 196)
-	roomPreviewPlayersList.Size = UDim2.fromOffset(456, 176)
-	roomPreviewPlayersList.BackgroundColor3 = UI_BRAND.bgPanel
-	roomPreviewPlayersList.BorderSizePixel = 0
-	roomPreviewPlayersList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	roomPreviewPlayersList.CanvasSize = UDim2.fromOffset(0, 0)
-	roomPreviewPlayersList.ScrollBarThickness = 4
-	roomPreviewPlayersList.Active = true
-	roomPreviewPlayersList.Parent = roomPreviewPanel
-	local roomPreviewPlayersCorner = Instance.new("UICorner")
-	roomPreviewPlayersCorner.CornerRadius = UDim.new(0, 8)
-	roomPreviewPlayersCorner.Parent = roomPreviewPlayersList
-	local roomPreviewPlayersPadding = Instance.new("UIPadding")
-	roomPreviewPlayersPadding.PaddingTop = UDim.new(0, 6)
-	roomPreviewPlayersPadding.PaddingBottom = UDim.new(0, 6)
-	roomPreviewPlayersPadding.PaddingLeft = UDim.new(0, 6)
-	roomPreviewPlayersPadding.PaddingRight = UDim.new(0, 6)
-	roomPreviewPlayersPadding.Parent = roomPreviewPlayersList
-	local roomPreviewPlayersLayout = Instance.new("UIGridLayout")
-	roomPreviewPlayersLayout.CellSize = UDim2.fromOffset(220, 78)
-	roomPreviewPlayersLayout.CellPadding = UDim2.fromOffset(8, 8)
-	roomPreviewPlayersLayout.FillDirectionMaxCells = 2
-	roomPreviewPlayersLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	roomPreviewPlayersLayout.Parent = roomPreviewPlayersList
-
-	local joinPwdBox = Instance.new("TextBox")
-	joinPwdBox.Name = "JoinPassword"
-	joinPwdBox.Position = UDim2.fromOffset(16, 408)
-	joinPwdBox.Size = UDim2.fromOffset(198, 30)
-	joinPwdBox.PlaceholderText = "Password Join (4 digit)"
-	joinPwdBox.Text = ""
-	joinPwdBox.ClearTextOnFocus = false
-	joinPwdBox.TextColor3 = UI_BRAND.text
-	joinPwdBox.Font = Enum.Font.Gotham
-	joinPwdBox.TextSize = 12
-	joinPwdBox.BackgroundColor3 = UI_BRAND.bgCard
-	joinPwdBox.BorderSizePixel = 0
-	joinPwdBox.Visible = false
-	joinPwdBox.Parent = panel
-
-	local joinPwdCorner = Instance.new("UICorner")
-	joinPwdCorner.CornerRadius = UDim.new(0, 6)
-	joinPwdCorner.Parent = joinPwdBox
-
-	local passwordModal = Instance.new("Frame")
-	passwordModal.Name = "PasswordModal"
-	passwordModal.Size = UDim2.fromScale(1, 1)
-	passwordModal.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	passwordModal.BackgroundTransparency = 0.35
-	passwordModal.ZIndex = 25
-	passwordModal.Active = true
-	passwordModal.Visible = false
-	passwordModal.Parent = gui
-
-	local passwordCard = Instance.new("Frame")
-	passwordCard.Name = "PasswordCard"
-	passwordCard.AnchorPoint = Vector2.new(0.5, 0.5)
-	passwordCard.Position = UDim2.fromScale(0.5, 0.5)
-	passwordCard.Size = UDim2.fromOffset(320, 180)
-	passwordCard.BackgroundColor3 = UI_BRAND.bgCard
-	passwordCard.BorderSizePixel = 0
-	passwordCard.ZIndex = 26
-	passwordCard.Active = true
-	passwordCard.Parent = passwordModal
-	local passwordCardCorner = Instance.new("UICorner")
-	passwordCardCorner.CornerRadius = UDim.new(0, 10)
-	passwordCardCorner.Parent = passwordCard
-
-	local passwordTitle = Instance.new("TextLabel")
-	passwordTitle.BackgroundTransparency = 1
-	passwordTitle.Position = UDim2.fromOffset(12, 10)
-	passwordTitle.Size = UDim2.fromOffset(296, 24)
-	passwordTitle.Text = "Masukkan Password Room"
-	passwordTitle.TextXAlignment = Enum.TextXAlignment.Left
-	passwordTitle.Font = Enum.Font.GothamBold
-	passwordTitle.TextSize = 16
-	passwordTitle.TextColor3 = UI_BRAND.text
-	passwordTitle.ZIndex = 27
-	passwordTitle.Parent = passwordCard
-
-	local passwordInput = Instance.new("TextBox")
-	passwordInput.Name = "PasswordInput"
-	passwordInput.Position = UDim2.fromOffset(12, 52)
-	passwordInput.Size = UDim2.fromOffset(296, 36)
-	passwordInput.PlaceholderText = "4 digit password"
-	passwordInput.Text = ""
-	passwordInput.ClearTextOnFocus = false
-	passwordInput.Font = Enum.Font.Gotham
-	passwordInput.TextSize = 14
-	passwordInput.TextColor3 = UI_BRAND.text
-	passwordInput.BackgroundColor3 = UI_BRAND.bgPanel
-	passwordInput.BorderSizePixel = 0
-	passwordInput.ZIndex = 27
-	passwordInput.Parent = passwordCard
-	local passwordInputCorner = Instance.new("UICorner")
-	passwordInputCorner.CornerRadius = UDim.new(0, 8)
-	passwordInputCorner.Parent = passwordInput
-
-	local passwordJoinBtn = Instance.new("TextButton")
-	passwordJoinBtn.Name = "JoinButton"
-	passwordJoinBtn.Position = UDim2.fromOffset(12, 102)
-	passwordJoinBtn.Size = UDim2.fromOffset(144, 34)
-	styleButton(passwordJoinBtn, "JOIN ROOM")
-	setButtonTone(passwordJoinBtn, "focus", true)
-	passwordJoinBtn.ZIndex = 27
-	passwordJoinBtn.Parent = passwordCard
-
-	local passwordCancelBtn = Instance.new("TextButton")
-	passwordCancelBtn.Name = "CancelButton"
-	passwordCancelBtn.Position = UDim2.fromOffset(164, 102)
-	passwordCancelBtn.Size = UDim2.fromOffset(144, 34)
-	styleButton(passwordCancelBtn, "BATAL")
-	setButtonTone(passwordCancelBtn, "danger", false)
-	passwordCancelBtn.ZIndex = 27
-	passwordCancelBtn.Parent = passwordCard
-
 	local function updatePasswordModalLayout()
+		if shouldPreserveAuthoredOwnerLayout("RoomBrowserUI") then
+			return
+		end
 		local viewport = Vector2.new(1920, 1080)
 		local camera = Workspace.CurrentCamera
 		if camera and typeof(camera.ViewportSize) == "Vector2" then
@@ -17104,50 +17225,10 @@ function UISystem:_ensureRoomBrowserGui()
 		table.insert(self._connections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updatePasswordModalLayout))
 	end
 
-	local kickNoticeModal = Instance.new("Frame")
-	kickNoticeModal.Name = "KickNoticeModal"
-	kickNoticeModal.Size = UDim2.fromScale(1, 1)
-	kickNoticeModal.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	kickNoticeModal.BackgroundTransparency = 0.35
-	kickNoticeModal.ZIndex = 28
-	kickNoticeModal.Active = true
-	kickNoticeModal.Visible = false
-	kickNoticeModal.Parent = gui
-
-	local kickNoticeCard = Instance.new("Frame")
-	kickNoticeCard.AnchorPoint = Vector2.new(0.5, 0.5)
-	kickNoticeCard.Position = UDim2.fromScale(0.5, 0.5)
-	kickNoticeCard.Size = UDim2.fromOffset(320, 140)
-	kickNoticeCard.BackgroundColor3 = Color3.fromRGB(34, 20, 22)
-	kickNoticeCard.BorderSizePixel = 0
-	kickNoticeCard.ZIndex = 29
-	kickNoticeCard.Active = true
-	kickNoticeCard.Parent = kickNoticeModal
-	local kickNoticeCorner = Instance.new("UICorner")
-	kickNoticeCorner.CornerRadius = UDim.new(0, 10)
-	kickNoticeCorner.Parent = kickNoticeCard
-
-	local kickNoticeText = Instance.new("TextLabel")
-	kickNoticeText.BackgroundTransparency = 1
-	kickNoticeText.Position = UDim2.fromOffset(12, 20)
-	kickNoticeText.Size = UDim2.fromOffset(296, 50)
-	kickNoticeText.Text = "ANDA TELAH DI KICK"
-	kickNoticeText.TextColor3 = Color3.fromRGB(245, 206, 206)
-	kickNoticeText.Font = Enum.Font.GothamBold
-	kickNoticeText.TextSize = 20
-	kickNoticeText.TextWrapped = true
-	kickNoticeText.ZIndex = 30
-	kickNoticeText.Parent = kickNoticeCard
-
-	local kickNoticeOk = Instance.new("TextButton")
-	kickNoticeOk.Position = UDim2.fromOffset(88, 86)
-	kickNoticeOk.Size = UDim2.fromOffset(144, 34)
-	styleButton(kickNoticeOk, "OK")
-	setButtonTone(kickNoticeOk, "danger", true)
-	kickNoticeOk.ZIndex = 30
-	kickNoticeOk.Parent = kickNoticeCard
-
 	local function updateKickNoticeLayout()
+		if shouldPreserveAuthoredOwnerLayout("RoomBrowserUI") then
+			return
+		end
 		local viewport = Vector2.new(1920, 1080)
 		local camera = Workspace.CurrentCamera
 		if camera and typeof(camera.ViewportSize) == "Vector2" then
@@ -17203,599 +17284,10 @@ function UISystem:_ensureRoomBrowserGui()
 		table.insert(self._connections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateKickNoticeLayout))
 	end
 
-	local refreshBtn = Instance.new("TextButton")
-	refreshBtn.Name = "RefreshButton"
-	refreshBtn.Position = UDim2.fromOffset(149, 456)
-	refreshBtn.Size = UDim2.fromOffset(126, 38)
-	styleButton(refreshBtn, "Refresh")
-	setButtonTone(refreshBtn, "default", false)
-	refreshBtn.ZIndex = 6
-	refreshBtn.Parent = panel
-
-	local createRoomBtn = Instance.new("TextButton")
-	createRoomBtn.Name = "CreateRoomButton"
-	createRoomBtn.Position = UDim2.fromOffset(282, 456)
-	createRoomBtn.Size = UDim2.fromOffset(126, 38)
-	styleButton(createRoomBtn, "BUAT ROOM")
-	setButtonTone(createRoomBtn, "focus", true)
-	createRoomBtn.ZIndex = 6
-	createRoomBtn.Parent = panel
-
-	local queueBtn = Instance.new("TextButton")
-	queueBtn.Name = "QueueButton"
-	queueBtn.Position = UDim2.fromOffset(16, 506)
-	queueBtn.Size = UDim2.fromOffset(126, 38)
-	styleButton(queueBtn, "JOIN ROOM")
-	setButtonTone(queueBtn, "focus", true)
-	queueBtn.ZIndex = 6
-	queueBtn.Parent = panel
-
-	local quickClassicBtn = Instance.new("TextButton")
-	quickClassicBtn.Name = "QuickJoinClassicButton"
-	quickClassicBtn.Position = UDim2.fromOffset(149, 506)
-	quickClassicBtn.Size = UDim2.fromOffset(126, 38)
-	styleButton(quickClassicBtn, "QUICK CLASSIC")
-	setButtonTone(quickClassicBtn, "profile", false)
-	quickClassicBtn.ZIndex = 6
-	quickClassicBtn.Parent = panel
-
-	local quickRankedBtn = Instance.new("TextButton")
-	quickRankedBtn.Name = "QuickJoinRankedButton"
-	quickRankedBtn.Position = UDim2.fromOffset(282, 506)
-	quickRankedBtn.Size = UDim2.fromOffset(126, 38)
-	styleButton(quickRankedBtn, "QUICK RANKED")
-	setButtonTone(quickRankedBtn, "rank", false)
-	quickRankedBtn.ZIndex = 6
-	quickRankedBtn.Parent = panel
-
-	local roomPanel = Instance.new("ScrollingFrame")
-	roomPanel.Name = "RoomPanel"
-	roomPanel.Position = UDim2.fromOffset(0, 0)
-	roomPanel.Size = UDim2.fromScale(1, 1)
-	roomPanel.BackgroundColor3 = UI_BRAND.bgCard
-	roomPanel.BackgroundTransparency = 0
-	roomPanel.BorderSizePixel = 0
-	roomPanel.AutomaticCanvasSize = Enum.AutomaticSize.None
-	roomPanel.CanvasSize = UDim2.fromOffset(0, 0)
-	roomPanel.ScrollBarThickness = 6
-	roomPanel.ScrollingDirection = Enum.ScrollingDirection.Y
-	roomPanel.Active = true
-	roomPanel.Visible = false
-	roomPanel.Parent = panel
-
-	local roomPanelCorner = Instance.new("UICorner")
-	roomPanelCorner.CornerRadius = UDim.new(0, 12)
-	roomPanelCorner.Parent = roomPanel
-
-	local roomTitle = Instance.new("TextLabel")
-	roomTitle.Name = "RoomTitle"
-	roomTitle.BackgroundTransparency = 1
-	roomTitle.Position = UDim2.fromOffset(14, 12)
-	roomTitle.Size = UDim2.fromOffset(420, 22)
-	roomTitle.TextXAlignment = Enum.TextXAlignment.Left
-	roomTitle.Font = Enum.Font.GothamBold
-	roomTitle.TextSize = 17
-	roomTitle.TextColor3 = UI_BRAND.text
-	roomTitle.Text = "RUANG"
-	roomTitle.Parent = roomPanel
-
-	local roomHost = Instance.new("TextLabel")
-	roomHost.Name = "HostLabel"
-	roomHost.BackgroundTransparency = 1
-	roomHost.Position = UDim2.fromOffset(14, 36)
-	roomHost.Size = UDim2.fromOffset(420, 18)
-	roomHost.TextXAlignment = Enum.TextXAlignment.Left
-	roomHost.Font = Enum.Font.Gotham
-	roomHost.TextSize = 12
-	roomHost.TextColor3 = UI_BRAND.muted
-	roomHost.Text = "Host: -"
-	roomHost.Parent = roomPanel
-
-	local playersLabel = Instance.new("TextLabel")
-	playersLabel.Name = "PlayersLabel"
-	playersLabel.BackgroundTransparency = 1
-	playersLabel.Position = UDim2.fromOffset(454, 12)
-	playersLabel.Size = UDim2.fromOffset(420, 16)
-	playersLabel.TextXAlignment = Enum.TextXAlignment.Left
-	playersLabel.Font = Enum.Font.GothamSemibold
-	playersLabel.TextSize = 12
-	playersLabel.TextColor3 = UI_BRAND.ghost
-	playersLabel.Text = "Anggota Ruangan"
-	playersLabel.Parent = roomPanel
-
-	local playersList = Instance.new("ScrollingFrame")
-	playersList.Name = "PlayersList"
-	playersList.BackgroundColor3 = UI_BRAND.bgPanel
-	playersList.BorderSizePixel = 0
-	playersList.Position = UDim2.fromOffset(454, 34)
-	playersList.Size = UDim2.fromOffset(420, 408)
-	playersList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	playersList.CanvasSize = UDim2.fromOffset(0, 0)
-	playersList.ScrollBarThickness = 4
-	playersList.Active = true
-	playersList.Parent = roomPanel
-	local playersListCorner = Instance.new("UICorner")
-	playersListCorner.CornerRadius = UDim.new(0, 8)
-	playersListCorner.Parent = playersList
-	local playersListPadding = Instance.new("UIPadding")
-	playersListPadding.PaddingTop = UDim.new(0, 4)
-	playersListPadding.PaddingBottom = UDim.new(0, 4)
-	playersListPadding.PaddingLeft = UDim.new(0, 6)
-	playersListPadding.PaddingRight = UDim.new(0, 6)
-	playersListPadding.Parent = playersList
-	local playersListLayout = Instance.new("UIGridLayout")
-	playersListLayout.CellSize = UDim2.fromOffset(202, 132)
-	playersListLayout.CellPadding = UDim2.fromOffset(8, 8)
-	playersListLayout.FillDirectionMaxCells = 2
-	playersListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	playersListLayout.Parent = playersList
-
-	local modeSelector = Instance.new("TextButton")
-	modeSelector.Name = "ModeSelector"
-	modeSelector.Position = UDim2.fromOffset(14, 348)
-	modeSelector.Size = UDim2.fromOffset(380, 30)
-	styleButton(modeSelector, "MODE: CLASSIC")
-	setButtonTone(modeSelector, "focus", false)
-	modeSelector.Parent = roomPanel
-
-	local modeDropdown = Instance.new("Frame")
-	modeDropdown.Name = "ModeDropdown"
-	modeDropdown.Position = UDim2.fromOffset(14, 382)
-	modeDropdown.Size = UDim2.fromOffset(380, 72)
-	modeDropdown.BackgroundColor3 = UI_BRAND.bgCard
-	modeDropdown.BorderSizePixel = 0
-	modeDropdown.Visible = false
-	modeDropdown.Active = true
-	modeDropdown.ZIndex = 24
-	modeDropdown.Parent = roomPanel
-	local modeDropdownCorner = Instance.new("UICorner")
-	modeDropdownCorner.CornerRadius = UDim.new(0, 8)
-	modeDropdownCorner.Parent = modeDropdown
-	local modeDropdownStroke = Instance.new("UIStroke")
-	modeDropdownStroke.Thickness = 1
-	modeDropdownStroke.Color = UI_BRAND.focusSoft
-	modeDropdownStroke.Parent = modeDropdown
-
-	local modeClassicBtn = Instance.new("TextButton")
-	modeClassicBtn.Name = "ClassicOption"
-	modeClassicBtn.Position = UDim2.fromOffset(8, 8)
-	modeClassicBtn.Size = UDim2.fromOffset(364, 26)
-	styleButton(modeClassicBtn, "CLASSIC")
-	setButtonTone(modeClassicBtn, "focus", true)
-	modeClassicBtn.ZIndex = 25
-	modeClassicBtn.Parent = modeDropdown
-	local modeClassicCorner = Instance.new("UICorner")
-	modeClassicCorner.CornerRadius = UDim.new(0, 6)
-	modeClassicCorner.Parent = modeClassicBtn
-
-	local modeRankedBtn = Instance.new("TextButton")
-	modeRankedBtn.Name = "RankedOption"
-	modeRankedBtn.Position = UDim2.fromOffset(8, 38)
-	modeRankedBtn.Size = UDim2.fromOffset(364, 26)
-	styleButton(modeRankedBtn, "RANKED")
-	setButtonTone(modeRankedBtn, "rank", false)
-	modeRankedBtn.ZIndex = 25
-	modeRankedBtn.Parent = modeDropdown
-	local modeRankedCorner = Instance.new("UICorner")
-	modeRankedCorner.CornerRadius = UDim.new(0, 6)
-	modeRankedCorner.Parent = modeRankedBtn
-
-	local mapSelector = Instance.new("TextButton")
-	mapSelector.Name = "MapSelector"
-	mapSelector.Position = UDim2.fromOffset(14, 422)
-	mapSelector.Size = UDim2.fromOffset(380, 30)
-	styleButton(mapSelector, "MAP: " .. tostring(MAPS[1]))
-	setButtonTone(mapSelector, "focus", false)
-	mapSelector.Parent = roomPanel
-
-	local mapDropdown = Instance.new("Frame")
-	mapDropdown.Name = "MapDropdown"
-	mapDropdown.Position = UDim2.fromOffset(14, 446)
-	mapDropdown.Size = UDim2.fromOffset(380, 112)
-	mapDropdown.BackgroundColor3 = UI_BRAND.bgCard
-	mapDropdown.BorderSizePixel = 0
-	mapDropdown.Visible = false
-	mapDropdown.Active = true
-	mapDropdown.ZIndex = 24
-	mapDropdown.Parent = roomPanel
-	local mapDropdownCorner = Instance.new("UICorner")
-	mapDropdownCorner.CornerRadius = UDim.new(0, 8)
-	mapDropdownCorner.Parent = mapDropdown
-	local mapDropdownStroke = Instance.new("UIStroke")
-	mapDropdownStroke.Thickness = 1
-	mapDropdownStroke.Color = UI_BRAND.focusSoft
-	mapDropdownStroke.Parent = mapDropdown
-
-	local mapOptionButtons = {}
-	for idx, mapName in ipairs(MAPS) do
-		local option = Instance.new("TextButton")
-		option.Name = "MapOption_" .. tostring(idx)
-		option.Position = UDim2.fromOffset(8, 8 + (idx - 1) * 26)
-		option.Size = UDim2.fromOffset(364, 22)
-		styleButton(option, mapName)
-		setButtonTone(option, "default", false)
-		option.TextSize = 12
-		option.ZIndex = 25
-		option.Parent = mapDropdown
-		local optionCorner = Instance.new("UICorner")
-		optionCorner.CornerRadius = UDim.new(0, 6)
-		optionCorner.Parent = option
-		mapOptionButtons[idx] = option
-	end
-
-	local rankedTierLabel = Instance.new("TextLabel")
-	rankedTierLabel.Name = "RankedTierLabel"
-	rankedTierLabel.BackgroundColor3 = Color3.fromRGB(24, 30, 42)
-	rankedTierLabel.BorderSizePixel = 0
-	rankedTierLabel.Position = UDim2.fromOffset(14, 422)
-	rankedTierLabel.Size = UDim2.fromOffset(380, 30)
-	rankedTierLabel.TextXAlignment = Enum.TextXAlignment.Left
-	rankedTierLabel.Font = Enum.Font.GothamSemibold
-	rankedTierLabel.TextSize = 12
-	rankedTierLabel.TextColor3 = UI_BRAND.text
-	rankedTierLabel.Text = "TIER HOST: UNRANKED"
-	rankedTierLabel.Visible = false
-	rankedTierLabel.Parent = roomPanel
-	local rankedTierCorner = Instance.new("UICorner")
-	rankedTierCorner.CornerRadius = UDim.new(0, 6)
-	rankedTierCorner.Parent = rankedTierLabel
-	local rankedTierStroke = Instance.new("UIStroke")
-	rankedTierStroke.Name = "TierStroke"
-	rankedTierStroke.Thickness = 1
-	rankedTierStroke.Color = UI_BRAND.focusSoft
-	rankedTierStroke.Parent = rankedTierLabel
-
-	local mapPreview = Instance.new("Frame")
-	mapPreview.Name = "MapPreview"
-	mapPreview.Position = UDim2.fromOffset(14, 72)
-	mapPreview.Size = UDim2.fromOffset(380, 208)
-	mapPreview.BackgroundColor3 = UI_BRAND.bgCard
-	mapPreview.BorderSizePixel = 0
-	mapPreview.Active = true
-	mapPreview.Parent = roomPanel
-	local mapPreviewCorner = Instance.new("UICorner")
-	mapPreviewCorner.CornerRadius = UDim.new(0, 8)
-	mapPreviewCorner.Parent = mapPreview
-	local mapPreviewStroke = Instance.new("UIStroke")
-	mapPreviewStroke.Thickness = 1
-	mapPreviewStroke.Color = UI_BRAND.focusSoft
-	mapPreviewStroke.Parent = mapPreview
-
-	local mapPreviewTitle = Instance.new("TextLabel")
-	mapPreviewTitle.Name = "Title"
-	mapPreviewTitle.BackgroundTransparency = 1
-	mapPreviewTitle.Position = UDim2.fromOffset(10, 8)
-	mapPreviewTitle.Size = UDim2.new(1, -20, 0, 14)
-	mapPreviewTitle.TextXAlignment = Enum.TextXAlignment.Left
-	mapPreviewTitle.Font = Enum.Font.GothamSemibold
-	mapPreviewTitle.TextSize = 10
-	mapPreviewTitle.TextColor3 = UI_BRAND.ghost
-	mapPreviewTitle.Text = "PREVIEW"
-	mapPreviewTitle.Parent = mapPreview
-
-	local mapPreviewLabel = Instance.new("TextLabel")
-	mapPreviewLabel.Name = "Label"
-	mapPreviewLabel.BackgroundTransparency = 1
-	mapPreviewLabel.Position = UDim2.fromOffset(10, 26)
-	mapPreviewLabel.Size = UDim2.new(1, -20, 0, 16)
-	mapPreviewLabel.TextXAlignment = Enum.TextXAlignment.Left
-	mapPreviewLabel.TextYAlignment = Enum.TextYAlignment.Top
-	mapPreviewLabel.Font = Enum.Font.GothamBold
-	mapPreviewLabel.TextSize = 12
-	mapPreviewLabel.TextWrapped = true
-	mapPreviewLabel.TextColor3 = UI_BRAND.text
-	mapPreviewLabel.Text = formatMapSummary(MAPS[1])
-	mapPreviewLabel.Parent = mapPreview
-
-	local mapPreviewImage = Instance.new("Frame")
-	mapPreviewImage.Name = "MapImagePlaceholder"
-	mapPreviewImage.AnchorPoint = Vector2.new(0.5, 0)
-	mapPreviewImage.Position = UDim2.new(0.5, 0, 0, 46)
-	mapPreviewImage.Size = UDim2.fromOffset(200, 150)
-	mapPreviewImage.BackgroundColor3 = UI_BRAND.bgPanel
-	mapPreviewImage.BorderSizePixel = 0
-	mapPreviewImage.Parent = mapPreview
-	local mapPreviewImageCorner = Instance.new("UICorner")
-	mapPreviewImageCorner.CornerRadius = UDim.new(0, 6)
-	mapPreviewImageCorner.Parent = mapPreviewImage
-	local mapPreviewImageStroke = Instance.new("UIStroke")
-	mapPreviewImageStroke.Thickness = 1
-	mapPreviewImageStroke.Color = UI_BRAND.focusSoft
-	mapPreviewImageStroke.Parent = mapPreviewImage
-	local mapPreviewImageGradient = Instance.new("UIGradient")
-	mapPreviewImageGradient.Name = "PreviewGradient"
-	mapPreviewImageGradient.Rotation = 18
-	mapPreviewImageGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 52, 74)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 16, 24)),
-	})
-	mapPreviewImageGradient.Parent = mapPreviewImage
-
-	local mapPreviewImageAccent = Instance.new("Frame")
-	mapPreviewImageAccent.Name = "AccentBar"
-	mapPreviewImageAccent.Position = UDim2.fromOffset(0, 0)
-	mapPreviewImageAccent.Size = UDim2.fromOffset(8, 150)
-	mapPreviewImageAccent.BackgroundColor3 = UI_BRAND.focus
-	mapPreviewImageAccent.BorderSizePixel = 0
-	mapPreviewImageAccent.Parent = mapPreviewImage
-
-	local mapPreviewImageChip = Instance.new("TextLabel")
-	mapPreviewImageChip.Name = "MoodChip"
-	mapPreviewImageChip.BackgroundColor3 = Color3.fromRGB(24, 58, 84)
-	mapPreviewImageChip.BackgroundTransparency = 0.12
-	mapPreviewImageChip.Position = UDim2.fromOffset(12, 10)
-	mapPreviewImageChip.Size = UDim2.fromOffset(128, 18)
-	mapPreviewImageChip.Font = Enum.Font.GothamBold
-	mapPreviewImageChip.TextSize = 10
-	mapPreviewImageChip.TextColor3 = UI_BRAND.text
-	mapPreviewImageChip.Text = "ATMOSPHERE"
-	mapPreviewImageChip.BorderSizePixel = 0
-	mapPreviewImageChip.Parent = mapPreviewImage
-	local mapPreviewImageChipCorner = Instance.new("UICorner")
-	mapPreviewImageChipCorner.CornerRadius = UDim.new(1, 0)
-	mapPreviewImageChipCorner.Parent = mapPreviewImageChip
-
-	local mapPreviewImageLabel = Instance.new("TextLabel")
-	mapPreviewImageLabel.Name = "ImageLabel"
-	mapPreviewImageLabel.BackgroundTransparency = 1
-	mapPreviewImageLabel.Position = UDim2.fromOffset(12, 26)
-	mapPreviewImageLabel.Size = UDim2.new(1, -24, 0, 76)
-	mapPreviewImageLabel.Font = Enum.Font.GothamBold
-	mapPreviewImageLabel.TextSize = 42
-	mapPreviewImageLabel.TextColor3 = UI_BRAND.text
-	mapPreviewImageLabel.TextWrapped = false
-	mapPreviewImageLabel.TextYAlignment = Enum.TextYAlignment.Center
-	mapPreviewImageLabel.TextXAlignment = Enum.TextXAlignment.Left
-	mapPreviewImageLabel.Text = "HH"
-	mapPreviewImageLabel.Parent = mapPreviewImage
-
-	local mapPreviewImageStats = Instance.new("TextLabel")
-	mapPreviewImageStats.Name = "Stats"
-	mapPreviewImageStats.BackgroundTransparency = 1
-	mapPreviewImageStats.Position = UDim2.fromOffset(12, 106)
-	mapPreviewImageStats.Size = UDim2.new(1, -24, 0, 16)
-	mapPreviewImageStats.Font = Enum.Font.GothamSemibold
-	mapPreviewImageStats.TextSize = 10
-	mapPreviewImageStats.TextColor3 = UI_BRAND.muted
-	mapPreviewImageStats.TextXAlignment = Enum.TextXAlignment.Left
-	mapPreviewImageStats.Text = "DETAIL"
-	mapPreviewImageStats.Parent = mapPreviewImage
-
-	local mapPreviewImageFooter = Instance.new("TextLabel")
-	mapPreviewImageFooter.Name = "Footer"
-	mapPreviewImageFooter.BackgroundTransparency = 1
-	mapPreviewImageFooter.Position = UDim2.fromOffset(12, 122)
-	mapPreviewImageFooter.Size = UDim2.new(1, -24, 0, 20)
-	mapPreviewImageFooter.Font = Enum.Font.GothamBold
-	mapPreviewImageFooter.TextSize = 12
-	mapPreviewImageFooter.TextColor3 = UI_BRAND.text
-	mapPreviewImageFooter.TextXAlignment = Enum.TextXAlignment.Left
-	mapPreviewImageFooter.Text = getMapDisplayName(MAPS[1])
-	mapPreviewImageFooter.Parent = mapPreviewImage
-
-	local setPwdBox = Instance.new("TextBox")
-	setPwdBox.Name = "SetPasswordBox"
-	setPwdBox.Position = UDim2.fromOffset(14, 184)
-	setPwdBox.Size = UDim2.fromOffset(256, 32)
-	setPwdBox.PlaceholderText = "Set Password (4 digit)"
-	setPwdBox.Text = ""
-	setPwdBox.ClearTextOnFocus = false
-	setPwdBox.TextColor3 = UI_BRAND.text
-	setPwdBox.Font = Enum.Font.Gotham
-	setPwdBox.TextSize = 12
-	setPwdBox.BackgroundColor3 = UI_BRAND.bgPanel
-	setPwdBox.BorderSizePixel = 0
-	setPwdBox.Parent = roomPanel
-
-	local setPwdCorner = Instance.new("UICorner")
-	setPwdCorner.CornerRadius = UDim.new(0, 6)
-	setPwdCorner.Parent = setPwdBox
-
-	local setPwdBtn = Instance.new("TextButton")
-	setPwdBtn.Name = "SetPasswordButton"
-	setPwdBtn.Position = UDim2.fromOffset(278, 184)
-	setPwdBtn.Size = UDim2.fromOffset(116, 32)
-	styleButton(setPwdBtn, "Set PWD")
-	setButtonTone(setPwdBtn, "default", false)
-	setPwdBtn.TextSize = 12
-	setPwdBtn.Parent = roomPanel
-
-	local readyBtn = Instance.new("TextButton")
-	readyBtn.Name = "ReadyButton"
-	readyBtn.Position = UDim2.fromOffset(14, 264)
-	readyBtn.Size = UDim2.fromOffset(380, 36)
-	styleButton(readyBtn, "READY")
-	setButtonTone(readyBtn, "success", false)
-	readyBtn.Parent = roomPanel
-
-	local startBtn = Instance.new("TextButton")
-	startBtn.Name = "StartButton"
-	startBtn.Position = UDim2.fromOffset(14, 264)
-	startBtn.Size = UDim2.fromOffset(380, 36)
-	styleButton(startBtn, "MULAI PERMAINAN")
-	setButtonTone(startBtn, "warning", true)
-	startBtn.Visible = false
-	startBtn.Parent = roomPanel
-
-	local cancelStartBtn = Instance.new("TextButton")
-	cancelStartBtn.Name = "CancelStartButton"
-	cancelStartBtn.Position = UDim2.fromOffset(14, 272)
-	cancelStartBtn.Size = UDim2.fromOffset(380, 28)
-	styleButton(cancelStartBtn, "BATALKAN COUNTDOWN")
-	cancelStartBtn.TextSize = 12
-	setButtonTone(cancelStartBtn, "danger", true)
-	cancelStartBtn.Visible = false
-	cancelStartBtn.Parent = roomPanel
-
-	local leaveRoomBtn = Instance.new("TextButton")
-	leaveRoomBtn.Name = "LeaveRoomButton"
-	leaveRoomBtn.Position = UDim2.fromOffset(14, 302)
-	leaveRoomBtn.Size = UDim2.fromOffset(380, 30)
-	styleButton(leaveRoomBtn, "Keluar Room")
-	leaveRoomBtn.TextSize = 12
-	setButtonTone(leaveRoomBtn, "danger", false)
-	leaveRoomBtn.Parent = roomPanel
-
-	local inviteBtn = Instance.new("TextButton")
-	inviteBtn.Name = "InviteButton"
-	inviteBtn.Position = UDim2.fromOffset(454, 446)
-	inviteBtn.Size = UDim2.fromOffset(420, 30)
-	styleButton(inviteBtn, "INVITE PLAYER")
-	inviteBtn.TextSize = 12
-	setButtonTone(inviteBtn, "focus", false)
-	inviteBtn.Visible = false
-	inviteBtn.Parent = roomPanel
-
-	local inviteDropdown = Instance.new("Frame")
-	inviteDropdown.Name = "InviteDropdown"
-	inviteDropdown.Position = UDim2.fromOffset(454, 220)
-	inviteDropdown.Size = UDim2.fromOffset(420, 220)
-	inviteDropdown.BackgroundColor3 = UI_BRAND.bgCard
-	inviteDropdown.BorderSizePixel = 0
-	inviteDropdown.Visible = false
-	inviteDropdown.Active = true
-	inviteDropdown.ZIndex = 24
-	inviteDropdown.Parent = roomPanel
-	local inviteDropdownCorner = Instance.new("UICorner")
-	inviteDropdownCorner.CornerRadius = UDim.new(0, 8)
-	inviteDropdownCorner.Parent = inviteDropdown
-	local inviteDropdownStroke = Instance.new("UIStroke")
-	inviteDropdownStroke.Thickness = 1
-	inviteDropdownStroke.Color = UI_BRAND.focusSoft
-	inviteDropdownStroke.Parent = inviteDropdown
-
-	local inviteList = Instance.new("ScrollingFrame")
-	inviteList.Name = "InviteList"
-	inviteList.Size = UDim2.new(1, -8, 1, -8)
-	inviteList.Position = UDim2.fromOffset(4, 4)
-	inviteList.BackgroundTransparency = 1
-	inviteList.BorderSizePixel = 0
-	inviteList.ScrollBarThickness = 4
-	inviteList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	inviteList.CanvasSize = UDim2.fromOffset(0, 0)
-	inviteList.ZIndex = 25
-	inviteList.Parent = inviteDropdown
-	local inviteListLayout = Instance.new("UIListLayout")
-	inviteListLayout.Padding = UDim.new(0, 4)
-	inviteListLayout.Parent = inviteList
-
-	local kickNameBox = Instance.new("TextBox")
-	kickNameBox.Name = "KickNameBox"
-	kickNameBox.Position = UDim2.fromOffset(14, 272)
-	kickNameBox.Size = UDim2.fromOffset(256, 28)
-	kickNameBox.PlaceholderText = "Nama pemain untuk di-kick"
-	kickNameBox.Text = ""
-	kickNameBox.ClearTextOnFocus = false
-	kickNameBox.TextColor3 = UI_BRAND.text
-	kickNameBox.Font = Enum.Font.Gotham
-	kickNameBox.TextSize = 12
-	kickNameBox.BackgroundColor3 = UI_BRAND.bgPanel
-	kickNameBox.BorderSizePixel = 0
-	kickNameBox.Visible = false
-	kickNameBox.Parent = roomPanel
-	local kickNameCorner = Instance.new("UICorner")
-	kickNameCorner.CornerRadius = UDim.new(0, 6)
-	kickNameCorner.Parent = kickNameBox
-
-	local kickBtn = Instance.new("TextButton")
-	kickBtn.Name = "KickButton"
-	kickBtn.Position = UDim2.fromOffset(278, 272)
-	kickBtn.Size = UDim2.fromOffset(116, 28)
-	styleButton(kickBtn, "KICK")
-	kickBtn.TextSize = 12
-	setButtonTone(kickBtn, "danger", false)
-	kickBtn.Visible = false
-	kickBtn.Parent = roomPanel
-
-	local countdownOverlay = Instance.new("Frame")
-	countdownOverlay.Name = "CountdownOverlay"
-	countdownOverlay.Size = UDim2.fromScale(1, 1)
-	countdownOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	countdownOverlay.BackgroundTransparency = 0.4
-	countdownOverlay.ZIndex = 10
-	countdownOverlay.Visible = false
-	countdownOverlay.Parent = gui
-
-	local countdownLabel = Instance.new("TextLabel")
-	countdownLabel.Name = "CountdownLabel"
-	countdownLabel.BackgroundTransparency = 1
-	countdownLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-	countdownLabel.Position = UDim2.fromScale(0.5, 0.45)
-	countdownLabel.Size = UDim2.fromOffset(400, 120)
-	countdownLabel.Text = "5"
-	countdownLabel.Font = Enum.Font.GothamBold
-	countdownLabel.TextSize = 96
-	countdownLabel.TextColor3 = Color3.fromRGB(255, 134, 86)
-	countdownLabel.ZIndex = 11
-	countdownLabel.Parent = countdownOverlay
-
-	local cancelCountdownBtn = Instance.new("TextButton")
-	cancelCountdownBtn.Name = "CancelCountdown"
-	cancelCountdownBtn.AnchorPoint = Vector2.new(0.5, 0.5)
-	cancelCountdownBtn.Position = UDim2.fromScale(0.5, 0.70)
-	cancelCountdownBtn.Size = UDim2.fromOffset(220, 38)
-	styleButton(cancelCountdownBtn, "BATALKAN")
-	setButtonTone(cancelCountdownBtn, "danger", true)
-	cancelCountdownBtn.ZIndex = 11
-	cancelCountdownBtn.Visible = false
-	cancelCountdownBtn.Parent = countdownOverlay
-
-	local invitePopup = Instance.new("Frame")
-	invitePopup.Name = "InvitePopup"
-	invitePopup.AnchorPoint = Vector2.new(0.5, 0)
-	invitePopup.Position = UDim2.new(0.5, 0, 0, 18)
-	invitePopup.Size = UDim2.fromOffset(408, 66)
-	invitePopup.BackgroundColor3 = UI_BRAND.bgCard
-	invitePopup.BorderSizePixel = 0
-	invitePopup.ZIndex = 12
-	invitePopup.Visible = false
-	invitePopup.Parent = gui
-	local invitePopupScale = Instance.new("UIScale")
-	invitePopupScale.Parent = invitePopup
-	local invitePopupCorner = Instance.new("UICorner")
-	invitePopupCorner.CornerRadius = UDim.new(0, 8)
-	invitePopupCorner.Parent = invitePopup
-	local invitePopupStroke = Instance.new("UIStroke")
-	invitePopupStroke.Thickness = 1
-	invitePopupStroke.Color = UI_BRAND.focus
-	invitePopupStroke.Parent = invitePopup
-
-	local invitePopupText = Instance.new("TextLabel")
-	invitePopupText.Name = "Text"
-	invitePopupText.BackgroundTransparency = 1
-	invitePopupText.Position = UDim2.fromOffset(10, 7)
-	invitePopupText.Size = UDim2.fromOffset(286, 50)
-	invitePopupText.TextXAlignment = Enum.TextXAlignment.Left
-	invitePopupText.TextYAlignment = Enum.TextYAlignment.Center
-	invitePopupText.Font = Enum.Font.GothamSemibold
-	invitePopupText.TextSize = 11
-	invitePopupText.TextWrapped = true
-	invitePopupText.TextColor3 = UI_BRAND.text
-	invitePopupText.Text = "Invite"
-	invitePopupText.ZIndex = 13
-	invitePopupText.Parent = invitePopup
-
-	local inviteAcceptBtn = Instance.new("TextButton")
-	inviteAcceptBtn.Name = "AcceptButton"
-	inviteAcceptBtn.Position = UDim2.fromOffset(302, 9)
-	inviteAcceptBtn.Size = UDim2.fromOffset(96, 22)
-	styleButton(inviteAcceptBtn, "TERIMA")
-	inviteAcceptBtn.TextSize = 11
-	setButtonTone(inviteAcceptBtn, "success", true)
-	inviteAcceptBtn.ZIndex = 13
-	inviteAcceptBtn.Parent = invitePopup
-
-	local inviteDeclineBtn = Instance.new("TextButton")
-	inviteDeclineBtn.Name = "DeclineButton"
-	inviteDeclineBtn.Position = UDim2.fromOffset(302, 35)
-	inviteDeclineBtn.Size = UDim2.fromOffset(96, 22)
-	styleButton(inviteDeclineBtn, "TOLAK")
-	inviteDeclineBtn.TextSize = 11
-	setButtonTone(inviteDeclineBtn, "danger", false)
-	inviteDeclineBtn.ZIndex = 13
-	inviteDeclineBtn.Parent = invitePopup
-
 	local function updateInvitePopupLayout()
+		if shouldPreserveAuthoredOwnerLayout("RoomBrowserUI") then
+			return
+		end
 		local topLeftInset, _ = UISupport.resolveSafeInsets(GuiService)
 		local viewport = Vector2.new(1920, 1080)
 		local camera = Workspace.CurrentCamera
@@ -17867,7 +17359,6 @@ function UISystem:_ensureRoomBrowserGui()
 	if Workspace.CurrentCamera then
 		table.insert(self._connections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateInvitePopupLayout))
 	end
-
 	local mapIndex = 1
 	local currentRoomId = nil
 	local selectedRoomId = nil
@@ -17955,31 +17446,54 @@ function UISystem:_ensureRoomBrowserGui()
 		modeText = modeText or "Classic"
 		mapName = mapName or resolveEffectiveMapId(self:GetRoomBrowserState(), nil) or MAPS[mapIndex]
 		local theme = resolveMapPreviewTheme(mapName, modeText)
-		mapPreview.BackgroundColor3 = theme.background
-		mapPreviewStroke.Color = theme.stroke
-		mapPreviewImage.BackgroundColor3 = theme.background
-		mapPreviewImageStroke.Color = theme.stroke
-		mapPreviewImageAccent.BackgroundColor3 = theme.accent
-		mapPreviewImageChip.BackgroundColor3 = theme.accentSoft
-		mapPreviewImageChip.TextColor3 = theme.text
-		mapPreviewImageLabel.TextColor3 = theme.text
-		mapPreviewImageStats.TextColor3 = theme.muted
-		mapPreviewImageFooter.TextColor3 = theme.text
-		mapPreviewImageGradient.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, theme.accentSoft),
-			ColorSequenceKeypoint.new(1, theme.background),
-		})
-
-		mapPreviewTitle.Text = modeText == "Ranked" and "RANKED DEPLOYMENT" or "MAP PREVIEW"
-		mapPreviewLabel.Text = modeText == "Ranked"
-			and string.format("%s\nHost Tier %s", formatMapSummary(mapName), resolveLocalTierText())
-			or formatMapSummary(mapName)
-		mapPreviewImageLabel.Text = buildMapPreviewGlyph(mapName, modeText)
-		mapPreviewImageChip.Text = buildMapPreviewMood(mapName, modeText)
-		mapPreviewImageStats.Text = buildMapPreviewStats(mapName)
-		mapPreviewImageFooter.Text = modeText == "Ranked"
-			and string.format("%s  |  TIER %s", getMapDisplayName(mapName), resolveLocalTierText())
-			or getMapDisplayName(mapName)
+		if mapPreview then
+			mapPreview.BackgroundColor3 = theme.background
+		end
+		if mapPreviewStroke then
+			mapPreviewStroke.Color = theme.stroke
+		end
+		if mapPreviewImage then
+			mapPreviewImage.BackgroundColor3 = theme.background
+		end
+		if mapPreviewImageStroke then
+			mapPreviewImageStroke.Color = theme.stroke
+		end
+		if mapPreviewImageAccent then
+			mapPreviewImageAccent.BackgroundColor3 = theme.accent
+		end
+		if mapPreviewImageChip then
+			mapPreviewImageChip.BackgroundColor3 = theme.accentSoft
+			mapPreviewImageChip.TextColor3 = theme.text
+			mapPreviewImageChip.Text = buildMapPreviewMood(mapName, modeText)
+		end
+		if mapPreviewImageLabel then
+			mapPreviewImageLabel.TextColor3 = theme.text
+			mapPreviewImageLabel.Text = buildMapPreviewGlyph(mapName, modeText)
+		end
+		if mapPreviewImageStats then
+			mapPreviewImageStats.TextColor3 = theme.muted
+			mapPreviewImageStats.Text = buildMapPreviewStats(mapName)
+		end
+		if mapPreviewImageFooter then
+			mapPreviewImageFooter.TextColor3 = theme.text
+			mapPreviewImageFooter.Text = modeText == "Ranked"
+				and string.format("%s  |  TIER %s", getMapDisplayName(mapName), resolveLocalTierText())
+				or getMapDisplayName(mapName)
+		end
+		if mapPreviewImageGradient then
+			mapPreviewImageGradient.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, theme.accentSoft),
+				ColorSequenceKeypoint.new(1, theme.background),
+			})
+		end
+		if mapPreviewTitle then
+			mapPreviewTitle.Text = modeText == "Ranked" and "RANKED DEPLOYMENT" or "MAP PREVIEW"
+		end
+		if mapPreviewLabel then
+			mapPreviewLabel.Text = modeText == "Ranked"
+				and string.format("%s\nHost Tier %s", formatMapSummary(mapName), resolveLocalTierText())
+				or formatMapSummary(mapName)
+		end
 	end
 
 	local function renderRoomSelectionPreview(rooms)
@@ -18021,11 +17535,7 @@ function UISystem:_ensureRoomBrowserGui()
 		end
 		selectedPreviewRenderKey = nextRenderKey
 
-		for _, child in ipairs(roomPreviewPlayersList:GetChildren()) do
-			if child:IsA("Frame") or child:IsA("TextLabel") then
-				child:Destroy()
-			end
-		end
+		self:_clearGeneratedRoomBrowserGuiChildren(roomPreviewPlayersList)
 
 		if not selectedRoom then
 			roomPreviewTitle.Text = "PREVIEW ROOM"
@@ -18042,16 +17552,11 @@ function UISystem:_ensureRoomBrowserGui()
 				ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 48, 68)),
 				ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 16, 24)),
 			})
-			local empty = Instance.new("TextLabel")
-			empty.BackgroundTransparency = 1
-			empty.Size = UDim2.new(1, -12, 1, 0)
-			empty.TextXAlignment = Enum.TextXAlignment.Center
-			empty.TextYAlignment = Enum.TextYAlignment.Center
-			empty.Font = Enum.Font.Gotham
-			empty.TextSize = 12
-			empty.TextColor3 = UI_BRAND.muted
-			empty.Text = "Belum ada room dipilih."
-			empty.Parent = roomPreviewPlayersList
+			local empty = cloneAuthoredGuiTemplate(roomPreviewEmptyStateTemplate, roomPreviewPlayersList, "EmptyState")
+			if empty and empty:IsA("TextLabel") then
+				empty.Text = "Belum ada room dipilih."
+				empty.TextColor3 = UI_BRAND.muted
+			end
 			return
 		end
 
@@ -18094,16 +17599,11 @@ function UISystem:_ensureRoomBrowserGui()
 
 		local players = type(selectedRoom.players) == "table" and selectedRoom.players or {}
 		if #players == 0 then
-			local empty = Instance.new("TextLabel")
-			empty.BackgroundTransparency = 1
-			empty.Size = UDim2.new(1, -12, 1, 0)
-			empty.TextXAlignment = Enum.TextXAlignment.Center
-			empty.TextYAlignment = Enum.TextYAlignment.Center
-			empty.Font = Enum.Font.Gotham
-			empty.TextSize = 12
-			empty.TextColor3 = Color3.fromRGB(182, 198, 216)
-			empty.Text = "Data pemain belum tersedia."
-			empty.Parent = roomPreviewPlayersList
+			local empty = cloneAuthoredGuiTemplate(roomPreviewEmptyStateTemplate, roomPreviewPlayersList, "EmptyState")
+			if empty and empty:IsA("TextLabel") then
+				empty.Text = "Data pemain belum tersedia."
+				empty.TextColor3 = Color3.fromRGB(182, 198, 216)
+			end
 			return
 		end
 
@@ -18117,65 +17617,58 @@ function UISystem:_ensureRoomBrowserGui()
 		local stateY = extraCompactPreview and 40 or 44
 		local nameTextSize = extraCompactPreview and 10 or (compactPreview and 11 or 10)
 		local stateTextSize = extraCompactPreview and 9 or (compactPreview and 11 or 10)
-		for _, info in ipairs(players) do
-			local card = Instance.new("Frame")
-			card.BackgroundColor3 = Color3.fromRGB(30, 36, 47)
-			card.BorderSizePixel = 0
-			card.Size = UDim2.fromOffset(compactPreview and 320 or 220, cardHeight)
-			card.Parent = roomPreviewPlayersList
-			local cardCorner = Instance.new("UICorner")
-			cardCorner.CornerRadius = UDim.new(0, 8)
-			cardCorner.Parent = card
-			local cardStroke = Instance.new("UIStroke")
-			cardStroke.Thickness = info.isReady and 2 or 1
-			cardStroke.Color = info.isReady and Color3.fromRGB(82, 179, 108) or Color3.fromRGB(74, 88, 112)
-			cardStroke.Parent = card
+		for index, info in ipairs(players) do
+			local card = self:_cloneAuthoredGuiTemplate(
+				roomPreviewPlayerCardTemplate,
+				roomPreviewPlayersList,
+				"Player_" .. tostring(info.userId or index)
+			)
+			if card and card:IsA("Frame") then
+				card.LayoutOrder = index
+				card.Size = UDim2.fromOffset(compactPreview and 320 or 220, cardHeight)
+				local cardStroke = card:FindFirstChildOfClass("UIStroke")
+				if cardStroke then
+					cardStroke.Thickness = info.isReady and 2 or 1
+					cardStroke.Color = info.isReady and Color3.fromRGB(82, 179, 108) or Color3.fromRGB(74, 88, 112)
+				end
 
-			local preview = Instance.new("ViewportFrame")
-			preview.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
-			preview.BorderSizePixel = 0
-			preview.Position = UDim2.fromOffset(6, 6)
-			preview.Size = UDim2.fromOffset(previewWidth, previewHeight)
-			preview.Parent = card
-			local previewCorner = Instance.new("UICorner")
-			previewCorner.CornerRadius = UDim.new(0, 6)
-			previewCorner.Parent = preview
-			CharacterPreviewSupport.render(preview, info.userId)
+				local preview = UISystem._getDirectChildOfClass(card, "Preview", "ViewportFrame")
+				if preview then
+					preview.Position = UDim2.fromOffset(6, 6)
+					preview.Size = UDim2.fromOffset(previewWidth, previewHeight)
+					CharacterPreviewSupport.render(preview, info.userId)
+				end
 
-			local nameLabel = Instance.new("TextLabel")
-			nameLabel.BackgroundTransparency = 1
-			nameLabel.Position = UDim2.fromOffset(textStartX, 7)
-			nameLabel.Size = UDim2.fromOffset(nameWidth, extraCompactPreview and 28 or 32)
-			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-			nameLabel.TextYAlignment = Enum.TextYAlignment.Top
-			nameLabel.Font = Enum.Font.GothamBold
-			nameLabel.TextSize = nameTextSize
-			nameLabel.TextWrapped = not extraCompactPreview
-			nameLabel.TextTruncate = extraCompactPreview and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-			nameLabel.TextColor3 = Color3.fromRGB(236, 240, 245)
-			local roleTag = info.isHost and "[HOST]" or "[MEMBER]"
-			nameLabel.Text = string.format("%s %s", roleTag, tostring(info.displayName or info.name or "?"))
-			nameLabel.Parent = card
+				local nameLabel = UISystem._getDirectChildOfClass(card, "NameLabel", "TextLabel")
+				if nameLabel then
+					nameLabel.Position = UDim2.fromOffset(textStartX, 7)
+					nameLabel.Size = UDim2.fromOffset(nameWidth, extraCompactPreview and 28 or 32)
+					nameLabel.TextSize = nameTextSize
+					nameLabel.TextWrapped = not extraCompactPreview
+					nameLabel.TextTruncate = extraCompactPreview and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+					nameLabel.TextColor3 = Color3.fromRGB(236, 240, 245)
+					local roleTag = info.isHost and "[HOST]" or "[MEMBER]"
+					nameLabel.Text = string.format("%s %s", roleTag, tostring(info.displayName or info.name or "?"))
+				end
 
-			local stateLabel = Instance.new("TextLabel")
-			stateLabel.BackgroundTransparency = 1
-			stateLabel.Position = UDim2.fromOffset(textStartX, stateY)
-			stateLabel.Size = UDim2.fromOffset(nameWidth, 18)
-			stateLabel.TextXAlignment = Enum.TextXAlignment.Left
-			stateLabel.Font = Enum.Font.GothamSemibold
-			stateLabel.TextSize = stateTextSize
-			stateLabel.TextTruncate = extraCompactPreview and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-			stateLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 220, 145) or Color3.fromRGB(255, 195, 120)
-			stateLabel.Text = info.isReady and "READY" or "NOT READY"
-			stateLabel.Parent = card
+				local stateLabel = UISystem._getDirectChildOfClass(card, "StateLabel", "TextLabel")
+				if stateLabel then
+					stateLabel.Position = UDim2.fromOffset(textStartX, stateY)
+					stateLabel.Size = UDim2.fromOffset(nameWidth, 18)
+					stateLabel.TextSize = stateTextSize
+					stateLabel.TextTruncate = extraCompactPreview and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+					stateLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 220, 145) or Color3.fromRGB(255, 195, 120)
+					stateLabel.Text = info.isReady and "READY" or "NOT READY"
+				end
+			end
 		end
 	end
 
-		local function renderRoomList(rooms)
-			local compactRoomBrowser = self._roomBrowserCompact == true
-			local wideMobileRoomBrowser = self._roomBrowserWideMobile == true
-			local extraCompactRoomBrowser = self._roomBrowserExtraCompact == true
-			local roomIdSet = {}
+	local function renderRoomList(rooms)
+		local compactRoomBrowser = self._roomBrowserCompact == true
+		local wideMobileRoomBrowser = self._roomBrowserWideMobile == true
+		local extraCompactRoomBrowser = self._roomBrowserExtraCompact == true
+		local roomIdSet = {}
 		for _, room in ipairs(rooms or {}) do
 			roomIdSet[tostring(room.roomId)] = true
 		end
@@ -18183,30 +17676,27 @@ function UISystem:_ensureRoomBrowserGui()
 			selectedRoomId = nil
 		end
 
-		for _, child in ipairs(roomList:GetChildren()) do
-			if child:IsA("TextButton") then
-				child:Destroy()
-			end
-		end
+		self:_clearGeneratedRoomBrowserGuiChildren(roomList)
 		for _, room in ipairs(rooms or {}) do
-			local row = Instance.new("TextButton")
-			row.Name = "Room_" .. tostring(room.roomId)
-				row.Size = UDim2.new(1, extraCompactRoomBrowser and -6 or -8, 0, wideMobileRoomBrowser and 66 or (extraCompactRoomBrowser and 50 or (compactRoomBrowser and 56 or 36)))
+			local row = self:_cloneAuthoredGuiTemplate(roomListRowTemplate, roomList, "Room_" .. tostring(room.roomId))
+			if not (row and row:IsA("TextButton")) then
+				continue
+			end
+			row.Size = UDim2.new(1, extraCompactRoomBrowser and -6 or -8, 0, wideMobileRoomBrowser and 66 or (extraCompactRoomBrowser and 50 or (compactRoomBrowser and 56 or 36)))
 			row.LayoutOrder = room.roomId
-			row.BorderSizePixel = 0
-			row.Font = Enum.Font.Gotham
-				row.TextSize = wideMobileRoomBrowser and 13 or (extraCompactRoomBrowser and 12 or (compactRoomBrowser and 14 or 13))
+			row.TextSize = wideMobileRoomBrowser and 13 or (extraCompactRoomBrowser and 12 or (compactRoomBrowser and 14 or 13))
 			row.TextXAlignment = Enum.TextXAlignment.Left
 			row.TextYAlignment = (wideMobileRoomBrowser or compactRoomBrowser) and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
-				row.TextWrapped = (not extraCompactRoomBrowser) and (compactRoomBrowser or wideMobileRoomBrowser)
-				row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-				row.Text = roomRowText(room)
-			local rowPadding = Instance.new("UIPadding")
-			rowPadding.PaddingTop = UDim.new(0, wideMobileRoomBrowser and 6 or (extraCompactRoomBrowser and 3 or 5))
-			rowPadding.PaddingBottom = UDim.new(0, extraCompactRoomBrowser and 3 or 5)
-			rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 7 or 10)
-			rowPadding.PaddingRight = UDim.new(0, extraCompactRoomBrowser and 5 or 8)
-			rowPadding.Parent = row
+			row.TextWrapped = (not extraCompactRoomBrowser) and (compactRoomBrowser or wideMobileRoomBrowser)
+			row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+			row.Text = roomRowText(room)
+			local rowPadding = row:FindFirstChildOfClass("UIPadding")
+			if rowPadding then
+				rowPadding.PaddingTop = UDim.new(0, wideMobileRoomBrowser and 6 or (extraCompactRoomBrowser and 3 or 5))
+				rowPadding.PaddingBottom = UDim.new(0, extraCompactRoomBrowser and 3 or 5)
+				rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 7 or 10)
+				rowPadding.PaddingRight = UDim.new(0, extraCompactRoomBrowser and 5 or 8)
+			end
 			row:SetAttribute("RoomId", room.roomId)
 			row:SetAttribute("InGame", room.inGame == true)
 			row:SetAttribute("Starting", room.starting == true)
@@ -18226,9 +17716,10 @@ function UISystem:_ensureRoomBrowserGui()
 			if tostring(room.roomId) == tostring(selectedRoomId) then
 				row.BackgroundColor3 = Color3.fromRGB(63, 92, 138)
 			end
-			local rowCorner = Instance.new("UICorner")
-			rowCorner.CornerRadius = UDim.new(0, extraCompactRoomBrowser and 5 or 6)
-			rowCorner.Parent = row
+			local rowCorner = row:FindFirstChild("UICorner")
+			if rowCorner and rowCorner:IsA("UICorner") then
+				rowCorner.CornerRadius = UDim.new(0, extraCompactRoomBrowser and 5 or 6)
+			end
 
 			connectButtonPress(row, function()
 				selectedRoomId = row:GetAttribute("RoomId")
@@ -18250,11 +17741,7 @@ function UISystem:_ensureRoomBrowserGui()
 
 	local function rebuildInviteList()
 		local extraCompactRoomBrowser = self._roomBrowserExtraCompact == true
-		for _, child in ipairs(inviteList:GetChildren()) do
-			if child:IsA("TextButton") then
-				child:Destroy()
-			end
-		end
+		self:_clearGeneratedRoomBrowserGuiChildren(inviteList)
 		local state = self:GetRoomBrowserState() or {}
 		local currentRoom = state.currentRoom or {}
 		local inRoomByUserId = {}
@@ -18264,58 +17751,43 @@ function UISystem:_ensureRoomBrowserGui()
 			end
 		end
 
-		local inviteAllRow = Instance.new("TextButton")
-		inviteAllRow.Name = "InviteAll"
-		inviteAllRow.Size = UDim2.new(1, -4, 0, extraCompactRoomBrowser and 22 or 24)
-		inviteAllRow.BackgroundColor3 = Color3.fromRGB(58, 98, 136)
-		inviteAllRow.BorderSizePixel = 0
-		inviteAllRow.Font = Enum.Font.GothamBold
-		inviteAllRow.TextSize = extraCompactRoomBrowser and 11 or 12
-		inviteAllRow.TextColor3 = Color3.fromRGB(245, 245, 245)
-		inviteAllRow.Text = "INVITE ALL (BROADCAST)"
-		inviteAllRow.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-		inviteAllRow.ZIndex = 26
-		inviteAllRow.Parent = inviteList
-		local inviteAllCorner = Instance.new("UICorner")
-		inviteAllCorner.CornerRadius = UDim.new(0, 6)
-		inviteAllCorner.Parent = inviteAllRow
-		connectButtonPress(inviteAllRow, function()
-			self:RoomBrowserInviteBroadcastToRoom()
-			statusLabel.Text = "Broadcast invite dikirim."
-		end)
-		self:_setSelectableStyle(inviteAllRow)
+		local inviteAllRow = self:_cloneAuthoredGuiTemplate(inviteAllTemplate, inviteList, "InviteAll")
+		if inviteAllRow and inviteAllRow:IsA("TextButton") then
+			inviteAllRow.Size = UDim2.new(1, -4, 0, extraCompactRoomBrowser and 22 or 24)
+			inviteAllRow.TextSize = extraCompactRoomBrowser and 11 or 12
+			inviteAllRow.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+			inviteAllRow.LayoutOrder = 0
+			connectButtonPress(inviteAllRow, function()
+				self:RoomBrowserInviteBroadcastToRoom()
+				statusLabel.Text = "Broadcast invite dikirim."
+			end)
+			self:_setSelectableStyle(inviteAllRow)
+		end
 
+		local rowOrder = 1
 		for _, lobbyPlayer in ipairs(state.lobbyPlayers or {}) do
 			local userId = lobbyPlayer.userId
 			if userId ~= nil and not inRoomByUserId[tostring(userId)] then
 				local nameText = tostring(lobbyPlayer.displayName or lobbyPlayer.name or ("User " .. tostring(userId)))
-				local row = Instance.new("TextButton")
-				row.Name = "Invite_" .. tostring(userId)
-				row.Size = UDim2.new(1, -4, 0, extraCompactRoomBrowser and 22 or 24)
-				row.BackgroundColor3 = Color3.fromRGB(40, 52, 68)
-				row.BorderSizePixel = 0
-				row.Font = Enum.Font.Gotham
-				row.TextSize = extraCompactRoomBrowser and 11 or 12
-				row.TextColor3 = Color3.fromRGB(230, 235, 245)
-				row.TextXAlignment = Enum.TextXAlignment.Left
-				row.Text = "  " .. nameText
-				row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-				row.ZIndex = 26
-				row.Parent = inviteList
-				local rowCorner = Instance.new("UICorner")
-				rowCorner.CornerRadius = UDim.new(0, 6)
-				rowCorner.Parent = row
-				if extraCompactRoomBrowser then
-					local rowPadding = Instance.new("UIPadding")
-					rowPadding.PaddingLeft = UDim.new(0, 8)
-					rowPadding.PaddingRight = UDim.new(0, 6)
-					rowPadding.Parent = row
+				local row = self:_cloneAuthoredGuiTemplate(invitePlayerTemplate, inviteList, "Invite_" .. tostring(userId))
+				if row and row:IsA("TextButton") then
+					row.Size = UDim2.new(1, -4, 0, extraCompactRoomBrowser and 22 or 24)
+					row.TextSize = extraCompactRoomBrowser and 11 or 12
+					row.Text = nameText
+					row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+					row.LayoutOrder = rowOrder
+					local rowPadding = row:FindFirstChildOfClass("UIPadding")
+					if rowPadding then
+						rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 8 or 12)
+						rowPadding.PaddingRight = UDim.new(0, extraCompactRoomBrowser and 6 or 8)
+					end
+					connectButtonPress(row, function()
+						self:RoomBrowserInvitePlayerToRoom(userId)
+						statusLabel.Text = string.format("Invite terkirim ke %s.", nameText)
+					end)
+					self:_setSelectableStyle(row)
 				end
-				connectButtonPress(row, function()
-					self:RoomBrowserInvitePlayerToRoom(userId)
-					statusLabel.Text = string.format("Invite terkirim ke %s.", nameText)
-				end)
-				self:_setSelectableStyle(row)
+				rowOrder += 1
 			end
 		end
 	end
@@ -18844,6 +18316,10 @@ function UISystem:_updateRoomBrowserVisibility()
 	local roomBrowserEnabled = (not suppressed) and self._roomBrowserVisible
 	if self._roomBrowserGui then
 		self._roomBrowserGui.Enabled = roomBrowserEnabled
+		local backdrop = self._roomBrowserGui:FindFirstChild("Backdrop")
+		if backdrop and backdrop:IsA("GuiObject") then
+			backdrop.Visible = roomBrowserEnabled
+		end
 		local rootPanel = self._roomBrowserGui:FindFirstChild("Panel", true)
 		if rootPanel and rootPanel:IsA("GuiObject") then
 			rootPanel.Visible = roomBrowserEnabled
@@ -19203,96 +18679,60 @@ function UISystem:_refreshRoomBrowserView()
 		if self._roomBrowserWidgets.UpdateMapPreview then
 			self._roomBrowserWidgets.UpdateMapPreview(roomMode, roomMapId)
 		end
-		for _, child in ipairs(self._roomBrowserWidgets.PlayersList:GetChildren()) do
-			if child:IsA("Frame") or child:IsA("TextLabel") then
-				child:Destroy()
-			end
-		end
-		for _, info in ipairs(roomPlayersData) do
-			local card = Instance.new("Frame")
-			card.BackgroundColor3 = UI_BRAND.bgCard
-			card.BorderSizePixel = 0
-			card.Size = UDim2.fromOffset(202, 132)
-			card.Parent = self._roomBrowserWidgets.PlayersList
-			local cardCorner = Instance.new("UICorner")
-			cardCorner.CornerRadius = UDim.new(0, 8)
-			cardCorner.Parent = card
-			local cardStroke = Instance.new("UIStroke")
-			cardStroke.Thickness = info.isReady and 2 or 1
-			cardStroke.Color = info.isReady and Color3.fromRGB(62, 194, 142) or Color3.fromRGB(64, 126, 166)
-			cardStroke.Parent = card
+		self:_clearGeneratedRoomBrowserGuiChildren(self._roomBrowserWidgets.PlayersList)
+		for index, info in ipairs(roomPlayersData) do
+			local card = self:_cloneAuthoredGuiTemplate(
+				roomPanelPlayerCardTemplate,
+				self._roomBrowserWidgets.PlayersList,
+				"Player_" .. tostring(info.userId or index)
+			)
+			if card and card:IsA("Frame") then
+				card.LayoutOrder = index
+				local cardStroke = card:FindFirstChildOfClass("UIStroke")
+				if cardStroke then
+					cardStroke.Thickness = info.isReady and 2 or 1
+					cardStroke.Color = info.isReady and Color3.fromRGB(62, 194, 142) or Color3.fromRGB(64, 126, 166)
+				end
 
-			local preview = Instance.new("ViewportFrame")
-			preview.Name = "Preview"
-			preview.BackgroundColor3 = UI_BRAND.bgPanel
-			preview.BorderSizePixel = 0
-			preview.Position = UDim2.fromOffset(6, 8)
-			preview.Size = UDim2.fromOffset(84, 116)
-			preview.Parent = card
-			local previewCorner = Instance.new("UICorner")
-			previewCorner.CornerRadius = UDim.new(0, 6)
-			previewCorner.Parent = preview
-			CharacterPreviewSupport.render(preview, info.userId)
+				local preview = UISystem._getDirectChildOfClass(card, "Preview", "ViewportFrame")
+				if preview then
+					CharacterPreviewSupport.render(preview, info.userId)
+				end
 
-			local displayNameLabel = Instance.new("TextLabel")
-			displayNameLabel.BackgroundTransparency = 1
-			displayNameLabel.Position = UDim2.fromOffset(96, 8)
-			displayNameLabel.Size = UDim2.fromOffset(100, 30)
-			displayNameLabel.TextXAlignment = Enum.TextXAlignment.Left
-			displayNameLabel.Font = Enum.Font.GothamBold
-			displayNameLabel.TextSize = 10
-			displayNameLabel.TextColor3 = UI_BRAND.text
-			displayNameLabel.TextWrapped = true
-			local roleTag = info.isHost and "[HOST]" or "[MEMBER]"
-			displayNameLabel.Text = string.format("%s %s", roleTag, tostring(info.displayName or info.name or "?"))
-			displayNameLabel.Parent = card
+				local displayNameLabel = UISystem._getDirectChildOfClass(card, "DisplayNameLabel", "TextLabel")
+				if displayNameLabel then
+					local roleTag = info.isHost and "[HOST]" or "[MEMBER]"
+					displayNameLabel.Text = string.format("%s %s", roleTag, tostring(info.displayName or info.name or "?"))
+					displayNameLabel.TextColor3 = UI_BRAND.text
+				end
 
-			local readyLabel = Instance.new("TextLabel")
-			readyLabel.BackgroundTransparency = 1
-			readyLabel.Position = UDim2.fromOffset(96, 40)
-			readyLabel.Size = UDim2.fromOffset(100, 14)
-			readyLabel.TextXAlignment = Enum.TextXAlignment.Left
-			readyLabel.Font = Enum.Font.GothamSemibold
-			readyLabel.TextSize = 10
-			readyLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 228, 170) or Color3.fromRGB(236, 194, 110)
-			readyLabel.Text = info.isReady and "READY" or "NOT READY"
-			readyLabel.Parent = card
+				local readyLabel = UISystem._getDirectChildOfClass(card, "ReadyLabel", "TextLabel")
+				if readyLabel then
+					readyLabel.TextColor3 = info.isReady and Color3.fromRGB(120, 228, 170) or Color3.fromRGB(236, 194, 110)
+					readyLabel.Text = info.isReady and "READY" or "NOT READY"
+				end
 
-			local canKickThis = state.isHost == true and info.userId ~= localUserId and state.matchStarting ~= true
-			local kickInline = Instance.new("TextButton")
-			kickInline.BackgroundColor3 = Color3.fromRGB(130, 44, 44)
-			kickInline.BorderSizePixel = 0
-			kickInline.Size = UDim2.fromOffset(18, 18)
-			kickInline.Position = UDim2.new(1, -22, 0, 4)
-			kickInline.Font = Enum.Font.GothamBlack
-			kickInline.TextSize = 12
-			kickInline.TextColor3 = Color3.fromRGB(245, 245, 245)
-			kickInline.Text = "X"
-			kickInline.Visible = canKickThis
-			kickInline.Parent = card
-			setButtonTone(kickInline, "danger", false)
-			local kickCorner = Instance.new("UICorner")
-			kickCorner.CornerRadius = UDim.new(1, 0)
-			kickCorner.Parent = kickInline
-			if canKickThis then
-				connectButtonPress(kickInline, function()
-					if self._roomBrowser then
-						self._roomBrowser:KickPlayer(info.userId)
+				local canKickThis = state.isHost == true and info.userId ~= localUserId and state.matchStarting ~= true
+				local kickInline = UISystem._getDirectChildOfClass(card, "KickInline", "TextButton")
+				if kickInline then
+					kickInline.Visible = canKickThis
+					setButtonTone(kickInline, "danger", false)
+					if canKickThis then
+						connectButtonPress(kickInline, function()
+							if self._roomBrowser then
+								self._roomBrowser:KickPlayer(info.userId)
+							end
+						end)
 					end
-				end)
+				end
 			end
 		end
 		if #roomPlayersData == 0 then
-			local emptyLabel = Instance.new("TextLabel")
-			emptyLabel.BackgroundTransparency = 1
-			emptyLabel.Size = UDim2.new(1, -12, 1, 0)
-			emptyLabel.TextXAlignment = Enum.TextXAlignment.Center
-			emptyLabel.TextYAlignment = Enum.TextYAlignment.Center
-			emptyLabel.Font = Enum.Font.Gotham
-			emptyLabel.TextSize = 12
-			emptyLabel.TextColor3 = Color3.fromRGB(220, 230, 240)
-			emptyLabel.Text = "Belum ada data anggota ruangan"
-			emptyLabel.Parent = self._roomBrowserWidgets.PlayersList
+			local emptyLabel = self:_cloneAuthoredGuiTemplate(roomPanelEmptyStateTemplate, self._roomBrowserWidgets.PlayersList, "EmptyState")
+			if emptyLabel and emptyLabel:IsA("TextLabel") then
+				emptyLabel.Text = "Belum ada data anggota ruangan"
+				emptyLabel.TextColor3 = Color3.fromRGB(220, 230, 240)
+			end
 		end
 		local isReady = state.isReady == true
 		local playerCount = roomData.playerCount
@@ -19310,6 +18750,7 @@ function UISystem:_refreshRoomBrowserView()
 			end
 		end
 
+		self._roomBrowserWidgets.ReadyButton.Visible = true
 		if state.isHost == true then
 			if state.matchStarting == true then
 				self._roomBrowserWidgets.ReadyButton.Text = "BATALKAN COUNTDOWN"
@@ -19337,6 +18778,23 @@ function UISystem:_refreshRoomBrowserView()
 			setButtonTone(self._roomBrowserWidgets.ReadyButton, isReady and "warning" or "success", isReady)
 			self._roomBrowserWidgets.ReadyButton.Active = true
 			self._roomBrowserWidgets.ReadyButton.AutoButtonColor = true
+		end
+		do
+			local readyButton = self._roomBrowserWidgets.ReadyButton
+			local readyImage = readyButton and readyButton:FindFirstChild("BrandTextImage")
+			if readyImage and isButtonTextImageObject(readyImage) then
+				local imageStates = ROOM_BROWSER_TEXT_IMAGE_STATES.ReadyButton
+				if state.isHost == true then
+					imageStates = state.matchStarting == true
+						and ROOM_BROWSER_TEXT_IMAGE_STATES.CancelStartButton
+						or ROOM_BROWSER_TEXT_IMAGE_STATES.StartButton
+				end
+				configureButtonTextImage(readyImage, imageStates)
+				readyImage.Visible = imageStates ~= nil
+				if readyImage:IsA("ImageButton") then
+					setButtonTextImagePassthrough(readyImage)
+				end
+			end
 		end
 
 		self._roomBrowserWidgets.StartButton.Visible = false
@@ -19381,11 +18839,7 @@ function UISystem:_refreshRoomBrowserView()
 			self._roomBrowserActionFocusKey = nil
 		end
 	else
-		for _, child in ipairs(self._roomBrowserWidgets.PlayersList:GetChildren()) do
-			if child:IsA("Frame") or child:IsA("TextLabel") then
-				child:Destroy()
-			end
-		end
+		self:_clearGeneratedRoomBrowserGuiChildren(self._roomBrowserWidgets.PlayersList)
 		self._roomModeDropdownOpen = false
 		self._roomMapDropdownOpen = false
 		self._roomBrowserWidgets.ModeDropdown.Visible = false
@@ -19480,6 +18934,7 @@ function UISystem:_startRoomBrowserLoop()
 				if state then
 					self:_syncRoomBrowserSuppressionFromMatchContext()
 					self:_updateCountdownOverlay(state)
+					self:_syncPreTeleportLoadingFromCountdown(state)
 					self:_renderRoomUI(state)
 				end
 			end
@@ -19629,4 +19084,3 @@ function UISystem:RoomBrowserRespondRoomInvite(inviteId, accept)
 end
 
 return setmetatable({}, UISystem)
-

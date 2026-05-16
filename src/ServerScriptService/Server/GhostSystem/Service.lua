@@ -4,12 +4,15 @@ local Services = require(script.Parent.Parent.Core.Services)
 local Service = {}
 Service.__index = Service
 
+local InsertService = game:GetService("InsertService")
+local PathfindingService = game:GetService("PathfindingService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local GHOST_TRACE_ATTRIBUTE = "PasrahGhostTrace"
 local GHOST_FORCE_VISUAL_STATE_ATTRIBUTE = "PasrahForceGhostVisualState"
+local STUDIO_GHOST_PREVIEW_LABEL_TEMPLATE_PATH = { "Assets", "VisualTemplates", "GhostVisuals", "StudioGhostPreviewLabelTemplate" }
 
 local DEFAULT_GHOST_TYPES = {
 	"Pocong",
@@ -27,6 +30,27 @@ local DEFAULT_GHOST_TYPES = {
 }
 
 local DEFAULT_GHOST_TEMPLATE_VISUAL_OFFSETS = {}
+
+local function resolveChildPath(root, path)
+	local node = root
+	for _, segment in ipairs(path) do
+		if typeof(node) ~= "Instance" then
+			return nil
+		end
+		node = node:FindFirstChild(segment)
+	end
+	return node
+end
+
+local function cloneStudioGhostPreviewLabelTemplate()
+	local template = resolveChildPath(ReplicatedStorage, STUDIO_GHOST_PREVIEW_LABEL_TEMPLATE_PATH)
+	if template and template:IsA("BillboardGui") then
+		local clone = template:Clone()
+		clone.Name = "PreviewLabel"
+		return clone
+	end
+	return nil
+end
 
 local DEFAULT_GHOST_TEMPLATE_ROOT_SIZES = {}
 
@@ -63,6 +87,7 @@ local GHOST_TEMPLATE_GROUNDED = {}
 local GHOST_TEMPLATE_MESH_PART_NAMES = {}
 local GHOST_TEMPLATE_CAST_SHADOW = {}
 local GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS = {}
+local GHOST_MODEL_ASSET_TEMPLATE_CACHE = {}
 
 local GHOST_VISUAL_MOVE_SPEED_BY_STATE = {
 	Idle = 1.75,
@@ -79,6 +104,13 @@ local GHOST_VISUAL_TRANSPARENCY_BY_STATE = {
 	Hunting = 0.05,
 	Cooldown = 0.55,
 }
+
+local GHOST_NAV_NODE_LINK_DISTANCE = 34
+local GHOST_NAV_MAX_RAYCAST_PASSES = 16
+local GHOST_NAV_PATH_RECOMPUTE_INTERVAL = 0.45
+local GHOST_NAV_PATH_TARGET_REUSE_DISTANCE = 5
+local GHOST_NAV_ROOM_MARGIN = 1.25
+local GHOST_NAV_VERTICAL_TOLERANCE = 12
 
 local GHOST_VISUAL_MOTION_BY_STATE = {
 	Idle = {
@@ -140,6 +172,7 @@ local STUDIO_GHOST_PREVIEW_ORDER = {
 }
 
 local GHOST_AGGRESSIVE_VISUAL_THRESHOLD = 65
+local MIN_PLAYER_COMPARABLE_GHOST_HEIGHT = 5.9
 local GHOST_AGGRESSIVE_SUFFIXES = {
 	"Aggressive",
 	"Agressive",
@@ -516,12 +549,86 @@ local function resolveGhostTemplatesFolder()
 	return models:FindFirstChild("Ghosts")
 end
 
-local function resolveGhostModelTemplate(ghostType, options)
-	if type(ghostType) ~= "string" or ghostType == "" then
+local function normalizeGhostModelAssetId(value)
+	if type(value) ~= "string" then
 		return nil
 	end
-	local ghosts = resolveGhostTemplatesFolder()
-	if not ghosts then
+	local digits = value:match("(%d+)$")
+	if not digits then
+		return nil
+	end
+	return digits
+end
+
+local function resolveGhostModelAssetId(ghostType)
+	return normalizeGhostModelAssetId(resolveGhostTemplateConfigValue(GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS, ghostType))
+end
+
+local function findUsableGhostModelFromAssetContainer(container)
+	if typeof(container) ~= "Instance" or not container:IsA("Model") then
+		return nil
+	end
+	if container:FindFirstChildWhichIsA("BasePart", true) then
+		return container
+	end
+	for _, child in ipairs(container:GetChildren()) do
+		if child:IsA("Model") and child:FindFirstChildWhichIsA("BasePart", true) then
+			return child
+		end
+	end
+	return nil
+end
+
+local function loadGhostModelAssetTemplate(ghostType)
+	local assetId = resolveGhostModelAssetId(ghostType)
+	if not assetId then
+		return nil
+	end
+
+	local cached = GHOST_MODEL_ASSET_TEMPLATE_CACHE[assetId]
+	if typeof(cached) == "Instance" and cached:IsA("Model") then
+		return cached
+	elseif cached == false then
+		return nil
+	end
+
+	local ok, containerOrErr = pcall(function()
+		return InsertService:LoadAsset(tonumber(assetId))
+	end)
+	if not ok or typeof(containerOrErr) ~= "Instance" then
+		warn(string.format(
+			"[GhostSystem] Failed to load ghost asset '%s' for '%s': %s",
+			tostring(assetId),
+			tostring(ghostType),
+			tostring(containerOrErr)
+		))
+		GHOST_MODEL_ASSET_TEMPLATE_CACHE[assetId] = false
+		return nil
+	end
+
+	local selectedModel = findUsableGhostModelFromAssetContainer(containerOrErr)
+	if not selectedModel then
+		containerOrErr:Destroy()
+		GHOST_MODEL_ASSET_TEMPLATE_CACHE[assetId] = false
+		return nil
+	end
+
+	local template = selectedModel
+	if selectedModel ~= containerOrErr then
+		template = selectedModel:Clone()
+		containerOrErr:Destroy()
+	end
+
+	template.Name = tostring(ghostType)
+	template:SetAttribute("PasrahLoadedFromAssetId", assetId)
+	template:SetAttribute("PasrahGhostRuntimeAssetTemplate", true)
+	template.Parent = nil
+	GHOST_MODEL_ASSET_TEMPLATE_CACHE[assetId] = template
+	return template
+end
+
+local function resolveGhostModelTemplate(ghostType, options)
+	if type(ghostType) ~= "string" or ghostType == "" then
 		return nil
 	end
 
@@ -546,6 +653,16 @@ local function resolveGhostModelTemplate(ghostType, options)
 	appendCandidates(buildGhostTemplateCandidateNames(ghostType, profile))
 	if baseGhostType ~= ghostType then
 		appendCandidates(buildGhostTemplateCandidateNames(baseGhostType, resolveGhostVisualProfile(baseGhostType)))
+	end
+
+	local assetTemplate = loadGhostModelAssetTemplate(ghostType) or loadGhostModelAssetTemplate(baseGhostType)
+	if assetTemplate then
+		return assetTemplate, baseGhostType or ghostType
+	end
+
+	local ghosts = resolveGhostTemplatesFolder()
+	if not ghosts then
+		return nil
 	end
 
 	for _, candidateName in ipairs(preferredCandidates) do
@@ -615,6 +732,10 @@ local function clampGhostTemplateScale(ghostModel, ghostType)
 	local currentY = math.max(currentBounds.Y, 0.001)
 	local currentZ = math.max(currentBounds.Z, 0.001)
 	local factor = math.min(targetBounds.X / currentX, targetBounds.Y / currentY, targetBounds.Z / currentZ)
+	local minHeightFactor = MIN_PLAYER_COMPARABLE_GHOST_HEIGHT / currentY
+	if minHeightFactor > factor then
+		factor = minHeightFactor
+	end
 	if factor >= 0.98 and factor <= 1.02 then
 		return
 	end
@@ -656,6 +777,7 @@ local function createGhostFromTemplate(spawnCFrame, ghostType, options)
 	ghostModel:SetAttribute("PlaceholderVisual", false)
 	ghostModel:SetAttribute("VisualTemplateName", template.Name)
 	ghostModel:SetAttribute("PasrahGhostInventoryModelAssetId", inventoryModelAssetId)
+	ghostModel:SetAttribute("PasrahLoadedFromAssetId", template:GetAttribute("PasrahLoadedFromAssetId"))
 
 	for _, descendant in ipairs(ghostModel:GetDescendants()) do
 		if descendant:IsA("BasePart") then
@@ -733,10 +855,10 @@ local function tryParentGhostModel(ghostModel, container)
 	local ok, err = pcall(function()
 		ghostModel.Parent = container
 	end)
-	if ok then
+	if ok and ghostModel.Parent == container then
 		return true
 	end
-	return false, tostring(err)
+	return false, tostring(err or "parent_not_applied")
 end
 
 local function resolveSharedGameDataModule(moduleName)
@@ -1044,7 +1166,11 @@ local function attachStudioGhostPreviewLabel(model, ghostType)
 		return
 	end
 
-	local billboard = Instance.new("BillboardGui")
+	local billboard = cloneStudioGhostPreviewLabelTemplate()
+	if not billboard then
+		warn("[GhostSystem] Missing authored visual template: GhostVisuals.StudioGhostPreviewLabelTemplate")
+		return
+	end
 	billboard.Name = "PreviewLabel"
 	billboard.AlwaysOnTop = true
 	billboard.LightInfluence = 0
@@ -1054,8 +1180,14 @@ local function attachStudioGhostPreviewLabel(model, ghostType)
 	billboard.Adornee = model.PrimaryPart
 	billboard.Parent = model.PrimaryPart
 
-	local label = Instance.new("TextLabel")
-	label.Name = "Text"
+	local label = billboard:FindFirstChild("Text")
+	if not (label and label:IsA("TextLabel")) then
+		if label then
+			label:Destroy()
+		end
+		warn("[GhostSystem] StudioGhostPreviewLabelTemplate missing required child: Text")
+		return
+	end
 	label.BackgroundTransparency = 0.2
 	label.BackgroundColor3 = Color3.fromRGB(12, 16, 22)
 	label.BorderSizePixel = 0
@@ -1065,7 +1197,6 @@ local function attachStudioGhostPreviewLabel(model, ghostType)
 	label.TextScaled = true
 	label.Font = Enum.Font.GothamBold
 	label.Size = UDim2.fromScale(1, 1)
-	label.Parent = billboard
 end
 
 local function resolveGhostGroundPosition(match, targetAnchor)
@@ -1210,6 +1341,481 @@ local function keepGhostOutsideSafeZones(match, currentPosition, desiredPosition
 	end
 
 	return desiredPosition
+end
+
+local function collectMatchRoomParts(match)
+	if type(match) ~= "table" then
+		return {}
+	end
+	local container = match.container
+	if typeof(container) ~= "Instance" then
+		return {}
+	end
+	local roomsFolder = container:FindFirstChild("Rooms", true)
+	if not roomsFolder then
+		return {}
+	end
+
+	local roomParts = {}
+	for _, descendant in ipairs(roomsFolder:GetDescendants()) do
+		if descendant:IsA("BasePart") and string.find(descendant.Name, "Room_", 1, true) == 1 then
+			table.insert(roomParts, descendant)
+		end
+	end
+	return roomParts
+end
+
+local function isPositionInsideRoomPart(roomPart, position)
+	if typeof(position) ~= "Vector3" or not (typeof(roomPart) == "Instance" and roomPart:IsA("BasePart")) then
+		return false
+	end
+
+	local localPosition = roomPart.CFrame:PointToObjectSpace(position)
+	local halfSize = roomPart.Size * 0.5
+	local verticalTolerance = math.max(halfSize.Y, GHOST_NAV_VERTICAL_TOLERANCE)
+	return math.abs(localPosition.X) <= (halfSize.X + 0.75)
+		and math.abs(localPosition.Y) <= verticalTolerance
+		and math.abs(localPosition.Z) <= (halfSize.Z + 0.75)
+end
+
+local function findContainingRoomPart(match, position)
+	for _, roomPart in ipairs(collectMatchRoomParts(match)) do
+		if isPositionInsideRoomPart(roomPart, position) then
+			return roomPart
+		end
+	end
+	return nil
+end
+
+local function clampPositionToRoom(roomPart, position)
+	if typeof(position) ~= "Vector3" or not (typeof(roomPart) == "Instance" and roomPart:IsA("BasePart")) then
+		return position
+	end
+
+	local localPosition = roomPart.CFrame:PointToObjectSpace(position)
+	local halfSize = roomPart.Size * 0.5
+	local marginX = math.min(GHOST_NAV_ROOM_MARGIN, math.max(0, halfSize.X - 0.25))
+	local marginZ = math.min(GHOST_NAV_ROOM_MARGIN, math.max(0, halfSize.Z - 0.25))
+	local clampedLocal = Vector3.new(
+		math.clamp(localPosition.X, -halfSize.X + marginX, halfSize.X - marginX),
+		localPosition.Y,
+		math.clamp(localPosition.Z, -halfSize.Z + marginZ, halfSize.Z - marginZ)
+	)
+	return roomPart.CFrame:PointToWorldSpace(clampedLocal)
+end
+
+local function findNearestRoomPart(match, position)
+	if typeof(position) ~= "Vector3" then
+		return nil
+	end
+
+	local bestRoom = nil
+	local bestDistance = math.huge
+	for _, roomPart in ipairs(collectMatchRoomParts(match)) do
+		local clamped = clampPositionToRoom(roomPart, position)
+		local distance = (Vector3.new(clamped.X, 0, clamped.Z) - Vector3.new(position.X, 0, position.Z)).Magnitude
+		if distance < bestDistance then
+			bestRoom = roomPart
+			bestDistance = distance
+		end
+	end
+	return bestRoom
+end
+
+local function clampGhostToInvestigationArea(match, desiredPosition, currentPosition)
+	if typeof(desiredPosition) ~= "Vector3" then
+		return desiredPosition
+	end
+
+	local containingRoom = findContainingRoomPart(match, desiredPosition)
+	if containingRoom then
+		return desiredPosition
+	end
+
+	local nearestRoom = findNearestRoomPart(match, desiredPosition)
+	if nearestRoom then
+		return clampPositionToRoom(nearestRoom, desiredPosition)
+	end
+
+	if typeof(currentPosition) == "Vector3" then
+		local currentRoom = findContainingRoomPart(match, currentPosition)
+		if currentRoom then
+			return currentPosition
+		end
+	end
+
+	return desiredPosition
+end
+
+local function hasAncestorNamed(instance, name)
+	local node = instance
+	while typeof(node) == "Instance" do
+		if node.Name == name then
+			return true
+		end
+		node = node.Parent
+	end
+	return false
+end
+
+local function isGhostDoorTraversalPart(instance)
+	local node = instance
+	while typeof(node) == "Instance" and node ~= Workspace do
+		local name = string.lower(node.Name)
+		if string.find(name, "door", 1, true) then
+			return true
+		end
+		local policy = node:GetAttribute("DoorTraversalPolicy")
+		local mode = node:GetAttribute("DoorTraversalMode")
+		if type(policy) == "string" and policy ~= "" then
+			return true
+		end
+		if type(mode) == "string" and mode ~= "" then
+			return true
+		end
+		node = node.Parent
+	end
+	return false
+end
+
+local function shouldIgnoreGhostNavigationHit(instance)
+	if not (typeof(instance) == "Instance" and instance:IsA("BasePart")) then
+		return true
+	end
+	if isGhostDoorTraversalPart(instance) then
+		return true
+	end
+	if hasAncestorNamed(instance, "NavigationNodes")
+		or hasAncestorNamed(instance, "GhostSpawns")
+		or hasAncestorNamed(instance, "GhostSpawnZones")
+		or hasAncestorNamed(instance, "EvidenceSpawnNodes")
+		or hasAncestorNamed(instance, "EvidenceSpawns")
+		or hasAncestorNamed(instance, "InteractionPoints")
+		or hasAncestorNamed(instance, "SafeZones")
+		or hasAncestorNamed(instance, "Rooms") then
+		return true
+	end
+	if instance.Transparency >= 0.98
+		and not hasAncestorNamed(instance, "RuntimeBoundary")
+		and not hasAncestorNamed(instance, "MapBoundaryRuntime") then
+		return true
+	end
+	return false
+end
+
+local function buildGhostNavigationIgnoreList(match)
+	local ignored = {}
+	if type(match) == "table" and typeof(match.ghost) == "Instance" then
+		table.insert(ignored, match.ghost)
+	end
+	if type(match) == "table" then
+		for _, playerState in pairs(match.playersByUserId or {}) do
+			local player = type(playerState) == "table" and playerState.player or nil
+			if typeof(player) == "Instance" and player:IsA("Player") and typeof(player.Character) == "Instance" then
+				table.insert(ignored, player.Character)
+			end
+		end
+	end
+	return ignored
+end
+
+local function raycastGhostNavigationBlock(match, fromPosition, toPosition)
+	if typeof(fromPosition) ~= "Vector3" or typeof(toPosition) ~= "Vector3" then
+		return nil
+	end
+
+	local delta = toPosition - fromPosition
+	if delta.Magnitude <= 0.05 then
+		return nil
+	end
+
+	local ignored = buildGhostNavigationIgnoreList(match)
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+	raycastParams.IgnoreWater = true
+
+	local origin = fromPosition + Vector3.new(0, 2.2, 0)
+	local destination = toPosition + Vector3.new(0, 2.2, 0)
+	for _ = 1, GHOST_NAV_MAX_RAYCAST_PASSES do
+		local direction = destination - origin
+		if direction.Magnitude <= 0.05 then
+			return nil
+		end
+		raycastParams.FilterDescendantsInstances = ignored
+		local result = Workspace:Raycast(origin, direction, raycastParams)
+		if not result then
+			return nil
+		end
+		if shouldIgnoreGhostNavigationHit(result.Instance) then
+			table.insert(ignored, result.Instance)
+			origin = result.Position + direction.Unit * 0.08
+		else
+			return result
+		end
+	end
+
+	return nil
+end
+
+local function isGhostNavigationLineClear(match, fromPosition, toPosition)
+	return raycastGhostNavigationBlock(match, fromPosition, toPosition) == nil
+end
+
+local function collectGhostNavigationNodes(match)
+	if type(match) ~= "table" or typeof(match.container) ~= "Instance" then
+		return {}
+	end
+	local nodesFolder = match.container:FindFirstChild("NavigationNodes", true)
+	if not nodesFolder then
+		return {}
+	end
+
+	local nodes = {}
+	for _, descendant in ipairs(nodesFolder:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			table.insert(nodes, descendant)
+		end
+	end
+	table.sort(nodes, function(a, b)
+		return a.Name < b.Name
+	end)
+	return nodes
+end
+
+local function getNodePosition(node)
+	return node.Position
+end
+
+local function findNearestVisibleGhostNavNode(match, nodes, position)
+	local bestIndex = nil
+	local bestDistance = math.huge
+	for index, node in ipairs(nodes) do
+		local nodePosition = getNodePosition(node)
+		local distance = (nodePosition - position).Magnitude
+		if distance < bestDistance and isGhostNavigationLineClear(match, position, nodePosition) then
+			bestIndex = index
+			bestDistance = distance
+		end
+	end
+	return bestIndex
+end
+
+local function findNearestGhostNavNode(nodes, position)
+	local bestIndex = nil
+	local bestDistance = math.huge
+	for index, node in ipairs(nodes) do
+		local distance = (getNodePosition(node) - position).Magnitude
+		if distance < bestDistance then
+			bestIndex = index
+			bestDistance = distance
+		end
+	end
+	return bestIndex
+end
+
+local function buildGhostNavigationAdjacency(match, nodes)
+	local adjacency = {}
+	for index = 1, #nodes do
+		adjacency[index] = {}
+	end
+
+	for leftIndex = 1, #nodes do
+		local leftPosition = getNodePosition(nodes[leftIndex])
+		for rightIndex = leftIndex + 1, #nodes do
+			local rightPosition = getNodePosition(nodes[rightIndex])
+			local horizontalDistance = (Vector3.new(leftPosition.X, 0, leftPosition.Z) - Vector3.new(rightPosition.X, 0, rightPosition.Z)).Magnitude
+			local verticalDistance = math.abs(leftPosition.Y - rightPosition.Y)
+			if horizontalDistance <= GHOST_NAV_NODE_LINK_DISTANCE
+				and verticalDistance <= GHOST_NAV_VERTICAL_TOLERANCE
+				and isGhostNavigationLineClear(match, leftPosition, rightPosition) then
+				table.insert(adjacency[leftIndex], { index = rightIndex, distance = horizontalDistance + verticalDistance })
+				table.insert(adjacency[rightIndex], { index = leftIndex, distance = horizontalDistance + verticalDistance })
+			end
+		end
+	end
+
+	return adjacency
+end
+
+local function resolveGhostNavigationPath(adjacency, startIndex, targetIndex)
+	if type(adjacency) ~= "table" or type(startIndex) ~= "number" or type(targetIndex) ~= "number" then
+		return nil
+	end
+	if startIndex == targetIndex then
+		return { startIndex }
+	end
+
+	local distances = {}
+	local previous = {}
+	local visited = {}
+	for index in pairs(adjacency) do
+		distances[index] = math.huge
+	end
+	distances[startIndex] = 0
+
+	while true do
+		local currentIndex = nil
+		local currentDistance = math.huge
+		for index, distance in pairs(distances) do
+			if not visited[index] and distance < currentDistance then
+				currentIndex = index
+				currentDistance = distance
+			end
+		end
+		if not currentIndex or currentDistance == math.huge then
+			break
+		end
+		if currentIndex == targetIndex then
+			break
+		end
+		visited[currentIndex] = true
+
+		for _, edge in ipairs(adjacency[currentIndex] or {}) do
+			local candidateDistance = currentDistance + edge.distance
+			if candidateDistance < (distances[edge.index] or math.huge) then
+				distances[edge.index] = candidateDistance
+				previous[edge.index] = currentIndex
+			end
+		end
+	end
+
+	if distances[targetIndex] == math.huge then
+		return nil
+	end
+
+	local path = {}
+	local cursor = targetIndex
+	while cursor do
+		table.insert(path, 1, cursor)
+		if cursor == startIndex then
+			break
+		end
+		cursor = previous[cursor]
+	end
+	return path[1] == startIndex and path or nil
+end
+
+local function getCachedPathfindingGhostNavigationStep(match, currentPosition, targetPosition)
+	if type(match) ~= "table" then
+		return nil
+	end
+
+	local cache = match._ghostPathfindingCache
+	if type(cache) ~= "table" then
+		return nil
+	end
+	if typeof(cache.targetPosition) ~= "Vector3"
+		or (cache.targetPosition - targetPosition).Magnitude > GHOST_NAV_PATH_TARGET_REUSE_DISTANCE then
+		return nil
+	end
+
+	local waypoints = cache.waypoints
+	if type(waypoints) ~= "table" or #waypoints == 0 then
+		return nil
+	end
+
+	local index = math.max(tonumber(cache.index) or 2, 2)
+	while index <= #waypoints and typeof(waypoints[index]) == "Vector3" and (waypoints[index] - currentPosition).Magnitude <= 2.25 do
+		index += 1
+	end
+	cache.index = index
+
+	local nextPosition = waypoints[index]
+	if typeof(nextPosition) == "Vector3" and isGhostNavigationLineClear(match, currentPosition, nextPosition) then
+		return nextPosition
+	end
+	return nil
+end
+
+local function computePathfindingGhostNavigationStep(match, currentPosition, targetPosition)
+	if type(match) ~= "table" then
+		return nil
+	end
+
+	local now = os.clock()
+	local cache = match._ghostPathfindingCache
+	if type(cache) == "table"
+		and typeof(cache.targetPosition) == "Vector3"
+		and (cache.targetPosition - targetPosition).Magnitude <= GHOST_NAV_PATH_TARGET_REUSE_DISTANCE
+		and now - (tonumber(cache.computedAt) or 0) < GHOST_NAV_PATH_RECOMPUTE_INTERVAL then
+		return getCachedPathfindingGhostNavigationStep(match, currentPosition, targetPosition)
+	end
+
+	local path = PathfindingService:CreatePath({
+		AgentRadius = 1.6,
+		AgentHeight = 6,
+		AgentCanJump = false,
+		AgentCanClimb = false,
+		WaypointSpacing = 5,
+		Costs = {
+			Doorway = 0.2,
+		},
+	})
+
+	local ok = pcall(function()
+		path:ComputeAsync(currentPosition, targetPosition)
+	end)
+	if not ok or path.Status ~= Enum.PathStatus.Success then
+		match._ghostPathfindingCache = {
+			computedAt = now,
+			targetPosition = targetPosition,
+			waypoints = {},
+			index = 2,
+		}
+		return nil
+	end
+
+	local waypointPositions = {}
+	for _, waypoint in ipairs(path:GetWaypoints()) do
+		if typeof(waypoint.Position) == "Vector3" then
+			table.insert(waypointPositions, clampGhostToInvestigationArea(match, waypoint.Position, currentPosition))
+		end
+	end
+
+	match._ghostPathfindingCache = {
+		computedAt = now,
+		targetPosition = targetPosition,
+		waypoints = waypointPositions,
+		index = 2,
+	}
+	return getCachedPathfindingGhostNavigationStep(match, currentPosition, targetPosition)
+end
+
+local function resolveGhostNavigationStep(match, currentPosition, targetPosition)
+	if typeof(currentPosition) ~= "Vector3" or typeof(targetPosition) ~= "Vector3" then
+		return targetPosition
+	end
+	if isGhostNavigationLineClear(match, currentPosition, targetPosition) then
+		return targetPosition
+	end
+
+	local nodes = collectGhostNavigationNodes(match)
+	if #nodes == 0 then
+		return computePathfindingGhostNavigationStep(match, currentPosition, targetPosition) or currentPosition
+	end
+
+	local startIndex = findNearestVisibleGhostNavNode(match, nodes, currentPosition) or findNearestGhostNavNode(nodes, currentPosition)
+	local targetIndex = findNearestVisibleGhostNavNode(match, nodes, targetPosition) or findNearestGhostNavNode(nodes, targetPosition)
+	if not startIndex or not targetIndex then
+		return currentPosition
+	end
+
+	local adjacency = buildGhostNavigationAdjacency(match, nodes)
+	local path = resolveGhostNavigationPath(adjacency, startIndex, targetIndex)
+	if type(path) ~= "table" or #path == 0 then
+		return currentPosition
+	end
+
+	local nextIndex = path[1]
+	if #path >= 2 and (getNodePosition(nodes[nextIndex]) - currentPosition).Magnitude <= 2 then
+		nextIndex = path[2]
+	end
+
+	local nextNode = nodes[nextIndex]
+	if nextNode and isGhostNavigationLineClear(match, currentPosition, nextNode.Position) then
+		return nextNode.Position
+	end
+	return computePathfindingGhostNavigationStep(match, currentPosition, targetPosition) or currentPosition
 end
 
 local function resolveHuntTargetPlayer(match, ghostState)
@@ -1628,21 +2234,113 @@ local function resolveMatchContainer(match)
 	return container, activeMatches
 end
 
+local function isRuntimeGhostUsable(ghostModel)
+	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
+		return false, "invalid_model"
+	end
+	if not ghostModel:FindFirstChildWhichIsA("BasePart", true) then
+		return false, "missing_basepart"
+	end
+	local okExtents, extents = pcall(function()
+		return ghostModel:GetExtentsSize()
+	end)
+	if okExtents and typeof(extents) == "Vector3" and extents.Magnitude <= 0.001 then
+		return false, "zero_extents"
+	end
+	return true
+end
+
+local function resolveGhostRepairCFrame(match, container)
+	if type(match) == "table" and typeof(match.ghostVisualCurrentPosition) == "Vector3" then
+		return CFrame.new(match.ghostVisualCurrentPosition)
+	end
+	if type(match) == "table" and typeof(match.ghost) == "Instance" and match.ghost:IsA("Model") then
+		local okPivot, pivot = pcall(function()
+			return match.ghost:GetPivot()
+		end)
+		if okPivot and typeof(pivot) == "CFrame" then
+			return pivot
+		end
+	end
+	local spawnPart = type(match) == "table" and match.ghostSpawnPart or nil
+	if not (typeof(spawnPart) == "Instance" and spawnPart:IsA("BasePart")) then
+		spawnPart = resolveSpawnPart(container)
+	end
+	return spawnPart and spawnPart.CFrame or CFrame.new(0, 5, 0)
+end
+
+local function copyGhostRuntimeAttributes(source, target)
+	if typeof(source) ~= "Instance" or typeof(target) ~= "Instance" then
+		return
+	end
+	for attributeName, attributeValue in pairs(source:GetAttributes()) do
+		if attributeName ~= "GhostType"
+			and attributeName ~= "VisualGhostType"
+			and attributeName ~= "VisualTemplateName"
+			and attributeName ~= "PlaceholderVisual" then
+			target:SetAttribute(attributeName, attributeValue)
+		end
+	end
+end
+
+local function repairRuntimeGhost(match, container, reason)
+	if type(match) ~= "table" or typeof(container) ~= "Instance" then
+		return false, "missing_container"
+	end
+
+	local previousGhost = match.ghost
+	local ghostType = match.ghostType
+	if type(ghostType) ~= "string" or ghostType == "" then
+		ghostType = typeof(previousGhost) == "Instance" and previousGhost:GetAttribute("GhostType") or nil
+	end
+	if type(ghostType) ~= "string" or ghostType == "" then
+		ghostType = DEFAULT_GHOST_TYPES[1]
+	end
+	match.ghostType = ghostType
+
+	local spawnCFrame = resolveGhostRepairCFrame(match, container)
+	local repairedGhost = createGhostFromTemplate(spawnCFrame, ghostType, {
+		logicalGhostType = ghostType,
+		initialAggression = tonumber(match.initialAggression),
+		personalityType = match.personalityType,
+	}) or createVisibleGhostPlaceholder(spawnCFrame, ghostType)
+	copyGhostRuntimeAttributes(previousGhost, repairedGhost)
+	repairedGhost:SetAttribute("PasrahGhostRepaired", true)
+	repairedGhost:SetAttribute("PasrahGhostRepairReason", tostring(reason or "unknown"))
+
+	local parentOk, parentErr = tryParentGhostModel(repairedGhost, container)
+	if not parentOk then
+		pcall(function()
+			repairedGhost:Destroy()
+		end)
+		return false, parentErr
+	end
+
+	match.ghost = repairedGhost
+	if typeof(previousGhost) == "Instance" and previousGhost ~= repairedGhost then
+		pcall(function()
+			previousGhost:Destroy()
+		end)
+	end
+	return true
+end
+
 local function ensureGhostPlacement(match)
-	if not (match and match.ghost) then
+	if type(match) ~= "table" or not match.ghost then
 		return false
 	end
-	local container = match.container
-	if not container then
-		container = resolveMatchContainer(match)
-	end
+	local container = resolveMatchContainer(match)
 	if not container then
 		return false
+	end
+	local usable, unusableReason = isRuntimeGhostUsable(match.ghost)
+	if not usable then
+		return repairRuntimeGhost(match, container, unusableReason)
 	end
 	if match.ghost.Parent ~= container then
-		local parentOk = tryParentGhostModel(match.ghost, container)
+		local parentOk, parentErr = tryParentGhostModel(match.ghost, container)
 		if not parentOk then
-			return false
+			return repairRuntimeGhost(match, container, parentErr)
 		end
 	end
 	return true
@@ -1955,7 +2653,9 @@ function Service:_syncGhostVisual(match, ghostState)
 	end
 
 	self:_tryPromoteGhostVisualVariant(match, ghostState)
-	ensureGhostPlacement(match)
+	if not ensureGhostPlacement(match) then
+		return false
+	end
 	local roomId = ghostState.currentRoomId or ghostState.favoriteRoomId
 	match.ghost:SetAttribute("CurrentRoomId", ghostState.currentRoomId)
 	match.ghost:SetAttribute("FavoriteRoomId", ghostState.favoriteRoomId)
@@ -1988,6 +2688,12 @@ function Service:_syncGhostVisual(match, ghostState)
 			currentPosition = match.ghost:GetPivot().Position
 		end
 
+		targetPosition = clampGhostToInvestigationArea(match, targetPosition, currentPosition)
+		if typeof(targetPosition) ~= "Vector3" then
+			self:_applyGhostVisualState(match, ghostState)
+			return true
+		end
+		targetPosition = resolveGhostNavigationStep(match, currentPosition, targetPosition)
 		targetPosition = keepGhostOutsideSafeZones(match, currentPosition, targetPosition)
 
 		match.ghostVisualTargetPosition = targetPosition
@@ -2015,6 +2721,12 @@ function Service:_syncGhostVisual(match, ghostState)
 		end
 
 		resolvedPosition = keepGhostOutsideSafeZones(match, currentPosition, resolvedPosition)
+		resolvedPosition = clampGhostToInvestigationArea(match, resolvedPosition, currentPosition)
+		if typeof(resolvedPosition) == "Vector3"
+			and typeof(currentPosition) == "Vector3"
+			and not isGhostNavigationLineClear(match, currentPosition, resolvedPosition) then
+			resolvedPosition = currentPosition
+		end
 		if typeof(resolvedPosition) ~= "Vector3" then
 			resolvedPosition = currentPosition
 		end
@@ -2071,15 +2783,20 @@ function Service:_ensureGhostReady(matchOrId, payload)
 		end
 
 		if type(liveMatch) == "table" and liveMatch.ghost then
-			ensureGhostPlacement(liveMatch)
+			if not ensureGhostPlacement(liveMatch) then
+				lastReason = "ghost_placement_failed"
+			end
 			if liveMatch.ghostSpawnPart == nil then
 				self:SelectGhostRoom(liveMatch)
 			end
 		end
 
 		if self._ghostService:GetGhostState(matchId) ~= nil then
-			self:_syncGhostVisualByMatch(liveMatch or matchId)
-			return liveMatch, matchId, nil
+			local synced = self:_syncGhostVisualByMatch(liveMatch or matchId)
+			if type(liveMatch) ~= "table" or synced or ensureGhostPlacement(liveMatch) then
+				return liveMatch, matchId, nil
+			end
+			lastReason = "ghost_visual_sync_failed"
 		end
 
 		task.wait(GHOST_RETRY_WAIT)
@@ -2149,8 +2866,13 @@ function Service:InitializeMatch(match)
 	if type(match) ~= "table" then
 		return nil, "invalid_match"
 	end
-	if match.ghost then
-		return match.ghost
+	if typeof(match.ghost) == "Instance" then
+		if ensureGhostPlacement(match) then
+			return match.ghost
+		end
+		match.ghost = nil
+	elseif match.ghost then
+		match.ghost = nil
 	end
 	local matchId = match.matchId or match.id
 	if not matchId then
