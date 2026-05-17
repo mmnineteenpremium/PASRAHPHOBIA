@@ -53,6 +53,8 @@ local DISABLED_RUNTIME_SYSTEM_NAMES = {
     -- QA/platform advisory layers are not wired into the active runtime graph.
     OperationsQASystem = true,
     PlatformSupportSystem = true,
+    -- Studio automation harness must be opt-in only and never active during normal play flow validation.
+    StudioE2EControlSystem = true,
 }
 
 local EXPLICIT_SYSTEM_NAMES = {
