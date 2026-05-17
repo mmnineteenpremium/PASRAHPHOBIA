@@ -9,6 +9,12 @@ local BROKEN_IDS = {
     ["1843529608"] = true,
     ["9125710681"] = true,
     ["1837829568"] = true,
+    -- Documented map audio 403s from the owner visual checklist.
+    ["412892754"] = true,
+    ["188608071"] = true,
+    ["3225480278"] = true,
+    ["510111269"] = true,
+    ["1013366831"] = true,
 }
 
 local function trim(value)
