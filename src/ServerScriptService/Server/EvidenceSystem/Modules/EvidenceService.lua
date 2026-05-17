@@ -6,6 +6,7 @@ local EvidenceDeduction = require(script.Parent.EvidenceDeduction)
 local EvidenceDataTypes = require(script.Parent.EvidenceDataTypes)
 local EvidenceRandomizer = require(script.Parent.Parent.EvidenceRandomizer)
 local UtilityToolVisuals = require(script.Parent.UtilityToolVisuals)
+local EvidenceWorldVisuals = require(script.Parent.EvidenceWorldVisuals)
 local HttpService = game:GetService("HttpService")
 local Workspace = game:GetService("Workspace")
 
@@ -612,6 +613,7 @@ function EvidenceService.new(state, deps)
 		EvidenceRandomizerConfig = self._deps.EvidenceRandomizerConfig,
 	})
 	self._utilityVisuals = UtilityToolVisuals.new()
+	self._evidenceWorldVisuals = EvidenceWorldVisuals.new()
 	self._engine = EvidenceEngine.new({
 		Spawner = self._spawner,
 		Validator = self._validator,
@@ -635,6 +637,7 @@ function EvidenceService:Init()
 	self._randomizer:Reset()
 	self._rngByMatchId = {}
 	self._utilityVisuals:ClearAll()
+	self._evidenceWorldVisuals:ClearAll()
 end
 
 function EvidenceService:Start()
@@ -646,6 +649,7 @@ function EvidenceService:Stop()
 	self._randomizer:Reset()
 	self._rngByMatchId = {}
 	self._utilityVisuals:ClearAll()
+	self._evidenceWorldVisuals:ClearAll()
 	self._state:Set("evidenceMatches", {})
 	self._state:Set("utilityToolsByMatch", {})
 end
@@ -1644,6 +1648,7 @@ function EvidenceService:StartMatch(matchId, payload)
 		smudgeEffects = {},
 	})
 	self._utilityVisuals:StartMatch(matchId)
+	self._evidenceWorldVisuals:StartMatch(matchId)
 	local candidates = self:_computeDeductionCandidates(matchId)
 	session.possibleGhosts = candidates
 	self:_publish("DeductionUpdated", { matchId = matchId, candidates = candidates })
@@ -1658,6 +1663,7 @@ function EvidenceService:EndMatch(matchId)
 	matches[matchId] = nil
 	self._state:Set("evidenceMatches", matches)
 	self._utilityVisuals:ClearMatch(matchId)
+	self._evidenceWorldVisuals:ClearMatch(matchId)
 	self:_clearUtilityState(matchId)
 end
 
@@ -1877,15 +1883,28 @@ function EvidenceService:CollectEvidence(player, matchId, payload)
 
 	if ok and result then
 		local session = self._engine:GetSession(matchId)
+		local evidenceVisual = self._evidenceWorldVisuals
+			and self._evidenceWorldVisuals:PlaceEvidence(matchId, result.evidenceType, player, payload)
+			or nil
+		if type(evidenceVisual) == "table" then
+			result.visualPlaced = evidenceVisual.model ~= nil
+			result.visualKind = evidenceVisual.kind
+			result.visualPosition = evidenceVisual.position
+		end
 		self:_sync(matchId, "EvidenceDetected", {
 			evidenceType = result.evidenceType,
 			player = player,
+			visualPlaced = result.visualPlaced == true,
+			visualKind = result.visualKind,
 		})
 		self:_publish("EvidenceDetected", {
 			player = player,
 			matchId = matchId,
 			evidenceType = result.evidenceType,
 			toolType = payload and payload.toolType,
+			visualPlaced = result.visualPlaced == true,
+			visualKind = result.visualKind,
+			visualPosition = result.visualPosition,
 			playerPosition = payload and payload.playerPosition,
 			ghostProximity = payload and (payload.ghostProximity or payload.distanceToGhost),
 			environmentalConditions = payload and payload.environmentalConditions,
@@ -1906,6 +1925,9 @@ function EvidenceService:CollectEvidence(player, matchId, payload)
 			toolType = payload and payload.toolType,
 			activity = payload and payload.activity,
 			roomId = payload and payload.roomId,
+			visualPlaced = result.visualPlaced == true,
+			visualKind = result.visualKind,
+			visualPosition = result.visualPosition,
 			nearGhostRoom = payload and payload.nearGhostRoom == true,
 			toolNearGhostRoom = payload and payload.toolNearGhostRoom == true,
 			now = payload and payload.now,

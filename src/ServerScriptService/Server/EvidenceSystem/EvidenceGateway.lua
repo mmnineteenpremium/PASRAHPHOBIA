@@ -366,6 +366,10 @@ function EvidenceGateway:_buildData(toolType, ok, reason, result)
 	end
 
 	if type(result) == "table" then
+		data.evidenceType = result.evidenceType or data.evidenceType
+		data.visualPlaced = result.visualPlaced == true
+		data.visualKind = result.visualKind
+		data.visualPosition = result.visualPosition
 		data.result = result
 	end
 	return data
