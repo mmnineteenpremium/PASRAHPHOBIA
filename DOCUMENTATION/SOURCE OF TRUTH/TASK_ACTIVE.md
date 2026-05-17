@@ -1,9 +1,233 @@
-# TASK ACTIVE - RUNTIME AUTHORITY + TOTAL VISUAL POLISH LOCK
+# TASK ACTIVE - RUNTIME AUTHORITY + TOTAL VISUAL POLISH LOCK codex resume 019dc78b-eaa2-7130-84bc-9d05bf097962
 
-Last updated: 2026-04-26 (Asia/Bangkok)
+Last updated: 2026-05-17 (Asia/Bangkok)
 Owner context: Miftah
 Status: ACTIVE
 Confidence target: 99%
+
+## Execution Update (2026-05-17)
+
+- Owner-visible continuation smoke terbaru:
+  - Flow resolusi dua langkah dikonfirmasi: `SubmitJournalGuess` mengunci/validasi jawaban, lalu `EndInvestigation` menutup match; setelah step kedua `InMatch=false` dan `Workspace.ActiveMatches` kosong.
+  - Result screen menampilkan `MISSION COMPLETE`, `BERHASIL`, `Ghost Asli: Kuntilanak | Tebakan: Kuntilanak`, dan checklist `Suara | To'un | Pengganggu`.
+  - Tombol tutup hasil mengembalikan kontrol PC normal: `CameraType=Custom`, `MouseBehavior=Default`.
+  - Door breach preparation terbukti tidak memakai bypass `AdvancePhase`: setelah `PreparationFocusTool=EMF`, `Door_FrontEntry` membuka via `DoorRuntimePreparationProximity` dan masuk `InvestigationPhase`.
+  - Runtime ghost animation smoke: `Kuntilanak` memainkan `GhostManifest`, lalu `KuntilanakAggressive` memainkan `GhostHunt` loop dengan `WeightCurrent=1`.
+  - Audit runtime sementara untuk 12 ghost menunjukkan semua template punya skinned mesh dan 7 clip per ghost berhasil `Animator:LoadAnimation` tanpa error.
+  - Template visual aggressive/angry yang kehilangan `SurfaceAppearance` diperbaiki di Studio aktif dan guard `GhostSystem.Service` ditambahkan agar varian tersebut mewarisi texture dari base ghost.
+## Execution Update (2026-05-14)
+
+- Branch/runtime target for this pass: `brian-second-final`, local `PASRAHPHOBIA.rbxlx`, Studio account session `briankotak`.
+- Match flow wiring retest completed in open Studio without creating a new match system: `M` opened `RoomBrowserUI`, room creation and host start used the same `LobbyEvent` actions as the UI handlers (`CreateRoom`, `HostStart`) because MCP mouse clicks do not fire GuiButton events reliably.
+- Visual flow reached: lobby spawn -> room browser -> room created -> 5-second countdown -> preparation/staging with Match panel -> breach target -> `InvestigationPhase` -> natural hunt -> safe zone hidden -> journal open -> correct journal submit -> success result.
+- Runtime fixes made and mirrored to source/build:
+  - `src/client/UI/Main.lua`: button input hardening; button polish children are forced passthrough and `connectButtonPress` also listens to `MouseButton1Down/InputBegan`.
+  - `src/ServerScriptService/Server/MatchSystem/MatchInstance.lua`: lifecycle phase start timestamp is serialized as `phaseStartedAt`.
+  - `src/ServerScriptService/Server/GhostSystem/GhostService.lua` + `GhostHuntController.lua`: ghost manifest/hunt respects lifecycle phase and blocks hunts during preparation plus the initial investigation grace window.
+  - `src/ServerScriptService/Server/HidingSystem/Service.lua`: safe-zone detection now allows vertical character-root tolerance, fixing HauntedHouse safe-zone parts that sit above the player root while X/Z are correct.
+- Verified Studio observations:
+  - no lobby falling loop after fresh play.
+  - `PreparationBreachTarget_1` changed player state to `MatchPhase=InGame`, `MatchLifecyclePhase=InvestigationPhase`, not instant result.
+  - HauntedHouse safe zone became valid: `PasrahHideState=Hidden`, `PasrahHideSpotType=SafeZone`, `PasrahHideZoneId=SafeZone_1`.
+  - natural hunt triggered after leaving safe zone briefly; returning to `SafeZone_1` kept player alive with `PasrahGhostHuntActive=true` and `IsDead=nil`.
+  - journal submit for live `Ghost_Pocong` with evidence `MEDOK`, `Suhu`, `BukuTerkutuk` returned `success=true`, `identified=true`, then result panel showed `MISSION COMPLETE | Ghost Pocong`.
+- Build verification: `.\.aftman\bin\rojo.exe build default.project.json -o PASRAHPHOBIA.rbxlx` passed after patches.
+- Remaining validation gap: MCP mouse click still does not trigger the authored `CreateRoomButton` directly, but keyboard toggle `M` works and the source has been hardened for real player mouse/touch input. Human click retest on the owner machine should be done before multiplayer client smoke.
+
+## Execution Update (2026-05-13)
+
+- Journal submit flow wired for the active match loop: `JournalUI` now uses background image asset `78469749292028`, shows a manual 3-evidence checklist, ghost selection, and `SUBMIT JOURNAL`; client submits only selected evidence/ghost, `EvidenceGateway` validates server-authoritatively through `EvidenceService:ValidateJournalGuess`, publishes `GhostGuessValidated`, and requests match end with success result only when the guess is correct. Source and active Studio modules were mirrored and compile-checked via Studio `require`.
+- Latest Studio cloud-place validation pass: `PlaceId=89787959603872`, `UniverseId=10138560838`, account session `briankotak`. Temporary E2E smoke forced `Kuntilanak`, started solo `HauntedHouse`, advanced to `InvestigationPhase`, then forced manifest. Result `ok=true`: `GhostAnimationPipeline` selected `GhostManifest` from per-ghost tracks, active animator path was `Workspace.ActiveMatches.Match_match_1.Ghost_Kuntilanak.Kuntilanak_RIG_BASE_REEXPORT_SKINNED_NORMALIZED.AnimationController.Animator`, playing track was `rbxassetid://77086566115618`, `ghostTracks=1`, and `playerGhostAnimationTracks=0`.
+- Runtime ghost animation hardening is now stricter than the earlier target-preference pass: when `ghostType` is known, `GhostAnimationPipeline` no longer falls back to arbitrary Workspace `AnimationController`/`Humanoid`; it retries until the matching ghost rig exists, creates a local `GhostAnimationController` only inside that matched ghost rig if needed, listens to player ghost state attributes (`PasrahGhostRenderManifesting`, `PasrahGhostRuntimeState`, hunt state, etc.), and exposes diagnostic state (`activeAnimatorPath`, `activeTrackAnimationId`, `lastPlayError`).
+- Investigation-tool mesh blocker resolved for branch `brian-second-final`: the 8 inaccessible legacy mesh IDs were identified as `KotakArwah=99948530753242`, `GerakanGaib=103978310572809`, `Dupa=132658963178691`, `Salib=137973898872421`, `Garam=86541720573721`, `BukuTerkutuk=110340483573539`, `BolaArwah=80180718732937`, and `JejakEnergi=134433508176285`. Source now points tool visual config/model JSON to second-account/team model assets, active Studio `ReplicatedStorage.Assets.Models.Tools` and `Workspace.Checklist Visualtemplates.FPVHandAndToolPreview.ToolHoldPreviews` were refreshed from `InsertService:LoadAsset`, and Play Test confirmed `PasrahToolVisualAssetRefreshCount=11` with no old permission warnings.
+- Runtime/server hardening added at `src/ServerScriptService/Server/ToolVisualAssetSystem/Main.lua`: on server start it refreshes tool templates from `ToolVisualConfig.inventoryModelAssetId`, so old `.rbxm` embedded mesh references no longer decide runtime visuals. Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/SECOND_ACCOUNT_TOOL_ASSET_REFRESH_2026-05-13.md`.
+- Additional second-account ghost model references from `ghost-assetid.md` are recorded as static/reference assets only. They are not wired over the normalized skinned runtime ghost IDs because the current ghost animation pipeline depends on the 12 skinned normalized base rigs and uploaded per-ghost animation assets.
+- Side task ghost rigged reimport/animation upload dibuka di branch `brian-second-final` dengan Studio akun kedua `briankotak`; `zyraaavex` dipause sampai appeal/moderation selesai.
+- Base rig ghost upload diarahkan ke creator team `PASRAHPHOBIA DEVELOPER & TEAM` / group id `407883270`; metadata spot-check Studio mengonfirmasi creator target team untuk asset test.
+- Manifest side task dibuat di `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_RIGGED_ANIMATION_UPLOAD_MANIFEST_2026-05-13.md`.
+- Open Cloud animation upload lock: raw `.fbx` tidak diupload langsung; source animation harus dikonversi/import dulu menjadi `.rbxm` atau `.rbxmx`.
+- Upload wrapper siap untuk hasil konversi: `scripts/upload-ghost-animation-rbxm-assets.ps1`, dengan generator plan `scripts/build-ghost-animation-upload-plan.ps1` dan template plan di `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_RIGGED_ANIMATION_UPLOAD_PLAN_TEMPLATE_2026-05-13.json`.
+- Runtime reader `src/client/GhostAnimationPipeline/Main.lua` sudah disiapkan untuk per-ghost animation folder dengan global fallback lama tetap aktif.
+- Result applier siap: `scripts/apply-ghost-animation-upload-results.ps1` untuk menulis `Animation` model JSON setelah AnimationId upload keluar.
+- Runtime ghost animation wiring tetap ditahan sampai minimal slice `Kuntilanak` atau `SilumanUlar` berhasil preview/publish dan AnimationId tercatat.
+- Runtime ghost base rig terbaru sudah di-wire permanen untuk branch `brian-second-final`: `GhostVisualTuning` memakai 12 AssetId terbaru, dan `GhostSystem.Service` sekarang prefer `InsertService:LoadAsset(assetId)` sebelum fallback ke template legacy.
+- Studio aktif sudah dimirror dan smoke initializer untuk 12 ghost pass: semua non-placeholder dengan `PasrahLoadedFromAssetId` sesuai AssetId terbaru.
+- Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_RUNTIME_NEW_ASSET_WIRING_2026-05-13.md`.
+- Animation Editor blocker found: `Kuntilanak`/`Genderuwo` package assets can be forced open by injecting `Bone` instances from `InitialPoses`, but their `node_0.HasSkinnedMesh=false`, so the mesh is still static and imported animation transforms are invalid. Do not use rehydrated clones as final animation source.
+- Base rig skinned audit from latest 12 asset IDs: valid skinned assets are `Banaspati`, `Jerangkong`, `SilumanUlar`, and `SundelBolong`; `Genderuwo`, `HantuTanah`, `Kuntilanak`, `Leak`, `Palasik`, `Pocong`, `Tuyul`, and `WeweGombel` must be reimported/reuploaded as real skinned package rigs before animation conversion.
+- Skinned base re-export candidates created from each failed ghost's `Manifest` `.blend` without overwriting source: `.codex/asset-imports/20260513-ghost-base-reexport/skinned-base/<Ghost>/<Ghost>_RIG_BASE_REEXPORT_SKINNED.fbx`. Blender import-back audit confirms armature, vertex groups, weighted vertices, and Armature modifier for all 8. `Pocong` and `WeweGombel` need extra Studio preview because source mesh scale is extreme.
+- Clean machine-readable audit files are available at `.codex/asset-imports/20260513-ghost-base-reexport/reexport-fbx-audit.clean.json` and `.codex/asset-imports/20260513-ghost-base-reexport/reexport-fbx-bounds-audit.clean.json`; use these for follow-up scripting instead of the older stdout captures that include Blender FBX log lines.
+- `Pocong` received a non-overwriting normalized candidate at `.codex/asset-imports/20260513-ghost-base-reexport/normalized-base/Pocong/Pocong_RIG_BASE_REEXPORT_SKINNED_NORMALIZED.fbx`; Blender audit confirms 16 bones, 16 vertex groups, 4643 weighted vertices, Armature modifier, mesh scale `1,1,1`, armature scale `1,1,1`.
+- Open Cloud base model upload wrapper is prepared and used for normalized base rigs: `scripts/build-ghost-base-model-upload-plan.ps1` and `scripts/upload-ghost-base-model-fbx-assets.ps1`.
+- Final normalized base rig reupload pass is complete for 8 formerly static ghosts. Studio `InsertService:LoadAsset` audit and `GhostSystem.Service:InitializeMatch` smoke both pass with `HasSkinnedMesh=true` and expected asset IDs. Runtime source and active Studio `GhostVisualTuning` now point to the normalized IDs: `Genderuwo=116514308503184`, `HantuTanah=97068595212213`, `Kuntilanak=111714179492317`, `Leak=98855032697085`, `Palasik=78260225419720`, `Pocong=135270375666027`, `Tuyul=128588579954533`, `WeweGombel=101666948803556`.
+- Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_BASE_NORMALIZED_REUPLOAD_AUDIT_2026-05-13.md`.
+- Ready-to-play local smoke after normalized wiring passed: Rojo build succeeded, Studio Play Test loaded player/UI shells, runtime `GhostVisualTuning` resolves normalized IDs, and the old lobby `MusicPlayer` script was guarded so it no longer errors when `workspace.MusicPlayer` is absent. Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/READY_TO_PLAY_GHOST_BASE_SMOKE_2026-05-13.md`.
+- Residual non-fatal visual asset warning remains for mesh asset `127919543217717` (`HANTU-TANAH` meshpart); it did not block bootstrap or ghost runtime smoke.
+- Animation upload plan now points to normalized base rig IDs and excludes backup FBX files. Dry-run correctly reports `missing_file=84` until converted `.rbxm/.rbxmx` animation files exist.
+- Cross-audit of 84 animation FBX files against normalized bases returned 0 bone/action/keyframe errors; the only warning was Pocong object scale on 7 clips.
+- Pocong's 7 animation FBX clips were exported non-destructively to `.codex/asset-imports/20260513-ghost-animation-rbxm/normalized-animation-fbx/Pocong` with object scale normalized to `1,1,1`. The animation upload plan now uses these Pocong override files and source preflight is clean: 84 items, 0 errors, 0 warnings.
+- Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/POCONG_ANIMATION_NORMALIZED_EXPORT_2026-05-13.md`.
+- Animation upload smoke completed for `Kuntilanak.GhostIdle`: normalized FBX imported cleanly in Animation Editor, saved to `.rbxmx`, uploaded to team via Open Cloud as AnimationId `110913223261685`, applied to `src/ReplicatedStorage/Assets/Animations/Ghosts/Kuntilanak/GhostIdle.model.json`, and mirrored in active Studio with `Looped=true`. The apply wrapper now writes UTF-8 without BOM; Rojo `sourcemap` and `build default.project.json` pass after the source JSON fix. Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/KUNTILANAK_GHOSTIDLE_ANIMATION_UPLOAD_SMOKE_2026-05-13.md`.
+- Animation upload smoke #2 completed for `SilumanUlar.GhostIdle`: saved `ServerStorage.RBX_ANIMSAVES` was extracted from `PASRAHPHOBIA.rbxlx` to `.rbxmx`, uploaded to team via Open Cloud as AnimationId `96845915731729`, applied to `src/ReplicatedStorage/Assets/Animations/Ghosts/SilumanUlar/GhostIdle.model.json`, and mirrored in active Studio with `Looped=true`. Rojo `sourcemap` and `build default.project.json` pass after apply. Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/SILUMANULAR_GHOSTIDLE_ANIMSAVE_UPLOAD_SMOKE_2026-05-13.md`.
+- Full ghost animation batch completed: 84/84 ghost runtime animations are converted to `.rbxmx`, uploaded as team `Animation` assets, applied under `src/ReplicatedStorage/Assets/Animations/Ghosts/<Ghost>/<RuntimeKey>.model.json`, and mirrored in active Studio. Each of 12 ghosts has 7 runtime keys; loop flags are 3 looping (`GhostIdle`, `GhostRoam`, `GhostHunt`) and 4 non-looping (`GhostManifest`, `GhostAttack`, `GhostJumpscare`, `GhostCooldown`). Rojo `sourcemap` and `build default.project.json` pass. Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_ANIMATION_BATCH_UPLOAD_2026-05-13.md`.
+- Runtime targeting hardening completed for `GhostAnimationPipeline`: client playback now targets the active ghost model by `GhostType` / `VisualGhostType` / `VisualTemplateName`; when `ghostType` is known it does not fall back to arbitrary Workspace animators, preventing ghost clips from loading onto player humanoids or stale preview rigs. `Init()` resets the active animator, and repeated non-looping actions can replay after their previous track stops. Active Studio was mirrored. Smoke tests passed: per-ghost track resolve returned `Kuntilanak:GhostIdle`, real rigs for `Kuntilanak`, `Pocong`, and `SilumanUlar` loaded and played uploaded clips with `HasSkinnedMesh=true`, and full pipeline play drove `Ghost_Kuntilanak` while `playerTracks=0`. Old `Workspace.ActiveMatches.Match_smoke_*` artifacts were removed from the active Studio scene.
+- Studio Play Test E2E pass for match runtime: temporary local smoke used `StudioE2EControl` to force `Kuntilanak`, start solo `HauntedHouse`, advance to `InvestigationPhase`, and force manifest. Client result: `Workspace.ActiveMatches.Match_match_1.Ghost_Kuntilanak`, `pipelineState.activeAnimation=GhostManifest`, `pipelineState.perGhostTrackCount=84`, ghost animator track `rbxassetid://77086566115618`, and `playerGhostAnimationTracks=0`. Temporary smoke script and attributes were removed after stopping Play.
+- `SilumanUlar` remains the validated conversion slice: Studio reports `node_0.HasSkinnedMesh=true`, Animation Editor opens, and `ServerStorage.RBX_ANIMSAVES.SilumanUlar_BASE-RIG-FIX.SilumanUlar_Idle_RIG_BASE_FIX_Scene` exists as a saved `KeyframeSequence`.
+- Match resolution flow rewire (phase-1 manual evidence, Phasmophobia-style) is implemented in `brian-second-final`:
+  - Journal now supports two-step resolution: `SUBMIT JOURNAL` (lock manual evidence+ghost guess) then `END INVESTIGATION` (intentional match end path).
+  - `SubmitJournalGuess` no longer auto-ends match; server keeps authoritative validation and final match close is triggered by explicit `EndInvestigation`.
+  - Results payload/UI now includes `ghost asli`, `ghost tebakan`, `checklist evidence tebakan`, `expected evidence`, `benar/salah`, and existing reward rows (MM/PP/XP/RP).
+  - Fail-state paths (sanity/hunt/death) remain active but are no longer the only way to finish a match.
+  - In-match Journal tutorial slides were added (`TUTORIAL MATCH`) with simple prev/next page guidance for manual checklist and submit flow.
+- `2026-05-17` local owner-visible smoke in `brian-second-final`:
+  - Natural flow revalidated through `Open Room Browser -> Buat Room -> Mulai Permainan -> countdown -> staging -> pilih tool -> buka pintu -> InvestigationPhase`.
+  - Room Browser image-text button stack was repaired in `src/client/UI/Main.lua`; visual overlay children now proxy click/touch input instead of blocking `CreateRoomButton`.
+  - Result close path returned to lobby with `MouseBehavior=Default`, camera TPV/custom humanoid subject, `phase=Lobby`, and `InMatch=nil`.
+  - Ghost visual registry decision: keep normalized skinned IDs for animation (`Genderuwo=116514308503184`, `HantuTanah=97068595212213`, `Kuntilanak=111714179492317`, `Leak=98855032697085`, `Palasik=78260225419720`, `Pocong=135270375666027`, `Tuyul=128588579954533`, `WeweGombel=101666948803556`). The later textured second-account IDs for those 8 are static (`HasSkinnedMesh=false`) and must not replace runtime rig IDs directly.
+  - Active Studio `ReplicatedStorage.Assets.Models.Ghosts` was refreshed with skinned templates plus `SurfaceAppearance` cloned from the textured static assets where available; `GhostSystem.Service` now prefers matching authored templates before `InsertService` fallback so texture+skinning can coexist.
+  - HantuTanah smoke confirmed runtime `bones=54`, `skinned=true`, `surfaces=1`, `asset=97068595212213`, `texture=139296725422008`; remaining visual risk is camera/line-of-sight validation for ghost body during hunt, because the forced hunt smoke ended quickly into result.
+  - Ghost animation stall root cause found and patched: runtime skinned ghost rigs must not receive the fallback `GhostHumanoid`, because that stops `AnimationController.Animator` evaluation (`TimePosition=0`, `WeightCurrent=0`). `GhostSystem.Service` now detects skinned `AnimationController` rigs, ensures an `Animator`, and leaves them Humanoid-free. HantuTanah smoke after patch spawned with `humanoid=nil`, `Animator` active, and `GhostManifest` playing at `time=1.929`, `weight=1.000`.
+  - Full ghost animation/grounding smoke completed: 12/12 ghost rigs and 84/84 runtime clips passed Play Mode motion checks (`TimePosition`, `WeightCurrent`, and `Bone.Transform` movement). Runtime `GhostSystem.Service:InitializeMatch` grounding passed for all 12 ghosts with `bottomDelta=0.040`, skinned mesh present, SurfaceAppearance present, `Animator=1`, and `Humanoid=0`. Runtime-scaled visual grid was shown in Studio, and actual match smoke with forced `SilumanUlar` reached hunt with live `GhostHunt` playing at `time=1.888`, `weight=1.000`. Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_ANIMATION_GROUNDING_RUNTIME_SMOKE_2026-05-17.md`.
+  - Hunt/pathing follow-up: `GhostSystem.Service` no longer treats map-level `DoorTraversalMode` as permission for every map part to be ghost-passable. Door traversal is narrowed to real door/proxy objects, HauntedHouse fallback navigation now uses existing `Rooms + Doors` when authored `NavigationNodes` are absent, and navigation raycasts use room/interior height instead of skinned-rig pivot height. Runtime probe confirmed direct line now blocks on real house geometry; live `Kuntilanak` hunt reached `VisualNavigationMode=node_path` before the forced hunt cooldown ended. Remaining gap: fresh full-length owner-visible hunt chase confirmation.
+  - Owner-visible continuation smoke in the active `PASRAHPHOBIA.rbxlx` session confirmed live `SilumanUlar` and `Genderuwo` hunts through the real `StudioE2EControl` match path. Both used runtime match ghosts, not raw clones; `GhostHunt` played with `WeightCurrent=1.00`, bounds stayed sane, and imported vertical-pivot ghosts kept horizontal runtime facing (`lookY` near 0) instead of looking upward.
+  - 12-ghost runtime sweep completed through `SetForcedGhost -> StartSoloMatch -> AdvancePhase -> ForceHunt -> EndMatch`: all 12 spawned as non-placeholder runtime ghosts. Focused retest resolved the initially weak broad-sweep samples for `Genderuwo`, `Jerangkong`, `Tuyul`, and `WeweGombel`; each reached `GhostHunt WeightCurrent=1.00` with moving bones after blend/load settling. Detail added to `DOCUMENTATION/SOURCE OF TRUTH/reports/GHOST_ANIMATION_GROUNDING_RUNTIME_SMOKE_2026-05-17.md`.
+  - Playable-loop event/tool smoke completed through existing `StudioE2EControl` wiring, not a new system. `GetMapInteractionSnapshot` now returns balanced samples per object type so map event smokes can target more than doors. Validation saw `71` HauntedHouse objects (`Door=18`, `Light=20`, `Object=20`, `Radio=7`, `Window=6`) and successfully triggered `LightFlicker`, `ObjectThrow`, `WindowKnock`, and `RadioStatic` with `ack=true`.
+  - Evidence/utility smoke passed for `JejakEnergi`, `BukuTerkutuk`, `Salib`, `Dupa`, and `Garam`; `InvestigationTools` runtime visuals appeared for `Garam`, `Dupa`, and `Salib`, and `ConsumeHuntProtection` returned `smudge_repellent_active` from `Dupa`. Safe-zone snapshot found 2 active zones. Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/PLAYABLE_LOOP_EVENT_TOOL_SMOKE_2026-05-17.md`.
+  - Owner-visible full-flow continuation completed in active Studio: visual Room Browser -> room create/host start countdown -> staging -> EMF tool selection -> `Door_FrontEntry` open -> `InvestigationPhase` -> evidence submit/end result. Door drift was patched so an already-open preparation advance door with valid world-station tool selection and nearby player now requests `InvestigationPhase` instead of staying in `PreparationPhase`.
+  - Studio E2E tool-pick now mirrors `WorldToolStation` attributes (`PreparationFocusToolSource`, `PasrahPreparationToolSelected`, etc.), and a Studio-only `MovePlayerToMapObject` helper was added for owner-visible camera/player placement during tests without creating gameplay ownership or bypassing phase logic.
+  - Forced `Pocong` result pass succeeded: result panel showed `MISSION COMPLETE`, ghost asli `Pocong`, tebakan `Pocong`, checklist/evidence asli `MEDOK | Suhu | BukuTerkutuk`, `BERHASIL`, and cursor/lobby state returned after close. Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/PLAYABLE_LOOP_OWNER_VISIBLE_FULL_FLOW_2026-05-17.md`.
+  - HauntedHouse imported legacy asset-script noise was isolated to script descendants inside the map clone, not PASRAH runtime ownership. `MapRuntimePatches` now disables those imported `BaseScript` descendants only on runtime HauntedHouse clones; smoke confirmed `LegacyAssetScriptsDisabled=true`, `LegacyAssetScriptsDisabledCount=581`, and no new targeted `Switch` / `Interactive` / `Openable` / root `Workspace.Fireplace` / `MapBoardSurfaceTemplate missing required child: Panel` errors after the patch timestamp. Tool texture-pack fetch and old sound `HTTP 403` errors remain non-fatal but visible in Output.
+  - Remaining playable-loop validation after current smoke: clean in-house chase readability through room-to-room ghost pathing, stop-kontak/lamp visual control, UV/fingerprint decals, cursed writing visual, camera UV visibility, and texture/audio asset polish, without leaving temporary smoke artifacts or duplicate runtime owners.
+
+## Execution Update (2026-05-03)
+
+- UI icon asset registry batch selesai untuk settings/toggle owner-edit lane:
+  - input owner dibaca dari `C:\Projects\ROBLOX\PASRAHPHOBIA\asset mentah\ROBLOX CREATOR HUB\UI\icons\asset-id-icon.txt`.
+  - source registry baru dibuat di `src/shared/GameData/UIIconAssets.lua`.
+  - dokumen registry dibuat di `DOCUMENTATION/SOURCE OF TRUTH/UI_ICON_ASSET_REGISTRY.md`.
+  - `OwnerSettingsLauncher.lua` sekarang membaca icon settings/toggle dari registry jika child authored `OwnerRowIcon` / `StateIcon` tersedia.
+  - Studio aktif `PASRAHPHOBIA.rbxlx` dimirror: 13 settings row punya `OwnerRowIcon`; 6 toggle row punya `ToggleOn`, `ToggleOff`, `ToggleDisabled`, dan `StateIcon`.
+  - Play Test single-client pass untuk target batch: `PlayerGui` memuat 13 row icon dan 18 state icon; tidak ada error target `UIIconAssets` / `OwnerSettingsLauncher`.
+  - Catatan asset input: `PASSWORD_ON` dan `EMF_READER_ON` masih `NOT_FOUND`, jadi belum dipakai.
+
+- Final owner-editable visual blocker batch selesai untuk `HorrorHUD` dan `GraphicsSupport`.
+- Authored shell/template baru:
+  - `src/StarterGui/SensoryHorrorHUD.model.json`
+  - `StarterGui.LobbyUI.SensoryLobbyCanvasGroup`
+  - `ReplicatedStorage.Assets.VisualTemplates.UI.FlatPreviewFallbackTemplate`
+- Runtime sekarang bind/clone authored visual untuk:
+  - `HorrorHUD.luau` vignette `SensoryHorrorHUD.Vignette`
+  - `HorrorHUD.luau` lobby fade `LobbyUI.SensoryLobbyCanvasGroup`
+  - `GraphicsSupport.lua` flat preview labels `FlatPreviewTitle` / `FlatPreviewDetail`
+- Source dan Studio aktif `PASRAHPHOBIA.rbxlx` sudah dimirror untuk authored shell/template dan dua script client target.
+- Validasi final blocker:
+  - parse JSON pass untuk `SensoryHorrorHUD.model.json`, `LobbyUI.model.json`, dan `VisualTemplates.model.json`
+  - source grep pass: target blocker files tidak lagi punya `Instance.new("ScreenGui")`, `Frame`, `ImageLabel`, `CanvasGroup`, `UIGradient`, `TextLabel`, `BoxHandleAdornment`, atau `Fire`
+  - Studio script grep pass untuk `Instance.new("ScreenGui")`, `Instance.new("CanvasGroup")`, dan `Instance.new("TextLabel")`
+  - Play Test single-client pass; runtime memuat `PlayerGui.SensoryHorrorHUD.Vignette`, `PlayerGui.LobbyUI.SensoryLobbyCanvasGroup`, dan `ReplicatedStorage.Assets.VisualTemplates.UI.FlatPreviewFallbackTemplate`
+  - log target bersih dari `HorrorHUD`, `GraphicsSupport`, missing template, `attempt to`, dan `ClientBootstrap`
+- Owner edit gate status: **READY FOR OWNER VISUAL EDIT PASS** untuk surfaces yang telah dimigrasi/audited dalam Wave D/E/F ini. Runtime-only whitelist tetap berlaku untuk post-process effects, transient VFX hosts, `ViewportFrame` live content, `WorldModel`, `Camera`, runtime sounds, folders, prompts, and map/runtime model assembly.
+- Owner edit readiness pass tambahan selesai: checklist lokasi edit manual dibuat di `DOCUMENTATION/SOURCE OF TRUTH/reports/OWNER_VISUAL_EDIT_READY_CHECKLIST_2026-05-03.md`.
+- Studio aktif `PASRAHPHOBIA.rbxlx` diverifikasi memuat 24 `StarterGui` ScreenGui dan `ReplicatedStorage.Assets.VisualTemplates` lengkap untuk kategori `UI`, `WorldMarkers`, `WorldSurfaces`, `ToolVisuals`, `GhostVisuals`, dan `WorldEffects`.
+- Source grep target visual-builder pass untuk area target terbaru; tidak ditemukan constructor target `ScreenGui`, `Frame`, `TextLabel`, `ImageLabel`, `TextButton`, `ImageButton`, `CanvasGroup`, `UIGradient`, `UIStroke`, `UICorner`, `BoxHandleAdornment`, atau `Fire` di area yang dibidik scan ini.
+- Status praktis: **SILAHKAN EDIT** dari `StarterGui` dan `ReplicatedStorage > Assets > VisualTemplates`; jangan edit runtime `PlayerGui` saat Play Test karena perubahan runtime tidak persist.
+- Master checklist owner diperluas untuk ghost/asset dependency: ghost behavior tetap protected, tetapi ghost model/rig, ghost animation, event prop 3D, ghost/environment SFX, VFX/HUD, fallback, dan audio asset `HTTP 403` masuk daftar persiapan owner di `DOCUMENTATION/SOURCE OF TRUTH/OWNER_MANUAL_VISUAL_EDIT_MASTER_CHECKLIST.md`.
+- Settings window migration selesai:
+  - `PASRAHPHOBIA_BottomNavbar_Static.Windows.SettingsWindow` dipakai sebagai visual shell Settings resmi.
+  - `PASRAHPHOBIA_BottomNavbar_Static.BottomNav` dan `FloatingUI` disembunyikan dari runtime agar tidak menjadi duplicate nav.
+  - `src/StarterGui/OwnerSettingsLauncher.model.json` ditambahkan sebagai fixed floating Settings button kanan atas dengan icon `111603217537771` dan `IgnoreGuiInset=false`.
+  - `src/client/OwnerSettingsLauncher.lua` ditambahkan untuk wiring buka/tutup Settings, graphics quality, post-processing, volume via `SoundGroup`, sanity bar toggle, dan client attributes untuk setting lanjutan.
+  - Studio aktif `PASRAHPHOBIA.rbxlx` sudah dimirror.
+  - Play Test single-client pass: button muncul, bottom nav reference tidak muncul, klik button membuka `SettingsWindow`, dan tidak ada log target `OwnerSettingsLauncher` / `SoundService.Volume`.
+- UI direction matrix dibuat di `DOCUMENTATION/SOURCE OF TRUTH/UI_SURFACE_OWNERSHIP_MATRIX.md`.
+  - Semua `StarterGui` surface diklasifikasikan sebagai `PRIMARY`, `GLOBAL`, `FEATURE PANEL`, `RUNTIME HUD`, `FLOW OVERLAY`, `REFERENCE ONLY`, atau `HOLD`.
+  - Tidak ada UI yang boleh dihapus hanya karena overlap; delete harus melalui audit wiring, Play Test, dan approval owner.
+  - `LobbyUI` dikunci sebagai primary hub lobby; `OwnerSettingsLauncher` sebagai global settings; `PASRAHPHOBIA_BottomNavbar_Static` sebagai reference/settings host; `MainMenuUI`, `RoomBrowserFloatUI`, dan `PASRA_UI` masuk `HOLD` sampai keputusan flow final.
+
+- World-effect authored-template batch selesai untuk outline marker dan campfire fire.
+- Template authored baru ditambahkan di `ReplicatedStorage.Assets.VisualTemplates.WorldEffects`:
+  - `WorldBoxOutlineTemplate`
+  - `WorldFireTemplate`
+- Runtime server sekarang clone-first dari template authored untuk:
+  - `HidingSystem.Service` safe-zone `BoxHandleAdornment`
+  - `ClosetHidingMechanic.Service` hide-spot `BoxHandleAdornment`
+  - `CampfireSanityService` campfire `Fire`
+- Source dan Studio aktif `PASRAHPHOBIA.rbxlx` sudah dimirror untuk tiga script server di atas dan dua template baru.
+- Validasi batch world-effect:
+  - parse JSON `VisualTemplates.model.json` pass
+  - source grep pass: target files tidak lagi punya `Instance.new("BoxHandleAdornment")` atau `Instance.new("Fire")`
+  - Studio script grep pass untuk constructor target
+  - Play Test single-client pass; runtime memuat `WorldBoxOutlineTemplate`, `WorldFireTemplate`, dan `Workspace...CampfireFireCore.CampfireFire`
+  - log target bersih dari `WorldBoxOutlineTemplate`/`WorldFireTemplate` missing-template warning, `attempt to`, dan `ClientBootstrap Start failed`
+- Studio drift repair juga dilakukan pada `Client.UI.Main`: stale `ensureCorner` call dari mirror sebelumnya diganti dengan binder non-builder ke `UICorner` authored sehingga Play Test kembali pass.
+- Owner edit gate untuk bagian ini sudah superseded oleh final blocker batch 2026-05-03 di atas. Blocker saat itu:
+  - `src/client/UI/HUD/HorrorHUD.luau` vignette `ScreenGui`/`CanvasGroup` shell
+  - `src/client/UI/GraphicsSupport.lua` fallback flat-preview labels di `ViewportFrame`
+
+- Deep scan correction batch owner-editable visual selesai untuk lane `SpectatorUI` + legacy cleanup `Client.UI.Main`.
+- `src/client/UI/Main.lua` sekarang sudah hard-delete helper visual legacy yang memang tidak dipakai lagi:
+  - `ensureCorner`
+  - `createSummaryRow`
+  - `createActionRow`
+- `src/client/UI/Main.lua` juga tidak lagi membuat `SelectionStroke` fallback; lane non-button sekarang authored-only jika stroke memang disediakan shell.
+- `src/client/SpectatorEffects/Main.lua` sekarang bind-only ke child authored `StaticFlickerOverlay` dan `ColorDesaturationOverlay`, tidak lagi membuat `Frame` overlay fallback runtime.
+- `src/StarterGui/SpectatorUI.model.json` sekarang memuat:
+  - `StaticFlickerOverlay`
+  - `ColorDesaturationOverlay`
+- Source dan Studio aktif `PASRAHPHOBIA.rbxlx` sudah disamakan untuk batch ini.
+- Validasi batch 2026-05-03:
+  - parse JSON `SpectatorUI.model.json` pass
+  - grep source pass: `src/client/UI/Main.lua` dan `src/client/SpectatorEffects/Main.lua` sudah bersih dari `Instance.new(...)` UI visual yang dibidik batch ini
+  - Play Test single-client pass di Studio aktif `PASRAHPHOBIA.rbxlx`
+  - `PlayerGui.SpectatorUI` saat runtime memuat `StaticFlickerOverlay` dan `ColorDesaturationOverlay`
+  - tidak ada warning `SpectatorEffects` contract mismatch; log yang tersisa hanya error lama tidak terkait batch ini (`Plugin CreateToolBar`, asset sound `HTTP 403`)
+- Owner edit gate untuk bagian ini sudah superseded oleh world-effect authored-template batch 2026-05-03 di atas. Blocker saat itu:
+  - `src/client/UI/HUD/HorrorHUD.luau` vignette `ScreenGui`/`CanvasGroup` shell
+  - `src/client/UI/GraphicsSupport.lua` fallback flat-preview labels di `ViewportFrame`
+  - `src/ServerScriptService/Server/HidingSystem/Service.lua` `BoxHandleAdornment` safe-zone outline
+  - `src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua` `BoxHandleAdornment` hide-spot outline
+  - `src/ServerScriptService/Server/LobbySocialHub/CampfireSanityService.lua` `Fire` visual
+- Runtime-only whitelist dipertegas:
+  - post-process `BlurEffect` / `ColorCorrectionEffect` di `SpectatorEffects` dan `Controllers/Sensory/VFXController.luau` tetap runtime-only
+  - invisible host `Part`/`Attachment` untuk VFX transient tetap runtime-only
+
+## Execution Update (2026-05-02)
+
+- Deep scan owner-editable visual lanjutan selesai untuk batch world-template child fallback.
+- Source dan Studio aktif `PASRAHPHOBIA.rbxlx` sudah disamakan untuk:
+  - `HidingSystem.Service`
+  - `ClosetHidingMechanic.Service`
+  - `MatchSystem.DoorRuntime`
+  - `MatchSystem.MapRuntimePatches`
+  - `LobbySocialHub.LobbyService`
+  - `GhostSystem.Service`
+- Child fallback builder pada template world yang sudah dimigrasi sekarang hard-delete: jika child wajib hilang, runtime `warn/skip`, bukan membuat `Frame/TextLabel/UICorner/UIStroke` baru.
+- `LobbyService` juga diperbaiki dari error compile Luau `Out of local registers` dengan memindahkan helper zone-focus menjadi method service tanpa mengubah payload event.
+- Validasi: Rojo sourcemap pass, Studio compile check pass, Play Test aktif `PASRAHPHOBIA.rbxlx` pass tanpa error/warning target, lalu Play mode dihentikan.
+- `QuestJournal` dan `QuestTracker` sekarang sudah berpindah ke authored template:
+  - source `QuestJournalGui.model.json` mendapat `BrandTextImage` button child + `Panel.Templates`
+  - source `QuestTrackerGui.model.json` mendapat `BrandTextImage` button child + `Templates`
+  - source baru `QuestPopupGui.model.json` ditambahkan sebagai popup authored
+  - runtime `QuestJournal.lua` dan `QuestTracker.lua` sekarang clone-first dari template authored, bukan membuat `TextLabel/Frame/ImageLabel/ScreenGui` visual baru
+- Source dan Studio aktif `PASRAHPHOBIA.rbxlx` sudah dimirror untuk `QuestJournal`, `QuestTracker`, `QuestJournalGui`, `QuestTrackerGui`, dan `QuestPopupGui`.
+- Validasi lanjutan: compile check kedua script quest pass; `PlayerGui` saat Play Test memuat `QuestJournalGui`, `QuestTrackerGui`, `QuestPopupGui`, beserta template/image child yang baru; `LogService` tidak menemukan warning/error `QuestJournal`/`QuestTracker`. Warning yang masih terlihat saat test adalah lane lama tidak terkait: `RoomBrowserUI contract mismatch`.
+- Batch authored-template lane lanjutan untuk `Client.UI.Main` sekarang sudah masuk di source + Studio aktif `PASRAHPHOBIA.rbxlx`:
+  - `ReplicatedStorage.Assets.VisualTemplates.UI.ButtonPolishChildrenTemplate`
+  - `ReplicatedStorage.Assets.VisualTemplates.UI.FloatingButtonChildrenTemplate`
+  - `ReplicatedStorage.Assets.VisualTemplates.UI.PricePillChildrenTemplate`
+  - `ReplicatedStorage.Assets.VisualTemplates.UI.SummaryRowTemplate`
+  - `ReplicatedStorage.Assets.VisualTemplates.UI.FieldKitButtonTemplate`
+  - `ReplicatedStorage.Assets.VisualTemplates.UI.LobbyTrainingSupportCardTemplate`
+- Runtime `Client.UI.Main` sekarang clone-first untuk lane berikut:
+  - generic button polish / border text-image shell
+  - floating room browser button shell
+  - field-kit button shell
+  - lobby training support-card shell
+  - price-pill shell
+  - match/result summary row shell
+- Compile blocker Studio `Out of local registers` pada `Client.UI.Main` sudah dihindari dengan memindahkan helper template menjadi method `UISystem`, tanpa mengubah wiring gameplay/UI flow.
+- Validasi batch `Client.UI.Main`: source Rojo sourcemap pass, Play Test single-client pass di Studio aktif `PASRAHPHOBIA.rbxlx`, `LogService` bersih untuk error/warning target batch ini, dan runtime `PlayerGui` memuat authored child visual representatif (`RoomBrowserFloatButton.FloatAccent`, `RoomBrowserFloatButton.BrandBorder`, `RefreshButton.BrandBorder`). Play mode dihentikan setelah test.
+- Owner edit gate untuk update 2026-05-02 ini sudah superseded oleh deep scan correction 2026-05-03 di atas.
 
 ## Active Mandate
 
@@ -800,6 +1024,356 @@ Task aktif saat ini dikunci ke dua hal berikut:
   - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
   - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
   - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T201 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-24 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T202 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-25 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T203 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-26 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T204 untuk RoomBrowser roombrowser-preview-playerlist-bottom-inset-trim-14 sudah masuk:
+  - inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+  - struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T205 untuk RoomBrowser roombrowser-preview-map-max-height-trim-13 sudah masuk:
+  - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+  - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T206 untuk RoomBrowser roombrowser-roomlist-min-height-trim-11 sudah masuk:
+  - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+  - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T207 untuk RoomBrowser roombrowser-join-password-anchor-trim-12 sudah masuk:
+  - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+  - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T208 untuk RoomBrowser roombrowser-action-column-gap-trim-8 sudah masuk:
+  - gap horizontal antar tombol aksi dua-kolom dirapatkan tipis lanjutan untuk reclaim lebar tombol.
+  - hierarchy aksi tetap dipertahankan agar layout bawah tetap cepat dipindai di mobile.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T209 untuk RoomBrowser roombrowser-preview-playerlist-top-gap-trim-12 sudah masuk:
+  - jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+  - judul players tetap dipertahankan agar section break tetap jelas.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T210 untuk RoomBrowser roombrowser-map-title-width-reclaim-19 sudah masuk:
+  - lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+  - ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T211 untuk RoomBrowser roombrowser-map-footer-height-micro-trim-22 sudah masuk:
+  - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+  - ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T212 untuk RoomBrowser roombrowser-map-footer-y-align-trim-6 sudah masuk:
+  - anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+  - height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T213 untuk RoomBrowser roombrowser-map-stats-anchor-trim-6 sudah masuk:
+  - anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+  - ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T214 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-27 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T215 untuk RoomBrowser roombrowser-preview-playerlist-bottom-inset-trim-15 sudah masuk:
+  - inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+  - struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T216 untuk RoomBrowser roombrowser-preview-map-max-height-trim-14 sudah masuk:
+  - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+  - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T217 untuk RoomBrowser roombrowser-roomlist-min-height-trim-12 sudah masuk:
+  - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+  - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T218 untuk RoomBrowser roombrowser-join-password-anchor-trim-13 sudah masuk:
+  - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+  - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T219 untuk RoomBrowser roombrowser-preview-playerlist-top-gap-trim-13 sudah masuk:
+  - jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+  - judul players tetap dipertahankan agar section break tetap jelas.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T220 untuk RoomBrowser roombrowser-map-title-width-reclaim-20 sudah masuk:
+  - lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+  - ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T221 untuk RoomBrowser roombrowser-map-footer-height-micro-trim-23 sudah masuk:
+  - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+  - ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T222 untuk RoomBrowser roombrowser-map-footer-y-align-trim-7 sudah masuk:
+  - anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+  - height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T223 untuk RoomBrowser roombrowser-map-stats-anchor-trim-7 sudah masuk:
+  - anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+  - ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T224 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-28 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T225 untuk RoomBrowser roombrowser-preview-playerlist-bottom-inset-trim-16 sudah masuk:
+  - inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+  - struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T226 untuk RoomBrowser roombrowser-preview-map-max-height-trim-15 sudah masuk:
+  - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+  - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T227 untuk RoomBrowser roombrowser-roomlist-min-height-trim-13 sudah masuk:
+  - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+  - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T228 untuk RoomBrowser roombrowser-join-password-anchor-trim-14 sudah masuk:
+  - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+  - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T229 untuk RoomBrowser roombrowser-preview-playerlist-top-gap-trim-14 sudah masuk:
+  - jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+  - judul players tetap dipertahankan agar section break tetap jelas.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T230 untuk RoomBrowser roombrowser-map-title-width-reclaim-21 sudah masuk:
+  - lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+  - ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T231 untuk RoomBrowser roombrowser-map-footer-height-micro-trim-24 sudah masuk:
+  - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+  - ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T232 untuk RoomBrowser roombrowser-map-footer-y-align-trim-8 sudah masuk:
+  - anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+  - height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T233 untuk RoomBrowser roombrowser-map-stats-anchor-trim-8 sudah masuk:
+  - anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+  - ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T234 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-29 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T235 untuk RoomBrowser roombrowser-preview-playerlist-bottom-inset-trim-17 sudah masuk:
+  - inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+  - struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T236 untuk RoomBrowser roombrowser-preview-map-max-height-trim-16 sudah masuk:
+  - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+  - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T237 untuk RoomBrowser roombrowser-roomlist-min-height-trim-14 sudah masuk:
+  - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+  - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T238 untuk RoomBrowser roombrowser-join-password-anchor-trim-15 sudah masuk:
+  - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+  - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T239 untuk RoomBrowser roombrowser-preview-playerlist-top-gap-trim-15 sudah masuk:
+  - jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+  - judul players tetap dipertahankan agar section break tetap jelas.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T240 untuk RoomBrowser roombrowser-map-title-width-reclaim-22 sudah masuk:
+  - lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+  - ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T241 untuk RoomBrowser roombrowser-map-footer-height-micro-trim-25 sudah masuk:
+  - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+  - ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T242 untuk RoomBrowser roombrowser-map-footer-y-align-trim-9 sudah masuk:
+  - anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+  - height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T243 untuk RoomBrowser roombrowser-map-stats-anchor-trim-9 sudah masuk:
+  - anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+  - ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T244 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-30 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T245 untuk RoomBrowser roombrowser-preview-playerlist-bottom-inset-trim-18 sudah masuk:
+  - inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+  - struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T246 untuk RoomBrowser roombrowser-preview-map-max-height-trim-17 sudah masuk:
+  - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+  - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T247 untuk RoomBrowser roombrowser-roomlist-min-height-trim-15 sudah masuk:
+  - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+  - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T248 untuk RoomBrowser roombrowser-join-password-anchor-trim-16 sudah masuk:
+  - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+  - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T249 untuk RoomBrowser roombrowser-preview-playerlist-top-gap-trim-16 sudah masuk:
+  - jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+  - judul players tetap dipertahankan agar section break tetap jelas.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T250 untuk RoomBrowser roombrowser-map-title-width-reclaim-23 sudah masuk:
+  - lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+  - ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T251 untuk RoomBrowser roombrowser-map-footer-height-micro-trim-26 sudah masuk:
+  - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+  - ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T252 untuk RoomBrowser roombrowser-map-footer-y-align-trim-10 sudah masuk:
+  - anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+  - height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T253 untuk RoomBrowser roombrowser-map-stats-anchor-trim-10 sudah masuk:
+  - anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+  - ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T254 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-31 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T255 untuk RoomBrowser roombrowser-preview-playerlist-bottom-inset-trim-19 sudah masuk:
+  - inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+  - struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T256 untuk RoomBrowser roombrowser-preview-map-max-height-trim-18 sudah masuk:
+  - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+  - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T257 untuk RoomBrowser roombrowser-roomlist-min-height-trim-16 sudah masuk:
+  - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+  - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T258 untuk RoomBrowser roombrowser-join-password-anchor-trim-17 sudah masuk:
+  - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+  - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T259 untuk RoomBrowser roombrowser-preview-playerlist-top-gap-trim-17 sudah masuk:
+  - jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+  - judul players tetap dipertahankan agar section break tetap jelas.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T260 untuk RoomBrowser roombrowser-map-title-width-reclaim-24 sudah masuk:
+  - lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+  - ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T261 untuk RoomBrowser roombrowser-map-footer-height-micro-trim-27 sudah masuk:
+  - tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+  - ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T262 untuk RoomBrowser roombrowser-map-footer-y-align-trim-11 sudah masuk:
+  - anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+  - height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T263 untuk RoomBrowser roombrowser-map-stats-anchor-trim-11 sudah masuk:
+  - anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+  - ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T264 untuk RoomBrowser roombrowser-map-mood-width-micro-trim-32 sudah masuk:
+  - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+  - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T265 untuk RoomBrowser roombrowser-preview-playerlist-bottom-inset-trim-20 sudah masuk:
+  - inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+  - struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T266 untuk RoomBrowser roombrowser-preview-map-max-height-trim-19 sudah masuk:
+  - batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+  - hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T267 untuk RoomBrowser roombrowser-roomlist-min-height-trim-17 sudah masuk:
+  - ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+  - struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch visual T268 untuk RoomBrowser roombrowser-join-password-anchor-trim-18 sudah masuk:
+  - anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+  - tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+  - tetap visual-only tanpa perubahan logic room preview/map data/runtime.
+- Batch live-fix T269 untuk tool-hand visual mount cframe normalization sudah masuk:
+  - mount spec tool visual sekarang dinormalisasi agar offset `cframe` berbentuk tabel serialisasi dan `CFrame` native sama-sama terbaca aman pada lane runtime aktif.
+  - error live `invalid argument #2 (Vector3 expected, got table)` pada `ToolVisualController` tidak terulang lagi pada flow lobby -> room browser -> staging -> tool/journal verification di Studio.
+  - tetap di lane parity visual tool/hand; tidak menambah sistem gameplay/economy/runtime baru.
+- Batch live-fix T270 untuk result panel reopen recovery sudah masuk:
+  - state `_matchWindowDismissed` sekarang dibersihkan saat masuk `Results`, dan tombol float reopen tetap diizinkan pada phase result selama pemain lokal masih berada di match.
+  - verifikasi live dilakukan dengan menyembunyikan match window sebelum result lalu mengakhiri match memakai kontrol E2E project; `ResultsPanel` muncul kembali di UI result.
+  - tetap di lane presentasi UI/result aktif; tidak menambah sistem reward/gameplay baru.
+- Audit roadmap `owner-editable GUI migration` sudah dikunci:
+  - repo saat ini belum punya `src/StarterGui`; mayoritas visual player-facing masih dibuat runtime lewat `src/client/UI/Main.lua`, `QuestTracker.lua`, `QuestJournal.lua`, `SanityHUD.lua`, `CameraController.client.lua`, dan `FlashlightController.client.lua`.
+  - migrasi visual ke lane owner-edit akan mempertahankan logic/wiring yang sama, lalu menghapus hardcode builder lama per-surface begitu shell authored penggantinya sudah terpasang dan terikat benar.
+  - lane ini tidak mengizinkan dual-path/legacy visible; jika satu shell GUI tidak dipakai lagi, jalur runtime lama wajib hard-delete.
+- Batch migrasi T271 `owner-editable GUI Wave A phase 1` sudah masuk:
+  - `src/StarterGui` sekarang sudah hidup sebagai canvas authored source-of-truth awal untuk `MatchLoadingUI`, `TeleportScreen`, `FPVCursorToggleUI`, dan `FlashlightToggleUI`.
+  - wiring aktif di `Main.lua`, `CameraController.client.lua`, dan `FlashlightController.client.lua` sekarang bind ke shell authored tersebut dan jalur `Instance.new` builder untuk empat surface ini sudah hard-delete.
+  - owner sekarang bisa mengedit visual empat surface ini langsung di Studio, tetapi nama widget canonical wajib dipertahankan agar logic lama tetap menempel.
+- Batch migrasi T272 `owner-editable GUI Wave A phase 2` sudah masuk:
+  - `LobbyUI` sekarang sudah dipindah ke shell authored di `src/StarterGui/LobbyUI.model.json` dan `Main.lua` bind ke contract widget authored, bukan lagi membuat panel lobby lewat `Instance.new`.
+  - builder runtime lama untuk `LobbyUI` sudah hard-delete dari lane aktif, sehingga tidak ada lagi jalur source yang bisa menghidupkan duplicate visible panel lobby.
+  - override layout desktop untuk `LobbyUI` sekarang dimatikan; owner edit posisi/ukuran panel lobby di Studio akan benar-benar terbawa pada lane PC, sementara lane mobile/compact masih boleh memakai adaptive sizing runtime.
+- Batch migrasi T273 `owner-editable GUI Wave A phase 3` sudah masuk:
+  - `RoomBrowserUI` dan `RoomBrowserFloatUI` sekarang sudah dipindah ke shell authored di `src/StarterGui/RoomBrowserUI.model.json` dan `src/StarterGui/RoomBrowserFloatUI.model.json`.
+- Batch migrasi T274 `owner-editable GUI Wave A phase 4` sudah masuk:
+  - `MainMenuUI`, `LeaderboardUI`, `QuestTrackerGui`, `QuestJournalGui`, dan `SanityHUDGui` sekarang sudah dipindah ke shell authored di `src/StarterGui/*` dan wiring aktif tetap memakai lane code yang sama tanpa builder shell runtime lama untuk surface itu.
+  - `_ensureRoomBrowserGui()` sekarang bind ke contract widget authored dan branch pembentuk shell statis `Instance.new` untuk RoomBrowser aktif sudah keluar dari lane runtime utama.
+  - override layout desktop untuk `RoomBrowserUI` dimatikan pada lane PC dan posisi float button desktop tidak lagi dipaksa oleh float rail; owner edit visual RoomBrowser di Studio sekarang benar-benar menempel pada lane desktop.
+- Batch migrasi T275 `owner-editable GUI Wave B phase 1` sudah masuk:
+  - `JournalUI`, `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, dan `SpectatorUI` sekarang sudah dipindah ke shell authored di `src/StarterGui/*` dan `Main.lua` bind ke contract widget authored yang sama tanpa membangunkan ulang shell statis runtime untuk surface itu.
+  - `ShopUI` sekarang mempertahankan shell authored untuk owner-edit, tetapi lane filter bar, item list, dan row purchase tetap dibangun runtime di dalam `ContentFrame` authored agar wiring logic item shop lama tidak berubah.
+  - keputusan owner tetap sama: jangan buka pass edit manual dulu; tuntaskan migrasi semua surface GUI eligible sampai hanya lane runtime-only terdokumentasi yang tersisa.
+- Batch migrasi T276 `owner-editable GUI Wave C phase 1` sudah masuk:
+  - `MatchUI` sekarang sudah dipindah ke shell authored di `src/StarterGui/MatchUI.model.json` dan `Main.lua` bind ke contract widget authored untuk panel match utama, timer, quick evidence button, controls hint, field kit frame, dan float button.
+  - ringkasan summary rows dan field-kit buttons tetap dibangun runtime di dalam container authored yang sama agar lane logic investigasi/tool/action lama tidak berubah.
+  - setelah slice ini, surface GUI eligible yang tersisa untuk migrasi authored tinggal `LobbyUXGui` dan `MatchUXGui`.
+- Batch migrasi T277 `owner-editable GUI Wave C phase 2` sudah masuk:
+  - `LobbyUXGui` sekarang sudah dipindah ke shell authored di `src/StarterGui/LobbyUXGui.model.json` dan `_ensureUXLayers()` memprioritaskan shell authored itu, bukan lagi membuat duplicate `LobbyUXGui` di folder runtime lama jika shell authored sudah tersedia.
+  - `SafePadding`, `FeedbackLabel`, `TrainingFrame`, dan `PlayButton` sekarang hidup di lane authored; support cards tetap diisi/runtime-refresh lewat widget yang sama di dalam `SupportStrip` authored agar training/tool preview lama tidak berubah.
+  - setelah slice ini, surface GUI eligible yang tersisa untuk migrasi authored tinggal `MatchUXGui`.
+- Batch migrasi T278 `owner-editable GUI Wave C phase 3` sudah masuk:
+  - `MatchUXGui` sekarang sudah dipindah ke shell authored di `src/StarterGui/MatchUXGui.model.json` dan `_ensureUXLayers()` memprioritaskan shell authored itu, bukan lagi membuat duplicate `MatchUXGui` di folder runtime lama jika shell authored sudah tersedia.
+  - `MatchUXLayer`, `StateMessage`, `ObjectiveLabel`, `HuntStatusBadge`, `HuntAssistLabel`, `HuntOverlay`, dan seluruh `ResultsPanel` shell sekarang hidup di lane authored; summary rows result tetap runtime-generated di dalam `ResultsSummary` authored agar lane state/result lama tidak berubah.
+  - dengan slice ini, seluruh surface GUI player-facing yang eligible untuk lane owner-edit sekarang sudah bermigrasi penuh ke authored `StarterGui`.
+- Batch responsive-lock T279 `single-owner responsive authored layout` sudah masuk:
+  - `Main.lua` sekarang punya authored-owner layout lock untuk surface GUI player-facing yang sudah bermigrasi ke `StarterGui`, sehingga lane authored menjadi sumber tunggal layout owner pada desktop maupun mobile.
+  - override runtime posisi/ukuran panel untuk `LobbyUI`, `RoomBrowserUI`, `MatchUI`, `MainMenuUI`, `LeaderboardUI`, `JournalUI`, `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, `SpectatorUI`, `LobbyUXGui`, dan `MatchUXGui` sekarang ditahan; runtime aktif tinggal memegang state visibility, binding, dan konten dinamis internal.
+  - target lane aktif bergeser dari `desktop authored + mobile adaptive split` menjadi `single canonical responsive shell`, sehingga owner mengedit satu shell authored dan perubahan visual tidak lagi dibelah oleh override layout device-specific lama.
+- Batch responsive-followup T280 `quest authored shell override cleanup` sudah masuk:
+  - `QuestJournal.lua` dan `QuestTracker.lua` sekarang ikut mematuhi authored-owner layout lock, sehingga runtime tidak lagi memaksa posisi/ukuran shell authored keduanya saat lane owner-edit aktif.
+  - residual geometry override yang sempat masih hidup di tombol/panel `QuestJournalGui` dan `QuestTrackerGui` sekarang hanya tersisa sebagai fallback code yang tidak dijalankan pada authored-owner lane aktif.
+  - popup quest-complete runtime tetap dibiarkan sebagai widget transient terpisah; ini bukan shell authored utama dan tidak mengubah otoritas layout owner pada HUD quest.
+- Batch responsive-followup T281 `lobby float rail authored preservation` sudah masuk:
+  - `_layoutLobbyFloatRail()` sekarang tidak lagi merelayout authored float buttons untuk `RoomBrowserFloatUI`, `MainMenuUI`, `LeaderboardUI`, `ProfileUI`, `ShopUI`, dan `RoyalPassUI` selama authored-owner layout lock aktif.
+  - authored float positions sekarang benar-benar milik owner edit, bukan lagi dipaksa masuk rail runtime di saat bootstrap atau refresh visibility.
+  - lane aktif yang tersisa sekarang dominan hanya widget runtime dinamis/transient, bukan shell-authored geometry utama.
+- Batch responsive-followup T282 `roombrowser modal authored preservation` sudah masuk:
+  - `PasswordModal`, `KickNoticeModal`, dan `InvitePopup` di lane `RoomBrowserUI` sekarang tidak lagi di-resize atau diposisikan ulang oleh runtime selama authored-owner layout lock aktif.
+  - authored modal/popup positions di RoomBrowser sekarang ikut menjadi milik owner edit, bukan lagi lane compact fallback runtime.
+  - sisa lane runtime untuk RoomBrowser sekarang terutama konten dinamis daftar room/player/invite rows, bukan geometry shell/modal authored.
+- Batch responsive-followup T283 `roombrowser float + countdown authored preservation` sudah masuk:
+  - `RoomBrowserFloatUI`, `CountdownLabel`, dan `CancelCountdown` sekarang tidak lagi dipaksa ukuran/posisinya oleh layout runtime RoomBrowser saat authored-owner layout lock aktif.
+  - authored float/countdown placement di RoomBrowser sekarang ikut stabil pada lane owner edit, bukan lagi kembali ke geometry compact runtime.
+  - sisa override runtime aktif di RoomBrowser semakin sempit ke konten daftar/preview/player cards yang memang dinamis.
+- Batch responsive-followup T284 `uxlayer authored bind-only enforcement` sudah masuk:
+  - `_ensureUXLayers()` sekarang pada lane authored-owner aktif tidak lagi diam-diam membangun ulang `LobbyUXGui`, `MatchUXGui`, atau widget shell authored turunannya jika contract authored hilang.
+  - lane aktif sekarang bind-only ke contract authored `LobbyUXGui` dan `MatchUXGui`, lalu gagal secara eksplisit dengan warning jika shell UX authored rusak/hilang; ini mencegah duplicate visible dari builder legacy di lane owner-edit.
+  - yang tetap runtime by design hanya refresh `SafePadding`, support cards training, summary rows result, visibility/state text, dan konten UX dinamis lain di dalam shell authored yang sama.
+- Batch responsive-followup T285 `uxlayer legacy builder hard-delete` sudah masuk:
+  - dead block builder lama di bawah `_ensureUXLayers()` sudah dihapus fisik dari `Main.lua`, bukan hanya dipagari dengan return.
+  - `_ensureUXLayers()` sekarang hanya punya jalur bind authored untuk `LobbyUXGui` dan `MatchUXGui`; tidak ada lagi code path lokal yang membuat `UXLayer`, `LobbyUXGui`, `MatchUXGui`, atau child shell UX statis dari runtime.
+  - runtime yang tersisa di UX layer sekarang terbatas pada binding, visibility, safe padding, dan konten dinamis di dalam shell authored.
+- Batch responsive-followup T286 `basic ui legacy builder hard-delete` sudah masuk:
+  - dead fallback builder umum di `_ensureBasicUIs()` sudah dihapus fisik, sehingga `Main.lua` tidak lagi punya jalur lokal yang membuat `ScreenGui/MainPanel` lama untuk `BASIC_GUI_NAMES`.
+  - semua entry `BASIC_GUI_NAMES` sekarang wajib lewat authored binding (`LobbyUI`, `MainMenuUI`, `LeaderboardUI`, `MatchUI`, `JournalUI`, `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, `SpectatorUI`) atau warning eksplisit jika ada nama baru yang belum dimigrasikan.
+  - audit `Instance.new("ScreenGui")` tersisa hanya `QuestPopupGui` dan `SensoryHorrorHUD`, keduanya runtime-only/transient dan bukan shell owner-edit utama.
+- Batch repair T287 `authored gui runtime binding reset` sudah masuk:
+  - binding tombol/drag authored tidak lagi memakai attribute persistent `Bound`, `DragBound`, atau `InitDone` yang bisa ikut tersimpan dari edit Studio dan mematikan wiring saat Play Test.
+  - `Main.lua` sekarang memakai runtime-memory guard untuk button binding, drag binding, dan bootstrap awal panel authored; `FlashlightController.client.lua` juga memakai runtime-memory drag guard.
+  - panel authored auxiliary/match/RoomBrowser sekarang di-reset visibility-nya saat bootstrap runtime tanpa mengubah posisi/ukuran authored milik owner.
 - Pending closure operasional (owner-manual lane):
   - `smoke test 2 client nyata` tetap diperlukan untuk verifikasi end-to-end runtime + visual di device lane aktif, namun ini tugas owner/user (bukan eksekusi agent).
 
@@ -881,10 +1455,274 @@ Wajib sinkron pada dokumen source-of-truth:
 
 Semua dokumen harus menyatakan lock runtime-spawn authored + visual-only execution lane.
 
+## Owner-Editable GUI Migration Lock
+
+Goal tambahan untuk lane visual aktif:
+
+- surface visual player-facing yang layak harus bisa dipindah ke GUI authored agar owner dapat mengedit manual langsung di Studio dengan drag/resize/layout editing, bukan bergantung penuh ke angka hardcode di script.
+
+Non-negotiable migrasi:
+
+- logic, remote wiring, snapshot binding, dan state ownership tetap memakai lane aktif yang sama; hanya shell visualnya yang dipindah.
+- nama instance canonical, struktur container, dan widget contract yang dipakai code harus tetap stabil agar wiring lama tetap hidup.
+- tidak boleh ada dua builder aktif untuk surface yang sama.
+- ketika shell authored pengganti sudah dipakai, builder runtime lama untuk surface itu wajib hard-delete.
+- tidak boleh meninggalkan legacy ScreenGui/Frame/TextButton/TextLabel path yang bisa membuat AI lain menyalakan duplicate visible.
+- world-space `BillboardGui`/`SurfaceGui` gameplay tidak otomatis dipindah ke lane `StarterGui`; itu audit terpisah kecuali memang dipilih khusus.
+
+Audit status saat ini:
+
+- repo sekarang sudah memiliki `src/StarterGui` sebagai canvas GUI authored aktif untuk:
+  - `MatchLoadingUI`
+  - `TeleportScreen`
+  - `FPVCursorToggleUI`
+  - `FlashlightToggleUI`
+- surface authored owner-edit yang sudah siap dipakai saat ini:
+  - `MatchLoadingUI`
+  - `TeleportScreen`
+  - `FPVCursorToggleUI`
+  - `FlashlightToggleUI`
+  - `LobbyUI`
+  - `RoomBrowserUI`
+  - `RoomBrowserFloatUI`
+  - `MainMenuUI`
+  - `LeaderboardUI`
+  - `QuestTrackerGui`
+  - `QuestJournalGui`
+  - `SanityHUDGui`
+  - `JournalUI`
+  - `ProfileUI`
+  - `ShopUI`
+  - `RoyalPassUI`
+  - `PASRA_UI`
+  - `SpectatorUI`
+  - `MatchUI`
+  - `LobbyUXGui`
+  - `MatchUXGui`
+- owner sekarang sudah punya dua puluh satu surface visual authored yang bisa diedit manual langsung di Studio tanpa mengubah wiring code pada lane aktif.
+- surface GUI utama yang masih runtime-authored:
+  - tidak ada untuk lane GUI player-facing yang eligible owner-edit; yang tersisa hanya widget/content runtime-generated di dalam shell authored yang memang dipertahankan untuk menjaga wiring lama.
+
+Prioritas migrasi authored GUI:
+
+1. Wave C - higher risk / dense runtime state:
+   - complete
+
+Excluded dari lane GUI-owner-edit awal:
+
+- world-space `BillboardGui`/`SurfaceGui` yang dibuat runtime di `LobbyService`, `DoorRuntime`, `MapRuntimePatches`, `ToolVisualController`, dan label gameplay dunia lain tetap dianggap lane visual runtime, bukan lane GUI authored owner-edit.
+
+Roadmap eksekusi:
+
+1. Audit freeze:
+   - finalkan daftar surface visual yang akan dipindah dan kontrak widget canonical per surface.
+2. Authored shell migration:
+   - buat shell GUI nyata di hierarchy project agar bisa diedit manual owner.
+   - bind code aktif ke shell authored dengan nama widget canonical yang sama.
+   - hapus builder runtime lama untuk surface yang sudah berhasil dipindah.
+3. Owner edit checkpoint:
+   - checkpoint ini ditahan dulu sampai migrasi penuh surface GUI eligible selesai.
+   - owner belum diminta edit parsial per-wave agar tidak ada surface yang terlewat atau terlupakan.
+   - agent tetap lanjut migrasi berurutan sambil menjaga wiring, naming contract, dan cleanup legacy.
+4. Validation checkpoint:
+   - test per-surface di viewport target yang benar.
+   - bug PC wajib divalidasi di lane PC, bukan viewport mobile override Studio.
+5. Publish checkpoint:
+   - mirror/saveback ke `PASRAHPHOBIA.rbxlx`.
+   - publish ke place canonical.
+   - tutup Studio lagi sebelum lanjut task lain.
+
+Wave A progress checkpoint:
+
+- phase 1 selesai untuk `MatchLoadingUI`, `TeleportScreen`, `FPVCursorToggleUI`, dan `FlashlightToggleUI`.
+- phase 2 selesai untuk `LobbyUI`.
+- phase 3 selesai untuk `RoomBrowserUI` dan `RoomBrowserFloatUI`.
+- phase 4 selesai untuk `MainMenuUI`, `LeaderboardUI`, `QuestTrackerGui`, `QuestJournalGui`, dan `SanityHUDGui`.
+- Wave A sekarang lengkap.
+- Wave B phase 1 selesai untuk `JournalUI`, `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, dan `SpectatorUI`.
+- Wave C phase 1 selesai untuk `MatchUI`.
+- Wave C phase 2 selesai untuk `LobbyUXGui`.
+- Wave C phase 3 selesai untuk `MatchUXGui`.
+- setelah Wave C phase 3, seluruh surface GUI eligible untuk migrasi authored sudah selesai dipindah ke `StarterGui`.
+- keputusan owner terbaru: jangan masuk tahap edit manual dulu; tuntaskan migrasi penuh semua surface GUI eligible terlebih dahulu agar tidak ada panel/HUD yang tertinggal dari lane authored.
+- contract naming yang sekarang wajib dipertahankan:
+  - `MatchLoadingUI.Background.ProgressTrack.ProgressFill`
+  - `TeleportScreen.LoadingOverlay`
+  - `FPVCursorToggleUI.CursorToggleButton`
+  - `FlashlightToggleUI.ToggleButton`
+  - `LobbyUI.MainPanel.HeaderCard.StatusBadge`
+  - `LobbyUI.MainPanel.HeaderCard.PrimaryLabel`
+  - `LobbyUI.MainPanel.HeaderCard.SecondaryLabel`
+  - `LobbyUI.MainPanel.HeaderCard.ModePill`
+  - `LobbyUI.MainPanel.HeaderCard.MapPill`
+  - `LobbyUI.MainPanel.HeaderCard.RoomPill`
+  - `LobbyUI.MainPanel.OpenRoomBrowserButton`
+  - `LobbyUI.MainPanel.ProfileButton`
+  - `LobbyUI.MainPanel.ShopButton`
+  - `LobbyUI.MainPanel.RoyalPassButton`
+  - `LobbyUI.MainPanel.MenuButton`
+  - `LobbyUI.MainPanel.RankButton`
+  - `LobbyUI.LobbyToggleButton`
+  - `MainMenuUI.MainPanel.RoomBrowserButton`
+  - `MainMenuUI.MainPanel.ProfileButton`
+  - `MainMenuUI.MainPanel.ShopButton`
+  - `MainMenuUI.MainPanel.RankButton`
+  - `MainMenuUI.MainPanel.GraphicsButton`
+  - `MainMenuUI.MainMenuFloatButton`
+  - `LeaderboardUI.MainPanel.ContentFrame.ContentText`
+  - `LeaderboardUI.MainPanel.ProfileButton`
+  - `LeaderboardUI.MainPanel.RoomBrowserButton`
+  - `LeaderboardUI.MainPanel.MenuButton`
+  - `LeaderboardUI.LeaderboardFloatButton`
+  - `QuestTrackerGui.QuestContainer.Header`
+  - `QuestTrackerGui.QuestContainer.CollapseButton`
+  - `QuestTrackerGui.ReopenButton`
+  - `QuestJournalGui.OpenButton`
+  - `QuestJournalGui.Panel.Header`
+  - `QuestJournalGui.Panel.TabBar.STORYTab`
+  - `QuestJournalGui.Panel.TabBar.DAILYTab`
+  - `QuestJournalGui.Panel.TabBar.WEEKLYTab`
+  - `QuestJournalGui.Panel.Content`
+  - `SanityHUDGui.Container.Bar.Fill`
+  - `SanityHUDGui.Container.ValueLabel`
+  - `SanityHUDGui.SanityVignette`
+- owner edit checkpoint sekarang valid untuk lane PC pada `LobbyUI`, `RoomBrowserUI`, `RoomBrowserFloatUI`, `MainMenuUI`, `LeaderboardUI`, `QuestTrackerGui`, `QuestJournalGui`, dan `SanityHUDGui`; owner sudah bisa mulai mengatur layout/spacing/visual shell tersebut langsung di Studio.
+- catatan RoomBrowser: daftar room / player cards / invite rows tetap runtime-generated, jadi owner mengedit shell container authored-nya, bukan row clone hasil runtime.
+- catatan QuestTracker/QuestJournal: kartu misi dan popup completion masih runtime-generated; yang sekarang authored adalah shell HUD/journal utamanya, jadi owner mengedit container/panel/tab/button authored-nya lebih dulu.
+- catatan Wave B phase 1: `JournalUI`, `ShopUI`, `ProfileUI`, `RoyalPassUI`, `PASRA_UI`, dan `SpectatorUI` sekarang shell-authored, tetapi isi data-heavy tertentu masih runtime-generated di dalam container authored supaya lane binding/snapshot/action lama tetap utuh.
+- catatan Wave C phase 1: `MatchUI` sekarang shell-authored, tetapi summary rows dan field-kit buttons tetap runtime-generated di dalam container authored agar lane state match/tool/hint lama tetap utuh.
+- catatan Wave C phase 2: `LobbyUXGui` sekarang shell-authored, tetapi support-card preview dan training state tetap runtime-refresh di dalam `SupportStrip`/`TrainingFrame` authored agar lane evidence-training lama tetap utuh.
+- catatan Wave C phase 3: `MatchUXGui` sekarang shell-authored, tetapi summary rows result dan state visual hunt/result tetap runtime-refresh di dalam `MatchUXLayer`/`ResultsSummary` authored agar lane state/result lama tetap utuh.
+- full migration untuk semua surface GUI eligible sekarang complete; berikutnya yang terbuka adalah owner visual edit pass pada shell-shell authored ini.
+- owner edit pass besar baru dibuka setelah seluruh surface GUI eligible sudah berstatus eksplisit `authored-migrated` atau `runtime-only with documented reason`.
+- T288 runtime repair selesai setelah Play Test berulang pada `PASRAHPHOBIA.rbxlx`: semua `StarterGui` root `ScreenGui` sekarang default `Enabled=false`, syntax error `Client.UI.Main` akibat `goto` sudah diganti `continue`, dan `RoomBrowserUI.Backdrop` ikut mengikuti visibility runtime saat Room Browser dibuka.
+- Validasi T288:
+  - preflight build OK dan `PASRAHPHOBIA.rbxlx` mirror OK.
+  - Play Test run 1 menemukan `Client.UI.Main:13252` syntax error yang mematikan `UISystem`; error sudah diperbaiki.
+  - Play Test run 2 membuktikan bootstrap `started`, `LobbyUI` visible, panel lain tidak terbuka bersamaan.
+  - Play Test run 3 membuktikan klik `LobbyUI.MainPanel.OpenRoomBrowserButton` membuka `RoomBrowserUI` dengan `Backdrop.Visible=true` dan `Panel.Visible=true`.
+  - log runtime tidak lagi berisi `Failed to require UI`, `System disabled: UI`, atau error `Client.UI.Main`.
+- T289 source parity selesai untuk `PASRAHPHOBIA_BottomNavbar_Static`:
+  - `StarterGui.PASRAHPHOBIA_BottomNavbar_Static` sekarang ikut masuk source di `src/StarterGui/PASRAHPHOBIA_BottomNavbar_Static.rbxm`, bukan hanya hidup di `.rbxlx`.
+  - isi model menjaga hierarchy authored BottomNav/FloatingUI/Windows serta tiga LocalScript aktif: `BottomNavRuntimeController`, `SettingsWindowController`, dan `SettingsWindowVFX_VisualOnly`.
+  - `FPVCursorToggleUI` dan `FlashlightToggleUI` sekarang juga menyimpan visual-state controller di source `.model.json`, bukan hanya static idle image.
+  - validasi JSON, Rojo `sourcemap`, dan `build default.project.json` OK.
+  - Play Test singkat di `PASRAHPHOBIA.rbxlx` membuktikan BottomNavbar, FPV cursor toggle, dan Flashlight toggle masuk `PlayerGui` dengan `BrandTextImage`; Studio Play sudah distop kembali.
+- Wave D (owner-approved 1-4 visual lane) dimulai:
+  - scope diset: `Workspace visual`, `Lighting`, `ReplicatedStorage visual assets`, `Tool + Ghost visual shell`.
+  - guardrail diset: visual editable YES, logic/AI/networking tetap locked.
+  - audit runtime-builder owner-edit gap sudah dicatat di `reports/OWNER_EDITABLE_VISUAL_WAVE_D_1_TO_4_2026-05-02.md`.
+  - owner edit gate untuk 1-4: `NOT YET` sampai slice D2 pertama (runtime template extraction) selesai dan parity Play Test pass.
+- Wave D2 slice-1 selesai (world marker template extraction):
+  - template authored ditambahkan: `ReplicatedStorage.Assets.VisualTemplates.WorldMarkers.SafeZoneMarkerBillboardTemplate`
+  - template authored ditambahkan: `ReplicatedStorage.Assets.VisualTemplates.WorldMarkers.HideSpotMarkerBillboardTemplate`
+  - `HidingSystem.Service` dan `ClosetHidingMechanic.Service` sekarang clone template authored dulu, fallback ke builder lama jika template tidak ada.
+  - parity Play Test pass (boot runtime normal, tidak ada error baru pada lane init/start).
+  - owner edit checkpoint **ditahan**: tidak dibuka per-slice.
+  - kebijakan owner terbaru dikunci: lanjutkan migrasi Wave D end-to-end dulu (1-4) sampai status full editable siap, baru serahkan satu kali untuk pass edit owner.
+- Wave D2 batch besar lanjutan selesai (door + interaction + traversal guide templates):
+  - template authored ditambahkan di `ReplicatedStorage.Assets.VisualTemplates.WorldMarkers`:
+    - `DoorRouteGuideBillboardTemplate`
+    - `InteractionGuideBillboardTemplate`
+    - `TraversalGuideBillboardTemplate`
+  - runtime sekarang clone template authored dulu (dengan fallback builder lama):
+    - `MatchSystem.DoorRuntime`
+    - `MatchSystem.MapRuntimePatches` (interaction + traversal guide lane)
+  - build source parity `default.project.json` pass.
+  - play test pada `PASRAHPHOBIA.rbxlx` pass, tidak ada error runtime baru pada lane bootstrap/init.
+  - owner edit masih ditahan sampai seluruh Wave D 1-4 selesai sesuai keputusan owner.
+- Wave D2/D3 batch besar lanjutan selesai (surface + tool + ghost + world effects templates):
+  - template authored ditambahkan:
+    - `ReplicatedStorage.Assets.VisualTemplates.WorldSurfaces.LobbyGuideBoardSurfaceTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.WorldSurfaces.MapBoardSurfaceTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.ToolVisuals.CameraScreenSurfaceTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.ToolVisuals.EMFScreenBillboardTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.ToolVisuals.ThermoScreenBillboardTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.ToolVisuals.FlashlightLocalSpotLightTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.ToolVisuals.ToolUse*` emitter/pulse templates
+    - `ReplicatedStorage.Assets.VisualTemplates.GhostVisuals.StudioGhostPreviewLabelTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.WorldEffects.WorldHighlightTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.WorldEffects.WorldPointLightTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.WorldEffects.WorldSpotLightTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.WorldEffects.WorldBeamTemplate`
+    - `ReplicatedStorage.Assets.VisualTemplates.WorldEffects.WorldParticleEmitterTemplate`
+  - runtime sekarang clone template authored dulu untuk:
+    - `LobbySocialHub.LobbyService` guide surfaces, lobby point lights, lobby/training highlights/lights
+    - `MatchSystem.MapRuntimePatches` map board surfaces, state highlights/lights, preparation particles/lights, traversal highlights
+    - `ToolVisualController` BolaArwah camera screen, EMF/Thermo screens, flashlight local spotlight, tool-use VFX emitters/pulse
+    - `GhostSystem.Service` studio ghost preview label
+    - `FlashlightSyncSystem.Service` remote flashlight spot/fill/beam visuals
+    - `CampfireSanityService` campfire light
+    - `EnvironmentalObjectRuntime` event object point lights
+  - validasi:
+    - JSON `VisualTemplates.model.json` OK.
+    - Rojo build `default.project.json` OK.
+    - Studio aktif diverifikasi `PASRAHPHOBIA.rbxlx`.
+    - Play Test Studio pass: `PlayerGui` termuat, `WorldEffects`/`ToolVisuals`/`GhostVisuals` ada di runtime, Studio Play sudah distop kembali.
+  - owner edit masih ditahan: sisa audit/hard-delete fallback dan lobby billboard/runtime-only decision pass belum selesai penuh.
+- Wave D2/D3 lobby billboard pass selesai:
+  - template authored ditambahkan di `ReplicatedStorage.Assets.VisualTemplates.WorldMarkers`:
+    - `LobbyCosmeticBillboardTemplate`
+    - `LobbyZoneGuideBillboardTemplate`
+    - `LobbyZoneEntryGuideBillboardTemplate`
+  - `LobbySocialHub.LobbyService` sekarang clone template authored untuk cosmetic flex billboard, lobby zone guide billboard, dan lobby zone entry guide billboard.
+  - teks/title/subtitle/meta tetap diisi runtime dari state lama; visual shell dan layout sekarang punya template owner-edit.
+  - `ViewportFrame` yang tersisa di `Client.UI.Main` diputuskan `runtime-only with documented reason` karena merender avatar/tool/player list berbasis data live (`CharacterPreviewSupport.render`, field-kit preview, room player card preview); bukan shell statis yang aman diedit owner tanpa wiring data.
+  - validasi:
+    - JSON `VisualTemplates.model.json` OK.
+    - Rojo build `default.project.json` OK.
+    - Studio aktif `PASRAHPHOBIA.rbxlx`; Play Test pass, `PlayerGui` termuat, `WorldMarkers` runtime berisi 8 template termasuk 3 lobby billboard baru; Play mode sudah distop kembali.
+  - owner edit gate masih ditahan sampai fallback legacy clone-or-builder yang sudah tidak perlu selesai dibersihkan/didokumentasikan.
+- Wave D fallback hard-delete pass selesai:
+  - runtime fallback builder untuk visual authored sudah dipangkas dari source dan Studio aktif: tidak ada lagi `Instance.new("BillboardGui"|"SurfaceGui"|"Highlight"|"PointLight"|"SpotLight"|"Beam"|"ParticleEmitter")` pada lane `src/ServerScriptService` + `src/client` selain `ViewportFrame` runtime-only yang sudah didokumentasikan.
+  - jika template authored hilang, runtime sekarang `warn`/skip visual, bukan membuat shell legacy diam-diam.
+  - `Client.UI.Main` MapPreview sekarang nil-safe untuk child visual owner-edit yang tidak ada (`MapPreview.Label`, dsb.) tanpa membuat fallback baru, sehingga RoomBrowser tidak crash saat template owner berbeda.
+  - validasi:
+    - JSON `VisualTemplates.model.json` OK.
+    - Rojo build `default.project.json` OK.
+    - Studio aktif `PASRAHPHOBIA.rbxlx`; Play Test ulang pass, `PlayerGui` termuat, `VisualTemplates` runtime lengkap (`WorldMarkers` 8, `WorldSurfaces` 2, `ToolVisuals` 9, `GhostVisuals` 1, `WorldEffects` 5); `LogService:GetLogHistory()` tidak menemukan `ClientBootstrap Start failed`, `attempt to index nil`, atau warning template hilang; Play mode sudah distop kembali.
+- Deep scan owner-editable visual ulang selesai setelah Wave D fallback cleanup:
+  - keputusan gate sebelumnya ditahan lagi; scan lebih luas menemukan visual builder runtime yang belum menjadi template owner-editable.
+  - detail audit dicatat di `DOCUMENTATION/SOURCE OF TRUTH/reports/OWNER_EDITABLE_VISUAL_DEEP_SCAN_2026-05-02.md`.
+  - yang sudah confirmed editable:
+    - `StarterGui` source berisi 21 `*.model.json`; Studio aktif berisi 22 `StarterGui` ScreenGui termasuk `PASRAHPHOBIA_BottomNavbar_Static`.
+    - `ReplicatedStorage.Assets.VisualTemplates` aktif lengkap: `WorldMarkers=8`, `WorldSurfaces=2`, `ToolVisuals=9`, `GhostVisuals=1`, `WorldEffects=5`.
+    - source/Studio grep tetap bersih untuk authored visual high-risk: `BillboardGui`, `SurfaceGui`, `Highlight`, `PointLight`, `SpotLight`, `Beam`, `ParticleEmitter`.
+  - gap yang wajib ditutup sebelum owner edit final:
+    - `Client.UI.Main` masih punya dynamic visual child builder untuk field-kit buttons, lobby training support cards, price pill split/glyph visuals, match field-kit button hosts, floating button captions/accent, button polish, dan selection stroke.
+    - helper shared seperti `createSummaryRow` / `createActionRow` masih tersisa untuk lane non-authored dan fallback cleanup akhir.
+  - owner-edit gate status: **HOLD** sampai batch extraction lane di atas selesai dan Studio Play Test pass.
+- Wave E1 auxiliary windows authored-template pass selesai:
+  - `src/client/UI/Main.lua` source sekarang authored-first untuk `LeaderboardUI`, `JournalUI`, dan `ProfileUI`; `Profile` wardrobe row juga sudah clone-first dari `WardrobeRowTemplate`.
+  - source model valid + Rojo sourcemap pass untuk:
+    - `src/StarterGui/LeaderboardUI.model.json`
+    - `src/StarterGui/JournalUI.model.json`
+    - `src/StarterGui/ProfileUI.model.json`
+  - Studio aktif `PASRAHPHOBIA.rbxlx` sudah dimirror:
+    - script `StarterPlayer.StarterPlayerScripts.Client.UI.Main` dipatch authored-first untuk tiga window tersebut
+    - `StarterGui` Studio memuat authored subtree `LeaderboardDeck`, `JournalDeck`, dan `ProfileDeck`
+  - validasi:
+    - Studio Play Test single-client pass lalu distop kembali
+    - `PlayerGui` memuat `LeaderboardDeck`, `RankRow1`, `JournalDeck`, `DiscoveredCard`, `ProfileDeck`, `SanityRow`, dan `WardrobeRowTemplate`
+    - `LogService:GetLogHistory()` tidak menemukan `Start failed for UI`, `contract mismatch`, atau `attempt to call a nil value`
+- Ghost latest base rig wiring untuk branch `brian-second-final` selesai:
+  - `src/shared/GameData/GhostVisualTuning.lua` berisi 12 asset ID base rig terbaru milik `PASRAHPHOBIA DEVELOPER & TEAM`.
+  - `src/ServerScriptService/Server/GhostSystem/Service.lua` sekarang load ghost runtime lewat `InsertService:LoadAsset(assetId)` lebih dulu, lalu fallback ke legacy embedded ghost template hanya jika asset load gagal.
+  - `PASRAHPHOBIA.rbxlx` branch Brian dipatch langsung di disk untuk dua ModuleScript itu karena save Studio tidak persist saat reopen pertama.
+  - validasi fresh reopen Studio pass: semua 12 ghost `Service:InitializeMatch()` spawn sebagai non-placeholder dan `PasrahLoadedFromAssetId` cocok dengan asset ID terbaru.
+  - catatan: embedded legacy package refs lama masih ada sebagai fallback, tetapi runtime tidak memakainya selama permission asset baru valid.
+- Ghost animation source preflight selesai:
+  - skrip audit baru: `scripts/audit-ghost-animation-sources.ps1`.
+  - 84 plan item / 84 source FBX ditemukan; audit akhir 0 error, 0 warning.
+  - `Genderuwo_Vanish_RIG_BASE_FIX` diperbaiki karena sempat berisi `HandyHandsRig`; backup file salah disimpan, `.blend1` yang benar direstore, dan FBX diekspor ulang dari Blender 5.1.
+  - metadata report `SilumanUlar` dilengkapi dari audit Blender: 119 bone, 4646 vertices, 119 vertex groups untuk semua 7 clip.
+  - upload dry-run masih `missing_file=84`; blocker berikutnya tetap konversi Studio/importer dari FBX ke `.rbxm/.rbxmx` sebelum Open Cloud upload animation.
+
 ## Remaining Work (Excluding Owner 2-Client Smoke)
 
 - Final pass visual canonical UI dari referensi `asset mentah/ref ui/*.html` untuk panel yang masih perlu penyetaraan akhir layout/spacing/typography lintas device (terutama verifikasi akhir readability pada device nyata setelah T9) tanpa menambah sistem baru.
 - Bukti visual + catatan perubahan per panel canonical perlu terus ditambah per batch report source-of-truth agar tidak ada drift antara implementasi aktif dan indeks dokumen.
+- Audit -> migrasi -> owner-edit -> publish lane untuk `owner-editable GUI` harus dijalankan per-wave tanpa meninggalkan builder runtime legacy yang sudah tidak dipakai.
 
 ## Definition Of Done
 
@@ -893,4 +1731,6 @@ Semua dokumen harus menyatakan lock runtime-spawn authored + visual-only executi
 - Door trigger preparation -> investigation tervalidasi ada pada semua map canonical.
 - Tidak ada drift/duplikasi antara runtime lama dan runtime aktif untuk logic visual tool/hand.
 - Seluruh panel visual scope di atas dipoles secara menyeluruh (UI/GUI/UX) tanpa membuat sistem baru.
+- semua surface GUI player-facing yang memang layak untuk owner-edit sudah diaudit dan tiap surface sudah diputuskan secara eksplisit: `migrate ke authored GUI` atau `tetap runtime-only dengan alasan terdokumentasi`.
+- surface yang sudah dimigrasikan ke authored GUI tidak lagi punya builder runtime legacy yang bisa memunculkan duplicate visible.
 - Canonical + doc index sudah sinkron terhadap lock ini.
