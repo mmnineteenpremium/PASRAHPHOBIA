@@ -33,11 +33,7 @@
               "properties": {
                 "ResampleMode": {
                   "Enum": 0
-                },
-                "RoughnessMapContent": "rbxassetid://108763420495258",
-                "MetalnessMapContent": "rbxassetid://112794460017202",
-                "ColorMapContent": "rbxassetid://119582538265133",
-                "NormalMapContent": "rbxassetid://133491195386808"
+                }
               }
             }
           ],
@@ -52,7 +48,7 @@
               715951.0625,
               5782352.5
             ],
-            "MeshContent": "rbxassetid://118360815663860",
+            "MeshContent": "rbxassetid://103970548891140",
             "UnscaledVolume": 5706.08154296875,
             "UnscaledVolInertiaOffDiags": [
               49340.26171875,
@@ -135,7 +131,7 @@
     }
   ],
   "attributes": {
-    "GhostAssetId": "123151303766691",
+    "GhostAssetId": "103970548891140",
     "GhostImportedAt": 1776497630.0,
     "GhostSourceCsvLabel": "pocong PASRAHPHOBIA",
     "Rojo_Target_PrimaryPart": "13bd4cc0acbd194e09f4aa480003603f"

@@ -9,13 +9,9 @@
           "name": "SurfaceAppearance",
           "className": "SurfaceAppearance",
           "properties": {
-            "MetalnessMapContent": "rbxassetid://102739110540413",
             "ResampleMode": {
               "Enum": 0
-            },
-            "RoughnessMapContent": "rbxassetid://78055000354002",
-            "ColorMapContent": "rbxassetid://70591601057846",
-            "NormalMapContent": "rbxassetid://117338046202379",
+            }
           }
         }
       ],
@@ -79,7 +75,7 @@
           97.71630096435547,
           24.457504272460938
         ],
-        "MeshContent": "rbxassetid://86541720573721"
+        "MeshContent": "rbxassetid://97825875959661"
       },
       "attributes": {
         "Rojo_Id": "56937ce57aa635e909f4f64900002995"
