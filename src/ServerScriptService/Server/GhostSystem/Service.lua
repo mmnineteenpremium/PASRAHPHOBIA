@@ -1719,7 +1719,8 @@ local function shouldIgnoreGhostNavigationHit(instance)
 	end
 	if instance.Transparency >= 0.98
 		and not hasAncestorNamed(instance, "RuntimeBoundary")
-		and not hasAncestorNamed(instance, "MapBoundaryRuntime") then
+		and not hasAncestorNamed(instance, "MapBoundaryRuntime")
+		and instance.CanCollide ~= true then
 		return true
 	end
 	return false
