@@ -19,6 +19,7 @@ local PREPARATION_STAGING_FOLDER_NAME = "PreparationStagingRuntime"
 local PREPARATION_STAGING_DEBUG_ATTR = "PreparationStagingRuntimeDebug"
 local PREPARATION_LANE_STATE_ATTR = "PreparationEntryLaneState"
 local PREPARATION_BREACH_MOVED_ATTR = "PreparationBreachMoved"
+local ABANDONED_PALACE_ALIGNMENT_PATCH_ATTR = "AbandonedPalaceAuthoringAlignmentPatched"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
@@ -4102,6 +4103,229 @@ local function resolvePreparationStagingPlacement(anchorDoor, baseY, outward, st
 	return baseCenter + (outward * stageDistance), outward, nil, (positiveBlockedRoom or negativeBlockedRoom)
 end
 
+local function estimateAbandonedPalaceVisualFloorY(mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return nil
+	end
+
+	local bestBottomY = nil
+	local bestFootprint = 0
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("BasePart")
+			and descendant.Anchored
+			and descendant.CanCollide
+			and descendant.Position.Y > 20
+			and not hasNamedAncestor(descendant, "Rooms")
+			and not hasNamedAncestor(descendant, "SpawnPoints")
+			and not hasNamedAncestor(descendant, "SafeZones")
+			and not hasNamedAncestor(descendant, "GhostSpawns")
+			and not hasNamedAncestor(descendant, "EvidenceSpawnNodes")
+			and not hasNamedAncestor(descendant, "InteractionPoints")
+			and not hasNamedAncestor(descendant, "Doors")
+			and not hasNamedAncestor(descendant, PREPARATION_STAGING_FOLDER_NAME) then
+			local footprint = math.max(descendant.Size.X, 0) * math.max(descendant.Size.Z, 0)
+			if footprint >= 90 and footprint > bestFootprint then
+				bestFootprint = footprint
+				bestBottomY = descendant.Position.Y - (descendant.Size.Y * 0.5)
+			end
+		end
+	end
+
+	return bestBottomY
+end
+
+local function moveNamedFolderByDelta(mapClone, folderName, delta)
+	if typeof(mapClone) ~= "Instance" or typeof(delta) ~= "Vector3" or delta.Magnitude <= 0.01 then
+		return false
+	end
+
+	local folder = mapClone:FindFirstChild(folderName, true)
+	if not (folder and folder:IsA("Folder")) then
+		return false
+	end
+	return applyVectorOffsetRecursive(folder, delta)
+end
+
+local function ensureAbandonedPalacePreparationSpawns(mapClone, visualFloorY)
+	local runtimeFolder = mapClone and mapClone:FindFirstChild("Runtime", true)
+	local preparationFolder = runtimeFolder and runtimeFolder:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME, true)
+	if not (preparationFolder and preparationFolder:IsA("Folder")) then
+		return false
+	end
+
+	local spawnArea = preparationFolder:FindFirstChild("PreparationSpawnArea", true)
+	if not (spawnArea and spawnArea:IsA("Folder")) then
+		spawnArea = Instance.new("Folder")
+		spawnArea.Name = "PreparationSpawnArea"
+		spawnArea.Parent = preparationFolder
+	end
+
+	local gateBlocker = preparationFolder:FindFirstChild("PreparationToolGateBlocker", true)
+	local anchor = gateBlocker and gateBlocker:IsA("BasePart") and gateBlocker
+		or preparationFolder:FindFirstChild("PreparationToolsTable", true)
+	if anchor and anchor:IsA("Model") then
+		anchor = anchor:FindFirstChild("Top", true)
+	end
+	if not (anchor and anchor:IsA("BasePart")) then
+		return false
+	end
+
+	local baseY = tonumber(visualFloorY) or (anchor.Position.Y - 1.5)
+	local center = Vector3.new(anchor.Position.X, baseY + 3.8, anchor.Position.Z + 3.5)
+	local offsets = {
+		Vector3.new(-4.8, 0, -2.6),
+		Vector3.new(-1.6, 0, -2.6),
+		Vector3.new(1.6, 0, -2.6),
+		Vector3.new(4.8, 0, -2.6),
+	}
+
+	local floor = ensurePart(preparationFolder, "PreparationSpawnFloor")
+	configurePart(floor, {
+		Anchored = true,
+		CanCollide = true,
+		CanTouch = false,
+		CanQuery = true,
+		CastShadow = false,
+		Transparency = 1,
+		Material = Enum.Material.SmoothPlastic,
+		Color = Color3.fromRGB(52, 46, 54),
+		Size = Vector3.new(18, 0.75, 14),
+		CFrame = CFrame.new(center.X, baseY + 0.2, center.Z),
+	})
+	floor:SetAttribute("PasrahRuntimePreparationFloor", true)
+
+	for index, offset in ipairs(offsets) do
+		local spawnPart = ensurePart(spawnArea, "PreparationSpawn_" .. tostring(index))
+		configurePart(spawnPart, {
+			Anchored = true,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = true,
+			CastShadow = false,
+			Transparency = 1,
+			Material = Enum.Material.SmoothPlastic,
+			Size = Vector3.new(2.8, 1, 2.8),
+			CFrame = CFrame.new(center + offset),
+		})
+		spawnPart:SetAttribute("PasrahPreparationSpawn", true)
+		spawnPart:SetAttribute("PasrahRuntimeAlignedSpawn", true)
+	end
+
+	preparationFolder:SetAttribute("PasrahRuntimeSpawnAlignment", "AbandonedPalaceVisualFloor")
+	return true
+end
+
+local function patchAbandonedPalaceAuthoringAlignment(mapId, mapClone)
+	if typeof(mapClone) ~= "Instance" or mapClone:GetAttribute(ABANDONED_PALACE_ALIGNMENT_PATCH_ATTR) == true then
+		return false
+	end
+	local token = resolveMapOverrideToken(mapId, mapClone) or resolveMapOverrideToken(nil, mapClone)
+	if token ~= "abandonedpalace" then
+		return false
+	end
+
+	local visualFloorY = estimateAbandonedPalaceVisualFloorY(mapClone)
+	if not visualFloorY then
+		return false
+	end
+
+	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
+	local firstRoom = roomsFolder and roomsFolder:FindFirstChildWhichIsA("BasePart", true)
+	local roomFloorY = firstRoom and (firstRoom.Position.Y - (firstRoom.Size.Y * 0.5)) or 0
+	local deltaY = visualFloorY - roomFloorY
+	if math.abs(deltaY) < 15 then
+		return false
+	end
+	local delta = Vector3.new(0, deltaY, 0)
+
+	local movedAny = false
+	for _, folderName in ipairs({
+		"Rooms",
+		"SpawnPoints",
+		"SafeZones",
+		"GhostSpawns",
+		"EvidenceSpawnNodes",
+		"InteractionPoints",
+		"Doors",
+		"RuntimeDecor",
+		"OutdoorBaseplateRuntime",
+	}) do
+		movedAny = moveNamedFolderByDelta(mapClone, folderName, delta) or movedAny
+	end
+
+	local spawnsAligned = ensureAbandonedPalacePreparationSpawns(mapClone, visualFloorY)
+	if movedAny or spawnsAligned then
+		mapClone:SetAttribute(ABANDONED_PALACE_ALIGNMENT_PATCH_ATTR, true)
+		mapClone:SetAttribute("AbandonedPalaceVisualFloorY", visualFloorY)
+		mapClone:SetAttribute("AbandonedPalaceLogicDeltaY", deltaY)
+	end
+	return movedAny or spawnsAligned
+end
+
+local function patchDistantPreparationEntryAlignment(mapId, mapClone)
+	if typeof(mapClone) ~= "Instance" or mapClone:GetAttribute("DistantPreparationEntryAlignmentPatched") == true then
+		return false
+	end
+	local token = resolveMapOverrideToken(mapId, mapClone) or resolveMapOverrideToken(nil, mapClone)
+	if token ~= "emptybuilding" then
+		return false
+	end
+
+	local runtimeFolder = mapClone:FindFirstChild("Runtime", true)
+	local preparationFolder = runtimeFolder and runtimeFolder:FindFirstChild(PREPARATION_STAGING_FOLDER_NAME, true)
+	if not (preparationFolder and preparationFolder:IsA("Folder")) then
+		return false
+	end
+
+	local gateBlocker = preparationFolder:FindFirstChild("PreparationToolGateBlocker", true)
+	local anchor = gateBlocker and gateBlocker:IsA("BasePart") and gateBlocker
+		or preparationFolder:FindFirstChild("PreparationToolsTable", true)
+	if anchor and anchor:IsA("Model") then
+		anchor = anchor:FindFirstChild("Top", true)
+	end
+	if not (anchor and anchor:IsA("BasePart")) then
+		return false
+	end
+
+	local entryDoorName = PRIMARY_ENTRY_DOOR_BY_TOKEN[token]
+	local doorsFolder = mapClone:FindFirstChild("Doors", true)
+	local entryDoor = doorsFolder and doorsFolder:FindFirstChild(entryDoorName, true)
+	if not (entryDoor and entryDoor:IsA("BasePart")) then
+		return false
+	end
+
+	local xzDistance = (Vector3.new(entryDoor.Position.X, 0, entryDoor.Position.Z)
+		- Vector3.new(anchor.Position.X, 0, anchor.Position.Z)).Magnitude
+	if xzDistance < 100 then
+		return false
+	end
+
+	local anchorFloorY = anchor.Position.Y - (anchor.Size.Y * 0.5)
+	local targetDoorPosition = Vector3.new(anchor.Position.X, anchorFloorY + (entryDoor.Size.Y * 0.5), anchor.Position.Z)
+	local delta = targetDoorPosition - entryDoor.Position
+
+	local movedAny = false
+	for _, folderName in ipairs({
+		"Rooms",
+		"SpawnPoints",
+		"SafeZones",
+		"GhostSpawns",
+		"EvidenceSpawnNodes",
+		"InteractionPoints",
+		"Doors",
+		"RuntimeDecor",
+	}) do
+		movedAny = moveNamedFolderByDelta(mapClone, folderName, delta) or movedAny
+	end
+
+	local spawnsAligned = ensureAbandonedPalacePreparationSpawns(mapClone, anchorFloorY)
+	if movedAny or spawnsAligned then
+		mapClone:SetAttribute("DistantPreparationEntryAlignmentPatched", true)
+		mapClone:SetAttribute("DistantPreparationEntryAlignmentDelta", tostring(delta))
+	end
+	return movedAny or spawnsAligned
+end
+
 local function patchPreparationStaging(mapId, mapClone, matchContext)
 	if not mapClone or mapClone:GetAttribute(PREPARATION_STAGING_PATCH_ATTR) == true then
 		return false
@@ -4617,6 +4841,8 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	didPatch = patchDoorTraversal(mapClone) or didPatch
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
+	didPatch = patchAbandonedPalaceAuthoringAlignment(mapId, mapClone) or didPatch
+	didPatch = patchDistantPreparationEntryAlignment(mapId, mapClone) or didPatch
 	didPatch = patchPlayableFloorColliders(mapId, mapClone) or didPatch
 	didPatch = patchPreparationStaging(mapId, mapClone, matchContext) or didPatch
 	didPatch = patchTraversalGuides(mapClone) or didPatch

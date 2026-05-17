@@ -8,6 +8,13 @@ Confidence target: 99%
 ## Execution Update (2026-05-17)
 
 - Owner-visible continuation smoke terbaru:
+  - `2026-05-17` continuation pass di Studio aktif branch `brian-second-final`: Studio tidak ditutup/dibuka ulang pada pass ini; hanya Play session yang di-stop/start untuk menghindari AutoRecovery popup branch Brian.
+  - Map alignment repair terbaru tetap memakai `MapRuntimePatches`, bukan sistem match baru:
+    - `AbandonedPalace` logic folders disejajarkan ke visual floor authoring sehingga `PreparationPhase` tidak jatuh/instant-result.
+    - `EmptyBuilding` `Door_Lobby`/logic folders yang authored jauh dari staging disejajarkan ke preparation gate; smoke visual mencapai `STAGING -> Door_Lobby -> InvestigationPhase -> LightFlicker/ObjectThrow/WindowKnock -> ForceManifest -> ForceHunt -> ExtractSelf -> Result`.
+    - `StudioMMNineteen` smoke visual mencapai `STAGING -> pilih EMF -> Door_FrontEntry -> InvestigationPhase -> ForceHunt -> ExtractSelf -> Result`; catatan E2E: direct `TriggerMapInteraction` hanya membuka pintu, sedangkan fase maju ketika karakter benar-benar berada di ambang door runtime seperti flow player.
+  - Screenshot bukti pass terbaru disimpan di `.codex/studio-smoke-emptybuilding-staging-patched.png`, `.codex/studio-smoke-emptybuilding-result.png`, `.codex/studio-smoke-studiomm19-staging.png`, dan `.codex/studio-smoke-studiomm19-result.png`.
+  - Remaining defect yang bukan blocker map-flow: beberapa runtime ghost masih tampil grey/putih karena `SurfaceAppearance.ColorMap` kosong setelah texture cleanup/permission scrub; ghost animation track berjalan, tetapi texture team-owned masih perlu wiring/polish lanjutan.
   - Four-map regression smoke tambahan setelah ghost animation grounding dan playable-floor repair:
     - `AbandonedPalace` pass sampai `PreparationPhase -> Door_GrandHall -> InvestigationPhase -> ObjectThrow -> ForceManifest -> ForceHunt`; runtime `Ghost_Leak` muncul dengan `playingTracks=1`, player stabil di Y `23.87`, health tetap `100`, dan `ObjectThrow` memilih target `Prop_Armory`.
     - `StudioMMNineteen` pass sampai `InvestigationPhase -> LightFlicker -> ForceManifest -> ForceHunt`; runtime `Ghost_Leak` muncul, `GhostHunt` aktif (`Animator=1`, `playingTracks=1`, `bones=54`, `SurfaceAppearance=1`), NavigationGuide masuk state `Hunt`, dan `EndMatch` berhasil.
