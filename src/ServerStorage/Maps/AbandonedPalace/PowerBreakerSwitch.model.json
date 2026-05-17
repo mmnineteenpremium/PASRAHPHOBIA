@@ -1,0 +1,12 @@
+{
+  "className": "Model",
+  "children": [
+    {
+      "name": "IsPowerOn",
+      "className": "BoolValue",
+      "properties": {
+        "Value": false
+      }
+    }
+  ]
+}

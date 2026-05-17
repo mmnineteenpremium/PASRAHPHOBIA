@@ -986,7 +986,7 @@ local function resolveSpawnForwardOffset(mapClone, position, forward)
 	return math.clamp(clearance - SPAWN_FORWARD_OFFSET_MIN_CLEARANCE, 0, SPAWN_FORWARD_OFFSET_MAX)
 end
 
-local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance, spawnCandidate)
+local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance, spawnCandidate, allowPreparationInsideRoom)
 	if not rawCFrame then
 		return nil, "missing_spawn_cframe"
 	end
@@ -1051,7 +1051,7 @@ local function buildSafeSpawnCFrame(mapClone, rawCFrame, floorClearance, spawnCa
 		finalPosition += (forward * forwardOffset)
 	end
 
-	if isPreparationSpawnCandidate(spawnCandidate) then
+	if isPreparationSpawnCandidate(spawnCandidate) and allowPreparationInsideRoom ~= true then
 		local insideRoom, roomPart = isPositionInsideAnyRoom(mapClone, finalPosition)
 		if insideRoom then
 			return nil, string.format(
@@ -1090,12 +1090,82 @@ local function resolveSafeSpawnCFrame(mapClone, spawnCandidates, preferredIndex,
 		end
 	end
 
+	for _, candidate in ipairs(orderedCandidates) do
+		if isPreparationSpawnCandidate(candidate) then
+			local candidateCFrame = extractSpawnCFrame(candidate)
+			local safeCFrame = buildSafeSpawnCFrame(mapClone, candidateCFrame, floorClearance, candidate, true)
+			if safeCFrame then
+				warn("[MatchTeleport] Using relaxed preparation spawn fallback:", candidate:GetFullName())
+				return safeCFrame, candidate
+			end
+		end
+	end
+
 	return nil, nil
+end
+
+local function findMapAnchorFallbackSpawnPart(mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return nil
+	end
+
+	local function isFallbackPart(part)
+		if not (part and part:IsA("BasePart")) then
+			return false
+		end
+		local normalizedName = tostring(part.Name):gsub("[%s_%-]+", ""):lower()
+		return part:GetAttribute("PasrahSafeZone") == true
+			or part:GetAttribute("SafeZone") == true
+			or part:GetAttribute("HidingSafeZone") == true
+			or string.find(normalizedName, "safezone", 1, true) ~= nil
+			or string.find(normalizedName, "hidespot", 1, true) ~= nil
+			or string.find(normalizedName, "hiding", 1, true) ~= nil
+	end
+
+	local safeZonesFolder = mapClone:FindFirstChild("SafeZones", true)
+	if safeZonesFolder then
+		for _, descendant in ipairs(safeZonesFolder:GetDescendants()) do
+			if isFallbackPart(descendant) then
+				return descendant
+			end
+		end
+	end
+
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if isFallbackPart(descendant) then
+			return descendant
+		end
+	end
+
+	return nil
+end
+
+local function buildMapAnchorFallbackSpawnCFrame(mapClone, floorClearance)
+	local anchor = findMapAnchorFallbackSpawnPart(mapClone)
+	if not anchor then
+		return nil, nil
+	end
+	local appliedClearance = tonumber(floorClearance) or DEFAULT_FLOOR_CLEARANCE
+	local yOffset = math.max((anchor.Size.Y * 0.5) + appliedClearance + 0.5, 4)
+	local position = anchor.Position + Vector3.new(0, yOffset, 0)
+	local rayParams = RaycastParams.new()
+	rayParams.FilterType = Enum.RaycastFilterType.Include
+	rayParams.FilterDescendantsInstances = { mapClone }
+	rayParams.IgnoreWater = true
+	rayParams.RespectCanCollide = true
+	local floorHit = Workspace:Raycast(anchor.Position + Vector3.new(0, 60, 0), Vector3.new(0, -200, 0), rayParams)
+	if floorHit then
+		position = floorHit.Position + Vector3.new(0, appliedClearance, 0)
+	end
+	return buildUprightFacingCFrame(mapClone, position, anchor.CFrame), anchor
 end
 
 local function buildStudioFallbackSpawnCFrame(mapClone, spawnPoints)
 	local fallback = nil
-	if type(spawnPoints) == "table" and #spawnPoints > 0 then
+	local anchorFallback = buildMapAnchorFallbackSpawnCFrame(mapClone, DEFAULT_FLOOR_CLEARANCE)
+	if anchorFallback then
+		fallback = anchorFallback
+	elseif type(spawnPoints) == "table" and #spawnPoints > 0 then
 		fallback = extractSpawnCFrame(spawnPoints[1])
 	end
 	if not fallback and mapClone then
@@ -1161,6 +1231,7 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 		end
 
 		local mapClone = mapTemplate:Clone()
+		MapRuntimePatches.DisableLegacyAssetScripts(resolvedMapName or resolvedTemplateName, mapClone)
 		mapClone.Parent = container
 		MapRuntimePatches.Apply(resolvedMapName or resolvedTemplateName, mapClone, match)
 		local runtimeOk, runtimeErr = validateAuthoredPreparationRuntime(resolvedMapName or resolvedTemplateName, mapClone)
@@ -1273,14 +1344,22 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 					)
 				end
 					if not safeSpawnCFrame then
-						warn("[MatchTeleport] NO VALID PREPARATION SPAWN, SKIP PLAYER")
-						table.insert(teleportTrace, string.format("%s:skip_no_preparation_spawn", player.Name))
-						updateStudioTeleportTrace(
-							teleportTrace,
-							#teleported,
-							string.format("player=%s status=skip_no_preparation_spawn", player.Name)
-						)
-						continue
+						local fallbackCFrame, fallbackAnchor = buildMapAnchorFallbackSpawnCFrame(mapClone, floorClearance)
+						if fallbackCFrame then
+							safeSpawnCFrame = fallbackCFrame
+							spawnCandidate = fallbackAnchor
+							warn("[MatchTeleport] Using safe-zone fallback spawn:", fallbackAnchor and fallbackAnchor:GetFullName() or "unknown")
+							table.insert(teleportTrace, string.format("%s:safeZoneFallbackSpawn=%s", player.Name, fallbackAnchor and fallbackAnchor:GetFullName() or "unknown"))
+						else
+							warn("[MatchTeleport] NO VALID PREPARATION SPAWN, SKIP PLAYER")
+							table.insert(teleportTrace, string.format("%s:skip_no_preparation_spawn", player.Name))
+							updateStudioTeleportTrace(
+								teleportTrace,
+								#teleported,
+								string.format("player=%s status=skip_no_preparation_spawn", player.Name)
+							)
+							continue
+						end
 					elseif spawnCandidate then
 						table.insert(teleportTrace, string.format("%s:spawnCandidate=%s", player.Name, spawnCandidate:GetFullName()))
 					end

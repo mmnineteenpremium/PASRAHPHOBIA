@@ -166,11 +166,11 @@ AUXILIARY_WINDOW_CONFIG = {
 	JournalUI = {
 		title = "JURNAL",
 		badgeText = "EVIDENCE",
-		floatText = "JOURNAL",
+		floatText = "GUIDE",
 		panelPosition = UDim2.fromOffset(16, 104),
 		panelAnchorPoint = Vector2.new(0, 0),
 		panelSize = Vector2.new(360, 396),
-		floatPosition = UDim2.new(0, 18, 0.62, 0),
+		floatPosition = UDim2.new(1, -86, 0, 18),
 		badgeColor = Color3.fromRGB(56, 92, 128),
 		footer = "Shortcut: J. Basic journal ini dibuat untuk test E2E deduction.",
 	},
@@ -279,10 +279,13 @@ JOURNAL_GHOST_ORDER = {
 	"HantuTanah",
 }
 JOURNAL_TUTORIAL_PAGES = {
-	"1/4 Checklist evidence manual. Pilih tepat 3 evidence dari hasil investigasi tim.",
-	"2/4 Pilih 1 ghost sebagai final guess. Tidak ada auto-solve di fase ini.",
-	"3/4 Tekan SUBMIT JOURNAL untuk lock tebakan, lalu END INVESTIGATION saat siap pulang.",
-	"4/4 Server tetap authoritative: ghost asli, benar/salah, dan reward dihitung server.",
+	"1/7 Mulai dari staging luar. Pilih tool, baca objective, lalu buka pintu utama untuk masuk investigasi.",
+	"2/7 Cari tanda dengan tool. EMF/MEDOK, suhu, buku, suara, orb, dan gerakan hanya menjadi bukti jika hasilnya muncul jelas.",
+	"3/7 Checklist evidence manual. Pilih tepat 3 evidence yang kamu percaya, bukan semua sinyal mentah.",
+	"4/7 Pilih 1 ghost sebagai final guess. Server tidak auto-solve untuk player di fase ini.",
+	"5/7 Saat hunt, putus line-of-sight, gunakan pintu untuk rotasi, lalu masuk safezone atau hidespot terdekat.",
+	"6/7 Tekan SUBMIT JOURNAL untuk lock jawaban. Setelah yakin pulang, tekan END INVESTIGATION.",
+	"7/7 Result menampilkan ghost asli, tebakan, checklist, benar/salah, dan reward sementara dari server.",
 }
 FIELD_KIT_TOOL_ORDER = {
 	"JejakEnergi",
@@ -1027,17 +1030,17 @@ local function setButtonTextImageScale(image, stateName)
 	scale.Scale = target
 	return scale, target
 end
-local function setButtonTextImagePassthrough(image)
+local function setButtonTextImagePassthrough(image, inputProxyEnabled)
 	if not (image and (image:IsA("ImageLabel") or image:IsA("ImageButton"))) then
 		return
 	end
 	if image:IsA("ImageButton") then
 		image.AutoButtonColor = false
 	end
-	image.Active = false
+	image.Active = inputProxyEnabled == true
 	image.Selectable = false
 	pcall(function()
-		image.Interactable = false
+		image.Interactable = inputProxyEnabled == true
 	end)
 end
 local function isButtonTextImageObject(image)
@@ -1075,7 +1078,9 @@ local function configureButtonTextImage(image, states)
 	if image:IsA("ImageButton") then
 		image.HoverImage = toButtonTextImageAsset(hover)
 		image.PressedImage = toButtonTextImageAsset(active)
-		setButtonTextImagePassthrough(image)
+		local parentButton = image.Parent
+		local inputProxyEnabled = parentButton and parentButton:GetAttribute("PasrahButtonInputProxy") == true
+		setButtonTextImagePassthrough(image, inputProxyEnabled)
 	end
 end
 local UI_SOUND_PATHS = {
@@ -1406,6 +1411,7 @@ local function ensureButtonPolish(button)
 
 	button.ClipsDescendants = true
 	UISystem:_ensureUiVisualTemplateChildren(button, "ButtonPolishChildrenTemplate")
+	local inputProxyEnabled = button:GetAttribute("PasrahButtonInputProxy") == true or isRuntimeButtonBound(button)
 
 	local scale = button:FindFirstChild("BrandScale")
 	if scale and not scale:IsA("UIScale") then
@@ -1416,10 +1422,10 @@ local function ensureButtonPolish(button)
 	if overlay and overlay:IsA("Frame") then
 		overlay.Size = UDim2.fromScale(1, 1)
 		overlay.ZIndex = math.max(0, button.ZIndex - 1)
-		overlay.Active = false
+		overlay.Active = inputProxyEnabled
 		overlay.Selectable = false
 		pcall(function()
-			overlay.Interactable = false
+			overlay.Interactable = inputProxyEnabled
 		end)
 		overlay.BackgroundColor3 = UI_BRAND.sheen
 	end
@@ -1454,10 +1460,10 @@ local function ensureButtonPolish(button)
 		borderImage.Size = UDim2.fromScale(1, 1)
 		borderImage.Position = UDim2.fromScale(0, 0)
 		borderImage.ZIndex = button.ZIndex + 2
-		borderImage.Active = false
+		borderImage.Active = inputProxyEnabled
 		borderImage.Selectable = false
 		pcall(function()
-			borderImage.Interactable = false
+			borderImage.Interactable = inputProxyEnabled
 		end)
 		borderImage.Visible = true
 	end
@@ -1477,9 +1483,12 @@ local function ensureButtonPolish(button)
 		textImage.Size = UDim2.new(1, -16, 1, -10)
 		textImage.ZIndex = button.ZIndex + 3
 		if textImage:IsA("ImageButton") then
-			setButtonTextImagePassthrough(textImage)
+			setButtonTextImagePassthrough(textImage, inputProxyEnabled)
 		else
-			textImage.Active = false
+			textImage.Active = inputProxyEnabled
+			pcall(function()
+				textImage.Interactable = inputProxyEnabled
+			end)
 		end
 	end
 	if textImageStates and textImage then
@@ -3911,6 +3920,7 @@ local function getNearestNavigationAnchorInfo(contextTag)
 				stateTextValue = stateTextValue(item.part)
 			end
 			consider(item.part, {
+				part = item.part,
 				kind = item.kind,
 				label = item.label,
 				subtitle = subtitleValue,
@@ -4226,6 +4236,7 @@ local function getNearestSafeZoneInfo()
 			if nearest == nil or distance < nearest.distance then
 				local fallbackLabel = formatSafeZoneLabel(child.Name) or child.Name
 				nearest = {
+					part = child,
 					zoneId = child.Name,
 					label = getRuntimeSafeZoneLabel(child) or fallbackLabel,
 					subtitle = getRuntimeSafeZoneSubtitle(child),
@@ -4271,6 +4282,7 @@ local function getNearestHideSpotInfo()
 				if nearest == nil or distance < nearest.distance then
 					local fallbackLabel = resolveHideZoneLabel(hideSpotId, hideSpotType) or hideSpotId
 					nearest = {
+						part = child,
 						kind = "HideSpot",
 						zoneId = hideSpotId,
 						spotType = hideSpotType,
@@ -4555,6 +4567,307 @@ local function getHuntAssistSnapshot()
 		routeText = "TARGET: " .. string.upper(refugeRoute),
 		supportText = "PINTU E/X/TAP  •  JANGAN LURUS  •  SIAP ROTASI",
 	}
+end
+
+function UISystem._getNavigationGuideDirection(targetPart)
+	local player = Players.LocalPlayer
+	local character = player and player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	local camera = Workspace.CurrentCamera
+	if not (root and targetPart and targetPart:IsA("BasePart") and camera) then
+		return "TRACK", 0.5, 0.5
+	end
+
+	local delta = targetPart.Position - root.Position
+	local flat = Vector3.new(delta.X, 0, delta.Z)
+	if flat.Magnitude <= 0.1 then
+		return "HERE", 0.5, 0.5
+	end
+
+	local localDirection = camera.CFrame:VectorToObjectSpace(flat.Unit)
+	local angle = math.deg(math.atan2(localDirection.X, -localDirection.Z))
+	local absAngle = math.abs(angle)
+	local directionText = "FRONT"
+	if absAngle > 150 then
+		directionText = "BACK"
+	elseif absAngle > 35 then
+		directionText = angle > 0 and "RIGHT" or "LEFT"
+	end
+
+	local dotX = math.clamp(0.5 + localDirection.X * 0.36, 0.14, 0.86)
+	local dotY = math.clamp(0.5 + localDirection.Z * 0.36, 0.14, 0.86)
+	return directionText, dotX, dotY
+end
+
+function UISystem._getNavigationGuideSnapshot(viewState)
+	local state = tostring(viewState or "")
+	if state ~= "Preparation" and state ~= "Loading" and state ~= "Investigation" and state ~= "Hunt" then
+		return { visible = false }
+	end
+
+	local target = nil
+	local badgeText = "ROUTE"
+	local titleText = "MAP GUIDE"
+	local hintText = "Pakai petunjuk ini sebagai kompas ringkas."
+	local accent = Color3.fromRGB(76, 112, 146)
+
+	if state == "Hunt" then
+		local alternateRefuge = nil
+		target, alternateRefuge = getPreferredHuntRefugeInfo()
+		badgeText = getHuntStatusBadge()
+		titleText = target and getRefugeHintText(target) or "RUANG AMAN"
+		hintText = getHuntControlsHintText()
+		if type(target) == "table" and target.kind == "HideSpot" and type(alternateRefuge) == "table" then
+			hintText = hintText .. " | ALT " .. getRefugeHintText(alternateRefuge)
+		end
+		accent = Color3.fromRGB(156, 70, 70)
+	elseif state == "Investigation" then
+		target = getNearestNavigationAnchorInfo("Investigation") or getNearestSafeZoneInfo() or getNearestHideSpotInfo()
+		badgeText = "NAV"
+		titleText = target and formatNavigationAnchorLabel(target, target.label or "area target") or "CARI EVIDENCE"
+		local refuge = getPreferredHuntRefugeInfo()
+		hintText = refuge and ("Safe route: " .. getRefugeHintText(refuge) .. " | J untuk journal") or "Cari evidence, lalu isi Journal [J]."
+		accent = getNavigationSemanticAccent(target) or Color3.fromRGB(70, 132, 98)
+	else
+		target = getNearestNavigationAnchorInfo("Preparation")
+		badgeText = "ENTRY"
+		titleText = target and formatNavigationAnchorLabel(target, "main entry") or "STAGING LUAR"
+		hintText = "Pilih tool, baca objective, lalu buka pintu utama."
+		accent = Color3.fromRGB(84, 108, 140)
+	end
+
+	local part = type(target) == "table" and target.part or nil
+	local direction, dotX, dotY = UISystem._getNavigationGuideDirection(part)
+	local distanceText = type(target) == "table" and formatNavigationAnchorDistance(target) or nil
+	if distanceText == nil and type(target) == "table" and type(target.distance) == "number" then
+		distanceText = string.format("%dm", math.max(1, math.floor(target.distance + 0.5)))
+	end
+
+	return {
+		visible = true,
+		badgeText = badgeText,
+		titleText = titleText,
+		hintText = hintText,
+		directionText = distanceText and (direction .. " | " .. distanceText) or direction,
+		dotX = dotX,
+		dotY = dotY,
+		accent = accent,
+	}
+end
+
+function UISystem:_ensureMatchNavigationGuideWidget(matchLayer)
+	if not (matchLayer and matchLayer:IsA("Frame")) then
+		return nil
+	end
+
+	local root = matchLayer:FindFirstChild("NavigationGuide")
+	if root and not root:IsA("Frame") then
+		root:Destroy()
+		root = nil
+	end
+	if not root then
+		root = Instance.new("Frame")
+		root.Name = "NavigationGuide"
+		root.AnchorPoint = Vector2.new(0, 0)
+		root.Position = UDim2.fromOffset(24, 148)
+		root.Size = UDim2.fromOffset(236, 122)
+		root.BackgroundColor3 = Color3.fromRGB(12, 18, 26)
+		root.BackgroundTransparency = 0.12
+		root.BorderSizePixel = 0
+		root.Visible = false
+		root.ZIndex = 4
+		root.Parent = matchLayer
+		ensureCorner(root, "GuideCorner", UDim.new(0, 10))
+		local stroke = Instance.new("UIStroke")
+		stroke.Name = "GuideStroke"
+		stroke.Thickness = 1.2
+		stroke.Transparency = 0.2
+		stroke.Color = Color3.fromRGB(74, 106, 132)
+		stroke.Parent = root
+	end
+
+	local function ensureLabel(name, position, size, font, textSize)
+		local label = root:FindFirstChild(name)
+		if label and not label:IsA("TextLabel") then
+			label:Destroy()
+			label = nil
+		end
+		if not label then
+			label = Instance.new("TextLabel")
+			label.Name = name
+			label.BackgroundTransparency = 1
+			label.TextColor3 = Color3.fromRGB(232, 238, 244)
+			label.TextXAlignment = Enum.TextXAlignment.Left
+			label.TextYAlignment = Enum.TextYAlignment.Top
+			label.TextWrapped = true
+			label.ZIndex = root.ZIndex + 1
+			label.Parent = root
+		end
+		label.Position = position
+		label.Size = size
+		label.Font = font
+		label.TextSize = textSize
+		return label
+	end
+
+	local badge = root:FindFirstChild("Badge")
+	if badge and not badge:IsA("TextLabel") then
+		badge:Destroy()
+		badge = nil
+	end
+	if not badge then
+		badge = Instance.new("TextLabel")
+		badge.Name = "Badge"
+		badge.BorderSizePixel = 0
+		badge.Font = Enum.Font.GothamBold
+		badge.TextSize = 10
+		badge.TextColor3 = Color3.fromRGB(244, 244, 238)
+		badge.TextXAlignment = Enum.TextXAlignment.Center
+		badge.ZIndex = root.ZIndex + 1
+		badge.Parent = root
+		ensureCorner(badge, "BadgeCorner", UDim.new(1, 0))
+	end
+	badge.Position = UDim2.fromOffset(12, 10)
+	badge.Size = UDim2.fromOffset(72, 20)
+
+	local map = root:FindFirstChild("RouteMap")
+	if map and not map:IsA("Frame") then
+		map:Destroy()
+		map = nil
+	end
+	if not map then
+		map = Instance.new("Frame")
+		map.Name = "RouteMap"
+		map.Position = UDim2.fromOffset(12, 40)
+		map.Size = UDim2.fromOffset(66, 66)
+		map.BackgroundColor3 = Color3.fromRGB(8, 12, 18)
+		map.BackgroundTransparency = 0.08
+		map.BorderSizePixel = 0
+		map.ZIndex = root.ZIndex + 1
+		map.Parent = root
+		ensureCorner(map, "MapCorner", UDim.new(0, 8))
+		local mapStroke = Instance.new("UIStroke")
+		mapStroke.Name = "MapStroke"
+		mapStroke.Thickness = 1
+		mapStroke.Transparency = 0.32
+		mapStroke.Color = Color3.fromRGB(80, 100, 116)
+		mapStroke.Parent = map
+	end
+
+	local forward = map:FindFirstChild("Forward")
+	if forward and not forward:IsA("TextLabel") then
+		forward:Destroy()
+		forward = nil
+	end
+	if not forward then
+		forward = Instance.new("TextLabel")
+		forward.Name = "Forward"
+		forward.BackgroundTransparency = 1
+		forward.Font = Enum.Font.GothamBold
+		forward.TextSize = 9
+		forward.Text = "VIEW"
+		forward.TextColor3 = Color3.fromRGB(150, 164, 180)
+		forward.ZIndex = map.ZIndex + 1
+		forward.Parent = map
+	end
+	forward.Position = UDim2.fromOffset(0, 4)
+	forward.Size = UDim2.new(1, 0, 0, 12)
+
+	local dot = map:FindFirstChild("TargetDot")
+	if dot and not dot:IsA("Frame") then
+		dot:Destroy()
+		dot = nil
+	end
+	if not dot then
+		dot = Instance.new("Frame")
+		dot.Name = "TargetDot"
+		dot.AnchorPoint = Vector2.new(0.5, 0.5)
+		dot.Size = UDim2.fromOffset(10, 10)
+		dot.BorderSizePixel = 0
+		dot.ZIndex = map.ZIndex + 2
+		dot.Parent = map
+		ensureCorner(dot, "DotCorner", UDim.new(1, 0))
+	end
+
+	return {
+		Root = root,
+		Stroke = root:FindFirstChild("GuideStroke"),
+		Badge = badge,
+		Map = map,
+		Dot = dot,
+		Title = ensureLabel("Title", UDim2.fromOffset(92, 10), UDim2.new(1, -104, 0, 36), Enum.Font.GothamBold, 12),
+		Direction = ensureLabel("Direction", UDim2.fromOffset(92, 48), UDim2.new(1, -104, 0, 18), Enum.Font.GothamBold, 11),
+		Hint = ensureLabel("Hint", UDim2.fromOffset(92, 68), UDim2.new(1, -104, 0, 42), Enum.Font.Gotham, 10),
+	}
+end
+
+function UISystem:_refreshMatchNavigationGuide(viewState)
+	local match = self._uxWidgets and self._uxWidgets.match or nil
+	local guide = match and match.NavigationGuide
+	if not (guide and guide.Root) then
+		return
+	end
+
+	local effectiveState = viewState
+	local player = Players.LocalPlayer
+	local lifecyclePhase = player and tostring(player:GetAttribute("MatchLifecyclePhase") or "") or ""
+	if player and (player:GetAttribute("PasrahGhostHuntActive") == true or lifecyclePhase == "HuntPhase" or lifecyclePhase == "Hunt") then
+		effectiveState = "Hunt"
+	end
+
+	local snapshot = UISystem._getNavigationGuideSnapshot(effectiveState)
+	if type(snapshot) ~= "table" or snapshot.visible ~= true then
+		guide.Root.Visible = false
+		return
+	end
+
+	local camera = Workspace.CurrentCamera
+	local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
+	local compact = viewport.X <= 960 or viewport.Y <= 560 or (self._deviceProfile and self._deviceProfile.isMobile == true)
+	local topLeftInset = UISupport.resolveSafeInsets(GuiService)
+	if compact then
+		guide.Root.Position = UDim2.fromOffset(14 + topLeftInset.X, 180 + topLeftInset.Y)
+		guide.Root.Size = UDim2.fromOffset(math.min(236, math.max(210, viewport.X - 28)), 112)
+		guide.Map.Size = UDim2.fromOffset(58, 58)
+		guide.Map.Position = UDim2.fromOffset(10, 42)
+		guide.Title.Position = UDim2.fromOffset(78, 10)
+		guide.Title.Size = UDim2.new(1, -88, 0, 32)
+		guide.Direction.Position = UDim2.fromOffset(78, 44)
+		guide.Hint.Position = UDim2.fromOffset(78, 62)
+		guide.Hint.Size = UDim2.new(1, -88, 0, 42)
+	else
+		guide.Root.Position = UDim2.fromOffset(24 + topLeftInset.X, 148 + topLeftInset.Y)
+		guide.Root.Size = UDim2.fromOffset(236, 122)
+		guide.Map.Size = UDim2.fromOffset(66, 66)
+		guide.Map.Position = UDim2.fromOffset(12, 40)
+		guide.Title.Position = UDim2.fromOffset(92, 10)
+		guide.Title.Size = UDim2.new(1, -104, 0, 36)
+		guide.Direction.Position = UDim2.fromOffset(92, 48)
+		guide.Hint.Position = UDim2.fromOffset(92, 68)
+		guide.Hint.Size = UDim2.new(1, -104, 0, 42)
+	end
+
+	local accent = typeof(snapshot.accent) == "Color3" and snapshot.accent or Color3.fromRGB(76, 112, 146)
+	guide.Root.Visible = true
+	guide.Root.BackgroundColor3 = accent:Lerp(Color3.fromRGB(10, 14, 20), 0.74)
+	if guide.Stroke then
+		guide.Stroke.Color = accent
+	end
+	guide.Badge.Text = tostring(snapshot.badgeText or "NAV")
+	guide.Badge.BackgroundColor3 = accent
+	guide.Title.Text = tostring(snapshot.titleText or "MAP GUIDE")
+	guide.Direction.Text = tostring(snapshot.directionText or "TRACK")
+	guide.Direction.TextColor3 = accent:Lerp(Color3.fromRGB(244, 246, 248), 0.22)
+	guide.Hint.Text = tostring(snapshot.hintText or "")
+	guide.Hint.TextColor3 = Color3.fromRGB(196, 208, 222)
+	guide.Dot.BackgroundColor3 = accent:Lerp(Color3.fromRGB(250, 246, 232), 0.12)
+	guide.Dot.Position = UDim2.fromScale(tonumber(snapshot.dotX) or 0.5, tonumber(snapshot.dotY) or 0.5)
+
+	guide.Root:SetAttribute("PasrahNavigationGuideOwner", "UISystem")
+	guide.Root:SetAttribute("PasrahNavigationGuideState", tostring(effectiveState or ""))
+	guide.Root:SetAttribute("PasrahNavigationGuideTitle", guide.Title.Text)
+	guide.Root:SetAttribute("PasrahNavigationGuideDirection", guide.Direction.Text)
+	guide.Root:SetAttribute("PasrahNavigationGuideHint", guide.Hint.Text)
 end
 
 function UISystem._stampMatchSurvivalInstance(instance, channel, viewState, huntSnapshot)
@@ -4946,6 +5259,9 @@ function connectButtonPress(button, callback)
 	if not button or type(callback) ~= "function" then
 		return
 	end
+	if button:IsA("GuiButton") then
+		button:SetAttribute("PasrahButtonInputProxy", true)
+	end
 	bindButtonPolish(button)
 	if button:IsA("GuiButton") then
 		button.Active = true
@@ -4972,6 +5288,40 @@ function connectButtonPress(button, callback)
 		end)
 		callback()
 	end
+
+	local function isButtonEffectivelyVisible()
+		local cursor = button
+		while cursor do
+			if cursor:IsA("GuiObject") and cursor.Visible ~= true then
+				return false
+			end
+			if cursor:IsA("ScreenGui") and cursor.Enabled ~= true then
+				return false
+			end
+			cursor = cursor.Parent
+		end
+		return button.Parent ~= nil
+	end
+
+	local function inputHitsButton(input)
+		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
+			return false
+		end
+		if not isButtonEffectivelyVisible() then
+			return false
+		end
+		local position = input.Position
+		if typeof(position) ~= "Vector3" then
+			return false
+		end
+		local absolutePosition = button.AbsolutePosition
+		local absoluteSize = button.AbsoluteSize
+		return position.X >= absolutePosition.X
+			and position.Y >= absolutePosition.Y
+			and position.X <= absolutePosition.X + absoluteSize.X
+			and position.Y <= absolutePosition.Y + absoluteSize.Y
+	end
+
 	button.Activated:Connect(invoke)
 	button.MouseButton1Click:Connect(invoke)
 	button.MouseButton1Down:Connect(invoke)
@@ -4992,6 +5342,11 @@ function connectButtonPress(button, callback)
 			invoke()
 		end
 	end)
+	UserInputService.InputEnded:Connect(function(input)
+		if inputHitsButton(input) then
+			invoke()
+		end
+	end)
 
 	local brandTextImage = button:FindFirstChild("BrandTextImage")
 	if brandTextImage and brandTextImage:IsA("GuiButton") then
@@ -5001,10 +5356,26 @@ function connectButtonPress(button, callback)
 	for _, childName in ipairs({ "BrandOverlay", "BrandBorder", "BrandTextImage" }) do
 		local child = button:FindFirstChild(childName)
 		if child and child:IsA("GuiObject") then
-			child.Active = false
+			child.Active = true
 			child.Selectable = false
 			pcall(function()
-				child.Interactable = false
+				child.Interactable = true
+			end)
+			child.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1
+					or input.UserInputType == Enum.UserInputType.Touch
+					or tostring(input.KeyCode) == tostring(Enum.KeyCode.ButtonA)
+				then
+					invoke()
+				end
+			end)
+			child.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1
+					or input.UserInputType == Enum.UserInputType.Touch
+					or tostring(input.KeyCode) == tostring(Enum.KeyCode.ButtonA)
+				then
+					invoke()
+				end
 			end)
 		end
 	end
@@ -7060,7 +7431,7 @@ function UISystem:_bindAuthoredLobbyUi(gui)
 		end
 	end
 
-	if not (panel and toggleBtn and title and headerCard and lobbyGlyph and statusBadge and primaryLabel and secondaryLabel and modePill and mapPill and roomPill and hintLabel and openRoomBrowserButton and profileButton and shopButton and royalPassButton and menuButton and rankButton) then
+	if not (panel and toggleBtn and openRoomBrowserButton and profileButton and shopButton and royalPassButton and menuButton and rankButton) then
 		return false
 	end
 
@@ -7079,7 +7450,7 @@ function UISystem:_bindAuthoredLobbyUi(gui)
 	if not isRuntimeButtonBound(openRoomBrowserButton) then
 		markRuntimeButtonBound(openRoomBrowserButton)
 		connectButtonPress(openRoomBrowserButton, function()
-			self:_toggleRoomBrowserVisible()
+			self:_setRoomBrowserVisible(true)
 			self:_refreshBasicLobbyPanel()
 		end)
 	end
@@ -7207,7 +7578,7 @@ function UISystem:_bindAuthoredBasicWindowUi(guiName, gui)
 		end
 	end
 
-	if not (panel and title and statusBadge and primaryLabel and secondaryLabel and footerLabel and closeButton and floatButton and roomBrowserButton and profileButton) then
+	if not (panel and closeButton and floatButton and roomBrowserButton and profileButton) then
 		return false
 	end
 	if isMainMenu and not (shopButton and rankButton and graphicsButton) then
@@ -7255,7 +7626,7 @@ function UISystem:_bindAuthoredBasicWindowUi(guiName, gui)
 	if not isRuntimeButtonBound(roomBrowserButton) then
 		markRuntimeButtonBound(roomBrowserButton)
 		connectButtonPress(roomBrowserButton, function()
-			self:_toggleRoomBrowserVisible()
+			self:_setRoomBrowserVisible(true)
 		end)
 	end
 	if not isRuntimeButtonBound(profileButton) then
@@ -8707,6 +9078,7 @@ function UISystem:_returnFromResultsToLobby()
 	local localPlayer = Players.LocalPlayer
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahResultsSurfaceVisible", false)
+		localPlayer:SetAttribute("PasrahCursorUnlockRequested", false)
 	end
 	self._uiState.MatchUI.visible = false
 	self._uiState.JournalUI.visible = false
@@ -8725,6 +9097,7 @@ function UISystem:_syncMatchWindowVisibility()
 	if not match then
 		if localPlayer then
 			localPlayer:SetAttribute("PasrahResultsSurfaceVisible", false)
+			localPlayer:SetAttribute("PasrahCursorUnlockRequested", false)
 			localPlayer:SetAttribute("PasrahMatchWindowVisible", false)
 		end
 		return
@@ -8757,6 +9130,7 @@ function UISystem:_syncMatchWindowVisibility()
 
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahResultsSurfaceVisible", showResults == true)
+		localPlayer:SetAttribute("PasrahCursorUnlockRequested", showResults == true)
 		localPlayer:SetAttribute("PasrahMatchWindowVisible", showWindow == true)
 	end
 end
@@ -9225,6 +9599,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	if match.HuntOverlay and huntAssistSnapshot then
 		match.HuntOverlay.BackgroundColor3 = huntAssistSnapshot.overlayColor
 	end
+	self:_refreshMatchNavigationGuide(viewState)
 	if match.ObjectiveLabel then
 		if viewState == "Hunt" then
 			match.ObjectiveLabel.Text = getHuntObjectiveText()
@@ -10569,21 +10944,21 @@ function UISystem:_ensureJournalSubmitWidgets(window, widgets)
 	statusLabel.TextColor3 = Color3.fromRGB(200, 210, 222)
 	widgets.SubmitStatusLabel = statusLabel
 
-	local tutorialCard = ensureCard("JournalTutorialSection", "TUTORIAL MATCH", 86, 70, Color3.fromRGB(72, 88, 128))
+	local tutorialCard = ensureCard("JournalTutorialSection", "TUTORIAL MATCH", 138, 70, Color3.fromRGB(72, 88, 128))
 	local tutorialLabel = ensureChild(tutorialCard, "TutorialLabel", "TextLabel")
 	tutorialLabel.Position = UDim2.fromOffset(12, 28)
-	tutorialLabel.Size = UDim2.new(1, -24, 0, 34)
+	tutorialLabel.Size = UDim2.new(1, -24, 0, 76)
 	tutorialLabel.BackgroundTransparency = 1
 	tutorialLabel.Font = Enum.Font.Gotham
-	tutorialLabel.TextSize = 11
+	tutorialLabel.TextSize = 12
 	tutorialLabel.TextWrapped = true
 	tutorialLabel.TextXAlignment = Enum.TextXAlignment.Left
 	tutorialLabel.TextYAlignment = Enum.TextYAlignment.Top
 	tutorialLabel.TextColor3 = Color3.fromRGB(216, 224, 236)
 	widgets.TutorialLabel = tutorialLabel
 	local tutorialPrev = ensureChild(tutorialCard, "TutorialPrevButton", "TextButton")
-	tutorialPrev.Position = UDim2.fromOffset(12, 64)
-	tutorialPrev.Size = UDim2.fromOffset(56, 18)
+	tutorialPrev.Position = UDim2.fromOffset(12, 110)
+	tutorialPrev.Size = UDim2.fromOffset(68, 22)
 	tutorialPrev.BorderSizePixel = 0
 	tutorialPrev.Font = Enum.Font.GothamBold
 	tutorialPrev.TextSize = 10
@@ -10599,8 +10974,8 @@ function UISystem:_ensureJournalSubmitWidgets(window, widgets)
 		markRuntimeButtonBound(tutorialPrev)
 	end
 	local tutorialNext = ensureChild(tutorialCard, "TutorialNextButton", "TextButton")
-	tutorialNext.Position = UDim2.new(1, -68, 1, -22)
-	tutorialNext.Size = UDim2.fromOffset(56, 18)
+	tutorialNext.Position = UDim2.new(1, -80, 1, -28)
+	tutorialNext.Size = UDim2.fromOffset(68, 22)
 	tutorialNext.BorderSizePixel = 0
 	tutorialNext.Font = Enum.Font.GothamBold
 	tutorialNext.TextSize = 10
@@ -16036,7 +16411,20 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		})
 		self:_setPhase(MATCH_PHASE.PREPARING, payload)
 	elseif eventName == "MatchStarted" then
+		self._resultsCloseUnlockAt = nil
+		self._matchWindowDismissed = false
+		self._matchResult = createDefaultMatchResult()
 		self:_forceCloseAllPanelsForTeleport()
+		self:_setPhase(MATCH_PHASE.LOADING, payload)
+		local playerGui = self:_getPlayerGui()
+		local questPopupGui = playerGui and playerGui:FindFirstChild("QuestPopupGui")
+		if questPopupGui and questPopupGui:IsA("ScreenGui") then
+			questPopupGui.Enabled = false
+			local questPopupPanel = questPopupGui:FindFirstChild("Panel")
+			if questPopupPanel and questPopupPanel:IsA("GuiObject") then
+				questPopupPanel.Visible = false
+			end
+		end
 		self._preTeleportLoadingHideText = false
 		self._preTeleportLoadingActiveUntil = 0
 		self:_showTeleportOverlay(TELEPORT_OVERLAY_HOLD_SECONDS, {
@@ -16398,6 +16786,7 @@ function UISystem:_ensureUXLayers()
 		self._uxWidgets.match.HuntStatusBadge = huntStatusBadge
 		self._uxWidgets.match.HuntAssistLabel = huntAssistLabel
 		self._uxWidgets.match.HuntOverlay = overlay
+		self._uxWidgets.match.NavigationGuide = matchLayer and self:_ensureMatchNavigationGuideWidget(matchLayer) or nil
 		self._uxWidgets.match.ResultsPanel = results
 		self._uxWidgets.match.ResultsCard = resultsCard
 		self._uxWidgets.match.ResultsTitle = resultsTitle
@@ -16427,6 +16816,7 @@ function UISystem:_clearMatchUX()
 	local localPlayer = Players.LocalPlayer
 	if localPlayer then
 		localPlayer:SetAttribute("PasrahResultsSurfaceVisible", false)
+		localPlayer:SetAttribute("PasrahCursorUnlockRequested", false)
 		localPlayer:SetAttribute("PasrahMatchWindowVisible", false)
 	end
 
@@ -16459,6 +16849,9 @@ function UISystem:_clearMatchUX()
 		match.HuntOverlay.Visible = false
 		match.HuntOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 		match.HuntOverlay.BackgroundTransparency = 0.6
+	end
+	if match.NavigationGuide and match.NavigationGuide.Root then
+		match.NavigationGuide.Root.Visible = false
 	end
 	if match.ResultsPanel then
 		match.ResultsPanel.Visible = false
@@ -16964,6 +17357,78 @@ function UISystem:_ensureBasicUIs()
 	self:_applyVisibility()
 end
 
+function UISystem:_bindCriticalRoomBrowserActions(gui, floatGui)
+	if not gui or not gui:IsA("ScreenGui") then
+		return
+	end
+
+	local function bindButton(name, callback)
+		local button = gui:FindFirstChild(name, true)
+		if not (button and button:IsA("GuiButton")) then
+			return
+		end
+		local boundAttr = "PasrahCriticalRoomBrowserBound_" .. name
+		if button:GetAttribute(boundAttr) == true then
+			return
+		end
+		button:SetAttribute(boundAttr, true)
+		markRuntimeButtonBound(button)
+		connectButtonPress(button, callback)
+	end
+
+	bindButton("CreateRoomButton", function()
+		self:RoomBrowserCreateRoom()
+		if self._roomBrowser then
+			task.delay(0.1, function()
+				self._roomBrowser:RequestSnapshot()
+				self._roomBrowser:RequestRoomList()
+			end)
+		end
+	end)
+
+	bindButton("RefreshButton", function()
+		if self._roomBrowser then
+			self._roomBrowser:RequestSnapshot()
+			self._roomBrowser:RequestRoomList()
+		end
+	end)
+
+	bindButton("ReadyButton", function()
+		local state = self:GetRoomBrowserState() or {}
+		if state.isHost == true then
+			self:RoomBrowserHostStart(resolveEffectiveMapId(state, state.currentRoom), nil, state.selectedMode)
+		else
+			self:RoomBrowserSetReady(not (state.isReady == true))
+		end
+	end)
+
+	bindButton("StartButton", function()
+		local state = self:GetRoomBrowserState() or {}
+		if state.isHost == true then
+			self:RoomBrowserHostStart(resolveEffectiveMapId(state, state.currentRoom), nil, state.selectedMode)
+		end
+	end)
+
+	bindButton("LeaveRoomButton", function()
+		self:RoomBrowserLeaveRoom()
+	end)
+
+	bindButton("CloseButton", function()
+		self:_setRoomBrowserVisible(false)
+	end)
+
+	if floatGui and floatGui:IsA("ScreenGui") then
+		local floatButton = floatGui:FindFirstChild("RoomBrowserFloatButton", true)
+		if floatButton and floatButton:IsA("GuiButton") and floatButton:GetAttribute("PasrahCriticalRoomBrowserBound_Float") ~= true then
+			floatButton:SetAttribute("PasrahCriticalRoomBrowserBound_Float", true)
+			markRuntimeButtonBound(floatButton)
+			connectButtonPress(floatButton, function()
+				self:_toggleRoomBrowserVisible()
+			end)
+		end
+	end
+end
+
 function UISystem:_ensureRoomBrowserGui()
 	local playerGui = self:_getPlayerGui()
 	local player = Players.LocalPlayer
@@ -16972,6 +17437,7 @@ function UISystem:_ensureRoomBrowserGui()
 	end
 
 	if self._roomBrowserGui and self._roomBrowserGui.Parent == playerGui and self._roomBrowserWidgets and self._roomBrowserFloatGui and self._roomBrowserFloatGui.Parent == playerGui then
+		self:_bindCriticalRoomBrowserActions(self._roomBrowserGui, self._roomBrowserFloatGui)
 		return
 	end
 
@@ -16999,6 +17465,7 @@ function UISystem:_ensureRoomBrowserGui()
 	if not floatGui then
 		floatGui = playerGui:WaitForChild("RoomBrowserFloatUI", 10)
 	end
+	self:_bindCriticalRoomBrowserActions(gui, floatGui)
 	local shell = self:_bindAuthoredRoomBrowserUi(gui, floatGui)
 	if not shell then
 		-- Fallback wiring for owner-edited RoomBrowserUI contracts.

@@ -2,6 +2,7 @@ local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local Debris = game:GetService("Debris")
 
 local VFXController = {}
 VFXController.__index = VFXController
@@ -134,6 +135,16 @@ local ENVIRONMENTAL_SHOCK_PROFILES = {
 		riseTime = 0.04,
 		releaseTime = 0.14,
 	},
+	radionoise = {
+		Brightness = -0.018,
+		Contrast = 0.06,
+		Saturation = -0.22,
+		Tint = Color3.fromRGB(208, 222, 238),
+		BlurSize = 3,
+		AtmosphereDensityDelta = 0.012,
+		riseTime = 0.04,
+		releaseTime = 0.14,
+	},
 	temperaturedrop = {
 		Brightness = -0.012,
 		Contrast = 0.1,
@@ -143,6 +154,16 @@ local ENVIRONMENTAL_SHOCK_PROFILES = {
 		AtmosphereDensityDelta = 0.018,
 		riseTime = 0.07,
 		releaseTime = 0.26,
+	},
+	shadowmovement = {
+		Brightness = -0.02,
+		Contrast = 0.18,
+		Saturation = -0.24,
+		Tint = Color3.fromRGB(180, 198, 242),
+		BlurSize = 10,
+		AtmosphereDensityDelta = 0.028,
+		riseTime = 0.07,
+		releaseTime = 0.24,
 	},
 }
 
@@ -1470,7 +1491,7 @@ function VFXController:_triggerEnvironmentalShock(payload)
 			"PasrahVFXLastPropCount",
 			"Props"
 		)
-	elseif eventToken == "radiostatic" then
+	elseif eventToken == "radiostatic" or eventToken == "radionoise" then
 		self:_pulseNearbyProps(
 			self:_resolveEventPosition(payload),
 			24,
@@ -1482,7 +1503,7 @@ function VFXController:_triggerEnvironmentalShock(payload)
 			"PasrahVFXLastElectronicCount",
 			"Props"
 		)
-	elseif eventToken == "shadowapparition" then
+	elseif eventToken == "shadowapparition" or eventToken == "shadowmovement" then
 		self:_spawnShadowApparition(self:_resolveEventPosition(payload) or Vector3.new())
 	end
 	self:_playTransientShock(cloned)

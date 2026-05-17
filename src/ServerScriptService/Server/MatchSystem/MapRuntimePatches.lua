@@ -1,5 +1,6 @@
 local MapRuntimePatches = {}
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
@@ -10,6 +11,7 @@ local SAFE_ZONE_PATCH_ATTR = "SafeZoneRuntimePatched"
 local MATERIAL_PATCH_ATTR = "MapMaterialRuntimePatched"
 local TRAVERSAL_GUIDE_PATCH_ATTR = "TraversalGuideRuntimePatched"
 local LOGIC_VOLUME_PATCH_ATTR = "LogicVolumesRuntimeHidden"
+local LEGACY_ASSET_SCRIPTS_DISABLED_ATTR = "LegacyAssetScriptsDisabled"
 local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
 local BOUNDARY_PATCH_ATTR = "RuntimeBoundaryPatched"
 local PREPARATION_STAGING_FOLDER_NAME = "PreparationStagingRuntime"
@@ -21,8 +23,8 @@ local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
 local DOOR_OPEN_SOUND_ATTR = "DoorOpenSoundId"
 local DOOR_CLOSE_SOUND_ATTR = "DoorCloseSoundId"
 local DEFAULT_DOOR_POLICY = "HybridRadiusPrompt"
-local DEFAULT_DOOR_OPEN_SOUND_ID = "rbxassetid://83005562781593"
-local DEFAULT_DOOR_CLOSE_SOUND_ID = "rbxassetid://78764817933410"
+local DEFAULT_DOOR_OPEN_SOUND_ID = "rbxassetid://119680795545028"
+local DEFAULT_DOOR_CLOSE_SOUND_ID = "rbxassetid://79226838058023"
 local MIN_SEGMENT_SIZE = 0.25
 local PREPARATION_TWEEN_INFO = TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local PREPARATION_FAST_TWEEN_INFO = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -320,6 +322,7 @@ local PREPARATION_TOOL_STATIONS = {
 	{
 		name = "ToolStation_EMF",
 		title = "EMF",
+		toolType = "JejakEnergi",
 		subtitle = "Medok sweep",
 		color = Color3.fromRGB(132, 186, 255),
 		modelName = "JejakEnergi",
@@ -329,6 +332,7 @@ local PREPARATION_TOOL_STATIONS = {
 	{
 		name = "ToolStation_UV",
 		title = "UV CAM",
+		toolType = "BolaArwah",
 		subtitle = "To'un trace",
 		color = Color3.fromRGB(214, 146, 255),
 		modelName = "BolaArwah",
@@ -338,6 +342,7 @@ local PREPARATION_TOOL_STATIONS = {
 	{
 		name = "ToolStation_THERMO",
 		title = "THERMO",
+		toolType = "SuhuMembeku",
 		subtitle = "Freeze check",
 		color = Color3.fromRGB(142, 214, 198),
 		modelName = "SuhuMembeku",
@@ -347,6 +352,7 @@ local PREPARATION_TOOL_STATIONS = {
 	{
 		name = "ToolStation_BOX",
 		title = "BOX",
+		toolType = "KotakArwah",
 		subtitle = "Voice bait",
 		color = Color3.fromRGB(255, 196, 118),
 		modelName = "KotakArwah",
@@ -356,6 +362,7 @@ local PREPARATION_TOOL_STATIONS = {
 	{
 		name = "ToolStation_WRITING",
 		title = "WRITING",
+		toolType = "BukuTerkutuk",
 		subtitle = "Book proof",
 		color = Color3.fromRGB(150, 189, 255),
 		modelName = "BukuTerkutuk",
@@ -365,6 +372,7 @@ local PREPARATION_TOOL_STATIONS = {
 	{
 		name = "ToolStation_SENSOR",
 		title = "SENSOR",
+		toolType = "GerakanGaib",
 		subtitle = "Movement read",
 		color = Color3.fromRGB(255, 130, 130),
 		modelName = "GerakanGaib",
@@ -372,6 +380,92 @@ local PREPARATION_TOOL_STATIONS = {
 		modelYaw = 90,
 	},
 }
+
+local function disableLegacyAssetScripts(mapId, mapClone)
+	if typeof(mapClone) ~= "Instance" then
+		return false
+	end
+	if mapClone:GetAttribute(LEGACY_ASSET_SCRIPTS_DISABLED_ATTR) == true then
+		return false
+	end
+
+	local normalizedMapId = tostring(mapId or ""):gsub("[%s_%-]+", ""):lower()
+	local disablesImportedScripts = {
+		hauntedhouse = true,
+		abandonedpalace = true,
+		emptybuilding = true,
+		studiommnineteen = true,
+	}
+	if disablesImportedScripts[normalizedMapId] ~= true then
+		return false
+	end
+
+	local disabledCount = 0
+	for _, descendant in ipairs(mapClone:GetDescendants()) do
+		if descendant:IsA("BaseScript") then
+			descendant.Disabled = true
+			descendant:SetAttribute("PasrahDisabledLegacyMapScript", true)
+			disabledCount += 1
+		end
+	end
+
+	mapClone:SetAttribute(LEGACY_ASSET_SCRIPTS_DISABLED_ATTR, true)
+	mapClone:SetAttribute("LegacyAssetScriptsDisabledCount", disabledCount)
+	return disabledCount > 0
+end
+
+function MapRuntimePatches.DisableLegacyAssetScripts(mapId, mapClone)
+	return disableLegacyAssetScripts(mapId, mapClone)
+end
+
+local INTERACTION_GUIDE_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldMarkers", "InteractionGuideBillboardTemplate" }
+local TRAVERSAL_GUIDE_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldMarkers", "TraversalGuideBillboardTemplate" }
+local MAP_BOARD_SURFACE_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldSurfaces", "MapBoardSurfaceTemplate" }
+local WORLD_HIGHLIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldHighlightTemplate" }
+local WORLD_POINT_LIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldPointLightTemplate" }
+local WORLD_SPOT_LIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldSpotLightTemplate" }
+local WORLD_PARTICLE_EMITTER_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldParticleEmitterTemplate" }
+
+local function resolveChildPath(root, path)
+	local node = root
+	for _, segment in ipairs(path) do
+		if typeof(node) ~= "Instance" then
+			return nil
+		end
+		node = node:FindFirstChild(segment)
+	end
+	return node
+end
+
+local function cloneGuideBillboardTemplate(path, name)
+	local template = resolveChildPath(ReplicatedStorage, path)
+	if template and template:IsA("BillboardGui") then
+		local clone = template:Clone()
+		clone.Name = name
+		return clone
+	end
+	return nil
+end
+
+local function cloneGuideSurfaceTemplate(path, name)
+	local template = resolveChildPath(ReplicatedStorage, path)
+	if template and template:IsA("SurfaceGui") then
+		local clone = template:Clone()
+		clone.Name = name
+		return clone
+	end
+	return nil
+end
+
+local function cloneWorldEffectTemplate(path, name, className)
+	local template = resolveChildPath(ReplicatedStorage, path)
+	if template and template:IsA(className) then
+		local clone = template:Clone()
+		clone.Name = name
+		return clone
+	end
+	return nil
+end
 
 local function normalizeToken(value)
 	if type(value) ~= "string" then
@@ -647,7 +741,11 @@ local function ensureInteractionGuide(interactionPoint, roomLabel)
 		if billboard then
 			billboard:Destroy()
 		end
-		billboard = Instance.new("BillboardGui")
+		billboard = cloneGuideBillboardTemplate(INTERACTION_GUIDE_TEMPLATE_PATH, INTERACTION_GUIDE_BILLBOARD_NAME)
+		if not billboard then
+			warn("[MapRuntimePatches] Missing authored visual template: WorldMarkers.InteractionGuideBillboardTemplate")
+			return nil
+		end
 		billboard.Name = INTERACTION_GUIDE_BILLBOARD_NAME
 		billboard.Parent = folder
 	end
@@ -668,48 +766,8 @@ local function ensureInteractionGuide(interactionPoint, roomLabel)
 		if panel then
 			panel:Destroy()
 		end
-		panel = Instance.new("Frame")
-		panel.Name = "Panel"
-		panel.Parent = billboard
-
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 10)
-		corner.Parent = panel
-
-		local stroke = Instance.new("UIStroke")
-		stroke.Name = "Stroke"
-		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Color = palette.accent
-		stroke.Transparency = 0.2
-		stroke.Thickness = 1.2
-		stroke.Parent = panel
-
-		local title = Instance.new("TextLabel")
-		title.Name = "Title"
-		title.BackgroundTransparency = 1
-		title.BorderSizePixel = 0
-		title.Position = UDim2.new(0, 14, 0, 5)
-		title.Size = UDim2.new(1, -28, 0, 16)
-		title.Font = Enum.Font.GothamBold
-		title.TextColor3 = palette.title
-		title.TextSize = 12
-		title.TextWrapped = true
-		title.TextXAlignment = Enum.TextXAlignment.Left
-		title.Parent = panel
-
-		local subtitle = Instance.new("TextLabel")
-		subtitle.Name = "Subtitle"
-		subtitle.BackgroundTransparency = 1
-		subtitle.BorderSizePixel = 0
-		subtitle.Position = UDim2.new(0, 14, 0, 20)
-		subtitle.Size = UDim2.new(1, -28, 0, 14)
-		subtitle.Font = Enum.Font.GothamMedium
-		subtitle.Text = guideSubtitle
-		subtitle.TextColor3 = palette.subtitle
-		subtitle.TextSize = 10
-		subtitle.TextWrapped = true
-		subtitle.TextXAlignment = Enum.TextXAlignment.Left
-		subtitle.Parent = panel
+		warn("[MapRuntimePatches] InteractionGuideBillboardTemplate missing required child: Panel")
+		return nil
 	end
 
 	panel.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
@@ -804,24 +862,6 @@ local function createFloorSegment(source, parent, name, bounds)
 	)
 	segment.Parent = parent
 	return segment
-end
-
-local function createGuideTextLabel(name, font, textSize, textColor, text, height, position)
-	local label = Instance.new("TextLabel")
-	label.Name = name
-	label.BackgroundTransparency = 1
-	label.BorderSizePixel = 0
-	label.Position = position
-	label.Size = UDim2.new(1, -18, 0, height)
-	label.Font = font
-	label.Text = text
-	label.TextColor3 = textColor
-	label.TextSize = textSize
-	label.TextStrokeTransparency = 0.82
-	label.TextWrapped = true
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.TextYAlignment = Enum.TextYAlignment.Top
-	return label
 end
 
 local function ensureFolder(parent, name)
@@ -1072,7 +1112,11 @@ local function ensureBoardSurface(part, surfaceName, face, titleText, subtitleTe
 		if surface then
 			surface:Destroy()
 		end
-		surface = Instance.new("SurfaceGui")
+		surface = cloneGuideSurfaceTemplate(MAP_BOARD_SURFACE_TEMPLATE_PATH, surfaceName)
+		if not surface then
+			warn("[MapRuntimePatches] Missing authored visual template: WorldSurfaces.MapBoardSurfaceTemplate")
+			return nil
+		end
 		surface.Name = surfaceName
 		surface.Parent = part
 	end
@@ -1092,65 +1136,8 @@ local function ensureBoardSurface(part, surfaceName, face, titleText, subtitleTe
 		if panel then
 			panel:Destroy()
 		end
-		panel = Instance.new("Frame")
-		panel.Name = "Panel"
-		panel.Parent = surface
-
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 18)
-		corner.Parent = panel
-
-		local stroke = Instance.new("UIStroke")
-		stroke.Name = "Stroke"
-		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Transparency = 0.14
-		stroke.Thickness = 2
-		stroke.Parent = panel
-
-		local accent = Instance.new("Frame")
-		accent.Name = "Accent"
-		accent.AnchorPoint = Vector2.new(0, 0.5)
-		accent.BorderSizePixel = 0
-		accent.Position = UDim2.new(0, 18, 0.5, 0)
-		accent.Size = UDim2.fromOffset(6, 180)
-		accent.Parent = panel
-
-		local accentCorner = Instance.new("UICorner")
-		accentCorner.CornerRadius = UDim.new(1, 0)
-		accentCorner.Parent = accent
-
-		createGuideTextLabel(
-			"Title",
-			Enum.Font.GothamBold,
-			28,
-			Color3.fromRGB(242, 246, 252),
-			titleText or "",
-			38,
-			UDim2.new(0, 38, 0, 26)
-		).Parent = panel
-
-		createGuideTextLabel(
-			"Subtitle",
-			Enum.Font.GothamMedium,
-			18,
-			Color3.fromRGB(188, 204, 236),
-			subtitleText or "",
-			28,
-			UDim2.new(0, 38, 0, 66)
-		).Parent = panel
-
-		local body = createGuideTextLabel(
-			"Body",
-			Enum.Font.GothamMedium,
-			16,
-			Color3.fromRGB(220, 228, 238),
-			"",
-			260,
-			UDim2.new(0, 38, 0, 116)
-		)
-		body.Size = UDim2.new(1, -66, 1, -138)
-		body.TextWrapped = true
-		body.Parent = panel
+		warn("[MapRuntimePatches] MapBoardSurfaceTemplate missing required child: Panel")
+		return nil
 	end
 
 	panel.Size = UDim2.fromScale(1, 1)
@@ -1310,7 +1297,8 @@ local function updatePreparationToolStationState(toolPart, prompt, toolData, sel
 		return
 	end
 
-	local isSelected = type(selectedTool) == "string" and selectedTool == toolData.title
+	local selectedToken = type(selectedTool) == "string" and selectedTool or ""
+	local isSelected = selectedToken ~= "" and (selectedToken == toolData.title or selectedToken == toolData.toolType)
 	local accentColor = toolData.color or Color3.fromRGB(132, 186, 255)
 	local highlightColor = accentColor:Lerp(Color3.new(1, 1, 1), 0.18)
 	local idleColor = accentColor:Lerp(Color3.fromRGB(46, 52, 64), 0.18)
@@ -1363,7 +1351,11 @@ local function updatePreparationToolStationState(toolPart, prompt, toolData, sel
 		if highlight then
 			highlight:Destroy()
 		end
-		highlight = Instance.new("Highlight")
+		highlight = cloneWorldEffectTemplate(WORLD_HIGHLIGHT_TEMPLATE_PATH, "StateHighlight", "Highlight")
+		if not highlight then
+			warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldHighlightTemplate")
+			return
+		end
 		highlight.Name = "StateHighlight"
 		highlight.DepthMode = Enum.HighlightDepthMode.Occluded
 		highlight.Adornee = toolPart
@@ -1380,7 +1372,11 @@ local function updatePreparationToolStationState(toolPart, prompt, toolData, sel
 		if stateLight then
 			stateLight:Destroy()
 		end
-		stateLight = Instance.new("PointLight")
+		stateLight = cloneWorldEffectTemplate(WORLD_POINT_LIGHT_TEMPLATE_PATH, "StateLight", "PointLight")
+		if not stateLight then
+			warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+			return
+		end
 		stateLight.Name = "StateLight"
 		stateLight.Parent = toolPart
 	end
@@ -1479,7 +1475,11 @@ local function ensurePreparationBurstEmitter(part, name, baseColor)
 		emitter = nil
 	end
 	if not emitter then
-		emitter = Instance.new("ParticleEmitter")
+		emitter = cloneWorldEffectTemplate(WORLD_PARTICLE_EMITTER_TEMPLATE_PATH, name, "ParticleEmitter")
+		if not emitter then
+			warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldParticleEmitterTemplate")
+			return nil
+		end
 		emitter.Name = name
 		emitter.Parent = part
 	end
@@ -1585,14 +1585,20 @@ local function updatePreparationEntryBeacon(beaconPart, selectedTool, breachOpen
 		if light then
 			light:Destroy()
 		end
-		light = Instance.new("PointLight")
-		light.Name = "Light"
-		light.Parent = beaconPart
+		light = cloneWorldEffectTemplate(WORLD_POINT_LIGHT_TEMPLATE_PATH, "Light", "PointLight")
+		if light then
+			light.Name = "Light"
+			light.Parent = beaconPart
+		else
+			warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+		end
 	end
-	light.Color = color
-	light.Brightness = breachOpen and 1.8 or 1.25
-	light.Range = 16
-	light.Shadows = false
+	if light then
+		light.Color = color
+		light.Brightness = breachOpen and 1.8 or 1.25
+		light.Range = 16
+		light.Shadows = false
+	end
 end
 
 local function updatePreparationEntryLane(folder, selectedTool, breachOpen, profile)
@@ -1880,6 +1886,262 @@ local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen, p
 	)
 end
 
+local function findPreparationToolDataByType(toolType)
+	if type(toolType) ~= "string" or toolType == "" then
+		return nil
+	end
+	for _, toolData in ipairs(PREPARATION_TOOL_STATIONS) do
+		if toolData.toolType == toolType or toolData.title == toolType or toolData.name == toolType then
+			return toolData
+		end
+	end
+	return nil
+end
+
+local function resolvePreparationToolModelTemplate(toolData)
+	if type(toolData) ~= "table" then
+		return nil
+	end
+	local assetsFolder = ReplicatedStorage:FindFirstChild("Assets")
+	local modelsFolder = assetsFolder and assetsFolder:FindFirstChild("Models")
+	local toolsFolder = modelsFolder and modelsFolder:FindFirstChild("Tools")
+	if not toolsFolder then
+		return nil
+	end
+	local modelName = type(toolData.modelName) == "string" and toolData.modelName or toolData.toolType
+	local template = modelName and toolsFolder:FindFirstChild(modelName)
+	if not template and type(toolData.toolType) == "string" then
+		template = toolsFolder:FindFirstChild(toolData.toolType)
+	end
+	return template and template:IsA("Model") and template or nil
+end
+
+local function ensurePreparationToolDisplay(toolPart, toolData)
+	if not (toolPart and toolPart:IsA("BasePart") and type(toolData) == "table") then
+		return nil
+	end
+
+	local display = toolPart:FindFirstChild("PreparationToolDisplay")
+	local template = resolvePreparationToolModelTemplate(toolData)
+	if not template then
+		if display then
+			display:Destroy()
+		end
+		return nil
+	end
+	if not (display and display:IsA("Model") and display:GetAttribute("PasrahToolType") == toolData.toolType) then
+		if display then
+			display:Destroy()
+		end
+		display = template:Clone()
+		display.Name = "PreparationToolDisplay"
+		display:SetAttribute("PasrahToolType", toolData.toolType)
+		display:SetAttribute("PasrahPreparationDisplay", true)
+		display.Parent = toolPart
+	end
+
+	for _, descendant in ipairs(display:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.Anchored = true
+			descendant.CanCollide = false
+			descendant.CanTouch = false
+			descendant.CanQuery = false
+		end
+	end
+
+	if display:GetAttribute("PasrahToolDisplayScaled") ~= true then
+		local okSize, size = pcall(function()
+			return display:GetExtentsSize()
+		end)
+		if okSize and typeof(size) == "Vector3" then
+			local maxDim = math.max(size.X, size.Y, size.Z)
+			local targetDim = math.max(0.18, math.min(toolPart.Size.X * 0.74, toolPart.Size.Z * 0.74, 1.25))
+			if maxDim > 0.001 then
+				local scaleFactor = math.clamp(targetDim / maxDim, 0.08, 4)
+				pcall(function()
+					display:ScaleTo(scaleFactor)
+				end)
+			end
+		end
+		display:SetAttribute("PasrahToolDisplayScaled", true)
+	end
+
+	local lift = tonumber(toolData.modelLift) or 0.62
+	local yaw = math.rad(tonumber(toolData.modelYaw) or 0)
+	local pivot = toolPart.CFrame
+		* CFrame.new(0, (toolPart.Size.Y * 0.5) + lift, 0)
+		* CFrame.Angles(0, yaw, 0)
+	pcall(function()
+		display:PivotTo(pivot)
+	end)
+	return display
+end
+
+local function isPreparationMatchPlayer(player, matchContext)
+	if not (typeof(player) == "Instance" and player:IsA("Player")) then
+		return false
+	end
+	if type(matchContext) ~= "table" then
+		return tostring(player:GetAttribute("MatchLifecyclePhase") or "") == "PreparationPhase"
+	end
+	local expectedMatchId = tostring(matchContext.matchId or matchContext.id or "")
+	local playerMatchId = tostring(player:GetAttribute("MatchId") or "")
+	if expectedMatchId ~= "" and playerMatchId ~= "" and playerMatchId ~= expectedMatchId then
+		return false
+	end
+	for _, matchPlayer in ipairs(matchContext.players or {}) do
+		if matchPlayer == player then
+			return true
+		end
+	end
+	return tostring(player:GetAttribute("MatchLifecyclePhase") or "") == "PreparationPhase"
+end
+
+local function resolveSelectedPreparationTool(matchContext)
+	local selectedTool = type(matchContext) == "table" and tostring(matchContext.selectedPreparationTool or "") or ""
+	local selectedLabel = type(matchContext) == "table" and tostring(matchContext.selectedPreparationToolLabel or "") or ""
+	if selectedTool ~= "" then
+		local toolData = findPreparationToolDataByType(selectedTool)
+		return selectedTool, selectedLabel ~= "" and selectedLabel or (toolData and toolData.title or selectedTool)
+	end
+
+	if type(matchContext) == "table" then
+		for _, player in ipairs(matchContext.players or {}) do
+			if typeof(player) == "Instance" and player:IsA("Player") then
+				local source = tostring(player:GetAttribute("PreparationFocusToolSource") or "")
+				local focusTool = tostring(player:GetAttribute("PreparationFocusTool") or "")
+				if source == "WorldToolStation" and focusTool ~= "" then
+					local toolData = findPreparationToolDataByType(focusTool)
+					return focusTool, tostring(player:GetAttribute("PreparationFocusToolLabel") or (toolData and toolData.title) or focusTool)
+				end
+			end
+		end
+	end
+	return "", ""
+end
+
+local function updatePreparationGateBlocker(blocker, selectedTool, selectedLabel, breachOpen)
+	if not (blocker and blocker:IsA("BasePart")) then
+		return
+	end
+	local unlocked = type(selectedTool) == "string" and selectedTool ~= ""
+	blocker.CanCollide = not unlocked
+	blocker.CanTouch = false
+	blocker.CanQuery = true
+	blocker.Transparency = unlocked and 0.86 or 0.35
+	blocker.Color = unlocked and Color3.fromRGB(96, 178, 146) or Color3.fromRGB(170, 108, 92)
+	blocker:SetAttribute("PasrahPreparationGateLocked", not unlocked)
+	blocker:SetAttribute("PasrahPreparationSelectedTool", unlocked and selectedTool or nil)
+	blocker:SetAttribute("PasrahPreparationSelectedToolLabel", unlocked and selectedLabel or nil)
+
+	local title = unlocked and "TOOLS SIAP" or "SILAHKAN PILIH TOOLS"
+	local subtitle = unlocked and tostring(selectedLabel or selectedTool) .. " terbawa" or "Ambil satu tool dari meja"
+	local body = unlocked
+		and (breachOpen and "Pintu sudah terbuka. Masuk untuk investigasi." or "Buka pintu depan untuk mulai investigasi.")
+		or "Pilih tool evidence di station. Gate ini baru hilang setelah tool benar-benar dipilih."
+	ensureBoardSurface(
+		blocker,
+		"GateLabel",
+		Enum.NormalId.Front,
+		title,
+		subtitle,
+		body,
+		unlocked and Color3.fromRGB(142, 214, 198) or Color3.fromRGB(240, 156, 120)
+	)
+end
+
+local function applyPreparationToolSelectionState(preparationFolder, matchContext, breachOpen)
+	if typeof(preparationFolder) ~= "Instance" then
+		return false
+	end
+	local selectedTool, selectedLabel = resolveSelectedPreparationTool(matchContext)
+	local hasSelection = selectedTool ~= ""
+	preparationFolder:SetAttribute("SelectedPreparationTool", hasSelection and selectedTool or nil)
+	preparationFolder:SetAttribute("SelectedPreparationToolLabel", hasSelection and selectedLabel or nil)
+	preparationFolder:SetAttribute("PreparationEntryLaneState", breachOpen and "breach" or (hasSelection and "armed" or "ready"))
+
+	for _, toolData in ipairs(PREPARATION_TOOL_STATIONS) do
+		local toolPart = preparationFolder:FindFirstChild(toolData.name, true)
+		if toolPart and toolPart:IsA("BasePart") then
+			toolPart:SetAttribute("PasrahPreparationToolType", toolData.toolType)
+			toolPart:SetAttribute("PasrahPreparationToolLabel", toolData.title)
+			local prompt = ensurePrompt(toolPart, "Prompt", "Pilih Fokus Tool", toolData.title)
+			ensurePreparationToolDisplay(toolPart, toolData)
+			local statePad = preparationFolder:FindFirstChild(toolData.name .. "_Pad", true)
+			updatePreparationToolStationState(toolPart, prompt, toolData, selectedTool, breachOpen == true, statePad)
+		end
+	end
+
+	local toolsBoard = preparationFolder:FindFirstChild("PreparationToolsBoard", true)
+		or preparationFolder:FindFirstChild("PreparationToolsTable", true)
+	if toolsBoard and toolsBoard:IsA("BasePart") then
+		updatePreparationToolsBoard(toolsBoard, selectedLabel ~= "" and selectedLabel or nil)
+	end
+	local objectiveBoard = preparationFolder:FindFirstChild("PreparationObjectiveBoard", true)
+	if objectiveBoard and objectiveBoard:IsA("BasePart") then
+		updatePreparationObjectiveBoard(objectiveBoard, buildPreparationBoardContent(nil, matchContext or {}), selectedLabel ~= "" and selectedLabel or nil, breachOpen == true)
+	end
+	local entrySign = preparationFolder:FindFirstChild("PreparationEntrySign", true)
+	if entrySign then
+		updatePreparationEntrySign(entrySign, selectedLabel ~= "" and selectedLabel or nil, breachOpen == true, nil)
+	end
+	updatePreparationEntryLane(preparationFolder, selectedLabel ~= "" and selectedLabel or selectedTool, breachOpen == true, nil)
+	updatePreparationGateBlocker(
+		preparationFolder:FindFirstChild("PreparationToolGateBlocker", true),
+		selectedTool,
+		selectedLabel ~= "" and selectedLabel or selectedTool,
+		breachOpen == true
+	)
+	return true
+end
+
+local function bindPreparationToolStations(preparationFolder, matchContext)
+	if typeof(preparationFolder) ~= "Instance" then
+		return false
+	end
+
+	if type(matchContext) == "table" and type(matchContext._preparationToolPromptConnections) ~= "table" then
+		matchContext._preparationToolPromptConnections = {}
+	end
+
+	for _, toolData in ipairs(PREPARATION_TOOL_STATIONS) do
+		local toolPart = preparationFolder:FindFirstChild(toolData.name, true)
+		if not (toolPart and toolPart:IsA("BasePart")) then
+			continue
+		end
+		local prompt = ensurePrompt(toolPart, "Prompt", "Pilih Fokus Tool", toolData.title)
+		ensurePreparationToolDisplay(toolPart, toolData)
+		if prompt and prompt:GetAttribute("PasrahPreparationToolPromptBound") ~= true then
+			prompt:SetAttribute("PasrahPreparationToolPromptBound", true)
+			local connection = prompt.Triggered:Connect(function(player)
+				if not isPreparationMatchPlayer(player, matchContext) then
+					return
+				end
+				if type(matchContext) == "table" and tostring(matchContext.phase or "") ~= "PreparationPhase" then
+					return
+				end
+
+				player:SetAttribute("PreparationFocusTool", toolData.toolType)
+				player:SetAttribute("PreparationFocusToolLabel", toolData.title)
+				player:SetAttribute("PreparationFocusToolSource", "WorldToolStation")
+				player:SetAttribute("PasrahPreparationToolSelected", true)
+				player:SetAttribute("PasrahEquippedToolType", toolData.toolType)
+				player:SetAttribute("PasrahToolUseStamp", os.clock())
+				if type(matchContext) == "table" then
+					matchContext.selectedPreparationTool = toolData.toolType
+					matchContext.selectedPreparationToolLabel = toolData.title
+				end
+				applyPreparationToolSelectionState(preparationFolder, matchContext, false)
+			end)
+			if type(matchContext) == "table" and type(matchContext._preparationToolPromptConnections) == "table" then
+				table.insert(matchContext._preparationToolPromptConnections, connection)
+			end
+		end
+	end
+
+	return applyPreparationToolSelectionState(preparationFolder, matchContext, false)
+end
+
 local function movePlayersToPreparationBreachTargets(folder, matchContext, outward)
 	if typeof(folder) ~= "Instance" or type(matchContext) ~= "table" then
 		return false
@@ -1983,14 +2245,20 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 		if glowLight then
 			glowLight:Destroy()
 		end
-		glowLight = Instance.new("PointLight")
-		glowLight.Name = "Light"
-		glowLight.Parent = marqueeGlow
+		glowLight = cloneWorldEffectTemplate(WORLD_POINT_LIGHT_TEMPLATE_PATH, "Light", "PointLight")
+		if glowLight then
+			glowLight.Name = "Light"
+			glowLight.Parent = marqueeGlow
+		else
+			warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+		end
 	end
-	glowLight.Range = 18
-	glowLight.Brightness = 1.1
-	glowLight.Color = readyAccent
-	glowLight.Shadows = false
+	if glowLight then
+		glowLight.Range = 18
+		glowLight.Brightness = 1.1
+		glowLight.Color = readyAccent
+		glowLight.Shadows = false
+	end
 
 	local crest = ensurePart(folder, "PreparationSiteCrest")
 	configureAccentDrivenPart(
@@ -2275,14 +2543,20 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 				if lanternLight then
 					lanternLight:Destroy()
 				end
-				lanternLight = Instance.new("PointLight")
-				lanternLight.Name = "Light"
-				lanternLight.Parent = porchLantern
+				lanternLight = cloneWorldEffectTemplate(WORLD_POINT_LIGHT_TEMPLATE_PATH, "Light", "PointLight")
+				if lanternLight then
+					lanternLight.Name = "Light"
+					lanternLight.Parent = porchLantern
+				else
+					warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+				end
 			end
-			lanternLight.Range = 14
-			lanternLight.Brightness = 1.2
-			lanternLight.Color = Color3.fromRGB(255, 214, 170)
-			lanternLight.Shadows = false
+			if lanternLight then
+				lanternLight.Range = 14
+				lanternLight.Brightness = 1.2
+				lanternLight.Color = Color3.fromRGB(255, 214, 170)
+				lanternLight.Shadows = false
+			end
 
 			local hedge = ensurePart(folder, "PreparationHedge_" .. tostring(index))
 			configurePart(
@@ -2442,14 +2716,20 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 				if flameLight then
 					flameLight:Destroy()
 				end
-				flameLight = Instance.new("PointLight")
-				flameLight.Name = "Light"
-				flameLight.Parent = brazierFlame
+				flameLight = cloneWorldEffectTemplate(WORLD_POINT_LIGHT_TEMPLATE_PATH, "Light", "PointLight")
+				if flameLight then
+					flameLight.Name = "Light"
+					flameLight.Parent = brazierFlame
+				else
+					warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+				end
 			end
-			flameLight.Range = 18
-			flameLight.Brightness = 1.7
-			flameLight.Color = readyAccent
-			flameLight.Shadows = false
+			if flameLight then
+				flameLight.Range = 18
+				flameLight.Brightness = 1.7
+				flameLight.Color = readyAccent
+				flameLight.Shadows = false
+			end
 
 			local banner = ensurePart(folder, "PreparationBanner_" .. tostring(index))
 			configurePart(
@@ -2523,14 +2803,20 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 			if relicLight then
 				relicLight:Destroy()
 			end
-			relicLight = Instance.new("PointLight")
-			relicLight.Name = "Light"
-			relicLight.Parent = relicCore
+			relicLight = cloneWorldEffectTemplate(WORLD_POINT_LIGHT_TEMPLATE_PATH, "Light", "PointLight")
+			if relicLight then
+				relicLight.Name = "Light"
+				relicLight.Parent = relicCore
+			else
+				warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+			end
 		end
-		relicLight.Range = 16
-		relicLight.Brightness = 1.35
-		relicLight.Color = readyAccent
-		relicLight.Shadows = false
+		if relicLight then
+			relicLight.Range = 16
+			relicLight.Brightness = 1.35
+			relicLight.Color = readyAccent
+			relicLight.Shadows = false
+		end
 		local sealMosaic = ensurePart(folder, "PreparationSealMosaic")
 		configurePart(
 			sealMosaic,
@@ -2715,16 +3001,22 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 				if worklight then
 					worklight:Destroy()
 				end
-				worklight = Instance.new("SpotLight")
-				worklight.Name = "Light"
-				worklight.Parent = worklightHead
+				worklight = cloneWorldEffectTemplate(WORLD_SPOT_LIGHT_TEMPLATE_PATH, "Light", "SpotLight")
+				if worklight then
+					worklight.Name = "Light"
+					worklight.Parent = worklightHead
+				else
+					warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldSpotLightTemplate")
+				end
 			end
-			worklight.Angle = 72
-			worklight.Brightness = 2.2
-			worklight.Range = 28
-			worklight.Color = Color3.fromRGB(224, 232, 255)
-			worklight.Face = Enum.NormalId.Front
-			worklight.Shadows = false
+			if worklight then
+				worklight.Angle = 72
+				worklight.Brightness = 2.2
+				worklight.Range = 28
+				worklight.Color = Color3.fromRGB(224, 232, 255)
+				worklight.Face = Enum.NormalId.Front
+				worklight.Shadows = false
+			end
 			local hazardRail = ensurePart(folder, "PreparationHazardRail")
 			configurePart(
 				hazardRail,
@@ -2900,14 +3192,20 @@ local function buildPreparationStageDecor(folder, profile, platformCenter, runne
 				if scannerLight then
 					scannerLight:Destroy()
 				end
-				scannerLight = Instance.new("PointLight")
-				scannerLight.Name = "Light"
-				scannerLight.Parent = scannerGlow
+				scannerLight = cloneWorldEffectTemplate(WORLD_POINT_LIGHT_TEMPLATE_PATH, "Light", "PointLight")
+				if scannerLight then
+					scannerLight.Name = "Light"
+					scannerLight.Parent = scannerGlow
+				else
+					warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+				end
 			end
-			scannerLight.Range = 14
-			scannerLight.Brightness = 1.4
-			scannerLight.Color = Color3.fromRGB(114, 182, 255)
-			scannerLight.Shadows = false
+			if scannerLight then
+				scannerLight.Range = 14
+				scannerLight.Brightness = 1.4
+				scannerLight.Color = Color3.fromRGB(114, 182, 255)
+				scannerLight.Shadows = false
+			end
 			for index, side in ipairs({ -1, 1 }) do
 				local dataColumn = ensurePart(folder, "PreparationDataColumn_" .. tostring(index))
 				configurePart(
@@ -3178,7 +3476,11 @@ local function ensureTraversalGuide(part)
 		if highlight then
 			highlight:Destroy()
 		end
-		highlight = Instance.new("Highlight")
+		highlight = cloneWorldEffectTemplate(WORLD_HIGHLIGHT_TEMPLATE_PATH, TRAVERSAL_GUIDE_HIGHLIGHT_NAME, "Highlight")
+		if not highlight then
+			warn("[MapRuntimePatches] Missing authored visual template: WorldEffects.WorldHighlightTemplate")
+			return nil
+		end
 		highlight.Name = TRAVERSAL_GUIDE_HIGHLIGHT_NAME
 		highlight.Parent = folder
 	end
@@ -3195,7 +3497,11 @@ local function ensureTraversalGuide(part)
 		if labelGui then
 			labelGui:Destroy()
 		end
-		labelGui = Instance.new("BillboardGui")
+		labelGui = cloneGuideBillboardTemplate(TRAVERSAL_GUIDE_TEMPLATE_PATH, TRAVERSAL_GUIDE_BILLBOARD_NAME)
+		if not labelGui then
+			warn("[MapRuntimePatches] Missing authored visual template: WorldMarkers.TraversalGuideBillboardTemplate")
+			return nil
+		end
 		labelGui.Name = TRAVERSAL_GUIDE_BILLBOARD_NAME
 		labelGui.Parent = folder
 	end
@@ -3216,54 +3522,8 @@ local function ensureTraversalGuide(part)
 		if panel then
 			panel:Destroy()
 		end
-		panel = Instance.new("Frame")
-		panel.Name = "Panel"
-		panel.Parent = labelGui
-
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 12)
-		corner.Parent = panel
-
-		local stroke = Instance.new("UIStroke")
-		stroke.Name = "Stroke"
-		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Color = palette.accent
-		stroke.Transparency = 0.12
-		stroke.Thickness = 1.4
-		stroke.Parent = panel
-
-		local accent = Instance.new("Frame")
-		accent.Name = "Accent"
-		accent.AnchorPoint = Vector2.new(0, 0.5)
-		accent.BackgroundColor3 = palette.accent
-		accent.BorderSizePixel = 0
-		accent.Position = UDim2.new(0, 10, 0.5, 0)
-		accent.Size = UDim2.fromOffset(3, 28)
-		accent.Parent = panel
-
-		local accentCorner = Instance.new("UICorner")
-		accentCorner.CornerRadius = UDim.new(1, 0)
-		accentCorner.Parent = accent
-
-		createGuideTextLabel(
-			"Title",
-			Enum.Font.GothamBold,
-			13,
-			palette.title,
-			"AKSES LANTAI 2",
-			18,
-			UDim2.new(0, 20, 0, 6)
-		).Parent = panel
-
-		createGuideTextLabel(
-			"Subtitle",
-			Enum.Font.GothamMedium,
-			11,
-			palette.subtitle,
-			"Naik lewat tangga pusat",
-			16,
-			UDim2.new(0, 20, 0, 23)
-		).Parent = panel
+		warn("[MapRuntimePatches] TraversalGuideBillboardTemplate missing required child: Panel")
+		return nil
 	end
 
 	panel.BackgroundColor3 = Color3.fromRGB(10, 18, 30)
@@ -3901,6 +4161,7 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 	if type(matchContext) == "table" then
 		matchContext.preparationWorldBoard = true
 	end
+	bindPreparationToolStations(authoredPreparationFolder, matchContext)
 	return true
 end
 
@@ -4252,6 +4513,7 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	end
 
 	local didPatch = false
+	didPatch = disableLegacyAssetScripts(mapId, mapClone) or didPatch
 	didPatch = removeDeprecatedPreparationStaging(mapClone, matchContext) or didPatch
 	didPatch = patchSecondFloor(mapClone) or didPatch
 	didPatch = patchLogicVolumes(mapClone) or didPatch

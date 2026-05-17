@@ -8,6 +8,17 @@ Confidence target: 99%
 ## Execution Update (2026-05-17)
 
 - Owner-visible continuation smoke terbaru:
+  - Three-map regression smoke tambahan setelah ghost animation grounding:
+    - `StudioMMNineteen` pass sampai `InvestigationPhase -> LightFlicker -> ForceManifest -> ForceHunt`; runtime `Ghost_Leak` muncul, `GhostHunt` aktif (`Animator=1`, `playingTracks=1`, `bones=54`, `SurfaceAppearance=1`), NavigationGuide masuk state `Hunt`, dan `EndMatch` berhasil.
+    - `EmptyBuilding` pass sampai `InvestigationPhase -> LightFlicker -> ForceManifest -> ForceHunt`; runtime `Ghost_Tuyul` muncul, `GhostHunt` aktif (`Animator=1`, `playingTracks=1`, `bones=54`, `SurfaceAppearance=1`), safe/hide counts terdaftar, dan player tetap punya `MatchId` sampai hunt. Snapshot/end kadang telat karena hunt pressure mengakhiri match setelah visual proof; perlu retest full-length tanpa kamera delay.
+    - `AbandonedPalace` belum pass: template server sudah tersedia dan teleport/countdown sudah benar (`match_started_sent`, `SafeZones` terdaftar), tetapi `ForceManifest` atau direct `ForceHunt` membuat player masuk spectator dan live match hilang. Repro terjadi dengan `Kuntilanak` dan `Leak`, jadi ini blocker map/runtime Abandoned, bukan asset ghost spesifik.
+    - `ObjectThrow`/poltergeist smoke dipisah sebagai blocker event: di Abandoned/StudioMMNineteen event ini bisa mengakhiri match sebelum ghost validation. Jangan klaim poltergeist pass lintas-map sampai target/physics event tersebut diproteksi.
+  - Runtime patch yang masuk untuk smoke di atas:
+    - `AbandonedPalace` disalin ke `src/ServerStorage/Maps` agar `MatchTeleport` bisa menemukan template server, bukan hanya `ReplicatedStorage.Maps`.
+    - `MapRuntimePatches` sekarang disable imported `BaseScript` descendants untuk semua runtime map clones (`HauntedHouse`, `AbandonedPalace`, `EmptyBuilding`, `StudioMMNineteen`) sebelum script asset lama sempat jalan.
+    - `MatchTeleport` men-disable legacy map scripts sebelum clone diparent ke Workspace dan menambahkan safe-zone floor fallback spawn ketika authored preparation spawn gagal floor/inside-room validation.
+    - `VFXController` mengambil `Debris` service secara eksplisit; `ShadowApparition`/shock VFX tidak lagi error `attempt to index nil with 'AddItem'`.
+    - `NavigationGuide` membaca `PasrahGhostHuntActive` / `MatchLifecyclePhase=HuntPhase`, sehingga hunt guide bisa tetap tampil sebagai safe/hide direction meski viewState panel terlambat refresh.
   - Flow resolusi dua langkah dikonfirmasi: `SubmitJournalGuess` mengunci/validasi jawaban, lalu `EndInvestigation` menutup match; setelah step kedua `InMatch=false` dan `Workspace.ActiveMatches` kosong.
   - Result screen menampilkan `MISSION COMPLETE`, `BERHASIL`, `Ghost Asli: Kuntilanak | Tebakan: Kuntilanak`, dan checklist `Suara | To'un | Pengganggu`.
   - Tombol tutup hasil mengembalikan kontrol PC normal: `CameraType=Custom`, `MouseBehavior=Default`.
