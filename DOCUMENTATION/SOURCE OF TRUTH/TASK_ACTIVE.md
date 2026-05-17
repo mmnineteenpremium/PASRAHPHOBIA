@@ -14,7 +14,9 @@ Confidence target: 99%
   - Door breach preparation terbukti tidak memakai bypass `AdvancePhase`: setelah `PreparationFocusTool=EMF`, `Door_FrontEntry` membuka via `DoorRuntimePreparationProximity` dan masuk `InvestigationPhase`.
   - Runtime ghost animation smoke: `Kuntilanak` memainkan `GhostManifest`, lalu `KuntilanakAggressive` memainkan `GhostHunt` loop dengan `WeightCurrent=1`.
   - Audit runtime sementara untuk 12 ghost menunjukkan semua template punya skinned mesh dan 7 clip per ghost berhasil `Animator:LoadAnimation` tanpa error.
+  - Audit batch edit-mode tambahan selesai untuk 12 ghost (`Banaspati`, `Genderuwo`, `HantuTanah`, `Jerangkong`, `Kuntilanak`, `Leak`, `Palasik`, `Pocong`, `SilumanUlar`, `SundelBolong`, `Tuyul`, `WeweGombel`): semua memiliki `SurfaceAppearance=1`, `skinnedMesh=1`, `loadedClips=7/7`, `playingProbe=7/7`, dan clearance lantai uji sekitar `0.03` stud setelah pivot grounding.
   - Template visual aggressive/angry yang kehilangan `SurfaceAppearance` diperbaiki di Studio aktif dan guard `GhostSystem.Service` ditambahkan agar varian tersebut mewarisi texture dari base ghost.
+
 ## Execution Update (2026-05-14)
 
 - Branch/runtime target for this pass: `brian-second-final`, local `PASRAHPHOBIA.rbxlx`, Studio account session `briankotak`.
