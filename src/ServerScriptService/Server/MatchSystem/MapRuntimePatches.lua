@@ -10,6 +10,7 @@ local DOOR_PATCH_ATTR = "DoorTraversalRuntimePatched"
 local SAFE_ZONE_PATCH_ATTR = "SafeZoneRuntimePatched"
 local MATERIAL_PATCH_ATTR = "MapMaterialRuntimePatched"
 local TRAVERSAL_GUIDE_PATCH_ATTR = "TraversalGuideRuntimePatched"
+local PLAYABLE_FLOOR_PATCH_ATTR = "RuntimePlayableFloorPatched"
 local LOGIC_VOLUME_PATCH_ATTR = "LogicVolumesRuntimeHidden"
 local LEGACY_ASSET_SCRIPTS_DISABLED_ATTR = "LegacyAssetScriptsDisabled"
 local PREPARATION_STAGING_PATCH_ATTR = "PreparationStagingRuntimePatched"
@@ -114,6 +115,11 @@ local MAINFLOOR_REQUIRED_TOKENS = {
 	studiommnineteen = true,
 	emptybuilding = true,
 	abandonedpalace = true,
+}
+local PLAYABLE_FLOOR_REQUIRED_TOKENS = {
+	abandonedpalace = true,
+	emptybuilding = true,
+	studiommnineteen = true,
 }
 
 local MAP_MATERIAL_POLISH = {
@@ -4381,6 +4387,96 @@ local function patchRuntimeMainfloor(mapId, mapClone)
 	return true
 end
 
+local function patchPlayableFloorColliders(mapId, mapClone)
+	if not mapClone or mapClone:GetAttribute(PLAYABLE_FLOOR_PATCH_ATTR) == true then
+		return false
+	end
+	local token = resolveMapOverrideToken(mapId, mapClone) or resolveMapOverrideToken(nil, mapClone)
+	if not token or PLAYABLE_FLOOR_REQUIRED_TOKENS[token] ~= true then
+		return false
+	end
+
+	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
+	if not roomsFolder then
+		return false
+	end
+
+	local floorFolder = ensureFolder(mapClone, "RuntimePlayableColliders")
+	if not floorFolder then
+		return false
+	end
+	floorFolder:SetAttribute("PasrahRuntimeGenerated", true)
+	floorFolder:SetAttribute("RuntimePurpose", "GameplayFloor")
+
+	local patchedAny = false
+	local baseFloorCFrame = nil
+	for _, room in ipairs(roomsFolder:GetChildren()) do
+		if room:IsA("BasePart") and string.find(room.Name, "Room_", 1, true) == 1 then
+			baseFloorCFrame = baseFloorCFrame or room.CFrame
+			local roomId = room.Name:gsub("^Room_", "")
+			local floor = ensurePart(floorFolder, "Floor_" .. roomId)
+			configurePart(
+				floor,
+				{
+					Anchored = true,
+					CanCollide = true,
+					CanTouch = false,
+					CanQuery = true,
+					Transparency = 1,
+					CastShadow = false,
+					Material = Enum.Material.SmoothPlastic,
+					Color = Color3.fromRGB(58, 52, 58),
+					Size = Vector3.new(math.max(room.Size.X, 4), 0.75, math.max(room.Size.Z, 4)),
+					CFrame = room.CFrame,
+				}
+			)
+			floor:SetAttribute("PasrahRuntimePlayableFloor", true)
+			floor:SetAttribute("RoomId", roomId)
+			patchedAny = true
+		end
+	end
+
+	local function addGameplayPad(part, prefix, size)
+		if not (part and part:IsA("BasePart")) or typeof(baseFloorCFrame) ~= "CFrame" then
+			return
+		end
+		local pad = ensurePart(floorFolder, prefix .. "_" .. part.Name)
+		local _, yaw, _ = part.CFrame:ToOrientation()
+		configurePart(
+			pad,
+			{
+				Anchored = true,
+				CanCollide = true,
+				CanTouch = false,
+				CanQuery = true,
+				Transparency = 1,
+				CastShadow = false,
+				Material = Enum.Material.SmoothPlastic,
+				Color = Color3.fromRGB(58, 52, 58),
+				Size = size,
+				CFrame = CFrame.new(part.Position.X, baseFloorCFrame.Position.Y, part.Position.Z) * CFrame.Angles(0, yaw, 0),
+			}
+		)
+		pad:SetAttribute("PasrahRuntimePlayableFloor", true)
+		pad:SetAttribute("RuntimeFloorSource", part:GetFullName())
+		patchedAny = true
+	end
+
+	local doorsFolder = mapClone:FindFirstChild("Doors", true)
+	if doorsFolder then
+		for _, door in ipairs(doorsFolder:GetChildren()) do
+			if door:IsA("BasePart") and string.find(door.Name, "Door_", 1, true) == 1 then
+				addGameplayPad(door, "DoorPad", Vector3.new(18, 0.75, 24))
+			end
+		end
+	end
+
+	if patchedAny then
+		mapClone:SetAttribute(PLAYABLE_FLOOR_PATCH_ATTR, true)
+	end
+	return patchedAny
+end
+
 local function patchRuntimeBoundary(mapClone)
 	if not mapClone or mapClone:GetAttribute(BOUNDARY_PATCH_ATTR) == true then
 		return false
@@ -4521,6 +4617,7 @@ function MapRuntimePatches.Apply(mapId, mapClone, matchContext)
 	didPatch = patchDoorTraversal(mapClone) or didPatch
 	didPatch = patchInteractionPoints(mapId, mapClone) or didPatch
 	didPatch = patchSafeZones(mapId, mapClone) or didPatch
+	didPatch = patchPlayableFloorColliders(mapId, mapClone) or didPatch
 	didPatch = patchPreparationStaging(mapId, mapClone, matchContext) or didPatch
 	didPatch = patchTraversalGuides(mapClone) or didPatch
 	return didPatch

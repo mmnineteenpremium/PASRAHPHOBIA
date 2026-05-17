@@ -8,14 +8,17 @@ Confidence target: 99%
 ## Execution Update (2026-05-17)
 
 - Owner-visible continuation smoke terbaru:
-  - Three-map regression smoke tambahan setelah ghost animation grounding:
+  - Four-map regression smoke tambahan setelah ghost animation grounding dan playable-floor repair:
+    - `AbandonedPalace` pass sampai `PreparationPhase -> Door_GrandHall -> InvestigationPhase -> ObjectThrow -> ForceManifest -> ForceHunt`; runtime `Ghost_Leak` muncul dengan `playingTracks=1`, player stabil di Y `23.87`, health tetap `100`, dan `ObjectThrow` memilih target `Prop_Armory`.
     - `StudioMMNineteen` pass sampai `InvestigationPhase -> LightFlicker -> ForceManifest -> ForceHunt`; runtime `Ghost_Leak` muncul, `GhostHunt` aktif (`Animator=1`, `playingTracks=1`, `bones=54`, `SurfaceAppearance=1`), NavigationGuide masuk state `Hunt`, dan `EndMatch` berhasil.
-    - `EmptyBuilding` pass sampai `InvestigationPhase -> LightFlicker -> ForceManifest -> ForceHunt`; runtime `Ghost_Tuyul` muncul, `GhostHunt` aktif (`Animator=1`, `playingTracks=1`, `bones=54`, `SurfaceAppearance=1`), safe/hide counts terdaftar, dan player tetap punya `MatchId` sampai hunt. Snapshot/end kadang telat karena hunt pressure mengakhiri match setelah visual proof; perlu retest full-length tanpa kamera delay.
-    - `AbandonedPalace` belum pass: template server sudah tersedia dan teleport/countdown sudah benar (`match_started_sent`, `SafeZones` terdaftar), tetapi `ForceManifest` atau direct `ForceHunt` membuat player masuk spectator dan live match hilang. Repro terjadi dengan `Kuntilanak` dan `Leak`, jadi ini blocker map/runtime Abandoned, bukan asset ghost spesifik.
-    - `ObjectThrow`/poltergeist smoke dipisah sebagai blocker event: di Abandoned/StudioMMNineteen event ini bisa mengakhiri match sebelum ghost validation. Jangan klaim poltergeist pass lintas-map sampai target/physics event tersebut diproteksi.
+    - `EmptyBuilding` pass sampai `PreparationPhase -> Door_Lobby -> InvestigationPhase -> ObjectThrow -> ForceManifest -> ForceHunt`; runtime `Ghost_Tuyul` muncul dengan `playingTracks=1`, player stabil di Y `23.87`, health tetap `100`, dan `ObjectThrow` memilih target `Prop_Bathroom1`.
+    - `HauntedHouse` tetap pass sampai `PreparationPhase -> Door_FrontEntry -> InvestigationPhase -> ObjectThrow -> ForceManifest -> ForceHunt`; runtime `Ghost_Kuntilanak` muncul dengan `playingTracks=1`, health tetap `100`, dan `ObjectThrow` memilih target `Prop_KitchenCrate`.
+    - `ObjectThrow` sekarang diperlakukan sebagai canonical poltergeist event, bukan test helper. Target selection diproteksi agar `ObjectThrow` hanya memilih object `Props`/`Prop_*` dan menolak nama/metadata struktural seperti door, safezone, spawn, floor, wall, roof.
   - Runtime patch yang masuk untuk smoke di atas:
     - `AbandonedPalace` disalin ke `src/ServerStorage/Maps` agar `MatchTeleport` bisa menemukan template server, bukan hanya `ReplicatedStorage.Maps`.
     - `MapRuntimePatches` sekarang disable imported `BaseScript` descendants untuk semua runtime map clones (`HauntedHouse`, `AbandonedPalace`, `EmptyBuilding`, `StudioMMNineteen`) sebelum script asset lama sempat jalan.
+    - `MapRuntimePatches` menambahkan invisible `RuntimePlayableColliders` dari `Rooms` + `DoorPad_*` untuk `AbandonedPalace`, `EmptyBuilding`, dan `StudioMMNineteen`; ini memperbaiki player jatuh saat spawn/preparation/door-offset tanpa mengubah visual owner atau membuat flow baru.
+    - `MapEventSystem` menandai `ObjectThrow` sebagai category `Poltergeist` dan membatasi target ke `Props`, sehingga event poltergeist tidak pernah mengambil struktur bangunan sebagai target.
     - `MatchTeleport` men-disable legacy map scripts sebelum clone diparent ke Workspace dan menambahkan safe-zone floor fallback spawn ketika authored preparation spawn gagal floor/inside-room validation.
     - `VFXController` mengambil `Debris` service secara eksplisit; `ShadowApparition`/shock VFX tidak lagi error `attempt to index nil with 'AddItem'`.
     - `NavigationGuide` membaca `PasrahGhostHuntActive` / `MatchLifecyclePhase=HuntPhase`, sehingga hunt guide bisa tetap tampil sebagai safe/hide direction meski viewState panel terlambat refresh.

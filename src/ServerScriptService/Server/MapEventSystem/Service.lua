@@ -5,7 +5,15 @@ Service.__index = Service
 
 local EVENT_LIBRARY = {
 	{ eventType = "DoorSlam", interaction = "Slam", objectType = "Door", baseIntensity = 0.55, cooldown = 4 },
-	{ eventType = "ObjectThrow", interaction = "Throw", objectType = "Object", baseIntensity = 0.65, cooldown = 6 },
+	{
+		eventType = "ObjectThrow",
+		interaction = "Throw",
+		objectType = "Object",
+		requiredFolder = "Props",
+		category = "Poltergeist",
+		baseIntensity = 0.65,
+		cooldown = 6,
+	},
 	{ eventType = "LightFlicker", interaction = "Flicker", objectType = "Light", baseIntensity = 0.50, cooldown = 3 },
 	{ eventType = "WindowKnock", interaction = "Knock", objectType = "Window", baseIntensity = 0.40, cooldown = 5 },
 	{ eventType = "RadioStatic", interaction = "StaticDistortion", objectType = "Radio", baseIntensity = 0.35, cooldown = 5 },
@@ -100,6 +108,38 @@ local function listRegisteredObjects(mapInteractionSystem)
 		return mapInteractionSystem.Service:ListObjects()
 	end
 	return {}
+end
+
+local function isObjectAllowedForEvent(objectData, eventConfig)
+	if type(objectData) ~= "table" or type(eventConfig) ~= "table" then
+		return false
+	end
+	local metadata = type(objectData.metadata) == "table" and objectData.metadata or {}
+	local objectId = tostring(objectData.id or objectData.objectId or "")
+	local objectIdLower = string.lower(objectId)
+	local requiredFolder = eventConfig.requiredFolder
+	if type(requiredFolder) == "string" and requiredFolder ~= "" then
+		local folderName = metadata.folder
+		if folderName ~= requiredFolder and string.find(objectIdLower, "^prop") == nil then
+			return false
+		end
+	end
+
+	if eventConfig.eventType == "ObjectThrow" then
+		if metadata.structural == true or metadata.noThrow == true or metadata.critical == true then
+			return false
+		end
+		if string.find(objectIdLower, "door", 1, true)
+			or string.find(objectIdLower, "safezone", 1, true)
+			or string.find(objectIdLower, "spawn", 1, true)
+			or string.find(objectIdLower, "floor", 1, true)
+			or string.find(objectIdLower, "wall", 1, true)
+			or string.find(objectIdLower, "roof", 1, true) then
+			return false
+		end
+	end
+
+	return true
 end
 
 function Service.new(state, deps)
@@ -263,7 +303,9 @@ function Service:_resolveTargetObject(eventData, eventConfig)
 	local mapInteractionSystem = self._dependencies.MapInteractionSystem or resolveMapInteractionSystem(self._deps)
 	self._dependencies.MapInteractionSystem = mapInteractionSystem
 	for _, objectData in ipairs(listRegisteredObjects(mapInteractionSystem)) do
-		if type(objectData) == "table" and objectData.type == eventConfig.objectType then
+		if type(objectData) == "table"
+			and objectData.type == eventConfig.objectType
+			and isObjectAllowedForEvent(objectData, eventConfig) then
 			candidates[#candidates + 1] = objectData
 			if type(eventData.roomId) == "string" and eventData.roomId ~= "" and objectData.roomId == eventData.roomId then
 				roomScoped[#roomScoped + 1] = objectData
