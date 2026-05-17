@@ -12,6 +12,9 @@ local EnvironmentalObjectRuntime = {}
 local GENERATED_FOLDER_NAME = "GeneratedEventAssets"
 local GENERATED_REVERT_DELAY = 1.6
 local LIGHT_FLICKER_DELAY = 0.08
+local LIGHT_SWITCH_PROMPT_NAME = "LightSwitchPrompt"
+local LIGHT_SWITCH_ON_COLOR = Color3.fromRGB(236, 214, 168)
+local LIGHT_SWITCH_OFF_COLOR = Color3.fromRGB(82, 88, 98)
 local WORLD_POINT_LIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldPointLightTemplate" }
 
 local function resolveChildPath(root, path)
@@ -446,6 +449,83 @@ local function collectBaseParts(target)
 	return parts
 end
 
+local function findRoomPart(mapClone, roomId)
+	if typeof(mapClone) ~= "Instance" or type(roomId) ~= "string" or roomId == "" then
+		return nil
+	end
+	local roomsFolder = mapClone:FindFirstChild("Rooms", true)
+	if not roomsFolder then
+		return nil
+	end
+	local direct = roomsFolder:FindFirstChild("Room_" .. roomId)
+	if direct and direct:IsA("BasePart") then
+		return direct
+	end
+	for _, child in ipairs(roomsFolder:GetChildren()) do
+		if child:IsA("BasePart")
+			and (child.Name == roomId or tostring(child:GetAttribute("RoomId") or child:GetAttribute("PasrahRoomId") or "") == roomId) then
+			return child
+		end
+	end
+	return nil
+end
+
+local function createLightSwitch(generatedFolder, mapClone, definition, proxyPart)
+	if not (generatedFolder and generatedFolder:IsA("Folder") and type(definition) == "table" and proxyPart and proxyPart:IsA("BasePart")) then
+		return nil
+	end
+	local switchName = "Switch_" .. tostring(definition.objectId or proxyPart.Name)
+	local switch = ensurePart(generatedFolder, switchName)
+	local roomPart = findRoomPart(mapClone, definition.roomId)
+	local proxyPosition = proxyPart.Position
+	local switchPosition = proxyPosition - Vector3.new(0, 3.2, 0)
+	local lookAt = proxyPosition + Vector3.new(0, 0, -1)
+	if roomPart then
+		local roomPosition = roomPart.Position
+		local flatDirection = Vector3.new(proxyPosition.X - roomPosition.X, 0, proxyPosition.Z - roomPosition.Z)
+		if flatDirection.Magnitude <= 0.1 then
+			flatDirection = Vector3.new(1, 0, 0)
+		end
+		local wallDistance = math.max(2, math.min(roomPart.Size.X, roomPart.Size.Z) * 0.36)
+		switchPosition = Vector3.new(roomPosition.X, roomPosition.Y + math.min(2.2, roomPart.Size.Y * 0.32), roomPosition.Z)
+			+ flatDirection.Unit * wallDistance
+		lookAt = Vector3.new(roomPosition.X, switchPosition.Y, roomPosition.Z)
+	end
+
+	switch.Anchored = true
+	switch.CanCollide = false
+	switch.CanTouch = false
+	switch.CanQuery = true
+	switch.CastShadow = false
+	switch.Material = Enum.Material.SmoothPlastic
+	switch.Color = LIGHT_SWITCH_ON_COLOR
+	switch.Size = Vector3.new(0.42, 0.62, 0.08)
+	switch.CFrame = CFrame.lookAt(switchPosition, lookAt)
+	switch:SetAttribute("PasrahEnvironmentalRuntime", true)
+	switch:SetAttribute("PasrahLightSwitchObjectId", definition.objectId)
+	switch:SetAttribute("PasrahRuntimeRoomId", definition.roomId)
+	switch:SetAttribute("PasrahLightSwitchOn", true)
+
+	local prompt = switch:FindFirstChild(LIGHT_SWITCH_PROMPT_NAME)
+	if not (prompt and prompt:IsA("ProximityPrompt")) then
+		if prompt then
+			prompt:Destroy()
+		end
+		prompt = Instance.new("ProximityPrompt")
+		prompt.Name = LIGHT_SWITCH_PROMPT_NAME
+		prompt.Parent = switch
+	end
+	prompt.KeyboardKeyCode = Enum.KeyCode.E
+	prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+	prompt.ObjectText = tostring(definition.roomId or "Lampu")
+	prompt.ActionText = "Matikan Lampu"
+	prompt.MaxActivationDistance = 8
+	prompt.RequiresLineOfSight = false
+	prompt.HoldDuration = 0
+	prompt.Style = Enum.ProximityPromptStyle.Default
+	return switch
+end
+
 local function registerObject(interactionSystem, objectId, objectType, position, roomId, interactions)
 	if not interactionSystem or type(interactionSystem.RegisterObject) ~= "function" then
 		return
@@ -468,14 +548,80 @@ local function buildLookupFromFolder(definitions, folder, mapClone, generatedFol
 			registerObject(interactionSystem, definition.objectId, objectType, proxy.Position, definition.roomId, interactions)
 			lookup[definition.objectId] = {
 				id = definition.objectId,
+				objectType = objectType,
 				roomId = definition.roomId,
 				proxy = proxy,
 				target = target,
+				switch = objectType == "Light" and createLightSwitch(generatedFolder, mapClone, definition, proxy) or nil,
+				lightOn = true,
 				defaultCFrame = getInstanceCFrame(target),
 			}
 		end
 	end
 	return lookup
+end
+
+local function captureLightBaseline(target)
+	local baseline = {
+		lights = {},
+		neonParts = {},
+	}
+	local lights, neonParts = collectLightDescendants(target)
+	for _, light in ipairs(lights) do
+		baseline.lights[light] = {
+			enabled = light.Enabled,
+			brightness = light.Brightness,
+			color = light.Color,
+		}
+	end
+	for _, part in ipairs(neonParts) do
+		baseline.neonParts[part] = {
+			transparency = part.Transparency,
+			color = part.Color,
+		}
+	end
+	return baseline
+end
+
+local function stampLightSwitch(record)
+	local switch = record and record.switch
+	if not (switch and switch:IsA("BasePart")) then
+		return
+	end
+	local isOn = record.lightOn ~= false
+	switch.Color = isOn and LIGHT_SWITCH_ON_COLOR or LIGHT_SWITCH_OFF_COLOR
+	switch:SetAttribute("PasrahLightSwitchOn", isOn)
+	local prompt = switch:FindFirstChild(LIGHT_SWITCH_PROMPT_NAME)
+	if prompt and prompt:IsA("ProximityPrompt") then
+		prompt.ActionText = isOn and "Matikan Lampu" or "Nyalakan Lampu"
+	end
+end
+
+local function applyLightPower(record, enabled)
+	if type(record) ~= "table" or typeof(record.target) ~= "Instance" then
+		return
+	end
+	record.lightBaseline = record.lightBaseline or captureLightBaseline(record.target)
+	record.lightOn = enabled == true
+	local baseline = record.lightBaseline
+	for light, state in pairs(baseline.lights or {}) do
+		if typeof(light) == "Instance" and light.Parent ~= nil then
+			light.Enabled = record.lightOn
+			light.Brightness = record.lightOn and (state.brightness or light.Brightness) or 0
+			if typeof(state.color) == "Color3" then
+				light.Color = state.color
+			end
+		end
+	end
+	for part, state in pairs(baseline.neonParts or {}) do
+		if typeof(part) == "Instance" and part.Parent ~= nil and part:IsA("BasePart") then
+			part.Transparency = record.lightOn and (state.transparency or 0) or 0.78
+			if typeof(state.color) == "Color3" then
+				part.Color = record.lightOn and state.color or state.color:Lerp(Color3.fromRGB(24, 26, 30), 0.74)
+			end
+		end
+	end
+	stampLightSwitch(record)
 end
 
 local function applyLightFlicker(record)
@@ -507,13 +653,14 @@ local function applyLightFlicker(record)
 		end
 		for instance, state in pairs(original) do
 			if instance:IsA("PointLight") or instance:IsA("SpotLight") or instance:IsA("SurfaceLight") then
-				instance.Enabled = state.enabled
-				instance.Brightness = state.brightness
+				instance.Enabled = record.lightOn == false and false or state.enabled
+				instance.Brightness = record.lightOn == false and 0 or state.brightness
 			elseif instance:IsA("BasePart") then
-				instance.Transparency = state.transparency
-				instance.Color = state.color
+				instance.Transparency = record.lightOn == false and 0.78 or state.transparency
+				instance.Color = record.lightOn == false and state.color:Lerp(Color3.fromRGB(24, 26, 30), 0.74) or state.color
 			end
 		end
+		stampLightSwitch(record)
 	end)
 end
 
@@ -645,6 +792,33 @@ function EnvironmentalObjectRuntime.Attach(match, mapClone, deps)
 		return next(objectLookup) ~= nil
 	end
 
+	for _, record in pairs(objectLookup) do
+		if record.objectType == "Light" and record.switch and record.switch:IsA("BasePart") then
+			stampLightSwitch(record)
+			local prompt = record.switch:FindFirstChild(LIGHT_SWITCH_PROMPT_NAME)
+			if prompt and prompt:IsA("ProximityPrompt") then
+				prompt.Triggered:Connect(function()
+					local nextEnabled = record.lightOn == false
+					local interactionSystem = resolveMapInteractionSystem(deps)
+					if interactionSystem and type(interactionSystem.ExecuteInteraction) == "function" then
+						interactionSystem:ExecuteInteraction(record.id, nextEnabled and "TurnOn" or "TurnOff", {
+							source = "LightSwitchPrompt",
+							now = os.clock(),
+						})
+					elseif interactionSystem and type(interactionSystem.Service) == "table"
+						and type(interactionSystem.Service.ExecuteInteraction) == "function" then
+						interactionSystem.Service:ExecuteInteraction(record.id, nextEnabled and "TurnOn" or "TurnOff", {
+							source = "LightSwitchPrompt",
+							now = os.clock(),
+						})
+					else
+						applyLightPower(record, nextEnabled)
+					end
+				end)
+			end
+		end
+	end
+
 	if match and match._environmentRuntimeSubscription then
 		eventBus:Unsubscribe("MapObjectInteracted", match._environmentRuntimeSubscription)
 		match._environmentRuntimeSubscription = nil
@@ -666,6 +840,8 @@ function EnvironmentalObjectRuntime.Attach(match, mapClone, deps)
 		local interactionType = tostring(payload.interactionType or "")
 		if interactionType == "Flicker" then
 			applyLightFlicker(record)
+		elseif record.objectType == "Light" and (interactionType == "TurnOn" or interactionType == "TurnOff") then
+			applyLightPower(record, interactionType == "TurnOn")
 		elseif interactionType == "Move" or interactionType == "Throw" or interactionType == "Rotate" then
 			applyObjectMovement(record, interactionType)
 		elseif interactionType == "TurnOn" or interactionType == "TurnOff" or interactionType == "PlayNoise" or interactionType == "StaticDistortion" then
