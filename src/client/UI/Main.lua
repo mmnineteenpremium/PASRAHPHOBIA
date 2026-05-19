@@ -5303,6 +5303,24 @@ function connectButtonPress(button, callback)
 		return button.Parent ~= nil
 	end
 
+	local function pointHitsGuiObject(guiObject, position)
+		if not (guiObject and guiObject:IsA("GuiObject")) then
+			return false
+		end
+		if guiObject.Visible ~= true then
+			return false
+		end
+		local absolutePosition = guiObject.AbsolutePosition
+		local absoluteSize = guiObject.AbsoluteSize
+		if absoluteSize.X <= 0 or absoluteSize.Y <= 0 then
+			return false
+		end
+		return position.X >= absolutePosition.X
+			and position.Y >= absolutePosition.Y
+			and position.X <= absolutePosition.X + absoluteSize.X
+			and position.Y <= absolutePosition.Y + absoluteSize.Y
+	end
+
 	local function inputHitsButton(input)
 		if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
 			return false
@@ -5314,12 +5332,15 @@ function connectButtonPress(button, callback)
 		if typeof(position) ~= "Vector3" then
 			return false
 		end
-		local absolutePosition = button.AbsolutePosition
-		local absoluteSize = button.AbsoluteSize
-		return position.X >= absolutePosition.X
-			and position.Y >= absolutePosition.Y
-			and position.X <= absolutePosition.X + absoluteSize.X
-			and position.Y <= absolutePosition.Y + absoluteSize.Y
+		if pointHitsGuiObject(button, position) then
+			return true
+		end
+		for _, childName in ipairs({ "BrandTextImage", "BrandOverlay", "BrandBorder" }) do
+			if pointHitsGuiObject(button:FindFirstChild(childName), position) then
+				return true
+			end
+		end
+		return false
 	end
 
 	button.Activated:Connect(invoke)
