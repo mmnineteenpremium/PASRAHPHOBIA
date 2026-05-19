@@ -79,6 +79,27 @@ local DEFAULT_GHOST_TEMPLATE_MESH_PART_NAMES = {}
 
 local DEFAULT_GHOST_TEMPLATE_CAST_SHADOW = {}
 
+local DEFAULT_GHOST_TEMPLATE_TEXTURE_MODEL_ASSET_IDS = {
+	Banaspati = "rbxassetid://97456316811319",
+	BanaspatiAggressive = "rbxassetid://97456316811319",
+	Genderuwo = "rbxassetid://98880262062359",
+	GenderuwoAggressive = "rbxassetid://134276874050331",
+	HantuTanah = "rbxassetid://139296725422008",
+	Jerangkong = "rbxassetid://111398758078419",
+	Kuntilanak = "rbxassetid://85391462330878",
+	KuntilanakAggressive = "rbxassetid://120578702101148",
+	Leak = "rbxassetid://123810909037540",
+	LeakAggressive = "rbxassetid://123810909037540",
+	Palasik = "rbxassetid://91886890215469",
+	PalasikAngry = "rbxassetid://91886890215469",
+	Pocong = "rbxassetid://111363343569502",
+	SilumanUlar = "rbxassetid://137287114113323",
+	SundelBolong = "rbxassetid://131700767022518",
+	SundelBolongAggressive = "rbxassetid://70983571304250",
+	Tuyul = "rbxassetid://127455958486834",
+	WeweGombel = "rbxassetid://137426068299766",
+}
+
 local GHOST_TEMPLATE_VISUAL_OFFSETS = {}
 local GHOST_TEMPLATE_VISUAL_ROTATIONS = {}
 local GHOST_TEMPLATE_ROOT_SIZES = {}
@@ -89,7 +110,9 @@ local GHOST_TEMPLATE_GROUNDED = {}
 local GHOST_TEMPLATE_MESH_PART_NAMES = {}
 local GHOST_TEMPLATE_CAST_SHADOW = {}
 local GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS = {}
+local GHOST_TEMPLATE_TEXTURE_MODEL_ASSET_IDS = {}
 local GHOST_MODEL_ASSET_TEMPLATE_CACHE = {}
+local GHOST_TEXTURE_DONOR_TEMPLATE_CACHE = {}
 
 local GHOST_VISUAL_MOVE_SPEED_BY_STATE = {
 	Idle = 1.75,
@@ -622,6 +645,13 @@ local function resolveGhostModelAssetId(ghostType)
 	return normalizeGhostModelAssetId(resolveGhostTemplateConfigValue(GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS, ghostType))
 end
 
+local function resolveGhostTextureModelAssetId(ghostType)
+	if type(ghostType) ~= "string" or ghostType == "" then
+		return nil
+	end
+	return normalizeGhostModelAssetId(resolveGhostTemplateConfigValue(GHOST_TEMPLATE_TEXTURE_MODEL_ASSET_IDS, ghostType))
+end
+
 local function findUsableGhostModelFromAssetContainer(container)
 	if typeof(container) ~= "Instance" or not container:IsA("Model") then
 		return nil
@@ -682,6 +712,53 @@ local function loadGhostModelAssetTemplate(ghostType)
 	template:SetAttribute("PasrahGhostRuntimeAssetTemplate", true)
 	template.Parent = nil
 	GHOST_MODEL_ASSET_TEMPLATE_CACHE[assetId] = template
+	return template
+end
+
+local function loadGhostTextureDonorTemplate(ghostType)
+	local assetId = resolveGhostTextureModelAssetId(ghostType)
+	if not assetId then
+		return nil
+	end
+
+	local cached = GHOST_TEXTURE_DONOR_TEMPLATE_CACHE[assetId]
+	if typeof(cached) == "Instance" and cached:IsA("Model") then
+		return cached
+	elseif cached == false then
+		return nil
+	end
+
+	local ok, containerOrErr = pcall(function()
+		return InsertService:LoadAsset(tonumber(assetId))
+	end)
+	if not ok or typeof(containerOrErr) ~= "Instance" then
+		warn(string.format(
+			"[GhostSystem] Failed to load ghost texture donor asset '%s' for '%s': %s",
+			tostring(assetId),
+			tostring(ghostType),
+			tostring(containerOrErr)
+		))
+		GHOST_TEXTURE_DONOR_TEMPLATE_CACHE[assetId] = false
+		return nil
+	end
+
+	local selectedModel = findUsableGhostModelFromAssetContainer(containerOrErr)
+	if not selectedModel then
+		containerOrErr:Destroy()
+		GHOST_TEXTURE_DONOR_TEMPLATE_CACHE[assetId] = false
+		return nil
+	end
+
+	local template = selectedModel
+	if selectedModel ~= containerOrErr then
+		template = selectedModel:Clone()
+		containerOrErr:Destroy()
+	end
+
+	template.Name = tostring(ghostType) .. "_TextureDonor"
+	template:SetAttribute("PasrahTextureDonorAssetId", assetId)
+	template.Parent = nil
+	GHOST_TEXTURE_DONOR_TEMPLATE_CACHE[assetId] = template
 	return template
 end
 
@@ -884,11 +961,214 @@ local function countGhostSurfaceAppearances(model)
 	return count
 end
 
+local function isNonEmptyAssetContent(value)
+	if value == nil then
+		return false
+	end
+	local text = tostring(value)
+	return text ~= "" and text ~= "nil"
+end
+
+local function getInstanceProperty(instance, propertyName)
+	local ok, value = pcall(function()
+		return instance[propertyName]
+	end)
+	if ok then
+		return value
+	end
+	return nil
+end
+
+local function setInstanceProperty(instance, propertyName, value)
+	if value == nil then
+		return false
+	end
+	local ok = pcall(function()
+		instance[propertyName] = value
+	end)
+	return ok == true
+end
+
+local SURFACE_APPEARANCE_CONTENT_PROPERTIES = {
+	"ColorMap",
+	"ColorMapContent",
+	"NormalMap",
+	"NormalMapContent",
+	"RoughnessMap",
+	"RoughnessMapContent",
+	"MetalnessMap",
+	"MetalnessMapContent",
+	"AlphaMap",
+	"AlphaMapContent",
+}
+
+local SURFACE_APPEARANCE_STYLE_PROPERTIES = {
+	"AlphaMode",
+	"ResampleMode",
+	"EmissiveStrength",
+	"EmissiveTint",
+}
+
+local function surfaceAppearanceHasRenderableContent(surface)
+	if not (surface and surface:IsA("SurfaceAppearance")) then
+		return false
+	end
+	for _, propertyName in ipairs(SURFACE_APPEARANCE_CONTENT_PROPERTIES) do
+		if isNonEmptyAssetContent(getInstanceProperty(surface, propertyName)) then
+			return true
+		end
+	end
+	return false
+end
+
+local function meshPartHasRenderableTexture(meshPart)
+	if not (meshPart and meshPart:IsA("MeshPart")) then
+		return false
+	end
+	return isNonEmptyAssetContent(getInstanceProperty(meshPart, "TextureID"))
+		or isNonEmptyAssetContent(getInstanceProperty(meshPart, "TextureId"))
+end
+
+local function readMeshPartTexture(meshPart)
+	local texture = getInstanceProperty(meshPart, "TextureID")
+	if isNonEmptyAssetContent(texture) then
+		return texture
+	end
+	texture = getInstanceProperty(meshPart, "TextureId")
+	if isNonEmptyAssetContent(texture) then
+		return texture
+	end
+	return nil
+end
+
+local function modelHasRenderableGhostSurface(model)
+	if typeof(model) ~= "Instance" then
+		return false
+	end
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("SurfaceAppearance") and surfaceAppearanceHasRenderableContent(descendant) then
+			return true
+		elseif descendant:IsA("MeshPart") and meshPartHasRenderableTexture(descendant) then
+			return true
+		end
+	end
+	return false
+end
+
+local function findTexturedGhostMeshPart(model)
+	if typeof(model) ~= "Instance" then
+		return nil
+	end
+	local fallback = nil
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("MeshPart") then
+			fallback = fallback or descendant
+			local surface = descendant:FindFirstChildWhichIsA("SurfaceAppearance")
+			if meshPartHasRenderableTexture(descendant) or surfaceAppearanceHasRenderableContent(surface) then
+				return descendant
+			end
+		end
+	end
+	return fallback
+end
+
+local function ensureTargetSurfaceAppearance(targetMesh)
+	if not (targetMesh and targetMesh:IsA("MeshPart")) then
+		return nil
+	end
+	local surface = targetMesh:FindFirstChildWhichIsA("SurfaceAppearance")
+	if surface then
+		return surface
+	end
+	surface = Instance.new("SurfaceAppearance")
+	surface.Name = "SurfaceAppearance"
+	surface.Parent = targetMesh
+	return surface
+end
+
+local function copySurfaceAppearanceProperties(sourceSurface, targetSurface)
+	if not (sourceSurface and sourceSurface:IsA("SurfaceAppearance")) then
+		return false
+	end
+	if not (targetSurface and targetSurface:IsA("SurfaceAppearance")) then
+		return false
+	end
+
+	local copied = false
+	for _, propertyName in ipairs(SURFACE_APPEARANCE_CONTENT_PROPERTIES) do
+		local value = getInstanceProperty(sourceSurface, propertyName)
+		if isNonEmptyAssetContent(value) and setInstanceProperty(targetSurface, propertyName, value) then
+			copied = true
+		end
+	end
+	for _, propertyName in ipairs(SURFACE_APPEARANCE_STYLE_PROPERTIES) do
+		local value = getInstanceProperty(sourceSurface, propertyName)
+		if value ~= nil then
+			setInstanceProperty(targetSurface, propertyName, value)
+		end
+	end
+	return copied
+end
+
+local function copyGhostMeshTexture(sourceMesh, targetMesh)
+	if not (sourceMesh and sourceMesh:IsA("MeshPart")) or not (targetMesh and targetMesh:IsA("MeshPart")) then
+		return false
+	end
+
+	local copied = false
+	local sourceTexture = readMeshPartTexture(sourceMesh)
+	if isNonEmptyAssetContent(sourceTexture)
+		and not meshPartHasRenderableTexture(targetMesh)
+		and (setInstanceProperty(targetMesh, "TextureID", sourceTexture) or setInstanceProperty(targetMesh, "TextureId", sourceTexture)) then
+		copied = true
+	end
+
+	local sourceSurface = sourceMesh:FindFirstChildWhichIsA("SurfaceAppearance")
+	if sourceSurface and surfaceAppearanceHasRenderableContent(sourceSurface) then
+		local targetSurface = ensureTargetSurfaceAppearance(targetMesh)
+		copied = copySurfaceAppearanceProperties(sourceSurface, targetSurface) or copied
+	end
+
+	if not copied then
+		local sourceColor = getInstanceProperty(sourceMesh, "Color")
+		if typeof(sourceColor) == "Color3" then
+			setInstanceProperty(targetMesh, "Color", sourceColor)
+			copied = true
+		end
+	end
+	return copied
+end
+
+local function repairGhostSurfaceAppearanceFromTemplate(ghostModel, sourceTemplate, sourceLabel)
+	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
+		return false
+	end
+	if not (sourceTemplate and sourceTemplate:IsA("Model")) then
+		return false
+	end
+
+	local targetMesh = findFirstGhostMeshPart(ghostModel)
+	local sourceMesh = findTexturedGhostMeshPart(sourceTemplate)
+	if not (targetMesh and sourceMesh) then
+		return false
+	end
+
+	local copied = copyGhostMeshTexture(sourceMesh, targetMesh)
+	if copied then
+		ghostModel:SetAttribute("PasrahSurfaceAppearanceRepairedFrom", tostring(sourceLabel or sourceTemplate.Name))
+		local donorAssetId = sourceTemplate:GetAttribute("PasrahTextureDonorAssetId")
+		if donorAssetId then
+			ghostModel:SetAttribute("PasrahSurfaceAppearanceDonorAssetId", tostring(donorAssetId))
+		end
+	end
+	return copied
+end
+
 local function repairVariantGhostSurfaceAppearance(ghostModel, visualGhostType)
 	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
 		return
 	end
-	if countGhostSurfaceAppearances(ghostModel) > 0 then
+	if modelHasRenderableGhostSurface(ghostModel) then
 		return
 	end
 
@@ -902,20 +1182,23 @@ local function repairVariantGhostSurfaceAppearance(ghostModel, visualGhostType)
 	if not (baseTemplate and baseTemplate:IsA("Model")) then
 		return
 	end
+	repairGhostSurfaceAppearanceFromTemplate(ghostModel, baseTemplate, baseGhostType)
+end
 
-	local targetMesh = findFirstGhostMeshPart(ghostModel)
-	local sourceMesh = findFirstGhostMeshPart(baseTemplate)
-	if not (targetMesh and sourceMesh) then
+local function repairGhostTextureDonorSurfaceAppearance(ghostModel, visualGhostType, logicalGhostType)
+	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
+		return
+	end
+	if modelHasRenderableGhostSurface(ghostModel) then
 		return
 	end
 
-	local sourceSurface = sourceMesh:FindFirstChildWhichIsA("SurfaceAppearance")
-	if sourceSurface then
-		sourceSurface:Clone().Parent = targetMesh
-		ghostModel:SetAttribute("PasrahSurfaceAppearanceRepairedFrom", baseGhostType)
-	end
-	if (targetMesh.TextureID == nil or targetMesh.TextureID == "") and sourceMesh.TextureID and sourceMesh.TextureID ~= "" then
-		targetMesh.TextureID = sourceMesh.TextureID
+	local baseGhostType = resolveGhostBaseType(visualGhostType or logicalGhostType)
+	local donorTemplate = loadGhostTextureDonorTemplate(visualGhostType)
+		or loadGhostTextureDonorTemplate(logicalGhostType)
+		or loadGhostTextureDonorTemplate(baseGhostType)
+	if donorTemplate then
+		repairGhostSurfaceAppearanceFromTemplate(ghostModel, donorTemplate, visualGhostType or logicalGhostType or baseGhostType)
 	end
 end
 
@@ -945,6 +1228,7 @@ local function createGhostFromTemplate(spawnCFrame, ghostType, options)
 	ghostModel:SetAttribute("PasrahGhostInventoryModelAssetId", inventoryModelAssetId)
 	ghostModel:SetAttribute("PasrahLoadedFromAssetId", template:GetAttribute("PasrahLoadedFromAssetId"))
 	repairVariantGhostSurfaceAppearance(ghostModel, visualGhostType)
+	repairGhostTextureDonorSurfaceAppearance(ghostModel, visualGhostType, logicalGhostType)
 
 	for _, descendant in ipairs(ghostModel:GetDescendants()) do
 		if descendant:IsA("BasePart") then
@@ -1103,6 +1387,7 @@ local function loadGhostVisualTuning()
 	local meshPartNames = copyGhostVisualStringMap(DEFAULT_GHOST_TEMPLATE_MESH_PART_NAMES)
 	local castShadow = copyGhostVisualBooleanMap(DEFAULT_GHOST_TEMPLATE_CAST_SHADOW)
 	local inventoryModelAssetIds = copyGhostVisualStringMap({})
+	local textureModelAssetIds = copyGhostVisualStringMap(DEFAULT_GHOST_TEMPLATE_TEXTURE_MODEL_ASSET_IDS)
 	local tuning = safeRequire(resolveSharedGameDataModule("GhostVisualTuning"))
 	local ghosts = type(tuning) == "table" and tuning.ghosts or nil
 	if type(ghosts) ~= "table" then
@@ -1133,6 +1418,9 @@ local function loadGhostVisualTuning()
 			end
 			if type(config.inventoryModelAssetId) == "string" and config.inventoryModelAssetId ~= "" then
 				inventoryModelAssetIds[ghostType] = config.inventoryModelAssetId
+			end
+			if type(config.textureModelAssetId) == "string" and config.textureModelAssetId ~= "" then
+				textureModelAssetIds[ghostType] = config.textureModelAssetId
 			end
 		end
 	end
@@ -1186,7 +1474,7 @@ local function loadGhostVisualTuning()
 		end
 	end
 
-	return offsets, rotations, meshSizes, bounds, maxHoverHeights, grounded, rootSizes, meshPartNames, castShadow, inventoryModelAssetIds
+	return offsets, rotations, meshSizes, bounds, maxHoverHeights, grounded, rootSizes, meshPartNames, castShadow, inventoryModelAssetIds, textureModelAssetIds
 end
 
 GHOST_TEMPLATE_VISUAL_OFFSETS,
@@ -1198,7 +1486,8 @@ GHOST_TEMPLATE_VISUAL_OFFSETS,
 	GHOST_TEMPLATE_ROOT_SIZES,
 	GHOST_TEMPLATE_MESH_PART_NAMES,
 	GHOST_TEMPLATE_CAST_SHADOW,
-	GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS = loadGhostVisualTuning()
+	GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS,
+	GHOST_TEMPLATE_TEXTURE_MODEL_ASSET_IDS = loadGhostVisualTuning()
 
 local function loadMapDatabase()
 	local database = safeRequire(resolveSharedGameDataModule("MapConfig"))
