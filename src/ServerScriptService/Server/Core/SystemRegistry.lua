@@ -24,6 +24,10 @@ local DISABLED_RUNTIME_SYSTEM_NAMES = {
     -- Generic reward fan-out duplicates active reward owners.
     RewardSystem = true,
     ContractRewardSystem = true,
+    -- DailyEngagementSystem is the canonical owner for daily, royal pass, and gacha state.
+    DailyCheckinSystem = true,
+    DailyMissionSystem = true,
+    RoyalPassSystem = true,
     -- Config loader mirrors publish unused events and are not active owners.
     ContractConfigSystem = true,
     GameConfigSystem = true,
@@ -95,9 +99,10 @@ local SYSTEMS_BY_GROUP = {
     },
     LiveServiceSystems = {
         "EconomySystem",
+        "ProgressionSystem",
+        "DailyEngagementSystem",
         "ShopSystem",
         "CosmeticSystem",
-        "ProgressionSystem",
         "RankedSystem",
         "ContractRewardSystem",
         "TelemetrySystem",
