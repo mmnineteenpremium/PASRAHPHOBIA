@@ -490,12 +490,15 @@ function Service:ResetDailyIfNeeded(player)
 end
 
 function Service:HandleCheckin(player)
+	local resetOk, resetReason = self:ResetDailyIfNeeded(player)
+	if resetOk == false then
+		return false, resetReason
+	end
+
 	local data = self:_ensurePlayerData(player)
 	if not data then
 		return false, "no_data"
 	end
-
-	self:ResetDailyIfNeeded(player)
 
 	local today = self:GetTodayDateString()
 	if data.daily.lastCheckinDate == today then
@@ -580,13 +583,16 @@ function Service:_missionEventSeen(userId, missionId, eventKey)
 end
 
 function Service:UpdateMissionProgress(player, eventType, amount, metadata)
+	local resetOk, resetReason = self:ResetDailyIfNeeded(player)
+	if resetOk == false then
+		return false, resetReason
+	end
+
 	local data = self:_ensurePlayerData(player)
 	local userId = toUserId(player)
 	if not data or not userId or type(data.daily.missions) ~= "table" then
 		return false, "no_data"
 	end
-
-	self:ResetDailyIfNeeded(player)
 
 	local updated = false
 	local matchId = type(metadata) == "table" and metadata.matchId or nil
@@ -664,12 +670,15 @@ function Service:UpdateMissionProgress(player, eventType, amount, metadata)
 end
 
 function Service:ClaimMissionReward(player, missionId)
+	local resetOk, resetReason = self:ResetDailyIfNeeded(player)
+	if resetOk == false then
+		return false, resetReason
+	end
+
 	local data = self:_ensurePlayerData(player)
 	if not data then
 		return false, "no_data"
 	end
-
-	self:ResetDailyIfNeeded(player)
 
 	local royalConfig = getRoyalPassConfig()
 	for _, mission in ipairs(data.daily.missions or {}) do
@@ -725,11 +734,15 @@ function Service:ClaimMissionReward(player, missionId)
 end
 
 function Service:GetDailyMissions(player)
+	local resetOk = self:ResetDailyIfNeeded(player)
+	if resetOk == false then
+		return {}
+	end
+
 	local data = self:_ensurePlayerData(player)
 	if not data then
 		return {}
 	end
-	self:ResetDailyIfNeeded(player)
 	return clone(data.daily.missions or {})
 end
 
