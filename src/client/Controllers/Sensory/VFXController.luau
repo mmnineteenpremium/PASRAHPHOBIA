@@ -598,7 +598,6 @@ local PREPARATION_VISUAL_PROFILES = {
 local PREPARATION_TOOL_VISUAL_ACCENTS = {
 	EMF = Color3.fromRGB(152, 206, 255),
 	["UV CAM"] = Color3.fromRGB(174, 148, 255),
-	["TO'UN CAM"] = Color3.fromRGB(174, 148, 255),
 	THERMO = Color3.fromRGB(178, 224, 255),
 	BOX = Color3.fromRGB(255, 184, 154),
 	WRITING = Color3.fromRGB(228, 232, 242),

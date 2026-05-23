@@ -2,99 +2,4377 @@
   "name": "PASRAHPHOBIA",
   "tree": {
     "$className": "DataModel",
-
+    "$ignoreUnknownInstances": true,
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "Shared": {
-        "$path": "src/shared"
-      },
-      "GameData": {
-        "$path": "src/shared/GameData"
-      },
-      "RemoteEvents": {
-        "$path": "src/ReplicatedStorage/RemoteEvents"
-      },
-      "RemoteFunctions": {
-        "$path": "src/ReplicatedStorage/RemoteFunctions"
-      },
+      "$ignoreUnknownInstances": true,
       "Assets": {
-        "$path": "src/ReplicatedStorage/Assets"
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+        "GhostVisualProfiles": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Pocong": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ReplicatedStorage/Assets/GhostVisualProfiles/Pocong.lua"
+          }
+        }
       },
-      "Config": {
-        "$path": "src/ReplicatedStorage/Config"
-      },
-      "Maps": {
-        "$path": "src/ReplicatedStorage/Maps"
-      }
-    },
-
-    "ServerScriptService": {
-      "$className": "ServerScriptService",
-      "$path": "src/ServerScriptService"
-    },
-
-    "ServerStorage": {
-      "$className": "ServerStorage",
-      "Maps": {
-        "$path": "src/ServerStorage/Maps"
-      }
-    },
-
-    "StarterPlayer": {
-      "$className": "StarterPlayer",
-      "$properties": {
-        "DevComputerCameraMovementMode": "UserChoice"
-      },
-      "StarterPlayerScripts": {
-        "$className": "StarterPlayerScripts",
-        "ButtonImageTextController": {
-          "$path": "src/StarterPlayerScripts/ButtonImageTextController.client.lua"
+      "Shared": {
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+        "ConfigLoader": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "ConfigLoader": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/ConfigLoader/ConfigLoader.lua"
+          }
         },
-        "ClientBootstrap": {
-          "$path": "src/StarterPlayerScripts/ClientBootstrap.client.lua"
+        "DataTypes": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "AssetAttributionCatalog": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/DataTypes/AssetAttributionCatalog.lua"
+          },
+          "Contracts": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "ContractObjectives": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "ModuleScript": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/shared/DataTypes/Contracts/ContractObjectives/ModuleScript.lua"
+              }
+            },
+            "ContractRewards": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "ModuleScript": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/shared/DataTypes/Contracts/ContractRewards/ModuleScript.lua"
+              }
+            },
+            "ContractTypes": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "ModuleScript": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/shared/DataTypes/Contracts/ContractTypes/ModuleScript.lua"
+              }
+            }
+          },
+          "Cosmetics": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "CosmeticDefinitions": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/DataTypes/Cosmetics/CosmeticDefinitions.lua"
+            },
+            "CosmeticTypes": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/DataTypes/Cosmetics/CosmeticTypes.lua"
+            }
+          },
+          "Evidence": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "EvidenceGhostMap": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "ModuleScript": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/shared/DataTypes/Evidence/EvidenceGhostMap/ModuleScript.lua"
+              }
+            },
+            "EvidenceRules": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "ModuleScript": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/shared/DataTypes/Evidence/EvidenceRules/ModuleScript.lua"
+              }
+            },
+            "EvidenceTypes": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "ModuleScript": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/shared/DataTypes/Evidence/EvidenceTypes/ModuleScript.lua"
+              }
+            }
+          },
+          "GamePhase": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/DataTypes/GamePhase.lua"
+          },
+          "Ghosts": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "GhostEvidenceMap": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "ModuleScript": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/shared/DataTypes/Ghosts/GhostEvidenceMap/ModuleScript.lua"
+              }
+            },
+            "GhostTypes": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "ModuleScript": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/shared/DataTypes/Ghosts/GhostTypes/ModuleScript.lua"
+              }
+            }
+          },
+          "Ranks": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "RankTiers": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/DataTypes/Ranks/RankTiers.lua"
+            }
+          },
+          "Rooms": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "RoomTypes": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "ModuleScript": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/shared/DataTypes/Rooms/RoomTypes/ModuleScript.lua"
+              }
+            }
+          },
+          "ShopCatalog": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/DataTypes/ShopCatalog.lua"
+          },
+          "ShopMarketplaceConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/DataTypes/ShopMarketplaceConfig.lua"
+          }
         },
-        "StudioRoomSmoke": {
-          "$path": "src/StarterPlayerScripts/StudioRoomSmoke.client.lua"
+        "EventBus": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "EventBus": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/EventBus/EventBus.lua"
+          }
         },
-        "Client": {
-          "$path": "src/client"
+        "GameData": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "ContractConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/ContractConfig.lua"
+          },
+          "DifficultyConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/DifficultyConfig.lua"
+          },
+          "EvidenceConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/EvidenceConfig.lua"
+          },
+          "FlashlightConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/FlashlightConfig.lua"
+          },
+          "GameConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/GameConfig.lua"
+          },
+          "GhostDatabase": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/GhostDatabase.lua"
+          },
+          "GhostVisualTuning": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/GhostVisualTuning.lua"
+          },
+          "Ghosts": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "Banaspati": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/Banaspati.lua"
+            },
+            "Genderuwo": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/Genderuwo.lua"
+            },
+            "HantuTanah": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/HantuTanah.lua"
+            },
+            "Jerangkong": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/Jerangkong.lua"
+            },
+            "Kuntilanak": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/Kuntilanak.lua"
+            },
+            "Leak": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/Leak.lua"
+            },
+            "Palasik": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/Palasik.lua"
+            },
+            "Pocong": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/Pocong.lua"
+            },
+            "SilumanUlar": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/SilumanUlar.lua"
+            },
+            "SundelBolong": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/SundelBolong.lua"
+            },
+            "Tuyul": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/Tuyul.lua"
+            },
+            "WeweGombel": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Ghosts/WeweGombel.lua"
+            }
+          },
+          "GlobalOperationsConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/GlobalOperationsConfig.lua"
+          },
+          "LiveOpsContent": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/LiveOpsContent.lua"
+          },
+          "MapConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/MapConfig.lua"
+          },
+          "Maps": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "AbandonedPalace": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Maps/AbandonedPalace.lua"
+            },
+            "EmptyBuilding": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Maps/EmptyBuilding.lua"
+            },
+            "HauntedHouse": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Maps/HauntedHouse.lua"
+            },
+            "LobbySocialHub": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Maps/LobbySocialHub.lua"
+            },
+            "StudioMMNineteen": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/GameData/Maps/StudioMMNineteen.lua"
+            }
+          },
+          "ModeDifficultyConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/ModeDifficultyConfig.lua"
+          },
+          "ToolUsageRules": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/ToolUsageRules.lua"
+          },
+          "ToolVisualConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/GameData/ToolVisualConfig.lua"
+          }
+        },
+        "Rewards": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "RewardPayload": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/Rewards/RewardPayload.lua"
+          }
         }
       }
     },
-
-    "StarterGui": {
-      "$className": "StarterGui",
-      "$properties": {
-        "ScreenOrientation": "LandscapeSensor"
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$ignoreUnknownInstances": true,
+      "Bootstrap": {
+        "$ignoreUnknownInstances": true,
+        "$path": "src/ServerScriptService/Bootstrap.server.lua"
       },
-      "$path": "src/StarterGui"
+      "Modules": {
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+        "MapLoader": {
+          "$ignoreUnknownInstances": true,
+          "$path": "src/ServerScriptService/Modules/MapLoader.lua"
+        }
+      },
+      "Server": {
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+        "AdaptiveHuntSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AdaptiveHuntSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AdaptiveHuntSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AdaptiveHuntSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AdaptiveHuntSystem/State.lua"
+          }
+        },
+        "AggressionSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AggressionSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AggressionSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AggressionSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AggressionSystem/State.lua"
+          }
+        },
+        "AntiCheatSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "AntiCheatSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AntiCheatSystem/AntiCheatSystem.lua"
+          },
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AntiCheatSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AntiCheatSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AntiCheatSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AntiCheatSystem/State.lua"
+          }
+        },
+        "AudioDistortionSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AudioDistortionSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AudioDistortionSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AudioDistortionSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AudioDistortionSystem/State.lua"
+          }
+        },
+        "AudioSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "AudioSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AudioSystem/AudioSystem.lua"
+          },
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AudioSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AudioSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AudioSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AudioSystem/State.lua"
+          }
+        },
+        "AutoRecoverySystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AutoRecoverySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AutoRecoverySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AutoRecoverySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/AutoRecoverySystem/State.lua"
+          }
+        },
+        "BackendStabilitySystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/BackendStabilitySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/BackendStabilitySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/BackendStabilitySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/BackendStabilitySystem/State.lua"
+          }
+        },
+        "ClosetHidingMechanic": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ClosetHidingMechanic/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ClosetHidingMechanic/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ClosetHidingMechanic/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ClosetHidingMechanic/State.lua"
+          }
+        },
+        "ConfigLoader": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ConfigLoader/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ConfigLoader/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ConfigLoader/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ConfigLoader/State.lua"
+          }
+        },
+        "ContentUpdatePipelineSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContentUpdatePipelineSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContentUpdatePipelineSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContentUpdatePipelineSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContentUpdatePipelineSystem/State.lua"
+          }
+        },
+        "ContractCompletionSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractCompletionSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractCompletionSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractCompletionSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractCompletionSystem/State.lua"
+          }
+        },
+        "ContractConfigSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractConfigSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractConfigSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractConfigSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractConfigSystem/State.lua"
+          }
+        },
+        "ContractObjectiveSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractObjectiveSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractObjectiveSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractObjectiveSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractObjectiveSystem/State.lua"
+          }
+        },
+        "ContractRewardSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractRewardSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractRewardSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractRewardSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractRewardSystem/State.lua"
+          }
+        },
+        "ContractSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "ContractBoard": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "Board": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/ContractSystem/ContractBoard/Board.lua"
+            },
+            "ContractBoard": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/ContractSystem/ContractBoard/ContractBoard.lua"
+            }
+          },
+          "ContractGenerator": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "ContractGenerator": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/ContractSystem/ContractGenerator/ContractGenerator.lua"
+            },
+            "Generator": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/ContractSystem/ContractGenerator/Generator.lua"
+            }
+          },
+          "ContractObjectives": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "ContractObjectives": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/ContractSystem/ContractObjectives/ContractObjectives.lua"
+            },
+            "MissionProgress": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/ContractSystem/ContractObjectives/MissionProgress.lua"
+            }
+          },
+          "ContractRewards": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "ContractRewards": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/ContractSystem/ContractRewards/ContractRewards.lua"
+            },
+            "RewardEngine": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/ContractSystem/ContractRewards/RewardEngine.lua"
+            }
+          },
+          "ContractService": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractSystem/ContractService.lua"
+          },
+          "ContractSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractSystem/ContractSystem.lua"
+          },
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ContractSystem/State.lua"
+          }
+        },
+        "Core": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "AudioErrorGuard": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/Core/AudioErrorGuard.lua"
+          },
+          "AudioSanitizer": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/Core/AudioSanitizer.lua"
+          },
+          "LobbyLocator": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/Core/LobbyLocator.lua"
+          },
+          "RankTiersResolver": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/Core/RankTiersResolver.lua"
+          },
+          "Services": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/Core/Services.lua"
+          },
+          "SystemDiagnostics": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/Core/SystemDiagnostics.lua"
+          },
+          "SystemRegistry": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/Core/SystemRegistry.lua"
+          }
+        },
+        "CosmeticSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/CosmeticSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/CosmeticSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/CosmeticSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/CosmeticSystem/State.lua"
+          }
+        },
+        "DailyCheckinSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyCheckinSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyCheckinSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyCheckinSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyCheckinSystem/State.lua"
+          }
+        },
+        "DailyContractSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyContractSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyContractSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyContractSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyContractSystem/State.lua"
+          }
+        },
+        "DailyMissionSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyMissionSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyMissionSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyMissionSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DailyMissionSystem/State.lua"
+          }
+        },
+        "DataIntegritySystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataIntegritySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataIntegritySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataIntegritySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataIntegritySystem/State.lua"
+          }
+        },
+        "DataPersistence": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataPersistence/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataPersistence/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataPersistence/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataPersistence/State.lua"
+          }
+        },
+        "DataPersistenceService": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataPersistenceService/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataPersistenceService/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataPersistenceService/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DataPersistenceService/State.lua"
+          }
+        },
+        "DeathStateSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DeathStateSystem/Controller.lua"
+          },
+          "DeathDetector": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DeathStateSystem/DeathDetector.lua"
+          },
+          "DeathEventBridge": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DeathStateSystem/DeathEventBridge.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DeathStateSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DeathStateSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DeathStateSystem/State.lua"
+          }
+        },
+        "DependencyVerificationSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DependencyVerificationSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DependencyVerificationSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DependencyVerificationSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DependencyVerificationSystem/State.lua"
+          }
+        },
+        "DifficultyConfigSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DifficultyConfigSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DifficultyConfigSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DifficultyConfigSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DifficultyConfigSystem/State.lua"
+          }
+        },
+        "DynamicInvestigationEventSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DynamicInvestigationEventSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DynamicInvestigationEventSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DynamicInvestigationEventSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/DynamicInvestigationEventSystem/State.lua"
+          }
+        },
+        "EconomySystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EconomySystem/Controller.lua"
+          },
+          "EconomySystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EconomySystem/EconomySystem.lua"
+          },
+          "Integrations": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "Controller": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EconomySystem/Integrations/Controller.lua"
+            },
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EconomySystem/Integrations/Main.lua"
+            },
+            "Service": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EconomySystem/Integrations/Service.lua"
+            },
+            "State": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EconomySystem/Integrations/State.lua"
+            }
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EconomySystem/Main.lua"
+          },
+          "Rewards": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "DailyCheckIn": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/DailyCheckIn/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/DailyCheckIn/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/DailyCheckIn/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/DailyCheckIn/State.lua"
+              }
+            },
+            "DailyMissions": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/DailyMissions/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/DailyMissions/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/DailyMissions/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/DailyMissions/State.lua"
+              }
+            },
+            "MatchCompletion": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/MatchCompletion/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/MatchCompletion/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/MatchCompletion/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/MatchCompletion/State.lua"
+              }
+            },
+            "RoyalPass": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/RoyalPass/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/RoyalPass/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/RoyalPass/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/EconomySystem/Rewards/RoyalPass/State.lua"
+              }
+            }
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EconomySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EconomySystem/State.lua"
+          }
+        },
+        "EngineStartupValidator": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EngineStartupValidator/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EngineStartupValidator/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EngineStartupValidator/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EngineStartupValidator/State.lua"
+          }
+        },
+        "ErrorMonitoringSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ErrorMonitoringSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ErrorMonitoringSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ErrorMonitoringSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ErrorMonitoringSystem/State.lua"
+          }
+        },
+        "EscalationTimerSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EscalationTimerSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EscalationTimerSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EscalationTimerSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EscalationTimerSystem/State.lua"
+          }
+        },
+        "EventBus": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventBus/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventBus/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventBus/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventBus/State.lua"
+          }
+        },
+        "EventBusProfiler": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventBusProfiler/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventBusProfiler/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventBusProfiler/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventBusProfiler/State.lua"
+          }
+        },
+        "EventMapRotationSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventMapRotationSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventMapRotationSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventMapRotationSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EventMapRotationSystem/State.lua"
+          }
+        },
+        "EvidenceConfigSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceConfigSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceConfigSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceConfigSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceConfigSystem/State.lua"
+          }
+        },
+        "EvidenceDeductionEngine": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceDeductionEngine/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceDeductionEngine/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceDeductionEngine/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceDeductionEngine/State.lua"
+          }
+        },
+        "EvidenceJournalSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceJournalSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceJournalSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceJournalSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceJournalSystem/State.lua"
+          }
+        },
+        "EvidenceSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceSystem/Controller.lua"
+          },
+          "EvidenceEngine": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "EvidenceEngine": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/EvidenceEngine/EvidenceEngine.lua"
+            }
+          },
+          "EvidenceGateway": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceSystem/EvidenceGateway.lua"
+          },
+          "EvidenceManager": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceSystem/EvidenceManager.lua"
+          },
+          "EvidenceRandomizer": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceSystem/EvidenceRandomizer.lua"
+          },
+          "EvidenceSpawner": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "EvidenceSpawner": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/EvidenceSpawner/EvidenceSpawner.lua"
+            }
+          },
+          "EvidenceSync": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "EvidenceSync": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/EvidenceSync/EvidenceSync.lua"
+            }
+          },
+          "EvidenceSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceSystem/EvidenceSystem.lua"
+          },
+          "EvidenceValidator": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "EvidenceValidator": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/EvidenceValidator/EvidenceValidator.lua"
+            }
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceSystem/Main.lua"
+          },
+          "Modules": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "EvidenceDataTypes": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceDataTypes.lua"
+            },
+            "EvidenceDeduction": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceDeduction.lua"
+            },
+            "EvidenceEngine": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceEngine.lua"
+            },
+            "EvidencePool": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidencePool.lua"
+            },
+            "EvidenceProbability": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceProbability.lua"
+            },
+            "EvidenceService": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceService.lua"
+            },
+            "EvidenceSpawner": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceSpawner.lua"
+            },
+            "EvidenceTracker": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceTracker.lua"
+            },
+            "EvidenceTrigger": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceTrigger.lua"
+            },
+            "EvidenceValidator": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/EvidenceValidator.lua"
+            },
+            "FalseEvidence": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/FalseEvidence.lua"
+            },
+            "UtilityToolVisuals": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/EvidenceSystem/Modules/UtilityToolVisuals.lua"
+            }
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceSystem/State.lua"
+          }
+        },
+        "EvidenceToolSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceToolSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceToolSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceToolSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/EvidenceToolSystem/State.lua"
+          }
+        },
+        "ExploitDetectionSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ExploitDetectionSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ExploitDetectionSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ExploitDetectionSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ExploitDetectionSystem/State.lua"
+          }
+        },
+        "FailSafeSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FailSafeSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FailSafeSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FailSafeSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FailSafeSystem/State.lua"
+          }
+        },
+        "FearEngine": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "AggressionSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearEngine/AggressionSystem.lua"
+          },
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearEngine/Controller.lua"
+          },
+          "FearEngine": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearEngine/FearEngine.lua"
+          },
+          "HuntController": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearEngine/HuntController.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearEngine/Main.lua"
+          },
+          "ParanormalEvents": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearEngine/ParanormalEvents.lua"
+          },
+          "SanitySystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearEngine/SanitySystem.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearEngine/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearEngine/State.lua"
+          }
+        },
+        "FearSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearSystem/Controller.lua"
+          },
+          "FearSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearSystem/FearSystem.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FearSystem/State.lua"
+          }
+        },
+        "FinalEngineBootstrap": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FinalEngineBootstrap/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FinalEngineBootstrap/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FinalEngineBootstrap/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FinalEngineBootstrap/State.lua"
+          }
+        },
+        "FlashlightSyncSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FlashlightSyncSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FlashlightSyncSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FlashlightSyncSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FlashlightSyncSystem/State.lua"
+          }
+        },
+        "FriendSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FriendSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FriendSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FriendSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/FriendSystem/State.lua"
+          }
+        },
+        "GameConfigSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GameConfigSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GameConfigSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GameConfigSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GameConfigSystem/State.lua"
+          }
+        },
+        "GamePhaseSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GamePhaseSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GamePhaseSystem/Main.lua"
+          },
+          "Phases": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "ResultsPhase": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GamePhaseSystem/Phases/ResultsPhase.lua"
+            }
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GamePhaseSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GamePhaseSystem/State.lua"
+          }
+        },
+        "GameplayLoopController": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GameplayLoopController/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GameplayLoopController/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GameplayLoopController/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GameplayLoopController/State.lua"
+          }
+        },
+        "GhostChaseSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostChaseSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostChaseSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostChaseSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostChaseSystem/State.lua"
+          }
+        },
+        "GhostDatabaseSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDatabaseSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDatabaseSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDatabaseSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDatabaseSystem/State.lua"
+          }
+        },
+        "GhostDeductionJournal": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDeductionJournal/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDeductionJournal/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDeductionJournal/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDeductionJournal/State.lua"
+          }
+        },
+        "GhostDirector": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Behaviors": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "AmbushBehavior": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostDirector/Behaviors/AmbushBehavior.lua"
+            },
+            "HuntBehavior": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostDirector/Behaviors/HuntBehavior.lua"
+            },
+            "ManifestBehavior": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostDirector/Behaviors/ManifestBehavior.lua"
+            },
+            "StalkBehavior": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostDirector/Behaviors/StalkBehavior.lua"
+            }
+          },
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDirector/Controller.lua"
+          },
+          "GhostDirector": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDirector/GhostDirector.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDirector/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDirector/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostDirector/State.lua"
+          }
+        },
+        "GhostModifierSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostModifierSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostModifierSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostModifierSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostModifierSystem/State.lua"
+          }
+        },
+        "GhostPathingSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostPathingSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostPathingSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostPathingSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostPathingSystem/State.lua"
+          }
+        },
+        "GhostPersonalitySystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostPersonalitySystem/Controller.lua"
+          },
+          "GhostPersonalitySystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostPersonalitySystem/GhostPersonalitySystem.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostPersonalitySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostPersonalitySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostPersonalitySystem/State.lua"
+          }
+        },
+        "GhostStrategySystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostStrategySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostStrategySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostStrategySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostStrategySystem/State.lua"
+          }
+        },
+        "GhostSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/Controller.lua"
+          },
+          "GhostAI": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "BehaviorPipeline": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/GhostAI/BehaviorPipeline.lua"
+            },
+            "GhostTypeProvider": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/GhostAI/GhostTypeProvider.lua"
+            }
+          },
+          "GhostAICore": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostAICore.lua"
+          },
+          "GhostAbilities": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "AbilityPipeline": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/GhostAbilities/AbilityPipeline.lua"
+            }
+          },
+          "GhostAbilityEngine": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostAbilityEngine.lua"
+          },
+          "GhostAbilityRegistry": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostAbilityRegistry.lua"
+          },
+          "GhostAggression": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostAggression.lua"
+          },
+          "GhostEvidenceController": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostEvidenceController.lua"
+          },
+          "GhostHuntController": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostHuntController.lua"
+          },
+          "GhostIntelligence": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostIntelligence.lua"
+          },
+          "GhostInteractionGateway": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostInteractionGateway.lua"
+          },
+          "GhostPersonality": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "PersonalityEngine": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/GhostPersonality/PersonalityEngine.lua"
+            },
+            "PersonalityTraits": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/GhostPersonality/PersonalityTraits.lua"
+            },
+            "PersonalityTypes": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/GhostPersonality/PersonalityTypes.lua"
+            }
+          },
+          "GhostPersonalityEngine": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostPersonalityEngine.lua"
+          },
+          "GhostRoamingController": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostRoamingController.lua"
+          },
+          "GhostRoomPreference": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostRoomPreference.lua"
+          },
+          "GhostService": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostService.lua"
+          },
+          "GhostStateMachine": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostStateMachine.lua"
+          },
+          "GhostSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostSystem.lua"
+          },
+          "GhostTargeting": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/GhostTargeting.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/Main.lua"
+          },
+          "RoomSystem": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "FavoriteRoom": {
+              "$className": "ModuleScript",
+              "$ignoreUnknownInstances": true,
+              "FavoriteRoomService": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/GhostSystem/RoomSystem/FavoriteRoom/FavoriteRoomService.lua"
+              }
+            },
+            "RoomActivity": {
+              "$className": "ModuleScript",
+              "$ignoreUnknownInstances": true,
+              "RoomActivityService": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/GhostSystem/RoomSystem/RoomActivity/RoomActivityService.lua"
+              }
+            },
+            "RoomRoaming": {
+              "$className": "ModuleScript",
+              "$ignoreUnknownInstances": true,
+              "RoomRoamingService": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/GhostSystem/RoomSystem/RoomRoaming/RoomRoamingService.lua"
+              }
+            },
+            "RoomSelection": {
+              "$className": "ModuleScript",
+              "$ignoreUnknownInstances": true,
+              "RoomSelectionService": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/GhostSystem/RoomSystem/RoomSelection/RoomSelectionService.lua"
+              }
+            },
+            "RoomSystem": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/RoomSystem/RoomSystem.lua"
+            }
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GhostSystem/State.lua"
+          },
+          "States": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "FakeHuntState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/States/FakeHuntState.lua"
+            },
+            "HuntState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/States/HuntState.lua"
+            },
+            "IdleState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/States/IdleState.lua"
+            },
+            "InteractState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/States/InteractState.lua"
+            },
+            "InteractionState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/States/InteractionState.lua"
+            },
+            "InvestigatingState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/States/InvestigatingState.lua"
+            },
+            "ManifestState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/States/ManifestState.lua"
+            },
+            "RetreatState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/States/RetreatState.lua"
+            },
+            "RoamingState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/GhostSystem/States/RoamingState.lua"
+            }
+          }
+        },
+        "GlobalOperationsSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GlobalOperationsSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GlobalOperationsSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GlobalOperationsSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/GlobalOperationsSystem/State.lua"
+          }
+        },
+        "HallucinationSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HallucinationSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HallucinationSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HallucinationSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HallucinationSystem/State.lua"
+          }
+        },
+        "HidingSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HidingSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HidingSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HidingSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HidingSystem/State.lua"
+          }
+        },
+        "HorrorDirector": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HorrorDirector/Controller.lua"
+          },
+          "DirectorRules": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "DirectorRules": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/HorrorDirector/DirectorRules/DirectorRules.lua"
+            }
+          },
+          "EventScheduler": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "EventScheduler": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/HorrorDirector/EventScheduler/EventScheduler.lua"
+            }
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HorrorDirector/Main.lua"
+          },
+          "PlayerStateMonitor": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "PlayerStateMonitor": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/HorrorDirector/PlayerStateMonitor/PlayerStateMonitor.lua"
+            }
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HorrorDirector/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HorrorDirector/State.lua"
+          },
+          "TensionSystem": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "TensionSystem": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/HorrorDirector/TensionSystem/TensionSystem.lua"
+            }
+          }
+        },
+        "HuntEscapeSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntEscapeSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntEscapeSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntEscapeSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntEscapeSystem/State.lua"
+          }
+        },
+        "HuntPhaseController": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntPhaseController/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntPhaseController/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntPhaseController/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntPhaseController/State.lua"
+          }
+        },
+        "HuntSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/HuntSystem/State.lua"
+          }
+        },
+        "InstanceScalingSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InstanceScalingSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InstanceScalingSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InstanceScalingSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InstanceScalingSystem/State.lua"
+          }
+        },
+        "InventorySystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InventorySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InventorySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InventorySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InventorySystem/State.lua"
+          }
+        },
+        "InvestigationSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InvestigationSystem/Controller.lua"
+          },
+          "EvidenceTracker": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "EvidenceTracker": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/InvestigationSystem/EvidenceTracker/EvidenceTracker.lua"
+            }
+          },
+          "GhostGuess": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "GhostGuess": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/InvestigationSystem/GhostGuess/GhostGuess.lua"
+            }
+          },
+          "InvestigationState": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "InvestigationState": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/InvestigationSystem/InvestigationState/InvestigationState.lua"
+            }
+          },
+          "InvestigationSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InvestigationSystem/InvestigationSystem.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InvestigationSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InvestigationSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/InvestigationSystem/State.lua"
+          }
+        },
+        "JournalSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/JournalSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/JournalSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/JournalSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/JournalSystem/State.lua"
+          }
+        },
+        "LatencyMonitoringSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LatencyMonitoringSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LatencyMonitoringSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LatencyMonitoringSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LatencyMonitoringSystem/State.lua"
+          }
+        },
+        "LeaderboardSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LeaderboardSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LeaderboardSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LeaderboardSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LeaderboardSystem/State.lua"
+          }
+        },
+        "LiveContentOpsSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LiveContentOpsSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LiveContentOpsSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LiveContentOpsSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LiveContentOpsSystem/State.lua"
+          }
+        },
+        "LobbySocialHub": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Buildings": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "DailyRewardBuilding": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/DailyRewardBuilding/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/DailyRewardBuilding/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/DailyRewardBuilding/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/DailyRewardBuilding/State.lua"
+              }
+            },
+            "FlexGallery": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/FlexGallery/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/FlexGallery/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/FlexGallery/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/FlexGallery/State.lua"
+              }
+            },
+            "LeaderboardBuilding": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/LeaderboardBuilding/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/LeaderboardBuilding/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/LeaderboardBuilding/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/LeaderboardBuilding/State.lua"
+              }
+            },
+            "MatchmakingHall": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/MatchmakingHall/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/MatchmakingHall/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/MatchmakingHall/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/MatchmakingHall/State.lua"
+              }
+            },
+            "ShopBuilding": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/ShopBuilding/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/ShopBuilding/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/ShopBuilding/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/ShopBuilding/State.lua"
+              }
+            },
+            "TrainingBuilding": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/TrainingBuilding/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/TrainingBuilding/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/TrainingBuilding/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Buildings/TrainingBuilding/State.lua"
+              }
+            }
+          },
+          "CampfireSanityService": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/CampfireSanityService.lua"
+          },
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/Controller.lua"
+          },
+          "Core": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "Controller": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/Core/Controller.lua"
+            },
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/Core/Main.lua"
+            },
+            "Service": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/Core/Service.lua"
+            },
+            "State": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/Core/State.lua"
+            }
+          },
+          "Interaction": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "Controller": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/Interaction/Controller.lua"
+            },
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/Interaction/Main.lua"
+            },
+            "Service": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/Interaction/Service.lua"
+            },
+            "State": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/Interaction/State.lua"
+            }
+          },
+          "LobbyInteraction": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/LobbyInteraction.lua"
+          },
+          "LobbyPlayerManager": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/LobbyPlayerManager.lua"
+          },
+          "LobbyPopulationController": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/LobbyPopulationController.lua"
+          },
+          "LobbyService": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua"
+          },
+          "LobbyZoneManager": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/LobbyZoneManager.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/Main.lua"
+          },
+          "PartySystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/PartySystem.lua",
+            "Controller": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/PartySystem/Controller.lua"
+            },
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/PartySystem/Main.lua"
+            },
+            "Service": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/PartySystem/Service.lua"
+            },
+            "State": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/PartySystem/State.lua"
+            }
+          },
+          "PlayerPresence": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "Controller": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/PlayerPresence/Controller.lua"
+            },
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/PlayerPresence/Main.lua"
+            },
+            "Service": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/PlayerPresence/Service.lua"
+            },
+            "State": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/LobbySocialHub/PlayerPresence/State.lua"
+            }
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/State.lua"
+          },
+          "Zones": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "DailyRewardZone": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/DailyRewardZone/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/DailyRewardZone/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/DailyRewardZone/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/DailyRewardZone/State.lua"
+              }
+            },
+            "FlexZone": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/FlexZone/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/FlexZone/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/FlexZone/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/FlexZone/State.lua"
+              }
+            },
+            "LeaderboardZone": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/LeaderboardZone/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/LeaderboardZone/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/LeaderboardZone/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/LeaderboardZone/State.lua"
+              }
+            },
+            "MatchmakingZone": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/MatchmakingZone/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/MatchmakingZone/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/MatchmakingZone/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/MatchmakingZone/State.lua"
+              }
+            },
+            "PartyZone": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/PartyZone/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/PartyZone/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/PartyZone/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/PartyZone/State.lua"
+              }
+            },
+            "ShopZone": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/ShopZone/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/ShopZone/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/ShopZone/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/ShopZone/State.lua"
+              }
+            },
+            "SpawnPlaza": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/SpawnPlaza/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/SpawnPlaza/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/SpawnPlaza/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/SpawnPlaza/State.lua"
+              }
+            },
+            "TrainingZone": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Controller": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/TrainingZone/Controller.lua"
+              },
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/TrainingZone/Main.lua"
+              },
+              "Service": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/TrainingZone/Service.lua"
+              },
+              "State": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/ServerScriptService/Server/LobbySocialHub/Zones/TrainingZone/State.lua"
+              }
+            }
+          }
+        },
+        "LobbySystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySystem/Main.lua"
+          },
+          "ModeSelectionConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySystem/ModeSelectionConfig.lua"
+          },
+          "RoomManager": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySystem/RoomManager.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySystem/State.lua"
+          }
+        },
+        "MapConfigSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapConfigSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapConfigSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapConfigSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapConfigSystem/State.lua"
+          }
+        },
+        "MapEventSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapEventSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapEventSystem/Main.lua"
+          },
+          "MapEventSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapEventSystem/MapEventSystem.lua"
+          },
+          "Modules": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "EventEngine": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/MapEventSystem/Modules/EventEngine.lua"
+            },
+            "EventRegistry": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/MapEventSystem/Modules/EventRegistry.lua"
+            }
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapEventSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapEventSystem/State.lua"
+          }
+        },
+        "MapInteractionSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/Controller.lua"
+          },
+          "DoorInteraction": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/DoorInteraction.lua"
+          },
+          "ElectronicDisturbance": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/ElectronicDisturbance.lua"
+          },
+          "EventScheduler": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/EventScheduler.lua"
+          },
+          "HorrorEvents": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/HorrorEvents.lua"
+          },
+          "LightInteraction": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/LightInteraction.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/Main.lua"
+          },
+          "MapInteractionSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/MapInteractionSystem.lua"
+          },
+          "ObjectMovement": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/ObjectMovement.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MapInteractionSystem/State.lua"
+          }
+        },
+        "MatchResultSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchResultSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchResultSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchResultSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchResultSystem/State.lua"
+          }
+        },
+        "MatchSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "AbandonedPalaceMapScaffold": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/AbandonedPalaceMapScaffold.lua"
+          },
+          "AbandonedPalaceRuntimeLayout": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/AbandonedPalaceRuntimeLayout.lua"
+          },
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/Controller.lua"
+          },
+          "DoorRuntime": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/DoorRuntime.lua"
+          },
+          "EmptyBuildingMapScaffold": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/EmptyBuildingMapScaffold.lua"
+          },
+          "EmptyBuildingRuntimeLayout": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/EmptyBuildingRuntimeLayout.lua"
+          },
+          "EnvironmentalObjectRuntime": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/EnvironmentalObjectRuntime.lua"
+          },
+          "HauntedHouseMapScaffold": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/HauntedHouseMapScaffold.lua"
+          },
+          "HauntedHouseRuntimeLayout": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/HauntedHouseRuntimeLayout.lua"
+          },
+          "InvestigationDirector": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/InvestigationDirector.lua"
+          },
+          "InvestigationState": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/InvestigationState.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/Main.lua"
+          },
+          "MapRuntimePatches": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MapRuntimePatches.lua"
+          },
+          "Match": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/Match.lua"
+          },
+          "MatchBuilder": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MatchBuilder.lua"
+          },
+          "MatchCleanup": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MatchCleanup.lua"
+          },
+          "MatchInstance": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MatchInstance.lua"
+          },
+          "MatchLifecycle": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MatchLifecycle.lua"
+          },
+          "MatchModel": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MatchModel.lua"
+          },
+          "MatchQueue": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MatchQueue.lua"
+          },
+          "MatchRegistry": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MatchRegistry.lua"
+          },
+          "MatchService": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MatchService.lua"
+          },
+          "MatchTeleport": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/MatchTeleport.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/State.lua"
+          },
+          "StudioMMNineteenMapScaffold": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/StudioMMNineteenMapScaffold.lua"
+          },
+          "StudioMMNineteenRuntimeLayout": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchSystem/StudioMMNineteenRuntimeLayout.lua"
+          }
+        },
+        "MatchmakingQualitySystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchmakingQualitySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchmakingQualitySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchmakingQualitySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchmakingQualitySystem/State.lua"
+          }
+        },
+        "MatchmakingSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchmakingSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchmakingSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchmakingSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MatchmakingSystem/State.lua"
+          }
+        },
+        "MemoryTrackingSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MemoryTrackingSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MemoryTrackingSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MemoryTrackingSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/MemoryTrackingSystem/State.lua"
+          }
+        },
+        "ModerationOperationsSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ModerationOperationsSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ModerationOperationsSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ModerationOperationsSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ModerationOperationsSystem/State.lua"
+          }
+        },
+        "OperationsQASystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/OperationsQASystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/OperationsQASystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/OperationsQASystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/OperationsQASystem/State.lua"
+          }
+        },
+        "PartySystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PartySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PartySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PartySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PartySystem/State.lua"
+          }
+        },
+        "PlatformSupportSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlatformSupportSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlatformSupportSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlatformSupportSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlatformSupportSystem/State.lua"
+          }
+        },
+        "PlayerDeathSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerDeathSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerDeathSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerDeathSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerDeathSystem/State.lua"
+          }
+        },
+        "PlayerEngagementSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerEngagementSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerEngagementSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerEngagementSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerEngagementSystem/State.lua"
+          }
+        },
+        "PlayerHealthSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerHealthSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerHealthSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerHealthSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerHealthSystem/State.lua"
+          }
+        },
+        "PlayerInspectSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerInspectSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerInspectSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerInspectSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerInspectSystem/State.lua"
+          }
+        },
+        "PlayerProfileSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerProfileSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerProfileSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerProfileSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerProfileSystem/State.lua"
+          }
+        },
+        "PlayerReputationSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerReputationSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerReputationSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerReputationSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerReputationSystem/State.lua"
+          }
+        },
+        "PlayerSurvivalSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerSurvivalSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerSurvivalSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerSurvivalSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerSurvivalSystem/State.lua"
+          }
+        },
+        "PlayerTargetingAI": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerTargetingAI/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerTargetingAI/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerTargetingAI/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/PlayerTargetingAI/State.lua"
+          }
+        },
+        "ProductionSafetySystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProductionSafetySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProductionSafetySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProductionSafetySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProductionSafetySystem/State.lua"
+          }
+        },
+        "ProfileSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProfileSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProfileSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProfileSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProfileSystem/State.lua"
+          }
+        },
+        "ProgressionSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProgressionSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProgressionSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProgressionSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ProgressionSystem/State.lua"
+          }
+        },
+        "RandomJumpscareSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RandomJumpscareSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RandomJumpscareSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RandomJumpscareSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RandomJumpscareSystem/State.lua"
+          }
+        },
+        "RankedSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RankedSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RankedSystem/Main.lua"
+          },
+          "RankedSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RankedSystem/RankedSystem.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RankedSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RankedSystem/State.lua"
+          }
+        },
+        "RewardCalculationSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RewardCalculationSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RewardCalculationSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RewardCalculationSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RewardCalculationSystem/State.lua"
+          }
+        },
+        "RewardSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RewardSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RewardSystem/Main.lua"
+          },
+          "RewardSystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RewardSystem/RewardSystem.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RewardSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RewardSystem/State.lua"
+          }
+        },
+        "RoyalPassSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RoyalPassSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RoyalPassSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RoyalPassSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RoyalPassSystem/State.lua"
+          }
+        },
+        "RuntimeIntegritySystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeIntegritySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeIntegritySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeIntegritySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeIntegritySystem/State.lua"
+          }
+        },
+        "RuntimeMetricsSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeMetricsSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeMetricsSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeMetricsSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeMetricsSystem/State.lua"
+          }
+        },
+        "RuntimeOptimizer": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeOptimizer/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeOptimizer/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeOptimizer/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/RuntimeOptimizer/State.lua"
+          }
+        },
+        "SanityEventSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SanityEventSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SanityEventSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SanityEventSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SanityEventSystem/State.lua"
+          }
+        },
+        "SanitySystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SanitySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SanitySystem/Main.lua"
+          },
+          "SanitySystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SanitySystem/SanitySystem.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SanitySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SanitySystem/State.lua"
+          }
+        },
+        "SeasonalEventSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SeasonalEventSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SeasonalEventSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SeasonalEventSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SeasonalEventSystem/State.lua"
+          }
+        },
+        "SecuritySystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SecuritySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SecuritySystem/Main.lua"
+          },
+          "SecuritySystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SecuritySystem/SecuritySystem.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SecuritySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SecuritySystem/State.lua"
+          }
+        },
+        "ServerBootstrap": {
+          "$ignoreUnknownInstances": true,
+          "$path": "src/ServerScriptService/Server/ServerBootstrap.lua"
+        },
+        "ServerHealthSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerHealthSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerHealthSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerHealthSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerHealthSystem/State.lua"
+          }
+        },
+        "ServerPerformance": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerPerformance/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerPerformance/Main.lua"
+          },
+          "ServerPerformance": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerPerformance/ServerPerformance.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerPerformance/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerPerformance/State.lua"
+          }
+        },
+        "ServerPerformanceSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerPerformanceSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerPerformanceSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerPerformanceSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerPerformanceSystem/State.lua"
+          }
+        },
+        "ServerProfilerSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerProfilerSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerProfilerSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerProfilerSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerProfilerSystem/State.lua"
+          }
+        },
+        "ServerQueueSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerQueueSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerQueueSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerQueueSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ServerQueueSystem/State.lua"
+          }
+        },
+        "SessionRecoverySystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SessionRecoverySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SessionRecoverySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SessionRecoverySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SessionRecoverySystem/State.lua"
+          }
+        },
+        "ShopSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ShopSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ShopSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ShopSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ShopSystem/State.lua"
+          }
+        },
+        "SocialCommerceSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialCommerceSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialCommerceSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialCommerceSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialCommerceSystem/State.lua"
+          }
+        },
+        "SocialEmoteSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialEmoteSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialEmoteSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialEmoteSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialEmoteSystem/State.lua"
+          }
+        },
+        "SocialNotificationSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialNotificationSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialNotificationSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialNotificationSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SocialNotificationSystem/State.lua"
+          }
+        },
+        "SpectatorCameraSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorCameraSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorCameraSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorCameraSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorCameraSystem/State.lua"
+          }
+        },
+        "SpectatorModeSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorModeSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorModeSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorModeSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorModeSystem/State.lua"
+          }
+        },
+        "SpectatorSystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorSystem/Main.lua"
+          },
+          "Modules": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "SpectatorDistortionRules": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/SpectatorSystem/Modules/SpectatorDistortionRules.lua"
+            },
+            "SpectatorEventBridge": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/SpectatorSystem/Modules/SpectatorEventBridge.lua"
+            },
+            "SpectatorUIMessageCatalog": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/SpectatorSystem/Modules/SpectatorUIMessageCatalog.lua"
+            },
+            "SpectatorVoicePolicy": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ServerScriptService/Server/SpectatorSystem/Modules/SpectatorVoicePolicy.lua"
+            }
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorSystem/Service.lua"
+          },
+          "SpectatorCommunication": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorSystem/SpectatorCommunication.lua"
+          },
+          "SpectatorDistortionEngine": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorSystem/SpectatorDistortionEngine.lua"
+          },
+          "SpectatorGhostGenerator": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorSystem/SpectatorGhostGenerator.lua"
+          },
+          "SpectatorService": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorSystem/SpectatorService.lua"
+          },
+          "SpectatorVision": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorSystem/SpectatorVision.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SpectatorSystem/State.lua"
+          }
+        },
+        "StudioE2EControlSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/StudioE2EControlSystem/Main.lua"
+          }
+        },
+        "SystemDiagnosticsController": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SystemDiagnosticsController/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SystemDiagnosticsController/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SystemDiagnosticsController/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SystemDiagnosticsController/State.lua"
+          }
+        },
+        "SystemIntegrationController": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SystemIntegrationController/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SystemIntegrationController/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SystemIntegrationController/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/SystemIntegrationController/State.lua"
+          }
+        },
+        "TelemetrySystem": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/TelemetrySystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/TelemetrySystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/TelemetrySystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/TelemetrySystem/State.lua"
+          },
+          "TelemetrySystem": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/TelemetrySystem/TelemetrySystem.lua"
+          }
+        },
+        "ToolInteractionSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ToolInteractionSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ToolInteractionSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ToolInteractionSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ToolInteractionSystem/State.lua"
+          }
+        },
+        "ToolSignalProcessingSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ToolSignalProcessingSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ToolSignalProcessingSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ToolSignalProcessingSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/ToolSignalProcessingSystem/State.lua"
+          }
+        },
+        "WatchdogSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/WatchdogSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/WatchdogSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/WatchdogSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/WatchdogSystem/State.lua"
+          }
+        },
+        "WeeklyChallengeSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/WeeklyChallengeSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/WeeklyChallengeSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/WeeklyChallengeSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/WeeklyChallengeSystem/State.lua"
+          }
+        }
+      }
     },
-
-    "Lighting": {
-      "$className": "Lighting",
-      "$properties": {
-        "Ambient": [0.04, 0.04, 0.05],
-        "OutdoorAmbient": [0.02, 0.02, 0.03],
-        "Brightness": 1,
-        "ClockTime": 18,
-        "FogStart": 18,
-        "FogEnd": 145,
-        "GlobalShadows": true,
-        "ShadowSoftness": 0.75,
-        "Technology": "Future"
-      },
-      "$path": "src/Lighting"
-    },
-
-    "Workspace": {
-      "$className": "Workspace",
-      "$properties": {
-        "StreamingEnabled": true,
-        "StreamingMinRadius": 64,
-        "StreamingTargetRadius": 192
-      },
-      "Maps": {
-        "$path": "src/Workspace/Maps"
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$ignoreUnknownInstances": true,
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$ignoreUnknownInstances": true,
+        "Client": {
+          "$className": "ModuleScript",
+          "$ignoreUnknownInstances": true,
+          "CameraController": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/client/CameraController.client.lua"
+          },
+          "CameraResolver": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/client/CameraResolver.lua"
+          },
+          "Controllers": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "Sensory": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "AudioController": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/Controllers/Sensory/AudioController.luau"
+              },
+              "FootstepController": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/Controllers/Sensory/FootstepController.luau"
+              },
+              "VFXController": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/Controllers/Sensory/VFXController.luau"
+              }
+            }
+          },
+          "Core": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "ClientBootstrap": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/Core/ClientBootstrap.lua"
+            },
+            "ClientServiceRegistry": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/Core/ClientServiceRegistry.lua"
+            }
+          },
+          "EvidenceTools": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "BolaArwah": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/BolaArwah/Main.lua"
+              }
+            },
+            "BukuTerkutuk": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/BukuTerkutuk/Main.lua"
+              }
+            },
+            "Dupa": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/Dupa/Main.lua"
+              }
+            },
+            "Garam": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/Garam/Main.lua"
+              }
+            },
+            "GerakanGaib": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/GerakanGaib/Main.lua"
+              }
+            },
+            "JejakEnergi": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/JejakEnergi/Main.lua"
+              }
+            },
+            "KotakArwah": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/KotakArwah/Main.lua"
+              }
+            },
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/EvidenceTools/Main.lua"
+            },
+            "PilSanity": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/PilSanity/Main.lua"
+              }
+            },
+            "Salib": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/Salib/Main.lua"
+              }
+            },
+            "SuhuMembeku": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "Main": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/EvidenceTools/SuhuMembeku/Main.lua"
+              }
+            },
+            "ToolClient": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/EvidenceTools/ToolClient.lua"
+            }
+          },
+          "FlashlightController": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/client/FlashlightController.client.lua"
+          },
+          "GhostAnimationPipeline": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/GhostAnimationPipeline/Main.lua"
+            }
+          },
+          "GhostRenderer": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/GhostRenderer/Main.lua"
+            }
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/client/Main.lua"
+          },
+          "MovementController": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/client/MovementController.client.lua"
+          },
+          "RespawnGuard": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/RespawnGuard/Main.lua"
+            }
+          },
+          "SoundSystem": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/SoundSystem/Main.lua"
+            }
+          },
+          "SpectatorEffects": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/SpectatorEffects/Main.lua"
+            }
+          },
+          "SpectatorSystem": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/SpectatorSystem/Main.lua"
+            }
+          },
+          "ToolVisualController": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/client/ToolVisualController.client.lua"
+          },
+          "UI": {
+            "$className": "ModuleScript",
+            "$ignoreUnknownInstances": true,
+            "CharacterPreviewSupport": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/CharacterPreviewSupport.lua"
+            },
+            "GraphicsSupport": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/GraphicsSupport.lua"
+            },
+            "HUD": {
+              "$className": "Folder",
+              "$ignoreUnknownInstances": true,
+              "HorrorHUD": {
+                "$ignoreUnknownInstances": true,
+                "$path": "src/client/UI/HUD/HorrorHUD.luau"
+              }
+            },
+            "Main": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/Main.lua"
+            },
+            "OverlayController": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/OverlayController.lua"
+            },
+            "QuestJournal": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/QuestJournal.lua"
+            },
+            "QuestTracker": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/QuestTracker.lua"
+            },
+            "QuestUIController": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/QuestUIController.lua"
+            },
+            "RoomBrowserController": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/RoomBrowserController.lua"
+            },
+            "SanityHUD": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/SanityHUD.lua"
+            },
+            "UISupport": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/UISupport.lua"
+            }
+          }
+        },
+        "ClientBootstrap": {
+          "$ignoreUnknownInstances": true,
+          "$path": "src/StarterPlayerScripts/ClientBootstrap.client.lua"
+        },
+        "StudioRoomSmoke": {
+          "$ignoreUnknownInstances": true,
+          "$path": "src/StarterPlayerScripts/StudioRoomSmoke.client.lua"
+        }
       }
     }
   }

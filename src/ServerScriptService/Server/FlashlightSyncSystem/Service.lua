@@ -171,14 +171,6 @@ local function getFlashlightMountCFrame(part)
     return HANDLE_CONFIG.fallbackMountCFrame or CFrame.new(0.1, -0.28, -0.08)
 end
 
-local function resolveLiveMountPart(character, fallbackMountPart)
-    if not character then
-        return fallbackMountPart
-    end
-
-    return getRightHand(character) or character:FindFirstChild("Head") or fallbackMountPart
-end
-
 local function resolveChildPath(root, path)
     local node = root
     for _, segment in ipairs(path) do
@@ -613,19 +605,16 @@ function Service:_applyLookVector(lookVector, data)
         return
     end
 
-    local mountPart = resolveLiveMountPart(data.character, data.mountPart or data.head)
+    local mountPart = data.mountPart or data.head
     local flashlightHandle = data.flashlightHandle
     local aimAttachment = data.aimAttachment
     local beamStart = data.beamStart
     local beamEnd = data.beamEnd
+    local mountCFrame = data.mountCFrame or CFrame.new()
 
     if not (mountPart and flashlightHandle and aimAttachment and beamStart and beamEnd) then
         return
     end
-
-    data.mountPart = mountPart
-    data.mountCFrame = getFlashlightMountCFrame(mountPart)
-    local mountCFrame = data.mountCFrame or CFrame.new()
 
     local unit = lookVector.Unit
     if unit.Magnitude <= 0 then

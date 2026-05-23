@@ -90,27 +90,21 @@ function Controller:RegisterEventHandlers()
         self._service:OnAggressionUpdate(matchId, payload and payload.aggression)
     end)
 
-	self:_subscribe("SanityCritical", function(payload)
-		local matchId = payload and payload.matchId
-		if not matchId then
-			return
-		end
-		self._service:OnSanityCritical(matchId, payload and payload.userId)
-	end)
+    self:_subscribe("SanityCritical", function(payload)
+        local matchId = payload and payload.matchId
+        if not matchId then
+            return
+        end
+        self._service:OnSanityCritical(matchId, payload and payload.userId)
+    end)
 
-	self:_subscribe("ForceHunt", function(payload)
-		self._service:HandleEvent("ForceHunt", payload)
-	end)
+    self:_subscribe("HuntStarted", function(payload)
+        self:OnHuntStarted(payload)
+    end)
 
-	self:_subscribe("HuntStarted", function(payload)
-		self._service:HandleEvent("HuntStarted", payload)
-		self:OnHuntStarted(payload)
-	end)
-
-	self:_subscribe("HuntEnded", function(payload)
-		self._service:HandleEvent("HuntEnded", payload)
-		self:OnHuntEnded(payload)
-	end)
+    self:_subscribe("HuntEnded", function(payload)
+        self:OnHuntEnded(payload)
+    end)
 
     self._registered = true
 end

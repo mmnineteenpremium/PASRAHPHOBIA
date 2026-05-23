@@ -1,5 +1,4 @@
 local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
 local Services = require(script.Parent.Parent.Core.Services)
 local GhostHuntController = require(script.Parent.Parent.GhostSystem.GhostHuntController)
 
@@ -162,50 +161,6 @@ end
 function Service:_publish(eventName, payload)
     if self._eventBus then
         self._eventBus:Publish(eventName, payload)
-    end
-end
-
-function Service:_applyExitDoorLock(matchId, locked, source)
-    if type(matchId) ~= "string" or matchId == "" then
-        return
-    end
-    local activeMatches = Workspace:FindFirstChild("ActiveMatches")
-    if not activeMatches then
-        return
-    end
-    for _, matchFolder in ipairs(activeMatches:GetChildren()) do
-        local folderMatchId = tostring(matchFolder:GetAttribute("MatchId") or matchFolder.Name:gsub("^Match_", ""))
-        if folderMatchId ~= matchId then
-            continue
-        end
-        for _, descendant in ipairs(matchFolder:GetDescendants()) do
-            local name = string.lower(descendant.Name)
-            local isExitDoor = descendant:GetAttribute("PasrahPreparationAdvanceDoor") == true
-                or (descendant:IsA("BasePart")
-                    and name:find("door", 1, true) ~= nil
-                    and (name:find("front", 1, true) ~= nil
-                        or name:find("entry", 1, true) ~= nil
-                        or name:find("lobby", 1, true) ~= nil
-                        or name:find("grandhall", 1, true) ~= nil))
-            if descendant:IsA("BasePart") and isExitDoor then
-                descendant:SetAttribute("DoorLocked", locked == true)
-                descendant:SetAttribute("DoorLockSource", locked and tostring(source or "HuntSystem") or nil)
-                if locked then
-                    descendant:SetAttribute("DoorIsOpen", false)
-                    descendant.CanCollide = true
-                    descendant.CanTouch = false
-                end
-                local prompt = descendant:FindFirstChildOfClass("ProximityPrompt")
-                if prompt then
-                    prompt.Enabled = locked ~= true
-                    if locked then
-                        prompt.ActionText = "Terkunci"
-                    else
-                        prompt.ActionText = descendant:GetAttribute("DoorIsOpen") == true and "Tutup Pintu" or "Buka Pintu"
-                    end
-                end
-            end
-        end
     end
 end
 
@@ -434,19 +389,6 @@ function Service:_requestHunt(matchId, reason, force, payload)
 
     self:_publish("GhostHuntTriggerRequested", requestPayload)
     self:_publish("HuntTriggered", requestPayload)
-    self:_publish("ExitDoorsLocked", {
-        matchId = matchId,
-        locked = true,
-        source = "HuntSystem",
-        reason = requestPayload.reason,
-    })
-    self:_publish("HuntDoorLockChanged", {
-        matchId = matchId,
-        locked = true,
-        source = "HuntSystem",
-        reason = requestPayload.reason,
-    })
-    self:_applyExitDoorLock(matchId, true, "HuntSystem")
 
     task.delay(self._config.PendingTimeoutSeconds, function()
         if self:_currentToken(matchId) ~= requestToken then
@@ -456,19 +398,6 @@ function Service:_requestHunt(matchId, reason, force, payload)
         if pendingByMatch[matchId] == true then
             pendingByMatch[matchId] = false
             self:_setMap("huntPendingByMatchId", pendingByMatch)
-            self:_publish("ExitDoorsLocked", {
-                matchId = matchId,
-                locked = false,
-                source = "HuntSystem",
-                reason = "hunt_request_timeout",
-            })
-            self:_publish("HuntDoorLockChanged", {
-                matchId = matchId,
-                locked = false,
-                source = "HuntSystem",
-                reason = "hunt_request_timeout",
-            })
-            self:_applyExitDoorLock(matchId, false, "HuntSystem")
         end
     end)
 
@@ -534,7 +463,6 @@ function Service:_startHuntFromGhost(payload)
         locked = true,
         source = "HuntSystem",
     })
-    self:_applyExitDoorLock(matchId, true, "HuntSystem")
     self:_publish("HuntLightingStateChanged", {
         matchId = matchId,
         mode = "flicker_shutdown",
@@ -594,7 +522,6 @@ function Service:_endHuntFromGhost(payload)
         locked = false,
         source = "HuntSystem",
     })
-    self:_applyExitDoorLock(matchId, false, "HuntSystem")
     self:_publish("HuntLightingStateChanged", {
         matchId = matchId,
         mode = "restore",

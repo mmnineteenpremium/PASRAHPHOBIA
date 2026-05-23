@@ -528,8 +528,6 @@ function StudioE2EControlSystem:_handleSetPreparationFocusTool(player, request)
 		EMF = "EMF",
 		UV = "UV CAM",
 		UVCAM = "UV CAM",
-		TOUN = "UV CAM",
-		TOUNCAM = "UV CAM",
 		THERMO = "THERMO",
 		BOX = "BOX",
 		WRITING = "WRITING",

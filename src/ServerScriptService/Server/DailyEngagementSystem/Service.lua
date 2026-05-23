@@ -219,10 +219,6 @@ local function getGachaConfig()
 	return getConfigModule("GachaConfig")
 end
 
-local function getCosmeticRegistry()
-	return getConfigModule("CosmeticRegistry")
-end
-
 local function getRemote(remoteName)
 	local folder = ReplicatedStorage:FindFirstChild(REMOTE_FOLDER_NAME)
 	if not folder then
@@ -1047,26 +1043,12 @@ function Service:_grantReward(player, reward, reason)
 			table.insert(itemIds, reward[key])
 		end
 	end
-	local cosmeticRegistry
-	local cosmeticRegistryOk, cosmeticRegistryValue = pcall(getCosmeticRegistry)
-	if cosmeticRegistryOk and type(cosmeticRegistryValue) == "table" then
-		cosmeticRegistry = cosmeticRegistryValue
-	end
 	if self._inventory then
 		for _, itemId in ipairs(itemIds) do
-			local registryEntry = cosmeticRegistry and cosmeticRegistry.Get and cosmeticRegistry.Get(itemId) or nil
-			local grantData = {
+			safeCall(self._inventory, "GrantItem", player, itemId, {
 				category = "Cosmetic",
 				source = reason,
-				rewardId = itemId,
-			}
-			if type(registryEntry) == "table" then
-				grantData.registryTrack = registryEntry.track
-				grantData.registryTier = registryEntry.tier
-				grantData.registrySourceKey = registryEntry.sourceKey
-				grantData.registryAssetStatus = registryEntry.assetStatus
-			end
-			safeCall(self._inventory, "GrantItem", player, itemId, grantData)
+			})
 		end
 	end
 

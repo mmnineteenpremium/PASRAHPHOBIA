@@ -710,12 +710,13 @@ local function normalizeFpvArmSideSpec(value)
 	if type(value) ~= "table" then
 		return nil
 	end
-	return {
-		cframe = cframeFromSpec(value),
-		handTransparency = math.clamp(tonumber(value.handTransparency) or 0, 0, 1),
-		lowerArmTransparency = math.clamp(tonumber(value.lowerArmTransparency) or 0, 0, 1),
-		upperArmTransparency = math.clamp(tonumber(value.upperArmTransparency) or 1, 0, 1),
-	}
+	local x = tonumber(value.x or value.X or value[1]) or 0
+	local y = tonumber(value.y or value.Y or value[2]) or 0
+	local z = tonumber(value.z or value.Z or value[3]) or 0
+	local rx = math.rad(tonumber(value.rx or value.RX or value[4]) or 0)
+	local ry = math.rad(tonumber(value.ry or value.RY or value[5]) or 0)
+	local rz = math.rad(tonumber(value.rz or value.RZ or value[6]) or 0)
+	return CFrame.new(x, y, z) * CFrame.Angles(rx, ry, rz)
 end
 
 local function normalizeFpvArmsSpec(value)
@@ -724,16 +725,16 @@ local function normalizeFpvArmsSpec(value)
 	end
 	local left = normalizeFpvArmSideSpec(value.Left or value.left)
 	local right = normalizeFpvArmSideSpec(value.Right or value.right)
-	if not left and not right then
+	if not (left or right) then
 		return nil
 	end
 	return {
-		Left = left,
-		Right = right,
-		handScale = math.clamp(tonumber(value.handScale or value.scale) or 1, 0.05, 3),
+		handScale = math.max(0.05, tonumber(value.handScale or value.HandScale or value.scale) or 1),
 		visible = value.visible ~= false,
 		hideUpper = value.hideUpper ~= false,
-		lowerCFrame = cframeFromSpec(value.lowerCFrame or { x = 0, y = -0.32, z = 0.10, rx = 8, ry = 0, rz = 0 }),
+		lowerCFrame = cframeFromSpec(value.lowerCFrame or value.LowerCFrame or value.lowerOffset),
+		Left = left,
+		Right = right,
 	}
 end
 
@@ -747,11 +748,11 @@ local function normalizeMountSpec(spec)
 		holdSeconds = math.max(0.6, tonumber(mount.holdSeconds) or DEFAULT_MOUNT_SPEC.holdSeconds),
 		viewportBias = type(mount.viewportBias) == "string" and mount.viewportBias or nil,
 		viewportTarget = normalizeViewportTargetSpec(mount.viewportTarget),
-		fitToViewport = mount.fitToViewport ~= false,
 		handTransparency = math.clamp(tonumber(mount.handTransparency) or 0, 0, 1),
 		lowerArmTransparency = math.clamp(tonumber(mount.lowerArmTransparency) or 0, 0, 1),
 		upperArmTransparency = math.clamp(tonumber(mount.upperArmTransparency) or 0.65, 0, 1),
 		cameraSpace = mount.cameraSpace == true,
+		fitToViewport = mount.fitToViewport ~= false,
 		cameraCFrame = cframeFromSpec(mount.cameraCFrame),
 		cframe = cframeFromSpec(mount.cframe or DEFAULT_MOUNT_SPEC.cframe),
 		fpvArms = normalizeFpvArmsSpec(mount.fpvArms),
@@ -1038,10 +1039,10 @@ local function scaleFpvGripPart(part, scale)
 	if not (part and part:IsA("BasePart")) then
 		return
 	end
-	local baseSize = part:GetAttribute("PasrahFpvGripBaseSize")
+	local baseSize = part:GetAttribute("PasrahFpvBaseSize")
 	if typeof(baseSize) ~= "Vector3" then
 		baseSize = part.Size
-		part:SetAttribute("PasrahFpvGripBaseSize", baseSize)
+		part:SetAttribute("PasrahFpvBaseSize", baseSize)
 	end
 	part.Size = baseSize * math.max(0.05, tonumber(scale) or 1)
 end
@@ -1051,42 +1052,34 @@ local function applyCameraSpaceFpvArmPose(fpvArms, mount, camera)
 	if not (fpvArms and armPose and camera) then
 		return false
 	end
-
-	local anyApplied = false
-	local visible = armPose.visible ~= false
-	local scale = armPose.handScale or 1
-	local function applySide(hand, sidePose)
-		if not sidePose then
-			return
-		end
-		local handPart = findFpvGripPart(fpvArms, hand, "hand")
-		local lowerPart = findFpvGripPart(fpvArms, hand, "lower")
-		local upperPart = findFpvGripPart(fpvArms, hand, "upper")
-		local handCFrame = camera.CFrame * sidePose.cframe
-		local handTransparency = visible and sidePose.handTransparency or 1
-		local lowerTransparency = visible and sidePose.lowerArmTransparency or 1
-		local upperTransparency = (visible and not armPose.hideUpper) and sidePose.upperArmTransparency or 1
-
-		if handPart then
-			scaleFpvGripPart(handPart, scale)
-			handPart.CFrame = handCFrame
-			setGripPartVisible(handPart, handTransparency)
-			anyApplied = true
-		end
-		if lowerPart and lowerPart ~= handPart then
-			scaleFpvGripPart(lowerPart, scale)
-			lowerPart.CFrame = handCFrame * armPose.lowerCFrame
-			setGripPartVisible(lowerPart, lowerTransparency)
-			anyApplied = true
-		end
-		if upperPart and upperPart ~= lowerPart and upperPart ~= handPart then
-			setGripPartVisible(upperPart, upperTransparency)
+	local scale = tonumber(armPose.handScale) or 1
+	local applied = false
+	for _, hand in ipairs({ "Left", "Right" }) do
+		local sideCFrame = armPose[hand]
+		if typeof(sideCFrame) == "CFrame" then
+			local handPart = findFpvGripPart(fpvArms, hand, "hand")
+			local lowerPart = findFpvGripPart(fpvArms, hand, "lower")
+			local upperPart = findFpvGripPart(fpvArms, hand, "upper")
+			local worldCFrame = camera.CFrame * sideCFrame
+			if handPart then
+				scaleFpvGripPart(handPart, scale)
+				handPart.CFrame = worldCFrame
+				setGripPartVisible(handPart, armPose.visible == false and 1 or mount.handTransparency)
+				applied = true
+			end
+			if lowerPart and lowerPart ~= handPart then
+				scaleFpvGripPart(lowerPart, scale)
+				lowerPart.CFrame = worldCFrame * (armPose.lowerCFrame or CFrame.new(0, -0.32, 0.10))
+				setGripPartVisible(lowerPart, armPose.visible == false and 1 or mount.lowerArmTransparency)
+				applied = true
+			end
+			if upperPart and upperPart ~= lowerPart and upperPart ~= handPart then
+				upperPart.Transparency = armPose.hideUpper ~= false and 1 or mount.upperArmTransparency
+				upperPart.LocalTransparencyModifier = 0
+			end
 		end
 	end
-
-	applySide("Left", armPose.Left)
-	applySide("Right", armPose.Right)
-	return anyApplied
+	return applied
 end
 
 local function applyFpvToolGripPose(fpvArms, mounted)
@@ -1095,11 +1088,6 @@ local function applyFpvToolGripPose(fpvArms, mounted)
 	end
 	local camera = Workspace.CurrentCamera
 	if not camera then
-		return
-	end
-
-	local mount = mounted.profile.mount
-	if applyCameraSpaceFpvArmPose(fpvArms, mount, camera) then
 		return
 	end
 
@@ -1117,6 +1105,10 @@ local function applyFpvToolGripPose(fpvArms, mounted)
 		extents = Vector3.new(0.35, 0.35, 0.35)
 	end
 
+	local mount = mounted.profile.mount
+	if applyCameraSpaceFpvArmPose(fpvArms, mount, camera) then
+		return
+	end
 	local primaryHand = mount.hand == "Left" and "Left" or "Right"
 	local secondaryHand = primaryHand == "Left" and "Right" or "Left"
 	if mount.style == "TwoHanded" and mount.secondaryHand then
@@ -1448,6 +1440,7 @@ local function ensureMountedTool(toolType, fpvArms, now)
 		model = model,
 		profile = profile,
 		holdUntil = now + (profile.mount.holdSeconds or 1.8),
+
 	}
 	return state.mounted
 end
@@ -1503,6 +1496,7 @@ local function ensureFlashlightMount(fpvArms, now, activeToolType)
 		holdUntil = now + (profile.mount.holdSeconds or 2),
 		lens = nil,
 		localLight = nil,
+
 	}
 	return state.flashlightMounted
 end

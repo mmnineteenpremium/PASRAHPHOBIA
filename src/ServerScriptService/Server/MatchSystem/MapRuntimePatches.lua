@@ -355,11 +355,6 @@ local PREPARATION_MAX_LOADOUT_TOOLS = 3
 local PREPARATION_LOADOUT_ATTR_PREFIX = "PasrahLoadoutTool"
 local PREPARATION_LOADOUT_COUNT_ATTR = "PasrahLoadoutToolCount"
 local PREPARATION_DEFAULT_PRIMARY_TOOL = "Flashlight"
-local PREPARATION_DEFAULT_LOADOUT = {
-	PREPARATION_DEFAULT_PRIMARY_TOOL,
-	"JejakEnergi",
-	"SuhuMembeku",
-}
 
 local PREPARATION_TOOL_STATIONS = {
 	{
@@ -384,9 +379,9 @@ local PREPARATION_TOOL_STATIONS = {
 	},
 	{
 		name = "ToolStation_UV",
-		title = "TO'UN CAM",
+		title = "UV CAM",
 		toolType = "BolaArwah",
-		subtitle = "Night orb",
+		subtitle = "To'un trace",
 		color = Color3.fromRGB(214, 146, 255),
 		modelName = "BolaArwah",
 		modelLift = 0.64,
@@ -1333,7 +1328,7 @@ local function buildPreparationBoardContent(mapId, matchContext)
 
 	local toolLines = {
 		"Field kit issued for first sweep.",
-		"EMF • TO'UN CAM • THERMO",
+		"EMF • UV CAM • THERMO",
 		"BOX • WRITING • SENSOR",
 		"Support kit: GARAM • SALIB • DUPA",
 		"Gunakan rack kanan untuk review urutan tool awal.",
@@ -2348,20 +2343,14 @@ local function bindPreparationToolStations(preparationFolder, matchContext)
 	if type(matchContext) == "table" and matchContext._preparationLoadoutInitialized ~= true then
 		matchContext._preparationLoadoutInitialized = true
 		matchContext.selectedPreparationTools = clonePreparationLoadoutList(matchContext.selectedPreparationTools)
-		if #matchContext.selectedPreparationTools == 0 then
-			matchContext.selectedPreparationTools = clonePreparationLoadoutList(PREPARATION_DEFAULT_LOADOUT)
-		end
-		local selectedTool = matchContext.selectedPreparationTools[2] or matchContext.selectedPreparationTools[1]
-		local selectedLabel = getPreparationToolLabel(selectedTool)
 		for _, player in ipairs(matchContext.players or {}) do
-			if typeof(player) == "Instance" and player:IsA("Player") then
-				writePreparationLoadoutToPlayer(player, matchContext.selectedPreparationTools)
-				if selectedTool then
-					player:SetAttribute("PreparationFocusTool", selectedTool)
-					player:SetAttribute("PreparationFocusToolLabel", selectedLabel)
-					player:SetAttribute("PreparationFocusToolSource", "DefaultLoadout")
-					player:SetAttribute("PasrahPreparationToolSelected", true)
-				end
+			if typeof(player) == "Instance" and player:IsA("Player") and #matchContext.selectedPreparationTools == 0 then
+				writePreparationLoadoutToPlayer(player, {})
+				player:SetAttribute("PreparationFocusTool", nil)
+				player:SetAttribute("PreparationFocusToolLabel", nil)
+				player:SetAttribute("PreparationFocusToolSource", nil)
+				player:SetAttribute("PasrahPreparationToolSelected", nil)
+				player:SetAttribute("PasrahEquippedToolType", nil)
 			end
 		end
 	end

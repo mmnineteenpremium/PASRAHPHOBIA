@@ -118,9 +118,7 @@ local CLIENT_PHASE_BY_MATCH_PHASE = {
 	HuntPhase = "Hunt",
 	EndgamePhase = "Endgame",
 }
-local PREPARATION_FOCUS_TOOL_FALLBACK = "JejakEnergi"
-local PREPARATION_FOCUS_TOOL_FALLBACK_LABEL = "EMF"
-local PREPARATION_FOCUS_TOOL_FALLBACK_SOURCE = "DefaultLoadout"
+local PREPARATION_FOCUS_TOOL_FALLBACK = "EMF"
 local PREPARATION_FOCUS_TOOL_FALLBACK_DELAY = 2.5
 
 local function resolveGhostSystem(deps)
@@ -1184,7 +1182,8 @@ function MatchService:StartMatch(matchId)
 	end
 
 	local function schedulePreparationFocusFallback(player)
-		-- Default loadout is assigned immediately; world tool stations can still override it.
+		-- Preparation unlock must come from the world tool station prompt, not a timer.
+		-- Keep this no-op wrapper so older StartMatch wiring cannot silently bypass the gate.
 	end
 
 	for _, player in ipairs(match.players or {}) do
@@ -1195,10 +1194,10 @@ function MatchService:StartMatch(matchId)
 			player:SetAttribute("MatchDifficulty", tostring(match.difficulty or "Mudah"))
 			player:SetAttribute("MatchMapId", tostring(match.mapId or match.map or ""))
 			player:SetAttribute("MatchLifecyclePhase", tostring(match.phase or "PreparationPhase"))
-			player:SetAttribute("PreparationFocusTool", PREPARATION_FOCUS_TOOL_FALLBACK)
-			player:SetAttribute("PreparationFocusToolLabel", PREPARATION_FOCUS_TOOL_FALLBACK_LABEL)
-			player:SetAttribute("PreparationFocusToolSource", PREPARATION_FOCUS_TOOL_FALLBACK_SOURCE)
-			player:SetAttribute("PasrahPreparationToolSelected", true)
+			player:SetAttribute("PreparationFocusTool", nil)
+			player:SetAttribute("PreparationFocusToolLabel", nil)
+			player:SetAttribute("PreparationFocusToolSource", nil)
+			player:SetAttribute("PasrahPreparationToolSelected", nil)
 			schedulePreparationFocusFallback(player)
 		end
 	end

@@ -9,9 +9,7 @@ local TOOL_EQUIPPED_ATTRIBUTE = "PasrahEquippedToolType"
 local TOOL_USE_STAMP_ATTRIBUTE = "PasrahToolUseStamp"
 local TOOL_LAST_EVENT_ATTRIBUTE = "PasrahToolLastEvent"
 local TOOL_LAST_SUCCESS_ATTRIBUTE = "PasrahToolLastSuccess"
-local USE_NATIVE_BACKPACK_TOOLS = true
-local FLASHLIGHT_TOOL_TYPE = "Flashlight"
-local FLASHLIGHT_TOOL_NAME = "Senter"
+local USE_NATIVE_BACKPACK_TOOLS = false
 
 local TOOL_REQUEST_TYPES = {
 	JejakEnergi = "JejakEnergiScan",
@@ -26,12 +24,18 @@ local TOOL_REQUEST_TYPES = {
 	Dupa = "SmudgeIgnite",
 }
 local NATIVE_TOOL_ORDER = {
-	"Flashlight",
 	"JejakEnergi",
+	"Garam",
+	"Salib",
+	"Dupa",
+	"KotakArwah",
 	"SuhuMembeku",
+	"BukuTerkutuk",
+	"BolaArwah",
+	"GerakanGaib",
+	"PilSanity",
 }
 local NATIVE_TOOL_LABELS = {
-	Flashlight = "Senter",
 	JejakEnergi = "EMF Scanner",
 	Garam = "Garam",
 	Salib = "Salib",
@@ -39,14 +43,9 @@ local NATIVE_TOOL_LABELS = {
 	KotakArwah = "Spirit Box",
 	SuhuMembeku = "Thermometer",
 	BukuTerkutuk = "Ghost Writing",
-	BolaArwah = "Kamera To'un",
+	BolaArwah = "Kamera TOUN",
 	GerakanGaib = "Motion Sensor",
 	PilSanity = "Pil Sanity",
-}
-local NATIVE_TOOL_NAMES = {
-	Flashlight = FLASHLIGHT_TOOL_NAME,
-	JejakEnergi = "JejakEnergi",
-	SuhuMembeku = "SuhuMembeku",
 }
 
 local CAMERA_SCAN_GHOST_ATTR = "PasrahCameraScanGhostType"
@@ -120,117 +119,6 @@ local function isLocalToolEvent(payload, eventName)
 	end
 	local userId = tonumber(payload.userId or payload.playerId)
 	return userId ~= nil and userId == localPlayer.UserId
-end
-
-local function resolveFlashlightRemote()
-	local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
-	return remoteFolder and remoteFolder:FindFirstChild("FlashlightEvent") or nil
-end
-
-local function setBackpackFlashlightEnabled(tool, enabled)
-	if localPlayer then
-		localPlayer:SetAttribute("FlashlightEnabled", enabled == true)
-		localPlayer:SetAttribute(TOOL_EQUIPPED_ATTRIBUTE, FLASHLIGHT_TOOL_TYPE)
-	end
-
-	local light = tool and tool:FindFirstChildOfClass("SpotLight", true)
-	if light then
-		light.Enabled = enabled == true
-	end
-
-	local remote = resolveFlashlightRemote()
-	if remote then
-		remote:FireServer({
-			action = "Toggle",
-			enabled = enabled == true,
-		})
-	end
-end
-
-local function addFlashlightHandle(tool)
-	local handle = Instance.new("Part")
-	handle.Name = "Handle"
-	handle.Size = Vector3.new(0.34, 0.34, 1.1)
-	handle.Color = Color3.fromRGB(24, 24, 28)
-	handle.Material = Enum.Material.Metal
-	handle.CanCollide = false
-	handle.CanTouch = false
-	handle.CanQuery = false
-	handle.Massless = true
-	handle.Parent = tool
-
-	local attachment = Instance.new("Attachment")
-	attachment.Name = "FlashlightAttachment"
-	attachment.Parent = handle
-
-	local light = Instance.new("SpotLight")
-	light.Name = "SenterSpotLight"
-	light.Enabled = true
-	light.Brightness = 3.2
-	light.Range = 45
-	light.Angle = 52
-	light.Face = Enum.NormalId.Front
-	light.Color = Color3.fromRGB(255, 242, 210)
-	light.Parent = handle
-end
-
-local function addEvidenceToolHandle(tool, toolType)
-	local handle = Instance.new("Part")
-	handle.Name = "Handle"
-	handle.Size = Vector3.new(0.42, 0.18, 0.72)
-	handle.Color = toolType == "SuhuMembeku" and Color3.fromRGB(72, 126, 130) or Color3.fromRGB(48, 62, 84)
-	handle.Material = Enum.Material.SmoothPlastic
-	handle.CanCollide = false
-	handle.CanTouch = false
-	handle.CanQuery = false
-	handle.Massless = true
-	handle.Parent = tool
-	return handle
-end
-
-local function addEvidenceToolDisplay(tool, toolType, handle)
-	local gui = Instance.new("BillboardGui")
-	gui.Name = "ToolGui"
-	gui.AlwaysOnTop = true
-	gui.LightInfluence = 0
-	gui.Size = UDim2.fromOffset(120, 44)
-	gui.StudsOffsetWorldSpace = Vector3.new(0, 0.55, 0)
-	gui.Parent = handle or tool
-
-	local label = Instance.new("TextLabel")
-	label.Name = toolType == "SuhuMembeku" and "TemperatureLabel" or "ReadingLabel"
-	label.BackgroundTransparency = 0.18
-	label.BackgroundColor3 = Color3.fromRGB(10, 12, 16)
-	label.BorderSizePixel = 0
-	label.Size = UDim2.fromScale(1, 1)
-	label.Font = Enum.Font.GothamBold
-	label.TextScaled = true
-	label.TextColor3 = toolType == "SuhuMembeku" and Color3.fromRGB(178, 255, 244) or Color3.fromRGB(154, 205, 255)
-	label.Text = toolType == "SuhuMembeku" and "20.0 C" or "EMF 0"
-	label.Parent = gui
-end
-
-local function updateEvidenceToolDisplay(tool, toolType, response, reason)
-	local gui = tool and tool:FindFirstChild("ToolGui", true)
-	if not gui then
-		return
-	end
-	local labelName = toolType == "SuhuMembeku" and "TemperatureLabel" or "ReadingLabel"
-	local label = gui:FindFirstChild(labelName, true)
-	if not (label and label:IsA("TextLabel")) then
-		return
-	end
-	if type(response) == "table" then
-		if toolType == "SuhuMembeku" then
-			local temperature = tonumber(response.temperatureC or response.temperature or response.value)
-			label.Text = temperature and string.format("%.1f C", temperature) or "TEMP --"
-		else
-			local emfLevel = tonumber(response.emfLevel or response.level or response.value)
-			label.Text = emfLevel and string.format("EMF %d", math.clamp(math.floor(emfLevel), 0, 5)) or "EMF --"
-		end
-	elseif type(reason) == "string" and reason ~= "" then
-		label.Text = toolType == "SuhuMembeku" and "TEMP --" or "EMF --"
-	end
 end
 
 function EvidenceTools:Init(context)
@@ -446,7 +334,7 @@ function EvidenceTools:_isNativeBackpackEnabled()
 		return false
 	end
 	local lifecyclePhase = tostring(localPlayer:GetAttribute("MatchLifecyclePhase") or ""):gsub("[%s_%-]+", ""):lower()
-	return lifecyclePhase ~= ""
+	return lifecyclePhase ~= "preparationphase"
 end
 
 function EvidenceTools:_refreshNativeBackpackTools()
@@ -468,7 +356,7 @@ function EvidenceTools:_ensureNativeBackpackTools()
 		return
 	end
 	for slot, toolType in ipairs(NATIVE_TOOL_ORDER) do
-		if toolType == FLASHLIGHT_TOOL_TYPE or self._toolAdapters[toolType] then
+		if self._toolAdapters[toolType] then
 			local tool = self._nativeToolByType[toolType]
 			if not tool or not tool.Parent then
 				tool = self:_createNativeTool(toolType, slot)
@@ -486,36 +374,20 @@ end
 function EvidenceTools:_createNativeTool(toolType, slot)
 	local tool = Instance.new("Tool")
 	local label = NATIVE_TOOL_LABELS[toolType] or toolType
-	tool.Name = NATIVE_TOOL_NAMES[toolType] or toolType
+	tool.Name = string.format("[%d] %s", slot, label)
 	tool.ToolTip = string.format("Pasrah Tool: %s", label)
 	tool.CanBeDropped = false
-	tool.RequiresHandle = true
-	if toolType == FLASHLIGHT_TOOL_TYPE then
-		tool.Grip = CFrame.new(0, -0.08, -0.25)
-		addFlashlightHandle(tool)
-	else
-		local handle = addEvidenceToolHandle(tool, toolType)
-		addEvidenceToolDisplay(tool, toolType, handle)
-	end
+	tool.RequiresHandle = false
 
 	local equippedConnection = tool.Equipped:Connect(function()
 		if localPlayer then
 			localPlayer:SetAttribute(TOOL_EQUIPPED_ATTRIBUTE, toolType)
 		end
-		if toolType == FLASHLIGHT_TOOL_TYPE then
-			setBackpackFlashlightEnabled(tool, true)
-		end
 	end)
 	local activatedConnection = tool.Activated:Connect(function()
-		if toolType == FLASHLIGHT_TOOL_TYPE then
-			local enabled = not (localPlayer and localPlayer:GetAttribute("FlashlightEnabled") == true)
-			setBackpackFlashlightEnabled(tool, enabled)
-		else
-			local success, reason, response = self:UseTool(toolType, {
-				source = "NativeBackpack",
-			})
-			updateEvidenceToolDisplay(tool, toolType, response, reason)
-		end
+		self:UseTool(toolType, {
+			source = "NativeBackpack",
+		})
 	end)
 
 	self._nativeToolConnections[tool] = {

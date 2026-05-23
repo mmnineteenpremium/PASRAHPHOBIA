@@ -170,8 +170,8 @@ local LOBBY_TRAINING_TOOL_SPECS = {
 	},
 	{
 		partName = "Table_Tools_2",
-		label = "TO'UN CAM",
-		promptLabel = "Kamera To'un",
+		label = "UV CAM",
+		promptLabel = "UV Camera",
 		toolType = "BolaArwah",
 		evidenceType = "To'un",
 	},
@@ -3000,7 +3000,7 @@ end
     -- North contract / evidence bay
     for _, data in ipairs({
         { name = "Table_Tools_1", pos = Vector3.new(1587, 1.02, -138), label = "EMF", promptLabel = "EMF Reader", summary = "MEDOK • Scan", color = Color3.fromRGB(132, 186, 255) },
-        { name = "Table_Tools_2", pos = Vector3.new(1600, 1.02, -138), label = "TO'UN CAM", promptLabel = "Kamera To'un", summary = "To'un • Night orb", color = Color3.fromRGB(214, 146, 255) },
+        { name = "Table_Tools_2", pos = Vector3.new(1600, 1.02, -138), label = "UV CAM", promptLabel = "UV Camera", summary = "To'un • Camera", color = Color3.fromRGB(214, 146, 255) },
         { name = "Table_Tools_3", pos = Vector3.new(1613, 1.02, -138), label = "THERMO", promptLabel = "Thermometer", summary = "Suhu • Freeze", color = Color3.fromRGB(142, 214, 198) },
         { name = "Table_Tools_4", pos = Vector3.new(1587, 1.02, -151), label = "BOX", promptLabel = "Spirit Box", summary = "Suara • Voice", color = Color3.fromRGB(255, 196, 118) },
         { name = "Table_Tools_5", pos = Vector3.new(1600, 1.02, -151), label = "WRITING", promptLabel = "Writing Book", summary = "Book • Script", color = Color3.fromRGB(150, 189, 255) },

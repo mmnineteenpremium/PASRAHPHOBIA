@@ -431,13 +431,13 @@ FIELD_KIT_TOOL_CONFIG = {
 	},
 	BolaArwah = {
 		accent = Color3.fromRGB(98, 142, 108),
-		glyph = "TV",
-		label = "TO'UN CAM",
-		hint = "Night vision",
+		glyph = "OR",
+		label = "ORB",
+		hint = "Visual sweep",
 		openJournal = false,
-		readyMeta = "NIGHT",
-		readyFooter = "TO'UN ARC",
-		role = "Recorder",
+		readyMeta = "GLOW",
+		readyFooter = "ORB ARC",
+		role = "Orb",
 		shortcut = "8",
 		keyCode = Enum.KeyCode.Eight,
 	},
@@ -1004,84 +1004,10 @@ local BUTTON_BORDER_HOVER_IMAGE = "rbxassetid://96807162342543"
 local BUTTON_BORDER_ACTIVE_IMAGE = "rbxassetid://96807162342543"
 local ROOM_BROWSER_PANEL_BACKGROUND_IMAGE = "rbxthumb://type=Asset&id=109092248853429&w=1024&h=1024"
 local ROOM_BROWSER_MAP_PHOTOS = {
-	HauntedHouse = "rbxassetid://78717858746178",
-	StudioMMNineteen = "rbxassetid://102263575385630",
-	AbandonedPalace = "rbxassetid://75717111818707",
+	HauntedHouse = "rbxthumb://type=Asset&id=95415512980974&w=1024&h=1024",
+	StudioMMNineteen = "rbxthumb://type=Asset&id=83797117611324&w=1024&h=1024",
+	AbandonedPalace = "rbxthumb://type=Asset&id=117646011293076&w=1024&h=1024",
 }
-local ROOM_BROWSER_MAP_SELECTOR_TEXT_IMAGE_STATES = { idle = "128785963361384", hover = "75709367169732", active = "97310596222882" }
-local ROOM_BROWSER_MAP_OPTION_TEXT_IMAGE_STATES = {
-	HauntedHouse = { idle = "99109847201550", hover = "106529855683993", active = "127887929409304" },
-	StudioMMNineteen = { idle = "111145558659072", hover = "109549774137768", active = "105549960352119" },
-	EmptyBuilding = { idle = "82837676268758", hover = "115476569583421", active = "81828934051890" },
-	AbandonedPalace = { idle = "71523706129904", hover = "130873140590312", active = "94091821215899" },
-}
-local assetIdConfigCache = false
-local function getAssetIdConfig()
-	if assetIdConfigCache ~= false then
-		return assetIdConfigCache
-	end
-	assetIdConfigCache = nil
-	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:WaitForChild("Shared", 5)
-	local configFolder = shared and (shared:FindFirstChild("Config") or shared:WaitForChild("Config", 5))
-	local generatedFolder = configFolder and (configFolder:FindFirstChild("Generated") or configFolder:WaitForChild("Generated", 5))
-	local moduleScript = generatedFolder and (generatedFolder:FindFirstChild("AssetIdConfig") or generatedFolder:WaitForChild("AssetIdConfig", 5))
-	if moduleScript and moduleScript:IsA("ModuleScript") then
-		local ok, result = pcall(require, moduleScript)
-		if ok and type(result) == "table" then
-			assetIdConfigCache = result
-		end
-	end
-	return assetIdConfigCache
-end
-local function getConfiguredUIImageId(key, fallback)
-	local config = getAssetIdConfig()
-	local uiImages = type(config) == "table" and type(config.UIImages) == "table" and config.UIImages or nil
-	local value = uiImages and uiImages[key]
-	return tostring(value or fallback or "")
-end
-local royalPassConfigCache = false
-local function getRoyalPassConfig()
-	if royalPassConfigCache ~= false then
-		return royalPassConfigCache
-	end
-	royalPassConfigCache = nil
-	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:WaitForChild("Shared", 5)
-	local configFolder = shared and (shared:FindFirstChild("Config") or shared:WaitForChild("Config", 5))
-	local moduleScript = configFolder and (configFolder:FindFirstChild("RoyalPassConfig") or configFolder:WaitForChild("RoyalPassConfig", 5))
-	if moduleScript and moduleScript:IsA("ModuleScript") then
-		local ok, result = pcall(require, moduleScript)
-		if ok and type(result) == "table" then
-			royalPassConfigCache = result
-		end
-	end
-	return royalPassConfigCache
-end
-local function describeRoyalPassReward(reward)
-	if type(reward) ~= "table" then
-		return "PENDING"
-	end
-	local parts = {}
-	if (tonumber(reward.mm) or 0) > 0 then
-		table.insert(parts, tostring(math.floor(tonumber(reward.mm) or 0)) .. " MM")
-	end
-	if (tonumber(reward.pp) or 0) > 0 then
-		table.insert(parts, tostring(math.floor(tonumber(reward.pp) or 0)) .. " PP")
-	end
-	if (tonumber(reward.xp) or 0) > 0 then
-		table.insert(parts, tostring(math.floor(tonumber(reward.xp) or 0)) .. " XP")
-	end
-	if (tonumber(reward.gachaTickets) or 0) > 0 then
-		table.insert(parts, tostring(math.floor(tonumber(reward.gachaTickets) or 0)) .. " TICKET")
-	end
-	if type(reward.cosmeticId) == "string" and reward.cosmeticId ~= "" then
-		table.insert(parts, "COSMETIC")
-	elseif type(reward.seasonBadgeId) == "string" and reward.seasonBadgeId ~= "" then
-		table.insert(parts, "BADGE")
-	elseif type(reward.exclusiveEmoteId) == "string" and reward.exclusiveEmoteId ~= "" then
-		table.insert(parts, "EMOTE")
-	end
-	return #parts > 0 and table.concat(parts, " + ") or "PENDING"
-end
 local ROOM_BROWSER_TEXT_IMAGE_STATES = {
 	ClassicButton = { idle = "117760951401524", hover = "129015288351024", active = "138617081838094" },
 	ClassicOption = { idle = "117760951401524", hover = "129015288351024", active = "138617081838094" },
@@ -1116,21 +1042,9 @@ local ROOM_BROWSER_TEXT_IMAGE_STATES = {
 	RankButton = { idle = "132541994193262", hover = "78308952430777", active = "137424967951840" },
 	ShopButton = { idle = "133173197641907", hover = "88732046094994", active = "91837126977915" },
 	RoyalPassButton = { idle = "74154323194225", hover = "92445570105509", active = "88526438006690" },
-	MissionTab = {
-		idle = getConfiguredUIImageId("ROYALPASS_MISSION_TAB_IDLE_HOVER", "91316576845536"),
-		hover = getConfiguredUIImageId("ROYALPASS_MISSION_TAB_IDLE_HOVER", "96825362275947"),
-		active = getConfiguredUIImageId("ROYALPASS_MISSION_TAB", "82227324051324"),
-	},
-	RewardTab = {
-		idle = getConfiguredUIImageId("ROYALPASS_REWARD_TAB_IDLE_HOVER", "91316576845536"),
-		hover = getConfiguredUIImageId("ROYALPASS_REWARD_TAB_IDLE_HOVER", "96825362275947"),
-		active = getConfiguredUIImageId("ROYALPASS_REWARD_TAB", "82227324051324"),
-	},
-	PremiumActionButton = {
-		idle = getConfiguredUIImageId("royalpass_premium_track", "133173197641907"),
-		hover = getConfiguredUIImageId("royalpass_premium_track", "88732046094994"),
-		active = getConfiguredUIImageId("royalpass_premium_track", "91837126977915"),
-	},
+	MissionTab = { idle = "91316576845536", hover = "96825362275947", active = "82227324051324" },
+	RewardTab = { idle = "91316576845536", hover = "96825362275947", active = "82227324051324" },
+	PremiumActionButton = { idle = "133173197641907", hover = "88732046094994", active = "91837126977915" },
 	PlayButton = { idle = "97619808744728", hover = "101162595389006", active = "124031181308180" },
 	ToolActionButton = { idle = "71874610051324", hover = "128303976874326", active = "109151429365319" },
 	KoleksiButton = { idle = "138104347169386", hover = "92582946322328", active = "112977326396191" },
@@ -1177,44 +1091,16 @@ local ACTION_BUTTON_TEXT_IMAGE_STATES = {
 	["TRACK"] = { idle = "103489183789899", hover = "99269259836629", active = "110126978866737" },
 	["PAKAI"] = { idle = "119893364681680", hover = "103511682438962", active = "133568679810222" },
 	["INFO"] = { idle = "131131528442725", hover = "92932938836672", active = "122482912193368" },
-	["LIHAT SHOP"] = {
-		idle = getConfiguredUIImageId("royalpass_premium_track", "123823941129089"),
-		hover = getConfiguredUIImageId("royalpass_premium_track", "138578045095503"),
-		active = getConfiguredUIImageId("royalpass_premium_track", "140390986903081"),
-	},
+	["LIHAT SHOP"] = { idle = "123823941129089", hover = "138578045095503", active = "140390986903081" },
 	["PENDING"] = { idle = "95774596939688", hover = "117499371608925", active = "75654724905306" },
 	["OPEN PROFILE"] = { idle = "105816021457823", hover = "138336629404370", active = "108485786723336" },
 	["OPEN RANK BOARD"] = { idle = "70851175896471", hover = "113137045182913", active = "111395627991278" },
 	["OPEN ROOM BROWSER"] = { idle = "121806831769566", hover = "114260638652413", active = "132315129687773" },
-	["OPEN SHOP"] = {
-		idle = getConfiguredUIImageId("royalpass_premium_track", "123823941129089"),
-		hover = getConfiguredUIImageId("royalpass_premium_track", "138578045095503"),
-		active = getConfiguredUIImageId("royalpass_premium_track", "140390986903081"),
-	},
+	["OPEN SHOP"] = { idle = "123823941129089", hover = "138578045095503", active = "140390986903081" },
 	ALL = { idle = "75636362660244", hover = "97893505198837", active = "71250727262939" },
 	X = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
 	["[X]"] = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
 }
-
-local function getRoomBrowserTextImageStates(button)
-	if not button then
-		return nil
-	end
-	local states = ACTION_BUTTON_TEXT_IMAGE_STATES[tostring(button.Text or "")]
-		or ROOM_BROWSER_TEXT_IMAGE_STATES[button.Name]
-	if states then
-		return states
-	end
-	if button.Name == "MapSelector" then
-		return ROOM_BROWSER_MAP_SELECTOR_TEXT_IMAGE_STATES
-	end
-	local mapOptionIndex = string.match(button.Name, "^MapOption_(%d+)$")
-	if mapOptionIndex then
-		local mapId = MAPS[tonumber(mapOptionIndex)]
-		return ROOM_BROWSER_MAP_OPTION_TEXT_IMAGE_STATES[mapId]
-	end
-	return nil
-end
 
 local function toThumbAsset(assetId)
 	return string.format("rbxthumb://type=Asset&id=%s&w=420&h=420", tostring(assetId))
@@ -1685,7 +1571,8 @@ local function ensureButtonPolish(button)
 		borderImage.Visible = true
 	end
 
-	local textImageStates = getRoomBrowserTextImageStates(button)
+	local textImageStates = ACTION_BUTTON_TEXT_IMAGE_STATES[tostring(button.Text or "")]
+		or ROOM_BROWSER_TEXT_IMAGE_STATES[button.Name]
 	local textImage = button:FindFirstChild("BrandTextImage")
 	if textImageStates and (not textImage or not isButtonTextImageObject(textImage)) then
 		textImage = replaceWithButtonTextImage(button, isButtonTextImageObject(textImage) and textImage or nil)
@@ -3198,43 +3085,6 @@ local function buildMapPreviewStats(mapId)
 	return table.concat(details, "  •  ")
 end
 
-local function resolveRoomBrowserMapPhoto(mapId)
-	if type(mapId) ~= "string" or mapId == "" then
-		return nil
-	end
-	return ROOM_BROWSER_MAP_PHOTOS[mapId]
-end
-
-local function ensureRoomBrowserMapPhoto(container)
-	if not (container and container:IsA("GuiObject")) then
-		return nil
-	end
-	local photo = container:FindFirstChild("MapPhoto")
-	if photo and not photo:IsA("ImageLabel") then
-		photo:Destroy()
-		photo = nil
-	end
-	if not photo then
-		photo = Instance.new("ImageLabel")
-		photo.Name = "MapPhoto"
-		photo.Parent = container
-		photo.Position = UDim2.fromScale(0, 0)
-		photo.Size = UDim2.fromScale(1, 1)
-		photo.ScaleType = Enum.ScaleType.Crop
-		photo.ZIndex = container.ZIndex + 1
-		for _, child in ipairs(container:GetChildren()) do
-			if child ~= photo and child:IsA("GuiObject") then
-				child.ZIndex = math.max(child.ZIndex, photo.ZIndex + 1)
-			end
-		end
-	end
-	photo.BackgroundTransparency = 1
-	photo.BorderSizePixel = 0
-	photo.ImageTransparency = 0
-	photo.ImageColor3 = Color3.new(1, 1, 1)
-	return photo
-end
-
 local SHOP_CATEGORY_THEMES = {
 	Cosmetic = {
 		background = Color3.fromRGB(32, 22, 44),
@@ -4626,10 +4476,10 @@ local function getHuntObjectiveText()
 	local hideZoneId = tostring(player:GetAttribute("PasrahHideZoneId") or "")
 	local threatState = tostring(player:GetAttribute("PasrahHuntThreatState") or "Clear")
 	local threatDistance = tonumber(player:GetAttribute("PasrahHuntThreatDistance"))
-	local nearestRefuge, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
-	local refugeHint = RefugeHints.getRefugeHintText(nearestRefuge)
-	local refugeAction = RefugeHints.getRefugeActionText(nearestRefuge)
-	local alternateHint = RefugeHints.getRefugeHintText(alternateRefuge)
+	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
+	local refugeHint = getRefugeHintText(nearestRefuge)
+	local refugeAction = getRefugeActionText(nearestRefuge)
+	local alternateHint = getRefugeHintText(alternateRefuge)
 
 	if hideState == "Hidden" then
 		if hideZoneId ~= "" then
@@ -4689,7 +4539,7 @@ local function getHuntObjectiveText()
 	return string.format("Hunt aktif. Pakai pintu untuk putus LOS, lalu %s.", refugeAction)
 end
 
-function UISystem._getHuntStatusSnapshot()
+local function getHuntStatusSnapshot()
 	local player = Players.LocalPlayer
 	if not player then
 		return {
@@ -4709,8 +4559,8 @@ function UISystem._getHuntStatusSnapshot()
 	}
 end
 
-function UISystem._getHuntStatusBadge(snapshot)
-	snapshot = snapshot or UISystem._getHuntStatusSnapshot()
+local function getHuntStatusBadge(snapshot)
+	snapshot = snapshot or getHuntStatusSnapshot()
 	if snapshot.hideState == "Hidden" then
 		return "HIDDEN"
 	end
@@ -4726,11 +4576,11 @@ function UISystem._getHuntStatusBadge(snapshot)
 	return "HUNT"
 end
 
-function UISystem._getHuntControlsHintText()
-	local snapshot = UISystem._getHuntStatusSnapshot()
-	local nearestRefuge, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
-	local refugeHint = RefugeHints.getRefugeHintText(nearestRefuge)
-	local alternateHint = RefugeHints.getRefugeHintText(alternateRefuge)
+local function getHuntControlsHintText()
+	local snapshot = getHuntStatusSnapshot()
+	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
+	local refugeHint = getRefugeHintText(nearestRefuge)
+	local alternateHint = getRefugeHintText(alternateRefuge)
 	local refugeRoute = type(nearestRefuge) == "table" and (nearestRefuge.routeLabel or nearestRefuge.label) or refugeHint
 	local alternateRoute = type(alternateRefuge) == "table" and (alternateRefuge.routeLabel or alternateRefuge.label) or alternateHint
 	if snapshot.hideState == "Hidden" then
@@ -4758,11 +4608,11 @@ function UISystem._getHuntControlsHintText()
 	return string.format("PINTU E/X/TAP  •  %s  •  JANGAN LURUS", refugeRoute)
 end
 
-function UISystem._getHuntAssistSnapshot()
-	local snapshot = UISystem._getHuntStatusSnapshot()
-	local nearestRefuge, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
-	local refugeHint = RefugeHints.getRefugeHintText(nearestRefuge)
-	local alternateHint = RefugeHints.getRefugeHintText(alternateRefuge)
+local function getHuntAssistSnapshot()
+	local snapshot = getHuntStatusSnapshot()
+	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
+	local refugeHint = getRefugeHintText(nearestRefuge)
+	local alternateHint = getRefugeHintText(alternateRefuge)
 	local refugeRoute = type(nearestRefuge) == "table" and (nearestRefuge.routeLabel or nearestRefuge.label) or refugeHint
 	local alternateRoute = type(alternateRefuge) == "table" and (alternateRefuge.routeLabel or alternateRefuge.label) or alternateHint
 	local hiddenPart = snapshot.hideZoneId ~= "" and getRuntimeHideSpotPart(snapshot.hideZoneId) or nil
@@ -4877,9 +4727,9 @@ function UISystem._getNavigationGuideSnapshot(viewState)
 	if state == "Hunt" then
 		local alternateRefuge = nil
 		target, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
-		badgeText = UISystem._getHuntStatusBadge()
+		badgeText = getHuntStatusBadge()
 		titleText = target and RefugeHints.getRefugeHintText(target) or "RUANG AMAN"
-		hintText = UISystem._getHuntControlsHintText()
+		hintText = getHuntControlsHintText()
 		if type(target) == "table" and target.kind == "HideSpot" and type(alternateRefuge) == "table" then
 			hintText = hintText .. " | ALT " .. RefugeHints.getRefugeHintText(alternateRefuge)
 		end
@@ -5379,8 +5229,8 @@ function UISystem._resolveToolFeedback(toolType, success, reason, data, eventNam
 			status = "Tulisan gaib terkunci."
 			detail = "Buku terkutuk tervalidasi sebagai evidence."
 		elseif toolType == "BolaArwah" and evidenceType == "To'un" then
-			status = "To'un tertangkap kamera."
-			detail = "Kamera To'un memvalidasi orb sebagai evidence."
+			status = "Orb terkunci."
+			detail = "To'un tervalidasi sebagai evidence."
 		elseif toolType == "GerakanGaib" and evidenceType == "Pengganggu" then
 			status = "Gangguan gerak terkunci."
 			detail = "Pengganggu tervalidasi sebagai evidence."
@@ -5736,7 +5586,7 @@ function UISystem:Init(context)
 	self._roomBrowserToggleCooldownUntil = 0
 	self._auxiliaryInputBound = false
 	self._windowCloseInputBound = false
-	self._lobbyPanelCollapsed = true
+	self._lobbyPanelCollapsed = false
 	self._roomBrowserMissingWidgetsLogged = false
 	self._roomBrowserModeView = "Selected"
 	self._singleWindowStrict = true
@@ -5863,10 +5713,10 @@ function UISystem:Init(context)
 		seasonId = "S1",
 		totalXP = 0,
 		currentTier = 1,
-		maxTier = ROYAL_PASS_TOTAL_TIERS,
-		xpPerTier = ROYAL_PASS_XP_PER_TIER,
+		maxTier = 50,
+		xpPerTier = 200,
 		currentTierXP = 0,
-		remainingXP = ROYAL_PASS_XP_PER_TIER,
+		remainingXP = 200,
 		progressPercent = 0,
 		premiumOwned = false,
 		unlockedTiers = {},
@@ -5997,13 +5847,14 @@ end
 
 function UISystem:Start()
 	for _, remoteName in ipairs(REMOTE_NAMES) do
-		if remoteName ~= "LobbyEvent" then
-			local remote = self._remotes[remoteName]
-			if remote and remote.OnClientEvent then
-				table.insert(self._connections, remote.OnClientEvent:Connect(function(payload)
-					self:_onServerEvent(remoteName, payload)
-				end))
-			end
+		if remoteName == "LobbyEvent" then
+			continue
+		end
+		local remote = self._remotes[remoteName]
+		if remote and remote.OnClientEvent then
+			table.insert(self._connections, remote.OnClientEvent:Connect(function(payload)
+				self:_onServerEvent(remoteName, payload)
+			end))
 		end
 	end
 	self:_connectLobbyEventRouting()
@@ -6043,9 +5894,8 @@ function UISystem:Start()
 	self:_setPhase(MATCH_PHASE.LOBBY)
 
 	local player = Players.LocalPlayer
-	self._lobbyPanelCollapsed = true
-	if player then
-		player:SetAttribute("LobbyPanelCollapsed", true)
+	if player and player:GetAttribute("LobbyPanelCollapsed") ~= nil then
+		self._lobbyPanelCollapsed = player:GetAttribute("LobbyPanelCollapsed") == true
 	end
 	self:_syncLobbyPanelVisibility()
 
@@ -6731,10 +6581,7 @@ function UISystem:_setBasicWindowPanelVisible(guiName, visible)
 		setAnimatedPanelVisible(panel, shouldShow, false)
 	end
 	if floatButton and floatButton:IsA("GuiObject") then
-		floatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
-			and self._matchPhase == MATCH_PHASE.LOBBY
-			and not shouldShow
-			and not self:_isLobbyFloatRailBlocked()
+		floatButton.Visible = self._matchPhase == MATCH_PHASE.LOBBY and not shouldShow and not self:_isLobbyFloatRailBlocked()
 	end
 	return true
 end
@@ -7042,8 +6889,7 @@ function UISystem:_setAuxiliaryWindowDismissed(guiName, dismissed)
 			and self._uxWidgets.windows
 			and self._uxWidgets.windows[guiName]
 		if widgets and widgets.FloatButton then
-			widgets.FloatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
-				and not self:_isLobbyFloatRailBlocked()
+			widgets.FloatButton.Visible = not self:_isLobbyFloatRailBlocked()
 		end
 		self:_layoutLobbyFloatRail()
 	end
@@ -7102,9 +6948,7 @@ function UISystem:_syncLobbyAuxiliaryWindowVisibility()
 					floatButton.Visible = false
 				end
 			elseif floatButton and floatButton:IsA("GuiObject") then
-				floatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
-					and (not blockLobbyFloatRail)
-					and not (panel and panel.Visible == true)
+				floatButton.Visible = (not blockLobbyFloatRail) and not (panel and panel.Visible == true)
 			end
 		end
 	end
@@ -7129,9 +6973,6 @@ end
 
 function UISystem:_layoutLobbyFloatRail()
 	local profile = self._deviceProfile or {}
-	if LOBBY_PANEL_ONLY_FLOATING_NAV == true then
-		return
-	end
 	if self:_isLobbyFloatRailBlocked() then
 		return
 	end
@@ -7513,21 +7354,23 @@ function UISystem:_tryBindAuthoredShopWindowWidgets(window, contentFrame)
 	window.ShopFilterButtons = {}
 	self:_clearGeneratedRoomBrowserGuiChildren(filterBar)
 	for _, filter in ipairs(SHOP_FILTERS) do
-		if shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
-			local filterButton = self:_cloneAuthoredGuiTemplate(filterTemplate, filterBar, "Filter" .. filter.key)
-			if filterButton then
-				filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
-				filterButton.Text = filter.label
-				self:_setSelectableStyle(filterButton)
-				if not isRuntimeButtonBound(filterButton) then
-					markRuntimeButtonBound(filterButton)
-					connectButtonPress(filterButton, function()
-						self:_setShopFilter(filter.key)
-					end)
-				end
-				window.ShopFilterButtons[filter.key] = filterButton
-			end
+		if not shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
+			continue
 		end
+		local filterButton = self:_cloneAuthoredGuiTemplate(filterTemplate, filterBar, "Filter" .. filter.key)
+		if not filterButton then
+			continue
+		end
+		filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
+		filterButton.Text = filter.label
+		self:_setSelectableStyle(filterButton)
+		if not isRuntimeButtonBound(filterButton) then
+			markRuntimeButtonBound(filterButton)
+			connectButtonPress(filterButton, function()
+				self:_setShopFilter(filter.key)
+			end)
+		end
+		window.ShopFilterButtons[filter.key] = filterButton
 	end
 
 	window.ItemRows = {}
@@ -7536,36 +7379,38 @@ function UISystem:_tryBindAuthoredShopWindowWidgets(window, contentFrame)
 	for index = 1, displayCount do
 		local rowRoot = self:_cloneAuthoredGuiTemplate(itemRowTemplateRoot, itemList, "ItemRow" .. tostring(index))
 		local row = self:_bindAuthoredActionRow(rowRoot)
-		if row and row.Button then
-			self:_setSelectableStyle(row.Button)
-			local item = self._shopState.catalog[index]
-			if item then
-				self:_applyShopRowVisual(row, item, index)
+		if not row or not row.Button then
+			if rowRoot then
+				rowRoot:Destroy()
 			end
-			if not isRuntimeButtonBound(row.Button) then
-				markRuntimeButtonBound(row.Button)
-				connectButtonPress(row.Button, function()
-					local catalogItem = self._shopState.catalog[index]
-					if catalogItem then
-						local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(catalogItem)
-						if not purchasable then
-							self._shopState.lastPurchase = {
-								itemId = catalogItem.id,
-								success = false,
-								reason = blockedReason or "item_disabled",
-							}
-							self._shopState.lastMessage = describeShopPurchaseBlock(catalogItem, blockedReason)
-							self:_openAuxiliaryWindow("ShopUI")
-							return
-						end
-						self:_requestShopPurchase(catalogItem.id)
-					end
-				end)
-			end
-			table.insert(window.ItemRows, row)
-		elseif rowRoot then
-			rowRoot:Destroy()
+			continue
 		end
+		self:_setSelectableStyle(row.Button)
+		local item = self._shopState.catalog[index]
+		if item then
+			self:_applyShopRowVisual(row, item, index)
+		end
+		if not isRuntimeButtonBound(row.Button) then
+			markRuntimeButtonBound(row.Button)
+			connectButtonPress(row.Button, function()
+				local catalogItem = self._shopState.catalog[index]
+				if catalogItem then
+					local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(catalogItem)
+					if not purchasable then
+						self._shopState.lastPurchase = {
+							itemId = catalogItem.id,
+							success = false,
+							reason = blockedReason or "item_disabled",
+						}
+						self._shopState.lastMessage = describeShopPurchaseBlock(catalogItem, blockedReason)
+						self:_openAuxiliaryWindow("ShopUI")
+						return
+					end
+					self:_requestShopPurchase(catalogItem.id)
+				end
+			end)
+		end
+		table.insert(window.ItemRows, row)
 	end
 
 	return true
@@ -7633,9 +7478,6 @@ function UISystem:_tryBindAuthoredRoyalPassWidgets(window, contentFrame)
 	self:_setSelectableStyle(premiumActionButton)
 	self:_setSelectableStyle(rewardTab)
 	self:_setSelectableStyle(missionTab)
-	configureButtonTextImage(rewardTab:FindFirstChild("BrandTextImage", true), ROOM_BROWSER_TEXT_IMAGE_STATES.RewardTab)
-	configureButtonTextImage(missionTab:FindFirstChild("BrandTextImage", true), ROOM_BROWSER_TEXT_IMAGE_STATES.MissionTab)
-	configureButtonTextImage(premiumActionButton:FindFirstChild("BrandTextImage", true), ROOM_BROWSER_TEXT_IMAGE_STATES.PremiumActionButton)
 
 	local rows = {}
 	self:_clearGeneratedRoomBrowserGuiChildren(tierList)
@@ -7943,9 +7785,9 @@ function UISystem:_bindAuthoredBasicWindowUi(guiName, gui)
 	if not isRuntimeGuiBootstrapped(gui) then
 		markRuntimeGuiBootstrapped(gui)
 		panel.Visible = false
-		floatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
+		floatButton.Visible = true
 	end
-	floatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true and panel.Visible ~= true
+	floatButton.Visible = panel.Visible ~= true
 	makeFloatingButtonDraggable(floatButton)
 
 	if not isRuntimeButtonBound(closeButton) then
@@ -8184,18 +8026,19 @@ function UISystem:_ensureAuthoredMatchPanelWidgets(match)
 				self:_setSelectableStyle(toolButton)
 			end
 		end
-		if toolButton and toolButton:IsA("TextButton") then
-			toolButton.LayoutOrder = order
-			local fieldKitWidget = ensureFieldKitButtonVisuals(toolButton, definition, toolType)
-			if not isRuntimeButtonBound(toolButton) then
-				local boundToolType = toolType
-				markRuntimeButtonBound(toolButton)
-				connectButtonPress(toolButton, function()
-					self:_equipFieldKitTool(boundToolType)
-				end)
-			end
-			fieldKitButtons[toolType] = fieldKitWidget
+		if not (toolButton and toolButton:IsA("TextButton")) then
+			continue
 		end
+		toolButton.LayoutOrder = order
+		local fieldKitWidget = ensureFieldKitButtonVisuals(toolButton, definition, toolType)
+		if not isRuntimeButtonBound(toolButton) then
+			local boundToolType = toolType
+			markRuntimeButtonBound(toolButton)
+			connectButtonPress(toolButton, function()
+				self:_equipFieldKitTool(boundToolType)
+			end)
+		end
+		fieldKitButtons[toolType] = fieldKitWidget
 	end
 
 	match.FieldKitButtons = fieldKitButtons
@@ -8515,7 +8358,7 @@ function UISystem:_bindAuthoredRoomBrowserUi(gui, floatGui)
 		shell.CountdownOverlay.Visible = false
 		shell.InvitePopup.Visible = false
 		if shell.FloatButton then
-			shell.FloatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
+			shell.FloatButton.Visible = true
 		end
 	end
 
@@ -8991,10 +8834,10 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	end
 	if toolType == "BolaArwah" then
 		if tostring(toolState.lastEvidenceType or "") == "To'un" or (feedbackData and feedbackData.ghostOrbDetected == true) then
-			return "TO'UN", false, "ORB LOCK"
+			return "ORB", false, "TO'UN LOCK"
 		end
 		if toolState.lastSuccess == false and toolState.lastReason == "ghost_out_of_range" then
-			return "DARK", false, "NO ORB"
+			return "DARK", false, "ORB NULL"
 		end
 		return tostring(config.readyMeta or "GLOW"), false, tostring(config.readyFooter or config.role or "UTILITY")
 	end
@@ -9527,10 +9370,7 @@ function UISystem:_syncMatchWindowVisibility()
 		match.BasicPanel.Visible = showBasicPanel
 	end
 	if match.BasicFloatButton then
-		match.BasicFloatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
-			and screenEnabled
-			and self._matchWindowDismissed
-			and (not isResultsPhase or allowResultReopen)
+		match.BasicFloatButton.Visible = screenEnabled and self._matchWindowDismissed and (not isResultsPhase or allowResultReopen)
 	end
 	if match.ResultsPanel then
 		match.ResultsPanel.Visible = showResults
@@ -9651,11 +9491,11 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState, payload)
 			or (useWorldPreparation and "Contract / Objective / Tools")
 			or (viewState == "Lobby" and "Quick access" or "-")
 		if viewState == "Hunt" then
-			local huntSnapshot = UISystem._getHuntStatusSnapshot()
-			local nearestRefuge, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
-			local refugeHint = RefugeHints.getRefugeHintText(nearestRefuge)
-			local alternateHint = RefugeHints.getRefugeHintText(alternateRefuge)
-			local huntBadge = UISystem._getHuntStatusBadge(huntSnapshot)
+			local huntSnapshot = getHuntStatusSnapshot()
+			local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
+			local refugeHint = getRefugeHintText(nearestRefuge)
+			local alternateHint = getRefugeHintText(alternateRefuge)
+			local huntBadge = getHuntStatusBadge(huntSnapshot)
 			local huntDistanceText = type(huntSnapshot.threatDistance) == "number"
 				and string.format("%dst", math.max(0, math.floor(huntSnapshot.threatDistance + 0.5)))
 				or "-"
@@ -9814,8 +9654,8 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	local profile = self._deviceProfile or {}
 	local hideHeaderBodyText = UserInputService.TouchEnabled == true
 		and (viewState == "Preparation" or viewState == "Loading")
-	local huntAssistSnapshot = viewState == "Hunt" and UISystem._getHuntAssistSnapshot() or nil
-	local huntStatusSnapshot = viewState == "Hunt" and UISystem._getHuntStatusSnapshot() or nil
+	local huntAssistSnapshot = viewState == "Hunt" and getHuntAssistSnapshot() or nil
+	local huntStatusSnapshot = viewState == "Hunt" and getHuntStatusSnapshot() or nil
 	local navigationAnchor = nil
 
 	local badgeText = "STATUS MATCH"
@@ -9988,7 +9828,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		))
 			and "Review CONTRACT / OBJECTIVES / TOOLS di staging luar, lalu aktifkan BREACH di MAIN ENTRY."
 			or (viewState == "Hunt"
-			and UISystem._getHuntControlsHintText()
+			and getHuntControlsHintText()
 			or ((viewState == "Preparation" and getInvestigationControlsHintText("Preparation"))
 				or (viewState == "Investigation" and prependPreparationFocusHint(getInvestigationControlsHintText("Investigation")))
 				or self._matchControlsHintText))
@@ -13153,38 +12993,39 @@ function UISystem:_ensureAuthoredShopWindowWidgets(window)
 		end
 	end
 	for _, filter in ipairs(SHOP_FILTERS) do
-		if shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
-			local filterButton = Instance.new("TextButton")
-			filterButton.Name = "Filter" .. filter.key
-			filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
-			filterButton.BackgroundColor3 = Color3.fromRGB(42, 54, 72)
-			filterButton.BorderSizePixel = 0
-			filterButton.Text = filter.label
-			filterButton.TextColor3 = Color3.fromRGB(236, 240, 244)
-			filterButton.Font = Enum.Font.GothamBold
-			filterButton.TextSize = 10
-			filterButton.Parent = filterBar
-			self:_setSelectableStyle(filterButton)
-
-			local filterCorner = Instance.new("UICorner")
-			filterCorner.CornerRadius = UDim.new(1, 0)
-			filterCorner.Parent = filterButton
-
-			local filterStroke = Instance.new("UIStroke")
-			filterStroke.Thickness = 1
-			filterStroke.Transparency = 0.18
-			filterStroke.Color = Color3.fromRGB(92, 116, 150)
-			filterStroke.Parent = filterButton
-
-			if not isRuntimeButtonBound(filterButton) then
-				markRuntimeButtonBound(filterButton)
-				connectButtonPress(filterButton, function()
-					self:_setShopFilter(filter.key)
-				end)
-			end
-
-			window.ShopFilterButtons[filter.key] = filterButton
+		if not shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
+			continue
 		end
+		local filterButton = Instance.new("TextButton")
+		filterButton.Name = "Filter" .. filter.key
+		filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
+		filterButton.BackgroundColor3 = Color3.fromRGB(42, 54, 72)
+		filterButton.BorderSizePixel = 0
+		filterButton.Text = filter.label
+		filterButton.TextColor3 = Color3.fromRGB(236, 240, 244)
+		filterButton.Font = Enum.Font.GothamBold
+		filterButton.TextSize = 10
+		filterButton.Parent = filterBar
+		self:_setSelectableStyle(filterButton)
+
+		local filterCorner = Instance.new("UICorner")
+		filterCorner.CornerRadius = UDim.new(1, 0)
+		filterCorner.Parent = filterButton
+
+		local filterStroke = Instance.new("UIStroke")
+		filterStroke.Thickness = 1
+		filterStroke.Transparency = 0.18
+		filterStroke.Color = Color3.fromRGB(92, 116, 150)
+		filterStroke.Parent = filterButton
+
+		if not isRuntimeButtonBound(filterButton) then
+			markRuntimeButtonBound(filterButton)
+			connectButtonPress(filterButton, function()
+				self:_setShopFilter(filter.key)
+			end)
+		end
+
+		window.ShopFilterButtons[filter.key] = filterButton
 	end
 
 	window.ItemRows = {}
@@ -13883,7 +13724,6 @@ function UISystem:_ensureRoyalPassWidgets(window)
 		row.Button.Selectable = false
 		table.insert(rows, row)
 	end
-	self:_bindRoyalPassActionRows(rows)
 
 	local trackTabs = Instance.new("Frame")
 	trackTabs.Name = "TrackTabs"
@@ -13926,7 +13766,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	trackHint.TextSize = 11
 	trackHint.TextXAlignment = Enum.TextXAlignment.Left
 	trackHint.TextColor3 = Color3.fromRGB(170, 184, 202)
-	trackHint.Text = "Geser horizontal untuk melihat lane check-in/quest 60 tier. Tier ke-60 menampilkan teaser hadiah finale rarity 5."
+	trackHint.Text = "Geser horizontal untuk melihat lane check-in/quest 30 hari. Hari ke-30 menampilkan teaser karakter rarity 5."
 	trackHint.Parent = deck
 
 	local trackScroller = Instance.new("ScrollingFrame")
@@ -14008,7 +13848,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 		dayBadge.Font = Enum.Font.GothamBlack
 		dayBadge.TextSize = 10
 		dayBadge.TextColor3 = Color3.fromRGB(242, 245, 248)
-		dayBadge.Text = string.format("TIER %02d", index)
+		dayBadge.Text = string.format("DAY %02d", index)
 		dayBadge.Parent = card
 		local dayBadgeCorner = Instance.new("UICorner")
 		dayBadgeCorner.CornerRadius = UDim.new(1, 0)
@@ -14082,6 +13922,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 			Footer = footerLabel,
 		}
 	end
+	self:_bindRoyalPassActionRows(rows)
 
 	if not isRuntimeButtonBound(premiumActionButton) then
 		markRuntimeButtonBound(premiumActionButton)
@@ -14215,11 +14056,9 @@ function UISystem:_refreshRoyalPassPanel()
 	local dailyEngagement = self._dailyEngagementState or {}
 	local currentTier = math.max(1, math.floor(tonumber(state.currentTier or 1) or 1))
 	local checkinTotalDays = math.max(0, math.floor(tonumber(dailyEngagement.checkinTotalDays or 0) or 0))
-	local royalPassConfig = getRoyalPassConfig()
-	local configuredTotalTiers = math.max(1, math.floor(tonumber(royalPassConfig and royalPassConfig.TOTAL_TIERS) or ROYAL_PASS_TOTAL_TIERS))
-	local dailyCheckInDay = math.clamp(checkinTotalDays > 0 and checkinTotalDays or currentTier, 1, configuredTotalTiers)
-	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or configuredTotalTiers) or configuredTotalTiers), configuredTotalTiers)
-	local xpPerTier = math.max(1, math.floor(tonumber(state.xpPerTier or (royalPassConfig and royalPassConfig.XP_PER_TIER) or ROYAL_PASS_XP_PER_TIER) or ROYAL_PASS_XP_PER_TIER))
+	local dailyCheckInDay = math.clamp(checkinTotalDays > 0 and checkinTotalDays or currentTier, 1, 30)
+	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or 50) or 50))
+	local xpPerTier = math.max(1, math.floor(tonumber(state.xpPerTier or 200) or 200))
 	local currentTierXP = math.clamp(math.floor(tonumber(state.currentTierXP or 0) or 0), 0, xpPerTier)
 	local totalXP = math.max(0, math.floor(tonumber(state.totalXP or 0) or 0))
 	local remainingXP = math.max(0, math.floor(tonumber(state.remainingXP or 0) or 0))
@@ -14371,6 +14210,14 @@ function UISystem:_refreshRoyalPassPanel()
 	end
 	local spinVisualState = premiumOwned and "PREMIUM POOL" or "FREE POOL"
 
+	local nextRewardMeta = state.nextReward
+		and string.format(
+			"%d MM + %d XP bonus menunggu di track berikutnya.",
+			math.max(0, math.floor(tonumber(state.nextReward.currency) or 0)),
+			math.max(0, math.floor(tonumber(state.nextReward.xp) or 0))
+		)
+		or "Semua tier utama sudah terbuka."
+
 	local rows = widgets.Rows or {}
 	local rowData = {
 		{
@@ -14398,7 +14245,7 @@ function UISystem:_refreshRoyalPassPanel()
 			glyph = "QST",
 			title = "Daily quest / spin / gacha",
 			meta = dailyMissionTotal > 0
-					and string.format("%d active • %d ready • spin %s • preview %s", activeMissionCount, readyMissionCount, spinVisualState, unlockedPreview)
+				and string.format("%d active • %d ready • spin %s • preview %s", activeMissionCount, readyMissionCount, spinVisualState, unlockedPreview)
 				or (premiumOfferReady
 					and string.format("Unlocked %d tier • spin %s • preview %s", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0)), spinVisualState, unlockedPreview)
 					or "Premium track belum dijual. Lane quest/spin tetap visual sampai compliant."),
@@ -14455,19 +14302,16 @@ function UISystem:_refreshRoyalPassPanel()
 			widgets.TrackHint.Text = "Premium track masih pending. Daily check-in/quest tetap visual preview sampai entitlement Roblox siap."
 		else
 			widgets.TrackHint.Text = state.viewMode == "Missions"
-				and string.format("Geser horizontal untuk melihat %d tier daily quest. Tier ke-%d menjaga finale hadiah rarity 5.", maxTier, maxTier)
-				or string.format("Geser horizontal untuk melihat %d tier Royal Pass. Tier ke-%d menampilkan hadiah finale rarity 5.", maxTier, maxTier)
+				and "Geser horizontal untuk melihat 60 tier daily quest. Tier 5/10/20/30/60 menjadi milestone hadiah."
+				or "Geser horizontal untuk melihat 60 tier Royal Pass. Tier 5/10/20/30/60 menjadi milestone hadiah."
 		end
 	end
 
 	local trackCards = widgets.TrackCards or {}
-	local dailyMissions = type(dailyEngagement.missions) == "table" and dailyEngagement.missions or {}
-	local unlockedDays = math.clamp(math.max(1, dailyCheckInDay), 1, maxTier)
-	local currentDay = math.min(unlockedDays, maxTier)
+	local unlockedDays = math.clamp(math.max(1, currentTier), 1, ROYAL_PASS_TOTAL_TIERS)
+	local currentDay = math.min(unlockedDays, ROYAL_PASS_TOTAL_TIERS)
 	for index, card in ipairs(trackCards) do
-		local tierConfig = royalPassConfig and royalPassConfig.TIERS and royalPassConfig.TIERS[index] or nil
-		local isFinalDay = index == maxTier
-		local isMilestoneTier = isFinalDay or index == 5 or index == 10 or index == 20 or index == 30 or index % 10 == 0
+		local isFinalDay = index == ROYAL_PASS_TOTAL_TIERS or index == 5 or index == 10 or index == 20 or index == 30
 		local isCurrentDay = index == currentDay
 		local isUnlocked = index < currentDay
 		local isLocked = index > currentDay
@@ -14481,10 +14325,8 @@ function UISystem:_refreshRoyalPassPanel()
 		local cardBackground = Color3.fromRGB(24, 32, 42)
 		local rarityKey = resolveRoyalPassTrackRarityKey(index, isFinalDay)
 		local rarityTemplateAssetId = SHOP_RARITY_TEMPLATE_ASSET_IDS[rarityKey]
-		local usesLiveMission = false
 
 		if state.viewMode == "Missions" then
-			local mission = dailyMissions[index]
 			local missionTemplates = {
 				"Menangkan 1 investigasi penuh",
 				"Kumpulkan 2 evidence penting",
@@ -14492,81 +14334,34 @@ function UISystem:_refreshRoyalPassPanel()
 				"Gunakan tool investigasi 3 kali",
 				"Bermain bersama 1 teman",
 			}
-			if type(mission) == "table" then
-				usesLiveMission = true
-				local target = math.max(1, math.floor(tonumber(mission.target) or 1))
-				local progress = math.clamp(math.floor(tonumber(mission.progress) or 0), 0, target)
-				local rewardParts = {}
-				if (tonumber(mission.xp) or 0) > 0 then
-					table.insert(rewardParts, "+" .. tostring(math.floor(tonumber(mission.xp) or 0)) .. " XP")
-				end
-				if (tonumber(mission.mm) or 0) > 0 then
-					table.insert(rewardParts, "+" .. tostring(math.floor(tonumber(mission.mm) or 0)) .. " MM")
-				end
-				titleText = tostring(mission.title or ("DAILY QUEST " .. string.format("%02d", index)))
-				metaText = string.format("%d/%d • %s", progress, target, tostring(mission.desc or mission.type or "Daily mission"))
-				rewardText = #rewardParts > 0 and table.concat(rewardParts, " + ") or "+RP XP"
-				if mission.claimed == true then
-					footerText = "DONE"
-				elseif progress >= target then
-					footerText = "CLAIM"
-				else
-					footerText = "LIVE"
-				end
-			else
-				titleText = isFinalDay and string.format("DAILY QUEST %02d • GRAND FINALE", index) or string.format("DAILY QUEST %02d", index)
-				metaText = isFinalDay
-					and "Selesaikan misi penutup season untuk membuka teaser hadiah karakter rarity 5."
-					or missionTemplates[((index - 1) % #missionTemplates) + 1]
-				rewardText = isFinalDay and "R5 TOKEN" or string.format("+%d XP", 60 + (index * 5))
-			end
-			if tierConfig then
-				rewardText = describeRoyalPassReward(tierConfig.free)
-				footerText = describeRoyalPassReward(tierConfig.premium)
-				if isFinalDay then
-					titleText = string.format("DAILY QUEST %02d • GRAND FINALE", index)
-					metaText = "Final season tier dengan reward premium/cosmetic puncak."
-				end
-			end
-			accentColor = isMilestoneTier and Color3.fromRGB(210, 160, 86) or Color3.fromRGB(112, 84, 150)
-			strokeColor = isMilestoneTier and Color3.fromRGB(232, 186, 104) or Color3.fromRGB(118, 90, 156)
-			badgeColor = isMilestoneTier and Color3.fromRGB(108, 78, 46) or Color3.fromRGB(76, 58, 102)
-			cardBackground = isMilestoneTier and Color3.fromRGB(40, 30, 22) or Color3.fromRGB(32, 28, 42)
-		else
-			titleText = isFinalDay and string.format("TIER %02d • CHARACTER R5", index) or string.format("TIER %02d", index)
+			titleText = isFinalDay and "DAILY QUEST 30 • GRAND FINALE" or string.format("DAILY QUEST %02d", index)
 			metaText = isFinalDay
-				and "Finale season untuk hadiah karakter rarity 5 di penghujung Royal Pass."
+				and "Selesaikan misi penutup season untuk membuka teaser hadiah karakter rarity 5."
+				or missionTemplates[((index - 1) % #missionTemplates) + 1]
+			rewardText = isFinalDay and "R5 TOKEN" or string.format("+%d XP", 60 + (index * 5))
+			accentColor = isFinalDay and Color3.fromRGB(210, 160, 86) or Color3.fromRGB(112, 84, 150)
+			strokeColor = isFinalDay and Color3.fromRGB(232, 186, 104) or Color3.fromRGB(118, 90, 156)
+			badgeColor = isFinalDay and Color3.fromRGB(108, 78, 46) or Color3.fromRGB(76, 58, 102)
+			cardBackground = isFinalDay and Color3.fromRGB(40, 30, 22) or Color3.fromRGB(32, 28, 42)
+		else
+			titleText = isFinalDay and "CHECK-IN DAY 30 • CHARACTER R5" or string.format("CHECK-IN DAY %02d", index)
+			metaText = isFinalDay
+				and "Border finale untuk hadiah karakter rarity 5 di penghujung 30 hari check-in season."
 				or string.format("Claim harian untuk ritme login. Bonus tier mengikuti season %s.", tostring(state.seasonId or "S1"))
 			rewardText = isFinalDay and "R5 BORDER" or string.format("+%d MM", 120 + ((index - 1) * 20))
-			if tierConfig then
-				rewardText = describeRoyalPassReward(tierConfig.free)
-				footerText = describeRoyalPassReward(tierConfig.premium)
-				if isMilestoneTier then
-					metaText = string.format("Milestone tier %02d. Premium: %s", index, footerText)
-				end
-			end
-			accentColor = isMilestoneTier and Color3.fromRGB(224, 170, 88) or (premiumOwned and Color3.fromRGB(126, 98, 52) or Color3.fromRGB(82, 110, 162))
-			strokeColor = isMilestoneTier and Color3.fromRGB(244, 198, 112) or accentColor
-			badgeColor = isMilestoneTier and Color3.fromRGB(118, 86, 42) or Color3.fromRGB(60, 82, 118)
-			cardBackground = isMilestoneTier and Color3.fromRGB(42, 30, 20) or Color3.fromRGB(24, 32, 42)
+			accentColor = isFinalDay and Color3.fromRGB(224, 170, 88) or (premiumOwned and Color3.fromRGB(126, 98, 52) or Color3.fromRGB(82, 110, 162))
+			strokeColor = isFinalDay and Color3.fromRGB(244, 198, 112) or accentColor
+			badgeColor = isFinalDay and Color3.fromRGB(118, 86, 42) or Color3.fromRGB(60, 82, 118)
+			cardBackground = isFinalDay and Color3.fromRGB(42, 30, 20) or Color3.fromRGB(24, 32, 42)
 		end
 
-		if not usesLiveMission then
-			if type(tierConfig) == "table" then
-				footerText = describeRoyalPassReward(tierConfig.premium)
-				if isCurrentDay then
-					cardBackground = cardBackground:Lerp(Color3.fromRGB(52, 64, 82), 0.28)
-				end
-			else
-				if isCurrentDay then
-					cardBackground = cardBackground:Lerp(Color3.fromRGB(52, 64, 82), 0.28)
-					footerText = "TODAY"
-				elseif isUnlocked then
-					footerText = "DONE"
-				elseif isLocked then
-					footerText = "LOCK"
-				end
-			end
+		if isCurrentDay then
+			cardBackground = cardBackground:Lerp(Color3.fromRGB(52, 64, 82), 0.28)
+			footerText = "TODAY"
+		elseif isUnlocked then
+			footerText = "DONE"
+		elseif isLocked then
+			footerText = "LOCK"
 		end
 
 		card.Root.BackgroundColor3 = cardBackground
@@ -14581,20 +14376,20 @@ function UISystem:_refreshRoyalPassPanel()
 			end
 		end
 		card.Stroke.Color = strokeColor
-		card.Stroke.Thickness = isMilestoneTier and 2 or 1
+		card.Stroke.Thickness = isFinalDay and 2 or 1
 		card.DayBadge.BackgroundColor3 = badgeColor
-		card.DayBadge.Text = string.format("TIER %02d", index)
+		card.DayBadge.Text = string.format("DAY %02d", index)
 		card.Title.Text = titleText
 		card.Meta.Text = metaText
 		card.Footer.Text = footerText
-		card.Footer.TextColor3 = isLocked and not usesLiveMission
+		card.Footer.TextColor3 = isLocked
 			and Color3.fromRGB(174, 182, 194)
-			or (isMilestoneTier and Color3.fromRGB(244, 214, 146) or Color3.fromRGB(220, 230, 238))
+			or (isFinalDay and Color3.fromRGB(244, 214, 146) or Color3.fromRGB(220, 230, 238))
 		applyPricePillVisual(
 			card.RewardPill,
 			rewardText,
 			accentColor,
-			isMilestoneTier and Color3.fromRGB(248, 242, 230) or Color3.fromRGB(236, 240, 246)
+			isFinalDay and Color3.fromRGB(248, 242, 230) or Color3.fromRGB(236, 240, 246)
 		)
 	end
 
@@ -14629,13 +14424,6 @@ function UISystem:_refreshRoyalPassPanel()
 		instance:SetAttribute("PasrahRoyalPassViewMode", tostring(state.viewMode or "Rewards"))
 		instance:SetAttribute("PasrahRoyalPassCurrentDay", currentDay)
 		instance:SetAttribute("PasrahRoyalPassLastEvent", tostring(state.lastEvent or "Idle"))
-		instance:SetAttribute("PasrahDailyCheckinTotalDays", checkinTotalDays)
-		instance:SetAttribute("PasrahDailyCheckinStreak", checkinStreak)
-		instance:SetAttribute("PasrahDailyMissionTotalCount", dailyMissionTotal)
-		instance:SetAttribute("PasrahDailyMissionReadyCount", readyMissionCount)
-		instance:SetAttribute("PasrahDailyMissionClaimedCount", claimedMissionCount)
-		instance:SetAttribute("PasrahGachaTickets", gachaTickets)
-		instance:SetAttribute("PasrahGachaPityCount", pityCount)
 	end
 
 	stamp(window.Gui, "RoyalPassGui")
@@ -16038,7 +15826,9 @@ function UISystem:_applyDeviceSizing()
 				local window = self._uxWidgets.windows[guiName]
 				if window then
 					local preserveAuthoredAuxWindowLayout = shouldPreserveAuthoredOwnerLayout(guiName)
-					if not preserveAuthoredAuxWindowLayout then
+					if preserveAuthoredAuxWindowLayout then
+						continue
+					end
 				if not preserveAuthoredAuxWindowLayout and window.Panel and (guiName == "RoyalPassUI" or guiName == "ProfileUI" or guiName == "ShopUI") then
 					local width = guiName == "ShopUI" and 356 or 364
 					local height = guiName == "ProfileUI" and 320 or 420
@@ -16315,10 +16105,12 @@ function UISystem:_applyDeviceSizing()
 				end
 			end
 		end
-		end
 		if self._uxWidgets and self._uxWidgets.basicWindows then
 			for guiName, window in pairs(self._uxWidgets.basicWindows) do
 				local preserveAuthoredDesktopBasicWindowLayout = shouldPreserveAuthoredOwnerLayout(guiName)
+				if preserveAuthoredDesktopBasicWindowLayout then
+					continue
+				end
 				if not preserveAuthoredDesktopBasicWindowLayout then
 					if window.PrimaryLabel then
 						window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
@@ -17416,28 +17208,30 @@ function UISystem:_startPhaseTimer()
 		while self._phaseTimerRunning do
 			task.wait(0.1)
 			self:_refreshBasicMatchPanel()
-			if self._phaseDuration then
-				local elapsed = tick() - self._phaseStartTime
-				if elapsed >= self._phaseDuration then
-					if self._matchPhase == MATCH_PHASE.BRIEFING then
-						local nextPayload = self._pendingInGamePayload
-						self._pendingInGamePayload = nil
-						if nextPayload then
-							self._hasPostTeleportLoaded = true
-							self._awaitingPostTeleportFlow = false
-							self:_setPhase(MATCH_PHASE.INGAME, nextPayload)
-						else
-							self._phaseDuration = nil
-						end
-					elseif self._matchPhase == MATCH_PHASE.HUNT then
-						-- Server should end hunt; this only prevents repeated fallback transitions.
-						self._phaseDuration = nil
-					else
-						self._phaseDuration = nil
-					end
+			if not self._phaseDuration then
+				continue
+			end
+
+			local elapsed = tick() - self._phaseStartTime
+			if elapsed < self._phaseDuration then
+				continue
+			end
+
+			if self._matchPhase == MATCH_PHASE.BRIEFING then
+				local nextPayload = self._pendingInGamePayload
+				self._pendingInGamePayload = nil
+				if nextPayload then
+					self._hasPostTeleportLoaded = true
+					self._awaitingPostTeleportFlow = false
+					self:_setPhase(MATCH_PHASE.INGAME, nextPayload)
 				else
-					self:_refreshBasicMatchPanel()
+					self._phaseDuration = nil
 				end
+			elseif self._matchPhase == MATCH_PHASE.HUNT then
+				-- Server should end hunt; this only prevents repeated fallback transitions.
+				self._phaseDuration = nil
+			else
+				self._phaseDuration = nil
 			end
 		end
 	end)
@@ -18212,7 +18006,9 @@ function UISystem:_ensureBasicUIs()
 				self._lobbyUiShellWarned = true
 				warn("[UISystem] Missing authored LobbyUI ScreenGui; check StarterGui shell contract.")
 			end
-		elseif guiName == "MainMenuUI" or guiName == "LeaderboardUI" then
+			continue
+		end
+		if guiName == "MainMenuUI" or guiName == "LeaderboardUI" then
 			gui = gui or playerGui:FindFirstChild(guiName) or playerGui:WaitForChild(guiName, 5)
 			if gui and gui:IsA("ScreenGui") then
 				self:_bindAuthoredBasicWindowUi(guiName, gui)
@@ -18223,7 +18019,9 @@ function UISystem:_ensureBasicUIs()
 					warn(string.format("[UISystem] Missing authored %s ScreenGui; check StarterGui shell contract.", guiName))
 				end
 			end
-		elseif guiName == "MatchUI" then
+			continue
+		end
+		if guiName == "MatchUI" then
 			gui = gui or playerGui:FindFirstChild(guiName) or playerGui:WaitForChild("MatchUI", 5)
 			if gui and gui:IsA("ScreenGui") then
 				self:_bindAuthoredMatchUi(gui)
@@ -18233,7 +18031,9 @@ function UISystem:_ensureBasicUIs()
 					warn("[UISystem] Missing authored MatchUI ScreenGui; check StarterGui shell contract.")
 				end
 			end
-		elseif guiName == "JournalUI"
+			continue
+		end
+		if guiName == "JournalUI"
 			or guiName == "ProfileUI"
 			or guiName == "ShopUI"
 			or guiName == "RoyalPassUI"
@@ -18250,9 +18050,9 @@ function UISystem:_ensureBasicUIs()
 					warn(string.format("[UISystem] Missing authored %s ScreenGui; check StarterGui shell contract.", guiName))
 				end
 			end
-		else
-			warn(string.format("[UISystem] Unsupported BASIC_GUI_NAMES entry %s; authored shell binding required.", tostring(guiName)))
+			continue
 		end
+		warn(string.format("[UISystem] Unsupported BASIC_GUI_NAMES entry %s; authored shell binding required.", tostring(guiName)))
 	end
 
 	self:_refreshBasicLobbyPanel()
@@ -18517,8 +18317,6 @@ function UISystem:_ensureRoomBrowserGui()
 	local roomPreviewMapStroke = roomPreviewMap and roomPreviewMap:FindFirstChildOfClass("UIStroke")
 	local mapPreviewStroke = mapPreview and mapPreview:FindFirstChildOfClass("UIStroke")
 	local mapPreviewImageStroke = mapPreviewImage and mapPreviewImage:FindFirstChildOfClass("UIStroke")
-	local roomPreviewMapPhoto = ensureRoomBrowserMapPhoto(roomPreviewMap)
-	local mapPreviewPhoto = ensureRoomBrowserMapPhoto(mapPreviewImage)
 	local cloneAuthoredGuiTemplate = function(template, parent, newName)
 		return self:_cloneAuthoredGuiTemplate(template, parent, newName)
 	end
@@ -18827,11 +18625,6 @@ function UISystem:_ensureRoomBrowserGui()
 		if mapPreviewImage then
 			mapPreviewImage.BackgroundColor3 = theme.background
 		end
-		local mapPhotoAsset = resolveRoomBrowserMapPhoto(mapName)
-		if mapPreviewPhoto then
-			mapPreviewPhoto.Image = mapPhotoAsset or ""
-			mapPreviewPhoto.Visible = mapPhotoAsset ~= nil
-		end
 		if mapPreviewImageStroke then
 			mapPreviewImageStroke.Color = theme.stroke
 		end
@@ -18844,7 +18637,6 @@ function UISystem:_ensureRoomBrowserGui()
 			mapPreviewImageChip.Text = buildMapPreviewMood(mapName, modeText)
 		end
 		if mapPreviewImageLabel then
-			mapPreviewImageLabel.Visible = mapPhotoAsset == nil
 			mapPreviewImageLabel.TextColor3 = theme.text
 			mapPreviewImageLabel.Text = buildMapPreviewGlyph(mapName, modeText)
 		end
@@ -18925,10 +18717,6 @@ function UISystem:_ensureRoomBrowserGui()
 			roomPreviewMap.BackgroundColor3 = UI_BRAND.bgPanel
 			roomPreviewMapStroke.Color = UI_BRAND.focusSoft
 			roomPreviewMapAccent.BackgroundColor3 = UI_BRAND.focus
-			if roomPreviewMapPhoto then
-				roomPreviewMapPhoto.Image = ""
-				roomPreviewMapPhoto.Visible = false
-			end
 			roomPreviewMapMood.BackgroundColor3 = Color3.fromRGB(22, 56, 80)
 			roomPreviewMapGradient.Color = ColorSequence.new({
 				ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 48, 68)),
@@ -18969,11 +18757,6 @@ function UISystem:_ensureRoomBrowserGui()
 		roomPreviewMap.BackgroundColor3 = theme.background
 		roomPreviewMapStroke.Color = theme.stroke
 		roomPreviewMapAccent.BackgroundColor3 = theme.accent
-		local roomPreviewPhotoAsset = resolveRoomBrowserMapPhoto(mapId)
-		if roomPreviewMapPhoto then
-			roomPreviewMapPhoto.Image = roomPreviewPhotoAsset or ""
-			roomPreviewMapPhoto.Visible = roomPreviewPhotoAsset ~= nil
-		end
 		roomPreviewMapMood.BackgroundColor3 = theme.accentSoft
 		roomPreviewMapMood.TextColor3 = theme.text
 		roomPreviewMapTitle.TextColor3 = theme.muted
@@ -19068,68 +18851,69 @@ function UISystem:_ensureRoomBrowserGui()
 		self:_clearGeneratedRoomBrowserGuiChildren(roomList)
 		for _, room in ipairs(rooms or {}) do
 			local row = self:_cloneAuthoredGuiTemplate(roomListRowTemplate, roomList, "Room_" .. tostring(room.roomId))
-			if row and row:IsA("TextButton") then
-				row.Size = UDim2.new(1, extraCompactRoomBrowser and -6 or -8, 0, roomRowHeight)
-				row.LayoutOrder = room.roomId
-				row.TextSize = roomRowTextSize
-				row.TextXAlignment = Enum.TextXAlignment.Left
-				row.TextYAlignment = Enum.TextYAlignment.Center
-				row.TextWrapped = (not extraCompactRoomBrowser) and (compactRoomBrowser or wideMobileRoomBrowser)
-				row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-				row.Text = roomRowText(room)
-				row.TextTransparency = 0
-				row.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
-				local rowPadding = row:FindFirstChildOfClass("UIPadding")
-				if rowPadding then
-					rowPadding.PaddingTop = UDim.new(0, extraCompactRoomBrowser and 4 or 7)
-					rowPadding.PaddingBottom = UDim.new(0, extraCompactRoomBrowser and 4 or 7)
-					rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 9 or 14)
-					rowPadding.PaddingRight = UDim.new(0, extraCompactRoomBrowser and 8 or 12)
-				end
-				row:SetAttribute("RoomId", room.roomId)
-				row:SetAttribute("InGame", room.inGame == true)
-				row:SetAttribute("Starting", room.starting == true)
-				row:SetAttribute("HasPassword", room.hasPassword == true)
-				local rowTone = "focus"
-				local rowActive = tostring(room.roomId) == tostring(selectedRoomId)
-				if row:GetAttribute("InGame") then
-					rowTone = "danger"
-					row.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
-					row.TextColor3 = Color3.fromRGB(255, 150, 150)
-					row.AutoButtonColor = false
-				elseif row:GetAttribute("Starting") then
-					rowTone = "warning"
-					row.BackgroundColor3 = Color3.fromRGB(50, 40, 20)
-					row.TextColor3 = Color3.fromRGB(255, 200, 120)
-					row.AutoButtonColor = false
-				else
-					row.BackgroundColor3 = Color3.fromRGB(28, 42, 58)
-					row.TextColor3 = Color3.fromRGB(246, 250, 255)
-					row.AutoButtonColor = true
-				end
-				if rowActive then
-					row.BackgroundColor3 = Color3.fromRGB(63, 92, 138)
-				end
-				local rowCorner = row:FindFirstChild("UICorner")
-				if rowCorner and rowCorner:IsA("UICorner") then
-					rowCorner.CornerRadius = UDim.new(0, extraCompactRoomBrowser and 5 or 6)
-				end
-
-				connectButtonPress(row, function()
-					selectedRoomId = row:GetAttribute("RoomId")
-					if row:GetAttribute("InGame") then
-						statusLabel.Text = string.format("Room #%s sedang berlangsung.", tostring(selectedRoomId))
-					elseif row:GetAttribute("Starting") then
-						statusLabel.Text = string.format("Room #%s sedang countdown.", tostring(selectedRoomId))
-					else
-						statusLabel.Text = string.format("Room #%s dipilih. Klik JOIN ROOM untuk masuk.", tostring(selectedRoomId))
-					end
-					renderRoomSelectionPreview(rooms)
-				end)
-				self:_setSelectableStyle(row)
-				setButtonTone(row, rowTone, rowActive)
-				row.Parent = roomList
+			if not (row and row:IsA("TextButton")) then
+				continue
 			end
+			row.Size = UDim2.new(1, extraCompactRoomBrowser and -6 or -8, 0, roomRowHeight)
+			row.LayoutOrder = room.roomId
+			row.TextSize = roomRowTextSize
+			row.TextXAlignment = Enum.TextXAlignment.Left
+			row.TextYAlignment = Enum.TextYAlignment.Center
+			row.TextWrapped = (not extraCompactRoomBrowser) and (compactRoomBrowser or wideMobileRoomBrowser)
+			row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+			row.Text = roomRowText(room)
+			row.TextTransparency = 0
+			row.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+			local rowPadding = row:FindFirstChildOfClass("UIPadding")
+			if rowPadding then
+				rowPadding.PaddingTop = UDim.new(0, extraCompactRoomBrowser and 4 or 7)
+				rowPadding.PaddingBottom = UDim.new(0, extraCompactRoomBrowser and 4 or 7)
+				rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 9 or 14)
+				rowPadding.PaddingRight = UDim.new(0, extraCompactRoomBrowser and 8 or 12)
+			end
+			row:SetAttribute("RoomId", room.roomId)
+			row:SetAttribute("InGame", room.inGame == true)
+			row:SetAttribute("Starting", room.starting == true)
+			row:SetAttribute("HasPassword", room.hasPassword == true)
+			local rowTone = "focus"
+			local rowActive = tostring(room.roomId) == tostring(selectedRoomId)
+			if row:GetAttribute("InGame") then
+				rowTone = "danger"
+				row.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+				row.TextColor3 = Color3.fromRGB(255, 150, 150)
+				row.AutoButtonColor = false
+			elseif row:GetAttribute("Starting") then
+				rowTone = "warning"
+				row.BackgroundColor3 = Color3.fromRGB(50, 40, 20)
+				row.TextColor3 = Color3.fromRGB(255, 200, 120)
+				row.AutoButtonColor = false
+			else
+				row.BackgroundColor3 = Color3.fromRGB(28, 42, 58)
+				row.TextColor3 = Color3.fromRGB(246, 250, 255)
+				row.AutoButtonColor = true
+			end
+			if rowActive then
+				row.BackgroundColor3 = Color3.fromRGB(63, 92, 138)
+			end
+			local rowCorner = row:FindFirstChild("UICorner")
+			if rowCorner and rowCorner:IsA("UICorner") then
+				rowCorner.CornerRadius = UDim.new(0, extraCompactRoomBrowser and 5 or 6)
+			end
+
+			connectButtonPress(row, function()
+				selectedRoomId = row:GetAttribute("RoomId")
+				if row:GetAttribute("InGame") then
+					statusLabel.Text = string.format("Room #%s sedang berlangsung.", tostring(selectedRoomId))
+				elseif row:GetAttribute("Starting") then
+					statusLabel.Text = string.format("Room #%s sedang countdown.", tostring(selectedRoomId))
+				else
+					statusLabel.Text = string.format("Room #%s dipilih. Klik JOIN ROOM untuk masuk.", tostring(selectedRoomId))
+				end
+				renderRoomSelectionPreview(rooms)
+			end)
+			self:_setSelectableStyle(row)
+			setButtonTone(row, rowTone, rowActive)
+			row.Parent = roomList
 		end
 		renderRoomSelectionPreview(rooms)
 	end
@@ -19759,10 +19543,7 @@ function UISystem:_updateRoomBrowserVisibility()
 		end
 	end
 	if self._roomBrowserFloatGui then
-		self._roomBrowserFloatGui.Enabled = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
-			and (not suppressed)
-			and (not self._roomBrowserVisible)
-			and (not blockLobbyFloatRail)
+		self._roomBrowserFloatGui.Enabled = (not suppressed) and (not self._roomBrowserVisible) and (not blockLobbyFloatRail)
 	end
 	self:_layoutLobbyFloatRail()
 end
