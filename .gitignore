@@ -30,6 +30,8 @@ tmp_*.png
 *.ogg
 *.fbx
 *.obj
+*.zip
+!DOCUMENTATION/SOURCE OF TRUTH/MISSION, ROYALPASS, REWARD/skill yang ada di codex dan claude code.zip
 
 # OS-specific junk
 .DS_Store
