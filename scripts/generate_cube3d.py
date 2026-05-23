@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 GLOBAL_TOOL = Path(
-    r"D:\MovedFromC_UserProfile\.codex\tools\roblox-asset-workflow\generate_cube3d.py"
+    r"C:\Users\User\.codex\tools\roblox-asset-workflow\generate_cube3d.py"
 )
 
 if not GLOBAL_TOOL.exists():

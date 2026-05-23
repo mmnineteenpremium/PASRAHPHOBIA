@@ -19,6 +19,29 @@ local UISupport = require(script.Parent.UISupport)
 local LoadingSpriteAnimator = require(script.Parent.LoadingSpriteAnimator)
 local LoadingSpriteAtlas = require(script.Parent.LoadingSpriteAtlas)
 
+local AssetIdConfig = {}
+local RoyalPassConfig = { TIERS = {} }
+do
+	local shared = ReplicatedStorage:FindFirstChild("Shared")
+	local config = shared and shared:FindFirstChild("Config")
+	local generated = config and config:FindFirstChild("Generated")
+	local assetIdModule = generated and generated:FindFirstChild("AssetIdConfig")
+	if assetIdModule and assetIdModule:IsA("ModuleScript") then
+		local ok, result = pcall(require, assetIdModule)
+		if ok and type(result) == "table" then
+			AssetIdConfig = result
+		end
+	end
+
+	local royalPassModule = config and config:FindFirstChild("RoyalPassConfig")
+	if royalPassModule and royalPassModule:IsA("ModuleScript") then
+		local ok, result = pcall(require, royalPassModule)
+		if ok and type(result) == "table" then
+			RoyalPassConfig = result
+		end
+	end
+end
+
 local UI_MODULES = {
 	"JournalUI",
 	"LobbyUI",
@@ -7147,6 +7170,7 @@ function UISystem:_bindAuthoredRoyalPassTrackCard(root)
 		Root = root,
 		Accent = UISystem._getDirectChildOfClass(root, "Accent", "Frame"),
 		RarityTemplate = UISystem._getDirectChildOfClass(root, "RarityTemplate", "ImageLabel"),
+		CosmeticPreview = UISystem._getDirectChildOfClass(root, "CosmeticPreview", "ImageLabel"),
 		Stroke = UISystem._getDirectChildOfClass(root, "CardStroke", "UIStroke"),
 		DayBadge = UISystem._getDirectChildOfClass(root, "DayBadge", "TextLabel"),
 		Title = UISystem._getDirectChildOfClass(root, "Title", "TextLabel"),
@@ -14310,6 +14334,7 @@ function UISystem:_refreshRoyalPassPanel()
 	local trackCards = widgets.TrackCards or {}
 	local unlockedDays = math.clamp(math.max(1, currentTier), 1, ROYAL_PASS_TOTAL_TIERS)
 	local currentDay = math.min(unlockedDays, ROYAL_PASS_TOTAL_TIERS)
+	local royalPassCosmeticIds = type(AssetIdConfig.RoyalPassCosmetics) == "table" and AssetIdConfig.RoyalPassCosmetics or {}
 	for index, card in ipairs(trackCards) do
 		local isFinalDay = index == ROYAL_PASS_TOTAL_TIERS or index == 5 or index == 10 or index == 20 or index == 30
 		local isCurrentDay = index == currentDay
@@ -14325,6 +14350,15 @@ function UISystem:_refreshRoyalPassPanel()
 		local cardBackground = Color3.fromRGB(24, 32, 42)
 		local rarityKey = resolveRoyalPassTrackRarityKey(index, isFinalDay)
 		local rarityTemplateAssetId = SHOP_RARITY_TEMPLATE_ASSET_IDS[rarityKey]
+		local tierConfig = type(RoyalPassConfig.TIERS) == "table" and RoyalPassConfig.TIERS[index] or nil
+		local rewardConfig = type(tierConfig) == "table"
+			and ((premiumOwned and type(tierConfig.premium) == "table" and tierConfig.premium)
+				or (type(tierConfig.free) == "table" and tierConfig.free)
+				or (type(tierConfig.premium) == "table" and tierConfig.premium))
+			or nil
+		local cosmeticId = type(rewardConfig) == "table"
+			and (rewardConfig.cosmeticId or rewardConfig.seasonBadgeId or rewardConfig.exclusiveEmoteId)
+			or nil
 
 		if state.viewMode == "Missions" then
 			local missionTemplates = {
@@ -14373,6 +14407,16 @@ function UISystem:_refreshRoyalPassPanel()
 			else
 				card.RarityTemplate.Visible = false
 				card.RarityTemplate.Image = ""
+			end
+		end
+		if card.CosmeticPreview then
+			local cosmeticAssetId = type(cosmeticId) == "string" and royalPassCosmeticIds[cosmeticId] or nil
+			if cosmeticAssetId ~= nil and cosmeticAssetId ~= 0 then
+				card.CosmeticPreview.Image = "rbxassetid://" .. tostring(cosmeticAssetId)
+				card.CosmeticPreview.Visible = true
+			else
+				card.CosmeticPreview.Image = ""
+				card.CosmeticPreview.Visible = false
 			end
 		end
 		card.Stroke.Color = strokeColor

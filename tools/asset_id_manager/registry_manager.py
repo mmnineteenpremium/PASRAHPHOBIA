@@ -519,7 +519,13 @@ def generate_lua(registry: dict[str, Any]) -> None:
                 value = int(entry["asset_id"])
                 break
         if value is None:
-            lines.append(f"    {lua_key(reward_id)} = nil, -- PENDING")
+            status = "PENDING"
+            for section_name in ("images", "animations"):
+                entry = registry.get(section_name, {}).get(reward_id)
+                if entry and entry.get("status"):
+                    status = str(entry["status"]).upper()
+                    break
+            lines.append(f"    {lua_key(reward_id)} = nil, -- {status}")
         else:
             lines.append(f"    {lua_key(reward_id)} = {value},")
 

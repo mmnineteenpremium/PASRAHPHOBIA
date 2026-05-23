@@ -1,5 +1,29 @@
 # Mission RoyalPass Reward Orchestrator Execution Log
 
+## 2026-05-23 - cosmetic asset pipeline (generate + upload + registry + wire)
+
+Status: partial; source pipeline completed, asset generation/upload blocked by local credentials/checkpoints.
+
+What changed:
+- Updated project asset workflow launchers to the moved C: tool paths.
+- Ran the full PENDING audit and attempted image/Cube generation loops for all current cosmetic gaps.
+- Marked 31 images, 23 meshes, 23 textures, and 2 animations as `MANUAL_REQUIRED` in `assets/manifest/ASSET_ID_REGISTRY.json` with blocker notes.
+- Regenerated `src/shared/Config/Generated/AssetIdConfig.lua`; nil Royal Pass cosmetic IDs now preserve `MANUAL_REQUIRED` comments.
+- Wired Royal Pass DayCard cosmetic preview lookup in `src/client/UI/Main.lua` and added `CosmeticPreview` to `src/StarterGui/RoyalPassUI.model.json`.
+- Added `DOCUMENTATION/SOURCE OF TRUTH/reports/COSMETIC_ASSET_PIPELINE_2026-05-23.md`.
+
+Validation:
+- `python scripts\generate_visual.py --help`: pass; no batch mode.
+- `python scripts\generate_cube3d.py --help`: pass after path update; no batch mode.
+- Image generation attempts: blocked by missing Gemini/Google credentials.
+- Mesh generation attempts: blocked by missing Cube model weights.
+- Open Cloud upload: skipped because no generated uploadable files existed.
+- `python tools\asset_id_manager\registry_manager.py --audit`: pass with MANUAL_REQUIRED asset gaps recorded.
+- `.\.aftman\bin\rojo.exe sourcemap default.project.json`: pass.
+
+Stop/blocker reason:
+- 0/79 cosmetic asset records confirmed, 79/79 manual required. Owner needs Gemini/Google image credentials and Cube weights, then asset upload can be retried.
+
 ## 2026-05-23 - To'un naming fix + preflight audit
 
 Status: source-only naming fix and audit completed.

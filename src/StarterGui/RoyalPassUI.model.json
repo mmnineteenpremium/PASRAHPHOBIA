@@ -1113,6 +1113,41 @@
                           }
                         },
                         {
+                          "name": "CosmeticPreview",
+                          "className": "ImageLabel",
+                          "properties": {
+                            "Visible": false,
+                            "Image": "",
+                            "ScaleType": "Fit",
+                            "BackgroundTransparency": 1.0,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0.1,
+                                  0
+                                ],
+                                [
+                                  0.45,
+                                  0
+                                ]
+                              ]
+                            },
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  0.8,
+                                  0
+                                ],
+                                [
+                                  0.0,
+                                  40
+                                ]
+                              ]
+                            },
+                            "ZIndex": 3.0
+                          }
+                        },
+                        {
                           "name": "DayBadge",
                           "className": "TextLabel",
                           "children": [
@@ -2683,9 +2718,9 @@
                             "InputSink": {
                               "Enum": 0
                             },
-            "ImageContent": "",
-            "ImageTransparency": 1.0,
-            "Visible": false,
+                            "ImageContent": "",
+                            "ImageTransparency": 1.0,
+                            "Visible": false,
                             "BackgroundTransparency": 1.0,
                             "Size": {
                               "UDim2": [

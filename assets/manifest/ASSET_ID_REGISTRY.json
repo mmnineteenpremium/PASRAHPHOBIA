@@ -4,8 +4,9 @@
     "game": "PASRAHPHOBIA",
     "universe_id": null,
     "place_id": null,
-    "last_updated": "2026-05-23T12:45:09Z",
-    "maintained_by": "AGENT_09"
+    "last_updated": "2026-05-23T23:32:08Z",
+    "maintained_by": "AGENT_09",
+    "cosmetic_pipeline_last_status": "MANUAL_REQUIRED_BLOCKED_GENERATION"
   },
   "images": {
     "title_investigator_setia": {
@@ -15,7 +16,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -37,7 +38,9 @@
         "title_png": "assets/ui/title_investigator_setia_title.png",
         "icon_png": "assets/icons/title_investigator_setia_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "border_haunted_frame": {
       "asset_id": null,
@@ -46,7 +49,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -68,7 +71,9 @@
         "border_png": "assets/ui/border_haunted_frame_border.png",
         "icon_png": "assets/icons/border_haunted_frame_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "emote_pasrah_bow": {
       "asset_id": null,
@@ -77,7 +82,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -100,7 +105,9 @@
         "icon_png": "assets/icons/emote_pasrah_bow_icon.png",
         "rbxanim": "assets/animations/rbxanim/emote_pasrah_bow_emote.rbxanim",
         "roblox_animation_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "title_penyintas_sejati": {
       "asset_id": null,
@@ -109,7 +116,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -131,7 +138,9 @@
         "title_png": "assets/ui/title_penyintas_sejati_title.png",
         "icon_png": "assets/icons/title_penyintas_sejati_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_5": {
       "asset_id": null,
@@ -140,7 +149,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -165,7 +174,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_5_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_5": {
       "asset_id": null,
@@ -174,7 +185,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -199,7 +210,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_5_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_10": {
       "asset_id": null,
@@ -208,7 +221,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -233,7 +246,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_10_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_10": {
       "asset_id": null,
@@ -242,7 +257,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -267,7 +282,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_10_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_15": {
       "asset_id": null,
@@ -276,7 +293,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -301,7 +318,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_15_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_15": {
       "asset_id": null,
@@ -310,7 +329,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -335,7 +354,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_15_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_20": {
       "asset_id": null,
@@ -344,7 +365,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -369,7 +390,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_20_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_20": {
       "asset_id": null,
@@ -378,7 +401,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -403,7 +426,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_20_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_25": {
       "asset_id": null,
@@ -412,7 +437,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -437,7 +462,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_25_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_25": {
       "asset_id": null,
@@ -446,7 +473,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -471,7 +498,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_25_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_30": {
       "asset_id": null,
@@ -480,7 +509,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -505,7 +534,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_30_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_30": {
       "asset_id": null,
@@ -514,7 +545,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -539,7 +570,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_30_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_35": {
       "asset_id": null,
@@ -548,7 +581,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -573,7 +606,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_35_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_35": {
       "asset_id": null,
@@ -582,7 +617,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -607,7 +642,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_35_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_40": {
       "asset_id": null,
@@ -616,7 +653,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -641,7 +678,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_40_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_40": {
       "asset_id": null,
@@ -650,7 +689,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -675,7 +714,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_40_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_45": {
       "asset_id": null,
@@ -684,7 +725,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -709,7 +750,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_45_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_45": {
       "asset_id": null,
@@ -718,7 +761,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -743,7 +786,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_45_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_50": {
       "asset_id": null,
@@ -752,7 +797,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -777,7 +822,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_50_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_50": {
       "asset_id": null,
@@ -786,7 +833,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -811,7 +858,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_50_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_55": {
       "asset_id": null,
@@ -820,7 +869,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -845,7 +894,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_55_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_55": {
       "asset_id": null,
@@ -854,7 +905,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -879,7 +930,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_55_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "title_legenda_pasrahphobia": {
       "asset_id": null,
@@ -888,7 +941,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -911,7 +964,9 @@
         "title_png": "assets/ui/title_legenda_pasrahphobia_title.png",
         "icon_png": "assets/icons/title_legenda_pasrahphobia_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "badge_season_complete_free": {
       "asset_id": null,
@@ -920,7 +975,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -943,7 +998,9 @@
         "badge_png": "assets/ui/badge_season_complete_free_badge.png",
         "icon_png": "assets/icons/badge_season_complete_free_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "outfit_sang_ahli_season_exclusive": {
       "asset_id": null,
@@ -952,7 +1009,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -977,7 +1034,9 @@
         "model_fbx": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
         "model_rbxm": "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
         "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "badge_season_complete_premium": {
       "asset_id": null,
@@ -986,7 +1045,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -1009,7 +1068,9 @@
         "badge_png": "assets/ui/badge_season_complete_premium_badge.png",
         "icon_png": "assets/icons/badge_season_complete_premium_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "emote_pasrah_ascend": {
       "asset_id": null,
@@ -1018,7 +1079,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -1042,7 +1103,9 @@
         "icon_png": "assets/icons/emote_pasrah_ascend_icon.png",
         "rbxanim": "assets/animations/rbxanim/emote_pasrah_ascend_emote.rbxanim",
         "roblox_animation_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: image generation blocked; missing GEMINI_API_KEY/GOOGLE_API_KEY/GOOGLE_APPLICATION_CREDENTIALS during generate_visual.py run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "###########": {
       "asset_id": 103331798947805,
@@ -2164,7 +2227,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2189,7 +2252,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_5_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_5": {
       "asset_id": null,
@@ -2198,7 +2263,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2223,7 +2288,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_5_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_10": {
       "asset_id": null,
@@ -2232,7 +2299,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2257,7 +2324,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_10_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_10": {
       "asset_id": null,
@@ -2266,7 +2335,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2291,7 +2360,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_10_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_15": {
       "asset_id": null,
@@ -2300,7 +2371,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2325,7 +2396,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_15_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_15": {
       "asset_id": null,
@@ -2334,7 +2407,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2359,7 +2432,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_15_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_20": {
       "asset_id": null,
@@ -2368,7 +2443,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2393,7 +2468,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_20_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_20": {
       "asset_id": null,
@@ -2402,7 +2479,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2427,7 +2504,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_20_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_25": {
       "asset_id": null,
@@ -2436,7 +2515,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2461,7 +2540,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_25_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_25": {
       "asset_id": null,
@@ -2470,7 +2551,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2495,7 +2576,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_25_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_30": {
       "asset_id": null,
@@ -2504,7 +2587,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2529,7 +2612,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_30_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_30": {
       "asset_id": null,
@@ -2538,7 +2623,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2563,7 +2648,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_30_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_35": {
       "asset_id": null,
@@ -2572,7 +2659,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2597,7 +2684,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_35_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_35": {
       "asset_id": null,
@@ -2606,7 +2695,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2631,7 +2720,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_35_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_40": {
       "asset_id": null,
@@ -2640,7 +2731,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2665,7 +2756,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_40_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_40": {
       "asset_id": null,
@@ -2674,7 +2767,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2699,7 +2792,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_40_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_45": {
       "asset_id": null,
@@ -2708,7 +2803,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2733,7 +2828,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_45_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_45": {
       "asset_id": null,
@@ -2742,7 +2839,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2767,7 +2864,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_45_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_50": {
       "asset_id": null,
@@ -2776,7 +2875,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2801,7 +2900,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_50_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_50": {
       "asset_id": null,
@@ -2810,7 +2911,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2835,7 +2936,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_50_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_55": {
       "asset_id": null,
@@ -2844,7 +2947,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2869,7 +2972,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_55_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_55": {
       "asset_id": null,
@@ -2878,7 +2983,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2903,7 +3008,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_55_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "outfit_sang_ahli_season_exclusive": {
       "asset_id": null,
@@ -2912,7 +3019,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -2937,7 +3044,9 @@
         "model_fbx": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
         "model_rbxm": "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
         "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: Cube generation blocked; missing Cube model weights shape_gpt.safetensors and shape_tokenizer.safetensors.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "Prop_Bingkai_Foto": {
       "asset_id": 125466475939741,
@@ -3803,7 +3912,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -3827,7 +3936,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_5_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_5": {
       "asset_id": null,
@@ -3836,7 +3947,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -3860,7 +3971,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_5_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_10": {
       "asset_id": null,
@@ -3869,7 +3982,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -3893,7 +4006,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_10_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_10": {
       "asset_id": null,
@@ -3902,7 +4017,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -3926,7 +4041,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_10_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_15": {
       "asset_id": null,
@@ -3935,7 +4052,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -3959,7 +4076,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_15_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_15": {
       "asset_id": null,
@@ -3968,7 +4087,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -3992,7 +4111,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_15_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_20": {
       "asset_id": null,
@@ -4001,7 +4122,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4025,7 +4146,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_20_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_20": {
       "asset_id": null,
@@ -4034,7 +4157,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4058,7 +4181,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_20_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_25": {
       "asset_id": null,
@@ -4067,7 +4192,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4091,7 +4216,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_25_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_25": {
       "asset_id": null,
@@ -4100,7 +4227,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4124,7 +4251,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_25_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_30": {
       "asset_id": null,
@@ -4133,7 +4262,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4157,7 +4286,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_30_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_30": {
       "asset_id": null,
@@ -4166,7 +4297,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4190,7 +4321,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_30_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_35": {
       "asset_id": null,
@@ -4199,7 +4332,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4223,7 +4356,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_35_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_35": {
       "asset_id": null,
@@ -4232,7 +4367,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4256,7 +4391,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_35_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_40": {
       "asset_id": null,
@@ -4265,7 +4402,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4289,7 +4426,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_40_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_40": {
       "asset_id": null,
@@ -4298,7 +4437,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4322,7 +4461,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_40_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_45": {
       "asset_id": null,
@@ -4331,7 +4472,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4355,7 +4496,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_45_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_45": {
       "asset_id": null,
@@ -4364,7 +4507,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4388,7 +4531,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_45_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_50": {
       "asset_id": null,
@@ -4397,7 +4542,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4421,7 +4566,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_50_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_50": {
       "asset_id": null,
@@ -4430,7 +4577,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4454,7 +4601,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_50_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_free_tier_55": {
       "asset_id": null,
@@ -4463,7 +4612,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4487,7 +4636,9 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_55_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "royal_premium_tier_55": {
       "asset_id": null,
@@ -4496,7 +4647,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4520,7 +4671,9 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_55_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "outfit_sang_ahli_season_exclusive": {
       "asset_id": null,
@@ -4529,7 +4682,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4553,7 +4706,9 @@
         "model_fbx": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
         "model_rbxm": "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
         "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png"
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: texture generation blocked because paired Cube mesh generation could not run without Cube model weights.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     }
   },
   "animations": {
@@ -4564,7 +4719,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -4586,7 +4741,9 @@
         "icon_png": "assets/icons/emote_pasrah_bow_icon.png",
         "rbxanim": "assets/animations/rbxanim/emote_pasrah_bow_emote.rbxanim",
         "roblox_animation_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: no uploadable .rbxanim animation file generated in this source-only run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     },
     "emote_pasrah_ascend": {
       "asset_id": null,
@@ -4595,7 +4752,7 @@
       "uploaded_by": "AGENT_09",
       "uploaded_at": null,
       "season": 1,
-      "status": "PENDING",
+      "status": "MANUAL_REQUIRED",
       "tags": [
         "season_1",
         "tiers",
@@ -4618,7 +4775,9 @@
         "icon_png": "assets/icons/emote_pasrah_ascend_icon.png",
         "rbxanim": "assets/animations/rbxanim/emote_pasrah_ascend_emote.rbxanim",
         "roblox_animation_id": null
-      }
+      },
+      "manual_required_note": "MANUAL_REQUIRED: no uploadable .rbxanim animation file generated in this source-only run.",
+      "manual_required_at": "2026-05-23T23:32:08Z"
     }
   },
   "audio": {
@@ -5982,28 +6141,28 @@
   "monetization": {
     "passes": {
       "royalpass_premium_track": {
-        "pass_id": 1846924611,
+        "pass_id": 3573231558,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
         "status": "HOLD"
       },
       "class_dukun_unlock": {
-        "pass_id": 1847326612,
+        "pass_id": 3573231828,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
         "status": "HOLD"
       },
       "class_detective_unlock": {
-        "pass_id": 1846726626,
+        "pass_id": 3573232123,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
         "status": "HOLD"
       },
       "lifetime_bonus_pass": {
-        "pass_id": 1846342643,
+        "pass_id": 3573232383,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
@@ -6012,42 +6171,42 @@
     },
     "developer_products": {
       "pp_pack_small": {
-        "product_id": 3595563338,
+        "product_id": 3573224039,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
         "status": "ACTIVE"
       },
       "mm_pack_small": {
-        "product_id": 3595563373,
+        "product_id": 3573226842,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
         "status": "ACTIVE"
       },
       "mm_pack_medium": {
-        "product_id": 3595563381,
+        "product_id": 3573227690,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
         "status": "ACTIVE"
       },
       "mm_pack_large": {
-        "product_id": 3595563400,
+        "product_id": 3573228070,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
         "status": "ACTIVE"
       },
       "pp_pack_standard": {
-        "product_id": 3595563345,
+        "product_id": 3573225850,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
         "status": "ACTIVE"
       },
       "pp_pack_large": {
-        "product_id": 3595563353,
+        "product_id": 3573226462,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
@@ -6055,6 +6214,10 @@
       }
     },
     "subscriptions": {},
-    "ugc_items": {}
+    "ugc_items": {},
+    "subscriptions_status": "NOT_IMPLEMENTED",
+    "subscriptions_note": "No subscription products implemented for this release lane.",
+    "ugc_items_status": "NOT_IMPLEMENTED",
+    "ugc_items_note": "No UGC item products implemented for this release lane."
   }
 }
