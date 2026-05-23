@@ -1,5 +1,24 @@
 # Mission RoyalPass Reward Orchestrator Execution Log
 
+## 2026-05-23 - src ↔ rbxlx Studio sync via rojo serve, LFS push
+
+Status: completed as rbxlx-authoritative sync-back and pushed.
+
+What changed:
+- Stopped the Rojo serve lane after the owner rejected the attempted Studio sync and closed Studio without saving.
+- Confirmed `PASRAHPHOBIA.rbxlx` was unchanged and remains the source of truth for the current stable Studio hierarchy/visual state.
+- Synced local script sources back from `PASRAHPHOBIA.rbxlx` into `src/` for the drifted script files.
+- Updated `default.project.json` to a script-only, rbxlx-matched Rojo lane with unknown instances ignored, avoiding stale model/UI subtree injection on future serves.
+- Regenerated `sourcemap.json` from the corrected `default.project.json`.
+
+Validation:
+- `rojo sourcemap default.project.json --output sourcemap.json` passed.
+- Post-sync audit found `0` non-Lua/model mappings, `0` managed paths missing from `PASRAHPHOBIA.rbxlx`, and `0` script source drift against `PASRAHPHOBIA.rbxlx`.
+- `git lfs track "*.rbxlx"` reported the pattern already supported; no `.rbxlx` content changed or required a new LFS object push.
+
+Stop/blocker reason:
+- No blocker. Owner does not need another Studio action for this sync-back state.
+
 ## 2026-05-23 - RoyalPass tier render fix + Studio sync retry
 
 Status: completed, Studio synced, Play Test passed.
