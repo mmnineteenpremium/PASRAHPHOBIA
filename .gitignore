@@ -3,6 +3,10 @@
 *.rbxlx
 *.rbxm
 *.rbxmx
+
+# Tulis pengecualian Anda di sini (Gunakan tanda seru !)
+!PASRAHPHOBIA.rbxlx
+
 !src/ReplicatedStorage/Assets/Models/Ghosts/*.rbxm
 !src/ReplicatedStorage/Assets/Models/Ghosts/*.rbxmx
 !src/ReplicatedStorage/Assets/Models/Tools/*.rbxm
@@ -43,4 +47,3 @@ openJdk-25/
 .aider*
 .aftman/
 /.codex/
-PASRAHPHOBIA.rbxlx
