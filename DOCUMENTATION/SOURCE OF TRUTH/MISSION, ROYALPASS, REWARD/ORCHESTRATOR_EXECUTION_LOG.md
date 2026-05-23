@@ -1,5 +1,26 @@
 # Mission RoyalPass Reward Orchestrator Execution Log
 
+## 2026-05-23 - RoyalPass tier render fix + Studio sync retry
+
+Status: completed, Studio synced, Play Test passed.
+
+What changed:
+- Verified source `Main.lua` still preserves the auxiliary bootstrap fix (`gui.Enabled = true`) and the authored RoyalPass shell contract.
+- Synced active Studio `StarterPlayer.StarterPlayerScripts.Client.UI.Main` so RoyalPass uses 60 DayCards via `ROYAL_PASS_TOTAL_TIERS`.
+- Verified active Studio `StarterGui.RoyalPassUI` HeroCard contains `ProgressTrack`, `ProgressFill`, `ProgressCaption`, and `PremiumActionButton`.
+
+Validation:
+- Rojo sourcemap passed from `default.project.json`.
+- Play Test bootstrap: `PlayerGui.RoyalPassUI.Enabled=true`.
+- Lobby `RoyalPassButton` opened `RoyalPassUI.MainPanel`.
+- HeroCard showed progress/premium controls.
+- `TrackScroller` formed 60 DayCards and scrolled to the end.
+- First DayCards displayed numbered text, milestones 5/10/20/30/60 had distinct stroke, and `MissionTab` changed the first card title to `DAILY QUEST 01`.
+- Final `PASRAHPHOBIA.rbxlx` LastWriteTime: `2026-05-23 23:32:07 +07:00`.
+
+Report:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/ROYALPASS_TIER_RENDER_FIX_2026-05-23.md`
+
 ## 2026-05-21 - n=20%
 
 Status: in progress.

@@ -66,6 +66,8 @@ UI_BUILD_SIGNATURE = "PHB-20260411-UI1"
 ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
 MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
 LOBBY_PANEL_ONLY_FLOATING_NAV = true
+ROYAL_PASS_TOTAL_TIERS = 60
+ROYAL_PASS_XP_PER_TIER = 1000
 BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
 CONFLICT_BASIC_GUI_NAMES = { "MainMenuUI", "LeaderboardUI" }
 STRICT_SINGLE_SCREEN_GUI_NAMES = {
@@ -1036,6 +1038,49 @@ local function getConfiguredUIImageId(key, fallback)
 	local uiImages = type(config) == "table" and type(config.UIImages) == "table" and config.UIImages or nil
 	local value = uiImages and uiImages[key]
 	return tostring(value or fallback or "")
+end
+local royalPassConfigCache = false
+local function getRoyalPassConfig()
+	if royalPassConfigCache ~= false then
+		return royalPassConfigCache
+	end
+	royalPassConfigCache = nil
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:WaitForChild("Shared", 5)
+	local configFolder = shared and (shared:FindFirstChild("Config") or shared:WaitForChild("Config", 5))
+	local moduleScript = configFolder and (configFolder:FindFirstChild("RoyalPassConfig") or configFolder:WaitForChild("RoyalPassConfig", 5))
+	if moduleScript and moduleScript:IsA("ModuleScript") then
+		local ok, result = pcall(require, moduleScript)
+		if ok and type(result) == "table" then
+			royalPassConfigCache = result
+		end
+	end
+	return royalPassConfigCache
+end
+local function describeRoyalPassReward(reward)
+	if type(reward) ~= "table" then
+		return "PENDING"
+	end
+	local parts = {}
+	if (tonumber(reward.mm) or 0) > 0 then
+		table.insert(parts, tostring(math.floor(tonumber(reward.mm) or 0)) .. " MM")
+	end
+	if (tonumber(reward.pp) or 0) > 0 then
+		table.insert(parts, tostring(math.floor(tonumber(reward.pp) or 0)) .. " PP")
+	end
+	if (tonumber(reward.xp) or 0) > 0 then
+		table.insert(parts, tostring(math.floor(tonumber(reward.xp) or 0)) .. " XP")
+	end
+	if (tonumber(reward.gachaTickets) or 0) > 0 then
+		table.insert(parts, tostring(math.floor(tonumber(reward.gachaTickets) or 0)) .. " TICKET")
+	end
+	if type(reward.cosmeticId) == "string" and reward.cosmeticId ~= "" then
+		table.insert(parts, "COSMETIC")
+	elseif type(reward.seasonBadgeId) == "string" and reward.seasonBadgeId ~= "" then
+		table.insert(parts, "BADGE")
+	elseif type(reward.exclusiveEmoteId) == "string" and reward.exclusiveEmoteId ~= "" then
+		table.insert(parts, "EMOTE")
+	end
+	return #parts > 0 and table.concat(parts, " + ") or "PENDING"
 end
 local ROOM_BROWSER_TEXT_IMAGE_STATES = {
 	ClassicButton = { idle = "117760951401524", hover = "129015288351024", active = "138617081838094" },
@@ -5818,10 +5863,10 @@ function UISystem:Init(context)
 		seasonId = "S1",
 		totalXP = 0,
 		currentTier = 1,
-		maxTier = 50,
-		xpPerTier = 200,
+		maxTier = ROYAL_PASS_TOTAL_TIERS,
+		xpPerTier = ROYAL_PASS_XP_PER_TIER,
 		currentTierXP = 0,
-		remainingXP = 200,
+		remainingXP = ROYAL_PASS_XP_PER_TIER,
 		progressPercent = 0,
 		premiumOwned = false,
 		unlockedTiers = {},
@@ -7610,7 +7655,7 @@ function UISystem:_tryBindAuthoredRoyalPassWidgets(window, contentFrame)
 
 	local trackCards = {}
 	self:_clearGeneratedRoomBrowserGuiChildren(trackScroller)
-	for index = 1, 30 do
+	for index = 1, ROYAL_PASS_TOTAL_TIERS do
 		local cardRoot = self:_cloneAuthoredGuiTemplate(dayCardTemplateRoot, trackScroller, "DayCard" .. tostring(index))
 		local card = self:_bindAuthoredRoyalPassTrackCard(cardRoot)
 		if card and card.Root then
@@ -13881,7 +13926,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	trackHint.TextSize = 11
 	trackHint.TextXAlignment = Enum.TextXAlignment.Left
 	trackHint.TextColor3 = Color3.fromRGB(170, 184, 202)
-	trackHint.Text = "Geser horizontal untuk melihat lane check-in/quest 30 hari. Hari ke-30 menampilkan teaser karakter rarity 5."
+	trackHint.Text = "Geser horizontal untuk melihat lane check-in/quest 60 tier. Tier ke-60 menampilkan teaser hadiah finale rarity 5."
 	trackHint.Parent = deck
 
 	local trackScroller = Instance.new("ScrollingFrame")
@@ -13920,7 +13965,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	trackLayout.Parent = trackScroller
 
 	local trackCards = {}
-	for index = 1, 30 do
+	for index = 1, ROYAL_PASS_TOTAL_TIERS do
 		local card = Instance.new("Frame")
 		card.Name = "DayCard" .. tostring(index)
 		card.Size = UDim2.fromOffset(140, 156)
@@ -13963,7 +14008,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 		dayBadge.Font = Enum.Font.GothamBlack
 		dayBadge.TextSize = 10
 		dayBadge.TextColor3 = Color3.fromRGB(242, 245, 248)
-		dayBadge.Text = string.format("DAY %02d", index)
+		dayBadge.Text = string.format("TIER %02d", index)
 		dayBadge.Parent = card
 		local dayBadgeCorner = Instance.new("UICorner")
 		dayBadgeCorner.CornerRadius = UDim.new(1, 0)
@@ -14170,9 +14215,11 @@ function UISystem:_refreshRoyalPassPanel()
 	local dailyEngagement = self._dailyEngagementState or {}
 	local currentTier = math.max(1, math.floor(tonumber(state.currentTier or 1) or 1))
 	local checkinTotalDays = math.max(0, math.floor(tonumber(dailyEngagement.checkinTotalDays or 0) or 0))
-	local dailyCheckInDay = math.clamp(checkinTotalDays > 0 and checkinTotalDays or currentTier, 1, 30)
-	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or 50) or 50))
-	local xpPerTier = math.max(1, math.floor(tonumber(state.xpPerTier or 200) or 200))
+	local royalPassConfig = getRoyalPassConfig()
+	local configuredTotalTiers = math.max(1, math.floor(tonumber(royalPassConfig and royalPassConfig.TOTAL_TIERS) or ROYAL_PASS_TOTAL_TIERS))
+	local dailyCheckInDay = math.clamp(checkinTotalDays > 0 and checkinTotalDays or currentTier, 1, configuredTotalTiers)
+	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or configuredTotalTiers) or configuredTotalTiers), configuredTotalTiers)
+	local xpPerTier = math.max(1, math.floor(tonumber(state.xpPerTier or (royalPassConfig and royalPassConfig.XP_PER_TIER) or ROYAL_PASS_XP_PER_TIER) or ROYAL_PASS_XP_PER_TIER))
 	local currentTierXP = math.clamp(math.floor(tonumber(state.currentTierXP or 0) or 0), 0, xpPerTier)
 	local totalXP = math.max(0, math.floor(tonumber(state.totalXP or 0) or 0))
 	local remainingXP = math.max(0, math.floor(tonumber(state.remainingXP or 0) or 0))
@@ -14408,17 +14455,19 @@ function UISystem:_refreshRoyalPassPanel()
 			widgets.TrackHint.Text = "Premium track masih pending. Daily check-in/quest tetap visual preview sampai entitlement Roblox siap."
 		else
 			widgets.TrackHint.Text = state.viewMode == "Missions"
-				and "Geser horizontal untuk melihat 30 hari daily quest. Hari ke-30 menjaga finale hadiah karakter rarity 5."
-				or "Geser horizontal untuk melihat 30 hari daily check-in. Hari ke-30 menampilkan teaser hadiah karakter rarity 5."
+				and string.format("Geser horizontal untuk melihat %d tier daily quest. Tier ke-%d menjaga finale hadiah rarity 5.", maxTier, maxTier)
+				or string.format("Geser horizontal untuk melihat %d tier Royal Pass. Tier ke-%d menampilkan hadiah finale rarity 5.", maxTier, maxTier)
 		end
 	end
 
 	local trackCards = widgets.TrackCards or {}
 	local dailyMissions = type(dailyEngagement.missions) == "table" and dailyEngagement.missions or {}
-	local unlockedDays = math.clamp(math.max(1, dailyCheckInDay), 1, 30)
-	local currentDay = math.min(unlockedDays, 30)
+	local unlockedDays = math.clamp(math.max(1, dailyCheckInDay), 1, maxTier)
+	local currentDay = math.min(unlockedDays, maxTier)
 	for index, card in ipairs(trackCards) do
-		local isFinalDay = index == 30
+		local tierConfig = royalPassConfig and royalPassConfig.TIERS and royalPassConfig.TIERS[index] or nil
+		local isFinalDay = index == maxTier
+		local isMilestoneTier = isFinalDay or index == 5 or index == 10 or index == 20 or index == 30 or index % 10 == 0
 		local isCurrentDay = index == currentDay
 		local isUnlocked = index < currentDay
 		local isLocked = index > currentDay
@@ -14465,36 +14514,58 @@ function UISystem:_refreshRoyalPassPanel()
 					footerText = "LIVE"
 				end
 			else
-				titleText = isFinalDay and "DAILY QUEST 30 • GRAND FINALE" or string.format("DAILY QUEST %02d", index)
+				titleText = isFinalDay and string.format("DAILY QUEST %02d • GRAND FINALE", index) or string.format("DAILY QUEST %02d", index)
 				metaText = isFinalDay
 					and "Selesaikan misi penutup season untuk membuka teaser hadiah karakter rarity 5."
 					or missionTemplates[((index - 1) % #missionTemplates) + 1]
 				rewardText = isFinalDay and "R5 TOKEN" or string.format("+%d XP", 60 + (index * 5))
 			end
-			accentColor = isFinalDay and Color3.fromRGB(210, 160, 86) or Color3.fromRGB(112, 84, 150)
-			strokeColor = isFinalDay and Color3.fromRGB(232, 186, 104) or Color3.fromRGB(118, 90, 156)
-			badgeColor = isFinalDay and Color3.fromRGB(108, 78, 46) or Color3.fromRGB(76, 58, 102)
-			cardBackground = isFinalDay and Color3.fromRGB(40, 30, 22) or Color3.fromRGB(32, 28, 42)
+			if tierConfig then
+				rewardText = describeRoyalPassReward(tierConfig.free)
+				footerText = describeRoyalPassReward(tierConfig.premium)
+				if isFinalDay then
+					titleText = string.format("DAILY QUEST %02d • GRAND FINALE", index)
+					metaText = "Final season tier dengan reward premium/cosmetic puncak."
+				end
+			end
+			accentColor = isMilestoneTier and Color3.fromRGB(210, 160, 86) or Color3.fromRGB(112, 84, 150)
+			strokeColor = isMilestoneTier and Color3.fromRGB(232, 186, 104) or Color3.fromRGB(118, 90, 156)
+			badgeColor = isMilestoneTier and Color3.fromRGB(108, 78, 46) or Color3.fromRGB(76, 58, 102)
+			cardBackground = isMilestoneTier and Color3.fromRGB(40, 30, 22) or Color3.fromRGB(32, 28, 42)
 		else
-			titleText = isFinalDay and "CHECK-IN DAY 30 • CHARACTER R5" or string.format("CHECK-IN DAY %02d", index)
+			titleText = isFinalDay and string.format("TIER %02d • CHARACTER R5", index) or string.format("TIER %02d", index)
 			metaText = isFinalDay
-				and "Border finale untuk hadiah karakter rarity 5 di penghujung 30 hari check-in season."
+				and "Finale season untuk hadiah karakter rarity 5 di penghujung Royal Pass."
 				or string.format("Claim harian untuk ritme login. Bonus tier mengikuti season %s.", tostring(state.seasonId or "S1"))
 			rewardText = isFinalDay and "R5 BORDER" or string.format("+%d MM", 120 + ((index - 1) * 20))
-			accentColor = isFinalDay and Color3.fromRGB(224, 170, 88) or (premiumOwned and Color3.fromRGB(126, 98, 52) or Color3.fromRGB(82, 110, 162))
-			strokeColor = isFinalDay and Color3.fromRGB(244, 198, 112) or accentColor
-			badgeColor = isFinalDay and Color3.fromRGB(118, 86, 42) or Color3.fromRGB(60, 82, 118)
-			cardBackground = isFinalDay and Color3.fromRGB(42, 30, 20) or Color3.fromRGB(24, 32, 42)
+			if tierConfig then
+				rewardText = describeRoyalPassReward(tierConfig.free)
+				footerText = describeRoyalPassReward(tierConfig.premium)
+				if isMilestoneTier then
+					metaText = string.format("Milestone tier %02d. Premium: %s", index, footerText)
+				end
+			end
+			accentColor = isMilestoneTier and Color3.fromRGB(224, 170, 88) or (premiumOwned and Color3.fromRGB(126, 98, 52) or Color3.fromRGB(82, 110, 162))
+			strokeColor = isMilestoneTier and Color3.fromRGB(244, 198, 112) or accentColor
+			badgeColor = isMilestoneTier and Color3.fromRGB(118, 86, 42) or Color3.fromRGB(60, 82, 118)
+			cardBackground = isMilestoneTier and Color3.fromRGB(42, 30, 20) or Color3.fromRGB(24, 32, 42)
 		end
 
 		if not usesLiveMission then
-			if isCurrentDay then
-				cardBackground = cardBackground:Lerp(Color3.fromRGB(52, 64, 82), 0.28)
-				footerText = "TODAY"
-			elseif isUnlocked then
-				footerText = "DONE"
-			elseif isLocked then
-				footerText = "LOCK"
+			if type(tierConfig) == "table" then
+				footerText = describeRoyalPassReward(tierConfig.premium)
+				if isCurrentDay then
+					cardBackground = cardBackground:Lerp(Color3.fromRGB(52, 64, 82), 0.28)
+				end
+			else
+				if isCurrentDay then
+					cardBackground = cardBackground:Lerp(Color3.fromRGB(52, 64, 82), 0.28)
+					footerText = "TODAY"
+				elseif isUnlocked then
+					footerText = "DONE"
+				elseif isLocked then
+					footerText = "LOCK"
+				end
 			end
 		end
 
@@ -14510,20 +14581,20 @@ function UISystem:_refreshRoyalPassPanel()
 			end
 		end
 		card.Stroke.Color = strokeColor
-		card.Stroke.Thickness = isFinalDay and 2 or 1
+		card.Stroke.Thickness = isMilestoneTier and 2 or 1
 		card.DayBadge.BackgroundColor3 = badgeColor
-		card.DayBadge.Text = string.format("DAY %02d", index)
+		card.DayBadge.Text = string.format("TIER %02d", index)
 		card.Title.Text = titleText
 		card.Meta.Text = metaText
 		card.Footer.Text = footerText
 		card.Footer.TextColor3 = isLocked and not usesLiveMission
 			and Color3.fromRGB(174, 182, 194)
-			or (isFinalDay and Color3.fromRGB(244, 214, 146) or Color3.fromRGB(220, 230, 238))
+			or (isMilestoneTier and Color3.fromRGB(244, 214, 146) or Color3.fromRGB(220, 230, 238))
 		applyPricePillVisual(
 			card.RewardPill,
 			rewardText,
 			accentColor,
-			isFinalDay and Color3.fromRGB(248, 242, 230) or Color3.fromRGB(236, 240, 246)
+			isMilestoneTier and Color3.fromRGB(248, 242, 230) or Color3.fromRGB(236, 240, 246)
 		)
 	end
 
