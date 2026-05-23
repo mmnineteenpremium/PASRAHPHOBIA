@@ -1,9 +1,33 @@
 # TASK ACTIVE - RUNTIME AUTHORITY + TOTAL VISUAL POLISH LOCK codex resume 019dc78b-eaa2-7130-84bc-9d05bf097962
 
-Last updated: 2026-05-17 (Asia/Bangkok)
+Last updated: 2026-05-20 (Asia/Bangkok)
 Owner context: Miftah
 Status: ACTIVE
 Confidence target: 99%
+
+## Execution Update (2026-05-20)
+
+- Brian-lane monetization bootstrap completed for `UniverseId=10138560838`, root place `89787959603872`, owner lane `briankotak`.
+- Six repeatable currency `DeveloperProduct` IDs were created and wired into `src/shared/DataTypes/ShopMarketplaceConfig.lua` with `enabled=true`: `pp_pack_small=3595563338`, `pp_pack_standard=3595563345`, `pp_pack_large=3595563353`, `mm_pack_small=3595563373`, `mm_pack_medium=3595563381`, `mm_pack_large=3595563400`.
+- Four permanent entitlement `GamePass` IDs were created in the same Brian universe but kept disabled/hold in source and Creator Hub sale state: `royalpass_premium_track=1846924611`, `class_dukun_unlock=1847326612`, `class_detective_unlock=1846726626`, `lifetime_bonus_pass=1846342643`.
+- `autoEnableWhenIdPresent=false` is now required for this lane so official GamePass IDs do not accidentally make hold entitlement items purchasable.
+- Active Studio `PASRAHPHOBIA.rbxlx` was mirrored for `ReplicatedStorage.Shared.DataTypes.ShopMarketplaceConfig`; runtime catalog check reports `10` Robux items, `6` enabled DeveloperProducts, and `0` enabled GamePasses.
+- Validation passed: Studio `MarketplaceService:GetProductInfo` type/price/sale checks, `scripts/audit-marketplace-mapping.ps1 -Strict -Json`, and Rojo build to `.codex/tmp/brian-monetization-build.rbxlx`.
+- Detail report: `DOCUMENTATION/SOURCE OF TRUTH/reports/BRIAN_MONETIZATION_BOOTSTRAP_2026-05-20.md`.
+
+## Execution Update (2026-05-19)
+
+- Owner-authored `StarterGui` UI was synced back into branch `brian-second-final` with a StarterGui-only scope so runtime logic ownership stays in the existing source systems.
+- `JournalUI` now has authored, owner-editable sections under `MainPanel.ContentFrame.JournalDeck`: manual `EvidenceChecklistSection`, `GhostChoiceSection`, `JournalSubmitSection`, and `JournalTutorialSection`. Runtime still binds these controls to the existing `SubmitJournalGuess` -> `EndInvestigation` flow; no duplicate journal/result system was introduced.
+- `SensoryHorrorHUD` top-layer placement now ignores the Roblox top inset (`IgnoreGuiInset=true`, `ScreenInsets=None`) both in authored `StarterGui` and at runtime after cloning to `PlayerGui`.
+- `MatchLoadingUI` and `TeleportScreen` were left intact; the pre-staging teleport/loading screen remains the current correct transition path.
+- Validation: Rojo build passed, Play Mode smoke compiled `src/client/UI/Main.lua` without the prior local-register error, and live `PlayerGui` contained the Journal submit sections plus Sensory HUD inset override.
+- Owner-approved `RoomBrowserUI.Backdrop.Panel.RoomPanel` layout was synced back from edit mode. Runtime visibility now hides main-panel mode filters (`Classic`, `All Modes`, `Ranked`) whenever `RoomPanel` is active, so clicking `Buat Room` uses the same `Backdrop/Panel` shell without leaving the room-list panel underneath. `LeaveRoomButton` remains present in the room panel as `KELUAR ROOM`.
+- `RoomPanel` map selector/dropdown text images now use the latest owner-provided assets for `MAPS`, `HauntedHouse`, `StudioMMNineteen`, `EmptyBuilding`, and `AbandonedPalace`; both `RoomPanel.MapPreview` and main `RoomPreviewPanel` now use linked map photo previews at runtime and in edit mode. Validation: Rojo build passed and Studio edit-mode inspection confirmed all new image IDs are present.
+- Owner-polished `RoomPanel.MapPreview` and `RoomPreviewPanel.MapPlaceholder` preview/text positions were synced back from the open Studio session into `src/StarterGui/RoomBrowserUI.model.json`; runtime owner-layout lock already keeps `_applyRoomBrowserSizing()` from overriding those authored positions. A hidden `MapPreview.Label` contract placeholder remains present so binding stays compatible without showing duplicate text.
+- UI response regression fixed after Play Test exposed `Client.UI.Main` failing to require with `Out of local registers` at the hunt-status helpers. Hunt status helper locals were moved onto `UISystem` table methods, preserving existing behavior while reducing top-level register pressure; smoke click verified `OpenRoomBrowserButton -> CreateRoomButton -> RoomPanel.Visible=true`.
+- Runtime UI rail trimmed to the owner-approved LobbyUI path: Play Test now starts with `LobbyUI.MainPanel.Visible=false`, `LobbyToggleButton.Visible=true`, and all other `*FloatButton` launchers hidden. `RoomPanel.MapPreview.MapPhoto` now preserves authored edit-mode position/size/crop at runtime and only swaps the selected map image asset, so owner-polished preview placement no longer drifts after `Buat Room`.
+- `RoomPanel` host controls repaired: `Ranked`/`Classic` selection now updates host UI immediately and server-side `SelectMode` broadcasts both room state and room list like map selection. Classic map changes now prefer the host's current `selectedMap`/`selectedMode` state before stale room data, so `MapSelector` stays usable after switching modes. Room list rows were enlarged and brightened for readability; smoke verified `Buat Room -> Ranked -> Classic -> AbandonedPalace` with `RoomPanel` still active.
 
 ## Execution Update (2026-05-17)
 
@@ -133,7 +157,10 @@ Confidence target: 99%
   - Second follow-up removed private/moderated direct PBR map references from active tool/preview source (`Salib`, `Dupa`, `Garam`, `Pocong`) and scrubbed surface map references from the local `PASRAHPHOBIA.rbxlx` test file. Fresh Studio log slice after the scrub had `0` new `TexturePack`/`SurfaceAppearance` dependency errors; tool/ghost meshes remain, but final texture quality still requires team-owned texture uploads.
   - Legacy map texture cleanup follow-up removed the archived/moderated `455880097` texture reference from source `Workspace.Maps.LobbySocialHub`; source grep is clean for `36581603`, `1019457120`, and `455880097`. The two remaining IDs only existed in the locally edited `.rbxlx` session file and should be replaced with team-owned visual textures during owner polish.
   - Non-strict release preflight from `brian-second-final` passed again without writing `PASRAHPHOBIA.rbxlx`: Rojo build ok to `C:\tmp\pasrah-brian-release-preflight-continue.rbxlx`, marketplace mapping clean (`safeItemsMissingMarketplaceId=0`, `safeItemsStillDisabled=0`, `holdItemsAccidentallyEnabled=0`, `unclassifiedItems=0`). Remaining scripted blocker is the intended manual/real 2-client smoke.
-  - Remaining playable-loop validation after current smoke: clean in-house chase readability through room-to-room ghost pathing and texture/replacement-audio asset polish, without leaving temporary smoke artifacts or duplicate runtime owners.
+- Owner gameplay decision recorded 2026-05-19: staging/outside-entry follows Phasmophobia-style safezone semantics. Players may leave/re-enter the investigation area when no hunt is active to swap/manage tools; during hunt, exit doors lock and players inside cannot leave until hunt ends. Ghosts must remain constrained to the investigation area and must not path into staging/safezone/outside-entry, except permitted door traversal inside the map.
+- Owner gameplay decision recorded 2026-05-20: prioritize a dedicated Night Vision Video Recorder for Ghost Orb evidence. `BolaArwah`/UV camera must not be treated as the final night-vision recorder; it may remain a temporary bridge only if needed, but the intended split is UV/fingerprint/handsprint evidence on UV tool and Ghost Orb on night-vision video recorder/camera.
+- Follow-up activation recorded 2026-05-20: current `BolaArwah` runtime slot is now explicitly surfaced as `Kamera To'un` / `TO'UN CAM` for the active To'un orb/night-vision evidence flow. Backend was already mapped to `TounDetection -> To'un`; the missing piece was mostly UI/staging/lobby naming, which is now aligned while keeping the existing evidence owner.
+- Remaining playable-loop validation after current smoke: clean in-house chase readability through room-to-room ghost pathing and texture/replacement-audio asset polish, without leaving temporary smoke artifacts or duplicate runtime owners.
 
 ## Execution Update (2026-05-03)
 

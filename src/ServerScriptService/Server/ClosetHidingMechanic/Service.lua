@@ -1,5 +1,6 @@
 local Services = require(script.Parent.Parent.Core.Services)
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Service = {}
@@ -29,23 +30,49 @@ local HIDE_SPOT_MARKER_SUBTITLE_COLOR = Color3.fromRGB(184, 222, 196)
 local HIDE_SPOT_MARKER_SUBTITLE_TEXT = "Bersembunyi saat hunt"
 local HIDE_SPOT_MARKER_STUDS_OFFSET = 2.6
 local HIDE_SPOT_WORLD_MARKERS_ENABLED = false
+local HIDE_SPOT_MARKER_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldMarkers", "HideSpotMarkerBillboardTemplate" }
+local HIDE_SPOT_HIGHLIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldHighlightTemplate" }
+local HIDE_SPOT_OUTLINE_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldBoxOutlineTemplate" }
 
-local function createMarkerTextLabel(name, font, textSize, textColor, text, height, position)
-	local label = Instance.new("TextLabel")
-	label.Name = name
-	label.BackgroundTransparency = 1
-	label.BorderSizePixel = 0
-	label.Position = position
-	label.Size = UDim2.new(1, -18, 0, height)
-	label.Font = font
-	label.Text = text
-	label.TextColor3 = textColor
-	label.TextSize = textSize
-	label.TextTransparency = 0
-	label.TextStrokeTransparency = 0.82
-	label.TextWrapped = true
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	return label
+local function resolveChildPath(root, path)
+	local node = root
+	for _, segment in ipairs(path) do
+		if typeof(node) ~= "Instance" then
+			return nil
+		end
+		node = node:FindFirstChild(segment)
+	end
+	return node
+end
+
+local function cloneHideSpotMarkerTemplate()
+	local template = resolveChildPath(ReplicatedStorage, HIDE_SPOT_MARKER_TEMPLATE_PATH)
+	if template and template:IsA("BillboardGui") then
+		local clone = template:Clone()
+		clone.Name = HIDE_SPOT_MARKER_LABEL_NAME
+		return clone
+	end
+	return nil
+end
+
+local function cloneHideSpotHighlightTemplate()
+	local template = resolveChildPath(ReplicatedStorage, HIDE_SPOT_HIGHLIGHT_TEMPLATE_PATH)
+	if template and template:IsA("Highlight") then
+		local clone = template:Clone()
+		clone.Name = HIDE_SPOT_MARKER_HIGHLIGHT_NAME
+		return clone
+	end
+	return nil
+end
+
+local function cloneHideSpotOutlineTemplate()
+	local template = resolveChildPath(ReplicatedStorage, HIDE_SPOT_OUTLINE_TEMPLATE_PATH)
+	if template and template:IsA("BoxHandleAdornment") then
+		local clone = template:Clone()
+		clone.Name = HIDE_SPOT_MARKER_OUTLINE_NAME
+		return clone
+	end
+	return nil
 end
 
 local function resolveEventBus(deps)
@@ -385,7 +412,11 @@ local function ensureHideSpotMarker(record)
 		if outline then
 			outline:Destroy()
 		end
-		outline = Instance.new("BoxHandleAdornment")
+		outline = cloneHideSpotOutlineTemplate()
+		if not outline then
+			warn("[ClosetHidingMechanic] Missing authored visual template: WorldEffects.WorldBoxOutlineTemplate")
+			return
+		end
 		outline.Name = HIDE_SPOT_MARKER_OUTLINE_NAME
 		outline.Parent = markerFolder
 	end
@@ -403,7 +434,11 @@ local function ensureHideSpotMarker(record)
 		if highlight then
 			highlight:Destroy()
 		end
-		highlight = Instance.new("Highlight")
+		highlight = cloneHideSpotHighlightTemplate()
+		if not highlight then
+			warn("[ClosetHidingMechanic] Missing authored visual template: WorldEffects.WorldHighlightTemplate")
+			return
+		end
 		highlight.Name = HIDE_SPOT_MARKER_HIGHLIGHT_NAME
 		highlight.Parent = markerFolder
 	end
@@ -421,7 +456,11 @@ local function ensureHideSpotMarker(record)
 		if labelGui then
 			labelGui:Destroy()
 		end
-		labelGui = Instance.new("BillboardGui")
+		labelGui = cloneHideSpotMarkerTemplate()
+		if not labelGui then
+			warn("[ClosetHidingMechanic] Missing authored visual template: WorldMarkers.HideSpotMarkerBillboardTemplate")
+			return
+		end
 		labelGui.Name = HIDE_SPOT_MARKER_LABEL_NAME
 		labelGui.Parent = markerFolder
 	end
@@ -443,54 +482,8 @@ local function ensureHideSpotMarker(record)
 		if panel then
 			panel:Destroy()
 		end
-		panel = Instance.new("Frame")
-		panel.Name = "Panel"
-		panel.Parent = labelGui
-
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 12)
-		corner.Parent = panel
-
-		local stroke = Instance.new("UIStroke")
-		stroke.Name = "Stroke"
-		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Color = HIDE_SPOT_MARKER_PANEL_STROKE
-		stroke.Transparency = 0.14
-		stroke.Thickness = 1.4
-		stroke.Parent = panel
-
-		local accent = Instance.new("Frame")
-		accent.Name = "Accent"
-		accent.AnchorPoint = Vector2.new(0, 0.5)
-		accent.BackgroundColor3 = HIDE_SPOT_MARKER_PANEL_STROKE
-		accent.BorderSizePixel = 0
-		accent.Position = UDim2.new(0, 10, 0.5, 0)
-		accent.Size = UDim2.fromOffset(3, 28)
-		accent.Parent = panel
-
-		local accentCorner = Instance.new("UICorner")
-		accentCorner.CornerRadius = UDim.new(1, 0)
-		accentCorner.Parent = accent
-
-		createMarkerTextLabel(
-			"Title",
-			Enum.Font.GothamBold,
-			13,
-			HIDE_SPOT_MARKER_TITLE_COLOR,
-			record.label or "Hide Spot",
-			18,
-			UDim2.new(0, 20, 0, 6)
-		).Parent = panel
-
-		createMarkerTextLabel(
-			"Subtitle",
-			Enum.Font.GothamMedium,
-			11,
-			HIDE_SPOT_MARKER_SUBTITLE_COLOR,
-			HIDE_SPOT_MARKER_SUBTITLE_TEXT,
-			16,
-			UDim2.new(0, 20, 0, 22)
-		).Parent = panel
+		warn("[ClosetHidingMechanic] HideSpotMarkerBillboardTemplate missing required child: Panel")
+		return
 	end
 
 	panel.BackgroundColor3 = HIDE_SPOT_MARKER_PANEL_COLOR

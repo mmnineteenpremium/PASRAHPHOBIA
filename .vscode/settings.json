@@ -16,5 +16,8 @@
   ],
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
-  "restartRobloxStudioSimulator.websocketPort": 10
+  "restartRobloxStudioSimulator.websocketPort": 10,
+  "restartRobloxStudioSimulator.websocketPort": 3010,
+  "robloxLsp.workspace.maxPreload": 2000,
+  "luau-lsp.studioPlugin.enabled": true
 }

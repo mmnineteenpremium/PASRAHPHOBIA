@@ -34,7 +34,8 @@ function InteractState.Update(session, context)
 	local aggression = session.aggression or 0
 	local personality = session.personality or {}
 	local manifestScale = personality.manifestChanceScale or 1.0
-	if aggression >= (context.config.ManifestAggressionThreshold or 45)
+	if context.manifestAllowed == true
+		and aggression >= (context.config.ManifestAggressionThreshold or 45)
 		and context.rng:NextNumber() <= ((context.config.ManifestChanceWhileInteracting or 0.2) * manifestScale)
 	then
 		return "Manifest"

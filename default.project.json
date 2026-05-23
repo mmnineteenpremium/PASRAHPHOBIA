@@ -8,6 +8,9 @@
       "Shared": {
         "$path": "src/shared"
       },
+      "GameData": {
+        "$path": "src/shared/GameData"
+      },
       "RemoteEvents": {
         "$path": "src/ReplicatedStorage/RemoteEvents"
       },

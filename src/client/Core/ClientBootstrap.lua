@@ -62,11 +62,17 @@ addSystem("UI", UISystem)
 
 local REMOTE_NAMES = {
 	"CosmeticEvent",
+	"DailyCheckinRequest",
+	"DailyEngagementSync",
+	"DailyMissionClaimRequest",
 	"EvidenceEvent",
+	"GachaPullRequest",
+	"GachaResult",
 	"LobbyEvent",
 	"MatchEvent",
 	"PurchaseEvent",
 	"RoyalPassEvent",
+	"RoyalPassTierUp",
 	"SanityEvent",
 }
 

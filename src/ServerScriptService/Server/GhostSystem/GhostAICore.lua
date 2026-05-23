@@ -34,6 +34,13 @@ local DEFAULT_CONFIG = {
 	DisturbedRetreatChance = 0.4,
 }
 
+local MANIFEST_ALLOWED_PHASES = {
+	Investigation = true,
+	InvestigationPhase = true,
+	Hunt = true,
+	HuntPhase = true,
+}
+
 local function deepCopy(value)
 	if type(value) ~= "table" then
 		return value
@@ -59,6 +66,26 @@ end
 
 local function getNow(now)
 	return now or os.clock()
+end
+
+local function normalizePhaseToken(value)
+	if type(value) ~= "string" then
+		return nil
+	end
+	local trimmed = value:gsub("^%s+", ""):gsub("%s+$", "")
+	if trimmed == "" then
+		return nil
+	end
+	return trimmed
+end
+
+local function isManifestAllowed(snapshot)
+	local safeSnapshot = type(snapshot) == "table" and snapshot or {}
+	if type(safeSnapshot.manifestAllowed) == "boolean" then
+		return safeSnapshot.manifestAllowed
+	end
+	local phaseName = normalizePhaseToken(safeSnapshot.lifecyclePhase or safeSnapshot.phaseName or safeSnapshot.phase)
+	return MANIFEST_ALLOWED_PHASES[phaseName] == true
 end
 
 local function resolveGhostTypeData(deps, payload)
@@ -234,6 +261,7 @@ function GhostAI:Tick(matchId, snapshot, dt, now)
 	local deltaTime = dt or self._config.LoopInterval
 	local safeSnapshot = snapshot or {}
 	safeSnapshot.now = currentTime
+	local manifestAllowed = isManifestAllowed(safeSnapshot)
 	local previousHuntActive = session.hunt.active
 	local previousState = session.currentState
 	local runtimeEvents = {}
@@ -277,6 +305,7 @@ function GhostAI:Tick(matchId, snapshot, dt, now)
 		huntController = self._huntController,
 		difficultyProfile = session.difficultyProfile or {},
 		stateMachine = self._stateMachine,
+		manifestAllowed = manifestAllowed,
 		emit = function(eventType, payload)
 			table.insert(runtimeEvents, {
 				type = eventType,
@@ -285,8 +314,12 @@ function GhostAI:Tick(matchId, snapshot, dt, now)
 		end,
 	}
 
-	if session.director.forceManifestUntil and currentTime <= session.director.forceManifestUntil and not session.hunt.active then
+	if session.director.forceManifestUntil and currentTime <= session.director.forceManifestUntil and not session.hunt.active and context.manifestAllowed == true then
 		self._stateMachine:TransitionTo(session, "Manifest", context)
+	end
+
+	if context.manifestAllowed ~= true and (session.currentState == "Manifest" or session.currentState == "Manifestation") then
+		self._stateMachine:TransitionTo(session, "Roaming", context)
 	end
 
 	for _, intelligenceEvent in ipairs(self._intelligence:Tick(session, safeSnapshot, currentTime, {
@@ -350,6 +383,7 @@ function GhostAI:TransitionState(matchId, stateName, now, snapshot)
 		huntController = self._huntController,
 		difficultyProfile = session.difficultyProfile or {},
 		stateMachine = self._stateMachine,
+		manifestAllowed = isManifestAllowed(snapshot or {}),
 		emit = function() end,
 	}
 	self._stateMachine:TransitionTo(session, stateName, context)

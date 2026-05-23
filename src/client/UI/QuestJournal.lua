@@ -30,6 +30,13 @@ local TAB_EMPTY_MESSAGES = {
 	DAILY = "Belum ada misi aktif hari ini.",
 	WEEKLY = "Weekly challenge belum diaktifkan di runtime branch ini.",
 }
+local QUEST_BUTTON_TEXT_IMAGE_STATES = {
+	OpenButton = { idle = "74146227961542", hover = "95903306810711", active = "98565884123985" },
+	DAILYTab = { idle = "91316576845536", hover = "96825362275947", active = "82227324051324" },
+	STORYTab = { idle = "137489635851687", hover = "98503217158561", active = "77447453584064" },
+	WEEKLYTab = { idle = "136762040893669", hover = "127247448482612", active = "128898766382265" },
+	CloseButton = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
+}
 local ACTIVE_MATCH_PHASES = {
 	PreparationPhase = true,
 	InvestigationPhase = true,
@@ -40,9 +47,24 @@ local ACTIVE_MATCH_PHASES = {
 	Escalation = true,
 	Hunt = true,
 }
+local AUTHORED_OWNER_LAYOUT_LOCK = true
 
 local QuestJournal = {}
 QuestJournal.__index = QuestJournal
+
+local missingQuestJournalTemplateWarnings = {}
+
+local function getDirectChildOfClass(parent, childName, className)
+	local child = parent and parent:FindFirstChild(childName)
+	if child and child:IsA(className) then
+		return child
+	end
+	return nil
+end
+
+local function getFirstChildOfClass(parent, className)
+	return parent and parent:FindFirstChildOfClass(className) or nil
+end
 
 local function decodeQuestPayload(encoded)
 	if type(encoded) ~= "string" or encoded == "" then
@@ -128,6 +150,172 @@ local function isTouchLayout()
 	return UserInputService.TouchEnabled == true and UserInputService.KeyboardEnabled ~= true
 end
 
+local function shouldPreserveAuthoredOwnerLayout()
+	return AUTHORED_OWNER_LAYOUT_LOCK == true
+end
+
+local function toButtonTextImageAsset(assetId)
+	return string.format("rbxassetid://%s", tostring(assetId))
+end
+local BUTTON_TEXT_IMAGE_SCALE = {
+	idle = 1,
+	hover = 1.3,
+	active = 1.2,
+}
+local function setButtonTextImageScale(image, stateName)
+	if not image then
+		return
+	end
+	local scale = image:FindFirstChild("BrandTextImageStateScale")
+	if not (scale and scale:IsA("UIScale")) then
+		scale = Instance.new("UIScale")
+		scale.Name = "BrandTextImageStateScale"
+		scale.Parent = image
+	end
+	scale.Scale = BUTTON_TEXT_IMAGE_SCALE[stateName or "idle"] or BUTTON_TEXT_IMAGE_SCALE.idle
+end
+local function setButtonTextImagePassthrough(image)
+	if not (image and image:IsA("ImageButton")) then
+		return
+	end
+	image.AutoButtonColor = false
+	image.Active = false
+	image.Selectable = false
+	pcall(function()
+		image.Interactable = false
+	end)
+end
+local function isButtonTextImageObject(image)
+	return image and (image:IsA("ImageLabel") or image:IsA("ImageButton"))
+end
+local function configureButtonTextImage(image, states, stateName)
+	if not (image and states) then
+		return
+	end
+	local idle = states.idle or states.active or states.hover
+	local hover = states.hover or idle
+	local active = states.active or hover
+	image.Image = toButtonTextImageAsset(states[stateName] or idle)
+	image.ImageTransparency = 0
+	setButtonTextImageScale(image, stateName)
+	if image:IsA("ImageButton") then
+		image.HoverImage = toButtonTextImageAsset(hover)
+		image.PressedImage = toButtonTextImageAsset(active)
+		setButtonTextImagePassthrough(image)
+	end
+end
+
+local function warnMissingQuestJournalTemplate(key, message)
+	if missingQuestJournalTemplateWarnings[key] then
+		return
+	end
+	missingQuestJournalTemplateWarnings[key] = true
+	warn(message)
+end
+
+local function resolveQuestButtonImage(button)
+	if not (button and button:IsA("GuiButton")) then
+		return nil
+	end
+	local image = button:FindFirstChild("BrandTextImage")
+	if image and image:IsA("ImageButton") then
+		return image
+	end
+	if image and isButtonTextImageObject(image) then
+		local replacement = Instance.new("ImageButton")
+		replacement.Name = "BrandTextImage"
+		replacement.BackgroundTransparency = 1
+		replacement.ScaleType = Enum.ScaleType.Fit
+		replacement.Size = image.Size
+		replacement.Position = image.Position
+		replacement.AnchorPoint = image.AnchorPoint
+		replacement.ZIndex = image.ZIndex
+		replacement.Visible = image.Visible
+		setButtonTextImagePassthrough(replacement)
+		image:Destroy()
+		replacement.Parent = button
+		return replacement
+	end
+	if not image then
+		image = Instance.new("ImageButton")
+		image.Name = "BrandTextImage"
+		image.BackgroundTransparency = 1
+		setButtonTextImagePassthrough(image)
+		image.Parent = button
+		return image
+	end
+	image = button:FindFirstChild("CloseIcon")
+	if image and image:IsA("ImageLabel") then
+		return image
+	end
+	warnMissingQuestJournalTemplate(
+		"ButtonImage:" .. button.Name,
+		string.format("[QuestJournal] Missing authored button image child on %s.", button.Name)
+	)
+	return nil
+end
+
+local function cloneGuiTemplate(template, cloneName, parent)
+	if typeof(template) ~= "Instance" then
+		return nil
+	end
+	local clone = template:Clone()
+	clone.Name = cloneName or template.Name:gsub("Template$", "")
+	clone.Parent = parent
+	return clone
+end
+
+local function applyQuestButtonImageState(button, stateName)
+	local states = QUEST_BUTTON_TEXT_IMAGE_STATES[button.Name]
+	if not states then
+		return
+	end
+	local image = resolveQuestButtonImage(button)
+	if not image then
+		return
+	end
+	image.BackgroundTransparency = 1
+	image.Size = UDim2.new(1, -8, 1, -8)
+	image.Position = UDim2.fromOffset(4, 4)
+	image.ScaleType = Enum.ScaleType.Fit
+	image.ZIndex = button.ZIndex + 1
+	setButtonTextImagePassthrough(image)
+	configureButtonTextImage(image, states, stateName)
+	button.TextTransparency = 1
+end
+
+local function bindQuestButtonImage(button)
+	if not QUEST_BUTTON_TEXT_IMAGE_STATES[button.Name] then
+		return
+	end
+	applyQuestButtonImageState(button, "idle")
+	local hovered = false
+	button.MouseEnter:Connect(function()
+		hovered = true
+		applyQuestButtonImageState(button, "hover")
+	end)
+	button.MouseLeave:Connect(function()
+		hovered = false
+		applyQuestButtonImageState(button, "idle")
+	end)
+	button.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or input.KeyCode == Enum.KeyCode.ButtonA
+		then
+			applyQuestButtonImageState(button, "active")
+		end
+	end)
+	button.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or input.KeyCode == Enum.KeyCode.ButtonA
+		then
+			applyQuestButtonImageState(button, hovered and "hover" or "idle")
+		end
+	end)
+end
+
 function QuestJournal.new(playerGui)
 	local self = setmetatable({}, QuestJournal)
 	self.playerGui = playerGui
@@ -139,161 +327,77 @@ function QuestJournal.new(playerGui)
 		active = {},
 		completed = {},
 	}
-	self:BuildUI()
-	self:Connect()
-	self:RefreshFromAttributes()
+	if self:BuildUI() then
+		self:Connect()
+		self:RefreshFromAttributes()
+	end
 	return self
 end
 
 function QuestJournal:BuildUI()
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "QuestJournalGui"
-	screenGui.ResetOnSpawn = false
-	screenGui.IgnoreGuiInset = false
-	screenGui.DisplayOrder = 5
-	screenGui.Parent = self.playerGui
+	local screenGui = self.playerGui:FindFirstChild("QuestJournalGui") or self.playerGui:WaitForChild("QuestJournalGui", 5)
+	if not screenGui or not screenGui:IsA("ScreenGui") then
+		warn("[QuestJournal] Missing authored QuestJournalGui ScreenGui; check StarterGui shell contract.")
+		return false
+	end
 
-	local openButton = Instance.new("TextButton")
-	openButton.Name = "OpenButton"
-	openButton.AnchorPoint = Vector2.new(1, 0)
-	openButton.Position = UDim2.new(1, -16, 0, 82)
-	openButton.Size = UDim2.fromOffset(144, 34)
-	openButton.BackgroundColor3 = Color3.fromRGB(35, 46, 68)
-	openButton.BorderSizePixel = 0
-	openButton.Font = Enum.Font.GothamBold
-	openButton.Text = "MISSIONS [Q]"
-	openButton.TextColor3 = Color3.fromRGB(244, 244, 250)
-	openButton.TextSize = 12
-	openButton.Parent = screenGui
+	local openButton = getDirectChildOfClass(screenGui, "OpenButton", "TextButton")
+	local overlay = getDirectChildOfClass(screenGui, "Overlay", "Frame")
+	local panel = getDirectChildOfClass(screenGui, "Panel", "Frame")
+	local panelSizeConstraint = getFirstChildOfClass(panel, "UISizeConstraint")
+	local header = getDirectChildOfClass(panel, "Header", "TextLabel")
+	local closeButton = getDirectChildOfClass(panel, "CloseButton", "TextButton")
+	local subtitle = getDirectChildOfClass(panel, "Subtitle", "TextLabel")
+	local tabBar = getDirectChildOfClass(panel, "TabBar", "Frame")
+	local content = getDirectChildOfClass(panel, "Content", "ScrollingFrame")
+	local contentLayout = getFirstChildOfClass(content, "UIListLayout")
+	local templates = getDirectChildOfClass(panel, "Templates", "Frame")
+	local storyTab = getDirectChildOfClass(tabBar, "STORYTab", "TextButton")
+	local dailyTab = getDirectChildOfClass(tabBar, "DAILYTab", "TextButton")
+	local weeklyTab = getDirectChildOfClass(tabBar, "WEEKLYTab", "TextButton")
+	local sectionLabelTemplate = getDirectChildOfClass(templates, "SectionLabelTemplate", "TextLabel")
+	local placeholderTemplate = getDirectChildOfClass(templates, "PlaceholderTemplate", "TextLabel")
+	local activeMissionCardTemplate = getDirectChildOfClass(templates, "ActiveMissionCardTemplate", "Frame")
+	local completedMissionCardTemplate = getDirectChildOfClass(templates, "CompletedMissionCardTemplate", "Frame")
+	if not (
+		openButton
+		and overlay
+		and panel
+		and panelSizeConstraint
+		and header
+		and closeButton
+		and subtitle
+		and tabBar
+		and content
+		and contentLayout
+		and templates
+		and storyTab
+		and dailyTab
+		and weeklyTab
+		and sectionLabelTemplate
+		and placeholderTemplate
+		and activeMissionCardTemplate
+		and completedMissionCardTemplate
+	) then
+		warn("[QuestJournal] Authored QuestJournalGui contract mismatch; preserve canonical widget names.")
+		return false
+	end
 
-	local openCorner = Instance.new("UICorner")
-	openCorner.CornerRadius = UDim.new(0, 10)
-	openCorner.Parent = openButton
-
-	local overlay = Instance.new("Frame")
-	overlay.Name = "Overlay"
-	overlay.Size = UDim2.fromScale(1, 1)
-	overlay.Active = true
-	overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	overlay.BackgroundTransparency = 0.32
-	overlay.Visible = false
-	overlay.Parent = screenGui
-
-	local panel = Instance.new("Frame")
-	panel.Name = "Panel"
-	panel.AnchorPoint = Vector2.new(0.5, 0.5)
-	panel.Position = UDim2.fromScale(0.5, 0.5)
-	panel.Size = UDim2.new(0.78, 0, 0.8, 0)
-	panel.Active = true
-	panel.BackgroundColor3 = Color3.fromRGB(15, 17, 27)
-	panel.BorderSizePixel = 0
-	panel.Visible = false
-	panel.Parent = screenGui
-
-	local panelCorner = Instance.new("UICorner")
-	panelCorner.CornerRadius = UDim.new(0, 16)
-	panelCorner.Parent = panel
-
-	local panelSizeConstraint = Instance.new("UISizeConstraint")
-	panelSizeConstraint.MinSize = Vector2.new(320, 320)
-	panelSizeConstraint.MaxSize = Vector2.new(860, 640)
-	panelSizeConstraint.Parent = panel
-
-	local header = Instance.new("TextLabel")
-	header.Name = "Header"
-	header.Size = UDim2.new(1, 0, 0, 52)
-	header.BackgroundColor3 = Color3.fromRGB(23, 27, 40)
-	header.BorderSizePixel = 0
-	header.Font = Enum.Font.GothamBold
-	header.Text = "  QUEST JOURNAL"
-	header.TextColor3 = Color3.fromRGB(244, 244, 250)
-	header.TextSize = 24
-	header.TextXAlignment = Enum.TextXAlignment.Left
-	header.Parent = panel
-
-	local headerCorner = Instance.new("UICorner")
-	headerCorner.CornerRadius = UDim.new(0, 16)
-	headerCorner.Parent = header
-
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.fromOffset(38, 38)
-	closeButton.AnchorPoint = Vector2.new(1, 0)
-	closeButton.Position = UDim2.new(1, -10, 0, 8)
-	closeButton.BackgroundColor3 = Color3.fromRGB(152, 44, 44)
-	closeButton.BorderSizePixel = 0
-	closeButton.Font = Enum.Font.GothamBold
-	closeButton.Text = "X"
-	closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	closeButton.TextSize = 16
-	closeButton.Parent = panel
-
-	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0, 8)
-	closeCorner.Parent = closeButton
-
-	local subtitle = Instance.new("TextLabel")
-	subtitle.Name = "Subtitle"
-	subtitle.Size = UDim2.new(1, -24, 0, 18)
-	subtitle.Position = UDim2.fromOffset(12, 60)
-	subtitle.BackgroundTransparency = 1
-	subtitle.Font = Enum.Font.Gotham
-	subtitle.Text = "Quest sync pending..."
-	subtitle.TextColor3 = Color3.fromRGB(168, 174, 193)
-	subtitle.TextSize = 12
-	subtitle.TextXAlignment = Enum.TextXAlignment.Left
-	subtitle.Parent = panel
-
-	local tabBar = Instance.new("Frame")
-	tabBar.Name = "TabBar"
-	tabBar.Size = UDim2.new(1, -24, 0, 38)
-	tabBar.Position = UDim2.fromOffset(12, 88)
-	tabBar.BackgroundTransparency = 1
-	tabBar.Parent = panel
-
-	local tabLayout = Instance.new("UIListLayout")
-	tabLayout.FillDirection = Enum.FillDirection.Horizontal
-	tabLayout.Padding = UDim.new(0, 6)
-	tabLayout.Parent = tabBar
-
-	self._tabButtons = {}
-	for _, tabName in ipairs(TAB_ORDER) do
-		local button = Instance.new("TextButton")
-		button.Name = tabName .. "Tab"
-		button.Size = UDim2.new(0.33, -4, 1, 0)
-		button.BackgroundColor3 = Color3.fromRGB(27, 32, 46)
-		button.BorderSizePixel = 0
-		button.Font = Enum.Font.GothamSemibold
-		button.Text = TAB_LABELS[tabName]
-		button.TextColor3 = Color3.fromRGB(210, 214, 224)
-		button.TextSize = 14
-		button.Parent = tabBar
-
-		local buttonCorner = Instance.new("UICorner")
-		buttonCorner.CornerRadius = UDim.new(0, 8)
-		buttonCorner.Parent = button
-
+	self._tabButtons = {
+		STORY = storyTab,
+		DAILY = dailyTab,
+		WEEKLY = weeklyTab,
+	}
+	bindQuestButtonImage(openButton)
+	bindQuestButtonImage(closeButton)
+	bindQuestButtonImage(dailyTab)
+	bindQuestButtonImage(storyTab)
+	bindQuestButtonImage(weeklyTab)
+	for tabName, button in pairs(self._tabButtons) do
 		button.MouseButton1Click:Connect(function()
 			self:SetTab(tabName)
 		end)
-
-		self._tabButtons[tabName] = button
 	end
-
-	local content = Instance.new("ScrollingFrame")
-	content.Name = "Content"
-	content.Size = UDim2.new(1, -24, 1, -136)
-	content.Position = UDim2.fromOffset(12, 132)
-	content.BackgroundTransparency = 1
-	content.BorderSizePixel = 0
-	content.ScrollBarThickness = 4
-	content.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	content.CanvasSize = UDim2.new()
-	content.Parent = panel
-
-	local contentLayout = Instance.new("UIListLayout")
-	contentLayout.Padding = UDim.new(0, 10)
-	contentLayout.Parent = content
 
 	openButton.MouseButton1Click:Connect(function()
 		self:Toggle()
@@ -313,8 +417,13 @@ function QuestJournal:BuildUI()
 	self._tabBar = tabBar
 	self._subtitle = subtitle
 	self._content = content
+	self._sectionLabelTemplate = sectionLabelTemplate
+	self._placeholderTemplate = placeholderTemplate
+	self._activeMissionCardTemplate = activeMissionCardTemplate
+	self._completedMissionCardTemplate = completedMissionCardTemplate
 	self:ApplyLayout()
 	self:SetTab("DAILY")
+	return true
 end
 
 function QuestJournal:_getMatchPhaseToken()
@@ -332,25 +441,28 @@ function QuestJournal:ApplyLayout()
 		or touchLayout
 		or viewport.X <= 900
 		or viewport.Y <= 520
+	local preserveAuthoredDesktopLayout = shouldPreserveAuthoredOwnerLayout() or (not touchLayout and not compactLayout)
 
 	self._openButton.Text = touchLayout and "MISSION" or "MISSIONS [Q]"
-	self._openButton.TextSize = touchLayout and 13 or 12
-	self._openButton.Size = UDim2.fromOffset(touchLayout and 116 or 144, touchLayout and 36 or 34)
-	self._openButton.Position = UDim2.new(1, -14, 0, compactLayout and 72 or 92)
+	if not preserveAuthoredDesktopLayout then
+		self._openButton.TextSize = touchLayout and 13 or 12
+		self._openButton.Size = UDim2.fromOffset(touchLayout and 116 or 144, touchLayout and 36 or 34)
+		self._openButton.Position = UDim2.new(1, -14, 0, compactLayout and 72 or 92)
 
-	self._header.TextSize = touchLayout and 18 or 24
-	self._closeButton.Size = UDim2.fromOffset(touchLayout and 34 or 38, touchLayout and 34 or 38)
-	self._closeButton.Position = UDim2.new(1, touchLayout and -8 or -10, 0, touchLayout and 6 or 8)
+		self._header.TextSize = touchLayout and 18 or 24
+		self._closeButton.Size = UDim2.fromOffset(touchLayout and 34 or 38, touchLayout and 34 or 38)
+		self._closeButton.Position = UDim2.new(1, touchLayout and -8 or -10, 0, touchLayout and 6 or 8)
 
-	local maxWidth = touchLayout and math.max(320, math.min(760, viewport.X - 24)) or 860
-	local maxHeight = touchLayout and math.max(240, math.min(440, viewport.Y - 18)) or 640
-	self._panelSizeConstraint.MinSize = Vector2.new(touchLayout and 300 or 320, touchLayout and 220 or 320)
-	self._panelSizeConstraint.MaxSize = Vector2.new(maxWidth, maxHeight)
-	self._panel.Size = UDim2.new(compactLayout and 0.94 or 0.78, 0, compactLayout and 0.9 or 0.8, 0)
+		local maxWidth = touchLayout and math.max(320, math.min(760, viewport.X - 24)) or 860
+		local maxHeight = touchLayout and math.max(240, math.min(440, viewport.Y - 18)) or 640
+		self._panelSizeConstraint.MinSize = Vector2.new(touchLayout and 300 or 320, touchLayout and 220 or 320)
+		self._panelSizeConstraint.MaxSize = Vector2.new(maxWidth, maxHeight)
+		self._panel.Size = UDim2.new(compactLayout and 0.94 or 0.78, 0, compactLayout and 0.9 or 0.8, 0)
 
-	self._tabBar.Position = UDim2.fromOffset(12, touchLayout and 82 or 88)
-	self._content.Position = UDim2.fromOffset(12, touchLayout and 124 or 132)
-	self._content.Size = UDim2.new(1, -24, 1, touchLayout and -128 or -136)
+		self._tabBar.Position = UDim2.fromOffset(12, touchLayout and 82 or 88)
+		self._content.Position = UDim2.fromOffset(12, touchLayout and 124 or 132)
+		self._content.Size = UDim2.new(1, -24, 1, touchLayout and -128 or -136)
+	end
 	self:_syncVisibility()
 end
 
@@ -362,7 +474,7 @@ end
 function QuestJournal:_syncVisibility()
 	local activeMatchMobile = isTouchLayout() and self:_isActiveMatchPhase()
 	self._openButton.Visible = true
-	if activeMatchMobile then
+	if activeMatchMobile and not shouldPreserveAuthoredOwnerLayout() then
 		self._openButton.Text = "MISSION"
 		self._openButton.TextSize = 12
 		self._openButton.Size = UDim2.fromOffset(100, 32)
@@ -386,102 +498,65 @@ function QuestJournal:SetTab(tabName)
 	end
 end
 
-function QuestJournal:_createSectionLabel(text, color)
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 0, 20)
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamSemibold
+function QuestJournal:_createSectionLabel(text, color, order)
+	local label = cloneGuiTemplate(self._sectionLabelTemplate, "QuestSectionLabel", self._content)
+	if not (label and label:IsA("TextLabel")) then
+		warnMissingQuestJournalTemplate(
+			"SectionLabelTemplate",
+			"[QuestJournal] Missing authored template: Templates.SectionLabelTemplate"
+		)
+		return nil
+	end
+	label.LayoutOrder = order or 0
 	label.Text = tostring(text)
 	label.TextColor3 = color
-	label.TextSize = 13
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = self._content
+	return label
 end
 
-function QuestJournal:_createPlaceholder(text)
-	local placeholder = Instance.new("TextLabel")
-	placeholder.Size = UDim2.new(1, 0, 0, 48)
-	placeholder.BackgroundTransparency = 1
-	placeholder.Font = Enum.Font.Gotham
-	placeholder.Text = tostring(text)
-	placeholder.TextColor3 = Color3.fromRGB(142, 147, 164)
-	placeholder.TextSize = 13
-	placeholder.TextWrapped = true
-	placeholder.TextXAlignment = Enum.TextXAlignment.Left
-	placeholder.Parent = self._content
-end
-
-function QuestJournal:_createMissionCard(mission, isCompleted)
-	local cardHeight = isCompleted and 78 or 98
-	local card = Instance.new("Frame")
-	card.Size = UDim2.new(1, -8, 0, cardHeight)
-	card.BackgroundColor3 = isCompleted and Color3.fromRGB(23, 26, 34) or Color3.fromRGB(27, 31, 46)
-	card.BorderSizePixel = 0
-	card.Parent = self._content
-
-	local cardCorner = Instance.new("UICorner")
-	cardCorner.CornerRadius = UDim.new(0, 10)
-	cardCorner.Parent = card
-
-	local stripe = Instance.new("Frame")
-	stripe.Size = UDim2.new(0, 5, 1, 0)
-	stripe.BackgroundColor3 = isCompleted and Color3.fromRGB(255, 196, 94) or TAB_COLORS[self._activeTab]
-	stripe.BorderSizePixel = 0
-	stripe.Parent = card
-
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, -140, 0, 22)
-	title.Position = UDim2.fromOffset(14, 10)
-	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamSemibold
-	title.Text = tostring(mission.title or "Quest")
-	title.TextColor3 = isCompleted and Color3.fromRGB(222, 224, 232) or Color3.fromRGB(244, 244, 250)
-	title.TextSize = 15
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.TextTruncate = Enum.TextTruncate.AtEnd
-	title.Parent = card
-
-	local reward = Instance.new("TextLabel")
-	reward.Size = UDim2.fromOffset(118, 24)
-	reward.AnchorPoint = Vector2.new(1, 0)
-	reward.Position = UDim2.new(1, -10, 0, 8)
-	reward.BackgroundColor3 = isCompleted and Color3.fromRGB(64, 56, 28) or Color3.fromRGB(54, 44, 18)
-	reward.BorderSizePixel = 0
-	reward.Font = Enum.Font.GothamBold
-	reward.Text = string.format("+%d XP", math.floor(tonumber(mission.rewards and mission.rewards.xp) or 0))
-	reward.TextColor3 = Color3.fromRGB(255, 222, 126)
-	reward.TextSize = 12
-	reward.Parent = card
-
-	local rewardCorner = Instance.new("UICorner")
-	rewardCorner.CornerRadius = UDim.new(0, 6)
-	rewardCorner.Parent = reward
-
-	local description = Instance.new("TextLabel")
-	description.Size = UDim2.new(1, -24, 0, 18)
-	description.Position = UDim2.fromOffset(14, 34)
-	description.BackgroundTransparency = 1
-	description.Font = Enum.Font.Gotham
-	description.Text = tostring(mission.description or "")
-	description.TextColor3 = Color3.fromRGB(170, 176, 194)
-	description.TextSize = 12
-	description.TextXAlignment = Enum.TextXAlignment.Left
-	description.TextTruncate = Enum.TextTruncate.AtEnd
-	description.Parent = card
-
-	if isCompleted then
-		local status = Instance.new("TextLabel")
-		status.Size = UDim2.new(1, -24, 0, 16)
-		status.Position = UDim2.fromOffset(14, 56)
-		status.BackgroundTransparency = 1
-		status.Font = Enum.Font.GothamSemibold
-		status.Text = "Selesai hari ini"
-		status.TextColor3 = Color3.fromRGB(150, 218, 126)
-		status.TextSize = 12
-		status.TextXAlignment = Enum.TextXAlignment.Left
-		status.Parent = card
-		return
+function QuestJournal:_createPlaceholder(text, order)
+	local placeholder = cloneGuiTemplate(self._placeholderTemplate, "QuestPlaceholder", self._content)
+	if not (placeholder and placeholder:IsA("TextLabel")) then
+		warnMissingQuestJournalTemplate(
+			"PlaceholderTemplate",
+			"[QuestJournal] Missing authored template: Templates.PlaceholderTemplate"
+		)
+		return nil
 	end
+	placeholder.LayoutOrder = order or 0
+	placeholder.Text = tostring(text)
+	return placeholder
+end
+
+function QuestJournal:_createMissionCard(mission, isCompleted, order)
+	local template = isCompleted and self._completedMissionCardTemplate or self._activeMissionCardTemplate
+	local cardName = isCompleted and "CompletedMissionCard" or "ActiveMissionCard"
+	local card = cloneGuiTemplate(template, cardName, self._content)
+	if not (card and card:IsA("Frame")) then
+		warnMissingQuestJournalTemplate(
+			cardName,
+			string.format("[QuestJournal] Missing authored template: Templates.%sTemplate", cardName)
+		)
+		return nil
+	end
+	card.LayoutOrder = order or 0
+
+	local stripe = getDirectChildOfClass(card, "Accent", "Frame")
+	local title = getDirectChildOfClass(card, "Title", "TextLabel")
+	local reward = getDirectChildOfClass(card, "RewardPill", "TextLabel")
+	local description = getDirectChildOfClass(card, "Description", "TextLabel")
+	if not (stripe and title and reward and description) then
+		warnMissingQuestJournalTemplate(
+			cardName .. ":Core",
+			string.format("[QuestJournal] Authored %s missing required children.", cardName)
+		)
+		card:Destroy()
+		return nil
+	end
+
+	stripe.BackgroundColor3 = isCompleted and Color3.fromRGB(255, 196, 94) or TAB_COLORS[self._activeTab]
+	title.Text = tostring(mission.title or "Quest")
+	reward.Text = string.format("+%d XP", math.floor(tonumber(mission.rewards and mission.rewards.xp) or 0))
+	description.Text = tostring(mission.description or "")
 
 	local objective = mission.objectives and mission.objectives[1]
 	local objectiveId = objective and objective.id or mission.id
@@ -489,41 +564,40 @@ function QuestJournal:_createMissionCard(mission, isCompleted)
 	local requiredValue = math.max(1, tonumber(objective and objective.required) or 1)
 	local ratio = math.clamp(progressValue / requiredValue, 0, 1)
 
-	local bar = Instance.new("Frame")
-	bar.Size = UDim2.new(1, -24, 0, 10)
-	bar.Position = UDim2.fromOffset(14, 60)
-	bar.BackgroundColor3 = Color3.fromRGB(44, 48, 62)
-	bar.BorderSizePixel = 0
-	bar.Parent = card
+	if isCompleted then
+		local status = getDirectChildOfClass(card, "Status", "TextLabel")
+		if not status then
+			warnMissingQuestJournalTemplate(
+				cardName .. ":Status",
+				"[QuestJournal] Authored CompletedMissionCardTemplate missing child: Status"
+			)
+			card:Destroy()
+			return nil
+		end
+		status.Text = "Selesai hari ini"
+		return card
+	end
 
-	local barCorner = Instance.new("UICorner")
-	barCorner.CornerRadius = UDim.new(0, 5)
-	barCorner.Parent = bar
-
-	local fill = Instance.new("Frame")
+	local bar = getDirectChildOfClass(card, "ProgressBar", "Frame")
+	local fill = bar and getDirectChildOfClass(bar, "ProgressFill", "Frame")
+	local progress = getDirectChildOfClass(card, "ProgressText", "TextLabel")
+	if not (bar and fill and progress) then
+		warnMissingQuestJournalTemplate(
+			cardName .. ":Progress",
+			"[QuestJournal] Authored ActiveMissionCardTemplate missing progress children."
+		)
+		card:Destroy()
+		return nil
+	end
 	fill.Size = UDim2.new(ratio, 0, 1, 0)
 	fill.BackgroundColor3 = TAB_COLORS[self._activeTab]
-	fill.BorderSizePixel = 0
-	fill.Parent = bar
-
-	local fillCorner = Instance.new("UICorner")
-	fillCorner.CornerRadius = UDim.new(0, 5)
-	fillCorner.Parent = fill
-
-	local progress = Instance.new("TextLabel")
-	progress.Size = UDim2.new(1, -24, 0, 14)
-	progress.Position = UDim2.fromOffset(14, 74)
-	progress.BackgroundTransparency = 1
-	progress.Font = Enum.Font.Gotham
 	progress.Text = string.format("%d / %d", progressValue, requiredValue)
-	progress.TextColor3 = Color3.fromRGB(193, 197, 210)
-	progress.TextSize = 11
-	progress.TextXAlignment = Enum.TextXAlignment.Right
-	progress.Parent = card
+	return card
 end
 
 function QuestJournal:Render()
 	clearContainer(self._content)
+	local layoutOrder = 1
 
 	local updatedAt = tonumber(self.player:GetAttribute(QUEST_UPDATED_AT_ATTR))
 	if updatedAt then
@@ -533,28 +607,33 @@ function QuestJournal:Render()
 	end
 
 	if self._activeTab ~= "DAILY" then
-		self:_createPlaceholder(TAB_EMPTY_MESSAGES[self._activeTab] or "Konten belum tersedia.")
+		self:_createPlaceholder(TAB_EMPTY_MESSAGES[self._activeTab] or "Konten belum tersedia.", layoutOrder)
 		return
 	end
 
 	local active = self._data.active or {}
 	local completed = self._data.completed or {}
 
-	self:_createSectionLabel("ACTIVE DAILY MISSIONS", Color3.fromRGB(116, 196, 255))
+	self:_createSectionLabel("ACTIVE DAILY MISSIONS", Color3.fromRGB(116, 196, 255), layoutOrder)
+	layoutOrder += 1
 	if #active == 0 then
-		self:_createPlaceholder(TAB_EMPTY_MESSAGES.DAILY)
+		self:_createPlaceholder(TAB_EMPTY_MESSAGES.DAILY, layoutOrder)
+		layoutOrder += 1
 	else
 		for _, mission in ipairs(active) do
-			self:_createMissionCard(mission, false)
+			self:_createMissionCard(mission, false, layoutOrder)
+			layoutOrder += 1
 		end
 	end
 
-	self:_createSectionLabel("COMPLETED TODAY", Color3.fromRGB(255, 196, 94))
+	self:_createSectionLabel("COMPLETED TODAY", Color3.fromRGB(255, 196, 94), layoutOrder)
+	layoutOrder += 1
 	if #completed == 0 then
-		self:_createPlaceholder("Belum ada misi yang selesai.")
+		self:_createPlaceholder("Belum ada misi yang selesai.", layoutOrder)
 	else
 		for _, mission in ipairs(completed) do
-			self:_createMissionCard(mission, true)
+			self:_createMissionCard(mission, true, layoutOrder)
+			layoutOrder += 1
 		end
 	end
 end

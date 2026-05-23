@@ -9,6 +9,8 @@ local INTERACTION_PATCH_ATTR = "InteractionPointsRuntimePatched"
 local DOOR_PATCH_ATTR = "DoorTraversalRuntimePatched"
 local SAFE_ZONE_PATCH_ATTR = "SafeZoneRuntimePatched"
 local MATERIAL_PATCH_ATTR = "MapMaterialRuntimePatched"
+local MATERIAL_PATCH_VERSION_ATTR = "MapMaterialRuntimePatchVersion"
+local MATERIAL_PATCH_VERSION = 3
 local TRAVERSAL_GUIDE_PATCH_ATTR = "TraversalGuideRuntimePatched"
 local PLAYABLE_FLOOR_PATCH_ATTR = "RuntimePlayableFloorPatched"
 local LOGIC_VOLUME_PATCH_ATTR = "LogicVolumesRuntimeHidden"
@@ -136,7 +138,13 @@ local MAP_MATERIAL_POLISH = {
 		windowTransparency = 0.42,
 		windowReflectance = 0.03,
 		lightColor = Color3.fromRGB(255, 214, 170),
-		lightBrightnessScale = 0.62,
+		lightBrightnessScale = 0.36,
+		foliageMaterial = Enum.Material.LeafyGrass,
+		foliageColor = Color3.fromRGB(18, 25, 20),
+		trunkMaterial = Enum.Material.Wood,
+		trunkColor = Color3.fromRGB(38, 28, 20),
+		soilMaterial = Enum.Material.Ground,
+		soilColor = Color3.fromRGB(28, 23, 18),
 	},
 	emptybuilding = {
 		floorMaterial = Enum.Material.Concrete,
@@ -150,7 +158,13 @@ local MAP_MATERIAL_POLISH = {
 		windowTransparency = 0.4,
 		windowReflectance = 0.02,
 		lightColor = Color3.fromRGB(214, 226, 255),
-		lightBrightnessScale = 0.9,
+		lightBrightnessScale = 0.42,
+		foliageMaterial = Enum.Material.LeafyGrass,
+		foliageColor = Color3.fromRGB(22, 28, 26),
+		trunkMaterial = Enum.Material.Wood,
+		trunkColor = Color3.fromRGB(40, 32, 26),
+		soilMaterial = Enum.Material.Ground,
+		soilColor = Color3.fromRGB(34, 34, 32),
 	},
 	abandonedpalace = {
 		floorMaterial = Enum.Material.Slate,
@@ -164,7 +178,13 @@ local MAP_MATERIAL_POLISH = {
 		windowTransparency = 0.36,
 		windowReflectance = 0.04,
 		lightColor = Color3.fromRGB(255, 208, 164),
-		lightBrightnessScale = 0.92,
+		lightBrightnessScale = 0.38,
+		foliageMaterial = Enum.Material.LeafyGrass,
+		foliageColor = Color3.fromRGB(24, 22, 20),
+		trunkMaterial = Enum.Material.Wood,
+		trunkColor = Color3.fromRGB(44, 32, 24),
+		soilMaterial = Enum.Material.Ground,
+		soilColor = Color3.fromRGB(32, 26, 22),
 	},
 	studiommnineteen = {
 		floorMaterial = Enum.Material.Concrete,
@@ -178,7 +198,13 @@ local MAP_MATERIAL_POLISH = {
 		windowTransparency = 0.34,
 		windowReflectance = 0.03,
 		lightColor = Color3.fromRGB(228, 234, 255),
-		lightBrightnessScale = 0.96,
+		lightBrightnessScale = 0.4,
+		foliageMaterial = Enum.Material.LeafyGrass,
+		foliageColor = Color3.fromRGB(20, 26, 28),
+		trunkMaterial = Enum.Material.Wood,
+		trunkColor = Color3.fromRGB(38, 30, 24),
+		soilMaterial = Enum.Material.Ground,
+		soilColor = Color3.fromRGB(30, 32, 34),
 	},
 }
 
@@ -222,15 +248,15 @@ local PREPARATION_STAGING_PROFILES = {
 		floodReadyColor = Color3.fromRGB(214, 228, 255),
 		floodArmedColor = Color3.fromRGB(178, 214, 255),
 		floodBreachColor = Color3.fromRGB(174, 255, 236),
-		floodReadyBrightness = 3.2,
-		floodArmedBrightness = 3.8,
-		floodBreachBrightness = 4.3,
+		floodReadyBrightness = 1.25,
+		floodArmedBrightness = 1.45,
+		floodBreachBrightness = 1.7,
 		lampReadyColor = Color3.fromRGB(255, 214, 170),
 		lampArmedColor = Color3.fromRGB(184, 214, 255),
 		lampBreachColor = Color3.fromRGB(190, 255, 236),
-		lampReadyBrightness = 1.8,
-		lampArmedBrightness = 2.1,
-		lampBreachBrightness = 2.45,
+		lampReadyBrightness = 0.65,
+		lampArmedBrightness = 0.78,
+		lampBreachBrightness = 0.9,
 	},
 	abandonedpalace = {
 		anchorRoomName = "Room_GrandHall",
@@ -271,15 +297,15 @@ local PREPARATION_STAGING_PROFILES = {
 		floodReadyColor = Color3.fromRGB(255, 224, 190),
 		floodArmedColor = Color3.fromRGB(188, 218, 255),
 		floodBreachColor = Color3.fromRGB(182, 255, 236),
-		floodReadyBrightness = 3.6,
-		floodArmedBrightness = 4.0,
-		floodBreachBrightness = 4.5,
+		floodReadyBrightness = 1.35,
+		floodArmedBrightness = 1.55,
+		floodBreachBrightness = 1.8,
 		lampReadyColor = Color3.fromRGB(255, 198, 150),
 		lampArmedColor = Color3.fromRGB(188, 214, 255),
 		lampBreachColor = Color3.fromRGB(198, 255, 234),
-		lampReadyBrightness = 1.95,
-		lampArmedBrightness = 2.2,
-		lampBreachBrightness = 2.55,
+		lampReadyBrightness = 0.7,
+		lampArmedBrightness = 0.82,
+		lampBreachBrightness = 0.95,
 	},
 	emptybuilding = {
 		anchorRoomName = "Room_Lobby",
@@ -325,7 +351,27 @@ local PREPARATION_OBJECTIVE_TEMPLATE = {
 	},
 }
 
+local PREPARATION_MAX_LOADOUT_TOOLS = 3
+local PREPARATION_LOADOUT_ATTR_PREFIX = "PasrahLoadoutTool"
+local PREPARATION_LOADOUT_COUNT_ATTR = "PasrahLoadoutToolCount"
+local PREPARATION_DEFAULT_PRIMARY_TOOL = "Flashlight"
+local PREPARATION_DEFAULT_LOADOUT = {
+	PREPARATION_DEFAULT_PRIMARY_TOOL,
+	"JejakEnergi",
+	"SuhuMembeku",
+}
+
 local PREPARATION_TOOL_STATIONS = {
+	{
+		name = "ToolStation_FLASHLIGHT",
+		title = "FLASH",
+		toolType = "Flashlight",
+		subtitle = "Main light",
+		color = Color3.fromRGB(172, 154, 96),
+		modelName = "Flashlight",
+		modelLift = 0.62,
+		modelYaw = 90,
+	},
 	{
 		name = "ToolStation_EMF",
 		title = "EMF",
@@ -338,9 +384,9 @@ local PREPARATION_TOOL_STATIONS = {
 	},
 	{
 		name = "ToolStation_UV",
-		title = "UV CAM",
+		title = "TO'UN CAM",
 		toolType = "BolaArwah",
-		subtitle = "To'un trace",
+		subtitle = "Night orb",
 		color = Color3.fromRGB(214, 146, 255),
 		modelName = "BolaArwah",
 		modelLift = 0.64,
@@ -384,6 +430,46 @@ local PREPARATION_TOOL_STATIONS = {
 		color = Color3.fromRGB(255, 130, 130),
 		modelName = "GerakanGaib",
 		modelLift = 0.63,
+		modelYaw = 90,
+	},
+	{
+		name = "ToolStation_GARAM",
+		title = "GARAM",
+		toolType = "Garam",
+		subtitle = "Salt trap",
+		color = Color3.fromRGB(180, 166, 110),
+		modelName = "Garam",
+		modelLift = 0.58,
+		modelYaw = 90,
+	},
+	{
+		name = "ToolStation_SALIB",
+		title = "SALIB",
+		toolType = "Salib",
+		subtitle = "Hunt block",
+		color = Color3.fromRGB(160, 118, 76),
+		modelName = "Salib",
+		modelLift = 0.6,
+		modelYaw = 90,
+	},
+	{
+		name = "ToolStation_DUPA",
+		title = "DUPA",
+		toolType = "Dupa",
+		subtitle = "Repel cloud",
+		color = Color3.fromRGB(180, 102, 72),
+		modelName = "Dupa",
+		modelLift = 0.6,
+		modelYaw = 90,
+	},
+	{
+		name = "ToolStation_PIL",
+		title = "SANITY",
+		toolType = "PilSanity",
+		subtitle = "Recover sanity",
+		color = Color3.fromRGB(126, 196, 154),
+		modelName = "PilSanity",
+		modelLift = 0.56,
 		modelYaw = 90,
 	},
 }
@@ -1247,7 +1333,7 @@ local function buildPreparationBoardContent(mapId, matchContext)
 
 	local toolLines = {
 		"Field kit issued for first sweep.",
-		"EMF • UV CAM • THERMO",
+		"EMF • TO'UN CAM • THERMO",
 		"BOX • WRITING • SENSOR",
 		"Support kit: GARAM • SALIB • DUPA",
 		"Gunakan rack kanan untuk review urutan tool awal.",
@@ -1261,22 +1347,157 @@ local function buildPreparationBoardContent(mapId, matchContext)
 		objectiveSubtitle = "Primary + optional briefing",
 		objectiveLines = objectiveLines,
 		toolsTitle = "TOOLS",
-		toolsSubtitle = "Default field kit briefing",
+		toolsSubtitle = "Staging loadout briefing",
 		toolsLines = toolLines,
 	}
 end
 
+local function findPreparationToolDataByType(toolType)
+	if type(toolType) ~= "string" or toolType == "" then
+		return nil
+	end
+	for _, toolData in ipairs(PREPARATION_TOOL_STATIONS) do
+		if toolData.toolType == toolType or toolData.title == toolType or toolData.name == toolType then
+			return toolData
+		end
+	end
+	if toolType == PREPARATION_DEFAULT_PRIMARY_TOOL then
+		return {
+			title = "FLASH",
+			toolType = PREPARATION_DEFAULT_PRIMARY_TOOL,
+		}
+	end
+	return nil
+end
+
+local function getPreparationToolLabel(toolType)
+	local toolData = findPreparationToolDataByType(toolType)
+	return toolData and tostring(toolData.title or toolType) or tostring(toolType or "")
+end
+
+local function clonePreparationLoadoutList(source)
+	local loadout = {}
+	local seen = {}
+	if type(source) == "table" then
+		for _, toolType in ipairs(source) do
+			if type(toolType) == "string"
+				and toolType ~= ""
+				and not seen[toolType]
+				and findPreparationToolDataByType(toolType)
+				and #loadout < PREPARATION_MAX_LOADOUT_TOOLS then
+				table.insert(loadout, toolType)
+				seen[toolType] = true
+			end
+		end
+	end
+	return loadout
+end
+
+local function readPreparationLoadoutFromPlayer(player)
+	local loadout = {}
+	if not (typeof(player) == "Instance" and player:IsA("Player")) then
+		return loadout
+	end
+	for slot = 1, PREPARATION_MAX_LOADOUT_TOOLS do
+		local toolType = player:GetAttribute(PREPARATION_LOADOUT_ATTR_PREFIX .. tostring(slot))
+		if type(toolType) == "string" and toolType ~= "" then
+			table.insert(loadout, toolType)
+		end
+	end
+	return clonePreparationLoadoutList(loadout)
+end
+
+local function writePreparationLoadoutToPlayer(player, loadout)
+	if not (typeof(player) == "Instance" and player:IsA("Player")) then
+		return
+	end
+	local normalized = clonePreparationLoadoutList(loadout)
+	player:SetAttribute(PREPARATION_LOADOUT_COUNT_ATTR, #normalized)
+	for slot = 1, PREPARATION_MAX_LOADOUT_TOOLS do
+		player:SetAttribute(PREPARATION_LOADOUT_ATTR_PREFIX .. tostring(slot), normalized[slot])
+	end
+end
+
+local function getPreparationLoadoutLabels(loadout)
+	local labels = {}
+	for _, toolType in ipairs(clonePreparationLoadoutList(loadout)) do
+		table.insert(labels, getPreparationToolLabel(toolType))
+	end
+	return labels
+end
+
+local function getPreparationLoadoutLabelText(loadout)
+	local labels = getPreparationLoadoutLabels(loadout)
+	if #labels == 0 then
+		return ""
+	end
+	return table.concat(labels, " / ")
+end
+
+local function resolvePreparationLoadout(matchContext)
+	local loadout = {}
+	if type(matchContext) == "table" then
+		loadout = clonePreparationLoadoutList(matchContext.selectedPreparationTools)
+		if #loadout == 0 and type(matchContext.selectedPreparationTool) == "string" and matchContext.selectedPreparationTool ~= "" then
+			loadout = clonePreparationLoadoutList({ PREPARATION_DEFAULT_PRIMARY_TOOL, matchContext.selectedPreparationTool })
+		end
+		for _, player in ipairs(matchContext.players or {}) do
+			if #loadout >= PREPARATION_MAX_LOADOUT_TOOLS then
+				break
+			end
+			for _, toolType in ipairs(readPreparationLoadoutFromPlayer(player)) do
+				if #loadout >= PREPARATION_MAX_LOADOUT_TOOLS then
+					break
+				end
+				local exists = false
+				for _, existing in ipairs(loadout) do
+					if existing == toolType then
+						exists = true
+						break
+					end
+				end
+				if not exists then
+					table.insert(loadout, toolType)
+				end
+			end
+		end
+	end
+	return clonePreparationLoadoutList(loadout)
+end
+
+local function buildPreparationLoadoutAfterSelection(currentLoadout, selectedTool)
+	local loadout = clonePreparationLoadoutList(currentLoadout)
+	local seen = {}
+	for _, toolType in ipairs(loadout) do
+		seen[toolType] = true
+	end
+	if not seen[PREPARATION_DEFAULT_PRIMARY_TOOL] then
+		table.insert(loadout, 1, PREPARATION_DEFAULT_PRIMARY_TOOL)
+		seen[PREPARATION_DEFAULT_PRIMARY_TOOL] = true
+	end
+	if type(selectedTool) == "string" and selectedTool ~= "" and not seen[selectedTool] then
+		if #loadout < PREPARATION_MAX_LOADOUT_TOOLS then
+			table.insert(loadout, selectedTool)
+		else
+			loadout[PREPARATION_MAX_LOADOUT_TOOLS] = selectedTool
+		end
+	end
+	return clonePreparationLoadoutList(loadout)
+end
+
 local function updatePreparationToolsBoard(boardPart, selectedTool)
+	local selectedLoadout = type(selectedTool) == "table" and clonePreparationLoadoutList(selectedTool) or nil
+	local selectedLabel = selectedLoadout and getPreparationLoadoutLabelText(selectedLoadout) or selectedTool
 	local lines = {
-		"Field kit issued for first sweep.",
-		"EMF • UV CAM • THERMO",
-		"BOX • WRITING • SENSOR",
-		"Support kit: GARAM • SALIB • DUPA",
+		"Loadout maksimal 3 tool.",
+		"FLASH otomatis ikut saat tool dipilih.",
+		"Slot 1-3 dipakai untuk switch tool.",
+		"Masuk hanya setelah loadout siap.",
 	}
-	local subtitle = "Default field kit briefing"
-	if type(selectedTool) == "string" and selectedTool ~= "" then
-		subtitle = string.format("%s ready for first sweep", selectedTool)
-		table.insert(lines, 1, string.format("Focus awal: %s", selectedTool))
+	local subtitle = "Pilih 1-2 tool tambahan"
+	if type(selectedLabel) == "string" and selectedLabel ~= "" then
+		subtitle = string.format("Loadout: %s", selectedLabel)
+		table.insert(lines, 1, string.format("%d/%d slot siap", selectedLoadout and #selectedLoadout or 1, PREPARATION_MAX_LOADOUT_TOOLS))
 	end
 
 	ensureBoardSurface(
@@ -1299,16 +1520,21 @@ local function updatePreparationToolsBoard(boardPart, selectedTool)
 	)
 end
 
-local function updatePreparationToolStationState(toolPart, prompt, toolData, selectedTool, breachOpen, statePad)
+local function updatePreparationToolStationState(toolPart, prompt, toolData, selectedTool, breachOpen, statePad, loadoutLookup, loadoutCount)
 	if not (toolPart and toolPart:IsA("BasePart") and type(toolData) == "table") then
 		return
 	end
 
 	local selectedToken = type(selectedTool) == "string" and selectedTool or ""
-	local isSelected = selectedToken ~= "" and (selectedToken == toolData.title or selectedToken == toolData.toolType)
+	local isSelected = (type(loadoutLookup) == "table" and loadoutLookup[toolData.toolType] == true)
+		or (selectedToken ~= "" and (selectedToken == toolData.title or selectedToken == toolData.toolType))
 	local accentColor = toolData.color or Color3.fromRGB(132, 186, 255)
 	local highlightColor = accentColor:Lerp(Color3.new(1, 1, 1), 0.18)
 	local idleColor = accentColor:Lerp(Color3.fromRGB(46, 52, 64), 0.18)
+	if prompt and prompt:IsA("ProximityPrompt") then
+		prompt.ActionText = isSelected and "Aktifkan Tool" or "Ambil Tool"
+		prompt.ObjectText = string.format("%s  %d/%d", tostring(toolData.title or toolData.toolType), tonumber(loadoutCount) or 0, PREPARATION_MAX_LOADOUT_TOOLS)
+	end
 
 	toolPart.Material = isSelected and Enum.Material.Neon or Enum.Material.SmoothPlastic
 	toolPart.Color = isSelected and highlightColor or idleColor
@@ -1328,10 +1554,16 @@ local function updatePreparationToolStationState(toolPart, prompt, toolData, sel
 			padTransparency = 0.4
 		end
 	elseif isSelected then
-		stateSubtitle = "Focus active • use first"
-		stateBody = "Gunakan tool ini untuk sweep pertama sebelum ganti jalur evidence."
+		stateSubtitle = string.format("Loadout aktif • %d/%d", tonumber(loadoutCount) or 1, PREPARATION_MAX_LOADOUT_TOOLS)
+		stateBody = "Tool ini terbawa. Klik tool lain untuk isi slot berikutnya atau ganti slot terakhir."
 		padColor = accentColor
 		padTransparency = 0.12
+	elseif tonumber(loadoutCount) and tonumber(loadoutCount) >= PREPARATION_MAX_LOADOUT_TOOLS then
+		stateSubtitle = "Slot penuh"
+		stateBody = "Memilih ini akan mengganti slot terakhir."
+	else
+		stateSubtitle = string.format("Ambil tool • %d/%d", tonumber(loadoutCount) or 0, PREPARATION_MAX_LOADOUT_TOOLS)
+		stateBody = "Pilih untuk masuk loadout staging."
 	end
 
 	ensureBoardSurface(
@@ -1528,15 +1760,15 @@ local function resolvePreparationTheme(profile, selectedTool, breachOpen)
 	local floodReadyColor = type(profile) == "table" and profile.floodReadyColor or Color3.fromRGB(214, 228, 255)
 	local floodArmedColor = type(profile) == "table" and profile.floodArmedColor or Color3.fromRGB(178, 214, 255)
 	local floodBreachColor = type(profile) == "table" and profile.floodBreachColor or Color3.fromRGB(174, 255, 236)
-	local floodReadyBrightness = type(profile) == "table" and tonumber(profile.floodReadyBrightness) or 3.2
-	local floodArmedBrightness = type(profile) == "table" and tonumber(profile.floodArmedBrightness) or 3.8
-	local floodBreachBrightness = type(profile) == "table" and tonumber(profile.floodBreachBrightness) or 4.3
+	local floodReadyBrightness = type(profile) == "table" and tonumber(profile.floodReadyBrightness) or 1.25
+	local floodArmedBrightness = type(profile) == "table" and tonumber(profile.floodArmedBrightness) or 1.45
+	local floodBreachBrightness = type(profile) == "table" and tonumber(profile.floodBreachBrightness) or 1.7
 	local lampReadyColor = type(profile) == "table" and profile.lampReadyColor or Color3.fromRGB(255, 214, 170)
 	local lampArmedColor = type(profile) == "table" and profile.lampArmedColor or Color3.fromRGB(184, 214, 255)
 	local lampBreachColor = type(profile) == "table" and profile.lampBreachColor or Color3.fromRGB(190, 255, 236)
-	local lampReadyBrightness = type(profile) == "table" and tonumber(profile.lampReadyBrightness) or 1.8
-	local lampArmedBrightness = type(profile) == "table" and tonumber(profile.lampArmedBrightness) or 2.1
-	local lampBreachBrightness = type(profile) == "table" and tonumber(profile.lampBreachBrightness) or 2.45
+	local lampReadyBrightness = type(profile) == "table" and tonumber(profile.lampReadyBrightness) or 0.65
+	local lampArmedBrightness = type(profile) == "table" and tonumber(profile.lampArmedBrightness) or 0.78
+	local lampBreachBrightness = type(profile) == "table" and tonumber(profile.lampBreachBrightness) or 0.9
 
 	if breachOpen then
 		return {
@@ -1893,18 +2125,6 @@ local function updatePreparationEntrySign(entrySign, selectedTool, breachOpen, p
 	)
 end
 
-local function findPreparationToolDataByType(toolType)
-	if type(toolType) ~= "string" or toolType == "" then
-		return nil
-	end
-	for _, toolData in ipairs(PREPARATION_TOOL_STATIONS) do
-		if toolData.toolType == toolType or toolData.title == toolType or toolData.name == toolType then
-			return toolData
-		end
-	end
-	return nil
-end
-
 local function resolvePreparationToolModelTemplate(toolData)
 	if type(toolData) ~= "table" then
 		return nil
@@ -2005,11 +2225,16 @@ local function isPreparationMatchPlayer(player, matchContext)
 end
 
 local function resolveSelectedPreparationTool(matchContext)
+	local loadout = resolvePreparationLoadout(matchContext)
 	local selectedTool = type(matchContext) == "table" and tostring(matchContext.selectedPreparationTool or "") or ""
 	local selectedLabel = type(matchContext) == "table" and tostring(matchContext.selectedPreparationToolLabel or "") or ""
 	if selectedTool ~= "" then
 		local toolData = findPreparationToolDataByType(selectedTool)
 		return selectedTool, selectedLabel ~= "" and selectedLabel or (toolData and toolData.title or selectedTool)
+	end
+	if #loadout > 0 then
+		local fallbackTool = loadout[#loadout] or loadout[1]
+		return fallbackTool, getPreparationToolLabel(fallbackTool)
 	end
 
 	if type(matchContext) == "table" then
@@ -2031,21 +2256,23 @@ local function updatePreparationGateBlocker(blocker, selectedTool, selectedLabel
 	if not (blocker and blocker:IsA("BasePart")) then
 		return
 	end
-	local unlocked = type(selectedTool) == "string" and selectedTool ~= ""
+	local selectedLoadout = type(selectedTool) == "table" and clonePreparationLoadoutList(selectedTool) or nil
+	local unlocked = selectedLoadout and #selectedLoadout > 0 or (type(selectedTool) == "string" and selectedTool ~= "")
+	local loadoutText = selectedLoadout and getPreparationLoadoutLabelText(selectedLoadout) or tostring(selectedLabel or selectedTool or "")
 	blocker.CanCollide = not unlocked
 	blocker.CanTouch = false
 	blocker.CanQuery = true
 	blocker.Transparency = unlocked and 0.86 or 0.35
 	blocker.Color = unlocked and Color3.fromRGB(96, 178, 146) or Color3.fromRGB(170, 108, 92)
 	blocker:SetAttribute("PasrahPreparationGateLocked", not unlocked)
-	blocker:SetAttribute("PasrahPreparationSelectedTool", unlocked and selectedTool or nil)
-	blocker:SetAttribute("PasrahPreparationSelectedToolLabel", unlocked and selectedLabel or nil)
+	blocker:SetAttribute("PasrahPreparationSelectedTool", unlocked and (selectedLoadout and selectedLoadout[1] or selectedTool) or nil)
+	blocker:SetAttribute("PasrahPreparationSelectedToolLabel", unlocked and loadoutText or nil)
 
 	local title = unlocked and "TOOLS SIAP" or "SILAHKAN PILIH TOOLS"
-	local subtitle = unlocked and tostring(selectedLabel or selectedTool) .. " terbawa" or "Ambil satu tool dari meja"
+	local subtitle = unlocked and string.format("%s terbawa", loadoutText) or "Ambil tool dari meja"
 	local body = unlocked
 		and (breachOpen and "Pintu sudah terbuka. Masuk untuk investigasi." or "Buka pintu depan untuk mulai investigasi.")
-		or "Pilih tool evidence di station. Gate ini baru hilang setelah tool benar-benar dipilih."
+		or "Pilih loadout staging. Flashlight masuk otomatis, total maksimal 3 tool."
 	ensureBoardSurface(
 		blocker,
 		"GateLabel",
@@ -2061,10 +2288,18 @@ local function applyPreparationToolSelectionState(preparationFolder, matchContex
 	if typeof(preparationFolder) ~= "Instance" then
 		return false
 	end
+	local loadout = resolvePreparationLoadout(matchContext)
+	local loadoutLookup = {}
+	for _, toolType in ipairs(loadout) do
+		loadoutLookup[toolType] = true
+	end
 	local selectedTool, selectedLabel = resolveSelectedPreparationTool(matchContext)
-	local hasSelection = selectedTool ~= ""
+	local hasSelection = #loadout > 0 or selectedTool ~= ""
+	local loadoutText = getPreparationLoadoutLabelText(loadout)
 	preparationFolder:SetAttribute("SelectedPreparationTool", hasSelection and selectedTool or nil)
-	preparationFolder:SetAttribute("SelectedPreparationToolLabel", hasSelection and selectedLabel or nil)
+	preparationFolder:SetAttribute("SelectedPreparationToolLabel", hasSelection and (loadoutText ~= "" and loadoutText or selectedLabel) or nil)
+	preparationFolder:SetAttribute("SelectedPreparationLoadout", hasSelection and loadoutText or nil)
+	preparationFolder:SetAttribute("SelectedPreparationLoadoutCount", #loadout)
 	preparationFolder:SetAttribute("PreparationEntryLaneState", breachOpen and "breach" or (hasSelection and "armed" or "ready"))
 
 	for _, toolData in ipairs(PREPARATION_TOOL_STATIONS) do
@@ -2075,14 +2310,14 @@ local function applyPreparationToolSelectionState(preparationFolder, matchContex
 			local prompt = ensurePrompt(toolPart, "Prompt", "Pilih Fokus Tool", toolData.title)
 			ensurePreparationToolDisplay(toolPart, toolData)
 			local statePad = preparationFolder:FindFirstChild(toolData.name .. "_Pad", true)
-			updatePreparationToolStationState(toolPart, prompt, toolData, selectedTool, breachOpen == true, statePad)
+			updatePreparationToolStationState(toolPart, prompt, toolData, selectedTool, breachOpen == true, statePad, loadoutLookup, #loadout)
 		end
 	end
 
 	local toolsBoard = preparationFolder:FindFirstChild("PreparationToolsBoard", true)
 		or preparationFolder:FindFirstChild("PreparationToolsTable", true)
 	if toolsBoard and toolsBoard:IsA("BasePart") then
-		updatePreparationToolsBoard(toolsBoard, selectedLabel ~= "" and selectedLabel or nil)
+		updatePreparationToolsBoard(toolsBoard, loadout)
 	end
 	local objectiveBoard = preparationFolder:FindFirstChild("PreparationObjectiveBoard", true)
 	if objectiveBoard and objectiveBoard:IsA("BasePart") then
@@ -2095,8 +2330,8 @@ local function applyPreparationToolSelectionState(preparationFolder, matchContex
 	updatePreparationEntryLane(preparationFolder, selectedLabel ~= "" and selectedLabel or selectedTool, breachOpen == true, nil)
 	updatePreparationGateBlocker(
 		preparationFolder:FindFirstChild("PreparationToolGateBlocker", true),
-		selectedTool,
-		selectedLabel ~= "" and selectedLabel or selectedTool,
+		loadout,
+		loadoutText ~= "" and loadoutText or selectedLabel ~= "" and selectedLabel or selectedTool,
 		breachOpen == true
 	)
 	return true
@@ -2109,6 +2344,26 @@ local function bindPreparationToolStations(preparationFolder, matchContext)
 
 	if type(matchContext) == "table" and type(matchContext._preparationToolPromptConnections) ~= "table" then
 		matchContext._preparationToolPromptConnections = {}
+	end
+	if type(matchContext) == "table" and matchContext._preparationLoadoutInitialized ~= true then
+		matchContext._preparationLoadoutInitialized = true
+		matchContext.selectedPreparationTools = clonePreparationLoadoutList(matchContext.selectedPreparationTools)
+		if #matchContext.selectedPreparationTools == 0 then
+			matchContext.selectedPreparationTools = clonePreparationLoadoutList(PREPARATION_DEFAULT_LOADOUT)
+		end
+		local selectedTool = matchContext.selectedPreparationTools[2] or matchContext.selectedPreparationTools[1]
+		local selectedLabel = getPreparationToolLabel(selectedTool)
+		for _, player in ipairs(matchContext.players or {}) do
+			if typeof(player) == "Instance" and player:IsA("Player") then
+				writePreparationLoadoutToPlayer(player, matchContext.selectedPreparationTools)
+				if selectedTool then
+					player:SetAttribute("PreparationFocusTool", selectedTool)
+					player:SetAttribute("PreparationFocusToolLabel", selectedLabel)
+					player:SetAttribute("PreparationFocusToolSource", "DefaultLoadout")
+					player:SetAttribute("PasrahPreparationToolSelected", true)
+				end
+			end
+		end
 	end
 
 	for _, toolData in ipairs(PREPARATION_TOOL_STATIONS) do
@@ -2128,6 +2383,14 @@ local function bindPreparationToolStations(preparationFolder, matchContext)
 					return
 				end
 
+				local currentLoadout = type(matchContext) == "table"
+					and clonePreparationLoadoutList(matchContext.selectedPreparationTools)
+					or {}
+				if #currentLoadout == 0 then
+					currentLoadout = readPreparationLoadoutFromPlayer(player)
+				end
+				local nextLoadout = buildPreparationLoadoutAfterSelection(currentLoadout, toolData.toolType)
+				writePreparationLoadoutToPlayer(player, nextLoadout)
 				player:SetAttribute("PreparationFocusTool", toolData.toolType)
 				player:SetAttribute("PreparationFocusToolLabel", toolData.title)
 				player:SetAttribute("PreparationFocusToolSource", "WorldToolStation")
@@ -2137,6 +2400,8 @@ local function bindPreparationToolStations(preparationFolder, matchContext)
 				if type(matchContext) == "table" then
 					matchContext.selectedPreparationTool = toolData.toolType
 					matchContext.selectedPreparationToolLabel = toolData.title
+					matchContext.selectedPreparationTools = nextLoadout
+					matchContext.selectedPreparationToolLabels = getPreparationLoadoutLabels(nextLoadout)
 				end
 				applyPreparationToolSelectionState(preparationFolder, matchContext, false)
 			end)
@@ -4396,7 +4661,11 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 end
 
 local function patchMapMaterials(mapId, mapClone)
-	if not mapClone or mapClone:GetAttribute(MATERIAL_PATCH_ATTR) == true then
+	if not mapClone then
+		return false
+	end
+	if mapClone:GetAttribute(MATERIAL_PATCH_ATTR) == true
+		and mapClone:GetAttribute(MATERIAL_PATCH_VERSION_ATTR) == MATERIAL_PATCH_VERSION then
 		return false
 	end
 
@@ -4413,7 +4682,27 @@ local function patchMapMaterials(mapId, mapClone)
 	for _, descendant in ipairs(mapClone:GetDescendants()) do
 		if descendant:IsA("BasePart") then
 			local nameToken = normalizeToken(descendant.Name) or ""
-			if string.find(nameToken, "floor", 1, true) then
+			if string.find(nameToken, "leaf", 1, true)
+				or string.find(nameToken, "leaves", 1, true)
+				or string.find(nameToken, "foliage", 1, true)
+				or string.find(nameToken, "bush", 1, true) then
+				descendant.Material = profile.foliageMaterial or descendant.Material
+				descendant.Color = profile.foliageColor or descendant.Color
+				descendant.Reflectance = 0
+				patchedAny = true
+			elseif string.find(nameToken, "trunk", 1, true)
+				or (string.find(nameToken, "tree", 1, true) and hasNamedAncestor(descendant, "BoundaryTrees")) then
+				descendant.Material = profile.trunkMaterial or descendant.Material
+				descendant.Color = profile.trunkColor or descendant.Color
+				descendant.Reflectance = 0
+				patchedAny = true
+			elseif string.find(nameToken, "soil", 1, true)
+				or (string.find(nameToken, "ground", 1, true) and hasNamedAncestor(descendant, "BoundaryTrees")) then
+				descendant.Material = profile.soilMaterial or descendant.Material
+				descendant.Color = profile.soilColor or descendant.Color
+				descendant.Reflectance = 0
+				patchedAny = true
+			elseif string.find(nameToken, "floor", 1, true) then
 				descendant.Material = profile.floorMaterial or descendant.Material
 				descendant.Color = profile.floorColor or descendant.Color
 				patchedAny = true
@@ -4441,6 +4730,7 @@ local function patchMapMaterials(mapId, mapClone)
 
 	if patchedAny then
 		mapClone:SetAttribute(MATERIAL_PATCH_ATTR, true)
+		mapClone:SetAttribute(MATERIAL_PATCH_VERSION_ATTR, MATERIAL_PATCH_VERSION)
 	end
 	return patchedAny
 end

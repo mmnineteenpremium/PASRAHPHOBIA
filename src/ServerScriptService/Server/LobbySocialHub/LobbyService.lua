@@ -33,18 +33,22 @@ local LobbyZoneManager = requireNamedModule(script.Parent, "LobbyZoneManager")
 local LobbyInteraction = requireNamedModule(script.Parent, "LobbyInteraction")
 local PartySystem = requireNamedModule(script.Parent, "PartySystem")
 local LobbyPopulationController = requireNamedModule(script.Parent, "LobbyPopulationController")
+local CampfireSanityService = requireNamedModule(script.Parent, "CampfireSanityService")
 local LobbyLocator = require(script.Parent.Parent.Core.LobbyLocator)
 local Services = require(script.Parent.Parent.Core.Services)
 
 local LOBBY_COSMETIC_FOLDER_NAME = "LobbyCosmeticVisuals"
 local LOBBY_COSMETIC_GUI_NAME = "LobbyCosmeticBillboard"
+local LOBBY_COSMETIC_BILLBOARD_TEMPLATE_PATH = { "WorldMarkers", "LobbyCosmeticBillboardTemplate" }
 local FLEX_SPOTLIGHT_PARTICIPANT_LIMIT = 4
 local LOBBY_ZONE_GUIDE_FOLDER_NAME = "LobbyZoneGuideRuntime"
 local LOBBY_ZONE_GUIDE_BILLBOARD_NAME = "Billboard"
 local LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME = "Highlight"
+local LOBBY_ZONE_GUIDE_BILLBOARD_TEMPLATE_PATH = { "WorldMarkers", "LobbyZoneGuideBillboardTemplate" }
 local LOBBY_ZONE_ENTRY_GUIDE_FOLDER_NAME = "LobbyZoneEntryGuideRuntime"
 local LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME = "Billboard"
 local LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME = "Highlight"
+local LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_TEMPLATE_PATH = { "WorldMarkers", "LobbyZoneEntryGuideBillboardTemplate" }
 local LOBBY_ZONE_ENTRY_GUIDE_ACCENT_NAME = "AccentBar"
 local LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME = "AccentLight"
 local LOBBY_ZONE_ENTRY_GUIDE_FRAME_TOP_NAME = "FrameTop"
@@ -166,8 +170,8 @@ local LOBBY_TRAINING_TOOL_SPECS = {
 	},
 	{
 		partName = "Table_Tools_2",
-		label = "UV CAM",
-		promptLabel = "UV Camera",
+		label = "TO'UN CAM",
+		promptLabel = "Kamera To'un",
 		toolType = "BolaArwah",
 		evidenceType = "To'un",
 	},
@@ -1001,6 +1005,30 @@ local function resolveReplicatedAssetModel(categoryName, modelName)
     return nil
 end
 
+local function resolveReplicatedVisualTemplate(...)
+    local ok, replicatedStorage = pcall(function()
+        return game:GetService("ReplicatedStorage")
+    end)
+    if not ok or typeof(replicatedStorage) ~= "Instance" then
+        return nil
+    end
+    local path = { "Assets", "VisualTemplates" }
+    for _, segment in ipairs({ ... }) do
+        path[#path + 1] = segment
+    end
+    return getByPath(replicatedStorage, path)
+end
+
+local function cloneVisualTemplate(name, ...)
+    local template = resolveReplicatedVisualTemplate(...)
+    if template then
+        local clone = template:Clone()
+        clone.Name = name
+        return clone
+    end
+    return nil
+end
+
 local function configureStaticModelPhysics(model, options)
     if not (model and model:IsA("Model")) then
         return false
@@ -1185,6 +1213,44 @@ local function resolveToolVisualProfileTargetBounds(toolType)
     return coerceProfileVector3(config.targetBounds) or coerceProfileVector3(config.meshSize)
 end
 
+local function applyToolInventoryMeshAssetId(model, toolConfig)
+    if not (model and model:IsA("Model")) or type(toolConfig) ~= "table" then
+        return false
+    end
+
+    local inventoryModelAssetId = toolConfig.inventoryModelAssetId
+    if type(inventoryModelAssetId) ~= "string" or inventoryModelAssetId == "" then
+        return false
+    end
+
+    local changed = false
+    for _, descendant in ipairs(model:GetDescendants()) do
+        if descendant:IsA("MeshPart") then
+            local ok, current = pcall(function()
+                return descendant.MeshId
+            end)
+            if (not ok) or current ~= inventoryModelAssetId then
+                pcall(function()
+                    descendant.MeshId = inventoryModelAssetId
+                end)
+                changed = true
+            end
+        elseif descendant:IsA("SpecialMesh") then
+            local ok, current = pcall(function()
+                return descendant.MeshId
+            end)
+            if (not ok) or current ~= inventoryModelAssetId then
+                pcall(function()
+                    descendant.MeshId = inventoryModelAssetId
+                end)
+                changed = true
+            end
+        end
+    end
+
+    return changed
+end
+
 local function clampRuntimeModelBounds(model, targetBounds)
     if not (model and model:IsA("Model")) or typeof(targetBounds) ~= "Vector3" then
         return false
@@ -1335,6 +1401,9 @@ local function syncRuntimeAssetModel(parent, runtimeName, categoryName, modelNam
         end
         if model:GetAttribute("PasrahToolVariantRole") ~= variantRole then
             model:SetAttribute("PasrahToolVariantRole", type(variantRole) == "string" and variantRole ~= "" and variantRole or nil)
+            changed = true
+        end
+        if applyToolInventoryMeshAssetId(model, toolConfig) then
             changed = true
         end
         if targetBounds and clampRuntimeModelBounds(model, targetBounds) then
@@ -1593,7 +1662,11 @@ local function ensurePointLight(parent, name)
         if light then
             light:Destroy()
         end
-        light = Instance.new("PointLight")
+        light = cloneVisualTemplate(name, "WorldEffects", "WorldPointLightTemplate")
+        if not light then
+            warn("[LobbyService] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+            return nil
+        end
         light.Name = name
         light.Parent = parent
     end
@@ -1616,7 +1689,11 @@ local function ensureGuideBoardSurface(parent, name, face, titleText, subtitleTe
         if surface then
             surface:Destroy()
         end
-        surface = Instance.new("SurfaceGui")
+        surface = cloneVisualTemplate(name, "WorldSurfaces", "LobbyGuideBoardSurfaceTemplate")
+        if not surface then
+            warn("[LobbyService] Missing authored visual template: WorldSurfaces.LobbyGuideBoardSurfaceTemplate")
+            return nil
+        end
         surface.Name = name
         surface.Parent = parent
     end
@@ -1638,62 +1715,8 @@ local function ensureGuideBoardSurface(parent, name, face, titleText, subtitleTe
         if panel then
             panel:Destroy()
         end
-        panel = Instance.new("Frame")
-        panel.Name = "Panel"
-        panel.Parent = surface
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 10)
-        corner.Parent = panel
-
-        local stroke = Instance.new("UIStroke")
-        stroke.Name = "Stroke"
-        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        stroke.Thickness = 1
-        stroke.Parent = panel
-
-        local accent = Instance.new("Frame")
-        accent.Name = "Accent"
-        accent.AnchorPoint = Vector2.new(0, 0.5)
-        accent.BorderSizePixel = 0
-        accent.Position = UDim2.new(0, 8, 0.5, 0)
-        accent.Size = UDim2.fromOffset(3, 36)
-        accent.Parent = panel
-
-        local accentCorner = Instance.new("UICorner")
-        accentCorner.CornerRadius = UDim.new(1, 0)
-        accentCorner.Parent = accent
-
-        local title = Instance.new("TextLabel")
-        title.Name = "Title"
-        title.BackgroundTransparency = 1
-        title.BorderSizePixel = 0
-        title.Font = Enum.Font.GothamBold
-        title.Text = titleText
-        title.TextColor3 = Color3.fromRGB(245, 248, 252)
-        title.TextSize = 20
-        title.TextTransparency = 0
-        title.TextXAlignment = Enum.TextXAlignment.Left
-        title.TextYAlignment = Enum.TextYAlignment.Center
-        title.Position = UDim2.new(0, 22, 0, 18)
-        title.Size = UDim2.new(1, -34, 0, 30)
-        title.Parent = panel
-
-        local subtitle = Instance.new("TextLabel")
-        subtitle.Name = "Subtitle"
-        subtitle.BackgroundTransparency = 1
-        subtitle.BorderSizePixel = 0
-        subtitle.Font = Enum.Font.GothamMedium
-        subtitle.Text = subtitleText
-        subtitle.TextColor3 = accentColor:Lerp(Color3.fromRGB(245, 248, 252), 0.25)
-        subtitle.TextSize = 14
-        subtitle.TextTransparency = 0
-        subtitle.TextWrapped = true
-        subtitle.TextXAlignment = Enum.TextXAlignment.Left
-        subtitle.TextYAlignment = Enum.TextYAlignment.Top
-        subtitle.Position = UDim2.new(0, 22, 0, 54)
-        subtitle.Size = UDim2.new(1, -34, 0, 56)
-        subtitle.Parent = panel
+        warn("[LobbyService] LobbyGuideBoardSurfaceTemplate missing required child: Panel")
+        return nil
     end
 
     panel.Size = UDim2.new(1, -18, 1, -18)
@@ -1722,24 +1745,6 @@ local function ensureGuideBoardSurface(parent, name, face, titleText, subtitleTe
     end
 
     return surface
-end
-
-local function createGuideTextLabel(name, font, textSize, textColor, text, height, position)
-    local label = Instance.new("TextLabel")
-    label.Name = name
-    label.BackgroundTransparency = 1
-    label.BorderSizePixel = 0
-    label.Position = position
-    label.Size = UDim2.new(1, -18, 0, height)
-    label.Font = font
-    label.Text = text
-    label.TextColor3 = textColor
-    label.TextSize = textSize
-    label.TextStrokeTransparency = 0.84
-    label.TextWrapped = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextYAlignment = Enum.TextYAlignment.Top
-    return label
 end
 
 local function sanitizeLobbyLogicPart(part)
@@ -1791,13 +1796,92 @@ local function sanitizeLobbyLogicVolumes()
 	return changed
 end
 
-local function applyMainHubVisualPatch()
+function LobbyService._polishLobbyAuthoredForest()
+	local lobbyRoot = LobbyLocator.ResolveRoot("LobbySocialHub", workspace)
+	if not lobbyRoot then
+		return false
+	end
+
+	local decorFolder = lobbyRoot:FindFirstChild(LOBBY_MAINHUB_DECOR_FOLDER_NAME, true)
+	local forest = decorFolder and decorFolder:FindFirstChild("forest", true)
+	if not forest then
+		forest = lobbyRoot:FindFirstChild("forest", true)
+	end
+	if not forest then
+		return false
+	end
+
+	local changed = false
+	for _, descendant in ipairs(forest:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			local size = descendant.Size
+			local name = string.lower(descendant.Name)
+			local isTrunk = string.find(name, "trunk", 1, true) ~= nil
+				or string.find(name, "log", 1, true) ~= nil
+				or (size.Y > 10 and math.max(size.X, size.Z) < 4)
+
+			if isTrunk then
+				descendant.Material = Enum.Material.Wood
+				descendant.Color = Color3.fromRGB(42, 32, 24)
+				descendant.Transparency = math.min(descendant.Transparency, 0.08)
+			else
+				descendant.Material = Enum.Material.LeafyGrass
+				descendant.Color = Color3.fromRGB(24, 32, 27)
+				descendant.Transparency = math.min(descendant.Transparency, 0.16)
+			end
+			descendant.CastShadow = true
+			changed = true
+		end
+	end
+	return changed
+end
+
+function LobbyService._applyMainHubVisualPatch()
 	local lobbyRoot = LobbyLocator.ResolveRoot("LobbySocialHub", workspace)
 	if not lobbyRoot then
 		return false
 	end
 
 	local changed = false
+	local function applyStaticVisualPatch(patchTable)
+		for partName, patch in pairs(patchTable) do
+			local part = lobbyRoot:FindFirstChild(partName, true)
+			if part and part:IsA("BasePart") then
+				if patch.color then part.Color = patch.color end
+				if patch.material then part.Material = patch.material end
+				if type(patch.transparency) == "number" then part.Transparency = patch.transparency end
+				if type(patch.castShadow) == "boolean" then part.CastShadow = patch.castShadow end
+				if type(patch.canCollide) == "boolean" then part.CanCollide = patch.canCollide end
+				if type(patch.canQuery) == "boolean" then part.CanQuery = patch.canQuery end
+				if type(patch.canTouch) == "boolean" then part.CanTouch = patch.canTouch end
+				changed = true
+			end
+		end
+	end
+	applyStaticVisualPatch(LOBBY_MAINHUB_VISUAL_PATCH)
+	applyStaticVisualPatch(LOBBY_EXTERIOR_VISUAL_PATCH)
+	for partName, profile in pairs(LOBBY_LIGHT_FIXTURE_PATCH) do
+		local part = lobbyRoot:FindFirstChild(partName, true)
+		if part and part:IsA("BasePart") then
+			part.Transparency = 1
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CanTouch = false
+			local light = ensurePointLight(part, "LobbyRuntimePointLight")
+			if light then
+				light.Color = profile.color
+				light.Brightness = profile.brightness
+				light.Range = profile.range
+				light.Shadows = false
+				light.Enabled = true
+			end
+			changed = true
+		end
+	end
+	return changed
+end
+
+	--[[
 	local function applyStaticVisualPatch(patchTable)
 		for partName, patch in pairs(patchTable) do
 			local part = lobbyRoot:FindFirstChild(partName, true)
@@ -1857,25 +1941,27 @@ local function applyMainHubVisualPatch()
 				changed = true
 			end
 			local light = ensurePointLight(part, "LobbyRuntimePointLight")
-			if light.Color ~= profile.color then
-				light.Color = profile.color
-				changed = true
-			end
-			if light.Brightness ~= profile.brightness then
-				light.Brightness = profile.brightness
-				changed = true
-			end
-			if light.Range ~= profile.range then
-				light.Range = profile.range
-				changed = true
-			end
-			if light.Shadows ~= false then
-				light.Shadows = false
-				changed = true
-			end
-			if light.Enabled ~= true then
-				light.Enabled = true
-				changed = true
+			if light then
+				if light.Color ~= profile.color then
+					light.Color = profile.color
+					changed = true
+				end
+				if light.Brightness ~= profile.brightness then
+					light.Brightness = profile.brightness
+					changed = true
+				end
+				if light.Range ~= profile.range then
+					light.Range = profile.range
+					changed = true
+				end
+				if light.Shadows ~= false then
+					light.Shadows = false
+					changed = true
+				end
+				if light.Enabled ~= true then
+					light.Enabled = true
+					changed = true
+				end
 			end
 		end
 	end
@@ -2009,6 +2095,9 @@ local function applyMainHubVisualPatch()
 
     local function applyDecorPointLight(part, name, props)
         local light = ensurePointLight(part, name)
+        if not light then
+            return
+        end
         local targetBrightness = math.max(0.15, (tonumber(props.brightness) or 0) * LOBBY_DECOR_LIGHT_BRIGHTNESS_SCALE)
         local targetRange = math.max(6, math.floor(((tonumber(props.range) or 0) * LOBBY_DECOR_LIGHT_RANGE_SCALE) + 0.5))
         if light.Color ~= props.color then
@@ -2911,7 +3000,7 @@ local function applyMainHubVisualPatch()
     -- North contract / evidence bay
     for _, data in ipairs({
         { name = "Table_Tools_1", pos = Vector3.new(1587, 1.02, -138), label = "EMF", promptLabel = "EMF Reader", summary = "MEDOK • Scan", color = Color3.fromRGB(132, 186, 255) },
-        { name = "Table_Tools_2", pos = Vector3.new(1600, 1.02, -138), label = "UV CAM", promptLabel = "UV Camera", summary = "To'un • Camera", color = Color3.fromRGB(214, 146, 255) },
+        { name = "Table_Tools_2", pos = Vector3.new(1600, 1.02, -138), label = "TO'UN CAM", promptLabel = "Kamera To'un", summary = "To'un • Night orb", color = Color3.fromRGB(214, 146, 255) },
         { name = "Table_Tools_3", pos = Vector3.new(1613, 1.02, -138), label = "THERMO", promptLabel = "Thermometer", summary = "Suhu • Freeze", color = Color3.fromRGB(142, 214, 198) },
         { name = "Table_Tools_4", pos = Vector3.new(1587, 1.02, -151), label = "BOX", promptLabel = "Spirit Box", summary = "Suara • Voice", color = Color3.fromRGB(255, 196, 118) },
         { name = "Table_Tools_5", pos = Vector3.new(1600, 1.02, -151), label = "WRITING", promptLabel = "Writing Book", summary = "Book • Script", color = Color3.fromRGB(150, 189, 255) },
@@ -3881,8 +3970,7 @@ local function applyMainHubVisualPatch()
         end
     end
 
-	return changed
-end
+	]]
 
 function LobbyService.new(state, deps)
     local self = setmetatable({}, LobbyService)
@@ -3898,6 +3986,7 @@ function LobbyService.new(state, deps)
     self._interaction = LobbyInteraction.new(self._deps, self._deps.LobbyInteractionConfig)
     self._partySystem = PartySystem.new(self._deps, self._deps.PartySystemConfig)
     self._population = LobbyPopulationController.new(self._state, self._deps, self._deps.LobbyPopulationConfig)
+    self._campfireSanity = CampfireSanityService.new(self._state, self._deps, self._deps.CampfireSanityConfig)
     self._characterConnections = {}
     self._promptConnections = {}
     self._cosmeticCatalogById = {}
@@ -4540,13 +4629,28 @@ function LobbyService:_refreshEvidenceTrainingGhostAsset(state, ghostColor, aggr
 	end
 
 	local ghostType = tostring((type(state) == "table" and state.ghostType) or "")
+	local ghostVisualTargetCFrame = CFrame.new(1600, 2.82, -145.42) * CFrame.Angles(0, math.rad(180), 0)
+	local authoredGhostVisual = decorFolder:FindFirstChild(LOBBY_TRAINING_GHOST_VISUAL_NAME)
+	if authoredGhostVisual and authoredGhostVisual:IsA("Model") then
+		local okPivot, pivot = pcall(function()
+			return authoredGhostVisual:GetPivot()
+		end)
+		if okPivot and typeof(pivot) == "CFrame" then
+			ghostVisualTargetCFrame = pivot
+		end
+	else
+		local ghostCore = decorFolder:FindFirstChild(LOBBY_TRAINING_GHOST_CORE_NAME)
+		if ghostCore and ghostCore:IsA("BasePart") then
+			ghostVisualTargetCFrame = CFrame.new(ghostCore.Position) * CFrame.Angles(0, math.rad(180), 0)
+		end
+	end
 	local ghostVisual = nil
 	ghostVisual = select(1, syncRuntimeAssetModel(
 		decorFolder,
 		LOBBY_TRAINING_GHOST_VISUAL_NAME,
 		"Ghosts",
 		ghostType,
-		CFrame.new(1600, 2.82, -145.42) * CFrame.Angles(0, math.rad(180), 0),
+		ghostVisualTargetCFrame,
 		{
 			scale = 0.72,
 			castShadow = false,
@@ -4573,7 +4677,11 @@ function LobbyService:_refreshEvidenceTrainingGhostAsset(state, ghostColor, aggr
 		if highlight then
 			highlight:Destroy()
 		end
-		highlight = Instance.new("Highlight")
+		highlight = cloneVisualTemplate(LOBBY_TRAINING_GHOST_VISUAL_HIGHLIGHT_NAME, "WorldEffects", "WorldHighlightTemplate")
+		if not highlight then
+			warn("[LobbyService] Missing authored visual template: WorldEffects.WorldHighlightTemplate")
+			return false
+		end
 		highlight.Name = LOBBY_TRAINING_GHOST_VISUAL_HIGHLIGHT_NAME
 		highlight.DepthMode = Enum.HighlightDepthMode.Occluded
 		highlight.Parent = ghostVisual
@@ -4590,14 +4698,21 @@ function LobbyService:_refreshEvidenceTrainingGhostAsset(state, ghostColor, aggr
 			if ghostLight then
 				ghostLight:Destroy()
 			end
-			ghostLight = Instance.new("PointLight")
-			ghostLight.Name = LOBBY_TRAINING_GHOST_VISUAL_LIGHT_NAME
-			ghostLight.Parent = lightHost
+			ghostLight = cloneVisualTemplate(LOBBY_TRAINING_GHOST_VISUAL_LIGHT_NAME, "WorldEffects", "WorldPointLightTemplate")
+			if not ghostLight then
+				warn("[LobbyService] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+			end
+			if ghostLight then
+				ghostLight.Name = LOBBY_TRAINING_GHOST_VISUAL_LIGHT_NAME
+				ghostLight.Parent = lightHost
+			end
 		end
-		ghostLight.Color = aggression >= 70 and Color3.fromRGB(255, 124, 124) or ghostColor
-		ghostLight.Brightness = 0.85 + aggressionAlpha * 1.85
-		ghostLight.Range = 9 + aggressionAlpha * 8
-		ghostLight.Enabled = true
+		if ghostLight then
+			ghostLight.Color = aggression >= 70 and Color3.fromRGB(255, 124, 124) or ghostColor
+			ghostLight.Brightness = 0.85 + aggressionAlpha * 1.85
+			ghostLight.Range = 9 + aggressionAlpha * 8
+			ghostLight.Enabled = true
+		end
 	end
 
 	return true
@@ -4887,10 +5002,12 @@ function LobbyService:_refreshEvidenceTrainingWorld()
 			supportPart.Material = state.lastSupportToolType == spec.toolType and Enum.Material.Neon or Enum.Material.SmoothPlastic
 			supportPart.Transparency = state.lastSupportToolType == spec.toolType and 0.02 or 0.1
 			local supportLight = ensurePointLight(supportPart, "TrainingSupportGlow")
-			supportLight.Color = accentColor
-			supportLight.Brightness = state.lastSupportToolType == spec.toolType and 1.8 or 0.8
-			supportLight.Range = state.lastSupportToolType == spec.toolType and 11 or 7
-			supportLight.Enabled = true
+			if supportLight then
+				supportLight.Color = accentColor
+				supportLight.Brightness = state.lastSupportToolType == spec.toolType and 1.8 or 0.8
+				supportLight.Range = state.lastSupportToolType == spec.toolType and 11 or 7
+				supportLight.Enabled = true
+			end
 			ensureGuideBoardSurface(supportPart, LOBBY_ZONE_ENTRY_GUIDE_BOARD_BACK_SURFACE_NAME, Enum.NormalId.Top, spec.label, subtitle, accentColor)
 		end
 	end
@@ -4942,9 +5059,13 @@ function LobbyService:_refreshEvidenceTrainingWorld()
 			if ghostLight then
 				ghostLight:Destroy()
 			end
-			ghostLight = Instance.new("PointLight")
-			ghostLight.Name = "TrainingGlow"
-			ghostLight.Parent = ghostLightHost
+			ghostLight = cloneVisualTemplate("TrainingGlow", "WorldEffects", "WorldPointLightTemplate")
+			if ghostLight then
+				ghostLight.Name = "TrainingGlow"
+				ghostLight.Parent = ghostLightHost
+			else
+				warn("[LobbyService] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+			end
 		end
 		if ghostLight and ghostLight:IsA("PointLight") then
 			ghostLight.Color = aggression >= 70 and Color3.fromRGB(255, 118, 118) or ghostColor
@@ -5632,7 +5753,11 @@ function LobbyService:_createBillboard(folder, head, equippedCosmetics)
     local primaryText = #primaryNames > 0 and table.concat(primaryNames, " | ") or "Lobby Flex Active"
     local secondaryText = emoteName and ("Emote: " .. emoteName) or "Cosmetics visible in lobby"
 
-    local billboard = Instance.new("BillboardGui")
+    local billboard = cloneVisualTemplate(LOBBY_COSMETIC_GUI_NAME, table.unpack(LOBBY_COSMETIC_BILLBOARD_TEMPLATE_PATH))
+    if not billboard then
+        warn("[LobbyService] Missing authored visual template: WorldMarkers.LobbyCosmeticBillboardTemplate")
+        return
+    end
     billboard.Name = LOBBY_COSMETIC_GUI_NAME
     billboard.Adornee = head
     billboard.AlwaysOnTop = true
@@ -5642,8 +5767,14 @@ function LobbyService:_createBillboard(folder, head, equippedCosmetics)
     billboard.StudsOffsetWorldSpace = Vector3.new(0, 3.4, 0)
     billboard.Parent = folder
 
-    local primaryLabel = Instance.new("TextLabel")
-    primaryLabel.Name = "Primary"
+    local primaryLabel = billboard:FindFirstChild("Primary")
+    if not (primaryLabel and primaryLabel:IsA("TextLabel")) then
+        if primaryLabel then
+            primaryLabel:Destroy()
+        end
+        warn("[LobbyService] LobbyCosmeticBillboardTemplate missing required child: Primary")
+        return
+    end
     primaryLabel.BackgroundTransparency = 1
     primaryLabel.Font = Enum.Font.GothamBold
     primaryLabel.TextColor3 = Color3.fromRGB(255, 244, 212)
@@ -5652,10 +5783,15 @@ function LobbyService:_createBillboard(folder, head, equippedCosmetics)
     primaryLabel.TextWrapped = true
     primaryLabel.Size = UDim2.new(1, 0, 0.58, 0)
     primaryLabel.Text = primaryText
-    primaryLabel.Parent = billboard
 
-    local secondaryLabel = Instance.new("TextLabel")
-    secondaryLabel.Name = "Secondary"
+    local secondaryLabel = billboard:FindFirstChild("Secondary")
+    if not (secondaryLabel and secondaryLabel:IsA("TextLabel")) then
+        if secondaryLabel then
+            secondaryLabel:Destroy()
+        end
+        warn("[LobbyService] LobbyCosmeticBillboardTemplate missing required child: Secondary")
+        return
+    end
     secondaryLabel.BackgroundTransparency = 1
     secondaryLabel.Font = Enum.Font.Gotham
     secondaryLabel.TextColor3 = Color3.fromRGB(196, 232, 255)
@@ -5665,7 +5801,6 @@ function LobbyService:_createBillboard(folder, head, equippedCosmetics)
     secondaryLabel.Position = UDim2.new(0, 0, 0.58, 0)
     secondaryLabel.Size = UDim2.new(1, 0, 0.42, 0)
     secondaryLabel.Text = secondaryText
-    secondaryLabel.Parent = billboard
 end
 
 function LobbyService:_applyHeadVisual(folder, character, rarity)
@@ -5877,7 +6012,11 @@ function LobbyService:_ensureZoneGuide(zoneName, zonePart)
         if highlight then
             highlight:Destroy()
         end
-        highlight = Instance.new("Highlight")
+        highlight = cloneVisualTemplate(LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME, "WorldEffects", "WorldHighlightTemplate")
+        if not highlight then
+            warn("[LobbyService] Missing authored visual template: WorldEffects.WorldHighlightTemplate")
+            return nil
+        end
         highlight.Name = LOBBY_ZONE_GUIDE_HIGHLIGHT_NAME
         highlight.Parent = folder
     end
@@ -5894,7 +6033,11 @@ function LobbyService:_ensureZoneGuide(zoneName, zonePart)
         if billboard then
             billboard:Destroy()
         end
-        billboard = Instance.new("BillboardGui")
+        billboard = cloneVisualTemplate(LOBBY_ZONE_GUIDE_BILLBOARD_NAME, table.unpack(LOBBY_ZONE_GUIDE_BILLBOARD_TEMPLATE_PATH))
+        if not billboard then
+            warn("[LobbyService] Missing authored visual template: WorldMarkers.LobbyZoneGuideBillboardTemplate")
+            return nil
+        end
         billboard.Name = LOBBY_ZONE_GUIDE_BILLBOARD_NAME
         billboard.Parent = folder
     end
@@ -5915,60 +6058,32 @@ function LobbyService:_ensureZoneGuide(zoneName, zonePart)
         if panel then
             panel:Destroy()
         end
-        panel = Instance.new("Frame")
-        panel.Name = "Panel"
-        panel.Parent = billboard
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 12)
-        corner.Parent = panel
-
-        local stroke = Instance.new("UIStroke")
-        stroke.Name = "Stroke"
-        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        stroke.Color = style.color
-        stroke.Transparency = 0.14
-        stroke.Thickness = 1.4
-        stroke.Parent = panel
-
-        local accent = Instance.new("Frame")
-        accent.Name = "Accent"
-        accent.AnchorPoint = Vector2.new(0, 0.5)
-        accent.BackgroundColor3 = style.color
-        accent.BorderSizePixel = 0
-        accent.Position = UDim2.new(0, 10, 0.5, 0)
-        accent.Size = UDim2.fromOffset(3, 30)
-        accent.Parent = panel
-
-        local accentCorner = Instance.new("UICorner")
-        accentCorner.CornerRadius = UDim.new(1, 0)
-        accentCorner.Parent = accent
-
-        createGuideTextLabel(
-            "Title",
-            Enum.Font.GothamBold,
-            13,
-            Color3.fromRGB(245, 248, 252),
-            titleText,
-            18,
-            UDim2.new(0, 20, 0, 6)
-        ).Parent = panel
-
-        createGuideTextLabel(
-            "Subtitle",
-            Enum.Font.GothamMedium,
-            11,
-            style.color:Lerp(Color3.fromRGB(240, 244, 248), 0.25),
-            subtitleText,
-            18,
-            UDim2.new(0, 20, 0, 24)
-        ).Parent = panel
+        warn("[LobbyService] LobbyZoneGuideBillboardTemplate missing required child: Panel")
+        return false
     end
 
     panel.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
     panel.BackgroundTransparency = 0.12
     panel.BorderSizePixel = 0
     panel.Size = UDim2.fromScale(1, 1)
+    local title = panel:FindFirstChild("Title")
+    if title and title:IsA("TextLabel") then
+        title.Text = titleText
+        title.TextColor3 = Color3.fromRGB(245, 248, 252)
+    end
+    local subtitle = panel:FindFirstChild("Subtitle")
+    if subtitle and subtitle:IsA("TextLabel") then
+        subtitle.Text = subtitleText
+        subtitle.TextColor3 = style.color:Lerp(Color3.fromRGB(240, 244, 248), 0.25)
+    end
+    local stroke = panel:FindFirstChild("Stroke")
+    if stroke and stroke:IsA("UIStroke") then
+        stroke.Color = style.color
+    end
+    local accent = panel:FindFirstChild("Accent")
+    if accent and accent:IsA("Frame") then
+        accent.BackgroundColor3 = style.color
+    end
     return true
 end
 
@@ -6027,7 +6142,11 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         if highlight then
             highlight:Destroy()
         end
-        highlight = Instance.new("Highlight")
+        highlight = cloneVisualTemplate(LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME, "WorldEffects", "WorldHighlightTemplate")
+        if not highlight then
+            warn("[LobbyService] Missing authored visual template: WorldEffects.WorldHighlightTemplate")
+            return nil
+        end
         highlight.Name = LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME
         highlight.Parent = folder
     end
@@ -6044,7 +6163,11 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         if billboard then
             billboard:Destroy()
         end
-        billboard = Instance.new("BillboardGui")
+        billboard = cloneVisualTemplate(LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME, table.unpack(LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_TEMPLATE_PATH))
+        if not billboard then
+            warn("[LobbyService] Missing authored visual template: WorldMarkers.LobbyZoneEntryGuideBillboardTemplate")
+            return nil
+        end
         billboard.Name = LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_NAME
         billboard.Parent = folder
     end
@@ -6086,14 +6209,20 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         if accentLight then
             accentLight:Destroy()
         end
-        accentLight = Instance.new("PointLight")
-        accentLight.Name = LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME
-        accentLight.Parent = accentBar
+        accentLight = cloneVisualTemplate(LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME, "WorldEffects", "WorldPointLightTemplate")
+        if accentLight then
+            accentLight.Name = LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME
+            accentLight.Parent = accentBar
+        else
+            warn("[LobbyService] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+        end
     end
-    accentLight.Color = style.color
-    accentLight.Brightness = 0.8
-    accentLight.Range = 10
-    accentLight.Shadows = false
+    if accentLight then
+        accentLight.Color = style.color
+        accentLight.Brightness = 0.8
+        accentLight.Range = 10
+        accentLight.Shadows = false
+    end
 
     local doorWidth = math.max(anchorPart.Size.X, anchorPart.Size.Z)
     local frameDepth = math.min(anchorPart.Size.X, anchorPart.Size.Z) + 0.14
@@ -6406,11 +6535,13 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
             lampPart.Material = Enum.Material.Neon
             lampPart.Transparency = 0.12
             local lampLight = ensurePointLight(lampPart, "Glow")
-            lampLight.Color = style.color
-            lampLight.Brightness = 1.35
-            lampLight.Range = 18
-            lampLight.Shadows = false
-            lampLight.Enabled = true
+            if lampLight then
+                lampLight.Color = style.color
+                lampLight.Brightness = 1.35
+                lampLight.Range = 18
+                lampLight.Shadows = false
+                lampLight.Enabled = true
+            end
         end
         forecourtPad.Color = Color3.fromRGB(20, 30, 44)
         forecourtPad.Material = Enum.Material.Slate
@@ -7093,72 +7224,39 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
         if panel then
             panel:Destroy()
         end
-        panel = Instance.new("Frame")
-        panel.Name = "Panel"
-        panel.Parent = billboard
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 12)
-        corner.Parent = panel
-
-        local stroke = Instance.new("UIStroke")
-        stroke.Name = "Stroke"
-        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        stroke.Color = style.color
-        stroke.Transparency = 0.18
-        stroke.Thickness = 1.2
-        stroke.Parent = panel
-
-        local accent = Instance.new("Frame")
-        accent.Name = "Accent"
-        accent.AnchorPoint = Vector2.new(0, 0.5)
-        accent.BackgroundColor3 = style.color
-        accent.BorderSizePixel = 0
-        accent.Position = UDim2.new(0, 10, 0.5, 0)
-        accent.Size = UDim2.fromOffset(3, 24)
-        accent.Parent = panel
-
-        local accentCorner = Instance.new("UICorner")
-        accentCorner.CornerRadius = UDim.new(1, 0)
-        accentCorner.Parent = accent
-
-        createGuideTextLabel(
-            "Title",
-            Enum.Font.GothamBold,
-            13,
-            Color3.fromRGB(245, 248, 252),
-            copy.title,
-            18,
-            UDim2.new(0, 20, 0, 6)
-        ).Parent = panel
-
-        createGuideTextLabel(
-            "Subtitle",
-            Enum.Font.GothamMedium,
-            10,
-            style.color:Lerp(Color3.fromRGB(240, 244, 248), 0.25),
-            copy.subtitle,
-            16,
-            UDim2.new(0, 20, 0, 23)
-        ).Parent = panel
-
-        if type(copy.meta) == "string" and copy.meta ~= "" then
-            createGuideTextLabel(
-                "Meta",
-                Enum.Font.GothamBold,
-                9,
-                style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.45),
-                copy.meta,
-                14,
-                UDim2.new(0, 20, 0, 39)
-            ).Parent = panel
-        end
+        warn("[LobbyService] LobbyZoneEntryGuideBillboardTemplate missing required child: Panel")
+        return false
     end
 
     panel.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
     panel.BackgroundTransparency = 0.14
     panel.BorderSizePixel = 0
     panel.Size = UDim2.fromScale(1, 1)
+    local title = panel:FindFirstChild("Title")
+    if title and title:IsA("TextLabel") then
+        title.Text = tostring(copy.title or "ENTRY")
+        title.TextColor3 = Color3.fromRGB(245, 248, 252)
+    end
+    local subtitle = panel:FindFirstChild("Subtitle")
+    if subtitle and subtitle:IsA("TextLabel") then
+        subtitle.Text = tostring(copy.subtitle or "")
+        subtitle.TextColor3 = style.color:Lerp(Color3.fromRGB(240, 244, 248), 0.25)
+    end
+    local meta = panel:FindFirstChild("Meta")
+    if meta and meta:IsA("TextLabel") then
+        local hasMeta = type(copy.meta) == "string" and copy.meta ~= ""
+        meta.Visible = hasMeta
+        meta.Text = hasMeta and copy.meta or ""
+        meta.TextColor3 = style.color:Lerp(Color3.fromRGB(255, 255, 255), 0.45)
+    end
+    local stroke = panel:FindFirstChild("Stroke")
+    if stroke and stroke:IsA("UIStroke") then
+        stroke.Color = style.color
+    end
+    local accent = panel:FindFirstChild("Accent")
+    if accent and accent:IsA("Frame") then
+        accent.BackgroundColor3 = style.color
+    end
     return true
 end
 
@@ -7198,6 +7296,7 @@ function LobbyService:Init()
     self._interaction:Init()
     self._partySystem:Init()
     self._population:Init()
+    self._campfireSanity:Init()
 
     self._zoneManager:SetZoneEnteredCallback(function(player, zoneName)
         self:OnPlayerEnteredZone(player, zoneName)
@@ -7219,7 +7318,9 @@ function LobbyService:Start()
     self._playerManager:Start()
     self._zoneManager:Start()
     sanitizeLobbyLogicVolumes()
-    applyMainHubVisualPatch()
+    LobbyService._polishLobbyAuthoredForest()
+    -- Owner-visual mode: runtime must respect authored edit-mode map state and avoid
+    -- regenerating/overwriting MainHubDecorRuntime from script.
     self:_ensureEvidenceTrainingState()
     self:_refreshLobbyWorldBoards()
     self:_syncZoneGuides()
@@ -7227,6 +7328,7 @@ function LobbyService:Start()
     self._interaction:Start()
     self._partySystem:Start()
     self._population:Start()
+    self._campfireSanity:Start()
 end
 
 function LobbyService:Stop()
@@ -7239,6 +7341,7 @@ function LobbyService:Stop()
     self._partySystem:Stop()
     self._playerManager:Stop()
     self._population:Stop()
+    self._campfireSanity:Stop()
     self._state:Set("flexZoneState", {
         participantsByUserId = {},
         rotationOrder = {},
@@ -7251,8 +7354,8 @@ function LobbyService:Stop()
     end
 end
 
-local function publishLobbyZoneFocus(service, player, zoneName)
-    if not (service and player and type(zoneName) == "string" and zoneName ~= "") then
+function LobbyService:_publishLobbyZoneFocus(player, zoneName)
+    if not (player and type(zoneName) == "string" and zoneName ~= "") then
         return
     end
 
@@ -7263,7 +7366,7 @@ local function publishLobbyZoneFocus(service, player, zoneName)
 
     local zoneStyle = LOBBY_ZONE_GUIDE_STYLE[zoneName]
     local zoneEntryCopy = LOBBY_ZONE_ENTRY_COPY[zoneName]
-    service:_publish("LobbyZoneFocused", {
+    self:_publish("LobbyZoneFocused", {
         eventName = "LobbyZoneFocused",
         zoneName = zoneName,
         title = zoneFeedback.title,
@@ -7289,7 +7392,7 @@ function LobbyService:RegisterPlayer(player)
     self:_publish("PlayerEnteredLobby", {
         player = player,
     })
-    publishLobbyZoneFocus(self, player, "SpawnPlaza")
+    self:_publishLobbyZoneFocus(player, "SpawnPlaza")
     local flexState = self:_getFlexState()
     if type(flexState.lastPayload) == "table" and type(flexState.lastPayload.eventName) == "string" then
         local replayPayload = cloneMap(flexState.lastPayload)
@@ -7373,7 +7476,7 @@ function LobbyService:OnPlayerEnteredZone(player, zoneName)
     end
 
     self._interaction:HandleZoneEntry(player, zoneName)
-    publishLobbyZoneFocus(self, player, zoneName)
+    self:_publishLobbyZoneFocus(player, zoneName)
 
     if zoneName == "FlexZone" then
         self:_activateFlexSpotlight(player, "zone_entered")

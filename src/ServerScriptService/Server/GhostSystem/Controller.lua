@@ -372,10 +372,10 @@ function Controller:_maybePublishAggressionThreshold(matchId, session)
 	if not self._eventBus or not matchId or not session then
 		return
 	end
-	local threshold = tonumber(session.difficultyProfile and session.difficultyProfile.HuntFrequency)
-	if not threshold then
-		return
-	end
+	local profile = session.difficultyProfile
+	local threshold = tonumber(profile and (profile.HuntAggressionThreshold or profile.AggressionThreshold))
+		or tonumber(session.huntAggressionThreshold)
+		or 70
 	local current = tonumber(session.aggression) or 0
 	local previous = self._lastAggressionByMatch[matchId] or 0
 	self._lastAggressionByMatch[matchId] = current

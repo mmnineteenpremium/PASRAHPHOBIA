@@ -37,8 +37,13 @@ local PREPARATION_ADVANCE_HOLD_SECONDS = 0.32
 -- so center-distance fallback must cover realistic reachable player positions.
 local PREPARATION_ADVANCE_RADIUS_FALLBACK = 9.5
 local PREPARATION_BREACH_TARGET_RADIUS = 3.75
+local PREPARATION_BREACH_PROMPT_NAME = "PreparationBreachPrompt"
+local PREPARATION_BREACH_PROXY_NAME = "PreparationBreachDoorPrompt"
+local PREPARATION_BREACH_PROMPT_DISTANCE = 14
 local PREPARATION_ADVANCE_FAILSAFE_SECONDS = 1.6
 local PREPARATION_ADVANCE_PROXIMITY_GRACE_SECONDS = 1.25
+local INVESTIGATION_EXIT_ACTION_TEXT = "Kembali ke Base"
+local INVESTIGATION_EXIT_TELEPORT_LIFT = 3
 local DEFAULT_OPEN_SOUND_ID = "rbxassetid://119680795545028"
 local DEFAULT_CLOSE_SOUND_ID = "rbxassetid://79226838058023"
 local DEFAULT_SOUND_VOLUME = 0.45
@@ -349,6 +354,9 @@ local function stampDoorRuntime(doorRecord, nearestDistance)
 
 	stampDoorRuntimeInstance(doorRecord.part, "DoorPart", doorRecord, nearestDistance)
 	stampDoorRuntimeInstance(doorRecord.prompt, "DoorPrompt", doorRecord, nearestDistance)
+	for _, prompt in ipairs(doorRecord.preparationBreachPrompts or {}) do
+		stampDoorRuntimeInstance(prompt, "PreparationBreachPrompt", doorRecord, nearestDistance)
+	end
 	stampDoorRuntimeInstance(doorRecord.guideBillboard, "DoorGuideBillboard", doorRecord, nearestDistance)
 	stampDoorRuntimeInstance(doorRecord.guidePanel, "DoorGuidePanel", doorRecord, nearestDistance)
 	stampDoorRuntimeInstance(doorRecord.guideHighlight, "DoorGuideHighlight", doorRecord, nearestDistance)
@@ -541,7 +549,11 @@ local function resolveDoorVisualTarget(mapClone, proxyPart)
 		return proxyPart
 	end
 	local expectedPosition = parseVector3String(proxyPart:GetAttribute("PasrahTargetPosition"))
-	local root = findNearestNamedInstance(mapClone, targetRootName, expectedPosition)
+	local targetPosition = expectedPosition
+	if typeof(expectedPosition) == "Vector3" and (expectedPosition - proxyPart.Position).Magnitude > 80 then
+		targetPosition = proxyPart.Position
+	end
+	local root = findNearestNamedInstance(mapClone, targetRootName, targetPosition)
 	if not root then
 		return proxyPart
 	end
@@ -549,7 +561,7 @@ local function resolveDoorVisualTarget(mapClone, proxyPart)
 	if type(targetName) ~= "string" or targetName == "" then
 		return root
 	end
-	return findNearestNamedInstance(root, targetName, expectedPosition) or root
+	return findNearestNamedInstance(root, targetName, targetPosition) or root
 end
 
 local function buildOpenCFrame(instance, closedCFrame, mode)
@@ -823,14 +835,14 @@ local function getNearestPlayerCenterDistance(doorRecord, players, matchId)
 	return nearest
 end
 
-local function getNearestPreparationBreachTargetDistance(doorRecord, players, matchId)
+local function collectPreparationBreachTargets(doorRecord)
 	if type(doorRecord) ~= "table" or typeof(doorRecord.mapClone) ~= "Instance" then
-		return nil
+		return {}
 	end
 
 	local stagingFolder = doorRecord.mapClone:FindFirstChild("PreparationStagingRuntime", true)
 	if not stagingFolder then
-		return nil
+		return {}
 	end
 
 	local targets = {}
@@ -839,6 +851,103 @@ local function getNearestPreparationBreachTargetDistance(doorRecord, players, ma
 			table.insert(targets, descendant)
 		end
 	end
+	return targets
+end
+
+local function resolvePreparationStagingFolder(doorRecord)
+	if type(doorRecord) ~= "table" or typeof(doorRecord.mapClone) ~= "Instance" then
+		return nil
+	end
+	return doorRecord.mapClone:FindFirstChild("PreparationStagingRuntime", true)
+end
+
+local function resolvePreparationSpawnCFrame(doorRecord)
+	local stagingFolder = resolvePreparationStagingFolder(doorRecord)
+	if not stagingFolder then
+		return nil, nil
+	end
+
+	local spawnArea = stagingFolder:FindFirstChild("PreparationSpawnArea", true)
+	if not spawnArea then
+		return nil, nil
+	end
+	if spawnArea:IsA("BasePart") then
+		return spawnArea.CFrame, spawnArea
+	end
+
+	local candidates = {}
+	for _, descendant in ipairs(spawnArea:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			table.insert(candidates, descendant)
+		end
+	end
+	table.sort(candidates, function(a, b)
+		local aName = tostring(a.Name)
+		local bName = tostring(b.Name)
+		if aName == bName then
+			return a:GetFullName() < b:GetFullName()
+		end
+		return aName < bName
+	end)
+
+	local spawnPart = candidates[1]
+	return spawnPart and spawnPart.CFrame or nil, spawnPart
+end
+
+local function resolveCharacterRoot(character)
+	if not character then
+		return nil
+	end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	return character:FindFirstChild("HumanoidRootPart")
+		or (humanoid and humanoid.RootPart)
+		or character.PrimaryPart
+		or character:FindFirstChild("UpperTorso")
+		or character:FindFirstChild("LowerTorso")
+		or character:FindFirstChild("Torso")
+end
+
+local function teleportPlayerToPreparationStaging(doorRecord, player)
+	if type(doorRecord) ~= "table" or not (doorRecord.part and doorRecord.part:IsA("BasePart")) then
+		return false, "invalid_door"
+	end
+	if not (typeof(player) == "Instance" and player:IsA("Player")) then
+		return false, "invalid_player"
+	end
+	if type(doorRecord.match) ~= "table" or tostring(doorRecord.match.phase or "") ~= "InvestigationPhase" then
+		return false, "not_investigation"
+	end
+	if not isRuntimeMatchParticipant(player, doorRecord.matchId) then
+		return false, "not_participant"
+	end
+
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local root = resolveCharacterRoot(character)
+	if not character or not root or (humanoid and humanoid.Health <= 0) then
+		return false, "missing_character"
+	end
+
+	local spawnCFrame, spawnPart = resolvePreparationSpawnCFrame(doorRecord)
+	if not spawnCFrame then
+		return false, "missing_preparation_spawn"
+	end
+
+	local targetCFrame = spawnCFrame + Vector3.new(0, INVESTIGATION_EXIT_TELEPORT_LIFT, 0)
+	character:PivotTo(targetCFrame)
+	doorRecord.lastInteractionAt = os.clock()
+	doorRecord.lastInteractionSource = "DoorRuntimeInvestigationExit"
+	doorRecord.part:SetAttribute("PasrahDoorLastInteractionSource", doorRecord.lastInteractionSource)
+	doorRecord.part:SetAttribute("PasrahDoorLastExitToStagingAt", doorRecord.lastInteractionAt)
+	doorRecord.part:SetAttribute("PasrahDoorLastExitPlayer", player.Name)
+	doorRecord.part:SetAttribute("PasrahDoorLastExitSpawn", spawnPart and spawnPart:GetFullName() or "")
+	player:SetAttribute("PasrahLastDoorExitResult", "ok:" .. tostring(doorRecord.objectId or doorRecord.part.Name))
+	return true, "ok"
+end
+
+local function getNearestPreparationBreachTargetDistance(doorRecord, players, matchId)
+	local targets = collectPreparationBreachTargets(doorRecord)
 	if #targets == 0 then
 		return nil
 	end
@@ -868,7 +977,11 @@ local function hasPreparationFocusTool(players, matchId)
 		local lifecyclePhase = tostring(player and player:GetAttribute("MatchLifecyclePhase") or "")
 		if isRuntimeMatchParticipant(player, matchId) or lifecyclePhase == "PreparationPhase" then
 			local focusTool = player:GetAttribute("PreparationFocusTool")
-			if type(focusTool) == "string" and focusTool ~= "" then
+			local focusSource = tostring(player:GetAttribute("PreparationFocusToolSource") or "")
+			local stationSelected = player:GetAttribute("PasrahPreparationToolSelected") == true
+			if type(focusTool) == "string"
+				and focusTool ~= ""
+				and (focusSource == "WorldToolStation" or stationSelected) then
 				return true
 			end
 		end
@@ -919,6 +1032,26 @@ local function executeDoorInteraction(doorRecord, interactionType, interactionSo
 	local now = os.clock()
 	doorRecord.lastInteractionAt = now
 	doorRecord.lastInteractionSource = interactionSource
+	local isPreparationAdvanceDoor = doorRecord.part:GetAttribute("PasrahPreparationAdvanceDoor") == true
+	if interactionType == "Close"
+		and isPreparationAdvanceDoor
+		and type(doorRecord.preparationAdvanceCommittedAt) == "number"
+		and (now - doorRecord.preparationAdvanceCommittedAt) < 4 then
+		return false
+	end
+	local isPreparationAdvanceOpen = interactionType == "Open"
+		and isPreparationAdvanceDoor
+		and type(doorRecord.match) == "table"
+		and tostring(doorRecord.match.phase or "") == "PreparationPhase"
+	if isPreparationAdvanceOpen then
+		local preparationPlayers = resolvePreparationAdvancePlayers(doorRecord.match.players, doorRecord.matchId)
+		if not hasPreparationFocusTool(preparationPlayers, doorRecord.matchId) then
+			doorRecord.part:SetAttribute("PasrahPrepAdvanceBlockedReason", "missing_world_tool")
+			doorRecord.part:SetAttribute("PasrahPrepAdvanceHasFocus", false)
+			return false
+		end
+		doorRecord.part:SetAttribute("PasrahPrepAdvanceBlockedReason", nil)
+	end
 	if interactionSource == LOCAL_PROMPT_SOURCE then
 		doorRecord.manualOverrideUntil = now + MANUAL_OVERRIDE_SECONDS
 		doorRecord.manualOverrideState = interactionType == "Open" and "Open" or "Closed"
@@ -930,9 +1063,12 @@ local function executeDoorInteraction(doorRecord, interactionType, interactionSo
 	end
 
 	applyDoorState(doorRecord, interactionType)
+	if isPreparationAdvanceOpen then
+		doorRecord.preparationAdvanceCommittedAt = now
+	end
 	if interactionType == "Open"
 		and interactionSource ~= LOCAL_AUTO_SOURCE
-		and doorRecord.part:GetAttribute("PasrahPreparationAdvanceDoor") == true
+		and isPreparationAdvanceDoor
 		and type(doorRecord.match) == "table"
 		and tostring(doorRecord.match.phase or "") == "PreparationPhase"
 		and type(doorRecord.match.requestAdvancePhase) == "function" then
@@ -946,9 +1082,19 @@ local function executeDoorInteraction(doorRecord, interactionType, interactionSo
 				now = now,
 				source = interactionSource,
 			})
-		elseif type(interactionSystem.ExecuteInteraction) == "function" then
+	elseif type(interactionSystem.ExecuteInteraction) == "function" then
 			interactionSystem:ExecuteInteraction(doorRecord.objectId, interactionType)
 		end
+	end
+	if isPreparationAdvanceOpen then
+		task.defer(function()
+			if type(doorRecord) == "table"
+				and doorRecord.part
+				and doorRecord.part.Parent ~= nil
+				and doorRecord.part:GetAttribute("DoorIsOpen") ~= true then
+				applyDoorState(doorRecord, "Open", true)
+			end
+		end)
 	end
 	return true
 end
@@ -979,6 +1125,149 @@ local function ensurePrompt(part, doorLabel)
 	prompt.Style = Enum.ProximityPromptStyle.Default
 	prompt.Parent = part
 	return prompt
+end
+
+local function setPreparationBreachPromptState(prompt, hasFocusTool, currentOpen, doorLabel)
+	if not (prompt and prompt:IsA("ProximityPrompt")) then
+		return
+	end
+	prompt.Enabled = true
+	prompt.KeyboardKeyCode = Enum.KeyCode.E
+	prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+	prompt.MaxActivationDistance = PREPARATION_BREACH_PROMPT_DISTANCE
+	prompt.RequiresLineOfSight = false
+	prompt.HoldDuration = PROMPT_HOLD_DURATION
+	prompt.Style = Enum.ProximityPromptStyle.Default
+	prompt.ActionText = hasFocusTool and (currentOpen and "Masuk Rumah" or "Buka Pintu") or "Pilih Tools Dulu"
+	prompt.ObjectText = hasFocusTool and (doorLabel or "Pintu") or "Pintu Terkunci"
+	prompt:SetAttribute("PasrahPreparationBreachPrompt", true)
+end
+
+local function ensurePreparationBreachPrompt(target, doorRecord)
+	if not (target and target:IsA("BasePart")) then
+		return nil
+	end
+
+	local prompt = target:FindFirstChild(PREPARATION_BREACH_PROMPT_NAME)
+	if not (prompt and prompt:IsA("ProximityPrompt")) then
+		if prompt then
+			prompt:Destroy()
+		end
+		prompt = Instance.new("ProximityPrompt")
+		prompt.Name = PREPARATION_BREACH_PROMPT_NAME
+		prompt.Parent = target
+	end
+	prompt.Enabled = true
+	pcall(function()
+		prompt.ClickablePrompt = true
+	end)
+	setPreparationBreachPromptState(prompt, false, false, doorRecord and doorRecord.label or "Pintu")
+
+	if prompt:GetAttribute("PasrahPreparationBreachConnected") ~= true then
+		prompt:SetAttribute("PasrahPreparationBreachConnected", true)
+		prompt.Triggered:Connect(function(player)
+			if type(doorRecord) ~= "table" then
+				return
+			end
+			local part = doorRecord.part
+			if not (part and part.Parent ~= nil) or part:GetAttribute("DoorLocked") == true then
+				return
+			end
+			if type(doorRecord.match) ~= "table" or tostring(doorRecord.match.phase or "") ~= "PreparationPhase" then
+				return
+			end
+
+			local preparationPlayers = resolvePreparationAdvancePlayers({ player }, doorRecord.matchId)
+			if not hasPreparationFocusTool(preparationPlayers, doorRecord.matchId) then
+				part:SetAttribute("PasrahPrepAdvanceBlockedReason", "missing_world_tool")
+				part:SetAttribute("PasrahPrepAdvanceHasFocus", false)
+				setPreparationBreachPromptState(prompt, false, part:GetAttribute("DoorIsOpen") == true, doorRecord.label)
+				return
+			end
+
+			part:SetAttribute("PasrahPrepAdvanceBlockedReason", nil)
+			local currentOpen = part:GetAttribute("DoorIsOpen") == true
+			if currentOpen then
+				if type(doorRecord.match.requestAdvancePhase) == "function" then
+					doorRecord.preparationAdvanceCommittedAt = os.clock()
+					doorRecord.match.requestAdvancePhase(nil, "InvestigationPhase")
+				end
+			else
+				executeDoorInteraction(doorRecord, "Open", LOCAL_PROMPT_SOURCE)
+			end
+		end)
+	end
+	return prompt
+end
+
+local function ensurePreparationDoorPromptProxy(doorRecord, breachTargets)
+	local part = type(doorRecord) == "table" and doorRecord.part or nil
+	if not (part and part:IsA("BasePart")) then
+		return nil
+	end
+
+	local stagingFolder = resolvePreparationStagingFolder(doorRecord)
+	if not stagingFolder then
+		return nil
+	end
+
+	local proxyName = PREPARATION_BREACH_PROXY_NAME .. "_" .. tostring(doorRecord.objectId or part.Name)
+	local proxy = stagingFolder:FindFirstChild(proxyName)
+	if not (proxy and proxy:IsA("BasePart")) then
+		if proxy then
+			proxy:Destroy()
+		end
+		proxy = Instance.new("Part")
+		proxy.Name = proxyName
+		proxy.Size = Vector3.new(1.5, 1.5, 1.5)
+		proxy.Transparency = 0.9
+		proxy.Anchored = true
+		proxy.CanCollide = false
+		proxy.CanTouch = false
+		proxy.CanQuery = true
+		proxy.Parent = stagingFolder
+	end
+
+	local centroid = Vector3.zero
+	local counted = 0
+	for _, target in ipairs(breachTargets or {}) do
+		if target and target:IsA("BasePart") then
+			centroid += target.Position
+			counted += 1
+		end
+	end
+	local stagingDirection = counted > 0 and ((centroid / counted) - part.Position) or nil
+	if not stagingDirection or stagingDirection.Magnitude < 0.1 then
+		stagingDirection = -part.CFrame.LookVector
+	end
+	local offset = math.min(math.max(stagingDirection.Magnitude * 0.22, 7), 10)
+	local proxyPosition = part.Position + stagingDirection.Unit * offset
+	if counted > 0 then
+		proxyPosition = Vector3.new(proxyPosition.X, (centroid / counted).Y + 2.95, proxyPosition.Z)
+	end
+	proxy.CFrame = CFrame.new(proxyPosition)
+	proxy:SetAttribute("PasrahPreparationDoorProxy", true)
+	proxy:SetAttribute("PasrahDoorObjectId", tostring(doorRecord.objectId or part.Name))
+	return proxy
+end
+
+local function ensurePreparationBreachPrompts(doorRecord)
+	if type(doorRecord) ~= "table"
+		or not (doorRecord.part and doorRecord.part:GetAttribute("PasrahPreparationAdvanceDoor") == true) then
+		return {}
+	end
+
+	local prompts = {}
+	local breachTargets = collectPreparationBreachTargets(doorRecord)
+	local proxyTarget = ensurePreparationDoorPromptProxy(doorRecord, breachTargets)
+	for _, target in ipairs(proxyTarget and { proxyTarget } or {}) do
+		local prompt = ensurePreparationBreachPrompt(target, doorRecord)
+		if prompt then
+			table.insert(prompts, prompt)
+		end
+	end
+	doorRecord.preparationBreachPrompts = prompts
+	return prompts
 end
 
 local function isDoorPart(part)
@@ -1022,6 +1311,47 @@ function DoorRuntime.Attach(match, mapClone, deps)
 	if match and match._doorRuntimeSubscription and eventBus then
 		eventBus:Unsubscribe("MapObjectInteracted", match._doorRuntimeSubscription)
 		match._doorRuntimeSubscription = nil
+	end
+	if match and match._doorRuntimeLockSubscriptions and eventBus then
+		for _, subscription in ipairs(match._doorRuntimeLockSubscriptions) do
+			eventBus:Unsubscribe(subscription.eventName, subscription.callback)
+		end
+		match._doorRuntimeLockSubscriptions = nil
+	end
+
+	local function isExitDoorRecord(doorRecord)
+		local part = doorRecord and doorRecord.part
+		if not part then
+			return false
+		end
+		if part:GetAttribute("PasrahPreparationAdvanceDoor") == true then
+			return true
+		end
+		local token = string.lower(tostring(doorRecord.objectId or part.Name or ""))
+		return token:find("front", 1, true) ~= nil
+			or token:find("entry", 1, true) ~= nil
+			or token:find("lobby", 1, true) ~= nil
+			or token:find("grandhall", 1, true) ~= nil
+	end
+
+	local function applyExitDoorLock(locked, source)
+		for _, doorRecord in pairs(doorLookup) do
+			if isExitDoorRecord(doorRecord) then
+				local part = doorRecord.part
+				part:SetAttribute("DoorLocked", locked == true)
+				part:SetAttribute("DoorLockSource", locked and tostring(source or "HuntSystem") or nil)
+				if locked and part:GetAttribute("DoorIsOpen") == true then
+					applyDoorState(doorRecord, "Close", false)
+				end
+				setPromptState(
+					doorRecord.prompt,
+					part:GetAttribute("DoorIsOpen") == true,
+					part:GetAttribute("DoorLocked") == true,
+					doorRecord.label
+				)
+				stampDoorRuntime(doorRecord, doorRecord.lastNearestApproachDistance)
+			end
+		end
 	end
 
 	for _, descendant in ipairs(scanRoot:GetDescendants()) do
@@ -1067,12 +1397,24 @@ function DoorRuntime.Attach(match, mapClone, deps)
 			registerDoorInteraction(mapInteractionSystem, descendant.Name, descendant.Position)
 			ensurePathfindingModifier(descendant)
 			ensureDoorRouteGuide(record)
+			ensurePreparationBreachPrompts(record)
 			applyDoorState(record, initialState.isOpen and "Open" or "Close", true)
 			setPromptState(prompt, initialState.isOpen, initialState.isLocked, doorLabel)
 
-			prompt.Triggered:Connect(function()
+			prompt.Triggered:Connect(function(player)
 				if descendant:GetAttribute("DoorLocked") == true then
 					return
+				end
+
+				if descendant:GetAttribute("PasrahPreparationAdvanceDoor") == true
+					and tostring(record.match and record.match.phase or "") == "InvestigationPhase" then
+					local exited, exitReason = teleportPlayerToPreparationStaging(record, player)
+					if exited then
+						return
+					end
+					if typeof(player) == "Instance" and player:IsA("Player") then
+						player:SetAttribute("PasrahLastDoorExitResult", "failed:" .. tostring(exitReason))
+					end
 				end
 
 				local nextInteraction = descendant:GetAttribute("DoorIsOpen") == true and "Close" or "Open"
@@ -1162,7 +1504,24 @@ if next(doorLookup) ~= nil and match then
 					part:SetAttribute("PasrahPrepAdvanceHasFocus", hasFocusTool == true)
 					part:SetAttribute("PasrahPrepAdvanceNearby", proximityActive == true)
 
+					if doorRecord.prompt then
+						doorRecord.prompt.ActionText = hasFocusTool and (currentOpen and "Tutup Pintu" or "Buka Pintu") or "Pilih Tools Dulu"
+						doorRecord.prompt.ObjectText = hasFocusTool and doorRecord.label or "Pintu Terkunci"
+					end
+					for _, breachPrompt in ipairs(ensurePreparationBreachPrompts(doorRecord)) do
+						setPreparationBreachPromptState(breachPrompt, hasFocusTool, currentOpen, doorRecord.label)
+					end
+
 					if currentOpen then
+						if hasFocusTool and proximityActive
+							and type(doorRecord.match) == "table"
+							and tostring(doorRecord.match.phase or "") == "PreparationPhase"
+							and type(doorRecord.match.requestAdvancePhase) == "function"
+							and (type(doorRecord.preparationAdvanceCommittedAt) ~= "number"
+								or (now - doorRecord.preparationAdvanceCommittedAt) > 2) then
+							doorRecord.preparationAdvanceCommittedAt = now
+							doorRecord.match.requestAdvancePhase(nil, "InvestigationPhase")
+						end
 						doorRecord.preparationAdvanceArmedAt = nil
 					elseif hasFocusTool and proximityActive then
 						local requiredHoldSeconds = nearbyNow
@@ -1180,6 +1539,52 @@ if next(doorLookup) ~= nil and match then
 					part:SetAttribute("PasrahPrepAdvanceArmed", type(doorRecord.preparationAdvanceArmedAt) == "number")
 					stampDoorRuntime(doorRecord, doorRecord.lastNearestApproachDistance)
 					continue
+				elseif part:GetAttribute("PasrahPreparationAdvanceDoor") == true then
+					for _, breachPrompt in ipairs(doorRecord.preparationBreachPrompts or {}) do
+						if breachPrompt and breachPrompt:IsA("ProximityPrompt") then
+							breachPrompt.Enabled = false
+						end
+					end
+					if tostring(match.phase or "") == "InvestigationPhase" then
+						if doorRecord.prompt then
+							doorRecord.prompt.Enabled = true
+							doorRecord.prompt.ObjectText = doorRecord.label or "Pintu"
+							doorRecord.prompt.ActionText = INVESTIGATION_EXIT_ACTION_TEXT
+						end
+						local nearestOpenDistance = getNearestPlayerApproachDistance(
+							doorRecord,
+							match.players,
+							matchId ~= "" and matchId or nil,
+							HYBRID_OPEN_APPROACH_DEPTH,
+							HYBRID_LATERAL_PADDING + 1
+						)
+						local nearestKeepOpenDistance = getNearestPlayerApproachDistance(
+							doorRecord,
+							match.players,
+							matchId ~= "" and matchId or nil,
+							HYBRID_CLOSE_APPROACH_DEPTH,
+							HYBRID_LATERAL_PADDING + 1
+						)
+						doorRecord.lastNearestApproachDistance = nearestOpenDistance or nearestKeepOpenDistance
+						local playerNearby = type(nearestOpenDistance) == "number"
+						local playerWithinKeepOpen = type(nearestKeepOpenDistance) == "number"
+						if playerNearby then
+							doorRecord.lastNearbyAt = now
+						end
+
+						local overrideActive = now < (doorRecord.manualOverrideUntil or 0)
+						local overrideState = doorRecord.manualOverrideState
+						if playerNearby and not currentOpen and not (overrideActive and overrideState == "Closed") then
+							executeDoorInteraction(doorRecord, "Open", LOCAL_AUTO_SOURCE)
+						elseif currentOpen and not playerWithinKeepOpen and not overrideActive then
+							local idleTime = now - (doorRecord.lastNearbyAt or 0)
+							if idleTime >= HYBRID_CLOSE_DELAY then
+								executeDoorInteraction(doorRecord, "Close", LOCAL_AUTO_SOURCE)
+							end
+						end
+						stampDoorRuntime(doorRecord, doorRecord.lastNearestApproachDistance)
+						continue
+					end
 				end
 
 				if doorRecord.policy ~= POLICY_HYBRID_RADIUS_PROMPT then
@@ -1251,6 +1656,26 @@ if next(doorLookup) ~= nil and match then
 		eventBus:Subscribe("MapObjectInteracted", callback)
 		if match then
 			match._doorRuntimeSubscription = callback
+		end
+
+		local lockCallback = function(payload)
+			if type(payload) ~= "table" then
+				return
+			end
+			local expectedMatchId = match and tostring(match.matchId or match.id or "")
+			local payloadMatchId = tostring(payload.matchId or "")
+			if expectedMatchId ~= "" and payloadMatchId ~= "" and payloadMatchId ~= expectedMatchId then
+				return
+			end
+			applyExitDoorLock(payload.locked == true, payload.source)
+		end
+		eventBus:Subscribe("ExitDoorsLocked", lockCallback)
+		eventBus:Subscribe("HuntDoorLockChanged", lockCallback)
+		if match then
+			match._doorRuntimeLockSubscriptions = {
+				{ eventName = "ExitDoorsLocked", callback = lockCallback },
+				{ eventName = "HuntDoorLockChanged", callback = lockCallback },
+			}
 		end
 	end
 

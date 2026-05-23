@@ -1,0 +1,1720 @@
+{
+  "className": "ScreenGui",
+  "children": [
+    {
+      "name": "MainPanel",
+      "className": "Frame",
+      "children": [
+        {
+          "name": "UICorner",
+          "className": "UICorner",
+          "properties": {
+            "TopRightRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            },
+            "BottomLeftRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            },
+            "TopLeftRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            },
+            "BottomRightRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            }
+          }
+        },
+        {
+          "name": "BrandStroke",
+          "className": "UIStroke",
+          "properties": {
+            "Color": [
+              0.3294117748737335,
+              0.40784314274787903,
+              0.5176470875740051
+            ],
+            "ApplyStrokeMode": "Border",
+            "Transparency": 0.23999999463558197
+          }
+        },
+        {
+          "name": "Title",
+          "className": "TextLabel",
+          "properties": {
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Bold",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "Text": "PANEL MATCH",
+            "TextSize": 16.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  12
+                ],
+                [
+                  0.0,
+                  10
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "TextXAlignment": "Left",
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -54
+                ],
+                [
+                  0.0,
+                  24
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.9215686321258545,
+              0.9411764740943909,
+              0.9607843160629272
+            ]
+          }
+        },
+        {
+          "name": "CloseButton",
+          "className": "TextButton",
+          "children": [
+            {
+              "name": "UICorner",
+              "className": "UICorner",
+              "properties": {
+                "TopRightRadius": {
+                  "UDim": [
+                    1.0,
+                    0
+                  ]
+                },
+                "BottomLeftRadius": {
+                  "UDim": [
+                    1.0,
+                    0
+                  ]
+                },
+                "BottomRightRadius": {
+                  "UDim": [
+                    1.0,
+                    0
+                  ]
+                },
+                "TopLeftRadius": {
+                  "UDim": [
+                    1.0,
+                    0
+                  ]
+                }
+              }
+            },
+            {
+              "name": "CloseIcon",
+              "className": "ImageLabel",
+              "properties": {
+                "InputSink": {
+                  "Enum": 0
+                },
+                "ImageContent": "rbxthumb://type=Asset&id=89807144108282&w=420&h=420",
+                "BackgroundTransparency": 1.0,
+                "Size": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      50
+                    ],
+                    [
+                      0.0,
+                      50
+                    ]
+                  ]
+                },
+                "AnchorPoint": [
+                  0.5,
+                  0.5
+                ],
+                "ScaleType": "Fit",
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.5,
+                      0
+                    ],
+                    [
+                      0.5,
+                      0
+                    ]
+                  ]
+                },
+                "ZIndex": 2.0
+              }
+            },
+            {
+              "name": "BrandTextImage",
+              "className": "ImageButton",
+              "children": [
+                {
+                  "name": "BrandTextImageStateScale",
+                  "className": "UIScale"
+                }
+              ],
+              "properties": {
+                "Selectable": false,
+                "ImageContent": "rbxassetid://90895017189874",
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.5,
+                      0
+                    ],
+                    [
+                      0.5,
+                      0
+                    ]
+                  ]
+                },
+                "ZIndex": 4.0,
+                "InputSink": {
+                  "Enum": 0
+                },
+                "BorderSizePixel": 0.0,
+                "Interactable": false,
+                "Active": false,
+                "BackgroundTransparency": 1.0,
+                "Size": {
+                  "UDim2": [
+                    [
+                      1.0,
+                      -8
+                    ],
+                    [
+                      1.0,
+                      -8
+                    ]
+                  ]
+                },
+                "AutoButtonColor": false,
+                "ScaleType": "Fit",
+                "AnchorPoint": [
+                  0.5,
+                  0.5
+                ]
+              },
+              "attributes": {
+                "PasrahImageTextActive": "127340669403158",
+                "PasrahImageTextHover": "115151774523039",
+                "PasrahImageTextIdle": "90895017189874"
+              }
+            }
+          ],
+          "properties": {
+            "TextTransparency": 1.0,
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Bold",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "BackgroundColor3": [
+              0.3607843220233917,
+              0.16470588743686676,
+              0.16470588743686676
+            ],
+            "Text": "X",
+            "TextSize": 14.0,
+            "Position": {
+              "UDim2": [
+                [
+                  1.0,
+                  -10
+                ],
+                [
+                  0.0,
+                  8
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            },
+            "BorderSizePixel": 0.0,
+            "Size": {
+              "UDim2": [
+                [
+                  0.0,
+                  28
+                ],
+                [
+                  0.0,
+                  28
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.9607843160629272,
+              0.9607843160629272,
+              0.9607843160629272
+            ],
+            "AnchorPoint": [
+              1.0,
+              0.0
+            ]
+          },
+          "attributes": {
+            "PasrahImageTextApplied": true,
+            "PasrahImageTextBase": "close_x"
+          }
+        },
+        {
+          "name": "HeaderCard",
+          "className": "Frame",
+          "children": [
+            {
+              "name": "UICorner",
+              "className": "UICorner",
+              "properties": {
+                "TopRightRadius": {
+                  "UDim": [
+                    0.0,
+                    12
+                  ]
+                },
+                "BottomLeftRadius": {
+                  "UDim": [
+                    0.0,
+                    12
+                  ]
+                },
+                "TopLeftRadius": {
+                  "UDim": [
+                    0.0,
+                    12
+                  ]
+                },
+                "BottomRightRadius": {
+                  "UDim": [
+                    0.0,
+                    12
+                  ]
+                }
+              }
+            },
+            {
+              "name": "HeaderStroke",
+              "className": "UIStroke",
+              "properties": {
+                "Color": [
+                  0.3294117748737335,
+                  0.40784314274787903,
+                  0.5176470875740051
+                ],
+                "ApplyStrokeMode": "Border",
+                "Transparency": 0.18000000715255737
+              }
+            },
+            {
+              "name": "PhaseGlyph",
+              "className": "TextLabel",
+              "properties": {
+                "FontFace": {
+                  "family": "rbxasset://fonts/families/GothamSSm.json",
+                  "weight": "Heavy",
+                  "style": "Normal",
+                  "cachedFaceId": null
+                },
+                "Text": "LO",
+                "TextSize": 52.0,
+                "Position": {
+                  "UDim2": [
+                    [
+                      1.0,
+                      -12
+                    ],
+                    [
+                      0.0,
+                      12
+                    ]
+                  ]
+                },
+                "InputSink": {
+                  "Enum": 0
+                },
+                "BackgroundTransparency": 1.0,
+                "Size": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      84
+                    ],
+                    [
+                      0.0,
+                      74
+                    ]
+                  ]
+                },
+                "TextXAlignment": "Right",
+                "TextColor3": [
+                  0.9176470637321472,
+                  0.8666666746139526,
+                  0.772549033164978
+                ],
+                "AnchorPoint": [
+                  1.0,
+                  0.0
+                ]
+              }
+            },
+            {
+              "name": "StateBadge",
+              "className": "TextLabel",
+              "children": [
+                {
+                  "name": "UICorner",
+                  "className": "UICorner",
+                  "properties": {
+                    "TopRightRadius": {
+                      "UDim": [
+                        0.0,
+                        999
+                      ]
+                    },
+                    "BottomLeftRadius": {
+                      "UDim": [
+                        0.0,
+                        999
+                      ]
+                    },
+                    "BottomRightRadius": {
+                      "UDim": [
+                        0.0,
+                        999
+                      ]
+                    },
+                    "TopLeftRadius": {
+                      "UDim": [
+                        0.0,
+                        999
+                      ]
+                    }
+                  }
+                }
+              ],
+              "properties": {
+                "FontFace": {
+                  "family": "rbxasset://fonts/families/GothamSSm.json",
+                  "weight": "Bold",
+                  "style": "Normal",
+                  "cachedFaceId": null
+                },
+                "BackgroundColor3": [
+                  0.24313725531101227,
+                  0.3137255012989044,
+                  0.40784314274787903
+                ],
+                "Text": "STATUS MATCH",
+                "TextSize": 12.0,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      14
+                    ],
+                    [
+                      0.0,
+                      12
+                    ]
+                  ]
+                },
+                "InputSink": {
+                  "Enum": 0
+                },
+                "BorderSizePixel": 0.0,
+                "Size": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      144
+                    ],
+                    [
+                      0.0,
+                      26
+                    ]
+                  ]
+                },
+                "TextColor3": [
+                  0.9607843160629272,
+                  0.9607843160629272,
+                  0.9607843160629272
+                ]
+              }
+            },
+            {
+              "name": "PrimaryLabel",
+              "className": "TextLabel",
+              "properties": {
+                "FontFace": {
+                  "family": "rbxasset://fonts/families/GothamSSm.json",
+                  "weight": "Bold",
+                  "style": "Normal",
+                  "cachedFaceId": null
+                },
+                "Text": "Menunggu event match.",
+                "TextSize": 18.0,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      14
+                    ],
+                    [
+                      0.0,
+                      46
+                    ]
+                  ]
+                },
+                "InputSink": {
+                  "Enum": 0
+                },
+                "BackgroundTransparency": 1.0,
+                "TextYAlignment": "Top",
+                "Size": {
+                  "UDim2": [
+                    [
+                      1.0,
+                      -112
+                    ],
+                    [
+                      0.0,
+                      32
+                    ]
+                  ]
+                },
+                "TextXAlignment": "Left",
+                "TextColor3": [
+                  0.9490196108818054,
+                  0.9647058844566345,
+                  0.9803921580314636
+                ]
+              }
+            },
+            {
+              "name": "SecondaryLabel",
+              "className": "TextLabel",
+              "properties": {
+                "FontFace": {
+                  "family": "rbxasset://fonts/families/GothamSSm.json",
+                  "weight": "Regular",
+                  "style": "Normal",
+                  "cachedFaceId": null
+                },
+                "Text": "Panel ini bisa ditutup jika menghalangi pandangan.",
+                "TextSize": 14.0,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      14
+                    ],
+                    [
+                      0.0,
+                      78
+                    ]
+                  ]
+                },
+                "InputSink": {
+                  "Enum": 0
+                },
+                "BackgroundTransparency": 1.0,
+                "TextYAlignment": "Top",
+                "TextXAlignment": "Left",
+                "Size": {
+                  "UDim2": [
+                    [
+                      1.0,
+                      -112
+                    ],
+                    [
+                      0.0,
+                      30
+                    ]
+                  ]
+                },
+                "TextColor3": [
+                  0.7137255072593689,
+                  0.7686274647712708,
+                  0.8470588326454163
+                ]
+              }
+            }
+          ],
+          "properties": {
+            "Visible": false,
+            "InputSink": {
+              "Enum": 0
+            },
+            "BorderSizePixel": 0.0,
+            "BackgroundTransparency": 0.03999999910593033,
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -24
+                ],
+                [
+                  0.0,
+                  118
+                ]
+              ]
+            },
+            "BackgroundColor3": [
+              0.0941176488995552,
+              0.11764705926179886,
+              0.1568627506494522
+            ],
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  12
+                ],
+                [
+                  0.0,
+                  42
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "name": "SummaryFrame",
+          "className": "ScrollingFrame",
+          "children": [
+            {
+              "name": "UICorner",
+              "className": "UICorner",
+              "properties": {
+                "TopRightRadius": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                },
+                "BottomLeftRadius": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                },
+                "TopLeftRadius": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                },
+                "BottomRightRadius": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                }
+              }
+            },
+            {
+              "name": "BrandStroke",
+              "className": "UIStroke",
+              "properties": {
+                "Color": [
+                  0.3137255012989044,
+                  0.3921568691730499,
+                  0.4941176474094391
+                ],
+                "ApplyStrokeMode": "Border",
+                "Transparency": 0.20000000298023224
+              }
+            },
+            {
+              "name": "UIPadding",
+              "className": "UIPadding",
+              "properties": {
+                "PaddingLeft": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                },
+                "PaddingRight": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                },
+                "PaddingBottom": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                },
+                "PaddingTop": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                }
+              }
+            },
+            {
+              "name": "UIListLayout",
+              "className": "UIListLayout",
+              "properties": {
+                "Padding": {
+                  "UDim": [
+                    0.0,
+                    6
+                  ]
+                },
+                "SortOrder": "LayoutOrder"
+              }
+            }
+          ],
+          "properties": {
+            "InputSink": {
+              "Enum": 0
+            },
+            "BorderSizePixel": 0.0,
+            "BackgroundTransparency": 0.05999999865889549,
+            "AutomaticCanvasSize": "Y",
+            "ScrollingDirection": "Y",
+            "BackgroundColor3": [
+              0.0784313753247261,
+              0.10588235408067703,
+              0.1411764770746231
+            ],
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -24
+                ],
+                [
+                  0.0,
+                  220
+                ]
+              ]
+            },
+            "ElasticBehavior": "Never",
+            "ScrollBarThickness": 5.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  4
+                ],
+                [
+                  0.0,
+                  167
+                ]
+              ]
+            },
+            "CanvasSize": {
+              "UDim2": [
+                [
+                  0.0,
+                  0
+                ],
+                [
+                  0.0,
+                  0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "name": "HideButton",
+          "className": "TextButton",
+          "children": [
+            {
+              "name": "UICorner",
+              "className": "UICorner",
+              "properties": {
+                "TopRightRadius": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                },
+                "BottomLeftRadius": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                },
+                "TopLeftRadius": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                },
+                "BottomRightRadius": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                }
+              }
+            },
+            {
+              "name": "BrandTextImage",
+              "className": "ImageButton",
+              "children": [
+                {
+                  "name": "BrandTextImageStateScale",
+                  "className": "UIScale"
+                }
+              ],
+              "properties": {
+                "Selectable": false,
+                "ImageContent": "rbxassetid://106449517363306",
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.5,
+                      0
+                    ],
+                    [
+                      0.5,
+                      0
+                    ]
+                  ]
+                },
+                "ZIndex": 4.0,
+                "InputSink": {
+                  "Enum": 0
+                },
+                "BorderSizePixel": 0.0,
+                "Interactable": false,
+                "Active": false,
+                "BackgroundTransparency": 1.0,
+                "Size": {
+                  "UDim2": [
+                    [
+                      1.0,
+                      -8
+                    ],
+                    [
+                      1.0,
+                      -8
+                    ]
+                  ]
+                },
+                "AutoButtonColor": false,
+                "AnchorPoint": [
+                  0.5,
+                  0.5
+                ],
+                "ScaleType": "Fit"
+              },
+              "attributes": {
+                "PasrahImageTextActive": "94285208092044",
+                "PasrahImageTextHover": "107558671055493",
+                "PasrahImageTextIdle": "106449517363306"
+              }
+            }
+          ],
+          "properties": {
+            "TextTransparency": 1.0,
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Bold",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "BackgroundColor3": [
+              0.1725490242242813,
+              0.22745098173618317,
+              0.2980392277240753
+            ],
+            "Text": "SEMBUNYIKAN",
+            "TextSize": 12.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  12
+                ],
+                [
+                  0.0,
+                  396
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            },
+            "BorderSizePixel": 0.0,
+            "Size": {
+              "UDim2": [
+                [
+                  0.0,
+                  144
+                ],
+                [
+                  0.0,
+                  40
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.9607843160629272,
+              0.9607843160629272,
+              0.9607843160629272
+            ]
+          },
+          "attributes": {
+            "PasrahImageTextApplied": true,
+            "PasrahImageTextBase": "sembunyikan"
+          }
+        },
+        {
+          "name": "FooterLabel",
+          "className": "TextLabel",
+          "properties": {
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Regular",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "TextWrapped": true,
+            "Text": "Tekan [X] atau tombol MATCH di tepi layar untuk buka/tutup panel ini.",
+            "TextSize": 12.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  166
+                ],
+                [
+                  0.0,
+                  396
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "TextYAlignment": "Top",
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -178
+                ],
+                [
+                  0.0,
+                  40
+                ]
+              ]
+            },
+            "TextXAlignment": "Left",
+            "TextColor3": [
+              0.6352941393852234,
+              0.6901960968971252,
+              0.7764706015586853
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "InputSink": {
+          "Enum": 0
+        },
+        "BorderSizePixel": 0.0,
+        "BackgroundTransparency": 0.10000000149011612,
+        "Active": true,
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              410
+            ],
+            [
+              0.0,
+              494
+            ]
+          ]
+        },
+        "BackgroundColor3": [
+          0.07058823853731155,
+          0.10196078568696976,
+          0.13333334028720856
+        ],
+        "AnchorPoint": [
+          1.0,
+          0.0
+        ],
+        "Position": {
+          "UDim2": [
+            [
+              0.22205518,
+              -16
+            ],
+            [
+              0.13867018,
+              16
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "MatchTimerLabel",
+      "className": "TextLabel",
+      "children": [
+        {
+          "name": "UICorner",
+          "className": "UICorner",
+          "properties": {
+            "TopRightRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            },
+            "BottomLeftRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            },
+            "TopLeftRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            },
+            "BottomRightRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            }
+          }
+        }
+      ],
+      "properties": {
+        "Visible": false,
+        "FontFace": {
+          "family": "rbxasset://fonts/families/GothamSSm.json",
+          "weight": "Bold",
+          "style": "Normal",
+          "cachedFaceId": null
+        },
+        "BackgroundColor3": [
+          0.0627450942993164,
+          0.08627451211214066,
+          0.11764705926179886
+        ],
+        "Text": "00:00",
+        "TextSize": 24.0,
+        "Position": {
+          "UDim2": [
+            [
+              0.5,
+              0
+            ],
+            [
+              0.0,
+              18
+            ]
+          ]
+        },
+        "InputSink": {
+          "Enum": 0
+        },
+        "BorderSizePixel": 0.0,
+        "BackgroundTransparency": 0.10000000149011612,
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              126
+            ],
+            [
+              0.0,
+              40
+            ]
+          ]
+        },
+        "TextColor3": [
+          0.9607843160629272,
+          0.9607843160629272,
+          0.9607843160629272
+        ],
+        "AnchorPoint": [
+          0.5,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "MatchTimerCaption",
+      "className": "TextLabel",
+      "properties": {
+        "Visible": false,
+        "FontFace": {
+          "family": "rbxasset://fonts/families/GothamSSm.json",
+          "weight": "Bold",
+          "style": "Normal",
+          "cachedFaceId": null
+        },
+        "Text": "PHASE TIMER",
+        "TextSize": 11.0,
+        "Position": {
+          "UDim2": [
+            [
+              0.5,
+              0
+            ],
+            [
+              0.0,
+              60
+            ]
+          ]
+        },
+        "InputSink": {
+          "Enum": 0
+        },
+        "BackgroundTransparency": 1.0,
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              170
+            ],
+            [
+              0.0,
+              18
+            ]
+          ]
+        },
+        "TextColor3": [
+          0.7450980544090271,
+          0.800000011920929,
+          0.8784313797950745
+        ],
+        "AnchorPoint": [
+          0.5,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "EvidenceQuickButton",
+      "className": "TextButton",
+      "children": [
+        {
+          "name": "UICorner",
+          "className": "UICorner",
+          "properties": {
+            "TopRightRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            },
+            "BottomLeftRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            },
+            "TopLeftRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            },
+            "BottomRightRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            }
+          }
+        },
+        {
+          "name": "BrandTextImage",
+          "className": "ImageButton",
+          "children": [
+            {
+              "name": "BrandTextImageStateScale",
+              "className": "UIScale"
+            }
+          ],
+          "properties": {
+            "Selectable": false,
+            "ImageContent": "rbxassetid://76661174366790",
+            "Position": {
+              "UDim2": [
+                [
+                  0.5,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ]
+            },
+            "ZIndex": 4.0,
+            "InputSink": {
+              "Enum": 0
+            },
+            "BorderSizePixel": 0.0,
+            "Interactable": false,
+            "Active": false,
+            "BackgroundTransparency": 1.0,
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -8
+                ],
+                [
+                  1.0,
+                  -8
+                ]
+              ]
+            },
+            "AutoButtonColor": false,
+            "ScaleType": "Fit",
+            "AnchorPoint": [
+              0.5,
+              0.5
+            ]
+          },
+          "attributes": {
+            "PasrahImageTextActive": "113787734161193",
+            "PasrahImageTextHover": "71133090906987",
+            "PasrahImageTextIdle": "76661174366790"
+          }
+        }
+      ],
+      "properties": {
+        "Visible": false,
+        "TextTransparency": 1.0,
+        "FontFace": {
+          "family": "rbxasset://fonts/families/GothamSSm.json",
+          "weight": "Bold",
+          "style": "Normal",
+          "cachedFaceId": null
+        },
+        "BackgroundColor3": [
+          0.20392157137393951,
+          0.32156863808631897,
+          0.4627451002597809
+        ],
+        "Text": "EVIDENCE [J]",
+        "TextSize": 12.0,
+        "Position": {
+          "UDim2": [
+            [
+              1.0,
+              -18
+            ],
+            [
+              1.0,
+              -18
+            ]
+          ]
+        },
+        "InputSink": {
+          "Enum": 0
+        },
+        "BorderSizePixel": 0.0,
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              142
+            ],
+            [
+              0.0,
+              48
+            ]
+          ]
+        },
+        "TextColor3": [
+          0.9607843160629272,
+          0.9607843160629272,
+          0.9607843160629272
+        ],
+        "AnchorPoint": [
+          1.0,
+          1.0
+        ]
+      },
+      "attributes": {
+        "PasrahImageTextApplied": true,
+        "PasrahImageTextBase": "evidence_j"
+      }
+    },
+    {
+      "name": "ControlsHintBar",
+      "className": "Frame",
+      "children": [
+        {
+          "name": "UICorner",
+          "className": "UICorner",
+          "properties": {
+            "TopRightRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            },
+            "BottomLeftRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            },
+            "BottomRightRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            },
+            "TopLeftRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            }
+          }
+        },
+        {
+          "name": "Label",
+          "className": "TextLabel",
+          "properties": {
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Bold",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "Text": "Gunakan tombol dan prompt investigasi untuk melanjutkan match.",
+            "TextSize": 12.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  10
+                ],
+                [
+                  0.0,
+                  0
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -20
+                ],
+                [
+                  1.0,
+                  0
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.8784313797950745,
+              0.9098039269447327,
+              0.9490196108818054
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "InputSink": {
+          "Enum": 0
+        },
+        "BorderSizePixel": 0.0,
+        "BackgroundTransparency": 0.11999999731779099,
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              620
+            ],
+            [
+              0.0,
+              34
+            ]
+          ]
+        },
+        "BackgroundColor3": [
+          0.0627450942993164,
+          0.08627451211214066,
+          0.11764705926179886
+        ],
+        "AnchorPoint": [
+          0.5,
+          1.0
+        ],
+        "Position": {
+          "UDim2": [
+            [
+              0.5,
+              0
+            ],
+            [
+              1.0,
+              -14
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "FieldKitFrame",
+      "className": "Frame",
+      "children": [
+        {
+          "name": "UICorner",
+          "className": "UICorner",
+          "properties": {
+            "TopRightRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            },
+            "BottomLeftRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            },
+            "TopLeftRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            },
+            "BottomRightRadius": {
+              "UDim": [
+                0.0,
+                12
+              ]
+            }
+          }
+        },
+        {
+          "name": "FrameStroke",
+          "className": "UIStroke",
+          "properties": {
+            "Color": [
+              0.3450980484485626,
+              0.42352941632270813,
+              0.5176470875740051
+            ],
+            "Transparency": 0.18000000715255737
+          }
+        },
+        {
+          "name": "Title",
+          "className": "TextLabel",
+          "properties": {
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Bold",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "Text": "FIELD KIT",
+            "TextSize": 11.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  12
+                ],
+                [
+                  0.0,
+                  10
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -24
+                ],
+                [
+                  0.0,
+                  18
+                ]
+              ]
+            },
+            "TextXAlignment": "Left",
+            "TextColor3": [
+              0.7921568751335144,
+              0.8392156958580017,
+              0.8941176533699036
+            ]
+          }
+        },
+        {
+          "name": "Buttons",
+          "className": "Frame",
+          "children": [
+            {
+              "name": "Grid",
+              "className": "UIGridLayout",
+              "properties": {
+                "CellPadding": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      6
+                    ],
+                    [
+                      0.0,
+                      6
+                    ]
+                  ]
+                },
+                "CellSize": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      79
+                    ],
+                    [
+                      0.0,
+                      56
+                    ]
+                  ]
+                },
+                "FillDirectionMaxCells": 4.0,
+                "SortOrder": "LayoutOrder"
+              }
+            }
+          ],
+          "properties": {
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -24
+                ],
+                [
+                  0.0,
+                  56
+                ]
+              ]
+            },
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  12
+                ],
+                [
+                  0.0,
+                  34
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "name": "StatusLabel",
+          "className": "TextLabel",
+          "properties": {
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Regular",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "TextWrapped": true,
+            "Text": "Field kit [1-9] siap. Pilih tool untuk lanjut investigasi.",
+            "TextSize": 11.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  12
+                ],
+                [
+                  0.0,
+                  96
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "TextYAlignment": "Top",
+            "TextXAlignment": "Left",
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -24
+                ],
+                [
+                  0.0,
+                  28
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.8156862854957581,
+              0.8470588326454163,
+              0.8941176533699036
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "Visible": false,
+        "InputSink": {
+          "Enum": 0
+        },
+        "BorderSizePixel": 0.0,
+        "BackgroundTransparency": 0.07999999821186066,
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              608
+            ],
+            [
+              0.0,
+              494
+            ]
+          ]
+        },
+        "BackgroundColor3": [
+          0.0627450942993164,
+          0.08627451211214066,
+          0.11764705926179886
+        ],
+        "AnchorPoint": [
+          0.0,
+          1.0
+        ],
+        "Position": {
+          "UDim2": [
+            [
+              0.0,
+              16
+            ],
+            [
+              1.0,
+              -60
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "MatchFloatButton",
+      "className": "TextButton",
+      "properties": {
+        "Visible": false,
+        "BackgroundColor3": [
+          0.13333334028720856,
+          0.18039216101169586,
+          0.24313725531101227
+        ],
+        "Text": "",
+        "Position": {
+          "UDim2": [
+            [
+              1.0,
+              -18
+            ],
+            [
+              0.68,
+              0
+            ]
+          ]
+        },
+        "InputSink": {
+          "Enum": 0
+        },
+        "BorderSizePixel": 0.0,
+        "BackgroundTransparency": 0.029999999329447746,
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              66
+            ],
+            [
+              0.0,
+              66
+            ]
+          ]
+        },
+        "AnchorPoint": [
+          1.0,
+          0.5
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "ZIndexBehavior": "Sibling",
+    "TabKeyboardNavigation": {
+      "Bool": false
+    },
+    "ResetOnSpawn": false,
+    "ScreenInsets": "DeviceSafeInsets",
+    "Enabled": false
+  }
+}

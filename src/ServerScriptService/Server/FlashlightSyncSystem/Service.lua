@@ -1,4 +1,5 @@
 local Services = require(script.Parent.Parent.Core.Services)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Service = {}
 Service.__index = Service
@@ -12,6 +13,9 @@ local REMOTE_BEAM_END = "FlashlightRemoteBeamEnd"
 local REMOTE_AIM_ATTACHMENT = "FlashlightRemoteAim"
 local REMOTE_HANDLE_NAME = "FlashlightHandle"
 local TOGGLE_SOUND_NAME = "FlashlightToggleClick"
+local REMOTE_SPOTLIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldSpotLightTemplate" }
+local REMOTE_POINT_LIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldPointLightTemplate" }
+local REMOTE_BEAM_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldBeamTemplate" }
 
 local DEFAULT_AIM_UPDATE_MIN_INTERVAL = 1 / 30
 local DEFAULT_AIM_SMOOTH_SPEED = 3 -- lower = more delay/lag
@@ -154,7 +158,46 @@ local function getFlashlightMountCFrame(part)
         end
     end
 
+    if part.Name == "RightHand" and HANDLE_CONFIG.rightHandMountCFrame then
+        return HANDLE_CONFIG.rightHandMountCFrame
+    end
+    if part.Name == "RightLowerArm" and HANDLE_CONFIG.rightLowerArmMountCFrame then
+        return HANDLE_CONFIG.rightLowerArmMountCFrame
+    end
+    if part.Name == "Right Arm" and HANDLE_CONFIG.rightArmMountCFrame then
+        return HANDLE_CONFIG.rightArmMountCFrame
+    end
+
     return HANDLE_CONFIG.fallbackMountCFrame or CFrame.new(0.1, -0.28, -0.08)
+end
+
+local function resolveLiveMountPart(character, fallbackMountPart)
+    if not character then
+        return fallbackMountPart
+    end
+
+    return getRightHand(character) or character:FindFirstChild("Head") or fallbackMountPart
+end
+
+local function resolveChildPath(root, path)
+    local node = root
+    for _, segment in ipairs(path) do
+        if typeof(node) ~= "Instance" then
+            return nil
+        end
+        node = node:FindFirstChild(segment)
+    end
+    return node
+end
+
+local function cloneVisualTemplate(path, name, className)
+    local template = resolveChildPath(ReplicatedStorage, path)
+    if template and template:IsA(className) then
+        local clone = template:Clone()
+        clone.Name = name
+        return clone
+    end
+    return nil
 end
 
 local function findOrCreateAttachment(parent, name)
@@ -277,7 +320,11 @@ local function findOrCreateSpotLight(parent)
     if existing then
         existing:Destroy()
     end
-    local spotlight = Instance.new("SpotLight")
+    local spotlight = cloneVisualTemplate(REMOTE_SPOTLIGHT_TEMPLATE_PATH, REMOTE_SPOTLIGHT_NAME, "SpotLight")
+    if not spotlight then
+        warn("[FlashlightSyncSystem] Missing authored visual template: WorldEffects.WorldSpotLightTemplate")
+        return nil
+    end
     spotlight.Name = REMOTE_SPOTLIGHT_NAME
     spotlight.Face = Enum.NormalId.Front
     spotlight.Brightness = FLASHLIGHT_BRIGHTNESS
@@ -303,7 +350,11 @@ local function findOrCreateBoostLight(parent)
     if existing then
         existing:Destroy()
     end
-    local spotlight = Instance.new("SpotLight")
+    local spotlight = cloneVisualTemplate(REMOTE_SPOTLIGHT_TEMPLATE_PATH, REMOTE_BOOST_NAME, "SpotLight")
+    if not spotlight then
+        warn("[FlashlightSyncSystem] Missing authored visual template: WorldEffects.WorldSpotLightTemplate")
+        return nil
+    end
     spotlight.Name = REMOTE_BOOST_NAME
     spotlight.Face = Enum.NormalId.Front
     spotlight.Brightness = BOOST_BRIGHTNESS
@@ -328,7 +379,11 @@ local function findOrCreateFillLight(parent)
     if existing then
         existing:Destroy()
     end
-    local light = Instance.new("PointLight")
+    local light = cloneVisualTemplate(REMOTE_POINT_LIGHT_TEMPLATE_PATH, REMOTE_FILL_NAME, "PointLight")
+    if not light then
+        warn("[FlashlightSyncSystem] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+        return nil
+    end
     light.Name = REMOTE_FILL_NAME
     light.Brightness = FILL_BRIGHTNESS
     light.Range = FILL_RANGE
@@ -349,7 +404,11 @@ local function findOrCreateBeam(parent, attachment0, attachment1)
     if existing then
         existing:Destroy()
     end
-    local beam = Instance.new("Beam")
+    local beam = cloneVisualTemplate(REMOTE_BEAM_TEMPLATE_PATH, REMOTE_BEAM_NAME, "Beam")
+    if not beam then
+        warn("[FlashlightSyncSystem] Missing authored visual template: WorldEffects.WorldBeamTemplate")
+        return nil
+    end
     beam.Name = REMOTE_BEAM_NAME
     beam.Attachment0 = attachment0
     beam.Attachment1 = attachment1
@@ -424,7 +483,6 @@ function Service:_ensureFlashlightAttached(player, userId)
 
     local handle = data and data.flashlightHandle
     local aimAttachment = data and data.aimAttachment
-    local spotlight = data and data.spotlight
     local liveHandle = character:FindFirstChild(REMOTE_HANDLE_NAME)
     if typeof(player) == "Instance" and player:IsA("Player") then
         player:SetAttribute("PasrahFlashlightRemoteLiveHandle", liveHandle ~= nil)
@@ -436,7 +494,6 @@ function Service:_ensureFlashlightAttached(player, userId)
         or not (handle and handle.Parent == character)
         or handle ~= liveHandle
         or not (aimAttachment and aimAttachment.Parent)
-        or not (spotlight and spotlight.Parent)
 
     if needsAttach then
         self:AttachFlashlight(player, character)
@@ -545,6 +602,8 @@ function Service:AttachFlashlight(player, character)
     player:SetAttribute("PasrahFlashlightRemoteAttached", true)
     player:SetAttribute("PasrahFlashlightRemoteHandlePath", flashlightHandle:GetFullName())
     player:SetAttribute("PasrahFlashlightRemoteSoundId", toggleSound and tostring(toggleSound.SoundId or "") or nil)
+    player:SetAttribute("PasrahFlashlightRemoteMountPart", mountPart.Name)
+    player:SetAttribute("PasrahFlashlightRemoteMountHand", string.find(mountPart.Name, "Right", 1, true) and "Right" or "Fallback")
 
     self:_storePlayer(userId, data)
 end
@@ -554,16 +613,19 @@ function Service:_applyLookVector(lookVector, data)
         return
     end
 
-    local mountPart = data.mountPart or data.head
+    local mountPart = resolveLiveMountPart(data.character, data.mountPart or data.head)
     local flashlightHandle = data.flashlightHandle
     local aimAttachment = data.aimAttachment
     local beamStart = data.beamStart
     local beamEnd = data.beamEnd
-    local mountCFrame = data.mountCFrame or CFrame.new()
 
     if not (mountPart and flashlightHandle and aimAttachment and beamStart and beamEnd) then
         return
     end
+
+    data.mountPart = mountPart
+    data.mountCFrame = getFlashlightMountCFrame(mountPart)
+    local mountCFrame = data.mountCFrame or CFrame.new()
 
     local unit = lookVector.Unit
     if unit.Magnitude <= 0 then

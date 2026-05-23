@@ -76,6 +76,13 @@ local RANKED_NEUTRALIZED_ITEMS = {
 	eq_spiritbox_modded = true,
 	pp_eq_spiritbox_elite = true,
 }
+local OWNED_ITEM_ATTRIBUTES = {
+	eq_sanitypill_standard = "PasrahOwnsSanityPillStandard",
+	eq_sanitypill_advanced = "PasrahOwnsSanityPillAdvanced",
+	eq_saltbag_reinforced = "PasrahOwnsReinforcedSaltBag",
+	eq_spiritbox_modded = "PasrahOwnsModdedSpiritBox",
+	pp_eq_spiritbox_elite = "PasrahOwnsEliteSpiritBox",
+}
 
 local function normalizeToken(value)
     if type(value) ~= "string" then
@@ -1027,6 +1034,10 @@ function EvidenceService:_playerOwnsItem(player, itemId)
 	if player:GetAttribute(MATCH_MODE_ATTR) == "Ranked" and RANKED_NEUTRALIZED_ITEMS[itemId] == true then
 		return false
 	end
+	local ownedAttribute = OWNED_ITEM_ATTRIBUTES[itemId]
+	if type(ownedAttribute) == "string" and player:GetAttribute(ownedAttribute) == true then
+		return true
+	end
 	if type(self._inventoryService) ~= "table" or type(self._inventoryService.HasItem) ~= "function" then
 		return false
 	end
@@ -1394,8 +1405,15 @@ function EvidenceService:_handleSmudgeUse(player, matchId, requestPayload)
 	self:_destroyUtilityVisualLater(matchId, placementId, config.durationSeconds)
 
 	local resultingSanity = nil
-	if self._sanityService and type(self._sanityService.RestoreSanity) == "function" then
-		resultingSanity = self._sanityService:RestoreSanity(player, config.sanityRestore, matchId, "smudge_stick")
+	local sanityService = self._sanityService
+	if not (sanityService and type(sanityService.RestoreSanity) == "function") then
+		sanityService = resolveSanityService(self._deps)
+		self._sanityService = sanityService
+	end
+	if sanityService and type(sanityService.RestoreSanity) == "function" then
+		resultingSanity = sanityService:RestoreSanity(player, config.sanityRestore, matchId, "smudge_stick")
+	else
+		setStudioEvidenceServiceTrace(player, "dupa_missing_sanity_service")
 	end
 
 	local shouldRepelHunt = requestPayload.nearGhostRoom == true
@@ -1467,8 +1485,15 @@ function EvidenceService:_handleSanityPillUse(player, matchId, requestPayload)
 	end
 
 	local resultingSanity = nil
-	if self._sanityService and type(self._sanityService.RestoreSanity) == "function" then
-		resultingSanity = self._sanityService:RestoreSanity(player, pillConfig.restoreAmount, matchId, "sanity_pill")
+	local sanityService = self._sanityService
+	if not (sanityService and type(sanityService.RestoreSanity) == "function") then
+		sanityService = resolveSanityService(self._deps)
+		self._sanityService = sanityService
+	end
+	if sanityService and type(sanityService.RestoreSanity) == "function" then
+		resultingSanity = sanityService:RestoreSanity(player, pillConfig.restoreAmount, matchId, "sanity_pill")
+	else
+		setStudioEvidenceServiceTrace(player, "pill_missing_sanity_service")
 	end
 
 	self:_publish("SanityPillUsed", {

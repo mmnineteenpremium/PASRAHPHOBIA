@@ -28,9 +28,28 @@ local ACTIVE_MATCH_PHASES = {
 	Escalation = true,
 	Hunt = true,
 }
+local AUTHORED_OWNER_LAYOUT_LOCK = true
+local TRACKER_BUTTON_TEXT_IMAGE_STATES = {
+	CollapseButton = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
+	ReopenButton = { idle = "103489183789899", hover = "99269259836629", active = "110126978866737" },
+}
 
 local QuestTracker = {}
 QuestTracker.__index = QuestTracker
+
+local missingQuestTrackerTemplateWarnings = {}
+
+local function getDirectChildOfClass(parent, childName, className)
+	local child = parent and parent:FindFirstChild(childName)
+	if child and child:IsA(className) then
+		return child
+	end
+	return nil
+end
+
+local function getFirstChildOfClass(parent, className)
+	return parent and parent:FindFirstChildOfClass(className) or nil
+end
 
 local function decodeQuestPayload(encoded)
 	if type(encoded) ~= "string" or encoded == "" then
@@ -97,6 +116,172 @@ local function isTouchLayout()
 	return UserInputService.TouchEnabled == true and UserInputService.KeyboardEnabled ~= true
 end
 
+local function shouldPreserveAuthoredOwnerLayout()
+	return AUTHORED_OWNER_LAYOUT_LOCK == true
+end
+
+local function toButtonTextImageAsset(assetId)
+	return string.format("rbxassetid://%s", tostring(assetId))
+end
+local BUTTON_TEXT_IMAGE_SCALE = {
+	idle = 1,
+	hover = 1.3,
+	active = 1.2,
+}
+local function setButtonTextImageScale(image, stateName)
+	if not image then
+		return
+	end
+	local scale = image:FindFirstChild("BrandTextImageStateScale")
+	if not (scale and scale:IsA("UIScale")) then
+		scale = Instance.new("UIScale")
+		scale.Name = "BrandTextImageStateScale"
+		scale.Parent = image
+	end
+	scale.Scale = BUTTON_TEXT_IMAGE_SCALE[stateName or "idle"] or BUTTON_TEXT_IMAGE_SCALE.idle
+end
+local function setButtonTextImagePassthrough(image)
+	if not (image and image:IsA("ImageButton")) then
+		return
+	end
+	image.AutoButtonColor = false
+	image.Active = false
+	image.Selectable = false
+	pcall(function()
+		image.Interactable = false
+	end)
+end
+local function isButtonTextImageObject(image)
+	return image and (image:IsA("ImageLabel") or image:IsA("ImageButton"))
+end
+local function configureButtonTextImage(image, states, stateName)
+	if not (image and states) then
+		return
+	end
+	local idle = states.idle or states.active or states.hover
+	local hover = states.hover or idle
+	local active = states.active or hover
+	image.Image = toButtonTextImageAsset(states[stateName] or idle)
+	image.ImageTransparency = 0
+	setButtonTextImageScale(image, stateName)
+	if image:IsA("ImageButton") then
+		image.HoverImage = toButtonTextImageAsset(hover)
+		image.PressedImage = toButtonTextImageAsset(active)
+		setButtonTextImagePassthrough(image)
+	end
+end
+
+local function warnMissingQuestTrackerTemplate(key, message)
+	if missingQuestTrackerTemplateWarnings[key] then
+		return
+	end
+	missingQuestTrackerTemplateWarnings[key] = true
+	warn(message)
+end
+
+local function resolveTrackerButtonImage(button)
+	if not (button and button:IsA("GuiButton")) then
+		return nil
+	end
+	local image = button:FindFirstChild("BrandTextImage")
+	if image and image:IsA("ImageButton") then
+		return image
+	end
+	if image and isButtonTextImageObject(image) then
+		local replacement = Instance.new("ImageButton")
+		replacement.Name = "BrandTextImage"
+		replacement.BackgroundTransparency = 1
+		replacement.ScaleType = Enum.ScaleType.Fit
+		replacement.Size = image.Size
+		replacement.Position = image.Position
+		replacement.AnchorPoint = image.AnchorPoint
+		replacement.ZIndex = image.ZIndex
+		replacement.Visible = image.Visible
+		setButtonTextImagePassthrough(replacement)
+		image:Destroy()
+		replacement.Parent = button
+		return replacement
+	end
+	if not image then
+		image = Instance.new("ImageButton")
+		image.Name = "BrandTextImage"
+		image.BackgroundTransparency = 1
+		setButtonTextImagePassthrough(image)
+		image.Parent = button
+		return image
+	end
+	image = button:FindFirstChild("CloseIcon")
+	if image and image:IsA("ImageLabel") then
+		return image
+	end
+	warnMissingQuestTrackerTemplate(
+		"ButtonImage:" .. button.Name,
+		string.format("[QuestTracker] Missing authored button image child on %s.", button.Name)
+	)
+	return nil
+end
+
+local function cloneGuiTemplate(template, cloneName, parent)
+	if typeof(template) ~= "Instance" then
+		return nil
+	end
+	local clone = template:Clone()
+	clone.Name = cloneName or template.Name:gsub("Template$", "")
+	clone.Parent = parent
+	return clone
+end
+
+local function applyTrackerButtonImageState(button, stateName)
+	local states = TRACKER_BUTTON_TEXT_IMAGE_STATES[button.Name]
+	if not states then
+		return
+	end
+	local image = resolveTrackerButtonImage(button)
+	if not image then
+		return
+	end
+	image.BackgroundTransparency = 1
+	image.Size = UDim2.new(1, -8, 1, -8)
+	image.Position = UDim2.fromOffset(4, 4)
+	image.ScaleType = Enum.ScaleType.Fit
+	image.ZIndex = button.ZIndex + 1
+	setButtonTextImagePassthrough(image)
+	configureButtonTextImage(image, states, stateName)
+	button.TextTransparency = 1
+end
+
+local function bindTrackerButtonImage(button)
+	if not TRACKER_BUTTON_TEXT_IMAGE_STATES[button.Name] then
+		return
+	end
+	applyTrackerButtonImageState(button, "idle")
+	local hovered = false
+	button.MouseEnter:Connect(function()
+		hovered = true
+		applyTrackerButtonImageState(button, "hover")
+	end)
+	button.MouseLeave:Connect(function()
+		hovered = false
+		applyTrackerButtonImageState(button, "idle")
+	end)
+	button.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or input.KeyCode == Enum.KeyCode.ButtonA
+		then
+			applyTrackerButtonImageState(button, "active")
+		end
+	end)
+	button.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch
+			or input.KeyCode == Enum.KeyCode.ButtonA
+		then
+			applyTrackerButtonImageState(button, hovered and "hover" or "idle")
+		end
+	end)
+end
+
 function QuestTracker.new(playerGui)
 	local self = setmetatable({}, QuestTracker)
 	self.playerGui = playerGui
@@ -105,84 +290,52 @@ function QuestTracker.new(playerGui)
 	self._lastCompletedAt = tonumber(self.player:GetAttribute(QUEST_LAST_COMPLETED_AT_ATTR)) or 0
 	self._collapsed = isTouchLayout()
 	self._manualExpandedDuringMatch = false
-	self:BuildUI()
-	self:Connect()
-	self:RefreshFromAttributes()
+	if self:BuildUI() then
+		self:Connect()
+		self:RefreshFromAttributes()
+	end
 	return self
 end
 
 function QuestTracker:BuildUI()
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "QuestTrackerGui"
-	screenGui.ResetOnSpawn = false
-	screenGui.IgnoreGuiInset = false
-	screenGui.DisplayOrder = 4
-	screenGui.Parent = self.playerGui
+	local screenGui = self.playerGui:FindFirstChild("QuestTrackerGui") or self.playerGui:WaitForChild("QuestTrackerGui", 5)
+	local popupGui = self.playerGui:FindFirstChild("QuestPopupGui") or self.playerGui:WaitForChild("QuestPopupGui", 5)
+	if not screenGui or not screenGui:IsA("ScreenGui") then
+		warn("[QuestTracker] Missing authored QuestTrackerGui ScreenGui; check StarterGui shell contract.")
+		return false
+	end
+	if not popupGui or not popupGui:IsA("ScreenGui") then
+		warn("[QuestTracker] Missing authored QuestPopupGui ScreenGui; check StarterGui shell contract.")
+		return false
+	end
 
-	local container = Instance.new("Frame")
-	container.Name = "QuestContainer"
-	container.AnchorPoint = Vector2.new(1, 1)
-	container.Position = UDim2.new(1, -18, 1, -18)
-	container.Size = UDim2.fromOffset(isTouchLayout() and 232 or 280, isTouchLayout() and 192 or 228)
-	container.BackgroundTransparency = 1
-	container.Parent = screenGui
-
-	local sizeConstraint = Instance.new("UISizeConstraint")
-	sizeConstraint.MinSize = Vector2.new(210, 180)
-	sizeConstraint.MaxSize = Vector2.new(300, 260)
-	sizeConstraint.Parent = container
-
-	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 6)
-	layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-	layout.Parent = container
-
-	local header = Instance.new("TextLabel")
-	header.Name = "Header"
-	header.Size = UDim2.new(1, -42, 0, 22)
-	header.LayoutOrder = 0
-	header.BackgroundTransparency = 1
-	header.Font = Enum.Font.GothamBold
-	header.Text = "  DAILY MISSIONS"
-	header.TextColor3 = Color3.fromRGB(255, 210, 92)
-	header.TextSize = 13
-	header.TextXAlignment = Enum.TextXAlignment.Left
-	header.Parent = container
-
-	local collapseButton = Instance.new("TextButton")
-	collapseButton.Name = "CollapseButton"
-	collapseButton.AnchorPoint = Vector2.new(1, 0)
-	collapseButton.Position = UDim2.new(1, 0, 0, 0)
-	collapseButton.Size = UDim2.fromOffset(34, 22)
-	collapseButton.BackgroundColor3 = Color3.fromRGB(32, 38, 54)
-	collapseButton.BorderSizePixel = 0
-	collapseButton.Font = Enum.Font.GothamBold
-	collapseButton.Text = "X"
-	collapseButton.TextColor3 = Color3.fromRGB(235, 238, 246)
-	collapseButton.TextSize = 11
-	collapseButton.Parent = container
-
-	local collapseCorner = Instance.new("UICorner")
-	collapseCorner.CornerRadius = UDim.new(0, 6)
-	collapseCorner.Parent = collapseButton
-
-	local reopenButton = Instance.new("TextButton")
-	reopenButton.Name = "ReopenButton"
-	reopenButton.AnchorPoint = Vector2.new(1, 1)
-	reopenButton.Position = UDim2.new(1, -12, 1, -12)
-	reopenButton.Size = UDim2.fromOffset(112, 34)
-	reopenButton.BackgroundColor3 = Color3.fromRGB(28, 34, 50)
-	reopenButton.BorderSizePixel = 0
-	reopenButton.Font = Enum.Font.GothamBold
-	reopenButton.Text = "TRACKER"
-	reopenButton.TextColor3 = Color3.fromRGB(255, 210, 92)
-	reopenButton.TextSize = 12
-	reopenButton.Visible = false
-	reopenButton.Parent = screenGui
-
-	local reopenCorner = Instance.new("UICorner")
-	reopenCorner.CornerRadius = UDim.new(0, 8)
-	reopenCorner.Parent = reopenButton
+	local container = getDirectChildOfClass(screenGui, "QuestContainer", "Frame")
+	local sizeConstraint = getFirstChildOfClass(container, "UISizeConstraint")
+	local layout = getFirstChildOfClass(container, "UIListLayout")
+	local header = getDirectChildOfClass(container, "Header", "TextLabel")
+	local collapseButton = getDirectChildOfClass(container, "CollapseButton", "TextButton")
+	local reopenButton = getDirectChildOfClass(screenGui, "ReopenButton", "TextButton")
+	local templates = getDirectChildOfClass(screenGui, "Templates", "Frame")
+	local questCardTemplate = getDirectChildOfClass(templates, "QuestCardTemplate", "Frame")
+	local questEmptyStateTemplate = getDirectChildOfClass(templates, "QuestEmptyStateTemplate", "TextLabel")
+	local popupPanel = getDirectChildOfClass(popupGui, "Panel", "Frame")
+	local popupLabel = getDirectChildOfClass(popupPanel, "Label", "TextLabel")
+	if not (
+		container
+		and sizeConstraint
+		and layout
+		and header
+		and collapseButton
+		and reopenButton
+		and templates
+		and questCardTemplate
+		and questEmptyStateTemplate
+		and popupPanel
+		and popupLabel
+	) then
+		warn("[QuestTracker] Authored QuestTrackerGui contract mismatch; preserve canonical widget names.")
+		return false
+	end
 
 	collapseButton.MouseButton1Click:Connect(function()
 		self:SetCollapsed(true, false)
@@ -198,7 +351,17 @@ function QuestTracker:BuildUI()
 	self._header = header
 	self._collapseButton = collapseButton
 	self._reopenButton = reopenButton
+	self._questCardTemplate = questCardTemplate
+	self._questEmptyStateTemplate = questEmptyStateTemplate
+	self._popupGui = popupGui
+	self._popupPanel = popupPanel
+	self._popupLabel = popupLabel
+	self._popupGui.Enabled = false
+	self._popupPanel.Visible = false
+	bindTrackerButtonImage(collapseButton)
+	bindTrackerButtonImage(reopenButton)
 	self:ApplyLayout()
+	return true
 end
 
 function QuestTracker:_getMatchPhaseToken()
@@ -216,6 +379,12 @@ function QuestTracker:ApplyLayout()
 		or touchLayout
 		or viewport.X <= 900
 		or viewport.Y <= 520
+	local preserveAuthoredDesktopLayout = shouldPreserveAuthoredOwnerLayout() or (not touchLayout and not compactLayout)
+
+	if preserveAuthoredDesktopLayout then
+		self:_syncVisibility()
+		return
+	end
 
 	self._container.Position = UDim2.new(1, compactLayout and -12 or -18, 1, touchLayout and -16 or (compactLayout and -12 or -18))
 	self._container.Size = UDim2.fromOffset(
@@ -277,68 +446,50 @@ function QuestTracker:_createCard(mission, order)
 	local requiredValue = math.max(1, tonumber(objective and objective.required) or 1)
 	local ratio = math.clamp(progressValue / requiredValue, 0, 1)
 
-	local card = Instance.new("Frame")
-	card.Name = "QuestCard"
-	card.Size = UDim2.new(1, 0, 0, 58)
+	local card = cloneGuiTemplate(self._questCardTemplate, "QuestCard", self._container)
+	if not (card and card:IsA("Frame")) then
+		warnMissingQuestTrackerTemplate(
+			"QuestCardTemplate",
+			"[QuestTracker] Missing authored template: Templates.QuestCardTemplate"
+		)
+		return nil
+	end
 	card.LayoutOrder = order
-	card.BackgroundColor3 = Color3.fromRGB(18, 20, 30)
-	card.BackgroundTransparency = 0.08
-	card.BorderSizePixel = 0
-	card.Parent = self._container
 
-	local cardCorner = Instance.new("UICorner")
-	cardCorner.CornerRadius = UDim.new(0, 8)
-	cardCorner.Parent = card
+	local stripe = getDirectChildOfClass(card, "Accent", "Frame")
+	local title = getDirectChildOfClass(card, "Title", "TextLabel")
+	local bar = getDirectChildOfClass(card, "ProgressBar", "Frame")
+	local fill = bar and getDirectChildOfClass(bar, "ProgressFill", "Frame")
+	local progress = getDirectChildOfClass(card, "ProgressText", "TextLabel")
+	if not (stripe and title and bar and fill and progress) then
+		warnMissingQuestTrackerTemplate(
+			"QuestCardTemplate:Children",
+			"[QuestTracker] Authored QuestCardTemplate missing required children."
+		)
+		card:Destroy()
+		return nil
+	end
 
-	local stripe = Instance.new("Frame")
-	stripe.Size = UDim2.new(0, 4, 1, 0)
 	stripe.BackgroundColor3 = Color3.fromRGB(116, 196, 255)
-	stripe.BorderSizePixel = 0
-	stripe.Parent = card
-
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, -18, 0, 20)
-	title.Position = UDim2.fromOffset(10, 4)
-	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamSemibold
 	title.Text = tostring(mission.title or "Mission")
-	title.TextColor3 = Color3.fromRGB(244, 244, 250)
-	title.TextSize = 13
-	title.TextTruncate = Enum.TextTruncate.AtEnd
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.Parent = card
-
-	local bar = Instance.new("Frame")
-	bar.Size = UDim2.new(1, -18, 0, 8)
-	bar.Position = UDim2.fromOffset(10, 28)
-	bar.BackgroundColor3 = Color3.fromRGB(44, 48, 62)
-	bar.BorderSizePixel = 0
-	bar.Parent = card
-
-	local barCorner = Instance.new("UICorner")
-	barCorner.CornerRadius = UDim.new(0, 4)
-	barCorner.Parent = bar
-
-	local fill = Instance.new("Frame")
 	fill.Size = UDim2.new(ratio, 0, 1, 0)
 	fill.BackgroundColor3 = Color3.fromRGB(116, 196, 255)
-	fill.BorderSizePixel = 0
-	fill.Parent = bar
-
-	local fillCorner = Instance.new("UICorner")
-	fillCorner.CornerRadius = UDim.new(0, 4)
-	fillCorner.Parent = fill
-
-	local progress = Instance.new("TextLabel")
-	progress.Size = UDim2.new(1, -18, 0, 14)
-	progress.Position = UDim2.fromOffset(10, 40)
-	progress.BackgroundTransparency = 1
-	progress.Font = Enum.Font.Gotham
 	progress.Text = string.format("%d / %d", progressValue, requiredValue)
-	progress.TextColor3 = Color3.fromRGB(188, 194, 210)
-	progress.TextSize = 11
-	progress.TextXAlignment = Enum.TextXAlignment.Right
-	progress.Parent = card
+	return card
+end
+
+function QuestTracker:_createEmptyState(text, order)
+	local placeholder = cloneGuiTemplate(self._questEmptyStateTemplate, "QuestEmptyState", self._container)
+	if not (placeholder and placeholder:IsA("TextLabel")) then
+		warnMissingQuestTrackerTemplate(
+			"QuestEmptyStateTemplate",
+			"[QuestTracker] Missing authored template: Templates.QuestEmptyStateTemplate"
+		)
+		return nil
+	end
+	placeholder.LayoutOrder = order or 0
+	placeholder.Text = tostring(text)
+	return placeholder
 end
 
 function QuestTracker:RefreshFromAttributes()
@@ -347,16 +498,7 @@ function QuestTracker:RefreshFromAttributes()
 
 	self:_clearCards()
 	if #active == 0 then
-		local placeholder = Instance.new("TextLabel")
-		placeholder.Name = "QuestEmptyState"
-		placeholder.Size = UDim2.new(1, 0, 0, 42)
-		placeholder.LayoutOrder = 1
-		placeholder.BackgroundTransparency = 1
-		placeholder.Font = Enum.Font.Gotham
-		placeholder.Text = "Tidak ada misi aktif."
-		placeholder.TextColor3 = Color3.fromRGB(142, 147, 164)
-		placeholder.TextSize = 12
-		placeholder.Parent = self._container
+		self:_createEmptyState("Tidak ada misi aktif.", 1)
 		return
 	end
 
@@ -376,68 +518,67 @@ function QuestTracker:_showCompletionPopup()
 		return
 	end
 	self._lastCompletedAt = completedAt
+	if self.player:GetAttribute("InMatch") == true then
+		self:_hideCompletionPopup()
+		return
+	end
 
 	local title = tostring(self.player:GetAttribute(QUEST_LAST_COMPLETED_TITLE_ATTR) or "Mission")
 	local xp = math.floor(tonumber(self.player:GetAttribute(QUEST_LAST_COMPLETED_XP_ATTR)) or 0)
 	local questId = tostring(self.player:GetAttribute(QUEST_LAST_COMPLETED_ID_ATTR) or "")
 
-	local existing = self.playerGui:FindFirstChild("QuestPopupGui")
-	if existing then
-		existing:Destroy()
+	if not (self._popupGui and self._popupPanel and self._popupLabel) then
+		warnMissingQuestTrackerTemplate(
+			"QuestPopupGui",
+			"[QuestTracker] Missing authored QuestPopupGui contract during completion popup."
+		)
+		return
 	end
 
-	local popup = Instance.new("ScreenGui")
-	popup.Name = "QuestPopupGui"
-	popup.ResetOnSpawn = false
-	popup.IgnoreGuiInset = false
-	popup.DisplayOrder = 6
-	popup.Parent = self.playerGui
-
-	local panel = Instance.new("Frame")
-	panel.Size = UDim2.fromOffset(isTouchLayout() and 300 or 340, 84)
-	panel.AnchorPoint = Vector2.new(0.5, 0)
-	panel.Position = UDim2.new(0.5, 0, 0, -96)
-	panel.BackgroundColor3 = Color3.fromRGB(22, 47, 28)
-	panel.BorderSizePixel = 0
-	panel.Parent = popup
-
-	local panelCorner = Instance.new("UICorner")
-	panelCorner.CornerRadius = UDim.new(0, 10)
-	panelCorner.Parent = panel
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -18, 1, 0)
-	label.Position = UDim2.fromOffset(10, 0)
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamSemibold
-	label.Text = string.format("Mission selesai!\n%s%s  (+%d XP)", title, questId ~= "" and ("  •  " .. questId) or "", xp)
-	label.TextColor3 = Color3.fromRGB(128, 244, 135)
-	label.TextSize = 15
-	label.TextWrapped = true
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = panel
+	self._popupNonce = (self._popupNonce or 0) + 1
+	local popupNonce = self._popupNonce
+	self._popupGui.Enabled = true
+	self._popupPanel.Visible = true
+	self._popupPanel.Position = UDim2.new(0.5, 0, 0, -96)
+	self._popupLabel.Text = string.format(
+		"Mission selesai!\n%s%s  (+%d XP)",
+		title,
+		questId ~= "" and ("  •  " .. questId) or "",
+		xp
+	)
 
 	TweenService:Create(
-		panel,
+		self._popupPanel,
 		TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
 		{ Position = UDim2.new(0.5, 0, 0, 18) }
 	):Play()
 
 	task.delay(3.2, function()
-		if not panel.Parent then
+		if self._popupNonce ~= popupNonce or not self._popupPanel.Parent then
 			return
 		end
 		TweenService:Create(
-			panel,
+			self._popupPanel,
 			TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
 			{ Position = UDim2.new(0.5, 0, 0, -96) }
 		):Play()
 		task.delay(0.3, function()
-			if popup.Parent then
-				popup:Destroy()
+			if self._popupNonce == popupNonce and self._popupGui.Parent then
+				self._popupPanel.Visible = false
+				self._popupGui.Enabled = false
 			end
 		end)
 	end)
+end
+
+function QuestTracker:_hideCompletionPopup()
+	self._popupNonce = (self._popupNonce or 0) + 1
+	if self._popupPanel then
+		self._popupPanel.Visible = false
+	end
+	if self._popupGui then
+		self._popupGui.Enabled = false
+	end
 end
 
 function QuestTracker:Connect()
@@ -447,6 +588,11 @@ function QuestTracker:Connect()
 
 	table.insert(self._connections, self.player:GetAttributeChangedSignal(QUEST_LAST_COMPLETED_AT_ATTR):Connect(function()
 		self:_showCompletionPopup()
+	end))
+	table.insert(self._connections, self.player:GetAttributeChangedSignal("InMatch"):Connect(function()
+		if self.player:GetAttribute("InMatch") == true then
+			self:_hideCompletionPopup()
+		end
 	end))
 
 	for _, attributeName in ipairs({

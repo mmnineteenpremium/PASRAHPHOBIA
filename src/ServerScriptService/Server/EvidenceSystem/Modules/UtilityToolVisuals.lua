@@ -38,6 +38,64 @@ local function resolveToolVisualConfig(toolType)
 	return type(config) == "table" and config or nil
 end
 
+local function coerceConfigVector3(value)
+	if typeof(value) == "Vector3" then
+		return value
+	end
+	if type(value) ~= "table" then
+		return nil
+	end
+
+	local x = tonumber(value.x or value.X or value[1])
+	local y = tonumber(value.y or value.Y or value[2])
+	local z = tonumber(value.z or value.Z or value[3])
+	if x and y and z then
+		return Vector3.new(x, y, z)
+	end
+	return nil
+end
+
+local function clampRuntimeModelBounds(model, targetBounds)
+	if not (model and model:IsA("Model")) or typeof(targetBounds) ~= "Vector3" then
+		return false
+	end
+
+	local okExtents, extents = pcall(function()
+		return model:GetExtentsSize()
+	end)
+	if not okExtents or typeof(extents) ~= "Vector3" then
+		return false
+	end
+	if extents.X <= 0 or extents.Y <= 0 or extents.Z <= 0 then
+		return false
+	end
+
+	local factor = math.min(
+		targetBounds.X / extents.X,
+		targetBounds.Y / extents.Y,
+		targetBounds.Z / extents.Z
+	)
+	if factor <= 0 then
+		return false
+	end
+	if factor >= 0.98 and factor <= 1.02 then
+		return true
+	end
+
+	local currentScale = 1
+	local okScale, value = pcall(function()
+		return model:GetScale()
+	end)
+	if okScale and type(value) == "number" and value > 0 then
+		currentScale = value
+	end
+
+	local okApply = pcall(function()
+		model:ScaleTo(math.max(0.01, currentScale * factor))
+	end)
+	return okApply
+end
+
 local function stampToolVisualMetadata(model, toolType, template, visualConfig)
 	if not (model and model:IsA("Model")) then
 		return
@@ -51,6 +109,27 @@ local function stampToolVisualMetadata(model, toolType, template, visualConfig)
 	model:SetAttribute("PasrahToolInventoryModelAssetId", type(inventoryModelAssetId) == "string" and inventoryModelAssetId ~= "" and inventoryModelAssetId or nil)
 	model:SetAttribute("PasrahToolVisualLabel", type(sourceLabel) == "string" and sourceLabel ~= "" and sourceLabel or nil)
 	model:SetAttribute("PasrahToolVariantRole", type(variantRole) == "string" and variantRole ~= "" and variantRole or nil)
+end
+
+local function applyInventoryMeshAssetId(model, visualConfig)
+	if not (model and model:IsA("Model")) or type(visualConfig) ~= "table" then
+		return
+	end
+	local inventoryModelAssetId = visualConfig.inventoryModelAssetId
+	if type(inventoryModelAssetId) ~= "string" or inventoryModelAssetId == "" then
+		return
+	end
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("MeshPart") then
+			pcall(function()
+				descendant.MeshId = inventoryModelAssetId
+			end)
+		elseif descendant:IsA("SpecialMesh") then
+			pcall(function()
+				descendant.MeshId = inventoryModelAssetId
+			end)
+		end
+	end
 end
 
 local function ensureActiveMatchesFolder()
@@ -238,6 +317,7 @@ function UtilityToolVisuals:PlaceTool(matchId, toolType, placementId, worldCFram
 	if not model then
 		return nil
 	end
+	applyInventoryMeshAssetId(model, visualConfig)
 	model.Name = string.format("%s_%s", toolType, tostring(placementId))
 	model:SetAttribute(TOOL_PLACEMENT_ID_ATTRIBUTE, tostring(placementId))
 	stampToolVisualMetadata(model, toolType, template, visualConfig)
@@ -249,6 +329,15 @@ function UtilityToolVisuals:PlaceTool(matchId, toolType, placementId, worldCFram
 		pcall(function()
 			model:PivotTo(worldCFrame)
 		end)
+	end
+	local targetBounds = type(visualConfig) == "table" and coerceConfigVector3(visualConfig.targetBounds) or nil
+	if targetBounds then
+		clampRuntimeModelBounds(model, targetBounds)
+		if typeof(worldCFrame) == "CFrame" then
+			pcall(function()
+				model:PivotTo(worldCFrame)
+			end)
+		end
 	end
 
 	self:_getPlacementMap(matchId)[placementId] = {

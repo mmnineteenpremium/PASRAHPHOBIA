@@ -110,6 +110,20 @@ local function listRegisteredObjects(mapInteractionSystem)
 	return {}
 end
 
+local function resolveRegisteredObjectPosition(mapInteractionSystem, objectId)
+	if type(objectId) ~= "string" or objectId == "" then
+		return nil
+	end
+	for _, objectData in ipairs(listRegisteredObjects(mapInteractionSystem)) do
+		if type(objectData) == "table"
+			and tostring(objectData.id or objectData.objectId or "") == objectId
+			and typeof(objectData.position) == "Vector3" then
+			return objectData.position
+		end
+	end
+	return nil
+end
+
 local function isObjectAllowedForEvent(objectData, eventConfig)
 	if type(objectData) ~= "table" or type(eventConfig) ~= "table" then
 		return false
@@ -206,11 +220,27 @@ function Service:ValidateEventConditions(eventData)
 	end
 
 	local matchId = eventData.matchId or self._state:Get("activeMatchId")
-	if not matchId or matchId ~= self._state:Get("activeMatchId") then
+	local activeMatchId = self._state:Get("activeMatchId")
+	if not matchId or (activeMatchId ~= nil and matchId ~= activeMatchId) then
 		return false, "invalid_match"
+	end
+	if activeMatchId == nil then
+		self._state:Set("activeMatchId", matchId)
 	end
 
 	local phase = eventData.phase or self._state:Get("currentPhase")
+	if not isGameplayPhase(phase) and matchId then
+		local matchSystem = self._dependencies.MatchSystem or Services.Get(self._deps, "MatchSystem")
+		self._dependencies.MatchSystem = matchSystem
+		local liveMatch = type(matchSystem) == "table"
+			and type(matchSystem.GetLiveMatch) == "function"
+			and matchSystem:GetLiveMatch(matchId)
+			or nil
+		if type(liveMatch) == "table" and type(liveMatch.phase) == "string" then
+			phase = liveMatch.phase
+			self._state:Set("currentPhase", phase)
+		end
+	end
 	if not isGameplayPhase(phase) then
 		return false, "invalid_phase"
 	end
@@ -267,7 +297,7 @@ function Service:ApplyEventEffect(eventData)
 		return true
 	end
 
-	local ok, result = pcall(function()
+	local ok, interactionOk, interactionReason = pcall(function()
 		if type(mapInteractionSystem.ExecuteInteraction) == "function" then
 			return mapInteractionSystem:ExecuteInteraction(targetObject, eventConfig.interaction)
 		end
@@ -284,8 +314,8 @@ function Service:ApplyEventEffect(eventData)
 		return false, "interaction_apply_failed"
 	end
 
-	if result == false then
-		return false, "interaction_rejected"
+	if interactionOk == false then
+		return false, tostring(interactionReason or "interaction_rejected")
 	end
 	return true
 end
@@ -342,6 +372,11 @@ function Service:TriggerEvent(eventData)
 
 	local eventConfig = findEventConfig(payload.eventType)
 	payload.targetObject, payload.roomId = self:_resolveTargetObject(payload, eventConfig)
+	if typeof(payload.position) ~= "Vector3" then
+		local mapInteractionSystem = self._dependencies.MapInteractionSystem or resolveMapInteractionSystem(self._deps)
+		self._dependencies.MapInteractionSystem = mapInteractionSystem
+		payload.position = resolveRegisteredObjectPosition(mapInteractionSystem, payload.targetObject)
+	end
 	local eventRecord = {
 		eventType = payload.eventType,
 		targetObject = payload.targetObject,

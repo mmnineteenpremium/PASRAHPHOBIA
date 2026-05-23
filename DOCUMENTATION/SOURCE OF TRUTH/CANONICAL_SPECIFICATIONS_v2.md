@@ -6,6 +6,13 @@
 
 **⚠️ AI & DEVELOPERS:** This document is the SINGLE SOURCE OF TRUTH. All conflicting information in other files must defer to this specification.
 
+## 2026-05-04 Addendum - Owner Visual Reality Priority
+
+- Semua dokumentasi map canonical adalah representasi spesifikasi; kondisi visual nyata yang diedit Owner di Studio dapat berubah dari dokumentasi.
+- Untuk lane `LobbySocialHub`, runtime wajib memprioritaskan hasil edit visual owner yang authored di map source aktif.
+- AI tidak boleh menghapus/mengubah objek visual owner tanpa persetujuan eksplisit Owner Projects.
+- Perubahan oleh AI harus berupa update pada owner/lane yang sudah ada (no owner ganda, no duplikasi source, no drift antar-lane).
+
 ## 2026-04-26 Addendum - Runtime Spawn Authority + Visual-Only Lane Lock
 
 - Runtime spawn source-of-truth untuk 4 map canonical dikunci ke authored path:
@@ -2085,3 +2092,543 @@ Based on canonical specifications, Phase 7 should prioritize:
 - RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro trim lane.
 - Mood-chip density tightens slightly while preserving truncation behavior.
 - No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T201 Map-Mood Width Micro Trim XXIV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro trim lane.
+- Mood-chip density tightens slightly while preserving truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T202 Map-Mood Width Micro Trim XXV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro trim lane.
+- Mood-chip density tightens slightly while preserving truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T203 Map-Mood Width Micro Trim XXVI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro trim lane.
+- Mood-chip density tightens slightly while preserving truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T204 Preview Playerlist Bottom Inset Trim XIV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist bottom inset trim lane.
+- Player-card lane gains slightly more usable height while preserving panel balance.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T205 Preview Map Max Height Trim XIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview map max height trim lane.
+- Map block remains the focal area while releasing a small amount of space to lower content.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T206 RoomList Min Height Trim XI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the room-list min-height trim lane.
+- Room-list scanning stays stable while vertical flexibility increases slightly.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T207 Join Password Anchor Trim XII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the join password anchor trim lane.
+- The lower control stack tightens slightly while preserving mobile input ergonomics.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T208 Action Column Gap Trim VIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the action-column gap trim lane.
+- Paired action buttons gain a little more usable width while preserving control hierarchy.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T209 Preview Playerlist Top Gap Trim XII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist top-gap trim lane.
+- Player-list flow tightens slightly while preserving section readability and title separation.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T210 Map-Title Width Reclaim XIX
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-title width reclaim lane.
+- Title bounds gain a little more horizontal headroom.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T211 Map-Footer Height Micro Trim XXII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer height micro-trim lane.
+- Footer density tightens slightly while preserving metadata hierarchy.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T212 Map-Footer Y Align Trim VI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer Y-align trim lane.
+- Footer rhythm tightens slightly against the title and mood strip without changing text behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T213 Map-Stats Anchor Trim VI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-stats anchor trim lane.
+- Stats placement compacts slightly toward the lower edge while preserving legibility.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T214 Map-Mood Width Micro Trim XXVII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro-trim lane.
+- Mood-chip density tightens slightly while preserving truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T215 Preview Playerlist Bottom Inset Trim XV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist bottom inset trim lane.
+- Player-card lane gains slightly more usable height while preserving panel balance.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T216 Preview Map Max Height Trim XIV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview map max-height trim lane.
+- Map block remains the focal area while releasing a small amount of space to lower content.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T217 RoomList Min Height Trim XII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the room-list min-height trim lane.
+- Room-list scanning stays stable while vertical flexibility increases slightly.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T218 Join Password Anchor Trim XIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the join password anchor trim lane.
+- The lower control stack tightens slightly while preserving mobile input ergonomics.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T219 Preview Playerlist Top Gap Trim XIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist top-gap trim lane.
+- Player-list flow tightens slightly while preserving section readability and title separation.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T220 Map-Title Width Reclaim XX
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-title width reclaim lane.
+- Title bounds gain a little more horizontal headroom.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T221 Map-Footer Height Micro Trim XXIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer height micro-trim lane.
+- Footer density tightens slightly while preserving metadata hierarchy.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T222 Map-Footer Y Align Trim VII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer Y-align trim lane.
+- Footer rhythm tightens slightly against the title and mood strip without changing text behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T223 Map-Stats Anchor Trim VII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-stats anchor trim lane.
+- Stats placement compacts slightly toward the lower edge while preserving legibility.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T224 Map-Mood Width Micro Trim XXVIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro-trim lane.
+- Mood-chip density tightens slightly while preserving truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T225 Preview Playerlist Bottom Inset Trim XVI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist bottom inset trim lane.
+- Player-card lane gains slightly more usable height while preserving panel balance.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T226 Preview Map Max Height Trim XV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview map max-height trim lane.
+- Map block remains the focal area while releasing a small amount of space to lower content.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T227 RoomList Min Height Trim XIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the room-list min-height trim lane.
+- Room-list scanning stays stable while vertical flexibility increases slightly.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T228 Join Password Anchor Trim XIV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the join password anchor trim lane.
+- The lower control stack tightens slightly while preserving mobile input ergonomics.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T229 Preview Playerlist Top Gap Trim XIV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist top-gap trim lane.
+- Player-list flow tightens slightly while preserving section readability and title separation.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T230 Map-Title Width Reclaim XXI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-title width reclaim lane.
+- Title bounds gain a little more horizontal headroom.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T231 Map-Footer Height Micro Trim XXIV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer height micro-trim lane.
+- Footer density tightens slightly while preserving metadata hierarchy.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T232 Map-Footer Y Align Trim VIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer Y-align trim lane.
+- Footer rhythm tightens slightly against the title and mood strip without changing text behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T233 Map-Stats Anchor Trim VIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-stats anchor trim lane.
+- Stats placement compacts slightly toward the lower edge while preserving legibility.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T234 Map-Mood Width Micro Trim XXIX
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro-trim lane.
+- Mood-chip density tightens slightly while preserving truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T235 Preview Playerlist Bottom Inset Trim XVII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist bottom inset trim lane.
+- Player-card lane gains slightly more usable height while preserving panel balance.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T236 Preview Map Max Height Trim XVI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview map max-height trim lane.
+- Map block remains the focal area while releasing a small amount of space to lower content.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T237 RoomList Min Height Trim XIV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the room-list min-height trim lane.
+- Room-list scanning stays stable while vertical flexibility increases slightly.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T238 Join Password Anchor Trim XV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the join password anchor trim lane.
+- The lower control stack tightens slightly while preserving mobile input ergonomics.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T239 Preview Playerlist Top Gap Trim XV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist top-gap trim lane.
+- Player-list flow tightens slightly while preserving section readability and title separation.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T240 Map-Title Width Reclaim XXII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-title width reclaim lane.
+- Title bounds gain a little more horizontal headroom.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T241 Map-Footer Height Micro Trim XXV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer height micro-trim lane.
+- Footer density tightens slightly while preserving metadata hierarchy.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T242 Map-Footer Y Align Trim IX
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer Y-align trim lane.
+- Footer rhythm tightens slightly against the title and mood strip without changing text behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T243 Map-Stats Anchor Trim IX
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-stats anchor trim lane.
+- Stats placement compacts slightly toward the lower edge while preserving legibility.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T244 Map-Mood Width Micro Trim XXX
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro-trim lane.
+- Mood-chip density tightens slightly while preserving truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T245 Preview Playerlist Bottom Inset Trim XVIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist bottom inset trim lane.
+- Player-card lane gains slightly more usable height while preserving panel balance.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T246 Preview Map Max Height Trim XVII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview map max-height trim lane.
+- Map block remains the focal area while releasing a small amount of space to lower content.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T247 RoomList Min Height Trim XV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the room-list min-height trim lane.
+- Room-list scanning stays stable while vertical flexibility increases slightly.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T248 Join Password Anchor Trim XVI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the join password anchor trim lane.
+- The lower control stack tightens slightly while preserving mobile input ergonomics.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T249 Preview Playerlist Top Gap Trim XVI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist top-gap trim lane.
+- Player-list flow tightens slightly while preserving section readability and title separation.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T250 Map-Title Width Reclaim XXIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-title width reclaim lane.
+- Title bounds gain a little more horizontal headroom.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T251 Map-Footer Height Micro Trim XXVI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer height micro-trim lane.
+- Footer density tightens slightly while preserving metadata hierarchy.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T252 Map-Footer Y Align Trim X
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer Y-align trim lane.
+- Footer rhythm tightens slightly against the title and mood strip without changing text behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T253 Map-Stats Anchor Trim X
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-stats anchor trim lane.
+- Stats placement compacts slightly toward the lower edge while preserving legibility.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T254 Map-Mood Width Micro Trim XXXI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro-trim lane.
+- Mood-chip density tightens slightly while preserving truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T255 Preview Playerlist Bottom Inset Trim XIX
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist bottom inset trim lane.
+- Player-card lane gains slightly more usable height while preserving panel balance.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T256 Preview Map Max Height Trim XVIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview map max-height trim lane.
+- Map block remains the focal area while releasing a small amount of space to lower content.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T257 RoomList Min Height Trim XVI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the room-list min-height trim lane.
+- Room-list scanning stays stable while vertical flexibility increases slightly.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T258 Join Password Anchor Trim XVII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the join password anchor trim lane.
+- The lower control stack tightens slightly while preserving mobile input ergonomics.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T259 Preview Playerlist Top Gap Trim XVII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist top-gap trim lane.
+- Player-list flow tightens slightly while preserving section readability and title separation.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T260 Map-Title Width Reclaim XXIV
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-title width reclaim lane.
+- Title bounds gain a little more horizontal headroom.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T261 Map-Footer Height Micro Trim XXVII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer height micro-trim lane.
+- Footer density tightens slightly while preserving metadata hierarchy.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T262 Map-Footer Y Align Trim XI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-footer Y-align trim lane.
+- Footer rhythm tightens slightly against the title and mood strip without changing text behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T263 Map-Stats Anchor Trim XI
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-stats anchor trim lane.
+- Stats placement compacts slightly toward the lower edge while preserving legibility.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T264 Map-Mood Width Micro Trim XXXII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the map-mood width micro-trim lane.
+- Mood-chip density tightens slightly while preserving truncation behavior.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T265 Preview Playerlist Bottom Inset Trim XX
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview playerlist bottom inset trim lane.
+- Player-card lane gains slightly more usable height while preserving panel balance.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T266 Preview Map Max Height Trim XIX
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the preview map max-height trim lane.
+- Map block remains the focal area while releasing a small amount of space to lower content.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T267 RoomList Min Height Trim XVII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the room-list min-height trim lane.
+- Room-list scanning stays stable while vertical flexibility increases slightly.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T268 Join Password Anchor Trim XVIII
+
+- RoomBrowser received another extra-compact visual micro-adjustment in the join password anchor trim lane.
+- The lower control stack tightens slightly while preserving mobile input ergonomics.
+- No room preview data flow, player-state logic, or runtime behavior changes in this batch.
+
+## 2026-04-30 Addendum - Visual Batch T269 ToolVisual Mount CFrame Normalization
+
+- Live Studio verification on the active `PASRAHPHOBIA.rbxlx` exposed a tool-visual mount offset path that still accepted serialized table data where runtime multiplication expected a `CFrame`.
+- The active tool-visual lane now normalizes mount specs before world-space resolution so table-form and native `CFrame` offsets behave identically.
+- This batch preserves the existing tool/hand visual lane and removes the previously observed `invalid argument #2 (Vector3 expected, got table)` error without adding a new runtime system.
+
+## 2026-04-30 Addendum - Visual Batch T270 Result Panel Reopen Fix
+
+- Live Studio verification on the active `PASRAHPHOBIA.rbxlx` exposed a result-phase presentation gap when the match window had been dismissed before the transition to `Results`.
+- The active match UI lane now clears stale dismissal state on result entry and still permits the float reopen control while the local player remains in the match.
+- This batch preserves the existing match/result presentation lane and restores visible result UI without changing gameplay, rewards, or match authority.
+
+## 2026-04-30 Addendum - Owner-Editable GUI Audit Roadmap
+
+- The current client repo still lacks an authored `StarterGui` visual source-of-truth; major player-facing GUI surfaces are still built at runtime from client code.
+- The active migration direction is now explicit: move eligible player-facing GUI shells into owner-editable authored GUI while preserving the same logic, remote wiring, and state ownership.
+- Once an authored shell replaces a runtime builder for a given surface, the old builder path must be hard-deleted to prevent duplicate visible lanes or future AI reactivation.
+
+## 2026-04-30 Addendum - Owner-Editable GUI Wave A Phase 1
+
+- `src/StarterGui` is now active as the first authored GUI source-of-truth slice for `MatchLoadingUI`, `TeleportScreen`, `FPVCursorToggleUI`, and `FlashlightToggleUI`.
+- Runtime `Instance.new` builder paths for those four surfaces have been removed from `Main.lua`, `CameraController.client.lua`, and `FlashlightController.client.lua`; logic and state wiring stay on the same owner-approved lanes.
+- Owner may now edit those four surfaces visually in Studio, but canonical widget names are locked because the existing code binds directly to `Background/ProgressTrack/ProgressFill`, `LoadingOverlay`, `CursorToggleButton`, and `ToggleButton`.
+
+## 2026-04-30 Addendum - Owner-Editable GUI Wave A Phase 2 LobbyUI
+
+- `LobbyUI` now lives as an authored `StarterGui` shell instead of being built from the runtime `Main.lua` lobby branch.
+- The old runtime lobby-builder path has been removed from the active lane; `Main.lua` now binds to the authored `LobbyUI` contract and warns on contract mismatch instead of recreating lobby widgets.
+- Desktop `LobbyUI` layout overrides are disabled so owner-side Studio edits to panel position, size, and arrangement persist on the PC lane, while mobile/compact fallback sizing remains active for smaller viewports.
+
+## 2026-04-30 Addendum - Owner-Editable GUI Wave A Phase 3 RoomBrowserUI
+
+- `RoomBrowserUI` and `RoomBrowserFloatUI` now live as authored `StarterGui` shells instead of being built from the runtime `Main.lua` room-browser shell branch.
+- The old runtime RoomBrowser shell-builder path has been removed from the active lane; `Main.lua` now binds to the authored RoomBrowser contract and keeps the same room/invite/preview/host-control logic on the existing state lane.
+- Desktop `RoomBrowserUI` layout overrides are disabled so owner-side Studio edits to the RoomBrowser shell persist on the PC lane, while mobile/compact fallback sizing remains active for smaller viewports.
+
+## 2026-05-01 Addendum - Owner-Editable GUI Wave A Phase 4 Menu Quest HUD
+
+- `MainMenuUI`, `LeaderboardUI`, `QuestTrackerGui`, `QuestJournalGui`, and `SanityHUDGui` now live as authored `StarterGui` shells instead of being created by runtime shell-builder code.
+- The active logic lane remains unchanged: `Main.lua`, `QuestTracker.lua`, `QuestJournal.lua`, and `SanityHUD.lua` now bind to authored contracts and preserve the same state ownership and refresh behavior.
+- Desktop authored layout overrides are disabled for `MainMenuUI` and `LeaderboardUI`, so owner-side Studio edits to those PC shells persist without being re-imposed by runtime sizing code.
+- Owner decision after Wave A: delay manual Studio editing until the remaining eligible GUI surfaces are migrated, so no player-facing surface is forgotten in a partial owner-edit pass.
+
+## 2026-05-01 Addendum - Owner-Editable GUI Wave B Phase 1 Auxiliary Panels
+
+- `JournalUI`, `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, and `SpectatorUI` now live as authored `StarterGui` shells instead of being recreated by the runtime auxiliary-window shell builder in `Main.lua`.
+- The active logic lane remains unchanged: `Main.lua` now binds the same close/float/status/content contracts onto authored shells, while preserving the same state ownership and action wiring.
+- `ShopUI` keeps authored shell ownership for manual Studio editing, but its filter buttons, item rows, and purchase actions are still populated at runtime inside the authored `ContentFrame` so the existing shop logic lane stays intact.
+- After this wave, the remaining eligible GUI surfaces for full owner-editable migration are only `MatchUI`, `LobbyUXGui`, and `MatchUXGui`; the owner edit pass remains intentionally delayed until those surfaces are also resolved.
+
+## 2026-05-01 Addendum - Owner-Editable GUI Wave C Phase 1 MatchUI
+
+- `MatchUI` now lives as an authored `StarterGui` shell instead of being recreated by the runtime match-panel shell branch in `Main.lua`.
+- The active match logic lane remains unchanged: `Main.lua` now binds the authored contract for the match panel, timer, quick evidence button, controls hint bar, field kit frame, and match float button.
+- `SummaryFrame` rows and `FieldKitFrame.Buttons` are still populated at runtime inside the authored shell so the existing match-state, journal-toggle, and investigation-tool bindings remain intact.
+- After this wave, the remaining eligible GUI surfaces for full owner-editable migration are only `LobbyUXGui` and `MatchUXGui`; the owner edit pass remains intentionally delayed until those surfaces are also resolved.
+
+## 2026-05-01 Addendum - Owner-Editable GUI Wave C Phase 2 LobbyUXGui
+
+- `LobbyUXGui` now lives as an authored `StarterGui` shell instead of being recreated by the runtime lobby overlay branch inside `_ensureUXLayers()`.
+- The active lobby feedback/training logic lane remains unchanged: `_ensureUXLayers()` now prefers the authored `LobbyUXGui` shell, refreshes `SafePadding` on that shell, and only falls back to runtime creation if the authored contract is missing.
+- `SupportStrip` cards and training viewport content are still runtime-refreshed inside the authored shell so the existing evidence-training and tool-preview bindings remain intact.
+- After this wave, the remaining eligible GUI surface for full owner-editable migration is only `MatchUXGui`; the owner edit pass remains intentionally delayed until that surface is also resolved.
+
+## 2026-05-01 Addendum - Owner-Editable GUI Wave C Phase 3 MatchUXGui
+
+- `MatchUXGui` now lives as an authored `StarterGui` shell instead of being recreated by the runtime match overlay branch inside `_ensureUXLayers()`.
+- The active hunt/objective/result logic lane remains unchanged: `_ensureUXLayers()` now prefers the authored `MatchUXGui` shell and only falls back to runtime creation if the authored contract is missing.
+- `ResultsSummary` rows, hunt/objective text, hunt overlay color, and result content are still runtime-refreshed inside the authored shell so the existing match-result bindings remain intact.
+- With this wave, every eligible player-facing GUI surface targeted by the owner-editable migration is now authored in `StarterGui`; the next lane is owner visual editing, not further shell migration.
+
+## 2026-05-01 Addendum - Single-Owner Responsive Authored Layout Lock
+
+- The authored `StarterGui` shells are now the single layout source for both desktop and mobile lanes across the migrated player-facing GUI set.
+- `_applyDeviceSizing()` no longer re-imposes device-specific panel geometry on authored shells such as `LobbyUI`, `RoomBrowserUI`, `MatchUI`, `MainMenuUI`, `LeaderboardUI`, `JournalUI`, `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, `SpectatorUI`, `LobbyUXGui`, and `MatchUXGui`.
+- Runtime still owns visibility, binding, and dynamic content refresh inside those shells, but owner-authored panel position/size no longer splits into separate desktop-vs-mobile layout authorities.
+
+## 2026-05-01 Addendum - Quest Authored Shell Override Cleanup
+
+- `QuestJournal.lua` and `QuestTracker.lua` now also preserve authored owner layout instead of forcing compact/mobile geometry onto the authored shell.
+- The quest HUD lane now matches the same single-owner responsive authority used by the broader `StarterGui` migration.
+- The quest completion popup remains a transient runtime widget and is intentionally excluded from the authored-shell layout lock.
+
+## 2026-05-01 Addendum - Lobby Float Rail Authored Preservation
+
+- The lobby float rail no longer repositions authored float buttons while the authored-owner layout lock is active.
+- `RoomBrowserFloatUI`, `MainMenuUI`, `LeaderboardUI`, `ProfileUI`, `ShopUI`, and `RoyalPassUI` now keep their authored float positions instead of being forced back into a runtime rail stack.
+- This closes another residual split between authored owner layout and runtime geometry enforcement.
+
+## 2026-05-01 Addendum - RoomBrowser Modal Authored Preservation
+
+- `PasswordModal`, `KickNoticeModal`, and `InvitePopup` inside `RoomBrowserUI` now also preserve authored owner layout.
+- Runtime no longer reapplies compact/viewport-specific geometry to those authored RoomBrowser modal shells while the owner-layout lock is active.
+- The remaining RoomBrowser runtime lane is primarily dynamic content generation, not modal shell geometry authority.
+
+## 2026-05-01 Addendum - RoomBrowser Float And Countdown Authored Preservation
+
+- `RoomBrowserFloatUI`, `CountdownLabel`, and `CancelCountdown` now also preserve authored owner layout while the owner-layout lock is active.
+- Runtime no longer forces those authored RoomBrowser widgets back to compact runtime geometry during layout refresh.
+- This narrows the remaining RoomBrowser runtime layout authority further toward dynamic content only.
+
+## 2026-05-01 Addendum - UXLayer Authored Bind-Only Enforcement
+
+- `_ensureUXLayers()` now runs in bind-only mode for `LobbyUXGui` and `MatchUXGui` while the authored-owner layout lock is active.
+- The active lane no longer recreates authored UX shells or their authored child widgets if the contract is missing; it now fails explicitly instead of reviving legacy duplicate geometry.
+- Intentional runtime-dynamic UX content remains inside the authored shell, including training support cards, result summary rows, safe padding refresh, and live state text updates.
+
+## 2026-05-01 Addendum - UXLayer Legacy Builder Hard Delete
+
+- The unreachable legacy builder block under `_ensureUXLayers()` has been physically removed from `Main.lua`.
+- `_ensureUXLayers()` now has no local runtime path that creates `UXLayer`, `LobbyUXGui`, `MatchUXGui`, or static UX shell children.
+- Authored UX contracts are now the only shell authority; runtime remains responsible only for binding, visibility, safe padding, and dynamic content refresh inside those shells.
+
+## 2026-05-01 Addendum - Basic UI Legacy Builder Hard Delete
+
+- The generic fallback builder under `_ensureBasicUIs()` has been physically removed from `Main.lua`.
+- Main player-facing UI entries now must bind through authored `StarterGui` shells; unsupported names produce an explicit warning instead of creating legacy `ScreenGui/MainPanel` shells.
+- Remaining runtime-created `ScreenGui` instances are documented as runtime-only/transient, currently `QuestPopupGui` and `SensoryHorrorHUD`.
+
+## 2026-05-01 Addendum - Authored GUI Runtime Binding Reset Repair
+
+- Authored GUI button and drag bindings now use runtime-memory guards instead of persistent `Bound`, `DragBound`, or `InitDone` attributes.
+- Play Test may reset visibility/state on authored panels, but it must not change owner-authored position or size.
+- Saved edit-mode visibility is no longer allowed to decide runtime wiring or first-play panel open state.
+
+## 2026-05-01 Addendum - Authored GUI Safe Default And Play-Test Repair
+
+- Every authored root `ScreenGui` under `StarterGui` now defaults to `Enabled=false`; runtime must explicitly enable the currently active surface.
+- `Client.UI.Main` must compile cleanly and remain the active `UISystem` owner; the invalid `goto` skip guards were replaced with Luau `continue` guards.
+- `RoomBrowserUI` visibility now toggles both the root `ScreenGui` and authored `Backdrop/Panel` shell, so opening Room Browser from `LobbyUI.MainPanel.OpenRoomBrowserButton` reveals the actual authored panel instead of enabling an invisible parent.
+- Verified in repeated Play Test on `PASRAHPHOBIA.rbxlx`: initial state shows lobby only, Room Browser opens only after click, and runtime log has no `Failed to require UI` / `System disabled: UI` errors.

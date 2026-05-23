@@ -1,6 +1,11 @@
 local ManifestState = {}
 
 function ManifestState.Enter(session, context)
+	if context.manifestAllowed ~= true then
+		session.stateData.manifestEndsAt = context.now
+		return
+	end
+
 	local duration = math.random(3, 7)
 	session.stateData.manifestEndsAt = context.now + duration
 	local token = (session.stateData.manifestToken or 0) + 1
@@ -37,6 +42,9 @@ function ManifestState.Enter(session, context)
 end
 
 function ManifestState.Update(session, context)
+	if context.manifestAllowed ~= true then
+		return "Roaming"
+	end
 	if session.hunt.active then
 		return "Hunt"
 	end

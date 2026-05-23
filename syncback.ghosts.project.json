@@ -15,12 +15,6 @@
             "$path": "src/ReplicatedStorage/Assets/Models/Ghosts"
           }
         }
-      },
-      "$attributes": {
-        "PasrahAutoRoomSmoke": false,
-        "PasrahForceGhostType": "Pocong",
-        "PasrahRoomTrace": false,
-        "PasrahStudioLobbyGhostPreview": true
       }
     }
   },

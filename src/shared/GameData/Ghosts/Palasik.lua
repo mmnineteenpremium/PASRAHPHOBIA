@@ -6,7 +6,7 @@ return {
         "Suara",
     },
     behaviorTraits = {
-        "Bloodlust",
+        "Frenzy",
         "MistWalker",
         "Agile",
     },

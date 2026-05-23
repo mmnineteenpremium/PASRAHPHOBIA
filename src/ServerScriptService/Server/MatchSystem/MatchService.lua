@@ -9,6 +9,8 @@ local RunService = game:GetService("RunService")
 local MatchService = {}
 MatchService.__index = MatchService
 
+local PRE_TELEPORT_LOADING_SECONDS = 10
+
 local DEFAULT_MODE_CONFIG = {
 	DefaultMode = "Classic",
 	DefaultClassicDifficulty = "Mudah",
@@ -116,7 +118,9 @@ local CLIENT_PHASE_BY_MATCH_PHASE = {
 	HuntPhase = "Hunt",
 	EndgamePhase = "Endgame",
 }
-local PREPARATION_FOCUS_TOOL_FALLBACK = "EMF"
+local PREPARATION_FOCUS_TOOL_FALLBACK = "JejakEnergi"
+local PREPARATION_FOCUS_TOOL_FALLBACK_LABEL = "EMF"
+local PREPARATION_FOCUS_TOOL_FALLBACK_SOURCE = "DefaultLoadout"
 local PREPARATION_FOCUS_TOOL_FALLBACK_DELAY = 2.5
 
 local function resolveGhostSystem(deps)
@@ -1180,26 +1184,7 @@ function MatchService:StartMatch(matchId)
 	end
 
 	local function schedulePreparationFocusFallback(player)
-		task.delay(PREPARATION_FOCUS_TOOL_FALLBACK_DELAY, function()
-			local currentMatch = self:_matches()[matchId]
-			if currentMatch ~= match then
-				return
-			end
-			if not (typeof(player) == "Instance" and player:IsA("Player")) then
-				return
-			end
-			if tostring(player:GetAttribute("MatchId") or "") ~= authoritativeMatchId then
-				return
-			end
-			if tostring(player:GetAttribute("MatchLifecyclePhase") or "") ~= "PreparationPhase" then
-				return
-			end
-			local focusTool = player:GetAttribute("PreparationFocusTool")
-			if type(focusTool) == "string" and focusTool ~= "" then
-				return
-			end
-			player:SetAttribute("PreparationFocusTool", PREPARATION_FOCUS_TOOL_FALLBACK)
-		end)
+		-- Default loadout is assigned immediately; world tool stations can still override it.
 	end
 
 	for _, player in ipairs(match.players or {}) do
@@ -1210,18 +1195,22 @@ function MatchService:StartMatch(matchId)
 			player:SetAttribute("MatchDifficulty", tostring(match.difficulty or "Mudah"))
 			player:SetAttribute("MatchMapId", tostring(match.mapId or match.map or ""))
 			player:SetAttribute("MatchLifecyclePhase", tostring(match.phase or "PreparationPhase"))
-			player:SetAttribute("PreparationFocusTool", nil)
+			player:SetAttribute("PreparationFocusTool", PREPARATION_FOCUS_TOOL_FALLBACK)
+			player:SetAttribute("PreparationFocusToolLabel", PREPARATION_FOCUS_TOOL_FALLBACK_LABEL)
+			player:SetAttribute("PreparationFocusToolSource", PREPARATION_FOCUS_TOOL_FALLBACK_SOURCE)
+			player:SetAttribute("PasrahPreparationToolSelected", true)
 			schedulePreparationFocusFallback(player)
 		end
 	end
 
 	self:_fireMatchEventToPlayers(match.players, {
 		eventName = "MatchPreparing",
-		countdown = 2,
+		countdown = PRE_TELEPORT_LOADING_SECONDS,
+		preTeleportLoadingSeconds = PRE_TELEPORT_LOADING_SECONDS,
 	})
 	setStudioMatchStartStage(string.format("match=%s stage=preparing_sent", tostring(matchId)))
 
-	task.delay(1.5, function()
+	task.delay(PRE_TELEPORT_LOADING_SECONDS, function()
 		local ok, err = pcall(function()
 			local currentMatch = self:_matches()[matchId]
 			if currentMatch ~= match then
@@ -1411,6 +1400,29 @@ function MatchService:_buildOutcomeSummary(match, results)
 	results.playersDead = results.playersDead or playersDead
 	results.playersExtracted = results.playersExtracted or playersExtracted
 	results.matchDuration = results.matchDuration or math.max(0, math.floor((getNow() - (match.startedAt or match.createdAt or getNow()))))
+	local ghostSystem = resolveGhostSystem(self._deps)
+	local ghostState = ghostSystem
+		and type(ghostSystem.GetGhostState) == "function"
+		and ghostSystem:GetGhostState(match.matchId)
+		or nil
+	local ghostStateGhostType = type(ghostState) == "table"
+		and (ghostState.ghostType or ghostState.visualGhostType or ghostState.type)
+		or nil
+	local actualGhostType = results.ghostType
+		or results.actualGhostType
+		or results.matchGhostType
+		or match.ghostType
+		or ghostStateGhostType
+		or (RunService:IsStudio() and ReplicatedStorage:GetAttribute("PasrahForceGhostType"))
+	if (type(actualGhostType) ~= "string" or actualGhostType == "") and typeof(match.ghost) == "Instance" then
+		actualGhostType = match.ghost:GetAttribute("GhostType")
+			or match.ghost:GetAttribute("VisualGhostType")
+			or match.ghost:GetAttribute("VisualTemplateName")
+	end
+	if type(actualGhostType) == "string" and actualGhostType ~= "" then
+		results.ghostType = actualGhostType
+		results.actualGhostType = actualGhostType
+	end
 	return results
 end
 
@@ -1538,6 +1550,9 @@ function MatchService:EndMatch(matchId, results)
 			player:SetAttribute("MatchMapId", nil)
 			player:SetAttribute("MatchLifecyclePhase", nil)
 			player:SetAttribute("PreparationFocusTool", nil)
+			player:SetAttribute("PreparationFocusToolLabel", nil)
+			player:SetAttribute("PreparationFocusToolSource", nil)
+			player:SetAttribute("PasrahPreparationToolSelected", nil)
 		end
 		self:_publish("PlayerTeleported", {
 			player = player,

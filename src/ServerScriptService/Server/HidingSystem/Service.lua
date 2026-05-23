@@ -23,23 +23,51 @@ local SAFE_ZONE_MARKER_TITLE_TEXT = "SAFE ZONE"
 local SAFE_ZONE_MARKER_SUBTITLE_TEXT = "Diam di sini saat hunt"
 local SAFE_ZONE_MARKER_STUDS_OFFSET = 2.6
 local SAFE_ZONE_WORLD_MARKERS_ENABLED = false
+local SAFE_ZONE_VERTICAL_EXTRA_BELOW = 8
+local SAFE_ZONE_VERTICAL_EXTRA_ABOVE = 2
+local SAFE_ZONE_MARKER_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldMarkers", "SafeZoneMarkerBillboardTemplate" }
+local SAFE_ZONE_HIGHLIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldHighlightTemplate" }
+local SAFE_ZONE_OUTLINE_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldBoxOutlineTemplate" }
 
-local function createMarkerTextLabel(name, font, textSize, textColor, text, height, position)
-    local label = Instance.new("TextLabel")
-    label.Name = name
-    label.BackgroundTransparency = 1
-    label.BorderSizePixel = 0
-    label.Position = position
-    label.Size = UDim2.new(1, -18, 0, height)
-    label.Font = font
-    label.Text = text
-    label.TextColor3 = textColor
-    label.TextSize = textSize
-    label.TextTransparency = 0
-    label.TextStrokeTransparency = 0.82
-    label.TextWrapped = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    return label
+local function resolveChildPath(root, path)
+    local node = root
+    for _, segment in ipairs(path) do
+        if typeof(node) ~= "Instance" then
+            return nil
+        end
+        node = node:FindFirstChild(segment)
+    end
+    return node
+end
+
+local function cloneSafeZoneMarkerTemplate()
+    local template = resolveChildPath(ReplicatedStorage, SAFE_ZONE_MARKER_TEMPLATE_PATH)
+    if template and template:IsA("BillboardGui") then
+        local clone = template:Clone()
+        clone.Name = SAFE_ZONE_MARKER_LABEL_NAME
+        return clone
+    end
+    return nil
+end
+
+local function cloneSafeZoneHighlightTemplate()
+    local template = resolveChildPath(ReplicatedStorage, SAFE_ZONE_HIGHLIGHT_TEMPLATE_PATH)
+    if template and template:IsA("Highlight") then
+        local clone = template:Clone()
+        clone.Name = SAFE_ZONE_MARKER_HIGHLIGHT_NAME
+        return clone
+    end
+    return nil
+end
+
+local function cloneSafeZoneOutlineTemplate()
+    local template = resolveChildPath(ReplicatedStorage, SAFE_ZONE_OUTLINE_TEMPLATE_PATH)
+    if template and template:IsA("BoxHandleAdornment") then
+        local clone = template:Clone()
+        clone.Name = SAFE_ZONE_MARKER_OUTLINE_NAME
+        return clone
+    end
+    return nil
 end
 
 local function ensureSafeZoneMarker(record)
@@ -86,7 +114,11 @@ local function ensureSafeZoneMarker(record)
         if outline then
             outline:Destroy()
         end
-        outline = Instance.new("BoxHandleAdornment")
+        outline = cloneSafeZoneOutlineTemplate()
+        if not outline then
+            warn("[HidingSystem] Missing authored visual template: WorldEffects.WorldBoxOutlineTemplate")
+            return
+        end
         outline.Name = SAFE_ZONE_MARKER_OUTLINE_NAME
         outline.Parent = markerFolder
     end
@@ -104,7 +136,11 @@ local function ensureSafeZoneMarker(record)
         if highlight then
             highlight:Destroy()
         end
-        highlight = Instance.new("Highlight")
+        highlight = cloneSafeZoneHighlightTemplate()
+        if not highlight then
+            warn("[HidingSystem] Missing authored visual template: WorldEffects.WorldHighlightTemplate")
+            return
+        end
         highlight.Name = SAFE_ZONE_MARKER_HIGHLIGHT_NAME
         highlight.Parent = markerFolder
     end
@@ -122,7 +158,11 @@ local function ensureSafeZoneMarker(record)
         if labelGui then
             labelGui:Destroy()
         end
-        labelGui = Instance.new("BillboardGui")
+        labelGui = cloneSafeZoneMarkerTemplate()
+        if not labelGui then
+            warn("[HidingSystem] Missing authored visual template: WorldMarkers.SafeZoneMarkerBillboardTemplate")
+            return
+        end
         labelGui.Name = SAFE_ZONE_MARKER_LABEL_NAME
         labelGui.Parent = markerFolder
     end
@@ -144,54 +184,8 @@ local function ensureSafeZoneMarker(record)
         if panel then
             panel:Destroy()
         end
-        panel = Instance.new("Frame")
-        panel.Name = "Panel"
-        panel.Parent = labelGui
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 12)
-        corner.Parent = panel
-
-        local stroke = Instance.new("UIStroke")
-        stroke.Name = "Stroke"
-        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        stroke.Color = SAFE_ZONE_MARKER_PANEL_STROKE
-        stroke.Transparency = 0.15
-        stroke.Thickness = 1.4
-        stroke.Parent = panel
-
-        local accent = Instance.new("Frame")
-        accent.Name = "Accent"
-        accent.AnchorPoint = Vector2.new(0, 0.5)
-        accent.BackgroundColor3 = SAFE_ZONE_MARKER_PANEL_STROKE
-        accent.BorderSizePixel = 0
-        accent.Position = UDim2.new(0, 10, 0.5, 0)
-        accent.Size = UDim2.fromOffset(3, 26)
-        accent.Parent = panel
-
-        local accentCorner = Instance.new("UICorner")
-        accentCorner.CornerRadius = UDim.new(1, 0)
-        accentCorner.Parent = accent
-
-        createMarkerTextLabel(
-            "Title",
-            Enum.Font.GothamBold,
-            13,
-            SAFE_ZONE_MARKER_TITLE_COLOR,
-            SAFE_ZONE_MARKER_TITLE_TEXT,
-            18,
-            UDim2.new(0, 20, 0, 7)
-        ).Parent = panel
-
-        createMarkerTextLabel(
-            "Subtitle",
-            Enum.Font.GothamMedium,
-            11,
-            SAFE_ZONE_MARKER_SUBTITLE_COLOR,
-            SAFE_ZONE_MARKER_SUBTITLE_TEXT,
-            16,
-            UDim2.new(0, 20, 0, 23)
-        ).Parent = panel
+        warn("[HidingSystem] SafeZoneMarkerBillboardTemplate missing required child: Panel")
+        return
     end
     panel.BackgroundColor3 = SAFE_ZONE_MARKER_PANEL_COLOR
     panel.BackgroundTransparency = 0.14
@@ -291,11 +285,12 @@ local function isPointInsidePart(part, worldPosition)
         return false
     end
 
-    local localPosition = part.CFrame:PointToObjectSpace(worldPosition)
-    local half = part.Size * 0.5
-    return math.abs(localPosition.X) <= half.X
-        and math.abs(localPosition.Y) <= half.Y
-        and math.abs(localPosition.Z) <= half.Z
+	local localPosition = part.CFrame:PointToObjectSpace(worldPosition)
+	local half = part.Size * 0.5
+	return math.abs(localPosition.X) <= half.X
+		and localPosition.Y >= -(half.Y + SAFE_ZONE_VERTICAL_EXTRA_BELOW)
+		and localPosition.Y <= (half.Y + SAFE_ZONE_VERTICAL_EXTRA_ABOVE)
+		and math.abs(localPosition.Z) <= half.Z
 end
 
 local function applyHideAttributes(player, state, spotType, zoneId)

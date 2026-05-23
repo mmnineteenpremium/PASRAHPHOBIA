@@ -1,0 +1,68 @@
+{
+  "className": "ScreenGui",
+  "children": [
+    {
+      "name": "LoadingOverlay",
+      "className": "Frame",
+      "children": [
+        {
+          "name": "TeleportImage",
+          "className": "ImageLabel",
+          "properties": {
+            "ScaleType": "Crop",
+            "ImageContent": "rbxassetid://105007652506979",
+            "BackgroundTransparency": 1.0,
+            "ZIndex": 0.0,
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  0
+                ],
+                [
+                  1.0,
+                  0
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            }
+          }
+        }
+      ],
+      "properties": {
+        "BorderSizePixel": 0.0,
+        "BackgroundColor3": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "Size": {
+          "UDim2": [
+            [
+              1.0,
+              0
+            ],
+            [
+              1.0,
+              0
+            ]
+          ]
+        },
+        "InputSink": {
+          "Enum": 0
+        }
+      }
+    }
+  ],
+  "properties": {
+    "TabKeyboardNavigation": {
+      "Bool": false
+    },
+    "Enabled": false,
+    "DisplayOrder": 10000.0,
+    "ResetOnSpawn": false,
+    "ScreenInsets": "DeviceSafeInsets"
+  }
+}

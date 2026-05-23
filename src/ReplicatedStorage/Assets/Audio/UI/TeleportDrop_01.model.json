@@ -3,7 +3,7 @@
   "properties": {
     "Volume": 0.44999998807907104,
     "RollOffMaxDistance": 60.0,
-    "AudioContent": "rbxassetid://82086363159443",
+    "AudioContent": "rbxassetid://115431493648305",
     "AcousticSimulationEnabled": {
       "Bool": true
     },

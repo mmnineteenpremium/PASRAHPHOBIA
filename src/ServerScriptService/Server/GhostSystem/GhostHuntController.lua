@@ -16,6 +16,13 @@ function GhostHuntController:CanStartHunt(session, snapshot, now, aggressionMode
 	if session.hunt.active then
 		return false
 	end
+	if snapshot and snapshot.huntAllowed == false then
+		return false
+	end
+	local huntGraceUntil = snapshot and tonumber(snapshot.huntGraceUntil)
+	if huntGraceUntil and now < huntGraceUntil then
+		return false
+	end
 	if now < (session.nextHuntAllowedAt or 0) then
 		return false
 	end

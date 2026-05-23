@@ -29,7 +29,14 @@ local function hasStudioE2EReady(): boolean
 	return remote ~= nil and ReplicatedStorage:GetAttribute("PasrahStudioE2EReady") == true
 end
 
+local function shouldEnableStudioE2E(): boolean
+	return RunService:IsStudio() and ReplicatedStorage:GetAttribute("PasrahEnableStudioE2EControl") == true
+end
+
 local function ensureStudioE2EFallback(serverFolder)
+	if not shouldEnableStudioE2E() then
+		return
+	end
 	if not isStudioRuntime() or hasStudioE2EReady() then
 		return
 	end

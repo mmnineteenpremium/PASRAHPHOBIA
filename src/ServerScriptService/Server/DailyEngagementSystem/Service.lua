@@ -1,4 +1,5 @@
 local HttpService = game:GetService("HttpService")
+local PolicyService = game:GetService("PolicyService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -88,6 +89,57 @@ local function clone(value)
 	return out
 end
 
+local function isPaidRandomItemsRestricted(player)
+	local ok, policyInfo = pcall(function()
+		return PolicyService:GetPolicyInfoForPlayerAsync(player)
+	end)
+	if not ok or type(policyInfo) ~= "table" then
+		warn("[DailyEngagement] PolicyService check failed for paid random item access")
+		return true
+	end
+	return policyInfo.ArePaidRandomItemsRestricted == true
+end
+
+local function toLegacyDailyRewardPayload(reward)
+	if type(reward) ~= "table" then
+		return nil
+	end
+	local payload = clone(reward)
+	payload.currency = math.max(0, math.floor(tonumber(payload.currency or payload.mm) or 0))
+	if type(payload.cosmetic) ~= "string" or payload.cosmetic == "" then
+		payload.cosmetic = payload.cosmeticId
+	end
+	return payload
+end
+
+local function combineLegacyDailyRewards(...)
+	local combined = {
+		currency = 0,
+		mm = 0,
+		xp = 0,
+		pp = 0,
+	}
+	for index = 1, select("#", ...) do
+		local payload = toLegacyDailyRewardPayload(select(index, ...))
+		if payload then
+			combined.currency += math.max(0, math.floor(tonumber(payload.currency or payload.mm) or 0))
+			combined.mm = combined.currency
+			combined.xp += math.max(0, math.floor(tonumber(payload.xp) or 0))
+			combined.pp += math.max(0, math.floor(tonumber(payload.pp) or 0))
+			if type(payload.cosmetic) == "string" and payload.cosmetic ~= "" then
+				combined.cosmetic = payload.cosmetic
+			end
+			if type(payload.cosmeticId) == "string" and payload.cosmeticId ~= "" then
+				combined.cosmeticId = payload.cosmeticId
+			end
+			if type(payload.gachaTickets) == "number" and payload.gachaTickets > 0 then
+				combined.gachaTickets = (combined.gachaTickets or 0) + payload.gachaTickets
+			end
+		end
+	end
+	return combined
+end
+
 local function toUserId(playerOrUserId)
 	if type(playerOrUserId) == "number" then
 		return playerOrUserId
@@ -165,6 +217,10 @@ end
 
 local function getGachaConfig()
 	return getConfigModule("GachaConfig")
+end
+
+local function getCosmeticRegistry()
+	return getConfigModule("CosmeticRegistry")
 end
 
 local function getRemote(remoteName)
@@ -549,6 +605,15 @@ function Service:HandleCheckin(player)
 		reward = streakReward,
 		milestone = milestone,
 	})
+	self:_publish("DailyRewardClaimed", {
+		player = player,
+		userId = toUserId(player),
+		date = today,
+		streak = data.daily.streakCount,
+		reward = combineLegacyDailyRewards(streakReward, milestone),
+		milestone = toLegacyDailyRewardPayload(milestone),
+		source = "DailyEngagementSystem",
+	})
 
 	return true, result
 end
@@ -865,6 +930,10 @@ function Service:PullGacha(player, pullCount, paymentType)
 		return false, "no_data"
 	end
 
+	if isPaidRandomItemsRestricted(player) then
+		return false, "paid_random_items_restricted"
+	end
+
 	local normalizedPullCount = math.floor(tonumber(pullCount) or 1)
 	if normalizedPullCount ~= 1 and normalizedPullCount ~= 10 then
 		return false, "invalid_pull_count"
@@ -978,12 +1047,26 @@ function Service:_grantReward(player, reward, reason)
 			table.insert(itemIds, reward[key])
 		end
 	end
+	local cosmeticRegistry
+	local cosmeticRegistryOk, cosmeticRegistryValue = pcall(getCosmeticRegistry)
+	if cosmeticRegistryOk and type(cosmeticRegistryValue) == "table" then
+		cosmeticRegistry = cosmeticRegistryValue
+	end
 	if self._inventory then
 		for _, itemId in ipairs(itemIds) do
-			safeCall(self._inventory, "GrantItem", player, itemId, {
+			local registryEntry = cosmeticRegistry and cosmeticRegistry.Get and cosmeticRegistry.Get(itemId) or nil
+			local grantData = {
 				category = "Cosmetic",
 				source = reason,
-			})
+				rewardId = itemId,
+			}
+			if type(registryEntry) == "table" then
+				grantData.registryTrack = registryEntry.track
+				grantData.registryTier = registryEntry.tier
+				grantData.registrySourceKey = registryEntry.sourceKey
+				grantData.registryAssetStatus = registryEntry.assetStatus
+			end
+			safeCall(self._inventory, "GrantItem", player, itemId, grantData)
 		end
 	end
 

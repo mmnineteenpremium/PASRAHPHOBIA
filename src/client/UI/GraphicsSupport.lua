@@ -67,6 +67,58 @@ end
 
 GraphicsSupport.PlatformVisualConfig = loadPlatformVisualConfig()
 
+local warnedPreviewContracts = {}
+
+local function warnPreviewContract(message)
+	if warnedPreviewContracts[message] then
+		return
+	end
+	warnedPreviewContracts[message] = true
+	warn(message)
+end
+
+local function resolveVisualTemplate(path)
+	local node = ReplicatedStorage
+	for _, segment in ipairs(path) do
+		if typeof(node) ~= "Instance" then
+			return nil
+		end
+		node = node:FindFirstChild(segment)
+	end
+	return node
+end
+
+local function cloneFlatPreviewTemplate(viewportFrame)
+	local template = resolveVisualTemplate({ "Assets", "VisualTemplates", "UI", "FlatPreviewFallbackTemplate" })
+	if not (template and template:IsA("Folder")) then
+		warnPreviewContract("[GraphicsSupport] Missing authored visual template: UI.FlatPreviewFallbackTemplate")
+		return nil, nil
+	end
+
+	local title
+	local detail
+	for _, child in ipairs(template:GetChildren()) do
+		local existing = viewportFrame:FindFirstChild(child.Name)
+		if existing then
+			existing:Destroy()
+		end
+		local clone = child:Clone()
+		clone.Parent = viewportFrame
+		if clone.Name == "FlatPreviewTitle" and clone:IsA("TextLabel") then
+			title = clone
+		elseif clone.Name == "FlatPreviewDetail" and clone:IsA("TextLabel") then
+			detail = clone
+		end
+	end
+
+	if not (title and detail) then
+		warnPreviewContract("[GraphicsSupport] Authored UI.FlatPreviewFallbackTemplate contract mismatch.")
+		return nil, nil
+	end
+
+	return title, detail
+end
+
 function GraphicsSupport.normalizeMode(rawMode)
 	local token = tostring(rawMode or "")
 	if GraphicsSupport.MODE_META[token] then
@@ -114,30 +166,18 @@ function GraphicsSupport.renderPreviewFallback(viewportFrame, titleText, accentC
 	viewportFrame.BackgroundColor3 = previewAccent:Lerp(Color3.fromRGB(18, 24, 34), 0.78)
 	viewportFrame.BackgroundTransparency = 0.03
 
-	local title = Instance.new("TextLabel")
-	title.Name = "FlatPreviewTitle"
-	title.BackgroundTransparency = 1
+	local title, detail = cloneFlatPreviewTemplate(viewportFrame)
+	if not (title and detail) then
+		return false
+	end
+
 	title.Size = UDim2.new(1, -8, 0, math.max(18, math.floor(viewportFrame.AbsoluteSize.Y * 0.55)))
 	title.Position = UDim2.fromOffset(4, 4)
-	title.Font = Enum.Font.GothamBlack
-	title.TextScaled = true
-	title.TextWrapped = true
-	title.TextColor3 = Color3.fromRGB(242, 245, 248)
 	title.Text = string.upper(tostring(titleText or "LOW"))
-	title.Parent = viewportFrame
 
-	local detail = Instance.new("TextLabel")
-	detail.Name = "FlatPreviewDetail"
-	detail.BackgroundTransparency = 1
-	detail.AnchorPoint = Vector2.new(0.5, 1)
 	detail.Position = UDim2.new(0.5, 0, 1, -4)
 	detail.Size = UDim2.new(1, -8, 0, math.max(10, math.floor(viewportFrame.AbsoluteSize.Y * 0.2)))
-	detail.Font = Enum.Font.GothamSemibold
-	detail.TextScaled = true
-	detail.TextWrapped = true
-	detail.TextColor3 = Color3.fromRGB(194, 206, 220)
 	detail.Text = string.upper(tostring(detailText or "3D OFF"))
-	detail.Parent = viewportFrame
 
 	return true
 end

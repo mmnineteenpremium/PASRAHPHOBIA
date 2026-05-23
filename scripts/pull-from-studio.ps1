@@ -65,5 +65,7 @@ if ($extension -ieq '.rbxlx') {
 }
 
 $syncbackRojo = Resolve-SyncbackRojo -RepoRoot $repoRoot
+Write-Host "NOTE: This syncback scope is limited to syncback.ghosts.project.json (ReplicatedStorage.Assets.GhostVisualProfiles + Assets.Models.Ghosts)."
+Write-Host "NOTE: Gameplay scripts, Match/Ghost/Tool runtime logic, and map gameplay flow are NOT pulled by this command."
 Write-Host "Syncing Studio snapshot $inputPathForSyncback back into the repo"
 & $syncbackRojo 'syncback' $resolvedProjectPath '--input' $inputPathForSyncback '-y'

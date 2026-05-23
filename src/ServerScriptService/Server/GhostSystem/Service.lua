@@ -966,7 +966,14 @@ local function isNonEmptyAssetContent(value)
 		return false
 	end
 	local text = tostring(value)
-	return text ~= "" and text ~= "nil"
+	if text == "" or text == "nil" then
+		return false
+	end
+	local compactText = text:gsub("%s+", "")
+	if compactText == "Content{SourceType=None}" or compactText == "Content{}" then
+		return false
+	end
+	return true
 end
 
 local function getInstanceProperty(instance, propertyName)
@@ -1097,8 +1104,22 @@ local function copySurfaceAppearanceProperties(sourceSurface, targetSurface)
 	local copied = false
 	for _, propertyName in ipairs(SURFACE_APPEARANCE_CONTENT_PROPERTIES) do
 		local value = getInstanceProperty(sourceSurface, propertyName)
-		if isNonEmptyAssetContent(value) and setInstanceProperty(targetSurface, propertyName, value) then
-			copied = true
+		if isNonEmptyAssetContent(value) then
+			if setInstanceProperty(targetSurface, propertyName, value) then
+				copied = true
+			end
+			local assetUri = tostring(value):match("rbxassetid://%d+")
+			if assetUri then
+				if propertyName == "ColorMapContent" and setInstanceProperty(targetSurface, "ColorMap", assetUri) then
+					copied = true
+				elseif propertyName == "NormalMapContent" and setInstanceProperty(targetSurface, "NormalMap", assetUri) then
+					copied = true
+				elseif propertyName == "RoughnessMapContent" and setInstanceProperty(targetSurface, "RoughnessMap", assetUri) then
+					copied = true
+				elseif propertyName == "MetalnessMapContent" and setInstanceProperty(targetSurface, "MetalnessMap", assetUri) then
+					copied = true
+				end
+			end
 		end
 	end
 	for _, propertyName in ipairs(SURFACE_APPEARANCE_STYLE_PROPERTIES) do
@@ -1189,16 +1210,67 @@ local function repairGhostTextureDonorSurfaceAppearance(ghostModel, visualGhostT
 	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
 		return
 	end
-	if modelHasRenderableGhostSurface(ghostModel) then
+
+	local baseGhostType = resolveGhostBaseType(visualGhostType or logicalGhostType)
+	local textureMaps = nil
+	if visualGhostType == "WeweGombel" or logicalGhostType == "WeweGombel" or baseGhostType == "WeweGombel" then
+		textureMaps = {
+			colorMap = "rbxassetid://129620806316127",
+			normalMap = "rbxassetid://137526021041912",
+		}
+	end
+	if type(textureMaps) ~= "table" then
+		local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
+		local gameData = shared and shared:FindFirstChild("GameData")
+		local tuningModule = gameData and gameData:FindFirstChild("GhostVisualTuning")
+		local tuning = safeRequire(tuningModule)
+		local ghosts = type(tuning) == "table" and tuning.ghosts or nil
+		local directConfig = type(ghosts) == "table" and (
+			ghosts[visualGhostType] or ghosts[logicalGhostType] or ghosts[baseGhostType]
+		) or nil
+		textureMaps = type(directConfig) == "table" and directConfig.textureMaps or nil
+	end
+	if type(textureMaps) ~= "table" and modelHasRenderableGhostSurface(ghostModel) then
 		return
 	end
 
-	local baseGhostType = resolveGhostBaseType(visualGhostType or logicalGhostType)
 	local donorTemplate = loadGhostTextureDonorTemplate(visualGhostType)
 		or loadGhostTextureDonorTemplate(logicalGhostType)
 		or loadGhostTextureDonorTemplate(baseGhostType)
 	if donorTemplate then
 		repairGhostSurfaceAppearanceFromTemplate(ghostModel, donorTemplate, visualGhostType or logicalGhostType or baseGhostType)
+	end
+	if type(textureMaps) ~= "table" and modelHasRenderableGhostSurface(ghostModel) then
+		return
+	end
+	if type(textureMaps) == "table" then
+		local targetMesh = findFirstGhostMeshPart(ghostModel)
+		local targetSurface = ensureTargetSurfaceAppearance(targetMesh)
+		if targetSurface then
+			local copied = false
+			if isNonEmptyAssetContent(textureMaps.colorMap or textureMaps.ColorMap) then
+				local colorMap = textureMaps.colorMap or textureMaps.ColorMap
+				local colorMapSet = setInstanceProperty(targetSurface, "ColorMap", colorMap)
+				if not colorMapSet and targetMesh and targetMesh:IsA("MeshPart") then
+					colorMapSet = setInstanceProperty(targetMesh, "TextureID", colorMap)
+						or setInstanceProperty(targetMesh, "TextureId", colorMap)
+				end
+				copied = colorMapSet or copied
+			end
+			if isNonEmptyAssetContent(textureMaps.normalMap or textureMaps.NormalMap) then
+				copied = setInstanceProperty(targetSurface, "NormalMap", textureMaps.normalMap or textureMaps.NormalMap) or copied
+			end
+			if isNonEmptyAssetContent(textureMaps.roughnessMap or textureMaps.RoughnessMap) then
+				copied = setInstanceProperty(targetSurface, "RoughnessMap", textureMaps.roughnessMap or textureMaps.RoughnessMap) or copied
+			end
+			if isNonEmptyAssetContent(textureMaps.metalnessMap or textureMaps.MetalnessMap) then
+				copied = setInstanceProperty(targetSurface, "MetalnessMap", textureMaps.metalnessMap or textureMaps.MetalnessMap) or copied
+			end
+			if copied then
+				ghostModel:SetAttribute("PasrahSurfaceAppearanceRepairedFrom", tostring(visualGhostType or logicalGhostType or baseGhostType))
+				ghostModel:SetAttribute("PasrahSurfaceAppearanceDirectMaps", true)
+			end
+		end
 	end
 end
 
@@ -2116,7 +2188,7 @@ local function collectGhostNavigationNodes(match)
 		end
 		local doorsFolder = match.container:FindFirstChild("Doors", true)
 		if doorsFolder then
-			for _, doorPart in ipairs(doorsFolder:GetChildren()) do
+			for _, doorPart in ipairs(doorsFolder:GetDescendants()) do
 				if doorPart:IsA("BasePart") and isGhostDoorTraversalPart(doorPart) then
 					table.insert(nodes, doorPart)
 				end
@@ -2361,8 +2433,9 @@ local function resolveGhostNavigationStep(match, currentPosition, targetPosition
 	local adjacency = buildGhostNavigationAdjacency(match, nodes)
 	local path = resolveGhostNavigationPath(adjacency, startIndex, targetIndex)
 	if type(path) ~= "table" or #path == 0 then
-		setGhostNavigationMode(match, "blocked_no_node_path")
-		return currentPosition
+		local pathStep = computePathfindingGhostNavigationStep(match, currentPosition, targetPosition)
+		setGhostNavigationMode(match, pathStep and "pathfinding_no_node_path" or "blocked_no_node_path")
+		return pathStep or currentPosition
 	end
 
 	local nextIndex = path[1]
@@ -2882,6 +2955,11 @@ local function repairRuntimeGhost(match, container, reason)
 		end)
 		return false, parentErr
 	end
+	repairGhostTextureDonorSurfaceAppearance(
+		repairedGhost,
+		repairedGhost:GetAttribute("VisualGhostType") or ghostType,
+		repairedGhost:GetAttribute("GhostType") or ghostType
+	)
 
 	match.ghost = repairedGhost
 	if typeof(previousGhost) == "Instance" and previousGhost ~= repairedGhost then
@@ -2910,6 +2988,11 @@ local function ensureGhostPlacement(match)
 			return repairRuntimeGhost(match, container, parentErr)
 		end
 	end
+	repairGhostTextureDonorSurfaceAppearance(
+		match.ghost,
+		match.ghost:GetAttribute("VisualGhostType") or match.ghost.Name,
+		match.ghost:GetAttribute("GhostType") or match.ghostType
+	)
 	return true
 end
 

@@ -88,7 +88,9 @@ local CUE_AUDIO_PROFILES = {
 		env_lightflicker = { volumeScale = 0.72, playbackSpeed = 1.04 },
 		prep_focus_lock = { volumeScale = 0.58, playbackSpeed = 1.12 },
 		env_radiostatic = { volumeScale = 0.68, playbackSpeed = 0.9 },
+		env_radionoise = { volumeScale = 0.68, playbackSpeed = 0.9 },
 		env_shadowapparition = { volumeScale = 0.94, playbackSpeed = 0.9 },
+		env_shadowmovement = { volumeScale = 0.94, playbackSpeed = 0.9 },
 		env_footstepsound = { volumeScale = 0.82, playbackSpeed = 1.03 },
 		env_suddenwhisper = { volumeScale = 0.88, playbackSpeed = 0.92 },
 		env_temperaturedrop = { volumeScale = 0.8, playbackSpeed = 0.88 },
@@ -117,44 +119,73 @@ local CUE_AUDIO_PROFILES = {
 
 local CUE_SOUND_ID_OVERRIDES = {
 	AmbientAudio = {
-		ambient_investigation = "rbxassetid://140704980462451",
-		ambient_tension_loop = "rbxassetid://140704980462451",
-		post_hunt_calm = "rbxassetid://140704980462451",
+		ambient_investigation = "rbxassetid://134774861446341",
+		ambient_tension_loop = "rbxassetid://134774861446341",
+		post_hunt_calm = "rbxassetid://134774861446341",
 	},
 	EnvironmentalAudio = {
-		prep_focus_lock = "rbxassetid://140513388846872",
-		environment_disturbance = "rbxassetid://111282528409948",
-		env_event = "rbxassetid://111282528409948",
-		env_doorslam = "rbxassetid://78764817933410",
-		env_windowknock = "rbxassetid://71098340187847",
-		env_objectthrow = "rbxassetid://86917747509286",
-		env_lightflicker = "rbxassetid://96038914699044",
-		env_radiostatic = "rbxassetid://82526759214554",
-		env_shadowapparition = "rbxassetid://139204195403262",
-		env_footstepsound = "rbxassetid://95974189526179",
-		env_suddenwhisper = "rbxassetid://110779846516591",
-		env_temperaturedrop = "rbxassetid://87230026682789",
+		prep_focus_lock = "rbxassetid://117632278120308",
+		environment_disturbance = "rbxassetid://122792350598366",
+		env_event = "rbxassetid://122792350598366",
+		env_doorslam = "rbxassetid://79226838058023",
+		env_windowknock = "rbxassetid://126276078185709",
+		env_objectthrow = "rbxassetid://84267552928276",
+		env_lightflicker = "rbxassetid://117935817925632",
+		env_radiostatic = "rbxassetid://117503297510887",
+		env_radionoise = "rbxassetid://117503297510887",
+		env_shadowapparition = "rbxassetid://123375212785319",
+		env_shadowmovement = "rbxassetid://123375212785319",
+		env_footstepsound = "rbxassetid://91121889937073",
+		env_suddenwhisper = "rbxassetid://82536318508196",
+		env_temperaturedrop = "rbxassetid://87937719989711",
 	},
 	GhostAudio = {
-		ghost_interaction = "rbxassetid://98105844059537",
-		ghost_whisper = "rbxassetid://98105844059537",
-		ghost_fake_footsteps = "rbxassetid://95974189526179",
-		ghost_manifest = "rbxassetid://139204195403262",
-		ghost_object_throw = "rbxassetid://86917747509286",
+		ghost_interaction = "rbxassetid://118997816874431",
+		ghost_whisper = "rbxassetid://118997816874431",
+		ghost_fake_footsteps = "rbxassetid://91121889937073",
+		ghost_manifest = "rbxassetid://123375212785319",
+		ghost_object_throw = "rbxassetid://84267552928276",
 	},
 	HuntAudio = {
-		hunt_start = "rbxassetid://101202336513383",
-		hunt_stinger = "rbxassetid://101202336513383",
-		hunt_phase_loop = "rbxassetid://138329686293368",
+		hunt_start = "rbxassetid://78211780453394",
+		hunt_stinger = "rbxassetid://78211780453394",
+		hunt_phase_loop = "rbxassetid://121809340847034",
 	},
 	FearAudio = {
-		fear_rise = "rbxassetid://138884191945388",
-		heartbeat_rise = "rbxassetid://138884191945388",
-		fear_critical = "rbxassetid://138329686293368",
+		fear_rise = "rbxassetid://123212283810885",
+		heartbeat_rise = "rbxassetid://123212283810885",
+		fear_critical = "rbxassetid://121809340847034",
 	},
 	JumpscareAudio = {
-		jumpscare_stinger = "rbxassetid://101202336513383",
+		jumpscare_stinger = "rbxassetid://78211780453394",
 	},
+}
+
+local GHOST_TYPE_SOUND_ID_OVERRIDES = {
+	banaspati = { default = "rbxassetid://77042021520991" },
+	jerangkong = { default = "rbxassetid://107677780610227" },
+	kuntilanak = { default = "rbxassetid://118652624478186" },
+	leak = {
+		default = "rbxassetid://137119373988694",
+		hunt = "rbxassetid://94159664233351",
+		hunt_start = "rbxassetid://94159664233351",
+		hunt_stinger = "rbxassetid://94159664233351",
+		hunt_phase_loop = "rbxassetid://94159664233351",
+	},
+	genderuwo = { default = "rbxassetid://127220449004274" },
+	hantutanah = { default = "rbxassetid://133222140058153" },
+	palasik = { default = "rbxassetid://94238755962872" },
+	pocong = { default = "rbxassetid://100251836150714" },
+	silumanular = { default = "rbxassetid://78766807826090" },
+	sundelbolong = { default = "rbxassetid://137824753785141" },
+	tuyul = { default = "rbxassetid://89416140557652" },
+	wewegombel = { default = "rbxassetid://120515818081490" },
+}
+
+local GHOST_SPECIFIC_AUDIO_CATEGORIES = {
+	GhostAudio = true,
+	HuntAudio = true,
+	JumpscareAudio = true,
 }
 
 local SPATIAL_SOUND_CATEGORIES = {
@@ -183,6 +214,70 @@ end
 
 local function normalizeCue(cue)
 	return tostring(cue or ""):gsub("[%s_%-]+", "_"):lower()
+end
+
+local function normalizeGhostType(value)
+	if type(value) ~= "string" then
+		return ""
+	end
+	return value:gsub("[%s_%-%.]+", ""):lower()
+end
+
+local function readGhostTypeFromPayload(payload)
+	if type(payload) ~= "table" then
+		return ""
+	end
+
+	for _, key in ipairs({ "ghostType", "visualGhostType", "actualGhostType", "targetGhostType" }) do
+		local normalized = normalizeGhostType(payload[key])
+		if normalized ~= "" then
+			return normalized
+		end
+	end
+
+	local metadata = payload.metadata
+	if type(metadata) == "table" then
+		for _, key in ipairs({ "ghostType", "visualGhostType", "actualGhostType", "targetGhostType" }) do
+			local normalized = normalizeGhostType(metadata[key])
+			if normalized ~= "" then
+				return normalized
+			end
+		end
+	end
+
+	return ""
+end
+
+local function shouldUseGhostSpecificSound(category, cueToken)
+	if GHOST_SPECIFIC_AUDIO_CATEGORIES[category] ~= true then
+		return false
+	end
+	if category == "HuntAudio" or category == "JumpscareAudio" then
+		return true
+	end
+	return cueToken == ""
+		or cueToken == "ghost_interaction"
+		or cueToken == "ghost_whisper"
+		or cueToken == "ghost_manifest"
+end
+
+local function resolveGhostSpecificSoundId(category, payload)
+	local cueToken = normalizeCue(payload and payload.cue)
+	if not shouldUseGhostSpecificSound(category, cueToken) then
+		return nil
+	end
+	local ghostToken = readGhostTypeFromPayload(payload)
+	local overrides = GHOST_TYPE_SOUND_ID_OVERRIDES[ghostToken]
+	if type(overrides) ~= "table" then
+		return nil
+	end
+	if category == "HuntAudio" then
+		return overrides[cueToken] or overrides.hunt or overrides.default
+	end
+	if category == "JumpscareAudio" then
+		return overrides[cueToken] or overrides.jumpscare or overrides.default
+	end
+	return overrides[cueToken] or overrides.ghost or overrides.default
 end
 
 local function stringifyVector3(value)
@@ -233,6 +328,11 @@ local function resolveCueProfile(category, payload)
 end
 
 local function resolveCueSoundIdOverride(category, payload)
+	local ghostSpecificSoundId = resolveGhostSpecificSoundId(category, payload)
+	if type(ghostSpecificSoundId) == "string" and ghostSpecificSoundId ~= "" then
+		return ghostSpecificSoundId
+	end
+
 	local overrides = CUE_SOUND_ID_OVERRIDES[category]
 	if type(overrides) ~= "table" then
 		return nil

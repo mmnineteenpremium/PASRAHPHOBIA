@@ -1,0 +1,217 @@
+{
+  "_comment": "PASRAHPHOBIA Royal Pass Asset Manifest — maintained by ORCHESTRATOR",
+  "season": 1,
+  "season_name": "Musim Teror Pertama",
+  "last_updated": "2026-05-20T00:00:00Z",
+  "orchestrator_version": "1.0",
+
+  "art_direction": {
+    "palette": {
+      "primary_dark": "#0D0D0D",
+      "ghost_purple": "#1A0A2E",
+      "lantern_gold": "#C8A96E",
+      "spirit_cyan": "#4ECDC4",
+      "horror_red": "#FF4757",
+      "survived_green": "#2ED573",
+      "text": "#E8E8E8"
+    },
+    "style": "Roblox low-poly stylized, Indonesian horror theme",
+    "must_have": "Indonesian cultural element per item"
+  },
+
+  "checkin_rewards": {
+    "border_haunted_frame": {
+      "type": "border",
+      "source": "10-day milestone",
+      "agent_owner": "AGENT_04",
+      "status": "PENDING",
+      "files": {
+        "border_png": null,
+        "icon_png": null,
+        "roblox_asset_id": null
+      }
+    },
+    "emote_pasrah_bow": {
+      "type": "emote",
+      "source": "20-day milestone",
+      "agents": ["AGENT_01", "AGENT_03", "AGENT_06"],
+      "status": "PENDING",
+      "files": {
+        "storyboard_png": null,
+        "icon_png": null,
+        "rbxanim": null,
+        "roblox_animation_id": null
+      }
+    },
+    "title_investigator_setia": {
+      "type": "title",
+      "source": "7-day streak",
+      "agent_owner": "AGENT_04",
+      "status": "PENDING",
+      "files": {
+        "title_png": null,
+        "roblox_asset_id": null
+      }
+    },
+    "title_penyintas_sejati": {
+      "type": "title",
+      "source": "30-day milestone",
+      "agent_owner": "AGENT_04",
+      "status": "PENDING",
+      "files": {
+        "title_png": null,
+        "roblox_asset_id": null
+      }
+    }
+  },
+
+  "royal_pass_rewards": {
+    "_comment": "Isi sesuai RoyalPassConfig.lua tier 1-60",
+    "tier_05_free": {
+      "reward_id": "hat_ghosthunter_cap",
+      "tier": 5,
+      "track": "FREE",
+      "type": "cosmetic",
+      "agents": ["AGENT_01", "AGENT_02", "AGENT_06"],
+      "status": "PENDING",
+      "files": {
+        "concept_png": null,
+        "icon_png": null,
+        "model_fbx": null,
+        "model_rbxm": null,
+        "diffuse_texture": null,
+        "roblox_mesh_id": null,
+        "roblox_texture_id": null
+      }
+    },
+    "tier_10_free": {
+      "reward_id": "border_haunted_frame",
+      "tier": 10,
+      "track": "FREE",
+      "type": "border",
+      "agents": ["AGENT_04", "AGENT_06"],
+      "status": "PENDING",
+      "files": {
+        "border_png": null,
+        "icon_png": null,
+        "roblox_asset_id": null
+      }
+    },
+    "tier_15_premium": {
+      "reward_id": "pet_orb_ghost",
+      "tier": 15,
+      "track": "PREMIUM",
+      "type": "pet",
+      "agents": ["AGENT_01", "AGENT_02", "AGENT_03", "AGENT_06"],
+      "status": "PENDING",
+      "files": {
+        "concept_png": null,
+        "icon_png": null,
+        "model_fbx": null,
+        "model_rbxm": null,
+        "anim_idle_rbxanim": null,
+        "anim_follow_rbxanim": null,
+        "anim_react_rbxanim": null,
+        "roblox_animation_id_idle": null,
+        "roblox_animation_id_follow": null,
+        "roblox_animation_id_react": null
+      }
+    },
+    "tier_20_free": {
+      "reward_id": "emote_pasrah_bow",
+      "tier": 20,
+      "track": "FREE",
+      "type": "emote",
+      "agents": ["AGENT_01", "AGENT_03", "AGENT_06"],
+      "status": "PENDING",
+      "files": {
+        "storyboard_png": null,
+        "icon_png": null,
+        "rbxanim": null,
+        "roblox_animation_id": null
+      }
+    },
+    "tier_25_premium": {
+      "reward_id": "acc_spirit_lantern",
+      "tier": 25,
+      "track": "PREMIUM",
+      "type": "accessory",
+      "agents": ["AGENT_01", "AGENT_02", "AGENT_06"],
+      "status": "PENDING",
+      "files": {
+        "concept_png": null,
+        "icon_png": null,
+        "model_fbx": null,
+        "model_rbxm": null,
+        "roblox_mesh_id": null,
+        "roblox_texture_id": null
+      }
+    },
+    "tier_30_free": {
+      "reward_id": "title_investigator_setia",
+      "tier": 30,
+      "track": "FREE",
+      "type": "title",
+      "agents": ["AGENT_04", "AGENT_06"],
+      "status": "PENDING",
+      "files": {
+        "title_png": null,
+        "roblox_asset_id": null
+      }
+    }
+  },
+
+  "gacha_pool": {
+    "_comment": "Item yang masuk pool gacha season 1 — diisi setelah ORCHESTRATOR konfirmasi",
+    "items": []
+  },
+
+  "audio_manifest": {
+    "_comment": "Diisi oleh AGENT_05 setelah upload ke Roblox",
+    "royal_pass": {
+      "tier_claim": null,
+      "tier_up_free": null,
+      "tier_up_premium": null,
+      "pass_purchased": null,
+      "royalpass_open": null,
+      "royalpass_close": null,
+      "tier_scroll": null
+    },
+    "gacha": {
+      "gacha_open": null,
+      "pull_start": null,
+      "reveal_common": null,
+      "reveal_rare": null,
+      "reveal_epic": null,
+      "reveal_legend": null,
+      "pity_warning": null
+    },
+    "checkin": {
+      "daily": null,
+      "streak_add": null,
+      "streak_7": null,
+      "milestone_5": null,
+      "milestone_30": null
+    },
+    "missions": {
+      "progress": null,
+      "complete": null,
+      "claim": null,
+      "challenge_complete": null,
+      "reset": null
+    },
+    "emotes": {
+      "emote_pasrah_bow": null,
+      "emote_investigate": null,
+      "emote_candle_pray": null
+    }
+  },
+
+  "status_legend": {
+    "NO_ASSET_NEEDED": "Reward berupa currency/points — tidak perlu asset",
+    "PENDING": "Belum dimulai",
+    "IN_PROGRESS": "Sedang dikerjakan oleh agent",
+    "REVIEW": "Menunggu approval dari ORCHESTRATOR",
+    "DONE": "Selesai dan terintegrasi di game"
+  }
+}

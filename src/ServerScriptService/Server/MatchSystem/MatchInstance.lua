@@ -61,10 +61,11 @@ end
 
 function MatchInstance:SetPhase(nextPhase, now)
 	self.phase = nextPhase
+	self.phaseStartedAt = getNow(now)
 	table.insert(self.history, {
 		type = "phase",
 		value = nextPhase,
-		at = getNow(now),
+		at = self.phaseStartedAt,
 	})
 end
 
@@ -97,6 +98,7 @@ function MatchInstance:ToPayload()
 		gameMode = self.gameMode,
 		createdAt = self.createdAt,
 		startedAt = self.startedAt,
+		phaseStartedAt = self.phaseStartedAt,
 		endedAt = self.endedAt,
 		results = self.results,
 	}

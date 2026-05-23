@@ -58,7 +58,12 @@ Sesi hanya dianggap siap jika:
 
 Urutan minimum yang aman untuk project ini:
 
-1. Buka `PASRAHPHOBIA.rbxlx`
+1. Buka Studio lewat script wajib (auto-maximize):
+
+```powershell
+pwsh -NoLogo -File .\scripts\open-studio-maximized.ps1 -PlacePath "PASRAHPHOBIA.rbxlx"
+```
+
 2. Pastikan Studio yang terbuka memang project ini, bukan place lain
 3. Pastikan Assistant MCP di Studio sudah terhubung
 4. Pastikan tool `Roblox_Studio` terbaca di sesi Codex
@@ -73,10 +78,28 @@ Urutan minimum yang aman untuk project ini:
 
 Aturan singkat:
 
+- wajib pakai `scripts/open-studio-maximized.ps1` saat membuka Studio
 - default aman: `Studio + MCP` dulu
 - `Rojo` hanya dinyalakan saat perlu workflow `local -> Studio`
 - jangan anggap state Studio otomatis sudah balik ke repo
 - perubahan Studio final harus dimirror/syncback dengan sengaja, lalu commit
+- jangan klaim `PASRAHPHOBIA.rbxlx` sudah ikut berubah kalau belum ada verifikasi save-back yang nyata
+
+## Save-Back Verification Gate
+
+Setelah ada patch/verifikasi live di Studio yang harus menetap di file lokal `PASRAHPHOBIA.rbxlx`, wajib lakukan salah satu jalur eksplisit berikut sebelum Studio ditutup:
+
+1. save/place mirror yang memang menulis ulang `PASRAHPHOBIA.rbxlx`
+2. verifikasi hasil tulis pada file lokal dengan bukti objektif:
+   - `LastWriteTime` berubah ke waktu sesi terbaru, atau
+   - hash file berubah, atau
+   - marker source yang baru memang bisa dicari langsung di `PASRAHPHOBIA.rbxlx`
+
+Jika gate ini belum lewat, status yang jujur adalah:
+
+- source repo mungkin sudah benar
+- publish cloud mungkin sudah benar
+- tetapi file lokal `PASRAHPHOBIA.rbxlx` belum boleh dianggap sudah tersimpan
 
 ## Startup Check Cloud Place Identity
 

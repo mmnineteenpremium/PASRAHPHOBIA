@@ -1,7 +1,0 @@
-{
-  "type": "world_effect",
-  "class": "SpotLight",
-  "brightness": 3.5,
-  "angle": 70,
-  "shadows": true
-}

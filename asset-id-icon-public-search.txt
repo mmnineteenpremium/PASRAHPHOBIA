@@ -1,0 +1,11 @@
+﻿no-nama-assetid-jenis
+1-class_detective_unlock-NOT_FOUND-icon image
+2-class_dukun_unlock-NOT_FOUND-icon image
+3-lifetime_bonus_pass-NOT_FOUND-icon image
+4-mm_pack_large-NOT_FOUND-icon image
+5-mm_pack_medium-NOT_FOUND-icon image
+6-mm_pack_small-NOT_FOUND-icon image
+7-pp_pack_large-NOT_FOUND-icon image
+8-pp_pack_small-NOT_FOUND-icon image
+9-pp_pack_standard-NOT_FOUND-icon image
+10-royalpass_premium_track-NOT_FOUND-icon image

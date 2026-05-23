@@ -1,6 +1,0 @@
-{
-  "type": "screen_mask",
-  "mode": "fog_of_war",
-  "defaultAlpha": 1.0,
-  "revealRadius": 0.18
-}

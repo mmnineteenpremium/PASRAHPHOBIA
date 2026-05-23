@@ -16230,3 +16230,37 @@ Menutup gap antara event ancaman server dan respons sensory client, sehingga hun
 - Evidence:
   - `.codex/evidence/pc_fresh_after_trace_cleanup_20260419.png`
   - `.codex/evidence/pc_lobby_after_lighting_patch_20260419_c.png`
+
+## 2026-05-04 - Owner Visual Runtime Binding (LobbySocialHub)
+
+- Risk check before implementation: low-to-moderate; change scoped to existing `LobbySocialHub` owner path and existing docs, no new system owner introduced.
+- Synced current Studio edit-mode snapshot into repo using:
+  - `rojo syncback syncback.studio-safe.project.json --input PASRAHPHOBIA.rbxlx -y`
+- Updated runtime behavior in existing owner service (no duplicate owner):
+  - `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua`
+  - removed `applyMainHubVisualPatch()` call in `LobbyService:Start()` so runtime respects authored visual map state and avoids script overwrite/regeneration of `MainHubDecorRuntime`.
+- Updated canonical/index policy to lock owner-visual authority and AI safety rule:
+  - `DOCUMENTATION/SOURCE OF TRUTH/CANONICAL_SPECIFICATIONS_v2.md`
+  - `DOCUMENTATION/SOURCE OF TRUTH/PASRAHPHOBIA_DOC_INDEX.md`
+- Governance note:
+  - map docs remain specification snapshots;
+  - real visual map state can change by Owner Projects;
+  - AI must ask Owner before destructive visual changes.
+
+## 2026-05-04 - LobbySocialHub Owner Visual Interior Placement Sync
+
+- Owner-approved sync of the live Studio edit-mode placement pass for `Workspace.Maps.LobbySocialHub.LobbySocialHub.MainHubDecorRuntime`.
+- Saved the active `PASRAHPHOBIA.rbxlx` Studio snapshot locally, then syncbacked through `syncback.studio-safe.project.json`.
+- Updated source model:
+  - `src/Workspace/Maps/LobbySocialHub/LobbySocialHub.rbxm`
+- Runtime fallback found and fixed during post-sync playtest:
+  - `TrainingGhostVisual` was still being re-pivoted by `LobbyService:_refreshEvidenceTrainingGhostAsset()` to the old hardcoded ghost CFrame during play.
+  - `src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua` now resolves the ghost runtime target from the authored `TrainingGhostVisual` pivot first, then `TrainingGhostCore`, with the legacy hardcoded CFrame only as a last fallback.
+- Scope stayed within existing owner-authored map state; no duplicate owner, replacement runtime builder, or new generated decor owner was introduced.
+- Final live runtime playtest verification after sync and fallback repair:
+  - `North=52`
+  - `Shop=20`
+  - `Garden=23`
+  - `Party=17`
+  - `Flex=18`
+  - `issues=0`

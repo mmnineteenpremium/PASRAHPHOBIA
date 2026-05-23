@@ -4,6 +4,7 @@ local LogService = game:GetService("LogService")
 local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 local HttpService = game:GetService("HttpService")
+local Workspace = game:GetService("Workspace")
 
 local Services = require(script.Parent.Parent.Core.Services)
 
@@ -527,6 +528,8 @@ function StudioE2EControlSystem:_handleSetPreparationFocusTool(player, request)
 		EMF = "EMF",
 		UV = "UV CAM",
 		UVCAM = "UV CAM",
+		TOUN = "UV CAM",
+		TOUNCAM = "UV CAM",
 		THERMO = "THERMO",
 		BOX = "BOX",
 		WRITING = "WRITING",
@@ -538,7 +541,65 @@ function StudioE2EControlSystem:_handleSetPreparationFocusTool(player, request)
 	end
 
 	player:SetAttribute("PreparationFocusTool", resolvedTool)
+	player:SetAttribute("PreparationFocusToolLabel", resolvedTool)
+	player:SetAttribute("PreparationFocusToolSource", "WorldToolStation")
+	player:SetAttribute("PasrahPreparationToolSelected", true)
+	player:SetAttribute("PasrahEquippedToolType", resolvedTool)
+	player:SetAttribute("PasrahToolUseStamp", os.clock())
 	return true, string.format("match=%s focus=%s", matchId, resolvedTool)
+end
+
+function StudioE2EControlSystem:_handleMovePlayerToMapObject(player, request)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false, "invalid_player"
+	end
+
+	local matchId = self:_resolveMatchId(player, request)
+	if not matchId then
+		return false, "missing_match_id"
+	end
+
+	local objectId = type(request) == "table" and tostring(request.objectId or request.targetObject or "") or ""
+	if objectId == "" then
+		return false, "missing_object_id"
+	end
+
+	local activeMatches = Workspace:FindFirstChild("ActiveMatches")
+	local matchFolder = activeMatches and (
+		activeMatches:FindFirstChild("Match_" .. tostring(matchId))
+		or activeMatches:FindFirstChild(tostring(matchId))
+	)
+	if not matchFolder then
+		return false, "missing_match_folder"
+	end
+
+	local target
+	for _, descendant in ipairs(matchFolder:GetDescendants()) do
+		if descendant.Name == objectId
+			or tostring(descendant:GetAttribute("DoorObjectId") or "") == objectId
+			or tostring(descendant:GetAttribute("PasrahObjectId") or "") == objectId then
+			target = descendant
+			break
+		end
+	end
+	if not target then
+		return false, "missing_object"
+	end
+
+	local targetPart = target:IsA("BasePart") and target or target:FindFirstChildWhichIsA("BasePart", true)
+	if not targetPart then
+		return false, "missing_target_part"
+	end
+
+	local character = player.Character
+	if not character then
+		return false, "missing_character"
+	end
+
+	local offset = coerceVector3(type(request) == "table" and request.offset or nil) or Vector3.new(0, 3, 7)
+	local targetPosition = targetPart.Position
+	character:PivotTo(CFrame.lookAt(targetPosition + offset, targetPosition, Vector3.yAxis))
+	return true, string.format("match=%s object=%s", matchId, objectId)
 end
 
 function StudioE2EControlSystem:_handleSimulateLobbyZone(player, request)
@@ -730,19 +791,33 @@ function StudioE2EControlSystem:_handleGetMapInteractionSnapshot(player, request
 
 	local countsByType = {}
 	local selected = {}
+	local selectedIds = {}
+	local selectedCountByType = {}
 	local targetObject = type(request) == "table" and tostring(request.targetObject or request.objectId or "") or ""
+	local function appendSelected(objectData)
+		local id = tostring(objectData.id or "")
+		if id == "" or selectedIds[id] == true then
+			return
+		end
+		selectedIds[id] = true
+		table.insert(selected, {
+			id = id,
+			type = tostring(objectData.type or "Unknown"),
+			roomId = tostring(objectData.roomId or ""),
+			interactions = objectData.interactions,
+		})
+	end
 	for _, objectData in ipairs(objects) do
 		if type(objectData) == "table" then
 			local objectType = tostring(objectData.type or "Unknown")
 			countsByType[objectType] = (countsByType[objectType] or 0) + 1
-			if #selected < 12
-				or (targetObject ~= "" and tostring(objectData.id or "") == targetObject) then
-				table.insert(selected, {
-					id = tostring(objectData.id or ""),
-					type = objectType,
-					roomId = tostring(objectData.roomId or ""),
-					interactions = objectData.interactions,
-				})
+			local id = tostring(objectData.id or "")
+			local typeSelectedCount = selectedCountByType[objectType] or 0
+			if (targetObject ~= "" and id == targetObject) or typeSelectedCount < 4 then
+				appendSelected(objectData)
+				if selectedIds[id] == true then
+					selectedCountByType[objectType] = typeSelectedCount + 1
+				end
 			end
 		end
 	end
@@ -2627,6 +2702,8 @@ function StudioE2EControlSystem:_handleRequest(player, request)
 			return self:_handleStartSoloMatch(player, request)
 		elseif action == "SetPreparationFocusTool" then
 			return self:_handleSetPreparationFocusTool(player, request)
+		elseif action == "MovePlayerToMapObject" then
+			return self:_handleMovePlayerToMapObject(player, request)
 		elseif action == "SimulateLobbyZone" then
 			return self:_handleSimulateLobbyZone(player, request)
 		elseif action == "LobbyTrainingSnapshot" then

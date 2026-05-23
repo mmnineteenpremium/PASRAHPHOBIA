@@ -12,6 +12,12 @@ Runtime source-of-truth for execution must follow:
 - `REPORTS.md` for current implementation status
 - `CANONICAL_SPECIFICATIONS_v2.md` for canonical design targets
 
+[2026-05-04 NOTE - Owner Visual Reality Priority]
+- Dokumentasi map di index/canonical adalah gambaran spesifikasi, bukan jaminan absolut visual terbaru.
+- Jika Owner Projects melakukan edit visual nyata di Studio, maka visual authored tersebut adalah prioritas runtime lane aktif.
+- AI dilarang menghapus/mengubah visual owner tanpa persetujuan eksplisit dari Owner Projects.
+- Implementasi AI wajib update owner/lane yang sudah ada, tanpa owner ganda, duplikasi source, atau drift.
+
 [2026-04-16 NOTE]
 For the latest verified live smoke on branch `final-source-of-truth`, read:
 - `DOCUMENTATION/SOURCE OF TRUTH/reports/FINAL_SOURCE_OF_TRUTH_RUNTIME_SMOKE_2026-04-16.md`
@@ -17707,3 +17713,721 @@ Batch visual-only lanjutan untuk RoomBrowser:
 - lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
 - perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
 - tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 204. VISUAL BATCH T201 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXIV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 205. VISUAL BATCH T202 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 206. VISUAL BATCH T203 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXVI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 207. VISUAL BATCH T204 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET TRIM XIV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+- struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 208. VISUAL BATCH T205 ROOMBROWSER PREVIEW MAP MAX HEIGHT TRIM XIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+- hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 209. VISUAL BATCH T206 ROOMBROWSER ROOMLIST MIN HEIGHT TRIM XI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+- struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 210. VISUAL BATCH T207 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM XII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+- tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 211. VISUAL BATCH T208 ROOMBROWSER ACTION COLUMN GAP TRIM VIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- gap horizontal antar tombol aksi dua-kolom dirapatkan tipis lanjutan untuk reclaim lebar tombol.
+- hierarchy aksi tetap dipertahankan agar layout bawah tetap cepat dipindai di mobile.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 212. VISUAL BATCH T209 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM XII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+- judul players tetap dipertahankan agar section break tetap jelas.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 213. VISUAL BATCH T210 ROOMBROWSER MAP TITLE WIDTH RECLAIM XIX (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+- ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 214. VISUAL BATCH T211 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM XXII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+- ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 215. VISUAL BATCH T212 ROOMBROWSER MAP FOOTER Y ALIGN TRIM VI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+- height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 216. VISUAL BATCH T213 ROOMBROWSER MAP STATS ANCHOR TRIM VI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+- ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 217. VISUAL BATCH T214 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXVII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 218. VISUAL BATCH T215 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET TRIM XV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+- struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 219. VISUAL BATCH T216 ROOMBROWSER PREVIEW MAP MAX HEIGHT TRIM XIV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+- hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 220. VISUAL BATCH T217 ROOMBROWSER ROOMLIST MIN HEIGHT TRIM XII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+- struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 221. VISUAL BATCH T218 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM XIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+- tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 222. VISUAL BATCH T219 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM XIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+- judul players tetap dipertahankan agar section break tetap jelas.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 223. VISUAL BATCH T220 ROOMBROWSER MAP TITLE WIDTH RECLAIM XX (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+- ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 224. VISUAL BATCH T221 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM XXIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+- ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 225. VISUAL BATCH T222 ROOMBROWSER MAP FOOTER Y ALIGN TRIM VII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+- height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 226. VISUAL BATCH T223 ROOMBROWSER MAP STATS ANCHOR TRIM VII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+- ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 227. VISUAL BATCH T224 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXVIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 228. VISUAL BATCH T225 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET TRIM XVI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+- struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 229. VISUAL BATCH T226 ROOMBROWSER PREVIEW MAP MAX HEIGHT TRIM XV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+- hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 230. VISUAL BATCH T227 ROOMBROWSER ROOMLIST MIN HEIGHT TRIM XIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+- struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 231. VISUAL BATCH T228 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM XIV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+- tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 232. VISUAL BATCH T229 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM XIV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+- judul players tetap dipertahankan agar section break tetap jelas.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 233. VISUAL BATCH T230 ROOMBROWSER MAP TITLE WIDTH RECLAIM XXI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+- ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 234. VISUAL BATCH T231 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM XXIV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+- ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 235. VISUAL BATCH T232 ROOMBROWSER MAP FOOTER Y ALIGN TRIM VIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+- height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 236. VISUAL BATCH T233 ROOMBROWSER MAP STATS ANCHOR TRIM VIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+- ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 237. VISUAL BATCH T234 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXIX (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 238. VISUAL BATCH T235 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET TRIM XVII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+- struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 239. VISUAL BATCH T236 ROOMBROWSER PREVIEW MAP MAX HEIGHT TRIM XVI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+- hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 240. VISUAL BATCH T237 ROOMBROWSER ROOMLIST MIN HEIGHT TRIM XIV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+- struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 241. VISUAL BATCH T238 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM XV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+- tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 242. VISUAL BATCH T239 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM XV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+- judul players tetap dipertahankan agar section break tetap jelas.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 243. VISUAL BATCH T240 ROOMBROWSER MAP TITLE WIDTH RECLAIM XXII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+- ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 244. VISUAL BATCH T241 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM XXV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+- ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 245. VISUAL BATCH T242 ROOMBROWSER MAP FOOTER Y ALIGN TRIM IX (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+- height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 246. VISUAL BATCH T243 ROOMBROWSER MAP STATS ANCHOR TRIM IX (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+- ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 247. VISUAL BATCH T244 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXX (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 248. VISUAL BATCH T245 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET TRIM XVIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+- struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 249. VISUAL BATCH T246 ROOMBROWSER PREVIEW MAP MAX HEIGHT TRIM XVII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+- hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 250. VISUAL BATCH T247 ROOMBROWSER ROOMLIST MIN HEIGHT TRIM XV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+- struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 251. VISUAL BATCH T248 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM XVI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+- tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 252. VISUAL BATCH T249 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM XVI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+- judul players tetap dipertahankan agar section break tetap jelas.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 253. VISUAL BATCH T250 ROOMBROWSER MAP TITLE WIDTH RECLAIM XXIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+- ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 254. VISUAL BATCH T251 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM XXVI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+- ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 255. VISUAL BATCH T252 ROOMBROWSER MAP FOOTER Y ALIGN TRIM X (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+- height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 256. VISUAL BATCH T253 ROOMBROWSER MAP STATS ANCHOR TRIM X (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+- ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 257. VISUAL BATCH T254 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXXI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 258. VISUAL BATCH T255 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET TRIM XIX (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+- struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 259. VISUAL BATCH T256 ROOMBROWSER PREVIEW MAP MAX HEIGHT TRIM XVIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+- hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 260. VISUAL BATCH T257 ROOMBROWSER ROOMLIST MIN HEIGHT TRIM XVI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+- struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 261. VISUAL BATCH T258 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM XVII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+- tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 262. VISUAL BATCH T259 ROOMBROWSER PREVIEW PLAYERLIST TOP GAP TRIM XVII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- jarak atas player list di bawah map preview dirapatkan tipis lanjutan untuk densitas panel preview.
+- judul players tetap dipertahankan agar section break tetap jelas.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 263. VISUAL BATCH T260 ROOMBROWSER MAP TITLE WIDTH RECLAIM XXIV (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar bounds title Map Preview direclaim tipis lanjutan untuk headroom horizontal judul map.
+- ukuran teks title tetap dipertahankan agar hierarchy label tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 264. VISUAL BATCH T261 ROOMBROWSER MAP FOOTER HEIGHT MICRO TRIM XXVII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- tinggi footer Map Preview lane extra-compact dipadatkan tipis lanjutan untuk reclaim ruang vertikal.
+- ukuran teks footer tetap dipertahankan agar hierarchy metadata map tidak berubah.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 265. VISUAL BATCH T262 ROOMBROWSER MAP FOOTER Y ALIGN TRIM XI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor vertikal footer Map Preview digeser tipis ke atas untuk ritme label yang lebih rapat.
+- height footer yang sudah ada dipertahankan agar alur baca metadata tidak berubah drastis.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 266. VISUAL BATCH T263 ROOMBROWSER MAP STATS ANCHOR TRIM XI (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor stats strip Map Preview didorong tipis ke bawah untuk memadatkan margin bawah.
+- ukuran teks stats dipertahankan agar hierarchy utilitas map tetap konsisten.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 267. VISUAL BATCH T264 ROOMBROWSER MAP MOOD WIDTH MICRO TRIM XXXII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- lebar mood chip Map Preview lane extra-compact dipadatkan tipis lanjutan untuk ruang strip horizontal.
+- perilaku truncation mood chip tetap dipertahankan untuk stabilitas readability.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 268. VISUAL BATCH T265 ROOMBROWSER PREVIEW PLAYERLIST BOTTOM INSET TRIM XX (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- inset bawah player list dipadatkan tipis lanjutan untuk menambah ruang kartu pemain.
+- struktur section preview tetap dipertahankan agar scan pemain tidak terganggu.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 269. VISUAL BATCH T266 ROOMBROWSER PREVIEW MAP MAX HEIGHT TRIM XIX (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- batas tinggi maksimum map preview extra-compact dipadatkan tipis lanjutan untuk memberi ruang ke section bawah.
+- hierarchy visual map card tetap dijaga agar map tetap menjadi focal area preview.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 270. VISUAL BATCH T267 ROOMBROWSER ROOMLIST MIN HEIGHT TRIM XVII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- ambang minimum tinggi room list mobile dipadatkan tipis lanjutan untuk memberi ruang lebih fleksibel ke stack bawah.
+- struktur daftar room tetap dipertahankan agar scanning daftar tetap nyaman.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 271. VISUAL BATCH T268 ROOMBROWSER JOIN PASSWORD ANCHOR TRIM XVIII (2026-04-30)
+
+Batch visual-only lanjutan untuk RoomBrowser:
+
+- anchor join-password field digeser tipis mendekat ke action stack untuk ritme bawah yang lebih rapat.
+- tinggi field tetap dipertahankan agar ergonomi input mobile tidak turun.
+- tidak ada perubahan logic room preview/map data/runtime, sesuai lock visual-only.
+
+# 272. VISUAL BATCH T269 TOOLVISUAL MOUNT CFRAME NORMALIZATION (2026-04-30)
+
+Batch live-fix pada lane visual tool/hand runtime aktif:
+
+- mount spec tool visual sekarang dinormalisasi agar offset `cframe` berbentuk tabel serialisasi dan `CFrame` native sama-sama terbaca aman pada runtime mount resolution.
+- error live `invalid argument #2 (Vector3 expected, got table)` tidak terulang lagi pada flow verifikasi Studio aktual dari lobby ke staging sambil membuka tool/journal.
+- tidak menambah sistem gameplay/runtime baru; tetap di lane parity visual tool/hand.
+
+# 273. VISUAL BATCH T270 RESULT PANEL REOPEN FIX (2026-04-30)
+
+Batch live-fix pada lane presentasi result match:
+
+- state dismissal match window dibersihkan saat phase `Result`, dan tombol float reopen tetap diizinkan selama pemain lokal masih berada di match.
+- result overlay kembali muncul walau match window sebelumnya sempat disembunyikan sebelum result, tervalidasi pada Studio aktual memakai kontrol E2E project untuk mengakhiri match.
+- tidak menambah sistem reward/gameplay baru; tetap di lane presentasi UI/result aktif.
+
+# 274. OWNER-EDITABLE GUI AUDIT + ROADMAP (2026-04-30)
+
+Audit source-of-truth untuk migrasi visual agar owner bisa ikut mengedit GUI langsung di Studio:
+
+- mayoritas player-facing GUI saat ini masih runtime-authored dari `Main.lua`, `QuestTracker.lua`, `QuestJournal.lua`, `SanityHUD.lua`, `CameraController.client.lua`, dan `FlashlightController.client.lua`; repo belum punya `src/StarterGui` sebagai canvas authored.
+- roadmap migrasi dikunci per-wave: mulai dari surface low-risk/high-leverage seperti `LobbyUI` dan `RoomBrowserUI`, sambil menjaga logic/wiring lama tetap sama.
+- begitu satu shell authored dipakai, builder runtime legacy untuk surface itu wajib hard-delete agar tidak ada dual visible lane atau duplicate activation oleh AI lain.
+
+# 275. OWNER-EDITABLE GUI WAVE A PHASE 1 (2026-04-30)
+
+Wave implementasi pertama untuk lane owner-editable GUI:
+
+- `src/StarterGui` sekarang berisi shell authored `MatchLoadingUI`, `TeleportScreen`, `FPVCursorToggleUI`, dan `FlashlightToggleUI`.
+- wiring aktif di `Main.lua`, `CameraController.client.lua`, dan `FlashlightController.client.lua` sekarang hanya bind ke shell authored tersebut; jalur builder runtime `Instance.new` untuk empat surface itu sudah dihapus.
+- owner sekarang bisa mengedit empat surface itu langsung di Studio, dengan syarat nama widget canonical tetap dipertahankan agar binding logic lama tidak putus.
+
+# 276. OWNER-EDITABLE GUI WAVE A PHASE 2 LOBBYUI (2026-04-30)
+
+Gelombang kedua untuk lane owner-editable GUI:
+
+- `LobbyUI` sekarang sudah authored di `src/StarterGui/LobbyUI.model.json` dan tidak lagi dibuat oleh branch runtime lama di `Main.lua`.
+- contract `LobbyUI` sekarang di-bind langsung oleh `Main.lua`; kalau widget canonical hilang/berubah nama, runtime akan warn dan tidak mencoba membangun ulang panel lobby.
+- lane PC sekarang sudah jadi checkpoint edit owner yang nyata untuk `LobbyUI`, karena override layout desktop dimatikan dan edit posisi/ukuran dari Studio akan tetap terbaca di runtime.
+
+# 277. OWNER-EDITABLE GUI WAVE A PHASE 3 ROOMBROWSERUI (2026-04-30)
+
+Gelombang ketiga untuk lane owner-editable GUI:
+
+- `RoomBrowserUI` dan `RoomBrowserFloatUI` sekarang sudah authored di `src/StarterGui/RoomBrowserUI.model.json` dan `src/StarterGui/RoomBrowserFloatUI.model.json`.
+- contract RoomBrowser sekarang di-bind langsung oleh `Main.lua`; kalau widget canonical hilang/berubah nama, runtime akan warn dan tidak mencoba membangun ulang shell RoomBrowser.
+- lane PC sekarang sudah jadi checkpoint edit owner yang nyata untuk `RoomBrowserUI`, karena override layout desktop dimatikan dan posisi float button desktop tidak lagi dipaksa oleh float rail.
+
+# 278. OWNER-EDITABLE GUI WAVE A PHASE 4 MENU QUEST HUD (2026-05-01)
+
+Gelombang keempat menutup Wave A owner-editable GUI:
+
+- `MainMenuUI`, `LeaderboardUI`, `QuestTrackerGui`, `QuestJournalGui`, dan `SanityHUDGui` sekarang sudah authored di `src/StarterGui/*.model.json`.
+- `Main.lua`, `QuestTracker.lua`, `QuestJournal.lua`, dan `SanityHUD.lua` sekarang bind ke shell authored itu dan tidak lagi membuat shell surface tersebut lewat jalur runtime aktif.
+- lane PC sekarang jadi checkpoint edit owner yang nyata untuk `MainMenuUI`, `LeaderboardUI`, `QuestTrackerGui`, `QuestJournalGui`, dan `SanityHUDGui`; Wave A selesai dan prioritas bergeser ke `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, dan `SpectatorUI`.
+- keputusan owner berikutnya: edit manual ditunda sampai semua surface GUI eligible selesai dimigrasikan, supaya tidak ada panel/HUD yang tertinggal dari lane authored.
+
+# 279. OWNER-EDITABLE GUI WAVE B PHASE 1 AUXILIARY PANELS (2026-05-01)
+
+Gelombang pertama Wave B memindahkan panel auxiliary/data-heavy ke lane authored:
+
+- `JournalUI`, `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, dan `SpectatorUI` sekarang sudah authored di `src/StarterGui/*.model.json`.
+- `Main.lua` sekarang bind ke shell authored keenam panel itu dan tidak lagi membuat ulang shell statis auxiliary window lewat jalur runtime aktif.
+- `ShopUI` tetap mengisi filter/item rows secara runtime di dalam `ContentFrame` authored agar wiring logic purchase/snapshot lama tidak berubah.
+- setelah gelombang ini, surface GUI eligible yang tersisa untuk migrasi authored tinggal `MatchUI`, `LobbyUXGui`, dan `MatchUXGui`; edit manual owner tetap ditahan sampai migrasi penuh selesai.
+
+# 280. OWNER-EDITABLE GUI WAVE C PHASE 1 MATCHUI (2026-05-01)
+
+Gelombang pertama Wave C memindahkan panel match utama ke lane authored:
+
+- `MatchUI` sekarang sudah authored di `src/StarterGui/MatchUI.model.json`.
+- `Main.lua` sekarang bind ke shell authored `MatchUI` dan tidak lagi membangun ulang shell panel match utama lewat jalur runtime aktif.
+- summary rows dan field-kit buttons tetap dibangun runtime di dalam container authored agar wiring state match, hint, evidence quick-toggle, dan tool action lama tidak berubah.
+- setelah gelombang ini, surface GUI eligible yang tersisa untuk migrasi authored tinggal `LobbyUXGui` dan `MatchUXGui`; edit manual owner tetap ditahan sampai migrasi penuh selesai.
+
+# 281. OWNER-EDITABLE GUI WAVE C PHASE 2 LOBBYUXGUI (2026-05-01)
+
+Gelombang kedua Wave C memindahkan overlay lobby utility ke lane authored:
+
+- `LobbyUXGui` sekarang sudah authored di `src/StarterGui/LobbyUXGui.model.json`.
+- `_ensureUXLayers()` sekarang memprioritaskan shell authored `LobbyUXGui` dan tidak lagi membuat duplicate `LobbyUXGui` di folder runtime lama bila shell authored sudah tersedia.
+- support-card preview dan training viewport content tetap di-refresh runtime di dalam shell authored agar wiring evidence-training lama tidak berubah.
+- setelah gelombang ini, surface GUI eligible yang tersisa untuk migrasi authored tinggal `MatchUXGui`; edit manual owner tetap ditahan sampai migrasi penuh selesai.
+
+# 282. OWNER-EDITABLE GUI WAVE C PHASE 3 MATCHUXGUI (2026-05-01)
+
+Gelombang penutup Wave C memindahkan overlay match utility ke lane authored:
+
+- `MatchUXGui` sekarang sudah authored di `src/StarterGui/MatchUXGui.model.json`.
+- `_ensureUXLayers()` sekarang memprioritaskan shell authored `MatchUXGui` dan tidak lagi membuat duplicate `MatchUXGui` di folder runtime lama bila shell authored sudah tersedia.
+- result summary rows dan state visual hunt/result tetap di-refresh runtime di dalam shell authored agar wiring match-result lama tidak berubah.
+- dengan gelombang ini, seluruh surface GUI eligible untuk migrasi owner-editable sekarang sudah authored di `StarterGui`; lane berikutnya adalah owner visual edit pass.
+
+# 283. SINGLE-OWNER RESPONSIVE AUTHORED LAYOUT LOCK (2026-05-01)
+
+Lock responsif untuk menghapus split otoritas layout desktop/mobile pada shell authored:
+
+- `Main.lua` sekarang mengunci authored `StarterGui` shell sebagai sumber tunggal layout owner pada lane desktop dan mobile untuk surface GUI player-facing yang sudah dimigrasikan.
+- `_applyDeviceSizing()` tidak lagi menimpa posisi/ukuran panel authored untuk `LobbyUI`, `RoomBrowserUI`, `MatchUI`, `MainMenuUI`, `LeaderboardUI`, `JournalUI`, `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, `SpectatorUI`, `LobbyUXGui`, dan `MatchUXGui`.
+- runtime aktif tetap memegang visibility, wiring, dan konten dinamis internal, tetapi layout shell tidak lagi dibelah oleh override device-specific runtime.
+
+# 284. QUEST AUTHORED SHELL OVERRIDE CLEANUP (2026-05-01)
+
+Follow-up untuk menutup residual override pada lane HUD quest:
+
+- `QuestJournal.lua` dan `QuestTracker.lua` sekarang mengikuti authored-owner layout lock yang sama dengan surface GUI authored lain.
+- runtime tidak lagi memaksa posisi/ukuran shell authored `QuestJournalGui` dan `QuestTrackerGui` saat lane owner-edit aktif.
+- popup completion quest tetap runtime-transient dan tidak dianggap shell authored utama.
+
+# 285. LOBBY FLOAT RAIL AUTHORED PRESERVATION (2026-05-01)
+
+Follow-up untuk menutup residual override pada tombol float lobby:
+
+- `_layoutLobbyFloatRail()` sekarang tidak lagi memposisikan ulang float button authored ketika authored-owner layout lock aktif.
+- `RoomBrowserFloatUI`, `MainMenuUI`, `LeaderboardUI`, `ProfileUI`, `ShopUI`, dan `RoyalPassUI` sekarang mempertahankan posisi float authored milik owner edit.
+- yang tersisa di lane runtime terutama adalah widget dinamis/transient, bukan lagi geometry shell authored utama.
+
+# 286. ROOMBROWSER MODAL AUTHORED PRESERVATION (2026-05-01)
+
+Follow-up untuk menutup residual override pada modal/popup authored RoomBrowser:
+
+- `PasswordModal`, `KickNoticeModal`, dan `InvitePopup` sekarang tidak lagi diposisikan ulang atau di-resize runtime ketika authored-owner layout lock aktif.
+- modal/popup authored RoomBrowser sekarang benar-benar ikut lane owner edit.
+- yang tersisa di RoomBrowser runtime terutama daftar room, player cards, invite rows, dan konten dinamis lain.
+
+# 287. ROOMBROWSER FLOAT AND COUNTDOWN AUTHORED PRESERVATION (2026-05-01)
+
+Follow-up untuk menutup residual override pada float/countdown authored RoomBrowser:
+
+- `RoomBrowserFloatUI`, `CountdownLabel`, dan `CancelCountdown` sekarang tidak lagi dipaksa ukuran/posisinya oleh runtime ketika authored-owner layout lock aktif.
+- widget authored RoomBrowser itu sekarang ikut stabil di lane owner edit.
+- yang tersisa di RoomBrowser runtime makin fokus ke konten dinamis, bukan shell geometry authored.
+
+# 288. UXLAYER AUTHORED BIND-ONLY ENFORCEMENT (2026-05-01)
+
+Follow-up untuk menutup builder legacy aktif pada lane UX overlay authored:
+
+- `_ensureUXLayers()` sekarang bind-only ke `LobbyUXGui` dan `MatchUXGui` selama authored-owner layout lock aktif.
+- lane aktif tidak lagi diam-diam membangun ulang shell UX authored atau child authored-nya jika contract hilang/rusak; sekarang ia gagal eksplisit dengan warning agar owner tidak tertipu duplicate visible legacy.
+- yang tetap runtime by design hanyalah konten UX dinamis di dalam shell authored, seperti support cards training, result summary rows, safe padding refresh, dan state text live.
+
+# 289. UXLAYER LEGACY BUILDER HARD DELETE (2026-05-01)
+
+Follow-up untuk menghapus fisik dead code builder UX lama:
+
+- dead block builder `UXLayer` di bawah `_ensureUXLayers()` sudah dihapus dari `Main.lua`.
+- `_ensureUXLayers()` sekarang tidak punya jalur lokal yang membuat ulang `LobbyUXGui`, `MatchUXGui`, atau child shell UX statis dari runtime.
+- sisa tanggung jawab runtime di UX layer tinggal binding, visibility, safe padding, dan konten dinamis di dalam shell authored.
+
+# 290. BASIC UI LEGACY BUILDER HARD DELETE (2026-05-01)
+
+Follow-up untuk menghapus fallback builder umum panel UI lama:
+
+- dead branch `BASIC_GUI_NAMES` yang membuat `ScreenGui/MainPanel` lama sudah dihapus dari `Main.lua`.
+- surface utama seperti `LobbyUI`, `MainMenuUI`, `LeaderboardUI`, `MatchUI`, `JournalUI`, `ProfileUI`, `ShopUI`, `RoyalPassUI`, `PASRA_UI`, dan `SpectatorUI` sekarang wajib bind ke shell authored.
+- sisa `ScreenGui` runtime yang terdeteksi tinggal `QuestPopupGui` dan `SensoryHorrorHUD`, keduanya runtime-only/transient dan bukan shell utama owner-edit.
+
+# 291. AUTHORED GUI RUNTIME BINDING RESET REPAIR (2026-05-01)
+
+Repair setelah Play Test owner menemukan semua panel terbuka dan wiring tombol tidak bekerja:
+
+- guard `Bound`, `DragBound`, dan `InitDone` persistent tidak lagi dipakai untuk binding authored GUI.
+- runtime sekarang memakai memory guard per sesi play, sehingga tombol dan drag tetap terhubung walau owner menyalakan `Visible` saat edit mode.
+- bootstrap runtime boleh reset visibility/state panel, tetapi tidak boleh mengubah posisi/ukuran authored yang diedit owner.
+
+# 292. AUTHORED GUI SAFE DEFAULT AND PLAY-TEST REPAIR (2026-05-01)
+
+Repair lanjutan dari Play Test langsung pada `PASRAHPHOBIA.rbxlx`:
+
+- seluruh root `ScreenGui` authored di `src/StarterGui` sekarang default `Enabled=false` agar F5 tidak menyalin semua panel dalam keadaan terbuka sebelum runtime mengatur state.
+- syntax error `Client.UI.Main:13252` yang mematikan `UISystem` sudah diperbaiki dengan mengganti `goto`/label menjadi `continue` loop.
+- `RoomBrowserUI.Backdrop` sekarang ikut visible saat Room Browser dibuka, sehingga klik `LobbyUI.MainPanel.OpenRoomBrowserButton` benar-benar menampilkan shell Room Browser.
+- divalidasi tiga run Play Test: initial lobby-only, no all-open frame regression, Room Browser opens on click, dan log tidak berisi error UI bootstrap.

@@ -59,6 +59,9 @@ local function stampMatchResultRuntime(target, payload)
     target:SetAttribute("PasrahMatchResultOwner", "MatchResultSystem")
     target:SetAttribute("PasrahMatchResultMatchId", type(payload.matchId) == "string" and payload.matchId or nil)
     target:SetAttribute("PasrahMatchResultGhostType", type(payload.ghostType) == "string" and payload.ghostType or nil)
+    target:SetAttribute("PasrahMatchResultGuessedGhostType", type(payload.guessedGhostType) == "string" and payload.guessedGhostType or nil)
+    target:SetAttribute("PasrahMatchResultGuessedEvidence", type(payload.guessedEvidenceText) == "string" and payload.guessedEvidenceText or nil)
+    target:SetAttribute("PasrahMatchResultExpectedEvidence", type(payload.expectedEvidenceText) == "string" and payload.expectedEvidenceText or nil)
     target:SetAttribute("PasrahMatchResultCorrectGuess", payload.correctGuess == true)
     target:SetAttribute("PasrahMatchResultGhostIdentified", payload.ghostIdentified == true)
     target:SetAttribute("PasrahMatchResultEvidenceCollected", tonumber(payload.evidenceCollected) or 0)
@@ -71,6 +74,22 @@ local function stampMatchResultRuntime(target, payload)
     target:SetAttribute("PasrahMatchResultDuration", tonumber(payload.matchDuration) or 0)
     target:SetAttribute("PasrahMatchResultLastEvent", type(payload.lastEvent) == "string" and payload.lastEvent or nil)
     target:SetAttribute("PasrahMatchResultLastUpdatedAt", tonumber(payload.updatedAt) or os.clock())
+end
+
+local function listToText(list)
+    if type(list) ~= "table" or #list == 0 then
+        return nil
+    end
+    local out = {}
+    for _, value in ipairs(list) do
+        if type(value) == "string" and value ~= "" then
+            table.insert(out, value)
+        end
+    end
+    if #out == 0 then
+        return nil
+    end
+    return table.concat(out, " | ")
 end
 
 function Service:Init()
@@ -247,6 +266,9 @@ function Service:HandleEvent(eventName, payload)
         self._state:Set("ghostIdentified", false)
         self._state:Set("correctGuess", false)
         self._state:Set("contractSuccess", false)
+        self._state:Set("guessedGhostType", nil)
+        self._state:Set("guessedEvidence", nil)
+        self._state:Set("expectedEvidence", nil)
         self._state:Set("matchStartedAt", os.clock())
         self:_registerPlayers(payload and payload.players or {})
         return
@@ -281,7 +303,12 @@ function Service:HandleEvent(eventName, payload)
                 or (results.extractionCompleted == true),
             extractionCompleted = results.extractionCompleted == true or extracted > 0,
             matchDuration = matchDuration,
+            guessedGhostType = results.guessedGhostType or self._state:Get("guessedGhostType"),
+            guessedEvidence = results.guessedEvidence or self._state:Get("guessedEvidence"),
+            expectedEvidence = results.expectedEvidence or self._state:Get("expectedEvidence"),
         }
+        result.guessedEvidenceText = listToText(result.guessedEvidence)
+        result.expectedEvidenceText = listToText(result.expectedEvidence)
 
         self._state:Set("lastResult", result)
         for _, player in ipairs(self:_collectPlayers(payload, result)) do
@@ -289,6 +316,9 @@ function Service:HandleEvent(eventName, payload)
                 stampMatchResultRuntime(player, {
                     matchId = result.matchId,
                     ghostType = result.ghostType,
+                    guessedGhostType = result.guessedGhostType,
+                    guessedEvidenceText = result.guessedEvidenceText,
+                    expectedEvidenceText = result.expectedEvidenceText,
                     correctGuess = result.correctGuess,
                     ghostIdentified = result.ghostIdentified,
                     evidenceCollected = result.evidenceCollected,
@@ -309,6 +339,9 @@ function Service:HandleEvent(eventName, payload)
             eventName = "MatchCompleted",
             matchId = result.matchId,
             ghostType = result.ghostType,
+            guessedGhostType = result.guessedGhostType,
+            guessedEvidence = result.guessedEvidence,
+            expectedEvidence = result.expectedEvidence,
             correctGuess = result.correctGuess,
             ghostIdentified = result.ghostIdentified,
             evidenceCollected = result.evidenceCollected,
@@ -358,6 +391,15 @@ function Service:HandleEvent(eventName, payload)
     end
 
     if eventName == "GhostGuessValidated" then
+        if payload and type(payload.guessedGhostType) == "string" and payload.guessedGhostType ~= "" then
+            self._state:Set("guessedGhostType", payload.guessedGhostType)
+        end
+        if payload and type(payload.guessedEvidence) == "table" then
+            self._state:Set("guessedEvidence", payload.guessedEvidence)
+        end
+        if payload and type(payload.expectedEvidence) == "table" then
+            self._state:Set("expectedEvidence", payload.expectedEvidence)
+        end
         if payload and payload.correct == true then
             self._state:Set("correctGuess", true)
             self._state:Set("ghostIdentified", true)

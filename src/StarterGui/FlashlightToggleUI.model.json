@@ -1,0 +1,184 @@
+{
+  "className": "ScreenGui",
+  "children": [
+    {
+      "name": "ToggleButton",
+      "className": "TextButton",
+      "children": [
+        {
+          "name": "UICorner",
+          "className": "UICorner",
+          "properties": {
+            "BottomLeftRadius": {
+              "UDim": [
+                1.0,
+                0
+              ]
+            },
+            "BottomRightRadius": {
+              "UDim": [
+                1.0,
+                0
+              ]
+            },
+            "TopLeftRadius": {
+              "UDim": [
+                1.0,
+                0
+              ]
+            },
+            "TopRightRadius": {
+              "UDim": [
+                1.0,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "name": "UIStroke",
+          "className": "UIStroke",
+          "properties": {
+            "Color": [
+              0.529411792755127,
+              0.6078431606292725,
+              0.7254902124404907
+            ],
+            "Thickness": 2.0
+          }
+        },
+        {
+          "name": "BrandTextImage",
+          "className": "ImageButton",
+          "children": [
+            {
+              "name": "BrandTextImageStateScale",
+              "className": "UIScale"
+            }
+          ],
+          "properties": {
+            "Selectable": false,
+            "ImageContent": "rbxassetid://106996620986201",
+            "Position": {
+              "UDim2": [
+                [
+                  0.5,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ]
+            },
+            "ZIndex": 4.0,
+            "InputSink": {
+              "Enum": 0
+            },
+            "BorderSizePixel": 0.0,
+            "Interactable": false,
+            "Active": false,
+            "BackgroundTransparency": 1.0,
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -8
+                ],
+                [
+                  1.0,
+                  -8
+                ]
+              ]
+            },
+            "AutoButtonColor": false,
+            "AnchorPoint": [
+              0.5,
+              0.5
+            ],
+            "ScaleType": "Fit"
+          },
+          "attributes": {
+            "PasrahImageTextActive": "75271688724464",
+            "PasrahImageTextHover": "128353838297791",
+            "PasrahImageTextIdle": "106996620986201"
+          }
+        }
+      ],
+      "properties": {
+        "TextTransparency": 1.0,
+        "FontFace": {
+          "family": "rbxasset://fonts/families/GothamSSm.json",
+          "weight": "Bold",
+          "style": "Normal",
+          "cachedFaceId": null
+        },
+        "TextWrapped": true,
+        "BackgroundColor3": [
+          0.20392157137393951,
+          0.24313725531101227,
+          0.3137255012989044
+        ],
+        "Text": "SENTER\nOFF",
+        "TextScaled": true,
+        "Position": {
+          "UDim2": [
+            [
+              1.0,
+              -18
+            ],
+            [
+              0.62,
+              0
+            ]
+          ]
+        },
+        "InputSink": {
+          "Enum": 0
+        },
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              72
+            ],
+            [
+              0.0,
+              72
+            ]
+          ]
+        },
+        "TextColor3": [
+          0.9607843160629272,
+          0.9607843160629272,
+          0.9607843160629272
+        ],
+        "AnchorPoint": [
+          1.0,
+          0.5
+        ]
+      },
+      "attributes": {
+        "PasrahImageTextApplied": true,
+        "PasrahImageTextBase": "senter_off"
+      }
+    },
+    {
+      "name": "FlashlightToggleVisualController",
+      "className": "LocalScript",
+      "properties": {
+        "ScriptGuid": "{FD5A1468-224F-4A10-A472-96281394058A}",
+        "Source": "local screenGui = script.Parent\nif not screenGui or not screenGui:IsA(\"ScreenGui\") then\n\treturn\nend\n\nlocal button = screenGui:FindFirstChild(\"ToggleButton\")\nif not button or not button:IsA(\"TextButton\") then\n\treturn\nend\n\nlocal states = {\n\tidle = \"106996620986201\",\n\thover = \"128353838297791\",\n\tactive = \"75271688724464\",\n}\n\nlocal function toImageAsset(assetId)\n\treturn string.format(\"rbxassetid://%s\", tostring(assetId))\nend\n\nlocal image = button:FindFirstChild(\"BrandTextImage\")\nif not image or not image:IsA(\"ImageButton\") then\n\tif image and (image:IsA(\"ImageLabel\") or image:IsA(\"ImageButton\")) then\n\t\timage:Destroy()\n\tend\n\timage = Instance.new(\"ImageButton\")\n\timage.Name = \"BrandTextImage\"\n\timage.BackgroundTransparency = 1\n\timage.AutoButtonColor = false\n\timage.Active = false\n\timage.Selectable = false\n\timage.Size = UDim2.new(1, -8, 1, -8)\n\timage.Position = UDim2.fromOffset(4, 4)\n\timage.ScaleType = Enum.ScaleType.Fit\n\timage.ZIndex = button.ZIndex + 1\n\timage.Parent = button\nend\nimage.HoverImage = toImageAsset(states.hover)\nimage.PressedImage = toImageAsset(states.active)\n\nlocal function apply(stateName)\n\timage.Image = toImageAsset(states[stateName] or states.idle)\n\tbutton.TextTransparency = 1\nend\n\napply(\"idle\")\nbutton.MouseEnter:Connect(function()\n\tapply(\"hover\")\nend)\nbutton.MouseLeave:Connect(function()\n\tapply(\"idle\")\nend)\nbutton.MouseButton1Down:Connect(function()\n\tapply(\"active\")\nend)\nbutton.MouseButton1Up:Connect(function()\n\tapply(\"hover\")\nend)\n"
+      }
+    }
+  ],
+  "properties": {
+    "TabKeyboardNavigation": {
+      "Bool": false
+    },
+    "ResetOnSpawn": false,
+    "ScreenInsets": "DeviceSafeInsets",
+    "DisplayOrder": 250.0,
+    "Enabled": false
+  }
+}

@@ -56,26 +56,24 @@ local function resolveDefaultGraphicsMode()
 	return "Quality"
 end
 
-local function ensureOverlayFrame(parent, name, backgroundTransparency)
-	local overlay = parent:FindFirstChild(name)
+local warnedOverlayContracts = {}
+
+local function warnMissingOverlayContract(name)
+	local key = tostring(name or "?")
+	if warnedOverlayContracts[key] then
+		return
+	end
+	warnedOverlayContracts[key] = true
+	warn("[SpectatorEffects] Authored SpectatorUI overlay contract mismatch: " .. key)
+end
+
+local function bindOverlayFrame(parent, name)
+	local overlay = parent and parent:FindFirstChild(name)
 	if overlay and overlay:IsA("Frame") then
-		overlay.BackgroundColor3 = Color3.new(0, 0, 0)
-		overlay.BackgroundTransparency = backgroundTransparency
-		overlay.BorderSizePixel = 0
-		overlay.Size = UDim2.fromScale(1, 1)
-		overlay.Visible = false
 		return overlay
 	end
-
-	overlay = Instance.new("Frame")
-	overlay.Name = name
-	overlay.BackgroundColor3 = Color3.new(0, 0, 0)
-	overlay.BackgroundTransparency = backgroundTransparency
-	overlay.BorderSizePixel = 0
-	overlay.Size = UDim2.fromScale(1, 1)
-	overlay.Visible = false
-	overlay.Parent = parent
-	return overlay
+	warnMissingOverlayContract(name)
+	return nil
 end
 
 local function findOverlayFrames(player)
@@ -103,8 +101,8 @@ local function findOverlayFrames(player)
 	end
 
 	local spectatorUi = fallbackUi
-	local staticOverlay = ensureOverlayFrame(spectatorUi, "StaticFlickerOverlay", 0.35)
-	local desaturationOverlay = ensureOverlayFrame(spectatorUi, "ColorDesaturationOverlay", 0.5)
+	local staticOverlay = bindOverlayFrame(spectatorUi, "StaticFlickerOverlay")
+	local desaturationOverlay = bindOverlayFrame(spectatorUi, "ColorDesaturationOverlay")
 	return staticOverlay, desaturationOverlay
 end
 

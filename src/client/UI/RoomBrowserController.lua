@@ -88,10 +88,12 @@ function RoomBrowserController.new(lobbyRemote)
 		lastEvent = nil,
 		lastError = nil,
 		queue = nil,
-		matchStarting = false,
-		countdownSecondsLeft = nil,
-		countdownTotal = nil,
-		countdownEndsAt = nil,
+	matchStarting = false,
+	countdownSecondsLeft = nil,
+	countdownTotal = nil,
+	countdownEndsAt = nil,
+	countdownCompletionToken = 0,
+	countdownCompletedAt = nil,
 		currentRoom = nil,
 		lastRoomId = nil,
 		isHost = false,
@@ -363,22 +365,27 @@ function RoomBrowserController:HandleLobbyEvent(payload)
 		self._state.countdownTotal = payload.countdownSeconds or self._state.countdownTotal or 5
 		self._state.countdownSecondsLeft = payload.countdownSeconds or self._state.countdownSecondsLeft
 		self._state.countdownEndsAt = tonumber(payload.countdownEndsAt) or (payload.countdownSeconds and (Workspace:GetServerTimeNow() + tonumber(payload.countdownSeconds))) or self._state.countdownEndsAt
+		self._state.countdownCompletedAt = nil
 	elseif eventName == "RoomMatchCountdown" then
 		self._state.matchStarting = true
 		self._state.countdownSecondsLeft = payload.secondsLeft
 		self._state.countdownTotal = payload.totalSeconds or self._state.countdownTotal
 		self._state.countdownEndsAt = tonumber(payload.countdownEndsAt) or (payload.secondsLeft and (Workspace:GetServerTimeNow() + tonumber(payload.secondsLeft))) or self._state.countdownEndsAt
+		self._state.countdownCompletedAt = nil
 	elseif eventName == "RoomMatchCountdownCancelled" then
 		self._state.matchStarting = false
 		self._state.countdownSecondsLeft = nil
 		self._state.countdownTotal = nil
 		self._state.countdownEndsAt = nil
+		self._state.countdownCompletedAt = nil
 		self._state.lastError = payload.reason == "host_cancelled" and nil or payload.reason
 	elseif eventName == "RoomMatchCountdownCompleted" then
 		self._state.matchStarting = false
 		self._state.countdownSecondsLeft = nil
 		self._state.countdownTotal = nil
 		self._state.countdownEndsAt = nil
+		self._state.countdownCompletionToken = (self._state.countdownCompletionToken or 0) + 1
+		self._state.countdownCompletedAt = Workspace:GetServerTimeNow()
 	elseif eventName == "RoomStateUpdate" then
 		self:_setPendingRoomTransition(false)
 		local roomData = payload.room

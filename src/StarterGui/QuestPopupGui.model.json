@@ -1,0 +1,136 @@
+{
+  "className": "ScreenGui",
+  "children": [
+    {
+      "name": "Panel",
+      "className": "Frame",
+      "children": [
+        {
+          "name": "UICorner",
+          "className": "UICorner",
+          "properties": {
+            "TopRightRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            },
+            "BottomLeftRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            },
+            "TopLeftRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            },
+            "BottomRightRadius": {
+              "UDim": [
+                0.0,
+                10
+              ]
+            }
+          }
+        },
+        {
+          "name": "Label",
+          "className": "TextLabel",
+          "properties": {
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Bold",
+              "style": "Normal",
+              "cachedFaceId": "rbxasset://fonts/Montserrat-Bold.ttf"
+            },
+            "TextWrapped": true,
+            "Text": "Mission selesai!",
+            "TextSize": 15.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  10
+                ],
+                [
+                  0.0,
+                  0
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "TextXAlignment": "Left",
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -18
+                ],
+                [
+                  1.0,
+                  0
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.501960813999176,
+              0.95686274766922,
+              0.529411792755127
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "InputSink": {
+          "Enum": 0
+        },
+        "BorderSizePixel": 0.0,
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              340
+            ],
+            [
+              0.0,
+              84
+            ]
+          ]
+        },
+        "BackgroundColor3": [
+          0.08627451211214066,
+          0.18431372940540314,
+          0.10980392247438431
+        ],
+        "AnchorPoint": [
+          0.5,
+          0.0
+        ],
+        "Position": {
+          "UDim2": [
+            [
+              0.5,
+              0
+            ],
+            [
+              0.0,
+              -96
+            ]
+          ]
+        }
+      }
+    }
+  ],
+  "properties": {
+    "TabKeyboardNavigation": {
+      "Bool": false
+    },
+    "ResetOnSpawn": false,
+    "DisplayOrder": 6.0
+  }
+}

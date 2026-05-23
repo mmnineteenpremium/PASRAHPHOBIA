@@ -1,0 +1,314 @@
+{
+  "className": "ScreenGui",
+  "children": [
+    {
+      "name": "RoomBrowserFloatButton",
+      "className": "TextButton",
+      "children": [
+        {
+          "name": "UICorner",
+          "className": "UICorner",
+          "properties": {
+            "TopRightRadius": {
+              "UDim": [
+                0.0,
+                18
+              ]
+            },
+            "BottomLeftRadius": {
+              "UDim": [
+                0.0,
+                18
+              ]
+            },
+            "TopLeftRadius": {
+              "UDim": [
+                0.0,
+                18
+              ]
+            },
+            "BottomRightRadius": {
+              "UDim": [
+                0.0,
+                18
+              ]
+            }
+          }
+        },
+        {
+          "name": "FloatAccent",
+          "className": "Frame",
+          "children": [
+            {
+              "name": "UICorner",
+              "className": "UICorner",
+              "properties": {
+                "TopRightRadius": {
+                  "UDim": [
+                    0.0,
+                    999
+                  ]
+                },
+                "BottomLeftRadius": {
+                  "UDim": [
+                    0.0,
+                    999
+                  ]
+                },
+                "TopLeftRadius": {
+                  "UDim": [
+                    0.0,
+                    999
+                  ]
+                },
+                "BottomRightRadius": {
+                  "UDim": [
+                    0.0,
+                    999
+                  ]
+                }
+              }
+            }
+          ],
+          "properties": {
+            "InputSink": {
+              "Enum": 0
+            },
+            "BorderSizePixel": 0.0,
+            "BackgroundTransparency": 0.07999999821186066,
+            "Size": {
+              "UDim2": [
+                [
+                  0.64,
+                  0
+                ],
+                [
+                  0.0,
+                  4
+                ]
+              ]
+            },
+            "BackgroundColor3": [
+              0.32156863808631897,
+              0.6392157077789307,
+              0.772549033164978
+            ],
+            "Position": {
+              "UDim2": [
+                [
+                  0.18,
+                  0
+                ],
+                [
+                  0.0,
+                  6
+                ]
+              ]
+            },
+            "ZIndex": 21.0
+          }
+        },
+        {
+          "name": "FloatGlyph",
+          "className": "TextLabel",
+          "properties": {
+            "TextTransparency": 0.18000000715255737,
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Heavy",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "Text": "RI",
+            "TextSize": 22.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.08,
+                  0
+                ],
+                [
+                  0.12,
+                  0
+                ]
+              ]
+            },
+            "ZIndex": 21.0,
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "Size": {
+              "UDim2": [
+                [
+                  0.84,
+                  0
+                ],
+                [
+                  0.48,
+                  0
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.7137255072593689,
+              0.886274516582489,
+              0.9490196108818054
+            ]
+          }
+        },
+        {
+          "name": "FloatCaption",
+          "className": "TextLabel",
+          "properties": {
+            "TextTransparency": 0.03999999910593033,
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Bold",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "TextWrapped": true,
+            "Text": "RUANG INVESTIGASI",
+            "TextSize": 10.0,
+            "Position": {
+              "UDim2": [
+                [
+                  0.1,
+                  0
+                ],
+                [
+                  0.58,
+                  0
+                ]
+              ]
+            },
+            "ZIndex": 21.0,
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "TextYAlignment": "Top",
+            "Size": {
+              "UDim2": [
+                [
+                  0.8,
+                  0
+                ],
+                [
+                  0.26,
+                  0
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.9333333373069763,
+              0.9529411792755127,
+              0.9725490212440491
+            ]
+          }
+        },
+        {
+          "name": "FloatSubcaption",
+          "className": "TextLabel",
+          "properties": {
+            "TextTransparency": 0.2199999988079071,
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Bold",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "Text": "OPEN",
+            "Position": {
+              "UDim2": [
+                [
+                  0.12,
+                  0
+                ],
+                [
+                  0.83,
+                  0
+                ]
+              ]
+            },
+            "ZIndex": 21.0,
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "Size": {
+              "UDim2": [
+                [
+                  0.76,
+                  0
+                ],
+                [
+                  0.12,
+                  0
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.6941176652908325,
+              0.8745098114013672,
+              0.9411764740943909
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "BackgroundColor3": [
+          0.10588235408067703,
+          0.1568627506494522,
+          0.21176470816135406
+        ],
+        "Text": "",
+        "Position": {
+          "UDim2": [
+            [
+              0.0,
+              16
+            ],
+            [
+              1.0,
+              -164
+            ]
+          ]
+        },
+        "ZIndex": 20.0,
+        "InputSink": {
+          "Enum": 0
+        },
+        "BorderSizePixel": 0.0,
+        "BackgroundTransparency": 0.029999999329447746,
+        "Size": {
+          "UDim2": [
+            [
+              0.0,
+              72
+            ],
+            [
+              0.0,
+              72
+            ]
+          ]
+        },
+        "AutoButtonColor": false,
+        "AnchorPoint": [
+          0.0,
+          1.0
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "ZIndexBehavior": "Sibling",
+    "TabKeyboardNavigation": {
+      "Bool": true
+    },
+    "ScreenInsets": "DeviceSafeInsets",
+    "DisplayOrder": 201.0,
+    "Enabled": false
+  }
+}

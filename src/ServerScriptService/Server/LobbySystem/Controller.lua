@@ -546,6 +546,12 @@ function Controller:OnSelectMode(player, request)
 		selection = selection,
 	})
 	self:OnRequestRoomBrowserSnapshot(player, request)
+
+	local room = self._service._roomManager and self._service._roomManager:GetRoomByPlayer(player) or nil
+	if room then
+		self:_broadcastRoomState(room)
+	end
+	self:_broadcastRoomListToAll()
 end
 
 function Controller:OnSelectMap(player, request)

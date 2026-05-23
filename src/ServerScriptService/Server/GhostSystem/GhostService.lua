@@ -4,6 +4,8 @@ local Services = require(script.Parent.Parent.Core.Services)
 local GhostService = {}
 GhostService.__index = GhostService
 
+local INVESTIGATION_HUNT_GRACE_SECONDS = 45
+
 local DEFAULT_CONFIG = {
 	MinTickIntervalSeconds = 0.2,
 	MaxRuntimeEventsPerTick = 24,
@@ -19,6 +21,13 @@ local DEFAULT_CONFIG = {
 		EvidenceTriggered = 0.2,
 		GhostFakeEvidenceSpawned = 0.2,
 	},
+}
+
+local MANIFEST_ALLOWED_PHASES = {
+	Investigation = true,
+	InvestigationPhase = true,
+	Hunt = true,
+	HuntPhase = true,
 }
 
 local function mergeConfig(base, override)
@@ -74,6 +83,39 @@ local function resolveEvidenceService(deps)
 	return nil
 end
 
+local function resolveMatchSystem(deps)
+	local matchSystem = Services.Get(deps, "MatchSystem")
+	if type(matchSystem) ~= "table" then
+		return nil
+	end
+	if type(matchSystem.GetLiveMatch) == "function" then
+		return matchSystem
+	end
+	if type(matchSystem.Service) == "table" and type(matchSystem.Service.GetLiveMatch) == "function" then
+		return matchSystem.Service
+	end
+	return nil
+end
+
+local function normalizePhaseToken(value)
+	if type(value) ~= "string" then
+		return nil
+	end
+	local trimmed = value:gsub("^%s+", ""):gsub("%s+$", "")
+	if trimmed == "" then
+		return nil
+	end
+	return trimmed
+end
+
+local function shallowCopyTable(source)
+	local copy = {}
+	for key, value in pairs(source or {}) do
+		copy[key] = value
+	end
+	return copy
+end
+
 function GhostService.new(state, deps)
 	local self = setmetatable({}, GhostService)
 	self._state = state
@@ -81,12 +123,76 @@ function GhostService.new(state, deps)
 	self._config = mergeConfig(DEFAULT_CONFIG, self._deps.GhostServiceConfig)
 	self._eventBus = resolveEventBus(self._deps)
 	self._evidenceService = resolveEvidenceService(self._deps)
+	self._matchSystem = resolveMatchSystem(self._deps)
 	self._ai = GhostAI.new(self._deps, self._deps.GhostConfig or {})
 	self._lastTickAtByMatch = {}
 	self._lastPublishedAtByMatch = {}
 	self._activeGhosts = {}
 	self._running = false
 	return self
+end
+
+function GhostService:_resolveLiveMatch(matchId)
+	if not matchId then
+		return nil
+	end
+	local matchSystem = self._matchSystem or resolveMatchSystem(self._deps)
+	if not (matchSystem and type(matchSystem.GetLiveMatch) == "function") then
+		return nil
+	end
+	self._matchSystem = matchSystem
+	return matchSystem:GetLiveMatch(matchId)
+end
+
+function GhostService:_resolveLifecyclePhase(matchId, snapshot)
+	local snapshotPhase = normalizePhaseToken(
+		type(snapshot) == "table" and (snapshot.lifecyclePhase or snapshot.phaseName or snapshot.phase) or nil
+	)
+	if snapshotPhase then
+		return snapshotPhase
+	end
+	local liveMatch = self:_resolveLiveMatch(matchId)
+	return normalizePhaseToken(type(liveMatch) == "table" and (liveMatch.lifecyclePhase or liveMatch.phaseName or liveMatch.phase) or nil)
+end
+
+function GhostService:_isManifestAllowedForPhase(phaseName)
+	return MANIFEST_ALLOWED_PHASES[normalizePhaseToken(phaseName)] == true
+end
+
+function GhostService:_buildTickSnapshot(matchId, snapshot)
+	local safeSnapshot = shallowCopyTable(type(snapshot) == "table" and snapshot or {})
+	local liveMatch = self:_resolveLiveMatch(matchId)
+	local phaseName = self:_resolveLifecyclePhase(matchId, safeSnapshot)
+	if phaseName then
+		safeSnapshot.lifecyclePhase = phaseName
+		if safeSnapshot.phaseName == nil then
+			safeSnapshot.phaseName = phaseName
+		end
+		if safeSnapshot.phase == nil then
+			safeSnapshot.phase = phaseName
+		end
+	end
+
+	if type(safeSnapshot.manifestAllowed) ~= "boolean" then
+		safeSnapshot.manifestAllowed = self:_isManifestAllowedForPhase(phaseName)
+	else
+		safeSnapshot.manifestAllowed = safeSnapshot.manifestAllowed and self:_isManifestAllowedForPhase(phaseName)
+	end
+
+	if phaseName == "PreparationPhase" then
+		safeSnapshot.huntAllowed = false
+	elseif phaseName == "InvestigationPhase" then
+		local phaseStartedAt = tonumber(safeSnapshot.phaseStartedAt)
+			or (type(liveMatch) == "table" and tonumber(liveMatch.phaseStartedAt))
+		if phaseStartedAt then
+			safeSnapshot.huntGraceUntil = math.max(
+				tonumber(safeSnapshot.huntGraceUntil) or 0,
+				phaseStartedAt + INVESTIGATION_HUNT_GRACE_SECONDS
+			)
+		end
+	end
+
+	return safeSnapshot
 end
 
 function GhostService:Init()
@@ -187,7 +293,7 @@ function GhostService:SpawnGhost(matchId, payload)
 end
 
 function GhostService:TickGhost(matchId, snapshot, dt, now)
-    local t0 = tick()
+	local t0 = tick()
 	local currentNow = now or os.clock()
 	local lastTickAt = self._lastTickAtByMatch[matchId] or 0
 	if (currentNow - lastTickAt) < (self._config.MinTickIntervalSeconds or 0) then
@@ -198,7 +304,8 @@ function GhostService:TickGhost(matchId, snapshot, dt, now)
 	local sessionBefore = self._ai:GetSession(matchId)
 	local previousRoomId = sessionBefore and sessionBefore.currentRoomId or nil
 
-	local session, huntEvent, runtimeEvents = self._ai:Tick(matchId, snapshot, dt, currentNow)
+	local effectiveSnapshot = self:_buildTickSnapshot(matchId, snapshot)
+	local session, huntEvent, runtimeEvents = self._ai:Tick(matchId, effectiveSnapshot, dt, currentNow)
 	if not session then
 		return nil
 	end
@@ -390,7 +497,7 @@ function GhostService:TickGhost(matchId, snapshot, dt, now)
 end
 
 function GhostService:StartHunt(matchId, snapshot, now)
-	local started, strategyEvent = self._ai:StartHunt(matchId, snapshot or {}, now)
+	local started, strategyEvent = self._ai:StartHunt(matchId, self:_buildTickSnapshot(matchId, snapshot), now)
 	if started then
 		self:_publish("HuntStarted", { matchId = matchId })
 	end
@@ -407,7 +514,7 @@ function GhostService:StartHunt(matchId, snapshot, now)
 end
 
 function GhostService:TransitionGhostState(matchId, stateName, now, snapshot)
-	return self._ai:TransitionState(matchId, stateName, now, snapshot)
+	return self._ai:TransitionState(matchId, stateName, now, self:_buildTickSnapshot(matchId, snapshot))
 end
 
 function GhostService:EndHunt(matchId, now)
@@ -451,10 +558,20 @@ function GhostService:DespawnGhost(matchId)
 end
 
 function GhostService:ApplyDirectorEvent(matchId, eventName, payload)
+	if eventName == "ForceManifest" then
+		local phaseName = self:_resolveLifecyclePhase(matchId, payload)
+		if not self:_isManifestAllowedForPhase(phaseName) then
+			return false
+		end
+	end
 	return self._ai:ApplyDirectorEvent(matchId, eventName, payload)
 end
 
 function GhostService:ForceManifest(matchId, now)
+	local phaseName = self:_resolveLifecyclePhase(matchId)
+	if not self:_isManifestAllowedForPhase(phaseName) then
+		return false
+	end
 	return self._ai:ForceManifest(matchId, now)
 end
 

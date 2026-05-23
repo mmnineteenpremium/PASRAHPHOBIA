@@ -30,7 +30,28 @@ local UI_MODULES = {
 	"SpectatorUI",
 }
 
-REMOTE_NAMES = { "MatchEvent", "LobbyEvent", "EvidenceEvent", "PurchaseEvent", "RoyalPassEvent", "SanityEvent", "CosmeticEvent" }
+REMOTE_NAMES = {
+	"MatchEvent",
+	"LobbyEvent",
+	"EvidenceEvent",
+	"PurchaseEvent",
+	"RoyalPassEvent",
+	"RoyalPassTierUp",
+	"DailyEngagementSync",
+	"DailyCheckinRequest",
+	"DailyMissionClaimRequest",
+	"GachaPullRequest",
+	"GachaResult",
+	"SanityEvent",
+	"CosmeticEvent",
+}
+DAILY_ENGAGEMENT_REMOTE_NAMES = {
+	DailyEngagementSync = true,
+	DailyCheckinRequest = true,
+	DailyMissionClaimRequest = true,
+	GachaPullRequest = true,
+	GachaResult = true,
+}
 UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
 UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
 UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
@@ -44,6 +65,7 @@ MATCH_MODE_ATTR = "MatchMode"
 UI_BUILD_SIGNATURE = "PHB-20260411-UI1"
 ROOM_BROWSER_TOGGLE_KEY = Enum.KeyCode.M
 MATCH_PANEL_TOGGLE_KEY = Enum.KeyCode.K
+LOBBY_PANEL_ONLY_FLOATING_NAV = true
 BASIC_GUI_NAMES = { "JournalUI", "LobbyUI", "MatchUI", "ProfileUI", "ShopUI", "RoyalPassUI", "PASRA_UI", "SpectatorUI", "LeaderboardUI", "MainMenuUI" }
 CONFLICT_BASIC_GUI_NAMES = { "MainMenuUI", "LeaderboardUI" }
 STRICT_SINGLE_SCREEN_GUI_NAMES = {
@@ -245,7 +267,7 @@ MATCH_PHASE = {
 CLOSE_KEYBOARD_KEY = Enum.KeyCode.X
 CLOSE_GAMEPAD_KEY = Enum.KeyCode.ButtonB
 CLOSE_HINT_TEXT = "[X] / [B] untuk tutup"
-USE_NATIVE_BACKPACK_TOOLS = true
+USE_NATIVE_BACKPACK_TOOLS = false
 JOURNAL_TOOL_TYPE = "JejakEnergi"
 JOURNAL_BACKGROUND_IMAGE_ID = "78469749292028"
 JOURNAL_EVIDENCE_ORDER = {
@@ -287,7 +309,15 @@ JOURNAL_TUTORIAL_PAGES = {
 	"6/7 Tekan SUBMIT JOURNAL untuk lock jawaban. Setelah yakin pulang, tekan END INVESTIGATION.",
 	"7/7 Result menampilkan ghost asli, tebakan, checklist, benar/salah, dan reward sementara dari server.",
 }
+JOURNAL_PAGE_ORDER = { "Evidence", "Ghost", "Submit", "Guide" }
+JOURNAL_PAGE_LABELS = {
+	Evidence = "EVIDENCE",
+	Ghost = "GHOST",
+	Submit = "SUBMIT",
+	Guide = "GUIDE",
+}
 FIELD_KIT_TOOL_ORDER = {
+	"Flashlight",
 	"JejakEnergi",
 	"Garam",
 	"Salib",
@@ -297,8 +327,21 @@ FIELD_KIT_TOOL_ORDER = {
 	"BukuTerkutuk",
 	"BolaArwah",
 	"GerakanGaib",
+	"PilSanity",
 }
 FIELD_KIT_TOOL_CONFIG = {
+	Flashlight = {
+		accent = Color3.fromRGB(172, 154, 96),
+		glyph = "FL",
+		label = "FLASH",
+		hint = "Main light",
+		openJournal = false,
+		readyMeta = "F",
+		readyFooter = "LIGHT",
+		role = "Light",
+		shortcut = "F",
+		keyCode = Enum.KeyCode.F,
+	},
 	JejakEnergi = {
 		accent = Color3.fromRGB(66, 104, 146),
 		glyph = "JN",
@@ -386,13 +429,13 @@ FIELD_KIT_TOOL_CONFIG = {
 	},
 	BolaArwah = {
 		accent = Color3.fromRGB(98, 142, 108),
-		glyph = "OR",
-		label = "ORB",
-		hint = "Visual sweep",
+		glyph = "TV",
+		label = "TO'UN CAM",
+		hint = "Night vision",
 		openJournal = false,
-		readyMeta = "GLOW",
-		readyFooter = "ORB ARC",
-		role = "Orb",
+		readyMeta = "NIGHT",
+		readyFooter = "TO'UN ARC",
+		role = "Recorder",
 		shortcut = "8",
 		keyCode = Enum.KeyCode.Eight,
 	},
@@ -408,8 +451,27 @@ FIELD_KIT_TOOL_CONFIG = {
 		shortcut = "9",
 		keyCode = Enum.KeyCode.Nine,
 	},
+	PilSanity = {
+		accent = Color3.fromRGB(112, 172, 128),
+		glyph = "PS",
+		label = "PIL",
+		hint = "Sanity recover",
+		maxUses = 1,
+		openJournal = false,
+		readyMeta = "CALM",
+		readyFooter = "SANITY",
+		role = "Recovery",
+		shortcut = "0",
+		keyCode = Enum.KeyCode.Zero,
+	},
 }
 FIELD_KIT_TOOL_PREVIEW_CONFIG = {
+	Flashlight = {
+		rotation = Vector3.new(-8, -18, 0),
+		focusOffset = Vector3.new(0, 0.03, 0),
+		cameraVector = Vector3.new(0.38, 0.34, 1),
+		distanceScale = 1.12,
+	},
 	JejakEnergi = {
 		rotation = Vector3.new(-10, -22, 0),
 		focusOffset = Vector3.new(0, 0.08, 0),
@@ -464,6 +526,12 @@ FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 		cameraVector = Vector3.new(0.34, 0.52, 1),
 		distanceScale = 1.18,
 	},
+	PilSanity = {
+		rotation = Vector3.new(-12, 18, 0),
+		focusOffset = Vector3.new(0, 0.02, 0),
+		cameraVector = Vector3.new(0.42, 0.38, 1),
+		distanceScale = 1.36,
+	},
 }
 
 function UISystem._getBuildSignatureText()
@@ -478,16 +546,17 @@ function UISystem._appendBuildSignature(text, separator)
 	end
 	return base .. (separator or " | ") .. signatureText
 end
-local FIELD_KIT_DESKTOP_MAX_COLUMNS = 5
-local FIELD_KIT_MOBILE_MAX_COLUMNS = 3
-UISystem._alwaysVisibleFieldKitTools = {
-	JejakEnergi = true,
-	KotakArwah = true,
-	SuhuMembeku = true,
-	BukuTerkutuk = true,
-	BolaArwah = true,
-	GerakanGaib = true,
+local FIELD_KIT_MAX_LOADOUT_SLOTS = 3
+local FIELD_KIT_LOADOUT_ATTR_PREFIX = "PasrahLoadoutTool"
+local FIELD_KIT_LOADOUT_COUNT_ATTR = "PasrahLoadoutToolCount"
+local FIELD_KIT_SLOT_KEY_CODES = {
+	Enum.KeyCode.One,
+	Enum.KeyCode.Two,
+	Enum.KeyCode.Three,
 }
+local FIELD_KIT_DESKTOP_MAX_COLUMNS = 3
+local FIELD_KIT_MOBILE_MAX_COLUMNS = 3
+UISystem._alwaysVisibleFieldKitTools = {}
 
 function shouldShowFieldKitTool(toolType, toolState)
 	if UISystem._alwaysVisibleFieldKitTools[toolType] then
@@ -522,32 +591,64 @@ function shouldShowFieldKitTool(toolType, toolState)
 	return false
 end
 
-function getVisibleFieldKitToolTypes(toolStates)
+local function insertUniqueFieldKitTool(target, seen, toolType)
+	if #target >= FIELD_KIT_MAX_LOADOUT_SLOTS then
+		return false
+	end
+	if type(toolType) ~= "string" or toolType == "" or seen[toolType] or FIELD_KIT_TOOL_CONFIG[toolType] == nil then
+		return false
+	end
+	table.insert(target, toolType)
+	seen[toolType] = true
+	return true
+end
+
+local function getLocalFieldKitLoadoutToolTypes(toolStates)
 	local visible = {}
-	for _, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
-		if shouldShowFieldKitTool(toolType, toolStates and toolStates[toolType] or nil) then
-			table.insert(visible, toolType)
+	local seen = {}
+	local player = Players.LocalPlayer
+
+	if player then
+		local declaredCount = tonumber(player:GetAttribute(FIELD_KIT_LOADOUT_COUNT_ATTR)) or nil
+		for slot = 1, FIELD_KIT_MAX_LOADOUT_SLOTS do
+			insertUniqueFieldKitTool(visible, seen, player:GetAttribute(FIELD_KIT_LOADOUT_ATTR_PREFIX .. tostring(slot)))
+		end
+		if declaredCount == 0 then
+			return visible
+		end
+
+		insertUniqueFieldKitTool(visible, seen, player:GetAttribute("PreparationFocusTool"))
+		insertUniqueFieldKitTool(visible, seen, player:GetAttribute("PasrahEquippedToolType"))
+	end
+
+	if #visible == 0 and type(toolStates) == "table" then
+		for _, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+			if shouldShowFieldKitTool(toolType, toolStates[toolType]) then
+				insertUniqueFieldKitTool(visible, seen, toolType)
+			end
 		end
 	end
-	if #visible == 0 then
-		table.insert(visible, JOURNAL_TOOL_TYPE)
-	end
+
 	return visible
 end
 
+function getVisibleFieldKitToolTypes(toolStates)
+	return getLocalFieldKitLoadoutToolTypes(toolStates)
+end
+
 local function getFieldKitLayoutMetrics(isMobile, availableWidth, toolCount)
-	local resolvedToolCount = math.max(1, tonumber(toolCount) or #FIELD_KIT_TOOL_ORDER)
+	local resolvedToolCount = math.max(1, math.min(FIELD_KIT_MAX_LOADOUT_SLOTS, tonumber(toolCount) or FIELD_KIT_MAX_LOADOUT_SLOTS))
 	local maxColumns = isMobile and FIELD_KIT_MOBILE_MAX_COLUMNS or FIELD_KIT_DESKTOP_MAX_COLUMNS
 	local columns = math.min(resolvedToolCount, maxColumns)
 	local cellPaddingX = 6
 	local cellPaddingY = 6
-	local cellHeight = isMobile and 66 or 64
-	local minCellWidth = isMobile and 92 or 58
-	local cellWidth = math.floor((math.max(280, availableWidth) - (cellPaddingX * math.max(0, columns - 1))) / columns)
+	local cellHeight = isMobile and 64 or 58
+	local minCellWidth = isMobile and 86 or 74
+	local cellWidth = math.floor((math.max(248, availableWidth) - (cellPaddingX * math.max(0, columns - 1))) / columns)
 	local rows = math.max(1, math.ceil(resolvedToolCount / columns))
 	local buttonsHeight = (rows * cellHeight) + (math.max(0, rows - 1) * cellPaddingY)
 	local statusY = 34 + buttonsHeight + 8
-	local statusHeight = isMobile and 40 or 36
+	local statusHeight = isMobile and 34 or 30
 	local frameHeight = statusY + statusHeight + 12
 	return {
 		columns = columns,
@@ -896,14 +997,21 @@ end
 local BUTTON_TWEEN_INFO = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local BUTTON_PRESS_TWEEN_INFO = TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local PANEL_REVEAL_TWEEN_INFO = TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-local BUTTON_BORDER_IDLE_IMAGE = "rbxthumb://type=Asset&id=96807162342543&w=420&h=420"
-local BUTTON_BORDER_HOVER_IMAGE = "rbxthumb://type=Asset&id=96807162342543&w=420&h=420"
-local BUTTON_BORDER_ACTIVE_IMAGE = "rbxthumb://type=Asset&id=96807162342543&w=420&h=420"
+local BUTTON_BORDER_IDLE_IMAGE = "rbxassetid://96807162342543"
+local BUTTON_BORDER_HOVER_IMAGE = "rbxassetid://96807162342543"
+local BUTTON_BORDER_ACTIVE_IMAGE = "rbxassetid://96807162342543"
 local ROOM_BROWSER_PANEL_BACKGROUND_IMAGE = "rbxthumb://type=Asset&id=109092248853429&w=1024&h=1024"
 local ROOM_BROWSER_MAP_PHOTOS = {
-	HauntedHouse = "rbxthumb://type=Asset&id=95415512980974&w=1024&h=1024",
-	StudioMMNineteen = "rbxthumb://type=Asset&id=83797117611324&w=1024&h=1024",
-	AbandonedPalace = "rbxthumb://type=Asset&id=117646011293076&w=1024&h=1024",
+	HauntedHouse = "rbxassetid://78717858746178",
+	StudioMMNineteen = "rbxassetid://102263575385630",
+	AbandonedPalace = "rbxassetid://75717111818707",
+}
+local ROOM_BROWSER_MAP_SELECTOR_TEXT_IMAGE_STATES = { idle = "128785963361384", hover = "75709367169732", active = "97310596222882" }
+local ROOM_BROWSER_MAP_OPTION_TEXT_IMAGE_STATES = {
+	HauntedHouse = { idle = "99109847201550", hover = "106529855683993", active = "127887929409304" },
+	StudioMMNineteen = { idle = "111145558659072", hover = "109549774137768", active = "105549960352119" },
+	EmptyBuilding = { idle = "82837676268758", hover = "115476569583421", active = "81828934051890" },
+	AbandonedPalace = { idle = "71523706129904", hover = "130873140590312", active = "94091821215899" },
 }
 local ROOM_BROWSER_TEXT_IMAGE_STATES = {
 	ClassicButton = { idle = "117760951401524", hover = "129015288351024", active = "138617081838094" },
@@ -998,6 +1106,26 @@ local ACTION_BUTTON_TEXT_IMAGE_STATES = {
 	X = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
 	["[X]"] = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
 }
+
+local function getRoomBrowserTextImageStates(button)
+	if not button then
+		return nil
+	end
+	local states = ACTION_BUTTON_TEXT_IMAGE_STATES[tostring(button.Text or "")]
+		or ROOM_BROWSER_TEXT_IMAGE_STATES[button.Name]
+	if states then
+		return states
+	end
+	if button.Name == "MapSelector" then
+		return ROOM_BROWSER_MAP_SELECTOR_TEXT_IMAGE_STATES
+	end
+	local mapOptionIndex = string.match(button.Name, "^MapOption_(%d+)$")
+	if mapOptionIndex then
+		local mapId = MAPS[tonumber(mapOptionIndex)]
+		return ROOM_BROWSER_MAP_OPTION_TEXT_IMAGE_STATES[mapId]
+	end
+	return nil
+end
 
 local function toThumbAsset(assetId)
 	return string.format("rbxthumb://type=Asset&id=%s&w=420&h=420", tostring(assetId))
@@ -1468,8 +1596,7 @@ local function ensureButtonPolish(button)
 		borderImage.Visible = true
 	end
 
-	local textImageStates = ACTION_BUTTON_TEXT_IMAGE_STATES[tostring(button.Text or "")]
-		or ROOM_BROWSER_TEXT_IMAGE_STATES[button.Name]
+	local textImageStates = getRoomBrowserTextImageStates(button)
 	local textImage = button:FindFirstChild("BrandTextImage")
 	if textImageStates and (not textImage or not isButtonTextImageObject(textImage)) then
 		textImage = replaceWithButtonTextImage(button, isButtonTextImageObject(textImage) and textImage or nil)
@@ -2982,6 +3109,43 @@ local function buildMapPreviewStats(mapId)
 	return table.concat(details, "  •  ")
 end
 
+local function resolveRoomBrowserMapPhoto(mapId)
+	if type(mapId) ~= "string" or mapId == "" then
+		return nil
+	end
+	return ROOM_BROWSER_MAP_PHOTOS[mapId]
+end
+
+local function ensureRoomBrowserMapPhoto(container)
+	if not (container and container:IsA("GuiObject")) then
+		return nil
+	end
+	local photo = container:FindFirstChild("MapPhoto")
+	if photo and not photo:IsA("ImageLabel") then
+		photo:Destroy()
+		photo = nil
+	end
+	if not photo then
+		photo = Instance.new("ImageLabel")
+		photo.Name = "MapPhoto"
+		photo.Parent = container
+		photo.Position = UDim2.fromScale(0, 0)
+		photo.Size = UDim2.fromScale(1, 1)
+		photo.ScaleType = Enum.ScaleType.Crop
+		photo.ZIndex = container.ZIndex + 1
+		for _, child in ipairs(container:GetChildren()) do
+			if child ~= photo and child:IsA("GuiObject") then
+				child.ZIndex = math.max(child.ZIndex, photo.ZIndex + 1)
+			end
+		end
+	end
+	photo.BackgroundTransparency = 1
+	photo.BorderSizePixel = 0
+	photo.ImageTransparency = 0
+	photo.ImageColor3 = Color3.new(1, 1, 1)
+	return photo
+end
+
 local SHOP_CATEGORY_THEMES = {
 	Cosmetic = {
 		background = Color3.fromRGB(32, 22, 44),
@@ -3030,11 +3194,11 @@ local SHOP_RARITY_COLORS = {
 	R5 = Color3.fromRGB(222, 170, 76),
 }
 local SHOP_RARITY_TEMPLATE_ASSET_IDS = {
-	R1 = "98127480673917",
-	R2 = "90268220179568",
-	R3 = "79062908978656",
-	R4 = "124067893180355",
-	R5 = "105312181896893",
+	R1 = nil,
+	R2 = nil,
+	R3 = nil,
+	R4 = nil,
+	R5 = nil,
 }
 
 local function resolveRoyalPassTrackRarityKey(dayIndex, isFinalDay)
@@ -4126,7 +4290,7 @@ end
 local function getInvestigationControlsHintText(contextTag)
 	local anchor = getNearestNavigationAnchorInfo(contextTag or "Investigation")
 	if type(anchor) ~= "table" then
-		return "[1-9] FIELD KIT  •  [J] JOURNAL  •  [F] FLASHLIGHT"
+		return "[1-3] INVENTORY  •  [J] JOURNAL  •  [F] FLASHLIGHT"
 	end
 
 	local anchorLabel = string.upper(formatNavigationAnchorLabel(anchor, "AREA TARGET"))
@@ -4138,7 +4302,7 @@ local function getInvestigationControlsHintText(contextTag)
 		return string.format("ROTASI: %s  •  BUKA LEVEL BERIKUTNYA  •  [J] JOURNAL  •  [F] FLASHLIGHT", anchorLabel)
 	end
 	if subtitle == "Sweep evidence" then
-		return string.format("SWEEP: %s  •  CEK RUANG DETAIL  •  [1-9] FIELD KIT  •  [J] JOURNAL", anchorLabel)
+		return string.format("SWEEP: %s  •  CEK RUANG DETAIL  •  [1-3] INVENTORY  •  [J] JOURNAL", anchorLabel)
 	end
 	if anchor.kind == "Door" then
 		local stateText = tostring(anchor.stateText or "")
@@ -4148,7 +4312,7 @@ local function getInvestigationControlsHintText(contextTag)
 			stateText ~= "" and string.upper(stateText) or "E/X/TAP"
 		)
 	end
-	return string.format("ANCHOR: %s  •  SWEEP EVIDENCE  •  [1-9] FIELD KIT  •  [J] JOURNAL", anchorLabel)
+	return string.format("ANCHOR: %s  •  SWEEP EVIDENCE  •  [1-3] INVENTORY  •  [J] JOURNAL", anchorLabel)
 end
 
 local function getPreparationFocusToolLabel()
@@ -4166,26 +4330,34 @@ local function getPreparationFocusToolLabel()
 	return focusTool
 end
 
+local function getPreparationLoadoutLabel()
+	local loadout = getLocalFieldKitLoadoutToolTypes(nil)
+	if #loadout == 0 then
+		return nil
+	end
+	return table.concat(loadout, " / ")
+end
+
 local function appendPreparationFocusLine(baseText)
-	local focusTool = getPreparationFocusToolLabel()
+	local focusTool = getPreparationLoadoutLabel() or getPreparationFocusToolLabel()
 	if not focusTool then
 		return baseText
 	end
 	if type(baseText) ~= "string" or baseText == "" then
-		return "Fokus awal: " .. focusTool
+		return "Loadout: " .. focusTool
 	end
-	return baseText .. "\nFokus awal: " .. focusTool
+	return baseText .. "\nLoadout: " .. focusTool
 end
 
 local function prependPreparationFocusHint(baseText)
-	local focusTool = getPreparationFocusToolLabel()
+	local focusTool = getPreparationLoadoutLabel() or getPreparationFocusToolLabel()
 	if not focusTool then
 		return baseText
 	end
 	if type(baseText) ~= "string" or baseText == "" then
-		return "FOKUS: " .. string.upper(focusTool)
+		return "LOADOUT: " .. string.upper(focusTool)
 	end
-	return string.format("FOKUS: %s  •  %s", string.upper(focusTool), baseText)
+	return string.format("LOADOUT: %s  •  %s", string.upper(focusTool), baseText)
 end
 
 local function getNavigationSemanticAccent(anchor)
@@ -4215,7 +4387,9 @@ local function resolveHideZoneLabel(zoneId, spotType)
 	return getRuntimeHideSpotLabel(zoneId) or formatHideSpotLabel(zoneId) or formatRuntimeAreaLabel(zoneId) or zoneId
 end
 
-local function getNearestSafeZoneInfo()
+local RefugeHints = {}
+
+function RefugeHints.getNearestSafeZoneInfo()
 	local player = Players.LocalPlayer
 	local character = player and player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -4250,7 +4424,7 @@ local function getNearestSafeZoneInfo()
 	return nearest
 end
 
-local function getNearestHideSpotInfo()
+function RefugeHints.getNearestHideSpotInfo()
 	local player = Players.LocalPlayer
 	local character = player and player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -4299,8 +4473,8 @@ local function getNearestHideSpotInfo()
 	return nearest
 end
 
-local function getSafeZoneHintText(nearestSafeZone)
-	local info = nearestSafeZone or getNearestSafeZoneInfo()
+function RefugeHints.getSafeZoneHintText(nearestSafeZone)
+	local info = nearestSafeZone or RefugeHints.getNearestSafeZoneInfo()
 	if type(info) ~= "table" then
 		return "SAFE ZONE BIRU"
 	end
@@ -4312,8 +4486,8 @@ local function getSafeZoneHintText(nearestSafeZone)
 	return label
 end
 
-local function getHideSpotHintText(nearestHideSpot)
-	local info = nearestHideSpot or getNearestHideSpotInfo()
+function RefugeHints.getHideSpotHintText(nearestHideSpot)
+	local info = nearestHideSpot or RefugeHints.getNearestHideSpotInfo()
 	if type(info) ~= "table" then
 		return "HIDE SPOT TERDEKAT"
 	end
@@ -4325,27 +4499,27 @@ local function getHideSpotHintText(nearestHideSpot)
 	return label
 end
 
-local function getPreferredHuntRefugeInfo()
-	local nearestSafeZone = getNearestSafeZoneInfo()
-	local nearestHideSpot = getNearestHideSpotInfo()
+function RefugeHints.getPreferredHuntRefugeInfo()
+	local nearestSafeZone = RefugeHints.getNearestSafeZoneInfo()
+	local nearestHideSpot = RefugeHints.getNearestHideSpotInfo()
 	if nearestHideSpot and (not nearestSafeZone or nearestHideSpot.distance <= (nearestSafeZone.distance + 4)) then
 		return nearestHideSpot, nearestSafeZone
 	end
 	return nearestSafeZone, nearestHideSpot
 end
 
-local function getRefugeHintText(refugeInfo)
+function RefugeHints.getRefugeHintText(refugeInfo)
 	if type(refugeInfo) ~= "table" then
 		return "RUANG AMAN"
 	end
 	if refugeInfo.kind == "HideSpot" then
-		return getHideSpotHintText(refugeInfo)
+		return RefugeHints.getHideSpotHintText(refugeInfo)
 	end
-	return getSafeZoneHintText(refugeInfo)
+	return RefugeHints.getSafeZoneHintText(refugeInfo)
 end
 
-local function getRefugeActionText(refugeInfo)
-	local hintText = getRefugeHintText(refugeInfo)
+function RefugeHints.getRefugeActionText(refugeInfo)
+	local hintText = RefugeHints.getRefugeHintText(refugeInfo)
 	if type(refugeInfo) == "table" and refugeInfo.kind == "HideSpot" then
 		return "masuk " .. hintText
 	end
@@ -4363,10 +4537,10 @@ local function getHuntObjectiveText()
 	local hideZoneId = tostring(player:GetAttribute("PasrahHideZoneId") or "")
 	local threatState = tostring(player:GetAttribute("PasrahHuntThreatState") or "Clear")
 	local threatDistance = tonumber(player:GetAttribute("PasrahHuntThreatDistance"))
-	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
-	local refugeHint = getRefugeHintText(nearestRefuge)
-	local refugeAction = getRefugeActionText(nearestRefuge)
-	local alternateHint = getRefugeHintText(alternateRefuge)
+	local nearestRefuge, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
+	local refugeHint = RefugeHints.getRefugeHintText(nearestRefuge)
+	local refugeAction = RefugeHints.getRefugeActionText(nearestRefuge)
+	local alternateHint = RefugeHints.getRefugeHintText(alternateRefuge)
 
 	if hideState == "Hidden" then
 		if hideZoneId ~= "" then
@@ -4426,7 +4600,7 @@ local function getHuntObjectiveText()
 	return string.format("Hunt aktif. Pakai pintu untuk putus LOS, lalu %s.", refugeAction)
 end
 
-local function getHuntStatusSnapshot()
+function UISystem._getHuntStatusSnapshot()
 	local player = Players.LocalPlayer
 	if not player then
 		return {
@@ -4446,8 +4620,8 @@ local function getHuntStatusSnapshot()
 	}
 end
 
-local function getHuntStatusBadge(snapshot)
-	snapshot = snapshot or getHuntStatusSnapshot()
+function UISystem._getHuntStatusBadge(snapshot)
+	snapshot = snapshot or UISystem._getHuntStatusSnapshot()
 	if snapshot.hideState == "Hidden" then
 		return "HIDDEN"
 	end
@@ -4463,11 +4637,11 @@ local function getHuntStatusBadge(snapshot)
 	return "HUNT"
 end
 
-local function getHuntControlsHintText()
-	local snapshot = getHuntStatusSnapshot()
-	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
-	local refugeHint = getRefugeHintText(nearestRefuge)
-	local alternateHint = getRefugeHintText(alternateRefuge)
+function UISystem._getHuntControlsHintText()
+	local snapshot = UISystem._getHuntStatusSnapshot()
+	local nearestRefuge, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
+	local refugeHint = RefugeHints.getRefugeHintText(nearestRefuge)
+	local alternateHint = RefugeHints.getRefugeHintText(alternateRefuge)
 	local refugeRoute = type(nearestRefuge) == "table" and (nearestRefuge.routeLabel or nearestRefuge.label) or refugeHint
 	local alternateRoute = type(alternateRefuge) == "table" and (alternateRefuge.routeLabel or alternateRefuge.label) or alternateHint
 	if snapshot.hideState == "Hidden" then
@@ -4495,11 +4669,11 @@ local function getHuntControlsHintText()
 	return string.format("PINTU E/X/TAP  •  %s  •  JANGAN LURUS", refugeRoute)
 end
 
-local function getHuntAssistSnapshot()
-	local snapshot = getHuntStatusSnapshot()
-	local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
-	local refugeHint = getRefugeHintText(nearestRefuge)
-	local alternateHint = getRefugeHintText(alternateRefuge)
+function UISystem._getHuntAssistSnapshot()
+	local snapshot = UISystem._getHuntStatusSnapshot()
+	local nearestRefuge, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
+	local refugeHint = RefugeHints.getRefugeHintText(nearestRefuge)
+	local alternateHint = RefugeHints.getRefugeHintText(alternateRefuge)
 	local refugeRoute = type(nearestRefuge) == "table" and (nearestRefuge.routeLabel or nearestRefuge.label) or refugeHint
 	local alternateRoute = type(alternateRefuge) == "table" and (alternateRefuge.routeLabel or alternateRefuge.label) or alternateHint
 	local hiddenPart = snapshot.hideZoneId ~= "" and getRuntimeHideSpotPart(snapshot.hideZoneId) or nil
@@ -4613,20 +4787,20 @@ function UISystem._getNavigationGuideSnapshot(viewState)
 
 	if state == "Hunt" then
 		local alternateRefuge = nil
-		target, alternateRefuge = getPreferredHuntRefugeInfo()
-		badgeText = getHuntStatusBadge()
-		titleText = target and getRefugeHintText(target) or "RUANG AMAN"
-		hintText = getHuntControlsHintText()
+		target, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
+		badgeText = UISystem._getHuntStatusBadge()
+		titleText = target and RefugeHints.getRefugeHintText(target) or "RUANG AMAN"
+		hintText = UISystem._getHuntControlsHintText()
 		if type(target) == "table" and target.kind == "HideSpot" and type(alternateRefuge) == "table" then
-			hintText = hintText .. " | ALT " .. getRefugeHintText(alternateRefuge)
+			hintText = hintText .. " | ALT " .. RefugeHints.getRefugeHintText(alternateRefuge)
 		end
 		accent = Color3.fromRGB(156, 70, 70)
 	elseif state == "Investigation" then
-		target = getNearestNavigationAnchorInfo("Investigation") or getNearestSafeZoneInfo() or getNearestHideSpotInfo()
+		target = getNearestNavigationAnchorInfo("Investigation") or RefugeHints.getNearestSafeZoneInfo() or RefugeHints.getNearestHideSpotInfo()
 		badgeText = "NAV"
 		titleText = target and formatNavigationAnchorLabel(target, target.label or "area target") or "CARI EVIDENCE"
-		local refuge = getPreferredHuntRefugeInfo()
-		hintText = refuge and ("Safe route: " .. getRefugeHintText(refuge) .. " | J untuk journal") or "Cari evidence, lalu isi Journal [J]."
+		local refuge = RefugeHints.getPreferredHuntRefugeInfo()
+		hintText = refuge and ("Safe route: " .. RefugeHints.getRefugeHintText(refuge) .. " | J untuk journal") or "Cari evidence, lalu isi Journal [J]."
 		accent = getNavigationSemanticAccent(target) or Color3.fromRGB(70, 132, 98)
 	else
 		target = getNearestNavigationAnchorInfo("Preparation")
@@ -5116,8 +5290,8 @@ function UISystem._resolveToolFeedback(toolType, success, reason, data, eventNam
 			status = "Tulisan gaib terkunci."
 			detail = "Buku terkutuk tervalidasi sebagai evidence."
 		elseif toolType == "BolaArwah" and evidenceType == "To'un" then
-			status = "Orb terkunci."
-			detail = "To'un tervalidasi sebagai evidence."
+			status = "To'un tertangkap kamera."
+			detail = "Kamera To'un memvalidasi orb sebagai evidence."
 		elseif toolType == "GerakanGaib" and evidenceType == "Pengganggu" then
 			status = "Gangguan gerak terkunci."
 			detail = "Pengganggu tervalidasi sebagai evidence."
@@ -5473,7 +5647,7 @@ function UISystem:Init(context)
 	self._roomBrowserToggleCooldownUntil = 0
 	self._auxiliaryInputBound = false
 	self._windowCloseInputBound = false
-	self._lobbyPanelCollapsed = false
+	self._lobbyPanelCollapsed = true
 	self._roomBrowserMissingWidgetsLogged = false
 	self._roomBrowserModeView = "Selected"
 	self._singleWindowStrict = true
@@ -5521,7 +5695,7 @@ function UISystem:Init(context)
 	self._lastFieldKitTemporalRefreshAt = 0
 	self._fieldKitTemporalRefreshArmed = false
 	self._matchWindowDismissed = false
-	self._matchControlsHintText = "[1-9] Field Kit   [J] Journal   [F] Flashlight   [K] Match   [X] Tutup UI"
+	self._matchControlsHintText = "[1-3] Inventory   [J] Journal   [F] Flashlight   [K] Match   [X] Tutup UI"
 	self._uxWidgets = {
 		match = {},
 		lobby = {},
@@ -5612,6 +5786,24 @@ function UISystem:Init(context)
 		nextReward = nil,
 		viewMode = "Rewards",
 	}
+	self._dailyEngagementState = {
+		lastEvent = "Idle",
+		lastReason = nil,
+		missions = {},
+		totalMissionCount = 0,
+		activeMissionCount = 0,
+		readyMissionCount = 0,
+		completedMissionCount = 0,
+		claimedMissionCount = 0,
+		checkinStreak = 0,
+		checkinTotalDays = 0,
+		lastCheckinDate = "",
+		gachaTickets = 0,
+		pityCount = 0,
+		epicPityCount = 0,
+		lastResultCount = 0,
+		lastSnapshotAt = 0,
+	}
 	self._royalPassTrackFocusKey = nil
 	self._spectatorState = self:_createDefaultSpectatorState()
 	self._pasraState = {
@@ -5620,6 +5812,7 @@ function UISystem:Init(context)
 		subtitle = "Panel ini akan terisi saat match selesai.",
 	}
 	self._shopRequestSeq = 0
+	self._dailyEngagementRequestSeq = 0
 
 	for _, moduleName in ipairs(UI_MODULES) do
 		self._uiState[moduleName] = { lastEvent = nil, visible = false }
@@ -5715,14 +5908,13 @@ end
 
 function UISystem:Start()
 	for _, remoteName in ipairs(REMOTE_NAMES) do
-		if remoteName == "LobbyEvent" then
-			continue
-		end
-		local remote = self._remotes[remoteName]
-		if remote and remote.OnClientEvent then
-			table.insert(self._connections, remote.OnClientEvent:Connect(function(payload)
-				self:_onServerEvent(remoteName, payload)
-			end))
+		if remoteName ~= "LobbyEvent" then
+			local remote = self._remotes[remoteName]
+			if remote and remote.OnClientEvent then
+				table.insert(self._connections, remote.OnClientEvent:Connect(function(payload)
+					self:_onServerEvent(remoteName, payload)
+				end))
+			end
 		end
 	end
 	self:_connectLobbyEventRouting()
@@ -5762,8 +5954,9 @@ function UISystem:Start()
 	self:_setPhase(MATCH_PHASE.LOBBY)
 
 	local player = Players.LocalPlayer
-	if player and player:GetAttribute("LobbyPanelCollapsed") ~= nil then
-		self._lobbyPanelCollapsed = player:GetAttribute("LobbyPanelCollapsed") == true
+	self._lobbyPanelCollapsed = true
+	if player then
+		player:SetAttribute("LobbyPanelCollapsed", true)
 	end
 	self:_syncLobbyPanelVisibility()
 
@@ -6216,7 +6409,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			end
 		end
 		self:_refreshProfilePanel()
-	elseif remoteName == "RoyalPassEvent" then
+	elseif remoteName == "RoyalPassEvent" or remoteName == "RoyalPassTierUp" then
 		self._uiState.RoyalPassUI.lastEvent = eventName
 		self._uiState.RoyalPassUI.visible = true
 		self._royalPassState.lastEvent = eventName
@@ -6225,7 +6418,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._royalPassState.lastAmount = math.max(0, math.floor(tonumber(payload.amount) or 0))
 		end
 		self:_applyRoyalPassSnapshot(payload and payload.snapshot or nil)
-		if eventName == "RoyalPassTierUnlocked" or eventName == "RoyalPassPremiumUpdated" then
+		if eventName == "RoyalPassTierUnlocked" or eventName == "RoyalPassTierUp" or eventName == "RoyalPassPremiumUpdated" then
 			if self._matchPhase == MATCH_PHASE.LOBBY then
 				self._windowDismissed.RoyalPassUI = false
 				self:_closeConflictingWindows("RoyalPassUI")
@@ -6233,6 +6426,22 @@ function UISystem:_onServerEvent(remoteName, payload)
 				self._windowDismissed.RoyalPassUI = true
 			end
 		end
+	elseif DAILY_ENGAGEMENT_REMOTE_NAMES[remoteName] == true then
+		local payloadTable = type(payload) == "table" and payload or {}
+		self._uiState.RoyalPassUI.lastEvent = eventName
+		self._dailyEngagementState.lastEvent = eventName
+		self._dailyEngagementState.lastReason = payloadTable.reason
+		if type(payloadTable.results) == "table" then
+			self._dailyEngagementState.lastResultCount = #payloadTable.results
+		end
+		self._royalPassState.lastEvent = eventName
+		local snapshot = type(payloadTable.snapshot) == "table" and payloadTable.snapshot
+			or (remoteName == "DailyEngagementSync" and payloadTable or nil)
+		if type(snapshot) == "table"
+			and (snapshot.missions ~= nil or snapshot.checkin ~= nil or snapshot.royalPass ~= nil or snapshot.gacha ~= nil or snapshot.gachaTickets ~= nil) then
+			self:_applyDailyEngagementSnapshot(snapshot)
+		end
+		self:_applyDailyEngagementResponse(remoteName, eventName, payloadTable)
 	elseif remoteName == "SanityEvent" then
 		self._uiState.ProfileUI.lastEvent = eventName
 		self._profileState.lastEvent = eventName
@@ -6430,7 +6639,10 @@ function UISystem:_setBasicWindowPanelVisible(guiName, visible)
 		setAnimatedPanelVisible(panel, shouldShow, false)
 	end
 	if floatButton and floatButton:IsA("GuiObject") then
-		floatButton.Visible = self._matchPhase == MATCH_PHASE.LOBBY and not shouldShow and not self:_isLobbyFloatRailBlocked()
+		floatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
+			and self._matchPhase == MATCH_PHASE.LOBBY
+			and not shouldShow
+			and not self:_isLobbyFloatRailBlocked()
 	end
 	return true
 end
@@ -6716,7 +6928,10 @@ function UISystem:_syncAuxiliaryWindowVisibility()
 				setAnimatedPanelVisible(widgets.Panel, screenEnabled and not dismissed, false)
 			end
 			if widgets.FloatButton then
-				widgets.FloatButton.Visible = screenEnabled and (dismissed or not panelVisible) and not blockLobbyFloatRail
+				widgets.FloatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
+					and screenEnabled
+					and (dismissed or not panelVisible)
+					and not blockLobbyFloatRail
 			end
 		end
 	end
@@ -6734,7 +6949,8 @@ function UISystem:_setAuxiliaryWindowDismissed(guiName, dismissed)
 			and self._uxWidgets.windows
 			and self._uxWidgets.windows[guiName]
 		if widgets and widgets.FloatButton then
-			widgets.FloatButton.Visible = not self:_isLobbyFloatRailBlocked()
+			widgets.FloatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
+				and not self:_isLobbyFloatRailBlocked()
 		end
 		self:_layoutLobbyFloatRail()
 	end
@@ -6793,7 +7009,9 @@ function UISystem:_syncLobbyAuxiliaryWindowVisibility()
 					floatButton.Visible = false
 				end
 			elseif floatButton and floatButton:IsA("GuiObject") then
-				floatButton.Visible = (not blockLobbyFloatRail) and not (panel and panel.Visible == true)
+				floatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
+					and (not blockLobbyFloatRail)
+					and not (panel and panel.Visible == true)
 			end
 		end
 	end
@@ -6805,17 +7023,22 @@ function UISystem:_syncLobbyPanelVisibility()
 		return
 	end
 
+	local lobbyVisible = self._matchPhase == MATCH_PHASE.LOBBY
 	local collapsed = self._lobbyPanelCollapsed == true
 	if lobby.BasicPanel then
-		lobby.BasicPanel.Visible = not collapsed
+		lobby.BasicPanel.Visible = lobbyVisible and not collapsed
 	end
 	if lobby.ToggleButton then
+		lobby.ToggleButton.Visible = lobbyVisible
 		lobby.ToggleButton.Text = collapsed and ">" or "<"
 	end
 end
 
 function UISystem:_layoutLobbyFloatRail()
 	local profile = self._deviceProfile or {}
+	if LOBBY_PANEL_ONLY_FLOATING_NAV == true then
+		return
+	end
 	if self:_isLobbyFloatRailBlocked() then
 		return
 	end
@@ -7197,23 +7420,21 @@ function UISystem:_tryBindAuthoredShopWindowWidgets(window, contentFrame)
 	window.ShopFilterButtons = {}
 	self:_clearGeneratedRoomBrowserGuiChildren(filterBar)
 	for _, filter in ipairs(SHOP_FILTERS) do
-		if not shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
-			continue
+		if shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
+			local filterButton = self:_cloneAuthoredGuiTemplate(filterTemplate, filterBar, "Filter" .. filter.key)
+			if filterButton then
+				filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
+				filterButton.Text = filter.label
+				self:_setSelectableStyle(filterButton)
+				if not isRuntimeButtonBound(filterButton) then
+					markRuntimeButtonBound(filterButton)
+					connectButtonPress(filterButton, function()
+						self:_setShopFilter(filter.key)
+					end)
+				end
+				window.ShopFilterButtons[filter.key] = filterButton
+			end
 		end
-		local filterButton = self:_cloneAuthoredGuiTemplate(filterTemplate, filterBar, "Filter" .. filter.key)
-		if not filterButton then
-			continue
-		end
-		filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
-		filterButton.Text = filter.label
-		self:_setSelectableStyle(filterButton)
-		if not isRuntimeButtonBound(filterButton) then
-			markRuntimeButtonBound(filterButton)
-			connectButtonPress(filterButton, function()
-				self:_setShopFilter(filter.key)
-			end)
-		end
-		window.ShopFilterButtons[filter.key] = filterButton
 	end
 
 	window.ItemRows = {}
@@ -7222,38 +7443,36 @@ function UISystem:_tryBindAuthoredShopWindowWidgets(window, contentFrame)
 	for index = 1, displayCount do
 		local rowRoot = self:_cloneAuthoredGuiTemplate(itemRowTemplateRoot, itemList, "ItemRow" .. tostring(index))
 		local row = self:_bindAuthoredActionRow(rowRoot)
-		if not row or not row.Button then
-			if rowRoot then
-				rowRoot:Destroy()
+		if row and row.Button then
+			self:_setSelectableStyle(row.Button)
+			local item = self._shopState.catalog[index]
+			if item then
+				self:_applyShopRowVisual(row, item, index)
 			end
-			continue
-		end
-		self:_setSelectableStyle(row.Button)
-		local item = self._shopState.catalog[index]
-		if item then
-			self:_applyShopRowVisual(row, item, index)
-		end
-		if not isRuntimeButtonBound(row.Button) then
-			markRuntimeButtonBound(row.Button)
-			connectButtonPress(row.Button, function()
-				local catalogItem = self._shopState.catalog[index]
-				if catalogItem then
-					local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(catalogItem)
-					if not purchasable then
-						self._shopState.lastPurchase = {
-							itemId = catalogItem.id,
-							success = false,
-							reason = blockedReason or "item_disabled",
-						}
-						self._shopState.lastMessage = describeShopPurchaseBlock(catalogItem, blockedReason)
-						self:_openAuxiliaryWindow("ShopUI")
-						return
+			if not isRuntimeButtonBound(row.Button) then
+				markRuntimeButtonBound(row.Button)
+				connectButtonPress(row.Button, function()
+					local catalogItem = self._shopState.catalog[index]
+					if catalogItem then
+						local purchasable, blockedReason = self:_getShopItemPurchaseAvailability(catalogItem)
+						if not purchasable then
+							self._shopState.lastPurchase = {
+								itemId = catalogItem.id,
+								success = false,
+								reason = blockedReason or "item_disabled",
+							}
+							self._shopState.lastMessage = describeShopPurchaseBlock(catalogItem, blockedReason)
+							self:_openAuxiliaryWindow("ShopUI")
+							return
+						end
+						self:_requestShopPurchase(catalogItem.id)
 					end
-					self:_requestShopPurchase(catalogItem.id)
-				end
-			end)
+				end)
+			end
+			table.insert(window.ItemRows, row)
+		elseif rowRoot then
+			rowRoot:Destroy()
 		end
-		table.insert(window.ItemRows, row)
 	end
 
 	return true
@@ -7350,6 +7569,7 @@ function UISystem:_tryBindAuthoredRoyalPassWidgets(window, contentFrame)
 			cardRoot:Destroy()
 		end
 	end
+	self:_bindRoyalPassActionRows(rows)
 
 	if not isRuntimeButtonBound(rewardTab) then
 		markRuntimeButtonBound(rewardTab)
@@ -7627,9 +7847,9 @@ function UISystem:_bindAuthoredBasicWindowUi(guiName, gui)
 	if not isRuntimeGuiBootstrapped(gui) then
 		markRuntimeGuiBootstrapped(gui)
 		panel.Visible = false
-		floatButton.Visible = true
+		floatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
 	end
-	floatButton.Visible = panel.Visible ~= true
+	floatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true and panel.Visible ~= true
 	makeFloatingButtonDraggable(floatButton)
 
 	if not isRuntimeButtonBound(closeButton) then
@@ -7868,22 +8088,18 @@ function UISystem:_ensureAuthoredMatchPanelWidgets(match)
 				self:_setSelectableStyle(toolButton)
 			end
 		end
-		if not (toolButton and toolButton:IsA("TextButton")) then
-			continue
+		if toolButton and toolButton:IsA("TextButton") then
+			toolButton.LayoutOrder = order
+			local fieldKitWidget = ensureFieldKitButtonVisuals(toolButton, definition, toolType)
+			if not isRuntimeButtonBound(toolButton) then
+				local boundToolType = toolType
+				markRuntimeButtonBound(toolButton)
+				connectButtonPress(toolButton, function()
+					self:_equipFieldKitTool(boundToolType)
+				end)
+			end
+			fieldKitButtons[toolType] = fieldKitWidget
 		end
-		toolButton.LayoutOrder = order
-		local fieldKitWidget = ensureFieldKitButtonVisuals(toolButton, definition, toolType)
-		if not isRuntimeButtonBound(toolButton) then
-			local boundToolType = toolType
-			local boundOpenJournal = definition.openJournal == true
-			markRuntimeButtonBound(toolButton)
-			connectButtonPress(toolButton, function()
-				self:_useInvestigationTool(boundToolType, {
-					openJournal = boundOpenJournal,
-				})
-			end)
-		end
-		fieldKitButtons[toolType] = fieldKitWidget
 	end
 
 	match.FieldKitButtons = fieldKitButtons
@@ -8203,7 +8419,7 @@ function UISystem:_bindAuthoredRoomBrowserUi(gui, floatGui)
 		shell.CountdownOverlay.Visible = false
 		shell.InvitePopup.Visible = false
 		if shell.FloatButton then
-			shell.FloatButton.Visible = true
+			shell.FloatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
 		end
 	end
 
@@ -8440,8 +8656,8 @@ function UISystem:_resetFieldKitToolStates()
 	local journalState = self._journalState or {}
 	journalState.toolStates = createDefaultFieldKitToolStates()
 	journalState.toolType = JOURNAL_TOOL_TYPE
-	journalState.toolStatus = "Field kit [1-9] siap."
-	journalState.toolReason = "Pilih tool evidence atau utility sesuai situasi investigasi."
+	journalState.toolStatus = "Inventory [1-3] siap."
+	journalState.toolReason = "Pakai hanya tool yang sudah dipilih di staging."
 	journalState.toolSuccess = nil
 	journalState.toolLastUsedAt = 0
 	self._journalState = journalState
@@ -8679,10 +8895,10 @@ function UISystem:_resolveFieldKitMeta(toolType, toolState)
 	end
 	if toolType == "BolaArwah" then
 		if tostring(toolState.lastEvidenceType or "") == "To'un" or (feedbackData and feedbackData.ghostOrbDetected == true) then
-			return "ORB", false, "TO'UN LOCK"
+			return "TO'UN", false, "ORB LOCK"
 		end
 		if toolState.lastSuccess == false and toolState.lastReason == "ghost_out_of_range" then
-			return "DARK", false, "ORB NULL"
+			return "DARK", false, "NO ORB"
 		end
 		return tostring(config.readyMeta or "GLOW"), false, tostring(config.readyFooter or config.role or "UTILITY")
 	end
@@ -8801,7 +9017,6 @@ function UISystem:_playFieldKitEvidenceCueIfNeeded(toolType, toolState, success,
 end
 
 function UISystem:_useInvestigationTool(toolType, options)
-	local tools = self:_getEvidenceToolsService()
 	local settings = options or {}
 	local payload = type(settings.payload) == "table" and settings.payload or nil
 	local openJournal = settings.openJournal == true
@@ -8815,6 +9030,39 @@ function UISystem:_useInvestigationTool(toolType, options)
 		toolState.pending = true
 		toolState.lastUpdatedAt = os.clock()
 	end
+
+	if toolType == "Flashlight" then
+		local localPlayer = Players.LocalPlayer
+		local enabled = not (localPlayer and localPlayer:GetAttribute("FlashlightEnabled") == true)
+		if localPlayer then
+			localPlayer:SetAttribute("PasrahEquippedToolType", "Flashlight")
+			localPlayer:SetAttribute("FlashlightEnabled", enabled)
+		end
+		local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+		local flashlightRemote = remoteFolder and remoteFolder:FindFirstChild("FlashlightEvent")
+		if flashlightRemote and flashlightRemote:IsA("RemoteEvent") then
+			flashlightRemote:FireServer({
+				action = "Toggle",
+				enabled = enabled,
+			})
+		end
+		state.toolStatus = enabled and "Flashlight aktif." or "Flashlight mati."
+		state.toolReason = "Gunakan F atau tombol FLASH untuk toggle lampu utama."
+		state.toolSuccess = true
+		if toolState then
+			toolState.pending = false
+			toolState.lastSuccess = true
+			toolState.lastReason = enabled and "flashlight_on" or "flashlight_off"
+			toolState.lastUpdatedAt = os.clock()
+		end
+		self._journalState = state
+		self:_refreshJournalPanel()
+		self:_refreshFieldKitPanel()
+		self:_applyVisibility()
+		return
+	end
+
+	local tools = self:_getEvidenceToolsService()
 
 	if not tools or type(tools.UseTool) ~= "function" then
 		state.toolStatus = "Tool client tidak siap."
@@ -8887,44 +9135,86 @@ function UISystem:_triggerJournalToolScan()
 	})
 end
 
+function UISystem:_equipFieldKitTool(toolType)
+	if type(toolType) ~= "string" or FIELD_KIT_TOOL_CONFIG[toolType] == nil then
+		return false
+	end
+
+	local localPlayer = Players.LocalPlayer
+	if localPlayer then
+		localPlayer:SetAttribute("PasrahEquippedToolType", toolType)
+	end
+
+	local state = self._journalState or {}
+	state.toolType = toolType
+	state.toolLastUsedAt = os.clock()
+	state.toolSuccess = nil
+	state.toolStatus = string.format("%s dipilih.", FIELD_KIT_TOOL_CONFIG[toolType].label or toolType)
+	state.toolReason = toolType == "Flashlight"
+		and "Tekan F untuk nyala/mati lampu utama."
+		or "Tool sudah di tangan. Gunakan action/scan saat target evidence terlihat."
+	self._journalState = state
+	self:_refreshJournalPanel()
+	self:_refreshFieldKitPanel()
+	return true
+end
+
 function UISystem:_refreshFieldKitPanel()
 	local match = self._uxWidgets and self._uxWidgets.match or nil
 	if not match or not match.FieldKitFrame then
 		return
 	end
 
-	local player = Players.LocalPlayer
-	local lifecyclePhase = tostring(player and player:GetAttribute("MatchLifecyclePhase") or "")
-	local authoritativePreparation = lifecyclePhase:gsub("[%s_%-]+", ""):lower() == "preparationphase"
 	local screenEnabled = (match.BasicGui and match.BasicGui.Enabled == true)
 		or (self._uiState.MatchUI and self._uiState.MatchUI.visible == true)
+	local phaseAllowsFieldKit = self._matchPhase == MATCH_PHASE.PREPARING
+		or self._matchPhase == MATCH_PHASE.BRIEFING
+		or self._matchPhase == MATCH_PHASE.INGAME
+		or self._matchPhase == MATCH_PHASE.ESCALATION
+		or self._matchPhase == MATCH_PHASE.HUNT
 	local showFieldKit = screenEnabled
-		and (self._matchPhase == MATCH_PHASE.INGAME or self._matchPhase == MATCH_PHASE.ESCALATION or self._matchPhase == MATCH_PHASE.HUNT)
-		and not authoritativePreparation
+		and phaseAllowsFieldKit
 		and not self:_isMatchResultsPhase()
 	if USE_NATIVE_BACKPACK_TOOLS == true then
 		showFieldKit = false
 	end
-	match.FieldKitFrame.Visible = showFieldKit
 
 	local state = self._journalState or {}
-	local activeTool = FIELD_KIT_TOOL_CONFIG[state.toolType] and state.toolType or JOURNAL_TOOL_TYPE
-	local activeConfig = FIELD_KIT_TOOL_CONFIG[activeTool] or FIELD_KIT_TOOL_CONFIG[JOURNAL_TOOL_TYPE]
-	local detailText = tostring(state.toolReason or "Pilih tool untuk lanjut investigasi.")
-	local statusText = tostring(state.toolStatus or "Field kit [1-9] siap.")
-	local isRecent = (os.clock() - (tonumber(state.toolLastUsedAt) or 0)) <= 4
 	local toolStates = self:_ensureFieldKitToolStates()
 	local visibleToolTypes = getVisibleFieldKitToolTypes(toolStates)
+	local hasLoadoutTools = #visibleToolTypes > 0
+	showFieldKit = showFieldKit and hasLoadoutTools
+	match.FieldKitFrame.Visible = showFieldKit
+
+	local activeTool = FIELD_KIT_TOOL_CONFIG[state.toolType] and state.toolType or visibleToolTypes[1] or JOURNAL_TOOL_TYPE
+	local activeVisible = false
+	for _, toolType in ipairs(visibleToolTypes) do
+		if toolType == activeTool then
+			activeVisible = true
+			break
+		end
+	end
+	if not activeVisible and visibleToolTypes[1] then
+		activeTool = visibleToolTypes[1]
+	end
+	local activeConfig = FIELD_KIT_TOOL_CONFIG[activeTool] or FIELD_KIT_TOOL_CONFIG[JOURNAL_TOOL_TYPE]
+	local detailText = tostring(state.toolReason or "Pakai slot 1-3 sesuai loadout staging.")
+	local statusText = tostring(state.toolStatus or string.format("Inventory %d/%d siap.", #visibleToolTypes, FIELD_KIT_MAX_LOADOUT_SLOTS))
+	local isRecent = (os.clock() - (tonumber(state.toolLastUsedAt) or 0)) <= 4
 	local visibleToolOrder = {}
 	for order, toolType in ipairs(visibleToolTypes) do
 		visibleToolOrder[toolType] = order
 	end
 	local deviceProfile = self._deviceProfile or {}
-	local layoutWidth = (match.FieldKitFrame and match.FieldKitFrame.Size.X.Offset or 356) - 24
+	local compactWidth = deviceProfile.isMobile == true and 300 or 286
+	if match.FieldKitFrame then
+		match.FieldKitFrame.Size = UDim2.fromOffset(compactWidth, match.FieldKitFrame.Size.Y.Offset)
+	end
+	local layoutWidth = compactWidth - 24
 	local fieldKitLayout = getFieldKitLayoutMetrics(deviceProfile.isMobile == true, layoutWidth, #visibleToolTypes)
 
 	if match.FieldKitFrame then
-		match.FieldKitFrame.Size = UDim2.fromOffset(match.FieldKitFrame.Size.X.Offset, fieldKitLayout.frameHeight)
+		match.FieldKitFrame.Size = UDim2.fromOffset(compactWidth, fieldKitLayout.frameHeight)
 	end
 	if match.FieldKitButtonsFrame then
 		match.FieldKitButtonsFrame.Size = UDim2.new(1, -24, 0, fieldKitLayout.buttonsHeight)
@@ -8943,7 +9233,7 @@ function UISystem:_refreshFieldKitPanel()
 		match.FieldKitFrame.BackgroundColor3 = activeConfig.accent:Lerp(Color3.fromRGB(14, 18, 26), 0.78)
 	end
 	if match.FieldKitTitle then
-		match.FieldKitTitle.Text = "FIELD KIT"
+		match.FieldKitTitle.Text = string.format("INVENTORY %d/%d", #visibleToolTypes, FIELD_KIT_MAX_LOADOUT_SLOTS)
 		match.FieldKitTitle.TextColor3 = activeConfig.accent:Lerp(Color3.fromRGB(244, 246, 248), 0.26)
 	end
 	if match.FieldKitStatusLabel then
@@ -9006,7 +9296,11 @@ function UISystem:_refreshFieldKitPanel()
 				if widget.ShortcutLabel then
 					widget.ShortcutLabel.Position = UDim2.new(1, -32, 0, 6)
 					widget.ShortcutLabel.Size = UDim2.fromOffset(26, 12)
-					widget.ShortcutLabel.Text = string.format("[%s]", tostring(toolConfig.shortcut or "?"))
+					local slotShortcut = tostring(visibleOrder)
+					if toolName == "Flashlight" then
+						slotShortcut = slotShortcut .. "/F"
+					end
+					widget.ShortcutLabel.Text = string.format("[%s]", slotShortcut)
 					widget.ShortcutLabel.TextColor3 = Color3.fromRGB(208, 214, 226)
 				end
 				if widget.TitleLabel then
@@ -9137,7 +9431,10 @@ function UISystem:_syncMatchWindowVisibility()
 		match.BasicPanel.Visible = showBasicPanel
 	end
 	if match.BasicFloatButton then
-		match.BasicFloatButton.Visible = screenEnabled and self._matchWindowDismissed and (not isResultsPhase or allowResultReopen)
+		match.BasicFloatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
+			and screenEnabled
+			and self._matchWindowDismissed
+			and (not isResultsPhase or allowResultReopen)
 	end
 	if match.ResultsPanel then
 		match.ResultsPanel.Visible = showResults
@@ -9258,11 +9555,11 @@ function UISystem:_updateMatchSummaryRows(rowWidgets, viewState, payload)
 			or (useWorldPreparation and "Contract / Objective / Tools")
 			or (viewState == "Lobby" and "Quick access" or "-")
 		if viewState == "Hunt" then
-			local huntSnapshot = getHuntStatusSnapshot()
-			local nearestRefuge, alternateRefuge = getPreferredHuntRefugeInfo()
-			local refugeHint = getRefugeHintText(nearestRefuge)
-			local alternateHint = getRefugeHintText(alternateRefuge)
-			local huntBadge = getHuntStatusBadge(huntSnapshot)
+			local huntSnapshot = UISystem._getHuntStatusSnapshot()
+			local nearestRefuge, alternateRefuge = RefugeHints.getPreferredHuntRefugeInfo()
+			local refugeHint = RefugeHints.getRefugeHintText(nearestRefuge)
+			local alternateHint = RefugeHints.getRefugeHintText(alternateRefuge)
+			local huntBadge = UISystem._getHuntStatusBadge(huntSnapshot)
 			local huntDistanceText = type(huntSnapshot.threatDistance) == "number"
 				and string.format("%dst", math.max(0, math.floor(huntSnapshot.threatDistance + 0.5)))
 				or "-"
@@ -9421,8 +9718,8 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	local profile = self._deviceProfile or {}
 	local hideHeaderBodyText = UserInputService.TouchEnabled == true
 		and (viewState == "Preparation" or viewState == "Loading")
-	local huntAssistSnapshot = viewState == "Hunt" and getHuntAssistSnapshot() or nil
-	local huntStatusSnapshot = viewState == "Hunt" and getHuntStatusSnapshot() or nil
+	local huntAssistSnapshot = viewState == "Hunt" and UISystem._getHuntAssistSnapshot() or nil
+	local huntStatusSnapshot = viewState == "Hunt" and UISystem._getHuntStatusSnapshot() or nil
 	local navigationAnchor = nil
 
 	local badgeText = "STATUS MATCH"
@@ -9477,7 +9774,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		secondaryText = timerVisible
 			and ("Sisa waktu investigasi: " .. timerText .. ". " .. getInvestigationObjectiveText("Investigation"):gsub("\n", " • "))
 			or getInvestigationObjectiveText("Investigation"):gsub("\n", " • ")
-		footerText = CLOSE_HINT_TEXT .. ". Gunakan Field Kit [1-4] untuk tool cepat dan EVIDENCE [J] untuk jurnal."
+		footerText = CLOSE_HINT_TEXT .. ". Gunakan Inventory [1-3] untuk tool yang dibawa dan EVIDENCE [J] untuk jurnal."
 		if focusTool then
 			footerText = footerText .. " Mulai sweep dengan fokus " .. focusTool .. "."
 		end
@@ -9595,7 +9892,7 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 		))
 			and "Review CONTRACT / OBJECTIVES / TOOLS di staging luar, lalu aktifkan BREACH di MAIN ENTRY."
 			or (viewState == "Hunt"
-			and getHuntControlsHintText()
+			and UISystem._getHuntControlsHintText()
 			or ((viewState == "Preparation" and getInvestigationControlsHintText("Preparation"))
 				or (viewState == "Investigation" and prependPreparationFocusHint(getInvestigationControlsHintText("Investigation")))
 				or self._matchControlsHintText))
@@ -9850,7 +10147,7 @@ function UISystem:_refreshBasicLobbyPanel()
 	local hintText = isMobileUi
 		and string.format("Flow: ROOM BROWSER -> START. %s • %s • %s", dailyQuestState, dailyCheckInState, hiddenGemsCompact)
 		or string.format(
-			"Alur test: OPEN ROOM BROWSER -> BUAT ROOM -> START -> masuk map -> pakai Field Kit untuk evidence. Daily %s • %s • %s",
+			"Alur test: OPEN ROOM BROWSER -> BUAT ROOM -> START -> masuk map -> pilih loadout lalu cari evidence. Daily %s • %s • %s",
 			dailyQuestState,
 			dailyCheckInState,
 			hiddenGemsCompact
@@ -10812,6 +11109,80 @@ function UISystem:_ensureJournalBackground(window)
 	background.Visible = true
 end
 
+function UISystem:_applyJournalPageLayout(widgets, activePage)
+	if type(widgets) ~= "table" or not widgets.Deck then
+		return
+	end
+	local deck = widgets.Deck
+	local contentFrame = deck.Parent
+	if contentFrame and contentFrame:IsA("ScrollingFrame") then
+		contentFrame.ScrollingEnabled = false
+		contentFrame.ScrollBarThickness = 0
+		contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.None
+		contentFrame.CanvasSize = UDim2.fromScale(0, 0)
+		contentFrame.CanvasPosition = Vector2.zero
+	end
+	if contentFrame and contentFrame:IsA("GuiObject") then
+		contentFrame.ClipsDescendants = true
+	end
+
+	deck.AutomaticSize = Enum.AutomaticSize.None
+	deck.Size = UDim2.new(1, -4, 1, 0)
+	deck.BackgroundTransparency = 1
+	local layout = deck:FindFirstChildOfClass("UIListLayout")
+	if not layout then
+		layout = Instance.new("UIListLayout")
+		layout.Parent = deck
+	end
+	layout.FillDirection = Enum.FillDirection.Vertical
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 8)
+
+	for _, staleName in ipairs({ "HeroCard", "StatRow", "DiscoveredSection", "ConfirmedSection", "CandidateSection" }) do
+		local stale = deck:FindFirstChild(staleName)
+		if stale and stale:IsA("GuiObject") then
+			stale.Visible = false
+			stale.LayoutOrder = 900
+		end
+	end
+
+	local pageHeight = 420
+	if contentFrame and contentFrame:IsA("GuiObject") and contentFrame.AbsoluteSize.Y > 0 then
+		pageHeight = math.max(320, contentFrame.AbsoluteSize.Y - 48)
+	end
+	local pageNav = widgets.PageNav
+	if pageNav and pageNav:IsA("GuiObject") then
+		pageNav.Visible = true
+		pageNav.LayoutOrder = 10
+		pageNav.Size = UDim2.new(1, 0, 0, 38)
+	end
+	for _, card in ipairs({ widgets.EvidenceCard, widgets.GhostCard, widgets.SubmitCard, widgets.TutorialCard }) do
+		if card and card:IsA("GuiObject") then
+			card.AutomaticSize = Enum.AutomaticSize.None
+			card.Size = UDim2.new(1, 0, 0, pageHeight)
+			card.LayoutOrder = 20
+		end
+	end
+	if widgets.TutorialLabel and widgets.TutorialLabel:IsA("GuiObject") then
+		widgets.TutorialLabel.Size = UDim2.new(1, -24, 1, -76)
+	end
+	if widgets.SubmitStatusLabel and widgets.SubmitStatusLabel:IsA("GuiObject") then
+		widgets.SubmitStatusLabel.Size = UDim2.new(1, -186, 1, -42)
+	end
+
+	local pageByCard = {
+		Evidence = widgets.EvidenceCard,
+		Ghost = widgets.GhostCard,
+		Submit = widgets.SubmitCard,
+		Guide = widgets.TutorialCard,
+	}
+	for pageId, card in pairs(pageByCard) do
+		if card and card:IsA("GuiObject") then
+			card.Visible = activePage == pageId
+		end
+	end
+end
+
 function UISystem:_ensureJournalSubmitWidgets(window, widgets)
 	if not window or type(widgets) ~= "table" or not widgets.Deck then
 		return widgets
@@ -10819,10 +11190,17 @@ function UISystem:_ensureJournalSubmitWidgets(window, widgets)
 	local deck = widgets.Deck
 
 	local function ensureChild(parent, name, className)
-		local child = parent and parent:FindFirstChild(name) or nil
-		if child and not child:IsA(className) then
-			child:Destroy()
-			child = nil
+		local child = nil
+		if parent then
+			for _, candidate in ipairs(parent:GetChildren()) do
+				if candidate.Name == name then
+					if child == nil and candidate:IsA(className) then
+						child = candidate
+					else
+						candidate:Destroy()
+					end
+				end
+			end
 		end
 		if not child then
 			child = Instance.new(className)
@@ -10860,6 +11238,38 @@ function UISystem:_ensureJournalSubmitWidgets(window, widgets)
 		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 		titleLabel.Text = title
 		return card
+	end
+
+	local pageNav = ensureChild(deck, "JournalPageNav", "Frame")
+	pageNav.Size = UDim2.new(1, 0, 0, 34)
+	pageNav.BackgroundTransparency = 1
+	pageNav.LayoutOrder = 28
+	local pageLayout = pageNav:FindFirstChildOfClass("UIGridLayout") or Instance.new("UIGridLayout")
+	pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	pageLayout.CellPadding = UDim2.fromOffset(6, 0)
+	pageLayout.CellSize = UDim2.new(0.25, -5, 1, 0)
+	pageLayout.Parent = pageNav
+	widgets.PageNav = pageNav
+	widgets.PageButtons = widgets.PageButtons or {}
+	for index, pageId in ipairs(JOURNAL_PAGE_ORDER) do
+		local button = ensureChild(pageNav, "Page_" .. pageId, "TextButton")
+		button.LayoutOrder = index
+		button.BorderSizePixel = 0
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 10
+		button.TextWrapped = true
+		button.TextColor3 = Color3.fromRGB(244, 244, 238)
+		button.Text = JOURNAL_PAGE_LABELS[pageId] or pageId
+		widgets.PageButtons[pageId] = button
+		if not isRuntimeButtonBound(button) then
+			button.MouseButton1Click:Connect(function()
+				local state = self._journalState or {}
+				state.activePage = pageId
+				self._journalState = state
+				self:_refreshJournalPanel()
+			end)
+			markRuntimeButtonBound(button)
+		end
 	end
 
 	local evidenceCard = ensureCard("EvidenceChecklistSection", "CHECKLIST EVIDENCE", 132, 40, Color3.fromRGB(70, 132, 98))
@@ -10964,6 +11374,9 @@ function UISystem:_ensureJournalSubmitWidgets(window, widgets)
 	statusLabel.TextYAlignment = Enum.TextYAlignment.Center
 	statusLabel.TextColor3 = Color3.fromRGB(200, 210, 222)
 	widgets.SubmitStatusLabel = statusLabel
+	widgets.EvidenceCard = evidenceCard
+	widgets.GhostCard = ghostCard
+	widgets.SubmitCard = submitCard
 
 	local tutorialCard = ensureCard("JournalTutorialSection", "TUTORIAL MATCH", 138, 70, Color3.fromRGB(72, 88, 128))
 	local tutorialLabel = ensureChild(tutorialCard, "TutorialLabel", "TextLabel")
@@ -11011,6 +11424,7 @@ function UISystem:_ensureJournalSubmitWidgets(window, widgets)
 		end)
 		markRuntimeButtonBound(tutorialNext)
 	end
+	widgets.TutorialCard = tutorialCard
 
 	return widgets
 end
@@ -11027,6 +11441,52 @@ function UISystem:_refreshJournalSubmitWidgets(widgets, state, discovered, confi
 	local selectedGhostKey = UISystem._normalizeJournalLookupKey(state.selectedGhostType)
 	local candidateSet = UISystem._buildJournalGhostSet(candidates)
 	local hasCandidates = next(candidateSet) ~= nil
+	local selectedGhostType = type(state.selectedGhostType) == "string" and state.selectedGhostType or ""
+	local activePage = tostring(state.activePage or "")
+	if JOURNAL_PAGE_LABELS[activePage] == nil then
+		activePage = (#selectedEvidence == 3 and selectedGhostType == "") and "Ghost" or "Evidence"
+		state.activePage = activePage
+		self._journalState = state
+	end
+
+	self:_applyJournalPageLayout(widgets, activePage)
+
+	if type(widgets.PageButtons) == "table" then
+		for _, pageId in ipairs(JOURNAL_PAGE_ORDER) do
+			local button = widgets.PageButtons[pageId]
+			if button then
+				local selected = pageId == activePage
+				button.BackgroundColor3 = selected and Color3.fromRGB(90, 76, 54) or Color3.fromRGB(28, 34, 42)
+				button.BackgroundTransparency = selected and 0 or 0.08
+				button.TextColor3 = selected and Color3.fromRGB(255, 244, 210) or Color3.fromRGB(204, 214, 224)
+			end
+		end
+	end
+
+	if widgets.EvidenceCard then
+		widgets.EvidenceCard.Visible = activePage == "Evidence"
+	end
+	if widgets.GhostCard then
+		widgets.GhostCard.Visible = activePage == "Ghost"
+	end
+	if widgets.SubmitCard then
+		widgets.SubmitCard.Visible = activePage == "Submit"
+	end
+	if widgets.TutorialCard then
+		widgets.TutorialCard.Visible = activePage == "Guide"
+	end
+	for _, body in ipairs({ widgets.DiscoveredBody, widgets.ConfirmedBody, widgets.CandidateBody }) do
+		local card = body and body.Parent
+		if card and card:IsA("GuiObject") then
+			card.Visible = false
+		end
+	end
+	local statRow = widgets.DiscoveredCount
+		and widgets.DiscoveredCount.Parent
+		and widgets.DiscoveredCount.Parent.Parent
+	if statRow and statRow:IsA("GuiObject") then
+		statRow.Visible = false
+	end
 
 	if type(widgets.EvidenceButtons) == "table" then
 		for _, evidenceType in ipairs(JOURNAL_EVIDENCE_ORDER) do
@@ -11060,7 +11520,6 @@ function UISystem:_refreshJournalSubmitWidgets(widgets, state, discovered, confi
 		end
 	end
 
-	local selectedGhostType = type(state.selectedGhostType) == "string" and state.selectedGhostType or ""
 	local canSubmit = #selectedEvidence == 3 and selectedGhostType ~= "" and state.submitPending ~= true and state.answerLocked ~= true
 	local canEndInvestigation = state.answerLocked == true and state.submitPending ~= true and state.endPending ~= true
 	if widgets.SubmitButton then
@@ -12598,39 +13057,38 @@ function UISystem:_ensureAuthoredShopWindowWidgets(window)
 		end
 	end
 	for _, filter in ipairs(SHOP_FILTERS) do
-		if not shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
-			continue
+		if shouldShowShopFilter(filter.key, self._shopState.catalog, self._shopState.ownedItemIds) then
+			local filterButton = Instance.new("TextButton")
+			filterButton.Name = "Filter" .. filter.key
+			filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
+			filterButton.BackgroundColor3 = Color3.fromRGB(42, 54, 72)
+			filterButton.BorderSizePixel = 0
+			filterButton.Text = filter.label
+			filterButton.TextColor3 = Color3.fromRGB(236, 240, 244)
+			filterButton.Font = Enum.Font.GothamBold
+			filterButton.TextSize = 10
+			filterButton.Parent = filterBar
+			self:_setSelectableStyle(filterButton)
+
+			local filterCorner = Instance.new("UICorner")
+			filterCorner.CornerRadius = UDim.new(1, 0)
+			filterCorner.Parent = filterButton
+
+			local filterStroke = Instance.new("UIStroke")
+			filterStroke.Thickness = 1
+			filterStroke.Transparency = 0.18
+			filterStroke.Color = Color3.fromRGB(92, 116, 150)
+			filterStroke.Parent = filterButton
+
+			if not isRuntimeButtonBound(filterButton) then
+				markRuntimeButtonBound(filterButton)
+				connectButtonPress(filterButton, function()
+					self:_setShopFilter(filter.key)
+				end)
+			end
+
+			window.ShopFilterButtons[filter.key] = filterButton
 		end
-		local filterButton = Instance.new("TextButton")
-		filterButton.Name = "Filter" .. filter.key
-		filterButton.Size = UDim2.fromOffset(filter.key == "Owned" and 78 or 54, 30)
-		filterButton.BackgroundColor3 = Color3.fromRGB(42, 54, 72)
-		filterButton.BorderSizePixel = 0
-		filterButton.Text = filter.label
-		filterButton.TextColor3 = Color3.fromRGB(236, 240, 244)
-		filterButton.Font = Enum.Font.GothamBold
-		filterButton.TextSize = 10
-		filterButton.Parent = filterBar
-		self:_setSelectableStyle(filterButton)
-
-		local filterCorner = Instance.new("UICorner")
-		filterCorner.CornerRadius = UDim.new(1, 0)
-		filterCorner.Parent = filterButton
-
-		local filterStroke = Instance.new("UIStroke")
-		filterStroke.Thickness = 1
-		filterStroke.Transparency = 0.18
-		filterStroke.Color = Color3.fromRGB(92, 116, 150)
-		filterStroke.Parent = filterButton
-
-		if not isRuntimeButtonBound(filterButton) then
-			markRuntimeButtonBound(filterButton)
-			connectButtonPress(filterButton, function()
-				self:_setShopFilter(filter.key)
-			end)
-		end
-
-		window.ShopFilterButtons[filter.key] = filterButton
 	end
 
 	window.ItemRows = {}
@@ -12987,6 +13445,185 @@ function UISystem:_applyRoyalPassSnapshot(snapshot)
 	self._royalPassState = state
 end
 
+function UISystem:_applyDailyEngagementSnapshot(snapshot)
+	if type(snapshot) ~= "table" then
+		return
+	end
+
+	local state = self._dailyEngagementState or {}
+	local missions = {}
+	local totalMissionCount = 0
+	local activeMissionCount = 0
+	local readyMissionCount = 0
+	local completedMissionCount = 0
+	local claimedMissionCount = 0
+
+	if type(snapshot.missions) == "table" then
+		for _, mission in ipairs(snapshot.missions) do
+			if type(mission) == "table" then
+				table.insert(missions, mission)
+				totalMissionCount += 1
+				local target = math.max(1, math.floor(tonumber(mission.target) or 1))
+				local progress = math.clamp(math.floor(tonumber(mission.progress) or 0), 0, target)
+				local claimed = mission.claimed == true
+				local complete = progress >= target
+				if claimed then
+					claimedMissionCount += 1
+				else
+					activeMissionCount += 1
+				end
+				if complete then
+					completedMissionCount += 1
+				end
+				if complete and not claimed then
+					readyMissionCount += 1
+				end
+			end
+		end
+	end
+
+	local checkin = type(snapshot.checkin) == "table" and snapshot.checkin or {}
+	local gacha = type(snapshot.gacha) == "table" and snapshot.gacha or {}
+
+	state.missions = missions
+	state.totalMissionCount = totalMissionCount
+	state.activeMissionCount = activeMissionCount
+	state.readyMissionCount = readyMissionCount
+	state.completedMissionCount = completedMissionCount
+	state.claimedMissionCount = claimedMissionCount
+	state.checkinStreak = math.max(0, math.floor(tonumber(checkin.streakCount) or state.checkinStreak or 0))
+	state.checkinTotalDays = math.max(0, math.floor(tonumber(checkin.totalDays) or state.checkinTotalDays or 0))
+	state.lastCheckinDate = tostring(checkin.lastDate or state.lastCheckinDate or "")
+	state.gachaTickets = math.max(0, math.floor(tonumber(snapshot.gachaTickets) or state.gachaTickets or 0))
+	state.pityCount = math.max(0, math.floor(tonumber(gacha.pityCount) or state.pityCount or 0))
+	state.epicPityCount = math.max(0, math.floor(tonumber(gacha.epicPityCount) or state.epicPityCount or 0))
+	state.lastSnapshotAt = tick()
+	self._dailyEngagementState = state
+
+	if type(snapshot.royalPass) == "table" then
+		self:_applyRoyalPassSnapshot(snapshot.royalPass)
+	end
+end
+
+function UISystem:_nextDailyEngagementRequestId(action)
+	self._dailyEngagementRequestSeq = (self._dailyEngagementRequestSeq or 0) + 1
+	return string.format("%s:%d:%d", tostring(action or "daily"), self._dailyEngagementRequestSeq, math.floor(os.clock() * 1000))
+end
+
+function UISystem:_isDailyCheckinReady()
+	local state = self._dailyEngagementState or {}
+	local today = os.date("!%Y%m%d")
+	return tostring(state.lastCheckinDate or "") ~= tostring(today)
+end
+
+function UISystem:_getFirstClaimableDailyMission()
+	local state = self._dailyEngagementState or {}
+	if type(state.missions) ~= "table" then
+		return nil
+	end
+	for _, mission in ipairs(state.missions) do
+		if type(mission) == "table" and mission.claimed ~= true then
+			local target = math.max(1, math.floor(tonumber(mission.target) or 1))
+			local progress = math.clamp(math.floor(tonumber(mission.progress) or 0), 0, target)
+			if progress >= target and type(mission.id) == "string" and mission.id ~= "" then
+				return mission
+			end
+		end
+	end
+	return nil
+end
+
+function UISystem:_requestDailyCheckin()
+	local remote = self._remotes and self._remotes.DailyCheckinRequest or nil
+	if not remote then
+		self._dailyEngagementState.lastReason = "missing_daily_checkin_remote"
+		self._royalPassState.lastSource = "missing_daily_checkin_remote"
+		self:_refreshRoyalPassPanel()
+		return false
+	end
+	self._dailyEngagementState.lastEvent = "DailyCheckinRequested"
+	self._dailyEngagementState.lastReason = nil
+	self._royalPassState.lastSource = "daily_checkin_requested"
+	self._royalPassState.lastAmount = 0
+	self:_refreshRoyalPassPanel()
+	remote:FireServer({
+		requestId = self:_nextDailyEngagementRequestId("checkin"),
+		action = "ClaimDailyCheckin",
+	})
+	return true
+end
+
+function UISystem:_requestDailyMissionClaim(missionId)
+	if type(missionId) ~= "string" or missionId == "" then
+		return false
+	end
+	local remote = self._remotes and self._remotes.DailyMissionClaimRequest or nil
+	if not remote then
+		self._dailyEngagementState.lastReason = "missing_daily_mission_remote"
+		self._royalPassState.lastSource = "missing_daily_mission_remote"
+		self:_refreshRoyalPassPanel()
+		return false
+	end
+	self._dailyEngagementState.lastEvent = "DailyMissionClaimRequested"
+	self._dailyEngagementState.lastReason = nil
+	self._royalPassState.lastSource = "daily_mission_claim_requested"
+	self._royalPassState.lastAmount = 0
+	self:_refreshRoyalPassPanel()
+	remote:FireServer({
+		requestId = self:_nextDailyEngagementRequestId("mission"),
+		missionId = missionId,
+	})
+	return true
+end
+
+function UISystem:_requestGachaPull(pullCount, paymentType)
+	local remote = self._remotes and self._remotes.GachaPullRequest or nil
+	if not remote then
+		self._dailyEngagementState.lastReason = "missing_gacha_remote"
+		self._royalPassState.lastSource = "missing_gacha_remote"
+		self:_refreshRoyalPassPanel()
+		return false
+	end
+	self._dailyEngagementState.lastEvent = "GachaPullRequested"
+	self._dailyEngagementState.lastReason = nil
+	self._royalPassState.lastSource = "gacha_pull_requested"
+	self._royalPassState.lastAmount = 0
+	self:_refreshRoyalPassPanel()
+	remote:FireServer({
+		requestId = self:_nextDailyEngagementRequestId("gacha"),
+		pullCount = pullCount == 10 and 10 or 1,
+		paymentType = paymentType or "Ticket",
+	})
+	return true
+end
+
+function UISystem:_applyDailyEngagementResponse(remoteName, eventName, payload)
+	local state = self._dailyEngagementState or {}
+	local passState = self._royalPassState or {}
+	local reason = tostring(payload and payload.reason or "")
+	local success = payload and payload.success == true
+
+	if eventName == "DailyCheckinProcessed" then
+		passState.lastSource = success and "daily_checkin_claimed" or ("daily_checkin_" .. (reason ~= "" and reason or "failed"))
+		passState.lastAmount = 0
+	elseif eventName == "DailyMissionClaimProcessed" then
+		passState.lastSource = success and "daily_mission_claimed" or ("daily_mission_" .. (reason ~= "" and reason or "failed"))
+		passState.lastAmount = 0
+	elseif eventName == "GachaPullProcessed" or eventName == "GachaResult" then
+		local resultCount = type(payload and payload.results) == "table" and #payload.results or 0
+		passState.lastSource = (success or resultCount > 0)
+			and string.format("gacha_result_%d", resultCount)
+			or ("gacha_" .. (reason ~= "" and reason or "failed"))
+		passState.lastAmount = 0
+	elseif remoteName == "DailyEngagementSync" then
+		passState.lastSource = passState.lastSource or "daily_engagement_sync"
+	end
+
+	state.lastReason = reason ~= "" and reason or nil
+	self._dailyEngagementState = state
+	self._royalPassState = passState
+end
+
 function UISystem:_ensureRoyalPassWidgets(window)
 	if not window or not window.ContentFrame then
 		return nil
@@ -13150,6 +13787,7 @@ function UISystem:_ensureRoyalPassWidgets(window)
 		row.Button.Selectable = false
 		table.insert(rows, row)
 	end
+	self:_bindRoyalPassActionRows(rows)
 
 	local trackTabs = Instance.new("Frame")
 	trackTabs.Name = "TrackTabs"
@@ -13412,6 +14050,65 @@ function UISystem:_ensureRoyalPassWidgets(window)
 	return window.RoyalPassWidgets
 end
 
+function UISystem:_bindRoyalPassActionRows(rows)
+	if type(rows) ~= "table" then
+		return
+	end
+	for index, row in ipairs(rows) do
+		local button = row and row.Button
+		if button and index > 1 then
+			self:_setSelectableStyle(button)
+			button.Active = true
+			button.AutoButtonColor = true
+			button.Selectable = true
+			if not isRuntimeButtonBound(button) then
+				markRuntimeButtonBound(button)
+				connectButtonPress(button, function()
+					self:_handleRoyalPassActionRowPressed(index)
+				end)
+			end
+		end
+	end
+end
+
+function UISystem:_handleRoyalPassActionRowPressed(index)
+	if index == 2 then
+		if self:_isDailyCheckinReady() then
+			self:_requestDailyCheckin()
+		else
+			self._royalPassState.lastSource = "daily_checkin_already_claimed"
+			self._royalPassState.lastAmount = 0
+			self:_refreshRoyalPassPanel()
+		end
+		return
+	end
+
+	if index == 3 then
+		local mission = self:_getFirstClaimableDailyMission()
+		if mission then
+			self:_requestDailyMissionClaim(mission.id)
+			return
+		end
+
+		local dailyEngagement = self._dailyEngagementState or {}
+		if math.max(0, math.floor(tonumber(dailyEngagement.gachaTickets or 0) or 0)) > 0 then
+			self:_requestGachaPull(1, "Ticket")
+			return
+		end
+
+		local _, premiumOfferReady = self:_getRoyalPassPremiumOffer()
+		if premiumOfferReady == true then
+			self:_setShopFilter("Robux")
+			self:_openAuxiliaryWindow("ShopUI")
+			return
+		end
+
+		self._royalPassState.lastSource = "no_claimable_daily_reward"
+		self._royalPassState.lastAmount = 0
+		self:_refreshRoyalPassPanel()
+	end
+end
+
 function UISystem:_refreshRoyalPassPanel()
 	local window = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows.RoyalPassUI
 	if not window then
@@ -13419,8 +14116,10 @@ function UISystem:_refreshRoyalPassPanel()
 	end
 
 	local state = self._royalPassState or {}
+	local dailyEngagement = self._dailyEngagementState or {}
 	local currentTier = math.max(1, math.floor(tonumber(state.currentTier or 1) or 1))
-	local dailyCheckInDay = math.min(30, currentTier)
+	local checkinTotalDays = math.max(0, math.floor(tonumber(dailyEngagement.checkinTotalDays or 0) or 0))
+	local dailyCheckInDay = math.clamp(checkinTotalDays > 0 and checkinTotalDays or currentTier, 1, 30)
 	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or 50) or 50))
 	local xpPerTier = math.max(1, math.floor(tonumber(state.xpPerTier or 200) or 200))
 	local currentTierXP = math.clamp(math.floor(tonumber(state.currentTierXP or 0) or 0), 0, xpPerTier)
@@ -13428,10 +14127,28 @@ function UISystem:_refreshRoyalPassPanel()
 	local remainingXP = math.max(0, math.floor(tonumber(state.remainingXP or 0) or 0))
 	local premiumOwned = state.premiumOwned == true
 	local progressPercent = math.clamp(tonumber(state.progressPercent or 0) or 0, 0, 1)
-	local dailyQuestProgress = math.max(0, math.floor(tonumber((self._matchResult and self._matchResult.dailyProgress) or 0) or 0))
-	local dailyQuestState = dailyQuestProgress > 0 and string.format("PROG %d", dailyQuestProgress) or "PENDING"
-	local gachaSnapshotState = countLookupEntries(self._shopState and self._shopState.ownedItemIds or {}) > 0 and "COLLECTED" or "EMPTY"
+	local dailyMissionTotal = math.max(0, math.floor(tonumber(dailyEngagement.totalMissionCount or 0) or 0))
+	local readyMissionCount = math.max(0, math.floor(tonumber(dailyEngagement.readyMissionCount or 0) or 0))
+	local completedMissionCount = math.max(0, math.floor(tonumber(dailyEngagement.completedMissionCount or 0) or 0))
+	local claimedMissionCount = math.max(0, math.floor(tonumber(dailyEngagement.claimedMissionCount or 0) or 0))
+	local activeMissionCount = math.max(0, math.floor(tonumber(dailyEngagement.activeMissionCount or 0) or 0))
+	local legacyDailyQuestProgress = math.max(0, math.floor(tonumber((self._matchResult and self._matchResult.dailyProgress) or 0) or 0))
+	local dailyQuestState = "PENDING"
+	if dailyMissionTotal > 0 then
+		dailyQuestState = string.format("%d/%d", completedMissionCount, dailyMissionTotal)
+	elseif legacyDailyQuestProgress > 0 then
+		dailyQuestState = string.format("PROG %d", legacyDailyQuestProgress)
+	end
+	local gachaTickets = math.max(0, math.floor(tonumber(dailyEngagement.gachaTickets or 0) or 0))
+	local pityCount = math.max(0, math.floor(tonumber(dailyEngagement.pityCount or 0) or 0))
+	local checkinStreak = math.max(0, math.floor(tonumber(dailyEngagement.checkinStreak or 0) or 0))
+	local gachaSnapshotState = gachaTickets > 0 and string.format("%d TICKET", gachaTickets)
+		or (pityCount > 0 and string.format("PITY %d", pityCount)
+			or (countLookupEntries(self._shopState and self._shopState.ownedItemIds or {}) > 0 and "COLLECTED" or "EMPTY"))
 	local _, premiumOfferReady = self:_getRoyalPassPremiumOffer()
+	local checkinReady = self:_isDailyCheckinReady()
+	local claimableMission = self:_getFirstClaimableDailyMission()
+	local canTicketPull = gachaTickets > 0
 
 	local badgeText = premiumOwned and "PREMIUM" or "FREE TRACK"
 	local badgeColor = premiumOwned and Color3.fromRGB(136, 102, 48) or Color3.fromRGB(78, 92, 118)
@@ -13479,7 +14196,7 @@ function UISystem:_refreshRoyalPassPanel()
 	local contentText = table.concat({
 		string.format("Track: %s", premiumOwned and "Premium aktif" or "Free only"),
 		string.format("Tier saat ini: %d", currentTier),
-		string.format("Daily Check-In: DAY %02d", math.min(30, currentTier)),
+		string.format("Daily Check-In: DAY %02d", dailyCheckInDay),
 		string.format("Daily Quest: %s • Spin: %s • Gacha: %s", dailyQuestState, premiumOwned and "PREMIUM POOL" or "FREE POOL", gachaSnapshotState),
 		string.format("Sisa XP ke tier berikutnya: %d", remainingXP),
 		string.format("Tier terbuka: %d", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0))),
@@ -13556,14 +14273,6 @@ function UISystem:_refreshRoyalPassPanel()
 	end
 	local spinVisualState = premiumOwned and "PREMIUM POOL" or "FREE POOL"
 
-	local nextRewardMeta = state.nextReward
-		and string.format(
-			"%d MM + %d XP bonus menunggu di track berikutnya.",
-			math.max(0, math.floor(tonumber(state.nextReward.currency) or 0)),
-			math.max(0, math.floor(tonumber(state.nextReward.xp) or 0))
-		)
-		or "Semua tier utama sudah terbuka."
-
 	local rows = widgets.Rows or {}
 	local rowData = {
 		{
@@ -13580,9 +14289,9 @@ function UISystem:_refreshRoyalPassPanel()
 			badge = "CHECK",
 			glyph = string.format("D%02d", dailyCheckInDay),
 			title = "Daily check-in",
-			meta = string.format("%s • %s", nextRewardMeta, state.nextTier and ("target day " .. tostring(state.nextTier)) or "max day tercapai"),
-			pill = state.nextReward and string.format("+%d MM", math.max(0, math.floor(tonumber(state.nextReward.currency) or 0))) or "CLEAR",
-			button = state.nextReward and "CLAIM" or "DONE",
+			meta = string.format("Streak %d • total %d day • %s", checkinStreak, checkinTotalDays, state.nextTier and ("target day " .. tostring(state.nextTier)) or "max day tercapai"),
+			pill = checkinReady and "READY" or "CLEAR",
+			button = checkinReady and "CLAIM" or "DONE",
 			accent = UI_BRAND.daily,
 			preview = Color3.fromRGB(34, 52, 72),
 		},
@@ -13590,11 +14299,13 @@ function UISystem:_refreshRoyalPassPanel()
 			badge = "TRACK",
 			glyph = "QST",
 			title = "Daily quest / spin / gacha",
-			meta = premiumOfferReady
-				and string.format("Unlocked %d tier • spin %s • preview %s", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0)), spinVisualState, unlockedPreview)
-				or "Premium track belum dijual. Lane quest/spin tetap visual sampai compliant.",
-			pill = string.format("%d LEFT", remainingXP),
-			button = premiumOwned and "ACTIVE" or (premiumOfferReady and "SHOP" or "PENDING"),
+			meta = dailyMissionTotal > 0
+					and string.format("%d active • %d ready • spin %s • preview %s", activeMissionCount, readyMissionCount, spinVisualState, unlockedPreview)
+				or (premiumOfferReady
+					and string.format("Unlocked %d tier • spin %s • preview %s", math.max(0, math.floor(tonumber(state.unlockedTierCount or 0) or 0)), spinVisualState, unlockedPreview)
+					or "Premium track belum dijual. Lane quest/spin tetap visual sampai compliant."),
+			pill = gachaTickets > 0 and string.format("%d TICKET", gachaTickets) or string.format("%d LEFT", remainingXP),
+			button = claimableMission and "CLAIM" or (canTicketPull and "SPIN" or (premiumOwned and "ACTIVE" or (premiumOfferReady and "SHOP" or "PENDING"))),
 			accent = premiumOwned and Color3.fromRGB(90, 126, 88) or Color3.fromRGB(74, 92, 118),
 			preview = premiumOwned and Color3.fromRGB(42, 58, 40) or Color3.fromRGB(38, 48, 62),
 		},
@@ -13627,7 +14338,12 @@ function UISystem:_refreshRoyalPassPanel()
 			applyPricePillVisual(row.PricePill, data.pill, data.accent, UI_BRAND.text)
 			row.Button.Text = data.button
 			local rowTone = index == 1 and "focus" or (index == 2 and "daily" or "shop")
-			setButtonTone(row.Button, rowTone, false)
+			local rowActionable = (index == 2 and checkinReady)
+				or (index == 3 and (claimableMission ~= nil or canTicketPull or (premiumOwned ~= true and premiumOfferReady == true)))
+			row.Button.Active = index > 1
+			row.Button.AutoButtonColor = rowActionable == true
+			row.Button.Selectable = index > 1
+			setButtonTone(row.Button, rowTone, rowActionable == true)
 		end
 	end
 
@@ -13647,7 +14363,8 @@ function UISystem:_refreshRoyalPassPanel()
 	end
 
 	local trackCards = widgets.TrackCards or {}
-	local unlockedDays = math.clamp(math.max(1, currentTier), 1, 30)
+	local dailyMissions = type(dailyEngagement.missions) == "table" and dailyEngagement.missions or {}
+	local unlockedDays = math.clamp(math.max(1, dailyCheckInDay), 1, 30)
 	local currentDay = math.min(unlockedDays, 30)
 	for index, card in ipairs(trackCards) do
 		local isFinalDay = index == 30
@@ -13664,8 +14381,10 @@ function UISystem:_refreshRoyalPassPanel()
 		local cardBackground = Color3.fromRGB(24, 32, 42)
 		local rarityKey = resolveRoyalPassTrackRarityKey(index, isFinalDay)
 		local rarityTemplateAssetId = SHOP_RARITY_TEMPLATE_ASSET_IDS[rarityKey]
+		local usesLiveMission = false
 
 		if state.viewMode == "Missions" then
+			local mission = dailyMissions[index]
 			local missionTemplates = {
 				"Menangkan 1 investigasi penuh",
 				"Kumpulkan 2 evidence penting",
@@ -13673,11 +14392,34 @@ function UISystem:_refreshRoyalPassPanel()
 				"Gunakan tool investigasi 3 kali",
 				"Bermain bersama 1 teman",
 			}
-			titleText = isFinalDay and "DAILY QUEST 30 • GRAND FINALE" or string.format("DAILY QUEST %02d", index)
-			metaText = isFinalDay
-				and "Selesaikan misi penutup season untuk membuka teaser hadiah karakter rarity 5."
-				or missionTemplates[((index - 1) % #missionTemplates) + 1]
-			rewardText = isFinalDay and "R5 TOKEN" or string.format("+%d XP", 60 + (index * 5))
+			if type(mission) == "table" then
+				usesLiveMission = true
+				local target = math.max(1, math.floor(tonumber(mission.target) or 1))
+				local progress = math.clamp(math.floor(tonumber(mission.progress) or 0), 0, target)
+				local rewardParts = {}
+				if (tonumber(mission.xp) or 0) > 0 then
+					table.insert(rewardParts, "+" .. tostring(math.floor(tonumber(mission.xp) or 0)) .. " XP")
+				end
+				if (tonumber(mission.mm) or 0) > 0 then
+					table.insert(rewardParts, "+" .. tostring(math.floor(tonumber(mission.mm) or 0)) .. " MM")
+				end
+				titleText = tostring(mission.title or ("DAILY QUEST " .. string.format("%02d", index)))
+				metaText = string.format("%d/%d • %s", progress, target, tostring(mission.desc or mission.type or "Daily mission"))
+				rewardText = #rewardParts > 0 and table.concat(rewardParts, " + ") or "+RP XP"
+				if mission.claimed == true then
+					footerText = "DONE"
+				elseif progress >= target then
+					footerText = "CLAIM"
+				else
+					footerText = "LIVE"
+				end
+			else
+				titleText = isFinalDay and "DAILY QUEST 30 • GRAND FINALE" or string.format("DAILY QUEST %02d", index)
+				metaText = isFinalDay
+					and "Selesaikan misi penutup season untuk membuka teaser hadiah karakter rarity 5."
+					or missionTemplates[((index - 1) % #missionTemplates) + 1]
+				rewardText = isFinalDay and "R5 TOKEN" or string.format("+%d XP", 60 + (index * 5))
+			end
 			accentColor = isFinalDay and Color3.fromRGB(210, 160, 86) or Color3.fromRGB(112, 84, 150)
 			strokeColor = isFinalDay and Color3.fromRGB(232, 186, 104) or Color3.fromRGB(118, 90, 156)
 			badgeColor = isFinalDay and Color3.fromRGB(108, 78, 46) or Color3.fromRGB(76, 58, 102)
@@ -13694,13 +14436,15 @@ function UISystem:_refreshRoyalPassPanel()
 			cardBackground = isFinalDay and Color3.fromRGB(42, 30, 20) or Color3.fromRGB(24, 32, 42)
 		end
 
-		if isCurrentDay then
-			cardBackground = cardBackground:Lerp(Color3.fromRGB(52, 64, 82), 0.28)
-			footerText = "TODAY"
-		elseif isUnlocked then
-			footerText = "DONE"
-		elseif isLocked then
-			footerText = "LOCK"
+		if not usesLiveMission then
+			if isCurrentDay then
+				cardBackground = cardBackground:Lerp(Color3.fromRGB(52, 64, 82), 0.28)
+				footerText = "TODAY"
+			elseif isUnlocked then
+				footerText = "DONE"
+			elseif isLocked then
+				footerText = "LOCK"
+			end
 		end
 
 		card.Root.BackgroundColor3 = cardBackground
@@ -13721,7 +14465,7 @@ function UISystem:_refreshRoyalPassPanel()
 		card.Title.Text = titleText
 		card.Meta.Text = metaText
 		card.Footer.Text = footerText
-		card.Footer.TextColor3 = isLocked
+		card.Footer.TextColor3 = isLocked and not usesLiveMission
 			and Color3.fromRGB(174, 182, 194)
 			or (isFinalDay and Color3.fromRGB(244, 214, 146) or Color3.fromRGB(220, 230, 238))
 		applyPricePillVisual(
@@ -13763,6 +14507,13 @@ function UISystem:_refreshRoyalPassPanel()
 		instance:SetAttribute("PasrahRoyalPassViewMode", tostring(state.viewMode or "Rewards"))
 		instance:SetAttribute("PasrahRoyalPassCurrentDay", currentDay)
 		instance:SetAttribute("PasrahRoyalPassLastEvent", tostring(state.lastEvent or "Idle"))
+		instance:SetAttribute("PasrahDailyCheckinTotalDays", checkinTotalDays)
+		instance:SetAttribute("PasrahDailyCheckinStreak", checkinStreak)
+		instance:SetAttribute("PasrahDailyMissionTotalCount", dailyMissionTotal)
+		instance:SetAttribute("PasrahDailyMissionReadyCount", readyMissionCount)
+		instance:SetAttribute("PasrahDailyMissionClaimedCount", claimedMissionCount)
+		instance:SetAttribute("PasrahGachaTickets", gachaTickets)
+		instance:SetAttribute("PasrahGachaPityCount", pityCount)
 	end
 
 	stamp(window.Gui, "RoyalPassGui")
@@ -15165,9 +15916,7 @@ function UISystem:_applyDeviceSizing()
 				local window = self._uxWidgets.windows[guiName]
 				if window then
 					local preserveAuthoredAuxWindowLayout = shouldPreserveAuthoredOwnerLayout(guiName)
-					if preserveAuthoredAuxWindowLayout then
-						continue
-					end
+					if not preserveAuthoredAuxWindowLayout then
 				if not preserveAuthoredAuxWindowLayout and window.Panel and (guiName == "RoyalPassUI" or guiName == "ProfileUI" or guiName == "ShopUI") then
 					local width = guiName == "ShopUI" and 356 or 364
 					local height = guiName == "ProfileUI" and 320 or 420
@@ -15444,12 +16193,10 @@ function UISystem:_applyDeviceSizing()
 				end
 			end
 		end
+		end
 		if self._uxWidgets and self._uxWidgets.basicWindows then
 			for guiName, window in pairs(self._uxWidgets.basicWindows) do
 				local preserveAuthoredDesktopBasicWindowLayout = shouldPreserveAuthoredOwnerLayout(guiName)
-				if preserveAuthoredDesktopBasicWindowLayout then
-					continue
-				end
 				if not preserveAuthoredDesktopBasicWindowLayout then
 					if window.PrimaryLabel then
 						window.PrimaryLabel.TextSize = math.max(15, profile:GetTextSize() - 1)
@@ -15796,6 +16543,16 @@ function UISystem:_bindPostTeleportLoading()
 		self:_syncPhaseFromAuthoritativeLifecycle()
 	end))
 	table.insert(self._connections, player:GetAttributeChangedSignal("PreparationFocusTool"):Connect(function()
+		self:_handlePreparationFocusToolChanged()
+	end))
+	for slot = 1, FIELD_KIT_MAX_LOADOUT_SLOTS do
+		table.insert(self._connections, player:GetAttributeChangedSignal(FIELD_KIT_LOADOUT_ATTR_PREFIX .. tostring(slot)):Connect(function()
+			self:_refreshFieldKitPanel()
+			self:_handlePreparationFocusToolChanged()
+		end))
+	end
+	table.insert(self._connections, player:GetAttributeChangedSignal(FIELD_KIT_LOADOUT_COUNT_ATTR):Connect(function()
+		self:_refreshFieldKitPanel()
 		self:_handlePreparationFocusToolChanged()
 	end))
 end
@@ -16232,6 +16989,16 @@ function UISystem:_stopLoadingScreenLoop(showCompletionMessage)
 	screen.Enabled = false
 end
 
+function UISystem:_applySensoryHudScreenInsets(hud)
+	if not (hud and hud:IsA("ScreenGui")) then
+		return
+	end
+	hud.IgnoreGuiInset = true
+	pcall(function()
+		hud.ScreenInsets = Enum.ScreenInsets.None
+	end)
+end
+
 function UISystem:_renderPhase(phase, payload)
 	local playerGui = self:_getPlayerGui()
 	if not playerGui then
@@ -16241,6 +17008,7 @@ function UISystem:_renderPhase(phase, payload)
 	local lobbyUI = playerGui:FindFirstChild("LobbyUI")
 	local roomUI = playerGui:FindFirstChild("RoomBrowserUI")
 	local hud = playerGui:FindFirstChild("SensoryHorrorHUD") or playerGui:FindFirstChild("HorrorHUD")
+	self:_applySensoryHudScreenInsets(hud)
 	local loadingUI = self:_ensureLoadingScreen()
 	local matchUX = self._uxWidgets and self._uxWidgets.match or nil
 
@@ -16526,30 +17294,28 @@ function UISystem:_startPhaseTimer()
 		while self._phaseTimerRunning do
 			task.wait(0.1)
 			self:_refreshBasicMatchPanel()
-			if not self._phaseDuration then
-				continue
-			end
-
-			local elapsed = tick() - self._phaseStartTime
-			if elapsed < self._phaseDuration then
-				continue
-			end
-
-			if self._matchPhase == MATCH_PHASE.BRIEFING then
-				local nextPayload = self._pendingInGamePayload
-				self._pendingInGamePayload = nil
-				if nextPayload then
-					self._hasPostTeleportLoaded = true
-					self._awaitingPostTeleportFlow = false
-					self:_setPhase(MATCH_PHASE.INGAME, nextPayload)
+			if self._phaseDuration then
+				local elapsed = tick() - self._phaseStartTime
+				if elapsed >= self._phaseDuration then
+					if self._matchPhase == MATCH_PHASE.BRIEFING then
+						local nextPayload = self._pendingInGamePayload
+						self._pendingInGamePayload = nil
+						if nextPayload then
+							self._hasPostTeleportLoaded = true
+							self._awaitingPostTeleportFlow = false
+							self:_setPhase(MATCH_PHASE.INGAME, nextPayload)
+						else
+							self._phaseDuration = nil
+						end
+					elseif self._matchPhase == MATCH_PHASE.HUNT then
+						-- Server should end hunt; this only prevents repeated fallback transitions.
+						self._phaseDuration = nil
+					else
+						self._phaseDuration = nil
+					end
 				else
-					self._phaseDuration = nil
+					self:_refreshBasicMatchPanel()
 				end
-			elseif self._matchPhase == MATCH_PHASE.HUNT then
-				-- Server should end hunt; this only prevents repeated fallback transitions.
-				self._phaseDuration = nil
-			else
-				self._phaseDuration = nil
 			end
 		end
 	end)
@@ -17324,9 +18090,7 @@ function UISystem:_ensureBasicUIs()
 				self._lobbyUiShellWarned = true
 				warn("[UISystem] Missing authored LobbyUI ScreenGui; check StarterGui shell contract.")
 			end
-			continue
-		end
-		if guiName == "MainMenuUI" or guiName == "LeaderboardUI" then
+		elseif guiName == "MainMenuUI" or guiName == "LeaderboardUI" then
 			gui = gui or playerGui:FindFirstChild(guiName) or playerGui:WaitForChild(guiName, 5)
 			if gui and gui:IsA("ScreenGui") then
 				self:_bindAuthoredBasicWindowUi(guiName, gui)
@@ -17337,9 +18101,7 @@ function UISystem:_ensureBasicUIs()
 					warn(string.format("[UISystem] Missing authored %s ScreenGui; check StarterGui shell contract.", guiName))
 				end
 			end
-			continue
-		end
-		if guiName == "MatchUI" then
+		elseif guiName == "MatchUI" then
 			gui = gui or playerGui:FindFirstChild(guiName) or playerGui:WaitForChild("MatchUI", 5)
 			if gui and gui:IsA("ScreenGui") then
 				self:_bindAuthoredMatchUi(gui)
@@ -17349,9 +18111,7 @@ function UISystem:_ensureBasicUIs()
 					warn("[UISystem] Missing authored MatchUI ScreenGui; check StarterGui shell contract.")
 				end
 			end
-			continue
-		end
-		if guiName == "JournalUI"
+		elseif guiName == "JournalUI"
 			or guiName == "ProfileUI"
 			or guiName == "ShopUI"
 			or guiName == "RoyalPassUI"
@@ -17368,9 +18128,9 @@ function UISystem:_ensureBasicUIs()
 					warn(string.format("[UISystem] Missing authored %s ScreenGui; check StarterGui shell contract.", guiName))
 				end
 			end
-			continue
+		else
+			warn(string.format("[UISystem] Unsupported BASIC_GUI_NAMES entry %s; authored shell binding required.", tostring(guiName)))
 		end
-		warn(string.format("[UISystem] Unsupported BASIC_GUI_NAMES entry %s; authored shell binding required.", tostring(guiName)))
 	end
 
 	self:_refreshBasicLobbyPanel()
@@ -17635,6 +18395,8 @@ function UISystem:_ensureRoomBrowserGui()
 	local roomPreviewMapStroke = roomPreviewMap and roomPreviewMap:FindFirstChildOfClass("UIStroke")
 	local mapPreviewStroke = mapPreview and mapPreview:FindFirstChildOfClass("UIStroke")
 	local mapPreviewImageStroke = mapPreviewImage and mapPreviewImage:FindFirstChildOfClass("UIStroke")
+	local roomPreviewMapPhoto = ensureRoomBrowserMapPhoto(roomPreviewMap)
+	local mapPreviewPhoto = ensureRoomBrowserMapPhoto(mapPreviewImage)
 	local cloneAuthoredGuiTemplate = function(template, parent, newName)
 		return self:_cloneAuthoredGuiTemplate(template, parent, newName)
 	end
@@ -17943,6 +18705,11 @@ function UISystem:_ensureRoomBrowserGui()
 		if mapPreviewImage then
 			mapPreviewImage.BackgroundColor3 = theme.background
 		end
+		local mapPhotoAsset = resolveRoomBrowserMapPhoto(mapName)
+		if mapPreviewPhoto then
+			mapPreviewPhoto.Image = mapPhotoAsset or ""
+			mapPreviewPhoto.Visible = mapPhotoAsset ~= nil
+		end
 		if mapPreviewImageStroke then
 			mapPreviewImageStroke.Color = theme.stroke
 		end
@@ -17955,6 +18722,7 @@ function UISystem:_ensureRoomBrowserGui()
 			mapPreviewImageChip.Text = buildMapPreviewMood(mapName, modeText)
 		end
 		if mapPreviewImageLabel then
+			mapPreviewImageLabel.Visible = mapPhotoAsset == nil
 			mapPreviewImageLabel.TextColor3 = theme.text
 			mapPreviewImageLabel.Text = buildMapPreviewGlyph(mapName, modeText)
 		end
@@ -18035,6 +18803,10 @@ function UISystem:_ensureRoomBrowserGui()
 			roomPreviewMap.BackgroundColor3 = UI_BRAND.bgPanel
 			roomPreviewMapStroke.Color = UI_BRAND.focusSoft
 			roomPreviewMapAccent.BackgroundColor3 = UI_BRAND.focus
+			if roomPreviewMapPhoto then
+				roomPreviewMapPhoto.Image = ""
+				roomPreviewMapPhoto.Visible = false
+			end
 			roomPreviewMapMood.BackgroundColor3 = Color3.fromRGB(22, 56, 80)
 			roomPreviewMapGradient.Color = ColorSequence.new({
 				ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 48, 68)),
@@ -18075,6 +18847,11 @@ function UISystem:_ensureRoomBrowserGui()
 		roomPreviewMap.BackgroundColor3 = theme.background
 		roomPreviewMapStroke.Color = theme.stroke
 		roomPreviewMapAccent.BackgroundColor3 = theme.accent
+		local roomPreviewPhotoAsset = resolveRoomBrowserMapPhoto(mapId)
+		if roomPreviewMapPhoto then
+			roomPreviewMapPhoto.Image = roomPreviewPhotoAsset or ""
+			roomPreviewMapPhoto.Visible = roomPreviewPhotoAsset ~= nil
+		end
 		roomPreviewMapMood.BackgroundColor3 = theme.accentSoft
 		roomPreviewMapMood.TextColor3 = theme.text
 		roomPreviewMapTitle.TextColor3 = theme.muted
@@ -18156,6 +18933,8 @@ function UISystem:_ensureRoomBrowserGui()
 		local compactRoomBrowser = self._roomBrowserCompact == true
 		local wideMobileRoomBrowser = self._roomBrowserWideMobile == true
 		local extraCompactRoomBrowser = self._roomBrowserExtraCompact == true
+		local roomRowHeight = wideMobileRoomBrowser and 78 or (extraCompactRoomBrowser and 58 or (compactRoomBrowser and 66 or 58))
+		local roomRowTextSize = wideMobileRoomBrowser and 15 or (extraCompactRoomBrowser and 13 or (compactRoomBrowser and 15 or 14))
 		local roomIdSet = {}
 		for _, room in ipairs(rooms or {}) do
 			roomIdSet[tostring(room.roomId)] = true
@@ -18167,61 +18946,68 @@ function UISystem:_ensureRoomBrowserGui()
 		self:_clearGeneratedRoomBrowserGuiChildren(roomList)
 		for _, room in ipairs(rooms or {}) do
 			local row = self:_cloneAuthoredGuiTemplate(roomListRowTemplate, roomList, "Room_" .. tostring(room.roomId))
-			if not (row and row:IsA("TextButton")) then
-				continue
-			end
-			row.Size = UDim2.new(1, extraCompactRoomBrowser and -6 or -8, 0, wideMobileRoomBrowser and 66 or (extraCompactRoomBrowser and 50 or (compactRoomBrowser and 56 or 36)))
-			row.LayoutOrder = room.roomId
-			row.TextSize = wideMobileRoomBrowser and 13 or (extraCompactRoomBrowser and 12 or (compactRoomBrowser and 14 or 13))
-			row.TextXAlignment = Enum.TextXAlignment.Left
-			row.TextYAlignment = (wideMobileRoomBrowser or compactRoomBrowser) and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
-			row.TextWrapped = (not extraCompactRoomBrowser) and (compactRoomBrowser or wideMobileRoomBrowser)
-			row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
-			row.Text = roomRowText(room)
-			local rowPadding = row:FindFirstChildOfClass("UIPadding")
-			if rowPadding then
-				rowPadding.PaddingTop = UDim.new(0, wideMobileRoomBrowser and 6 or (extraCompactRoomBrowser and 3 or 5))
-				rowPadding.PaddingBottom = UDim.new(0, extraCompactRoomBrowser and 3 or 5)
-				rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 7 or 10)
-				rowPadding.PaddingRight = UDim.new(0, extraCompactRoomBrowser and 5 or 8)
-			end
-			row:SetAttribute("RoomId", room.roomId)
-			row:SetAttribute("InGame", room.inGame == true)
-			row:SetAttribute("Starting", room.starting == true)
-			row:SetAttribute("HasPassword", room.hasPassword == true)
-			if row:GetAttribute("InGame") then
-				row.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
-				row.TextColor3 = Color3.fromRGB(180, 80, 80)
-				row.AutoButtonColor = false
-			elseif row:GetAttribute("Starting") then
-				row.BackgroundColor3 = Color3.fromRGB(50, 40, 20)
-				row.TextColor3 = Color3.fromRGB(255, 200, 120)
-				row.AutoButtonColor = false
-			else
-				row.BackgroundColor3 = Color3.fromRGB(38, 47, 62)
-				row.TextColor3 = Color3.fromRGB(235, 240, 245)
-			end
-			if tostring(room.roomId) == tostring(selectedRoomId) then
-				row.BackgroundColor3 = Color3.fromRGB(63, 92, 138)
-			end
-			local rowCorner = row:FindFirstChild("UICorner")
-			if rowCorner and rowCorner:IsA("UICorner") then
-				rowCorner.CornerRadius = UDim.new(0, extraCompactRoomBrowser and 5 or 6)
-			end
-
-			connectButtonPress(row, function()
-				selectedRoomId = row:GetAttribute("RoomId")
-				if row:GetAttribute("InGame") then
-					statusLabel.Text = string.format("Room #%s sedang berlangsung.", tostring(selectedRoomId))
-				elseif row:GetAttribute("Starting") then
-					statusLabel.Text = string.format("Room #%s sedang countdown.", tostring(selectedRoomId))
-				else
-					statusLabel.Text = string.format("Room #%s dipilih. Klik JOIN ROOM untuk masuk.", tostring(selectedRoomId))
+			if row and row:IsA("TextButton") then
+				row.Size = UDim2.new(1, extraCompactRoomBrowser and -6 or -8, 0, roomRowHeight)
+				row.LayoutOrder = room.roomId
+				row.TextSize = roomRowTextSize
+				row.TextXAlignment = Enum.TextXAlignment.Left
+				row.TextYAlignment = Enum.TextYAlignment.Center
+				row.TextWrapped = (not extraCompactRoomBrowser) and (compactRoomBrowser or wideMobileRoomBrowser)
+				row.TextTruncate = extraCompactRoomBrowser and Enum.TextTruncate.AtEnd or Enum.TextTruncate.None
+				row.Text = roomRowText(room)
+				row.TextTransparency = 0
+				row.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+				local rowPadding = row:FindFirstChildOfClass("UIPadding")
+				if rowPadding then
+					rowPadding.PaddingTop = UDim.new(0, extraCompactRoomBrowser and 4 or 7)
+					rowPadding.PaddingBottom = UDim.new(0, extraCompactRoomBrowser and 4 or 7)
+					rowPadding.PaddingLeft = UDim.new(0, extraCompactRoomBrowser and 9 or 14)
+					rowPadding.PaddingRight = UDim.new(0, extraCompactRoomBrowser and 8 or 12)
 				end
-				renderRoomSelectionPreview(rooms)
-			end)
-			self:_setSelectableStyle(row)
-			row.Parent = roomList
+				row:SetAttribute("RoomId", room.roomId)
+				row:SetAttribute("InGame", room.inGame == true)
+				row:SetAttribute("Starting", room.starting == true)
+				row:SetAttribute("HasPassword", room.hasPassword == true)
+				local rowTone = "focus"
+				local rowActive = tostring(room.roomId) == tostring(selectedRoomId)
+				if row:GetAttribute("InGame") then
+					rowTone = "danger"
+					row.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+					row.TextColor3 = Color3.fromRGB(255, 150, 150)
+					row.AutoButtonColor = false
+				elseif row:GetAttribute("Starting") then
+					rowTone = "warning"
+					row.BackgroundColor3 = Color3.fromRGB(50, 40, 20)
+					row.TextColor3 = Color3.fromRGB(255, 200, 120)
+					row.AutoButtonColor = false
+				else
+					row.BackgroundColor3 = Color3.fromRGB(28, 42, 58)
+					row.TextColor3 = Color3.fromRGB(246, 250, 255)
+					row.AutoButtonColor = true
+				end
+				if rowActive then
+					row.BackgroundColor3 = Color3.fromRGB(63, 92, 138)
+				end
+				local rowCorner = row:FindFirstChild("UICorner")
+				if rowCorner and rowCorner:IsA("UICorner") then
+					rowCorner.CornerRadius = UDim.new(0, extraCompactRoomBrowser and 5 or 6)
+				end
+
+				connectButtonPress(row, function()
+					selectedRoomId = row:GetAttribute("RoomId")
+					if row:GetAttribute("InGame") then
+						statusLabel.Text = string.format("Room #%s sedang berlangsung.", tostring(selectedRoomId))
+					elseif row:GetAttribute("Starting") then
+						statusLabel.Text = string.format("Room #%s sedang countdown.", tostring(selectedRoomId))
+					else
+						statusLabel.Text = string.format("Room #%s dipilih. Klik JOIN ROOM untuk masuk.", tostring(selectedRoomId))
+					end
+					renderRoomSelectionPreview(rooms)
+				end)
+				self:_setSelectableStyle(row)
+				setButtonTone(row, rowTone, rowActive)
+				row.Parent = roomList
+			end
 		end
 		renderRoomSelectionPreview(rooms)
 	end
@@ -18451,6 +19237,7 @@ function UISystem:_ensureRoomBrowserGui()
 		inviteDropdown.Visible = false
 		self._roomModeDropdownOpen = not self._roomModeDropdownOpen
 		self._roomMapDropdownOpen = false
+		modeDropdown.ZIndex = math.max(modeDropdown.ZIndex, modeSelector.ZIndex + 20)
 		modeDropdown.Visible = self._roomModeDropdownOpen
 		mapDropdown.Visible = false
 	end)
@@ -18460,10 +19247,17 @@ function UISystem:_ensureRoomBrowserGui()
 		modeDropdown.Visible = false
 		self._roomMapDropdownOpen = false
 		mapDropdown.Visible = false
+		modeSelector.Text = "MODE: CLASSIC"
+		mapSelector.Visible = true
+		rankedTierLabel.Visible = false
+		statusLabel.Text = "Mode room diubah ke Classic."
 		self:RoomBrowserSelectMode("Classic")
+		local selectedMapId = syncMapIndex((self:GetRoomBrowserState() or {}).selectedMap)
+		updateMapPreview("Classic", selectedMapId)
 		task.delay(0.08, function()
 			if self._roomBrowser then
 				self._roomBrowser:RequestSnapshot()
+				self._roomBrowser:RequestRoomList()
 			end
 		end)
 	end)
@@ -18473,10 +19267,17 @@ function UISystem:_ensureRoomBrowserGui()
 		modeDropdown.Visible = false
 		self._roomMapDropdownOpen = false
 		mapDropdown.Visible = false
+		modeSelector.Text = "MODE: RANKED"
+		mapSelector.Visible = false
+		rankedTierLabel.Visible = true
+		statusLabel.Text = "Mode room diubah ke Ranked."
 		self:RoomBrowserSelectMode("Ranked")
+		local selectedMapId = syncMapIndex((self:GetRoomBrowserState() or {}).selectedMap)
+		updateMapPreview("Ranked", selectedMapId)
 		task.delay(0.08, function()
 			if self._roomBrowser then
 				self._roomBrowser:RequestSnapshot()
+				self._roomBrowser:RequestRoomList()
 			end
 		end)
 	end)
@@ -18487,19 +19288,29 @@ function UISystem:_ensureRoomBrowserGui()
 		self._roomMapDropdownOpen = not self._roomMapDropdownOpen
 		self._roomModeDropdownOpen = false
 		modeDropdown.Visible = false
+		mapDropdown.ZIndex = math.max(mapDropdown.ZIndex, mapSelector.ZIndex + 20)
 		mapDropdown.Visible = self._roomMapDropdownOpen
 	end)
 
 	for idx, btn in ipairs(mapOptionButtons) do
 		connectButtonPress(btn, function()
 			local selectedMapId = syncMapIndex(MAPS[idx])
+			local state = self:GetRoomBrowserState() or {}
+			local selectedModeName = tostring(state.selectedMode or "Classic")
 			mapSelector.Text = "MAP: " .. tostring(selectedMapId)
 			self._roomMapDropdownOpen = false
 			mapDropdown.Visible = false
+			statusLabel.Text = "Map room diubah ke " .. tostring(selectedMapId) .. "."
 			if self._roomBrowser then
 				self._roomBrowser:SelectMap(selectedMapId)
 			end
-			updateMapPreview("Classic", selectedMapId)
+			updateMapPreview(selectedModeName, selectedMapId)
+			task.delay(0.08, function()
+				if self._roomBrowser then
+					self._roomBrowser:RequestSnapshot()
+					self._roomBrowser:RequestRoomList()
+				end
+			end)
 		end)
 	end
 
@@ -18826,7 +19637,10 @@ function UISystem:_updateRoomBrowserVisibility()
 		end
 	end
 	if self._roomBrowserFloatGui then
-		self._roomBrowserFloatGui.Enabled = (not suppressed) and (not self._roomBrowserVisible) and (not blockLobbyFloatRail)
+		self._roomBrowserFloatGui.Enabled = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
+			and (not suppressed)
+			and (not self._roomBrowserVisible)
+			and (not blockLobbyFloatRail)
 	end
 	self:_layoutLobbyFloatRail()
 end
@@ -18948,7 +19762,14 @@ function UISystem:_bindMatchToolInput()
 		if USE_NATIVE_BACKPACK_TOOLS == true then
 			return
 		end
-		if gameProcessed or UserInputService:GetFocusedTextBox() then
+		if UserInputService:GetFocusedTextBox() then
+			return
+		end
+		local isToolKey = input.KeyCode == Enum.KeyCode.F
+			or input.KeyCode == Enum.KeyCode.One
+			or input.KeyCode == Enum.KeyCode.Two
+			or input.KeyCode == Enum.KeyCode.Three
+		if gameProcessed and not isToolKey then
 			return
 		end
 		if self._matchPhase == MATCH_PHASE.LOBBY or self:_isMatchResultsPhase() then
@@ -18956,12 +19777,21 @@ function UISystem:_bindMatchToolInput()
 		end
 
 		local visibleToolTypes = getVisibleFieldKitToolTypes(self:_ensureFieldKitToolStates())
-		for _, toolType in ipairs(visibleToolTypes) do
+		for slotIndex, toolType in ipairs(visibleToolTypes) do
 			local toolConfig = FIELD_KIT_TOOL_CONFIG[toolType]
-			if toolConfig and input.KeyCode == toolConfig.keyCode then
-				self:_useInvestigationTool(toolType, {
-					openJournal = toolConfig.openJournal == true,
+			local slotKeyCode = FIELD_KIT_SLOT_KEY_CODES[slotIndex]
+			local matchesSlotKey = slotKeyCode ~= nil and input.KeyCode == slotKeyCode
+			local matchesDirectKey = toolConfig
+				and toolConfig.keyCode
+				and toolConfig.keyCode ~= Enum.KeyCode.Unknown
+				and input.KeyCode == toolConfig.keyCode
+			if toolConfig and matchesDirectKey and toolType == "Flashlight" then
+				self:_useInvestigationTool("Flashlight", {
+					openJournal = false,
 				})
+				break
+			elseif toolConfig and matchesSlotKey then
+				self:_equipFieldKitTool(toolType)
 				break
 			end
 		end
@@ -19081,10 +19911,10 @@ function UISystem:_refreshRoomBrowserView()
 		self._roomBrowserWidgets.HeaderTitleGlow.Visible = not showRoomPanel
 	end
 	self._roomBrowserWidgets.Status.Visible = not showRoomPanel
-	local canChangeMode = (not showRoomPanel) or (state.isHost == true)
-	self._roomBrowserWidgets.ClassicButton.Visible = canChangeMode
-	self._roomBrowserWidgets.AllModesButton.Visible = canChangeMode
-	self._roomBrowserWidgets.RankedButton.Visible = canChangeMode
+	local showMainPanelModeControls = not showRoomPanel
+	self._roomBrowserWidgets.ClassicButton.Visible = showMainPanelModeControls
+	self._roomBrowserWidgets.AllModesButton.Visible = showMainPanelModeControls
+	self._roomBrowserWidgets.RankedButton.Visible = showMainPanelModeControls
 	self._roomBrowserWidgets.RoomList.Visible = not showRoomPanel
 	self._roomBrowserWidgets.RoomPreviewPanel.Visible = not showRoomPanel
 	self._roomBrowserWidgets.JoinPassword.Visible = false
@@ -19129,9 +19959,9 @@ function UISystem:_refreshRoomBrowserView()
 
 		self._roomBrowserWidgets.RoomTitle.Text = "RUANG #" .. tostring(roomData.roomId or currentRoom)
 		self._roomBrowserWidgets.RoomHost.Text = "Host: " .. tostring(roomData.hostName or ((roomPlayersData[1] and (roomPlayersData[1].displayName or roomPlayersData[1].name)) or "-"))
-		local roomMode = tostring(roomData.mode or selectedMode or "Classic")
-		local roomMapId = (type(roomData.mapId) == "string" and roomData.mapId ~= "" and roomData.mapId)
-			or (type(state.selectedMap) == "string" and state.selectedMap ~= "" and state.selectedMap)
+		local roomMode = tostring((hostCanControl and state.selectedMode) or roomData.mode or selectedMode or "Classic")
+		local roomMapId = (hostCanControl and type(state.selectedMap) == "string" and state.selectedMap ~= "" and state.selectedMap)
+			or (type(roomData.mapId) == "string" and roomData.mapId ~= "" and roomData.mapId)
 			or MAPS[1]
 		if roomMode == "Ranked" then
 			self._roomMapDropdownOpen = false

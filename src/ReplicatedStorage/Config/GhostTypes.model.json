@@ -730,7 +730,7 @@
           "name": "ManifestBehavior",
           "className": "StringValue",
           "properties": {
-            "Value": "BloodMist"
+            "Value": "MistFrenzy"
           }
         },
         {

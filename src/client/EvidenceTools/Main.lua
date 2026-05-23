@@ -2,6 +2,16 @@ local EvidenceTools = {}
 EvidenceTools.__index = EvidenceTools
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local TOOL_EQUIPPED_ATTRIBUTE = "PasrahEquippedToolType"
+local TOOL_USE_STAMP_ATTRIBUTE = "PasrahToolUseStamp"
+local TOOL_LAST_EVENT_ATTRIBUTE = "PasrahToolLastEvent"
+local TOOL_LAST_SUCCESS_ATTRIBUTE = "PasrahToolLastSuccess"
+local USE_NATIVE_BACKPACK_TOOLS = true
+local FLASHLIGHT_TOOL_TYPE = "Flashlight"
+local FLASHLIGHT_TOOL_NAME = "Senter"
 
 local TOOL_REQUEST_TYPES = {
 	JejakEnergi = "JejakEnergiScan",
@@ -15,6 +25,35 @@ local TOOL_REQUEST_TYPES = {
 	Salib = "CrucifixPlacement",
 	Dupa = "SmudgeIgnite",
 }
+local NATIVE_TOOL_ORDER = {
+	"Flashlight",
+	"JejakEnergi",
+	"SuhuMembeku",
+}
+local NATIVE_TOOL_LABELS = {
+	Flashlight = "Senter",
+	JejakEnergi = "EMF Scanner",
+	Garam = "Garam",
+	Salib = "Salib",
+	Dupa = "Dupa",
+	KotakArwah = "Spirit Box",
+	SuhuMembeku = "Thermometer",
+	BukuTerkutuk = "Ghost Writing",
+	BolaArwah = "Kamera To'un",
+	GerakanGaib = "Motion Sensor",
+	PilSanity = "Pil Sanity",
+}
+local NATIVE_TOOL_NAMES = {
+	Flashlight = FLASHLIGHT_TOOL_NAME,
+	JejakEnergi = "JejakEnergi",
+	SuhuMembeku = "SuhuMembeku",
+}
+
+local CAMERA_SCAN_GHOST_ATTR = "PasrahCameraScanGhostType"
+local CAMERA_SCAN_CANDIDATES_ATTR = "PasrahCameraScanCandidates"
+local CAMERA_SCAN_EVIDENCE_ATTR = "PasrahCameraScanEvidence"
+local CAMERA_SCAN_REASON_ATTR = "PasrahCameraScanReason"
+local CAMERA_SCAN_STAMP_ATTR = "PasrahCameraScanStamp"
 
 local ToolModules = {
 	JejakEnergi = require(script.Parent.JejakEnergi.Main),
@@ -29,6 +68,171 @@ local ToolModules = {
 	Dupa = require(script.Parent.Dupa.Main),
 }
 
+local function stampToolRuntime(toolType, success, eventName)
+	if not localPlayer then
+		return
+	end
+	if type(toolType) == "string" and toolType ~= "" then
+		localPlayer:SetAttribute(TOOL_EQUIPPED_ATTRIBUTE, toolType)
+	end
+	if eventName ~= nil then
+		localPlayer:SetAttribute(TOOL_LAST_EVENT_ATTRIBUTE, tostring(eventName))
+	end
+	if type(success) == "boolean" then
+		localPlayer:SetAttribute(TOOL_LAST_SUCCESS_ATTRIBUTE, success)
+	end
+	localPlayer:SetAttribute(TOOL_USE_STAMP_ATTRIBUTE, os.clock())
+end
+
+local function stampCameraScanRuntime(payload)
+	if not localPlayer or type(payload) ~= "table" then
+		return
+	end
+	local possibleGhosts = type(payload.possibleGhosts) == "table" and payload.possibleGhosts or {}
+	local evidenceType = type(payload.evidenceType) == "string" and payload.evidenceType or ""
+	local scanReason = type(payload.reason) == "string" and payload.reason or ""
+	local resolvedGhostType = ""
+	if #possibleGhosts == 1 then
+		resolvedGhostType = tostring(possibleGhosts[1])
+	end
+	local hasMeaningfulScan = resolvedGhostType ~= "" or #possibleGhosts > 0 or evidenceType ~= "" or scanReason ~= ""
+	if not hasMeaningfulScan then
+		return
+	end
+
+	localPlayer:SetAttribute(CAMERA_SCAN_GHOST_ATTR, resolvedGhostType ~= "" and resolvedGhostType or nil)
+	localPlayer:SetAttribute(CAMERA_SCAN_CANDIDATES_ATTR, #possibleGhosts > 0 and table.concat(possibleGhosts, ", ") or nil)
+	localPlayer:SetAttribute(CAMERA_SCAN_EVIDENCE_ATTR, evidenceType ~= "" and evidenceType or nil)
+	localPlayer:SetAttribute(CAMERA_SCAN_REASON_ATTR, scanReason ~= "" and scanReason or nil)
+	localPlayer:SetAttribute(CAMERA_SCAN_STAMP_ATTR, os.clock())
+end
+
+local function isLocalToolEvent(payload, eventName)
+	if eventName == "EvidenceToolResult" then
+		return true
+	end
+	if not localPlayer or type(payload) ~= "table" then
+		return false
+	end
+	local payloadPlayer = payload.player
+	if typeof(payloadPlayer) == "Instance" and payloadPlayer:IsA("Player") then
+		return payloadPlayer == localPlayer
+	end
+	local userId = tonumber(payload.userId or payload.playerId)
+	return userId ~= nil and userId == localPlayer.UserId
+end
+
+local function resolveFlashlightRemote()
+	local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	return remoteFolder and remoteFolder:FindFirstChild("FlashlightEvent") or nil
+end
+
+local function setBackpackFlashlightEnabled(tool, enabled)
+	if localPlayer then
+		localPlayer:SetAttribute("FlashlightEnabled", enabled == true)
+		localPlayer:SetAttribute(TOOL_EQUIPPED_ATTRIBUTE, FLASHLIGHT_TOOL_TYPE)
+	end
+
+	local light = tool and tool:FindFirstChildOfClass("SpotLight", true)
+	if light then
+		light.Enabled = enabled == true
+	end
+
+	local remote = resolveFlashlightRemote()
+	if remote then
+		remote:FireServer({
+			action = "Toggle",
+			enabled = enabled == true,
+		})
+	end
+end
+
+local function addFlashlightHandle(tool)
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.34, 0.34, 1.1)
+	handle.Color = Color3.fromRGB(24, 24, 28)
+	handle.Material = Enum.Material.Metal
+	handle.CanCollide = false
+	handle.CanTouch = false
+	handle.CanQuery = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	local attachment = Instance.new("Attachment")
+	attachment.Name = "FlashlightAttachment"
+	attachment.Parent = handle
+
+	local light = Instance.new("SpotLight")
+	light.Name = "SenterSpotLight"
+	light.Enabled = true
+	light.Brightness = 3.2
+	light.Range = 45
+	light.Angle = 52
+	light.Face = Enum.NormalId.Front
+	light.Color = Color3.fromRGB(255, 242, 210)
+	light.Parent = handle
+end
+
+local function addEvidenceToolHandle(tool, toolType)
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.42, 0.18, 0.72)
+	handle.Color = toolType == "SuhuMembeku" and Color3.fromRGB(72, 126, 130) or Color3.fromRGB(48, 62, 84)
+	handle.Material = Enum.Material.SmoothPlastic
+	handle.CanCollide = false
+	handle.CanTouch = false
+	handle.CanQuery = false
+	handle.Massless = true
+	handle.Parent = tool
+	return handle
+end
+
+local function addEvidenceToolDisplay(tool, toolType, handle)
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "ToolGui"
+	gui.AlwaysOnTop = true
+	gui.LightInfluence = 0
+	gui.Size = UDim2.fromOffset(120, 44)
+	gui.StudsOffsetWorldSpace = Vector3.new(0, 0.55, 0)
+	gui.Parent = handle or tool
+
+	local label = Instance.new("TextLabel")
+	label.Name = toolType == "SuhuMembeku" and "TemperatureLabel" or "ReadingLabel"
+	label.BackgroundTransparency = 0.18
+	label.BackgroundColor3 = Color3.fromRGB(10, 12, 16)
+	label.BorderSizePixel = 0
+	label.Size = UDim2.fromScale(1, 1)
+	label.Font = Enum.Font.GothamBold
+	label.TextScaled = true
+	label.TextColor3 = toolType == "SuhuMembeku" and Color3.fromRGB(178, 255, 244) or Color3.fromRGB(154, 205, 255)
+	label.Text = toolType == "SuhuMembeku" and "20.0 C" or "EMF 0"
+	label.Parent = gui
+end
+
+local function updateEvidenceToolDisplay(tool, toolType, response, reason)
+	local gui = tool and tool:FindFirstChild("ToolGui", true)
+	if not gui then
+		return
+	end
+	local labelName = toolType == "SuhuMembeku" and "TemperatureLabel" or "ReadingLabel"
+	local label = gui:FindFirstChild(labelName, true)
+	if not (label and label:IsA("TextLabel")) then
+		return
+	end
+	if type(response) == "table" then
+		if toolType == "SuhuMembeku" then
+			local temperature = tonumber(response.temperatureC or response.temperature or response.value)
+			label.Text = temperature and string.format("%.1f C", temperature) or "TEMP --"
+		else
+			local emfLevel = tonumber(response.emfLevel or response.level or response.value)
+			label.Text = emfLevel and string.format("EMF %d", math.clamp(math.floor(emfLevel), 0, 5)) or "EMF --"
+		end
+	elseif type(reason) == "string" and reason ~= "" then
+		label.Text = toolType == "SuhuMembeku" and "TEMP --" or "EMF --"
+	end
+end
+
 function EvidenceTools:Init(context)
 	self._context = context
 	self._remotes = context.Remotes
@@ -38,6 +242,10 @@ function EvidenceTools:Init(context)
 	self._toolStates = {}
 	self._requestCounter = 0
 	self._toolAdapters = {}
+	self._nativeToolByType = {}
+	self._nativeToolConnections = {}
+	self._runtimeConnections = {}
+	self._nativeBackpackActive = false
 
 	for toolType in pairs(ToolModules) do
 		self._toolStates[toolType] = {
@@ -57,6 +265,8 @@ function EvidenceTools:Start()
 		end))
 	end
 	self:_ensureEvidenceRequest()
+	self:_bindRuntimeSignals()
+	self:_refreshNativeBackpackTools()
 end
 
 function EvidenceTools:Stop()
@@ -64,6 +274,11 @@ function EvidenceTools:Stop()
 		connection:Disconnect()
 	end
 	table.clear(self._connections)
+	for _, connection in ipairs(self._runtimeConnections or {}) do
+		connection:Disconnect()
+	end
+	table.clear(self._runtimeConnections)
+	self:_clearNativeBackpackTools()
 end
 
 function EvidenceTools:_onEvidenceEvent(payload)
@@ -77,6 +292,12 @@ function EvidenceTools:_onEvidenceEvent(payload)
 	self._toolStates[toolType].lastUsedAt = os.clock()
 	if payload.success == false then
 		self._toolStates[toolType].cooldownUntil = os.clock() + 0.25
+	end
+	if isLocalToolEvent(payload, eventName) then
+		stampToolRuntime(toolType, payload.success ~= false, eventName)
+		if toolType == "BolaArwah" then
+			stampCameraScanRuntime(payload)
+		end
 	end
 end
 
@@ -92,6 +313,7 @@ function EvidenceTools:_requestTool(toolType, payload)
 	if now < (self._toolStates[toolType].cooldownUntil or 0) then
 		return false, "tool_local_cooldown"
 	end
+	stampToolRuntime(toolType, nil, "ClientToolRequest")
 
 	self._requestCounter += 1
 	self._toolStates[toolType].lastUsedAt = now
@@ -106,6 +328,7 @@ function EvidenceTools:_requestTool(toolType, payload)
 	if not okInvoke then
 		self._toolStates[toolType].lastReason = "invoke_failed"
 		self._toolStates[toolType].cooldownUntil = os.clock() + 0.25
+		stampToolRuntime(toolType, false, "ClientInvokeFailed")
 		return false, "invoke_failed"
 	end
 	if type(response) == "table" then
@@ -114,8 +337,13 @@ function EvidenceTools:_requestTool(toolType, payload)
 		if response.success == false then
 			self._toolStates[toolType].cooldownUntil = os.clock() + 0.25
 		end
+		stampToolRuntime(toolType, response.success == true, "ClientGatewayResponse")
+		if toolType == "BolaArwah" then
+			stampCameraScanRuntime(response)
+		end
 		return response.success == true, response.reason, response
 	end
+	stampToolRuntime(toolType, false, "ClientGatewayInvalid")
 	return false, "invalid_gateway_response"
 end
 
@@ -128,6 +356,58 @@ function EvidenceTools:_ensureEvidenceRequest()
 	return self._evidenceRequest
 end
 
+function EvidenceTools:SubmitJournalGuess(payload)
+	self:_ensureEvidenceRequest()
+	if not self._evidenceRequest or not self._evidenceRequest.InvokeServer then
+		return false, "missing_remote_function"
+	end
+	self._requestCounter += 1
+	local okInvoke, response = pcall(function()
+		return self._evidenceRequest:InvokeServer({
+			action = "SubmitJournalGuess",
+			requestType = "SubmitJournalGuess",
+			requestId = tostring(self._requestCounter),
+			payload = payload or {},
+		})
+	end)
+	if not okInvoke then
+		stampToolRuntime("Journal", false, "JournalSubmitInvokeFailed")
+		return false, "invoke_failed"
+	end
+	if type(response) ~= "table" then
+		stampToolRuntime("Journal", false, "JournalSubmitInvalid")
+		return false, "invalid_gateway_response"
+	end
+	stampToolRuntime("Journal", response.success == true, "JournalSubmitResponse")
+	return response.success == true, response.reason, response
+end
+
+function EvidenceTools:EndInvestigation(payload)
+	self:_ensureEvidenceRequest()
+	if not self._evidenceRequest or not self._evidenceRequest.InvokeServer then
+		return false, "missing_remote_function"
+	end
+	self._requestCounter += 1
+	local okInvoke, response = pcall(function()
+		return self._evidenceRequest:InvokeServer({
+			action = "EndInvestigation",
+			requestType = "EndInvestigation",
+			requestId = tostring(self._requestCounter),
+			payload = payload or {},
+		})
+	end)
+	if not okInvoke then
+		stampToolRuntime("Journal", false, "JournalEndInvokeFailed")
+		return false, "invoke_failed"
+	end
+	if type(response) ~= "table" then
+		stampToolRuntime("Journal", false, "JournalEndInvalid")
+		return false, "invalid_gateway_response"
+	end
+	stampToolRuntime("Journal", response.success == true, "JournalEndResponse")
+	return response.success == true, response.reason, response
+end
+
 function EvidenceTools:UseTool(toolType, payload)
 	local adapter = self._toolAdapters[toolType]
 	if not adapter then
@@ -138,6 +418,127 @@ end
 
 function EvidenceTools:GetToolState(toolType)
 	return self._toolStates[toolType]
+end
+
+function EvidenceTools:_bindRuntimeSignals()
+	if not localPlayer then
+		return
+	end
+	table.insert(self._runtimeConnections, localPlayer:GetAttributeChangedSignal("InMatch"):Connect(function()
+		self:_refreshNativeBackpackTools()
+	end))
+	table.insert(self._runtimeConnections, localPlayer:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
+		self:_refreshNativeBackpackTools()
+	end))
+	table.insert(self._runtimeConnections, localPlayer.CharacterAdded:Connect(function()
+		self:_refreshNativeBackpackTools()
+	end))
+end
+
+function EvidenceTools:_isNativeBackpackEnabled()
+	if USE_NATIVE_BACKPACK_TOOLS ~= true then
+		return false
+	end
+	if not localPlayer then
+		return false
+	end
+	if localPlayer:GetAttribute("InMatch") ~= true then
+		return false
+	end
+	local lifecyclePhase = tostring(localPlayer:GetAttribute("MatchLifecyclePhase") or ""):gsub("[%s_%-]+", ""):lower()
+	return lifecyclePhase ~= ""
+end
+
+function EvidenceTools:_refreshNativeBackpackTools()
+	local shouldEnable = self:_isNativeBackpackEnabled()
+	if shouldEnable then
+		self:_ensureNativeBackpackTools()
+	else
+		self:_clearNativeBackpackTools()
+	end
+	self._nativeBackpackActive = shouldEnable
+end
+
+function EvidenceTools:_ensureNativeBackpackTools()
+	if not localPlayer then
+		return
+	end
+	local backpack = localPlayer:FindFirstChildOfClass("Backpack")
+	if not backpack then
+		return
+	end
+	for slot, toolType in ipairs(NATIVE_TOOL_ORDER) do
+		if toolType == FLASHLIGHT_TOOL_TYPE or self._toolAdapters[toolType] then
+			local tool = self._nativeToolByType[toolType]
+			if not tool or not tool.Parent then
+				tool = self:_createNativeTool(toolType, slot)
+				if tool then
+					self._nativeToolByType[toolType] = tool
+				end
+			end
+			if tool and tool.Parent ~= backpack then
+				tool.Parent = backpack
+			end
+		end
+	end
+end
+
+function EvidenceTools:_createNativeTool(toolType, slot)
+	local tool = Instance.new("Tool")
+	local label = NATIVE_TOOL_LABELS[toolType] or toolType
+	tool.Name = NATIVE_TOOL_NAMES[toolType] or toolType
+	tool.ToolTip = string.format("Pasrah Tool: %s", label)
+	tool.CanBeDropped = false
+	tool.RequiresHandle = true
+	if toolType == FLASHLIGHT_TOOL_TYPE then
+		tool.Grip = CFrame.new(0, -0.08, -0.25)
+		addFlashlightHandle(tool)
+	else
+		local handle = addEvidenceToolHandle(tool, toolType)
+		addEvidenceToolDisplay(tool, toolType, handle)
+	end
+
+	local equippedConnection = tool.Equipped:Connect(function()
+		if localPlayer then
+			localPlayer:SetAttribute(TOOL_EQUIPPED_ATTRIBUTE, toolType)
+		end
+		if toolType == FLASHLIGHT_TOOL_TYPE then
+			setBackpackFlashlightEnabled(tool, true)
+		end
+	end)
+	local activatedConnection = tool.Activated:Connect(function()
+		if toolType == FLASHLIGHT_TOOL_TYPE then
+			local enabled = not (localPlayer and localPlayer:GetAttribute("FlashlightEnabled") == true)
+			setBackpackFlashlightEnabled(tool, enabled)
+		else
+			local success, reason, response = self:UseTool(toolType, {
+				source = "NativeBackpack",
+			})
+			updateEvidenceToolDisplay(tool, toolType, response, reason)
+		end
+	end)
+
+	self._nativeToolConnections[tool] = {
+		equippedConnection,
+		activatedConnection,
+	}
+	return tool
+end
+
+function EvidenceTools:_clearNativeBackpackTools()
+	for toolType, tool in pairs(self._nativeToolByType) do
+		local connections = self._nativeToolConnections[tool]
+		if connections then
+			for _, connection in ipairs(connections) do
+				connection:Disconnect()
+			end
+			self._nativeToolConnections[tool] = nil
+		end
+		if tool and tool.Parent then
+			tool:Destroy()
+		end
+		self._nativeToolByType[toolType] = nil
+	end
 end
 
 return setmetatable({}, EvidenceTools)

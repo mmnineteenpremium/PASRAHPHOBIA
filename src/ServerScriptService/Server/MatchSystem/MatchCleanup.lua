@@ -17,9 +17,20 @@ local MatchCleanup = {}
 -- Configuration
 local LOBBY_NAME = "LobbySocialHub"
 local LOBBY_SPAWN_OFFSET = Vector3.new(0, 3, 0)
+local LOBBY_RETURN_FLOOR_RAYCAST_HEIGHT = 120
+local LOBBY_RETURN_FLOOR_RAYCAST_DEPTH = 240
 local LOBBY_SPAWN_MAX_DELTA_XZ = 350
 local LOBBY_MIN_Y = -50
 local LOBBY_MAX_SPAWN_Y = 15
+local LOBBY_FLOOR_REFERENCE_CANDIDATE_NAMES = {
+	"Floor_1_Main",
+	"DirectoryPad",
+	"GardenBayFloor",
+	"ShopBayFloor",
+	"FlexBayFloor",
+	"PartyBayFloor",
+	"NorthBayFloor",
+}
 local LOBBY_VISUAL_SPAWN_OFFSETS = {
 	Vector3.new(-4, 0, 26),
 	Vector3.new(4, 0, 26),
@@ -99,6 +110,86 @@ local function buildUprightPartCFrame(part, offset)
 		flatLook = flatLook.Unit
 	end
 
+	return CFrame.lookAt(position, position + flatLook, Vector3.yAxis)
+end
+
+local function resolveLobbyFloorReferencePart(lobbyRoot)
+	if not lobbyRoot then
+		return nil
+	end
+
+	for _, name in ipairs(LOBBY_FLOOR_REFERENCE_CANDIDATE_NAMES) do
+		local candidate = lobbyRoot:FindFirstChild(name, true)
+		if candidate and candidate:IsA("BasePart") then
+			return candidate
+		end
+	end
+
+	local bestPart = nil
+	local bestArea = 0
+	for _, descendant in ipairs(lobbyRoot:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			local lowerName = descendant.Name:lower()
+			if lowerName:find("floor", 1, true) or lowerName:find("pad", 1, true) then
+				local area = descendant.Size.X * descendant.Size.Z
+				if area > bestArea then
+					bestArea = area
+					bestPart = descendant
+				end
+			end
+		end
+	end
+
+	return bestPart
+end
+
+local function resolvePrimaryFloorTopY(lobbyRoot)
+	local floorPart = resolveLobbyFloorReferencePart(lobbyRoot)
+	if floorPart then
+		return floorPart.Position.Y + (floorPart.Size.Y * 0.5)
+	end
+	return nil
+end
+
+local function raycastLobbyFloorY(lobbyRoot, position, fallbackY)
+	if not lobbyRoot or typeof(position) ~= "Vector3" then
+		return fallbackY
+	end
+
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+	params.IgnoreWater = true
+	params.FilterDescendantsInstances = { lobbyRoot }
+
+	local origin = Vector3.new(position.X, (fallbackY or 0) + LOBBY_RETURN_FLOOR_RAYCAST_HEIGHT, position.Z)
+	local result = workspace:Raycast(origin, Vector3.new(0, -LOBBY_RETURN_FLOOR_RAYCAST_DEPTH, 0), params)
+	local floorY = result and result.Position.Y or fallbackY
+	local primaryFloorTopY = resolvePrimaryFloorTopY(lobbyRoot)
+	if primaryFloorTopY and (not floorY or floorY < primaryFloorTopY) then
+		floorY = primaryFloorTopY
+	end
+	return floorY
+end
+
+local function buildLobbyReturnCFrame(lobbyRoot, lobbySpawn, targetPosition, lookTarget)
+	if not (lobbySpawn and lobbySpawn:IsA("BasePart")) then
+		return nil
+	end
+
+	local basePosition = typeof(targetPosition) == "Vector3" and targetPosition or lobbySpawn.Position
+	local floorY = raycastLobbyFloorY(lobbyRoot, basePosition, lobbySpawn.Position.Y)
+	local position = Vector3.new(basePosition.X, floorY + LOBBY_SPAWN_OFFSET.Y, basePosition.Z)
+	local flatLook = typeof(lookTarget) == "Vector3"
+		and Vector3.new(lookTarget.X - position.X, 0, lookTarget.Z - position.Z)
+		or Vector3.zero
+	if flatLook.Magnitude <= 1e-4 then
+		flatLook = Vector3.new(lobbySpawn.CFrame.LookVector.X, 0, lobbySpawn.CFrame.LookVector.Z)
+	end
+	if flatLook.Magnitude <= 1e-4 then
+		flatLook = Vector3.new(0, 0, -1)
+	else
+		flatLook = flatLook.Unit
+	end
 	return CFrame.lookAt(position, position + flatLook, Vector3.yAxis)
 end
 
@@ -225,23 +316,14 @@ function MatchCleanup.TeleportPlayersToLobby(matchId)
 				local visualSpawnPosition = resolveLobbyVisualSpawnPosition(lobbyRoot, lobbySpawn)
 				local lookTarget = resolveLobbyLookTarget(lobbyRoot)
 				if typeof(visualSpawnPosition) == "Vector3" then
-					local position = visualSpawnPosition + LOBBY_SPAWN_OFFSET
-					local flatLook = typeof(lookTarget) == "Vector3"
-						and Vector3.new(lookTarget.X - position.X, 0, lookTarget.Z - position.Z)
-						or Vector3.zero
-					if flatLook.Magnitude <= 1e-4 then
-						flatLook = Vector3.new(lobbySpawn.CFrame.LookVector.X, 0, lobbySpawn.CFrame.LookVector.Z)
-					end
-					if flatLook.Magnitude <= 1e-4 then
-						flatLook = Vector3.new(0, 0, -1)
-					else
-						flatLook = flatLook.Unit
-					end
-					spawnCFrame = CFrame.new(position, position + flatLook)
+					spawnCFrame = buildLobbyReturnCFrame(lobbyRoot, lobbySpawn, visualSpawnPosition, lookTarget)
 				else
-					spawnCFrame = buildUprightPartCFrame(lobbySpawn, LOBBY_SPAWN_OFFSET)
+					spawnCFrame = buildLobbyReturnCFrame(lobbyRoot, lobbySpawn, lobbySpawn.Position, lookTarget)
+						or buildUprightPartCFrame(lobbySpawn, LOBBY_SPAWN_OFFSET)
 				end
 				hrp.CFrame = spawnCFrame or (lobbySpawn.CFrame + LOBBY_SPAWN_OFFSET)
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hrp.AssemblyAngularVelocity = Vector3.zero
 				teleportCount = teleportCount + 1
 			end
 		end

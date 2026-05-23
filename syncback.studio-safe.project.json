@@ -6,31 +6,39 @@
       "$className": "Lighting",
       "$properties": {
         "Ambient": [
-          0.47058823704719543,
-          0.47058823704719543,
-          0.47058823704719543
+          0.7450980544090271,
+          0.7450980544090271,
+          0.7450980544090271
         ],
-        "Brightness": 2.200000047683716,
+        "Brightness": 3.0,
         "ClockTime": 18.0,
-        "EnvironmentDiffuseScale": 0.30000001192092896,
+        "EnvironmentDiffuseScale": 0.75,
+        "EnvironmentSpecularScale": 0.44999998807907104,
+        "ExposureCompensation": 0.3499999940395355,
         "FogColor": [
-          0.3333333432674408,
-          0.37254902720451355,
-          0.4627451002597809
+          1.0,
+          1.0,
+          1.0
         ],
         "FogEnd": 145.0,
         "FogStart": 100000.0,
         "GeographicLatitude": 0.0,
         "GlobalShadows": true,
+        "LightingStyle": "Realistic",
         "OutdoorAmbient": [
-          0.47058823704719543,
-          0.47058823704719543,
-          0.47058823704719543
+          0.8235294222831726,
+          0.8235294222831726,
+          0.8235294222831726
         ],
         "Outlines": false,
         "PrioritizeLightingQuality": true,
         "ShadowSoftness": 0.75,
-        "Technology": "ShadowMap"
+        "Technology": "Future",
+        "TimeOfDay": "12:00:00"
+      },
+      "$attributes": {
+        "PasrahOwnerEditLightingPreset": "BrightNoFog",
+        "PasrahOwnerEditLightingPresetAppliedAt": "2026-05-02T18:37:30Z"
       },
       "$path": "src/Lighting"
     },
@@ -108,6 +116,7 @@
         "UseFixedSimulation": {
           "Enum": 0
         },
+        "UseNewLuauTypeSolver": "Disabled",
         "ValidateEnabledProximityPrompt": {
           "Enum": 0
         },

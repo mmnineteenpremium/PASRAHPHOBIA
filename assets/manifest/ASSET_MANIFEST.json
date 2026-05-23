@@ -1,0 +1,629 @@
+{
+  "_comment": "PASRAHPHOBIA Royal Pass Asset Manifest - maintained by ORCHESTRATOR",
+  "season": 1,
+  "season_id": "S1",
+  "season_name": "Musim Teror Pertama",
+  "last_updated": "2026-05-20T18:37:14Z",
+  "orchestrator_version": "1.0",
+  "source_files": {
+    "royal_pass_config": "src/shared/Config/RoyalPassConfig.lua",
+    "checkin_reward_config": "src/shared/Config/CheckinRewardConfig.lua"
+  },
+  "art_direction": {
+    "palette": {
+      "primary_dark": "#0D0D0D",
+      "ghost_purple": "#1A0A2E",
+      "lantern_gold": "#C8A96E",
+      "spirit_cyan": "#4ECDC4",
+      "horror_red": "#FF4757",
+      "survived_green": "#2ED573",
+      "text": "#E8E8E8"
+    },
+    "style": "Roblox low-poly stylized, Indonesian atmospheric horror, no gore",
+    "must_have": "Readable in Roblox UI and at R15 avatar scale"
+  },
+  "checkin_rewards": {
+    "streak_7": [
+      {
+        "reward_id": "title_investigator_setia",
+        "type": "title",
+        "track": "CHECKIN",
+        "source_key": "cosmeticId",
+        "asset_status": "PENDING",
+        "files": {
+          "title_png": "assets/ui/title_investigator_setia_title.png",
+          "icon_png": "assets/icons/title_investigator_setia_icon.png",
+          "roblox_asset_id": null
+        },
+        "assigned_to": ["AGENT_04", "AGENT_06"],
+        "blocking": ["AGENT_06"]
+      }
+    ],
+    "milestone_10": [
+      {
+        "reward_id": "border_haunted_frame",
+        "type": "border",
+        "track": "CHECKIN",
+        "source_key": "cosmeticId",
+        "asset_status": "PENDING",
+        "files": {
+          "border_png": "assets/ui/border_haunted_frame_border.png",
+          "icon_png": "assets/icons/border_haunted_frame_icon.png",
+          "roblox_asset_id": null
+        },
+        "assigned_to": ["AGENT_04", "AGENT_06"],
+        "blocking": ["AGENT_06"]
+      }
+    ],
+    "milestone_20": [
+      {
+        "reward_id": "emote_pasrah_bow",
+        "type": "emote",
+        "track": "CHECKIN",
+        "source_key": "cosmeticId",
+        "asset_status": "PENDING",
+        "files": {
+          "storyboard_png": "assets/concept/emote_pasrah_bow_emote_board.png",
+          "icon_png": "assets/icons/emote_pasrah_bow_icon.png",
+          "rbxanim": "assets/animations/rbxanim/emote_pasrah_bow_emote.rbxanim",
+          "roblox_animation_id": null
+        },
+        "assigned_to": ["AGENT_01", "AGENT_03", "AGENT_06"],
+        "blocking": ["AGENT_03", "AGENT_06"]
+      }
+    ],
+    "milestone_30": [
+      {
+        "reward_id": "title_penyintas_sejati",
+        "type": "title",
+        "track": "CHECKIN",
+        "source_key": "cosmeticId",
+        "asset_status": "PENDING",
+        "files": {
+          "title_png": "assets/ui/title_penyintas_sejati_title.png",
+          "icon_png": "assets/icons/title_penyintas_sejati_icon.png",
+          "roblox_asset_id": null
+        },
+        "assigned_to": ["AGENT_04", "AGENT_06"],
+        "blocking": ["AGENT_06"]
+      }
+    ]
+  },
+  "tiers": {
+    "5": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_5",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_5_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_5_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_5_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_5_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_5",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_5_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_5_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_5_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "10": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_10",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_10_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_10_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_10_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_10_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_10",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_10_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_10_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_10_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "15": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_15",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_15_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_15_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_15_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_15_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_15",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_15_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_15_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_15_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "20": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_20",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_20_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_20_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_20_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_20_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_20",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_20_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_20_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_20_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "25": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_25",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_25_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_25_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_25_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_25_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_25",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_25_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_25_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_25_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "30": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_30",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_30_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_30_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_30_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_30_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_30",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_30_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_30_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_30_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "35": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_35",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_35_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_35_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_35_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_35_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_35",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_35_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_35_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_35_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "40": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_40",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_40_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_40_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_40_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_40_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_40",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_40_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_40_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_40_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "45": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_45",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_45_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_45_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_45_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_45_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_45",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_45_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_45_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_45_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "50": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_50",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_50_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_50_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_50_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_50_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_50",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_50_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_50_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_50_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "55": {
+      "free": [
+        {
+          "reward_id": "royal_free_tier_55",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_free_tier_55_concept.png",
+            "icon_png": "assets/icons/royal_free_tier_55_icon.png",
+            "model_fbx": "assets/models/fbx/royal_free_tier_55_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_free_tier_55_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "royal_premium_tier_55",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/royal_premium_tier_55_concept.png",
+            "icon_png": "assets/icons/royal_premium_tier_55_icon.png",
+            "model_fbx": "assets/models/fbx/royal_premium_tier_55_model.fbx",
+            "model_rbxm": "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        }
+      ]
+    },
+    "60": {
+      "free": [
+        {
+          "reward_id": "title_legenda_pasrahphobia",
+          "type": "title",
+          "track": "FREE",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "title_png": "assets/ui/title_legenda_pasrahphobia_title.png",
+            "icon_png": "assets/icons/title_legenda_pasrahphobia_icon.png",
+            "roblox_asset_id": null
+          },
+          "assigned_to": ["AGENT_04", "AGENT_06"],
+          "blocking": ["AGENT_06"]
+        },
+        {
+          "reward_id": "badge_season_complete_free",
+          "type": "cosmetic",
+          "track": "FREE",
+          "source_key": "seasonBadgeId",
+          "asset_status": "PENDING",
+          "files": {
+            "badge_png": "assets/ui/badge_season_complete_free_badge.png",
+            "icon_png": "assets/icons/badge_season_complete_free_icon.png",
+            "roblox_asset_id": null
+          },
+          "assigned_to": ["AGENT_04", "AGENT_06"],
+          "blocking": ["AGENT_06"]
+        }
+      ],
+      "premium": [
+        {
+          "reward_id": "outfit_sang_ahli_season_exclusive",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "cosmeticId",
+          "asset_status": "PENDING",
+          "files": {
+            "concept_art": "assets/concept/outfit_sang_ahli_season_exclusive_concept.png",
+            "icon_png": "assets/icons/outfit_sang_ahli_season_exclusive_icon.png",
+            "model_fbx": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
+            "model_rbxm": "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
+            "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png"
+          },
+          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
+          "blocking": ["AGENT_02", "AGENT_06"]
+        },
+        {
+          "reward_id": "badge_season_complete_premium",
+          "type": "cosmetic",
+          "track": "PREMIUM",
+          "source_key": "seasonBadgeId",
+          "asset_status": "PENDING",
+          "files": {
+            "badge_png": "assets/ui/badge_season_complete_premium_badge.png",
+            "icon_png": "assets/icons/badge_season_complete_premium_icon.png",
+            "roblox_asset_id": null
+          },
+          "assigned_to": ["AGENT_04", "AGENT_06"],
+          "blocking": ["AGENT_06"]
+        },
+        {
+          "reward_id": "emote_pasrah_ascend",
+          "type": "emote",
+          "track": "PREMIUM",
+          "source_key": "exclusiveEmoteId",
+          "asset_status": "PENDING",
+          "files": {
+            "storyboard_png": "assets/concept/emote_pasrah_ascend_emote_board.png",
+            "icon_png": "assets/icons/emote_pasrah_ascend_icon.png",
+            "rbxanim": "assets/animations/rbxanim/emote_pasrah_ascend_emote.rbxanim",
+            "roblox_animation_id": null
+          },
+          "assigned_to": ["AGENT_01", "AGENT_03", "AGENT_06"],
+          "blocking": ["AGENT_03", "AGENT_06"]
+        }
+      ]
+    }
+  },
+  "audio_manifest": {
+    "royal_pass": {
+      "tier_claim": null,
+      "tier_up_free": null,
+      "tier_up_premium": null,
+      "pass_purchased": null,
+      "royalpass_open": null,
+      "royalpass_close": null,
+      "tier_scroll": null
+    },
+    "gacha": {
+      "gacha_open": null,
+      "pull_start": null,
+      "reveal_common": null,
+      "reveal_rare": null,
+      "reveal_epic": null,
+      "reveal_legend": null,
+      "pity_warning": null
+    },
+    "checkin": {
+      "daily": null,
+      "streak_add": null,
+      "streak_7": null,
+      "milestone_5": null,
+      "milestone_30": null
+    },
+    "emotes": {
+      "emote_pasrah_bow": null,
+      "emote_pasrah_ascend": null
+    }
+  },
+  "asset_status_legend": {
+    "NO_ASSET_NEEDED": "Reward berupa currency/points/tickets - tidak perlu asset",
+    "PENDING": "Belum dimulai",
+    "IN_PROGRESS": "Sedang dikerjakan oleh agent",
+    "REVIEW": "Menunggu approval dari ORCHESTRATOR",
+    "DONE": "Selesai dan terintegrasi di game"
+  }
+}

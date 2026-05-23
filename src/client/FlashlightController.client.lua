@@ -29,8 +29,33 @@ local lastAimLookVector = nil
 local camera = workspace.CurrentCamera
 local toggleGui = nil
 local toggleButton = nil
+local toggleButtonConnection = nil
 local toggleFlashlight
 local aimRenderConnection = nil
+local TOOL_BLOCKED_ATTRIBUTE = "PasrahFlashlightBlockedByTool"
+local TOOL_EQUIPPED_ATTRIBUTE = "PasrahEquippedToolType"
+local PREPARATION_TOOL_ATTRIBUTE = "PreparationFocusTool"
+local toggleUiContractWarned = false
+local runtimeDragBindings = setmetatable({}, { __mode = "k" })
+
+local function safeRequire(moduleScript)
+	if not moduleScript then
+		return nil
+	end
+	local ok, result = pcall(require, moduleScript)
+	if ok and type(result) == "table" then
+		return result
+	end
+	return nil
+end
+
+local function loadToolUsageRules()
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:FindFirstChild("shared")
+	local gameData = shared and shared:FindFirstChild("GameData")
+	return safeRequire(gameData and gameData:FindFirstChild("ToolUsageRules")) or nil
+end
+
+local TOOL_USAGE_RULES = loadToolUsageRules()
 
 local function setAttributeIfChanged(instance, attributeName, value, numberEpsilon)
 	if not instance then
@@ -50,6 +75,39 @@ end
 local function isPlayerInMatch()
 	return player:GetAttribute("InMatch") == true
 		or tostring(player:GetAttribute("MatchId") or "") ~= ""
+end
+
+local function resolveActiveToolType()
+	local equippedTool = player:GetAttribute(TOOL_EQUIPPED_ATTRIBUTE)
+	if type(equippedTool) == "string" and equippedTool ~= "" then
+		return equippedTool
+	end
+	local preparationTool = player:GetAttribute(PREPARATION_TOOL_ATTRIBUTE)
+	if type(preparationTool) == "string" and preparationTool ~= "" then
+		return preparationTool
+	end
+	return nil
+end
+
+local function canUseWithFlashlight(toolType)
+	if type(toolType) ~= "string" or toolType == "" then
+		return true
+	end
+	if toolType == "Flashlight" then
+		return true
+	end
+	if TOOL_USAGE_RULES and type(TOOL_USAGE_RULES.CanUseWithFlashlight) == "function" then
+		return TOOL_USAGE_RULES.CanUseWithFlashlight(toolType) == true
+	end
+	return true
+end
+
+local function resolveBlockedTool()
+	local activeToolType = resolveActiveToolType()
+	if canUseWithFlashlight(activeToolType) then
+		return nil
+	end
+	return activeToolType
 end
 
 local function shouldShowToggleUI()
@@ -74,6 +132,7 @@ local function stampFlashlightClientState()
 	setAttributeIfChanged(player, "PasrahFlashlightClientEnabled", flashlightOn == true)
 	setAttributeIfChanged(player, "PasrahFlashlightClientTouchEligible", UserInputService.TouchEnabled == true)
 	setAttributeIfChanged(player, "PasrahFlashlightClientToggleVisible", shouldShowToggleUI())
+	setAttributeIfChanged(player, TOOL_BLOCKED_ATTRIBUTE, resolveBlockedTool())
 end
 
 local function stampToggleRuntime()
@@ -98,10 +157,10 @@ local function stampToggleRuntime()
 end
 
 local function makeButtonDraggable(button)
-	if not button or button:GetAttribute("DragBound") == true then
+	if not button or runtimeDragBindings[button] == true then
 		return
 	end
-	button:SetAttribute("DragBound", true)
+	runtimeDragBindings[button] = true
 
 	local dragging = false
 	local dragStart = nil
@@ -152,6 +211,22 @@ local function makeButtonDraggable(button)
 			userInputChangedConnection:Disconnect()
 			userInputChangedConnection = nil
 		end
+	end)
+end
+
+local function bindToggleButton(button)
+	if not button then
+		return
+	end
+	if toggleButton == button and toggleButtonConnection then
+		return
+	end
+	if toggleButtonConnection then
+		toggleButtonConnection:Disconnect()
+		toggleButtonConnection = nil
+	end
+	toggleButtonConnection = button.Activated:Connect(function()
+		toggleFlashlight()
 	end)
 end
 
@@ -231,7 +306,11 @@ local function updateToggleVisual()
 		stampFlashlightClientState()
 		return
 	end
-	if flashlightOn then
+	local blockedTool = resolveBlockedTool()
+	if blockedTool and flashlightOn ~= true then
+		toggleButton.Text = "SENTER\nLOCK"
+		toggleButton.BackgroundColor3 = Color3.fromRGB(108, 62, 62)
+	elseif flashlightOn then
 		toggleButton.Text = "SENTER\nON"
 		toggleButton.BackgroundColor3 = Color3.fromRGB(196, 154, 64)
 	else
@@ -244,67 +323,33 @@ end
 local function ensureToggleUI()
 	local playerGui = player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui")
 	local existing = dedupeScreenGuiByName(playerGui, "FlashlightToggleUI")
-	if UserInputService.TouchEnabled ~= true then
-		if existing then
-			existing:Destroy()
+	if not existing then
+		existing = playerGui:FindFirstChild("FlashlightToggleUI") or playerGui:WaitForChild("FlashlightToggleUI", 5)
+	end
+	if not existing or not existing:IsA("ScreenGui") then
+		if not toggleUiContractWarned then
+			toggleUiContractWarned = true
+			warn("[FlashlightController] Missing authored FlashlightToggleUI ScreenGui; check StarterGui shell contract.")
 		end
 		toggleGui = nil
 		toggleButton = nil
 		return nil
 	end
-	if existing and existing:IsA("ScreenGui") then
-		toggleGui = existing
-		toggleButton = existing:FindFirstChild("ToggleButton")
-		if toggleButton and not toggleButton:IsA("TextButton") then
-			toggleButton:Destroy()
-			toggleButton = nil
-		end
-	else
-		if existing then
-			existing:Destroy()
+	local button = existing:FindFirstChild("ToggleButton")
+	if not button or not button:IsA("TextButton") then
+		if not toggleUiContractWarned then
+			toggleUiContractWarned = true
+			warn("[FlashlightController] Missing ToggleButton in authored FlashlightToggleUI; preserve canonical widget names.")
 		end
 		toggleGui = nil
 		toggleButton = nil
+		return nil
 	end
 
-	if not toggleGui then
-		toggleGui = Instance.new("ScreenGui")
-		toggleGui.Name = "FlashlightToggleUI"
-		toggleGui.ResetOnSpawn = false
-		toggleGui.IgnoreGuiInset = false
-		toggleGui.DisplayOrder = 250
-		toggleGui.Parent = playerGui
-	end
-
-	if not toggleButton then
-		toggleButton = Instance.new("TextButton")
-		toggleButton.Name = "ToggleButton"
-		toggleButton.AnchorPoint = Vector2.new(1, 0.5)
-		toggleButton.Position = UDim2.new(1, -18, 0.62, 0)
-		toggleButton.Size = UDim2.fromOffset(72, 72)
-		toggleButton.BackgroundColor3 = Color3.fromRGB(52, 62, 80)
-		toggleButton.TextColor3 = Color3.fromRGB(245, 245, 245)
-		toggleButton.Font = Enum.Font.GothamBold
-		toggleButton.TextScaled = true
-		toggleButton.TextWrapped = true
-		toggleButton.AutoButtonColor = true
-		toggleButton.Parent = toggleGui
-
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(1, 0)
-		corner.Parent = toggleButton
-
-		local stroke = Instance.new("UIStroke")
-		stroke.Thickness = 2
-		stroke.Color = Color3.fromRGB(135, 155, 185)
-		stroke.Parent = toggleButton
-		makeButtonDraggable(toggleButton)
-
-		toggleButton.Activated:Connect(function()
-			toggleFlashlight()
-		end)
-	end
-
+	toggleGui = existing
+	toggleButton = button
+	makeButtonDraggable(toggleButton)
+	bindToggleButton(toggleButton)
 	toggleGui.Enabled = shouldShowToggleUI()
 	updateToggleVisual()
 	stampToggleRuntime()
@@ -312,8 +357,18 @@ local function ensureToggleUI()
 end
 
 toggleFlashlight = function()
+	local blockedTool = resolveBlockedTool()
+	if flashlightOn ~= true and blockedTool then
+		setAttributeIfChanged(player, TOOL_BLOCKED_ATTRIBUTE, blockedTool)
+		updateToggleVisual()
+		stampToggleRuntime()
+		print(string.format("[Flashlight] BLOCKED by tool=%s", tostring(blockedTool)))
+		return
+	end
+
 	flashlightOn = not flashlightOn
 	setAttributeIfChanged(player, FLASHLIGHT_ATTRIBUTE, flashlightOn)
+	setAttributeIfChanged(player, TOOL_BLOCKED_ATTRIBUTE, flashlightOn and nil or blockedTool)
 
 	flashlightRemote:FireServer({
 		action = "Toggle",
@@ -335,6 +390,16 @@ end
 
 local function refreshToggleUIVisibility()
 	local inMatch = isPlayerInMatch()
+	local blockedTool = resolveBlockedTool()
+	if blockedTool and flashlightOn == true then
+		flashlightOn = false
+		setAttributeIfChanged(player, FLASHLIGHT_ATTRIBUTE, false)
+		setAttributeIfChanged(player, TOOL_BLOCKED_ATTRIBUTE, blockedTool)
+		flashlightRemote:FireServer({
+			action = "Toggle",
+			enabled = false,
+		})
+	end
 	if inMatch ~= true and flashlightOn == true then
 		flashlightOn = false
 		setAttributeIfChanged(player, FLASHLIGHT_ATTRIBUTE, false)
@@ -345,11 +410,14 @@ local function refreshToggleUIVisibility()
 	end
 
 	if UserInputService.TouchEnabled ~= true then
-		if toggleGui and toggleGui.Parent then
-			toggleGui:Destroy()
+		if not toggleGui or not toggleGui.Parent then
+			ensureToggleUI()
 		end
-		toggleGui = nil
-		toggleButton = nil
+		if toggleGui then
+			toggleGui.Enabled = false
+		end
+		updateToggleVisual()
+		stampToggleRuntime()
 		syncAimLoop()
 		return
 	end
@@ -359,6 +427,44 @@ local function refreshToggleUIVisibility()
 	if toggleGui then
 		toggleGui.Enabled = shouldShowToggleUI()
 	end
+	updateToggleVisual()
+	stampToggleRuntime()
+	syncAimLoop()
+end
+
+local function syncFlashlightStateFromAttribute()
+	local attributeEnabled = player:GetAttribute(FLASHLIGHT_ATTRIBUTE) == true
+	local blockedTool = resolveBlockedTool()
+
+	if blockedTool and attributeEnabled == true then
+		flashlightOn = false
+		setAttributeIfChanged(player, FLASHLIGHT_ATTRIBUTE, false)
+		setAttributeIfChanged(player, TOOL_BLOCKED_ATTRIBUTE, blockedTool)
+		flashlightRemote:FireServer({
+			action = "Toggle",
+			enabled = false,
+		})
+		updateToggleVisual()
+		stampToggleRuntime()
+		syncAimLoop()
+		return
+	end
+
+	if flashlightOn == attributeEnabled then
+		updateToggleVisual()
+		stampToggleRuntime()
+		syncAimLoop()
+		return
+	end
+
+	flashlightOn = attributeEnabled
+	if flashlightOn then
+		lastAimSend = 0
+		lastAimTransmitAt = 0
+		lastAimLookVector = nil
+	end
+
+	updateToggleVisual()
 	stampToggleRuntime()
 	syncAimLoop()
 end
@@ -368,8 +474,11 @@ ensureToggleUI()
 refreshToggleUIVisibility()
 stampFlashlightClientState()
 
+player:GetAttributeChangedSignal(FLASHLIGHT_ATTRIBUTE):Connect(syncFlashlightStateFromAttribute)
 player:GetAttributeChangedSignal("InMatch"):Connect(refreshToggleUIVisibility)
 player:GetAttributeChangedSignal("MatchId"):Connect(refreshToggleUIVisibility)
+player:GetAttributeChangedSignal(TOOL_EQUIPPED_ATTRIBUTE):Connect(refreshToggleUIVisibility)
+player:GetAttributeChangedSignal(PREPARATION_TOOL_ATTRIBUTE):Connect(refreshToggleUIVisibility)
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then

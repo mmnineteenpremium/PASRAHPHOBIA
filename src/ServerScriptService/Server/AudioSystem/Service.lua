@@ -145,6 +145,29 @@ function Service:_getLiveMatch(matchId)
 	return matchSystem:GetLiveMatch(matchId)
 end
 
+function Service:_resolveGhostType(matchId, payload)
+	for _, key in ipairs({ "ghostType", "visualGhostType", "actualGhostType", "targetGhostType" }) do
+		if type(payload) == "table" and type(payload[key]) == "string" and payload[key] ~= "" then
+			return payload[key]
+		end
+	end
+
+	local match = self:_getLiveMatch(matchId)
+	if type(match) == "table" then
+		if type(match.ghostType) == "string" and match.ghostType ~= "" then
+			return match.ghostType
+		end
+		if typeof(match.ghost) == "Instance" then
+			local attributeGhostType = match.ghost:GetAttribute("GhostType") or match.ghost:GetAttribute("VisualGhostType")
+			if type(attributeGhostType) == "string" and attributeGhostType ~= "" then
+				return attributeGhostType
+			end
+		end
+	end
+
+	return nil
+end
+
 function Service:_isInvestigationPhase(match)
 	local phase = type(match) == "table" and match.phase or nil
 	return INVESTIGATION_PHASES[phase] == true
@@ -298,6 +321,7 @@ function Service:TriggerGhostAudio(matchId, payload)
 		matchId = matchId,
 		category = "GhostAudio",
 		cue = payload and payload.cue or "ghost_whisper",
+		ghostType = self:_resolveGhostType(matchId, payload),
 		roomId = payload and payload.roomId,
 		intensity = payload and payload.intensity or 0.65,
 	})
@@ -312,6 +336,7 @@ function Service:TriggerJumpscareAudio(matchId, payload)
 		matchId = matchId,
 		category = "JumpscareAudio",
 		cue = payload and payload.cue or "jumpscare_stinger",
+		ghostType = self:_resolveGhostType(matchId, payload),
 		roomId = payload and payload.roomId,
 		intensity = payload and payload.intensity or 1.0,
 	})
@@ -326,6 +351,7 @@ function Service:TriggerHuntAudio(matchId, payload)
 		matchId = matchId,
 		category = "HuntAudio",
 		cue = payload and payload.cue or "hunt_stinger",
+		ghostType = self:_resolveGhostType(matchId, payload),
 		intensity = payload and payload.intensity or 1.0,
 	})
 	return true

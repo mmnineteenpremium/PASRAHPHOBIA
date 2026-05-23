@@ -15,7 +15,23 @@ local LIGHT_FLICKER_DELAY = 0.08
 local LIGHT_SWITCH_PROMPT_NAME = "LightSwitchPrompt"
 local LIGHT_SWITCH_ON_COLOR = Color3.fromRGB(236, 214, 168)
 local LIGHT_SWITCH_OFF_COLOR = Color3.fromRGB(82, 88, 98)
+local LIGHT_SWITCH_WALL_HEIGHT = 3.2
+local LIGHT_SWITCH_REMOTE_DISTANCE = 10
+local LIGHT_SWITCH_REMOTE_COOLDOWN = 0.35
+local MAP_INTERACTION_REMOTE_NAME = "MapInteractionEvent"
 local WORLD_POINT_LIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldPointLightTemplate" }
+
+local EventPropAssets = nil
+do
+	local gameData = ReplicatedStorage:FindFirstChild("GameData")
+	local moduleScript = gameData and gameData:FindFirstChild("EventPropAssets")
+	if moduleScript and moduleScript:IsA("ModuleScript") then
+		local ok, result = pcall(require, moduleScript)
+		if ok and type(result) == "table" then
+			EventPropAssets = result
+		end
+	end
+end
 
 local function resolveChildPath(root, path)
 	local node = root
@@ -36,6 +52,31 @@ local function cloneWorldPointLightTemplate(name)
 		return clone
 	end
 	return nil
+end
+
+local function ensureRemoteFolder()
+	local folder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = "RemoteEvents"
+		folder.Parent = ReplicatedStorage
+	end
+	return folder
+end
+
+local function ensureMapInteractionRemote()
+	local folder = ensureRemoteFolder()
+	local remote = folder:FindFirstChild(MAP_INTERACTION_REMOTE_NAME)
+	if remote and remote:IsA("RemoteEvent") then
+		return remote
+	end
+	if remote then
+		remote:Destroy()
+	end
+	remote = Instance.new("RemoteEvent")
+	remote.Name = MAP_INTERACTION_REMOTE_NAME
+	remote.Parent = folder
+	return remote
 end
 
 local function normalizeToken(value)
@@ -168,6 +209,35 @@ local function ensurePart(parent, name)
 	return part
 end
 
+local function ensureMeshPart(parent, name)
+	local part = parent:FindFirstChild(name)
+	if part and part:IsA("MeshPart") then
+		return part
+	end
+	if part then
+		part:Destroy()
+	end
+	part = Instance.new("MeshPart")
+	part.Name = name
+	part.Parent = parent
+	return part
+end
+
+local function configurePropBoxPart(part, kind, color)
+	if not (part and part:IsA("BasePart")) then
+		return nil
+	end
+	part.Anchored = true
+	part.CanCollide = true
+	part.CanTouch = false
+	part.CanQuery = true
+	part.Material = Enum.Material.WoodPlanks
+	part.Color = color or (kind == "prop_crate" and Color3.fromRGB(96, 78, 58) or Color3.fromRGB(112, 90, 62))
+	part.Transparency = 0
+	part.Size = Vector3.new(1.6, 1.2, 1.1)
+	return part
+end
+
 local function createCeilingLight(parent, name, position)
 	local model = parent:FindFirstChild(name)
 	if model and not model:IsA("Model") then
@@ -226,15 +296,63 @@ end
 
 local function createPropBox(parent, name, position, color)
 	local part = ensurePart(parent, name)
-	part.Anchored = true
-	part.CanCollide = true
-	part.CanTouch = false
-	part.CanQuery = true
-	part.Material = Enum.Material.WoodPlanks
-	part.Color = color or Color3.fromRGB(116, 92, 64)
-	part.Size = Vector3.new(1.6, 1.2, 1.1)
+	configurePropBoxPart(part, nil, color or Color3.fromRGB(116, 92, 64))
 	part.CFrame = CFrame.new(position)
 	return part
+end
+
+local function resolveAuthoredEventPropSpec(kind, objectId)
+	if type(EventPropAssets) ~= "table" or type(EventPropAssets.ResolveForGenerated) ~= "function" then
+		return nil
+	end
+	local ok, spec = pcall(EventPropAssets.ResolveForGenerated, kind, objectId)
+	if ok and type(spec) == "table" and type(spec.meshId) == "string" and spec.meshId ~= "" then
+		return spec
+	end
+	return nil
+end
+
+local function createAuthoredEventProp(parent, name, kind, position)
+	local spec = resolveAuthoredEventPropSpec(kind, name)
+	if not spec then
+		return nil
+	end
+
+	local model = parent:FindFirstChild(name)
+	if model and not model:IsA("Model") then
+		model:Destroy()
+		model = nil
+	end
+	if not model then
+		model = Instance.new("Model")
+		model.Name = name
+		model.Parent = parent
+	end
+
+	local mesh = ensureMeshPart(model, "Mesh")
+	mesh.Anchored = true
+	mesh.CanCollide = true
+	mesh.CanTouch = false
+	mesh.CanQuery = true
+	mesh.Material = Enum.Material.SmoothPlastic
+	mesh.Color = typeof(spec.color) == "Color3" and spec.color or Color3.fromRGB(112, 90, 62)
+	mesh.Size = typeof(spec.size) == "Vector3" and spec.size or Vector3.new(1.4, 1.0, 1.2)
+	mesh.CFrame = CFrame.new(position)
+	pcall(function()
+		mesh.MeshId = "rbxassetid://" .. tostring(spec.meshId)
+	end)
+	pcall(function()
+		mesh.CollisionFidelity = Enum.CollisionFidelity.Box
+	end)
+	mesh:SetAttribute("PasrahPropAssetKey", tostring(spec.key or name))
+	mesh:SetAttribute("PasrahPropMeshId", tostring(spec.meshId))
+	mesh:SetAttribute("PasrahGeneratedKind", tostring(kind or ""))
+
+	model.PrimaryPart = mesh
+	model:SetAttribute("PasrahPropAssetKey", tostring(spec.key or name))
+	model:SetAttribute("PasrahPropMeshId", tostring(spec.meshId))
+	model:SetAttribute("PasrahGeneratedKind", tostring(kind or ""))
+	return model
 end
 
 local function createTelevision(parent, name, position)
@@ -357,6 +475,32 @@ local function createRadio(parent, name, position)
 	return model
 end
 
+local function createGeneratedTarget(generatedFolder, name, kind, position)
+	if not (generatedFolder and generatedFolder:IsA("Folder") and type(kind) == "string" and kind ~= "" and typeof(position) == "Vector3") then
+		return nil
+	end
+	local authoredProp = createAuthoredEventProp(generatedFolder, name, kind, position)
+	if authoredProp then
+		return authoredProp
+	end
+	if kind == "ceiling_light" then
+		return createCeilingLight(generatedFolder, name, position)
+	end
+	if kind == "prop_box" then
+		return createPropBox(generatedFolder, name, position, Color3.fromRGB(112, 90, 62))
+	end
+	if kind == "prop_crate" then
+		return createPropBox(generatedFolder, name, position, Color3.fromRGB(96, 78, 58))
+	end
+	if kind == "tv" then
+		return createTelevision(generatedFolder, name, position)
+	end
+	if kind == "radio" then
+		return createRadio(generatedFolder, name, position)
+	end
+	return nil
+end
+
 local function findNearestNamedInstance(root, targetName, expectedPosition)
 	if typeof(root) ~= "Instance" or type(targetName) ~= "string" or targetName == "" then
 		return nil
@@ -378,37 +522,53 @@ local function findNearestNamedInstance(root, targetName, expectedPosition)
 	return best
 end
 
-local function resolveTargetInstance(mapClone, generatedFolder, proxyPart)
+local function resolveTargetInstance(mapClone, generatedFolder, proxyPart, definition)
 	local generatedKind = proxyPart:GetAttribute("PasrahGeneratedKind")
+	local generatedDefinition = type(definition) == "table" and definition.generated or nil
+	if (type(generatedKind) ~= "string" or generatedKind == "") and type(generatedDefinition) == "table" then
+		generatedKind = generatedDefinition.kind
+	end
 	if type(generatedKind) == "string" and generatedKind ~= "" then
-		local generatedPosition = parseVector3String(proxyPart:GetAttribute("PasrahGeneratedPosition")) or proxyPart.Position
-		if generatedKind == "ceiling_light" then
-			return createCeilingLight(generatedFolder, proxyPart.Name, generatedPosition)
+		local generatedPosition = parseVector3String(proxyPart:GetAttribute("PasrahGeneratedPosition"))
+		if typeof(generatedPosition) ~= "Vector3" and type(generatedDefinition) == "table" and proxyPart:GetAttribute("PasrahGeneratedKind") ~= nil then
+			generatedPosition = generatedDefinition.position
 		end
-		if generatedKind == "prop_box" then
-			return createPropBox(generatedFolder, proxyPart.Name, generatedPosition, Color3.fromRGB(112, 90, 62))
+		if typeof(generatedPosition) ~= "Vector3" then
+			generatedPosition = proxyPart.Position
 		end
-		if generatedKind == "prop_crate" then
-			return createPropBox(generatedFolder, proxyPart.Name, generatedPosition, Color3.fromRGB(96, 78, 58))
+		if generatedKind == "prop_box" or generatedKind == "prop_crate" then
+			local generatedTarget = createGeneratedTarget(generatedFolder, proxyPart.Name, generatedKind, generatedPosition)
+			if generatedTarget then
+				proxyPart.Transparency = 1
+				proxyPart.CanCollide = false
+				proxyPart.CanTouch = false
+				proxyPart.CanQuery = false
+				return generatedTarget
+			end
+			return configurePropBoxPart(proxyPart, generatedKind)
 		end
-		if generatedKind == "tv" then
-			return createTelevision(generatedFolder, proxyPart.Name, generatedPosition)
-		end
-		if generatedKind == "radio" then
-			return createRadio(generatedFolder, proxyPart.Name, generatedPosition)
-		end
+		return createGeneratedTarget(generatedFolder, proxyPart.Name, generatedKind, generatedPosition)
 	end
 
 	local targetRootName = proxyPart:GetAttribute("PasrahTargetRootName")
+	if (type(targetRootName) ~= "string" or targetRootName == "") and type(definition) == "table" then
+		targetRootName = definition.targetRootName
+	end
 	if type(targetRootName) ~= "string" or targetRootName == "" then
 		return nil
 	end
 	local expectedPosition = parseVector3String(proxyPart:GetAttribute("PasrahTargetPosition"))
+	if typeof(expectedPosition) ~= "Vector3" and type(definition) == "table" then
+		expectedPosition = definition.expectedPosition
+	end
 	local root = findNearestNamedInstance(mapClone, targetRootName, expectedPosition)
 	if not root then
 		return nil
 	end
 	local targetName = proxyPart:GetAttribute("PasrahTargetName")
+	if (type(targetName) ~= "string" or targetName == "") and type(definition) == "table" then
+		targetName = definition.targetName
+	end
 	if type(targetName) == "string" and targetName ~= "" then
 		return findNearestNamedInstance(root, targetName, expectedPosition) or root
 	end
@@ -487,7 +647,8 @@ local function createLightSwitch(generatedFolder, mapClone, definition, proxyPar
 			flatDirection = Vector3.new(1, 0, 0)
 		end
 		local wallDistance = math.max(2, math.min(roomPart.Size.X, roomPart.Size.Z) * 0.36)
-		switchPosition = Vector3.new(roomPosition.X, roomPosition.Y + math.min(2.2, roomPart.Size.Y * 0.32), roomPosition.Z)
+		local floorY = roomPosition.Y - (roomPart.Size.Y * 0.5)
+		switchPosition = Vector3.new(roomPosition.X, floorY + LIGHT_SWITCH_WALL_HEIGHT, roomPosition.Z)
 			+ flatDirection.Unit * wallDistance
 		lookAt = Vector3.new(roomPosition.X, switchPosition.Y, roomPosition.Z)
 	end
@@ -523,6 +684,10 @@ local function createLightSwitch(generatedFolder, mapClone, definition, proxyPar
 	prompt.RequiresLineOfSight = false
 	prompt.HoldDuration = 0
 	prompt.Style = Enum.ProximityPromptStyle.Default
+	prompt.Exclusivity = Enum.ProximityPromptExclusivity.AlwaysShow
+	pcall(function()
+		prompt.ClickablePrompt = true
+	end)
 	return switch
 end
 
@@ -544,7 +709,23 @@ local function buildLookupFromFolder(definitions, folder, mapClone, generatedFol
 	for _, definition in ipairs(definitions) do
 		local proxy = folder:FindFirstChild(definition.objectId)
 		if proxy and proxy:IsA("BasePart") then
-			local target = resolveTargetInstance(mapClone, generatedFolder, proxy)
+			local target = resolveTargetInstance(mapClone, generatedFolder, proxy, definition)
+			if target == nil and type(definition.generated) == "table" then
+				if definition.generated.kind == "prop_box" or definition.generated.kind == "prop_crate" then
+					target = configurePropBoxPart(proxy, definition.generated.kind)
+				else
+					target = createGeneratedTarget(generatedFolder, definition.objectId, definition.generated.kind, proxy.Position)
+				end
+			end
+			if objectType == "Light" and type(definition.generated) == "table" then
+				local lights, neonParts = collectLightDescendants(target)
+				if #lights == 0 and #neonParts == 0 then
+					if typeof(target) == "Instance" and target.Parent == generatedFolder then
+						target:Destroy()
+					end
+					target = createGeneratedTarget(generatedFolder, definition.objectId, definition.generated.kind, proxy.Position)
+				end
+			end
 			registerObject(interactionSystem, definition.objectId, objectType, proxy.Position, definition.roomId, interactions)
 			lookup[definition.objectId] = {
 				id = definition.objectId,
@@ -823,8 +1004,78 @@ function EnvironmentalObjectRuntime.Attach(match, mapClone, deps)
 		eventBus:Unsubscribe("MapObjectInteracted", match._environmentRuntimeSubscription)
 		match._environmentRuntimeSubscription = nil
 	end
+	if match and match._environmentRuntimeRemoteConnection then
+		match._environmentRuntimeRemoteConnection:Disconnect()
+		match._environmentRuntimeRemoteConnection = nil
+	end
 
 	local matchId = match and tostring(match.matchId or match.id or "") or ""
+	local remoteCooldowns = {}
+	local remote = ensureMapInteractionRemote()
+	if remote and match then
+		match._environmentRuntimeRemoteConnection = remote.OnServerEvent:Connect(function(player, request)
+			if type(request) ~= "table" or tostring(request.action or "") ~= "ToggleLight" then
+				return
+			end
+			if not (typeof(player) == "Instance" and player:IsA("Player")) then
+				return
+			end
+			if player:GetAttribute("InMatch") ~= true or tostring(player:GetAttribute("MatchId") or "") ~= matchId then
+				return
+			end
+			if tostring(player:GetAttribute("MatchLifecyclePhase") or "") ~= "InvestigationPhase" then
+				player:SetAttribute("PasrahLastMapInteractionResult", "rejected_phase")
+				return
+			end
+
+			local objectId = tostring(request.objectId or "")
+			local record = objectLookup[objectId]
+			if type(record) ~= "table" or record.objectType ~= "Light" or not (record.switch and record.switch:IsA("BasePart")) then
+				player:SetAttribute("PasrahLastMapInteractionResult", "rejected_object")
+				return
+			end
+			local character = player.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			if not (root and root:IsA("BasePart")) then
+				player:SetAttribute("PasrahLastMapInteractionResult", "rejected_character")
+				return
+			end
+			local distance = (root.Position - record.switch.Position).Magnitude
+			if distance > LIGHT_SWITCH_REMOTE_DISTANCE then
+				player:SetAttribute("PasrahLastMapInteractionResult", "rejected_distance:" .. tostring(math.floor(distance * 100 + 0.5) / 100))
+				return
+			end
+
+			local now = os.clock()
+			local cooldownKey = tostring(player.UserId) .. ":" .. objectId
+			if now < (remoteCooldowns[cooldownKey] or 0) then
+				player:SetAttribute("PasrahLastMapInteractionResult", "rejected_cooldown")
+				return
+			end
+			remoteCooldowns[cooldownKey] = now + LIGHT_SWITCH_REMOTE_COOLDOWN
+
+			local nextEnabled = record.lightOn == false
+			local interactionSystem = resolveMapInteractionSystem(deps)
+			local ok = false
+			if interactionSystem and type(interactionSystem.ExecuteInteraction) == "function" then
+				ok = interactionSystem:ExecuteInteraction(record.id, nextEnabled and "TurnOn" or "TurnOff", {
+					source = "LightSwitchFallback",
+					now = now,
+				}) == true
+			elseif interactionSystem and type(interactionSystem.Service) == "table"
+				and type(interactionSystem.Service.ExecuteInteraction) == "function" then
+				ok = interactionSystem.Service:ExecuteInteraction(record.id, nextEnabled and "TurnOn" or "TurnOff", {
+					source = "LightSwitchFallback",
+					now = now,
+				}) == true
+			else
+				applyLightPower(record, nextEnabled)
+				ok = true
+			end
+			player:SetAttribute("PasrahLastMapInteractionResult", ok and "ok:" .. objectId or "failed:" .. objectId)
+		end)
+	end
+
 	local callback = function(payload)
 		if type(payload) ~= "table" then
 			return

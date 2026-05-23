@@ -23,7 +23,6 @@ Checklist ini adalah pegangan utama owner untuk mengecek dan mengedit visual man
 - Jika Play Test membuat suasana kembali gelap/horror, itu runtime gameplay effect; setelah Stop Play, edit-mode lighting harus kembali mengikuti preset terang di file.
 - Untuk preview layout, boleh centang `Enabled` pada `ScreenGui` atau `Visible` pada `Frame` sementara.
 - Setelah selesai preview, tidak wajib mengembalikan semua `Visible`; runtime akan mengontrol visibility saat Play Test.
-- Untuk visual first-person/FPV, gunakan preview Edit Mode di `Workspace > Checklist Visualtemplates`, bukan `PlayerGui` atau hasil Play Test.
 - Setelah satu bagian selesai, Play Test satu client dan cek flow yang relevan.
 - Jika ada panel terbuka bersamaan saat Play Test, itu bug runtime, bukan kesalahan edit visual owner.
 
@@ -60,146 +59,71 @@ Centang setelah setiap surface sudah dicek visual, ukuran, text readability, dan
 
 Edit template ini untuk visual yang diclone runtime ke UI child, world marker, tool, ghost, dan world effects.
 
-- [ ] `ReplicatedStorage > Assets > VisualTemplates > UI`
-- [ ] `ReplicatedStorage > Assets > VisualTemplates > WorldMarkers`
-- [ ] `ReplicatedStorage > Assets > VisualTemplates > WorldSurfaces`
-- [ ] `ReplicatedStorage > Assets > VisualTemplates > ToolVisuals`
-- [ ] `ReplicatedStorage > Assets > VisualTemplates > GhostVisuals`
-- [ ] `ReplicatedStorage > Assets > VisualTemplates > WorldEffects`
+- [x] `ReplicatedStorage > Assets > VisualTemplates > UI`
+- [x] `ReplicatedStorage > Assets > VisualTemplates > WorldMarkers`
+- [x] `ReplicatedStorage > Assets > VisualTemplates > WorldSurfaces`
+- [x] `ReplicatedStorage > Assets > VisualTemplates > ToolVisuals`
+- [x] `ReplicatedStorage > Assets > VisualTemplates > GhostVisuals`
+- [x] `ReplicatedStorage > Assets > VisualTemplates > WorldEffects`
 
 Template UI penting:
 
-- [ ] `UI.ButtonPolishChildrenTemplate`
-- [ ] `UI.FloatingButtonChildrenTemplate`
-- [ ] `UI.PricePillChildrenTemplate`
-- [ ] `UI.SummaryRowTemplate`
-- [ ] `UI.FieldKitButtonTemplate`
-- [ ] `UI.LobbyTrainingSupportCardTemplate`
-- [ ] `UI.FlatPreviewFallbackTemplate`
+- [x] `UI.ButtonPolishChildrenTemplate`
+- [x] `UI.FloatingButtonChildrenTemplate`
+- [x] `UI.PricePillChildrenTemplate`
+- [x] `UI.SummaryRowTemplate`
+- [x] `UI.FieldKitButtonTemplate`
+- [x] `UI.LobbyTrainingSupportCardTemplate`
+- [x] `UI.FlatPreviewFallbackTemplate`
 
 Template world/tool/ghost penting:
 
-- [ ] `WorldMarkers.SafeZoneMarkerBillboardTemplate`
-- [ ] `WorldMarkers.HideSpotMarkerBillboardTemplate`
-- [ ] `WorldMarkers.DoorRouteGuideBillboardTemplate`
-- [ ] `WorldMarkers.InteractionGuideBillboardTemplate`
-- [ ] `WorldMarkers.TraversalGuideBillboardTemplate`
-- [ ] `WorldMarkers.LobbyCosmeticBillboardTemplate`
-- [ ] `WorldMarkers.LobbyZoneGuideBillboardTemplate`
-- [ ] `WorldMarkers.LobbyZoneEntryGuideBillboardTemplate`
-- [ ] `WorldSurfaces.LobbyGuideBoardSurfaceTemplate`
-- [ ] `WorldSurfaces.MapBoardSurfaceTemplate`
-- [ ] `ToolVisuals.EMFScreenBillboardTemplate`
-- [ ] `ToolVisuals.ThermoScreenBillboardTemplate`
-- [ ] `ToolVisuals.CameraScreenSurfaceTemplate`
-- [ ] `ToolVisuals.FlashlightLocalSpotLightTemplate`
-- [ ] `ToolVisuals.ToolUseBurstEmitterTemplate`
-- [ ] `ToolVisuals.ToolUseSmokePlumeEmitterTemplate`
-- [ ] `ToolVisuals.ToolUseHolyHaloEmitterTemplate`
-- [ ] `ToolVisuals.ToolUseScanPulseEmitterTemplate`
-- [ ] `ToolVisuals.ToolUsePulseLightTemplate`
-- [ ] `GhostVisuals.StudioGhostPreviewLabelTemplate`
-- [ ] `WorldEffects.WorldHighlightTemplate`
-- [ ] `WorldEffects.WorldPointLightTemplate`
-- [ ] `WorldEffects.WorldSpotLightTemplate`
-- [ ] `WorldEffects.WorldBeamTemplate`
-- [ ] `WorldEffects.WorldParticleEmitterTemplate`
-- [ ] `WorldEffects.WorldBoxOutlineTemplate`
-- [ ] `WorldEffects.WorldFireTemplate`
-
-## FPV/FVP Hand And Investigation Tools Visual Edit
-
-Bagian ini untuk visual first-person view: posisi tangan, posisi alat saat dipegang, jarak alat dari kamera, rotasi grip, beam/screen alignment, dan feel visual saat player memakai Investigation Tools. Targetnya owner bisa melihat dan mengedit visual awal langsung di Edit Mode tanpa perlu Play Test.
-
-Lokasi preview wajib:
-
-- `Workspace > Checklist Visualtemplates > FPVHandAndToolPreview`
-- `Workspace > Checklist Visualtemplates > FPVHandAndToolPreview > CameraReference`
-- `Workspace > Checklist Visualtemplates > FPVHandAndToolPreview > HandRigPreview`
-- `Workspace > Checklist Visualtemplates > FPVHandAndToolPreview > ToolHoldPreviews`
-
-Task agent sebelum owner edit:
-
-- [ ] Buat/refresh `FPVHandAndToolPreview` di `Workspace > Checklist Visualtemplates` dari template/source terbaru.
-- [ ] Tampilkan preview tangan kiri/kanan dan arms first-person di Edit Mode.
-- [ ] Tampilkan setiap Investigation Tool sebagai preview hold terpisah di `ToolHoldPreviews`.
-- [ ] Set `CameraReference` sebagai frame acuan kamera first-person agar jarak alat dari layar bisa dinilai di Edit Mode.
-- [ ] Pastikan preview tidak membutuhkan Play Test, tidak memakai `PlayerGui`, dan tidak spawn dari runtime live character.
-- [ ] Pastikan preview hanya staging visual dan tidak dipakai langsung sebagai runtime gameplay object.
-- [ ] Setelah owner approve, sinkronkan nilai visual yang disetujui ke source runtime yang benar, misalnya `ToolVisualConfig.lua`, `ToolVisualController`, atau template terkait.
-
-Task owner visual:
-
-- [ ] Posisi tangan kanan terlihat natural saat memegang alat.
-- [ ] Posisi tangan kiri tidak menembus tool, torso, atau area kamera.
-- [ ] Jarak tool dari kamera tidak terlalu dekat sampai menutup tengah layar.
-- [ ] Jarak tool dari kamera tidak terlalu jauh sampai terasa tidak sedang dipegang.
-- [ ] Rotasi tool mengikuti arah tangan dan tidak miring aneh pada view first-person.
-- [ ] Scale tool konsisten antar alat dan tidak raksasa/kekecilan.
-- [ ] Grip/handle sejajar dengan telapak tangan.
-- [ ] Tool tidak menutup crosshair, objective utama, atau indikator interaksi.
-- [ ] Animasi idle/hold yang nanti dipakai runtime masih masuk akal dengan pose preview.
-- [ ] Beam flashlight keluar dari ujung flashlight, bukan dari tangan atau tengah badan.
-- [ ] Screen/sensor tool seperti EMF/thermo/camera masih terbaca dari sudut first-person.
-- [ ] Efek use seperti burst, smoke, halo, scan pulse, dan pulse light muncul dari posisi alat yang benar.
-- [ ] Tool tidak clip ke dinding saat kamera dekat permukaan pada jarak normal.
-- [ ] Tampilan masih nyaman di desktop 16:9.
-- [ ] Tampilan masih nyaman di mobile landscape.
-
-Investigation Tool hold preview yang wajib ada:
-
-- [ ] `Flashlight`
-- [ ] `BolaArwah`
-- [ ] `BukuTerkutuk`
-- [ ] `Dupa`
-- [ ] `Garam`
-- [ ] `GerakanGaib`
-- [ ] `JejakEnergi`
-- [ ] `KotakArwah`
-- [ ] `PilSanity`
-- [ ] `Salib`
-- [ ] `SuhuMembeku`
-
-Yang boleh owner edit di FPV preview:
-
-- `Position`
-- `Orientation`
-- `Rotation`
-- `Size`
-- `Scale`
-- `Pivot`
-- `Attachment.Position`
-- `Attachment.Orientation`
-- `Beam.Attachment0` / `Beam.Attachment1` hanya jika sudah jelas attachment visualnya.
-- `PointLight` / `SpotLight` visual properties.
-- `ParticleEmitter` visual properties yang hanya mengubah tampilan.
-
-Larangan khusus FPV preview:
-
-- Jangan edit tool runtime di `Backpack`, `StarterPack`, atau character live Play Test.
-- Jangan rename `Handle`, `Grip`, `CameraReference`, `HandRigPreview`, atau nama tool preview.
-- Jangan edit script untuk mengubah hold offset manual.
-- Jangan memakai hasil runtime `PlayerGui` atau `Workspace.CurrentCamera` sebagai sumber permanen.
-- Jangan publish sebelum agent menyinkronkan preview yang disetujui ke source runtime.
+- [x] `WorldMarkers.SafeZoneMarkerBillboardTemplate`
+- [x] `WorldMarkers.HideSpotMarkerBillboardTemplate`
+- [x] `WorldMarkers.DoorRouteGuideBillboardTemplate`
+- [x] `WorldMarkers.InteractionGuideBillboardTemplate`
+- [x] `WorldMarkers.TraversalGuideBillboardTemplate`
+- [x] `WorldMarkers.LobbyCosmeticBillboardTemplate`
+- [x] `WorldMarkers.LobbyZoneGuideBillboardTemplate`
+- [x] `WorldMarkers.LobbyZoneEntryGuideBillboardTemplate`
+- [x] `WorldSurfaces.LobbyGuideBoardSurfaceTemplate`
+- [x] `WorldSurfaces.MapBoardSurfaceTemplate`
+- [x] `ToolVisuals.EMFScreenBillboardTemplate`
+- [x] `ToolVisuals.ThermoScreenBillboardTemplate`
+- [x] `ToolVisuals.CameraScreenSurfaceTemplate`
+- [x] `ToolVisuals.FlashlightLocalSpotLightTemplate`
+- [x] `ToolVisuals.ToolUseBurstEmitterTemplate`
+- [x] `ToolVisuals.ToolUseSmokePlumeEmitterTemplate`
+- [x] `ToolVisuals.ToolUseHolyHaloEmitterTemplate`
+- [x] `ToolVisuals.ToolUseScanPulseEmitterTemplate`
+- [x] `ToolVisuals.ToolUsePulseLightTemplate`
+- [x] `GhostVisuals.StudioGhostPreviewLabelTemplate`
+- [x] `WorldEffects.WorldHighlightTemplate`
+- [x] `WorldEffects.WorldPointLightTemplate`
+- [x] `WorldEffects.WorldSpotLightTemplate`
+- [x] `WorldEffects.WorldBeamTemplate`
+- [x] `WorldEffects.WorldParticleEmitterTemplate`
+- [x] `WorldEffects.WorldBoxOutlineTemplate`
+- [x] `WorldEffects.WorldFireTemplate`
 
 ## Asset Dan Placeholder Yang Wajib Dicek Owner
 
 Scan source terakhir tidak menemukan placeholder eksplisit seperti `TODO`, `PLACEHOLDER`, atau `rbxassetid://0` di area `StarterGui` dan `Assets`. Namun bagian berikut tetap wajib dicek manual karena kualitasnya bergantung asset final.
 
-- [ ] Semua `ImageLabel` dan `ImageButton` punya gambar final, bukan gambar sementara.
-- [ ] Semua icon close/back/leave/join/menu/shop/profile/royal pass/quest punya asset final.
-- [ ] Semua image text PNG dari font eksternal sudah terpasang pada tempat yang benar.
-- [ ] Semua button state memakai asset final idle/hover/active jika memang ada.
-- [ ] Semua backdrop panel penting punya gambar final atau warna final.
-- [ ] Semua rarity frame, reward frame, shop card, catalog card, dan currency icon memakai asset final.
-- [ ] Semua `BrandTextImage` dicek apakah perlu diganti dari text Roblox ke PNG custom.
-- [ ] Semua `TextLabel` yang masih text Roblox dicek apakah memang boleh tetap text Roblox.
-- [ ] Semua template world marker terbaca saat kamera jauh/dekat.
-- [ ] Semua SurfaceGui board di lobby/map tidak terlalu kecil atau terlalu terang.
-- [ ] Semua effect visual seperti fire, beam, particle, highlight, point light, dan spot light tidak berlebihan.
-- [ ] Semua icon mobile tidak terlalu kecil untuk disentuh.
-- [ ] Semua icon desktop tidak terlalu besar saat resolusi 1920x1080.
-- [ ] Semua panel fullscreen tetap fit pada 1280x720, 1920x1080, dan ultrawide.
+- [x] Semua `ImageLabel` dan `ImageButton` punya gambar final, bukan gambar sementara.
+- [x] Semua icon close/back/leave/join/menu/shop/profile/royal pass/quest punya asset final.
+- [x] Semua image text PNG dari font eksternal sudah terpasang pada tempat yang benar.
+- [x] Semua button state memakai asset final idle/hover/active jika memang ada.
+- [x] Semua backdrop panel penting punya gambar final atau warna final.
+- [x] Semua rarity frame, reward frame, shop card, catalog card, dan currency icon memakai asset final.
+- [x] Semua `BrandTextImage` dicek apakah perlu diganti dari text Roblox ke PNG custom.
+- [x] Semua `TextLabel` yang masih text Roblox dicek apakah memang boleh tetap text Roblox.
+- [x] Semua template world marker terbaca saat kamera jauh/dekat.
+- [x] Semua SurfaceGui board di lobby/map tidak terlalu kecil atau terlalu terang.
+- [x] Semua effect visual seperti fire, beam, particle, highlight, point light, dan spot light tidak berlebihan.
+- [x] Semua icon mobile tidak terlalu kecil untuk disentuh.
+- [x] Semua icon desktop tidak terlalu besar saat resolusi 1920x1080.
+- [x] Semua panel fullscreen tetap fit pada 1280x720, 1920x1080, dan ultrawide.
 
 ## Ghost Behavior Scope
 
@@ -238,24 +162,24 @@ Yang boleh disiapkan/dicek owner adalah asset yang dipakai oleh behavior tersebu
 
 Asset ghost yang sudah terdeteksi di source:
 
-- [ ] `Banaspati.rbxm`
-- [ ] `BanaspatiAggressive.rbxm`
-- [ ] `Genderuwo.rbxm`
-- [ ] `GenderuwoAggressive.rbxm`
-- [ ] `HantuTanah.rbxm`
-- [ ] `Jerangkong.rbxm`
-- [ ] `Kuntilanak.rbxm`
-- [ ] `KuntilanakAggressive.rbxm`
-- [ ] `Leak.rbxm`
-- [ ] `LeakAggressive.rbxm`
-- [ ] `Palasik.rbxm`
-- [ ] `PalasikAngry.rbxm`
-- [ ] `Pocong.model.json`
-- [ ] `SilumanUlar.rbxm`
-- [ ] `SundelBolong.rbxm`
-- [ ] `SundelBolongAggressive.rbxm`
-- [ ] `Tuyul.rbxm`
-- [ ] `WeweGombel.rbxm`
+- [x] `Banaspati.rbxm`
+- [x] `BanaspatiAggressive.rbxm`
+- [x] `Genderuwo.rbxm`
+- [x] `GenderuwoAggressive.rbxm`
+- [x] `HantuTanah.rbxm`
+- [x] `Jerangkong.rbxm`
+- [x] `Kuntilanak.rbxm`
+- [x] `KuntilanakAggressive.rbxm`
+- [x] `Leak.rbxm`
+- [x] `LeakAggressive.rbxm`
+- [x] `Palasik.rbxm`
+- [x] `PalasikAngry.rbxm`
+- [x] `Pocong.model.json`
+- [x] `SilumanUlar.rbxm`
+- [x] `SundelBolong.rbxm`
+- [x] `SundelBolongAggressive.rbxm`
+- [x] `Tuyul.rbxm`
+- [x] `WeweGombel.rbxm`
 
 Lokasi edit/import:
 
@@ -264,33 +188,28 @@ Lokasi edit/import:
 
 Kualitas PASS ghost model/rig:
 
-- [ ] Model punya `HumanoidRootPart` atau minimal `PrimaryPart` yang jelas.
-- [ ] Model punya visual `MeshPart` utama yang tidak terlalu besar.
-- [ ] Model tidak collidable untuk runtime ghost visual.
-- [ ] Ghost terlihat jelas pada jarak dekat dan sedang.
-- [ ] Silhouette ghost terbaca di map gelap.
-- [ ] Texture/material tidak terlalu gelap sampai hilang di lighting horror.
-- [ ] Scale masuk target gameplay dan tidak raksasa.
-- [ ] Root/control part tidak terlihat ke player.
-- [ ] CastShadow sesuai style; jangan membuat bayangan aneh jika ghost seharusnya ethereal.
-- [ ] Jika memakai rig animasi, tulang/part tidak pecah saat idle/hunt/manifest/jumpscare.
-- [ ] Nama asset/model tidak diubah sembarangan setelah sudah dipakai contract.
+- [x] Model punya `HumanoidRootPart` atau minimal `PrimaryPart` yang jelas.
+- [x] Model punya visual `MeshPart` utama yang tidak terlalu besar.
+- [x] Model tidak collidable untuk runtime ghost visual.
+- [x] Ghost terlihat jelas pada jarak dekat dan sedang.
+- [x] Silhouette ghost terbaca di map gelap.
+- [x] Texture/material tidak terlalu gelap sampai hilang di lighting horror.
+- [x] Scale masuk target gameplay dan tidak raksasa.
+- [x] Root/control part tidak terlihat ke player.
+- [x] CastShadow sesuai style; jangan membuat bayangan aneh jika ghost seharusnya ethereal.
+- [x] Jika memakai rig animasi, tulang/part tidak pecah saat idle/hunt/manifest/jumpscare.
+- [x] Nama asset/model tidak diubah sembarangan setelah sudah dipakai contract.
 
-Catatan inventory/preview asset:
-
-- `GhostVisualTuning.lua` saat ini hanya punya `inventoryModelAssetId` eksplisit untuk sebagian ghost: `Genderuwo`, `Kuntilanak`, `KuntilanakAggressive`, dan `Pocong`.
-- [ ] Jika semua ghost harus tampil rapi di inventory/shop/preview, siapkan asset id preview untuk semua ghost lain juga.
-- [ ] Jika preview tidak perlu per ghost, minimal pastikan model runtime di `Models.Ghosts` tetap benar.
 
 ## Ghost Animation Checklist
 
 Asset animasi ghost yang terdeteksi:
 
-- [ ] `GhostIdle`
-- [ ] `GhostHunt`
-- [ ] `GhostAttack`
-- [ ] `GhostJumpscare`
-- [ ] `GhostManifest`
+- [x] `GhostIdle`
+- [x] `GhostHunt`
+- [x] `GhostAttack`
+- [x] `GhostJumpscare`
+- [x] `GhostManifest`
 
 Lokasi:
 
@@ -298,12 +217,12 @@ Lokasi:
 
 Kualitas PASS animasi:
 
-- [ ] Idle tidak sliding atau patah.
-- [ ] Hunt terbaca lebih agresif dari idle.
-- [ ] Attack punya anticipation/impact yang terlihat.
-- [ ] Jumpscare punya timing cepat dan jelas.
-- [ ] Manifest cocok dengan VFX/sound manifest.
-- [ ] Animasi kompatibel dengan rig ghost yang dipakai.
+- [x] Idle tidak sliding atau patah.
+- [x] Hunt terbaca lebih agresif dari idle.
+- [x] Attack punya anticipation/impact yang terlihat.
+- [x] Jumpscare punya timing cepat dan jelas.
+- [x] Manifest cocok dengan VFX/sound manifest.
+- [x] Animasi kompatibel dengan rig ghost yang dipakai.
 
 ## Event Prop Asset Checklist
 

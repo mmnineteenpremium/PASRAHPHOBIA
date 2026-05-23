@@ -30,13 +30,13 @@ local PREPARATION_AMBIENT_PROFILE = {
 	},
 }
 
-local LOBBY_AMBIENT_SOUND_ID = "rbxassetid://113854211240490"
+local LOBBY_AMBIENT_SOUND_ID = "rbxassetid://105100810469828"
 local LOBBY_AMBIENT_PROFILE = {
 	Volume = 0.16,
 	PlaybackSpeed = 0.98,
 }
 
-local RESULTS_BGM_SOUND_ID = "rbxassetid://95027410279438"
+local RESULTS_BGM_SOUND_ID = "rbxassetid://98396239847837"
 local RESULTS_BGM_PROFILE = {
 	Volume = 0.2,
 	PlaybackSpeed = 1.0,
@@ -852,3 +852,4 @@ function AudioController:_updateResultsBgm()
 end
 
 return setmetatable({}, AudioController)
+

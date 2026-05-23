@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Debris = game:GetService("Debris")
 
@@ -8,6 +9,7 @@ local player = Players.LocalPlayer
 
 local EQUIPPED_TOOL_ATTRIBUTE = "PasrahEquippedToolType"
 local PREPARATION_TOOL_ATTRIBUTE = "PreparationFocusTool"
+local LOADOUT_TOOL_ATTR_PREFIX = "PasrahLoadoutTool"
 local TOOL_USE_STAMP_ATTRIBUTE = "PasrahToolUseStamp"
 local TOOL_LAST_SUCCESS_ATTRIBUTE = "PasrahToolLastSuccess"
 local TOOL_LAST_EVENT_ATTRIBUTE = "PasrahToolLastEvent"
@@ -33,8 +35,29 @@ local TOOL_USE_SCAN_PULSE_TEMPLATE_PATH = { "Assets", "VisualTemplates", "ToolVi
 local TOOL_USE_PULSE_LIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "ToolVisuals", "ToolUsePulseLightTemplate" }
 
 local FPV_ARMS_MODEL_NAME = "FPV_Arms"
+local FPV_VIEW_ROOT_NAME = "FPV_ViewRoot"
 local HELD_TOOL_MODEL_NAME = "FPV_HeldTool"
 local HELD_FLASHLIGHT_MODEL_NAME = "FPV_FlashlightTool"
+local FLASHLIGHT_AIM_HOST_NAME = "FPV_FlashlightAimHost"
+local EMF_SCREEN_HOST_NAME = "FPV_EMFScreenHost"
+local THERMO_SCREEN_HOST_NAME = "FPV_ThermoScreenHost"
+local FPV_GRIP_PART_GROUPS = {
+	Left = {
+		hand = { "FPV_LeftHand", "FPV_LeftArm", "LeftHand", "Left Arm" },
+		lower = { "FPV_LeftLowerArm", "FPV_LeftArm", "LeftLowerArm", "Left Arm" },
+		upper = { "FPV_LeftUpperArm", "LeftUpperArm" },
+	},
+	Right = {
+		hand = { "FPV_RightHand", "FPV_RightArm", "RightHand", "Right Arm" },
+		lower = { "FPV_RightLowerArm", "FPV_RightArm", "RightLowerArm", "Right Arm" },
+		upper = { "FPV_RightUpperArm", "RightUpperArm" },
+	},
+}
+local LOADOUT_SLOT_KEY_CODES = {
+	Enum.KeyCode.One,
+	Enum.KeyCode.Two,
+	Enum.KeyCode.Three,
+}
 
 local DEFAULT_MOUNT_SPEC = {
 	style = "SingleHand",
@@ -277,7 +300,7 @@ local CAMERA_PREVIEW_SAMPLE_PATTERN = {
 }
 local CAMERA_PREVIEW_RAY_DISTANCE = 260
 local CAMERA_SCREEN_HOST_NAME = "FPV_CameraScreenHost"
-local CAMERA_SCREEN_HOST_OFFSET = Vector3.new(0.12, -0.05, -0.26)
+local CAMERA_SCREEN_HOST_OFFSET = Vector3.new(0.08, -0.04, -0.24)
 local CAMERA_PREVIEW_RENDERED_ATTR = "PasrahCameraPreviewRenderedCount"
 local INSTRUMENT_RAY_DISTANCE = 90
 local INSTRUMENT_PROBE_INTERVAL = 0.09
@@ -401,6 +424,120 @@ local function orientSurfaceToCamera(surfaceGui, hostPart)
 	end
 end
 
+local resolveVisualTemplate
+
+local function cloneBillboardTemplateAsSurfaceGui(path, name)
+	local template = resolveVisualTemplate(path)
+	if not template then
+		return nil
+	end
+	if template:IsA("SurfaceGui") then
+		local clone = template:Clone()
+		clone.Name = name
+		return clone
+	end
+	if not template:IsA("BillboardGui") then
+		return nil
+	end
+
+	local surfaceGui = Instance.new("SurfaceGui")
+	surfaceGui.Name = name
+	for _, child in ipairs(template:GetChildren()) do
+		child:Clone().Parent = surfaceGui
+	end
+	return surfaceGui
+end
+
+local function ensureConfiguredScreenHostPart(mounted, hostName, screenConfig)
+	if not (mounted and mounted.model and screenConfig and screenConfig.hostCFrame) then
+		return nil
+	end
+	local host = mounted.model:FindFirstChild(hostName)
+	if host and not host:IsA("BasePart") then
+		host:Destroy()
+		host = nil
+	end
+	if not host then
+		host = Instance.new("Part")
+		host.Name = hostName
+		host.Anchored = true
+		host.CanCollide = false
+		host.CanTouch = false
+		host.CanQuery = false
+		host.CastShadow = false
+		host.Massless = true
+		host.Material = Enum.Material.SmoothPlastic
+		host.Color = Color3.fromRGB(0, 255, 220)
+		host.Transparency = 1
+		host.Parent = mounted.model
+	end
+	host.Size = screenConfig.hostSize or Vector3.new(0.22, 0.01, 0.12)
+	host.CFrame = mounted.model:GetPivot() * screenConfig.hostCFrame
+	return host
+end
+
+local function applySurfaceGuiContentRotation(surfaceGui, screenConfig)
+	if not (surfaceGui and surfaceGui:IsA("SurfaceGui")) then
+		return
+	end
+	local rotation = tonumber(screenConfig and screenConfig.contentRotationDeg) or 0
+	for _, child in ipairs(surfaceGui:GetChildren()) do
+		if child:IsA("GuiObject") then
+			child.AnchorPoint = Vector2.new(0.5, 0.5)
+			child.Position = UDim2.fromScale(0.5, 0.5)
+			child.Size = UDim2.fromScale(1, 1)
+			child.Rotation = rotation
+		end
+	end
+end
+
+local function configureSurfaceGuiForScreen(surfaceGui, screenConfig, fallbackFace, fallbackCanvasSize, fallbackPixelsPerStud)
+	if not (surfaceGui and surfaceGui:IsA("SurfaceGui")) then
+		return
+	end
+	surfaceGui.Face = (screenConfig and screenConfig.face) or fallbackFace or Enum.NormalId.Front
+	surfaceGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	surfaceGui.PixelsPerStud = (screenConfig and screenConfig.pixelsPerStud) or fallbackPixelsPerStud or 180
+	surfaceGui.CanvasSize = (screenConfig and screenConfig.canvasSize) or fallbackCanvasSize or Vector2.new(180, 120)
+	surfaceGui.LightInfluence = 0
+	surfaceGui.AlwaysOnTop = screenConfig == nil or screenConfig.alwaysOnTop ~= false
+	applySurfaceGuiContentRotation(surfaceGui, screenConfig)
+end
+
+local function orientSpotLightToCameraLook(spotlight, hostPart)
+	if not (spotlight and spotlight:IsA("SpotLight") and hostPart and hostPart:IsA("BasePart")) then
+		return
+	end
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	local look = camera.CFrame.LookVector
+	if look.Magnitude <= 0.001 then
+		return
+	end
+	look = look.Unit
+	if hostPart.Name == FLASHLIGHT_AIM_HOST_NAME then
+		local hostPosition = camera.CFrame.Position + (camera.CFrame.LookVector * 0.75)
+		hostPart.CFrame = CFrame.lookAt(hostPosition, hostPosition + look, camera.CFrame.UpVector)
+		spotlight.Face = Enum.NormalId.Front
+		return
+	end
+	local bestFace = Enum.NormalId.Front
+	local bestDot = -math.huge
+	for _, entry in ipairs(SCREEN_FACE_NORMALS) do
+		local worldNormal = hostPart.CFrame:VectorToWorldSpace(entry.normal)
+		local dot = worldNormal:Dot(look)
+		if dot > bestDot then
+			bestDot = dot
+			bestFace = entry.face
+		end
+	end
+	if spotlight.Face ~= bestFace then
+		spotlight.Face = bestFace
+	end
+end
+
 local function safeRequire(moduleScript)
 	if not moduleScript then
 		return nil
@@ -426,6 +563,8 @@ local FLASHLIGHT_LENS_CONFIG = type(FLASHLIGHT_CONFIG.lens) == "table" and FLASH
 local FLASHLIGHT_LIGHT_CONFIG = type(FLASHLIGHT_CONFIG.localLight) == "table"
 	and FLASHLIGHT_CONFIG.localLight
 	or DEFAULT_FLASHLIGHT_LOCAL_LIGHT
+local FLASHLIGHT_MOTION_CONFIG = type(FLASHLIGHT_CONFIG.motion) == "table" and FLASHLIGHT_CONFIG.motion or {}
+local STATIC_HOLD_TOOLS = FLASHLIGHT_MOTION_CONFIG.staticHoldTools == true
 
 local function resolveToolsFolder()
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
@@ -433,7 +572,7 @@ local function resolveToolsFolder()
 	return models and models:FindFirstChild("Tools") or nil
 end
 
-local function resolveVisualTemplate(path)
+function resolveVisualTemplate(path)
 	local node = ReplicatedStorage
 	for _, segment in ipairs(path or {}) do
 		if typeof(node) ~= "Instance" then
@@ -465,6 +604,7 @@ local function warnMissingVisualTemplate(templateName)
 end
 
 local TOOLS_FOLDER = resolveToolsFolder()
+local state
 
 local function coerceVector3(value)
 	if typeof(value) == "Vector3" then
@@ -478,6 +618,21 @@ local function coerceVector3(value)
 	local z = tonumber(value.z or value.Z or value[3])
 	if x and y and z then
 		return Vector3.new(x, y, z)
+	end
+	return nil
+end
+
+local function coerceVector2(value)
+	if typeof(value) == "Vector2" then
+		return value
+	end
+	if type(value) ~= "table" then
+		return nil
+	end
+	local x = tonumber(value.x or value.X or value[1])
+	local y = tonumber(value.y or value.Y or value[2])
+	if x and y then
+		return Vector2.new(x, y)
 	end
 	return nil
 end
@@ -512,6 +667,76 @@ local function cframeFromSpec(spec)
 	return CFrame.new(x, y, z) * CFrame.Angles(rx, ry, rz)
 end
 
+local function normalizeViewportTargetSpec(value)
+	if type(value) ~= "table" then
+		return nil
+	end
+	local x = tonumber(value.x or value.X or value[1])
+	local y = tonumber(value.y or value.Y or value[2])
+	if not (x and y) then
+		return nil
+	end
+	return {
+		x = math.clamp(x, 0.05, 0.95),
+		y = math.clamp(y, 0.05, 0.95),
+	}
+end
+
+local function normalizeScreenSpec(value)
+	if type(value) ~= "table" then
+		return nil
+	end
+	local mode = type(value.mode) == "string" and value.mode or nil
+	local hostCFrameSpec = value.hostCFrame or value.HostCFrame or value.cframe or value.CFrame
+	local hostCFrame = hostCFrameSpec and cframeFromSpec(hostCFrameSpec) or nil
+	local faceName = type(value.face) == "string" and value.face or "Front"
+	local face = Enum.NormalId[faceName] or Enum.NormalId.Front
+	return {
+		enabled = value.enabled ~= false,
+		mode = mode,
+		size = coerceVector2(value.size or value.Size),
+		studsOffset = coerceVector3(value.studsOffset or value.StudsOffset or value.offset or value.Offset),
+		hostCFrame = hostCFrame,
+		hostSize = coerceVector3(value.hostSize or value.HostSize or value.sizeStuds or value.SizeStuds),
+		canvasSize = coerceVector2(value.canvasSize or value.CanvasSize),
+		pixelsPerStud = math.max(1, tonumber(value.pixelsPerStud or value.PixelsPerStud) or 180),
+		contentRotationDeg = tonumber(value.contentRotationDeg or value.ContentRotationDeg or value.rotationDeg or value.RotationDeg) or 0,
+		face = face,
+		alwaysOnTop = value.alwaysOnTop ~= false,
+	}
+end
+
+local function normalizeFpvArmSideSpec(value)
+	if type(value) ~= "table" then
+		return nil
+	end
+	return {
+		cframe = cframeFromSpec(value),
+		handTransparency = math.clamp(tonumber(value.handTransparency) or 0, 0, 1),
+		lowerArmTransparency = math.clamp(tonumber(value.lowerArmTransparency) or 0, 0, 1),
+		upperArmTransparency = math.clamp(tonumber(value.upperArmTransparency) or 1, 0, 1),
+	}
+end
+
+local function normalizeFpvArmsSpec(value)
+	if type(value) ~= "table" then
+		return nil
+	end
+	local left = normalizeFpvArmSideSpec(value.Left or value.left)
+	local right = normalizeFpvArmSideSpec(value.Right or value.right)
+	if not left and not right then
+		return nil
+	end
+	return {
+		Left = left,
+		Right = right,
+		handScale = math.clamp(tonumber(value.handScale or value.scale) or 1, 0.05, 3),
+		visible = value.visible ~= false,
+		hideUpper = value.hideUpper ~= false,
+		lowerCFrame = cframeFromSpec(value.lowerCFrame or { x = 0, y = -0.32, z = 0.10, rx = 8, ry = 0, rz = 0 }),
+	}
+end
+
 local function normalizeMountSpec(spec)
 	local mount = type(spec) == "table" and spec or DEFAULT_MOUNT_SPEC
 	return {
@@ -521,7 +746,15 @@ local function normalizeMountSpec(spec)
 		twoHandBlend = math.clamp(tonumber(mount.twoHandBlend) or DEFAULT_MOUNT_SPEC.twoHandBlend, 0, 0.8),
 		holdSeconds = math.max(0.6, tonumber(mount.holdSeconds) or DEFAULT_MOUNT_SPEC.holdSeconds),
 		viewportBias = type(mount.viewportBias) == "string" and mount.viewportBias or nil,
+		viewportTarget = normalizeViewportTargetSpec(mount.viewportTarget),
+		fitToViewport = mount.fitToViewport ~= false,
+		handTransparency = math.clamp(tonumber(mount.handTransparency) or 0, 0, 1),
+		lowerArmTransparency = math.clamp(tonumber(mount.lowerArmTransparency) or 0, 0, 1),
+		upperArmTransparency = math.clamp(tonumber(mount.upperArmTransparency) or 0.65, 0, 1),
+		cameraSpace = mount.cameraSpace == true,
+		cameraCFrame = cframeFromSpec(mount.cameraCFrame),
 		cframe = cframeFromSpec(mount.cframe or DEFAULT_MOUNT_SPEC.cframe),
+		fpvArms = normalizeFpvArmsSpec(mount.fpvArms),
 	}
 end
 
@@ -539,6 +772,35 @@ local function ensurePrimaryPart(model)
 	return basePart
 end
 
+local function getRenderableBoundsSize(model)
+	if not (model and model:IsA("Model")) then
+		return nil
+	end
+	local maxSize = Vector3.zero
+	local foundRenderable = false
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart")
+			and descendant.Transparency < 0.98
+			and descendant.Name ~= FLASHLIGHT_AIM_HOST_NAME
+			and descendant.Name ~= CAMERA_SCREEN_HOST_NAME
+			and descendant.Name ~= EMF_SCREEN_HOST_NAME
+			and descendant.Name ~= THERMO_SCREEN_HOST_NAME
+		then
+			local size = descendant.Size
+			maxSize = Vector3.new(
+				math.max(maxSize.X, size.X),
+				math.max(maxSize.Y, size.Y),
+				math.max(maxSize.Z, size.Z)
+			)
+			foundRenderable = true
+		end
+	end
+	if foundRenderable then
+		return maxSize
+	end
+	return nil
+end
+
 local function clampModelBounds(model, targetBounds)
 	if not (model and model:IsA("Model")) then
 		return
@@ -546,9 +808,13 @@ local function clampModelBounds(model, targetBounds)
 	if typeof(targetBounds) ~= "Vector3" then
 		return
 	end
-	local okExtents, extents = pcall(function()
-		return model:GetExtentsSize()
-	end)
+	local renderableExtents = getRenderableBoundsSize(model)
+	local okExtents, extents = true, renderableExtents
+	if typeof(extents) ~= "Vector3" then
+		okExtents, extents = pcall(function()
+			return model:GetExtentsSize()
+		end)
+	end
 	if not okExtents or typeof(extents) ~= "Vector3" then
 		return
 	end
@@ -574,7 +840,7 @@ local function clampModelBounds(model, targetBounds)
 		currentScale = modelScale
 	end
 	pcall(function()
-		model:ScaleTo(math.max(0.01, currentScale * factor))
+		model:ScaleTo(math.max(0.001, currentScale * factor))
 	end)
 end
 
@@ -673,6 +939,210 @@ local function getFpvArmsModel()
 	return nil
 end
 
+local function findFpvGripPart(fpvArms, hand, role)
+	if not fpvArms then
+		return nil
+	end
+	local group = FPV_GRIP_PART_GROUPS[hand]
+	local names = group and group[role]
+	if type(names) ~= "table" then
+		return nil
+	end
+	for _, name in ipairs(names) do
+		local part = fpvArms:FindFirstChild(name)
+		if part and part:IsA("BasePart") then
+			return part
+		end
+	end
+	return nil
+end
+
+local function resetFpvGripPose(fpvArms)
+	if not fpvArms then
+		return nil
+	end
+	local viewRoot = fpvArms:FindFirstChild(FPV_VIEW_ROOT_NAME)
+	if not (viewRoot and viewRoot:IsA("BasePart")) then
+		return nil
+	end
+
+	for _, part in ipairs(fpvArms:GetChildren()) do
+		if part:IsA("BasePart") and part ~= viewRoot then
+			if state.fpvBaseLocalCFrames[part] == nil then
+				state.fpvBaseLocalCFrames[part] = viewRoot.CFrame:ToObjectSpace(part.CFrame)
+				state.fpvBaseTransparency[part] = part.Transparency
+			end
+			local localCFrame = state.fpvBaseLocalCFrames[part]
+			if typeof(localCFrame) == "CFrame" then
+				part.CFrame = viewRoot.CFrame * localCFrame
+			end
+			part.Transparency = 1
+		end
+	end
+	return viewRoot
+end
+
+local function setGripPartVisible(part, transparency)
+	if not (part and part:IsA("BasePart")) then
+		return
+	end
+	part.Transparency = math.clamp(tonumber(transparency) or 0, 0, 1)
+	part.CanCollide = false
+	part.CanTouch = false
+	part.CanQuery = false
+	part.CastShadow = false
+	part.LocalTransparencyModifier = 0
+end
+
+local function poseGripArm(fpvArms, hand, gripPosition, focusPosition, camera, mount)
+	local sideSign = hand == "Left" and -1 or 1
+	local handPart = findFpvGripPart(fpvArms, hand, "hand")
+	local lowerPart = findFpvGripPart(fpvArms, hand, "lower")
+	local upperPart = findFpvGripPart(fpvArms, hand, "upper")
+	if not (handPart and camera) then
+		return
+	end
+
+	local handForward = (focusPosition - gripPosition)
+	if handForward.Magnitude <= 0.001 then
+		handForward = camera.CFrame.LookVector
+	end
+	handForward = handForward.Unit
+	local palmRoll = math.rad(hand == "Left" and -16 or 16)
+	handPart.CFrame = CFrame.lookAt(gripPosition, gripPosition + handForward, camera.CFrame.UpVector)
+		* CFrame.Angles(math.rad(-8), math.rad(sideSign * 10), palmRoll)
+	setGripPartVisible(handPart, mount and mount.handTransparency or 0)
+
+	if lowerPart and lowerPart ~= handPart then
+		local elbowPosition = gripPosition
+			- camera.CFrame.UpVector * 0.23
+			+ camera.CFrame.RightVector * (sideSign * 0.10)
+			+ camera.CFrame.LookVector * 0.08
+		lowerPart.CFrame = CFrame.lookAt(elbowPosition, gripPosition, camera.CFrame.UpVector)
+			* CFrame.Angles(math.rad(82), 0, math.rad(sideSign * 8))
+		setGripPartVisible(lowerPart, mount and mount.lowerArmTransparency or 0)
+	end
+
+	if upperPart and upperPart ~= lowerPart and upperPart ~= handPart then
+		local shoulderPosition = gripPosition
+			- camera.CFrame.UpVector * 0.46
+			+ camera.CFrame.RightVector * (sideSign * 0.22)
+			+ camera.CFrame.LookVector * 0.14
+		upperPart.CFrame = CFrame.lookAt(shoulderPosition, gripPosition, camera.CFrame.UpVector)
+			* CFrame.Angles(math.rad(76), 0, math.rad(sideSign * 10))
+		setGripPartVisible(upperPart, mount and mount.upperArmTransparency or 0.65)
+	end
+end
+
+local function scaleFpvGripPart(part, scale)
+	if not (part and part:IsA("BasePart")) then
+		return
+	end
+	local baseSize = part:GetAttribute("PasrahFpvGripBaseSize")
+	if typeof(baseSize) ~= "Vector3" then
+		baseSize = part.Size
+		part:SetAttribute("PasrahFpvGripBaseSize", baseSize)
+	end
+	part.Size = baseSize * math.max(0.05, tonumber(scale) or 1)
+end
+
+local function applyCameraSpaceFpvArmPose(fpvArms, mount, camera)
+	local armPose = mount and mount.fpvArms
+	if not (fpvArms and armPose and camera) then
+		return false
+	end
+
+	local anyApplied = false
+	local visible = armPose.visible ~= false
+	local scale = armPose.handScale or 1
+	local function applySide(hand, sidePose)
+		if not sidePose then
+			return
+		end
+		local handPart = findFpvGripPart(fpvArms, hand, "hand")
+		local lowerPart = findFpvGripPart(fpvArms, hand, "lower")
+		local upperPart = findFpvGripPart(fpvArms, hand, "upper")
+		local handCFrame = camera.CFrame * sidePose.cframe
+		local handTransparency = visible and sidePose.handTransparency or 1
+		local lowerTransparency = visible and sidePose.lowerArmTransparency or 1
+		local upperTransparency = (visible and not armPose.hideUpper) and sidePose.upperArmTransparency or 1
+
+		if handPart then
+			scaleFpvGripPart(handPart, scale)
+			handPart.CFrame = handCFrame
+			setGripPartVisible(handPart, handTransparency)
+			anyApplied = true
+		end
+		if lowerPart and lowerPart ~= handPart then
+			scaleFpvGripPart(lowerPart, scale)
+			lowerPart.CFrame = handCFrame * armPose.lowerCFrame
+			setGripPartVisible(lowerPart, lowerTransparency)
+			anyApplied = true
+		end
+		if upperPart and upperPart ~= lowerPart and upperPart ~= handPart then
+			setGripPartVisible(upperPart, upperTransparency)
+		end
+	end
+
+	applySide("Left", armPose.Left)
+	applySide("Right", armPose.Right)
+	return anyApplied
+end
+
+local function applyFpvToolGripPose(fpvArms, mounted)
+	if not (fpvArms and mounted and mounted.model and mounted.profile and mounted.profile.mount) then
+		return
+	end
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+
+	local mount = mounted.profile.mount
+	if applyCameraSpaceFpvArmPose(fpvArms, mount, camera) then
+		return
+	end
+
+	local okPivot, toolPivot = pcall(function()
+		return mounted.model:GetPivot()
+	end)
+	if not okPivot or typeof(toolPivot) ~= "CFrame" then
+		return
+	end
+
+	local okExtents, extents = pcall(function()
+		return mounted.model:GetExtentsSize()
+	end)
+	if not okExtents or typeof(extents) ~= "Vector3" then
+		extents = Vector3.new(0.35, 0.35, 0.35)
+	end
+
+	local primaryHand = mount.hand == "Left" and "Left" or "Right"
+	local secondaryHand = primaryHand == "Left" and "Right" or "Left"
+	if mount.style == "TwoHanded" and mount.secondaryHand then
+		secondaryHand = mount.secondaryHand == "Right" and "Right" or "Left"
+	end
+
+	local halfWidth = math.clamp(extents.X * 0.34, 0.08, 0.22)
+	local lowerOffset = math.clamp(extents.Y * 0.18, 0.04, 0.13)
+	local forwardOffset = math.clamp(extents.Z * 0.25, 0.04, 0.16)
+	local focusPosition = toolPivot.Position
+	fpvArms:SetAttribute("PasrahCurrentHeldToolType", mounted.toolType)
+	local function gripPositionFor(hand, secondary)
+		local sideSign = hand == "Left" and -1 or 1
+		local width = secondary and (halfWidth * 1.05) or (halfWidth * 0.18)
+		return focusPosition
+			+ camera.CFrame.RightVector * (sideSign * width)
+			- camera.CFrame.UpVector * lowerOffset
+			+ camera.CFrame.LookVector * forwardOffset
+	end
+
+	poseGripArm(fpvArms, primaryHand, gripPositionFor(primaryHand, false), focusPosition, camera, mount)
+	if mount.style == "TwoHanded" then
+		poseGripArm(fpvArms, secondaryHand, gripPositionFor(secondaryHand, true), focusPosition, camera, mount)
+	end
+end
+
 local function getHandPart(fpvArms, hand)
 	if not fpvArms then
 		return nil
@@ -724,6 +1194,7 @@ local function resolveToolProfile(toolType)
 		},
 		inventoryModelAssetId = type(raw.inventoryModelAssetId) == "string" and raw.inventoryModelAssetId or nil,
 		targetBounds = coerceVector3(raw.targetBounds),
+		screen = normalizeScreenSpec(raw.screen),
 	}
 end
 
@@ -750,6 +1221,7 @@ local function cloneProfile(profile)
 		},
 		inventoryModelAssetId = profile.inventoryModelAssetId,
 		targetBounds = profile.targetBounds,
+		screen = profile.screen,
 	}
 end
 
@@ -860,7 +1332,7 @@ local function resolveUseVfxStyleProfile(toolType, useVfx, succeeded)
 	}
 end
 
-local state = {
+state = {
 	dirty = true,
 	lastUseStamp = 0,
 	useAnimationUntil = 0,
@@ -885,6 +1357,8 @@ local state = {
 	emfDisplayLevel = 1,
 	thermoDisplayC = 18,
 	thermoLastDisplayC = 18,
+	fpvBaseLocalCFrames = setmetatable({}, { __mode = "k" }),
+	fpvBaseTransparency = setmetatable({}, { __mode = "k" }),
 }
 
 local function clearMountedTool()
@@ -959,6 +1433,10 @@ local function ensureMountedTool(toolType, fpvArms, now)
 		return nil
 	end
 	applyInventoryMeshAssetId(model, profile.inventoryModelAssetId)
+	if profile.targetBounds then
+		clampModelBounds(model, profile.targetBounds)
+	end
+	ensurePrimaryPart(model)
 	model.Name = HELD_TOOL_MODEL_NAME
 	model.Parent = fpvArms
 	model:SetAttribute("PasrahHeldToolType", toolType)
@@ -1008,6 +1486,10 @@ local function ensureFlashlightMount(fpvArms, now, activeToolType)
 		return nil
 	end
 	applyInventoryMeshAssetId(model, profile.inventoryModelAssetId)
+	if profile.targetBounds then
+		clampModelBounds(model, profile.targetBounds)
+	end
+	ensurePrimaryPart(model)
 	model.Name = HELD_FLASHLIGHT_MODEL_NAME
 	model.Parent = fpvArms
 	model:SetAttribute("PasrahHeldToolType", "Flashlight")
@@ -1025,7 +1507,18 @@ local function ensureFlashlightMount(fpvArms, now, activeToolType)
 	return state.flashlightMounted
 end
 
+local function enforceMountedTargetBounds(mounted)
+	if not (mounted and mounted.model and mounted.profile and mounted.profile.targetBounds) then
+		return
+	end
+	clampModelBounds(mounted.model, mounted.profile.targetBounds)
+	ensurePrimaryPart(mounted.model)
+end
+
 local function computeAnimatedOffset(mounted, now)
+	if STATIC_HOLD_TOOLS then
+		return CFrame.new()
+	end
 	if not mounted then
 		return CFrame.new()
 	end
@@ -1056,6 +1549,18 @@ local function computeAnimatedOffset(mounted, now)
 end
 
 local function resolveMountWorldCFrame(fpvArms, mount, animOffset)
+	if mount.cameraSpace == true then
+		local camera = Workspace.CurrentCamera
+		if not camera then
+			return nil, nil
+		end
+		local worldCFrame = camera.CFrame * (mount.cameraCFrame or CFrame.new())
+		if typeof(animOffset) == "CFrame" then
+			worldCFrame *= animOffset
+		end
+		return worldCFrame, camera.CFrame
+	end
+
 	local primaryHand = getHandPart(fpvArms, mount.hand)
 	if not primaryHand then
 		return nil, nil
@@ -1076,6 +1581,9 @@ local function resolveMountWorldCFrame(fpvArms, mount, animOffset)
 end
 
 local function fitMountToViewport(mountWorldCFrame, mount)
+	if mount and mount.fitToViewport == false then
+		return mountWorldCFrame, nil
+	end
 	local camera = Workspace.CurrentCamera
 	if not (camera and camera.ViewportSize) then
 		return mountWorldCFrame, nil
@@ -1085,41 +1593,40 @@ local function fitMountToViewport(mountWorldCFrame, mount)
 		return mountWorldCFrame, nil
 	end
 
-	local shortSide = math.min(viewport.X, viewport.Y)
-	if shortSide >= 560 then
-		return mountWorldCFrame, nil
-	end
-
 	local adjustedCFrame = mountWorldCFrame
 	local totalOffset = Vector3.zero
 
 	for _ = 1, 3 do
 		local projected, onScreen = camera:WorldToViewportPoint(adjustedCFrame.Position)
-		local top = viewport.Y * 0.50
-		local bottom = viewport.Y - 2
-		local left = viewport.X * 0.16
-		local right = viewport.X * 0.84
+		local top = viewport.Y * 0.42
+		local bottom = viewport.Y * 0.74
+		local left = viewport.X * 0.22
+		local right = viewport.X * 0.78
 		if mount.hand == "Left" then
-			left = viewport.X * 0.08
+			left = viewport.X * 0.12
 			right = viewport.X * 0.44
 		elseif mount.hand == "Right" then
-			left = viewport.X * 0.56
-			right = viewport.X * 0.92
+			left = viewport.X * 0.54
+			right = viewport.X * 0.80
 		end
 		if mount.viewportBias == "Center" then
-			left = viewport.X * 0.34
+			left = viewport.X * 0.50
 			right = viewport.X * 0.72
+			top = viewport.Y * 0.46
+			bottom = viewport.Y * 0.72
 		elseif mount.viewportBias == "CenterRight" then
-			left = viewport.X * 0.42
-			right = viewport.X * 0.78
-		end
-		if mount.style == "TwoHanded" then
-			left = viewport.X * 0.30
+			left = viewport.X * 0.48
 			right = viewport.X * 0.76
 		end
+		if mount.style == "TwoHanded" then
+			left = viewport.X * 0.32
+			right = viewport.X * 0.76
+			bottom = viewport.Y * 0.74
+		end
 
-		local targetX = math.clamp(projected.X, left, right)
-		local targetY = math.clamp(projected.Y, top, bottom)
+		local targetSpec = mount.viewportTarget
+		local targetX = targetSpec and (viewport.X * targetSpec.x) or math.clamp(projected.X, left, right)
+		local targetY = targetSpec and (viewport.Y * targetSpec.y) or math.clamp(projected.Y, top, bottom)
 		local needsFit = (not onScreen)
 			or (math.abs(targetX - projected.X) > 1)
 			or (math.abs(targetY - projected.Y) > 1)
@@ -1168,15 +1675,39 @@ end
 
 local function ensureFlashlightLocalLight(mounted)
 	local lens = ensureFlashlightLens(mounted)
-	if not lens then
+	if not (lens and mounted and mounted.model) then
 		return nil
 	end
+	local host = mounted.model:FindFirstChild(FLASHLIGHT_AIM_HOST_NAME)
+	if not (host and host:IsA("BasePart")) then
+		if host then
+			host:Destroy()
+		end
+		host = Instance.new("Part")
+		host.Name = FLASHLIGHT_AIM_HOST_NAME
+		host.Size = Vector3.new(0.05, 0.05, 0.05)
+		host.Transparency = 1
+		host.Anchored = true
+		host.CanCollide = false
+		host.CanTouch = false
+		host.CanQuery = false
+		host.CastShadow = false
+		host.Parent = mounted.model
+	end
+
+	local legacyLight = lens:FindFirstChild("FPV_LocalSpotLight")
+	if legacyLight and legacyLight:IsA("SpotLight") then
+		legacyLight:Destroy()
+	elseif legacyLight then
+		legacyLight:Destroy()
+	end
+
 	local light = mounted.localLight
-	if light and light.Parent == lens and light:IsA("SpotLight") then
+	if light and light.Parent == host and light:IsA("SpotLight") then
 		return light
 	end
 
-	local existing = lens:FindFirstChild("FPV_LocalSpotLight")
+	local existing = host:FindFirstChild("FPV_LocalSpotLight")
 	if existing and existing:IsA("SpotLight") then
 		mounted.localLight = existing
 		return existing
@@ -1198,9 +1729,82 @@ local function ensureFlashlightLocalLight(mounted)
 	spotlight.Color = coerceColor3(FLASHLIGHT_LIGHT_CONFIG.color, DEFAULT_FLASHLIGHT_LOCAL_LIGHT.color)
 	spotlight.Enabled = false
 	spotlight.Shadows = false
-	spotlight.Parent = lens
+	spotlight.Parent = host
 	mounted.localLight = spotlight
 	return spotlight
+end
+
+local function ensureViewmodelFillLight(mounted)
+	if not (mounted and mounted.model) then
+		return nil
+	end
+	local primaryPart = mounted.model.PrimaryPart or mounted.model:FindFirstChildWhichIsA("BasePart", true)
+	if not primaryPart then
+		return nil
+	end
+	local light = primaryPart:FindFirstChild("FPV_ViewmodelFillLight")
+	if light and light:IsA("PointLight") then
+		return light
+	end
+	if light then
+		light:Destroy()
+	end
+	light = Instance.new("PointLight")
+	light.Name = "FPV_ViewmodelFillLight"
+	light.Brightness = mounted.toolType == "Flashlight" and 0.42 or 0.22
+	light.Range = mounted.toolType == "Flashlight" and 2.4 or 1.8
+	light.Color = Color3.fromRGB(255, 238, 202)
+	light.Shadows = false
+	light.Parent = primaryPart
+	return light
+end
+
+local function updateFlashlightViewmodelProxy(mounted)
+	if not (mounted and mounted.toolType == "Flashlight" and mounted.model) then
+		return
+	end
+	local existingProxy = mounted.model:FindFirstChild("FPV_FlashlightReadableProxy")
+	if existingProxy then
+		existingProxy:Destroy()
+	end
+	return
+end
+
+local function captureBolaArwahScreenRefs(mounted, surfaceGui)
+	if not (mounted and surfaceGui and surfaceGui:IsA("SurfaceGui")) then
+		return
+	end
+	local background = surfaceGui:FindFirstChild("Background")
+	local preview = background and background:FindFirstChild("Preview")
+	local viewport = preview and preview:FindFirstChild("LiveViewport")
+	local worldModel = viewport and viewport:FindFirstChild("LiveWorld")
+	local viewCamera = viewport and viewport:FindFirstChild("LiveCamera")
+	local recBadge = background and background:FindFirstChild("RecBadge")
+	local timer = background and background:FindFirstChild("Timer")
+	local battery = background and background:FindFirstChild("Battery")
+	local mode = background and background:FindFirstChild("Mode")
+	local status = preview and preview:FindFirstChild("Status")
+	local scan = preview and preview:FindFirstChild("ScanResult")
+	local lockFrame = preview and preview:FindFirstChild("LockFrame")
+	local recDot = recBadge and recBadge:FindFirstChild("RecDot")
+	if viewport and viewCamera then
+		viewport.CurrentCamera = viewCamera
+	end
+	mounted.screenRefs = {
+		surface = surfaceGui,
+		preview = preview,
+		viewport = viewport,
+		worldModel = worldModel,
+		viewCamera = viewCamera,
+		recBadge = recBadge,
+		recDot = recDot,
+		timer = timer,
+		battery = battery,
+		mode = mode,
+		status = status,
+		scan = scan,
+		lockFrame = lockFrame,
+	}
 end
 
 local function ensureBolaArwahScreen(mounted)
@@ -1212,6 +1816,57 @@ local function ensureBolaArwahScreen(mounted)
 	if not primaryPart then
 		return nil
 	end
+	local screenConfig = mounted.profile and mounted.profile.screen
+	if screenConfig and screenConfig.enabled == false then
+		for _, descendant in ipairs(mounted.model:GetDescendants()) do
+			if descendant.Name == "FPV_CameraScreen" and descendant:IsA("SurfaceGui") then
+				descendant:Destroy()
+			end
+		end
+		mounted.screenRefs = nil
+		mounted.screenPart = nil
+		mounted.cameraScreenFixedToModel = nil
+		return nil
+	end
+
+	local useSurfaceHost = screenConfig and (screenConfig.mode == "SurfaceHost" or screenConfig.hostCFrame ~= nil)
+	if useSurfaceHost then
+		local screenPart = ensureConfiguredScreenHostPart(mounted, CAMERA_SCREEN_HOST_NAME, screenConfig)
+		if not screenPart then
+			return nil
+		end
+		mounted.screenPart = screenPart
+		mounted.cameraScreenFixedToModel = true
+		for _, descendant in ipairs(mounted.model:GetDescendants()) do
+			if descendant.Name == "FPV_CameraScreen"
+				and descendant.Parent ~= screenPart
+				and descendant:IsA("SurfaceGui")
+			then
+				descendant:Destroy()
+			end
+		end
+
+		local surfaceGui = screenPart:FindFirstChild("FPV_CameraScreen")
+		if surfaceGui and not surfaceGui:IsA("SurfaceGui") then
+			surfaceGui:Destroy()
+			surfaceGui = nil
+		end
+		if not surfaceGui then
+			surfaceGui = cloneVisualTemplate(CAMERA_SCREEN_TEMPLATE_PATH, "FPV_CameraScreen")
+			if surfaceGui and surfaceGui:IsA("SurfaceGui") then
+				surfaceGui.Parent = screenPart
+			end
+		end
+		if surfaceGui and surfaceGui:IsA("SurfaceGui") then
+			configureSurfaceGuiForScreen(surfaceGui, screenConfig, Enum.NormalId.Front, Vector2.new(212, 352), 900)
+			captureBolaArwahScreenRefs(mounted, surfaceGui)
+			return surfaceGui
+		end
+
+		warnMissingVisualTemplate("ToolVisuals.CameraScreenSurfaceTemplate")
+		return nil
+	end
+	mounted.cameraScreenFixedToModel = false
 
 	local function alignCameraScreenHostPart(hostPart, anchorPart)
 		if not (hostPart and anchorPart and anchorPart:IsA("BasePart")) then
@@ -1235,7 +1890,7 @@ local function ensureBolaArwahScreen(mounted)
 		if not host then
 			host = Instance.new("Part")
 			host.Name = CAMERA_SCREEN_HOST_NAME
-			host.Size = Vector3.new(0.56, 0.92, 0.03)
+			host.Size = Vector3.new(0.36, 0.58, 0.03)
 			host.Anchored = true
 			host.CanCollide = false
 			host.CanTouch = false
@@ -1651,6 +2306,90 @@ local function ensureJejakEnergiScreen(mounted)
 	if not primaryPart then
 		return nil
 	end
+	local screenConfig = mounted.profile and mounted.profile.screen
+	if screenConfig and screenConfig.enabled == false then
+		for _, descendant in ipairs(mounted.model:GetDescendants()) do
+			if descendant.Name == "FPV_EMFScreen" and (descendant:IsA("SurfaceGui") or descendant:IsA("BillboardGui")) then
+				descendant:Destroy()
+			end
+		end
+		mounted.emfRefs = nil
+		mounted.emfScreenPart = nil
+		mounted.emfScreenFixedToModel = nil
+		return nil
+	end
+
+	local useSurfaceHost = screenConfig and (screenConfig.mode == "SurfaceHost" or screenConfig.hostCFrame ~= nil)
+	if useSurfaceHost then
+		local screenPart = ensureConfiguredScreenHostPart(mounted, EMF_SCREEN_HOST_NAME, screenConfig)
+		if not screenPart then
+			return nil
+		end
+		mounted.emfScreenPart = screenPart
+		mounted.emfScreenFixedToModel = true
+		for _, descendant in ipairs(mounted.model:GetDescendants()) do
+			if descendant.Name == "FPV_EMFScreen"
+				and descendant.Parent ~= screenPart
+				and (descendant:IsA("SurfaceGui") or descendant:IsA("BillboardGui"))
+			then
+				descendant:Destroy()
+			end
+		end
+
+		local surface = screenPart:FindFirstChild("FPV_EMFScreen")
+		if surface and not surface:IsA("SurfaceGui") then
+			surface:Destroy()
+			surface = nil
+		end
+		if surface and surface:IsA("SurfaceGui") then
+			surface.Face = screenConfig.face or Enum.NormalId.Top
+			surface.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+			surface.PixelsPerStud = screenConfig.pixelsPerStud or 760
+			surface.CanvasSize = screenConfig.canvasSize or Vector2.new(220, 124)
+			surface.LightInfluence = 0
+			surface.AlwaysOnTop = screenConfig.alwaysOnTop ~= false
+			applySurfaceGuiContentRotation(surface, screenConfig)
+			mounted.emfRefs = {
+				bars = {
+					surface:FindFirstChild("B1", true),
+					surface:FindFirstChild("B2", true),
+					surface:FindFirstChild("B3", true),
+					surface:FindFirstChild("B4", true),
+					surface:FindFirstChild("B5", true),
+				},
+				label = surface:FindFirstChild("Threat", true),
+			}
+			return surface
+		end
+
+		surface = cloneBillboardTemplateAsSurfaceGui(EMF_SCREEN_TEMPLATE_PATH, "FPV_EMFScreen")
+		if surface and surface:IsA("SurfaceGui") then
+			surface.Face = screenConfig.face or Enum.NormalId.Top
+			surface.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+			surface.PixelsPerStud = screenConfig.pixelsPerStud or 760
+			surface.CanvasSize = screenConfig.canvasSize or Vector2.new(220, 124)
+			surface.LightInfluence = 0
+			surface.AlwaysOnTop = screenConfig.alwaysOnTop ~= false
+			surface.Parent = screenPart
+			applySurfaceGuiContentRotation(surface, screenConfig)
+			mounted.emfRefs = {
+				bars = {
+					surface:FindFirstChild("B1", true),
+					surface:FindFirstChild("B2", true),
+					surface:FindFirstChild("B3", true),
+					surface:FindFirstChild("B4", true),
+					surface:FindFirstChild("B5", true),
+				},
+				label = surface:FindFirstChild("Threat", true),
+			}
+			return surface
+		end
+
+		warnMissingVisualTemplate("ToolVisuals.EMFScreenBillboardTemplate")
+		return nil
+	end
+
+	mounted.emfScreenFixedToModel = false
 	local screenPart = mounted.emfScreenPart
 	if not (screenPart and screenPart.Parent) then
 		screenPart = resolveToolScreenPart(mounted.model, primaryPart, { "screen", "display", "lcd", "monitor", "panel", "emf" })
@@ -1677,10 +2416,11 @@ local function ensureJejakEnergiScreen(mounted)
 
 	surface = cloneVisualTemplate(EMF_SCREEN_TEMPLATE_PATH, "FPV_EMFScreen")
 	if surface and surface:IsA("BillboardGui") then
-		surface.Size = UDim2.fromOffset(220, 124)
-		surface.StudsOffset = Vector3.new(0, 0.06, 0)
+		local screenSize = screenConfig and screenConfig.size or Vector2.new(170, 96)
+		surface.Size = UDim2.fromOffset(screenSize.X, screenSize.Y)
+		surface.StudsOffset = screenConfig and screenConfig.studsOffset or Vector3.new(0, 0.06, 0)
 		surface.LightInfluence = 0
-		surface.AlwaysOnTop = true
+		surface.AlwaysOnTop = not screenConfig or screenConfig.alwaysOnTop ~= false
 		surface.Parent = screenPart
 		mounted.emfRefs = {
 			bars = {
@@ -1707,6 +2447,61 @@ local function ensureSuhuMembekuScreen(mounted)
 	if not primaryPart then
 		return nil
 	end
+	local screenConfig = mounted.profile and mounted.profile.screen
+	if screenConfig and screenConfig.enabled == false then
+		for _, descendant in ipairs(mounted.model:GetDescendants()) do
+			if descendant.Name == "FPV_ThermoScreen" and (descendant:IsA("SurfaceGui") or descendant:IsA("BillboardGui")) then
+				descendant:Destroy()
+			end
+		end
+		mounted.thermoRefs = nil
+		mounted.thermoScreenPart = nil
+		mounted.thermoScreenFixedToModel = nil
+		return nil
+	end
+
+	local useSurfaceHost = screenConfig and (screenConfig.mode == "SurfaceHost" or screenConfig.hostCFrame ~= nil)
+	if useSurfaceHost then
+		local screenPart = ensureConfiguredScreenHostPart(mounted, THERMO_SCREEN_HOST_NAME, screenConfig)
+		if not screenPart then
+			return nil
+		end
+		mounted.thermoScreenPart = screenPart
+		mounted.thermoScreenFixedToModel = true
+		for _, descendant in ipairs(mounted.model:GetDescendants()) do
+			if descendant.Name == "FPV_ThermoScreen"
+				and descendant.Parent ~= screenPart
+				and (descendant:IsA("SurfaceGui") or descendant:IsA("BillboardGui"))
+			then
+				descendant:Destroy()
+			end
+		end
+
+		local surface = screenPart:FindFirstChild("FPV_ThermoScreen")
+		if surface and not surface:IsA("SurfaceGui") then
+			surface:Destroy()
+			surface = nil
+		end
+		if not surface then
+			surface = cloneBillboardTemplateAsSurfaceGui(THERMO_SCREEN_TEMPLATE_PATH, "FPV_ThermoScreen")
+			if surface and surface:IsA("SurfaceGui") then
+				surface.Parent = screenPart
+			end
+		end
+		if surface and surface:IsA("SurfaceGui") then
+			configureSurfaceGuiForScreen(surface, screenConfig, Enum.NormalId.Front, Vector2.new(214, 124), 950)
+			mounted.thermoRefs = {
+				value = surface:FindFirstChild("TempValue", true),
+				trend = surface:FindFirstChild("Trend", true),
+			}
+			return surface
+		end
+
+		warnMissingVisualTemplate("ToolVisuals.ThermoScreenBillboardTemplate")
+		return nil
+	end
+	mounted.thermoScreenFixedToModel = false
+
 	local screenPart = mounted.thermoScreenPart
 	if not (screenPart and screenPart.Parent) then
 		screenPart = resolveToolScreenPart(mounted.model, primaryPart, { "screen", "display", "lcd", "monitor", "panel", "thermo", "temperature" })
@@ -1727,7 +2522,7 @@ local function ensureSuhuMembekuScreen(mounted)
 
 	surface = cloneVisualTemplate(THERMO_SCREEN_TEMPLATE_PATH, "FPV_ThermoScreen")
 	if surface and surface:IsA("BillboardGui") then
-		surface.Size = UDim2.fromOffset(228, 132)
+		surface.Size = UDim2.fromOffset(214, 124)
 		surface.StudsOffset = Vector3.new(0, 0.05, 0)
 		surface.LightInfluence = 0
 		surface.AlwaysOnTop = true
@@ -1755,7 +2550,12 @@ local function updateBolaArwahScreenVisual(mounted, now)
 		return
 	end
 	ensureBolaArwahScreen(mounted)
-	if mounted and mounted.model and mounted.screenPart and mounted.screenPart.Name == CAMERA_SCREEN_HOST_NAME then
+	if mounted
+		and mounted.model
+		and mounted.screenPart
+		and mounted.screenPart.Name == CAMERA_SCREEN_HOST_NAME
+		and mounted.cameraScreenFixedToModel ~= true
+	then
 		local primaryPart = mounted.model.PrimaryPart or mounted.model:FindFirstChildWhichIsA("BasePart", true)
 		if primaryPart then
 			local camera = Workspace.CurrentCamera
@@ -2027,7 +2827,7 @@ local function updateJejakEnergiScreenVisual(mounted, now)
 		return
 	end
 	local emfSurface = mounted.emfScreenPart and mounted.emfScreenPart:FindFirstChild("FPV_EMFScreen")
-	if emfSurface and emfSurface:IsA("SurfaceGui") then
+	if emfSurface and emfSurface:IsA("SurfaceGui") and mounted.emfScreenFixedToModel ~= true then
 		orientSurfaceToCamera(emfSurface, mounted.emfScreenPart)
 	end
 	if state.instrumentStartedAt <= 0 then
@@ -2095,7 +2895,7 @@ local function updateSuhuMembekuScreenVisual(mounted, now)
 		return
 	end
 	local thermoSurface = mounted.thermoScreenPart and mounted.thermoScreenPart:FindFirstChild("FPV_ThermoScreen")
-	if thermoSurface and thermoSurface:IsA("SurfaceGui") then
+	if thermoSurface and thermoSurface:IsA("SurfaceGui") and mounted.thermoScreenFixedToModel ~= true then
 		orientSurfaceToCamera(thermoSurface, mounted.thermoScreenPart)
 	end
 	if state.instrumentStartedAt <= 0 then
@@ -2172,12 +2972,14 @@ local function updateFlashlightVisual(mounted, deltaTime, flashlightEnabled)
 			local offColor = coerceColor3(FLASHLIGHT_LENS_CONFIG.offColor, DEFAULT_FLASHLIGHT_LENS.offColor)
 			local onTransparency = tonumber(FLASHLIGHT_LENS_CONFIG.onTransparency) or DEFAULT_FLASHLIGHT_LENS.onTransparency
 			local offTransparency = tonumber(FLASHLIGHT_LENS_CONFIG.offTransparency) or DEFAULT_FLASHLIGHT_LENS.offTransparency
+			lens.Material = state.flashlightVisualAlpha > 0.18 and Enum.Material.Neon or Enum.Material.SmoothPlastic
 			lens.Color = offColor:Lerp(onColor, state.flashlightVisualAlpha)
 			lens.Transparency = offTransparency + ((onTransparency - offTransparency) * state.flashlightVisualAlpha)
 		end
 
 		local light = ensureFlashlightLocalLight(mounted)
 		if light then
+			orientSpotLightToCameraLook(light, light.Parent)
 			local onBrightness = tonumber(FLASHLIGHT_LIGHT_CONFIG.brightness) or DEFAULT_FLASHLIGHT_LOCAL_LIGHT.brightness
 			local offBrightness = tonumber(FLASHLIGHT_LIGHT_CONFIG.offBrightness) or DEFAULT_FLASHLIGHT_LOCAL_LIGHT.offBrightness
 			local onRange = tonumber(FLASHLIGHT_LIGHT_CONFIG.range) or DEFAULT_FLASHLIGHT_LOCAL_LIGHT.range
@@ -2191,6 +2993,7 @@ local function updateFlashlightVisual(mounted, deltaTime, flashlightEnabled)
 			light.Angle = offAngle + ((onAngle - offAngle) * state.flashlightVisualAlpha)
 			light.Enabled = state.flashlightVisualAlpha > 0.02
 		end
+		updateFlashlightViewmodelProxy(mounted)
 	end
 
 	player:SetAttribute(FLASHLIGHT_VISUAL_ALPHA_ATTRIBUTE, state.flashlightVisualAlpha)
@@ -2383,9 +3186,7 @@ local function updateMountedTool(deltaTime)
 	local activeToolType = resolveActiveToolType(now)
 	local flashlightEnabled = player:GetAttribute(FLASHLIGHT_ENABLED_ATTRIBUTE) == true
 	local flashlightPrimary = activeToolType == "Flashlight"
-	local flashlightCompatible = (type(activeToolType) == "string" and activeToolType ~= "")
-		and canUseWithFlashlight(activeToolType)
-	local shouldShowFlashlight = flashlightPrimary or flashlightEnabled or flashlightCompatible
+	local shouldShowFlashlight = flashlightPrimary
 
 	if not fpvArms then
 		clearMountedTool()
@@ -2393,16 +3194,20 @@ local function updateMountedTool(deltaTime)
 		updateFlashlightVisual(nil, deltaTime, false)
 		return
 	end
+	resetFpvGripPose(fpvArms)
 
 	if activeToolType and activeToolType ~= "Flashlight" then
 		local mounted = ensureMountedTool(activeToolType, fpvArms, now)
 		if mounted and mounted.model and mounted.model.Parent == fpvArms then
+			enforceMountedTargetBounds(mounted)
 			local mountWorldCFrame, baseCFrame = resolveMountWorldCFrame(fpvArms, mounted.profile.mount, computeAnimatedOffset(mounted, now))
 			if mountWorldCFrame and baseCFrame then
 				local viewportOffset = nil
 				mountWorldCFrame, viewportOffset = fitMountToViewport(mountWorldCFrame, mounted.profile.mount)
 				mounted.model:PivotTo(mountWorldCFrame)
+				ensureViewmodelFillLight(mounted)
 				updateSpecialToolVisuals(mounted, now)
+				applyFpvToolGripPose(fpvArms, mounted)
 
 				if state.pendingUseVfx == true and state.pendingUseVfxToolType == mounted.toolType then
 					local succeeded = state.pendingUseVfxSucceeded ~= false
@@ -2433,10 +3238,13 @@ local function updateMountedTool(deltaTime)
 	if shouldShowFlashlight then
 		local flashlightMount = ensureFlashlightMount(fpvArms, now, activeToolType)
 		if flashlightMount and flashlightMount.model and flashlightMount.model.Parent == fpvArms then
+			enforceMountedTargetBounds(flashlightMount)
 			local flashlightWorld = resolveMountWorldCFrame(fpvArms, flashlightMount.profile.mount, nil)
 			if flashlightWorld then
 				flashlightWorld = fitMountToViewport(flashlightWorld, flashlightMount.profile.mount)
 				flashlightMount.model:PivotTo(flashlightWorld)
+				ensureViewmodelFillLight(flashlightMount)
+				applyFpvToolGripPose(fpvArms, flashlightMount)
 				flashlightMount.holdUntil = math.max(flashlightMount.holdUntil or 0, now + math.max(0.35, deltaTime * 2))
 			end
 		end
@@ -2496,6 +3304,34 @@ player:GetAttributeChangedSignal("MatchId"):Connect(function()
 	state.dirty = true
 end)
 player:GetAttributeChangedSignal(FLASHLIGHT_ENABLED_ATTRIBUTE):Connect(function()
+	state.dirty = true
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if UserInputService:GetFocusedTextBox() then
+		return
+	end
+
+	local requestedSlot = nil
+	for slot, keyCode in ipairs(LOADOUT_SLOT_KEY_CODES) do
+		if input.KeyCode == keyCode then
+			requestedSlot = slot
+			break
+		end
+	end
+	if not requestedSlot then
+		return
+	end
+	if gameProcessed and input.KeyCode ~= Enum.KeyCode.One and input.KeyCode ~= Enum.KeyCode.Two and input.KeyCode ~= Enum.KeyCode.Three then
+		return
+	end
+
+	local toolType = player:GetAttribute(LOADOUT_TOOL_ATTR_PREFIX .. tostring(requestedSlot))
+	if type(toolType) ~= "string" or toolType == "" then
+		return
+	end
+
+	player:SetAttribute(EQUIPPED_TOOL_ATTRIBUTE, toolType)
 	state.dirty = true
 end)
 

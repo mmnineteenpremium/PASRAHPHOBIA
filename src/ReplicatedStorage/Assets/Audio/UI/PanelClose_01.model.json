@@ -6,7 +6,7 @@
     "AcousticSimulationEnabled": {
       "Bool": true
     },
-    "AudioContent": "rbxassetid://73589904561594",
+    "AudioContent": "rbxassetid://71780731527254",
     "RollOffMinDistance": 5.0
   }
 }

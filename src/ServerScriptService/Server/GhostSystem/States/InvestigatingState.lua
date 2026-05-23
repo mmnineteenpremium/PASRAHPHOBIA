@@ -23,7 +23,8 @@ function InvestigatingState.Update(session, context)
 		return "Roaming"
 	end
 
-	if (session.aggression or 0) >= (context.config.ManifestAggressionThreshold or 45)
+	if context.manifestAllowed == true
+		and (session.aggression or 0) >= (context.config.ManifestAggressionThreshold or 45)
 		and context.rng:NextNumber() <= (context.config.ManifestChanceWhileInvestigating or 0.15)
 	then
 		return "Manifest"

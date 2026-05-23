@@ -211,37 +211,43 @@ local GHOST_AUDIO_SHOCK_PROFILES = {
 }
 
 local DEFAULT_MAP_ATMOSPHERE = {
-	Density = 0.38,
-	Offset = 0.22,
-	Color = Color3.fromRGB(148, 158, 176),
-	Decay = Color3.fromRGB(96, 106, 124),
-	Glare = 0.16,
-	Haze = 1.85,
+	Density = 0.34,
+	Offset = 0.08,
+	Color = Color3.fromRGB(126, 138, 156),
+	Decay = Color3.fromRGB(54, 62, 78),
+	Glare = 0.015,
+	Haze = 1.55,
 }
 
 local DEFAULT_MAP_LIGHTING = {
-	ClockTime = 14.2,
-	Brightness = 2.1,
-	ExposureCompensation = -0.08,
-	Ambient = Color3.fromRGB(108, 116, 132),
-	OutdoorAmbient = Color3.fromRGB(122, 128, 144),
-	EnvironmentDiffuseScale = 0.26,
-	EnvironmentSpecularScale = 0.18,
+	ClockTime = 0.35,
+	Brightness = 1.32,
+	ExposureCompensation = -0.16,
+	Ambient = Color3.fromRGB(58, 64, 76),
+	OutdoorAmbient = Color3.fromRGB(38, 44, 58),
+	EnvironmentDiffuseScale = 0.2,
+	EnvironmentSpecularScale = 0.09,
 	ColorShift_Top = Color3.fromRGB(0, 0, 0),
 	ColorShift_Bottom = Color3.fromRGB(0, 0, 0),
 }
 
+local DEFAULT_MAP_FOG = {
+	FogStart = 26,
+	FogEnd = 180,
+	FogColor = Color3.fromRGB(24, 30, 42),
+}
+
 local DEFAULT_MAP_GRADE = {
-	Brightness = 0,
-	Contrast = 0.02,
-	Saturation = -0.04,
-	TintColor = Color3.fromRGB(248, 248, 252),
+	Brightness = -0.035,
+	Contrast = 0.18,
+	Saturation = -0.18,
+	TintColor = Color3.fromRGB(214, 224, 240),
 }
 
 local DEFAULT_MAP_BLOOM = {
-	Intensity = 0.14,
-	Size = 18,
-	Threshold = 1.12,
+	Intensity = 0.035,
+	Size = 14,
+	Threshold = 1.55,
 }
 
 local DEFAULT_MAP_DOF = {
@@ -322,36 +328,36 @@ local MAP_ATMOSPHERE_PROFILES = {
 		Haze = 1.2,
 	},
 	AbandonedPalace = {
-		Density = 0.5,
-		Offset = 0.34,
-		Color = Color3.fromRGB(170, 152, 136),
-		Decay = Color3.fromRGB(112, 94, 82),
-		Glare = 0.22,
-		Haze = 2.35,
+		Density = 0.42,
+		Offset = 0.04,
+		Color = Color3.fromRGB(116, 102, 94),
+		Decay = Color3.fromRGB(48, 38, 36),
+		Glare = 0.004,
+		Haze = 2.2,
 	},
 	HauntedHouse = {
-		Density = 0.34,
-		Offset = 0.18,
-		Color = Color3.fromRGB(162, 170, 188),
-		Decay = Color3.fromRGB(112, 118, 136),
-		Glare = 0.1,
-		Haze = 1.55,
+		Density = 0.38,
+		Offset = 0.03,
+		Color = Color3.fromRGB(98, 112, 134),
+		Decay = Color3.fromRGB(28, 34, 48),
+		Glare = 0,
+		Haze = 2.05,
 	},
 	EmptyBuilding = {
-		Density = 0.32,
-		Offset = 0.14,
-		Color = Color3.fromRGB(176, 182, 194),
-		Decay = Color3.fromRGB(122, 128, 142),
-		Glare = 0.09,
-		Haze = 1.45,
+		Density = 0.4,
+		Offset = 0.04,
+		Color = Color3.fromRGB(104, 116, 134),
+		Decay = Color3.fromRGB(34, 42, 54),
+		Glare = 0.003,
+		Haze = 2.0,
 	},
 	StudioMMNineteen = {
-		Density = 0.36,
-		Offset = 0.2,
-		Color = Color3.fromRGB(160, 168, 184),
-		Decay = Color3.fromRGB(104, 112, 128),
-		Glare = 0.12,
-		Haze = 1.7,
+		Density = 0.41,
+		Offset = 0.04,
+		Color = Color3.fromRGB(98, 110, 132),
+		Decay = Color3.fromRGB(30, 36, 52),
+		Glare = 0.003,
+		Haze = 2.1,
 	},
 }
 
@@ -368,48 +374,76 @@ local MAP_LIGHTING_PROFILES = {
 		ColorShift_Bottom = Color3.fromRGB(6, 4, 2),
 	},
 	AbandonedPalace = {
-		ClockTime = 19.2,
-		Brightness = 1.65,
-		ExposureCompensation = -0.34,
-		Ambient = Color3.fromRGB(88, 76, 70),
-		OutdoorAmbient = Color3.fromRGB(104, 90, 82),
-		EnvironmentDiffuseScale = 0.18,
+		ClockTime = 0.25,
+		Brightness = 1.2,
+		ExposureCompensation = -0.2,
+		Ambient = Color3.fromRGB(62, 52, 50),
+		OutdoorAmbient = Color3.fromRGB(42, 34, 34),
+		EnvironmentDiffuseScale = 0.19,
 		EnvironmentSpecularScale = 0.08,
-		ColorShift_Top = Color3.fromRGB(18, 8, 2),
-		ColorShift_Bottom = Color3.fromRGB(10, 4, 0),
+		ColorShift_Top = Color3.fromRGB(12, 6, 4),
+		ColorShift_Bottom = Color3.fromRGB(4, 2, 2),
 	},
 	HauntedHouse = {
-		ClockTime = 1.35,
-		Brightness = 2.02,
-		ExposureCompensation = -0.08,
-		Ambient = Color3.fromRGB(104, 114, 130),
-		OutdoorAmbient = Color3.fromRGB(118, 126, 142),
-		EnvironmentDiffuseScale = 0.3,
-		EnvironmentSpecularScale = 0.14,
-		ColorShift_Top = Color3.fromRGB(2, 8, 14),
-		ColorShift_Bottom = Color3.fromRGB(2, 6, 10),
+		ClockTime = 0.2,
+		Brightness = 1.26,
+		ExposureCompensation = -0.16,
+		Ambient = Color3.fromRGB(58, 64, 76),
+		OutdoorAmbient = Color3.fromRGB(38, 44, 58),
+		EnvironmentDiffuseScale = 0.2,
+		EnvironmentSpecularScale = 0.08,
+		ColorShift_Top = Color3.fromRGB(2, 5, 10),
+		ColorShift_Bottom = Color3.fromRGB(0, 2, 5),
 	},
 	EmptyBuilding = {
-		ClockTime = 16.8,
-		Brightness = 1.95,
-		ExposureCompensation = -0.16,
-		Ambient = Color3.fromRGB(118, 122, 134),
-		OutdoorAmbient = Color3.fromRGB(132, 136, 148),
-		EnvironmentDiffuseScale = 0.24,
-		EnvironmentSpecularScale = 0.14,
-		ColorShift_Top = Color3.fromRGB(4, 6, 10),
-		ColorShift_Bottom = Color3.fromRGB(2, 4, 8),
+		ClockTime = 23.75,
+		Brightness = 1.28,
+		ExposureCompensation = -0.18,
+		Ambient = Color3.fromRGB(58, 64, 76),
+		OutdoorAmbient = Color3.fromRGB(36, 42, 54),
+		EnvironmentDiffuseScale = 0.2,
+		EnvironmentSpecularScale = 0.085,
+		ColorShift_Top = Color3.fromRGB(3, 5, 10),
+		ColorShift_Bottom = Color3.fromRGB(1, 2, 6),
 	},
 	StudioMMNineteen = {
-		ClockTime = 18.1,
-		Brightness = 1.82,
-		ExposureCompensation = -0.22,
-		Ambient = Color3.fromRGB(98, 104, 116),
-		OutdoorAmbient = Color3.fromRGB(112, 118, 130),
-		EnvironmentDiffuseScale = 0.22,
-		EnvironmentSpecularScale = 0.12,
-		ColorShift_Top = Color3.fromRGB(6, 6, 12),
-		ColorShift_Bottom = Color3.fromRGB(4, 4, 8),
+		ClockTime = 23.9,
+		Brightness = 1.24,
+		ExposureCompensation = -0.18,
+		Ambient = Color3.fromRGB(54, 62, 76),
+		OutdoorAmbient = Color3.fromRGB(34, 40, 54),
+		EnvironmentDiffuseScale = 0.19,
+		EnvironmentSpecularScale = 0.08,
+		ColorShift_Top = Color3.fromRGB(4, 5, 10),
+		ColorShift_Bottom = Color3.fromRGB(1, 2, 5),
+	},
+}
+
+local MAP_FOG_PROFILES = {
+	LobbySocialHub = {
+		FogStart = 80,
+		FogEnd = 420,
+		FogColor = Color3.fromRGB(188, 196, 208),
+	},
+	AbandonedPalace = {
+		FogStart = 22,
+		FogEnd = 150,
+		FogColor = Color3.fromRGB(34, 28, 28),
+	},
+	HauntedHouse = {
+		FogStart = 24,
+		FogEnd = 160,
+		FogColor = Color3.fromRGB(22, 28, 40),
+	},
+	EmptyBuilding = {
+		FogStart = 24,
+		FogEnd = 170,
+		FogColor = Color3.fromRGB(24, 30, 40),
+	},
+	StudioMMNineteen = {
+		FogStart = 22,
+		FogEnd = 155,
+		FogColor = Color3.fromRGB(22, 28, 40),
 	},
 }
 
@@ -421,28 +455,28 @@ local MAP_GRADE_PROFILES = {
 		TintColor = Color3.fromRGB(248, 246, 240),
 	},
 	AbandonedPalace = {
-		Brightness = -0.02,
-		Contrast = 0.08,
-		Saturation = -0.12,
-		TintColor = Color3.fromRGB(236, 220, 204),
+		Brightness = -0.045,
+		Contrast = 0.22,
+		Saturation = -0.24,
+		TintColor = Color3.fromRGB(218, 204, 194),
 	},
 	HauntedHouse = {
-		Brightness = 0.03,
-		Contrast = 0.08,
-		Saturation = -0.08,
-		TintColor = Color3.fromRGB(228, 236, 248),
+		Brightness = -0.04,
+		Contrast = 0.24,
+		Saturation = -0.22,
+		TintColor = Color3.fromRGB(204, 216, 236),
 	},
 	EmptyBuilding = {
-		Brightness = 0,
-		Contrast = 0.06,
-		Saturation = -0.1,
-		TintColor = Color3.fromRGB(238, 240, 246),
+		Brightness = -0.035,
+		Contrast = 0.2,
+		Saturation = -0.2,
+		TintColor = Color3.fromRGB(212, 222, 238),
 	},
 	StudioMMNineteen = {
-		Brightness = -0.01,
-		Contrast = 0.07,
-		Saturation = -0.08,
-		TintColor = Color3.fromRGB(232, 238, 248),
+		Brightness = -0.04,
+		Contrast = 0.22,
+		Saturation = -0.2,
+		TintColor = Color3.fromRGB(204, 216, 236),
 	},
 }
 
@@ -453,24 +487,24 @@ local MAP_BLOOM_PROFILES = {
 		Threshold = 1.18,
 	},
 	AbandonedPalace = {
-		Intensity = 0.08,
-		Size = 14,
-		Threshold = 1.42,
+		Intensity = 0.03,
+		Size = 12,
+		Threshold = 1.62,
 	},
 	HauntedHouse = {
-		Intensity = 0.05,
-		Size = 12,
-		Threshold = 1.02,
+		Intensity = 0.025,
+		Size = 10,
+		Threshold = 1.58,
 	},
 	EmptyBuilding = {
-		Intensity = 0.1,
-		Size = 16,
-		Threshold = 1.34,
+		Intensity = 0.035,
+		Size = 12,
+		Threshold = 1.6,
 	},
 	StudioMMNineteen = {
-		Intensity = 0.09,
-		Size = 15,
-		Threshold = 1.38,
+		Intensity = 0.03,
+		Size = 12,
+		Threshold = 1.62,
 	},
 }
 
@@ -513,57 +547,58 @@ local MAP_SUNRAYS_PROFILES = {
 		Spread = 0.88,
 	},
 	AbandonedPalace = {
-		Intensity = 0.018,
-		Spread = 0.76,
-	},
-	HauntedHouse = {
-		Intensity = 0.012,
+		Intensity = 0.002,
 		Spread = 0.72,
 	},
+	HauntedHouse = {
+		Intensity = 0.001,
+		Spread = 0.68,
+	},
 	EmptyBuilding = {
-		Intensity = 0.034,
-		Spread = 0.8,
+		Intensity = 0.004,
+		Spread = 0.74,
 	},
 	StudioMMNineteen = {
-		Intensity = 0.026,
-		Spread = 0.78,
+		Intensity = 0.003,
+		Spread = 0.72,
 	},
 }
 
 local PREPARATION_VISUAL_PROFILES = {
 	HauntedHouse = {
-		Exposure = 0.12,
-		BloomIntensity = 0.14,
-		SunRaysIntensity = 0.038,
-		AtmosphereDensityDelta = -0.035,
-		GradeTint = Color3.fromRGB(244, 236, 220),
+		Exposure = 0.08,
+		BloomIntensity = 0.06,
+		SunRaysIntensity = 0.004,
+		AtmosphereDensityDelta = -0.02,
+		GradeTint = Color3.fromRGB(226, 230, 226),
 	},
 	AbandonedPalace = {
-		Exposure = -0.08,
-		BloomIntensity = 0.12,
-		SunRaysIntensity = 0.026,
-		AtmosphereDensityDelta = -0.05,
-		GradeTint = Color3.fromRGB(250, 224, 198),
+		Exposure = 0.02,
+		BloomIntensity = 0.055,
+		SunRaysIntensity = 0.004,
+		AtmosphereDensityDelta = -0.018,
+		GradeTint = Color3.fromRGB(232, 218, 204),
 	},
 	EmptyBuilding = {
-		Exposure = 0.08,
-		BloomIntensity = 0.12,
-		SunRaysIntensity = 0.036,
-		AtmosphereDensityDelta = -0.028,
-		GradeTint = Color3.fromRGB(236, 242, 252),
+		Exposure = 0.06,
+		BloomIntensity = 0.055,
+		SunRaysIntensity = 0.004,
+		AtmosphereDensityDelta = -0.018,
+		GradeTint = Color3.fromRGB(224, 232, 242),
 	},
 	StudioMMNineteen = {
-		Exposure = 0.05,
-		BloomIntensity = 0.11,
-		SunRaysIntensity = 0.03,
-		AtmosphereDensityDelta = -0.025,
-		GradeTint = Color3.fromRGB(226, 238, 255),
+		Exposure = 0.04,
+		BloomIntensity = 0.055,
+		SunRaysIntensity = 0.003,
+		AtmosphereDensityDelta = -0.018,
+		GradeTint = Color3.fromRGB(218, 228, 242),
 	},
 }
 
 local PREPARATION_TOOL_VISUAL_ACCENTS = {
 	EMF = Color3.fromRGB(152, 206, 255),
 	["UV CAM"] = Color3.fromRGB(174, 148, 255),
+	["TO'UN CAM"] = Color3.fromRGB(174, 148, 255),
 	THERMO = Color3.fromRGB(178, 224, 255),
 	BOX = Color3.fromRGB(255, 184, 154),
 	WRITING = Color3.fromRGB(228, 232, 242),
@@ -698,6 +733,63 @@ local function ensureAtmosphere()
 	return atmosphere
 end
 
+local function applyMapSkyOcclusion(mapName)
+	local shouldOcclude = mapName ~= "LobbySocialHub"
+	local generatedSky = Lighting:FindFirstChild("PasrahMatchFogSky")
+	if shouldOcclude and not generatedSky then
+		generatedSky = Instance.new("Sky")
+		generatedSky.Name = "PasrahMatchFogSky"
+		generatedSky:SetAttribute("PasrahGeneratedMatchSky", true)
+		generatedSky.Parent = Lighting
+	elseif not shouldOcclude and generatedSky and generatedSky:GetAttribute("PasrahGeneratedMatchSky") == true then
+		generatedSky:Destroy()
+		generatedSky = nil
+	end
+	for _, child in ipairs(Lighting:GetChildren()) do
+		if child:IsA("Sky") then
+			if child:GetAttribute("PasrahBaseCelestialBodiesShown") == nil then
+				child:SetAttribute("PasrahBaseCelestialBodiesShown", child.CelestialBodiesShown)
+				child:SetAttribute("PasrahBaseStarCount", child.StarCount)
+				child:SetAttribute("PasrahBaseSunAngularSize", child.SunAngularSize)
+				child:SetAttribute("PasrahBaseMoonAngularSize", child.MoonAngularSize)
+				child:SetAttribute("PasrahBaseSkyboxBk", child.SkyboxBk)
+				child:SetAttribute("PasrahBaseSkyboxDn", child.SkyboxDn)
+				child:SetAttribute("PasrahBaseSkyboxFt", child.SkyboxFt)
+				child:SetAttribute("PasrahBaseSkyboxLf", child.SkyboxLf)
+				child:SetAttribute("PasrahBaseSkyboxRt", child.SkyboxRt)
+				child:SetAttribute("PasrahBaseSkyboxUp", child.SkyboxUp)
+			end
+			if shouldOcclude then
+				child.CelestialBodiesShown = false
+				child.StarCount = 0
+				child.SunAngularSize = 0
+				child.MoonAngularSize = 0
+				child.SkyboxBk = ""
+				child.SkyboxDn = ""
+				child.SkyboxFt = ""
+				child.SkyboxLf = ""
+				child.SkyboxRt = ""
+				child.SkyboxUp = ""
+			else
+				local baseCelestial = child:GetAttribute("PasrahBaseCelestialBodiesShown")
+				local baseStarCount = child:GetAttribute("PasrahBaseStarCount")
+				local baseSunSize = child:GetAttribute("PasrahBaseSunAngularSize")
+				local baseMoonSize = child:GetAttribute("PasrahBaseMoonAngularSize")
+				child.CelestialBodiesShown = baseCelestial == nil and true or baseCelestial == true
+				child.StarCount = tonumber(baseStarCount) or child.StarCount
+				child.SunAngularSize = tonumber(baseSunSize) or child.SunAngularSize
+				child.MoonAngularSize = tonumber(baseMoonSize) or child.MoonAngularSize
+				child.SkyboxBk = child:GetAttribute("PasrahBaseSkyboxBk") or child.SkyboxBk
+				child.SkyboxDn = child:GetAttribute("PasrahBaseSkyboxDn") or child.SkyboxDn
+				child.SkyboxFt = child:GetAttribute("PasrahBaseSkyboxFt") or child.SkyboxFt
+				child.SkyboxLf = child:GetAttribute("PasrahBaseSkyboxLf") or child.SkyboxLf
+				child.SkyboxRt = child:GetAttribute("PasrahBaseSkyboxRt") or child.SkyboxRt
+				child.SkyboxUp = child:GetAttribute("PasrahBaseSkyboxUp") or child.SkyboxUp
+			end
+		end
+	end
+end
+
 local function normalizeCueToken(value)
 	return tostring(value or ""):gsub("[%s_%-_]+", ""):lower()
 end
@@ -799,6 +891,10 @@ function VFXController:Init(context)
 	self._baseLightingColorShiftBottom = Lighting.ColorShift_Bottom
 	self._baseLightingGlobalShadows = Lighting.GlobalShadows
 	self._baseLightingShadowSoftness = Lighting.ShadowSoftness
+	self._baseLightingFogStart = Lighting.FogStart
+	self._baseLightingFogEnd = Lighting.FogEnd
+	self._baseLightingFogColor = Lighting.FogColor
+	self._activeMapLightingExposure = self._baseLightingExposure
 	self._baseMapGradeBrightness = self._mapCorrection and self._mapCorrection.Brightness or DEFAULT_MAP_GRADE.Brightness
 	self._baseMapGradeContrast = self._mapCorrection and self._mapCorrection.Contrast or DEFAULT_MAP_GRADE.Contrast
 	self._baseMapGradeSaturation = self._mapCorrection and self._mapCorrection.Saturation or DEFAULT_MAP_GRADE.Saturation
@@ -1569,6 +1665,7 @@ function VFXController:_applyMapLighting(mapName)
 	Lighting.ClockTime = profile.ClockTime or self._baseLightingClockTime or DEFAULT_MAP_LIGHTING.ClockTime
 	Lighting.Brightness = profile.Brightness or self._baseLightingBrightness or DEFAULT_MAP_LIGHTING.Brightness
 	Lighting.ExposureCompensation = profile.ExposureCompensation or self._baseLightingExposure or DEFAULT_MAP_LIGHTING.ExposureCompensation
+	self._activeMapLightingExposure = Lighting.ExposureCompensation
 	Lighting.Ambient = profile.Ambient or self._baseLightingAmbient or DEFAULT_MAP_LIGHTING.Ambient
 	Lighting.OutdoorAmbient = profile.OutdoorAmbient or self._baseLightingOutdoorAmbient or DEFAULT_MAP_LIGHTING.OutdoorAmbient
 	Lighting.EnvironmentDiffuseScale = (profile.EnvironmentDiffuseScale or self._baseLightingDiffuseScale or DEFAULT_MAP_LIGHTING.EnvironmentDiffuseScale)
@@ -1579,6 +1676,14 @@ function VFXController:_applyMapLighting(mapName)
 	Lighting.ColorShift_Bottom = profile.ColorShift_Bottom or self._baseLightingColorShiftBottom or DEFAULT_MAP_LIGHTING.ColorShift_Bottom
 	Lighting.GlobalShadows = graphicsProfile.useGlobalShadows == true and self._baseLightingGlobalShadows ~= false
 	Lighting.ShadowSoftness = math.clamp((self._baseLightingShadowSoftness or 0.5) * (graphicsProfile.shadowSoftnessScale or 1), 0, 1)
+end
+
+function VFXController:_applyMapFog(mapName)
+	local profile = MAP_FOG_PROFILES[mapName] or DEFAULT_MAP_FOG
+	Lighting.FogStart = tonumber(profile.FogStart) or self._baseLightingFogStart or DEFAULT_MAP_FOG.FogStart
+	Lighting.FogEnd = tonumber(profile.FogEnd) or self._baseLightingFogEnd or DEFAULT_MAP_FOG.FogEnd
+	Lighting.FogColor = profile.FogColor or self._baseLightingFogColor or DEFAULT_MAP_FOG.FogColor
+	applyMapSkyOcclusion(mapName)
 end
 
 function VFXController:_applyMapGrade(mapName)
@@ -1645,7 +1750,11 @@ function VFXController:_applyPreparationVisualProfile(mapName)
 	local focusTool = tostring(localPlayer and localPlayer:GetAttribute("PreparationFocusTool") or "")
 	local focusAccent = PREPARATION_TOOL_VISUAL_ACCENTS[focusTool]
 	local tintTarget = self._baseMapGradeTint
-	local exposureTarget = self._baseLightingExposure
+	local mapExposure = tonumber(self._activeMapLightingExposure)
+	if mapExposure == nil then
+		mapExposure = tonumber(self._baseLightingExposure) or DEFAULT_MAP_LIGHTING.ExposureCompensation
+	end
+	local exposureTarget = mapExposure
 	local bloomTarget = self:_scaleMapBloomIntensity(self._baseMapBloomIntensity)
 	local raysTarget = self:_scaleMapSunRaysIntensity(self._baseMapSunRaysIntensity)
 	local atmosphereTarget = self:_scaleAtmosphereDensity(self._baseAtmosphereDensity, 0)
@@ -1653,7 +1762,7 @@ function VFXController:_applyPreparationVisualProfile(mapName)
 
 	if isPreparation and profile then
 		tintTarget = profile.GradeTint or tintTarget
-		exposureTarget = (profile.Exposure or 0) + self._baseLightingExposure
+		exposureTarget = mapExposure + (profile.Exposure or 0)
 		bloomTarget = self:_scaleMapBloomIntensity(profile.BloomIntensity or self._baseMapBloomIntensity)
 		raysTarget = self:_scaleMapSunRaysIntensity(profile.SunRaysIntensity or self._baseMapSunRaysIntensity)
 		atmosphereTarget = self:_scaleAtmosphereDensity(self._baseAtmosphereDensity, profile.AtmosphereDensityDelta or 0)
@@ -1707,6 +1816,7 @@ function VFXController:_applyMapVisualProfile(mapName)
 	self._activeMapProfileName = resolvedMapName
 	self:_applyMapAtmosphere(resolvedMapName)
 	self:_applyMapLighting(resolvedMapName)
+	self:_applyMapFog(resolvedMapName)
 	self:_applyMapGrade(resolvedMapName)
 	self:_applyMapBloom(resolvedMapName)
 	self:_applyMapDepthOfField(resolvedMapName)

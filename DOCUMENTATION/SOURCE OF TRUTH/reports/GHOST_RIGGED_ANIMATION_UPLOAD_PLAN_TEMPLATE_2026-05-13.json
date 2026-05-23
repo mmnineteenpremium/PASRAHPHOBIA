@@ -1,0 +1,32 @@
+[
+  {
+    "key": "Kuntilanak.GhostIdle",
+    "ghost": "Kuntilanak",
+    "runtimeKey": "GhostIdle",
+    "sourceClip": "Idle",
+    "sourceFbx": "Kuntilanak/_generated_animations/Kuntilanak_Idle_RIG_BASE_FIX.fbx",
+    "file": "Kuntilanak/Kuntilanak_GhostIdle.rbxmx",
+    "displayName": "PASRAH_GHOST_Kuntilanak_GhostIdle",
+    "description": "PASRAHPHOBIA ghost animation Kuntilanak GhostIdle. Converted from Kuntilanak_Idle_RIG_BASE_FIX.fbx."
+  },
+  {
+    "key": "Kuntilanak.GhostRoam",
+    "ghost": "Kuntilanak",
+    "runtimeKey": "GhostRoam",
+    "sourceClip": "WalkPatrol",
+    "sourceFbx": "Kuntilanak/_generated_animations/Kuntilanak_WalkPatrol_RIG_BASE_FIX.fbx",
+    "file": "Kuntilanak/Kuntilanak_GhostRoam.rbxmx",
+    "displayName": "PASRAH_GHOST_Kuntilanak_GhostRoam",
+    "description": "PASRAHPHOBIA ghost animation Kuntilanak GhostRoam. Converted from Kuntilanak_WalkPatrol_RIG_BASE_FIX.fbx."
+  },
+  {
+    "key": "Kuntilanak.GhostHunt",
+    "ghost": "Kuntilanak",
+    "runtimeKey": "GhostHunt",
+    "sourceClip": "HuntStride",
+    "sourceFbx": "Kuntilanak/_generated_animations/Kuntilanak_HuntStride_RIG_BASE_FIX.fbx",
+    "file": "Kuntilanak/Kuntilanak_GhostHunt.rbxmx",
+    "displayName": "PASRAH_GHOST_Kuntilanak_GhostHunt",
+    "description": "PASRAHPHOBIA ghost animation Kuntilanak GhostHunt. Converted from Kuntilanak_HuntStride_RIG_BASE_FIX.fbx."
+  }
+]

@@ -52,7 +52,8 @@ function RoamingState.Update(session, context)
 	local manifestThreshold = context.config.ManifestAggressionThreshold or 45
 	local personality = session.personality or {}
 	local manifestScale = personality.manifestChanceScale or 1.0
-	if aggression >= manifestThreshold
+	if context.manifestAllowed == true
+		and aggression >= manifestThreshold
 		and context.rng:NextNumber() <= ((context.config.ManifestChanceWhileRoaming or 0.1) * manifestScale)
 	then
 		return "Manifest"

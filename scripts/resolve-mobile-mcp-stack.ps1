@@ -24,9 +24,9 @@ if (-not (Test-Path $rojoServeScript)) {
     throw "Rojo serve script not found at $rojoServeScript"
 }
 
-$requiredModels = [ordered]@{
-    "Samsung-NOTE10" = "SM-N971N"
-    "S22-ultra" = "SM-S908N"
+$requiredAndroidLanes = [ordered]@{
+    # Canonical lane alias plus legacy hardware variants accepted by older runs.
+    "Samsung-N960" = @("SM-N960", "SM-N971", "SM-S908")
 }
 
 $devices = @()
@@ -40,7 +40,7 @@ foreach ($line in (& $adbPath devices -l)) {
     $model = $null
 
     if ($line -match "model:(?<model>\S+)") {
-        $model = $Matches["model"].Replace("_", "-")
+        $model = $Matches["model"]
     }
 
     if ([string]::IsNullOrWhiteSpace($model)) {
@@ -51,10 +51,20 @@ foreach ($line in (& $adbPath devices -l)) {
         }
     }
 
+    $normalizedModel = ""
+    if (-not [string]::IsNullOrWhiteSpace($model)) {
+        $normalizedModel = $model.Replace("_", "-").Trim().ToUpperInvariant()
+    }
+
     $alias = $null
-    foreach ($entry in $requiredModels.GetEnumerator()) {
-        if ($model -eq $entry.Value) {
-            $alias = $entry.Key
+    foreach ($entry in $requiredAndroidLanes.GetEnumerator()) {
+        foreach ($prefix in $entry.Value) {
+            if ($normalizedModel.StartsWith($prefix)) {
+                $alias = $entry.Key
+                break
+            }
+        }
+        if ($alias) {
             break
         }
     }
@@ -63,12 +73,12 @@ foreach ($line in (& $adbPath devices -l)) {
         alias = $alias
         deviceId = $deviceId
         state = $state
-        model = $model
+        model = $normalizedModel
     }
 }
 
 $missing = @()
-foreach ($entry in $requiredModels.GetEnumerator()) {
+foreach ($entry in $requiredAndroidLanes.GetEnumerator()) {
     $match = $devices | Where-Object { $_.alias -eq $entry.Key -and $_.state -eq "device" }
     if (-not $match) {
         $missing += $entry.Key
@@ -89,5 +99,5 @@ $json = $result | ConvertTo-Json -Depth 6
 Write-Output $json
 
 if ($Strict -and $missing.Count -gt 0) {
-    throw "Required Android emulators missing or offline: $($missing -join ', ')"
+    throw "Required Android lanes missing or offline: $($missing -join ', ')"
 }

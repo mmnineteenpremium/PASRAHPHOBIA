@@ -3,6 +3,15 @@ local Workspace = game:GetService("Workspace")
 local LobbyLocator = {}
 
 local DEFAULT_LOBBY_NAME = "LobbySocialHub"
+local FLOOR_REFERENCE_CANDIDATE_NAMES = {
+    "Floor_1_Main",
+    "DirectoryPad",
+    "GardenBayFloor",
+    "ShopBayFloor",
+    "FlexBayFloor",
+    "PartyBayFloor",
+    "NorthBayFloor",
+}
 
 local function normalizeLobbyName(lobbyName)
     if type(lobbyName) == "string" and lobbyName ~= "" then
@@ -112,18 +121,29 @@ function LobbyLocator.ResolvePrimaryFloor(lobbyName, workspaceInstance)
         return nil, nil
     end
 
-    local preferredFloor = root:FindFirstChild("Floor_1_Main", true)
-    if preferredFloor and preferredFloor:IsA("BasePart") then
-        return preferredFloor, root
-    end
-
-    for _, descendant in ipairs(root:GetDescendants()) do
-        if descendant:IsA("BasePart") and descendant.Name:match("^Floor") then
-            return descendant, root
+    for _, name in ipairs(FLOOR_REFERENCE_CANDIDATE_NAMES) do
+        local preferredFloor = root:FindFirstChild(name, true)
+        if preferredFloor and preferredFloor:IsA("BasePart") then
+            return preferredFloor, root
         end
     end
 
-    return nil, root
+    local bestPart = nil
+    local bestArea = 0
+    for _, descendant in ipairs(root:GetDescendants()) do
+        if descendant:IsA("BasePart") then
+            local lowerName = descendant.Name:lower()
+            if lowerName:find("floor", 1, true) or lowerName:find("pad", 1, true) then
+                local area = descendant.Size.X * descendant.Size.Z
+                if area > bestArea then
+                    bestArea = area
+                    bestPart = descendant
+                end
+            end
+        end
+    end
+
+    return bestPart, root
 end
 
 function LobbyLocator.ResolveReferencePosition(lobbyName, workspaceInstance)

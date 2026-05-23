@@ -4,6 +4,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local ServerBootstrap = {}
 local _started = false
+local STUDIO_E2E_ENABLE_ATTR = "PasrahEnableStudioE2EControl"
 
 local function hasStudioE2ERemote()
     local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
@@ -13,6 +14,10 @@ local function hasStudioE2ERemote()
 
     local remote = remoteFolder:FindFirstChild("StudioE2EControl")
     return remote ~= nil and ReplicatedStorage:GetAttribute("PasrahStudioE2EReady") == true
+end
+
+local function shouldEnableStudioE2E()
+    return RunService:IsStudio() and ReplicatedStorage:GetAttribute(STUDIO_E2E_ENABLE_ATTR) == true
 end
 
 local function hasStudioRuntimeSystemReady(attributeName)
@@ -133,6 +138,9 @@ local function ensureEvidenceGatewayBinding(systemRegistry)
 end
 
 local function ensureStudioE2EControl(systemRegistry)
+    if not shouldEnableStudioE2E() then
+        return
+    end
     if not RunService:IsStudio() then
         return
     end

@@ -3807,7 +3807,7 @@
               "name": "BrandBorder",
               "className": "ImageLabel",
               "properties": {
-                "ImageContent": "rbxthumb://type=Asset&id=96807162342543&w=420&h=420",
+                "ImageContent": "rbxassetid://96807162342543",
                 "BackgroundTransparency": 1.0,
                 "Size": {
                   "UDim2": [

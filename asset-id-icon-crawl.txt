@@ -1,0 +1,11 @@
+no-nama-assetid-jenis
+1-pp_pack_small-rbxassetid://3573224039-icon image
+2-pp_pack_standard-rbxassetid://3573225850-icon image
+3-pp_pack_large-rbxassetid://3573226462-icon image
+4-mm_pack_small-rbxassetid://3573226842-icon image
+5-mm_pack_medium-rbxassetid://3573227690-icon image
+6-mm_pack_large-rbxassetid://3573228070-icon image
+7-royalpass_premium_track-rbxassetid://3573231558-icon image
+8-class_dukun_unlock-rbxassetid://3573231828-icon image
+9-class_detective_unlock-rbxassetid://3573232123-icon image
+10-lifetime_bonus_pass-rbxassetid://3573232383-icon image

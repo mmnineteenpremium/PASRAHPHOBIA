@@ -7,6 +7,14 @@ local MATCH_ATTR = "InMatch"
 local SanityHUD = {}
 SanityHUD.__index = SanityHUD
 
+local function getDirectChildOfClass(parent, childName, className)
+	local child = parent and parent:FindFirstChild(childName)
+	if child and child:IsA(className) then
+		return child
+	end
+	return nil
+end
+
 local function getPlayerSanity(player)
 	for _, attrName in ipairs(SANITY_ATTRS) do
 		local value = tonumber(player:GetAttribute(attrName))
@@ -24,79 +32,36 @@ function SanityHUD.new(playerGui)
 	self._connections = {}
 	self._sanity = getPlayerSanity(self.player)
 	self._vignetteTween = nil
-	self:BuildUI()
-	self:Connect()
-	self:Refresh()
+	if self:BuildUI() then
+		self:Connect()
+		self:Refresh()
+	end
 	return self
 end
 
 function SanityHUD:BuildUI()
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "SanityHUDGui"
-	screenGui.ResetOnSpawn = false
-	screenGui.Enabled = false
-	screenGui.Parent = self.playerGui
+	local screenGui = self.playerGui:FindFirstChild("SanityHUDGui") or self.playerGui:WaitForChild("SanityHUDGui", 5)
+	if not screenGui or not screenGui:IsA("ScreenGui") then
+		warn("[SanityHUD] Missing authored SanityHUDGui ScreenGui; check StarterGui shell contract.")
+		return false
+	end
 
-	local container = Instance.new("Frame")
-	container.Size = UDim2.fromOffset(210, 32)
-	container.Position = UDim2.new(0, 18, 0, 116)
-	container.BackgroundTransparency = 1
-	container.Parent = screenGui
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.fromOffset(68, 32)
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamSemibold
-	label.Text = " SANITY"
-	label.TextColor3 = Color3.fromRGB(191, 174, 246)
-	label.TextSize = 12
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = container
-
-	local bar = Instance.new("Frame")
-	bar.Size = UDim2.fromOffset(112, 10)
-	bar.Position = UDim2.fromOffset(68, 11)
-	bar.BackgroundColor3 = Color3.fromRGB(39, 40, 56)
-	bar.BorderSizePixel = 0
-	bar.Parent = container
-
-	local barCorner = Instance.new("UICorner")
-	barCorner.CornerRadius = UDim.new(0, 5)
-	barCorner.Parent = bar
-
-	local fill = Instance.new("Frame")
-	fill.Size = UDim2.fromScale(1, 1)
-	fill.BackgroundColor3 = Color3.fromRGB(124, 88, 220)
-	fill.BorderSizePixel = 0
-	fill.Parent = bar
-
-	local fillCorner = Instance.new("UICorner")
-	fillCorner.CornerRadius = UDim.new(0, 5)
-	fillCorner.Parent = fill
-
-	local valueLabel = Instance.new("TextLabel")
-	valueLabel.Size = UDim2.fromOffset(30, 32)
-	valueLabel.Position = UDim2.new(1, -30, 0, 0)
-	valueLabel.BackgroundTransparency = 1
-	valueLabel.Font = Enum.Font.GothamBold
-	valueLabel.Text = "100"
-	valueLabel.TextColor3 = Color3.fromRGB(230, 223, 255)
-	valueLabel.TextSize = 12
-	valueLabel.Parent = container
-
-	local vignette = Instance.new("Frame")
-	vignette.Name = "SanityVignette"
-	vignette.Size = UDim2.fromScale(1, 1)
-	vignette.BackgroundColor3 = Color3.fromRGB(64, 10, 86)
-	vignette.BackgroundTransparency = 1
-	vignette.BorderSizePixel = 0
-	vignette.ZIndex = 4
-	vignette.Parent = screenGui
+	local container = getDirectChildOfClass(screenGui, "Container", "Frame")
+	local label = getDirectChildOfClass(container, "Label", "TextLabel")
+	local bar = getDirectChildOfClass(container, "Bar", "Frame")
+	local fill = getDirectChildOfClass(bar, "Fill", "Frame")
+	local valueLabel = getDirectChildOfClass(container, "ValueLabel", "TextLabel")
+	local vignette = getDirectChildOfClass(screenGui, "SanityVignette", "Frame")
+	if not (container and label and bar and fill and valueLabel and vignette) then
+		warn("[SanityHUD] Authored SanityHUDGui contract mismatch; preserve canonical widget names.")
+		return false
+	end
 
 	self._screenGui = screenGui
 	self._fill = fill
 	self._valueLabel = valueLabel
 	self._vignette = vignette
+	return true
 end
 
 function SanityHUD:_cancelVignetteTween()
@@ -138,6 +103,9 @@ function SanityHUD:_applySanityVisuals()
 end
 
 function SanityHUD:Refresh()
+	if not self._screenGui then
+		return
+	end
 	self._sanity = getPlayerSanity(self.player)
 	self._screenGui.Enabled = self.player:GetAttribute(MATCH_ATTR) == true
 	self:_applySanityVisuals()

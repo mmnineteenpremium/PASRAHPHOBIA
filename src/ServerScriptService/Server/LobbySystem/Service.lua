@@ -97,6 +97,14 @@ local function applyLobbySpawnState(player)
 		return
 	end
 
+	local matchId = player:GetAttribute("MatchId")
+	local lifecyclePhase = player:GetAttribute("MatchLifecyclePhase")
+	local hasMatchContext = (type(matchId) == "string" and matchId ~= "")
+		or (type(lifecyclePhase) == "string" and lifecyclePhase ~= "")
+	if hasMatchContext then
+		return
+	end
+
 	local protectUntil = os.clock() + LOBBY_SPAWN_PROTECTION_SECONDS
 	player:SetAttribute("InLobby", true)
 	player:SetAttribute("InMatch", nil)
