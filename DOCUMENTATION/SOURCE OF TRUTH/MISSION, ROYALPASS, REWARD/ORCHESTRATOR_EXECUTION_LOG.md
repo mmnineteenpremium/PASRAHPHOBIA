@@ -676,3 +676,28 @@ Notes:
 
 Stop/blocker reason:
 - No blocker at source slice. This lane is ready for owner review and downstream consumers.
+
+## 2026-05-23 - lane 06 partial - AssetIdConfig wire + Play Test
+
+Status: partial runtime wiring and Studio smoke recorded.
+
+What changed:
+- `src/client/UI/Main.lua` now resolves RoyalPass tab/button image IDs from `AssetIdConfig.UIImages` with safe fallbacks.
+- RoyalPass authored shell binding explicitly refreshes `RewardTab`, `MissionTab`, and `PremiumActionButton` `BrandTextImage` instances from the generated config image states.
+- `src/shared/DataTypes/ShopMarketplaceConfig.lua` now resolves GamePass and DeveloperProduct marketplace IDs from `AssetIdConfig.Monetization`, keeping the config module as the runtime override surface.
+- In the active `PASRAHPHOBIA.rbxlx` Studio session, `ReplicatedStorage.Shared.Config.Generated.AssetIdConfig` was created and the two runtime modules were patched to match the source slice because an existing Rojo serve log pointed to a different worktree.
+
+Validation:
+- Rojo build check: `.\.aftman\bin\rojo.exe sourcemap default.project.json` passed.
+- Studio active instance: `PASRAHPHOBIA.rbxlx`.
+- AssetIdConfig runtime require: pass; `UIImages.ROYALPASS_REWARD_TAB = 104919640357265`.
+- RoyalPass image smoke: pass when panel was made visible for inspection; Reward tab used `rbxassetid://104919640357265`, Mission tab used `rbxassetid://85460610439403`, and premium action used `rbxassetid://107066534772372`.
+- Shop catalog config smoke: pass; DeveloperProduct IDs resolved as `pp_pack_small=3595563338`, `pp_pack_standard=3595563345`, `pp_pack_large=3595563353`, `mm_pack_small=3595563373`, `mm_pack_medium=3595563381`, `mm_pack_large=3595563400`.
+
+Visual smoke notes:
+- RoyalPass panel visual smoke showed the configured tab/premium images were not blank after forced panel visibility.
+- Shop panel forced visibility showed the shell, but item rows were not visually populated in that forced state; catalog data inspection confirmed the DeveloperProduct items and prices were present.
+- Lobby bottom-nav/button activation did not open RoyalPass/Shop automatically during this MCP Play Test session; treat that as a follow-up UI activation issue rather than an AssetIdConfig ID mismatch.
+
+Stop/blocker reason:
+- Partial pass only. Source wiring and catalog IDs are aligned; normal lobby button-open flow needs a separate focused smoke/fix before claiming full visual runtime pass.

@@ -1013,6 +1013,30 @@ local ROOM_BROWSER_MAP_OPTION_TEXT_IMAGE_STATES = {
 	EmptyBuilding = { idle = "82837676268758", hover = "115476569583421", active = "81828934051890" },
 	AbandonedPalace = { idle = "71523706129904", hover = "130873140590312", active = "94091821215899" },
 }
+local assetIdConfigCache = false
+local function getAssetIdConfig()
+	if assetIdConfigCache ~= false then
+		return assetIdConfigCache
+	end
+	assetIdConfigCache = nil
+	local shared = ReplicatedStorage:FindFirstChild("Shared") or ReplicatedStorage:WaitForChild("Shared", 5)
+	local configFolder = shared and (shared:FindFirstChild("Config") or shared:WaitForChild("Config", 5))
+	local generatedFolder = configFolder and (configFolder:FindFirstChild("Generated") or configFolder:WaitForChild("Generated", 5))
+	local moduleScript = generatedFolder and (generatedFolder:FindFirstChild("AssetIdConfig") or generatedFolder:WaitForChild("AssetIdConfig", 5))
+	if moduleScript and moduleScript:IsA("ModuleScript") then
+		local ok, result = pcall(require, moduleScript)
+		if ok and type(result) == "table" then
+			assetIdConfigCache = result
+		end
+	end
+	return assetIdConfigCache
+end
+local function getConfiguredUIImageId(key, fallback)
+	local config = getAssetIdConfig()
+	local uiImages = type(config) == "table" and type(config.UIImages) == "table" and config.UIImages or nil
+	local value = uiImages and uiImages[key]
+	return tostring(value or fallback or "")
+end
 local ROOM_BROWSER_TEXT_IMAGE_STATES = {
 	ClassicButton = { idle = "117760951401524", hover = "129015288351024", active = "138617081838094" },
 	ClassicOption = { idle = "117760951401524", hover = "129015288351024", active = "138617081838094" },
@@ -1047,9 +1071,21 @@ local ROOM_BROWSER_TEXT_IMAGE_STATES = {
 	RankButton = { idle = "132541994193262", hover = "78308952430777", active = "137424967951840" },
 	ShopButton = { idle = "133173197641907", hover = "88732046094994", active = "91837126977915" },
 	RoyalPassButton = { idle = "74154323194225", hover = "92445570105509", active = "88526438006690" },
-	MissionTab = { idle = "91316576845536", hover = "96825362275947", active = "82227324051324" },
-	RewardTab = { idle = "91316576845536", hover = "96825362275947", active = "82227324051324" },
-	PremiumActionButton = { idle = "133173197641907", hover = "88732046094994", active = "91837126977915" },
+	MissionTab = {
+		idle = getConfiguredUIImageId("ROYALPASS_MISSION_TAB_IDLE_HOVER", "91316576845536"),
+		hover = getConfiguredUIImageId("ROYALPASS_MISSION_TAB_IDLE_HOVER", "96825362275947"),
+		active = getConfiguredUIImageId("ROYALPASS_MISSION_TAB", "82227324051324"),
+	},
+	RewardTab = {
+		idle = getConfiguredUIImageId("ROYALPASS_REWARD_TAB_IDLE_HOVER", "91316576845536"),
+		hover = getConfiguredUIImageId("ROYALPASS_REWARD_TAB_IDLE_HOVER", "96825362275947"),
+		active = getConfiguredUIImageId("ROYALPASS_REWARD_TAB", "82227324051324"),
+	},
+	PremiumActionButton = {
+		idle = getConfiguredUIImageId("royalpass_premium_track", "133173197641907"),
+		hover = getConfiguredUIImageId("royalpass_premium_track", "88732046094994"),
+		active = getConfiguredUIImageId("royalpass_premium_track", "91837126977915"),
+	},
 	PlayButton = { idle = "97619808744728", hover = "101162595389006", active = "124031181308180" },
 	ToolActionButton = { idle = "71874610051324", hover = "128303976874326", active = "109151429365319" },
 	KoleksiButton = { idle = "138104347169386", hover = "92582946322328", active = "112977326396191" },
@@ -1096,12 +1132,20 @@ local ACTION_BUTTON_TEXT_IMAGE_STATES = {
 	["TRACK"] = { idle = "103489183789899", hover = "99269259836629", active = "110126978866737" },
 	["PAKAI"] = { idle = "119893364681680", hover = "103511682438962", active = "133568679810222" },
 	["INFO"] = { idle = "131131528442725", hover = "92932938836672", active = "122482912193368" },
-	["LIHAT SHOP"] = { idle = "123823941129089", hover = "138578045095503", active = "140390986903081" },
+	["LIHAT SHOP"] = {
+		idle = getConfiguredUIImageId("royalpass_premium_track", "123823941129089"),
+		hover = getConfiguredUIImageId("royalpass_premium_track", "138578045095503"),
+		active = getConfiguredUIImageId("royalpass_premium_track", "140390986903081"),
+	},
 	["PENDING"] = { idle = "95774596939688", hover = "117499371608925", active = "75654724905306" },
 	["OPEN PROFILE"] = { idle = "105816021457823", hover = "138336629404370", active = "108485786723336" },
 	["OPEN RANK BOARD"] = { idle = "70851175896471", hover = "113137045182913", active = "111395627991278" },
 	["OPEN ROOM BROWSER"] = { idle = "121806831769566", hover = "114260638652413", active = "132315129687773" },
-	["OPEN SHOP"] = { idle = "123823941129089", hover = "138578045095503", active = "140390986903081" },
+	["OPEN SHOP"] = {
+		idle = getConfiguredUIImageId("royalpass_premium_track", "123823941129089"),
+		hover = getConfiguredUIImageId("royalpass_premium_track", "138578045095503"),
+		active = getConfiguredUIImageId("royalpass_premium_track", "140390986903081"),
+	},
 	ALL = { idle = "75636362660244", hover = "97893505198837", active = "71250727262939" },
 	X = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
 	["[X]"] = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
@@ -7540,6 +7584,9 @@ function UISystem:_tryBindAuthoredRoyalPassWidgets(window, contentFrame)
 	self:_setSelectableStyle(premiumActionButton)
 	self:_setSelectableStyle(rewardTab)
 	self:_setSelectableStyle(missionTab)
+	configureButtonTextImage(rewardTab:FindFirstChild("BrandTextImage", true), ROOM_BROWSER_TEXT_IMAGE_STATES.RewardTab)
+	configureButtonTextImage(missionTab:FindFirstChild("BrandTextImage", true), ROOM_BROWSER_TEXT_IMAGE_STATES.MissionTab)
+	configureButtonTextImage(premiumActionButton:FindFirstChild("BrandTextImage", true), ROOM_BROWSER_TEXT_IMAGE_STATES.PremiumActionButton)
 
 	local rows = {}
 	self:_clearGeneratedRoomBrowserGuiChildren(tierList)
