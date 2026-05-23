@@ -6612,8 +6612,11 @@ function UISystem:_applyVisibility()
 		local state = self._uiState[guiName]
 		if gui and state then
 			local shouldEnable = state.visible == true
+			if table.find(AUXILIARY_UI_NAMES, guiName) ~= nil then
+				shouldEnable = true
+			end
 			if LOBBY_ONLY_GUI_NAMES[guiName] == true then
-				shouldEnable = shouldEnable and self._matchPhase == MATCH_PHASE.LOBBY
+				shouldEnable = shouldEnable and (table.find(AUXILIARY_UI_NAMES, guiName) ~= nil or self._matchPhase == MATCH_PHASE.LOBBY)
 			end
 			gui.Enabled = shouldEnable
 		end
@@ -6967,14 +6970,15 @@ function UISystem:_syncAuxiliaryWindowVisibility()
 		if widgets and gui and gui:IsA("ScreenGui") then
 			local screenEnabled = gui.Enabled == true
 			local dismissed = self._windowDismissed[guiName] == true
+			local requestedVisible = self._uiState[guiName] and self._uiState[guiName].visible == true
 			local panelVisible = widgets.Panel and widgets.Panel.Visible == true
 			if widgets.Panel then
-				setAnimatedPanelVisible(widgets.Panel, screenEnabled and not dismissed, false)
+				setAnimatedPanelVisible(widgets.Panel, screenEnabled and requestedVisible and not dismissed, false)
 			end
 			if widgets.FloatButton then
 				widgets.FloatButton.Visible = LOBBY_PANEL_ONLY_FLOATING_NAV ~= true
 					and screenEnabled
-					and (dismissed or not panelVisible)
+					and (dismissed or not requestedVisible or not panelVisible)
 					and not blockLobbyFloatRail
 			end
 		end
@@ -8030,7 +8034,7 @@ function UISystem:_bindAuthoredAuxiliaryWindowUi(guiName, gui)
 
 	if not isRuntimeGuiBootstrapped(gui) then
 		markRuntimeGuiBootstrapped(gui)
-		gui.Enabled = false
+		gui.Enabled = true
 		panel.Visible = false
 		floatBtn.Visible = false
 	end

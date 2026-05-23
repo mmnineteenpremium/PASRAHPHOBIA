@@ -642,6 +642,26 @@ Validation limits:
 Stop/blocker reason:
 - Not stopped permanently. Audit slice is recorded at n=78%; remaining blockers are publish/2FA/mobile availability and partial monetization/cosmetic registry scope, not a missing canonical daily/royalpass/gacha implementation.
 
+## 2026-05-23 - lobby RoyalPass+Shop bootstrap fix + Studio sync + Play Test
+
+Status: completed and pushed through Studio Play Test.
+
+What changed:
+- `src/client/UI/Main.lua` now enables auxiliary ScreenGuis during runtime bootstrap/apply while keeping auxiliary `MainPanel` visibility controlled by `_uiState`.
+- Synced the patched `StarterPlayer.StarterPlayerScripts.Client.UI.Main` ModuleScript into the active `PASRAHPHOBIA.rbxlx` Studio session.
+- Saved `PASRAHPHOBIA.rbxlx` before sync and again after Play Test.
+
+Validation:
+- Bootstrap confirmed `PlayerGui.RoyalPassUI.Enabled=true` and `PlayerGui.ShopUI.Enabled=true`.
+- `LobbyUI.MainPanel.RoyalPassButton` opened `RoyalPassUI.MainPanel`; Reward and Mission tabs had visible image widgets.
+- RoyalPass close button closed the panel.
+- `LobbyUI.MainPanel.ShopButton` opened `ShopUI.MainPanel`; filter bar and item list were visible with 31 item rows.
+- Shop close button closed the panel.
+- Final `PASRAHPHOBIA.rbxlx` LastWriteTime: `2026-05-23 22:46:38 +07:00`.
+
+Report:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/LOBBY_ROYALPASS_SHOP_BUTTON_FIX_2026-05-23.md`
+
 ## 2026-05-23 - mission royalpass reward continuation - n=80%
 
 Status: registry continuation slice recorded.
