@@ -206,7 +206,7 @@ return {
 		BolaArwah = {
 			inventoryModelAssetId = "rbxassetid://128926250160887",
 			sourceModelAssetId = "rbxassetid://131756461063213",
-			sourceLabel = "Kamera To'un - Night Vision Recorder",
+			sourceLabel = "Kamera To'un",
 			variantRole = "base",
 			targetBounds = { x = 0.402, y = 0.860, z = 0.422 },
 			mount = {

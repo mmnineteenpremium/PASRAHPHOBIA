@@ -1,5 +1,21 @@
 # Mission RoyalPass Reward Orchestrator Execution Log
 
+## 2026-05-23 - To'un naming fix + preflight audit
+
+Status: source-only naming fix and audit completed.
+
+What changed:
+- Updated `src/shared/GameData/ToolVisualConfig.lua` entry `BolaArwah.sourceLabel` from `Kamera To'un - Night Vision Recorder` to `Kamera To'un`.
+- Added `DOCUMENTATION/SOURCE OF TRUTH/reports/TOUN_NAMING_AND_PREFLIGHT_2026-05-23.md` with preflight, marketplace audit, and sourcemap results.
+
+Validation:
+- `.\scripts\release-preflight.ps1`: build ok, canonical mirror ok, no missing reports, no safe item marketplace ID gaps, no hold items enabled.
+- `.\scripts\audit-marketplace-mapping.ps1`: safe missing ID `0`, hold accidentally enabled `0`, unclassified `0`.
+- `.\.aftman\bin\rojo.exe sourcemap default.project.json`: pass.
+
+Stop/blocker reason:
+- No automated audit blocker. Remaining preflight attention item is manual owner smoke test: `smoke test 2 client nyata`.
+
 ## 2026-05-23 - src ↔ rbxlx Studio sync via rojo serve, LFS push
 
 Status: completed as rbxlx-authoritative sync-back and pushed.
