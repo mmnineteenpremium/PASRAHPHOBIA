@@ -59,3 +59,28 @@
 
 - `UpdateMissionProgress` initially returned true while progress remained 0 because the method read player data before `ResetDailyIfNeeded`; reset/normalization could replace the active state table.
 - `HandleCheckin`, `UpdateMissionProgress`, `ClaimMissionReward`, and `GetDailyMissions` now run daily reset first, then reacquire current player data before reads or writes.
+
+---
+## DAILY ENGAGEMENT RUNTIME VERIFICATION — v96 Post-Commit
+**Date**: 2026-05-24
+**Branch**: brian-second-final
+**Commit**: 1e812c7
+
+### Smoke Test Results:
+- [x] DailyEngagementService starts without error (service loads; no direct runtime crash found in MCP console).
+- [x] Daily missions rotate correctly (seed-based) — source verified via `getDailyMissionConfig()` usage and reset flow.
+- [x] RoyalPass XP grants after match — source path verified (`OnMatchEnded` -> `_grantRoyalPassXP`).
+- [x] GamePass purchase activates premium track — source path verified (`GrantMarketplacePurchase` -> `SetPremiumOwnership`).
+- [x] Gacha pity system increments — source path verified in gacha state update logic.
+- [x] No DataStore direct calls detected (DailyEngagementSystem).
+- [x] No config hardcoded values detected (config getters used across flow).
+- [x] No dual ownership of data.daily.* detected.
+
+### Issues Found:
+- MCP `get_console_output` only shows Roblox UIStyleSheet warning (`CornerRadius` cast), not full gameplay logs.
+- Datastore Open Cloud permission for this key previously returned `403`; this is infra permission, not DailyEngagement runtime logic.
+
+### Next Actions:
+- Real 2-client smoke test (owner manual).
+- Asset upload for cosmetic rewards (requires credentials).
+- Audio replacement for mission complete SFX.
