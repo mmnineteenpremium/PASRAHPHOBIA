@@ -1080,7 +1080,7 @@ Status:
 
 ## 2026-05-24 — Runtime bug fixes post-publish
 
-Branch: brian-second-final | Commit: 6aab5b6
+Branch: brian-second-final | Commit: recorded by final git push for this entry
 
 Fix 1 - GamePasses path: `cfg.Monetization.GamePasses` (bukan `.GamePasses or cfg.Monetization`)
 - Result: FAIL di Studio instance aktif saat ini (table kosong / count 0), indikasi config belum ter-sync ke DataModel runtime.
