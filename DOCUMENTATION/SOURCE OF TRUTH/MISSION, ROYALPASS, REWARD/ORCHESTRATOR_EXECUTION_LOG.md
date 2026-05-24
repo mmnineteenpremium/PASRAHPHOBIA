@@ -722,6 +722,28 @@ Validation limits:
 Stop/blocker reason:
 - Not stopped permanently. Audit slice is recorded at n=78%; remaining blockers are publish/2FA/mobile availability and partial monetization/cosmetic registry scope, not a missing canonical daily/royalpass/gacha implementation.
 
+## 2026-05-23 - image+mesh pipeline dengan checkpoint, key rotation, Open Cloud upload
+
+Status: checkpoint tooling added; image generation still blocked by Gemini quota.
+
+What changed:
+- Added `scripts/pipeline_checkpoint.py` for resumable image/mesh generation state.
+- Added `scripts/run_image_pipeline.py` for rate-limited image generation with per-item checkpointing and graceful exit code `42` on quota exhaustion.
+- Reloaded owner `.env` and retried image generation against the updated key.
+- Stopped the interrupted Cube Python process before retrying image work.
+- Recorded checkpoint pipeline report.
+
+Validation:
+- Rojo sourcemap passed with `.\.aftman\bin\rojo.exe sourcemap default.project.json`.
+
+Stop/blocker reason:
+- Single-image Gemini test still returns `429 RESOURCE_EXHAUSTED` for `gemini-3-pro-image`.
+- Retry with `GOOGLE_API_KEY` mapped from `GEMINI_API_KEY` and `gemini-2.5-flash-image` also returns `429 RESOURCE_EXHAUSTED`.
+- No generated files exist to upload through Open Cloud yet.
+
+Report:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/IMAGE_MESH_PIPELINE_CHECKPOINT_2026-05-23.md`
+
 ## 2026-05-23 - Cube weights install + full cosmetic pipeline run
 
 Status: blocked by external generation/runtime limits after dependency progress.
