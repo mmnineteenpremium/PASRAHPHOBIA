@@ -4,18 +4,18 @@
     "game": "PASRAHPHOBIA",
     "universe_id": null,
     "place_id": null,
-    "last_updated": "2026-05-24T05:36:51Z",
+    "last_updated": "2026-05-24T07:53:39Z",
     "maintained_by": "AGENT_09"
   },
   "images": {
     "title_investigator_setia": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 98107737947948,
+      "rbx_asset_id": "rbxassetid://98107737947948",
       "filename": "assets/ui/title_investigator_setia_title.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:45Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -37,16 +37,17 @@
         "title_png": "assets/ui/title_investigator_setia_title.png",
         "icon_png": "assets/icons/title_investigator_setia_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "roblox_asset_id": "rbxassetid://98107737947948"
     },
     "border_haunted_frame": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 76170537279263,
+      "rbx_asset_id": "rbxassetid://76170537279263",
       "filename": "assets/ui/border_haunted_frame_border.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:48:35Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -68,16 +69,17 @@
         "border_png": "assets/ui/border_haunted_frame_border.png",
         "icon_png": "assets/icons/border_haunted_frame_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "roblox_asset_id": "rbxassetid://76170537279263"
     },
     "emote_pasrah_bow": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 71768047944720,
+      "rbx_asset_id": "rbxassetid://71768047944720",
       "filename": "assets/concept/emote_pasrah_bow_emote_board.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:48:44Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -100,16 +102,17 @@
         "icon_png": "assets/icons/emote_pasrah_bow_icon.png",
         "rbxanim": "assets/animations/rbxanim/emote_pasrah_bow_emote.rbxanim",
         "roblox_animation_id": null
-      }
+      },
+      "roblox_asset_id": "rbxassetid://71768047944720"
     },
     "title_penyintas_sejati": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 105087156895491,
+      "rbx_asset_id": "rbxassetid://105087156895491",
       "filename": "assets/ui/title_penyintas_sejati_title.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:51Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -131,16 +134,17 @@
         "title_png": "assets/ui/title_penyintas_sejati_title.png",
         "icon_png": "assets/icons/title_penyintas_sejati_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "roblox_asset_id": "rbxassetid://105087156895491"
     },
     "royal_free_tier_5": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 110947571877642,
+      "rbx_asset_id": "rbxassetid://110947571877642",
       "filename": "assets/concept/royal_free_tier_5_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:36Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -165,16 +169,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_5_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://110947571877642"
     },
     "royal_premium_tier_5": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 96117604804464,
+      "rbx_asset_id": "rbxassetid://96117604804464",
       "filename": "assets/concept/royal_premium_tier_5_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:29Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -199,16 +204,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_5_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://96117604804464"
     },
     "royal_free_tier_10": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 118126994059248,
+      "rbx_asset_id": "rbxassetid://118126994059248",
       "filename": "assets/concept/royal_free_tier_10_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:48:56Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -233,16 +239,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_10_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://118126994059248"
     },
     "royal_premium_tier_10": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 89016215997657,
+      "rbx_asset_id": "rbxassetid://89016215997657",
       "filename": "assets/concept/royal_premium_tier_10_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:46Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -267,16 +274,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_10_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://89016215997657"
     },
     "royal_free_tier_15": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 136853886377977,
+      "rbx_asset_id": "rbxassetid://136853886377977",
       "filename": "assets/concept/royal_free_tier_15_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:01Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -301,16 +309,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_15_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://136853886377977"
     },
     "royal_premium_tier_15": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 109211309824278,
+      "rbx_asset_id": "rbxassetid://109211309824278",
       "filename": "assets/concept/royal_premium_tier_15_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:50Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -335,16 +344,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_15_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://109211309824278"
     },
     "royal_free_tier_20": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 72333924734908,
+      "rbx_asset_id": "rbxassetid://72333924734908",
       "filename": "assets/concept/royal_free_tier_20_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:06Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -369,16 +379,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_20_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://72333924734908"
     },
     "royal_premium_tier_20": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 120015007711145,
+      "rbx_asset_id": "rbxassetid://120015007711145",
       "filename": "assets/concept/royal_premium_tier_20_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:57Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -403,16 +414,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_20_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://120015007711145"
     },
     "royal_free_tier_25": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 79384265618482,
+      "rbx_asset_id": "rbxassetid://79384265618482",
       "filename": "assets/concept/royal_free_tier_25_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:10Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -437,16 +449,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_25_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://79384265618482"
     },
     "royal_premium_tier_25": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 123839620074252,
+      "rbx_asset_id": "rbxassetid://123839620074252",
       "filename": "assets/concept/royal_premium_tier_25_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:03Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -471,16 +484,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_25_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://123839620074252"
     },
     "royal_free_tier_30": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 131340575068118,
+      "rbx_asset_id": "rbxassetid://131340575068118",
       "filename": "assets/concept/royal_free_tier_30_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:14Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -505,16 +519,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_30_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://131340575068118"
     },
     "royal_premium_tier_30": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 116033229089879,
+      "rbx_asset_id": "rbxassetid://116033229089879",
       "filename": "assets/concept/royal_premium_tier_30_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:07Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -539,16 +554,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_30_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://116033229089879"
     },
     "royal_free_tier_35": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 119837041875143,
+      "rbx_asset_id": "rbxassetid://119837041875143",
       "filename": "assets/concept/royal_free_tier_35_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:21Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -573,16 +589,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_35_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://119837041875143"
     },
     "royal_premium_tier_35": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 81130382968458,
+      "rbx_asset_id": "rbxassetid://81130382968458",
       "filename": "assets/concept/royal_premium_tier_35_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:14Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -607,16 +624,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_35_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://81130382968458"
     },
     "royal_free_tier_40": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 74290002837767,
+      "rbx_asset_id": "rbxassetid://74290002837767",
       "filename": "assets/concept/royal_free_tier_40_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:27Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -641,16 +659,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_40_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://74290002837767"
     },
     "royal_premium_tier_40": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 86042025676074,
+      "rbx_asset_id": "rbxassetid://86042025676074",
       "filename": "assets/concept/royal_premium_tier_40_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:20Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -675,16 +694,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_40_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://86042025676074"
     },
     "royal_free_tier_45": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 86854794141705,
+      "rbx_asset_id": "rbxassetid://86854794141705",
       "filename": "assets/concept/royal_free_tier_45_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:31Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -709,16 +729,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_45_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://86854794141705"
     },
     "royal_premium_tier_45": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 132881317348411,
+      "rbx_asset_id": "rbxassetid://132881317348411",
       "filename": "assets/concept/royal_premium_tier_45_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:24Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -743,16 +764,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_45_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://132881317348411"
     },
     "royal_free_tier_50": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 84075201883534,
+      "rbx_asset_id": "rbxassetid://84075201883534",
       "filename": "assets/concept/royal_free_tier_50_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:40Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -777,16 +799,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_50_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://84075201883534"
     },
     "royal_premium_tier_50": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 94455101854994,
+      "rbx_asset_id": "rbxassetid://94455101854994",
       "filename": "assets/concept/royal_premium_tier_50_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:33Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -811,16 +834,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_50_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://94455101854994"
     },
     "royal_free_tier_55": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 85863611330411,
+      "rbx_asset_id": "rbxassetid://85863611330411",
       "filename": "assets/concept/royal_free_tier_55_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:49:44Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -845,16 +869,17 @@
         "model_fbx": "assets/models/fbx/royal_free_tier_55_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://85863611330411"
     },
     "royal_premium_tier_55": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 95802451969718,
+      "rbx_asset_id": "rbxassetid://95802451969718",
       "filename": "assets/concept/royal_premium_tier_55_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:41Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -879,16 +904,17 @@
         "model_fbx": "assets/models/fbx/royal_premium_tier_55_model.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://95802451969718"
     },
     "title_legenda_pasrahphobia": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 77614685520493,
+      "rbx_asset_id": "rbxassetid://77614685520493",
       "filename": "assets/ui/title_legenda_pasrahphobia_title.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:50:47Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -911,16 +937,17 @@
         "title_png": "assets/ui/title_legenda_pasrahphobia_title.png",
         "icon_png": "assets/icons/title_legenda_pasrahphobia_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "roblox_asset_id": "rbxassetid://77614685520493"
     },
     "badge_season_complete_free": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 132587431755176,
+      "rbx_asset_id": "rbxassetid://132587431755176",
       "filename": "assets/ui/badge_season_complete_free_badge.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:48:23Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -943,16 +970,17 @@
         "badge_png": "assets/ui/badge_season_complete_free_badge.png",
         "icon_png": "assets/icons/badge_season_complete_free_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "roblox_asset_id": "rbxassetid://132587431755176"
     },
     "outfit_sang_ahli_season_exclusive": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 101129320250126,
+      "rbx_asset_id": "rbxassetid://101129320250126",
       "filename": "assets/concept/outfit_sang_ahli_season_exclusive_concept.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:48:49Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -977,16 +1005,17 @@
         "model_fbx": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
         "model_rbxm": "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
         "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png"
-      }
+      },
+      "roblox_asset_id": "rbxassetid://101129320250126"
     },
     "badge_season_complete_premium": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 72637676363783,
+      "rbx_asset_id": "rbxassetid://72637676363783",
       "filename": "assets/ui/badge_season_complete_premium_badge.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:48:28Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -1009,16 +1038,17 @@
         "badge_png": "assets/ui/badge_season_complete_premium_badge.png",
         "icon_png": "assets/icons/badge_season_complete_premium_icon.png",
         "roblox_asset_id": null
-      }
+      },
+      "roblox_asset_id": "rbxassetid://72637676363783"
     },
     "emote_pasrah_ascend": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 128825450189999,
+      "rbx_asset_id": "rbxassetid://128825450189999",
       "filename": "assets/concept/emote_pasrah_ascend_emote_board.png",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T07:48:39Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -1042,7 +1072,8 @@
         "icon_png": "assets/icons/emote_pasrah_ascend_icon.png",
         "rbxanim": "assets/animations/rbxanim/emote_pasrah_ascend_emote.rbxanim",
         "roblox_animation_id": null
-      }
+      },
+      "roblox_asset_id": "rbxassetid://128825450189999"
     },
     "###########": {
       "asset_id": 103331798947805,

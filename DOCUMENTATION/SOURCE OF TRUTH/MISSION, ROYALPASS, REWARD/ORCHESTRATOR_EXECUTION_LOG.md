@@ -722,6 +722,34 @@ Validation limits:
 Stop/blocker reason:
 - Not stopped permanently. Audit slice is recorded at n=78%; remaining blockers are publish/2FA/mobile availability and partial monetization/cosmetic registry scope, not a missing canonical daily/royalpass/gacha implementation.
 
+## 2026-05-24 - manual inbox image upload + registry confirmation
+
+Status: completed locally; push retry still needed because remote upload is failing with HTTP connection resets.
+
+What changed:
+- Processed `assets/generated/images/manual_inbox` with `scripts/process_manual_inbox.py`.
+- Uploaded 31 base PNG files to Roblox Open Cloud.
+- Skipped 67 variation PNG files whose `_2/_3/_4` names do not map to registry keys.
+- Wrote resized runtime/source images under `assets/concept` and `assets/ui`.
+- Updated `assets/manifest/ASSET_ID_REGISTRY.json` so all image entries are confirmed.
+- Updated `src/shared/Config/CosmeticRegistry.lua` with confirmed image asset status and `roblox_asset_id` values for matching cosmetic entries.
+- Regenerated `src/shared/Config/Generated/AssetIdConfig.lua`.
+
+Validation:
+- `registry_manager.py --sync`: pass.
+- `registry_manager.py --audit`: pass; images missing `0`, meshes missing `23`, textures missing `23`, animations missing `2`.
+- `registry_manager.py --generate-lua`: pass.
+- Rojo sourcemap passed with `.\.aftman\bin\rojo.exe sourcemap default.project.json`.
+
+Remaining:
+- Mesh/model generation and upload.
+- Texture generation/upload.
+- Emote animation import/upload.
+- Git push for the image asset commits is still blocked by repeated remote connection resets.
+
+Report:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/MANUAL_INBOX_IMAGE_UPLOAD_2026-05-24.md`
+
 ## 2026-05-24 — SDK fix + image pipeline retry
 
 Root cause final:
