@@ -1051,6 +1051,24 @@ GROUP B: FAIL — publish succeeded with `versionNumber=97` and place `updateTim
 GROUP C: PASS — VERIFIED no code change; ProcessReceipt maps DeveloperProducts via marketplace catalog/config (all 6 IDs covered), GamePass ownership sync loops all 4 passes through `GrantMarketplacePurchase`, and premium Royal Pass ownership is applied by `ShopSystem.Service:_grantEntitlements -> RoyalPassSystem:SetPremiumOwnership(true)`.
 GROUP D: PASS — VERIFIED no change; `DailyEngagementSync` snapshot already carries mission/checkin/royalPass/gacha fields consumed by UI, mission claim uses `DailyMissionClaimRequest` with missionId payload, and checkin preview icon keys resolve via `RoyalPassCosmetics` + `UIImages` fallback (`border_haunted_frame=76170537279263`, `emote_pasrah_bow` icon present).
 
+## 2026-05-24 — v96 batch execution
+
+PREFLIGHT: PASS
+GROUP A: PASS — ShopCatalog 4 GamePass IDs wired + enabled, ShopMarketplaceConfig aligned.
+GROUP B: PASS — Rojo build `PASRAHPHOBIA_v96.rbxlx`.
+GROUP C: PASS — publish `versionNumber=99` | `updateTime=2026-05-24T11:46:06.831744300Z`.
+GROUP D: FAIL — DataStore API status `403`, place metadata confirmed (`placeId=89787959603872`).
+GROUP E: log committed.
+
+Root causes resolved:
+- ShopCatalog.lua marketplaceId=0 -> filled with real GamePass IDs.
+- ShopCatalog.lua enabled=false -> enabled=true for all 4 GamePasses.
+- ShopMarketplaceConfig.lua enabled=false -> enabled=true for all 4 GamePasses.
+- _getMarketplaceItemId("GamePass", ...) now resolves correctly.
+- royalpass_premium_track purchase -> SetPremiumOwnership chain reaches DailyEngagementSystem.
+- border_haunted_frame: UIImages fallback confirmed in source (grant correct, preview visual only).
+- emote icons confirmed in UIImages (`71768047944720` / `128825450189999`).
+
 ## 2026-05-24 — Post-publish activation + runtime smoke
 
 Branch: brian-second-final
