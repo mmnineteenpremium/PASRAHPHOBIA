@@ -5736,7 +5736,7 @@ function UISystem:Init(context)
 		seasonId = "S1",
 		totalXP = 0,
 		currentTier = 1,
-		maxTier = 50,
+		maxTier = ROYAL_PASS_TOTAL_TIERS,
 		xpPerTier = 200,
 		currentTierXP = 0,
 		remainingXP = 200,
@@ -6945,7 +6945,9 @@ function UISystem:_toggleAuxiliaryWindow(guiName)
 	if not self._uiState[guiName] then
 		return
 	end
-	if self._uiState[guiName].visible ~= true or self._windowDismissed[guiName] == true then
+	local widgets = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows[guiName]
+	local panelVisible = widgets and widgets.Panel and widgets.Panel.Visible == true
+	if self._uiState[guiName].visible ~= true or self._windowDismissed[guiName] == true or panelVisible ~= true then
 		self:_openAuxiliaryWindow(guiName)
 		return
 	end
@@ -13364,7 +13366,7 @@ function UISystem:_applyRoyalPassSnapshot(snapshot)
 	state.seasonId = tostring(snapshot.seasonId or state.seasonId or "S1")
 	state.totalXP = math.max(0, math.floor(tonumber(snapshot.totalXP) or state.totalXP or 0))
 	state.currentTier = math.max(1, math.floor(tonumber(snapshot.currentTier) or state.currentTier or 1))
-	state.maxTier = math.max(state.currentTier, math.floor(tonumber(snapshot.maxTier) or state.maxTier or 50))
+	state.maxTier = math.max(state.currentTier, math.floor(tonumber(snapshot.maxTier) or state.maxTier or ROYAL_PASS_TOTAL_TIERS))
 	state.xpPerTier = math.max(1, math.floor(tonumber(snapshot.xpPerTier) or state.xpPerTier or 200))
 	state.currentTierXP = math.clamp(
 		math.floor(tonumber(snapshot.currentTierXP) or state.currentTierXP or 0),
@@ -14081,7 +14083,7 @@ function UISystem:_refreshRoyalPassPanel()
 	local currentTier = math.max(1, math.floor(tonumber(state.currentTier or 1) or 1))
 	local checkinTotalDays = math.max(0, math.floor(tonumber(dailyEngagement.checkinTotalDays or 0) or 0))
 	local dailyCheckInDay = math.clamp(checkinTotalDays > 0 and checkinTotalDays or currentTier, 1, 30)
-	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or 50) or 50))
+	local maxTier = math.max(currentTier, math.floor(tonumber(state.maxTier or ROYAL_PASS_TOTAL_TIERS) or ROYAL_PASS_TOTAL_TIERS))
 	local xpPerTier = math.max(1, math.floor(tonumber(state.xpPerTier or 200) or 200))
 	local currentTierXP = math.clamp(math.floor(tonumber(state.currentTierXP or 0) or 0), 0, xpPerTier)
 	local totalXP = math.max(0, math.floor(tonumber(state.totalXP or 0) or 0))

@@ -1073,6 +1073,36 @@ Validation:
 STATUS: S1 Royal Pass assets confirmed and complete.
 Next: publish `PASRAHPHOBIA.rbxlx` to Roblox from Studio.
 
+## 2026-05-24 - Integration + Publish: S1 Royal Pass LIVE
+
+Branch: brian-second-final
+Commit: recorded by final git push for this entry
+
+Integration:
+- MAX_TIER fix: `50` -> `60` in `RoyalPassSystem/Service.lua`.
+- Lobby nav RoyalPass: fixed and confirmed. The shared auxiliary toggle now opens a panel when runtime state says visible but the actual panel is still hidden.
+- Client RoyalPass fallback max tier now uses `ROYAL_PASS_TOTAL_TIERS` instead of `50`.
+
+Smoke:
+- Cosmetic preview IDs: 23/23 resolved.
+- Animation IDs in config: bow `86538939340527`, ascend `104989718132438`.
+- RoyalPass UI button smoke: PASS, `RoyalPassUI.MainPanel.Visible = true`.
+- RoyalPass max tier smoke: PASS, `PasrahRoyalPassMaxTier = 60`.
+- Reward and Mission tabs: PASS.
+- Tier 60 / S1 milestone text: PASS.
+- Rojo sourcemap: PASS.
+- Registry audit: PASS, 0 missing across all sections.
+
+Publish:
+- Built `PASRAHPHOBIA_build.rbxlx` with Rojo.
+- Published via Roblox Open Cloud Place Publishing API.
+- UniverseId: `10138560838`
+- PlaceId: `89787959603872`
+- Version: `95`
+
+STATUS: SEASON 1 ROYAL PASS LIVE.
+Next: monitor runtime errors via Roblox Developer Console post-publish.
+
 ## 2026-05-24 — Animation authoring prepared; publish IDs still required
 
 Branch: brian-second-final

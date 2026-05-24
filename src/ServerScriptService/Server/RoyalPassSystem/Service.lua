@@ -4,7 +4,7 @@ local Service = {}
 Service.__index = Service
 
 local TIER_XP = 200
-local MAX_TIER = 50
+local MAX_TIER = 60
 
 local function toUserId(playerOrUserId)
     if type(playerOrUserId) == "number" then
