@@ -1046,3 +1046,52 @@ Sourcemap:
 
 Next:
 - Owner/Studio operator creates and uploads `emote_pasrah_bow` and `emote_pasrah_ascend` in Animation Editor, then updates `assets/manifest/ASSET_ID_REGISTRY.json` animation entries with the returned IDs and regenerates Lua.
+
+## 2026-05-24 — MCP active verification and registry smoke
+
+Branch: brian-second-final
+Commit: 93b0eee
+MCP Status: ACTIVE
+
+Preflight:
+- `git status --short --branch`: PASS on `brian-second-final`
+- `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
+- Active Studio instance: `PASRAHPHOBIA.rbxlx`
+
+MCP Studio work:
+- `generate_procedural_model` submitted/completed: 6 submitted, 4 completed, 2 failed polling
+- Completed MCP models: `royal_free_tier_5`, `royal_premium_tier_5`, `royal_free_tier_10`, `royal_premium_tier_15`
+- Failed MCP polling: `royal_premium_tier_10`, `royal_free_tier_15`
+- Queue note: Studio MCP accepted max 2 concurrent generation jobs; repeated polling failures made full 23 generated-mesh retry impractical in this run.
+- Studio fallback preview: 23/23 reward models created under `Workspace.PASRAH_S1_MCP_ASSET_PREVIEW` with named primitive components and baked art-direction colors.
+- SurfaceAppearance note: Studio rejected `SurfaceAppearance` on primitive `Part` objects with `SurfaceAppearance can only be parented to MeshParts`; preview models use baked `Color`/`Material`.
+
+Registry and assets:
+- Existing `.rbxm` model files present and valid binary Roblox model files: 23/23
+- Open Cloud upload this run: BLOCKED because `ROBLOX_API_KEY` was not set in the environment.
+- Registry current state after `python tools\asset_id_manager\registry_manager.py --sync`:
+  - Images: 100/100 CONFIRMED
+  - Meshes: 80/80 CONFIRMED
+  - Textures: 23/23 CONFIRMED
+  - Animations: 0/2 CONFIRMED
+- `python tools\asset_id_manager\registry_manager.py --generate-lua`: PASS
+- Generated Lua nil check: `Still nil: 0 entries`
+
+Manual inbox:
+- `python scripts\process_manual_inbox.py`: executed
+- Files found: 67 variant PNGs with `_2/_3/_4` suffixes
+- Uploaded/processed: 0
+- Failed/skipped: 67, because those suffixed keys do not exist in registry
+
+Studio smoke:
+- `AssetIdConfig` synced into Studio for smoke under `ReplicatedStorage.Shared.Config.Generated.AssetIdConfig`
+- Smoke require result: PASS
+- `RoyalPassCosmetics` non-nil count from Studio: 30 entries. This includes the 23 model cosmetics plus S1 title/badge/emote image rewards.
+
+Animation status:
+- `emote_pasrah_bow` animation ID: PENDING
+- `emote_pasrah_ascend` animation ID: PENDING
+- Blocker: current MCP tools do not expose `studio_create_animation`, `create_animation`, `open_animation_editor`, or animation upload/Get Asset ID. Registry audit still reports 2 missing animation entries.
+
+Sourcemap:
+- Final `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
