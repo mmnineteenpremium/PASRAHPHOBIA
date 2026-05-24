@@ -86,6 +86,12 @@ def build_empty_registry() -> dict[str, Any]:
     }
 
 
+def clone_section_map(raw: Any) -> dict[str, Any]:
+    if not isinstance(raw, dict):
+        return {}
+    return json.loads(json.dumps(raw))
+
+
 def normalize_status(status: str | None, default: str = "PENDING") -> str:
     if not status:
         return default
@@ -290,6 +296,16 @@ def build_registry() -> dict[str, Any]:
 
     manifest = load_json(MANIFEST_PATH)
     registry = build_empty_registry()
+    existing_registry = load_json(REGISTRY_PATH) if REGISTRY_PATH.exists() else {}
+
+    for section_name in ("images", "meshes", "textures", "animations", "audio"):
+        registry[section_name] = clone_section_map(existing_registry.get(section_name, {}))
+
+    existing_mono = existing_registry.get("monetization", {})
+    registry["monetization"]["passes"] = clone_section_map(existing_mono.get("passes", {}))
+    registry["monetization"]["developer_products"] = clone_section_map(existing_mono.get("developer_products", {}))
+    registry["monetization"]["subscriptions"] = clone_section_map(existing_mono.get("subscriptions", {}))
+    registry["monetization"]["ugc_items"] = clone_section_map(existing_mono.get("ugc_items", {}))
 
     # Reward entries from manifest become the source truth for pending Royal Pass assets.
     for reward in parse_manifest_rewards(manifest):
@@ -513,14 +529,14 @@ def generate_lua(registry: dict[str, Any]) -> None:
 
     for reward_id in royal_pass_ids:
         value = None
-        for section_name in ("images", "animations"):
+        for section_name in ("meshes", "animations", "images"):
             entry = registry.get(section_name, {}).get(reward_id)
             if entry and entry.get("asset_id") is not None:
                 value = int(entry["asset_id"])
                 break
         if value is None:
             status = "PENDING"
-            for section_name in ("images", "animations"):
+            for section_name in ("meshes", "animations", "images"):
                 entry = registry.get(section_name, {}).get(reward_id)
                 if entry and entry.get("status"):
                     status = str(entry["status"]).upper()
