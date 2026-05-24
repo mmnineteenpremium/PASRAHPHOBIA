@@ -11,19 +11,19 @@ local ShopMarketplaceConfig = {
         -- GamePass
         royalpass_premium_track = {
             marketplaceId = 3573231558,
-            enabled = false,
+            enabled = true,
         },
         class_dukun_unlock = {
             marketplaceId = 3573231828,
-            enabled = false,
+            enabled = true,
         },
         class_detective_unlock = {
             marketplaceId = 3573232123,
-            enabled = false,
+            enabled = true,
         },
         lifetime_bonus_pass = {
             marketplaceId = 3573232383,
-            enabled = false,
+            enabled = true,
         },
 
         -- DeveloperProduct

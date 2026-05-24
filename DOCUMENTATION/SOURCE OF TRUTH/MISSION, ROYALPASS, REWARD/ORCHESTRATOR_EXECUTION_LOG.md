@@ -1044,6 +1044,10 @@ Animation status:
 Sourcemap:
 - Final `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
 
+## 2026-05-24 — v96 batch execution
+
+GROUP A: PASS — GamePass config enabled flags corrected (4/4 true), XP event consumer verified via `DailyEngagementSync` (no `RoyalPass_GrantXP` usage), `border_haunted_frame` pipeline verified in generated config + UI fallback, registry sync/generate/audit all PASS (0 missing).
+
 ## 2026-05-24 — Post-publish activation + runtime smoke
 
 Branch: brian-second-final
