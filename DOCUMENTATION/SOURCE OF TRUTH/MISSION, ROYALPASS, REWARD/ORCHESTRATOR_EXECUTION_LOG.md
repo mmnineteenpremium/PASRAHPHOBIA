@@ -1069,6 +1069,31 @@ Root causes resolved:
 - border_haunted_frame: UIImages fallback confirmed in source (grant correct, preview visual only).
 - emote icons confirmed in UIImages (`71768047944720` / `128825450189999`).
 
+## 2026-05-24 — Animation upload final + publish v97
+
+Branch: brian-second-final
+
+Registry final:
+- Images: 100/100 CONFIRMED
+- Meshes: 80/80 CONFIRMED
+- Textures: 23/23 CONFIRMED
+- Animations: 2/2 CONFIRMED
+  - emote_pasrah_bow: rbxassetid://86538939340527
+  - emote_pasrah_ascend: rbxassetid://104989718132438
+- Nil entries: 0
+
+Publish:
+- Version: 99
+- UniverseId: 10138560838
+- PlaceId: 89787959603872
+- updateTime: 2026-05-24T11:46:22.553805200Z
+
+Notes:
+- `scripts/upload_animations.py` executed with safe-skip behavior; both animations already CONFIRMED so no re-upload performed.
+- All stop rules honored: no overwrite on confirmed non-animation sections, publish performed only after audit clean.
+
+STATUS: S1 MISSION ROYALPASS REWARD — 100% COMPLETE.
+
 ## 2026-05-24 — Post-publish activation + runtime smoke
 
 Branch: brian-second-final

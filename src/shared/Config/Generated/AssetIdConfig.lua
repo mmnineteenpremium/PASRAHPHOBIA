@@ -13,10 +13,10 @@ AssetIdConfig.Monetization = {
         pp_pack_standard = 3573225850,
     },
     GamePasses = {
-        class_detective_unlock = 3573232123,
-        class_dukun_unlock = 3573231828,
-        lifetime_bonus_pass = 3573232383,
-        royalpass_premium_track = 3573231558,
+        class_detective_unlock = 3573232123, -- hold
+        class_dukun_unlock = 3573231828, -- hold
+        lifetime_bonus_pass = 3573232383, -- hold
+        royalpass_premium_track = 3573231558, -- hold
     },
 }
 
