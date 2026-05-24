@@ -4,7 +4,7 @@
     "game": "PASRAHPHOBIA",
     "universe_id": null,
     "place_id": null,
-    "last_updated": "2026-05-24T10:20:20Z",
+    "last_updated": "2026-05-24T10:41:23Z",
     "maintained_by": "AGENT_09"
   },
   "images": {
@@ -4589,13 +4589,13 @@
   },
   "animations": {
     "emote_pasrah_bow": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 86538939340527,
+      "rbx_asset_id": "rbxassetid://86538939340527",
       "filename": "assets/animations/rbxanim/emote_pasrah_bow_emote.rbxanim",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T10:41:12Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "checkin_rewards",
@@ -4616,17 +4616,17 @@
         "storyboard_png": "assets/concept/emote_pasrah_bow_emote_board.png",
         "icon_png": "assets/icons/emote_pasrah_bow_icon.png",
         "rbxanim": "assets/animations/rbxanim/emote_pasrah_bow_emote.rbxanim",
-        "roblox_animation_id": null
+        "roblox_animation_id": 86538939340527
       }
     },
     "emote_pasrah_ascend": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 104989718132438,
+      "rbx_asset_id": "rbxassetid://104989718132438",
       "filename": "assets/animations/rbxanim/emote_pasrah_ascend_emote.rbxanim",
       "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_at": "2026-05-24T10:41:17Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4648,7 +4648,7 @@
         "storyboard_png": "assets/concept/emote_pasrah_ascend_emote_board.png",
         "icon_png": "assets/icons/emote_pasrah_ascend_icon.png",
         "rbxanim": "assets/animations/rbxanim/emote_pasrah_ascend_emote.rbxanim",
-        "roblox_animation_id": null
+        "roblox_animation_id": 104989718132438
       }
     }
   },

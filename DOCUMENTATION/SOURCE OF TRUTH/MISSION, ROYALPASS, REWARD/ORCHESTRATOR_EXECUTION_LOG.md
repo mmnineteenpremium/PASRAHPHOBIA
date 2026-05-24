@@ -1044,6 +1044,35 @@ Animation status:
 Sourcemap:
 - Final `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
 
+## 2026-05-24 - FINAL: Animation upload + S1 Royal Pass complete
+
+Branch: brian-second-final
+Commit: recorded by final git push for this entry
+
+Upload:
+- Open Cloud direct `.rbxanim` upload returned `400 INVALID_ARGUMENT` because `application/octet-stream` Animation upload is not supported.
+- Retried the same Roblox XML animation content as `.rbxmx` with `model/x-rbxm`; Open Cloud accepted both uploads.
+- `emote_pasrah_bow` asset_id: 86538939340527
+- `emote_pasrah_ascend` asset_id: 104989718132438
+
+Registry final:
+- Images: 100/100
+- Meshes: 80/80
+- Textures: 23/23
+- Animations: 2/2
+- Audio: 84/84
+
+Validation:
+- `python tools\asset_id_manager\registry_manager.py --sync`: PASS
+- `python tools\asset_id_manager\registry_manager.py --generate-lua`: PASS
+- `python tools\asset_id_manager\registry_manager.py --audit`: PASS, 0 missing across all sections
+- Lua nil check: 0 entries
+- Studio source smoke: PASS, `Animations = 2/2`
+- Sourcemap: PASS
+
+STATUS: S1 Royal Pass assets confirmed and complete.
+Next: publish `PASRAHPHOBIA.rbxlx` to Roblox from Studio.
+
 ## 2026-05-24 — Animation authoring prepared; publish IDs still required
 
 Branch: brian-second-final

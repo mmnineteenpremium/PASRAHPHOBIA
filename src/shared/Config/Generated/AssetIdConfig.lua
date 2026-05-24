@@ -47,13 +47,15 @@ AssetIdConfig.RoyalPassCosmetics = {
     badge_season_complete_free = 132587431755176,
     outfit_sang_ahli_season_exclusive = 98438623958974,
     badge_season_complete_premium = 72637676363783,
-    emote_pasrah_ascend = 128825450189999,
+    emote_pasrah_ascend = 104989718132438,
     title_investigator_setia = 98107737947948,
-    emote_pasrah_bow = 71768047944720,
+    emote_pasrah_bow = 86538939340527,
     title_penyintas_sejati = 105087156895491,
 }
 
 AssetIdConfig.Animations = {
+    emote_pasrah_ascend = 104989718132438,
+    emote_pasrah_bow = 86538939340527,
 }
 
 AssetIdConfig.UIImages = {
