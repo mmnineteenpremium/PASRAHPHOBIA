@@ -722,6 +722,30 @@ Validation limits:
 Stop/blocker reason:
 - Not stopped permanently. Audit slice is recorded at n=78%; remaining blockers are publish/2FA/mobile availability and partial monetization/cosmetic registry scope, not a missing canonical daily/royalpass/gacha implementation.
 
+## 2026-05-23 - Cube weights install + full cosmetic pipeline run
+
+Status: blocked by external generation/runtime limits after dependency progress.
+
+What changed:
+- Loaded owner-provided `.env` keys into the process session without printing values.
+- Installed `huggingface_hub` and downloaded Cube weights from Hugging Face repo `Roblox/cube3d-v0.5`.
+- Verified Cube weights exist under `C:\Users\User\.codex\tools\cube\model_weights`.
+- Installed `google-genai` for the Google image workflow.
+- Ran asset registry sync, audit, and Lua generation.
+- Recorded pipeline report.
+
+Validation:
+- `shape_gpt.safetensors` and `shape_tokenizer.safetensors` are present.
+- `registry_manager.py --sync`, `--audit`, and `--generate-lua` completed.
+- Rojo sourcemap passed with `.\.aftman\bin\rojo.exe sourcemap default.project.json`.
+
+Stop/blocker reason:
+- `generate_visual.py` reached Gemini but failed with `429 RESOURCE_EXHAUSTED`; no images were generated or uploaded.
+- `generate_cube3d.py` test timed out after 30 minutes with no `.obj` output; no meshes were generated or uploaded.
+
+Report:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/CUBE_WEIGHTS_INSTALL_AND_PIPELINE_2026-05-23.md`
+
 ## 2026-05-23 - dependency setup, launcher path fix, cosmetic pipeline retry
 
 Status: blocked before image generation; owner credential action required.
