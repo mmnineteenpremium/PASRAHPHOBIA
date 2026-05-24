@@ -722,6 +722,27 @@ Validation limits:
 Stop/blocker reason:
 - Not stopped permanently. Audit slice is recorded at n=78%; remaining blockers are publish/2FA/mobile availability and partial monetization/cosmetic registry scope, not a missing canonical daily/royalpass/gacha implementation.
 
+## 2026-05-23 - dependency setup, launcher path fix, cosmetic pipeline retry
+
+Status: blocked before image generation; owner credential action required.
+
+What changed:
+- Verified branch/worktree `brian-second-final` and `default.project.json`.
+- Confirmed `scripts/generate_visual.py` and `scripts/generate_cube3d.py` already point to `C:\Users\User\.codex\tools\roblox-asset-workflow\`.
+- Installed minimal Python dependencies for the visual workflow: `google-generativeai`, `Pillow`, and `requests`.
+- Created local `.env` template with placeholder Gemini/Roblox values.
+- Recorded dependency and pipeline retry report.
+
+Validation:
+- Rojo sourcemap passed with `.\.aftman\bin\rojo.exe sourcemap default.project.json`.
+
+Stop/blocker reason:
+- `GEMINI_API_KEY`/`GOOGLE_API_KEY` is missing, so `generate_visual.py` test and full image generation were not run.
+- Cube weights `shape_gpt.safetensors` and `shape_tokenizer.safetensors` were not found on `C:\`, so mesh generation remains blocked.
+
+Report:
+- `DOCUMENTATION/SOURCE OF TRUTH/reports/DEPENDENCY_SETUP_AND_PIPELINE_RETRY_2026-05-23.md`
+
 ## 2026-05-23 - lobby RoyalPass+Shop bootstrap fix + Studio sync + Play Test
 
 Status: completed and pushed through Studio Play Test.
