@@ -4,7 +4,7 @@
     "game": "PASRAHPHOBIA",
     "universe_id": null,
     "place_id": null,
-    "last_updated": "2026-05-24T10:41:23Z",
+    "last_updated": "2026-05-24T11:44:38Z",
     "maintained_by": "AGENT_09"
   },
   "images": {
@@ -6017,32 +6017,28 @@
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
-        "status": "ACTIVE",
-        "activated_at": "2026-05-24T11:01:22Z"
+        "status": "HOLD"
       },
       "class_dukun_unlock": {
         "pass_id": 3573231828,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
-        "status": "ACTIVE",
-        "activated_at": "2026-05-24T11:01:22Z"
+        "status": "HOLD"
       },
       "class_detective_unlock": {
         "pass_id": 3573232123,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
-        "status": "ACTIVE",
-        "activated_at": "2026-05-24T11:01:22Z"
+        "status": "HOLD"
       },
       "lifetime_bonus_pass": {
         "pass_id": 3573232383,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
-        "status": "ACTIVE",
-        "activated_at": "2026-05-24T11:01:22Z"
+        "status": "HOLD"
       }
     },
     "developer_products": {
