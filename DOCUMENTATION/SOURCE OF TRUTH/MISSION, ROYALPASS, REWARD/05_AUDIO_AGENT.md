@@ -12,6 +12,28 @@ OUTPUT: .ogg / .mp3 files siap upload ke Roblox
 - Jangan meminta imagegen lama untuk cover/reference audio. Jika perlu visual timing board, minta `python scripts/generate_visual.py --prompt "<brief>" --type ui`.
 - Sebelum audio upload atau registrasi AssetId, pastikan worktree/branch dan manifest target benar.
 
+## STATUS AGENT_05 — 2026-05-24
+
+BELUM DIMULAI.
+
+Yang sudah ada di registry (84 audio) adalah BGM dan SFX gameplay
+yang di-upload oleh akun briankotak sebelum pipeline ini.
+Itu BUKAN output AGENT_05.
+
+Output AGENT_05 yang masih 0:
+- sfx_tier_claim
+- sfx_tier_up_free / sfx_tier_up_premium
+- sfx_gacha_reveal_common / rare / epic / legend
+- sfx_checkin_daily / streak7 / milestone_30
+- sfx_mission_complete / sfx_mission_claim
+- sfx_royalpass_open / sfx_royalpass_close
+
+Prioritas saat owner siap:
+1. sfx_tier_claim (paling sering dipakai)
+2. sfx_checkin_daily
+3. sfx_gacha_reveal_legend
+4. Sisanya menyusul
+
 ## IDENTITAS
 Kamu adalah AUDIO_AGENT — agen yang membuat semua audio untuk sistem
 Daily Engagement & Royal Pass PASRAHPHOBIA.

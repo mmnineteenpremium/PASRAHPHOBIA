@@ -4,6 +4,45 @@ ROYAL PASS ASSET PIPELINE — SEASON 1
 DIPERBARUI: Menambahkan AGENT_07, AGENT_08, AGENT_09
 =======================================================================
 
+## STATUS AKTUAL SEASON 1 — Per 2026-05-24
+
+### Registry Asset
+| Section    | Confirmed | Total | Keterangan |
+|------------|-----------|-------|-----------|
+| Images     | 100       | 100   | DONE — icon/preview semua tier sudah di-upload |
+| Meshes     | 80        | 80    | DONE — model placeholder, bukan UGC accessory proper |
+| Textures   | 23        | 23    | DONE |
+| Animations | 2         | 2     | PENDING Animation Asset ID dari Studio Animation Editor |
+| Audio BGM  | 84        | 84    | DONE — gameplay audio (bukan UI reward SFX) |
+
+### Agent Status
+| Agent | Status   | Keterangan |
+|-------|----------|-----------|
+| 00 ORCHESTRATOR | ACTIVE | Koordinasi berjalan |
+| 01 IMAGEGEN     | DONE   | 31 gambar via Grok manual, diupload |
+| 02 3DMODEL      | PARTIAL | .rbxm placeholder ada, bukan UGC accessory proper |
+| 03 ANIMATION    | PARTIAL | 2 .rbxanim dibuat, Animation ID pending Studio upload |
+| 04 VISUAL_UI    | PARTIAL | Shell authored selesai, owner visual test BELUM |
+| 05 AUDIO        | BELUM  | UI reward SFX (tier_claim, gacha, checkin) belum dibuat |
+| 06 INTEGRATION  | PARTIAL | Source integration selesai, owner visual test BELUM |
+| 07 IMPORTER     | DONE   | process_manual_inbox.py + upload pipeline selesai |
+| 08 MONETIZATION | PARTIAL | 6 DevProduct ACTIVE, 4 GamePass HOLD, subscription belum |
+| 09 ASSET_ID_MGR | DONE   | registry_manager.py selesai, AssetIdConfig.lua generate |
+
+### Yang Belum Disentuh Sama Sekali
+- UI reward SFX (AGENT_05 scope: sfx_tier_claim, sfx_gacha_reveal_*, sfx_checkin_*)
+- Subscription plan
+- Season skip developer products
+- Owner visual play test langsung (semua pass adalah code pass)
+- 2-client multiplayer smoke
+- Mobile device smoke
+
+### Catatan Penting
+- "PASS" dan "DONE" di log = source/code/build pass — BUKAN owner visual konfirmasi
+- Gambar Grok sudah diupload dan ID masuk ke AssetIdConfig.lua
+- Icon gambar di DayCard RoyalPass UI belum dikonfirmasi muncul oleh owner
+- Owner visual test dijadwalkan serentak untuk debugging satu sesi
+
 ## WORKFLOW OVERRIDE (2026-05-22)
 
 - Visual raster: gunakan `python scripts/generate_visual.py --prompt "<brief>" --type <icon|billboard|ui|reference>` untuk icon, billboard, UI, border, HUD/static overlay, concept, storyboard, dan 3D reference.

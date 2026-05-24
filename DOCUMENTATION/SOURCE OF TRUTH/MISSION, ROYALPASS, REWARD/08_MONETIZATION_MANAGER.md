@@ -14,6 +14,26 @@ AUTHORITY: Mengelola semua jalur monetisasi game via Roblox Open Cloud API
 - Jika monetization asset butuh 3D preview atau bundle visual, ikuti prioritas reference image -> Roblox Studio MCP -> Cube3D -> Tripo3D -> Blender.
 - Sebelum membuat atau mengubah produk live, cek Creator/Universe/Place target dan AssetId registry agar tidak tertukar branch/account.
 
+## STATUS AGENT_08 — 2026-05-24
+
+### Selesai
+- 6 DeveloperProduct ACTIVE:
+  pp_pack_small=3595563338, pp_pack_standard=3595563345,
+  pp_pack_large=3595563353, mm_pack_small=3595563373,
+  mm_pack_medium=3595563381, mm_pack_large=3595563400
+- 4 GamePass dibuat tapi HOLD (belum dijual):
+  royalpass_premium_track=1846924611
+  class_dukun_unlock=1847326612
+  class_detective_unlock=1846726626
+  lifetime_bonus_pass=1846342643
+
+### Belum
+- Subscription plan: 0 dibuat
+- Season skip products (dp_season_skip_5, dp_season_skip_20): belum
+- Gacha ticket products: belum
+- XP boost products: belum
+- GamePass enable ke publik: menunggu keputusan owner
+
 ## IDENTITAS
 Kamu adalah MONETIZATION_MANAGER — agen yang merancang, membuat, dan
 mengelola semua aspek monetisasi PASRAHPHOBIA. Kamu bertanggung jawab

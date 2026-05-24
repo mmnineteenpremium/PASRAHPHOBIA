@@ -24,7 +24,8 @@
       "type": "border",
       "source": "10-day milestone",
       "agent_owner": "AGENT_04",
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "border_png": null,
         "icon_png": null,
@@ -35,7 +36,8 @@
       "type": "emote",
       "source": "20-day milestone",
       "agents": ["AGENT_01", "AGENT_03", "AGENT_06"],
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "storyboard_png": null,
         "icon_png": null,
@@ -47,7 +49,8 @@
       "type": "title",
       "source": "7-day streak",
       "agent_owner": "AGENT_04",
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "title_png": null,
         "roblox_asset_id": null
@@ -57,7 +60,8 @@
       "type": "title",
       "source": "30-day milestone",
       "agent_owner": "AGENT_04",
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "title_png": null,
         "roblox_asset_id": null
@@ -73,7 +77,8 @@
       "track": "FREE",
       "type": "cosmetic",
       "agents": ["AGENT_01", "AGENT_02", "AGENT_06"],
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "concept_png": null,
         "icon_png": null,
@@ -90,7 +95,8 @@
       "track": "FREE",
       "type": "border",
       "agents": ["AGENT_04", "AGENT_06"],
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "border_png": null,
         "icon_png": null,
@@ -103,7 +109,8 @@
       "track": "PREMIUM",
       "type": "pet",
       "agents": ["AGENT_01", "AGENT_02", "AGENT_03", "AGENT_06"],
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "concept_png": null,
         "icon_png": null,
@@ -123,7 +130,8 @@
       "track": "FREE",
       "type": "emote",
       "agents": ["AGENT_01", "AGENT_03", "AGENT_06"],
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "storyboard_png": null,
         "icon_png": null,
@@ -137,7 +145,8 @@
       "track": "PREMIUM",
       "type": "accessory",
       "agents": ["AGENT_01", "AGENT_02", "AGENT_06"],
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "concept_png": null,
         "icon_png": null,
@@ -153,7 +162,8 @@
       "track": "FREE",
       "type": "title",
       "agents": ["AGENT_04", "AGENT_06"],
-      "status": "PENDING",
+      "status": "IN_PROGRESS",
+      "note": "Image uploaded dan ID ada di AssetIdConfig.lua. Owner visual test belum dilakukan.",
       "files": {
         "title_png": null,
         "roblox_asset_id": null
@@ -213,5 +223,21 @@
     "IN_PROGRESS": "Sedang dikerjakan oleh agent",
     "REVIEW": "Menunggu approval dari ORCHESTRATOR",
     "DONE": "Selesai dan terintegrasi di game"
+  },
+  "_actual_status": {
+    "last_synced": "2026-05-24",
+    "note": "Template ini adalah referensi struktur saja. Data aktual ada di assets/manifest/ASSET_ID_REGISTRY.json",
+    "registry_summary": {
+      "images": "100/100 CONFIRMED",
+      "meshes": "80/80 CONFIRMED — placeholder, bukan UGC accessory",
+      "textures": "23/23 CONFIRMED",
+      "animations": "2/2 — Animation Asset ID pending Studio upload",
+      "audio_bgm": "84/84 CONFIRMED — gameplay audio",
+      "audio_ui_sfx": "0 — belum dibuat (AGENT_05 scope)"
+    },
+    "owner_visual_test": "BELUM — dijadwalkan serentak",
+    "published_version": "v96",
+    "universe_id": "10138560838",
+    "place_id": "89787959603872"
   }
 }
