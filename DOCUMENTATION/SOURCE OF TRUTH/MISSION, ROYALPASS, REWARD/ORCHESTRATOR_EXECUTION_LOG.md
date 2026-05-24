@@ -946,3 +946,38 @@ Commit: f831eef feat(pipeline): manual inbox processor script + cube3d diagnosis
 Sourcemap:
 - `.\.aftman\bin\rojo.exe sourcemap default.project.json`
 Result: PASS
+
+## 2026-05-24 - studio mesh pipeline continuation status
+
+Branch: brian-second-final
+Commit: e6ca4e5 fix(asset-registry): preserve synced ids and mesh lua mapping
+
+### Preflight
+- `git status --short --branch`: PASS on `brian-second-final`
+- `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
+
+### Manual inbox
+- Inbox checked at `assets/generated/images/manual_inbox/`
+- PNG available this run: `0`
+- `python scripts\process_manual_inbox.py`: not executed beyond empty-inbox check because there were no files to process
+- `python tools\asset_id_manager\registry_manager.py --audit`: confirms image queue still pending
+
+### Studio mesh pipeline
+- Cube3D remains blocked and was not retried
+- Gemini remains blocked and was not retried
+- Roblox Studio MCP / Studio automation tool availability in this session: BLOCKED (`tool_search` returned no attachable Roblox Studio/MCP tools)
+- Result: mesh generation/export/upload could not be executed from this shell-only session without violating the no-bulk-touch rule for `PASRAHPHOBIA.rbxlx`
+- Mesh generated: `0/22`
+- Mesh uploaded: `0/22`
+- Registry CONFIRMED this run: `0/22`
+
+### Source-of-truth toolchain fix
+- Patched `tools/asset_id_manager/registry_manager.py` so `--sync` preserves existing asset IDs instead of rebuilding from zero
+- Patched `--generate-lua` so `AssetIdConfig.RoyalPassCosmetics` can resolve from `meshes` entries, not only `images`/`animations`
+- Validation:
+  - `python tools\asset_id_manager\registry_manager.py --sync`: PASS
+  - `python tools\asset_id_manager\registry_manager.py --generate-lua`: PASS
+
+### Next
+- If owner drops PNG files: run `python scripts\process_manual_inbox.py`
+- If Studio/MCP becomes available: continue Step 2 using Studio primitive models and then upload
