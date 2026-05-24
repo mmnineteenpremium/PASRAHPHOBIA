@@ -1049,6 +1049,7 @@ Sourcemap:
 GROUP A: PASS — GamePass config enabled flags corrected (4/4 true), XP event consumer verified via `DailyEngagementSync` (no `RoyalPass_GrantXP` usage), `border_haunted_frame` pipeline verified in generated config + UI fallback, registry sync/generate/audit all PASS (0 missing).
 GROUP B: FAIL — publish succeeded with `versionNumber=97` and place `updateTime=2026-05-24T11:31:20.241487700Z`, but DataStore API permission check returned HTTP 403.
 GROUP C: PASS — VERIFIED no code change; ProcessReceipt maps DeveloperProducts via marketplace catalog/config (all 6 IDs covered), GamePass ownership sync loops all 4 passes through `GrantMarketplacePurchase`, and premium Royal Pass ownership is applied by `ShopSystem.Service:_grantEntitlements -> RoyalPassSystem:SetPremiumOwnership(true)`.
+GROUP D: PASS — VERIFIED no change; `DailyEngagementSync` snapshot already carries mission/checkin/royalPass/gacha fields consumed by UI, mission claim uses `DailyMissionClaimRequest` with missionId payload, and checkin preview icon keys resolve via `RoyalPassCosmetics` + `UIImages` fallback (`border_haunted_frame=76170537279263`, `emote_pasrah_bow` icon present).
 
 ## 2026-05-24 — Post-publish activation + runtime smoke
 
