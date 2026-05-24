@@ -1009,3 +1009,40 @@ Commit: e6ca4e5 fix(asset-registry): preserve synced ids and mesh lua mapping
 ### Next
 - If owner drops PNG files: run `python scripts\process_manual_inbox.py`
 - If Studio/MCP becomes available: continue Step 2 using Studio primitive models and then upload
+
+## 2026-05-24 — Studio full asset completion (mesh+texture upload)
+
+Branch: brian-second-final
+Status: PARTIAL — mesh and texture assets completed; animation upload remains blocked by Animation Editor requirement.
+
+Execution notes:
+- Preflight branch check: PASS on `brian-second-final`
+- Rojo sourcemap before asset work: PASS
+- Cube3D and Gemini: not retried
+- Roblox Studio MCP / command-bar executor availability: unavailable in this session
+- `PASRAHPHOBIA.rbxlx`: not touched
+
+Asset completion:
+- Mesh generated as Roblox primitive `.rbxm` files from the provided Studio Command Bar model spec: 23/23
+- Mesh uploaded through Open Cloud as Model assets: 23/23
+- Texture PNG generated from the S1 palette and uploaded through Open Cloud as Image assets: 23/23
+- SurfaceAppearance note: empty SurfaceAppearance instances caused Open Cloud model operations to fail with `Unknown Error`; `.rbxm` files were regenerated with baked part colors and separate diffuse PNG texture assets.
+- Images from manual inbox: 31/31 already confirmed; rerun found 67 variant files with `_2/_3/_4` suffixes and skipped them because those keys do not exist in registry.
+
+Registry and Lua:
+- `python tools\asset_id_manager\registry_manager.py --sync`: PASS
+- `python tools\asset_id_manager\registry_manager.py --audit`: images 0 missing, meshes 0 missing, textures 0 missing, animations 2 missing
+- `python tools\asset_id_manager\registry_manager.py --generate-lua`: PASS
+- `src/shared/Config/CosmeticRegistry.lua`: 23 model asset IDs applied to matching Royal Pass cosmetic entries
+- `src/shared/Config/Generated/AssetIdConfig.lua`: regenerated; no `nil` entries found by grep/Select-String check
+
+Animation status:
+- `emote_pasrah_bow` animation ID: PENDING
+- `emote_pasrah_ascend` animation ID: PENDING
+- Blocker: prompt requires Animation Editor export/upload and Get Asset ID; no Studio UI/MCP executor is available from this shell session, and Open Cloud animation upload was intentionally not used.
+
+Sourcemap:
+- Final `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
+
+Next:
+- Owner/Studio operator creates and uploads `emote_pasrah_bow` and `emote_pasrah_ascend` in Animation Editor, then updates `assets/manifest/ASSET_ID_REGISTRY.json` animation entries with the returned IDs and regenerates Lua.

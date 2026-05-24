@@ -14,7 +14,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_5_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_5_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_5_diffuse.png",
-			roblox_asset_id = "rbxassetid://110947571877642",
+			roblox_asset_id = "rbxassetid://72039547113863",
 		},
 	},
 	{
@@ -30,7 +30,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_5_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_5_diffuse.png",
-			roblox_asset_id = "rbxassetid://96117604804464",
+			roblox_asset_id = "rbxassetid://102589695413306",
 		},
 	},
 	{
@@ -46,7 +46,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_10_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_10_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_10_diffuse.png",
-			roblox_asset_id = "rbxassetid://118126994059248",
+			roblox_asset_id = "rbxassetid://98269830081500",
 		},
 	},
 	{
@@ -62,7 +62,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_10_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_10_diffuse.png",
-			roblox_asset_id = "rbxassetid://89016215997657",
+			roblox_asset_id = "rbxassetid://101072178250101",
 		},
 	},
 	{
@@ -78,7 +78,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_15_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_15_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_15_diffuse.png",
-			roblox_asset_id = "rbxassetid://136853886377977",
+			roblox_asset_id = "rbxassetid://78914867377290",
 		},
 	},
 	{
@@ -94,7 +94,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_15_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_15_diffuse.png",
-			roblox_asset_id = "rbxassetid://109211309824278",
+			roblox_asset_id = "rbxassetid://135937861696861",
 		},
 	},
 	{
@@ -110,7 +110,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_20_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_20_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_20_diffuse.png",
-			roblox_asset_id = "rbxassetid://72333924734908",
+			roblox_asset_id = "rbxassetid://76314793317030",
 		},
 	},
 	{
@@ -126,7 +126,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_20_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_20_diffuse.png",
-			roblox_asset_id = "rbxassetid://120015007711145",
+			roblox_asset_id = "rbxassetid://121646072411963",
 		},
 	},
 	{
@@ -142,7 +142,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_25_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_25_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_25_diffuse.png",
-			roblox_asset_id = "rbxassetid://79384265618482",
+			roblox_asset_id = "rbxassetid://112972141985348",
 		},
 	},
 	{
@@ -158,7 +158,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_25_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_25_diffuse.png",
-			roblox_asset_id = "rbxassetid://123839620074252",
+			roblox_asset_id = "rbxassetid://97440314472554",
 		},
 	},
 	{
@@ -174,7 +174,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_30_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_30_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_30_diffuse.png",
-			roblox_asset_id = "rbxassetid://131340575068118",
+			roblox_asset_id = "rbxassetid://76403100413658",
 		},
 	},
 	{
@@ -190,7 +190,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_30_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_30_diffuse.png",
-			roblox_asset_id = "rbxassetid://116033229089879",
+			roblox_asset_id = "rbxassetid://78386631931095",
 		},
 	},
 	{
@@ -206,7 +206,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_35_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_35_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_35_diffuse.png",
-			roblox_asset_id = "rbxassetid://119837041875143",
+			roblox_asset_id = "rbxassetid://128533258115000",
 		},
 	},
 	{
@@ -222,7 +222,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_35_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_35_diffuse.png",
-			roblox_asset_id = "rbxassetid://81130382968458",
+			roblox_asset_id = "rbxassetid://124675688972910",
 		},
 	},
 	{
@@ -238,7 +238,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_40_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_40_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_40_diffuse.png",
-			roblox_asset_id = "rbxassetid://74290002837767",
+			roblox_asset_id = "rbxassetid://105173616058507",
 		},
 	},
 	{
@@ -254,7 +254,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_40_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_40_diffuse.png",
-			roblox_asset_id = "rbxassetid://86042025676074",
+			roblox_asset_id = "rbxassetid://85379695399394",
 		},
 	},
 	{
@@ -270,7 +270,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_45_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_45_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_45_diffuse.png",
-			roblox_asset_id = "rbxassetid://86854794141705",
+			roblox_asset_id = "rbxassetid://117917470537373",
 		},
 	},
 	{
@@ -286,7 +286,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_45_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_45_diffuse.png",
-			roblox_asset_id = "rbxassetid://132881317348411",
+			roblox_asset_id = "rbxassetid://123380570005663",
 		},
 	},
 	{
@@ -302,7 +302,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_50_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_50_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_50_diffuse.png",
-			roblox_asset_id = "rbxassetid://84075201883534",
+			roblox_asset_id = "rbxassetid://86129464676714",
 		},
 	},
 	{
@@ -318,7 +318,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_50_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_50_diffuse.png",
-			roblox_asset_id = "rbxassetid://94455101854994",
+			roblox_asset_id = "rbxassetid://116859601325162",
 		},
 	},
 	{
@@ -334,7 +334,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_free_tier_55_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_free_tier_55_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_free_tier_55_diffuse.png",
-			roblox_asset_id = "rbxassetid://85863611330411",
+			roblox_asset_id = "rbxassetid://97545315228281",
 		},
 	},
 	{
@@ -350,7 +350,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/royal_premium_tier_55_model.fbx",
 			model_rbxm = "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
 			diffuse_texture = "assets/models/fbx/royal_premium_tier_55_diffuse.png",
-			roblox_asset_id = "rbxassetid://95802451969718",
+			roblox_asset_id = "rbxassetid://130849313594932",
 		},
 	},
 	{
@@ -392,7 +392,7 @@ local RAW_ENTRIES = {
 			model_fbx = "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
 			model_rbxm = "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
 			diffuse_texture = "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png",
-			roblox_asset_id = "rbxassetid://101129320250126",
+			roblox_asset_id = "rbxassetid://98438623958974",
 		},
 	},
 	{

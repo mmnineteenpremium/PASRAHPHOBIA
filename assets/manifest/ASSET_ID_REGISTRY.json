@@ -4,7 +4,7 @@
     "game": "PASRAHPHOBIA",
     "universe_id": null,
     "place_id": null,
-    "last_updated": "2026-05-24T07:53:39Z",
+    "last_updated": "2026-05-24T08:46:58Z",
     "maintained_by": "AGENT_09"
   },
   "images": {
@@ -2189,13 +2189,13 @@
   },
   "meshes": {
     "royal_free_tier_5": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 72039547113863,
+      "rbx_asset_id": "rbxassetid://72039547113863",
       "filename": "assets/models/fbx/royal_free_tier_5_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:43:41Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2223,13 +2223,13 @@
       }
     },
     "royal_premium_tier_5": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 102589695413306,
+      "rbx_asset_id": "rbxassetid://102589695413306",
       "filename": "assets/models/fbx/royal_premium_tier_5_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:46:28Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2257,13 +2257,13 @@
       }
     },
     "royal_free_tier_10": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 98269830081500,
+      "rbx_asset_id": "rbxassetid://98269830081500",
       "filename": "assets/models/fbx/royal_free_tier_10_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:02Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2291,13 +2291,13 @@
       }
     },
     "royal_premium_tier_10": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 101072178250101,
+      "rbx_asset_id": "rbxassetid://101072178250101",
       "filename": "assets/models/fbx/royal_premium_tier_10_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:42Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2325,13 +2325,13 @@
       }
     },
     "royal_free_tier_15": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 78914867377290,
+      "rbx_asset_id": "rbxassetid://78914867377290",
       "filename": "assets/models/fbx/royal_free_tier_15_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:43:17Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2359,13 +2359,13 @@
       }
     },
     "royal_premium_tier_15": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 135937861696861,
+      "rbx_asset_id": "rbxassetid://135937861696861",
       "filename": "assets/models/fbx/royal_premium_tier_15_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:47Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2393,13 +2393,13 @@
       }
     },
     "royal_free_tier_20": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 76314793317030,
+      "rbx_asset_id": "rbxassetid://76314793317030",
       "filename": "assets/models/fbx/royal_free_tier_20_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:07Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2427,13 +2427,13 @@
       }
     },
     "royal_premium_tier_20": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 121646072411963,
+      "rbx_asset_id": "rbxassetid://121646072411963",
       "filename": "assets/models/fbx/royal_premium_tier_20_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:54Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2461,13 +2461,13 @@
       }
     },
     "royal_free_tier_25": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 112972141985348,
+      "rbx_asset_id": "rbxassetid://112972141985348",
       "filename": "assets/models/fbx/royal_free_tier_25_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:11Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2495,13 +2495,13 @@
       }
     },
     "royal_premium_tier_25": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 97440314472554,
+      "rbx_asset_id": "rbxassetid://97440314472554",
       "filename": "assets/models/fbx/royal_premium_tier_25_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:58Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2529,13 +2529,13 @@
       }
     },
     "royal_free_tier_30": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 76403100413658,
+      "rbx_asset_id": "rbxassetid://76403100413658",
       "filename": "assets/models/fbx/royal_free_tier_30_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:15Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2563,13 +2563,13 @@
       }
     },
     "royal_premium_tier_30": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 78386631931095,
+      "rbx_asset_id": "rbxassetid://78386631931095",
       "filename": "assets/models/fbx/royal_premium_tier_30_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:46:03Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2597,13 +2597,13 @@
       }
     },
     "royal_free_tier_35": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 128533258115000,
+      "rbx_asset_id": "rbxassetid://128533258115000",
       "filename": "assets/models/fbx/royal_free_tier_35_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:43:29Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2631,13 +2631,13 @@
       }
     },
     "royal_premium_tier_35": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 124675688972910,
+      "rbx_asset_id": "rbxassetid://124675688972910",
       "filename": "assets/models/fbx/royal_premium_tier_35_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:46:11Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2665,13 +2665,13 @@
       }
     },
     "royal_free_tier_40": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 105173616058507,
+      "rbx_asset_id": "rbxassetid://105173616058507",
       "filename": "assets/models/fbx/royal_free_tier_40_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:23Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2699,13 +2699,13 @@
       }
     },
     "royal_premium_tier_40": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 85379695399394,
+      "rbx_asset_id": "rbxassetid://85379695399394",
       "filename": "assets/models/fbx/royal_premium_tier_40_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:46:15Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2733,13 +2733,13 @@
       }
     },
     "royal_free_tier_45": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 117917470537373,
+      "rbx_asset_id": "rbxassetid://117917470537373",
       "filename": "assets/models/fbx/royal_free_tier_45_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:27Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2767,13 +2767,13 @@
       }
     },
     "royal_premium_tier_45": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 123380570005663,
+      "rbx_asset_id": "rbxassetid://123380570005663",
       "filename": "assets/models/fbx/royal_premium_tier_45_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:46:19Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2801,13 +2801,13 @@
       }
     },
     "royal_free_tier_50": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 86129464676714,
+      "rbx_asset_id": "rbxassetid://86129464676714",
       "filename": "assets/models/fbx/royal_free_tier_50_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:31Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2835,13 +2835,13 @@
       }
     },
     "royal_premium_tier_50": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 116859601325162,
+      "rbx_asset_id": "rbxassetid://116859601325162",
       "filename": "assets/models/fbx/royal_premium_tier_50_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:46:34Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2869,13 +2869,13 @@
       }
     },
     "royal_free_tier_55": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 97545315228281,
+      "rbx_asset_id": "rbxassetid://97545315228281",
       "filename": "assets/models/fbx/royal_free_tier_55_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:45:38Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2903,13 +2903,13 @@
       }
     },
     "royal_premium_tier_55": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 130849313594932,
+      "rbx_asset_id": "rbxassetid://130849313594932",
       "filename": "assets/models/fbx/royal_premium_tier_55_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:46:43Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -2937,13 +2937,13 @@
       }
     },
     "outfit_sang_ahli_season_exclusive": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 98438623958974,
+      "rbx_asset_id": "rbxassetid://98438623958974",
       "filename": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/rbxmk",
+      "uploaded_at": "2026-05-24T08:44:58Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -3828,13 +3828,13 @@
   },
   "textures": {
     "royal_free_tier_5": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 76650739296988,
+      "rbx_asset_id": "rbxassetid://76650739296988",
       "filename": "assets/models/fbx/royal_free_tier_5_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:47Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -3861,13 +3861,13 @@
       }
     },
     "royal_premium_tier_5": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 99943137514199,
+      "rbx_asset_id": "rbxassetid://99943137514199",
       "filename": "assets/models/fbx/royal_premium_tier_5_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:39Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -3894,13 +3894,13 @@
       }
     },
     "royal_free_tier_10": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 137704868304430,
+      "rbx_asset_id": "rbxassetid://137704868304430",
       "filename": "assets/models/fbx/royal_free_tier_10_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:12Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -3927,13 +3927,13 @@
       }
     },
     "royal_premium_tier_10": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 126816480398766,
+      "rbx_asset_id": "rbxassetid://126816480398766",
       "filename": "assets/models/fbx/royal_premium_tier_10_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:00Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -3960,13 +3960,13 @@
       }
     },
     "royal_free_tier_15": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 81790192319435,
+      "rbx_asset_id": "rbxassetid://81790192319435",
       "filename": "assets/models/fbx/royal_free_tier_15_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:17Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -3993,13 +3993,13 @@
       }
     },
     "royal_premium_tier_15": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 76492997908216,
+      "rbx_asset_id": "rbxassetid://76492997908216",
       "filename": "assets/models/fbx/royal_premium_tier_15_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:05Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4026,13 +4026,13 @@
       }
     },
     "royal_free_tier_20": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 77139320948324,
+      "rbx_asset_id": "rbxassetid://77139320948324",
       "filename": "assets/models/fbx/royal_free_tier_20_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:22Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4059,13 +4059,13 @@
       }
     },
     "royal_premium_tier_20": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 95804917921038,
+      "rbx_asset_id": "rbxassetid://95804917921038",
       "filename": "assets/models/fbx/royal_premium_tier_20_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:09Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4092,13 +4092,13 @@
       }
     },
     "royal_free_tier_25": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 74927347428801,
+      "rbx_asset_id": "rbxassetid://74927347428801",
       "filename": "assets/models/fbx/royal_free_tier_25_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:25Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4125,13 +4125,13 @@
       }
     },
     "royal_premium_tier_25": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 77484665559633,
+      "rbx_asset_id": "rbxassetid://77484665559633",
       "filename": "assets/models/fbx/royal_premium_tier_25_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:12Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4158,13 +4158,13 @@
       }
     },
     "royal_free_tier_30": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 130490261663643,
+      "rbx_asset_id": "rbxassetid://130490261663643",
       "filename": "assets/models/fbx/royal_free_tier_30_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:30Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4191,13 +4191,13 @@
       }
     },
     "royal_premium_tier_30": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 111160162489881,
+      "rbx_asset_id": "rbxassetid://111160162489881",
       "filename": "assets/models/fbx/royal_premium_tier_30_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:18Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4224,13 +4224,13 @@
       }
     },
     "royal_free_tier_35": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 126632239598737,
+      "rbx_asset_id": "rbxassetid://126632239598737",
       "filename": "assets/models/fbx/royal_free_tier_35_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:34Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4257,13 +4257,13 @@
       }
     },
     "royal_premium_tier_35": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 83106725938239,
+      "rbx_asset_id": "rbxassetid://83106725938239",
       "filename": "assets/models/fbx/royal_premium_tier_35_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:22Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4290,13 +4290,13 @@
       }
     },
     "royal_free_tier_40": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 115472786267548,
+      "rbx_asset_id": "rbxassetid://115472786267548",
       "filename": "assets/models/fbx/royal_free_tier_40_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:41Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4323,13 +4323,13 @@
       }
     },
     "royal_premium_tier_40": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 138360619387906,
+      "rbx_asset_id": "rbxassetid://138360619387906",
       "filename": "assets/models/fbx/royal_premium_tier_40_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:26Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4356,13 +4356,13 @@
       }
     },
     "royal_free_tier_45": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 123195183217241,
+      "rbx_asset_id": "rbxassetid://123195183217241",
       "filename": "assets/models/fbx/royal_free_tier_45_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:45Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4389,13 +4389,13 @@
       }
     },
     "royal_premium_tier_45": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 109060022773681,
+      "rbx_asset_id": "rbxassetid://109060022773681",
       "filename": "assets/models/fbx/royal_premium_tier_45_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:33Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4422,13 +4422,13 @@
       }
     },
     "royal_free_tier_50": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 84119776102463,
+      "rbx_asset_id": "rbxassetid://84119776102463",
       "filename": "assets/models/fbx/royal_free_tier_50_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:51Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4455,13 +4455,13 @@
       }
     },
     "royal_premium_tier_50": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 127697919600894,
+      "rbx_asset_id": "rbxassetid://127697919600894",
       "filename": "assets/models/fbx/royal_premium_tier_50_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:43Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4488,13 +4488,13 @@
       }
     },
     "royal_free_tier_55": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 73642036012132,
+      "rbx_asset_id": "rbxassetid://73642036012132",
       "filename": "assets/models/fbx/royal_free_tier_55_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:55Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4521,13 +4521,13 @@
       }
     },
     "royal_premium_tier_55": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 78322368531413,
+      "rbx_asset_id": "rbxassetid://78322368531413",
       "filename": "assets/models/fbx/royal_premium_tier_55_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:42:46Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
@@ -4554,13 +4554,13 @@
       }
     },
     "outfit_sang_ahli_season_exclusive": {
-      "asset_id": null,
-      "rbx_asset_id": null,
+      "asset_id": 109675545295725,
+      "rbx_asset_id": "rbxassetid://109675545295725",
       "filename": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png",
-      "uploaded_by": "AGENT_09",
-      "uploaded_at": null,
+      "uploaded_by": "OpenCloud/generated-palette",
+      "uploaded_at": "2026-05-24T08:41:05Z",
       "season": 1,
-      "status": "PENDING",
+      "status": "CONFIRMED",
       "tags": [
         "season_1",
         "tiers",
