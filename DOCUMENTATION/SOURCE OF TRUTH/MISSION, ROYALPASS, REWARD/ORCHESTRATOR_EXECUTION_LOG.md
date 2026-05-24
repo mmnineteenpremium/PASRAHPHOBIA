@@ -1044,6 +1044,48 @@ Animation status:
 Sourcemap:
 - Final `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
 
+## 2026-05-24 — Animation authoring prepared; publish IDs still required
+
+Branch: brian-second-final
+Status: PARTIAL — animation source files and Studio keyframes prepared, but 2 Animation Editor publish IDs are still required before S1 can be marked 100% confirmed.
+
+Preflight:
+- `git status --short --branch`: PASS on `brian-second-final`
+- `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
+- Active Studio instance: `PASRAHPHOBIA.rbxlx`
+
+Studio animation authoring:
+- Created `Workspace.AnimRig_R15` using R15 humanoid rig generation.
+- Rig validation: 15 `Motor6D` joints found.
+- Created `ServerStorage.PASRAH_AnimationKeyframes.emote_pasrah_bow`.
+- Created `ServerStorage.PASRAH_AnimationKeyframes.emote_pasrah_ascend`.
+- Keyframe specs match the requested bow and ascend frame timings/poses.
+
+Local animation files:
+- Wrote `assets/animations/rbxanim/emote_pasrah_bow_emote.rbxanim`.
+- Wrote `assets/animations/rbxanim/emote_pasrah_ascend_emote.rbxanim`.
+
+Registry and Lua:
+- `python tools\asset_id_manager\registry_manager.py --sync`: PASS.
+- `python tools\asset_id_manager\registry_manager.py --generate-lua`: PASS.
+- Added `AssetIdConfig.Animations` generation so final smoke can count confirmed animation IDs after registry update.
+- Lua nil check: `Still nil: 0 entries`.
+- Audit remains blocked only on animations:
+  - `emote_pasrah_bow`: PENDING, no Animation asset ID yet.
+  - `emote_pasrah_ascend`: PENDING, no Animation asset ID yet.
+
+Studio smoke:
+- `RoyalPassCosmetics confirmed`: 30.
+- `Animations confirmed`: 0/2 expected.
+
+Blocker:
+- Current MCP tools do not expose Animation Editor publish/Get Asset ID.
+- Per rule, animation upload must be done through Studio Animation Editor, not Open Cloud.
+
+Next:
+- In Studio Animation Editor, publish `emote_pasrah_bow` as `PASRAHPHOBIA_emote_pasrah_bow` and `emote_pasrah_ascend` as `PASRAHPHOBIA_emote_pasrah_ascend`.
+- Provide the two returned numeric Animation Asset IDs, then run registry update/regenerate/audit and final commit with 2/2 animations confirmed.
+
 Next:
 - Owner/Studio operator creates and uploads `emote_pasrah_bow` and `emote_pasrah_ascend` in Animation Editor, then updates `assets/manifest/ASSET_ID_REGISTRY.json` animation entries with the returned IDs and regenerates Lua.
 

@@ -479,6 +479,7 @@ def generate_lua(registry: dict[str, Any]) -> None:
     developer_products = mono.get("developer_products", {})
     game_passes = mono.get("passes", {})
     images = registry.get("images", {})
+    animations = registry.get("animations", {})
 
     royal_pass_ids: list[str] = []
     if COSMETIC_REGISTRY_PATH.exists():
@@ -544,6 +545,21 @@ def generate_lua(registry: dict[str, Any]) -> None:
             lines.append(f"    {lua_key(reward_id)} = nil, -- {status}")
         else:
             lines.append(f"    {lua_key(reward_id)} = {value},")
+
+    lines += [
+        "}",
+        "",
+        "AssetIdConfig.Animations = {",
+    ]
+
+    animation_rows: list[tuple[str, int]] = []
+    for key, entry in animations.items():
+        if entry.get("status") == "CONFIRMED" and entry.get("asset_id") is not None:
+            animation_rows.append((key, int(entry["asset_id"])))
+    animation_rows.sort(key=lambda item: item[0].lower())
+
+    for key, asset_id in animation_rows:
+        lines.append(f"    {lua_key(key)} = {asset_id},")
 
     lines += [
         "}",

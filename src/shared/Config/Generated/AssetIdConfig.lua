@@ -53,6 +53,9 @@ AssetIdConfig.RoyalPassCosmetics = {
     title_penyintas_sejati = 105087156895491,
 }
 
+AssetIdConfig.Animations = {
+}
+
 AssetIdConfig.UIImages = {
     ["01_background_mansion_forest"] = 127537437758897,
     ["01_button_idle"] = 96807162342543,
