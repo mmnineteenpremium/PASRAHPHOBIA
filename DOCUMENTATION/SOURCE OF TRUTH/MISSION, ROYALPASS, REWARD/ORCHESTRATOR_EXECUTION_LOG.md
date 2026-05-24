@@ -1078,6 +1078,31 @@ Status:
 - Pass registry updated to ACTIVE in `assets/manifest/ASSET_ID_REGISTRY.json`.
 - Creator Dashboard sale toggle/price/icon activation still requires manual confirmation in Dashboard UI.
 
+## 2026-05-24 — Runtime bug fixes post-publish
+
+Branch: brian-second-final | Commit: 6aab5b6
+
+Fix 1 - GamePasses path: `cfg.Monetization.GamePasses` (bukan `.GamePasses or cfg.Monetization`)
+- Result: FAIL di Studio instance aktif saat ini (table kosong / count 0), indikasi config belum ter-sync ke DataModel runtime.
+
+Fix 2 - `border_haunted_frame`: `cosmeticAssetId` fallback ke `UIImages`
+- Source patch: `src/client/UI/Main.lua` reward preview lookup sekarang `RoyalPassCosmetics` lalu `UIImages`.
+- Target ID: `border_haunted_frame -> 76170537279263`.
+- Re-smoke runtime saat ini: FAIL (key `border_haunted_frame` belum muncul di `AssetIdConfig.UIImages` pada Studio instance aktif).
+
+Fix 3 - EventBus XP event name:
+- Nama event benar dari kode server: `RoyalPassXPGranted` (bukan `RoyalPass_GrantXP`).
+- Lokasi: `src/ServerScriptService/Server/RoyalPassSystem/Service.lua` publish `RoyalPassXPGranted`.
+- Catatan runtime: `ReplicatedStorage.EventBus` adalah module bus, bukan child instance event dengan nama ini.
+
+Fix 4 - StyleRule CornerRadius warning:
+- Roblox engine warning, bukan bug source code lokal.
+- NO ACTION.
+
+Re-smoke checkin rewards: FAIL (1 key unresolved di Studio runtime aktif: `border_haunted_frame`).
+Sourcemap: PASS.
+Next: pastikan Rojo sync penuh ke Studio instance aktif lalu ulangi smoke; publish v96 hanya setelah semua smoke PASS.
+
 ## 2026-05-24 - FINAL: Animation upload + S1 Royal Pass complete
 
 Branch: brian-second-final

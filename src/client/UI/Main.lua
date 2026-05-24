@@ -14337,6 +14337,7 @@ function UISystem:_refreshRoyalPassPanel()
 	local unlockedDays = math.clamp(math.max(1, currentTier), 1, ROYAL_PASS_TOTAL_TIERS)
 	local currentDay = math.min(unlockedDays, ROYAL_PASS_TOTAL_TIERS)
 	local royalPassCosmeticIds = type(AssetIdConfig.RoyalPassCosmetics) == "table" and AssetIdConfig.RoyalPassCosmetics or {}
+	local uiImages = type(AssetIdConfig.UIImages) == "table" and AssetIdConfig.UIImages or {}
 	for index, card in ipairs(trackCards) do
 		local isFinalDay = index == ROYAL_PASS_TOTAL_TIERS or index == 5 or index == 10 or index == 20 or index == 30
 		local isCurrentDay = index == currentDay
@@ -14412,7 +14413,9 @@ function UISystem:_refreshRoyalPassPanel()
 			end
 		end
 		if card.CosmeticPreview then
-			local cosmeticAssetId = type(cosmeticId) == "string" and royalPassCosmeticIds[cosmeticId] or nil
+			local cosmeticAssetId = type(cosmeticId) == "string"
+				and (royalPassCosmeticIds[cosmeticId] or uiImages[cosmeticId])
+				or nil
 			if cosmeticAssetId ~= nil and cosmeticAssetId ~= 0 then
 				card.CosmeticPreview.Image = "rbxassetid://" .. tostring(cosmeticAssetId)
 				card.CosmeticPreview.Visible = true
