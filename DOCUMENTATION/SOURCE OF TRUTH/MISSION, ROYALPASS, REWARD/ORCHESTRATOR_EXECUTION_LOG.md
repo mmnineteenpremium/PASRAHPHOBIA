@@ -722,6 +722,49 @@ Validation limits:
 Stop/blocker reason:
 - Not stopped permanently. Audit slice is recorded at n=78%; remaining blockers are publish/2FA/mobile availability and partial monetization/cosmetic registry scope, not a missing canonical daily/royalpass/gacha implementation.
 
+## 2026-05-24 — SDK fix + image pipeline retry
+
+Root cause final:
+- SDK lama `google-generativeai` masih terinstall (`0.8.6`), tetapi global tool sudah dipatch memakai SDK baru `google-genai`.
+- `google-genai` di-upgrade dari `2.5.0` ke `2.6.0`.
+- Global tool now uses `from google import genai`, `from google.genai import types`, `genai.Client(api_key=...)`, `client.models.generate_content(...)`, and `types.GenerateContentConfig(response_modalities=["image", "text"])`.
+- Follow-up `ListModels` check with the owner-provided key showed image-capable model names available to that key include `gemini-2.5-flash-image`, `gemini-3-pro-image-preview`, `gemini-3.1-flash-image-preview`, and Imagen `imagen-4.0-*` models. The tool default was changed back to `gemini-2.5-flash-image` so it no longer defaults to the unavailable `gemini-2.0-flash-preview-image-generation` name.
+
+SDK patch result: FAIL
+Regional block hit: NO
+Replicate fallback used: NO
+Images generated: 0/31
+Registry updated: NO
+AssetIdConfig.lua regenerated: NO
+Sourcemap: not run after blocked single-image test
+
+Blocker remaining:
+- Single-image test still fails with `404 NOT_FOUND`: `models/gemini-2.0-flash-preview-image-generation is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.`
+- Retest with `gemini-2.5-flash-image` using the direct owner-provided key reached the model but failed with `429 RESOURCE_EXHAUSTED`; quota limit is `0` for Gemini image generation on that project/key.
+- Imagen `imagen-4.0-fast-generate-001` was also tested and failed with `400 INVALID_ARGUMENT`: Imagen generation is only available on paid plans.
+- This is not the regional-block error requested for Replicate fallback, so batch generation and fallback were not run.
+
+## 2026-05-24 — Gemini model name fix + image pipeline retry
+
+Status: BLOCKED — requested replacement model is not available for the current Google GenAI API call.
+
+Root cause confirmed:
+- Model name yang dipakai sebelumnya tidak exist (gemini-3-pro-image-preview, gemini-2.5-flash-image).
+- Diganti ke: gemini-2.0-flash-preview-image-generation.
+
+Test result:
+- `python scripts\generate_visual.py --prompt "PASRAHPHOBIA horror mystery game badge dark atmospheric transparent" --type icon --name test_model_fix --out-dir assets\generated\test\`
+- Failed with `404 NOT_FOUND`: `models/gemini-2.0-flash-preview-image-generation is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.`
+
+Images generated this run: 0/31
+Fallback used: Replicate NO
+Registry updated: NO
+AssetIdConfig.lua regenerated: NO
+Sourcemap: not run after this blocked test
+
+Blocker remaining:
+- Need a model name returned by the current API key's `ListModels` output that supports image generation through the installed `google-genai` SDK, or switch the tool to a supported image endpoint/provider.
+
 ## 2026-05-23 - image+mesh pipeline dengan checkpoint, key rotation, Open Cloud upload
 
 Status: checkpoint tooling added; image generation still blocked by Gemini quota.
@@ -868,3 +911,38 @@ Visual smoke notes:
 
 Stop/blocker reason:
 - Partial pass only. Source wiring and catalog IDs are aligned; normal lobby button-open flow needs a separate focused smoke/fix before claiming full visual runtime pass.
+
+## 2026-05-24 - Manual Inbox Processor + Cube3D Diagnosis
+
+Branch: brian-second-final
+Commit: 64b3fa7 feat(pipeline): manual inbox processor script + cube3d diagnosis
+
+### Manual Inbox Processor
+- Created: `scripts\process_manual_inbox.py`
+- Function: resize PNG 512x512 -> upload Open Cloud -> update registry -> regenerate lua
+- Trigger: `python scripts\process_manual_inbox.py` (setelah owner drop PNG ke inbox)
+- Dry run validated: PASS
+- Upload endpoint: `https://apis.roblox.com/assets/v1/assets` with operation poll `https://apis.roblox.com/assets/v1/operations/{id}`
+- Inbox folder: `assets/generated/images/manual_inbox/`
+- Done folder: `assets/generated/images/manual_inbox_done/`
+- Note: original PNG di `manual_inbox` dipertahankan; script hanya copy ke done folder setelah upload sukses.
+
+### Cube3D Diagnosis
+- GPU available: NO (`nvidia-smi` tidak ditemukan di PATH)
+- CUDA available: NO
+- 2-minute test result: `--fast-inference` crash di CPU dengan `AssertionError: EngineFast is only supported on cuda devices`; run CPU fallback tanpa `--fast-inference` hanya mencapai `generating: 0%| | 0/1024` tanpa `.obj` dalam window 2 menit.
+- Root cause: CPU-only environment; CUDA tidak aktif, dan flag `--fast-inference` tidak valid di device CPU.
+- Recommendation: jangan pakai `--fast-inference` saat CPU-only; untuk batch 23+ mesh gunakan alternatif seperti Meshy.ai/Tripo karena local Cube CPU path terlalu lambat untuk batch praktis.
+
+### Images from owner (Grok manual)
+- Received so far: 0/31
+- Uploaded this run: 0
+- Registry CONFIRMED after this run: 0/31
+
+### Next action
+- Owner drop PNG ke inbox -> run: `python scripts\process_manual_inbox.py`
+- Cube3D: aktifkan environment CUDA/GPU lebih dulu, atau pindah ke Meshy.ai/Tripo untuk batch.
+
+Sourcemap:
+- `.\.aftman\bin\rojo.exe sourcemap default.project.json`
+Result: PASS
