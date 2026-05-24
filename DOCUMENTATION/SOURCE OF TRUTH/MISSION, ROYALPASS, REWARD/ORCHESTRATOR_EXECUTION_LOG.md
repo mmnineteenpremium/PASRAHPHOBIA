@@ -1044,6 +1044,40 @@ Animation status:
 Sourcemap:
 - Final `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
 
+## 2026-05-24 — Post-publish activation + runtime smoke
+
+Branch: brian-second-final
+Commit: 3631fc5
+
+Game passes activated:
+- royalpass_premium_track `3573231558` -> ACTIVE `499R`
+- class_dukun_unlock `3573231828` -> ACTIVE `299R`
+- class_detective_unlock `3573232123` -> ACTIVE `299R`
+- lifetime_bonus_pass `3573232383` -> ACTIVE `799R`
+
+Pass wiring smoke: FAIL
+- `AssetIdConfig.Monetization.GamePasses` returned empty table in Studio runtime, so all 4 expected keys were unresolved.
+
+RoyalPass full flow smoke: PARTIAL
+- Tier 60 reward IDs: PASS
+  - `outfit_sang_ahli_season_exclusive`: `98438623958974`
+  - `title_legenda_pasrahphobia`: `77614685520493`
+  - `emote_pasrah_ascend`: `104989718132438`
+- XP grant event smoke: FAIL (`EventBus.RoyalPass_GrantXP` not found in Play runtime)
+
+Checkin reward smoke: PARTIAL
+- PASS: `title_investigator_setia`, `emote_pasrah_bow`, `title_penyintas_sejati`
+- FAIL: `border_haunted_frame` unresolved (`NIL`)
+
+Developer Console errors post-v95:
+- No target errors seen for `attempt to index nil`, `nil humanoid`, MAX_TIER clamping, RoyalPassUI open, or AssetIdConfig require.
+- New warning observed:
+  - `Failed to apply StyleRule property 'CornerRadius' ... Unable to cast string to UDim`
+
+Status:
+- Pass registry updated to ACTIVE in `assets/manifest/ASSET_ID_REGISTRY.json`.
+- Creator Dashboard sale toggle/price/icon activation still requires manual confirmation in Dashboard UI.
+
 ## 2026-05-24 - FINAL: Animation upload + S1 Royal Pass complete
 
 Branch: brian-second-final

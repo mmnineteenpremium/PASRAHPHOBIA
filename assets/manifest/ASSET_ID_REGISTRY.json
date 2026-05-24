@@ -6017,28 +6017,32 @@
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
-        "status": "HOLD"
+        "status": "ACTIVE",
+        "activated_at": "2026-05-24T11:01:22Z"
       },
       "class_dukun_unlock": {
         "pass_id": 3573231828,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
-        "status": "HOLD"
+        "status": "ACTIVE",
+        "activated_at": "2026-05-24T11:01:22Z"
       },
       "class_detective_unlock": {
         "pass_id": 3573232123,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
-        "status": "HOLD"
+        "status": "ACTIVE",
+        "activated_at": "2026-05-24T11:01:22Z"
       },
       "lifetime_bonus_pass": {
         "pass_id": 3573232383,
         "price_robux": null,
         "created_by": "AGENT_08",
         "created_at": null,
-        "status": "HOLD"
+        "status": "ACTIVE",
+        "activated_at": "2026-05-24T11:01:22Z"
       }
     },
     "developer_products": {
