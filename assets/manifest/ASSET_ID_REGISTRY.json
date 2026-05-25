@@ -4,7 +4,7 @@
     "game": "PASRAHPHOBIA",
     "universe_id": null,
     "place_id": null,
-    "last_updated": "2026-05-24T13:20:30Z",
+    "last_updated": "2026-05-25T03:39:55Z",
     "maintained_by": "AGENT_09"
   },
   "images": {
@@ -5992,6 +5992,56 @@
       ],
       "source_ref": "inventory:user:8603977492<br>local:C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\asset mentah\\ROBLOX CREATOR HUB\\[SECOND ACCOUNT]\\[ASSETID]\\audio-assetid.md<br>report:metadata:C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\.codex\\worktrees\\brian-second-final\\.codex\\asset-permissions\\cross-account-use-grant-report.json",
       "asset_type": "Audio / AUDIO"
+    },
+    "sfx_tier_claim": {
+      "asset_id": 9120791530,
+      "type": "sfx",
+      "confirmed": true
+    },
+    "sfx_tier_up_free": {
+      "asset_id": 9120791530,
+      "type": "sfx",
+      "confirmed": true
+    },
+    "sfx_tier_up_premium": {
+      "asset_id": 4843543704,
+      "type": "sfx",
+      "confirmed": true
+    },
+    "sfx_pass_purchased": {
+      "asset_id": 4843543704,
+      "type": "sfx",
+      "confirmed": true
+    },
+    "sfx_royalpass_open": {
+      "asset_id": 108784352030590,
+      "type": "sfx",
+      "confirmed": true
+    },
+    "sfx_royalpass_close": {
+      "asset_id": 71780731527254,
+      "type": "sfx",
+      "confirmed": true
+    },
+    "sfx_checkin_daily": {
+      "asset_id": 9120791530,
+      "type": "sfx",
+      "confirmed": true
+    },
+    "sfx_checkin_streak7": {
+      "asset_id": 4843543704,
+      "type": "sfx",
+      "confirmed": true
+    },
+    "sfx_gacha_reveal_common": {
+      "asset_id": 9120791530,
+      "type": "sfx",
+      "confirmed": true
+    },
+    "sfx_gacha_reveal_legend": {
+      "asset_id": 4843543704,
+      "type": "sfx",
+      "confirmed": true
     },
     "wind_howl_loop": {
       "asset_id": 134247806257549,

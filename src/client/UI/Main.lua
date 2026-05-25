@@ -1263,6 +1263,46 @@ local UI_SOUND_FALLBACKS = {
 		SoundId = "rbxassetid://113552745198796",
 		Volume = 0.2,
 	},
+	sfx_tier_claim = {
+		SoundId = "rbxassetid://9120791530",
+		Volume = 0.35,
+	},
+	sfx_tier_up_free = {
+		SoundId = "rbxassetid://9120791530",
+		Volume = 0.22,
+	},
+	sfx_tier_up_premium = {
+		SoundId = "rbxassetid://4843543704",
+		Volume = 0.4,
+	},
+	sfx_pass_purchased = {
+		SoundId = "rbxassetid://4843543704",
+		Volume = 0.45,
+	},
+	sfx_royalpass_open = {
+		SoundId = "rbxassetid://108784352030590",
+		Volume = 0.2,
+	},
+	sfx_royalpass_close = {
+		SoundId = "rbxassetid://71780731527254",
+		Volume = 0.14,
+	},
+	sfx_checkin_daily = {
+		SoundId = "rbxassetid://9120791530",
+		Volume = 0.3,
+	},
+	sfx_checkin_streak7 = {
+		SoundId = "rbxassetid://4843543704",
+		Volume = 0.38,
+	},
+	sfx_gacha_reveal_common = {
+		SoundId = "rbxassetid://9120791530",
+		Volume = 0.25,
+	},
+	sfx_gacha_reveal_legend = {
+		SoundId = "rbxassetid://4843543704",
+		Volume = 0.5,
+	},
 }
 local cachedSoundTemplates = {}
 local activeRuntimeUISounds = {}
@@ -6939,6 +6979,9 @@ function UISystem:_openAuxiliaryWindow(guiName)
 		VolumeScale = guiName == "JournalUI" and 0.86 or 0.82,
 		PlaybackJitter = 0.02,
 	})
+	if guiName == "RoyalPassUI" then
+		playRuntimeUISound("sfx_royalpass_open", { SingleInstance = true })
+	end
 end
 
 function UISystem:_toggleAuxiliaryWindow(guiName)
@@ -13569,15 +13612,34 @@ function UISystem:_applyDailyEngagementResponse(remoteName, eventName, payload)
 	if eventName == "DailyCheckinProcessed" then
 		passState.lastSource = success and "daily_checkin_claimed" or ("daily_checkin_" .. (reason ~= "" and reason or "failed"))
 		passState.lastAmount = 0
+		if success then
+			local streak = type(payload) == "table" and tonumber(payload.newStreak or 0) or 0
+			if streak > 0 and streak % 7 == 0 then
+				playRuntimeUISound("sfx_checkin_streak7", { SingleInstance = true })
+			else
+				playRuntimeUISound("sfx_checkin_daily", { SingleInstance = true })
+			end
+		end
 	elseif eventName == "DailyMissionClaimProcessed" then
 		passState.lastSource = success and "daily_mission_claimed" or ("daily_mission_" .. (reason ~= "" and reason or "failed"))
 		passState.lastAmount = 0
+		if success then
+			playRuntimeUISound("sfx_tier_claim", { SingleInstance = true })
+		end
 	elseif eventName == "GachaPullProcessed" or eventName == "GachaResult" then
 		local resultCount = type(payload and payload.results) == "table" and #payload.results or 0
 		passState.lastSource = (success or resultCount > 0)
 			and string.format("gacha_result_%d", resultCount)
 			or ("gacha_" .. (reason ~= "" and reason or "failed"))
 		passState.lastAmount = 0
+		if success or resultCount > 0 then
+			local rarity = type(payload) == "table" and tostring(payload.highestRarity or "") or ""
+			if rarity == "Legend" or rarity == "legendary" then
+				playRuntimeUISound("sfx_gacha_reveal_legend", { SingleInstance = true })
+			else
+				playRuntimeUISound("sfx_gacha_reveal_common", { SingleInstance = true })
+			end
+		end
 	elseif remoteName == "DailyEngagementSync" then
 		passState.lastSource = passState.lastSource or "daily_engagement_sync"
 	end
