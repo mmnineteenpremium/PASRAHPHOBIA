@@ -1044,6 +1044,13 @@ Animation status:
 Sourcemap:
 - Final `.\.aftman\bin\rojo.exe sourcemap default.project.json`: PASS
 
+## 2026-05-25 — v98 batch execution (SFX wiring)
+GROUP A: PASS — 10 sfx entries added to UI_SOUND_FALLBACKS
+GROUP B: PASS — sfx injected at: DailyCheckinProcessed, DailyMissionClaimProcessed, GachaPullProcessed/GachaResult, RoyalPassUI open. B5: SKIP (no tier claim button found in Main.lua)
+GROUP C: PASS — 10 sfx keys added to registry audio section, audit 0 missing
+GROUP D: PASS — AssetIdConfig.Audio sfx keys present
+GROUP E: PASS — versionNumber=100 | updateTime=2026-05-25T03:45:34.2183796Z
+
 ## 2026-05-24 — v96 batch execution
 
 GROUP A: PASS — GamePass config enabled flags corrected (4/4 true), XP event consumer verified via `DailyEngagementSync` (no `RoyalPass_GrantXP` usage), `border_haunted_frame` pipeline verified in generated config + UI fallback, registry sync/generate/audit all PASS (0 missing).
