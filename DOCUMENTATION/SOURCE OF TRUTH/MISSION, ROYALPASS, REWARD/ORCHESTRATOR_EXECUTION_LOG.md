@@ -1051,6 +1051,23 @@ GROUP C: PASS — 10 sfx keys added to registry audio section, audit 0 missing
 GROUP D: PASS — AssetIdConfig.Audio sfx keys present
 GROUP E: PASS — versionNumber=100 | updateTime=2026-05-25T03:45:34.2183796Z
 
+## 2026-05-25 — RECOVERY: Workspace lost from publish
+
+ROOT CAUSE:
+- PASRAHPHOBIA.rbxlx local state was not the expected full place source for map-safe publish flow.
+- default.project.json does not include a Workspace tree, so script-only Rojo project uploads cannot reconstruct map/lobby geometry.
+- Prior publish path used a source that resulted in missing gameplay floor/map content on live place.
+
+RECOVERY METHOD: OPTION A: LFS pull + direct .rbxlx publish
+RECOVERED FILE: PASRAHPHOBIA.rbxlx (5,044,740 bytes, valid `<roblox ...>` header)
+UPLOAD: PASS versionNumber=102 updateTime=2026-05-25T04:08:47.261886100Z
+SMOKE: PENDING OWNER TEST (Roblox Player spawn in Lobby)
+
+PREVENTION:
+- Untuk update scripts saja: gunakan `rojo upload` (in-memory build + upload), bukan build-file publish flow yang tidak membawa Workspace.
+- Jangan upload hasil build dari project yang tidak punya Workspace mapping jika target butuh geometry map/lobby.
+- Jika upload `.rbxlx` langsung: verifikasi file valid dan berisi referensi map/spawn sebelum publish.
+
 ## 2026-05-24 — v96 batch execution
 
 GROUP A: PASS — GamePass config enabled flags corrected (4/4 true), XP event consumer verified via `DailyEngagementSync` (no `RoyalPass_GrantXP` usage), `border_haunted_frame` pipeline verified in generated config + UI fallback, registry sync/generate/audit all PASS (0 missing).
