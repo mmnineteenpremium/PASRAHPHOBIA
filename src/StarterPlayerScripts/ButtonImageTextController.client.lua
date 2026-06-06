@@ -1,12 +1,15 @@
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 
 local LOCAL_PLAYER = Players.LocalPlayer
 
 local IMAGE_TEXT_SCALE = {
 	idle = 1,
-	hover = 1.3,
-	active = 1.2,
+	hover = 1.15,
+	active = 1.1,
 }
+
+local SCALE_TWEEN_INFO = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 local IMAGE_TEXT_STATES = {
 	active = { idle = "119893364681680", hover = "103511682438962", active = "133568679810222" },
@@ -153,6 +156,13 @@ local BUTTON_TEXT_ALIASES = {
 }
 
 local BOUND_ATTRIBUTE = "PasrahImageTextBound"
+local DISABLED_ATTRIBUTE = "PasrahDisableGlobalImageTextController"
+
+local function isManagedByPrimaryUi(button)
+	return button:GetAttribute(DISABLED_ATTRIBUTE) == true
+		or button:GetAttribute("PasrahButtonInputProxy") == true
+		or button:GetAttribute("BrandFeedbackBound") == true
+end
 
 local function normalize(text)
 	text = tostring(text or "")
@@ -182,7 +192,9 @@ local function setImageTextScale(image, stateName)
 		scale.Name = "BrandTextImageStateScale"
 		scale.Parent = image
 	end
-	scale.Scale = IMAGE_TEXT_SCALE[stateName or "idle"] or IMAGE_TEXT_SCALE.idle
+	local targetScale = IMAGE_TEXT_SCALE[stateName or "idle"] or IMAGE_TEXT_SCALE.idle
+	local tween = TweenService:Create(scale, SCALE_TWEEN_INFO, { Scale = targetScale })
+	tween:Play()
 end
 
 local function setImagePassthrough(image)
@@ -279,6 +291,9 @@ local function applyButton(button, stateName)
 	if not button:IsA("GuiButton") or button.Name == "BrandTextImage" then
 		return false
 	end
+	if isManagedByPrimaryUi(button) then
+		return false
+	end
 
 	local base = resolveBase(button)
 	local states = base and IMAGE_TEXT_STATES[base] or nil
@@ -312,19 +327,31 @@ local function bindButton(button)
 	button:SetAttribute(BOUND_ATTRIBUTE, true)
 	local hovered = false
 	button.MouseEnter:Connect(function()
+		if isManagedByPrimaryUi(button) then
+			return
+		end
 		hovered = true
 		applyButton(button, "hover")
 	end)
 	button.MouseLeave:Connect(function()
+		if isManagedByPrimaryUi(button) then
+			return
+		end
 		hovered = false
 		applyButton(button, "idle")
 	end)
 	button.InputBegan:Connect(function(input)
+		if isManagedByPrimaryUi(button) then
+			return
+		end
 		if isPrimaryPress(input) then
 			applyButton(button, "active")
 		end
 	end)
 	button.InputEnded:Connect(function(input)
+		if isManagedByPrimaryUi(button) then
+			return
+		end
 		if isPrimaryPress(input) then
 			applyButton(button, hovered and "hover" or "idle")
 		end
@@ -332,6 +359,9 @@ local function bindButton(button)
 
 	if button:IsA("TextButton") then
 		button:GetPropertyChangedSignal("Text"):Connect(function()
+			if isManagedByPrimaryUi(button) then
+				return
+			end
 			applyButton(button, "idle")
 		end)
 	end
