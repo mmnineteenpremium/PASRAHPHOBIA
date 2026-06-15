@@ -25,7 +25,7 @@ end
 local function pickRandomAlive(players, rng)
 	local alive = {}
 	for _, playerData in ipairs(players) do
-		if playerData.isAlive ~= false then
+		if playerData.isAlive ~= false and playerData.isHidden ~= true then
 			table.insert(alive, playerData)
 		end
 	end
@@ -49,7 +49,8 @@ function GhostTargeting:SelectTarget(_, snapshot, strategy, rng)
 	local bestScore = -math.huge
 
 	for _, playerData in ipairs(players) do
-		if playerData.isAlive ~= false then
+		-- Hidden players in closets are not valid targets
+		if playerData.isAlive ~= false and playerData.isHidden ~= true then
 			local totalScore = 0
 			if strategy == "nearest_player" then
 				totalScore = getDistanceScore(playerData.distanceToGhost)
@@ -63,7 +64,12 @@ function GhostTargeting:SelectTarget(_, snapshot, strategy, rng)
 				local noiseScore = getNoiseScore(playerData)
 				local sanityScore = getSanityScore(playerData)
 				local visibilityScore = playerData.isVisible and 0.75 or 0
-				totalScore = (distanceScore * 1.8) + (noiseScore * 1.25) + (sanityScore * 0.9) + visibilityScore
+				-- Running players (high movement) attract the ghost's attention significantly
+				local movementLevel = tonumber(playerData.movementLevel) or 0
+				local runningScore = (movementLevel >= 0.6) and 2.5 or 0
+				-- Sprinting with noise makes ghost prioritise this player even more
+				local sprintNoiseBonus = (movementLevel >= 0.6 and noiseScore > 0) and (noiseScore * 0.8) or 0
+				totalScore = (distanceScore * 1.8) + (noiseScore * 1.25) + (sanityScore * 0.9) + visibilityScore + runningScore + sprintNoiseBonus
 			end
 			if totalScore > bestScore then
 				bestScore = totalScore

@@ -107,9 +107,24 @@ local DEFAULT_MODE_CONFIG = {
 
 local DEFAULT_PHASE_DURATIONS = {
 	PreparationPhase = -1,
-	InvestigationPhase = 480,
+	InvestigationPhase = 600,
 	HuntPhase = 60,
 	EndgamePhase = 30,
+}
+
+local PHASE_DURATIONS_BY_MAP_SIZE = {
+	Small = {
+		InvestigationPhase = 480,
+		HuntPhase = 45,
+	},
+	Medium = {
+		InvestigationPhase = 600,
+		HuntPhase = 60,
+	},
+	Large = {
+		InvestigationPhase = 720,
+		HuntPhase = 90,
+	},
 }
 
 local CLIENT_PHASE_BY_MATCH_PHASE = {
@@ -913,7 +928,7 @@ function MatchService:_hydrateMatchMapData(match)
 	return mapDef
 end
 
-function MatchService:_getPhaseDuration(phaseName)
+function MatchService:_getPhaseDuration(phaseName, match)
 	if phaseName == "PreparationPhase" or phaseName == "Preparation" then
 		return nil
 	end
@@ -921,11 +936,21 @@ function MatchService:_getPhaseDuration(phaseName)
 	if type(duration) == "number" and duration >= 0 then
 		return duration
 	end
+	if type(match) == "table" and phaseName then
+		local mapDef = self:_hydrateMatchMapData(match)
+		local mapSize = mapDef and mapDef.mapSize
+		if mapSize and PHASE_DURATIONS_BY_MAP_SIZE[mapSize] then
+			local sizedDuration = PHASE_DURATIONS_BY_MAP_SIZE[mapSize][phaseName]
+			if type(sizedDuration) == "number" and sizedDuration >= 0 then
+				return sizedDuration
+			end
+		end
+	end
 	return nil
 end
 
 function MatchService:_buildPhasePayload(match, phaseName, startedAt)
-	local durationSeconds = self:_getPhaseDuration(phaseName)
+	local durationSeconds = self:_getPhaseDuration(phaseName, match)
 	local phaseStartedAt = startedAt or getNow()
 	local endsAt = durationSeconds and (phaseStartedAt + durationSeconds) or nil
 	local mapDef = self:_hydrateMatchMapData(match)
@@ -951,6 +976,7 @@ function MatchService:_buildPhasePayload(match, phaseName, startedAt)
 		ghostRoomCandidates = deepCopy(match.ghostRoomCandidates or {}),
 		evidenceSpawnPoints = deepCopy(match.evidenceSpawnPoints or {}),
 		mapFloorCount = mapDef and mapDef.mapDimensions and mapDef.mapDimensions.floors or nil,
+		mapSize = mapDef and mapDef.mapSize or nil,
 	}
 end
 
@@ -1271,7 +1297,8 @@ function MatchService:StartMatch(matchId)
 				phase = CLIENT_PHASE_BY_MATCH_PHASE[match.phase] or match.phase,
 				lifecyclePhase = match.phase,
 				phaseStartedAt = phaseNow,
-				durationSeconds = self:_getPhaseDuration(match.phase),
+				durationSeconds = self:_getPhaseDuration(match.phase, match),
+				mapSize = match.mapDefinition and match.mapDefinition.mapSize or nil,
 				preparationWorldBoard = match.preparationWorldBoard == true and match.phase == "PreparationPhase",
 			})
 			self:_fireMatchEventToPlayers(teleportedPlayers, self:_buildPhasePayload(match, match.phase, phaseNow))
@@ -1383,9 +1410,40 @@ function MatchService:AdvanceMatchPhase(matchId, nextPhase)
 	local ghostState = ghostSystem and type(ghostSystem.GetGhostState) == "function" and ghostSystem:GetGhostState(matchId) or nil
 	setStudioGhostPlayerSnapshot(match.players, matchId, match, ghostState)
 
-	self:_fireMatchEventToPlayers(match.players, self:_buildPhasePayload(match, phase, now))
+	local phasePayload = self:_buildPhasePayload(match, phase, now)
+	if phase == "HuntPhase" then
+		local huntSystem = Services.Get(self._deps, "HuntSystem")
+		if type(huntSystem) == "table" and type(huntSystem.GetHuntContext) == "function" then
+			local huntContext = huntSystem:GetHuntContext(matchId)
+			if huntContext and type(huntContext.duration) == "number" then
+				phasePayload.durationSeconds = huntContext.duration
+				phasePayload.phaseEndsAt = huntContext.expectedEndAt
+			end
+		end
+	end
+
+	self:_fireMatchEventToPlayers(match.players, phasePayload)
 
 	return match:ToPayload()
+end
+
+function MatchService:SyncHuntPhaseTimer(matchId, huntPayload)
+	local matches = self:_matches()
+	local match = matches[matchId]
+	if not match then
+		return
+	end
+
+	local huntDuration = tonumber(huntPayload and huntPayload.duration)
+	if not huntDuration or huntDuration <= 0 then
+		return
+	end
+
+	local now = getNow()
+	local phasePayload = self:_buildPhasePayload(match, "HuntPhase", now)
+	phasePayload.durationSeconds = huntDuration
+	phasePayload.phaseEndsAt = now + huntDuration
+	self:_fireMatchEventToPlayers(match.players, phasePayload)
 end
 
 function MatchService:_buildOutcomeSummary(match, results)

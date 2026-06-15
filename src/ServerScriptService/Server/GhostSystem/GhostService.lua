@@ -129,6 +129,7 @@ function GhostService.new(state, deps)
 	self._lastPublishedAtByMatch = {}
 	self._activeGhosts = {}
 	self._running = false
+	self._closetHidingMechanic = Services.Get(self._deps, "ClosetHidingMechanic")
 	return self
 end
 
@@ -189,6 +190,19 @@ function GhostService:_buildTickSnapshot(matchId, snapshot)
 				tonumber(safeSnapshot.huntGraceUntil) or 0,
 				phaseStartedAt + INVESTIGATION_HUNT_GRACE_SECONDS
 			)
+		end
+	end
+
+	-- Inject closet hiding state into player snapshots so ghost targeting respects safe zones
+	local closetService = self._closetHidingMechanic
+	if type(closetService) == "table" and type(closetService.IsPlayerHidden) == "function" then
+		local players = safeSnapshot.players
+		if type(players) == "table" then
+			for _, playerData in ipairs(players) do
+				if type(playerData) == "table" and type(playerData.userId) == "number" then
+					playerData.isHidden = closetService:IsPlayerHidden(matchId, playerData.userId) == true
+				end
+			end
 		end
 	end
 

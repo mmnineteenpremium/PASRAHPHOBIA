@@ -176,6 +176,14 @@ function Service:_setMap(key, mapValue)
     self._state:Set(key, mapValue)
 end
 
+function Service:GetHuntContext(matchId)
+    if type(matchId) ~= "string" or matchId == "" then
+        return nil
+    end
+    local contextByMatch = self:_getMap("huntContextByMatchId")
+    return contextByMatch[matchId] or nil
+end
+
 function Service:_getMatchStates()
     return self._state:Get("matchStates") or {}
 end

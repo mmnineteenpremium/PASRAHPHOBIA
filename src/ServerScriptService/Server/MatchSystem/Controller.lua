@@ -74,6 +74,9 @@ function Controller:RegisterEventHandlers()
     self:_subscribe("GhostGuessValidated", function(payload)
         self:OnGhostGuessValidated(payload)
     end)
+    self:_subscribe("GhostHuntStarted", function(payload)
+        self:OnGhostHuntStarted(payload)
+    end)
     self:_subscribe("PlayerDied", function(payload)
         self:OnPlayerDied(payload)
     end)
@@ -230,6 +233,14 @@ function Controller:OnMatchEnded(payload)
         return
     end
     self._service:EndMatch(matchId, payload.results)
+end
+
+function Controller:OnGhostHuntStarted(payload)
+    local matchId = payload and payload.matchId
+    if not matchId then
+        return
+    end
+    self._service:SyncHuntPhaseTimer(matchId, payload)
 end
 
 function Controller:OnPlayerDied(payload)

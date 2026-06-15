@@ -34,6 +34,8 @@ local HIDE_SPOT_MARKER_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldMark
 local HIDE_SPOT_HIGHLIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldHighlightTemplate" }
 local HIDE_SPOT_OUTLINE_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEffects", "WorldBoxOutlineTemplate" }
 
+local CLOSET_HIDING_SERVICE_KEY = "ClosetHidingMechanic"
+
 local function resolveChildPath(root, path)
 	local node = root
 	for _, segment in ipairs(path) do
@@ -902,6 +904,39 @@ function Service:HandleEvent(eventName, payload)
 		self:_cleanupHideSpots(payload and payload.matchId)
 		self:_setOccupancy({})
 	end
+end
+
+function Service:IsPlayerHidden(matchId, userId)
+	if type(matchId) ~= "string" or matchId == "" then
+		return false
+	end
+	local occupancy = self:_getOccupancy()
+	if type(occupancy) ~= "table" then
+		return false
+	end
+	for _, occupantId in pairs(occupancy) do
+		if occupantId == userId then
+			return true
+		end
+	end
+	return false
+end
+
+function Service:GetHiddenUserIds(matchId)
+	if type(matchId) ~= "string" or matchId == "" then
+		return {}
+	end
+	local occupancy = self:_getOccupancy()
+	if type(occupancy) ~= "table" then
+		return {}
+	end
+	local result = {}
+	for _, occupantId in pairs(occupancy) do
+		if occupantId then
+			table.insert(result, occupantId)
+		end
+	end
+	return result
 end
 
 return Service
