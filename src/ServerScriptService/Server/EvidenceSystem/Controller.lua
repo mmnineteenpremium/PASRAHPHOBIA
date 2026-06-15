@@ -382,6 +382,12 @@ function Controller:_broadcastEvidence(matchId, payload)
     if not self._evidenceRemote then
         return
     end
+    if type(payload) ~= "table" then
+        return
+    end
+    if payload.autoOpenJournal == nil then
+        payload.autoOpenJournal = false
+    end
     local match = self:_getMatchById(matchId)
     if not match then
         return
@@ -889,6 +895,7 @@ function Controller:OnEvidenceCollected(payload)
         confirmedEvidence = collectedEvidence,
         possibleGhosts = possibleGhosts,
         evidenceFound = #collectedEvidence,
+        autoOpenJournal = false,
     })
     self:_broadcastEvidenceFound(matchId, {
         matchId = matchId,

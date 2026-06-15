@@ -1996,15 +1996,35 @@ local function keepGhostOutsideSafeZones(match, currentPosition, desiredPosition
 		return desiredPosition
 	end
 
-	if typeof(currentPosition) == "Vector3" and not isPositionInsideSafeZones(currentPosition, safeZoneParts) then
-		return currentPosition
+	local bestEdge = nil
+	local bestDist2D = math.huge
+	for _, sz in ipairs(safeZoneParts) do
+		local localPos = sz.CFrame:PointToObjectSpace(desiredPosition)
+		local half = sz.Size * 0.5
+		local dx = math.abs(localPos.X) - half.X
+		local dz = math.abs(localPos.Z) - half.Z
+		local dy = math.abs(localPos.Y) - half.Y
+		if dx > 0 or dz > 0 or dy > 0 then
+			local pushX = 0
+			if localPos.X > half.X then pushX = localPos.X - half.X
+			elseif localPos.X < -half.X then pushX = localPos.X + half.X end
+			local pushZ = 0
+			if localPos.Z > half.Z then pushZ = localPos.Z - half.Z
+			elseif localPos.Z < -half.Z then pushZ = localPos.Z + half.Z end
+			local pushY = 0
+			if localPos.Y > half.Y then pushY = localPos.Y - half.Y
+			elseif localPos.Y < -half.Y then pushY = localPos.Y + half.Y end
+			local worldPush = sz.CFrame:VectorToWorldSpace(Vector3.new(pushX, pushY, pushZ))
+			local edgePos = desiredPosition - worldPush
+			local dist2D = math.sqrt((edgePos.X - desiredPosition.X) ^ 2 + (edgePos.Z - desiredPosition.Z) ^ 2)
+			if dist2D < bestDist2D then
+				bestDist2D = dist2D
+				bestEdge = edgePos
+			end
+		end
 	end
 
-	if typeof(currentPosition) == "Vector3" then
-		return currentPosition
-	end
-
-	return desiredPosition
+	return bestEdge or desiredPosition
 end
 
 local function collectMatchRoomParts(match)
@@ -3495,13 +3515,7 @@ function Service:_syncGhostVisual(match, ghostState)
 			end
 		end
 
-		resolvedPosition = keepGhostOutsideSafeZones(match, currentPosition, resolvedPosition)
 		resolvedPosition = clampGhostToInvestigationArea(match, resolvedPosition, currentPosition)
-		if typeof(resolvedPosition) == "Vector3"
-			and typeof(currentPosition) == "Vector3"
-			and not isGhostNavigationLineClear(match, currentPosition, resolvedPosition) then
-			resolvedPosition = currentPosition
-		end
 		if typeof(resolvedPosition) ~= "Vector3" then
 			resolvedPosition = currentPosition
 		end

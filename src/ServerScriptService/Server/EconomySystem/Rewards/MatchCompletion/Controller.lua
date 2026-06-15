@@ -33,15 +33,26 @@ function Controller:RegisterEventHandlers()
     if not self._eventBus then
         return
     end
-    local function handle(payload)
-        local player = payload and payload.player
-        local percent = payload and payload.performancePercent or 0
-        self._service:GrantMatchReward(player, percent)
+    local function handleMatchEnded(payload)
+        local playerOutcome = payload and payload.playerOutcome
+        if type(playerOutcome) == "table" then
+            for userIdStr, outcome in pairs(playerOutcome) do
+                local player = outcome and outcome.player
+                if typeof(player) == "Instance" and player:IsA("Player") then
+                    local percent = 0
+                    if outcome.survived == true then
+                        percent = percent + 50
+                    end
+                    if outcome.extracted == true then
+                        percent = percent + 50
+                    end
+                    self._service:GrantMatchReward(player, percent)
+                end
+            end
+        end
     end
-    self._eventBus:Subscribe("MatchEnded", handle)
-    table.insert(self._subscriptions, { eventName = "MatchEnded", callback = handle })
-    self._eventBus:Subscribe("ResultsCalculated", handle)
-    table.insert(self._subscriptions, { eventName = "ResultsCalculated", callback = handle })
+    self._eventBus:Subscribe("MatchEnded", handleMatchEnded)
+    table.insert(self._subscriptions, { eventName = "MatchEnded", callback = handleMatchEnded })
 end
 
 function Controller:UnregisterEventHandlers()
