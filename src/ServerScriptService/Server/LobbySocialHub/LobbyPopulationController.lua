@@ -246,6 +246,23 @@ local function pivotNpcToSpawn(npc, anchorPart)
 	npc:PivotTo(spawnCF)
 end
 
+local function getInvestigatorSpawnCFrame(spawnNode, index)
+	local baseCFrame = getSpawnCFrame(spawnNode)
+	local seedBase = math.floor((spawnNode.Position.X * 100) + (spawnNode.Position.Z * 100))
+	local seed = seedBase + (tonumber(index) or 0) * 7919 + math.floor(os.clock() * 1000)
+	local rng = Random.new(seed)
+
+	local slotCount = 4
+	local slotIndex = ((tonumber(index) or 1) - 1) % slotCount
+	local ringIndex = math.floor(((tonumber(index) or 1) - 1) / slotCount)
+	local radius = 6 + (ringIndex * 2)
+	local angle = (math.pi * 0.5 * slotIndex) + rng:NextNumber(-0.18, 0.18)
+	local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+	local yaw = math.rad(rng:NextNumber(-180, 180))
+
+	return baseCFrame * CFrame.new(offset) * CFrame.Angles(0, yaw, 0)
+end
+
 local function stripHumanoidDescription(npc)
 	if not npc then
 		return
@@ -760,6 +777,9 @@ function LobbyPopulationController:_beginNpcDialogue(npc, player)
 	if not npc then
 		return
 	end
+	if npc:GetAttribute(NPC_DIALOGUE_ACTIVE_ATTR) == true then
+		return
+	end
 
 	local humanoid = npc:FindFirstChildOfClass("Humanoid")
 	local tracks = self._npcTracks[npc]
@@ -890,6 +910,9 @@ local function ensureDialoguePrompt(controller, npc, dialogueId, objectText, max
 	local connection
 	connection = prompt.Triggered:Connect(function(player)
 		if not player or not player:IsA("Player") then
+			return
+		end
+		if player:GetAttribute(NPC_DIALOGUE_ACTIVE_ATTR) == true or player:GetAttribute("PasrahNpcDialogueActive") == true then
 			return
 		end
 		if controller and type(controller._beginNpcDialogue) == "function" then
@@ -1049,7 +1072,7 @@ function LobbyPopulationController:_spawnInvestigator(spawnNode, index)
 		end
 	end
 
-	pivotNpcToSpawn(npc, spawnNode)
+	npc:PivotTo(getInvestigatorSpawnCFrame(spawnNode, index))
 	npc.Parent = Workspace
 
 	task.defer(function()

@@ -27,7 +27,7 @@ function UISupport.fadeGuiObject(guiObject, transparency, duration, tweenService
 	if not guiObject then
 		return
 	end
-	local tweenInfo = TweenInfo.new(duration or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	local tweenInfo = TweenInfo.new(duration or 0.68, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	if guiObject:IsA("Frame") or guiObject:IsA("TextButton") or guiObject:IsA("TextBox") then
 		tweenService:Create(guiObject, tweenInfo, { BackgroundTransparency = transparency }):Play()
 	elseif guiObject:IsA("TextLabel") then

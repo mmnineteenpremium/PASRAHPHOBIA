@@ -284,7 +284,7 @@ local function findOrCreateHandle(character)
         existing.CanQuery = false
         existing.CastShadow = false
         existing.Massless = true
-        existing.Anchored = true
+        existing.Anchored = false
         findOrCreateHandleMesh(existing)
         findOrCreateToggleSound(existing)
         return existing
@@ -301,7 +301,7 @@ local function findOrCreateHandle(character)
     handle.CanQuery = false
     handle.CastShadow = false
     handle.Massless = true
-    handle.Anchored = true
+    handle.Anchored = false
     handle.Material = HANDLE_CONFIG.material or Enum.Material.SmoothPlastic
     handle.Color = HANDLE_CONFIG.color or Color3.fromRGB(44, 46, 50)
     handle.Parent = character

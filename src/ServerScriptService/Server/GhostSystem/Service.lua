@@ -132,12 +132,13 @@ local GHOST_VISUAL_MOVE_SPEED_BY_STATE = {
 	Cooldown = 2.1,
 }
 
+local GHOST_MAX_TRANSPARENCY = 0.5
 local GHOST_VISUAL_TRANSPARENCY_BY_STATE = {
-	Idle = 0.75,
+	Idle = 0.45,
 	Roaming = 0.35,
 	Manifestation = 0.0,
 	Hunting = 0.05,
-	Cooldown = 0.55,
+	Cooldown = 0.45,
 }
 
 local GHOST_NAV_NODE_LINK_DISTANCE = 34
@@ -3358,7 +3359,7 @@ function Service:_applyGhostVisualState(match, ghostState)
 	end
 
 	local stateName, actualStateName, overrideStateName = resolveGhostVisualStateName(ghostState)
-	local transparency = GHOST_VISUAL_TRANSPARENCY_BY_STATE[stateName] or 0.35
+	local transparency = math.min(GHOST_MAX_TRANSPARENCY, GHOST_VISUAL_TRANSPARENCY_BY_STATE[stateName] or 0.35)
 
 	match.ghost:SetAttribute("RuntimeGhostState", tostring(stateName or "Unknown"))
 	match.ghost:SetAttribute("RuntimeGhostStateActual", tostring(actualStateName or "Unknown"))

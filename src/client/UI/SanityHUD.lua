@@ -182,7 +182,7 @@ function SanityHUD:_applySanityVisuals()
 	local ratio = math.clamp(self._sanity / 100, 0, 1)
 	TweenService:Create(
 		self._fill,
-		TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		TweenInfo.new(0.68, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 		{ Size = UDim2.new(ratio, 0, 1, 0) }
 	):Play()
 
@@ -203,7 +203,7 @@ function SanityHUD:_applySanityVisuals()
 		self:_cancelVignetteTween()
 		TweenService:Create(
 			self._vignette,
-			TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			TweenInfo.new(0.52, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{ BackgroundTransparency = 1 }
 		):Play()
 	end

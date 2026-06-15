@@ -33,6 +33,12 @@ local TRACKER_BUTTON_TEXT_IMAGE_STATES = {
 	CollapseButton = { idle = "90895017189874", hover = "115151774523039", active = "127340669403158" },
 	ReopenButton = { idle = "103489183789899", hover = "99269259836629", active = "110126978866737" },
 }
+local QUEST_PANEL_TWEEN_INFO = TweenInfo.new(0.68, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local QUEST_POPUP_IN_TWEEN_INFO = TweenInfo.new(0.72, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local QUEST_POPUP_OUT_TWEEN_INFO = TweenInfo.new(0.52, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+local QUEST_POPUP_OUT_HIDE_DELAY = 0.58
+local QUEST_POPUP_VISIBLE_POSITION = UDim2.new(0.5, 0, 0, 18)
+local QUEST_POPUP_HIDDEN_SCALE = 0.96
 
 local QuestTracker = {}
 QuestTracker.__index = QuestTracker
@@ -231,6 +237,21 @@ local function cloneGuiTemplate(template, cloneName, parent)
 	return clone
 end
 
+local function setGuiTreeVisible(root, visible)
+	if not root then
+		return
+	end
+	local targetVisible = visible == true
+	if root:IsA("GuiObject") then
+		root.Visible = targetVisible
+	end
+	for _, descendant in ipairs(root:GetDescendants()) do
+		if descendant:IsA("GuiObject") then
+			descendant.Visible = targetVisible
+		end
+	end
+end
+
 local function applyTrackerButtonImageState(button, stateName)
 	local states = TRACKER_BUTTON_TEXT_IMAGE_STATES[button.Name]
 	if not states then
@@ -280,6 +301,57 @@ local function bindTrackerButtonImage(button)
 			applyTrackerButtonImageState(button, hovered and "hover" or "idle")
 		end
 	end)
+end
+
+local function animateQuestPanel(panel, immediate)
+	if not panel or not panel:IsA("GuiObject") then
+		return
+	end
+
+	local scale = panel:FindFirstChild("QuestPanelMotionScale")
+	if not (scale and scale:IsA("UIScale")) then
+		scale = Instance.new("UIScale")
+		scale.Name = "QuestPanelMotionScale"
+		scale.Parent = panel
+	end
+
+	if immediate then
+		scale.Scale = 1
+		return
+	end
+
+	scale.Scale = 0.985
+	TweenService:Create(scale, QUEST_PANEL_TWEEN_INFO, { Scale = 1 }):Play()
+end
+
+local function animateQuestPopup(panel, visible, immediate)
+	if not panel or not panel:IsA("GuiObject") then
+		return
+	end
+
+	local scale = panel:FindFirstChild("QuestPopupMotionScale")
+	if not (scale and scale:IsA("UIScale")) then
+		scale = Instance.new("UIScale")
+		scale.Name = "QuestPopupMotionScale"
+		scale.Parent = panel
+	end
+
+	if visible then
+		panel.Position = QUEST_POPUP_VISIBLE_POSITION
+		panel.Visible = true
+		if immediate then
+			scale.Scale = 1
+			return
+		end
+		scale.Scale = QUEST_POPUP_HIDDEN_SCALE
+		TweenService:Create(scale, QUEST_POPUP_IN_TWEEN_INFO, { Scale = 1 }):Play()
+	else
+		if immediate then
+			scale.Scale = QUEST_POPUP_HIDDEN_SCALE
+			return
+		end
+		TweenService:Create(scale, QUEST_POPUP_OUT_TWEEN_INFO, { Scale = QUEST_POPUP_HIDDEN_SCALE }):Play()
+	end
 end
 
 function QuestTracker.new(playerGui)
@@ -345,6 +417,11 @@ function QuestTracker:BuildUI()
 		return false
 	end
 
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.VerticalAlignment = Enum.VerticalAlignment.Top
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	layout.Padding = UDim.new(0, 6)
+
 	collapseButton.MouseButton1Click:Connect(function()
 		self:SetCollapsed(true, false)
 	end)
@@ -366,8 +443,20 @@ function QuestTracker:BuildUI()
 	self._popupLabel = popupLabel
 	self._popupGui.Enabled = false
 	self._popupPanel.Visible = false
+	self._popupPanel.Position = QUEST_POPUP_VISIBLE_POSITION
+	if templates then
+		templates.Visible = false
+		setGuiTreeVisible(templates, false)
+	end
+	if questCardTemplate then
+		setGuiTreeVisible(questCardTemplate, false)
+	end
+	if questEmptyStateTemplate then
+		setGuiTreeVisible(questEmptyStateTemplate, false)
+	end
 	bindTrackerButtonImage(collapseButton)
 	bindTrackerButtonImage(reopenButton)
+	self._container.ClipsDescendants = true
 	self:ApplyLayout()
 	return true
 end
@@ -390,6 +479,9 @@ function QuestTracker:ApplyLayout()
 	local preserveAuthoredDesktopLayout = shouldPreserveAuthoredOwnerLayout() or (not touchLayout and not compactLayout)
 
 	if preserveAuthoredDesktopLayout then
+		if self._container and self._container.Visible == true then
+			animateQuestPanel(self._container, false)
+		end
 		self:_syncVisibility()
 		return
 	end
@@ -404,6 +496,9 @@ function QuestTracker:ApplyLayout()
 	self._header.TextSize = touchLayout and 12 or 13
 	self._reopenButton.Position = UDim2.new(1, compactLayout and -12 or -18, 1, touchLayout and -16 or (compactLayout and -12 or -18))
 	self._reopenButton.Size = UDim2.fromOffset(touchLayout and 96 or 116, touchLayout and 32 or 36)
+	if self._container.Visible == true then
+		animateQuestPanel(self._container, false)
+	end
 	self:_syncVisibility()
 end
 
@@ -463,6 +558,12 @@ function QuestTracker:_createCard(mission, order)
 		return nil
 	end
 	card.LayoutOrder = order
+	setGuiTreeVisible(card, true)
+	card.AutomaticSize = Enum.AutomaticSize.None
+	card.AnchorPoint = Vector2.new(0, 0)
+	card.Position = UDim2.new(0, 0, 0, 0)
+	card.Size = UDim2.new(1, 0, 0, 58)
+	card.ClipsDescendants = true
 
 	local stripe = getDirectChildOfClass(card, "Accent", "Frame")
 	local title = getDirectChildOfClass(card, "Title", "TextLabel")
@@ -479,10 +580,23 @@ function QuestTracker:_createCard(mission, order)
 	end
 
 	stripe.BackgroundColor3 = Color3.fromRGB(116, 196, 255)
+	stripe.Position = UDim2.new(0, 0, 0, 0)
 	title.Text = tostring(mission.title or "Mission")
+	title.AutomaticSize = Enum.AutomaticSize.None
+	title.AnchorPoint = Vector2.new(0, 0)
+	title.Position = UDim2.new(0, 10, 0, 4)
+	title.Size = UDim2.new(1, -18, 0, 20)
+	title.TextWrapped = false
+	title.TextTruncate = Enum.TextTruncate.AtEnd
 	fill.Size = UDim2.new(ratio, 0, 1, 0)
 	fill.BackgroundColor3 = Color3.fromRGB(116, 196, 255)
 	progress.Text = string.format("%d / %d", progressValue, requiredValue)
+	progress.AutomaticSize = Enum.AutomaticSize.None
+	progress.AnchorPoint = Vector2.new(0, 0)
+	progress.Position = UDim2.new(0, 10, 0, 40)
+	progress.Size = UDim2.new(1, -18, 0, 14)
+	progress.TextWrapped = false
+	progress.TextTruncate = Enum.TextTruncate.AtEnd
 	return card
 end
 
@@ -495,6 +609,7 @@ function QuestTracker:_createEmptyState(text, order)
 		)
 		return nil
 	end
+	setGuiTreeVisible(placeholder, true)
 	placeholder.LayoutOrder = order or 0
 	placeholder.Text = tostring(text)
 	return placeholder
@@ -546,8 +661,7 @@ function QuestTracker:_showCompletionPopup()
 	self._popupNonce = (self._popupNonce or 0) + 1
 	local popupNonce = self._popupNonce
 	self._popupGui.Enabled = true
-	self._popupPanel.Visible = true
-	self._popupPanel.Position = UDim2.new(0.5, 0, 0, -96)
+	animateQuestPopup(self._popupPanel, true, false)
 	self._popupLabel.Text = string.format(
 		"Mission selesai!\n%s%s  (+%d XP)",
 		title,
@@ -555,22 +669,12 @@ function QuestTracker:_showCompletionPopup()
 		xp
 	)
 
-	TweenService:Create(
-		self._popupPanel,
-		TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Position = UDim2.new(0.5, 0, 0, 18) }
-	):Play()
-
 	task.delay(3.2, function()
 		if self._popupNonce ~= popupNonce or not self._popupPanel.Parent then
 			return
 		end
-		TweenService:Create(
-			self._popupPanel,
-			TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-			{ Position = UDim2.new(0.5, 0, 0, -96) }
-		):Play()
-		task.delay(0.3, function()
+		animateQuestPopup(self._popupPanel, false, false)
+		task.delay(QUEST_POPUP_OUT_HIDE_DELAY, function()
 			if self._popupNonce == popupNonce and self._popupGui.Parent then
 				self._popupPanel.Visible = false
 				self._popupGui.Enabled = false
@@ -582,7 +686,17 @@ end
 function QuestTracker:_hideCompletionPopup()
 	self._popupNonce = (self._popupNonce or 0) + 1
 	if self._popupPanel then
-		self._popupPanel.Visible = false
+		if self._popupPanel.Visible == true then
+			animateQuestPopup(self._popupPanel, false, false)
+			task.delay(QUEST_POPUP_OUT_HIDE_DELAY, function()
+				if self._popupPanel and self._popupGui then
+					self._popupPanel.Visible = false
+					self._popupGui.Enabled = false
+				end
+			end)
+		else
+			self._popupPanel.Visible = false
+		end
 	end
 	if self._popupGui then
 		self._popupGui.Enabled = false

@@ -552,6 +552,40 @@ function OwnerDebugPanel:_applyTransparency()
 	self:_setStatus(("Transparency %.2f applied"):format(self.transparency), COLORS.ok)
 end
 
+local GHOST_MIN_HEIGHT = 6
+local GHOST_MIN_HEIGHT_SMALL = 2
+local SMALL_GHOST_TYPES = {Palasik = true, Jerangkong = true}
+
+local function getMinGhostHeight(ghostType)
+	if ghostType and SMALL_GHOST_TYPES[ghostType] then
+		return GHOST_MIN_HEIGHT_SMALL
+	end
+	return GHOST_MIN_HEIGHT
+end
+
+local function enforceMinGhostScale(model, desiredScale, ghostType)
+	if not (model and model:IsA("Model")) then
+		return desiredScale
+	end
+	local bounds = model:GetBoundingBox()
+	if not bounds then
+		return desiredScale
+	end
+	local _, size = bounds[1], bounds[2]
+	local currentHeight = size.Y
+	local minHeight = getMinGhostHeight(ghostType)
+	if currentHeight <= 0 then
+		return desiredScale
+	end
+	local minScaleFactor = minHeight / currentHeight
+	local enforcedScale = Vector3.new(
+		math.max(desiredScale.X, minScaleFactor),
+		math.max(desiredScale.Y, minScaleFactor),
+		math.max(desiredScale.Z, minScaleFactor)
+	)
+	return enforcedScale
+end
+
 function OwnerDebugPanel:_applyScale()
 	local model = self.selectedModel
 	if not model then
@@ -559,9 +593,10 @@ function OwnerDebugPanel:_applyScale()
 		return
 	end
 	ensureGhostRig(model)
-	local ok, err = scaleModelWithPivot(model, self.scale)
+	local enforcedScale = enforceMinGhostScale(model, self.scale, self.selectedGhostType)
+	local ok, err = scaleModelWithPivot(model, enforcedScale)
 	if ok then
-		self:_setStatus(("Scale applied %.2f %.2f %.2f"):format(self.scale.X, self.scale.Y, self.scale.Z), COLORS.ok)
+		self:_setStatus(("Scale applied (min enforced): X=%.2f Y=%.2f Z=%.2f"):format(enforcedScale.X, enforcedScale.Y, enforcedScale.Z), COLORS.ok)
 	else
 		self:_setStatus("Scale failed: " .. tostring(err), COLORS.warn)
 	end

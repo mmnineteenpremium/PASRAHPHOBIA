@@ -58,6 +58,12 @@ function RespawnGuard:_shouldDisableReset()
 	if player:GetAttribute("InMatch") == true then
 		return true
 	end
+	if player:GetAttribute("InLobby") == true then
+		return true
+	end
+	if player:GetAttribute("SpawnProtected") == true then
+		return true
+	end
 	return player:GetAttribute("MatchId") ~= nil
 end
 

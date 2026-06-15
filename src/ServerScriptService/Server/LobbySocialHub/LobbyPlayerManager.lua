@@ -747,6 +747,9 @@ function LobbyPlayerManager:_requestCharacterReload(player, reason)
     if self:_hasActiveMatchContext(player) then
         return false
     end
+    if reason ~= "missing_character" then
+        return false
+    end
 
     local userId = player.UserId
     local now = os.clock()

@@ -12,6 +12,7 @@ local LOCAL_COOLDOWN_SECONDS = 0.35
 
 local visibleLightPrompts = {}
 local lastRequestAt = 0
+local anyPromptVisibleCount = 0
 
 local function getRemote()
 	local folder = ReplicatedStorage:FindFirstChild("RemoteEvents")
@@ -31,10 +32,12 @@ ProximityPromptService.PromptShown:Connect(function(prompt)
 	if isVisibleLightPrompt(prompt) then
 		visibleLightPrompts[prompt] = true
 	end
+	anyPromptVisibleCount = anyPromptVisibleCount + 1
 end)
 
 ProximityPromptService.PromptHidden:Connect(function(prompt)
 	visibleLightPrompts[prompt] = nil
+	anyPromptVisibleCount = math.max(0, anyPromptVisibleCount - 1)
 end)
 
 local function hasVisibleLightPrompt()
@@ -93,6 +96,9 @@ UserInputService.InputBegan:Connect(function(input)
 	end
 	if LOCAL_PLAYER:GetAttribute("InMatch") ~= true
 		or tostring(LOCAL_PLAYER:GetAttribute("MatchLifecyclePhase") or "") ~= "InvestigationPhase" then
+		return
+	end
+	if anyPromptVisibleCount > 0 then
 		return
 	end
 	if hasVisibleLightPrompt() then

@@ -653,9 +653,12 @@ local function getLocalFieldKitLoadoutToolTypes(toolStates)
 	end
 
 	if #visible == 0 and type(toolStates) == "table" then
-		for _, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
-			if shouldShowFieldKitTool(toolType, toolStates[toolType]) then
-				insertUniqueFieldKitTool(visible, seen, toolType)
+		local phase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+		if phase == "InvestigationPhase" or phase == "HuntPhase" then
+			for _, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+				if shouldShowFieldKitTool(toolType, toolStates[toolType]) then
+					insertUniqueFieldKitTool(visible, seen, toolType)
+				end
 			end
 		end
 	end
@@ -1031,9 +1034,9 @@ local function applyButtonToneVisual(button, parts)
 		})
 	end
 end
-local BUTTON_TWEEN_INFO = TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local BUTTON_PRESS_TWEEN_INFO = TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local PANEL_REVEAL_TWEEN_INFO = TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local BUTTON_TWEEN_INFO = TweenInfo.new(0.58, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local BUTTON_PRESS_TWEEN_INFO = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local PANEL_REVEAL_TWEEN_INFO = TweenInfo.new(0.68, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 local BUTTON_BORDER_IDLE_IMAGE = "rbxassetid://96807162342543"
 local BUTTON_BORDER_HOVER_IMAGE = "rbxassetid://96807162342543"
 local BUTTON_BORDER_ACTIVE_IMAGE = "rbxassetid://96807162342543"
@@ -1578,7 +1581,7 @@ local function pulseCountdownLabel(label)
 
 	local scale = UISystem._ensureNamedScale(label, "CountdownPulseScale")
 	scale.Scale = 1.12
-	UISystem._tweenInstance(scale, TweenInfo.new(0.16, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+	UISystem._tweenInstance(scale, TweenInfo.new(0.58, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
 		Scale = 1,
 	})
 end
@@ -5746,6 +5749,8 @@ function UISystem:Init(context)
 	self._roomBrowserSuppressed = false
 	self._roomBrowserInputBound = false
 	self._roomBrowserToggleCooldownUntil = 0
+	self._roomCardPool = {}
+	self._roomCardActiveKeys = {}
 	self._auxiliaryInputBound = false
 	self._windowCloseInputBound = false
 	self._lobbyPanelCollapsed = true
@@ -7471,6 +7476,39 @@ end
 
 function UISystem:_isNamedGuiTemplate(instance)
 	return instance ~= nil and string.sub(instance.Name or "", -8) == "Template"
+end
+
+local ROOM_CARD_POOL_MAX = 100
+
+function UISystem:_getRoomCardFromPool(name, roomListRowTemplate, roomList)
+	local pool = self._roomCardPool
+	for i = #pool, 1, -1 do
+		local card = table.remove(pool, i)
+		if card and card.Parent then
+			card.Name = name
+			card.Visible = true
+			card.Parent = roomList
+			return card
+		end
+	end
+	return self:_cloneAuthoredGuiTemplate(roomListRowTemplate, roomList, name)
+end
+
+function UISystem:_returnRoomCardsToPool(roomList, keepKeys)
+	local pool = self._roomCardPool
+	for _, child in ipairs(roomList:GetChildren()) do
+		if (child:IsA("Frame") or child:IsA("TextLabel") or child:IsA("TextButton")) and not self:_isNamedGuiTemplate(child) then
+			local key = tostring(child:GetAttribute("RoomId"))
+			if not keepKeys or not keepKeys[key] then
+				if #pool < ROOM_CARD_POOL_MAX then
+					child.Visible = false
+					table.insert(pool, child)
+				else
+					child:Destroy()
+				end
+			end
+		end
+	end
 end
 
 function UISystem:_clearGeneratedRoomBrowserGuiChildren(container)
@@ -20238,9 +20276,9 @@ function UISystem:_ensureRoomBrowserGui()
 			selectedRoomId = nil
 		end
 
-		self:_clearGeneratedRoomBrowserGuiChildren(roomList)
+		self:_returnRoomCardsToPool(roomList, roomIdSet)
 		for _, room in ipairs(rooms or {}) do
-			local row = self:_cloneAuthoredGuiTemplate(roomListRowTemplate, roomList, "Room_" .. tostring(room.roomId))
+			local row = self:_getRoomCardFromPool("Room_" .. tostring(room.roomId), roomListRowTemplate, roomList)
 			if not (row and row:IsA("TextButton")) then
 				continue
 			end

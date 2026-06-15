@@ -37,6 +37,15 @@ local TOOL_EQUIPPED_ATTRIBUTE = "PasrahEquippedToolType"
 local PREPARATION_TOOL_ATTRIBUTE = "PreparationFocusTool"
 local toggleUiContractWarned = false
 local runtimeDragBindings = setmetatable({}, { __mode = "k" })
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local visiblePromptCount = 0
+
+ProximityPromptService.PromptShown:Connect(function()
+	visiblePromptCount = visiblePromptCount + 1
+end)
+ProximityPromptService.PromptHidden:Connect(function()
+	visiblePromptCount = math.max(0, visiblePromptCount - 1)
+end)
 
 local function safeRequire(moduleScript)
 	if not moduleScript then
@@ -485,6 +494,9 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		return
 	end
 	if input.KeyCode == Enum.KeyCode.F then
+		if visiblePromptCount > 0 then
+			return
+		end
 		toggleFlashlight()
 	end
 end)
