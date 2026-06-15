@@ -10,9 +10,9 @@ DIPERBARUI: Menambahkan AGENT_07, AGENT_08, AGENT_09
 | Section    | Confirmed | Total | Keterangan |
 |------------|-----------|-------|-----------|
 | Images     | 100       | 100   | DONE — icon/preview semua tier sudah di-upload |
-| Meshes     | 80        | 80    | DONE — model placeholder, bukan UGC accessory proper |
+| Meshes     | 80        | 80    | DONE — model in-game, bukan UGC accessory proper |
 | Textures   | 23        | 23    | DONE |
-| Animations | 2         | 2     | PENDING Animation Asset ID dari Studio Animation Editor |
+| Animations | 2         | 2     | DONE — Animation IDs confirmed; owner visual confirmation pending |
 | Audio BGM  | 84        | 84    | DONE — gameplay audio (bukan UI reward SFX) |
 
 ### Agent Status
@@ -20,17 +20,16 @@ DIPERBARUI: Menambahkan AGENT_07, AGENT_08, AGENT_09
 |-------|----------|-----------|
 | 00 ORCHESTRATOR | ACTIVE | Koordinasi berjalan |
 | 01 IMAGEGEN     | DONE   | 31 gambar via Grok manual, diupload |
-| 02 3DMODEL      | PARTIAL | .rbxm placeholder ada, bukan UGC accessory proper |
-| 03 ANIMATION    | PARTIAL | 2 .rbxanim dibuat, Animation ID pending Studio upload |
+| 02 3DMODEL      | PARTIAL | .rbxm placeholder ada untuk in-game reward, bukan UGC accessory |
+| 03 ANIMATION    | PARTIAL | 2 .rbxanim dibuat, Animation IDs confirmed; owner visual test BELUM |
 | 04 VISUAL_UI    | PARTIAL | Shell authored selesai, owner visual test BELUM |
-| 05 AUDIO        | BELUM  | UI reward SFX (tier_claim, gacha, checkin) belum dibuat |
+| 05 AUDIO        | PARTIAL | UI reward SFX sudah ter-wire di client; polish/owner confirmation masih pending |
 | 06 INTEGRATION  | PARTIAL | Source integration selesai, owner visual test BELUM |
 | 07 IMPORTER     | DONE   | process_manual_inbox.py + upload pipeline selesai |
 | 08 MONETIZATION | PARTIAL | 6 DevProduct ACTIVE, 4 GamePass HOLD, subscription belum |
 | 09 ASSET_ID_MGR | DONE   | registry_manager.py selesai, AssetIdConfig.lua generate |
 
 ### Yang Belum Disentuh Sama Sekali
-- UI reward SFX (AGENT_05 scope: sfx_tier_claim, sfx_gacha_reveal_*, sfx_checkin_*)
 - Subscription plan
 - Season skip developer products
 - Owner visual play test langsung (semua pass adalah code pass)
@@ -62,7 +61,7 @@ DIPERBARUI: Menambahkan AGENT_07, AGENT_08, AGENT_09
 | 05_AUDIO_AGENT.md            | AGENT_05            | SFX & music stinger                           |
 | 06_INTEGRATION_AGENT.md      | AGENT_06            | Integrasi semua asset ke Roblox Studio        |
 | 07_IMPORTER_AGENT.md         | AGENT_07 ★ BARU    | Upload otomatis ke Roblox via Open Cloud API  |
-| 08_MONETIZATION_MANAGER.md   | AGENT_08 ★ BARU    | Passes, Products, Subs, UGC, Ads, Analytics   |
+| 08_MONETIZATION_MANAGER.md   | AGENT_08 ★ BARU    | Passes, Products, Subs, in-game cosmetics, Ads, Analytics |
 | 09_ASSET_ID_MANAGER.md       | AGENT_09 ★ BARU    | Registry terpusat semua AssetId + Lua codegen |
 
 =======================================================================
@@ -116,7 +115,7 @@ DIPERBARUI: Menambahkan AGENT_07, AGENT_08, AGENT_09
 | game pass      | —  | —  | —  | —  | —  | ✓  | —  | ✓  | ✓  |
 | dev product    | —  | —  | —  | —  | —  | ✓  | —  | ✓  | ✓  |
 | subscription   | —  | —  | —  | —  | —  | ✓  | —  | ✓  | ✓  |
-| ugc item       | ✓  | ✓  | —  | —  | —  | —  | ✓  | ✓  | ✓  |
+| in-game cosmetic | ✓  | ✓  | —  | —  | —  | ✓  | ✓  | —  | ✓  |
 | mm/xp/pp       | —  | —  | —  | —  | —  | —  | —  | —  | —  |
 
 ✓* = fungsi khusus (storyboard / emote SFX)
@@ -212,7 +211,7 @@ sfx_[event_name]               ← audio section
 pass_[name]                    ← monetization.passes
 dp_[name]                      ← monetization.developer_products
 sub_[name]                     ← monetization.subscriptions
-ugc_[name]                     ← monetization.ugc_items
+reward_[name] / cosmetic_[name] ← in_game_rewards / RoyalPassConfig rewardId
 ```
 
 =======================================================================

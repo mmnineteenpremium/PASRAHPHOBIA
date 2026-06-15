@@ -23,7 +23,8 @@ local WORLD_POINT_LIGHT_TEMPLATE_PATH = { "Assets", "VisualTemplates", "WorldEff
 
 local EventPropAssets = nil
 do
-	local gameData = ReplicatedStorage:FindFirstChild("GameData")
+	local shared = ReplicatedStorage:FindFirstChild("Shared")
+	local gameData = (shared and shared:FindFirstChild("GameData")) or ReplicatedStorage:FindFirstChild("GameData")
 	local moduleScript = gameData and gameData:FindFirstChild("EventPropAssets")
 	if moduleScript and moduleScript:IsA("ModuleScript") then
 		local ok, result = pcall(require, moduleScript)
@@ -195,6 +196,17 @@ local function ensureFolder(parent, name)
 	return folder
 end
 
+local function clearGeneratedRuntimeFolder(folder)
+	if not (folder and folder:IsA("Folder")) then
+		return
+	end
+	for _, child in ipairs(folder:GetChildren()) do
+		child:Destroy()
+	end
+	folder:SetAttribute("PasrahRuntimeGenerated", true)
+	folder:SetAttribute("PasrahRuntimeSource", "EnvironmentalObjectRuntime")
+end
+
 local function ensurePart(parent, name)
 	local part = parent:FindFirstChild(name)
 	if part and part:IsA("BasePart") then
@@ -347,6 +359,28 @@ local function createAuthoredEventProp(parent, name, kind, position)
 	mesh:SetAttribute("PasrahPropAssetKey", tostring(spec.key or name))
 	mesh:SetAttribute("PasrahPropMeshId", tostring(spec.meshId))
 	mesh:SetAttribute("PasrahGeneratedKind", tostring(kind or ""))
+	if kind == "ceiling_light" or kind == "light" or kind == "lamp" then
+		mesh.Material = Enum.Material.Neon
+		local pointLight = mesh:FindFirstChild("PointLight")
+		if not (pointLight and pointLight:IsA("PointLight")) then
+			if pointLight then
+				pointLight:Destroy()
+			end
+			pointLight = cloneWorldPointLightTemplate("PointLight")
+			if pointLight then
+				pointLight.Name = "PointLight"
+				pointLight.Parent = mesh
+			else
+				warn("[EnvironmentalObjectRuntime] Missing authored visual template: WorldEffects.WorldPointLightTemplate")
+			end
+		end
+		if pointLight then
+			pointLight.Range = 18
+			pointLight.Brightness = 1.8
+			pointLight.Color = mesh.Color
+			pointLight.Enabled = true
+		end
+	end
 
 	model.PrimaryPart = mesh
 	model:SetAttribute("PasrahPropAssetKey", tostring(spec.key or name))
@@ -522,6 +556,21 @@ local function findNearestNamedInstance(root, targetName, expectedPosition)
 	return best
 end
 
+local function resolveGeneratedTargetPosition(proxyPart, definition, generatedPosition)
+	if not (proxyPart and proxyPart:IsA("BasePart")) then
+		return generatedPosition
+	end
+	local runtimeProxyPosition = proxyPart.Position
+	if typeof(generatedPosition) ~= "Vector3" then
+		return runtimeProxyPosition
+	end
+	local authoredProxyPosition = type(definition) == "table" and definition.proxyPosition or nil
+	if typeof(authoredProxyPosition) == "Vector3" then
+		return runtimeProxyPosition + (generatedPosition - authoredProxyPosition)
+	end
+	return runtimeProxyPosition
+end
+
 local function resolveTargetInstance(mapClone, generatedFolder, proxyPart, definition)
 	local generatedKind = proxyPart:GetAttribute("PasrahGeneratedKind")
 	local generatedDefinition = type(definition) == "table" and definition.generated or nil
@@ -536,6 +585,7 @@ local function resolveTargetInstance(mapClone, generatedFolder, proxyPart, defin
 		if typeof(generatedPosition) ~= "Vector3" then
 			generatedPosition = proxyPart.Position
 		end
+		generatedPosition = resolveGeneratedTargetPosition(proxyPart, definition, generatedPosition)
 		if generatedKind == "prop_box" or generatedKind == "prop_crate" then
 			local generatedTarget = createGeneratedTarget(generatedFolder, proxyPart.Name, generatedKind, generatedPosition)
 			if generatedTarget then
@@ -714,7 +764,12 @@ local function buildLookupFromFolder(definitions, folder, mapClone, generatedFol
 				if definition.generated.kind == "prop_box" or definition.generated.kind == "prop_crate" then
 					target = configurePropBoxPart(proxy, definition.generated.kind)
 				else
-					target = createGeneratedTarget(generatedFolder, definition.objectId, definition.generated.kind, proxy.Position)
+					target = createGeneratedTarget(
+						generatedFolder,
+						definition.objectId,
+						definition.generated.kind,
+						resolveGeneratedTargetPosition(proxy, definition, definition.generated.position)
+					)
 				end
 			end
 			if objectType == "Light" and type(definition.generated) == "table" then
@@ -723,7 +778,12 @@ local function buildLookupFromFolder(definitions, folder, mapClone, generatedFol
 					if typeof(target) == "Instance" and target.Parent == generatedFolder then
 						target:Destroy()
 					end
-					target = createGeneratedTarget(generatedFolder, definition.objectId, definition.generated.kind, proxy.Position)
+					target = createGeneratedTarget(
+						generatedFolder,
+						definition.objectId,
+						definition.generated.kind,
+						resolveGeneratedTargetPosition(proxy, definition, definition.generated.position)
+					)
 				end
 			end
 			registerObject(interactionSystem, definition.objectId, objectType, proxy.Position, definition.roomId, interactions)
@@ -955,6 +1015,7 @@ function EnvironmentalObjectRuntime.Attach(match, mapClone, deps)
 	local eventBus = resolveEventBus(deps)
 	local interactionSystem = resolveMapInteractionSystem(deps)
 	local generatedFolder = ensureFolder(mapClone, GENERATED_FOLDER_NAME)
+	clearGeneratedRuntimeFolder(generatedFolder)
 	local lightsFolder = mapClone:FindFirstChild("Lights", true)
 	local propsFolder = mapClone:FindFirstChild("Props", true)
 	local electronicsFolder = mapClone:FindFirstChild("Electronics", true)

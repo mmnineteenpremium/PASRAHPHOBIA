@@ -62,17 +62,31 @@ local DEFAULT_GHOST_TEMPLATE_TARGET_BOUNDS = {
 	KuntilanakAggressive = Vector3.new(2.2, 5.4, 1.8),
 	Genderuwo = Vector3.new(3.4, 5.8, 2.6),
 	Leak = Vector3.new(2.0, 4.8, 2.35),
+	Pocong = Vector3.new(2.2, 4.0, 1.5),
+	Tuyul = Vector3.new(1.5, 2.5, 1.2),
+	Banaspati = Vector3.new(3.0, 5.0, 2.0),
+	Jerangkong = Vector3.new(2.5, 4.5, 1.8),
+	WeweGombel = Vector3.new(3.0, 4.5, 1.8),
+	Palasik = Vector3.new(2.0, 3.5, 1.5),
+	SilumanUlar = Vector3.new(2.0, 4.0, 1.5),
+	SundelBolong = Vector3.new(2.8, 4.5, 1.6),
+	HantuTanah = Vector3.new(3.0, 4.0, 2.0),
 }
 
 local DEFAULT_GHOST_TEMPLATE_MAX_HOVER_HEIGHT = {
 	Kuntilanak = 0.05,
 	KuntilanakAggressive = 0.05,
+	Pocong = 0.0,
+	Genderuwo = 0.0,
+	Leak = 0.0,
 }
 
 local DEFAULT_GHOST_TEMPLATE_GROUNDED = {
 	Pocong = true,
 	Genderuwo = true,
 	Leak = true,
+	HantuTanah = true,
+	Jerangkong = true,
 }
 
 local DEFAULT_GHOST_TEMPLATE_MESH_PART_NAMES = {}
@@ -82,17 +96,13 @@ local DEFAULT_GHOST_TEMPLATE_CAST_SHADOW = {}
 local DEFAULT_GHOST_TEMPLATE_TEXTURE_MODEL_ASSET_IDS = {
 	Banaspati = "rbxassetid://97456316811319",
 	BanaspatiAggressive = "rbxassetid://97456316811319",
-	Genderuwo = "rbxassetid://98880262062359",
-	GenderuwoAggressive = "rbxassetid://134276874050331",
 	HantuTanah = "rbxassetid://139296725422008",
 	Jerangkong = "rbxassetid://111398758078419",
 	Kuntilanak = "rbxassetid://85391462330878",
-	KuntilanakAggressive = "rbxassetid://120578702101148",
 	Leak = "rbxassetid://123810909037540",
 	LeakAggressive = "rbxassetid://123810909037540",
 	Palasik = "rbxassetid://91886890215469",
 	PalasikAngry = "rbxassetid://91886890215469",
-	Pocong = "rbxassetid://111363343569502",
 	SilumanUlar = "rbxassetid://137287114113323",
 	SundelBolong = "rbxassetid://131700767022518",
 	SundelBolongAggressive = "rbxassetid://70983571304250",
@@ -197,7 +207,6 @@ local STUDIO_GHOST_PREVIEW_ORDER = {
 }
 
 local GHOST_AGGRESSIVE_VISUAL_THRESHOLD = 65
-local MIN_PLAYER_COMPARABLE_GHOST_HEIGHT = 5.9
 local GHOST_AGGRESSIVE_SUFFIXES = {
 	"Aggressive",
 	"Agressive",
@@ -487,30 +496,6 @@ local function safeRequire(moduleScript)
 	return nil
 end
 
-local function resolveGhostVisualProfileFolder()
-	local assets = ReplicatedStorage:FindFirstChild("Assets")
-	return assets and assets:FindFirstChild("GhostVisualProfiles") or nil
-end
-
-local function resolveGhostVisualProfile(ghostType)
-	if type(ghostType) ~= "string" or ghostType == "" then
-		return nil
-	end
-	local folder = resolveGhostVisualProfileFolder()
-	if not folder then
-		return nil
-	end
-	local moduleScript = folder:FindFirstChild(ghostType)
-	if not (moduleScript and moduleScript:IsA("ModuleScript")) then
-		return nil
-	end
-	local profile = safeRequire(moduleScript)
-	if type(profile) ~= "table" then
-		return nil
-	end
-	return profile
-end
-
 local function coerceProfileVector3(value)
 	if typeof(value) == "Vector3" then
 		return value
@@ -528,7 +513,7 @@ local function coerceProfileVector3(value)
 	return nil
 end
 
-local function buildGhostTemplateCandidateNames(ghostType, profile)
+local function buildGhostTemplateCandidateNames(ghostType)
 	local seen = {}
 	local candidates = {}
 
@@ -542,12 +527,6 @@ local function buildGhostTemplateCandidateNames(ghostType, profile)
 
 	addCandidate(ghostType)
 	addCandidate("Ghost_" .. tostring(ghostType))
-
-	local modelName = type(profile) == "table" and profile.modelName or nil
-	addCandidate(modelName)
-	if type(modelName) == "string" and string.sub(modelName, 1, 6) == "Ghost_" then
-		addCandidate(string.sub(modelName, 7))
-	end
 
 	return candidates
 end
@@ -652,17 +631,113 @@ local function resolveGhostTextureModelAssetId(ghostType)
 	return normalizeGhostModelAssetId(resolveGhostTemplateConfigValue(GHOST_TEMPLATE_TEXTURE_MODEL_ASSET_IDS, ghostType))
 end
 
-local function findUsableGhostModelFromAssetContainer(container)
+local function collectGhostRigSignals(model)
+	local signals = {
+		baseParts = 0,
+		animationControllers = 0,
+		animators = 0,
+		bones = 0,
+		skinnedMeshes = 0,
+	}
+	if typeof(model) ~= "Instance" then
+		return signals
+	end
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			signals.baseParts += 1
+		end
+		if descendant:IsA("AnimationController") then
+			signals.animationControllers += 1
+		elseif descendant:IsA("Animator") then
+			signals.animators += 1
+		elseif descendant:IsA("Bone") then
+			signals.bones += 1
+		elseif descendant:IsA("MeshPart") then
+			local ok, hasSkinnedMesh = pcall(function()
+				return descendant.HasSkinnedMesh
+			end)
+			if ok and hasSkinnedMesh == true then
+				signals.skinnedMeshes += 1
+			end
+		end
+	end
+	return signals
+end
+
+local function isAnimatableGhostModel(model)
+	if typeof(model) ~= "Instance" or not model:IsA("Model") then
+		return false
+	end
+	local signals = collectGhostRigSignals(model)
+	if signals.baseParts <= 0 then
+		return false
+	end
+	if signals.skinnedMeshes > 0 then
+		return true
+	end
+	return signals.bones > 0 and (signals.animationControllers > 0 or signals.animators > 0)
+end
+
+local function stampGhostRigSignalAttributes(model)
+	if typeof(model) ~= "Instance" or not model:IsA("Model") then
+		return
+	end
+	local signals = collectGhostRigSignals(model)
+	local animatable = signals.baseParts > 0 and (signals.skinnedMeshes > 0
+		or (signals.bones > 0 and (signals.animationControllers > 0 or signals.animators > 0)))
+	model:SetAttribute("PasrahGhostTemplateAnimatable", animatable)
+	model:SetAttribute("PasrahGhostBasePartCount", signals.baseParts)
+	model:SetAttribute("PasrahGhostAnimationControllerCount", signals.animationControllers)
+	model:SetAttribute("PasrahGhostAnimatorCount", signals.animators)
+	model:SetAttribute("PasrahGhostBoneCount", signals.bones)
+	model:SetAttribute("PasrahGhostSkinnedMeshCount", signals.skinnedMeshes)
+end
+
+local function warnRejectedGhostTemplate(reason, ghostType, candidate)
+	if not RunService:IsStudio() then
+		return
+	end
+	local candidateName = typeof(candidate) == "Instance" and candidate.Name or tostring(candidate)
+	warn(string.format(
+		"[GhostSystem] Rejected %s ghost template for '%s': %s",
+		tostring(reason or "invalid"),
+		tostring(ghostType or "Unknown"),
+		tostring(candidateName)
+	))
+end
+
+local function findUsableGhostModelFromAssetContainer(container, requireAnimatable)
 	if typeof(container) ~= "Instance" or not container:IsA("Model") then
 		return nil
 	end
-	if container:FindFirstChildWhichIsA("BasePart", true) then
-		return container
-	end
-	for _, child in ipairs(container:GetChildren()) do
-		if child:IsA("Model") and child:FindFirstChildWhichIsA("BasePart", true) then
-			return child
+	local fallbackModel = nil
+	local function consider(candidate)
+		if not (candidate and candidate:IsA("Model") and candidate:FindFirstChildWhichIsA("BasePart", true)) then
+			return nil
 		end
+		if requireAnimatable ~= true or isAnimatableGhostModel(candidate) then
+			return candidate
+		end
+		if not fallbackModel then
+			fallbackModel = candidate
+		end
+		return nil
+	end
+
+	local selected = consider(container)
+	if selected then
+		return selected
+	end
+	for _, descendant in ipairs(container:GetDescendants()) do
+		if descendant:IsA("Model") then
+			selected = consider(descendant)
+			if selected then
+				return selected
+			end
+		end
+	end
+	if requireAnimatable ~= true then
+		return fallbackModel
 	end
 	return nil
 end
@@ -694,10 +769,11 @@ local function loadGhostModelAssetTemplate(ghostType)
 		return nil
 	end
 
-	local selectedModel = findUsableGhostModelFromAssetContainer(containerOrErr)
+	local selectedModel = findUsableGhostModelFromAssetContainer(containerOrErr, true)
 	if not selectedModel then
 		containerOrErr:Destroy()
 		GHOST_MODEL_ASSET_TEMPLATE_CACHE[assetId] = false
+		warnRejectedGhostTemplate("non-animatable asset", ghostType, assetId)
 		return nil
 	end
 
@@ -710,6 +786,7 @@ local function loadGhostModelAssetTemplate(ghostType)
 	template.Name = tostring(ghostType)
 	template:SetAttribute("PasrahLoadedFromAssetId", assetId)
 	template:SetAttribute("PasrahGhostRuntimeAssetTemplate", true)
+	stampGhostRigSignalAttributes(template)
 	template.Parent = nil
 	GHOST_MODEL_ASSET_TEMPLATE_CACHE[assetId] = template
 	return template
@@ -742,7 +819,7 @@ local function loadGhostTextureDonorTemplate(ghostType)
 		return nil
 	end
 
-	local selectedModel = findUsableGhostModelFromAssetContainer(containerOrErr)
+	local selectedModel = findUsableGhostModelFromAssetContainer(containerOrErr, false)
 	if not selectedModel then
 		containerOrErr:Destroy()
 		GHOST_TEXTURE_DONOR_TEMPLATE_CACHE[assetId] = false
@@ -769,7 +846,6 @@ local function resolveGhostModelTemplate(ghostType, options)
 
 	local context = type(options) == "table" and options or {}
 	local baseGhostType = resolveGhostBaseType(ghostType)
-	local profile = resolveGhostVisualProfile(ghostType) or resolveGhostVisualProfile(baseGhostType)
 	local preferredCandidates = {}
 	local seen = {}
 
@@ -785,9 +861,9 @@ local function resolveGhostModelTemplate(ghostType, options)
 	if shouldUseAggressiveGhostVisualType(ghostType, context.ghostState, context) then
 		appendCandidates(buildAggressiveGhostTemplateCandidateNames(ghostType))
 	end
-	appendCandidates(buildGhostTemplateCandidateNames(ghostType, profile))
+	appendCandidates(buildGhostTemplateCandidateNames(ghostType))
 	if baseGhostType ~= ghostType then
-		appendCandidates(buildGhostTemplateCandidateNames(baseGhostType, resolveGhostVisualProfile(baseGhostType)))
+		appendCandidates(buildGhostTemplateCandidateNames(baseGhostType))
 	end
 
 	local ghosts = resolveGhostTemplatesFolder()
@@ -798,7 +874,10 @@ local function resolveGhostModelTemplate(ghostType, options)
 			if candidate and candidate:IsA("Model") then
 				local candidateAssetId = normalizeGhostModelAssetId(candidate:GetAttribute("PasrahLoadedFromAssetId"))
 				if candidateAssetId == configuredAssetId then
-					return candidate, candidateName
+					if isAnimatableGhostModel(candidate) then
+						return candidate, candidateName
+					end
+					warnRejectedGhostTemplate("non-animatable local asset match", ghostType, candidate)
 				end
 			end
 		end
@@ -807,17 +886,6 @@ local function resolveGhostModelTemplate(ghostType, options)
 	local assetTemplate = loadGhostModelAssetTemplate(ghostType) or loadGhostModelAssetTemplate(baseGhostType)
 	if assetTemplate then
 		return assetTemplate, baseGhostType or ghostType
-	end
-
-	if not ghosts then
-		return nil
-	end
-
-	for _, candidateName in ipairs(preferredCandidates) do
-		local candidate = ghosts:FindFirstChild(candidateName)
-		if candidate and candidate:IsA("Model") then
-			return candidate, candidateName
-		end
 	end
 
 	return nil
@@ -863,8 +931,19 @@ local function setGhostTraceState(stage, details)
 	ReplicatedStorage:SetAttribute("PasrahGhostTraceDetails", details)
 end
 
+local function shouldApplyRuntimeGhostScale(ghostModel)
+	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
+		return false
+	end
+	return ghostModel:GetAttribute("PasrahGhostRuntimeAssetTemplate") == true
+		or ghostModel:GetAttribute("PasrahAllowRuntimeScale") == true
+end
+
 local function clampGhostTemplateScale(ghostModel, ghostType)
 	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
+		return
+	end
+	if not shouldApplyRuntimeGhostScale(ghostModel) then
 		return
 	end
 
@@ -881,10 +960,6 @@ local function clampGhostTemplateScale(ghostModel, ghostType)
 	local currentY = math.max(currentBounds.Y, 0.001)
 	local currentZ = math.max(currentBounds.Z, 0.001)
 	local factor = math.min(targetBounds.X / currentX, targetBounds.Y / currentY, targetBounds.Z / currentZ)
-	local minHeightFactor = MIN_PLAYER_COMPARABLE_GHOST_HEIGHT / currentY
-	if explicitTargetBounds == nil and minHeightFactor > factor then
-		factor = minHeightFactor
-	end
 	if factor >= 0.98 and factor <= 1.02 then
 		return
 	end
@@ -1299,6 +1374,7 @@ local function createGhostFromTemplate(spawnCFrame, ghostType, options)
 	ghostModel:SetAttribute("VisualTemplateName", template.Name)
 	ghostModel:SetAttribute("PasrahGhostInventoryModelAssetId", inventoryModelAssetId)
 	ghostModel:SetAttribute("PasrahLoadedFromAssetId", template:GetAttribute("PasrahLoadedFromAssetId"))
+	stampGhostRigSignalAttributes(ghostModel)
 	repairVariantGhostSurfaceAppearance(ghostModel, visualGhostType)
 	repairGhostTextureDonorSurfaceAppearance(ghostModel, visualGhostType, logicalGhostType)
 
@@ -1497,55 +1573,6 @@ local function loadGhostVisualTuning()
 		end
 	end
 
-	local profilesFolder = resolveGhostVisualProfileFolder()
-	if profilesFolder then
-		for _, child in ipairs(profilesFolder:GetChildren()) do
-			if child:IsA("ModuleScript") then
-				local profile = safeRequire(child)
-				if type(profile) == "table" then
-					local ghostType = child.Name
-					local visualOffset = coerceProfileVector3(profile.visualOffset)
-					if visualOffset then
-						offsets[ghostType] = visualOffset
-					end
-
-					local visualRotation = coerceProfileVector3(profile.visualRotation) or coerceProfileVector3(profile.meshRotation)
-					if visualRotation then
-						rotations[ghostType] = visualRotation
-					end
-
-					local meshSize = coerceProfileVector3(profile.size)
-					if meshSize and meshSizes[ghostType] == nil then
-						meshSizes[ghostType] = meshSize
-					end
-
-					local rootSize = coerceProfileVector3(profile.rootSize)
-					if rootSize then
-						rootSizes[ghostType] = rootSize
-					end
-
-					local targetBounds = coerceProfileVector3(profile.targetBounds) or meshSize
-					if targetBounds then
-						bounds[ghostType] = targetBounds
-					end
-
-					if type(profile.maxHoverHeight) == "number" then
-						maxHoverHeights[ghostType] = math.max(0, profile.maxHoverHeight)
-					end
-					if type(profile.grounded) == "boolean" then
-						grounded[ghostType] = profile.grounded
-					end
-					if type(profile.meshPartName) == "string" and profile.meshPartName ~= "" then
-						meshPartNames[ghostType] = profile.meshPartName
-					end
-					if type(profile.castShadow) == "boolean" then
-						castShadow[ghostType] = profile.castShadow
-					end
-				end
-			end
-		end
-	end
-
 	return offsets, rotations, meshSizes, bounds, maxHoverHeights, grounded, rootSizes, meshPartNames, castShadow, inventoryModelAssetIds, textureModelAssetIds
 end
 
@@ -1560,6 +1587,91 @@ GHOST_TEMPLATE_VISUAL_OFFSETS,
 	GHOST_TEMPLATE_CAST_SHADOW,
 	GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS,
 	GHOST_TEMPLATE_TEXTURE_MODEL_ASSET_IDS = loadGhostVisualTuning()
+
+local function ensureCanonicalGhostTemplatesFolder()
+	local assets = ReplicatedStorage:FindFirstChild("Assets")
+	if not assets then
+		assets = Instance.new("Folder")
+		assets.Name = "Assets"
+		assets.Parent = ReplicatedStorage
+	end
+
+	local models = assets:FindFirstChild("Models")
+	if not models then
+		models = Instance.new("Folder")
+		models.Name = "Models"
+		models.Parent = assets
+	end
+
+	local ghosts = models:FindFirstChild("Ghosts")
+	if not ghosts then
+		ghosts = Instance.new("Folder")
+		ghosts.Name = "Ghosts"
+		ghosts.Parent = models
+	end
+
+	return ghosts
+end
+
+local function buildCanonicalGhostTemplateTypes()
+	local types = {}
+	for ghostType in pairs(GHOST_TEMPLATE_INVENTORY_MODEL_ASSET_IDS) do
+		table.insert(types, ghostType)
+	end
+	table.sort(types)
+	return types
+end
+
+local function refreshCanonicalGhostTemplate(ghostsFolder, ghostType)
+	local configuredAssetId = resolveGhostModelAssetId(ghostType)
+	if not configuredAssetId then
+		return false, "missing_asset_id"
+	end
+
+	local existing = ghostsFolder:FindFirstChild(ghostType)
+	if existing and existing:IsA("Model") then
+		local existingAssetId = normalizeGhostModelAssetId(existing:GetAttribute("PasrahLoadedFromAssetId"))
+		if existingAssetId == configuredAssetId and isAnimatableGhostModel(existing) then
+			existing:SetAttribute("PasrahCanonicalLocalTemplate", true)
+			stampGhostRigSignalAttributes(existing)
+			return true
+		end
+	end
+
+	local template = loadGhostModelAssetTemplate(ghostType)
+	if not template then
+		return false, "asset_load_failed"
+	end
+
+	local clone = template:Clone()
+	clone.Name = ghostType
+	clone:SetAttribute("PasrahLoadedFromAssetId", configuredAssetId)
+	clone:SetAttribute("PasrahGhostRuntimeAssetTemplate", true)
+	clone:SetAttribute("PasrahCanonicalLocalTemplate", true)
+	clone:SetAttribute("PasrahCanonicalTemplateRefreshUtc", os.date("!%Y-%m-%dT%H:%M:%SZ"))
+	stampGhostRigSignalAttributes(clone)
+	clone.Parent = ghostsFolder
+
+	if existing and existing ~= clone then
+		existing:Destroy()
+	end
+
+	return true
+end
+
+local function refreshCanonicalGhostTemplates()
+	local ghostsFolder = ensureCanonicalGhostTemplatesFolder()
+	for _, ghostType in ipairs(buildCanonicalGhostTemplateTypes()) do
+		local ok, reason = refreshCanonicalGhostTemplate(ghostsFolder, ghostType)
+		if not ok and RunService:IsStudio() then
+			warn(string.format(
+				"[GhostSystem] Failed to refresh canonical ReplicatedStorage ghost template '%s': %s",
+				tostring(ghostType),
+				tostring(reason)
+			))
+		end
+	end
+end
 
 local function loadMapDatabase()
 	local database = safeRequire(resolveSharedGameDataModule("MapConfig"))
@@ -3012,6 +3124,7 @@ function Service.new(state, deps)
 end
 
 function Service:Init()
+	refreshCanonicalGhostTemplates()
 	self._ghostService:Init()
 end
 
@@ -3097,11 +3210,17 @@ function Service:Start()
 		if self._visualSyncAccumulator < GHOST_VISUAL_SYNC_INTERVAL then
 			return
 		end
-
 		self._visualSyncAccumulator = 0
 		local sessions = self._state:Get("sessions") or {}
+		local sc = 0
+		for _ in pairs(sessions) do sc = sc + 1 end
+		if sc == 0 then return end
 		for matchId in pairs(sessions) do
-			self:_syncGhostVisualByMatch(matchId)
+			local liveMatch = select(1, self:_resolveLiveMatch(matchId))
+			local ghostState = self._ghostService:GetGhostState(matchId)
+			if liveMatch and ghostState then
+				self:_syncGhostVisual(liveMatch, ghostState)
+			end
 		end
 	end)
 end

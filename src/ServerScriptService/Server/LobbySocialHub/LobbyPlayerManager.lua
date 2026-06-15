@@ -2,6 +2,7 @@ local LobbyPlayerManager = {}
 LobbyPlayerManager.__index = LobbyPlayerManager
 
 local LobbyLocator = require(script.Parent.Parent.Core.LobbyLocator)
+local CollectionService = game:GetService("CollectionService")
 
 local LOBBY_NAME = "LobbySocialHub"
 local LOBBY_SPAWN_OFFSET = Vector3.new(0, 13, 0)
@@ -525,9 +526,9 @@ local function isHealthySpawnCandidate(lobbyRoot, spawnPart)
 end
 
 local function spawnPartsAreHealthy(lobbyRoot, spawnParts)
-    if #spawnParts < EXPECTED_SPAWN_COUNT then
-        return false, string.format("spawn_count_%d", #spawnParts)
-    end
+	if #spawnParts < EXPECTED_SPAWN_COUNT then
+		return false, string.format("spawn_count_%d", #spawnParts)
+	end
 
     local spawnLocationCount = 0
     local floorTopY = resolvePrimaryFloorTopY(lobbyRoot)
@@ -550,62 +551,127 @@ local function spawnPartsAreHealthy(lobbyRoot, spawnParts)
         return false, string.format("spawn_locations_%d", spawnLocationCount)
     end
 
-    return true, nil
+	return true, nil
+end
+
+local function collectTaggedSpawnParts(lobbyRoot)
+	if not lobbyRoot then
+		return nil
+	end
+
+	local taggedSpawnParts = {}
+	for _, candidate in ipairs(CollectionService:GetTagged("PasrahLobbySpawnPoint")) do
+		if candidate and candidate:IsA("SpawnLocation") and candidate:IsDescendantOf(lobbyRoot) and isHealthySpawnCandidate(lobbyRoot, candidate) then
+			table.insert(taggedSpawnParts, candidate)
+		end
+	end
+
+	if #taggedSpawnParts >= EXPECTED_SPAWN_COUNT then
+		return sortSpawnParts(taggedSpawnParts)
+	end
+
+	return nil
+end
+
+local function collectWorkspaceLobbySpawnParts(lobbyRoot)
+	local workspaceSpawn = workspace:FindFirstChild("LobbySpawn")
+	if workspaceSpawn and workspaceSpawn:IsA("BasePart") and isHealthySpawnCandidate(lobbyRoot, workspaceSpawn) then
+		return { workspaceSpawn }
+	end
+
+	return nil
+end
+
+local function collectSpawnFolderSpawnParts(lobbyRoot)
+	if not lobbyRoot then
+		return nil
+	end
+
+	local spawnFolder = lobbyRoot:FindFirstChild("SpawnPoints", true)
+	local spawnParts = collectSpawnParts(spawnFolder)
+	local safeSpawnParts = {}
+	for _, candidate in ipairs(spawnParts) do
+		if string.match(candidate.Name, "^PlayerSpawn_%d+$") and isHealthySpawnCandidate(lobbyRoot, candidate) then
+			table.insert(safeSpawnParts, candidate)
+		end
+	end
+
+	if #safeSpawnParts > 0 then
+		return sortSpawnParts(safeSpawnParts)
+	end
+
+	return nil
+end
+
+local function collectDirectSpawnParts(lobbyRoot)
+	if not lobbyRoot then
+		return nil
+	end
+
+	local directSpawnParts = {}
+	for index = 1, EXPECTED_SPAWN_COUNT do
+		local candidate = lobbyRoot:FindFirstChild(string.format("PlayerSpawn_%d", index))
+		if candidate and candidate:IsA("BasePart") and isHealthySpawnCandidate(lobbyRoot, candidate) then
+			table.insert(directSpawnParts, candidate)
+		end
+	end
+
+	if #directSpawnParts > 0 then
+		return sortSpawnParts(directSpawnParts)
+	end
+
+	return nil
+end
+
+local function resolveLobbySpawnPartsForResolver(lobbyRoot)
+	local taggedSpawnParts = collectTaggedSpawnParts(lobbyRoot)
+	if taggedSpawnParts then
+		return taggedSpawnParts, "tagged_spawn_points"
+	end
+
+	local workspaceSpawnParts = collectWorkspaceLobbySpawnParts(lobbyRoot)
+	if workspaceSpawnParts then
+		return workspaceSpawnParts, "workspace_lobby_spawn"
+	end
+
+	local spawnFolderParts = collectSpawnFolderSpawnParts(lobbyRoot)
+	if spawnFolderParts then
+		return spawnFolderParts, "spawn_points_folder"
+	end
+
+	local directSpawnParts = collectDirectSpawnParts(lobbyRoot)
+	if directSpawnParts then
+		return directSpawnParts, "direct_player_spawns"
+	end
+
+	return nil, "spawn_missing"
 end
 
 local function resolveSpawnPart(deps, config, player)
-    local lobbyRoot = resolveLobbyRoot()
-    if config and typeof(config.SpawnPart) == "Instance" then
-        local healthy = isHealthySpawnCandidate(lobbyRoot, config.SpawnPart)
-        if healthy then
-            return config.SpawnPart
-        end
-    end
-    if deps.LobbySpawnPart and typeof(deps.LobbySpawnPart) == "Instance" then
-        local healthy = isHealthySpawnCandidate(lobbyRoot, deps.LobbySpawnPart)
-        if healthy then
-            return deps.LobbySpawnPart
-        end
-    end
+	local lobbyRoot = resolveLobbyRoot()
+	if config and typeof(config.SpawnPart) == "Instance" then
+		local healthy = isHealthySpawnCandidate(lobbyRoot, config.SpawnPart)
+		if healthy then
+			return config.SpawnPart
+		end
+	end
+	if deps.LobbySpawnPart and typeof(deps.LobbySpawnPart) == "Instance" then
+		local healthy = isHealthySpawnCandidate(lobbyRoot, deps.LobbySpawnPart)
+		if healthy then
+			return deps.LobbySpawnPart
+		end
+	end
 
-    local workspaceSpawn = workspace:FindFirstChild("LobbySpawn")
-    if workspaceSpawn and workspaceSpawn:IsA("BasePart") and isHealthySpawnCandidate(lobbyRoot, workspaceSpawn) then
-        return workspaceSpawn
-    end
+	local resolverSpawnParts = resolveLobbySpawnPartsForResolver(lobbyRoot)
+	if resolverSpawnParts then
+		local index = 1
+		if typeof(player) == "Instance" and player:IsA("Player") then
+			index = (player.UserId % #resolverSpawnParts) + 1
+		end
+		return resolverSpawnParts[index]
+	end
 
-    if lobbyRoot then
-        local lobbySpawn = lobbyRoot:FindFirstChild("LobbySpawn", true)
-        if lobbySpawn and lobbySpawn:IsA("BasePart") and isHealthySpawnCandidate(lobbyRoot, lobbySpawn) then
-            return lobbySpawn
-        end
-
-        local spawnLocation = lobbyRoot:FindFirstChildWhichIsA("SpawnLocation", true)
-        if spawnLocation and isHealthySpawnCandidate(lobbyRoot, spawnLocation) then
-            return spawnLocation
-        end
-
-        local spawnFolder = lobbyRoot:FindFirstChild("SpawnPoints", true)
-        local spawnParts = collectSpawnParts(spawnFolder)
-        local safeSpawnParts = {}
-        for _, candidate in ipairs(spawnParts) do
-            if isHealthySpawnCandidate(lobbyRoot, candidate) then
-                table.insert(safeSpawnParts, candidate)
-            end
-        end
-        if #safeSpawnParts > 0 then
-            table.sort(safeSpawnParts, function(a, b)
-                return a.Name < b.Name
-            end)
-
-            local index = 1
-            if typeof(player) == "Instance" and player:IsA("Player") then
-                index = (player.UserId % #safeSpawnParts) + 1
-            end
-            return safeSpawnParts[index]
-        end
-    end
-
-    return nil
+	return nil
 end
 
 local function buildUprightPartCFrame(part, offset, lookTarget)
@@ -746,8 +812,10 @@ function LobbyPlayerManager:_scanAndSyncLobbySpawns(reason)
         ))
     end
 
-    local spawnFolder = getSpawnFolder(lobbyRoot)
-    local spawnParts = sortSpawnParts(collectSpawnParts(spawnFolder))
+    local spawnParts, spawnSource = resolveLobbySpawnPartsForResolver(lobbyRoot)
+    if not spawnParts then
+        spawnParts = {}
+    end
     local stabilizedCount = 0
     for _, spawnPart in ipairs(spawnParts) do
         if stabilizeSpawnPart(spawnPart) then
@@ -780,6 +848,13 @@ function LobbyPlayerManager:_scanAndSyncLobbySpawns(reason)
     end
 
     warn(string.format("[LobbyPlayerManager] [%s] Spawn scan unhealthy (%s). Rebuilding SpawnPoints.", tostring(reason), tostring(healthReason)))
+
+    if lobbyRoot:GetAttribute("PasrahLobbyAllowSpawnRebuild") ~= true then
+        warn(string.format("[LobbyPlayerManager] [%s] SpawnPoints rebuild skipped because PasrahLobbyAllowSpawnRebuild is not enabled.", tostring(reason)))
+        return nil
+    end
+
+    local referencePosition = resolveLobbyReferencePosition(lobbyRoot)
 
     if spawnFolder then
         spawnFolder:Destroy()
@@ -920,7 +995,9 @@ function LobbyPlayerManager:_spawnPlayer(player, character)
 end
 
 function LobbyPlayerManager:RegisterPlayer(player)
+    print("[DEBUG-MGR-1] LobbyPlayerManager:RegisterPlayer CALLED for: " .. (player and player.Name or "nil"))
     if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        print("[DEBUG-MGR-2] LobbyPlayerManager:RegisterPlayer INVALID player")
         return false, "invalid_player"
     end
 
@@ -941,6 +1018,7 @@ function LobbyPlayerManager:RegisterPlayer(player)
     end
 
     if self._players[userId] then
+        print("[DEBUG-MGR-3] LobbyPlayerManager:RegisterPlayer already registered, skipping")
         return true
     end
 
@@ -954,10 +1032,13 @@ function LobbyPlayerManager:RegisterPlayer(player)
     end)
 
     if player.Character then
+        print("[DEBUG-MGR-4] LobbyPlayerManager:RegisterPlayer has character, calling _spawnPlayer now")
         self:_spawnPlayer(player, player.Character)
     else
+        print("[DEBUG-MGR-5] LobbyPlayerManager:RegisterPlayer NO character, requesting reload")
         self:_requestCharacterReload(player, "missing_character")
     end
+    print("[DEBUG-MGR-6] LobbyPlayerManager:RegisterPlayer COMPLETE for: " .. player.Name)
     return true
 end
 

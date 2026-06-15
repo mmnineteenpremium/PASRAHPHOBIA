@@ -58,18 +58,83 @@ local function warnContract(message)
 	warn(message)
 end
 
+local function ensureFallbackVignetteGui(playerGui)
+	if not playerGui then
+		return nil
+	end
+	local gui = playerGui:FindFirstChild("SensoryHorrorHUD")
+	if not (gui and gui:IsA("ScreenGui")) then
+		if gui then
+			gui:Destroy()
+		end
+		gui = Instance.new("ScreenGui")
+		gui.Name = "SensoryHorrorHUD"
+		gui.ResetOnSpawn = false
+		gui.IgnoreGuiInset = true
+		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		gui.DisplayOrder = 45
+		gui.Parent = playerGui
+	end
+
+	if hasConfiguredVignetteImage() then
+		local vignette = gui:FindFirstChild("Vignette")
+		if not (vignette and vignette:IsA("ImageLabel")) then
+			if vignette then
+				vignette:Destroy()
+			end
+			vignette = Instance.new("ImageLabel")
+			vignette.Name = "Vignette"
+			vignette.Size = UDim2.fromScale(1, 1)
+			vignette.BackgroundTransparency = 1
+			vignette.ScaleType = Enum.ScaleType.Stretch
+			vignette.ZIndex = 1
+			vignette.Parent = gui
+		end
+		vignette.Image = VIGNETTE_IMAGE
+		vignette.ImageColor3 = Color3.fromRGB(0, 0, 0)
+		vignette.ImageTransparency = 1
+	else
+		local vignette = gui:FindFirstChild("Vignette")
+		if not (vignette and vignette:IsA("CanvasGroup")) then
+			if vignette then
+				vignette:Destroy()
+			end
+			vignette = Instance.new("CanvasGroup")
+			vignette.Name = "Vignette"
+			vignette.Size = UDim2.fromScale(1, 1)
+			vignette.BackgroundColor3 = Color3.fromRGB(64, 0, 10)
+			vignette.BackgroundTransparency = 0.38
+			vignette.GroupTransparency = 1
+			vignette.ZIndex = 1
+			vignette.Parent = gui
+
+			local edge = Instance.new("Frame")
+			edge.Name = "EdgePulse"
+			edge.Size = UDim2.fromScale(1, 1)
+			edge.BackgroundColor3 = Color3.fromRGB(120, 12, 24)
+			edge.BackgroundTransparency = 0.5
+			edge.BorderSizePixel = 0
+			edge.Parent = vignette
+		end
+		vignette.GroupTransparency = 1
+	end
+
+	gui.Enabled = false
+	return gui
+end
+
 local function bindVignetteGui(playerGui)
 	local gui = playerGui and playerGui:FindFirstChild("SensoryHorrorHUD")
 	if not (gui and gui:IsA("ScreenGui")) then
 		warnContract("[HorrorHUD] Missing authored SensoryHorrorHUD ScreenGui; check StarterGui shell contract.")
-		return nil
+		return ensureFallbackVignetteGui(playerGui)
 	end
 
 	local vignette = gui:FindFirstChild("Vignette")
 	if hasConfiguredVignetteImage() then
 		if not (vignette and vignette:IsA("ImageLabel")) then
 			warnContract("[HorrorHUD] Authored SensoryHorrorHUD contract mismatch: Vignette ImageLabel required for image mode.")
-			return nil
+			return ensureFallbackVignetteGui(playerGui)
 		end
 		vignette.Image = VIGNETTE_IMAGE
 		vignette.ImageColor3 = Color3.fromRGB(0, 0, 0)
@@ -77,7 +142,7 @@ local function bindVignetteGui(playerGui)
 	else
 		if not (vignette and vignette:IsA("CanvasGroup")) then
 			warnContract("[HorrorHUD] Authored SensoryHorrorHUD contract mismatch: Vignette CanvasGroup required.")
-			return nil
+			return ensureFallbackVignetteGui(playerGui)
 		end
 		vignette.GroupTransparency = 1
 	end

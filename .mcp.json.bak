@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "task-manager": {
+      "url": "https://task-mcp-server.aayushpokharel9029.workers.dev/sse?apiKey=ldtmcp-kVrn81SJWzBag1LYI_NbbyFmd8_xdNXCifhESvhtzJw"
+    }
+  }
+}

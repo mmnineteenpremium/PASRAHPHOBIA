@@ -116,6 +116,34 @@ local function resolveGhostInventoryModelAssetId(ghostType)
 	return nil
 end
 
+local function collectGhostRigSignals(model)
+	local signals = {
+		animatable = false,
+		animationControllers = 0,
+		bones = 0,
+		skinnedMeshes = 0,
+	}
+	if typeof(model) ~= "Instance" then
+		return signals
+	end
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("AnimationController") then
+			signals.animationControllers += 1
+		elseif descendant:IsA("Bone") then
+			signals.bones += 1
+		elseif descendant:IsA("MeshPart") then
+			local ok, hasSkinnedMesh = pcall(function()
+				return descendant.HasSkinnedMesh
+			end)
+			if ok and hasSkinnedMesh == true then
+				signals.skinnedMeshes += 1
+			end
+		end
+	end
+	signals.animatable = signals.skinnedMeshes > 0 or (signals.bones > 0 and signals.animationControllers > 0)
+	return signals
+end
+
 local function resolveStudioGhostSessionState(ghostState, runtimeState)
 	local runtimeToken = type(runtimeState) == "string" and runtimeState or nil
 	local stateToken = type(ghostState) == "table" and tostring(ghostState.state or "") or nil
@@ -204,6 +232,7 @@ local function setStudioGhostPlayerSnapshot(players, matchId, match, ghostState)
 	end
 	local targetBounds = resolveGhostTargetBounds(ghostType)
 	local inventoryModelAssetId = resolveGhostInventoryModelAssetId(ghostType)
+	local ghostRigSignals = collectGhostRigSignals(ghostModel)
 
 	for _, player in ipairs(players) do
 		if typeof(player) == "Instance" and player:IsA("Player") then
@@ -224,6 +253,10 @@ local function setStudioGhostPlayerSnapshot(players, matchId, match, ghostState)
 			player:SetAttribute("PasrahGhostExtents", ghostExtents)
 			player:SetAttribute("PasrahGhostScale", ghostScale)
 			player:SetAttribute("PasrahGhostInventoryModelAssetId", inventoryModelAssetId)
+			player:SetAttribute("PasrahGhostTemplateAnimatable", ghostRigSignals.animatable)
+			player:SetAttribute("PasrahGhostAnimationControllerCount", ghostRigSignals.animationControllers)
+			player:SetAttribute("PasrahGhostBoneCount", ghostRigSignals.bones)
+			player:SetAttribute("PasrahGhostSkinnedMeshCount", ghostRigSignals.skinnedMeshes)
 		end
 	end
 end

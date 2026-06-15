@@ -164,7 +164,7 @@ local CUE_SOUND_ID_OVERRIDES = {
 local GHOST_TYPE_SOUND_ID_OVERRIDES = {
 	banaspati = { default = "rbxassetid://77042021520991" },
 	jerangkong = { default = "rbxassetid://107677780610227" },
-	kuntilanak = { default = "rbxassetid://118652624478186" },
+	kuntilanak = { default = "rbxassetid://118997816874431" },
 	leak = {
 		default = "rbxassetid://137119373988694",
 		hunt = "rbxassetid://94159664233351",

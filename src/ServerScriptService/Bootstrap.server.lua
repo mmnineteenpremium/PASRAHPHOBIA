@@ -53,7 +53,7 @@ local function ensureStudioE2EFallback(serverFolder)
 	local systemContainer = serverFolder:FindFirstChild("StudioE2EControlSystem")
 	local systemModule = systemContainer and systemContainer:FindFirstChild("Main")
 	if not (systemModule and systemModule:IsA("ModuleScript")) then
-s		warn("[Bootstrap] StudioE2E bootstrap fallback skipped: missing module")
+		warn("[Bootstrap] StudioE2E bootstrap fallback skipped: missing module")
 		return
 	end
 

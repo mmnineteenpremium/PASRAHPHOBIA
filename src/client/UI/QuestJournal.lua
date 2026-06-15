@@ -28,7 +28,7 @@ local TAB_COLORS = {
 local TAB_EMPTY_MESSAGES = {
 	STORY = "Story mission belum diaktifkan di runtime branch ini.",
 	DAILY = "Belum ada misi aktif hari ini.",
-	WEEKLY = "Weekly challenge belum diaktifkan di runtime branch ini.",
+	WEEKLY = "Belum ada weekly challenge aktif.",
 }
 local QUEST_BUTTON_TEXT_IMAGE_STATES = {
 	OpenButton = { idle = "74146227961542", hover = "95903306810711", active = "98565884123985" },
@@ -71,6 +71,10 @@ local function decodeQuestPayload(encoded)
 		return {
 			active = {},
 			completed = {},
+			weekly = {
+				active = {},
+				completed = {},
+			},
 		}
 	end
 
@@ -81,16 +85,48 @@ local function decodeQuestPayload(encoded)
 		return {
 			active = {},
 			completed = {},
+			weekly = {
+				active = {},
+				completed = {},
+			},
 		}
 	end
 
 	decoded.active = type(decoded.active) == "table" and decoded.active or {}
 	decoded.completed = type(decoded.completed) == "table" and decoded.completed or {}
+	decoded.weekly = type(decoded.weekly) == "table" and decoded.weekly or {
+		active = {},
+		completed = {},
+	}
+	decoded.weekly.active = type(decoded.weekly.active) == "table" and decoded.weekly.active or {}
+	decoded.weekly.completed = type(decoded.weekly.completed) == "table" and decoded.weekly.completed or {}
 	return decoded
 end
 
 local function nowMillis()
 	return DateTime.now().UnixTimestampMillis
+end
+
+local function formatDuration(seconds)
+	local total = math.max(0, math.floor(tonumber(seconds) or 0))
+	local days = math.floor(total / 86400)
+	local hours = math.floor((total % 86400) / 3600)
+	local minutes = math.floor((total % 3600) / 60)
+
+	local parts = {}
+	if days > 0 then
+		table.insert(parts, string.format("%d hari", days))
+	end
+	if hours > 0 and #parts < 2 then
+		table.insert(parts, string.format("%d jam", hours))
+	end
+	if minutes > 0 and #parts < 2 then
+		table.insert(parts, string.format("%d menit", minutes))
+	end
+	if #parts == 0 then
+		table.insert(parts, string.format("%d detik", total))
+	end
+	return table.concat(parts, " ")
 end
 
 local function clearContainer(container)
@@ -507,6 +543,8 @@ function QuestJournal:_createSectionLabel(text, color, order)
 		)
 		return nil
 	end
+	label.AutomaticSize = Enum.AutomaticSize.None
+	label.Size = UDim2.new(1, 0, 0, 18)
 	label.LayoutOrder = order or 0
 	label.Text = tostring(text)
 	label.TextColor3 = color
@@ -522,6 +560,8 @@ function QuestJournal:_createPlaceholder(text, order)
 		)
 		return nil
 	end
+	placeholder.AutomaticSize = Enum.AutomaticSize.None
+	placeholder.Size = UDim2.new(1, 0, 0, 42)
 	placeholder.LayoutOrder = order or 0
 	placeholder.Text = tostring(text)
 	return placeholder
@@ -538,6 +578,8 @@ function QuestJournal:_createMissionCard(mission, isCompleted, order)
 		)
 		return nil
 	end
+	card.AutomaticSize = Enum.AutomaticSize.None
+	card.Size = UDim2.new(1, 0, 0, isCompleted and 96 or 108)
 	card.LayoutOrder = order or 0
 
 	local stripe = getDirectChildOfClass(card, "Accent", "Frame")
@@ -595,15 +637,86 @@ function QuestJournal:_createMissionCard(mission, isCompleted, order)
 	return card
 end
 
+function QuestJournal:_renderMissionGroup(labelText, emptyText, missions, isCompleted, color, layoutOrder)
+	self:_createSectionLabel(labelText, color, layoutOrder)
+	layoutOrder += 1
+
+	if #missions == 0 then
+		self:_createPlaceholder(emptyText, layoutOrder)
+		layoutOrder += 1
+		return layoutOrder
+	end
+
+	for _, mission in ipairs(missions) do
+		self:_createMissionCard(mission, isCompleted, layoutOrder)
+		layoutOrder += 1
+	end
+
+	return layoutOrder
+end
+
 function QuestJournal:Render()
 	clearContainer(self._content)
 	local layoutOrder = 1
 
 	local updatedAt = tonumber(self.player:GetAttribute(QUEST_UPDATED_AT_ATTR))
+	local snapshot = self._data or {}
+	local weekly = snapshot.weekly or {}
 	if updatedAt then
 		self._subtitle.Text = ("Quest sync • %ds lalu"):format(math.max(0, math.floor((nowMillis() - updatedAt) / 1000)))
 	else
 		self._subtitle.Text = "Quest sync pending..."
+	end
+
+	if self._activeTab == "WEEKLY" then
+		local nextResetAt = tonumber(weekly.nextResetAt) or 0
+		local resetSeconds = tonumber(weekly.resetSeconds) or 604800
+		local nowSeconds = Workspace:GetServerTimeNow()
+		local remaining = nextResetAt > 0 and (nextResetAt - nowSeconds) or resetSeconds
+		self._subtitle.Text = string.format("Reset mingguan • %s lagi", formatDuration(remaining))
+
+		local activeWeekly = weekly.active or {}
+		local completedWeekly = weekly.completed or {}
+
+		layoutOrder = self:_renderMissionGroup(
+			"ACTIVE WEEKLY CHALLENGES",
+			TAB_EMPTY_MESSAGES.WEEKLY,
+			activeWeekly,
+			false,
+			Color3.fromRGB(255, 182, 92),
+			layoutOrder
+		)
+		layoutOrder = self:_renderMissionGroup(
+			"COMPLETED THIS CYCLE",
+			"Belum ada weekly challenge yang selesai.",
+			completedWeekly,
+			true,
+			Color3.fromRGB(255, 196, 94),
+			layoutOrder
+		)
+		return
+	end
+
+	if self._activeTab == "STORY" then
+		local storyData = snapshot.story or {}
+		layoutOrder = self:_renderMissionGroup(
+			"ACTIVE STORY MISSIONS",
+			TAB_EMPTY_MESSAGES.STORY,
+			storyData.active or {},
+			false,
+			Color3.fromRGB(190, 122, 255),
+			layoutOrder
+		)
+		layoutOrder = self:_renderMissionGroup(
+			"COMPLETED STORY",
+			"Belum ada story mission yang selesai.",
+			storyData.completed or {},
+			true,
+			Color3.fromRGB(190, 122, 255),
+			layoutOrder
+		)
+		self._subtitle.Text = "Story Mission"
+		return
 	end
 
 	if self._activeTab ~= "DAILY" then
@@ -614,28 +727,22 @@ function QuestJournal:Render()
 	local active = self._data.active or {}
 	local completed = self._data.completed or {}
 
-	self:_createSectionLabel("ACTIVE DAILY MISSIONS", Color3.fromRGB(116, 196, 255), layoutOrder)
-	layoutOrder += 1
-	if #active == 0 then
-		self:_createPlaceholder(TAB_EMPTY_MESSAGES.DAILY, layoutOrder)
-		layoutOrder += 1
-	else
-		for _, mission in ipairs(active) do
-			self:_createMissionCard(mission, false, layoutOrder)
-			layoutOrder += 1
-		end
-	end
-
-	self:_createSectionLabel("COMPLETED TODAY", Color3.fromRGB(255, 196, 94), layoutOrder)
-	layoutOrder += 1
-	if #completed == 0 then
-		self:_createPlaceholder("Belum ada misi yang selesai.", layoutOrder)
-	else
-		for _, mission in ipairs(completed) do
-			self:_createMissionCard(mission, true, layoutOrder)
-			layoutOrder += 1
-		end
-	end
+	layoutOrder = self:_renderMissionGroup(
+		"ACTIVE DAILY MISSIONS",
+		TAB_EMPTY_MESSAGES.DAILY,
+		active,
+		false,
+		Color3.fromRGB(116, 196, 255),
+		layoutOrder
+	)
+	self:_renderMissionGroup(
+		"COMPLETED TODAY",
+		"Belum ada misi yang selesai.",
+		completed,
+		true,
+		Color3.fromRGB(255, 196, 94),
+		layoutOrder
+	)
 end
 
 function QuestJournal:RefreshFromAttributes()

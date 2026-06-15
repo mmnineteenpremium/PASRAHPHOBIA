@@ -1,7 +1,7 @@
 =======================================================================
 PASRAHPHOBIA — AGENT_08: MONETIZATION_MANAGER
 ROLE: MONETIZATION PIPELINE — PASSES, DEV PRODUCTS, SUBSCRIPTIONS,
-      AVATAR ITEMS, COMMERCE, ADS, REVENUE ANALYTICS
+      IN-GAME COMMERCE, ADS, REVENUE ANALYTICS
 VERSION: 1.0
 GAME: PASRAHPHOBIA (Roblox Horror/Investigation)
 AUTHORITY: Mengelola semua jalur monetisasi game via Roblox Open Cloud API
@@ -10,9 +10,16 @@ AUTHORITY: Mengelola semua jalur monetisasi game via Roblox Open Cloud API
 
 ## WORKFLOW OVERRIDE (2026-05-22)
 
-- Icon pass/product/subscription/UGC promo memakai output AGENT_01/04 dari `scripts/generate_visual.py`, bukan IMAGEGEN lama.
+- Icon pass/product/subscription promo memakai output AGENT_01/04 dari `scripts/generate_visual.py`, bukan IMAGEGEN lama.
 - Jika monetization asset butuh 3D preview atau bundle visual, ikuti prioritas reference image -> Roblox Studio MCP -> Cube3D -> Tripo3D -> Blender.
 - Sebelum membuat atau mengubah produk live, cek Creator/Universe/Place target dan AssetId registry agar tidak tertukar branch/account.
+
+## REWARD SCOPE OVERRIDE (2026-05-27)
+
+- Semua Mission/RoyalPass/Reward Season 1 adalah in-game-only.
+- Jangan membuat, menjual, atau menjanjikan UGC Avatar Marketplace item, limited drop, Avatar Creation Token, resale, atau reward yang bisa dipakai lintas game.
+- Tidak ada credential request khusus UGC upload. Asset upload umum tetap harus lewat approval owner dan guard branch/Rojo.
+- Istilah `cosmetic`, `outfit`, `badge`, `title`, dan `emote` di dokumen ini berarti entitlement dalam PASRAHPHOBIA, bukan item Avatar Marketplace.
 
 ## STATUS AGENT_08 — 2026-05-24
 
@@ -43,8 +50,8 @@ atas seluruh revenue pipeline, dari harga hingga payout strategy.
 1. Game Passes (akses premium konten)
 2. Developer Products (pembelian berulang: MM, PP, Tiket)
 3. Subscriptions (bulanan — Royal Pass otomatis)
-4. Avatar Items (UGC / Avatar Creation Tokens)
-5. Roblox Commerce (Shops, item reselling)
+4. In-game cosmetic commerce (PASRAHPHOBIA-only cosmetics, titles, badges, emotes)
+5. Roblox Commerce surface untuk shop internal, tanpa item reselling lintas game
 6. Advertising (Sponsored, Portal Ads, Immersive Ads)
 7. Revenue analytics & pricing optimization
 
@@ -394,92 +401,62 @@ end
 ```
 
 =======================================================================
-## SECTION 4: AVATAR CREATION TOKENS (UGC)
+## SECTION 4: IN-GAME COSMETIC REWARDS ONLY
 =======================================================================
 
-### Strategi UGC PASRAHPHOBIA:
+### Keputusan Reward PASRAHPHOBIA:
 
-PASRAHPHOBIA akan membuat UGC Avatar Items yang bisa digunakan di luar game.
-Ini memberikan visibility dan revenue tambahan dari Avatar Marketplace.
+PASRAHPHOBIA tidak memakai UGC Avatar Marketplace untuk Mission/RoyalPass/Reward Season 1.
+Semua reward cosmetic, outfit, title, badge, dan emote hanya berlaku di dalam experience PASRAHPHOBIA.
+Keputusan ini menekan biaya upload UGC, menghindari kebutuhan credential tambahan, dan menghapus janji reward lintas game.
 
-**Item UGC yang direncanakan Season 1:**
+**Item in-game Season 1:**
 
-| ugc_id                    | Tipe          | Estimasi Harga | Strategi              |
-|---------------------------|---------------|---------------|-----------------------|
-| ugc_hat_pocong_hood       | Hat           | 75-150 R$     | Sold in Marketplace   |
-| ugc_acc_jimat_necklace    | Necklace      | 50-100 R$     | Bundle dengan pass    |
-| ugc_face_ghost_eyes       | Face          | 50-75 R$      | Limited / seasonal    |
-| ugc_back_spirit_wings     | Back          | 150-300 R$    | Premium limited drop  |
+| reward_id                           | Tipe in-game | Strategi                         |
+|-------------------------------------|--------------|----------------------------------|
+| royal_free_tier_* / royal_premium_* | Cosmetic     | Royal Pass tier claim only       |
+| outfit_sang_ahli_season_exclusive   | Outfit       | Premium tier 60 in-game cosmetic |
+| title_legenda_pasrahphobia          | Title        | Free tier 60 in-game title       |
+| badge_season_complete_*             | Badge        | Season completion badge in-game  |
+| emote_pasrah_ascend                 | Emote        | Premium tier 60 in-game emote    |
 
-### Proses Pembuatan UGC Item:
+### Proses Pembuatan In-Game Cosmetic:
 ```
-1. AGENT_02 (3DMODEL_AGENT) buat model sesuai Roblox Avatar Item specs:
-   - Hat: Mesh + Attachment sesuai spec UGC
-   - Maximum vertices: 4,000 (lebih ketat dari in-game accessories)
-   - Harus fit semua body type (default, boy, girl, dll)
-
-2. Upload ke Roblox Creator Hub → Avatar Items
-   URL: https://create.roblox.com/dashboard/creations/avatar-items
-
-3. Proses moderation Roblox (1-3 hari kerja)
-
-4. Setelah approved, set harga dan publish
-
-5. Untuk Avatar Creation Token (ACT) flow:
-   - Player mendapat ACT in-game dari milestone/gacha
-   - ACT ditukar dengan limited UGC item via game menu
-   - Server call ke Roblox API untuk grant item ke player
-
-6. AGENT_08 monitor sales via Creator Dashboard Analytics
+1. AGENT_02/04/03 membuat model/UI/emote sesuai kebutuhan reward.
+2. AGENT_06 mengintegrasikan asset ke Roblox Studio/Rojo sebagai asset internal experience.
+3. Server grant dilakukan melalui Inventory/Cosmetic/RoyalPass service internal.
+4. UI menampilkan status owned/equipped sebagai inventory PASRAHPHOBIA.
+5. Tidak ada Avatar Marketplace publish, resale, limited drop, atau server call untuk grant UGC.
 ```
 
-### Avatar Creation Token (ACT) In-Game Integration:
+### In-Game Cosmetic Grant Integration:
 ```lua
--- src/ServerScriptService/Server/UGCService/Service.lua
+-- src/ServerScriptService/Server/CosmeticRewardService/Service.lua
 
-local UGCService = {}
+local CosmeticRewardService = {}
 
--- Daftar UGC item yang bisa di-redeem dengan ACT
-UGCService.ACT_CATALOG = {
-    ["ugc_hat_pocong_hood"] = {
-        assetId        = [ASSET_ID_DARI_MARKETPLACE],  -- dari AGENT_09
-        actCost        = 1,
-        displayName    = "Pocong Hood",
-        rarity         = "Rare",
-        availableUntil = "2026-08-01",  -- season end
-    },
-    ["ugc_back_spirit_wings"] = {
-        assetId        = [ASSET_ID_DARI_MARKETPLACE],
-        actCost        = 3,
-        displayName    = "Spirit Wings",
+-- Daftar reward cosmetic internal PASRAHPHOBIA, bukan Avatar Marketplace.
+CosmeticRewardService.REWARD_CATALOG = {
+    ["outfit_sang_ahli_season_exclusive"] = {
+        displayName    = "Sang Ahli Season Exclusive",
         rarity         = "Legendary",
+        source         = "RoyalPassPremiumTier60",
         availableUntil = "2026-08-01",
     },
 }
 
-function UGCService:RedeemACT(player, ugcId)
-    local item = self.ACT_CATALOG[ugcId]
+function CosmeticRewardService:GrantReward(player, rewardId)
+    local item = self.REWARD_CATALOG[rewardId]
     if not item then
         return false, "Item tidak ditemukan"
     end
 
-    -- Cek ACT balance
-    local playerACT = InventoryService:GetACTBalance(player)
-    if playerACT < item.actCost then
-        return false, "ACT tidak cukup"
-    end
-
-    -- Deduct ACT
-    InventoryService:DeductACT(player, item.actCost)
-
-    -- Grant UGC item ke player (via Roblox Avatar API jika didukung)
-    -- Saat ini: grant sebagai in-game cosmetic, bukan marketplace item
-    InventoryService:GrantCosmetic(player, ugcId)
+    InventoryService:GrantCosmetic(player, rewardId)
 
     return true, "Berhasil redeem " .. item.displayName
 end
 
-return UGCService
+return CosmeticRewardService
 ```
 
 =======================================================================
@@ -500,8 +477,8 @@ PASRAHPHOBIA SHOP
 │   ├── Royal Pass Premium (Game Pass)
 │   ├── Royal Pass Premium+ (Game Pass)
 │   └── VIP Investigator (Game Pass)
-└── UGC Showcase
-    └── [Link ke Avatar Marketplace items PASRAHPHOBIA]
+└── Cosmetic Preview
+    └── [Preview in-game reward PASRAHPHOBIA only]
 ```
 
 ### Shop UI Config (untuk AGENT_04 & AGENT_06):
@@ -696,8 +673,10 @@ DEVELOPER PRODUCTS:
 SUBSCRIPTIONS:
   sub_investigator_club   → subscriptionId: [ID]
 
-UGC ITEMS:
-  ugc_hat_pocong_hood     → assetId: [ID]
+IN-GAME COSMETIC REWARDS:
+  outfit_sang_ahli_season_exclusive → internal rewardId only
+  title_legenda_pasrahphobia        → internal rewardId only
+  badge_season_complete_*           → internal rewardId only
 
 → Semua ID sudah dicatat ke AGENT_09 (ASSET_ID_MANAGER)
 → MonetizationConfig.lua sudah diupdate

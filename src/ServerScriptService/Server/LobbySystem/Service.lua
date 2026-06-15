@@ -629,7 +629,7 @@ function Service:SetReady(player, isReady)
 
 	end
 
-	local ok, allReady = self._roomManager:SetReady(player, isReady)
+	local ok, allReady, effectiveReady = self._roomManager:SetReady(player, isReady)
 
 	if not ok then
 
@@ -647,7 +647,7 @@ function Service:SetReady(player, isReady)
 
 			player = player,
 
-			isReady = isReady,
+			isReady = effectiveReady == nil and isReady or effectiveReady,
 
 			allReady = allReady or false,
 

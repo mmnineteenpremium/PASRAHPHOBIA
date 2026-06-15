@@ -3,6 +3,7 @@ RoomManager.__index = RoomManager
 
 local ROOM_COUNT = 10
 local MAX_PLAYERS = 4
+local READY_CANCEL_GUARD_SECONDS = 0.75
 
 function RoomManager.new()
 	local self = setmetatable({}, RoomManager)
@@ -16,6 +17,7 @@ function RoomManager.new()
 			status = "waiting",
 			host = nil,
 			readyPlayers = {},
+			readyChangedAt = {},
 			inGame = false,
 			starting = false,
 			password = nil,
@@ -74,6 +76,7 @@ function RoomManager:JoinRoom(player, roomId, password)
 	else
 		room.readyPlayers[player] = nil
 	end
+	room.readyChangedAt[player] = os.clock()
 
 	return true
 end
@@ -84,6 +87,7 @@ function RoomManager:LeaveRoom(player)
 			if member == player then
 				table.remove(room.players, index)
 				room.readyPlayers[player] = nil
+				room.readyChangedAt[player] = nil
 
 				if room.host == player then
 					room.host = room.players[1] or nil
@@ -98,6 +102,7 @@ function RoomManager:LeaveRoom(player)
 					room.inGame = false
 					room.starting = false
 					room.readyPlayers = {}
+					room.readyChangedAt = {}
 					room.host = nil
 				end
 
@@ -118,10 +123,30 @@ function RoomManager:SetReady(player, isReady)
 		return false, "room_in_game"
 	end
 
+	local desiredReady = isReady == true
+	local effectiveReady = desiredReady
 	if room.host == player then
 		room.readyPlayers[player] = true
+		effectiveReady = true
 	else
-		room.readyPlayers[player] = isReady and true or nil
+		room.readyChangedAt = room.readyChangedAt or {}
+		local now = os.clock()
+		local currentReady = room.readyPlayers[player] == true
+		local lastChangedAt = room.readyChangedAt[player] or 0
+		if currentReady and not desiredReady and (now - lastChangedAt) < READY_CANCEL_GUARD_SECONDS then
+			effectiveReady = true
+		else
+			if desiredReady then
+				room.readyPlayers[player] = true
+				effectiveReady = true
+			else
+				room.readyPlayers[player] = nil
+				effectiveReady = false
+			end
+			if currentReady ~= effectiveReady then
+				room.readyChangedAt[player] = now
+			end
+		end
 	end
 
 	local allReady = #room.players > 0
@@ -133,7 +158,7 @@ function RoomManager:SetReady(player, isReady)
 	end
 
 	room.status = allReady and "all_ready" or "waiting"
-	return true, allReady
+	return true, allReady, effectiveReady
 end
 
 function RoomManager:IsAllReady(roomId)
@@ -167,6 +192,7 @@ function RoomManager:KickPlayer(host, targetPlayer)
 		if member == targetPlayer then
 			table.remove(room.players, index)
 			room.readyPlayers[targetPlayer] = nil
+			room.readyChangedAt[targetPlayer] = nil
 			return true
 		end
 	end
@@ -202,6 +228,7 @@ function RoomManager:SetInGame(roomId, value, preserveReady)
 		room.status = "waiting"
 		if not preserveReady then
 			room.readyPlayers = {}
+			room.readyChangedAt = {}
 		end
 	end
 

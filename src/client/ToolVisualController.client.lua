@@ -38,6 +38,7 @@ local FPV_ARMS_MODEL_NAME = "FPV_Arms"
 local FPV_VIEW_ROOT_NAME = "FPV_ViewRoot"
 local HELD_TOOL_MODEL_NAME = "FPV_HeldTool"
 local HELD_FLASHLIGHT_MODEL_NAME = "FPV_FlashlightTool"
+local REMOTE_HELD_TOOL_MODEL_NAME = "PasrahRemoteHeldTool"
 local FLASHLIGHT_AIM_HOST_NAME = "FPV_FlashlightAimHost"
 local EMF_SCREEN_HOST_NAME = "FPV_EMFScreenHost"
 local THERMO_SCREEN_HOST_NAME = "FPV_ThermoScreenHost"
@@ -100,7 +101,7 @@ local TOOL_USE_VFX_STYLE = {
 
 local USE_VFX_STYLES = {
 	Default = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 22,
 		acceleration = Vector3.new(0, 2.2, 0),
 		drag = 2.1,
@@ -111,7 +112,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 5.2,
 	},
 	EMF = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 18,
 		acceleration = Vector3.new(0, 0.8, 0),
 		drag = 1.6,
@@ -122,7 +123,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 5.8,
 	},
 	Frost = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 30,
 		acceleration = Vector3.new(0, -1.2, 0),
 		drag = 2.8,
@@ -133,7 +134,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 4.6,
 	},
 	Echo = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 16,
 		acceleration = Vector3.new(0, 0.3, 0),
 		drag = 1.3,
@@ -144,7 +145,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 5.1,
 	},
 	Arcane = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 26,
 		acceleration = Vector3.new(0, 1.8, 0),
 		drag = 1.8,
@@ -155,7 +156,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 5.6,
 	},
 	Scan = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 12,
 		acceleration = Vector3.new(0, 0, 0),
 		drag = 0.8,
@@ -166,7 +167,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 6,
 	},
 	Static = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 24,
 		acceleration = Vector3.new(0, 1.1, 0),
 		drag = 1.4,
@@ -177,7 +178,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 5.2,
 	},
 	Salt = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 34,
 		acceleration = Vector3.new(0, -1.6, 0),
 		drag = 3.2,
@@ -188,7 +189,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 4.2,
 	},
 	Calm = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 20,
 		acceleration = Vector3.new(0, 1.2, 0),
 		drag = 1.9,
@@ -199,7 +200,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 4.5,
 	},
 	Holy = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 28,
 		acceleration = Vector3.new(0, 2.8, 0),
 		drag = 2.4,
@@ -210,7 +211,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 6.4,
 	},
 	Smoke = {
-		texture = "rbxasset://textures/particles/smoke_main.dds",
+		texture = "rbxassetid://241685934",
 		spread = 24,
 		acceleration = Vector3.new(0, 2.6, 0),
 		drag = 0.85,
@@ -221,7 +222,7 @@ local USE_VFX_STYLES = {
 		pulseRange = 3.8,
 	},
 	Light = {
-		texture = "rbxasset://textures/particles/sparkles_main.dds",
+		texture = "rbxassetid://6489023589",
 		spread = 12,
 		acceleration = Vector3.new(0, 0.4, 0),
 		drag = 1.2,
@@ -1351,6 +1352,7 @@ state = {
 	thermoLastDisplayC = 18,
 	fpvBaseLocalCFrames = setmetatable({}, { __mode = "k" }),
 	fpvBaseTransparency = setmetatable({}, { __mode = "k" }),
+	remoteTools = {},
 }
 
 local function clearMountedTool()
@@ -3057,7 +3059,7 @@ local function emitUseBurst(worldCFrame, mounted, succeeded, eventName)
 		end
 		if plume then
 			plume.Name = "UseSmokePlume"
-			plume.Texture = "rbxasset://textures/particles/smoke_main.dds"
+			plume.Texture = "rbxassetid://241685934"
 			plume.Rate = 0
 			plume.SpreadAngle = Vector2.new(16, 16)
 			plume.Speed = NumberRange.new(math.max(0.45, vfx.speed * 0.32), math.max(0.8, vfx.speed * 0.58))
@@ -3087,7 +3089,7 @@ local function emitUseBurst(worldCFrame, mounted, succeeded, eventName)
 		end
 		if halo then
 			halo.Name = "UseHolyHalo"
-			halo.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			halo.Texture = "rbxassetid://6489023589"
 			halo.Rate = 0
 			halo.SpreadAngle = Vector2.new(42, 42)
 			halo.Speed = NumberRange.new(math.max(0.6, vfx.speed * 0.42), math.max(0.9, vfx.speed * 0.78))
@@ -3115,7 +3117,7 @@ local function emitUseBurst(worldCFrame, mounted, succeeded, eventName)
 		end
 		if scanEmitter then
 			scanEmitter.Name = "UseScanPulse"
-			scanEmitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			scanEmitter.Texture = "rbxassetid://6489023589"
 			scanEmitter.Rate = 0
 			scanEmitter.SpreadAngle = Vector2.new(8, 8)
 			scanEmitter.Speed = NumberRange.new(math.max(0.7, vfx.speed * 0.65), math.max(1.2, vfx.speed * 1.05))
@@ -3162,6 +3164,157 @@ local function emitUseBurst(worldCFrame, mounted, succeeded, eventName)
 	player:SetAttribute("PasrahToolUseVfxStyle", style.token)
 	player:SetAttribute("PasrahToolUseVfxSuccess", succeeded ~= false)
 	player:SetAttribute("PasrahToolUseEvent", (type(eventName) == "string" and eventName ~= "") and eventName or nil)
+end
+
+local function resolveRemoteHandPart(character)
+	if not character then
+		return nil
+	end
+	for _, name in ipairs({ "RightHand", "Right Arm", "RightLowerArm", "HumanoidRootPart" }) do
+		local part = character:FindFirstChild(name)
+		if part and part:IsA("BasePart") then
+			return part
+		end
+	end
+	return character:FindFirstChildWhichIsA("BasePart")
+end
+
+local function resolveRemotePlayerActiveTool(remotePlayer)
+	if remotePlayer == player then
+		return nil
+	end
+	if typeof(remotePlayer) ~= "Instance" or not remotePlayer:IsA("Player") then
+		return nil
+	end
+	local inMatch = remotePlayer:GetAttribute("InMatch") == true or tostring(remotePlayer:GetAttribute("MatchId") or "") ~= ""
+	if not inMatch then
+		return nil
+	end
+	local toolType = remotePlayer:GetAttribute(EQUIPPED_TOOL_ATTRIBUTE)
+	if type(toolType) ~= "string" or toolType == "" then
+		toolType = remotePlayer:GetAttribute(PREPARATION_TOOL_ATTRIBUTE)
+	end
+	if type(toolType) ~= "string" or toolType == "" or toolType == "Flashlight" then
+		return nil
+	end
+	return toolType
+end
+
+local function clearRemoteTool(remotePlayer)
+	local record = state.remoteTools[remotePlayer]
+	if not record then
+		return
+	end
+	if record.model and record.model.Parent then
+		record.model:Destroy()
+	end
+	if type(record.connections) == "table" then
+		for _, connection in ipairs(record.connections) do
+			connection:Disconnect()
+		end
+	end
+	state.remoteTools[remotePlayer] = nil
+end
+
+local function ensureRemoteTool(remotePlayer, toolType)
+	local character = remotePlayer and remotePlayer.Character
+	local handPart = resolveRemoteHandPart(character)
+	if not (character and handPart) then
+		local record = state.remoteTools[remotePlayer]
+		if record and record.model and record.model.Parent then
+			record.model:Destroy()
+			record.model = nil
+		end
+		return nil
+	end
+
+	local record = state.remoteTools[remotePlayer]
+	if record and record.toolType == toolType and record.model and record.model.Parent == character then
+		record.handPart = handPart
+		return record
+	end
+	if record and record.model and record.model.Parent then
+		record.model:Destroy()
+	end
+
+	local profile = applyUsageRuleToProfile(toolType, resolveToolProfile(toolType))
+	local model = cloneToolModel(toolType, profile.targetBounds)
+	if not model then
+		return nil
+	end
+	applyInventoryMeshAssetId(model, profile.inventoryModelAssetId)
+	if profile.targetBounds then
+		clampModelBounds(model, profile.targetBounds)
+	end
+	ensurePrimaryPart(model)
+	model.Name = REMOTE_HELD_TOOL_MODEL_NAME
+	model:SetAttribute("PasrahRemoteHeldToolType", toolType)
+	model:SetAttribute("PasrahRemoteHeldToolOwnerUserId", remotePlayer.UserId)
+	model.Parent = character
+
+	record = record or {
+		connections = {},
+	}
+	record.toolType = toolType
+	record.model = model
+	record.profile = profile
+	record.handPart = handPart
+	state.remoteTools[remotePlayer] = record
+	return record
+end
+
+local function updateRemotePlayerTool(remotePlayer)
+	local toolType = resolveRemotePlayerActiveTool(remotePlayer)
+	if not toolType then
+		local record = state.remoteTools[remotePlayer]
+		if record then
+			if record.model and record.model.Parent then
+				record.model:Destroy()
+			end
+			record.model = nil
+			record.toolType = nil
+		end
+		return
+	end
+	local record = ensureRemoteTool(remotePlayer, toolType)
+	if not (record and record.model and record.handPart) then
+		return
+	end
+	local mountOffset = CFrame.new(0, -0.54, -0.22) * CFrame.Angles(math.rad(-84), 0, math.rad(8))
+	record.model:PivotTo(record.handPart.CFrame * mountOffset)
+end
+
+local function updateAllRemoteTools()
+	for _, remotePlayer in ipairs(Players:GetPlayers()) do
+		if remotePlayer ~= player then
+			updateRemotePlayerTool(remotePlayer)
+		end
+	end
+end
+
+local function bindRemotePlayerTool(remotePlayer)
+	if remotePlayer == player or state.remoteTools[remotePlayer] then
+		return
+	end
+	state.remoteTools[remotePlayer] = {
+		connections = {},
+	}
+	local record = state.remoteTools[remotePlayer]
+	local function markDirty()
+		record.dirty = true
+	end
+	table.insert(record.connections, remotePlayer:GetAttributeChangedSignal(EQUIPPED_TOOL_ATTRIBUTE):Connect(markDirty))
+	table.insert(record.connections, remotePlayer:GetAttributeChangedSignal(PREPARATION_TOOL_ATTRIBUTE):Connect(markDirty))
+	table.insert(record.connections, remotePlayer:GetAttributeChangedSignal("InMatch"):Connect(markDirty))
+	table.insert(record.connections, remotePlayer:GetAttributeChangedSignal("MatchId"):Connect(markDirty))
+	table.insert(record.connections, remotePlayer.CharacterAdded:Connect(function()
+		if record.model and record.model.Parent then
+			record.model:Destroy()
+		end
+		record.model = nil
+		record.dirty = true
+	end))
+	record.dirty = true
 end
 
 local function updateMountedTool(deltaTime)
@@ -3333,8 +3486,15 @@ player.CharacterAdded:Connect(function()
 	state.dirty = true
 end)
 
+for _, remotePlayer in ipairs(Players:GetPlayers()) do
+	bindRemotePlayerTool(remotePlayer)
+end
+Players.PlayerAdded:Connect(bindRemotePlayerTool)
+Players.PlayerRemoving:Connect(clearRemoteTool)
+
 RunService.RenderStepped:Connect(function(deltaTime)
 	updateMountedTool(deltaTime)
+	updateAllRemoteTools()
 	if state.dirty then
 		state.dirty = false
 	end

@@ -96,10 +96,13 @@ function DailyEngagementSystem:Init()
 end
 
 function DailyEngagementSystem:Start()
+	print(">>> DailyEngagementSystem:Start() CALLED BY REGISTRY <<<")
 	if type(self.Controller.Start) == "function" then
+		print(">>> DailyEngagementSystem calling Controller:Start() now <<<")
 		self.Controller:Start()
 	end
 	self.Service:Start()
+	print(">>> DailyEngagementSystem:Start() COMPLETE <<<")
 end
 
 function DailyEngagementSystem:Stop()
@@ -147,6 +150,14 @@ end
 
 function DailyEngagementSystem:PullGacha(...)
 	return self.Service:PullGacha(...)
+end
+
+function DailyEngagementSystem:RefreshQuestRuntime(player)
+	return self.Service:RefreshQuestRuntime(player)
+end
+
+function DailyEngagementSystem:RefreshAllQuestRuntime()
+	return self.Service:RefreshAllQuestRuntime()
 end
 
 return DailyEngagementSystem

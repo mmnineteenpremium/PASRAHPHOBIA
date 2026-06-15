@@ -1,0 +1,211 @@
+[
+  {
+    "source": "royal_free_tier_10 .fbx",
+    "fbx": "royal_free_tier_10 .fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "UI/static model optional",
+    "rig_created": null,
+    "animation_task": "no",
+    "vfx_task": "Optional UI shimmer"
+  },
+  {
+    "source": "royal_free_tier_15.fbx",
+    "fbx": "royal_free_tier_15.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static mesh",
+    "rig_created": null,
+    "animation_task": "no",
+    "vfx_task": "Optional"
+  },
+  {
+    "source": "royal_free_tier_20.fbx",
+    "fbx": "royal_free_tier_20.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no model",
+    "rig_type": "R15 untuk emote animation",
+    "rig_created": null,
+    "animation_task": "Ya",
+    "vfx_task": "Optional"
+  },
+  {
+    "source": "royal_free_tier_25.fbx",
+    "fbx": "royal_free_tier_25.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static accessory/mesh",
+    "rig_created": null,
+    "animation_task": "no",
+    "vfx_task": "Optional"
+  },
+  {
+    "source": "royal_free_tier_30.fbx",
+    "fbx": "royal_free_tier_30.fbx",
+    "triangles_before": 2,
+    "triangles_after": 2,
+    "rig_task": "no",
+    "rig_type": "UI only/static",
+    "rig_created": null,
+    "animation_task": "no",
+    "vfx_task": "UI VFX optional"
+  },
+  {
+    "source": "royal_free_tier_35.fbx",
+    "fbx": "royal_free_tier_35.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static mesh/UI",
+    "rig_created": null,
+    "animation_task": "no",
+    "vfx_task": "Optional"
+  },
+  {
+    "source": "royal_free_tier_40.fbx",
+    "fbx": "royal_free_tier_40.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static tool mesh",
+    "rig_created": null,
+    "animation_task": "Optional use animation via tool",
+    "vfx_task": "Ya"
+  },
+  {
+    "source": "royal_free_tier_45.fbx",
+    "fbx": "royal_free_tier_45.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static mesh",
+    "rig_created": null,
+    "animation_task": "no",
+    "vfx_task": "Optional"
+  },
+  {
+    "source": "royal_free_tier_5.fbx",
+    "fbx": "royal_free_tier_5.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static accessory/mesh",
+    "rig_created": null,
+    "animation_task": "no",
+    "vfx_task": "Optional glow kecil"
+  },
+  {
+    "source": "royal_free_tier_50.fbx",
+    "fbx": "royal_free_tier_50.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static accessory/mesh",
+    "rig_created": null,
+    "animation_task": "Optional inspect",
+    "vfx_task": "Ya"
+  },
+  {
+    "source": "royal_free_tier_55.fbx",
+    "fbx": "royal_free_tier_55.fbx",
+    "triangles_before": 4415,
+    "triangles_after": 4415,
+    "rig_task": "no",
+    "rig_type": "Static mesh/UI",
+    "rig_created": null,
+    "animation_task": "no",
+    "vfx_task": "Optional"
+  },
+  {
+    "source": "royal_premium_tier_10.fbx",
+    "fbx": "royal_premium_tier_10.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static mesh",
+    "rig_created": null,
+    "animation_task": "Optional idle spin",
+    "vfx_task": "Ya"
+  },
+  {
+    "source": "royal_premium_tier_15.fbx",
+    "fbx": "royal_premium_tier_15.fbx",
+    "triangles_before": 8827,
+    "triangles_after": 4416,
+    "rig_task": "yes",
+    "rig_type": "Custom armature bones",
+    "rig_created": null,
+    "animation_task": "Ya, idle/follow/float",
+    "vfx_task": "Ya"
+  },
+  {
+    "source": "royal_premium_tier_20.fbx",
+    "fbx": "royal_premium_tier_20.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static mesh",
+    "rig_created": null,
+    "animation_task": "Optional glow pulse",
+    "vfx_task": "Ya"
+  },
+  {
+    "source": "royal_premium_tier_25.fbx",
+    "fbx": "royal_premium_tier_25.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static mesh",
+    "rig_created": null,
+    "animation_task": "Optional flame flicker",
+    "vfx_task": "Ya"
+  },
+  {
+    "source": "royal_premium_tier_35.fbx",
+    "fbx": "royal_premium_tier_35.fbx",
+    "triangles_before": 8818,
+    "triangles_after": 4416,
+    "rig_task": "yes",
+    "rig_type": "Custom armature bones",
+    "rig_created": null,
+    "animation_task": "Ya, idle/follow/hover",
+    "vfx_task": "Ya"
+  },
+  {
+    "source": "royal_premium_tier_45.fbx",
+    "fbx": "royal_premium_tier_45.fbx",
+    "triangles_before": 8827,
+    "triangles_after": 4416,
+    "rig_task": "yes",
+    "rig_type": "Custom armature bones",
+    "rig_created": null,
+    "animation_task": "Ya, idle/follow/hover",
+    "vfx_task": "Ya"
+  },
+  {
+    "source": "royal_premium_tier_5.fbx",
+    "fbx": "royal_premium_tier_5.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static accessory/mesh",
+    "rig_created": null,
+    "animation_task": "no",
+    "vfx_task": "Ya, aura crown"
+  },
+  {
+    "source": "royal_premium_tier_55.fbx",
+    "fbx": "royal_premium_tier_55.fbx",
+    "triangles_before": 4416,
+    "triangles_after": 4416,
+    "rig_task": "no",
+    "rig_type": "Static accessory/mesh",
+    "rig_created": null,
+    "animation_task": "Optional hover/spin",
+    "vfx_task": "Ya"
+  }
+]

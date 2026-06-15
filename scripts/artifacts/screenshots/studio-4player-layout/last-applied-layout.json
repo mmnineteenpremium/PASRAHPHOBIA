@@ -1,0 +1,155 @@
+{
+    "AppliedAt":  "2026-05-28T16:05:48.7623056+07:00",
+    "Layout":  "PrimarySix",
+    "EffectiveLayout":  "PrimarySix",
+    "DryRun":  false,
+    "Slots":  [
+                  {
+                      "Name":  "Main",
+                      "X":  0,
+                      "Y":  0,
+                      "Width":  1146,
+                      "Height":  720
+                  },
+                  {
+                      "Name":  "Server",
+                      "X":  0,
+                      "Y":  720,
+                      "Width":  1146,
+                      "Height":  720
+                  },
+                  {
+                      "Name":  "Client1",
+                      "X":  1146,
+                      "Y":  0,
+                      "Width":  1146,
+                      "Height":  720
+                  },
+                  {
+                      "Name":  "Client2",
+                      "X":  1146,
+                      "Y":  720,
+                      "Width":  1146,
+                      "Height":  720
+                  },
+                  {
+                      "Name":  "Client3",
+                      "X":  2292,
+                      "Y":  0,
+                      "Width":  1148,
+                      "Height":  720
+                  },
+                  {
+                      "Name":  "Client4",
+                      "X":  2292,
+                      "Y":  720,
+                      "Width":  1148,
+                      "Height":  720
+                  }
+              ],
+    "Main":  {
+                 "Pid":  28744,
+                 "ProcessName":  "RobloxStudioBeta",
+                 "Title":  "C:\\Projects\\ROBLOX\\PASRAHPHOBIA\\.codex\\worktrees\\brian-second-final\\PASRAHPHOBIA.rbxlx - Roblox Studio",
+                 "Handle":  4589948,
+                 "Left":  0,
+                 "Top":  0,
+                 "Width":  1146,
+                 "Height":  720
+             },
+    "Server":  {
+                   "Pid":  29380,
+                   "ProcessName":  "RobloxStudioBeta",
+                   "Title":  "Server - Roblox Studio",
+                   "Handle":  5114622,
+                   "Left":  0,
+                   "Top":  720,
+                   "Width":  1146,
+                   "Height":  720
+               },
+    "Clients":  [
+                    {
+                        "Pid":  15972,
+                        "ProcessName":  "RobloxStudioBeta",
+                        "Title":  "Place1 - Roblox Studio",
+                        "Handle":  1968924,
+                        "Left":  1146,
+                        "Top":  0,
+                        "Width":  1146,
+                        "Height":  720
+                    },
+                    {
+                        "Pid":  23484,
+                        "ProcessName":  "RobloxStudioBeta",
+                        "Title":  "Place1 - Roblox Studio",
+                        "Handle":  4525000,
+                        "Left":  1146,
+                        "Top":  720,
+                        "Width":  1146,
+                        "Height":  720
+                    },
+                    {
+                        "Pid":  26244,
+                        "ProcessName":  "RobloxStudioBeta",
+                        "Title":  "Place1 - Roblox Studio",
+                        "Handle":  593386,
+                        "Left":  2292,
+                        "Top":  0,
+                        "Width":  1148,
+                        "Height":  720
+                    },
+                    {
+                        "Pid":  28292,
+                        "ProcessName":  "RobloxStudioBeta",
+                        "Title":  "Place1 - Roblox Studio",
+                        "Handle":  4197748,
+                        "Left":  2292,
+                        "Top":  720,
+                        "Width":  1148,
+                        "Height":  720
+                    }
+                ],
+    "Viewports":  [
+                      {
+                          "Pid":  26244,
+                          "ProcessName":  "RobloxStudioBeta",
+                          "Title":  "RobloxStudio",
+                          "Handle":  528468,
+                          "Left":  3440,
+                          "Top":  116,
+                          "Width":  960,
+                          "Height":  540
+                      },
+                      {
+                          "Pid":  15972,
+                          "ProcessName":  "RobloxStudioBeta",
+                          "Title":  "RobloxStudio",
+                          "Handle":  1314422,
+                          "Left":  4400,
+                          "Top":  116,
+                          "Width":  960,
+                          "Height":  540
+                      },
+                      {
+                          "Pid":  23484,
+                          "ProcessName":  "RobloxStudioBeta",
+                          "Title":  "RobloxStudio",
+                          "Handle":  1181516,
+                          "Left":  3440,
+                          "Top":  656,
+                          "Width":  960,
+                          "Height":  540
+                      },
+                      {
+                          "Pid":  28292,
+                          "ProcessName":  "RobloxStudioBeta",
+                          "Title":  "RobloxStudio",
+                          "Handle":  6556886,
+                          "Left":  4400,
+                          "Top":  656,
+                          "Width":  960,
+                          "Height":  540
+                      }
+                  ],
+    "Code":  null
+}

@@ -52,6 +52,7 @@ function Controller:RegisterEventHandlers()
 
     if self._playersService then
         table.insert(self._connections, self._playersService.PlayerAdded:Connect(function(player)
+            print("[DEBUG-HUB-1] LobbySocialHub PlayerAdded fired for: " .. player.Name)
             self:OnPlayerAdded({
                 player = player,
             })
@@ -64,6 +65,7 @@ function Controller:RegisterEventHandlers()
         end))
 
         for _, player in ipairs(self._playersService:GetPlayers()) do
+            print("[DEBUG-HUB-2] LobbySocialHub pre-seed OnPlayerAdded for: " .. player.Name)
             self:OnPlayerAdded({
                 player = player,
             })
@@ -100,8 +102,10 @@ end
 function Controller:OnPlayerAdded(payload)
     local player = payload and payload.player
     if not player then
+        print("[DEBUG-HUB-3] LobbySocialHub OnPlayerAdded: no player in payload")
         return
     end
+    print("[DEBUG-HUB-3] LobbySocialHub OnPlayerAdded calling service:RegisterPlayer for: " .. player.Name)
     self._service:RegisterPlayer(player)
 end
 

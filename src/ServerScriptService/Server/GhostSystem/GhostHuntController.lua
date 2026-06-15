@@ -38,19 +38,15 @@ function GhostHuntController:CanStartHunt(session, snapshot, now, aggressionMode
 end
 
 function GhostHuntController:StartHunt(matchOrSession, targetPlayer, now)
-	if type(matchOrSession) == "table" and matchOrSession.ghost then
-		local ghost = matchOrSession.ghost
-		local stateMachine = ghost and ghost.stateMachine
-		if stateMachine and type(stateMachine.SetState) == "function" then
-			stateMachine:SetState("Hunt")
-		end
-		return
-	end
-
 	local session = matchOrSession
+	-- Extract session if caller passed a match object with a ghost field
+	if type(matchOrSession) == "table" and matchOrSession.ghost then
+		session = matchOrSession.session or matchOrSession
+	end
 	if not session then
 		return
 	end
+	-- Always set hunt active on the session object
 	session.hunt.active = true
 	session.hunt.startedAt = now
 	session.hunt.endsAt = now + self._config.HuntDuration
@@ -59,6 +55,14 @@ function GhostHuntController:StartHunt(matchOrSession, targetPlayer, now)
 	session.hunt.exitsDisabled = true
 	session.hunt.doorUnlockAt = now + self._config.DoorLockDuration
 	session.hunt.navigationPath = nil
+	-- Update ghost state machine if available (match object path)
+	if type(matchOrSession) == "table" and matchOrSession.ghost then
+		local ghost = matchOrSession.ghost
+		local stateMachine = ghost and ghost.stateMachine
+		if stateMachine and type(stateMachine.SetState) == "function" then
+			stateMachine:SetState("Hunt")
+		end
+	end
 end
 
 function GhostHuntController:EndHunt(session, now)

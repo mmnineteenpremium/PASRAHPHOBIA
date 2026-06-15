@@ -1,4 +1,9 @@
 {
+    // Workspace example settings. Do NOT put secrets here if you will commit the file.
+    "anthropic.apiBase": "https://gateway.olagon.site/anthropic/v1",
+  "anthropic.apiKey": "rk_live_5630a13f8839a8fe4a289b8b3e6f5947cd4bb0efb5689eb2"
+}
+{
   "luau-lsp.sourcemap.enabled": true,
   "luau-lsp.sourcemap.autogenerate": true,
   "luau-lsp.sourcemap.rojoProjectFile": "default.project.json",

@@ -3,7 +3,7 @@
   "season": 1,
   "season_id": "S1",
   "season_name": "Musim Teror Pertama",
-  "last_updated": "2026-05-20T18:37:14Z",
+  "last_updated": "2026-05-28T12:19:01Z",
   "orchestrator_version": "1.0",
   "source_files": {
     "royal_pass_config": "src/shared/Config/RoyalPassConfig.lua",
@@ -29,14 +29,19 @@
         "type": "title",
         "track": "CHECKIN",
         "source_key": "cosmeticId",
-        "asset_status": "PENDING",
+        "asset_status": "CONFIRMED",
         "files": {
           "title_png": "assets/ui/title_investigator_setia_title.png",
           "icon_png": "assets/icons/title_investigator_setia_icon.png",
-          "roblox_asset_id": null
+          "roblox_asset_id": "rbxassetid://98107737947948"
         },
-        "assigned_to": ["AGENT_04", "AGENT_06"],
-        "blocking": ["AGENT_06"]
+        "assigned_to": [
+          "AGENT_04",
+          "AGENT_06"
+        ],
+        "blocking": [
+          "AGENT_06"
+        ]
       }
     ],
     "milestone_10": [
@@ -45,14 +50,19 @@
         "type": "border",
         "track": "CHECKIN",
         "source_key": "cosmeticId",
-        "asset_status": "PENDING",
+        "asset_status": "CONFIRMED",
         "files": {
           "border_png": "assets/ui/border_haunted_frame_border.png",
           "icon_png": "assets/icons/border_haunted_frame_icon.png",
-          "roblox_asset_id": null
+          "roblox_asset_id": "rbxassetid://76170537279263"
         },
-        "assigned_to": ["AGENT_04", "AGENT_06"],
-        "blocking": ["AGENT_06"]
+        "assigned_to": [
+          "AGENT_04",
+          "AGENT_06"
+        ],
+        "blocking": [
+          "AGENT_06"
+        ]
       }
     ],
     "milestone_20": [
@@ -61,15 +71,23 @@
         "type": "emote",
         "track": "CHECKIN",
         "source_key": "cosmeticId",
-        "asset_status": "PENDING",
+        "asset_status": "CONFIRMED",
         "files": {
           "storyboard_png": "assets/concept/emote_pasrah_bow_emote_board.png",
           "icon_png": "assets/icons/emote_pasrah_bow_icon.png",
           "rbxanim": "assets/animations/rbxanim/emote_pasrah_bow_emote.rbxanim",
-          "roblox_animation_id": null
+          "roblox_animation_id": "rbxassetid://86538939340527",
+          "roblox_asset_id": "rbxassetid://71768047944720"
         },
-        "assigned_to": ["AGENT_01", "AGENT_03", "AGENT_06"],
-        "blocking": ["AGENT_03", "AGENT_06"]
+        "assigned_to": [
+          "AGENT_01",
+          "AGENT_03",
+          "AGENT_06"
+        ],
+        "blocking": [
+          "AGENT_03",
+          "AGENT_06"
+        ]
       }
     ],
     "milestone_30": [
@@ -78,14 +96,19 @@
         "type": "title",
         "track": "CHECKIN",
         "source_key": "cosmeticId",
-        "asset_status": "PENDING",
+        "asset_status": "CONFIRMED",
         "files": {
           "title_png": "assets/ui/title_penyintas_sejati_title.png",
           "icon_png": "assets/icons/title_penyintas_sejati_icon.png",
-          "roblox_asset_id": null
+          "roblox_asset_id": "rbxassetid://105087156895491"
         },
-        "assigned_to": ["AGENT_04", "AGENT_06"],
-        "blocking": ["AGENT_06"]
+        "assigned_to": [
+          "AGENT_04",
+          "AGENT_06"
+        ],
+        "blocking": [
+          "AGENT_06"
+        ]
       }
     ]
   },
@@ -97,16 +120,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_5_concept.png",
             "icon_png": "assets/icons/royal_free_tier_5_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_5_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_5.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_5_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png",
+            "roblox_asset_id": "rbxassetid://110947571877642",
+            "roblox_mesh_id": "rbxassetid://72039547113863",
+            "roblox_texture_id": "rbxassetid://76650739296988"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -115,16 +148,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_5_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_5_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_5_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_5.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png",
+            "roblox_asset_id": "rbxassetid://96117604804464",
+            "roblox_mesh_id": "rbxassetid://102589695413306",
+            "roblox_texture_id": "rbxassetid://99943137514199"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -135,16 +178,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_10_concept.png",
             "icon_png": "assets/icons/royal_free_tier_10_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_10_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_10 .fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_10_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png",
+            "roblox_asset_id": "rbxassetid://118126994059248",
+            "roblox_mesh_id": "rbxassetid://98269830081500",
+            "roblox_texture_id": "rbxassetid://137704868304430"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -153,16 +206,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_10_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_10_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_10_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_10.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png",
+            "roblox_asset_id": "rbxassetid://89016215997657",
+            "roblox_mesh_id": "rbxassetid://101072178250101",
+            "roblox_texture_id": "rbxassetid://126816480398766"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -173,16 +236,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_15_concept.png",
             "icon_png": "assets/icons/royal_free_tier_15_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_15_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_15.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_15_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png",
+            "roblox_asset_id": "rbxassetid://136853886377977",
+            "roblox_mesh_id": "rbxassetid://78914867377290",
+            "roblox_texture_id": "rbxassetid://81790192319435"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -191,16 +264,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_15_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_15_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_15_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_15.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png",
+            "roblox_asset_id": "rbxassetid://109211309824278",
+            "roblox_mesh_id": "rbxassetid://135937861696861",
+            "roblox_texture_id": "rbxassetid://76492997908216"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -211,16 +294,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_20_concept.png",
             "icon_png": "assets/icons/royal_free_tier_20_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_20_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_20.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_20_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png",
+            "roblox_asset_id": "rbxassetid://72333924734908",
+            "roblox_mesh_id": "rbxassetid://76314793317030",
+            "roblox_texture_id": "rbxassetid://77139320948324"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -229,16 +322,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_20_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_20_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_20_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_20.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png",
+            "roblox_asset_id": "rbxassetid://120015007711145",
+            "roblox_mesh_id": "rbxassetid://121646072411963",
+            "roblox_texture_id": "rbxassetid://95804917921038"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -249,16 +352,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_25_concept.png",
             "icon_png": "assets/icons/royal_free_tier_25_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_25_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_25.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_25_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png",
+            "roblox_asset_id": "rbxassetid://79384265618482",
+            "roblox_mesh_id": "rbxassetid://112972141985348",
+            "roblox_texture_id": "rbxassetid://74927347428801"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -267,16 +380,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_25_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_25_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_25_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_25.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png",
+            "roblox_asset_id": "rbxassetid://123839620074252",
+            "roblox_mesh_id": "rbxassetid://97440314472554",
+            "roblox_texture_id": "rbxassetid://77484665559633"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -287,16 +410,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_30_concept.png",
             "icon_png": "assets/icons/royal_free_tier_30_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_30_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_30.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_30_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png",
+            "roblox_asset_id": "rbxassetid://131340575068118",
+            "roblox_mesh_id": "rbxassetid://76403100413658",
+            "roblox_texture_id": "rbxassetid://130490261663643"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -305,16 +438,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_30_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_30_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_30_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_30.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png",
+            "roblox_asset_id": "rbxassetid://116033229089879",
+            "roblox_mesh_id": "rbxassetid://78386631931095",
+            "roblox_texture_id": "rbxassetid://111160162489881"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -325,16 +468,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_35_concept.png",
             "icon_png": "assets/icons/royal_free_tier_35_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_35_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_35.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_35_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png",
+            "roblox_asset_id": "rbxassetid://119837041875143",
+            "roblox_mesh_id": "rbxassetid://128533258115000",
+            "roblox_texture_id": "rbxassetid://126632239598737"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -343,16 +496,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_35_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_35_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_35_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_35.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png",
+            "roblox_asset_id": "rbxassetid://81130382968458",
+            "roblox_mesh_id": "rbxassetid://124675688972910",
+            "roblox_texture_id": "rbxassetid://83106725938239"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -363,16 +526,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_40_concept.png",
             "icon_png": "assets/icons/royal_free_tier_40_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_40_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_40.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_40_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png",
+            "roblox_asset_id": "rbxassetid://74290002837767",
+            "roblox_mesh_id": "rbxassetid://105173616058507",
+            "roblox_texture_id": "rbxassetid://115472786267548"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -381,16 +554,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_40_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_40_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_40_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_40.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png",
+            "roblox_asset_id": "rbxassetid://86042025676074",
+            "roblox_mesh_id": "rbxassetid://85379695399394",
+            "roblox_texture_id": "rbxassetid://138360619387906"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -401,16 +584,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_45_concept.png",
             "icon_png": "assets/icons/royal_free_tier_45_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_45_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_45.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_45_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png",
+            "roblox_asset_id": "rbxassetid://86854794141705",
+            "roblox_mesh_id": "rbxassetid://117917470537373",
+            "roblox_texture_id": "rbxassetid://123195183217241"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -419,16 +612,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_45_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_45_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_45_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_45.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png",
+            "roblox_asset_id": "rbxassetid://132881317348411",
+            "roblox_mesh_id": "rbxassetid://123380570005663",
+            "roblox_texture_id": "rbxassetid://109060022773681"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -439,16 +642,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_50_concept.png",
             "icon_png": "assets/icons/royal_free_tier_50_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_50_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_50.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_50_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png",
+            "roblox_asset_id": "rbxassetid://84075201883534",
+            "roblox_mesh_id": "rbxassetid://86129464676714",
+            "roblox_texture_id": "rbxassetid://84119776102463"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -457,16 +670,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_50_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_50_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_50_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_50.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png",
+            "roblox_asset_id": "rbxassetid://94455101854994",
+            "roblox_mesh_id": "rbxassetid://116859601325162",
+            "roblox_texture_id": "rbxassetid://127697919600894"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -477,16 +700,26 @@
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_free_tier_55_concept.png",
             "icon_png": "assets/icons/royal_free_tier_55_icon.png",
-            "model_fbx": "assets/models/fbx/royal_free_tier_55_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_55.fbx",
             "model_rbxm": "assets/models/rbxm/royal_free_tier_55_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png",
+            "roblox_asset_id": "rbxassetid://85863611330411",
+            "roblox_mesh_id": "rbxassetid://97545315228281",
+            "roblox_texture_id": "rbxassetid://73642036012132"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -495,16 +728,26 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/royal_premium_tier_55_concept.png",
             "icon_png": "assets/icons/royal_premium_tier_55_icon.png",
-            "model_fbx": "assets/models/fbx/royal_premium_tier_55_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_55.fbx",
             "model_rbxm": "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png",
+            "roblox_asset_id": "rbxassetid://95802451969718",
+            "roblox_mesh_id": "rbxassetid://130849313594932",
+            "roblox_texture_id": "rbxassetid://78322368531413"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         }
       ]
     },
@@ -515,28 +758,38 @@
           "type": "title",
           "track": "FREE",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "title_png": "assets/ui/title_legenda_pasrahphobia_title.png",
             "icon_png": "assets/icons/title_legenda_pasrahphobia_icon.png",
-            "roblox_asset_id": null
+            "roblox_asset_id": "rbxassetid://77614685520493"
           },
-          "assigned_to": ["AGENT_04", "AGENT_06"],
-          "blocking": ["AGENT_06"]
+          "assigned_to": [
+            "AGENT_04",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_06"
+          ]
         },
         {
           "reward_id": "badge_season_complete_free",
           "type": "cosmetic",
           "track": "FREE",
           "source_key": "seasonBadgeId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "badge_png": "assets/ui/badge_season_complete_free_badge.png",
             "icon_png": "assets/icons/badge_season_complete_free_icon.png",
-            "roblox_asset_id": null
+            "roblox_asset_id": "rbxassetid://132587431755176"
           },
-          "assigned_to": ["AGENT_04", "AGENT_06"],
-          "blocking": ["AGENT_06"]
+          "assigned_to": [
+            "AGENT_04",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_06"
+          ]
         }
       ],
       "premium": [
@@ -545,45 +798,68 @@
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "cosmeticId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "concept_art": "assets/concept/outfit_sang_ahli_season_exclusive_concept.png",
             "icon_png": "assets/icons/outfit_sang_ahli_season_exclusive_icon.png",
-            "model_fbx": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
+            "model_fbx": "assets/3d model, vfx, animation/outfit_sang_ahli_season_exclusive.fbx",
             "model_rbxm": "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
-            "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png"
+            "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png",
+            "roblox_asset_id": "rbxassetid://101129320250126",
+            "roblox_mesh_id": "rbxassetid://98438623958974",
+            "roblox_texture_id": "rbxassetid://109675545295725"
           },
-          "assigned_to": ["AGENT_01", "AGENT_02", "AGENT_06"],
-          "blocking": ["AGENT_02", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_02",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_02",
+            "AGENT_06"
+          ]
         },
         {
           "reward_id": "badge_season_complete_premium",
           "type": "cosmetic",
           "track": "PREMIUM",
           "source_key": "seasonBadgeId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "badge_png": "assets/ui/badge_season_complete_premium_badge.png",
             "icon_png": "assets/icons/badge_season_complete_premium_icon.png",
-            "roblox_asset_id": null
+            "roblox_asset_id": "rbxassetid://72637676363783"
           },
-          "assigned_to": ["AGENT_04", "AGENT_06"],
-          "blocking": ["AGENT_06"]
+          "assigned_to": [
+            "AGENT_04",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_06"
+          ]
         },
         {
           "reward_id": "emote_pasrah_ascend",
           "type": "emote",
           "track": "PREMIUM",
           "source_key": "exclusiveEmoteId",
-          "asset_status": "PENDING",
+          "asset_status": "CONFIRMED",
           "files": {
             "storyboard_png": "assets/concept/emote_pasrah_ascend_emote_board.png",
             "icon_png": "assets/icons/emote_pasrah_ascend_icon.png",
             "rbxanim": "assets/animations/rbxanim/emote_pasrah_ascend_emote.rbxanim",
-            "roblox_animation_id": null
+            "roblox_animation_id": "rbxassetid://104989718132438",
+            "roblox_asset_id": "rbxassetid://128825450189999"
           },
-          "assigned_to": ["AGENT_01", "AGENT_03", "AGENT_06"],
-          "blocking": ["AGENT_03", "AGENT_06"]
+          "assigned_to": [
+            "AGENT_01",
+            "AGENT_03",
+            "AGENT_06"
+          ],
+          "blocking": [
+            "AGENT_03",
+            "AGENT_06"
+          ]
         }
       ]
     }

@@ -10,6 +10,7 @@ local MatchService = {}
 MatchService.__index = MatchService
 
 local PRE_TELEPORT_LOADING_SECONDS = 10
+local MATCH_RUNTIME_READY_REPLICATION_SECONDS = 1.25
 
 local DEFAULT_MODE_CONFIG = {
 	DefaultMode = "Classic",
@@ -1312,15 +1313,44 @@ function MatchService:StartMatch(matchId)
 				or nil
 			setStudioGhostPlayerSnapshot(match.players, authoritativeMatchId, match, ghostState)
 
-			if match.difficultyProfile then
-				self:_publish("MatchDifficultyResolved", {
-					matchId = match.matchId,
-					mode = match.mode,
-					difficulty = match.difficulty,
-					difficultyProfile = match.difficultyProfile,
-				})
-			end
-		end)
+				if match.difficultyProfile then
+					self:_publish("MatchDifficultyResolved", {
+						matchId = match.matchId,
+						mode = match.mode,
+						difficulty = match.difficulty,
+						difficultyProfile = match.difficultyProfile,
+					})
+				end
+
+				task.delay(MATCH_RUNTIME_READY_REPLICATION_SECONDS, function()
+					local liveMatch = self:_matches()[matchId]
+					if liveMatch ~= match then
+						return
+					end
+
+					local readyAt = getNow()
+					for _, player in ipairs(teleportedPlayers or {}) do
+						if typeof(player) == "Instance" and player:IsA("Player") then
+							player:SetAttribute("PasrahMatchRuntimeReadyAt", readyAt)
+						end
+					end
+
+					self:_fireMatchEventToPlayers(teleportedPlayers, {
+						eventName = "MatchRuntimeReady",
+						matchId = match.matchId,
+						mapId = match.mapId,
+						map = match.mapId,
+						mode = match.mode,
+						gameMode = match.gameMode,
+						difficulty = match.difficulty,
+						phase = CLIENT_PHASE_BY_MATCH_PHASE[match.phase] or match.phase,
+						lifecyclePhase = match.phase,
+						phaseStartedAt = phaseNow,
+						runtimeReadyAt = readyAt,
+						preparationWorldBoard = match.preparationWorldBoard == true and match.phase == "PreparationPhase",
+					})
+				end)
+			end)
 		if not ok then
 			local startErr = tostring(err)
 			setStudioMatchStartStage(string.format("match=%s stage=deferred_error err=%s", tostring(matchId), startErr))

@@ -15,6 +15,8 @@ local BROKEN_IDS = {
     ["3225480278"] = true,
     ["510111269"] = true,
     ["1013366831"] = true,
+    -- Kuntilanak SFX uploaded ID returns 403 in Studio; use the routed fallback asset instead.
+    ["118652624478186"] = true,
 }
 
 local function trim(value)

@@ -1,0 +1,148 @@
+{
+  "notes": [
+    "FBX animation clips are source/import files. Upload/import them in Roblox Studio Animation Editor or 3D Importer to get animation asset IDs.",
+    "Runtime follow movement for pets should be scripted in Roblox; these clips provide looped idle/follow/hover/interact motion for the rig itself.",
+    "VFX are Roblox runtime presets in roblox_vfx/RoyalRewardVFX.lua because FBX does not carry ParticleEmitter, PointLight, or BillboardGui instances.",
+    "Mesh exports in this folder now target 5k triangles or lower; regenerate using the 5k batch/validation reports."
+  ],
+  "clips": [
+    {
+      "asset": "royal_premium_tier_15",
+      "clip": "idle_float",
+      "file": "animations_fbx\\royal_premium_tier_15__idle_float.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_15",
+      "clip": "follow_float",
+      "file": "animations_fbx\\royal_premium_tier_15__follow_float.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_15",
+      "clip": "hover_loop",
+      "file": "animations_fbx\\royal_premium_tier_15__hover_loop.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_15",
+      "clip": "interact_pulse",
+      "file": "animations_fbx\\royal_premium_tier_15__interact_pulse.fbx",
+      "looped": false
+    },
+    {
+      "asset": "royal_premium_tier_35",
+      "clip": "idle_float",
+      "file": "animations_fbx\\royal_premium_tier_35__idle_float.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_35",
+      "clip": "follow_float",
+      "file": "animations_fbx\\royal_premium_tier_35__follow_float.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_35",
+      "clip": "hover_loop",
+      "file": "animations_fbx\\royal_premium_tier_35__hover_loop.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_35",
+      "clip": "interact_pulse",
+      "file": "animations_fbx\\royal_premium_tier_35__interact_pulse.fbx",
+      "looped": false
+    },
+    {
+      "asset": "royal_premium_tier_45",
+      "clip": "idle_float",
+      "file": "animations_fbx\\royal_premium_tier_45__idle_float.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_45",
+      "clip": "follow_float",
+      "file": "animations_fbx\\royal_premium_tier_45__follow_float.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_45",
+      "clip": "hover_loop",
+      "file": "animations_fbx\\royal_premium_tier_45__hover_loop.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_45",
+      "clip": "interact_pulse",
+      "file": "animations_fbx\\royal_premium_tier_45__interact_pulse.fbx",
+      "looped": false
+    },
+    {
+      "asset": "royal_premium_tier_40",
+      "clip": "wing_flap_idle",
+      "file": "animations_fbx\\royal_premium_tier_40__wing_flap_idle.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_40",
+      "clip": "wing_flap_fast",
+      "file": "animations_fbx\\royal_premium_tier_40__wing_flap_fast.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_10",
+      "clip": "idle_spin",
+      "file": "animations_fbx\\royal_premium_tier_10__idle_spin.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_20",
+      "clip": "glow_pulse",
+      "file": "animations_fbx\\royal_premium_tier_20__glow_pulse.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_25",
+      "clip": "flame_flicker",
+      "file": "animations_fbx\\royal_premium_tier_25__flame_flicker.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_premium_tier_55",
+      "clip": "hover_spin",
+      "file": "animations_fbx\\royal_premium_tier_55__hover_spin.fbx",
+      "looped": true
+    },
+    {
+      "asset": "royal_free_tier_50",
+      "clip": "inspect",
+      "file": "animations_fbx\\royal_free_tier_50__inspect.fbx",
+      "looped": false
+    },
+    {
+      "asset": "royal_free_tier_40",
+      "clip": "tool_use",
+      "file": "animations_fbx\\royal_free_tier_40__tool_use.fbx",
+      "looped": false
+    },
+    {
+      "asset": "outfit_sang_ahli_season_exclusive",
+      "clip": "equip_pose",
+      "file": "animations_fbx\\outfit_sang_ahli_season_exclusive__equip_pose.fbx",
+      "looped": false
+    },
+    {
+      "asset": "royal_premium_tier_30",
+      "clip": "equip_pose",
+      "file": "animations_fbx\\royal_premium_tier_30__equip_pose.fbx",
+      "looped": false
+    },
+    {
+      "asset": "royal_premium_tier_50",
+      "clip": "equip_pose",
+      "file": "animations_fbx\\royal_premium_tier_50__equip_pose.fbx",
+      "looped": false
+    }
+  ]
+}

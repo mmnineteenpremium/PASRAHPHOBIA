@@ -402,6 +402,13 @@ function Service:IsMarketplacePurchase(item)
     return self:_normalizePurchaseCurrency(item.currency) == "Robux"
 end
 
+function Service:_isRepeatablePurchaseItem(item)
+    return type(item) == "table"
+        and item.grantItem == false
+        and tostring(item.category or "") == "CurrencyPack"
+        and self:_normalizePurchaseCurrency(item.currency) ~= "Robux"
+end
+
 function Service:_getEconomyService()
     local economy = self._dependencies.EconomySystem
     if type(economy) == "table" and type(economy.Service) == "table" then
@@ -558,7 +565,7 @@ function Service:_alreadyOwned(player, itemId, category, item)
     return false
 end
 
-function Service:ValidatePurchase(player, itemId)
+function Service:ValidatePurchase(player, itemId, quantity)
     local userId = toUserId(player)
     if not userId then
         return false, "invalid_player"
@@ -576,6 +583,10 @@ function Service:ValidatePurchase(player, itemId)
     end
     if type(item.price) ~= "number" or item.price <= 0 then
         return false, "invalid_price"
+    end
+    local safeQuantity = math.clamp(math.floor(tonumber(quantity) or 1), 1, 99)
+    if safeQuantity > 1 and not self:_isRepeatablePurchaseItem(item) then
+        return false, "quantity_not_supported"
     end
 
     local purchaseCurrency = self:_normalizePurchaseCurrency(item.currency)
@@ -624,15 +635,15 @@ function Service:ValidatePurchase(player, itemId)
         end
     end
 
-    if type(balance) == "number" and balance < item.price then
+    if type(balance) == "number" and balance < (item.price * safeQuantity) then
         return false, "insufficient_currency"
     end
 
     return true, nil, item, userId
 end
 
-function Service:ResolvePurchaseIntent(player, itemId)
-    local ok, err, item, userId = self:ValidatePurchase(player, itemId)
+function Service:ResolvePurchaseIntent(player, itemId, quantity)
+    local ok, err, item, userId = self:ValidatePurchase(player, itemId, quantity)
     if not ok then
         return false, err
     end
@@ -695,13 +706,14 @@ function Service:GrantItem(player, itemId, itemData)
     return false, "grant_item_failed"
 end
 
-function Service:_grantCurrencyBenefit(player, item, reason)
+function Service:_grantCurrencyBenefit(player, item, reason, quantity)
     if type(item) ~= "table" then
         return false
     end
 
     local grantCurrency = tostring(item.grantCurrency or "")
     local grantAmount = math.max(0, math.floor(tonumber(item.grantCurrencyAmount) or 0))
+        * math.clamp(math.floor(tonumber(quantity) or 1), 1, 99)
     if grantAmount <= 0 or not VALID_GRANT_CURRENCIES[grantCurrency] then
         return false
     end
@@ -717,8 +729,9 @@ function Service:_grantCurrencyBenefit(player, item, reason)
     return ok
 end
 
-function Service:ProcessPurchase(player, itemId)
-    local ok, err, item, userId = self:ValidatePurchase(player, itemId)
+function Service:ProcessPurchase(player, itemId, quantity)
+    local safeQuantity = math.clamp(math.floor(tonumber(quantity) or 1), 1, 99)
+    local ok, err, item, userId = self:ValidatePurchase(player, itemId, safeQuantity)
     if not ok then
         self:_publish("PurchaseFailed", {
             player = player,
@@ -734,9 +747,11 @@ function Service:ProcessPurchase(player, itemId)
         return false, "marketplace_prompt_required"
     end
 
+    local totalPrice = item.price * safeQuantity
     local activeTransactions = self._state:Get("activeTransactions") or {}
     activeTransactions[userId] = {
         itemId = itemId,
+        quantity = safeQuantity,
         startedAt = nowClock(),
     }
     self._state:Set("activeTransactions", activeTransactions)
@@ -747,7 +762,7 @@ function Service:ProcessPurchase(player, itemId)
 
     if type(economy.SpendCurrency) == "function" then
         local spendOk, resultA, resultB = pcall(function()
-            return economy:SpendCurrency(player, purchaseCurrency, item.price, "ShopPurchase")
+            return economy:SpendCurrency(player, purchaseCurrency, totalPrice, "ShopPurchase")
         end)
         if spendOk then
             if resultA == false then
@@ -771,7 +786,7 @@ function Service:ProcessPurchase(player, itemId)
         return false, spendErr
     end
 
-    local grantedCurrency = self:_grantCurrencyBenefit(player, item, "CurrencyPackPurchase")
+    local grantedCurrency = self:_grantCurrencyBenefit(player, item, "CurrencyPackPurchase", safeQuantity)
     local grantedInventory = true
     local grantErr = nil
     if item.grantItem ~= false then
@@ -782,7 +797,7 @@ function Service:ProcessPurchase(player, itemId)
 
     local softGrantOk = grantedCurrency == true or (item.grantItem ~= false and grantedInventory == true)
     if not softGrantOk then
-        self:_refundCurrency(player, userId, item.price, itemId, grantErr, purchaseCurrency)
+        self:_refundCurrency(player, userId, totalPrice, itemId, grantErr, purchaseCurrency)
         activeTransactions[userId] = nil
         self._state:Set("activeTransactions", activeTransactions)
         self:_publish("PurchaseFailed", {
@@ -800,7 +815,8 @@ function Service:ProcessPurchase(player, itemId)
     history[userId] = history[userId] or {}
     table.insert(history[userId], {
         itemId = itemId,
-        price = item.price,
+        price = totalPrice,
+        quantity = safeQuantity,
         category = item.category,
         purchasedAt = os.time(),
     })
@@ -813,7 +829,8 @@ function Service:ProcessPurchase(player, itemId)
             player = player,
             userId = userId,
             itemId = itemId,
-            price = item.price,
+            price = totalPrice,
+            quantity = safeQuantity,
             category = item.category,
             currency = purchaseCurrency,
             source = "SoftCurrency",

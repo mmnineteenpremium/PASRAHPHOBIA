@@ -1229,7 +1229,7 @@
                   "Enum": 0
                 },
                 "BorderSizePixel": 0,
-                "ImageContent": "rbxassetid://117179527568088",
+                "ImageContent": "rbxassetid://109092248853429",
                 "BackgroundTransparency": 1,
                 "ImageTransparency": 0.7599999904632568,
                 "ImageColor3": [
@@ -1269,7 +1269,7 @@
                 "ZIndex": -10
               },
               "attributes": {
-                "BackdropAssetId": "117179527568088",
+                "BackdropAssetId": "109092248853429",
                 "BlurSimLayer": true
               }
             },
@@ -1281,7 +1281,7 @@
                   "Enum": 0
                 },
                 "BorderSizePixel": 0,
-                "ImageContent": "rbxassetid://117179527568088",
+                "ImageContent": "rbxassetid://109092248853429",
                 "BackgroundTransparency": 1,
                 "ImageTransparency": 0.7400000095367432,
                 "ImageColor3": [
@@ -1321,7 +1321,7 @@
                 "ZIndex": -10
               },
               "attributes": {
-                "BackdropAssetId": "117179527568088",
+                "BackdropAssetId": "109092248853429",
                 "BlurSimLayer": true
               }
             },
@@ -1333,7 +1333,7 @@
                   "Enum": 0
                 },
                 "BorderSizePixel": 0,
-                "ImageContent": "rbxassetid://117179527568088",
+                "ImageContent": "rbxassetid://109092248853429",
                 "BackgroundTransparency": 1,
                 "ImageTransparency": 0.7400000095367432,
                 "ImageColor3": [
@@ -1373,7 +1373,7 @@
                 "ZIndex": -10
               },
               "attributes": {
-                "BackdropAssetId": "117179527568088",
+                "BackdropAssetId": "109092248853429",
                 "BlurSimLayer": true
               }
             },
@@ -1385,7 +1385,7 @@
                   "Enum": 0
                 },
                 "BorderSizePixel": 0,
-                "ImageContent": "rbxassetid://117179527568088",
+                "ImageContent": "rbxassetid://109092248853429",
                 "Size": {
                   "UDim2": [
                     [
@@ -1424,7 +1424,7 @@
                 "ZIndex": -10
               },
               "attributes": {
-                "BackdropAssetId": "117179527568088",
+                "BackdropAssetId": "109092248853429",
                 "BlurSimLayer": true
               }
             }
@@ -1507,7 +1507,7 @@
                     ]
                   ]
                 },
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -1685,7 +1685,7 @@
                     ]
                   ]
                 },
-                "ZIndex": 8,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -1737,7 +1737,7 @@
                     ]
                   ]
                 },
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -1851,7 +1851,7 @@
                     ]
                   ]
                 },
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -1968,7 +1968,7 @@
                     ]
                   ]
                 },
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -2085,7 +2085,7 @@
                   ]
                 },
                 "TextSize": 12,
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -2348,7 +2348,7 @@
                     ]
                   ]
                 },
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -2467,7 +2467,7 @@
                   ]
                 },
                 "TextSize": 12,
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -2584,7 +2584,7 @@
                   ]
                 },
                 "TextSize": 12,
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -2701,7 +2701,7 @@
                     ]
                   ]
                 },
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -2818,7 +2818,7 @@
                   ]
                 },
                 "TextSize": 11,
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -2858,7 +2858,7 @@
                       "Enum": 0
                     },
                     "BorderSizePixel": 0,
-                    "ImageContent": "rbxasset://96737108122674",
+                    "ImageContent": "rbxassetid://96737108122674",
                     "BackgroundTransparency": 1,
                     "Active": true,
                     "Size": {
@@ -2982,7 +2982,7 @@
                     ]
                   ]
                 },
-                "ZIndex": 2,
+                "ZIndex": 13,
                 "InputSink": {
                   "Enum": 0
                 },
@@ -7796,7 +7796,7 @@
                           "Enum": 0
                         },
                         "BorderSizePixel": 0,
-                        "ImageContent": "rbxassetid://117179527568088",
+                        "ImageContent": "rbxassetid://109092248853429",
                         "BackgroundTransparency": 1,
                         "ImageTransparency": 0.7599999904632568,
                         "Size": {
@@ -7836,7 +7836,7 @@
                         "ZIndex": -10
                       },
                       "attributes": {
-                        "BackdropAssetId": "117179527568088",
+                        "BackdropAssetId": "109092248853429",
                         "BlurSimLayer": true
                       }
                     },
@@ -7848,7 +7848,7 @@
                           "Enum": 0
                         },
                         "BorderSizePixel": 0,
-                        "ImageContent": "rbxassetid://117179527568088",
+                        "ImageContent": "rbxassetid://109092248853429",
                         "BackgroundTransparency": 1,
                         "ImageTransparency": 0.7400000095367432,
                         "ImageColor3": [
@@ -7888,7 +7888,7 @@
                         "ZIndex": -10
                       },
                       "attributes": {
-                        "BackdropAssetId": "117179527568088",
+                        "BackdropAssetId": "109092248853429",
                         "BlurSimLayer": true
                       }
                     },
@@ -7900,7 +7900,7 @@
                           "Enum": 0
                         },
                         "BorderSizePixel": 0,
-                        "ImageContent": "rbxassetid://117179527568088",
+                        "ImageContent": "rbxassetid://109092248853429",
                         "BackgroundTransparency": 1,
                         "ImageTransparency": 0.7400000095367432,
                         "ImageColor3": [
@@ -7940,7 +7940,7 @@
                         "ZIndex": -10
                       },
                       "attributes": {
-                        "BackdropAssetId": "117179527568088",
+                        "BackdropAssetId": "109092248853429",
                         "BlurSimLayer": true
                       }
                     },
@@ -7952,7 +7952,7 @@
                           "Enum": 0
                         },
                         "BorderSizePixel": 0,
-                        "ImageContent": "rbxassetid://117179527568088",
+                        "ImageContent": "rbxassetid://109092248853429",
                         "BackgroundTransparency": 1,
                         "Active": true,
                         "ImageTransparency": 0.7599999904632568,
@@ -7993,7 +7993,7 @@
                         "ZIndex": -10
                       },
                       "attributes": {
-                        "BackdropAssetId": "117179527568088",
+                        "BackdropAssetId": "109092248853429",
                         "BlurSimLayer": true
                       }
                     }
@@ -8112,7 +8112,7 @@
                   "Enum": 0
                 },
                 "BorderSizePixel": 0,
-                "ImageContent": "rbxthumb://type=Asset&id=109092248853429&w=1024&h=1024",
+                "ImageContent": "rbxassetid://109092248853429",
                 "BackgroundTransparency": 1,
                 "Size": {
                   "UDim2": [
@@ -8216,7 +8216,7 @@
       },
       "attributes": {
         "BackdropBlurStyle": "thin-offset-layer-simulation",
-        "BackdropImageAssetId": "117179527568088"
+        "BackdropImageAssetId": "109092248853429"
       }
     }
   ],

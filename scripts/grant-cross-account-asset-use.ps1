@@ -105,6 +105,7 @@ function Get-CandidateFiles {
 
     $directFiles = @(
         "PASRAHPHOBIA.rbxlx",
+        "tmp_private_images.json",
         "ghost-assetid.md",
         "meshparts-assetid.md",
         "InvestigationTools-Assetid.md",
@@ -118,11 +119,17 @@ function Get-CandidateFiles {
         }
     }
 
+    foreach ($item in Get-ChildItem -LiteralPath $Root -File -Filter *.rbxlx -ErrorAction SilentlyContinue) {
+        if (-not $files.Contains($item.FullName)) {
+            $files.Add($item.FullName)
+        }
+    }
+
     $scanRoots = @(
         "src",
         ".codex\asset-imports"
     )
-    $allowedExtensions = @(".lua", ".json", ".md", ".csv", ".txt", ".model.json", ".rbxmx", ".rbxm")
+    $allowedExtensions = @(".lua", ".json", ".md", ".csv", ".txt", ".model.json", ".rbxmx", ".rbxm", ".rbxlx")
 
     foreach ($relativeRoot in $scanRoots) {
         $scanRoot = Join-Path $Root $relativeRoot
@@ -179,7 +186,7 @@ function Add-AssetIdsFromFile {
     $extension = [System.IO.Path]::GetExtension($FilePath).ToLowerInvariant()
     $name = [System.IO.Path]::GetFileName($FilePath)
     $useLooseNumeric = $true
-    if ($extension -in @(".rbxlx", ".json", ".rbxmx", ".rbxm") -or $name.EndsWith(".model.json", [System.StringComparison]::OrdinalIgnoreCase)) {
+    if ($extension -in @(".rbxlx", ".rbxmx", ".rbxm") -or $name.EndsWith(".model.json", [System.StringComparison]::OrdinalIgnoreCase)) {
         $useLooseNumeric = $false
     }
     $pattern = if ($useLooseNumeric) {
@@ -218,6 +225,17 @@ function Add-AssetIdsFromFile {
         try {
             while ($null -ne ($line = $reader.ReadLine())) {
                 foreach ($match in [regex]::Matches($line, "rbxassetid://([0-9]{6,})")) {
+                    $id = $match.Groups[1].Value
+                    [void]$Ids.Add($id)
+                    if (-not $Sources.ContainsKey($id)) {
+                        $Sources[$id] = [System.Collections.Generic.List[string]]::new()
+                    }
+                    if ($Sources[$id].Count -lt 5) {
+                        $Sources[$id].Add($FilePath)
+                    }
+                }
+
+                foreach ($match in [regex]::Matches($line, "rbxthumb://type=Asset&id=([0-9]{6,})")) {
                     $id = $match.Groups[1].Value
                     [void]$Ids.Add($id)
                     if (-not $Sources.ContainsKey($id)) {

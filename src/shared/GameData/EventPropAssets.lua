@@ -128,6 +128,18 @@ local DIRECT_BY_TOKEN = {
 		size = Vector3.new(1.0, 1.15, 1.0),
 		color = Color3.fromRGB(178, 145, 86),
 	},
+	light = {
+		key = "Prop_Lampu_Gantung",
+		meshId = "89304787152305",
+		size = Vector3.new(1.0, 1.15, 1.0),
+		color = Color3.fromRGB(178, 145, 86),
+	},
+	ceilinglight = {
+		key = "Prop_Lampu_Gantung",
+		meshId = "89304787152305",
+		size = Vector3.new(1.0, 1.15, 1.0),
+		color = Color3.fromRGB(178, 145, 86),
+	},
 	curtain = {
 		key = "Prop_Tirai_Kain",
 		meshId = "123243345613605",

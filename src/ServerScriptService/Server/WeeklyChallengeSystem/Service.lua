@@ -7,24 +7,32 @@ local DEFAULT_TEMPLATES = {
     {
         id = "complete_investigations",
         objectiveType = "complete_investigation",
+        title = "Selesaikan Investigasi",
+        desc = "Selesaikan 10 investigasi minggu ini.",
         target = 10,
         reward = { currency = 2000, xp = 650, royalPassXP = 350, cosmeticId = "Weekly_Investigator_Badge" },
     },
     {
         id = "identify_ghosts_weekly",
         objectiveType = "identify_ghost",
+        title = "Identifikasi Hantu",
+        desc = "Identifikasi 8 hantu minggu ini.",
         target = 8,
         reward = { currency = 1800, xp = 600, royalPassXP = 320, cosmeticId = "Weekly_GhostHunter_Icon" },
     },
     {
         id = "survive_hunts_weekly",
         objectiveType = "survive_hunt",
+        title = "Bertahan dari Hunt",
+        desc = "Bertahan dari 6 hunt minggu ini.",
         target = 6,
         reward = { currency = 1700, xp = 540, royalPassXP = 300, cosmeticId = "Weekly_SteadyNerves_Banner" },
     },
     {
         id = "evidence_mastery",
         objectiveType = "collect_evidence",
+        title = "Kuasai Bukti",
+        desc = "Kumpulkan 24 bukti minggu ini.",
         target = 24,
         reward = { currency = 2200, xp = 700, royalPassXP = 380, cosmeticId = "Weekly_EvidenceArchivist_Frame" },
     },
@@ -87,6 +95,8 @@ local function normalizeTemplates(raw)
             table.insert(out, {
                 id = template.id,
                 objectiveType = template.objectiveType,
+                title = type(template.title) == "string" and template.title or nil,
+                desc = type(template.desc) == "string" and template.desc or nil,
                 target = math.max(1, math.floor(tonumber(template.target) or 1)),
                 reward = {
                     currency = math.max(0, math.floor(tonumber(template.reward and template.reward.currency) or 0)),
@@ -302,6 +312,63 @@ function Service:GetWeeklyChallenges(playerOrUserId)
     end
     local challengesByUser = self._state:Get("playerChallenges") or {}
     return deepCopy(challengesByUser[userId] or {})
+end
+
+function Service:GetWeeklyChallengeSnapshot(playerOrUserId)
+    local userId = self:_ensurePlayer(playerOrUserId)
+    if not userId then
+        return nil
+    end
+
+    local challengesByUser = self._state:Get("playerChallenges") or {}
+    local cycleByUser = self._state:Get("playerCycleStart") or {}
+    local resetSeconds = self._state:Get("resetSeconds") or 604800
+    local cycleStart = tonumber(cycleByUser[userId]) or self:_cycleStart(os.time())
+    local active = {}
+    local completed = {}
+
+    for _, challenge in ipairs(challengesByUser[userId] or {}) do
+        local target = math.max(1, math.floor(tonumber(challenge.target) or 1))
+        local progress = math.clamp(math.floor(tonumber(challenge.progress) or 0), 0, target)
+        local reward = challenge.reward or {}
+        local entry = {
+            id = challenge.id,
+            title = challenge.title or challenge.id,
+            description = challenge.desc or "",
+            type = "WEEKLY",
+            objectives = {
+                {
+                    id = challenge.id,
+                    label = challenge.desc or challenge.title or challenge.id,
+                    required = target,
+                },
+            },
+            progress = {
+                [challenge.id] = progress,
+            },
+            rewards = {
+                xp = math.max(0, math.floor(tonumber(reward.xp) or 0)),
+                currency = math.max(0, math.floor(tonumber(reward.currency) or 0)),
+                currencyType = "MM",
+            },
+        }
+
+        if challenge.completed == true then
+            table.insert(completed, entry)
+        else
+            table.insert(active, entry)
+        end
+    end
+
+    return {
+        userId = userId,
+        cycleStart = cycleStart,
+        resetSeconds = resetSeconds,
+        nextResetAt = cycleStart + resetSeconds,
+        updatedAt = DateTime.now().UnixTimestampMillis,
+        active = active,
+        completed = completed,
+    }
 end
 
 function Service:_resolvePlayer(userId)

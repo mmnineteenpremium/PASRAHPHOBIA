@@ -5,6 +5,12 @@ RoyalPassConfig.TOTAL_TIERS = 60
 RoyalPassConfig.PREMIUM_PRICE_ROBUX = 299
 RoyalPassConfig.XP_PER_TIER = 1000
 RoyalPassConfig.SEASON_ID = "S1"
+RoyalPassConfig.REWARD_SCOPE = {
+	inGameOnly = true,
+	experience = "PASRAHPHOBIA",
+	allowAvatarMarketplaceUGC = false,
+	allowCrossGameEntitlements = false,
+}
 
 RoyalPassConfig.XP_SOURCES = {
 	MATCH_COMPLETE = 100,

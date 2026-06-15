@@ -69,6 +69,19 @@ local function resolveBaseGhostType(ghostType)
 	return normalized
 end
 
+local function stampAnimationDebug(trackKey, ghostType, animationName, assetId, errorText)
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
+		return
+	end
+	localPlayer:SetAttribute("PasrahGhostAnimationTrackKey", type(trackKey) == "string" and trackKey ~= "" and trackKey or nil)
+	localPlayer:SetAttribute("PasrahGhostAnimationGhostType", type(ghostType) == "string" and ghostType ~= "" and ghostType or nil)
+	localPlayer:SetAttribute("PasrahGhostAnimationName", type(animationName) == "string" and animationName ~= "" and animationName or nil)
+	localPlayer:SetAttribute("PasrahGhostAnimationAssetId", type(assetId) == "string" and assetId ~= "" and assetId or nil)
+	localPlayer:SetAttribute("PasrahGhostAnimationLastError", type(errorText) == "string" and errorText ~= "" and errorText or nil)
+	localPlayer:SetAttribute("PasrahGhostAnimationStamp", os.clock())
+end
+
 local function normalizeSearchToken(value)
 	local normalized = normalizeGhostType(value)
 	if not normalized then
@@ -391,6 +404,9 @@ function GhostAnimationPipeline:_resolveTrack(animationName, ghostType)
 			end
 		end
 	end
+	if normalizedGhostType then
+		return nil, nil, nil
+	end
 
 	for _, candidateName in ipairs(searchNames) do
 		local entry = self._tracks[candidateName]
@@ -467,12 +483,14 @@ function GhostAnimationPipeline:Play(animationName, ghostType, retryAttempt)
 	end
 	if not entry then
 		self._lastPlayError = "missing_track:" .. tostring(resolvedGhostType or "global") .. ":" .. tostring(animationName)
+		stampAnimationDebug(nil, resolvedGhostType, animationName, nil, self._lastPlayError)
 		return
 	end
 
 	local animator = self:_findAnimator(resolvedGhostType)
 	if not animator then
 		self._lastPlayError = "missing_ghost_animator:" .. tostring(resolvedGhostType or "unknown")
+		stampAnimationDebug(trackKey, resolvedGhostType, resolvedAnimationName or animationName, entry.animation.AnimationId, self._lastPlayError)
 		self:_scheduleAnimatorRetry(animationName, resolvedGhostType, retryAttempt)
 		return
 	end
@@ -480,6 +498,7 @@ function GhostAnimationPipeline:Play(animationName, ghostType, retryAttempt)
 	self._pendingRetryToken = (self._pendingRetryToken or 0) + 1
 
 	if self._activeTrackKey == trackKey and self._activeAnimator == animator and self._activeTrack and self._activeTrack.IsPlaying then
+		stampAnimationDebug(trackKey, resolvedGhostType, resolvedAnimationName or animationName, entry.animation.AnimationId, nil)
 		return
 	end
 
@@ -493,6 +512,7 @@ function GhostAnimationPipeline:Play(animationName, ghostType, retryAttempt)
 	end)
 	if not loaded or not trackOrError then
 		self._lastPlayError = "load_failed:" .. tostring(trackOrError)
+		stampAnimationDebug(trackKey, resolvedGhostType, resolvedAnimationName or animationName, entry.animation.AnimationId, self._lastPlayError)
 		return
 	end
 
@@ -506,6 +526,7 @@ function GhostAnimationPipeline:Play(animationName, ghostType, retryAttempt)
 	self._activeTrackKey = trackKey
 	self._activeGhostType = resolvedGhostType
 	self._lastPlayError = nil
+	stampAnimationDebug(trackKey, resolvedGhostType, resolvedAnimationName or animationName, entry.animation.AnimationId, nil)
 end
 
 function GhostAnimationPipeline:GetState()

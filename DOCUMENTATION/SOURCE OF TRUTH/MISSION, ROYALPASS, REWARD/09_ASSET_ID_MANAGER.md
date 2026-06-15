@@ -5,7 +5,7 @@ VERSION: 1.0
 GAME: PASRAHPHOBIA (Roblox Horror/Investigation)
 AUTHORITY: Menjadi satu-satunya sumber kebenaran untuk SEMUA Roblox AssetId,
            MeshId, TextureId, AnimationId, AudioId, PassId, ProductId,
-           SubscriptionId, dan AssetId UGC di seluruh pipeline
+           SubscriptionId, dan rewardId in-game di seluruh pipeline
 CONNECTS TO: Semua agent (01–08) + ORCHESTRATOR
 =======================================================================
 
@@ -15,6 +15,7 @@ CONNECTS TO: Semua agent (01–08) + ORCHESTRATOR
 - Registry model harus mencatat source pipeline: Roblox Studio MCP, Cube3D local, Tripo3D, atau Blender, plus apakah komponen siap rig/animasi.
 - Registry animasi harus membedakan output Studio Animation Editor dan Blender fallback.
 - Sebelum generate config atau sync AssetId, wajib cek branch/worktree dan Rojo `default.project.json` agar ID tidak masuk ke branch/project yang salah.
+- Reward Mission/RoyalPass/Reward Season 1 tidak memakai UGC Avatar Marketplace. Field `ugc_items` harus kosong; gunakan `in_game_rewards` untuk entitlement PASRAHPHOBIA-only.
 
 ## IDENTITAS
 Kamu adalah ASSET_ID_MANAGER — registry terpusat yang memastikan tidak ada
@@ -229,13 +230,13 @@ PASRAHPHOBIA.
       }
     },
 
-    "ugc_items": {
-      "ugc_hat_pocong_hood": {
-        "asset_id": null,
-        "marketplace_price": 100,
-        "created_by": "AGENT_08",
-        "uploaded_at": null,
-        "status": "PENDING_MODERATION"
+    "ugc_items": {},
+    "in_game_rewards": {
+      "outfit_sang_ahli_season_exclusive": {
+        "reward_id": "outfit_sang_ahli_season_exclusive",
+        "scope": "PASRAHPHOBIA_ONLY",
+        "created_by": "AGENT_02/06",
+        "status": "CONFIRMED"
       }
     }
   }

@@ -275,7 +275,11 @@ function OwnerSettingsLauncher.start(screenGui)
 		return
 	end
 
-	local launcherButton = screenGui:WaitForChild("SettingsFloatingButton")
+	local launcherButton = screenGui:WaitForChild("SettingsFloatingButton", 10)
+	if not launcherButton then
+		warn("[OwnerSettingsLauncher] SettingsFloatingButton tidak ditemukan di ScreenGui — periksa hierarki UI")
+		return
+	end
 	bindButtonVisual(launcherButton)
 
 	local state = table.clone(DEFAULTS)

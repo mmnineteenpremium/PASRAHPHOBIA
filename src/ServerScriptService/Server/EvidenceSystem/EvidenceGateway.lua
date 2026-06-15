@@ -12,6 +12,13 @@ local ELITE_SPIRIT_BOX_RANGE = 30
 local MODDED_SPIRIT_BOX_OWNED_ATTR = "PasrahOwnsModdedSpiritBox"
 local ELITE_SPIRIT_BOX_OWNED_ATTR = "PasrahOwnsEliteSpiritBox"
 local MATCH_MODE_ATTR = "MatchMode"
+local LOADOUT_TOOL_ATTR_PREFIX = "PasrahLoadoutTool"
+local LOADOUT_TOOL_COUNT_ATTR = "PasrahLoadoutToolCount"
+local PREPARATION_FOCUS_TOOL_ATTR = "PreparationFocusTool"
+local EQUIPPED_TOOL_ATTR = "PasrahEquippedToolType"
+local TOOL_USE_STAMP_ATTR = "PasrahToolUseStamp"
+local TOOL_LAST_EVENT_ATTR = "PasrahToolLastEvent"
+local TOOL_LAST_SUCCESS_ATTR = "PasrahToolLastSuccess"
 
 local EVIDENCE_NAME_BY_TOOL = {
 	JejakEnergi = "MEDOK",
@@ -54,6 +61,8 @@ local TOOL_ALIASES = {
 	toun = "BolaArwah",
 	gerakangaib = "GerakanGaib",
 	pengganggu = "GerakanGaib",
+	flashlight = "Flashlight",
+	flash = "Flashlight",
 	garam = "Garam",
 	salt = "Garam",
 	saltbag = "Garam",
@@ -309,6 +318,107 @@ function EvidenceGateway:_isJournalEndRequest(request)
 	return requestTypeToken == "endinvestigation" or requestTypeToken == "lockanswer"
 end
 
+function EvidenceGateway:_isEquipToolRequest(request)
+	local requestTypeToken = normalizeToken(request and (request.action or request.requestType))
+	return requestTypeToken == "equipinvestigationtool"
+		or requestTypeToken == "equiptool"
+		or requestTypeToken == "selectinvestigationtool"
+		or requestTypeToken == "selecttool"
+end
+
+function EvidenceGateway:_resolveLoadoutToolType(value)
+	local token = normalizeToken(value)
+	if token and TOOL_ALIASES[token] then
+		return TOOL_ALIASES[token]
+	end
+	return nil
+end
+
+function EvidenceGateway:_playerHasLoadoutTool(player, toolType)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false
+	end
+	if type(toolType) ~= "string" or toolType == "" then
+		return false
+	end
+
+	local declaredCount = tonumber(player:GetAttribute(LOADOUT_TOOL_COUNT_ATTR))
+	if declaredCount == nil then
+		return true
+	end
+	if declaredCount <= 0 then
+		return false
+	end
+
+	for slot = 1, 3 do
+		if self:_resolveLoadoutToolType(player:GetAttribute(LOADOUT_TOOL_ATTR_PREFIX .. tostring(slot))) == toolType then
+			return true
+		end
+	end
+	if self:_resolveLoadoutToolType(player:GetAttribute(PREPARATION_FOCUS_TOOL_ATTR)) == toolType then
+		return true
+	end
+	return false
+end
+
+function EvidenceGateway:_stampPlayerToolRuntime(player, toolType, eventName, success)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return
+	end
+	if type(toolType) == "string" and toolType ~= "" then
+		player:SetAttribute(EQUIPPED_TOOL_ATTR, toolType)
+	end
+	player:SetAttribute(TOOL_LAST_EVENT_ATTR, tostring(eventName or "ServerToolRuntime"))
+	if type(success) == "boolean" then
+		player:SetAttribute(TOOL_LAST_SUCCESS_ATTR, success)
+	end
+	player:SetAttribute(TOOL_USE_STAMP_ATTR, os.clock())
+end
+
+function EvidenceGateway:_handleEquipTool(player, request)
+	local toolType = self:_resolveToolType(request)
+	if not toolType or (toolType ~= "Flashlight" and not self:_isSupportedToolType(toolType)) then
+		return {
+			success = false,
+			reason = "invalid_tool",
+		}
+	end
+
+	local requestPayload = type(request.payload) == "table" and request.payload or {}
+	local matchId = self:_resolveMatchIdForPlayer(player, requestPayload)
+	if not matchId then
+		return {
+			success = false,
+			reason = "missing_match_id",
+			toolType = toolType,
+		}
+	end
+	if not self:_playerHasLoadoutTool(player, toolType) then
+		self:_stampPlayerToolRuntime(player, toolType, "ServerToolEquipRejected", false)
+		return {
+			success = false,
+			reason = "tool_not_in_loadout",
+			matchId = matchId,
+			toolType = toolType,
+		}
+	end
+
+	self:_stampPlayerToolRuntime(player, toolType, "ServerToolEquipped", true)
+	self:_fireEvidenceEvent(player, {
+		eventName = "InvestigationToolEquipped",
+		matchId = matchId,
+		success = true,
+		toolType = toolType,
+		autoOpenJournal = false,
+	})
+	return {
+		success = true,
+		reason = "equipped",
+		matchId = matchId,
+		toolType = toolType,
+	}
+end
+
 function EvidenceGateway:_fireEvidenceEvent(player, payload)
 	if typeof(player) ~= "Instance" or not player:IsA("Player") then
 		return
@@ -562,6 +672,19 @@ function EvidenceGateway:_handleEndInvestigation(player, request)
 	local resolvedGuess = type(result) == "table" and result.guessedGhostType or guessedGhostType
 	local resolvedEvidence = type(result) == "table" and result.guessedEvidence or guessedEvidence
 	local expectedEvidence = type(result) == "table" and result.expectedEvidence or nil
+	local verifiedEvidence = {}
+	if self._service and type(self._service.GetCollectedEvidence) == "function" then
+		local okCollected, collected = pcall(function()
+			return self._service:GetCollectedEvidence(matchId)
+		end)
+		if okCollected and type(collected) == "table" then
+			verifiedEvidence = collected
+		end
+	end
+	local expectedEvidenceCount = #(expectedEvidence or {})
+	local evidenceQualityPercent = expectedEvidenceCount > 0
+		and math.floor(math.clamp(#verifiedEvidence / expectedEvidenceCount, 0, 1) * 100 + 0.5)
+		or 0
 
 	self:_publish("GhostGuessValidated", {
 		player = player,
@@ -575,6 +698,10 @@ function EvidenceGateway:_handleEndInvestigation(player, request)
 		evidenceMatches = type(result) == "table" and result.evidenceMatches == true or false,
 		guessedEvidence = resolvedEvidence,
 		expectedEvidence = expectedEvidence,
+		verifiedEvidence = verifiedEvidence,
+		evidenceCollected = #verifiedEvidence,
+		expectedEvidenceCount = expectedEvidenceCount,
+		evidenceQualityPercent = evidenceQualityPercent,
 		reason = reason,
 		source = "JournalEndInvestigation",
 		validatedAt = now,
@@ -597,7 +724,10 @@ function EvidenceGateway:_handleEndInvestigation(player, request)
 			guessedGhostType = resolvedGuess,
 			guessedEvidence = resolvedEvidence,
 			expectedEvidence = expectedEvidence,
-			evidenceCollected = #(resolvedEvidence or {}),
+			verifiedEvidence = verifiedEvidence,
+			evidenceCollected = #verifiedEvidence,
+			expectedEvidenceCount = expectedEvidenceCount,
+			evidenceQualityPercent = evidenceQualityPercent,
 			source = "JournalEndInvestigation",
 		},
 	})
@@ -613,6 +743,10 @@ function EvidenceGateway:_handleEndInvestigation(player, request)
 		guessedEvidence = resolvedEvidence,
 		actualGhostType = actualGhostType,
 		expectedEvidence = expectedEvidence,
+		verifiedEvidence = verifiedEvidence,
+		evidenceCollected = #verifiedEvidence,
+		expectedEvidenceCount = expectedEvidenceCount,
+		evidenceQualityPercent = evidenceQualityPercent,
 		autoOpenJournal = false,
 	})
 
@@ -628,6 +762,10 @@ function EvidenceGateway:_handleEndInvestigation(player, request)
 			guessedEvidence = resolvedEvidence,
 			actualGhostType = actualGhostType,
 			expectedEvidence = expectedEvidence,
+			verifiedEvidence = verifiedEvidence,
+			evidenceCollected = #verifiedEvidence,
+			expectedEvidenceCount = expectedEvidenceCount,
+			evidenceQualityPercent = evidenceQualityPercent,
 		},
 	}
 end
@@ -685,6 +823,12 @@ function EvidenceGateway:HandleRequest(player, request)
 		setStudioEvidenceGatewayTrace(player, "after_end_investigation", response and response.reason or "ok")
 		return response
 	end
+	if self:_isEquipToolRequest(request) then
+		setStudioEvidenceGatewayTrace(player, "before_equip_tool")
+		local response = self:_handleEquipTool(player, request)
+		setStudioEvidenceGatewayTrace(player, "after_equip_tool", response and response.reason or "ok")
+		return response
+	end
 
 	local toolType = self:_resolveToolType(request)
 	local utilityTool = UTILITY_TOOL_TYPES[toolType] == true
@@ -708,6 +852,15 @@ function EvidenceGateway:HandleRequest(player, request)
 		return {
 			success = false,
 			reason = "missing_match_id",
+			toolType = toolType,
+		}
+	end
+	if not self:_playerHasLoadoutTool(player, toolType) then
+		self:_stampPlayerToolRuntime(player, toolType, "ServerToolUseRejected", false)
+		return {
+			success = false,
+			reason = "tool_not_in_loadout",
+			matchId = matchId,
 			toolType = toolType,
 		}
 	end
@@ -750,6 +903,7 @@ function EvidenceGateway:HandleRequest(player, request)
 		payload = requestPayload,
 	})
 	setStudioEvidenceGatewayTrace(player, "after_process_tool_use", reason or (ok and "success" or "nil"))
+	self:_stampPlayerToolRuntime(player, toolType, "ServerToolUse", ok == true)
 
 	return {
 		success = ok,

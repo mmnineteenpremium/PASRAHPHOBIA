@@ -273,17 +273,24 @@ function Service:_calculateReward(payload, entry)
         or (payload and payload.extractionCompleted == true)
     local correctGuess = (payload and payload.correctGuess == true) or (payload and payload.ghostIdentified == true)
     local evidenceCollected = math.max(0, tonumber(payload and payload.evidenceCollected) or 0)
+    local expectedEvidenceCount = math.max(0, tonumber(payload and payload.expectedEvidenceCount) or 0)
+    if expectedEvidenceCount <= 0 and type(payload and payload.expectedEvidence) == "table" then
+        expectedEvidenceCount = #payload.expectedEvidence
+    end
+    local evidenceQuality = expectedEvidenceCount > 0
+        and math.clamp(evidenceCollected / expectedEvidenceCount, 0, 1)
+        or 0
 
     local currency = 120
     local xp = 90
 
     if teamSuccess then
-        currency += 55
-        xp += 35
+        currency += math.floor(55 * evidenceQuality)
+        xp += math.floor(35 * evidenceQuality)
     end
     if correctGuess then
-        currency += 75
-        xp += 55
+        currency += math.floor(75 * evidenceQuality)
+        xp += math.floor(55 * evidenceQuality)
     end
 
     currency += math.min(6, evidenceCollected) * 12
@@ -304,18 +311,23 @@ function Service:_calculateReward(payload, entry)
 
     local ppReward = 0
     local ppBreakdown = {}
-    if teamSuccess then
+    if teamSuccess and evidenceQuality >= 0.34 then
         ppReward += 1
         table.insert(ppBreakdown, {
-            label = "Misi selesai",
+            label = "Misi selesai dengan bukti",
             amount = 1,
         })
     end
-    if correctGuess then
+    if correctGuess and evidenceQuality >= 0.67 then
         ppReward += 1
         table.insert(ppBreakdown, {
-            label = "Tebakan benar",
+            label = "Tebakan benar tervalidasi",
             amount = 1,
+        })
+    elseif correctGuess then
+        table.insert(ppBreakdown, {
+            label = "Tebakan benar, bukti kurang",
+            amount = 0,
         })
     end
     if entry.survived then
@@ -351,7 +363,7 @@ function Service:_calculateReward(payload, entry)
     xp = math.max(1, math.floor(xp * multiplier))
     ppReward = math.clamp(math.floor(ppReward), 0, 5)
     local royalPassXP = math.max(15, math.floor(xp * 0.45))
-    local dailyProgress = (teamSuccess and 2 or 1) + (entry.survived and 1 or 0)
+    local dailyProgress = ((teamSuccess and evidenceQuality >= 0.34) and 2 or 1) + (entry.survived and 1 or 0)
 
     return {
         currency = "MM",
@@ -361,6 +373,7 @@ function Service:_calculateReward(payload, entry)
         xp = xp,
         royalPassXP = royalPassXP,
         dailyProgress = dailyProgress,
+        evidenceQualityPercent = math.floor(evidenceQuality * 100 + 0.5),
     }
 end
 

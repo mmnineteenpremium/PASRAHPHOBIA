@@ -1,0 +1,140 @@
+[
+  {
+    "fbx": "animations_fbx\\outfit_sang_ahli_season_exclusive__equip_pose.fbx",
+    "triangles": 8272,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_free_tier_40__tool_use.fbx",
+    "triangles": 8832,
+    "armatures": 0,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_free_tier_50__inspect.fbx",
+    "triangles": 8832,
+    "armatures": 0,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_10__idle_spin.fbx",
+    "triangles": 8831,
+    "armatures": 0,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_15__follow_float.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_15__hover_loop.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_15__idle_float.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_15__interact_pulse.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_20__glow_pulse.fbx",
+    "triangles": 8832,
+    "armatures": 0,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_25__flame_flicker.fbx",
+    "triangles": 8832,
+    "armatures": 0,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_30__equip_pose.fbx",
+    "triangles": 8272,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_35__follow_float.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_35__hover_loop.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_35__idle_float.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_35__interact_pulse.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_40__wing_flap_fast.fbx",
+    "triangles": 8272,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_40__wing_flap_idle.fbx",
+    "triangles": 8272,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_45__follow_float.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_45__hover_loop.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_45__idle_float.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_45__interact_pulse.fbx",
+    "triangles": 8832,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_50__equip_pose.fbx",
+    "triangles": 8272,
+    "armatures": 1,
+    "meshes": 1
+  },
+  {
+    "fbx": "animations_fbx\\royal_premium_tier_55__hover_spin.fbx",
+    "triangles": 8832,
+    "armatures": 0,
+    "meshes": 1
+  }
+]

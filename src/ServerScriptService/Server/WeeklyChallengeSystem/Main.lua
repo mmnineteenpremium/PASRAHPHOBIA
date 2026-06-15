@@ -1,6 +1,7 @@
 local Service = require(script.Parent.Service)
 local Controller = require(script.Parent.Controller)
 local State = require(script.Parent.State)
+local Services = require(script.Parent.Parent.Core.Services)
 
 local WeeklyChallengeSystem = {}
 WeeklyChallengeSystem.__index = WeeklyChallengeSystem
@@ -22,6 +23,10 @@ end
 function WeeklyChallengeSystem:Start()
     self.Controller:Start()
     self.Service:Start()
+    local dailyEngagementSystem = Services.Get(self._deps, "DailyEngagementSystem")
+    if type(dailyEngagementSystem) == "table" and type(dailyEngagementSystem.RefreshAllQuestRuntime) == "function" then
+        dailyEngagementSystem:RefreshAllQuestRuntime()
+    end
 end
 
 function WeeklyChallengeSystem:Stop()
@@ -31,6 +36,10 @@ end
 
 function WeeklyChallengeSystem:GetWeeklyChallenges(playerOrUserId)
     return self.Service:GetWeeklyChallenges(playerOrUserId)
+end
+
+function WeeklyChallengeSystem:GetWeeklyChallengeSnapshot(playerOrUserId)
+    return self.Service:GetWeeklyChallengeSnapshot(playerOrUserId)
 end
 
 return WeeklyChallengeSystem

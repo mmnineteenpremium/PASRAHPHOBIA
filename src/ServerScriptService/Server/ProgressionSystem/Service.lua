@@ -489,8 +489,12 @@ function Service:AddXP(userId, amount)
 
     local session = self._sessions[resolvedId]
     if not session then
-        warn("[ProgressionSystem] Missing session for userId", resolvedId)
-        return false, "missing_session"
+        -- Race condition: XP granted before PlayerJoined event; auto-init session
+        session = self:InitSession(resolvedId, nil)
+        if not session then
+            warn("[ProgressionSystem] Gagal membuat session untuk userId", resolvedId)
+            return false, "missing_session"
+        end
     end
 
     local xpAmount = math.max(0, math.floor(tonumber(amount) or 0))

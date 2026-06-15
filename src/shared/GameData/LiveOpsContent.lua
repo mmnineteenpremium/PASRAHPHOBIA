@@ -61,6 +61,8 @@ return {
             {
                 id = "complete_investigations",
                 objectiveType = "complete_investigation",
+                title = "Selesaikan Investigasi",
+                desc = "Selesaikan 10 investigasi minggu ini.",
                 target = 10,
                 weight = 10,
                 reward = {
@@ -73,6 +75,8 @@ return {
             {
                 id = "identify_ghosts_weekly",
                 objectiveType = "identify_ghost",
+                title = "Identifikasi Hantu",
+                desc = "Identifikasi 8 hantu minggu ini.",
                 target = 8,
                 weight = 11,
                 reward = {
@@ -85,6 +89,8 @@ return {
             {
                 id = "survive_hunts_weekly",
                 objectiveType = "survive_hunt",
+                title = "Bertahan dari Hunt",
+                desc = "Bertahan dari 6 hunt minggu ini.",
                 target = 6,
                 weight = 8,
                 reward = {
@@ -97,6 +103,8 @@ return {
             {
                 id = "evidence_mastery",
                 objectiveType = "collect_evidence",
+                title = "Kuasai Bukti",
+                desc = "Kumpulkan 24 bukti minggu ini.",
                 target = 24,
                 weight = 9,
                 reward = {
@@ -104,6 +112,54 @@ return {
                     xp = 700,
                     royalPassXP = 380,
                     cosmeticId = "Weekly_EvidenceArchivist_Frame",
+                },
+            },
+        },
+    },
+
+    StoryMissions = {
+        ActiveStoryCount = 3,
+        Chapters = {
+            {
+                id = "chapter_1_act_1",
+                chapter = 1,
+                act = 1,
+                objectiveType = "complete_investigation",
+                title = "Awal yang Gelap",
+                desc = "Selesaikan 3 investigasi pertama",
+                target = 3,
+                reward = {
+                    currency = 500,
+                    xp = 200,
+                    cosmeticId = "Story_Chapter1_Badge",
+                },
+            },
+            {
+                id = "chapter_1_act_2",
+                chapter = 1,
+                act = 2,
+                objectiveType = "identify_ghost",
+                title = "Mengenal Lawsuit",
+                desc = "Identifikasi Pocong dan Kuntilanak masing-masing 1 kali",
+                target = 2,
+                reward = {
+                    currency = 800,
+                    xp = 350,
+                    cosmeticId = "Story_GhostWhisperer_Icon",
+                },
+            },
+            {
+                id = "chapter_2_act_1",
+                chapter = 2,
+                act = 1,
+                objectiveType = "collect_evidence",
+                title = "Di Balik Pintu",
+                desc = "Kumpulkan 10 evidence dari map HauntedHouse",
+                target = 10,
+                reward = {
+                    currency = 1200,
+                    xp = 500,
+                    cosmeticId = "Story_Investigator_Frame",
                 },
             },
         },

@@ -126,8 +126,16 @@ local function bindCharacter(newCharacter)
 	end
 
 	sprinting = false
-	applyDefaultMovement(humanoid)
-	stampMovementRuntime(humanoid.WalkSpeed, Vector3.zero, player:GetAttribute("InMatch") == true, false, humanoid, humanoidRootPart)
+	if player:GetAttribute("PasrahNpcDialogueActive") == true then
+		humanoid.WalkSpeed = 0
+		humanoid.JumpPower = 0
+		humanoid.UseJumpPower = true
+		humanoid.AutoRotate = false
+		stampMovementRuntime(0, Vector3.zero, player:GetAttribute("InMatch") == true, false, humanoid, humanoidRootPart)
+	else
+		applyDefaultMovement(humanoid)
+		stampMovementRuntime(humanoid.WalkSpeed, Vector3.zero, player:GetAttribute("InMatch") == true, false, humanoid, humanoidRootPart)
+	end
 end
 
 if player.Character then
@@ -151,6 +159,9 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if input.KeyCode ~= Enum.KeyCode.LeftShift then
 		return
 	end
+	if player:GetAttribute("PasrahNpcDialogueActive") == true then
+		return
+	end
 
 	local _, activeHumanoid, activeRootPart = resolveLiveCharacterRefs()
 	if not activeHumanoid then
@@ -171,6 +182,9 @@ end)
 
 UserInputService.InputEnded:Connect(function(input)
 	if input.KeyCode ~= Enum.KeyCode.LeftShift then
+		return
+	end
+	if player:GetAttribute("PasrahNpcDialogueActive") == true then
 		return
 	end
 
@@ -202,13 +216,25 @@ RunService.RenderStepped:Connect(function()
 		return
 	end
 
+	local inMatch = player:GetAttribute("InMatch") == true
+	local dialogueActive = player:GetAttribute("PasrahNpcDialogueActive") == true
+
+	if dialogueActive then
+		activeHumanoid.WalkSpeed = 0
+		activeHumanoid.JumpPower = 0
+		activeHumanoid.UseJumpPower = true
+		activeHumanoid.AutoRotate = false
+		activeHumanoid:Move(Vector3.zero, false)
+		stampMovementRuntime(0, Vector3.zero, inMatch, false, activeHumanoid, activeRootPart)
+		return
+	end
+
 	-- Keep Roblox default rotation ownership to avoid local/client drift desync in FPV.
 	if not activeHumanoid.AutoRotate then
 		activeHumanoid.AutoRotate = true
 	end
 
 	local moveDirection = activeHumanoid.MoveDirection
-	local inMatch = player:GetAttribute("InMatch") == true
 	local baseSpeed = sprinting and SPRINT_SPEED or WALK_SPEED
 	local targetSpeed = baseSpeed
 	local backwardPenaltyActive = false

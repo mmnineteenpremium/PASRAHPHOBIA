@@ -1,5 +1,6 @@
 local Services = require(script.Parent.Parent.Core.Services)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Service = {}
 Service.__index = Service
@@ -58,6 +59,10 @@ local BOOST_ANGLE = tonumber(REMOTE_LIGHT_CONFIG.boostAngle) or 55
 local BOOST_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.boostBrightness) or 8
 local FILL_RANGE = tonumber(REMOTE_LIGHT_CONFIG.fillRange) or 13
 local FILL_BRIGHTNESS = tonumber(REMOTE_LIGHT_CONFIG.fillBrightness) or 3
+local FLASHLIGHT_BATTERY_ATTR = "PasrahFlashlightBattery"
+local FLASHLIGHT_NEEDS_RELOAD_ATTR = "PasrahFlashlightNeedsReload"
+local FLASHLIGHT_BATTERY_SECONDS = math.max(30, tonumber(FLASHLIGHT_CONFIG.batterySeconds) or 150)
+local FLASHLIGHT_DRAIN_PER_SECOND = 100 / FLASHLIGHT_BATTERY_SECONDS
 
 local function toUserId(player)
     if typeof(player) == "Instance" and player:IsA("Player") then
@@ -101,6 +106,8 @@ local function stampRemoteFlashlightRuntime(data, player)
         player:SetAttribute("PasrahFlashlightRemoteEnabled", data.flashlightOn == true)
         player:SetAttribute("PasrahFlashlightRemoteSoundId", data.toggleSound and tostring(data.toggleSound.SoundId or "") or nil)
         player:SetAttribute("PasrahFlashlightRemoteHandlePath", data.flashlightHandle and data.flashlightHandle:GetFullName() or nil)
+        player:SetAttribute(FLASHLIGHT_BATTERY_ATTR, math.clamp(tonumber(data.battery) or 100, 0, 100))
+        player:SetAttribute(FLASHLIGHT_NEEDS_RELOAD_ATTR, (tonumber(data.battery) or 100) <= 0)
     end
 end
 
@@ -428,6 +435,7 @@ function Service.new(state, deps)
     self._state = state
     self._deps = deps or {}
     self._eventBus = resolveEventBus(self._deps)
+    self._heartbeatConn = nil
     return self
 end
 
@@ -436,10 +444,19 @@ function Service:Init()
 end
 
 function Service:Start()
-    -- Event-driven system.
+    if self._heartbeatConn then
+        self._heartbeatConn:Disconnect()
+    end
+    self._heartbeatConn = RunService.Heartbeat:Connect(function(deltaTime)
+        self:_updateBattery(deltaTime)
+    end)
 end
 
 function Service:Stop()
+    if self._heartbeatConn then
+        self._heartbeatConn:Disconnect()
+        self._heartbeatConn = nil
+    end
     self._state:Clear()
 end
 
@@ -464,6 +481,75 @@ end
 function Service:_getPlayerState(userId)
     local players = self._state:Get("players") or {}
     return players[userId]
+end
+
+function Service:_setBattery(data, player, battery)
+    if not data then
+        return
+    end
+    data.battery = math.clamp(tonumber(battery) or 0, 0, 100)
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        player:SetAttribute(FLASHLIGHT_BATTERY_ATTR, data.battery)
+        player:SetAttribute(FLASHLIGHT_NEEDS_RELOAD_ATTR, data.battery <= 0)
+    end
+end
+
+function Service:_isPreparationReloadAllowed(player)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return false
+    end
+    local phase = tostring(player:GetAttribute("MatchLifecyclePhase") or player:GetAttribute("MatchPhase") or "")
+    return phase == "PreparationPhase"
+        or phase == "Preparing"
+        or phase == "Briefing"
+        or player:GetAttribute("InMatch") ~= true
+end
+
+function Service:_reloadBattery(player, data)
+    if not data then
+        return false
+    end
+    self:_setBattery(data, player, 100)
+    if data.flashlightOn ~= true then
+        self:_setEnabled(data, false)
+    end
+    self:_publish("FlashlightBatteryReloaded", {
+        player = player,
+        userId = toUserId(player),
+        battery = data.battery,
+    })
+    return true
+end
+
+function Service:_updateBattery(deltaTime)
+    local players = self._state:Get("players") or {}
+    local delta = math.max(0, tonumber(deltaTime) or 0)
+    for userId, data in pairs(players) do
+        if type(data) == "table" and data.flashlightOn == true then
+            local player = data.player
+            local current = tonumber(data.battery)
+                or (typeof(player) == "Instance" and player:IsA("Player") and tonumber(player:GetAttribute(FLASHLIGHT_BATTERY_ATTR)))
+                or 100
+            local nextBattery = math.max(0, current - (FLASHLIGHT_DRAIN_PER_SECOND * delta))
+            self:_setBattery(data, player, nextBattery)
+            if nextBattery <= 0 then
+                data.flashlightOn = false
+                self:_setEnabled(data, false)
+                if typeof(player) == "Instance" and player:IsA("Player") then
+                    player:SetAttribute("FlashlightEnabled", false)
+                    player:SetAttribute("PasrahFlashlightRemoteEnabled", false)
+                    player:SetAttribute("PasrahFlashlightBatteryDepletedAt", os.clock())
+                end
+                self:_publish("FlashlightBatteryDepleted", {
+                    player = player,
+                    userId = userId,
+                    battery = 0,
+                })
+            end
+            players[userId] = data
+        end
+    end
+    self._state:Set("players", players)
 end
 
 function Service:_ensureFlashlightAttached(player, userId)
@@ -514,6 +600,9 @@ function Service:OnPlayerAdded(player)
 
     local data = self:_getPlayerState(userId) or {}
     data.player = player
+    data.battery = math.clamp(tonumber(player:GetAttribute(FLASHLIGHT_BATTERY_ATTR)) or tonumber(data.battery) or 100, 0, 100)
+    player:SetAttribute(FLASHLIGHT_BATTERY_ATTR, data.battery)
+    player:SetAttribute(FLASHLIGHT_NEEDS_RELOAD_ATTR, data.battery <= 0)
 
     if data.characterConn then
         data.characterConn:Disconnect()
@@ -587,6 +676,7 @@ function Service:AttachFlashlight(player, character)
     data.lastUpdate = data.lastUpdate or 0
     data.lastAimAt = data.lastAimAt or 0
     data.currentLook = data.currentLook or nil
+    data.battery = math.clamp(tonumber(player:GetAttribute(FLASHLIGHT_BATTERY_ATTR)) or tonumber(data.battery) or 100, 0, 100)
     aimAttachment.CFrame = CFrame.new()
     beamStart.CFrame = CFrame.new()
     beamEnd.CFrame = CFrame.new(0, 0, -FLASHLIGHT_RANGE)
@@ -682,8 +772,34 @@ function Service:HandleRemote(player, payload)
 
     local action = payload.action
     player:SetAttribute("PasrahFlashlightRemoteLastAction", tostring(action or ""))
+    if action == "Reload" or action == "ReloadAtPreparation" then
+        if self:_isPreparationReloadAllowed(player) then
+            self:_reloadBattery(player, data)
+            self:_storePlayer(userId, data)
+        else
+            player:SetAttribute("PasrahFlashlightReloadRejected", true)
+        end
+        return
+    end
+
     if action == "Toggle" then
         local enabled = payload.enabled == true
+        data.battery = math.clamp(tonumber(data.battery) or tonumber(player:GetAttribute(FLASHLIGHT_BATTERY_ATTR)) or 100, 0, 100)
+        if enabled and data.battery <= 0 then
+            data.flashlightOn = false
+            self:_setEnabled(data, false)
+            player:SetAttribute("FlashlightEnabled", false)
+            player:SetAttribute("PasrahFlashlightRemoteEnabled", false)
+            player:SetAttribute(FLASHLIGHT_NEEDS_RELOAD_ATTR, true)
+            player:SetAttribute("PasrahFlashlightToggleRejected", "battery_empty")
+            self:_storePlayer(userId, data)
+            self:_publish("FlashlightToggleRejected", {
+                player = player,
+                userId = userId,
+                reason = "battery_empty",
+            })
+            return
+        end
         local wasEnabled = data.flashlightOn == true
         data.flashlightOn = enabled
         self:_setEnabled(data, enabled)

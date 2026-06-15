@@ -1,5 +1,27 @@
 # Mission RoyalPass Reward Orchestrator Execution Log
 
+## 2026-05-27 - reward UGC scope cancelled, in-game-only policy locked
+
+Status: source/documentation policy update completed locally; no `.rbxlx` rebuild, broad overwrite, publish, or upload performed. `PASRAHPHOBIA.rbxlx` received one targeted XML script-source patch for `RoyalPassConfig.REWARD_SCOPE`.
+
+What changed:
+- Updated Mission/RoyalPass/Reward source-of-truth docs so Season 1 rewards are explicitly PASRAHPHOBIA-only.
+- Replaced the old UGC/Avatar Marketplace/ACT plan in `08_MONETIZATION_MANAGER.md` with in-game cosmetic reward handling.
+- Updated `09_ASSET_ID_MANAGER.md`, quick references, and manifest template so `ugc_items` stays empty and `in_game_rewards` is the registry surface.
+- Added runtime-safe metadata to `RoyalPassConfig.lua`, `CosmeticRegistry.lua`, and `assets/manifest/ASSET_ID_REGISTRY.json` marking rewards as in-game-only and disabling Avatar Marketplace UGC/cross-game entitlements.
+- Synced `RoyalPassConfig.REWARD_SCOPE` into active Studio and directly into `PASRAHPHOBIA.rbxlx` XML without rebuilding from Rojo.
+
+Validation:
+- `assets/manifest/ASSET_ID_REGISTRY.json` parses successfully; `ugc_items_count=0`; `in_game_rewards._policy` exists.
+- `PASRAHPHOBIA.rbxlx` is `430322847` bytes after the targeted patch, above the 410 MB guard.
+- `rg` confirms `allowAvatarMarketplaceUGC = false` exists in both source `RoyalPassConfig.lua` and `PASRAHPHOBIA.rbxlx`.
+- `rojo sourcemap default.project.json --output sourcemap.current.json`: pass.
+- Full XML parse check was attempted but timed out after 120 seconds on the 430 MB `.rbxlx`; no parser error was returned before timeout.
+- Branch guard checked before edits: `brian-second-final` with `default.project.json` present.
+
+Next action:
+- If syncing this source slice into Studio is required later, use script/Rojo-safe targeted sync only. Do not rebuild or overwrite `PASRAHPHOBIA.rbxlx` from a script-only Rojo project.
+
 ## 2026-05-23 - cosmetic asset pipeline (generate + upload + registry + wire)
 
 Status: partial; source pipeline completed, asset generation/upload blocked by local credentials/checkpoints.

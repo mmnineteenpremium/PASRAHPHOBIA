@@ -853,6 +853,9 @@ local function isResultsLifecyclePhase()
 end
 
 local function shouldLockForMatchCamera()
+	if player:GetAttribute("PasrahNpcDialogueActive") == true then
+		return false
+	end
 	if player:GetAttribute("PasrahSpectatorActive") == true then
 		return false
 	end
@@ -870,6 +873,14 @@ local function bindMatchAttribute()
 		return
 	end
 	local function syncMatchCameraLock()
+		if player:GetAttribute("PasrahNpcDialogueActive") == true then
+			if player.Character then
+				setFpvLocked(false)
+			else
+				FPV_LOCKED = false
+			end
+			return
+		end
 		local shouldLock = shouldLockForMatchCamera()
 		if shouldLock then
 			task.wait(0.5)
@@ -894,6 +905,7 @@ local function bindMatchAttribute()
 	spectatorAttributeConnection = player:GetAttributeChangedSignal("PasrahSpectatorActive"):Connect(syncMatchCameraLock)
 	spectatorClientAttributeConnection = player:GetAttributeChangedSignal("PasrahSpectatorClientActive"):Connect(syncMatchCameraLock)
 	resultsSurfaceConnection = player:GetAttributeChangedSignal(RESULTS_SURFACE_VISIBLE_ATTR):Connect(syncMatchCameraLock)
+	player:GetAttributeChangedSignal("PasrahNpcDialogueActive"):Connect(syncMatchCameraLock)
 	if not lifecyclePhaseConnection then
 		lifecyclePhaseConnection = player:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
 			syncMatchCameraLock()
@@ -907,9 +919,17 @@ end
 bindMatchAttribute()
 
 player.CharacterAdded:Connect(function(character)
-	local humanoid = character:WaitForChild("Humanoid")
-	character:WaitForChild("Head")
-	character:WaitForChild("HumanoidRootPart")
+	local humanoid = character:WaitForChild("Humanoid", 10)
+	if not humanoid then
+		warn("[CameraController] Humanoid tidak ditemukan dalam 10s, skip setup kamera")
+		return
+	end
+	local head = character:WaitForChild("Head", 10)
+	if not head then
+		warn("[CameraController] Head tidak ditemukan dalam 10s, skip setup kamera")
+		return
+	end
+	character:WaitForChild("HumanoidRootPart", 10)
 	task.wait(0.2)
 
 	if camera ~= workspace.CurrentCamera then
@@ -971,6 +991,15 @@ RunService:BindToRenderStep("HeadBob", Enum.RenderPriority.Camera.Value + 1, fun
 
 	local humanoid = character:FindFirstChild("Humanoid")
 	if not humanoid then
+		return
+	end
+
+	if player:GetAttribute("PasrahNpcDialogueActive") == true then
+		if FPV_LOCKED then
+			setFpvLocked(false)
+		end
+		humanoid.CameraOffset = Vector3.zero
+		clearFpvArms()
 		return
 	end
 

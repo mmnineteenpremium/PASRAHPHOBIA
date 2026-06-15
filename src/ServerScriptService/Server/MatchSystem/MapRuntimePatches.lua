@@ -1736,7 +1736,7 @@ local function ensurePreparationBurstEmitter(part, name, baseColor)
 		NumberSequenceKeypoint.new(0.4, 0.14),
 		NumberSequenceKeypoint.new(1, 0),
 	})
-	emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	emitter.Texture = "rbxassetid://6489023589"
 	local color = baseColor or Color3.fromRGB(255, 255, 255)
 	emitter.Color = ColorSequence.new(
 		color:Lerp(Color3.fromRGB(255, 255, 255), 0.2),
@@ -2199,6 +2199,101 @@ local function ensurePreparationToolDisplay(toolPart, toolData)
 	return display
 end
 
+local function resolvePreparationToolStationAnchor(preparationFolder)
+	if typeof(preparationFolder) ~= "Instance" then
+		return nil
+	end
+	for _, name in ipairs({
+		"PreparationToolsTable",
+		"PreparationToolsBoard",
+		"PreparationToolGateBlocker",
+		"PreparationObjectiveBoard",
+		"PreparationEntrySign",
+	}) do
+		local candidate = preparationFolder:FindFirstChild(name, true)
+		if candidate and candidate:IsA("BasePart") then
+			return candidate
+		end
+	end
+	if preparationFolder:IsA("Model") then
+		if preparationFolder.PrimaryPart and preparationFolder.PrimaryPart:IsA("BasePart") then
+			return preparationFolder.PrimaryPart
+		end
+		return preparationFolder:FindFirstChildWhichIsA("BasePart", true)
+	end
+	return nil
+end
+
+local function ensurePreparationToolStationParts(preparationFolder)
+	if typeof(preparationFolder) ~= "Instance" then
+		return false
+	end
+
+	local stationRoot = preparationFolder:FindFirstChild("PreparationToolStations")
+	if not (stationRoot and stationRoot:IsA("Folder")) then
+		if stationRoot then
+			stationRoot:Destroy()
+		end
+		stationRoot = Instance.new("Folder")
+		stationRoot.Name = "PreparationToolStations"
+		stationRoot.Parent = preparationFolder
+	end
+
+	local anchor = resolvePreparationToolStationAnchor(preparationFolder)
+	local baseCFrame = anchor and anchor.CFrame or CFrame.new()
+	local anchorHeight = anchor and anchor.Size.Y or 1
+	local columns = 6
+	local xSpacing = 1.55
+	local zSpacing = 1.34
+	local createdOrUpdated = false
+
+	for index, toolData in ipairs(PREPARATION_TOOL_STATIONS) do
+		if preparationFolder:FindFirstChild(toolData.name, true) then
+			continue
+		end
+
+		local row = math.floor((index - 1) / columns)
+		local column = (index - 1) % columns
+		local centeredX = (column - ((columns - 1) * 0.5)) * xSpacing
+		local localZ = -1.25 + (row * zSpacing)
+		local stationCFrame = baseCFrame * CFrame.new(centeredX, (anchorHeight * 0.5) + 0.16, localZ)
+		local accent = toolData.color or Color3.fromRGB(132, 186, 255)
+
+		local pad = ensurePart(stationRoot, toolData.name .. "_Pad")
+		configurePart(pad, {
+			Size = Vector3.new(1.3, 0.08, 1.05),
+			CFrame = stationCFrame * CFrame.new(0, -0.08, 0),
+			Material = Enum.Material.Neon,
+			Color = accent:Lerp(Color3.fromRGB(28, 34, 44), 0.62),
+			Transparency = 0.3,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = true,
+		})
+		pad:SetAttribute("PasrahGeneratedPreparationToolPad", true)
+
+		local station = ensurePart(stationRoot, toolData.name)
+		configurePart(station, {
+			Size = Vector3.new(1.18, 0.16, 0.9),
+			CFrame = stationCFrame,
+			Material = Enum.Material.SmoothPlastic,
+			Color = accent:Lerp(Color3.fromRGB(46, 52, 64), 0.18),
+			Transparency = 0,
+			CanCollide = false,
+			CanTouch = false,
+			CanQuery = true,
+		})
+		station:SetAttribute("PasrahGeneratedPreparationToolStation", true)
+		station:SetAttribute("PasrahPreparationToolType", toolData.toolType)
+		station:SetAttribute("PasrahPreparationToolLabel", toolData.title)
+		ensurePrompt(station, "Prompt", "Pilih Fokus Tool", toolData.title)
+		ensurePreparationToolDisplay(station, toolData)
+		createdOrUpdated = true
+	end
+
+	return createdOrUpdated
+end
+
 local function isPreparationMatchPlayer(player, matchContext)
 	if not (typeof(player) == "Instance" and player:IsA("Player")) then
 		return false
@@ -2283,6 +2378,7 @@ local function applyPreparationToolSelectionState(preparationFolder, matchContex
 	if typeof(preparationFolder) ~= "Instance" then
 		return false
 	end
+	ensurePreparationToolStationParts(preparationFolder)
 	local loadout = resolvePreparationLoadout(matchContext)
 	local loadoutLookup = {}
 	for _, toolType in ipairs(loadout) do
@@ -2336,6 +2432,7 @@ local function bindPreparationToolStations(preparationFolder, matchContext)
 	if typeof(preparationFolder) ~= "Instance" then
 		return false
 	end
+	ensurePreparationToolStationParts(preparationFolder)
 
 	if type(matchContext) == "table" and type(matchContext._preparationToolPromptConnections) ~= "table" then
 		matchContext._preparationToolPromptConnections = {}
@@ -2386,6 +2483,10 @@ local function bindPreparationToolStations(preparationFolder, matchContext)
 				player:SetAttribute("PasrahPreparationToolSelected", true)
 				player:SetAttribute("PasrahEquippedToolType", toolData.toolType)
 				player:SetAttribute("PasrahToolUseStamp", os.clock())
+				if toolData.toolType == "Flashlight" then
+					player:SetAttribute("PasrahFlashlightBattery", 100)
+					player:SetAttribute("PasrahFlashlightNeedsReload", false)
+				end
 				if type(matchContext) == "table" then
 					matchContext.selectedPreparationTool = toolData.toolType
 					matchContext.selectedPreparationToolLabel = toolData.title

@@ -168,7 +168,56 @@ function GraphicsSupport.renderPreviewFallback(viewportFrame, titleText, accentC
 
 	local title, detail = cloneFlatPreviewTemplate(viewportFrame)
 	if not (title and detail) then
-		return false
+		local backdrop = Instance.new("Frame")
+		backdrop.Name = "FlatPreviewBackdrop"
+		backdrop.Size = UDim2.fromScale(1, 1)
+		backdrop.BackgroundColor3 = previewAccent:Lerp(Color3.fromRGB(28, 34, 44), 0.24)
+		backdrop.BackgroundTransparency = 0.2
+		backdrop.BorderSizePixel = 0
+		backdrop.Parent = viewportFrame
+		local backdropCorner = Instance.new("UICorner")
+		backdropCorner.CornerRadius = UDim.new(0, 8)
+		backdropCorner.Parent = backdrop
+
+		local backdropStroke = Instance.new("UIStroke")
+		backdropStroke.Name = "FlatPreviewStroke"
+		backdropStroke.Thickness = 1
+		backdropStroke.Color = previewAccent
+		backdropStroke.Transparency = 0.36
+		backdropStroke.Parent = backdrop
+
+		local accentBar = Instance.new("Frame")
+		accentBar.Name = "FlatPreviewAccentBar"
+		accentBar.Position = UDim2.fromOffset(0, 0)
+		accentBar.Size = UDim2.new(1, 0, 0, 4)
+		accentBar.BackgroundColor3 = previewAccent
+		accentBar.BackgroundTransparency = 0.02
+		accentBar.BorderSizePixel = 0
+		accentBar.Parent = backdrop
+
+		title = Instance.new("TextLabel")
+		title.Name = "FlatPreviewTitle"
+		title.BackgroundTransparency = 1
+		title.TextColor3 = Color3.fromRGB(247, 242, 234)
+		title.Font = Enum.Font.GothamBlack
+		title.TextSize = math.max(10, math.floor(viewportFrame.AbsoluteSize.Y * 0.28))
+		title.TextWrapped = true
+		title.TextScaled = false
+		title.TextXAlignment = Enum.TextXAlignment.Center
+		title.TextYAlignment = Enum.TextYAlignment.Center
+		title.Parent = backdrop
+
+		detail = Instance.new("TextLabel")
+		detail.Name = "FlatPreviewDetail"
+		detail.BackgroundTransparency = 1
+		detail.TextColor3 = Color3.fromRGB(196, 206, 220)
+		detail.Font = Enum.Font.GothamBold
+		detail.TextSize = math.max(8, math.floor(viewportFrame.AbsoluteSize.Y * 0.16))
+		detail.TextWrapped = true
+		detail.TextScaled = false
+		detail.TextXAlignment = Enum.TextXAlignment.Center
+		detail.TextYAlignment = Enum.TextYAlignment.Center
+		detail.Parent = backdrop
 	end
 
 	title.Size = UDim2.new(1, -8, 0, math.max(18, math.floor(viewportFrame.AbsoluteSize.Y * 0.55)))

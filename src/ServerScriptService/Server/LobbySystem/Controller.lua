@@ -47,6 +47,7 @@ local ACTION_HANDLERS = {
 	KickPlayer = "OnKickPlayer",
 	SetPassword = "OnSetPassword",
 	CreateRoom = "OnCreateRoom",
+	SetForcedGhost = "OnSetForcedGhost",
 }
 
 local function appendTraceValue(parts, key, value)
@@ -1094,4 +1095,3 @@ function Controller:OnSetForcedGhost(player, request)
 	})
 end
 return Controller
-

@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local LOBBY_REMOTE_NAME = "LobbyEvent"
+local READY_TOGGLE_GUARD_SECONDS = 0.75
 
 local function appendTraceValue(parts, key, value)
 	if value == nil then
@@ -78,6 +79,10 @@ function RoomBrowserController.new(lobbyRemote)
 	self._lobbyRemote = lobbyRemote
 	self._requestSeq = 0
 	self._lastActionSentAt = {}
+	self._pendingReadyDesired = nil
+	self._pendingReadySentAt = 0
+	self._lastReadyDesired = nil
+	self._lastReadySentAt = 0
 	self._state = {
 		modes = {},
 		classicDifficulties = {},
@@ -240,7 +245,26 @@ function RoomBrowserController:QueueSelected()
 end
 
 function RoomBrowserController:SetReady(isReady)
-	self:_send("SetReady", { isReady = isReady })
+	local desired = isReady == true
+	local now = os.clock()
+	if self._pendingReadyDesired == desired and (now - (self._pendingReadySentAt or 0)) < READY_TOGGLE_GUARD_SECONDS then
+		return false
+	end
+	if self._lastReadyDesired ~= nil
+		and self._lastReadyDesired ~= desired
+		and (now - (self._lastReadySentAt or 0)) < READY_TOGGLE_GUARD_SECONDS
+	then
+		return false
+	end
+
+	local sent = self:_send("SetReady", { isReady = desired })
+	if sent then
+		self._pendingReadyDesired = desired
+		self._pendingReadySentAt = now
+		self._lastReadyDesired = desired
+		self._lastReadySentAt = now
+	end
+	return sent
 end
 
 function RoomBrowserController:HostStart(mapId, difficulty, mode)
@@ -347,6 +371,10 @@ function RoomBrowserController:HandleLobbyEvent(payload)
 	elseif eventName == "RoomReadyResult" or eventName == "HostStartResult" or eventName == "KickPlayerResult" or eventName == "CreateRoomResult" or eventName == "SetPasswordResult" or eventName == "CancelHostStartResult" then
 		local okResult = payload and payload.ok
 		if okResult == false then
+			if eventName == "RoomReadyResult" then
+				self._pendingReadyDesired = nil
+				self._pendingReadySentAt = 0
+			end
 			self:_setPendingRoomTransition(false)
 			self._state.lastError = payload.err or payload.reason or eventName
 		else
@@ -404,7 +432,12 @@ function RoomBrowserController:HandleLobbyEvent(payload)
 			self._state.isHost = payload.isHost == true
 		end
 		if payload.isReady ~= nil then
-			self._state.isReady = payload.isReady == true
+			local resolvedReady = payload.isReady == true
+			self._state.isReady = resolvedReady
+			if self._pendingReadyDesired == resolvedReady then
+				self._pendingReadyDesired = nil
+				self._pendingReadySentAt = 0
+			end
 		end
 		if payload.allReady ~= nil then
 			self._state.allReady = payload.allReady == true

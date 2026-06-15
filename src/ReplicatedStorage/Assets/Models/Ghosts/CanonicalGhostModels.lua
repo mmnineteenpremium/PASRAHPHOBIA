@@ -1,0 +1,27 @@
+return {
+	owner = {
+		groupId = 407883270,
+		groupName = "PASRAHPHOBIA DEVELOPER & TEAM",
+	},
+	notes = "GhostSystem.Service hydrates ReplicatedStorage.Assets.Models.Ghosts from these canonical rigged model assets at server init; legacy binary .rbxm ghost templates are intentionally not source-owned.",
+	ghosts = {
+		Banaspati = "rbxassetid://125985418520274",
+		BanaspatiAggressive = "rbxassetid://125985418520274",
+		Genderuwo = "rbxassetid://116514308503184",
+		GenderuwoAggressive = "rbxassetid://116514308503184",
+		HantuTanah = "rbxassetid://97068595212213",
+		Jerangkong = "rbxassetid://115554451751983",
+		Kuntilanak = "rbxassetid://111714179492317",
+		KuntilanakAggressive = "rbxassetid://111714179492317",
+		Leak = "rbxassetid://98855032697085",
+		LeakAggressive = "rbxassetid://98855032697085",
+		Palasik = "rbxassetid://78260225419720",
+		PalasikAngry = "rbxassetid://78260225419720",
+		Pocong = "rbxassetid://135270375666027",
+		SilumanUlar = "rbxassetid://87361945667344",
+		SundelBolong = "rbxassetid://89326336764042",
+		SundelBolongAggressive = "rbxassetid://89326336764042",
+		Tuyul = "rbxassetid://128588579954533",
+		WeweGombel = "rbxassetid://101666948803556",
+	},
+}

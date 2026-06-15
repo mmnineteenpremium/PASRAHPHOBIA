@@ -7,6 +7,8 @@ local SUPPORTED_ZONES = {
     "SpawnPlaza",
     "FlexZone",
     "ShopZone",
+    "TrainingZone",
+    "LeaderboardZone",
     "DailyRewardZone",
     "MatchmakingZone",
     "PartyZone",

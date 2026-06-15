@@ -30,12 +30,13 @@ AUTHORITY: Mengkoordinasi semua sub-agent untuk memenuhi kebutuhan asset
 - Asset pipeline: 100 images + 80 meshes + 23 textures uploaded
 - AssetIdConfig.lua: generated, 0 nil entries
 - Lobby button, Shop, RoyalPass panel open/close: working
+- Reward scope: semua Mission/RoyalPass/Reward Season 1 hanya in-game PASRAHPHOBIA. Tidak ada UGC Avatar Marketplace, item lintas game, ACT redemption, atau upload UGC yang butuh credential tambahan.
 
 ### Belum Selesai
 - Owner visual test: BELUM (dijadwalkan serentak)
-- Animation Asset ID: 2 pending Studio publish
-- AGENT_05 audio UI SFX: belum dimulai
-- Cosmetic wearable proper (UGC accessory): belum
+- Animation Asset ID: 2 confirmed from Studio; owner visual test masih pending
+- AGENT_05 audio UI SFX: partial; runtime wiring sudah ada, polish/owner confirmation masih pending
+- Cosmetic wearable proper: scope in-game-only; jalur UGC accessory dibatalkan untuk hemat biaya dan menghindari credential tambahan.
 - Subscription + season skip product: belum
 - 2-client + mobile smoke: belum
 
@@ -69,6 +70,7 @@ asset Royal Pass PASRAHPHOBIA. Kamu TIDAK membuat asset sendiri. Tugasmu adalah:
 **Currency:** MM (MadMoney), PP (PassPoints), XP
 **Royal Pass:** 60 tier per season, Free Track + Premium Track
 **Reset:** Per season (perkiraan 60 hari)
+**Reward Scope:** Semua reward Season 1 hanya berlaku di PASRAHPHOBIA. Jangan menjanjikan UGC, Avatar Marketplace item, limited drop, atau item lintas game.
 
 **Reward Types yang ada di RoyalPassConfig.lua:**
 | Type         | Contoh ID                    | Agent Owner    |
@@ -82,6 +84,12 @@ asset Royal Pass PASRAHPHOBIA. Kamu TIDAK membuat asset sendiri. Tugasmu adalah:
 | pet          | pet_orb_ghost                | 3DMODEL_AGENT + ANIMATION_AGENT |
 | gachaTickets | —                            | (no asset needed) |
 | mm / xp / pp | —                            | (no asset needed) |
+
+**UGC / Avatar Marketplace Decision (2026-05-27):**
+- Dibatalkan untuk scope Mission/RoyalPass/Reward saat ini.
+- Semua model/cosmetic/emote/title/badge adalah entitlement internal PASRAHPHOBIA.
+- Jangan membuat task `ugc_*`, Avatar Creation Token, marketplace limited, resale, atau upload Avatar Item.
+- Jangan meminta credential tambahan untuk UGC upload. Asset upload umum tetap wajib approval owner dan guard branch/Rojo.
 
 =======================================================================
 ## SUB-AGENT REGISTRY
@@ -280,3 +288,8 @@ ORCHESTRATOR RULES:
 - Jika ada konflik naming → ORCHESTRATOR yang resolve, bukan sub-agent
 - Jika ada perubahan RoyalPassConfig.lua → update manifest dulu, baru re-assign
 =======================================================================
+
+QUEST JOURNAL SOURCE OF TRUTH:
+- Writer stabil quest journal saat ini adalah `DailyEngagementSystem.Service`.
+- Weekly/story/daily harus di-update dari `LiveOpsContent` yang sama, bukan dari dokumen split lama yang tidak lagi cocok dengan runtime stabil.
+- Jika daily/weekly/story terlihat sama setiap cycle, itu adalah batas content source saat ini dan harus diperlakukan sebagai data yang perlu di-rotate, bukan bug UI.

@@ -29,6 +29,9 @@
     {
       "name": "MainPanel",
       "className": "Frame",
+      "properties": {
+        "Visible": false
+      },
       "children": [
         {
           "name": "UICorner",
@@ -1535,7 +1538,7 @@
             "InputSink": {
               "Enum": 0
             },
-            "ImageContent": "rbxthumb://type=Asset&id=80346066735019&w=420&h=420",
+            "ImageContent": "rbxthumb://type=Asset&id=85244632357585&w=420&h=420",
             "BackgroundTransparency": 1.0,
             "Size": {
               "UDim2": [
@@ -1569,7 +1572,7 @@
             "ZIndex": 2.0
           },
           "attributes": {
-            "OwnerIconAssetId": "80346066735019"
+            "OwnerIconAssetId": "85244632357585"
           }
         }
       ],
@@ -1586,16 +1589,16 @@
           0.23529411852359772,
           0.32156863808631897
         ],
-        "Text": "<",
+        "Text": ">",
         "Position": {
           "UDim2": [
             [
               0.0,
-              1838
+              18
             ],
             [
               0.0,
-              500
+              88
             ]
           ]
         },
@@ -1623,12 +1626,12 @@
           0.9098039269447327
         ],
         "AnchorPoint": [
-          1.0,
+          0.0,
           0.0
         ]
       },
       "attributes": {
-        "OwnerIconAssetId": "80346066735019"
+        "OwnerIconAssetId": "85244632357585"
       }
     }
   ],
@@ -1641,3 +1644,8 @@
     "ScreenInsets": "DeviceSafeInsets"
   }
 }
+
+
+
+
+

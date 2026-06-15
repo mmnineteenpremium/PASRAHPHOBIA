@@ -126,6 +126,39 @@ local function safeCall(target, methodName, ...)
     return result
 end
 
+local function mergeQuestPayloadFromCurrentAttribute(player, payload)
+    if type(player) ~= "Instance" or not player:IsA("Player") then
+        return payload
+    end
+
+    local current = player:GetAttribute(QUEST_DATA_ATTR)
+    if type(current) ~= "string" or current == "" then
+        return payload
+    end
+
+    local ok, decoded = pcall(function()
+        return HttpService:JSONDecode(current)
+    end)
+    if not ok or type(decoded) ~= "table" then
+        return payload
+    end
+
+    for key, value in pairs(decoded) do
+        if payload[key] == nil then
+            payload[key] = value
+        end
+    end
+
+    if type(decoded.weekly) == "table" and type(payload.weekly) ~= "table" then
+        payload.weekly = decoded.weekly
+    end
+    if type(decoded.story) == "table" and type(payload.story) ~= "table" then
+        payload.story = decoded.story
+    end
+
+    return payload
+end
+
 local function resolveEventBus(deps)
     local eventBus = Services.Get(deps, "EventBus")
     if type(eventBus) ~= "table" then
@@ -348,6 +381,7 @@ function Service:SyncPlayer(playerOrUserId)
     end
 
     local payload = self:_buildQuestPayload(player)
+    payload = mergeQuestPayloadFromCurrentAttribute(player, payload)
     local ok, encoded = pcall(function()
         return HttpService:JSONEncode(payload)
     end)

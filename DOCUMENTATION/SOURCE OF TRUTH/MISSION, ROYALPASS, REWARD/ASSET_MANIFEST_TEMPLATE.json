@@ -229,13 +229,14 @@
     "note": "Template ini adalah referensi struktur saja. Data aktual ada di assets/manifest/ASSET_ID_REGISTRY.json",
     "registry_summary": {
       "images": "100/100 CONFIRMED",
-      "meshes": "80/80 CONFIRMED — placeholder, bukan UGC accessory",
+      "meshes": "80/80 CONFIRMED — in-game cosmetic/model only, bukan UGC accessory",
       "textures": "23/23 CONFIRMED",
-      "animations": "2/2 — Animation Asset ID pending Studio upload",
+      "animations": "2/2 CONFIRMED — IDs available in AssetIdConfig.lua; owner visual confirmation pending",
       "audio_bgm": "84/84 CONFIRMED — gameplay audio",
-      "audio_ui_sfx": "0 — belum dibuat (AGENT_05 scope)"
+      "audio_ui_sfx": "wired in client; polish/owner confirmation pending"
     },
     "owner_visual_test": "BELUM — dijadwalkan serentak",
+    "reward_scope": "PASRAHPHOBIA_ONLY — no UGC Avatar Marketplace, no cross-game entitlement, no ACT redemption",
     "published_version": "v96",
     "universe_id": "10138560838",
     "place_id": "89787959603872"

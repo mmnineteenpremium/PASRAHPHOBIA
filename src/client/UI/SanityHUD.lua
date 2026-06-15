@@ -25,6 +25,105 @@ local function getPlayerSanity(player)
 	return 100
 end
 
+local function ensureFallbackSanityHUDGui(playerGui)
+	if not playerGui then
+		return nil
+	end
+	local screenGui = playerGui:FindFirstChild("SanityHUDGui")
+	if not (screenGui and screenGui:IsA("ScreenGui")) then
+		if screenGui then
+			screenGui:Destroy()
+		end
+		screenGui = Instance.new("ScreenGui")
+		screenGui.Name = "SanityHUDGui"
+		screenGui.ResetOnSpawn = false
+		screenGui.IgnoreGuiInset = true
+		screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		screenGui.Parent = playerGui
+	end
+
+	local container = getDirectChildOfClass(screenGui, "Container", "Frame")
+	if not container then
+		container = Instance.new("Frame")
+		container.Name = "Container"
+		container.AnchorPoint = Vector2.new(0, 1)
+		container.Position = UDim2.new(0, 24, 1, -96)
+		container.Size = UDim2.fromOffset(214, 54)
+		container.BackgroundColor3 = Color3.fromRGB(12, 15, 20)
+		container.BackgroundTransparency = 0.12
+		container.BorderSizePixel = 0
+		container.Parent = screenGui
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = container
+	end
+	local label = getDirectChildOfClass(container, "Label", "TextLabel")
+	if not label then
+		label = Instance.new("TextLabel")
+		label.Name = "Label"
+		label.BackgroundTransparency = 1
+		label.Position = UDim2.fromOffset(12, 6)
+		label.Size = UDim2.fromOffset(98, 18)
+		label.Font = Enum.Font.GothamBold
+		label.Text = "SANITY"
+		label.TextColor3 = Color3.fromRGB(230, 235, 242)
+		label.TextSize = 13
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Parent = container
+	end
+	local valueLabel = getDirectChildOfClass(container, "ValueLabel", "TextLabel")
+	if not valueLabel then
+		valueLabel = Instance.new("TextLabel")
+		valueLabel.Name = "ValueLabel"
+		valueLabel.BackgroundTransparency = 1
+		valueLabel.Position = UDim2.new(1, -60, 0, 6)
+		valueLabel.Size = UDim2.fromOffset(48, 18)
+		valueLabel.Font = Enum.Font.GothamBold
+		valueLabel.Text = "100"
+		valueLabel.TextColor3 = Color3.fromRGB(230, 235, 242)
+		valueLabel.TextSize = 13
+		valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+		valueLabel.Parent = container
+	end
+	local bar = getDirectChildOfClass(container, "Bar", "Frame")
+	if not bar then
+		bar = Instance.new("Frame")
+		bar.Name = "Bar"
+		bar.Position = UDim2.fromOffset(12, 31)
+		bar.Size = UDim2.new(1, -24, 0, 10)
+		bar.BackgroundColor3 = Color3.fromRGB(36, 42, 54)
+		bar.BorderSizePixel = 0
+		bar.Parent = container
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = bar
+	end
+	local fill = getDirectChildOfClass(bar, "Fill", "Frame")
+	if not fill then
+		fill = Instance.new("Frame")
+		fill.Name = "Fill"
+		fill.Size = UDim2.fromScale(1, 1)
+		fill.BackgroundColor3 = Color3.fromRGB(124, 88, 220)
+		fill.BorderSizePixel = 0
+		fill.Parent = bar
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = fill
+	end
+	local vignette = getDirectChildOfClass(screenGui, "SanityVignette", "Frame")
+	if not vignette then
+		vignette = Instance.new("Frame")
+		vignette.Name = "SanityVignette"
+		vignette.Size = UDim2.fromScale(1, 1)
+		vignette.BackgroundColor3 = Color3.fromRGB(120, 18, 34)
+		vignette.BackgroundTransparency = 1
+		vignette.BorderSizePixel = 0
+		vignette.ZIndex = 0
+		vignette.Parent = screenGui
+	end
+	return screenGui
+end
+
 function SanityHUD.new(playerGui)
 	local self = setmetatable({}, SanityHUD)
 	self.playerGui = playerGui
@@ -43,9 +142,8 @@ function SanityHUD:BuildUI()
 	local screenGui = self.playerGui:FindFirstChild("SanityHUDGui") or self.playerGui:WaitForChild("SanityHUDGui", 5)
 	if not screenGui or not screenGui:IsA("ScreenGui") then
 		warn("[SanityHUD] Missing authored SanityHUDGui ScreenGui; check StarterGui shell contract.")
-		return false
+		screenGui = ensureFallbackSanityHUDGui(self.playerGui)
 	end
-
 	local container = getDirectChildOfClass(screenGui, "Container", "Frame")
 	local label = getDirectChildOfClass(container, "Label", "TextLabel")
 	local bar = getDirectChildOfClass(container, "Bar", "Frame")
@@ -54,7 +152,16 @@ function SanityHUD:BuildUI()
 	local vignette = getDirectChildOfClass(screenGui, "SanityVignette", "Frame")
 	if not (container and label and bar and fill and valueLabel and vignette) then
 		warn("[SanityHUD] Authored SanityHUDGui contract mismatch; preserve canonical widget names.")
-		return false
+		screenGui = ensureFallbackSanityHUDGui(self.playerGui)
+		container = getDirectChildOfClass(screenGui, "Container", "Frame")
+		label = getDirectChildOfClass(container, "Label", "TextLabel")
+		bar = getDirectChildOfClass(container, "Bar", "Frame")
+		fill = getDirectChildOfClass(bar, "Fill", "Frame")
+		valueLabel = getDirectChildOfClass(container, "ValueLabel", "TextLabel")
+		vignette = getDirectChildOfClass(screenGui, "SanityVignette", "Frame")
+		if not (container and label and bar and fill and valueLabel and vignette) then
+			return false
+		end
 	end
 
 	self._screenGui = screenGui

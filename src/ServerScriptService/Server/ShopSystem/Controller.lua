@@ -137,6 +137,18 @@ local function resolveGiftRecipientUserId(request)
     return recipientUserId
 end
 
+local function resolvePurchaseQuantity(request)
+    if type(request) ~= "table" then
+        return 1
+    end
+    local raw = request.quantity
+    if raw == nil and type(request.payload) == "table" then
+        raw = request.payload.quantity
+    end
+    local quantity = math.floor(tonumber(raw) or 1)
+    return math.clamp(quantity, 1, 99)
+end
+
 function Controller.new(state, service, deps)
     local self = setmetatable({}, Controller)
     self._state = state
@@ -638,7 +650,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
 
     local recipientUserId = resolveGiftRecipientUserId(request)
     if recipientUserId and recipientUserId ~= toUserId(player) then
-        local purchaseIntentOk, purchaseIntentErr, purchaseIntent = self._service:ResolvePurchaseIntent(player, itemId)
+        local purchaseIntentOk, purchaseIntentErr, purchaseIntent = self._service:ResolvePurchaseIntent(player, itemId, 1)
         if not purchaseIntentOk then
             self:_sendPurchaseResponseWithSnapshot(player, {
                 eventName = "PurchaseProcessed",
@@ -698,7 +710,8 @@ function Controller:OnPurchaseRemoteRequest(player, request)
         source = "PurchaseEvent",
     })
 
-    local intentOk, intentErr, intent = self._service:ResolvePurchaseIntent(player, itemId)
+    local quantity = resolvePurchaseQuantity(request)
+    local intentOk, intentErr, intent = self._service:ResolvePurchaseIntent(player, itemId, quantity)
     if not intentOk then
         self:_sendPurchaseResponseWithSnapshot(player, {
             eventName = "PurchaseProcessed",
@@ -706,6 +719,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
             success = false,
             reason = intentErr,
             itemId = itemId,
+            quantity = quantity,
         })
         return
     end
@@ -717,6 +731,7 @@ function Controller:OnPurchaseRemoteRequest(player, request)
             requestId = requestId,
             success = true,
             itemId = itemId,
+            quantity = quantity,
             purchaseType = intent.marketplaceType,
             productId = intent.marketplaceId,
             currency = intent.purchaseCurrency,
@@ -724,13 +739,14 @@ function Controller:OnPurchaseRemoteRequest(player, request)
         return
     end
 
-    local ok, reason = self._service:ProcessPurchase(player, itemId)
+    local ok, reason = self._service:ProcessPurchase(player, itemId, quantity)
     self:_sendPurchaseResponseWithSnapshot(player, {
         eventName = "PurchaseProcessed",
         requestId = requestId,
         success = ok == true,
         reason = reason,
         itemId = itemId,
+        quantity = quantity,
     })
 end
 

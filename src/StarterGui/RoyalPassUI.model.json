@@ -1114,20 +1114,24 @@
                         },
                         {
                           "name": "CosmeticPreview",
-                          "className": "ImageLabel",
+                          "className": "ViewportFrame",
                           "properties": {
-                            "Visible": false,
-                            "Image": "",
-                            "ScaleType": "Fit",
-                            "BackgroundTransparency": 1.0,
+                            "Visible": true,
+                            "BackgroundColor3": [
+                              0.07058823853731155,
+                              0.0941176488995552,
+                              0.13333334028720856
+                            ],
+                            "BackgroundTransparency": 0.03999999910593033,
+                            "BorderSizePixel": 0.0,
                             "Position": {
                               "UDim2": [
                                 [
-                                  0.1,
+                                  14,
                                   0
                                 ],
                                 [
-                                  0.45,
+                                  44,
                                   0
                                 ]
                               ]
@@ -1135,8 +1139,8 @@
                             "Size": {
                               "UDim2": [
                                 [
-                                  0.8,
-                                  0
+                                  1.0,
+                                  -28
                                 ],
                                 [
                                   0.0,

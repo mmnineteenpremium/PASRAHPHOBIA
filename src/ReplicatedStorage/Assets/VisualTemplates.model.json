@@ -3555,7 +3555,7 @@
             "FlipbookBlendFrames": {
               "Bool": true
             },
-            "Texture": "rbxasset://textures/particles/smoke_main.dds",
+            "Texture": "rbxassetid://241685934",
             "Rate": 0.0
           }
         },

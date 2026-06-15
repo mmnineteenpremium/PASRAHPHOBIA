@@ -495,3 +495,29 @@ Current blockers:
 
 Stop/blocker reason:
 - Audit slice recorded at n=80%. Work can continue into the next slice, but final PASS is withheld until owner confirmation plus publish/runtime validation.
+
+## 2026-06-11 - quest journal weekly/story/daily stabilization - n=86%
+
+Owner-facing status:
+- Quest Journal now renders daily, weekly, and story cards correctly in live client after a layout stabilization fix.
+- The verified runtime source of truth remains `DailyEngagementSystem.Service`, not the older split daily mission path.
+- Existing debug startup prints in `DailyEngagementSystem.Controller` and `DailyEngagementSystem.Main` were removed.
+
+Verified content source:
+- `ReplicatedStorage.Shared.GameData.LiveOpsContent`
+- DailyContracts: 4 fixed contracts per day.
+- WeeklyChallenges: 4 fixed challenges per week.
+- StoryMissions: 3 active story missions.
+
+Design truth captured:
+- Weekly does not currently rotate between multiple challenge pools; all 4 weekly challenges are active every cycle.
+- Daily does not currently vary by day; it is the same fixed 4-contract set each day.
+- Story is the early chapter progression arc for new players.
+- Rewards are not XP-only: daily includes MM/currency + XP + RoyalPassXP, weekly includes MM/currency + XP + RoyalPassXP + cosmetic metadata, and story includes MM/currency + XP + cosmetic metadata.
+
+Documentation updated:
+- `DOCUMENTATION/SOURCE OF TRUTH/MISSION, ROYALPASS, REWARD/QUEST_JOURNAL_WEEKLY_STORY_DAILY_REPORT_2026-06-11.md`
+- `DOCUMENTATION/SOURCE OF TRUTH/MISSION, ROYALPASS, REWARD/QUICK_REFERENCE.md`
+
+Follow-up recommendation:
+- If the content strategy requires true day-by-day and week-by-week variety, the next slice should expand `LiveOpsContent` into rotating pools instead of treating the current fixed set as a long-term live ops endpoint.

@@ -311,6 +311,14 @@ function QuestTracker:BuildUI()
 
 	local container = getDirectChildOfClass(screenGui, "QuestContainer", "Frame")
 	local sizeConstraint = getFirstChildOfClass(container, "UISizeConstraint")
+	if container and not sizeConstraint then
+		sizeConstraint = Instance.new("UISizeConstraint")
+		sizeConstraint.Name = "RuntimeSizeConstraint"
+		sizeConstraint.MinSize = Vector2.new(220, 96)
+		sizeConstraint.MaxSize = Vector2.new(420, 460)
+		sizeConstraint:SetAttribute("PasrahRuntimeShellRepair", true)
+		sizeConstraint.Parent = container
+	end
 	local layout = getFirstChildOfClass(container, "UIListLayout")
 	local header = getDirectChildOfClass(container, "Header", "TextLabel")
 	local collapseButton = getDirectChildOfClass(container, "CollapseButton", "TextButton")

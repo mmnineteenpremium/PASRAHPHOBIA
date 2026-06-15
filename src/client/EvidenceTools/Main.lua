@@ -304,6 +304,47 @@ function EvidenceTools:UseTool(toolType, payload)
 	return adapter:Use(payload)
 end
 
+function EvidenceTools:EquipTool(toolType)
+	if type(toolType) ~= "string" or toolType == "" then
+		return false, "invalid_tool"
+	end
+	if toolType == "Flashlight" then
+		stampToolRuntime(toolType, true, "ClientToolEquipped")
+		return true, "equipped_local"
+	end
+	if not self._toolStates[toolType] then
+		return false, "invalid_tool"
+	end
+	self:_ensureEvidenceRequest()
+	if not self._evidenceRequest or not self._evidenceRequest.InvokeServer then
+		stampToolRuntime(toolType, false, "ClientToolEquipMissingRemote")
+		return false, "missing_remote_function"
+	end
+
+	self._requestCounter += 1
+	local okInvoke, response = pcall(function()
+		return self._evidenceRequest:InvokeServer({
+			action = "EquipInvestigationTool",
+			requestType = "EquipInvestigationTool",
+			requestId = tostring(self._requestCounter),
+			toolType = toolType,
+			payload = {
+				toolType = toolType,
+			},
+		})
+	end)
+	if not okInvoke then
+		stampToolRuntime(toolType, false, "ClientToolEquipInvokeFailed")
+		return false, "invoke_failed"
+	end
+	if type(response) ~= "table" then
+		stampToolRuntime(toolType, false, "ClientToolEquipInvalid")
+		return false, "invalid_gateway_response"
+	end
+	stampToolRuntime(toolType, response.success == true, "ClientToolEquipped")
+	return response.success == true, response.reason, response
+end
+
 function EvidenceTools:GetToolState(toolType)
 	return self._toolStates[toolType]
 end

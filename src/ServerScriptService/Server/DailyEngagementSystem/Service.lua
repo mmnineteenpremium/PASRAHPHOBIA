@@ -219,6 +219,34 @@ local function getGachaConfig()
 	return getConfigModule("GachaConfig")
 end
 
+local function getWeeklyChallengeSystem(deps)
+	local system = Services.Get(deps, "WeeklyChallengeSystem")
+	if type(system) ~= "table" then
+		return nil
+	end
+	if type(system.GetWeeklyChallengeSnapshot) == "function" then
+		return system
+	end
+	if type(system.Service) == "table" and type(system.Service.GetWeeklyChallengeSnapshot) == "function" then
+		return system.Service
+	end
+	return nil
+end
+
+local function getStoryMissionSystem(deps)
+	local system = Services.Get(deps, "StoryMissionSystem")
+	if type(system) ~= "table" then
+		return nil
+	end
+	if type(system.GetStorySnapshot) == "function" then
+		return system
+	end
+	if type(system.Service) == "table" and type(system.Service.GetStorySnapshot) == "function" then
+		return system.Service
+	end
+	return nil
+end
+
 local function getRemote(remoteName)
 	local folder = ReplicatedStorage:FindFirstChild(REMOTE_FOLDER_NAME)
 	if not folder then
@@ -463,13 +491,17 @@ function Service:GetTodayDateString()
 end
 
 function Service:OnPlayerAdded(player)
+	print("[DEBUG-SVC-1] OnPlayerAdded triggered for: " .. (player and player.Name or "nil"))
 	task.defer(function()
 		if player.Parent ~= Players then
+			print("[DEBUG-SVC-2] OnPlayerAdded deferred: player left game")
 			return
 		end
+		print("[DEBUG-SVC-3] OnPlayerAdded deferred executing for: " .. player.Name)
 		self:_ensurePlayerData(player, { forceLoad = true })
 		self:ResetDailyIfNeeded(player)
 		self:_syncToClient(player)
+		print("[DEBUG-SVC-4] OnPlayerAdded deferred COMPLETE for: " .. player.Name)
 	end)
 end
 
@@ -491,9 +523,11 @@ function Service:OnPlayerRemoving(player)
 end
 
 function Service:OnPlayerEnteredLobby(player)
+	print("[DEBUG-A] OnPlayerEnteredLobby called for: " .. (player and player.Name or "nil"))
 	self:_ensurePlayerData(player)
 	self:ResetDailyIfNeeded(player)
 	self:_syncToClient(player)
+	print("[DEBUG-D] _syncToClient finished for: " .. (player and player.Name or "nil"))
 end
 
 function Service:ResetDailyIfNeeded(player)
@@ -1111,6 +1145,7 @@ function Service:_buildQuestEntry(mission)
 end
 
 function Service:_buildQuestPayload(player)
+	print("[DEBUG-1] _buildQuestPayload ENTERED for: " .. (player and player.Name or "nil"))
 	local data = self:_ensurePlayerData(player)
 	local active = {}
 	local completed = {}
@@ -1121,23 +1156,87 @@ function Service:_buildQuestPayload(player)
 			table.insert(active, self:_buildQuestEntry(mission))
 		end
 	end
+	local weeklySnap = self:_buildWeeklySnapshot(player)
+	local storySnap = self:_buildStorySnapshot(player)
+	print(string.format(
+		"[DEBUG-2] QuestPayload → weekly:[%s] story:[%s] | weekly.active=%d completed=%d | story.active=%d completed=%d",
+		weeklySnap and "OK" or "NIL",
+		storySnap and "OK" or "NIL",
+		weeklySnap and #(weeklySnap.active or {}) or -1,
+		weeklySnap and #(weeklySnap.completed or {}) or -1,
+		storySnap and #(storySnap.active or {}) or -1,
+		storySnap and #(storySnap.completed or {}) or -1
+	))
 	return {
 		active = active,
 		completed = completed,
 		date = data and data.daily.lastResetDate or self:GetTodayDateString(),
 		updatedAt = nowMillis(),
+		weekly = weeklySnap,
+		story = storySnap,
 	}
+end
+
+function Service:_buildWeeklySnapshot(player)
+	local weeklySystem = getWeeklyChallengeSystem(self._deps)
+	if not weeklySystem then
+		warn("[DailyEngagement] WeeklyChallengeSystem not resolved — weekly tab will be empty")
+		return {
+			active = {},
+			completed = {},
+		}
+	end
+
+	local snapshot = safeCall(weeklySystem, "GetWeeklyChallengeSnapshot", player)
+	if type(snapshot) ~= "table" then
+		warn("[DailyEngagement] GetWeeklyChallengeSnapshot returned nil — weekly tab will be empty")
+		return {
+			active = {},
+			completed = {},
+		}
+	end
+
+	snapshot.active = type(snapshot.active) == "table" and snapshot.active or {}
+	snapshot.completed = type(snapshot.completed) == "table" and snapshot.completed or {}
+	return snapshot
+end
+
+function Service:_buildStorySnapshot(player)
+	local storySystem = getStoryMissionSystem(self._deps)
+	if not storySystem then
+		warn("[DailyEngagement] StoryMissionSystem not resolved — story tab will be empty")
+		return {
+			active = {},
+			completed = {},
+		}
+	end
+
+	local snapshot = safeCall(storySystem, "GetStorySnapshot", player)
+	if type(snapshot) ~= "table" then
+		warn("[DailyEngagement] GetStorySnapshot returned nil — story tab will be empty")
+		return {
+			active = {},
+			completed = {},
+		}
+	end
+
+	snapshot.active = type(snapshot.active) == "table" and snapshot.active or {}
+	snapshot.completed = type(snapshot.completed) == "table" and snapshot.completed or {}
+	return snapshot
 end
 
 function Service:_stampQuestRuntime(player)
 	if not player then
+		print("[DEBUG-Y] _stampQuestRuntime early exit: player is nil")
 		return
 	end
+	print("[DEBUG-C] _stampQuestRuntime called for: " .. player.Name)
 	local payload = self:_buildQuestPayload(player)
 	local ok, encoded = pcall(function()
 		return HttpService:JSONEncode(payload)
 	end)
 	if not ok then
+		print("[DEBUG-ERR] JSONEncode failed for: " .. player.Name)
 		return
 	end
 	player:SetAttribute(QUEST_OWNER_ATTR, "DailyEngagementSystem")
@@ -1145,6 +1244,7 @@ function Service:_stampQuestRuntime(player)
 	player:SetAttribute(QUEST_UPDATED_AT_ATTR, payload.updatedAt)
 	player:SetAttribute(QUEST_ACTIVE_COUNT_ATTR, #(payload.active or {}))
 	player:SetAttribute(QUEST_COMPLETED_COUNT_ATTR, #(payload.completed or {}))
+	print("[DEBUG-Z] _stampQuestRuntime SET ATTR for: " .. player.Name .. " | hasWeekly=" .. tostring(payload.weekly ~= nil) .. " hasStory=" .. tostring(payload.story ~= nil))
 end
 
 function Service:_stampCompletedMission(player, mission)
@@ -1231,6 +1331,7 @@ function Service:BuildClientSnapshot(player)
 			totalDays = data.daily.totalLoginDays or 0,
 			lastDate = data.daily.lastCheckinDate or "",
 		},
+		weekly = self:_buildWeeklySnapshot(player),
 		royalPass = self:GetPlayerSnapshot(player),
 		gacha = clone(data.gacha or {}),
 		gachaTickets = data.gachaTickets or 0,
@@ -1252,14 +1353,28 @@ end
 
 function Service:_syncToClient(player)
 	if not player then
+		print("[DEBUG-X] _syncToClient early exit: player is nil")
 		return
 	end
+	print("[DEBUG-B] _syncToClient called for: " .. player.Name)
 	self:_stampQuestRuntime(player)
 	self:GetPlayerSnapshot(player)
 	self:_sendRemote(player, DAILY_SYNC_REMOTE_NAME, {
 		eventName = "DailyEngagementSync",
 		snapshot = self:BuildClientSnapshot(player),
 	})
+end
+
+function Service:RefreshQuestRuntime(player)
+	if player then
+		self:_syncToClient(player)
+	end
+end
+
+function Service:RefreshAllQuestRuntime()
+	for _, player in ipairs(Players:GetPlayers()) do
+		self:_syncToClient(player)
+	end
 end
 
 function Service:_getMatchPlayerCount(payload)

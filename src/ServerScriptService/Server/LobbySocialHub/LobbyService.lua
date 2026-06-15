@@ -33,6 +33,7 @@ local LobbyZoneManager = requireNamedModule(script.Parent, "LobbyZoneManager")
 local LobbyInteraction = requireNamedModule(script.Parent, "LobbyInteraction")
 local PartySystem = requireNamedModule(script.Parent, "PartySystem")
 local LobbyPopulationController = requireNamedModule(script.Parent, "LobbyPopulationController")
+local NpcDialogueService = requireNamedModule(script.Parent, "NpcDialogueService")
 local CampfireSanityService = requireNamedModule(script.Parent, "CampfireSanityService")
 local LobbyLocator = require(script.Parent.Parent.Core.LobbyLocator)
 local Services = require(script.Parent.Parent.Core.Services)
@@ -51,9 +52,11 @@ local LOBBY_ZONE_ENTRY_GUIDE_HIGHLIGHT_NAME = "Highlight"
 local LOBBY_ZONE_ENTRY_GUIDE_BILLBOARD_TEMPLATE_PATH = { "WorldMarkers", "LobbyZoneEntryGuideBillboardTemplate" }
 local LOBBY_ZONE_ENTRY_GUIDE_ACCENT_NAME = "AccentBar"
 local LOBBY_ZONE_ENTRY_GUIDE_LIGHT_NAME = "AccentLight"
-local LOBBY_ZONE_ENTRY_GUIDE_FRAME_TOP_NAME = "FrameTop"
-local LOBBY_ZONE_ENTRY_GUIDE_FRAME_LEFT_NAME = "FrameLeft"
-local LOBBY_ZONE_ENTRY_GUIDE_FRAME_RIGHT_NAME = "FrameRight"
+local LOBBY_ZONE_ENTRY_GUIDE_FRAME_NAMES = {
+	TOP = "FrameTop",
+	LEFT = "FrameLeft",
+	RIGHT = "FrameRight",
+}
 local LOBBY_ZONE_ENTRY_GUIDE_HEADER_NAME = "HeaderBand"
 local LOBBY_ZONE_ENTRY_GUIDE_CONTRACT_BOARD_NAME = "ContractBoard"
 local LOBBY_ZONE_ENTRY_GUIDE_TOOLS_BOARD_NAME = "ToolsBoard"
@@ -70,6 +73,18 @@ local LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_NAME = "CenterDesk"
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_DESK_TOP_NAME = "CenterDeskTop"
 local LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_NAME = "LeftDisplayCase"
 local LOBBY_ZONE_ENTRY_GUIDE_RIGHT_CASE_NAME = "RightDisplayCase"
+local LOBBY_WORLD_PROMPT_ACTION_BY_PART_NAME = {
+    QueueTrigger = "OpenRoomBrowser",
+    RoomBoard = "OpenRoomBrowser",
+    ContractBoard = "OpenContractBoard",
+    ShopCounter = "OpenShop",
+    Interact_Shop = "OpenShop",
+    PartyBoard = "OpenParty",
+    PartyPlatform = "OpenParty",
+    DailyRewardTerminal = "ClaimDailyReward",
+    AnnouncementBoard = "ViewFlexSpotlight",
+    FlexStage = "ViewFlexSpotlight",
+}
 local LOBBY_ZONE_ENTRY_GUIDE_CENTER_BACKDROP_NAME = "CenterBackdrop"
 local LOBBY_ZONE_ENTRY_GUIDE_FLOOR_RUNNER_NAME = "FloorRunner"
 local LOBBY_ZONE_ENTRY_GUIDE_LEFT_CASE_STRIP_NAME = "LeftCaseAccentStrip"
@@ -104,9 +119,11 @@ local LOBBY_ZONE_ENTRY_GUIDE_ZONE_RIGHT_DISPLAY_NAME = "ZoneRightDisplay"
 local LOBBY_ZONE_ENTRY_GUIDE_ZONE_PRIMARY_PROP_NAME = "ZonePrimaryProp"
 local LOBBY_ZONE_ENTRY_GUIDE_ZONE_SECONDARY_PROP_NAME = "ZoneSecondaryProp"
 local LOBBY_MAINHUB_DECOR_FOLDER_NAME = "MainHubDecorRuntime"
-local LOBBY_MAINHUB_DIRECTORY_PAD_NAME = "DirectoryPad"
-local LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME = "DirectoryPillar"
-local LOBBY_MAINHUB_DIRECTORY_PANEL_NAME = "DirectoryPanel"
+local LOBBY_MAINHUB_DIRECTORY_NAMES = {
+	PAD = "DirectoryPad",
+	PILLAR = "DirectoryPillar",
+	PANEL = "DirectoryPanel",
+}
 local LOBBY_MAINHUB_ROUTE_NORTH_NAME = "RouteNorth"
 local LOBBY_MAINHUB_ROUTE_EAST_NAME = "RouteEast"
 local LOBBY_MAINHUB_ROUTE_WEST_NAME = "RouteWest"
@@ -242,10 +259,12 @@ local LOBBY_TRAINING_SUPPORT_TOOL_MODEL_NAMES = {
 	Salib = LOBBY_ZONE_ENTRY_GUIDE_TOOL_SALIB_NAME,
 	Dupa = LOBBY_ZONE_ENTRY_GUIDE_TOOL_DUPA_NAME,
 }
-local LOBBY_TRAINING_SUPPORT_VISUAL_HIGHLIGHT_NAME = "TrainingSupportHighlight"
-local LOBBY_TRAINING_SUPPORT_VISUAL_LIGHT_NAME = "TrainingSupportVisualGlow"
-local LOBBY_ZONE_GUIDES_ENABLED = false
-local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = false
+local LOBBY_TRAINING_SUPPORT_VISUAL_NAMES = {
+	HIGHLIGHT = "TrainingSupportHighlight",
+	LIGHT = "TrainingSupportVisualGlow",
+}
+local LOBBY_ZONE_GUIDES_ENABLED = true
+local LOBBY_ZONE_ENTRY_GUIDES_ENABLED = true
 local LOBBY_LOGIC_VOLUME_TRANSPARENCY = 1
 local LOBBY_LOGIC_VOLUME_FOLDER_NAMES = {
 	"Rooms",
@@ -610,7 +629,7 @@ local LOBBY_LIGHT_FIXTURE_PATCH = {
 local LOBBY_ZONE_FEEDBACK = {
     SpawnPlaza = {
         title = "Lobby plaza aktif.",
-        hint = "Semua panel utama tetap bisa diakses dari quick menu tanpa harus menyentuh bangunan tertentu.",
+        hint = "Gunakan panel di bawah atau tekan M untuk akses cepat.",
     },
     MatchmakingZone = {
         title = "Area contract & evidence aktif.",
@@ -1153,22 +1172,7 @@ local function resolveGhostVisualProfileTargetBounds(ghostType)
         end
     end
 
-    local ok, replicatedStorage = pcall(function()
-        return game:GetService("ReplicatedStorage")
-    end)
-    if not ok or typeof(replicatedStorage) ~= "Instance" then
-        return nil
-    end
-
-    local assets = replicatedStorage:FindFirstChild("Assets")
-    local profilesFolder = assets and assets:FindFirstChild("GhostVisualProfiles")
-    local moduleScript = profilesFolder and profilesFolder:FindFirstChild(ghostType)
-    local profile = safeRequireModule(moduleScript)
-    if type(profile) ~= "table" then
-        return nil
-    end
-
-    return coerceProfileVector3(profile.targetBounds) or coerceProfileVector3(profile.size)
+    return nil
 end
 
 local function resolveGhostVisualProfileInventoryModelAssetId(ghostType)
@@ -2584,7 +2588,7 @@ end
     local southNodePos = Vector3.new(1600, 0.2, 36)
     local flexNodePos = Vector3.new(1668, 0.2, 84)
 
-    local pad = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PAD_NAME)
+    local pad = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_NAMES.PAD)
     applyPartProps(pad, {
         size = Vector3.new(24, 0.18, 24),
         cframe = CFrame.new(hubCenter),
@@ -2643,7 +2647,7 @@ end
     })
     applyPrompt(ensurePrompt(queueTrigger, "InteractPrompt"), "Queue Hub", "Open Room Browser", 14)
 
-    local pillar = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PILLAR_NAME)
+    local pillar = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_NAMES.PILLAR)
     applyPartProps(pillar, {
         size = Vector3.new(2.6, 6.8, 2.6),
         cframe = CFrame.new(hubCenter + Vector3.new(0, 3.3, 0)),
@@ -2652,7 +2656,7 @@ end
         transparency = 0.02,
     })
 
-    local directoryPanel = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_PANEL_NAME)
+    local directoryPanel = ensureDecorPart(LOBBY_MAINHUB_DIRECTORY_NAMES.PANEL)
     applyPartProps(directoryPanel, {
         size = Vector3.new(15.8, 5.8, 0.35),
         cframe = CFrame.new(hubCenter + Vector3.new(0, 5.1, 2.3)),
@@ -3986,6 +3990,7 @@ function LobbyService.new(state, deps)
     self._interaction = LobbyInteraction.new(self._deps, self._deps.LobbyInteractionConfig)
     self._partySystem = PartySystem.new(self._deps, self._deps.PartySystemConfig)
     self._population = LobbyPopulationController.new(self._state, self._deps, self._deps.LobbyPopulationConfig)
+    self._npcDialogue = NpcDialogueService.new(self._deps, self._deps.NpcDialogueConfig)
     self._campfireSanity = CampfireSanityService.new(self._state, self._deps, self._deps.CampfireSanityConfig)
     self._characterConnections = {}
     self._promptConnections = {}
@@ -4041,9 +4046,38 @@ function LobbyService:_publishLobbyWorldEvent(player, eventName, zoneName, title
     self:_publish(eventName, payload)
 end
 
-function LobbyService:_connectWorldPrompt(partName, callback)
+function LobbyService:_resolveWorldPromptHost(partName)
     local promptHost = workspace:FindFirstChild(partName, true)
-    if not (promptHost and promptHost:IsA("BasePart")) then
+    if promptHost and promptHost:IsA("BasePart") then
+        local prompt = promptHost:FindFirstChild("InteractPrompt")
+        if prompt and prompt:IsA("ProximityPrompt") then
+            return promptHost
+        end
+    end
+
+    local expectedAction = LOBBY_WORLD_PROMPT_ACTION_BY_PART_NAME[partName]
+    if not expectedAction then
+        return nil
+    end
+
+    for _, candidate in ipairs(workspace:GetDescendants()) do
+        if candidate:IsA("BasePart") then
+            local candidatePrompt = candidate:FindFirstChild("InteractPrompt")
+            if candidatePrompt and candidatePrompt:IsA("ProximityPrompt") then
+                local action = candidate:GetAttribute("PasrahLobbyAction")
+                if action == expectedAction then
+                    return candidate
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+function LobbyService:_connectWorldPrompt(partName, callback)
+    local promptHost = self:_resolveWorldPromptHost(partName)
+    if not promptHost then
         return false
     end
 
@@ -6230,9 +6264,9 @@ function LobbyService:_ensureZoneEntryGuide(zoneName)
     local sideOffset = (doorWidth * 0.5) + 0.42
     local topY = anchorPart.Size.Y * 0.5 + 0.42
 
-    local frameTop = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_FRAME_TOP_NAME)
-    local frameLeft = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_FRAME_LEFT_NAME)
-    local frameRight = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_FRAME_RIGHT_NAME)
+    local frameTop = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_FRAME_NAMES.TOP)
+    local frameLeft = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_FRAME_NAMES.LEFT)
+    local frameRight = ensureNeonGuidePart(folder, LOBBY_ZONE_ENTRY_GUIDE_FRAME_NAMES.RIGHT)
     for _, framePart in ipairs({ frameTop, frameLeft, frameRight }) do
         framePart.Color = style.color
         framePart.Transparency = 0.2
@@ -7296,6 +7330,7 @@ function LobbyService:Init()
     self._interaction:Init()
     self._partySystem:Init()
     self._population:Init()
+    self._npcDialogue:Init()
     self._campfireSanity:Init()
 
     self._zoneManager:SetZoneEnteredCallback(function(player, zoneName)
@@ -7328,6 +7363,7 @@ function LobbyService:Start()
     self._interaction:Start()
     self._partySystem:Start()
     self._population:Start()
+    self._npcDialogue:Start()
     self._campfireSanity:Start()
 end
 
@@ -7341,6 +7377,7 @@ function LobbyService:Stop()
     self._partySystem:Stop()
     self._playerManager:Stop()
     self._population:Stop()
+    self._npcDialogue:Stop()
     self._campfireSanity:Stop()
     self._state:Set("flexZoneState", {
         participantsByUserId = {},
@@ -7389,9 +7426,11 @@ function LobbyService:RegisterPlayer(player)
     end
 
     self:_ensureCharacterConnection(player)
-    self:_publish("PlayerEnteredLobby", {
-        player = player,
-    })
+    task.defer(function()
+        self:_publish("PlayerEnteredLobby", {
+            player = player,
+        })
+    end)
     self:_publishLobbyZoneFocus(player, "SpawnPlaza")
     local flexState = self:_getFlexState()
     if type(flexState.lastPayload) == "table" and type(flexState.lastPayload.eventName) == "string" then

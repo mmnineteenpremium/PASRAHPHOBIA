@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "Roblox_Studio": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "C:\\Users\\User\\AppData\\Local\\Roblox\\mcp.bat"
+      ],
+      "env": {}
+    }
+  }
+}

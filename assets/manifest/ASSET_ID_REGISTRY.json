@@ -4,7 +4,7 @@
     "game": "PASRAHPHOBIA",
     "universe_id": null,
     "place_id": null,
-    "last_updated": "2026-05-25T03:39:55Z",
+    "last_updated": "2026-05-28T12:32:48Z",
     "maintained_by": "AGENT_09"
   },
   "images": {
@@ -166,7 +166,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_5_concept.png",
         "icon_png": "assets/icons/royal_free_tier_5_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_5_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_5.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png"
       },
@@ -201,7 +201,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_5_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_5_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_5_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_5.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png"
       },
@@ -236,7 +236,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_10_concept.png",
         "icon_png": "assets/icons/royal_free_tier_10_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_10_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_10 .fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png"
       },
@@ -271,7 +271,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_10_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_10_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_10_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_10.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png"
       },
@@ -306,7 +306,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_15_concept.png",
         "icon_png": "assets/icons/royal_free_tier_15_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_15_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_15.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png"
       },
@@ -341,7 +341,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_15_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_15_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_15_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_15.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png"
       },
@@ -376,7 +376,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_20_concept.png",
         "icon_png": "assets/icons/royal_free_tier_20_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_20_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_20.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png"
       },
@@ -411,7 +411,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_20_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_20_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_20_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_20.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png"
       },
@@ -446,7 +446,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_25_concept.png",
         "icon_png": "assets/icons/royal_free_tier_25_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_25_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_25.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png"
       },
@@ -481,7 +481,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_25_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_25_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_25_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_25.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png"
       },
@@ -516,7 +516,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_30_concept.png",
         "icon_png": "assets/icons/royal_free_tier_30_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_30_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_30.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png"
       },
@@ -551,7 +551,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_30_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_30_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_30_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_30.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png"
       },
@@ -586,7 +586,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_35_concept.png",
         "icon_png": "assets/icons/royal_free_tier_35_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_35_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_35.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png"
       },
@@ -621,7 +621,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_35_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_35_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_35_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_35.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png"
       },
@@ -656,7 +656,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_40_concept.png",
         "icon_png": "assets/icons/royal_free_tier_40_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_40_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_40.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png"
       },
@@ -691,7 +691,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_40_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_40_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_40_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_40.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png"
       },
@@ -726,7 +726,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_45_concept.png",
         "icon_png": "assets/icons/royal_free_tier_45_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_45_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_45.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png"
       },
@@ -761,7 +761,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_45_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_45_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_45_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_45.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png"
       },
@@ -796,7 +796,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_50_concept.png",
         "icon_png": "assets/icons/royal_free_tier_50_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_50_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_50.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png"
       },
@@ -831,7 +831,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_50_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_50_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_50_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_50.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png"
       },
@@ -866,7 +866,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_55_concept.png",
         "icon_png": "assets/icons/royal_free_tier_55_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_55_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_55.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png"
       },
@@ -901,7 +901,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_55_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_55_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_55_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_55.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png"
       },
@@ -1002,7 +1002,7 @@
       "source_files": {
         "concept_art": "assets/concept/outfit_sang_ahli_season_exclusive_concept.png",
         "icon_png": "assets/icons/outfit_sang_ahli_season_exclusive_icon.png",
-        "model_fbx": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/outfit_sang_ahli_season_exclusive.fbx",
         "model_rbxm": "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
         "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png"
       },
@@ -2191,9 +2191,9 @@
     "royal_free_tier_5": {
       "asset_id": 72039547113863,
       "rbx_asset_id": "rbxassetid://72039547113863",
-      "filename": "assets/models/fbx/royal_free_tier_5_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_5.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:43:41Z",
+      "uploaded_at": "2026-05-24T08:43:38.348Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2217,17 +2217,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_5_concept.png",
         "icon_png": "assets/icons/royal_free_tier_5_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_5_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_5.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:43:38.348Z",
+      "state": "Active"
     },
     "royal_premium_tier_5": {
       "asset_id": 102589695413306,
       "rbx_asset_id": "rbxassetid://102589695413306",
-      "filename": "assets/models/fbx/royal_premium_tier_5_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_5.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:46:28Z",
+      "uploaded_at": "2026-05-24T08:46:20.911Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2251,17 +2254,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_5_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_5_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_5_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_5.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:46:20.911Z",
+      "state": "Active"
     },
     "royal_free_tier_10": {
       "asset_id": 98269830081500,
       "rbx_asset_id": "rbxassetid://98269830081500",
-      "filename": "assets/models/fbx/royal_free_tier_10_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_10.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:02Z",
+      "uploaded_at": "2026-05-24T08:44:59.999Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2285,17 +2291,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_10_concept.png",
         "icon_png": "assets/icons/royal_free_tier_10_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_10_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_10 .fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:44:59.999Z",
+      "state": "Active"
     },
     "royal_premium_tier_10": {
       "asset_id": 101072178250101,
       "rbx_asset_id": "rbxassetid://101072178250101",
-      "filename": "assets/models/fbx/royal_premium_tier_10_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_10.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:42Z",
+      "uploaded_at": "2026-05-28T12:29:48.630443600Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2319,17 +2328,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_10_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_10_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_10_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_10.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:29:48.630443600Z",
+      "state": "Active"
     },
     "royal_free_tier_15": {
       "asset_id": 78914867377290,
       "rbx_asset_id": "rbxassetid://78914867377290",
-      "filename": "assets/models/fbx/royal_free_tier_15_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_15.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:43:17Z",
+      "uploaded_at": "2026-05-28T12:29:54.660662200Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2353,17 +2365,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_15_concept.png",
         "icon_png": "assets/icons/royal_free_tier_15_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_15_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_15.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:29:54.660662200Z",
+      "state": "Active"
     },
     "royal_premium_tier_15": {
       "asset_id": 135937861696861,
       "rbx_asset_id": "rbxassetid://135937861696861",
-      "filename": "assets/models/fbx/royal_premium_tier_15_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_15.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:47Z",
+      "uploaded_at": "2026-05-28T12:29:58.448602300Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2387,17 +2402,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_15_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_15_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_15_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_15.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:29:58.448602300Z",
+      "state": "Active"
     },
     "royal_free_tier_20": {
       "asset_id": 76314793317030,
       "rbx_asset_id": "rbxassetid://76314793317030",
-      "filename": "assets/models/fbx/royal_free_tier_20_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_20.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:07Z",
+      "uploaded_at": "2026-05-28T12:30:01.490551400Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2421,17 +2439,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_20_concept.png",
         "icon_png": "assets/icons/royal_free_tier_20_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_20_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_20.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:30:01.490551400Z",
+      "state": "Active"
     },
     "royal_premium_tier_20": {
       "asset_id": 121646072411963,
       "rbx_asset_id": "rbxassetid://121646072411963",
-      "filename": "assets/models/fbx/royal_premium_tier_20_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_20.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:54Z",
+      "uploaded_at": "2026-05-24T08:45:49.444Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2455,17 +2476,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_20_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_20_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_20_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_20.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:45:49.444Z",
+      "state": "Active"
     },
     "royal_free_tier_25": {
       "asset_id": 112972141985348,
       "rbx_asset_id": "rbxassetid://112972141985348",
-      "filename": "assets/models/fbx/royal_free_tier_25_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_25.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:11Z",
+      "uploaded_at": "2026-05-28T12:30:10.218084Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2489,17 +2513,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_25_concept.png",
         "icon_png": "assets/icons/royal_free_tier_25_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_25_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_25.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:30:10.218084Z",
+      "state": "Active"
     },
     "royal_premium_tier_25": {
       "asset_id": 97440314472554,
       "rbx_asset_id": "rbxassetid://97440314472554",
-      "filename": "assets/models/fbx/royal_premium_tier_25_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_25.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:58Z",
+      "uploaded_at": "2026-05-28T12:30:13.045186600Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2523,17 +2550,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_25_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_25_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_25_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_25.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:30:13.045186600Z",
+      "state": "Active"
     },
     "royal_free_tier_30": {
       "asset_id": 76403100413658,
       "rbx_asset_id": "rbxassetid://76403100413658",
-      "filename": "assets/models/fbx/royal_free_tier_30_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_30.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:15Z",
+      "uploaded_at": "2026-05-24T08:45:13.383Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2557,17 +2587,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_30_concept.png",
         "icon_png": "assets/icons/royal_free_tier_30_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_30_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_30.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:45:13.383Z",
+      "state": "Active"
     },
     "royal_premium_tier_30": {
       "asset_id": 78386631931095,
       "rbx_asset_id": "rbxassetid://78386631931095",
-      "filename": "assets/models/fbx/royal_premium_tier_30_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_30.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:46:03Z",
+      "uploaded_at": "2026-05-24T08:46:01.509Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2591,17 +2624,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_30_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_30_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_30_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_30.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:46:01.509Z",
+      "state": "Active"
     },
     "royal_free_tier_35": {
       "asset_id": 128533258115000,
       "rbx_asset_id": "rbxassetid://128533258115000",
-      "filename": "assets/models/fbx/royal_free_tier_35_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_35.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:43:29Z",
+      "uploaded_at": "2026-05-24T08:43:26.147Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2625,17 +2661,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_35_concept.png",
         "icon_png": "assets/icons/royal_free_tier_35_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_35_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_35.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:43:26.147Z",
+      "state": "Active"
     },
     "royal_premium_tier_35": {
       "asset_id": 124675688972910,
       "rbx_asset_id": "rbxassetid://124675688972910",
-      "filename": "assets/models/fbx/royal_premium_tier_35_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_35.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:46:11Z",
+      "uploaded_at": "2026-05-28T12:30:27.652795800Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2659,17 +2698,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_35_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_35_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_35_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_35.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:30:27.652795800Z",
+      "state": "Active"
     },
     "royal_free_tier_40": {
       "asset_id": 105173616058507,
       "rbx_asset_id": "rbxassetid://105173616058507",
-      "filename": "assets/models/fbx/royal_free_tier_40_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_40.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:23Z",
+      "uploaded_at": "2026-05-28T12:30:31.621399Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2693,17 +2735,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_40_concept.png",
         "icon_png": "assets/icons/royal_free_tier_40_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_40_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_40.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:30:31.621399Z",
+      "state": "Active"
     },
     "royal_premium_tier_40": {
       "asset_id": 85379695399394,
       "rbx_asset_id": "rbxassetid://85379695399394",
-      "filename": "assets/models/fbx/royal_premium_tier_40_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_40.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:46:15Z",
+      "uploaded_at": "2026-05-24T08:46:12.745Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2727,17 +2772,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_40_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_40_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_40_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_40.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:46:12.745Z",
+      "state": "Active"
     },
     "royal_free_tier_45": {
       "asset_id": 117917470537373,
       "rbx_asset_id": "rbxassetid://117917470537373",
-      "filename": "assets/models/fbx/royal_free_tier_45_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_45.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:27Z",
+      "uploaded_at": "2026-05-28T12:30:40.192673400Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2761,17 +2809,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_45_concept.png",
         "icon_png": "assets/icons/royal_free_tier_45_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_45_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_45.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:30:40.192673400Z",
+      "state": "Active"
     },
     "royal_premium_tier_45": {
       "asset_id": 123380570005663,
       "rbx_asset_id": "rbxassetid://123380570005663",
-      "filename": "assets/models/fbx/royal_premium_tier_45_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_45.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:46:19Z",
+      "uploaded_at": "2026-05-28T12:30:42.922124700Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2795,17 +2846,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_45_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_45_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_45_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_45.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:30:42.922124700Z",
+      "state": "Active"
     },
     "royal_free_tier_50": {
       "asset_id": 86129464676714,
       "rbx_asset_id": "rbxassetid://86129464676714",
-      "filename": "assets/models/fbx/royal_free_tier_50_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_50.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:31Z",
+      "uploaded_at": "2026-05-24T08:45:28.84Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2829,17 +2883,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_50_concept.png",
         "icon_png": "assets/icons/royal_free_tier_50_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_50_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_50.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:45:28.84Z",
+      "state": "Active"
     },
     "royal_premium_tier_50": {
       "asset_id": 116859601325162,
       "rbx_asset_id": "rbxassetid://116859601325162",
-      "filename": "assets/models/fbx/royal_premium_tier_50_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_50.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:46:34Z",
+      "uploaded_at": "2026-05-28T12:30:49.784429900Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2863,17 +2920,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_50_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_50_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_50_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_50.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:30:49.784429900Z",
+      "state": "Active"
     },
     "royal_free_tier_55": {
       "asset_id": 97545315228281,
       "rbx_asset_id": "rbxassetid://97545315228281",
-      "filename": "assets/models/fbx/royal_free_tier_55_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_free_tier_55.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:45:38Z",
+      "uploaded_at": "2026-05-24T08:45:32.972Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2897,17 +2957,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_55_concept.png",
         "icon_png": "assets/icons/royal_free_tier_55_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_55_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_55.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:45:32.972Z",
+      "state": "Active"
     },
     "royal_premium_tier_55": {
       "asset_id": 130849313594932,
       "rbx_asset_id": "rbxassetid://130849313594932",
-      "filename": "assets/models/fbx/royal_premium_tier_55_model.fbx",
+      "filename": "assets/3d model, vfx, animation/royal_premium_tier_55.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:46:43Z",
+      "uploaded_at": "2026-05-24T08:46:36.704Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2931,17 +2994,20 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_55_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_55_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_55_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_55.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png"
-      }
+      },
+      "revision_id": 1,
+      "revision_create_time": "2026-05-24T08:46:36.704Z",
+      "state": "Active"
     },
     "outfit_sang_ahli_season_exclusive": {
       "asset_id": 98438623958974,
       "rbx_asset_id": "rbxassetid://98438623958974",
-      "filename": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
+      "filename": "assets/3d model, vfx, animation/outfit_sang_ahli_season_exclusive.fbx",
       "uploaded_by": "OpenCloud/rbxmk",
-      "uploaded_at": "2026-05-24T08:44:58Z",
+      "uploaded_at": "2026-05-28T12:31:02.538945300Z",
       "season": 1,
       "status": "CONFIRMED",
       "tags": [
@@ -2965,10 +3031,13 @@
       "source_files": {
         "concept_art": "assets/concept/outfit_sang_ahli_season_exclusive_concept.png",
         "icon_png": "assets/icons/outfit_sang_ahli_season_exclusive_icon.png",
-        "model_fbx": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/outfit_sang_ahli_season_exclusive.fbx",
         "model_rbxm": "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
         "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png"
-      }
+      },
+      "revision_id": 3,
+      "revision_create_time": "2026-05-28T12:31:02.538945300Z",
+      "state": "Active"
     },
     "Prop_Bingkai_Foto": {
       "asset_id": 125466475939741,
@@ -3855,7 +3924,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_5_concept.png",
         "icon_png": "assets/icons/royal_free_tier_5_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_5_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_5.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_5_diffuse.png"
       }
@@ -3888,7 +3957,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_5_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_5_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_5_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_5.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_5_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_5_diffuse.png"
       }
@@ -3921,7 +3990,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_10_concept.png",
         "icon_png": "assets/icons/royal_free_tier_10_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_10_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_10.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_10_diffuse.png"
       }
@@ -3954,7 +4023,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_10_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_10_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_10_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_10.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_10_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_10_diffuse.png"
       }
@@ -3987,7 +4056,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_15_concept.png",
         "icon_png": "assets/icons/royal_free_tier_15_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_15_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_15.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_15_diffuse.png"
       }
@@ -4020,7 +4089,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_15_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_15_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_15_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_15.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_15_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_15_diffuse.png"
       }
@@ -4053,7 +4122,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_20_concept.png",
         "icon_png": "assets/icons/royal_free_tier_20_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_20_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_20.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_20_diffuse.png"
       }
@@ -4086,7 +4155,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_20_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_20_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_20_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_20.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_20_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_20_diffuse.png"
       }
@@ -4119,7 +4188,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_25_concept.png",
         "icon_png": "assets/icons/royal_free_tier_25_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_25_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_25.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_25_diffuse.png"
       }
@@ -4152,7 +4221,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_25_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_25_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_25_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_25.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_25_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_25_diffuse.png"
       }
@@ -4185,7 +4254,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_30_concept.png",
         "icon_png": "assets/icons/royal_free_tier_30_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_30_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_30.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_30_diffuse.png"
       }
@@ -4218,7 +4287,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_30_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_30_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_30_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_30.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_30_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_30_diffuse.png"
       }
@@ -4251,7 +4320,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_35_concept.png",
         "icon_png": "assets/icons/royal_free_tier_35_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_35_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_35.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_35_diffuse.png"
       }
@@ -4284,7 +4353,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_35_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_35_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_35_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_35.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_35_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_35_diffuse.png"
       }
@@ -4317,7 +4386,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_40_concept.png",
         "icon_png": "assets/icons/royal_free_tier_40_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_40_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_40.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_40_diffuse.png"
       }
@@ -4350,7 +4419,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_40_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_40_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_40_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_40.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_40_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_40_diffuse.png"
       }
@@ -4383,7 +4452,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_45_concept.png",
         "icon_png": "assets/icons/royal_free_tier_45_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_45_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_45.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_45_diffuse.png"
       }
@@ -4416,7 +4485,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_45_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_45_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_45_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_45.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_45_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_45_diffuse.png"
       }
@@ -4449,7 +4518,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_50_concept.png",
         "icon_png": "assets/icons/royal_free_tier_50_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_50_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_50.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_50_diffuse.png"
       }
@@ -4482,7 +4551,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_50_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_50_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_50_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_50.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_50_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_50_diffuse.png"
       }
@@ -4515,7 +4584,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_free_tier_55_concept.png",
         "icon_png": "assets/icons/royal_free_tier_55_icon.png",
-        "model_fbx": "assets/models/fbx/royal_free_tier_55_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_free_tier_55.fbx",
         "model_rbxm": "assets/models/rbxm/royal_free_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_free_tier_55_diffuse.png"
       }
@@ -4548,7 +4617,7 @@
       "source_files": {
         "concept_art": "assets/concept/royal_premium_tier_55_concept.png",
         "icon_png": "assets/icons/royal_premium_tier_55_icon.png",
-        "model_fbx": "assets/models/fbx/royal_premium_tier_55_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/royal_premium_tier_55.fbx",
         "model_rbxm": "assets/models/rbxm/royal_premium_tier_55_model.rbxm",
         "diffuse_texture": "assets/models/fbx/royal_premium_tier_55_diffuse.png"
       }
@@ -4581,7 +4650,7 @@
       "source_files": {
         "concept_art": "assets/concept/outfit_sang_ahli_season_exclusive_concept.png",
         "icon_png": "assets/icons/outfit_sang_ahli_season_exclusive_icon.png",
-        "model_fbx": "assets/models/fbx/outfit_sang_ahli_season_exclusive_model.fbx",
+        "model_fbx": "assets/3d model, vfx, animation/outfit_sang_ahli_season_exclusive.fbx",
         "model_rbxm": "assets/models/rbxm/outfit_sang_ahli_season_exclusive_model.rbxm",
         "diffuse_texture": "assets/models/fbx/outfit_sang_ahli_season_exclusive_diffuse.png"
       }

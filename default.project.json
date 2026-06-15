@@ -3,19 +3,53 @@
   "tree": {
     "$className": "DataModel",
     "$ignoreUnknownInstances": true,
+    "TextChatService": {
+      "$className": "TextChatService",
+      "$properties": {
+        "ChatVersion": "TextChatService"
+      }
+    },
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "$ignoreUnknownInstances": true,
+      "LoadingSpriteAnimator": {
+        "$ignoreUnknownInstances": true,
+        "$path": "src/ReplicatedFirst/LoadingSpriteAnimator.lua"
+      },
+      "LoadingSpriteAtlas": {
+        "$ignoreUnknownInstances": true,
+        "$path": "src/ReplicatedFirst/LoadingSpriteAtlas.lua"
+      },
+      "PasrahLoadingScreen": {
+        "$ignoreUnknownInstances": true,
+        "$path": "src/ReplicatedFirst/PasrahLoadingScreen.client.lua"
+      }
+    },
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
       "$ignoreUnknownInstances": true,
       "Assets": {
         "$className": "Folder",
         "$ignoreUnknownInstances": true,
-        "GhostVisualProfiles": {
+        "Models": {
           "$className": "Folder",
           "$ignoreUnknownInstances": true,
-          "Pocong": {
+          "Ghosts": {
+            "$className": "Folder",
             "$ignoreUnknownInstances": true,
-            "$path": "src/ReplicatedStorage/Assets/GhostVisualProfiles/Pocong.lua"
+            "CanonicalGhostModels": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/ReplicatedStorage/Assets/Models/Ghosts/CanonicalGhostModels.lua"
+            }
           }
+        }
+      },
+      "RemoteEvents": {
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+        "OwnerCheatEvent": {
+          "$ignoreUnknownInstances": true,
+          "$path": "src/ReplicatedStorage/RemoteEvents/OwnerCheatEvent.model.json"
         }
       },
       "Shared": {
@@ -27,6 +61,50 @@
           "ConfigLoader": {
             "$ignoreUnknownInstances": true,
             "$path": "src/shared/ConfigLoader/ConfigLoader.lua"
+          }
+        },
+        "Config": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "CheckinRewardConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/Config/CheckinRewardConfig.lua"
+          },
+          "CosmeticRegistry": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/Config/CosmeticRegistry.lua"
+          },
+          "OwnerCheatConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/Config/OwnerCheatConfig.lua"
+          },
+          "DailyMissionConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/Config/DailyMissionConfig.lua"
+          },
+          "GachaConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/Config/GachaConfig.lua"
+          },
+          "Generated": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "AssetIdConfig": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/shared/Config/Generated/AssetIdConfig.lua"
+            }
+          },
+          "RoyalPassConfig": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/Config/RoyalPassConfig.lua"
+          }
+        },
+        "NpcDialogue": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "DialogueData": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/shared/NpcDialogue/DialogueData.lua"
           }
         },
         "DataTypes": {
@@ -2540,6 +2618,10 @@
             "$ignoreUnknownInstances": true,
             "$path": "src/ServerScriptService/Server/LobbySocialHub/LobbyPopulationController.lua"
           },
+          "NpcDialogueService": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/LobbySocialHub/NpcDialogueService.lua"
+          },
           "LobbyService": {
             "$ignoreUnknownInstances": true,
             "$path": "src/ServerScriptService/Server/LobbySocialHub/LobbyService.lua"
@@ -3127,6 +3209,14 @@
           "State": {
             "$ignoreUnknownInstances": true,
             "$path": "src/ServerScriptService/Server/OperationsQASystem/State.lua"
+          }
+        },
+        "OwnerCheatSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/OwnerCheatSystem/Main.lua"
           }
         },
         "PartySystem": {
@@ -4104,6 +4194,26 @@
             "$ignoreUnknownInstances": true,
             "$path": "src/ServerScriptService/Server/WeeklyChallengeSystem/State.lua"
           }
+        },
+        "StoryMissionSystem": {
+          "$className": "Folder",
+          "$ignoreUnknownInstances": true,
+          "Controller": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/StoryMissionSystem/Controller.lua"
+          },
+          "Main": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/StoryMissionSystem/Main.lua"
+          },
+          "Service": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/StoryMissionSystem/Service.lua"
+          },
+          "State": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/ServerScriptService/Server/StoryMissionSystem/State.lua"
+          }
         }
       }
     },
@@ -4154,6 +4264,14 @@
             "ClientServiceRegistry": {
               "$ignoreUnknownInstances": true,
               "$path": "src/client/Core/ClientServiceRegistry.lua"
+            }
+          },
+          "NpcDialogue": {
+            "$className": "Folder",
+            "$ignoreUnknownInstances": true,
+            "NpcDialogueController": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/NpcDialogue/NpcDialogueController.lua"
             }
           },
           "EvidenceTools": {
@@ -4276,6 +4394,10 @@
             "$ignoreUnknownInstances": true,
             "$path": "src/client/MovementController.client.lua"
           },
+          "OwnerCheatUI": {
+            "$ignoreUnknownInstances": true,
+            "$path": "src/client/OwnerCheatUI.lua"
+          },
           "RespawnGuard": {
             "$className": "Folder",
             "$ignoreUnknownInstances": true,
@@ -4355,6 +4477,10 @@
               "$ignoreUnknownInstances": true,
               "$path": "src/client/UI/RoomBrowserController.lua"
             },
+            "ShopPreviewSupport": {
+              "$ignoreUnknownInstances": true,
+              "$path": "src/client/UI/ShopPreviewSupport.lua"
+            },
             "SanityHUD": {
               "$ignoreUnknownInstances": true,
               "$path": "src/client/UI/SanityHUD.lua"
@@ -4368,6 +4494,10 @@
         "ClientBootstrap": {
           "$ignoreUnknownInstances": true,
           "$path": "src/StarterPlayerScripts/ClientBootstrap.client.lua"
+        },
+        "GlobalResponsiveUIScaler": {
+          "$ignoreUnknownInstances": true,
+          "$path": "src/StarterPlayerScripts/GlobalResponsiveUIScaler.client.lua"
         },
         "StudioRoomSmoke": {
           "$ignoreUnknownInstances": true,

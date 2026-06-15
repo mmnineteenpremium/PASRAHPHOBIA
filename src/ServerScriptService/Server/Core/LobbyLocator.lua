@@ -41,6 +41,18 @@ local function unwrapLobbyRoot(container, lobbyName)
         return namedChild
     end
 
+    if container:IsA("Folder") and namedChild then
+        local nestedNamedChild = namedChild:FindFirstChild(lobbyName)
+        if nestedNamedChild and nestedNamedChild:IsA("Model") then
+            return nestedNamedChild
+        end
+
+        local nestedFirstModel = namedChild:FindFirstChildWhichIsA("Model")
+        if nestedFirstModel then
+            return nestedFirstModel
+        end
+    end
+
     local firstModel = container:FindFirstChildWhichIsA("Model")
     if firstModel then
         return firstModel

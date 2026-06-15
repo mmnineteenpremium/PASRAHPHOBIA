@@ -36,6 +36,7 @@ local RespawnGuard = safeRequire(findModule({ "RespawnGuard", "Main" }), "Respaw
 local SpectatorSystem = safeRequire(findModule({ "SpectatorSystem", "Main" }), "SpectatorSystem")
 local SpectatorEffects = safeRequire(findModule({ "SpectatorEffects", "Main" }), "SpectatorEffects")
 local SoundSystem = safeRequire(findModule({ "SoundSystem", "Main" }), "SoundSystem")
+local OwnerCheatUI = safeRequire(findModule({ "OwnerCheatUI" }), "OwnerCheatUI")
 local UISystem = safeRequire(findModule({ "UI", "Main" }), "UI")
 
 local ClientBootstrap = {}
@@ -58,6 +59,7 @@ addSystem("RespawnGuard", RespawnGuard)
 addSystem("SpectatorSystem", SpectatorSystem)
 addSystem("SpectatorEffects", SpectatorEffects)
 addSystem("SoundSystem", SoundSystem)
+addSystem("OwnerCheatUI", OwnerCheatUI)
 addSystem("UI", UISystem)
 
 local REMOTE_NAMES = {
@@ -70,6 +72,8 @@ local REMOTE_NAMES = {
 	"GachaResult",
 	"LobbyEvent",
 	"MatchEvent",
+	"NpcDialogueEvent",
+	"OwnerCheatEvent",
 	"PurchaseEvent",
 	"RoyalPassEvent",
 	"RoyalPassTierUp",

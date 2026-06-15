@@ -9,6 +9,7 @@
 ]]
 
 local Players = game:GetService("Players")
+local CollectionService = game:GetService("CollectionService")
 local workspace = game:GetService("Workspace")
 local LobbyLocator = require(script.Parent.Parent.Core.LobbyLocator)
 
@@ -95,6 +96,113 @@ local function sortSpawnParts(spawnParts)
 		return a.Name < b.Name
 	end)
 	return spawnParts
+end
+
+local function collectTaggedSpawnParts(lobbyRoot)
+	if not lobbyRoot then
+		return nil
+	end
+
+	local taggedSpawnParts = {}
+	for _, candidate in ipairs(CollectionService:GetTagged("PasrahLobbySpawnPoint")) do
+		if candidate and candidate:IsA("SpawnLocation") and candidate:IsDescendantOf(lobbyRoot) and isValidLobbySpawnPart(lobbyRoot, candidate) then
+			table.insert(taggedSpawnParts, candidate)
+		end
+	end
+
+	if #taggedSpawnParts >= 4 then
+		return sortSpawnParts(taggedSpawnParts)
+	end
+
+	return nil
+end
+
+local function collectWorkspaceLobbySpawnParts(lobbyRoot)
+	local workspaceSpawn = workspace:FindFirstChild("LobbySpawn")
+	if workspaceSpawn and workspaceSpawn:IsA("BasePart") and isValidLobbySpawnPart(lobbyRoot, workspaceSpawn) then
+		return { workspaceSpawn }
+	end
+
+	return nil
+end
+
+local function collectSpawnFolderSpawnParts(lobbyRoot)
+	if not lobbyRoot then
+		return nil
+	end
+
+	local spawnFolder = lobbyRoot:FindFirstChild("SpawnPoints", true)
+	local spawnParts = collectSpawnParts(spawnFolder)
+	local validSpawnParts = {}
+	for _, spawnPart in ipairs(spawnParts) do
+		if string.match(spawnPart.Name, "^PlayerSpawn_%d+$") and isValidLobbySpawnPart(lobbyRoot, spawnPart) then
+			table.insert(validSpawnParts, spawnPart)
+		end
+	end
+
+	if #validSpawnParts > 0 then
+		return sortSpawnParts(validSpawnParts)
+	end
+
+	return nil
+end
+
+local function collectDirectSpawnParts(lobbyRoot)
+	if not lobbyRoot then
+		return nil
+	end
+
+	local directSpawnParts = {}
+	for index = 1, 4 do
+		local candidate = lobbyRoot:FindFirstChild(string.format("PlayerSpawn_%d", index))
+		if candidate and candidate:IsA("BasePart") and isValidLobbySpawnPart(lobbyRoot, candidate) then
+			table.insert(directSpawnParts, candidate)
+		end
+	end
+
+	if #directSpawnParts > 0 then
+		return sortSpawnParts(directSpawnParts)
+	end
+
+	return nil
+end
+
+local function resolveLobbySpawnParts()
+	local lobby = resolveLobbyRoot()
+	if lobby then
+		local taggedSpawnParts = collectTaggedSpawnParts(lobby)
+		if taggedSpawnParts then
+			return taggedSpawnParts
+		end
+	end
+
+	local workspaceSpawnParts = collectWorkspaceLobbySpawnParts(lobby)
+	if workspaceSpawnParts then
+		return workspaceSpawnParts
+	end
+
+	if lobby then
+		local spawnFolderParts = collectSpawnFolderSpawnParts(lobby)
+		if spawnFolderParts then
+			return spawnFolderParts
+		end
+
+		local directSpawnParts = collectDirectSpawnParts(lobby)
+		if directSpawnParts then
+			return directSpawnParts
+		end
+	end
+
+	local directSpawn = workspace:FindFirstChild("LobbySpawn")
+	if directSpawn and directSpawn:IsA("BasePart") and isValidLobbySpawnPart(lobby, directSpawn) then
+		return { directSpawn }
+	end
+
+	if not lobby then
+		return nil, "lobby_missing"
+	end
+
+	return nil, "spawn_missing"
 end
 
 local function buildUprightPartCFrame(part, offset)
@@ -235,44 +343,6 @@ local function resolveLobbyVisualSpawnPosition(lobbyRoot, spawnPart)
 	local offset = LOBBY_VISUAL_SPAWN_OFFSETS[((spawnIndex - 1) % #LOBBY_VISUAL_SPAWN_OFFSETS) + 1]
 	local targetXZ = matchmakingDoor.Position + Vector3.new(offset.X, 0, offset.Z)
 	return Vector3.new(targetXZ.X, spawnPart.Position.Y, targetXZ.Z)
-end
-
-local function resolveLobbySpawnParts()
-	local lobby = resolveLobbyRoot()
-	if lobby then
-		local lobbySpawn = lobby:FindFirstChild("LobbySpawn", true)
-		if isValidLobbySpawnPart(lobby, lobbySpawn) then
-			return { lobbySpawn }
-		end
-
-		local spawnFolder = lobby:FindFirstChild("SpawnPoints", true)
-		local spawnParts = sortSpawnParts(collectSpawnParts(spawnFolder))
-		local validSpawnParts = {}
-		for _, spawnPart in ipairs(spawnParts) do
-			if isValidLobbySpawnPart(lobby, spawnPart) then
-				table.insert(validSpawnParts, spawnPart)
-			end
-		end
-		if #validSpawnParts > 0 then
-			return validSpawnParts
-		end
-
-		local spawnLocation = lobby:FindFirstChildWhichIsA("SpawnLocation", true)
-		if isValidLobbySpawnPart(lobby, spawnLocation) then
-			return { spawnLocation }
-		end
-	end
-
-	local directSpawn = workspace:FindFirstChild("LobbySpawn")
-	if isValidLobbySpawnPart(lobby, directSpawn) then
-		return { directSpawn }
-	end
-
-	if not lobby then
-		return nil, "lobby_missing"
-	end
-
-	return nil, "spawn_missing"
 end
 
 -- Teleport all players in match back to lobby

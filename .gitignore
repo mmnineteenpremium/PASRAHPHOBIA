@@ -1,11 +1,11 @@
+/.env
+.vscode/settings.json
 # Roblox binaries – never commit
 *.rbxl
 *.rbxlx
 *.rbxm
 *.rbxmx
 
-# Tulis pengecualian Anda di sini (Gunakan tanda seru !)
-!PASRAHPHOBIA.rbxlx
 
 !src/ReplicatedStorage/Assets/Models/Ghosts/*.rbxm
 !src/ReplicatedStorage/Assets/Models/Ghosts/*.rbxmx

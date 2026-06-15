@@ -100,9 +100,17 @@ function Controller:Init()
 end
 
 function Controller:Start()
+	print(">>> DailyEngagement Controller:Start() ENTERED <<<")
+	print(">>> START line 1")
+	print(">>> START line 2")
+	print(">>> START line 3, calling RegisterEventHandlers now")
 	self:RegisterEventHandlers()
+	print(">>> START line 4 returned from RegisterEventHandlers")
 	self:_connectPlayerSignals()
+	print(">>> START line 5 returned from _connectPlayerSignals")
 	self:_connectRemotes()
+	print(">>> START line 6 returned from _connectRemotes")
+	print(">>> DailyEngagement Controller:Start() COMPLETE <<<")
 end
 
 function Controller:Stop()
@@ -121,15 +129,30 @@ function Controller:Stop()
 end
 
 function Controller:RegisterEventHandlers()
-	if not self._eventBus or self._registered then
+	print("[REG-0] RegisterEventHandlers ENTERED")
+	print("[REG-1] eventBus=", self._eventBus ~= nil, " registered=", self._registered)
+	if not self._eventBus then
+		print("[REG-2] eventBus is nil - returning early")
+		return
+	end
+	if self._registered then
+		print("[REG-3] already registered - skipping")
 		return
 	end
 
+	print("[REG-4] about to subscribe PlayerEnteredLobby")
 	self:_subscribe("PlayerEnteredLobby", function(payload)
+		print("[REG-EVENT] PlayerEnteredLobby fired! player:", payload and payload.player and payload.player.Name)
 		if payload and payload.player then
 			self._service:OnPlayerEnteredLobby(payload.player)
 		end
 	end)
+
+	-- Sync all players already in the game when subscription is registered
+	for _, player in ipairs(Players:GetPlayers()) do
+		print("[REG-5] syncing existing player:", player.Name)
+		self._service:OnPlayerEnteredLobby(player)
+	end
 
 	self:_subscribe("PlayerJoinedLobby", function(payload)
 		if payload and payload.player then
@@ -207,7 +230,9 @@ function Controller:_subscribe(eventName, callback)
 end
 
 function Controller:_connectPlayerSignals()
+	print("[DEBUG-CTRL-1] _connectPlayerSignals called, existing players:", #Players:GetPlayers())
 	table.insert(self._connections, Players.PlayerAdded:Connect(function(player)
+		print("[DEBUG-CTRL-2] Players.PlayerAdded fired for: " .. player.Name)
 		self._service:OnPlayerAdded(player)
 	end))
 	table.insert(self._connections, Players.PlayerRemoving:Connect(function(player)
@@ -215,6 +240,7 @@ function Controller:_connectPlayerSignals()
 	end))
 
 	for _, player in ipairs(Players:GetPlayers()) do
+		print("[DEBUG-CTRL-3] Pre-seed: calling OnPlayerAdded for: " .. player.Name)
 		self._service:OnPlayerAdded(player)
 	end
 end
