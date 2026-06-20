@@ -136,6 +136,65 @@
           }
         },
         {
+          "name": "CountdownLabel",
+          "className": "TextLabel",
+          "properties": {
+            "FontFace": {
+              "family": "rbxasset://fonts/families/GothamSSm.json",
+              "weight": "Heavy",
+              "style": "Normal",
+              "cachedFaceId": null
+            },
+            "Text": "5",
+            "TextSize": 96.0,
+            "TextScaled": true,
+            "Visible": false,
+            "Position": {
+              "UDim2": [
+                [
+                  0.5,
+                  0
+                ],
+                [
+                  0.54,
+                  0
+                ]
+              ]
+            },
+            "InputSink": {
+              "Enum": 0
+            },
+            "BackgroundTransparency": 1.0,
+            "Size": {
+              "UDim2": [
+                [
+                  0.0,
+                  180
+                ],
+                [
+                  0.0,
+                  120
+                ]
+              ]
+            },
+            "TextColor3": [
+              0.9607843160629272,
+              0.9607843160629272,
+              0.9607843160629272
+            ],
+            "TextStrokeTransparency": 0.25,
+            "TextStrokeColor3": [
+              0.0470588244497776,
+              0.062745101749897,
+              0.0980392172932625
+            ],
+            "AnchorPoint": [
+              0.5,
+              0.0
+            ]
+          }
+        },
+        {
           "name": "MapNameLabel",
           "className": "TextLabel",
           "properties": {
@@ -445,7 +504,9 @@
             },
             "BackgroundTransparency": 1.0,
             "ScaleType": "Crop",
-            "ZIndex": 0.0
+            "ZIndex": 0.0,
+            "ImageTransparency": 0.0,
+            "Visible": true
           }
         }
       ],
@@ -454,15 +515,16 @@
           "Enum": 0
         },
         "BorderSizePixel": 0.0,
-        "BackgroundTransparency": 0.3400000035762787,
+        "BackgroundTransparency": 0.0,
+        "Visible": true,
         "Size": {
           "UDim2": [
             [
-              1.06665,
+              1.0,
               0
             ],
             [
-              1.0887097,
+              1.0,
               0
             ]
           ]

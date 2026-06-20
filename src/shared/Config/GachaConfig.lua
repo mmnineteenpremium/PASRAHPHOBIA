@@ -13,8 +13,8 @@ GachaConfig.BASE_RATES = {
 
 GachaConfig.SOFT_PITY_MULTIPLIER = 0.08
 
-GachaConfig.SINGLE_PULL_MM = 1500
-GachaConfig.TEN_PULL_MM = 13500
+GachaConfig.SINGLE_PULL_MM = 100
+GachaConfig.TEN_PULL_MM = 900
 GachaConfig.SINGLE_PULL_TICKET = 1
 GachaConfig.TEN_PULL_TICKET = 10
 

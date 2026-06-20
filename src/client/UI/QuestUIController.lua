@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 
 local QuestJournal = require(script.Parent.QuestJournal)
-local QuestTracker = require(script.Parent.QuestTracker)
 
 local QuestUIController = {}
 QuestUIController.__index = QuestUIController
@@ -11,7 +10,6 @@ function QuestUIController.new()
 	local self = setmetatable({}, QuestUIController)
 	self._initialized = false
 	self._journal = nil
-	self._tracker = nil
 	return self
 end
 
@@ -39,7 +37,12 @@ function QuestUIController:Init()
 		return
 	end
 
-	self._tracker = QuestTracker.new(playerGui)
+	local trackerGui = playerGui:FindFirstChild("QuestTrackerGui")
+	if trackerGui and trackerGui:IsA("ScreenGui") then
+		trackerGui.Enabled = false
+		trackerGui:Destroy()
+	end
+
 	self._journal = QuestJournal.new(playerGui)
 	self._initialized = true
 end

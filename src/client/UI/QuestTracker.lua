@@ -11,7 +11,7 @@ local QUEST_LAST_COMPLETED_TITLE_ATTR = "PasrahQuestLastCompletedTitle"
 local QUEST_LAST_COMPLETED_XP_ATTR = "PasrahQuestLastCompletedXP"
 local QUEST_LAST_COMPLETED_AT_ATTR = "PasrahQuestLastCompletedAt"
 local MATCH_LIFECYCLE_PHASE_ATTR = "MatchLifecyclePhase"
-local LEGACY_MATCH_PHASE_ATTR = "MatchPhase"
+local LEGACY_MATCH_PHASE_ATTR = "PasrahMatchPhase"
 local UI_INPUT_PROFILE_OVERRIDE_ATTR = "PasrahUIInputProfileOverride"
 local UI_FORCE_COMPACT_ATTR = "PasrahUIForceCompact"
 local UI_VIEWPORT_OVERRIDE_X_ATTR = "PasrahUIViewportOverrideX"
@@ -441,6 +441,7 @@ function QuestTracker:BuildUI()
 	self._popupGui = popupGui
 	self._popupPanel = popupPanel
 	self._popupLabel = popupLabel
+	self._screenGui.Enabled = true
 	self._popupGui.Enabled = false
 	self._popupPanel.Visible = false
 	self._popupPanel.Position = QUEST_POPUP_VISIBLE_POSITION
@@ -518,6 +519,13 @@ function QuestTracker:SetCollapsed(collapsed, markManualOpen)
 end
 
 function QuestTracker:_syncVisibility()
+	if self.player and self.player:GetAttribute("InMatch") == true then
+		self._container.Visible = false
+		self._reopenButton.Visible = false
+		self:_hideCompletionPopup()
+		return
+	end
+
 	local touchLayout = isTouchLayout()
 	local activeMatchMobile = touchLayout and self:_isActiveMatchPhase()
 	if touchLayout then

@@ -204,7 +204,7 @@ return {
 			},
 		},
 		BolaArwah = {
-			inventoryModelAssetId = "rbxassetid://128926250160887",
+			inventoryModelAssetId = "rbxassetid://131756461063213",
 			sourceModelAssetId = "rbxassetid://131756461063213",
 			sourceLabel = "Kamera To'un",
 			variantRole = "base",
@@ -255,8 +255,8 @@ return {
 				style = "Scan",
 			},
 			variantPool = {
-				"rbxassetid://128926250160887",
 				"rbxassetid://131756461063213",
+				"rbxassetid://128926250160887",
 			},
 		},
 		GerakanGaib = {
