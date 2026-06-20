@@ -205,7 +205,18 @@ function Service:Init()
 end
 
 function Service:Start()
-    -- Event-driven service.
+    -- Event-driven service: publishes via _publish() called by OnPlayerPurchaseRequest
+    -- But we also need to push initial snapshot to players on join
+    game.Players.PlayerAdded:Connect(function(player)
+        task.defer(function()
+            self:_publish("ShopSnapshot", { player = player })
+        end)
+    end)
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        task.defer(function()
+            self:_publish("ShopSnapshot", { player = player })
+        end)
+    end
 end
 
 function Service:Stop()
