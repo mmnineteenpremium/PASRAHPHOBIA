@@ -14,7 +14,7 @@ local player = Players.LocalPlayer
 local CameraResolver = require(script.Parent:WaitForChild("CameraResolver"))
 
 local REMOTE_NAME = "FlashlightEvent"
-local FLASHLIGHT_ATTRIBUTE = "FlashlightEnabled"
+local FLASHLIGHT_ATTRIBUTE = "PasrahFlashlightEnabled"
 local remoteFolder = ReplicatedStorage:WaitForChild("RemoteEvents")
 local flashlightRemote = remoteFolder:WaitForChild(REMOTE_NAME)
 
@@ -34,7 +34,7 @@ local toggleFlashlight
 local aimRenderConnection = nil
 local TOOL_BLOCKED_ATTRIBUTE = "PasrahFlashlightBlockedByTool"
 local TOOL_EQUIPPED_ATTRIBUTE = "PasrahEquippedToolType"
-local PREPARATION_TOOL_ATTRIBUTE = "PreparationFocusTool"
+local PREPARATION_TOOL_ATTRIBUTE = "PasrahPreparationFocusTool"
 local toggleUiContractWarned = false
 local runtimeDragBindings = setmetatable({}, { __mode = "k" })
 local ProximityPromptService = game:GetService("ProximityPromptService")
@@ -488,16 +488,12 @@ player:GetAttributeChangedSignal("InMatch"):Connect(refreshToggleUIVisibility)
 player:GetAttributeChangedSignal("MatchId"):Connect(refreshToggleUIVisibility)
 player:GetAttributeChangedSignal(TOOL_EQUIPPED_ATTRIBUTE):Connect(refreshToggleUIVisibility)
 player:GetAttributeChangedSignal(PREPARATION_TOOL_ATTRIBUTE):Connect(refreshToggleUIVisibility)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then
-		return
-	end
-	if input.KeyCode == Enum.KeyCode.F then
-		if visiblePromptCount > 0 then
-			return
-		end
-		toggleFlashlight()
+player:GetAttributeChangedSignal("MatchLifecyclePhase"):Connect(function()
+	local phase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
+	if phase == "Lobby" and flashlightOn then
+		flashlightOn = false
+		setAttributeIfChanged(player, FLASHLIGHT_ATTRIBUTE, false)
+		stopAimLoop()
 	end
 end)
 

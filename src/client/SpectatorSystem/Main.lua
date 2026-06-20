@@ -93,6 +93,10 @@ end
 
 function SpectatorSystem:_onMatchEvent(payload)
 	local eventName = payload and payload.eventName
+	if eventName == "MatchStarted" then
+		self:ExitSpectatorMode("MatchStarted")
+		return
+	end
 	if eventName == "PlayerKilled" and payload.localPlayerKilled == true then
 		self:EnterSpectatorMode(payload)
 	elseif eventName == "PlayerRespawned" and payload.localPlayerRespawned == true then

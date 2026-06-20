@@ -8,12 +8,12 @@ local Debris = game:GetService("Debris")
 local player = Players.LocalPlayer
 
 local EQUIPPED_TOOL_ATTRIBUTE = "PasrahEquippedToolType"
-local PREPARATION_TOOL_ATTRIBUTE = "PreparationFocusTool"
+local PREPARATION_TOOL_ATTRIBUTE = "PasrahPreparationFocusTool"
 local LOADOUT_TOOL_ATTR_PREFIX = "PasrahLoadoutTool"
 local TOOL_USE_STAMP_ATTRIBUTE = "PasrahToolUseStamp"
 local TOOL_LAST_SUCCESS_ATTRIBUTE = "PasrahToolLastSuccess"
 local TOOL_LAST_EVENT_ATTRIBUTE = "PasrahToolLastEvent"
-local FLASHLIGHT_ENABLED_ATTRIBUTE = "FlashlightEnabled"
+local FLASHLIGHT_ENABLED_ATTRIBUTE = "PasrahFlashlightEnabled"
 local FLASHLIGHT_VISUAL_ALPHA_ATTRIBUTE = "PasrahFlashlightVisualAlpha"
 local FLASHLIGHT_LIGHT_ENABLED_ATTRIBUTE = "PasrahFlashlightLightEnabled"
 local CAMERA_SCAN_GHOST_ATTR = "PasrahCameraScanGhostType"

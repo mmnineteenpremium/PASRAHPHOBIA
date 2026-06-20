@@ -211,6 +211,11 @@ end
 
 function SpectatorEffects:_onMatchEvent(payload)
 	local eventName = payload and payload.eventName
+	if eventName == "MatchStarted" then
+		self._lastReason = "MatchStarted"
+		self:ExitSpectatorMode()
+		return
+	end
 	if eventName == "PlayerKilled" and payload.localPlayerKilled == true then
 		self:EnterSpectatorMode()
 		return

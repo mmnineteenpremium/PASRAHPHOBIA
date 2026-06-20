@@ -180,6 +180,7 @@ function GhostAnimationPipeline:Init(context)
 	self._lastRequestedAnimationName = nil
 	self._lastRequestedGhostType = nil
 	self._watchdogStarted = false
+	self._refreshScheduled = false
 	self:_loadAnimationAssets()
 end
 
@@ -199,6 +200,27 @@ function GhostAnimationPipeline:_scheduleAnimatorRetry(animationName, ghostType,
 	end)
 end
 
+function GhostAnimationPipeline:_scheduleAnimationRefresh()
+	if self._refreshScheduled then
+		return
+	end
+
+	self._refreshScheduled = true
+	task.defer(function()
+		self._refreshScheduled = false
+		local animationName, ghostType = self:_resolveCurrentAnimationRequest()
+		if ghostType then
+			self._activeGhostType = ghostType
+		end
+
+		if animationName then
+			self._lastRequestedAnimationName = animationName
+			self._lastRequestedGhostType = ghostType
+			self:Play(animationName, ghostType)
+		end
+	end)
+end
+
 function GhostAnimationPipeline:Start()
 	local matchEvent = self._remotes.MatchEvent
 	if matchEvent and matchEvent.OnClientEvent then
@@ -211,7 +233,7 @@ function GhostAnimationPipeline:Start()
 	if localPlayer then
 		for _, attributeName in ipairs({
 			"InMatch",
-			"MatchPhase",
+			"PasrahMatchPhase",
 			"PasrahGhostHuntActive",
 			"PasrahGhostRenderManifesting",
 			"PasrahGhostRuntimeState",
@@ -222,7 +244,7 @@ function GhostAnimationPipeline:Start()
 				self:_onPlayerGhostAttributesChanged()
 			end))
 		end
-		self:_onPlayerGhostAttributesChanged()
+		self:_scheduleAnimationRefresh()
 	end
 	self:_startAnimationWatchdog()
 end
@@ -233,7 +255,7 @@ function GhostAnimationPipeline:_resolveCurrentAnimationRequest()
 		return nil, nil
 	end
 
-	local matchPhase = normalizeGhostType(localPlayer:GetAttribute("MatchPhase"))
+	local matchPhase = normalizeGhostType(localPlayer:GetAttribute("PasrahMatchPhase"))
 	if matchPhase == "Result" or matchPhase == "End" then
 		return nil, nil
 	end
@@ -262,15 +284,51 @@ function GhostAnimationPipeline:_ensureActiveAnimation()
 		return
 	end
 
-	local entry = self:_resolveTrack(animationName, ghostType)
-	local animator = self:_findAnimator(ghostType)
-	if not entry or not animator then
+	local entry, trackKey, resolvedAnimationName = self:_resolveTrack(animationName, ghostType)
+	if not entry then
+		return
+	end
+
+	local animator = self._activeAnimator
+	if animator and (not animator.Parent or not animator.Parent:IsDescendantOf(Workspace)) then
+		animator = nil
+	end
+	if animator then
+		local activeGhostType = normalizeGhostType(self._activeGhostType)
+		local requestedGhostType = normalizeGhostType(ghostType)
+		if requestedGhostType and activeGhostType and activeGhostType ~= requestedGhostType then
+			animator = nil
+		end
+	end
+	if not animator then
+		animator = self:_findAnimator(ghostType)
+	end
+	if not animator then
 		self:Play(animationName, ghostType)
+		return
+	end
+
+	if self._activeTrackKey == trackKey and self._activeTrack and self._activeTrack.IsPlaying and self._activeTrack.Animation == entry.animation and self._activeAnimator == animator then
+		return
+	end
+
+	if self._activeTrack and self._activeTrack.IsPlaying and self._activeTrack.Animation == entry.animation then
+		self._activeAnimator = animator
+		self._activeAnimationName = resolvedAnimationName
+		self._activeTrackKey = trackKey
+		self._activeGhostType = ghostType
+		self._lastPlayError = nil
 		return
 	end
 
 	for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
 		if track.IsPlaying and track.Animation == entry.animation then
+			self._activeTrack = track
+			self._activeAnimator = animator
+			self._activeAnimationName = resolvedAnimationName
+			self._activeTrackKey = trackKey
+			self._activeGhostType = ghostType
+			self._lastPlayError = nil
 			return
 		end
 	end
@@ -365,16 +423,7 @@ function GhostAnimationPipeline:_resolveGhostTypeFromPlayerAttributes(player)
 end
 
 function GhostAnimationPipeline:_onPlayerGhostAttributesChanged()
-	local animationName, ghostType = self:_resolveCurrentAnimationRequest()
-	if ghostType then
-		self._activeGhostType = ghostType
-	end
-
-	if animationName then
-		self._lastRequestedAnimationName = animationName
-		self._lastRequestedGhostType = ghostType
-		self:Play(animationName, ghostType)
-	end
+	self:_scheduleAnimationRefresh()
 end
 
 function GhostAnimationPipeline:_resolveTrack(animationName, ghostType)
@@ -420,7 +469,8 @@ end
 
 function GhostAnimationPipeline:_findAnimator(ghostType)
 	local normalizedGhostType = normalizeGhostType(ghostType)
-	for _, instance in ipairs(Workspace:GetDescendants()) do
+	local descendants = Workspace:GetDescendants()
+	for _, instance in ipairs(descendants) do
 		if normalizedGhostType and instance:IsA("Model") and modelMatchesGhostType(instance, normalizedGhostType) then
 			local animator = getAnimatorFromRig(instance)
 			if animator then
@@ -433,7 +483,7 @@ function GhostAnimationPipeline:_findAnimator(ghostType)
 		return nil
 	end
 
-	for _, instance in ipairs(Workspace:GetDescendants()) do
+	for _, instance in ipairs(descendants) do
 		if instance:IsA("Model") then
 			local isGhostModel = instance:GetAttribute("GhostType") ~= nil
 				or instance:GetAttribute("VisualGhostType") ~= nil
@@ -487,7 +537,20 @@ function GhostAnimationPipeline:Play(animationName, ghostType, retryAttempt)
 		return
 	end
 
-	local animator = self:_findAnimator(resolvedGhostType)
+	local animator = self._activeAnimator
+	if animator and (not animator.Parent or not animator.Parent:IsDescendantOf(Workspace)) then
+		animator = nil
+	end
+	if animator then
+		local activeGhostType = normalizeGhostType(self._activeGhostType)
+		local requestedGhostType = normalizeGhostType(resolvedGhostType)
+		if requestedGhostType and activeGhostType and activeGhostType ~= requestedGhostType then
+			animator = nil
+		end
+	end
+	if not animator then
+		animator = self:_findAnimator(resolvedGhostType)
+	end
 	if not animator then
 		self._lastPlayError = "missing_ghost_animator:" .. tostring(resolvedGhostType or "unknown")
 		stampAnimationDebug(trackKey, resolvedGhostType, resolvedAnimationName or animationName, entry.animation.AnimationId, self._lastPlayError)

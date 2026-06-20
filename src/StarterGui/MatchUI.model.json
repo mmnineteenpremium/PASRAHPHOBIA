@@ -1618,6 +1618,332 @@
             ]
           }
         }
+        ,
+        {
+          "name": "FieldKitModal",
+          "className": "Frame",
+          "children": [
+            {
+              "name": "UICorner",
+              "className": "UICorner",
+              "properties": {
+                "CornerRadius": {
+                  "UDim": [
+                    0.0,
+                    10
+                  ]
+                }
+              }
+            },
+            {
+              "name": "FieldKitModalStroke",
+              "className": "UIStroke",
+              "properties": {
+                "Color": [
+                  0.3843137323856354,
+                  0.47843137383461,
+                  0.6235294342041016
+                ],
+                "Transparency": 0.1599999964237213,
+                "Thickness": 1.0
+              }
+            },
+            {
+              "name": "ModalTitle",
+              "className": "TextLabel",
+              "properties": {
+                "FontFace": {
+                  "family": "rbxasset://fonts/families/GothamSSm.json",
+                  "weight": "Bold",
+                  "style": "Normal",
+                  "cachedFaceId": null
+                },
+                "Text": "Preparation Spawn",
+                "TextSize": 12.0,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      12
+                    ],
+                    [
+                      0.0,
+                      8
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1.0,
+                "Size": {
+                  "UDim2": [
+                    [
+                      1.0,
+                      -24
+                    ],
+                    [
+                      0.0,
+                      18
+                    ]
+                  ]
+                },
+                "TextXAlignment": "Left",
+                "TextColor3": [
+                  0.9647058844566345,
+                  0.95686274766922,
+                  0.9254902005195618
+                ]
+              }
+            },
+            {
+              "name": "ModalBody",
+              "className": "TextLabel",
+              "properties": {
+                "FontFace": {
+                  "family": "rbxasset://fonts/families/GothamSSm.json",
+                  "weight": "Regular",
+                  "style": "Normal",
+                  "cachedFaceId": null
+                },
+                "Text": "Pilih tool sebelum masuk match. Tidak semua tool bisa dihapus atau dipakai.",
+                "TextWrapped": true,
+                "TextSize": 10.0,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      12
+                    ],
+                    [
+                      0.0,
+                      28
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1.0,
+                "Size": {
+                  "UDim2": [
+                    [
+                      1.0,
+                      -24
+                    ],
+                    [
+                      0.0,
+                      18
+                    ]
+                  ]
+                },
+                "TextXAlignment": "Left",
+                "TextColor3": [
+                  0.7921568751335144,
+                  0.8392156958580017,
+                  0.8941176533699036
+                ]
+              }
+            },
+            {
+              "name": "ModalStats",
+              "className": "TextLabel",
+              "properties": {
+                "FontFace": {
+                  "family": "rbxasset://fonts/families/GothamSSm.json",
+                  "weight": "Regular",
+                  "style": "Normal",
+                  "cachedFaceId": null
+                },
+                "Text": "Cooldown: - | uses - | charges -",
+                "TextSize": 10.0,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      12
+                    ],
+                    [
+                      0.0,
+                      46
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1.0,
+                "Size": {
+                  "UDim2": [
+                    [
+                      1.0,
+                      -24
+                    ],
+                    [
+                      0.0,
+                      18
+                    ]
+                  ]
+                },
+                "TextXAlignment": "Left",
+                "TextColor3": [
+                  0.6666666865348816,
+                  0.7215686440467834,
+                  0.7843137383460999
+                ]
+              }
+            },
+            {
+              "name": "PromptRow",
+              "className": "Frame",
+              "children": [
+                {
+                  "name": "Grid",
+                  "className": "UIGridLayout",
+                  "properties": {
+                    "CellPadding": {
+                      "UDim2": [
+                        [
+                          0.0,
+                          6
+                        ],
+                        [
+                          0.0,
+                          0
+                        ]
+                      ]
+                    },
+                    "CellSize": {
+                      "UDim2": [
+                        [
+                          0.25,
+                          -5
+                        ],
+                        [
+                          1.0,
+                          0
+                        ]
+                      ]
+                    },
+                    "SortOrder": "LayoutOrder"
+                  }
+                },
+                {
+                  "name": "EquipButton",
+                  "className": "TextButton",
+                  "properties": {
+                    "Text": "EQUIP",
+                    "BackgroundColor3": [
+                      0.22745098173618317,
+                      0.43921568989753723,
+                      0.3529411852359772
+                    ]
+                  }
+                },
+                {
+                  "name": "BuangButton",
+                  "className": "TextButton",
+                  "properties": {
+                    "Text": "BUANG",
+                    "BackgroundColor3": [
+                      0.3764705955982208,
+                      0.250980406999588,
+                      0.250980406999588
+                    ]
+                  }
+                },
+                {
+                  "name": "GantiButton",
+                  "className": "TextButton",
+                  "properties": {
+                    "Text": "GANTI",
+                    "BackgroundColor3": [
+                      0.2823529541492462,
+                      0.3607843220233917,
+                      0.501960813999176
+                    ]
+                  }
+                },
+                {
+                  "name": "UseButton",
+                  "className": "TextButton",
+                  "properties": {
+                    "Text": "USE",
+                    "BackgroundColor3": [
+                      0.40784314274787903,
+                      0.3294117748737335,
+                      0.21960784494876862
+                    ]
+                  }
+                }
+              ],
+              "properties": {
+                "BackgroundTransparency": 1.0,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0.0,
+                      12
+                    ],
+                    [
+                      0.0,
+                      68
+                    ]
+                  ]
+                },
+                "Size": {
+                  "UDim2": [
+                    [
+                      1.0,
+                      -24
+                    ],
+                    [
+                      0.0,
+                      22
+                    ]
+                  ]
+                }
+              }
+            },
+            {
+              "name": "CloseButton",
+              "className": "TextButton",
+              "properties": {
+                "Text": "X",
+                "BackgroundColor3": [
+                  0.2823529541492462,
+                  0.21960784494876862,
+                  0.21960784494876862
+                ]
+              }
+            }
+          ],
+          "properties": {
+            "Visible": false,
+            "BorderSizePixel": 0.0,
+            "BackgroundTransparency": 0.03999999910593033,
+            "Size": {
+              "UDim2": [
+                [
+                  1.0,
+                  -24
+                ],
+                [
+                  0.0,
+                  118
+                ]
+              ]
+            },
+            "BackgroundColor3": [
+              0.054901961237192154,
+              0.0784313753247261,
+              0.10980392247438431
+            ],
+            "Position": {
+              "UDim2": [
+                [
+                  0.0,
+                  12
+                ],
+                [
+                  0.0,
+                  12
+                ]
+              ]
+            }
+          }
+        }
       ],
       "properties": {
         "Visible": false,

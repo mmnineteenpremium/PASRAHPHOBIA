@@ -345,6 +345,58 @@ function EvidenceTools:EquipTool(toolType)
 	return response.success == true, response.reason, response
 end
 
+function EvidenceTools:UnequipTool(toolType)
+	if type(toolType) ~= "string" or toolType == "" then
+		return false, "invalid_tool"
+	end
+	if toolType == "Flashlight" then
+		if localPlayer then
+			localPlayer:SetAttribute(TOOL_EQUIPPED_ATTRIBUTE, nil)
+			localPlayer:SetAttribute("PasrahFlashlightEnabled", false)
+			localPlayer:SetAttribute(TOOL_LAST_EVENT_ATTRIBUTE, "ClientToolUnequipped")
+			localPlayer:SetAttribute(TOOL_LAST_SUCCESS_ATTRIBUTE, true)
+			localPlayer:SetAttribute(TOOL_USE_STAMP_ATTRIBUTE, os.clock())
+		end
+		return true, "unequipped_local"
+	end
+	if not self._toolStates[toolType] then
+		return false, "invalid_tool"
+	end
+	self:_ensureEvidenceRequest()
+	if not self._evidenceRequest or not self._evidenceRequest.InvokeServer then
+		stampToolRuntime(toolType, false, "ClientToolUnequipMissingRemote")
+		return false, "missing_remote_function"
+	end
+
+	self._requestCounter += 1
+	local okInvoke, response = pcall(function()
+		return self._evidenceRequest:InvokeServer({
+			action = "UnequipInvestigationTool",
+			requestType = "UnequipInvestigationTool",
+			requestId = tostring(self._requestCounter),
+			toolType = toolType,
+			payload = {
+				toolType = toolType,
+			},
+		})
+	end)
+	if not okInvoke then
+		stampToolRuntime(toolType, false, "ClientToolUnequipInvokeFailed")
+		return false, "invoke_failed"
+	end
+	if type(response) ~= "table" then
+		stampToolRuntime(toolType, false, "ClientToolUnequipInvalid")
+		return false, "invalid_gateway_response"
+	end
+	if response.success == true and localPlayer then
+		if localPlayer:GetAttribute(TOOL_EQUIPPED_ATTRIBUTE) == toolType then
+			localPlayer:SetAttribute(TOOL_EQUIPPED_ATTRIBUTE, nil)
+		end
+	end
+	stampToolRuntime(toolType, response.success == true, "ClientToolUnequipped")
+	return response.success == true, response.reason, response
+end
+
 function EvidenceTools:GetToolState(toolType)
 	return self._toolStates[toolType]
 end

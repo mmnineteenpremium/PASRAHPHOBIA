@@ -39,6 +39,7 @@ local SpectatorEffects = safeRequire(findModule({ "SpectatorEffects", "Main" }),
 local SoundSystem = safeRequire(findModule({ "SoundSystem", "Main" }), "SoundSystem")
 local OwnerCheatUI = safeRequire(findModule({ "OwnerCheatUI" }), "OwnerCheatUI")
 local UISystem = safeRequire(findModule({ "UI", "Main" }), "UI")
+local CrosshairInteraction = safeRequire(findModule({ "CrosshairInteraction" }), "CrosshairInteraction")
 
 local ClientBootstrap = {}
 ClientBootstrap.__index = ClientBootstrap
@@ -63,6 +64,7 @@ addSystem("SpectatorEffects", SpectatorEffects)
 addSystem("SoundSystem", SoundSystem)
 addSystem("OwnerCheatUI", OwnerCheatUI)
 addSystem("UI", UISystem)
+addSystem("CrosshairInteraction", CrosshairInteraction)
 
 local REMOTE_NAMES = {
 	"CosmeticEvent",
@@ -70,6 +72,7 @@ local REMOTE_NAMES = {
 	"DailyEngagementSync",
 	"DailyMissionClaimRequest",
 	"EvidenceEvent",
+	"InvestigationBegin",
 	"GachaPullRequest",
 	"GachaResult",
 	"LobbyEvent",
@@ -80,6 +83,7 @@ local REMOTE_NAMES = {
 	"RoyalPassEvent",
 	"RoyalPassTierUp",
 	"SanityEvent",
+	"StudioE2EControl",
 }
 
 local REMOTE_WAIT_TIMEOUT_SECONDS = 12

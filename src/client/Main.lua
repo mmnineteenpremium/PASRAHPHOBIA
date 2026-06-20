@@ -1,6 +1,5 @@
 local OverlayController = require(script.Parent.UI.OverlayController)
 local QuestUIController = require(script.Parent.UI.QuestUIController)
-
 local ClientBootstrap = require(script.Parent.Core.ClientBootstrap)
 
 local ClientMain = {}
