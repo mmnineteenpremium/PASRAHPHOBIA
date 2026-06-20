@@ -1075,7 +1075,7 @@ function EnvironmentalObjectRuntime.Attach(match, mapClone, deps)
 	local remote = ensureMapInteractionRemote()
 	if remote and match then
 		match._environmentRuntimeRemoteConnection = remote.OnServerEvent:Connect(function(player, request)
-			if type(request) ~= "table" or tostring(request.action or "") ~= "ToggleLight" then
+			if type(request) ~= "table" then
 				return
 			end
 			if not (typeof(player) == "Instance" and player:IsA("Player")) then
@@ -1085,7 +1085,34 @@ function EnvironmentalObjectRuntime.Attach(match, mapClone, deps)
 				return
 			end
 			if tostring(player:GetAttribute("MatchLifecyclePhase") or "") ~= "InvestigationPhase" then
-				player:SetAttribute("PasrahLastMapInteractionResult", "rejected_phase")
+				if tostring(request.action or "") ~= "PreparationToolResponse" or tostring(player:GetAttribute("MatchLifecyclePhase") or "") ~= "PreparationPhase" then
+					player:SetAttribute("PasrahLastMapInteractionResult", "rejected_phase")
+					return
+				end
+			end
+
+			local action = tostring(request.action or "")
+			if action == "PreparationToolResponse" then
+				local pendingToolType = tostring(player:GetAttribute("PasrahPreparationToolPendingToolType") or "")
+				if pendingToolType == "" then
+					player:SetAttribute("PasrahLastMapInteractionResult", "rejected_pending_missing")
+					return
+				end
+				local requestedToolType = tostring(request.toolType or "")
+				if requestedToolType ~= "" and requestedToolType ~= pendingToolType then
+					player:SetAttribute("PasrahLastMapInteractionResult", "rejected_pending_mismatch")
+					return
+				end
+				local response = tostring(request.response or "")
+				if response ~= "confirm" and response ~= "cancel" then
+					player:SetAttribute("PasrahLastMapInteractionResult", "rejected_pending_response")
+					return
+				end
+				player:SetAttribute("PasrahPreparationToolPendingResponse", response .. ":" .. tostring(os.clock()))
+				player:SetAttribute("PasrahLastMapInteractionResult", "ok:" .. response .. ":" .. pendingToolType)
+				return
+			end
+			if action ~= "ToggleLight" then
 				return
 			end
 

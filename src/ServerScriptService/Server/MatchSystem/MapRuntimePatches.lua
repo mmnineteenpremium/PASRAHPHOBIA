@@ -21,6 +21,10 @@ local PREPARATION_STAGING_FOLDER_NAME = "PreparationStagingRuntime"
 local PREPARATION_STAGING_DEBUG_ATTR = "PreparationStagingRuntimeDebug"
 local PREPARATION_LANE_STATE_ATTR = "PreparationEntryLaneState"
 local PREPARATION_BREACH_MOVED_ATTR = "PreparationBreachMoved"
+local PREPARATION_TOOL_PENDING_TYPE_ATTR = "PasrahPreparationToolPendingToolType"
+local PREPARATION_TOOL_PENDING_LABEL_ATTR = "PasrahPreparationToolPendingToolLabel"
+local PREPARATION_TOOL_PENDING_SOURCE_ATTR = "PasrahPreparationToolPendingToolSource"
+local PREPARATION_TOOL_PENDING_RESPONSE_ATTR = "PasrahPreparationToolPendingResponse"
 local ABANDONED_PALACE_ALIGNMENT_PATCH_ATTR = "AbandonedPalaceAuthoringAlignmentPatched"
 local DOOR_MODE_ATTR = "DoorTraversalMode"
 local DOOR_POLICY_ATTR = "DoorTraversalPolicy"
@@ -1457,6 +1461,10 @@ local function resolvePreparationLoadout(matchContext)
 			end
 		end
 	end
+	if #loadout == 0 then
+		-- Seed a playable baseline so solo / owner test rooms always have a visible field kit.
+		loadout = clonePreparationLoadoutList({ PREPARATION_DEFAULT_PRIMARY_TOOL, "JejakEnergi" })
+	end
 	return clonePreparationLoadoutList(loadout)
 end
 
@@ -1478,6 +1486,102 @@ local function buildPreparationLoadoutAfterSelection(currentLoadout, selectedToo
 		end
 	end
 	return clonePreparationLoadoutList(loadout)
+end
+
+local function clearPreparationToolPendingState(player)
+	if not (typeof(player) == "Instance" and player:IsA("Player")) then
+		return
+	end
+	player:SetAttribute(PREPARATION_TOOL_PENDING_RESPONSE_ATTR, nil)
+	player:SetAttribute(PREPARATION_TOOL_PENDING_TYPE_ATTR, nil)
+	player:SetAttribute(PREPARATION_TOOL_PENDING_LABEL_ATTR, nil)
+	player:SetAttribute(PREPARATION_TOOL_PENDING_SOURCE_ATTR, nil)
+end
+
+local function commitPreparationToolSelection(preparationFolder, matchContext, player, toolData)
+	if not (typeof(player) == "Instance" and player:IsA("Player")) then
+		return false
+	end
+	if type(toolData) ~= "table" or type(toolData.toolType) ~= "string" or toolData.toolType == "" then
+		return false
+	end
+
+	local currentLoadout = type(matchContext) == "table"
+		and clonePreparationLoadoutList(matchContext.selectedPreparationTools)
+		or {}
+	if #currentLoadout == 0 then
+		currentLoadout = readPreparationLoadoutFromPlayer(player)
+	end
+
+	local nextLoadout = buildPreparationLoadoutAfterSelection(currentLoadout, toolData.toolType)
+	writePreparationLoadoutToPlayer(player, nextLoadout)
+	player:SetAttribute("PreparationFocusTool", toolData.toolType)
+	player:SetAttribute("PreparationFocusToolLabel", toolData.title)
+	player:SetAttribute("PreparationFocusToolSource", "WorldToolStation")
+	player:SetAttribute("PasrahPreparationToolSelected", true)
+	player:SetAttribute("PasrahEquippedToolType", toolData.toolType)
+	player:SetAttribute("PasrahToolUseStamp", os.clock())
+	if toolData.toolType == "Flashlight" then
+		player:SetAttribute("PasrahFlashlightBattery", 100)
+		player:SetAttribute("PasrahFlashlightNeedsReload", false)
+	end
+	if type(matchContext) == "table" then
+		matchContext.selectedPreparationTool = toolData.toolType
+		matchContext.selectedPreparationToolLabel = toolData.title
+		matchContext.selectedPreparationTools = nextLoadout
+		matchContext.selectedPreparationToolLabels = getPreparationLoadoutLabels(nextLoadout)
+	end
+	applyPreparationToolSelectionState(preparationFolder, matchContext, false)
+	return true
+end
+
+local function attachPreparationToolSelectionObserver(preparationFolder, matchContext, player)
+	if not (typeof(preparationFolder) == "Instance" and type(matchContext) == "table") then
+		return
+	end
+	if not (typeof(player) == "Instance" and player:IsA("Player")) then
+		return
+	end
+
+	matchContext._preparationToolSelectionObservers = matchContext._preparationToolSelectionObservers or {}
+	if matchContext._preparationToolSelectionObservers[player] ~= nil then
+		return
+	end
+
+	local observer = {
+		handling = false,
+		connections = {},
+	}
+
+	local function handlePendingResponse()
+		if observer.handling then
+			return
+		end
+		local response = tostring(player:GetAttribute(PREPARATION_TOOL_PENDING_RESPONSE_ATTR) or "")
+		if response == "" then
+			return
+		end
+		local pendingToolType = tostring(player:GetAttribute(PREPARATION_TOOL_PENDING_TYPE_ATTR) or "")
+		if pendingToolType == "" then
+			observer.handling = true
+			clearPreparationToolPendingState(player)
+			observer.handling = false
+			return
+		end
+
+		observer.handling = true
+		local toolData = findPreparationToolDataByType(pendingToolType)
+		local isConfirm = response:lower():sub(1, 7) == "confirm"
+		if isConfirm and toolData then
+			commitPreparationToolSelection(preparationFolder, matchContext, player, toolData)
+		end
+		clearPreparationToolPendingState(player)
+		observer.handling = false
+	end
+
+	table.insert(observer.connections, player:GetAttributeChangedSignal(PREPARATION_TOOL_PENDING_RESPONSE_ATTR):Connect(handlePendingResponse))
+	table.insert(observer.connections, player:GetAttributeChangedSignal(PREPARATION_TOOL_PENDING_TYPE_ATTR):Connect(handlePendingResponse))
+	matchContext._preparationToolSelectionObservers[player] = observer
 end
 
 local function updatePreparationToolsBoard(boardPart, selectedTool)
@@ -2439,16 +2543,18 @@ local function bindPreparationToolStations(preparationFolder, matchContext)
 	end
 	if type(matchContext) == "table" and matchContext._preparationLoadoutInitialized ~= true then
 		matchContext._preparationLoadoutInitialized = true
-		matchContext.selectedPreparationTools = clonePreparationLoadoutList(matchContext.selectedPreparationTools)
+		local initialLoadout = resolvePreparationLoadout(matchContext)
+		matchContext.selectedPreparationTools = clonePreparationLoadoutList(initialLoadout)
+		matchContext.selectedPreparationToolLabels = getPreparationLoadoutLabels(initialLoadout)
 		for _, player in ipairs(matchContext.players or {}) do
-			if typeof(player) == "Instance" and player:IsA("Player") and #matchContext.selectedPreparationTools == 0 then
-				writePreparationLoadoutToPlayer(player, {})
-				player:SetAttribute("PreparationFocusTool", nil)
-				player:SetAttribute("PreparationFocusToolLabel", nil)
-				player:SetAttribute("PreparationFocusToolSource", nil)
-				player:SetAttribute("PasrahPreparationToolSelected", nil)
-				player:SetAttribute("PasrahEquippedToolType", nil)
+			if typeof(player) == "Instance" and player:IsA("Player") and #readPreparationLoadoutFromPlayer(player) == 0 then
+				writePreparationLoadoutToPlayer(player, initialLoadout)
 			end
+		end
+	end
+	if type(matchContext) == "table" then
+		for _, player in ipairs(matchContext.players or {}) do
+			attachPreparationToolSelectionObserver(preparationFolder, matchContext, player)
 		end
 	end
 
@@ -2469,31 +2575,12 @@ local function bindPreparationToolStations(preparationFolder, matchContext)
 					return
 				end
 
-				local currentLoadout = type(matchContext) == "table"
-					and clonePreparationLoadoutList(matchContext.selectedPreparationTools)
-					or {}
-				if #currentLoadout == 0 then
-					currentLoadout = readPreparationLoadoutFromPlayer(player)
-				end
-				local nextLoadout = buildPreparationLoadoutAfterSelection(currentLoadout, toolData.toolType)
-				writePreparationLoadoutToPlayer(player, nextLoadout)
-				player:SetAttribute("PreparationFocusTool", toolData.toolType)
-				player:SetAttribute("PreparationFocusToolLabel", toolData.title)
-				player:SetAttribute("PreparationFocusToolSource", "WorldToolStation")
-				player:SetAttribute("PasrahPreparationToolSelected", true)
-				player:SetAttribute("PasrahEquippedToolType", toolData.toolType)
-				player:SetAttribute("PasrahToolUseStamp", os.clock())
-				if toolData.toolType == "Flashlight" then
-					player:SetAttribute("PasrahFlashlightBattery", 100)
-					player:SetAttribute("PasrahFlashlightNeedsReload", false)
-				end
-				if type(matchContext) == "table" then
-					matchContext.selectedPreparationTool = toolData.toolType
-					matchContext.selectedPreparationToolLabel = toolData.title
-					matchContext.selectedPreparationTools = nextLoadout
-					matchContext.selectedPreparationToolLabels = getPreparationLoadoutLabels(nextLoadout)
-				end
-				applyPreparationToolSelectionState(preparationFolder, matchContext, false)
+				attachPreparationToolSelectionObserver(preparationFolder, matchContext, player)
+				clearPreparationToolPendingState(player)
+				player:SetAttribute(PREPARATION_TOOL_PENDING_TYPE_ATTR, toolData.toolType)
+				player:SetAttribute(PREPARATION_TOOL_PENDING_LABEL_ATTR, toolData.title)
+				player:SetAttribute(PREPARATION_TOOL_PENDING_SOURCE_ATTR, "WorldToolStation")
+				player:SetAttribute(PREPARATION_TOOL_PENDING_RESPONSE_ATTR, "")
 			end)
 			if type(matchContext) == "table" and type(matchContext._preparationToolPromptConnections) == "table" then
 				table.insert(matchContext._preparationToolPromptConnections, connection)
@@ -4706,11 +4793,6 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		authoredSpawn:SetAttribute("PasrahPreparationSpawn", true)
 	end
 
-	local legacySpawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
-	if legacySpawnFolder then
-		legacySpawnFolder:Destroy()
-	end
-
 	local safeZonesFolder = mapClone:FindFirstChild("SafeZones", true)
 	if not hasAnyBasePart(safeZonesFolder) then
 		ensureSafeZonesFromAuthoredPreparation(mapClone, authoredPreparationFolder)
@@ -4738,6 +4820,11 @@ local function patchPreparationStaging(mapId, mapClone, matchContext)
 		mapClone:SetAttribute("RuntimeBoundarySource", "Missing")
 		mapClone:SetAttribute(PREPARATION_STAGING_DEBUG_ATTR, "strict_missing_runtime_boundary")
 		return false
+	end
+
+	local legacySpawnFolder = mapClone:FindFirstChild("SpawnPoints", true)
+	if legacySpawnFolder then
+		legacySpawnFolder:Destroy()
 	end
 
 	authoredPreparationFolder:SetAttribute("NativeStagingSourceOfTruth", true)
