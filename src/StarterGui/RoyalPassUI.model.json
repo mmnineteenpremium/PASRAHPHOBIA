@@ -1498,6 +1498,186 @@
                       }
                     }
                   ],
+                  "name": "Day30Card",
+                  "className": "Frame",
+                  "children": [
+                    {
+                      "name": "DayCardCorner",
+                      "className": "UICorner",
+                      "properties": {
+                        "TopRightRadius": { "UDim": [0.0, 12] },
+                        "BottomLeftRadius": { "UDim": [0.0, 12] },
+                        "TopLeftRadius": { "UDim": [0.0, 12] },
+                        "BottomRightRadius": { "UDim": [0.0, 12] }
+                      }
+                    },
+                    {
+                      "name": "CardStroke",
+                      "className": "UIStroke",
+                      "properties": {
+                        "Color": [0.65, 0.49, 0.20],
+                        "Transparency": 0.1
+                      }
+                    },
+                    {
+                      "name": "Accent",
+                      "className": "Frame",
+                      "properties": {
+                        "BorderSizePixel": 0.0,
+                        "Size": { "UDim2": [[1.0, 0], [0.0, 5]] },
+                        "BackgroundColor3": [0.831, 0.658, 0.360]
+                      }
+                    },
+                    {
+                      "name": "RarityTemplate",
+                      "className": "ImageLabel",
+                      "properties": {
+                        "Visible": true,
+                        "BackgroundTransparency": 1.0,
+                        "ImageTransparency": 0.1,
+                        "Size": { "UDim2": [[1.0, 0], [1.0, 0]] },
+                        "ZIndex": 2.0,
+                        "ImageContent": "rbxassetid://PASRAH_PLACEHOLDER_TAG_gold_shimmer"
+                      },
+                      "attributes": {
+                        "PasrahRarity": "Legendary",
+                        "PasrahPlaceholderTag": "PASRAH_PLACEHOLDER_TAG: gold_shimmer_asset_id_needed"
+                      }
+                    },
+                    {
+                      "name": "CosmeticPreview",
+                      "className": "ViewportFrame",
+                      "properties": {
+                        "Visible": true,
+                        "BackgroundColor3": [0.07, 0.094, 0.133],
+                        "BackgroundTransparency": 0.04,
+                        "BorderSizePixel": 0.0,
+                        "Position": { "UDim2": [[14, 0], [44, 0]] },
+                        "Size": { "UDim2": [[1.0, -28], [0.0, 40]] },
+                        "ZIndex": 3.0
+                      }
+                    },
+                    {
+                      "name": "DayBadge",
+                      "className": "TextLabel",
+                      "children": [
+                        {
+                          "name": "DayBadgeCorner",
+                          "className": "UICorner",
+                          "properties": {
+                            "BottomLeftRadius": { "UDim": [1.0, 0] },
+                            "TopLeftRadius": { "UDim": [1.0, 0] },
+                            "BottomRightRadius": { "UDim": [1.0, 0] },
+                            "TopRightRadius": { "UDim": [1.0, 0] }
+                          }
+                        }
+                      ],
+                      "properties": {
+                        "FontFace": { "family": "rbxasset://fonts/families/GothamSSm.json", "weight": "Heavy", "style": "Normal", "cachedFaceId": "rbxasset://fonts/Montserrat-Black.ttf" },
+                        "BackgroundColor3": [0.55, 0.40, 0.15],
+                        "Text": "DAY 30",
+                        "TextSize": 10.0,
+                        "Position": { "UDim2": [[0.0, 10], [0.0, 12]] },
+                        "BorderSizePixel": 0.0,
+                        "Size": { "UDim2": [[0.0, 78], [0.0, 18]] },
+                        "TextColor3": [0.95, 0.96, 0.97]
+                      }
+                    },
+                    {
+                      "name": "Title",
+                      "className": "TextLabel",
+                      "properties": {
+                        "FontFace": { "family": "rbxasset://fonts/families/GothamSSm.json", "weight": "Bold", "style": "Normal", "cachedFaceId": "rbxasset://fonts/Montserrat-Bold.ttf" },
+                        "Text": "EPIC REWARD",
+                        "TextWrapped": true,
+                        "TextSize": 14.0,
+                        "Position": { "UDim2": [[0.0, 10], [0.0, 40]] },
+                        "BorderSizePixel": 0.0,
+                        "BackgroundTransparency": 1.0,
+                        "TextYAlignment": "Top",
+                        "Size": { "UDim2": [[1.0, -20], [0.0, 36]] },
+                        "TextXAlignment": "Left",
+                        "TextColor3": [0.95, 0.80, 0.30]
+                      }
+                    },
+                    {
+                      "name": "Meta",
+                      "className": "TextLabel",
+                      "properties": {
+                        "FontFace": { "family": "rbxasset://fonts/families/GothamSSm.json", "weight": "Regular", "style": "Normal", "cachedFaceId": "rbxasset://fonts/Montserrat-Regular.ttf" },
+                        "Text": "PASRAH_PLACEHOLDER_TAG: cosmetic_id_legendary_season_S1 — Rarity 5 Legendary Cosmetic",
+                        "TextWrapped": true,
+                        "TextSize": 11.0,
+                        "Position": { "UDim2": [[0.0, 10], [0.0, 78]] },
+                        "BorderSizePixel": 0.0,
+                        "BackgroundTransparency": 1.0,
+                        "TextYAlignment": "Top",
+                        "Size": { "UDim2": [[1.0, -20], [0.0, 38]] },
+                        "TextXAlignment": "Left",
+                        "TextColor3": [0.75, 0.65, 0.30]
+                      },
+                      "attributes": {
+                        "PasrahPlaceholderTag": "PASRAH_PLACEHOLDER_TAG: cosmetic_id_legendary_season_S1"
+                      }
+                    },
+                    {
+                      "name": "RewardPill",
+                      "className": "TextLabel",
+                      "children": [
+                        {
+                          "name": "RewardPillCorner",
+                          "className": "UICorner",
+                          "properties": {
+                            "BottomLeftRadius": { "UDim": [1.0, 0] },
+                            "TopLeftRadius": { "UDim": [1.0, 0] },
+                            "BottomRightRadius": { "UDim": [1.0, 0] },
+                            "TopRightRadius": { "UDim": [1.0, 0] }
+                          }
+                        }
+                      ],
+                      "properties": {
+                        "FontFace": { "family": "rbxasset://fonts/families/GothamSSm.json", "weight": "Bold", "style": "Normal", "cachedFaceId": "rbxasset://fonts/Montserrat-Bold.ttf" },
+                        "BackgroundColor3": [0.55, 0.40, 0.15],
+                        "Text": "+PASRAH_PLACEHOLDER_TAG — SEASON LEGENDARY",
+                        "TextSize": 10.0,
+                        "Position": { "UDim2": [[0.0, 10], [0.0, 120]] },
+                        "BorderSizePixel": 0.0,
+                        "Size": { "UDim2": [[1.0, -20], [0.0, 22]] },
+                        "TextColor3": [0.95, 0.90, 0.60]
+                      }
+                    },
+                    {
+                      "name": "Footer",
+                      "className": "TextLabel",
+                      "properties": {
+                        "FontFace": { "family": "rbxasset://fonts/families/GothamSSm.json", "weight": "Heavy", "style": "Normal", "cachedFaceId": "rbxasset://fonts/Montserrat-Black.ttf" },
+                        "Text": "EPIC",
+                        "TextSize": 9.0,
+                        "Position": { "UDim2": [[1.0, -10], [0.0, 14]] },
+                        "BorderSizePixel": 0.0,
+                        "BackgroundTransparency": 1.0,
+                        "Size": { "UDim2": [[0.0, 36], [0.0, 16]] },
+                        "TextXAlignment": "Right",
+                        "TextColor3": [0.90, 0.75, 0.30],
+                        "AnchorPoint": [1.0, 0.0]
+                      }
+                    }
+                  ],
+                  "properties": {
+                    "LayoutOrder": 30.0,
+                    "BorderSizePixel": 0.0,
+                    "Size": { "UDim2": [[0.0, 149], [0.0, 166]] },
+                    "BackgroundColor3": [0.12, 0.09, 0.04]
+                  },
+                  "attributes": {
+                    "PasrahTierDay": 30,
+                    "PasrahRarityTier": "Legendary",
+                    "PasrahCosmeticReward": "PASRAH_PLACEHOLDER_TAG: cosmetic_id_legendary_season_S1",
+                    "PasrahIsEpicDay": true,
+                    "PasrahPlaceholderTag": "PASRAH_PLACEHOLDER_TAG: Day_30_Epic_Legendary_Cosmetic"
+                  }
+                }
+              ],
                   "properties": {
                     "VerticalScrollBarInset": "ScrollBar",
                     "InputSink": {

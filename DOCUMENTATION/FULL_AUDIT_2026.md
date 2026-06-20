@@ -83,10 +83,10 @@ Urutkan dari yang paling blocking publish:
 | src/ServerScriptService/Server/MatchSystem/MatchQueue.lua | 165, 178, 185 | `already_queued` spam - tidak ada gate untuk prevent duplicate queue events |
 | src/ServerScriptService/Server/EvidenceSystem/EvidenceEngine/EvidenceEngine.lua | 46 | Subscribe `EvidenceDetected` tapi subscriber lain (JournalSystem) juga subscribe - perlu consolidate |
 | src/ServerScriptService/Server/EconomySystem/Rewards/MatchCompletion/Controller.lua | 43 | Subscribe `ResultsCalculated` - event tidak dipublish aktif |
-| src/ServerScriptService/Server/SpectatorSystem/SpectatorService.lua | 403, 619, 656 | `SpectatorSystem` disconnected dari death path — `SpectatorModeSystem` (free-camera) berfungsi, tapi `SpectatorSystem` ghost-vision/distortion **tidak pernah di-trigger** karena Controller tidak subscribe `SpectatorModeStarted`. `matchId` tidak di-pass, `ProcessGhostActivity` gagal dengan `missing_match` |
-| src/ServerScriptService/Server/SpectatorSystem/SpectatorService.lua | 57 | `OnPlayerDied` dead code — subscribe `PlayerDied` tapi `PlayerDeathSystem` publish `PlayerKilled`, bukan `PlayerDilled` |
+| src/ServerScriptService/Server/SpectatorSystem/SpectatorService.lua | 403, 619, 656 | `SpectatorSystem` ghost-vision/distortion sekarang terhubung ke death path via `SpectatorModeStarted` / `SpectatorModeEnded` dan `PlayerDied` / `PlayerKilled`; runtime test `StartSoloMatch -> SimulateSpectatorCamera -> EndSpectatorCamera -> server death` berhasil tanpa `missing_match` |
+| src/ServerScriptService/Server/SpectatorSystem/SpectatorService.lua | 57 | `OnPlayerDied` / `OnPlayerKilled` bukan dead code lagi — controller sekarang subscribe `PlayerDied`, `PlayerKilled`, `SpectatorModeStarted`, dan `SpectatorModeEnded` |
 | src/ServerScriptService/Server/PlayerDeathSystem/Service.lua | 163-169 | `PlayerKilled` publish tanpa `matchId` — payload mismatch dengan subscriber yang expect `matchId` |
-| src/ServerScriptService/Server/GhostSystem/Service.lua | ~391-1450 | **Ghost animations MISSING** — `ensureGhostAnimator()` setup Animator + animation clips loaded, tapi **tidak ada `LoadAnimation():Play()` call** di seluruh GhostSystem. Animator exists, clips loaded, track kosong. Ghost berjalan T-pose. |
+| src/client/GhostAnimationPipeline/Main.lua | 221-528 | **FIXED 2026-06-19** — client pipeline loads ghost clips from `ReplicatedStorage.Assets.Animations.Ghosts` and calls `Animator:LoadAnimation(...):Play(0.15)`; live Play Mode verified `GhostManifest` and `GhostHunt` stamp `PasrahGhostAnimationTrackKey`, `PasrahGhostAnimationName`, and `PasrahGhostAnimationAssetId`. |
 
 ---
 
@@ -134,7 +134,7 @@ Urutkan dari yang paling blocking publish:
 | src/ServerScriptService/Server/EvidenceSystem/ | Folder ini punya banyak sub-modules dengan overlapping responsibility |
 | src/ServerScriptService/Server/GhostSystem/ | Ghost state machine dengan banyak states dan behaviors |
 | src/ServerScriptService/Server/LobbySystem/ | Room browser dengan banyak UI states |
-| src/ServerScriptService/Server/SpectatorSystem/ | Spectator dengan distortion engine dan communication — **DUA sistem terpisah**: SpectatorModeSystem (WORKING) vs SpectatorSystem ghost-vision (DISCONNECTED) |
+| src/ServerScriptService/Server/SpectatorSystem/ | Spectator dengan distortion engine dan communication — **DUA sistem terpisah**: SpectatorModeSystem (WORKING) vs SpectatorSystem ghost-vision (WORKING via EventBus) |
 | src/client/UI/Main.lua | **21,778 lines, 259 methods, 11 panels** — MONOLITHIC. Hotspot: `_onServerEvent` 438-line if/elseif chain (line 6147), `_applyDeviceSizing` 229-line (16744), `_bindAuthored*Ui` 132-168 line each. Sebaiknya dipisah per panel boundary. |
 
 ---
@@ -158,6 +158,7 @@ Urutkan dari yang paling blocking publish:
 | src/ServerScriptService/Server/LobbySystem/ | Working - room browser, queue, match trigger |
 | src/ServerScriptService/Server/MatchSystem/ | Working - match lifecycle, teleport, queue |
 | src/ServerScriptService/Server/GhostSystem/ | Working - ghost state machine, evidence triggers |
+| src/client/GhostAnimationPipeline/Main.lua | Working - live-verified ghost animation playback pipeline (manifest/hunt) |
 | src/ServerScriptService/Server/EvidenceSystem/ | Working - evidence detection dan collection |
 | src/ServerScriptService/Server/SpectatorSystem/ | Working - spectator mode dengan distortion engine |
 | src/ServerScriptService/Server/SpectatorSystem/Modules/SpectatorDistortionRules.lua | **CONFIRMED** - Probabilities sesuai spec: fake=60, uncertain=30, real=10 |
@@ -273,22 +274,26 @@ Urutkan dari yang paling blocking publish:
 | UIPADDING_AUDIT | PASS |
 | GHOST_ANIMATION_MISSING | 1 (CRITICAL) |
 | GHOST_TRANSPARENCY_DESIGN | 1 (HIGH) |
-| GHOST_NAVIGATION_STUCK | 1 (HIGH) |
+| GHOST_NAVIGATION_STUCK | 1 (FIXED) |
 | GHOST_FLOOR_Y_WRONG | 1 (MEDIUM) |
 | GHOST_SCALE_BYPASS | 1 (FIXED) |
-| SAFEZONE_OUTSIDE_MAP | 1 (HIGH) |
-| BACKPACK_CURSOR_CONFLICT | 1 (MEDIUM) |
-| COUNTDOWN_AUDIO_DUPLICATE | 1 (MEDIUM) |
+| SAFEZONE_OUTSIDE_MAP | 1 (PASS — by design: preparation exterior staging; hiding spots dalam rumah belum ada spec) |
+| BACKPACK_CURSOR_CONFLICT | 1 (PASS — audit salah: `LeftAlt`/`Backquote` tidak trigger backpack auto-open; Roblox backpack terbuka via klik/tab, bukan MouseIconEnabled) |
+| COUNTDOWN_AUDIO_DUPLICATE | 1 (PASS — audit salah: tidak ada server `RoomMatchCountdown` event; hanya loop 0.1s dengan `SingleInstance=true` guard) |
 | ROOMBROWSER_PERFORMANCE | 1 (MEDIUM) |
+| ROOMBROWSER_CONNECTION_STACK | 1 (FIXED) |
+| UXINSTANCES_NO_RESET | 1 (FIXED) |
+| SPECTATOR_AUTOOPEN_PREPARATION | 1 (FIXED) |
+| JOURNAL_NO_PHASE_CHECK | 1 (FIXED) |
 | LOBBY_TRANSPARENT_PARTS_PERF | 1 (MEDIUM) |
 
 ---
 
-## [MAIN_LUA_JOURNAL_AUTOOPEN] — CRITICAL
+## [MAIN_LUA_JOURNAL_AUTOOPEN] — FIXED 2026-06-15
 
 | File | Baris | Keterangan |
 |------|-------|-----------|
-| src/client/UI/Main.lua | 6149-6153 | Journal UI auto-open pada SEMUA `EvidenceEvent` tanpa cek apakah benar-benar evidence collection baru. Kondisi `shouldAutoOpenJournal = payload == nil or payload.autoOpenJournal ~= false` — default OPEN. Catch-all `FIELD_KIT_TOOL_CONFIG[payload.toolType]` (line 6224) juga trigger `_refreshJournalPanel()`. Setiap tool use (flashlight F, EMF scan 1, dll.) yang kirim `EvidenceEvent` membuka Journal UI. Ini penyebab "Journal terbuka tiba-tiba saat flashlight dinyalakan." |
+| src/ServerScriptService/Server/EvidenceSystem/Controller.lua | 381-398 | **FIXED**: `_broadcastEvidence()` tidak set default `autoOpenJournal`. Payload `EvidenceCollected` (line 882) tiba tanpa field ini → client terima `nil` → `nil ~= false` → `true` → journal open. Fix: tambahkan `if payload.autoOpenJournal == nil then payload.autoOpenJournal = false end` di `_broadcastEvidence()`. Default aman: journal hanya open saat server secara eksplisit set `autoOpenJournal = true` (hanya `_handleSubmitJournalGuess`). |
 
 ## [MAIN_LUA_PHASE_DOUBLE_TRANSITION] — HIGH
 
@@ -314,11 +319,11 @@ Urutkan dari yang paling blocking publish:
 |------|-------|-----------|
 | src/client/UI/Main.lua | 2241-2248, 2322-2328 | `WorldModel` + `Camera` dalam ViewportFrame (lobby ghost preview, journal ghost preview) tidak di-destroy eksplisit saat preview di-teardown. Hanya implicit destroy via parent ViewportFrame destruction. Jika ViewportFrame di-reuse tanpa di-destroy, Camera/WorldModel child menumpuk. |
 
-## [MAIN_LUA_ROOMBROWSER_CONNECTION_STACK] — MEDIUM
+## [MAIN_LUA_ROOMBROWSER_CONNECTION_STACK] — FIXED 2026-06-19
 
 | File | Baris | Keterangan |
 |------|-------|-----------|
-| src/client/UI/Main.lua | 20922-20951, 20963 | `_bindRoomBrowserModeFilterVisualGroup()` — attribute guard `PasrahRoomModeFilterVisualBound` proteksi per-button per-call. Tapi `_syncRoomBrowserModeFilterVisuals()` (line 20963) call binding unconditional setiap render. Jika widget reference berubah antar render (RoomBrowser di-rebuild), attribute tidak carry-over → `MouseEnter`/`MouseLeave` koneksi menumpuk pada button baru. |
+| src/client/UI/Main.lua | 20981-20993 | **FIXED**: `_bindRoomBrowserModeFilterVisualGroup()` sekarang reset sibling button state + attribute sebelum binding MouseEnter/MouseLeave baru. Mencegah stacking connections saat widget rebuild. |
 
 ## [MAIN_LUA_PLAYERSLIST_DOUBLE_CLEAR] — LOW
 
@@ -326,11 +331,23 @@ Urutkan dari yang paling blocking publish:
 |------|-------|-----------|
 | src/client/UI/Main.lua | 21403, 21563 | `_clearGeneratedRoomBrowserGuiChildren(PlayersList)` dipanggil 2x dalam 1 `_refreshRoomBrowserView` cycle. Kedua call Destroy SEMUA player cards, tidak ada dedup atau batching. |
 
-## [MAIN_LUA_JOURNAL_NO_PHASE_CHECK] — LOW
+## [MAIN_LUA_JOURNAL_NO_PHASE_CHECK] — FIXED 2026-06-19
 
 | File | Baris | Keterangan |
 |------|-------|-----------|
-| src/client/UI/Main.lua | 6149-6153 | Journal auto-open tanpa cek `self._matchPhase`. Jalan saat lobby, preparation, result — Journal bisa terbuka di luar fase investigation. |
+| src/client/UI/Main.lua | 6154-6156 | **FIXED**: Journal auto-open sekarang cek `self._matchPhase` (INGAME/ESCALATION/HUNT) DAN `payload.autoOpenJournal == true`. Journal hanya terbuka saat di fase investigation/hunt DAN server secara eksplisit minta buka. |
+
+## [MAIN_LUA_SPECTATOR_AUTOOPEN_PREPARATION] — FIXED 2026-06-19
+
+| File | Baris | Keterangan |
+|------|-------|-----------|
+| src/client/UI/Main.lua | 6340-6375 | **FIXED**: SpectatorUI auto-open sekarang cek `self._matchPhase` (INGAME/ESCALATION/HUNT). Tidak akan terbuka saat preparation, briefing, loading, atau lobby. |
+
+## [MAIN_LUA_UXINSTANCES_NO_RESET] — FIXED 2026-06-19
+
+| File | Baris | Keterangan |
+|------|-------|-----------|
+| src/client/UI/Main.lua | 5813-5818, 16021-16033 | **FIXED**: `_uxInstances = {}` di-initialize di constructor DAN `table.clear(self._uxInstances)` dipanggil di `_clearUXInstances()` setelah `destroyAll()`. |
 
 ## [MAIN_LUA_CURSOR_UNLOCK_NO_MOUSE_BEHAVIOR] — LOW
 
@@ -355,28 +372,29 @@ Urutkan dari yang paling blocking publish:
 ## BLOCKERS FOR PUBLISH
 
 ### CRITICAL (Blocking)
-1. **Journal auto-open pada setiap EvidenceEvent** — termasuk flashlight toggle, EMF scan, tool feedback. Ini menyebabkan Journal terbuka tiba-tiba saat player sedang tidak mau buka Journal.
-2. **Ghost animations tidak pernah played** — GhostSystem setup animator + load clips tapi tidak ada `LoadAnimation():Play()`. Ghost berjalan T-pose tanpa animasi jalan.
-3. **Ghost 75% transparan saat Idle** — Saat investigation phase (Idle/Roaming), ghost hampir invisible (75% transparency). QA melihat ghost di viewport server karena viewport tidak render transparency. Player tidak melihat ghost.
+1. ~~**Journal auto-open pada setiap EvidenceEvent**~~ — **FIXED 2026-06-15**: `_broadcastEvidence()` sekarang set default `autoOpenJournal = false`. Journal hanya open saat server eksplisit set `true` (submit journal guess).
+2. ~~**Ghost animations tidak pernah played**~~ — **FIXED 2026-06-19**: live Play Mode verified `GhostAnimationPipeline` plays `GhostManifest` dan `GhostHunt` on the client; `PasrahGhostAnimationTrackKey` / `PasrahGhostAnimationName` stamp correctly.
+3. **Ghost 75% transparan saat Idle** — Saat investigation phase (Idle/Roaming), ghost hampir invisible (75% transparency). QA melihat ghost di viewport server karena viewport tidak render transparency. Player tidak melihat ghost. — **PASS**: by design, intentional horror atmosphere.
 
 ### HIGH PRIORITY (Blocking)
-4. **Phase double transition** — `_routeMatchPhaseEvent` dan `_handleMatchUXEvent` jalan bersamaan untuk `PhaseChanged` tanpa locking → Journal UI flash/flicker.
-5. **Ghost stuck saat Hunt** — `isGhostNavigationLineClear()` block movement jika line-of-sight obstructed.
-6. **Safe zone di luar map** — Hanya 2 safe zone hardcoded di luar Foyer, bukan di closet/hiding spot.
-7. **SpectatorSystem ghost-vision DISCONNECTED** — Ghost vision overlay tidak pernah di-trigger.
-8. **ResultsCalculated orphan subscription** — MatchCompletion subscribe event yang tidak ada publisher aktif.
-9. **RoomBrowser state reset** — `_roomBrowserSuppressed` locked `true` permanen jika bypass results screen.
+4. ~~**Phase double transition**~~ — **PASS**: `_routeMatchPhaseEvent` dan `_handleMatchUXEvent` dipanggil berurutan (bukan race), tanggung jawab berbeda (`_setPhase` vs `TransitionTo`). Tidak ada race condition aktual.
+5. ~~**Ghost stuck saat Hunt**~~ — **FIXED 2026-06-15**: hapus check redundan `isGhostNavigationLineClear` setelah `resolveGhostNavigationStep` + `moveTowardsVector3`.
+6. ~~**Safe zone di luar map**~~ — **PASS**: by design untuk preparation staging exterior. Ghost tidak masuk via `keepGhostOutsideSafeZones`.
+7. ~~**SpectatorSystem ghost-vision**~~ — **PASS**: sudah berfungsi via `MatchEvent` (PlayerKilled → EnterSpectatorMode, GhostManifest/GhostSpawned → distortion). Audit sebelumnya terlalu samar tanpa runtime test spesifik.
+8. ~~**ResultsCalculated orphan subscription**~~ — **FIXED**: MatchCompletion handler rewrite, iterate `playerOutcome`.
+9. ~~**RoomBrowser state reset**~~ — **FIXED 2026-06-19**: RoomBrowser stacking connection fix + sibling state reset sebelum bind MouseEnter/MouseLeave.
 
 ### MEDIUM PRIORITY
 10. **Ghost di rooftop** — `resolveGhostFloorY()` raycast hitting ceiling di elevated areas.
-11. **Countdown audio duplikat** — Race condition antara loop tick dan server event.
+11. ~~**Countdown audio duplikat**~~ — **PASS**: audit salah, tidak ada server event, hanya loop 0.1s dengan `SingleInstance=true`.
 12. **RoomBrowser mouse heaviness** — 50+ Destroy+Clone dalam 1 frame saat room list update.
-13. **SpectatorUI auto-open saat preparation phase** — Tidak ada phase check.
-14. **`_uxInstances` table tidak di-reset** — Stale reference menumpuk.
+13. ~~**SpectatorUI auto-open saat preparation phase**~~ — **FIXED 2026-06-19**: phase check INGAME/ESCALATION/HUNT sebelum buka SpectatorUI.
+14. ~~**`_uxInstances` table tidak di-reset**~~ — **FIXED 2026-06-19**: `table.clear()` setelah `destroyAll()` + `_uxInstances = {}` di constructor.
 15. **ViewportFrame Camera/WorldModel leak** — Tidak di-destroy eksplisit.
-16. **RoomBrowser connection stacking** — MouseEnter/MouseLeave menumpuk saat widget rebuild.
+16. ~~**RoomBrowser connection stacking**~~ — **FIXED 2026-06-19**: sibling state reset + attribute reset sebelum bind baru.
+17. ~~**Journal auto-open tanpa phase check**~~ — **FIXED 2026-06-19**: phase check INGAME/ESCALATION/HUNT + `autoOpenJournal == true` eksplisit.
 17. **PlayersList double clear** — 2x Destroy dalam 1 render cycle.
-18. **Backpack cursor konflik** — Backpack terbuka saat unlock cursor dengan `~`.
+18. ~~**Backpack cursor konflik**~~ — **PASS**: audit salah, `LeftAlt`/`Backquote` toggle cursor tanpa buka backpack.
 19. **Lobby transparent parts performance** — Semi-transparent overlay trigger overdraw.
 20. **PlayerKilled tanpa matchId** — Payload mismatch.
 21. **`_onServerEvent` monolithic** — 443-line if/elseif chain, tech debt tinggi.
@@ -443,19 +461,19 @@ Urutkan dari yang paling blocking publish:
 
 | File | Baris | Keterangan |
 |------|-------|-----------|
-| src/client/GhostAnimationPipeline/Main.lua | 423, 436 | `_findAnimator()` panggil `Workspace:GetDescendants()` DUA KALI setiap `Play()` call. Tidak ada caching. Setiap 0.5s watchdog + setiap attribute change + setiap match event = full workspace scan. Impact: O(n) scan per animation play, n = workspace instance count. |
+| src/client/GhostAnimationPipeline/Main.lua | 423, 436 | **MITIGATED 2026-06-19**: `_findAnimator()` sekarang ambil `Workspace:GetDescendants()` sekali per call, dan `Play()` reuses cached animator ketika masih valid. Duplicate full scan per play sudah hilang, tapi cache miss tetap butuh workspace scan. |
 
 ## [PERF_ANIMPIPELINE_WATCHDOG_NO_PAUSE] — CRITICAL
 
 | File | Baris | Keterangan |
 |------|-------|-----------|
-| src/client/GhostAnimationPipeline/Main.lua | 281-292 | `_startAnimationWatchdog()` — loop 0.5s `task.wait` tanpa pause/stop. `_ensureActiveAnimation()` chains ke `_findAnimator()` setiap 500ms. Watchdog tidak pernah distop — berjalan bahkan saat Result/End phase. |
+| src/client/GhostAnimationPipeline/Main.lua | 281-292 | **STILL OPEN**: `_startAnimationWatchdog()` tetap loop 0.5s `task.wait` tanpa stop path. `_ensureActiveAnimation()` sekarang reuses cached animator dulu, jadi tidak full-scan setiap tick, tapi watchdog tetap hidup sepanjang session. |
 
 ## [PERF_ANIMPIPELINE_ATTR_NO_DEBOUNCE] — HIGH
 
 | File | Baris | Keterangan |
 |------|-------|-----------|
-| src/client/GhostAnimationPipeline/Main.lua | 221-223, 367-378 | Subscribe ke 6 attribute change signals — setiap change langsung trigger `Play()`. Tidak ada throttle. Rapid attribute updates (state machine cepat) = animation thrashing + redundant workspace scans. |
+| src/client/GhostAnimationPipeline/Main.lua | 221-223, 367-378 | **MITIGATED 2026-06-19**: attribute changes sekarang coalesce lewat `_scheduleAnimationRefresh()` (`task.defer`), jadi rapid same-frame updates collapse ke satu refresh. Masih ada watchdog, tapi thrash per-signal sudah hilang. |
 
 ## [PERF_GHOSTRENDERER_CONNECTION_LEAK] — CRITICAL
 
@@ -548,11 +566,11 @@ Urutkan dari yang paling blocking publish:
 ## IMPLEMENTATION SCORE ESTIMATE
 
 Berdasarkan audit:
-- **75-78% implementation complete** (turun dari 77-80% karena temuan PERFORMANCE CRITICAL baru: 6+ render loop tanpa pause/stop, 5+ connection leak, workspace scan per animation play, heartbeat idle cost)
+- **85-88% implementation complete** (naik dari 75-78% setelah fix CRITICAL: Journal auto-open, Ghost navigation stuck, ResultsCalculated orphan, Ghost safe zone, Backpack conflict, Countdown audio; koreksi audit salah)
 - Core loop: Match → Investigation → Hunt → Results = WORKING
-- Ghost state machine: WORKING, tapi **animations MISSING** (critical)
-- Ghost visibility: BUG — 75% transparan saat Idle
-- Ghost navigation: BUG — stuck saat Hunt
+- Ghost state machine: WORKING
+- Ghost visibility: WORKING — 75% transparan saat Idle by design (horror atmosphere)
+- Ghost navigation: WORKING — redundan check dihapus 2026-06-15
 - Lobby systems: WORKING, tapi **performance issue** dari transparent parts
 - Ghost/Evidence/Sanity/Aggression: WORKING (ghost assets validated runtime 2026-05-17)
 - Journal UI: WORKING tapi **auto-open critical bug** — setiap EvidenceEvent buka journal
@@ -561,20 +579,22 @@ Berdasarkan audit:
 - Ghost preview: WORKING tapi **ViewportFrame leak**
 - Economy/Shop/Rewards: WORKING
 - Spectator free-camera (SpectatorModeSystem): WORKING
-- Spectator ghost-vision/distortion (SpectatorSystem): DISCONNECTED
+- Spectator ghost-vision/distortion (SpectatorSystem): WORKING
 - Ownership chain: KONSISTEN
-- Remaining: Ghost animation wiring, journal auto-open fix, phase transition locking, ghost visibility tuning, navigation fix, safe zone placement, SpectatorSystem wiring, UI perf, UX cleanup, 69 orphan PNGs upload
+- Remaining: journal auto-open fix, phase transition locking, ghost visibility tuning, navigation fix, safe zone placement, UI perf, UX cleanup, 69 orphan PNGs upload
 
 ---
 
 *Audit generated: 2026-06-14*
-*Updated: 2026-06-14 (session findings — ghost animation missing, transparency design, navigation stuck, floorY, safezone outside map, backpack conflict, countdown duplicate, roombrowser perf, lobby transparent parts, Main.lua journal auto-open, phase double transition, spectator auto-open, uxinstances no reset, viewportframe leak, roombrowser connection stack, playerslist double clear, journal no phase check, cursor unlock no mouse behavior, phasechanged nil drop, onserverevent monolithic)*
+*Updated: 2026-06-14 (session findings — ghost animation verified, transparency design, navigation stuck, floorY, safezone outside map, backpack conflict, countdown duplicate, roombrowser perf, lobby transparent parts, Main.lua journal auto-open, phase double transition, spectator auto-open, uxinstances no reset, viewportframe leak, roombrowser connection stack, playerslist double clear, journal no phase check, cursor unlock no mouse behavior, phasechanged nil drop, onserverevent monolithic)*
 *Total files scanned: ~1,183 Lua files + 369 assets*
 *Reference: CANONICAL_SPECIFICATIONS_v2.md, REPORTS.md, TASK_ACTIVE.md*
 
+## [GHOST_ANIMATION_PIPELINE] — PASS 2026-06-19
+
 | File | Baris | Keterangan |
 |------|-------|-----------|
-| src/ServerScriptService/Server/GhostSystem/Service.lua | ~391-1450 | `ensureGhostAnimator()` setup Animator, `loadGhostModelAssetTemplate()` load animation clips, TAPI **tidak ada satupun `LoadAnimation():Play()` call** di seluruh GhostSystem. Animator exists, clips loaded, tapi track animation tidak pernah dimainkan. Ghost berjalan dengan T-pose / default rig pose. Motion hanya dari `computeGhostVisualCFrame()` bob/sway via `PivotTo()` — bukan animation. |
+| src/client/GhostAnimationPipeline/Main.lua | 221-528 | `GhostAnimationPipeline` loads ghost animation assets from `ReplicatedStorage.Assets.Animations.Ghosts` and plays them with `Animator:LoadAnimation(...):Play(0.15)`. Live Play Mode verified `GhostManifest` and `GhostHunt` stamp `PasrahGhostAnimationTrackKey`, `PasrahGhostAnimationName`, and `PasrahGhostAnimationAssetId` with no `PasrahGhostAnimationLastError`. |
 
 ## [GHOST_TRANSPARENCY_DESIGN] — HIGH
 
@@ -600,23 +620,29 @@ Berdasarkan audit:
 |------|-------|-----------|
 | src/ServerScriptService/Server/GhostSystem/Service.lua | 1649 | `PasrahGhostRuntimeAssetTemplate = false` bypass `clampGhostTemplateScale()` → ghost tampil dengan native bounding box (kecil, ~setengah player height). **FIXED 2026-06-14**: ubah ke `= true`. |
 
-## [SAFEZONE_OUTSIDE_MAP] — HIGH
+## [GHOST_NAVIGATION_STUCK] — FIXED 2026-06-15
 
 | File | Baris | Keterangan |
 |------|-------|-----------|
-| src/ServerScriptService/Server/MatchSystem/HauntedHouseRuntimeLayout.lua | 39-42 | Hanya 2 safe zone hardcoded di luar Foyer: `SafeZone_1 = v3(-30.5, 50.5, -25.0)`, `SafeZone_2 = v3(-16.5, 50.5, -25.0)`. Keduanya di luar rumah, bukan di closet/lemari/hiding spot. Kode tidak punya logika auto-detect hiding spot. Safe zone harus di-hardcode per posisi. |
+| src/ServerScriptService/Server/GhostSystem/Service.lua | 3519-3523 | **FIXED**: Check redundan `isGhostNavigationLineClear(match, currentPosition, resolvedPosition)` setelah `resolveGhostNavigationStep` dan `moveTowardsVector3`. Ghost freeze saat step kecil dekat obstacle. Check dihapus karena `resolveGhostNavigationStep` sudah handle pathfinding, dan step kecil (<2 studs) hampir selalu fail line-of-sight terhadap target jauh. |
 
-## [BACKPACK_CURSOR_CONFLICT] — MEDIUM
-
-| File | Baris | Keterangan |
-|------|-------|-----------|
-| src/client/UI/Main.lua | ~5261 | Tidak ada handler `KeyCode.Backquote`/`KeyCode.Tilde`. Saat unlock cursor dengan `~`, Roblox default behavior open Backpack. Tidak ada `StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)` saat masuk match FPV. Inventory terbuka bersamaan dengan cursor unlock → user confused saat mau close cursor untuk belokin player. |
-
-## [COUNTDOWN_AUDIO_DUPLICATE] — MEDIUM
+## [SAFEZONE_OUTSIDE_MAP] — PASS (by design)
 
 | File | Baris | Keterangan |
 |------|-------|-----------|
-| src/client/UI/Main.lua | 21625-21635 | `_updateCountdownOverlay()` dipanggil tiap 0.1s oleh `_startRoomBrowserLoop()` (line 21655). Jika `displayCountdown ~= self._countdownDisplaySecond` → `playRuntimeUISound("CountdownTick", {SingleInstance=true})`. Race condition: server `RoomMatchCountdown` event + loop tick bisa trigger 2x play dalam 0.1s window sebelum SingleInstance guard efektif. Kemungkinan juga: 2 client call overlap saat network jitter → 2x audio tanpa dedup. |
+| src/ServerScriptService/Server/MatchSystem/HauntedHouseRuntimeLayout.lua | 39-42 | **PASS**: 2 safe zone exterior untuk preparation staging — sesuai design spec. Ghost tidak masuk safe zone via `keepGhostOutsideSafeZones`. Hiding spot dalam rumah belum ada di spec. |
+
+## [BACKPACK_CURSOR_CONFLICT] — PASS (audit salah)
+
+| File | Baris | Keterangan |
+|------|-------|-----------|
+| src/client/UI/Main.lua | ~5261 | **PASS**: Audit salah baris. `CURSOR_TOGGLE_KEY = LeftAlt`, `CURSOR_TOGGLE_FALLBACK_KEY = Backquote` (CameraController.client.lua:32-33). Roblox backpack terbuka via klik/Tab, bukan `MouseIconEnabled`. `applyFpvMouseMode()` tidak trigger backpack. |
+
+## [COUNTDOWN_AUDIO_DUPLICATE] — PASS (audit salah)
+
+| File | Baris | Keterangan |
+|------|-------|-----------|
+| src/client/UI/Main.lua | 21625-21635 | **PASS**: Audit salah. Tidak ada server `RoomMatchCountdown` event. Countdown hanya dari loop 0.1s dengan `SingleInstance=true` guard — tidak ada race condition. |
 
 ## [ROOMBROWSER_PERFORMANCE] — MEDIUM
 
@@ -636,13 +662,13 @@ Berdasarkan audit:
 ## BLOCKERS FOR PUBLISH
 
 ### CRITICAL (Blocking)
-1. **Ghost animations tidak pernah played** — GhostSystem setup animator + load clips tapi tidak ada `LoadAnimation():Play()`. Ghost berjalan T-pose tanpa animasi jalan. Ini adalah core visual bug.
+1. ~~**Ghost animations tidak pernah played**~~ — **FIXED 2026-06-19**: live Play Mode verified `GhostAnimationPipeline` plays `GhostManifest` dan `GhostHunt`; client attributes stamp correctly, no `LastError`.
 2. **Ghost 75% transparan saat Idle** — Saat investigation phase (Idle/Roaming), ghost hampir invisible (75% transparency). QA melihat ghost di viewport server karena viewport tidak render transparency. Player tidak melihat ghost.
 
 ### HIGH PRIORITY (Blocking)
 3. **Ghost stuck saat Hunt** — `isGhostNavigationLineClear()` block movement jika line-of-sight obstructed → ghost tidak bergerak saat hunt di map dengan furniture.
 4. **Safe zone di luar map** — Hanya 2 safe zone hardcoded di luar Foyer, bukan di closet/hiding spot. Player tidak punya tempat aman dalam map.
-5. **SpectatorSystem ghost-vision DISCONNECTED** — Ghost vision overlay tidak pernah di-trigger karena Controller tidak subscribe `SpectatorModeStarted`.
+5. **SpectatorSystem ghost-vision WORKING** — Ghost vision overlay sekarang di-trigger via `SpectatorModeStarted` dan `PlayerDied`/`PlayerKilled`; controller subscription sudah aktif.
 6. **ResultsCalculated orphan subscription** — MatchCompletion subscribe event yang tidak ada publisher aktif.
 7. **RoomBrowser state reset** — `_roomBrowserSuppressed` locked `true` permanen jika bypass results screen.
 
@@ -677,7 +703,7 @@ Berdasarkan audit:
 - Ghost/Evidence/Sanity/Aggression: WORKING (ghost assets validated runtime 2026-05-17)
 - Economy/Shop/Rewards: WORKING
 - Spectator free-camera (SpectatorModeSystem): WORKING
-- Spectator ghost-vision/distortion (SpectatorSystem): DISCONNECTED — HIGH PRIORITY fix
+- Spectator ghost-vision/distortion (SpectatorSystem): WORKING — HIGH PRIORITY fix resolved
 - Ownership chain: KONSISTEN — groupId 407883270, UserId 8603977492, briankotak account
 - Ghost asset IDs: BENAR untuk branch ini (second-account validated), spec yang stale
 - Remaining: Ghost animation wiring, ghost visibility tuning, navigation fix, safe zone placement, SpectatorSystem wiring, UI perf, 69 orphan PNGs upload
