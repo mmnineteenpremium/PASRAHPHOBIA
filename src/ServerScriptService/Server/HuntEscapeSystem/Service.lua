@@ -495,19 +495,19 @@ function Service:HandlePlayerExtraction(player, matchId, zoneId, source)
         return false, "invalid_player"
     end
     if typeof(player) == "Instance" and player:IsA("Player") then
-        player:SetAttribute("LastExtractionResult", nil)
-        player:SetAttribute("LastExtractionZone", zoneId)
+        player:SetAttribute("PasrahLastExtractionResult", nil)
+        player:SetAttribute("PasrahLastExtractionZone", zoneId)
     end
     if self:_isExtracted(matchId, userId) then
         if typeof(player) == "Instance" and player:IsA("Player") then
-            player:SetAttribute("LastExtractionResult", "already_extracted")
+            player:SetAttribute("PasrahLastExtractionResult", "already_extracted")
         end
         self:_stampExtractionRuntime(matchId, zoneId, player, "already_extracted")
         return false, "already_extracted"
     end
     if not self:_isAlive(matchId, userId) then
         if typeof(player) == "Instance" and player:IsA("Player") then
-            player:SetAttribute("LastExtractionResult", "player_not_alive")
+            player:SetAttribute("PasrahLastExtractionResult", "player_not_alive")
         end
         self:_stampExtractionRuntime(matchId, zoneId, player, "player_not_alive")
         return false, "player_not_alive"
@@ -516,7 +516,7 @@ function Service:HandlePlayerExtraction(player, matchId, zoneId, source)
     local studioOverride = canUseStudioExtractionOverride()
     if not ghostIdentified and not studioOverride then
         if typeof(player) == "Instance" and player:IsA("Player") then
-            player:SetAttribute("LastExtractionResult", "ghost_not_identified")
+            player:SetAttribute("PasrahLastExtractionResult", "ghost_not_identified")
         end
         traceExtraction("ExtractionDenied", {
             matchId = matchId,
@@ -538,7 +538,7 @@ function Service:HandlePlayerExtraction(player, matchId, zoneId, source)
 
     self:_setExtracted(matchId, userId, true)
     if typeof(player) == "Instance" and player:IsA("Player") then
-        player:SetAttribute("LastExtractionResult", studioOverride and "extracted_via_studio_override" or "extracted")
+        player:SetAttribute("PasrahLastExtractionResult", studioOverride and "extracted_via_studio_override" or "extracted")
     end
     traceExtraction("ExtractionAccepted", {
         matchId = matchId,

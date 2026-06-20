@@ -9,7 +9,7 @@ local RunService = game:GetService("RunService")
 local MatchService = {}
 MatchService.__index = MatchService
 
-local PRE_TELEPORT_LOADING_SECONDS = 10
+local PRE_TELEPORT_LOADING_SECONDS = 5
 local MATCH_RUNTIME_READY_REPLICATION_SECONDS = 1.25
 
 local DEFAULT_MODE_CONFIG = {
@@ -856,7 +856,6 @@ function MatchService:Init()
 end
 
 function MatchService:Start()
-	-- Runtime is event-driven.
 end
 
 function MatchService:Stop()
@@ -1213,18 +1212,51 @@ function MatchService:StartMatch(matchId)
 		-- Keep this no-op wrapper so older StartMatch wiring cannot silently bypass the gate.
 	end
 
+	local function seedDefaultPreparationLoadout(player)
+		if not (typeof(player) == "Instance" and player:IsA("Player")) then
+			return
+		end
+		local currentCount = tonumber(player:GetAttribute("PasrahLoadoutToolCount")) or 0
+		if currentCount > 0 then
+			return
+		end
+
+		-- Ensure a fresh solo/staging match always has a playable baseline kit.
+		player:SetAttribute("PasrahLoadoutTool1", "JejakEnergi")
+		player:SetAttribute("PasrahLoadoutTool2", "Flashlight")
+		player:SetAttribute("PasrahLoadoutToolCount", 2)
+		player:SetAttribute("PasrahInventoryActiveTool", "JejakEnergi")
+		player:SetAttribute("PasrahInventorySelectedTool", "JejakEnergi")
+	end
+
 	for _, player in ipairs(match.players or {}) do
 		if typeof(player) == "Instance" and player:IsA("Player") then
+			seedDefaultPreparationLoadout(player)
 			player:SetAttribute("InMatch", true)
 			player:SetAttribute("MatchId", authoritativeMatchId)
-			player:SetAttribute("MatchMode", tostring(match.mode or match.gameMode or "Classic"))
-			player:SetAttribute("MatchDifficulty", tostring(match.difficulty or "Mudah"))
-			player:SetAttribute("MatchMapId", tostring(match.mapId or match.map or ""))
+			player:SetAttribute("PasrahMatchMode", tostring(match.mode or match.gameMode or "Classic"))
+			player:SetAttribute("PasrahMatchDifficulty", tostring(match.difficulty or "Mudah"))
+			player:SetAttribute("PasrahMatchMapId", tostring(match.mapId or match.map or ""))
 			player:SetAttribute("MatchLifecyclePhase", tostring(match.phase or "PreparationPhase"))
-			player:SetAttribute("PreparationFocusTool", nil)
-			player:SetAttribute("PreparationFocusToolLabel", nil)
-			player:SetAttribute("PreparationFocusToolSource", nil)
+			player:SetAttribute("PasrahPreparationFocusTool", nil)
+			player:SetAttribute("PasrahPreparationFocusToolLabel", nil)
+			player:SetAttribute("PasrahPreparationFocusToolSource", nil)
 			player:SetAttribute("PasrahPreparationToolSelected", nil)
+			player:SetAttribute("PasrahDeathActive", nil)
+			player:SetAttribute("PasrahDeathOwner", nil)
+			player:SetAttribute("PasrahDeathMatchId", nil)
+			player:SetAttribute("PasrahDeathState", nil)
+			player:SetAttribute("PasrahDeathReason", nil)
+			player:SetAttribute("PasrahDeathLastEvent", nil)
+			player:SetAttribute("PasrahDeathSpectatorTargetUserId", nil)
+			player:SetAttribute("PasrahDeathSpectatorTargetName", nil)
+			player:SetAttribute("PasrahSpectatorOwner", nil)
+			player:SetAttribute("PasrahSpectatorMatchId", nil)
+			player:SetAttribute("PasrahSpectatorReason", nil)
+			player:SetAttribute("PasrahSpectatorMode", nil)
+			player:SetAttribute("PasrahSpectatorActive", nil)
+			player:SetAttribute("PasrahSpectatorLimitedAwareness", nil)
+			player:SetAttribute("PasrahSpectatorEnteredAt", nil)
 			schedulePreparationFocusFallback(player)
 		end
 	end
@@ -1300,6 +1332,7 @@ function MatchService:StartMatch(matchId)
 				durationSeconds = self:_getPhaseDuration(match.phase, match),
 				mapSize = match.mapDefinition and match.mapDefinition.mapSize or nil,
 				preparationWorldBoard = match.preparationWorldBoard == true and match.phase == "PreparationPhase",
+				postTeleportLoadingSeconds = 15,
 			})
 			self:_fireMatchEventToPlayers(teleportedPlayers, self:_buildPhasePayload(match, match.phase, phaseNow))
 			setStudioMatchStartStage(string.format("match=%s stage=match_started_sent", tostring(matchId)))
@@ -1632,13 +1665,13 @@ function MatchService:EndMatch(matchId, results)
 		if typeof(player) == "Instance" and player:IsA("Player") then
 			player:SetAttribute("InMatch", false)
 			player:SetAttribute("MatchId", nil)
-			player:SetAttribute("MatchMode", nil)
-			player:SetAttribute("MatchDifficulty", nil)
-			player:SetAttribute("MatchMapId", nil)
+			player:SetAttribute("PasrahMatchMode", nil)
+			player:SetAttribute("PasrahMatchDifficulty", nil)
+			player:SetAttribute("PasrahMatchMapId", nil)
 			player:SetAttribute("MatchLifecyclePhase", nil)
-			player:SetAttribute("PreparationFocusTool", nil)
-			player:SetAttribute("PreparationFocusToolLabel", nil)
-			player:SetAttribute("PreparationFocusToolSource", nil)
+			player:SetAttribute("PasrahPreparationFocusTool", nil)
+			player:SetAttribute("PasrahPreparationFocusToolLabel", nil)
+			player:SetAttribute("PasrahPreparationFocusToolSource", nil)
 			player:SetAttribute("PasrahPreparationToolSelected", nil)
 		end
 		self:_publish("PlayerTeleported", {

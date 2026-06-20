@@ -37,17 +37,20 @@ Layout.spawnPoints = {
 }
 
 Layout.safeZones = {
-	{ name = "SafeZone_1", position = v3(-30.5, 50.5, -25.0) },
-	{ name = "SafeZone_2", position = v3(-16.5, 50.5, -25.0) },
+	{ name = "SafeZone_FoyerExterior", position = v3(-30.5, 50.5, -25.0) },
+	{ name = "SafeZone_FrontPorch", position = v3(-16.5, 50.5, -25.0) },
+	{ name = "SafeZone_ClosetA", position = v3(-44.0, 63.0, 11.5) },
+	{ name = "SafeZone_LinenCloset", position = v3(-30.0, 63.0, 21.5) },
+	{ name = "SafeZone_ClosetB", position = v3(20.5, 63.0, 3.0) },
 }
 
 Layout.ghostSpawns = {
-	{ name = "GhostSpawnZone_1", roomId = "LivingRoom", position = v3(-16.0, 50.5, 47.0) },
-	{ name = "GhostSpawnZone_2", roomId = "Kitchen", position = v3(-42.0, 50.5, 35.0) },
-	{ name = "GhostSpawnZone_3", roomId = "Garage", position = v3(-80.0, 50.5, 59.0) },
-	{ name = "GhostSpawnZone_4", roomId = "Bedroom1", position = v3(-40.0, 63.0, 2.0) },
-	{ name = "GhostSpawnZone_5", roomId = "Bedroom3", position = v3(10.0, 63.0, 10.0) },
-	{ name = "GhostSpawnZone_6", roomId = "BonusRoom", position = v3(-15.0, 63.0, 47.0) },
+	{ name = "GhostSpawnZone_1", roomId = "LivingRoom", position = v3(-18.0, 50.5, 49.0) },
+	{ name = "GhostSpawnZone_2", roomId = "Kitchen", position = v3(-39.0, 50.5, 36.0) },
+	{ name = "GhostSpawnZone_3", roomId = "Garage", position = v3(-80.0, 50.5, 56.0) },
+	{ name = "GhostSpawnZone_4", roomId = "Bedroom1", position = v3(-40.0, 63.0, 0.0) },
+	{ name = "GhostSpawnZone_5", roomId = "Bedroom3", position = v3(11.0, 63.0, 11.0) },
+	{ name = "GhostSpawnZone_6", roomId = "BonusRoom", position = v3(-15.0, 63.0, 49.0) },
 }
 
 Layout.evidenceNodes = {

@@ -73,6 +73,46 @@ local LOBBY_TRAINING_SUPPORT_MAP = {
 	},
 }
 
+local PREPARATION_TOOL_ALIAS_TO_TYPE = {
+	flash = "Flashlight",
+	flashlight = "Flashlight",
+	emf = "JejakEnergi",
+	medok = "JejakEnergi",
+	jejakenergi = "JejakEnergi",
+	uv = "BolaArwah",
+	uvcam = "BolaArwah",
+	bolaarwah = "BolaArwah",
+	toun = "BolaArwah",
+	thermo = "SuhuMembeku",
+	suhumembeku = "SuhuMembeku",
+	box = "KotakArwah",
+	spiritbox = "KotakArwah",
+	kotakarwah = "KotakArwah",
+	writing = "BukuTerkutuk",
+	bukuterkutuk = "BukuTerkutuk",
+	sensor = "GerakanGaib",
+	gerakangaib = "GerakanGaib",
+	garam = "Garam",
+	salib = "Salib",
+	dupa = "Dupa",
+	sanity = "PilSanity",
+	pilsanity = "PilSanity",
+}
+
+local PREPARATION_TOOL_LABEL_BY_TYPE = {
+	Flashlight = "FLASH",
+	JejakEnergi = "EMF",
+	BolaArwah = "UV CAM",
+	SuhuMembeku = "THERMO",
+	KotakArwah = "BOX",
+	BukuTerkutuk = "WRITING",
+	GerakanGaib = "SENSOR",
+	Garam = "GARAM",
+	Salib = "SALIB",
+	Dupa = "DUPA",
+	PilSanity = "SANITY",
+}
+
 local function resolveService(deps, name, methodName)
 	local service = Services.Get(deps, name)
 	if type(service) ~= "table" then
@@ -140,6 +180,10 @@ local function summarizeSpectatorVisionState(vision, communication)
 		tostring(type(communication) == "table" and communication.canTransmitVoice == true),
 		tostring(type(communication) == "table" and communication.distortionHint or nil)
 	)
+end
+
+local function formatStudioMatchId(matchId)
+	return tostring(matchId or "nil")
 end
 
 local function ensureRemote()
@@ -508,43 +552,44 @@ function StudioE2EControlSystem:_handleSetPreparationFocusTool(player, request)
 	end
 
 	local matchId = self:_resolveMatchId(player, request)
-	if not matchId then
+	if not matchId and not RunService:IsStudio() then
 		return false, "missing_match_id"
 	end
 
 	local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
-	if lifecyclePhase ~= "PreparationPhase" then
+	local isStudio = RunService:IsStudio()
+	if lifecyclePhase ~= "PreparationPhase" and not isStudio then
 		return false, string.format("not_preparation_phase phase=%s", lifecyclePhase)
+	end
+	if isStudio and lifecyclePhase ~= "PreparationPhase" then
+		player:SetAttribute("MatchLifecyclePhase", "PreparationPhase")
 	end
 
 	local focusTool = type(request) == "table" and (request.tool or request.focusTool) or nil
 	if focusTool == nil or tostring(focusTool) == "" then
-		player:SetAttribute("PreparationFocusTool", nil)
-		return true, string.format("match=%s focus=nil", matchId)
+		player:SetAttribute("PasrahPreparationFocusTool", nil)
+		player:SetAttribute("PasrahPreparationFocusToolLabel", nil)
+		player:SetAttribute("PasrahPreparationFocusToolSource", nil)
+		player:SetAttribute("PasrahPreparationToolSelected", nil)
+		player:SetAttribute("PasrahEquippedToolType", nil)
+		player:SetAttribute("PasrahToolUseStamp", nil)
+		return true, string.format("match=%s focus=nil", formatStudioMatchId(matchId))
 	end
 
-	local token = tostring(focusTool):gsub("[%s_%-%.]+", ""):upper()
-	local allowedTools = {
-		EMF = "EMF",
-		UV = "UV CAM",
-		UVCAM = "UV CAM",
-		THERMO = "THERMO",
-		BOX = "BOX",
-		WRITING = "WRITING",
-		SENSOR = "SENSOR",
-	}
-	local resolvedTool = allowedTools[token]
+	local token = normalizeToken(focusTool)
+	local resolvedTool = token and PREPARATION_TOOL_ALIAS_TO_TYPE[token] or nil
 	if resolvedTool == nil then
 		return false, "invalid_tool"
 	end
 
-	player:SetAttribute("PreparationFocusTool", resolvedTool)
-	player:SetAttribute("PreparationFocusToolLabel", resolvedTool)
-	player:SetAttribute("PreparationFocusToolSource", "WorldToolStation")
+	local resolvedLabel = PREPARATION_TOOL_LABEL_BY_TYPE[resolvedTool] or resolvedTool
+	player:SetAttribute("PasrahPreparationFocusTool", resolvedTool)
+	player:SetAttribute("PasrahPreparationFocusToolLabel", resolvedLabel)
+	player:SetAttribute("PasrahPreparationFocusToolSource", "WorldToolStation")
 	player:SetAttribute("PasrahPreparationToolSelected", true)
 	player:SetAttribute("PasrahEquippedToolType", resolvedTool)
 	player:SetAttribute("PasrahToolUseStamp", os.clock())
-	return true, string.format("match=%s focus=%s", matchId, resolvedTool)
+	return true, string.format("match=%s focus=%s label=%s", formatStudioMatchId(matchId), resolvedTool, resolvedLabel)
 end
 
 function StudioE2EControlSystem:_handleMovePlayerToMapObject(player, request)

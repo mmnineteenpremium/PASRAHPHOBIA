@@ -494,11 +494,19 @@ function Service:_setBattery(data, player, battery)
     end
 end
 
+local function isInLobbyPhase(player)
+    if typeof(player) ~= "Instance" or not player:IsA("Player") then
+        return true
+    end
+    local phase = tostring(player:GetAttribute("MatchLifecyclePhase") or player:GetAttribute("PasrahMatchPhase") or "")
+    return phase == "Lobby" or phase == "" or phase == nil
+end
+
 function Service:_isPreparationReloadAllowed(player)
     if typeof(player) ~= "Instance" or not player:IsA("Player") then
         return false
     end
-    local phase = tostring(player:GetAttribute("MatchLifecyclePhase") or player:GetAttribute("MatchPhase") or "")
+    local phase = tostring(player:GetAttribute("MatchLifecyclePhase") or player:GetAttribute("PasrahMatchPhase") or "")
     return phase == "PreparationPhase"
         or phase == "Preparing"
         or phase == "Briefing"
@@ -536,7 +544,7 @@ function Service:_updateBattery(deltaTime)
                 data.flashlightOn = false
                 self:_setEnabled(data, false)
                 if typeof(player) == "Instance" and player:IsA("Player") then
-                    player:SetAttribute("FlashlightEnabled", false)
+                    player:SetAttribute("PasrahFlashlightEnabled", false)
                     player:SetAttribute("PasrahFlashlightRemoteEnabled", false)
                     player:SetAttribute("PasrahFlashlightBatteryDepletedAt", os.clock())
                 end
@@ -610,10 +618,12 @@ function Service:OnPlayerAdded(player)
     end
 
     data.characterConn = player.CharacterAdded:Connect(function(character)
-        self:AttachFlashlight(player, character)
+        if not isInLobbyPhase(player) then
+            self:AttachFlashlight(player, character)
+        end
     end)
 
-    if player.Character then
+    if player.Character and not isInLobbyPhase(player) then
         self:AttachFlashlight(player, player.Character)
     end
 
@@ -635,6 +645,10 @@ end
 function Service:AttachFlashlight(player, character)
     local userId = toUserId(player)
     if not userId then
+        return
+    end
+
+    if isInLobbyPhase(player) then
         return
     end
 
@@ -783,12 +797,16 @@ function Service:HandleRemote(player, payload)
     end
 
     if action == "Toggle" then
+        if isInLobbyPhase(player) then
+            player:SetAttribute("PasrahFlashlightToggleRejected", "in_lobby")
+            return
+        end
         local enabled = payload.enabled == true
         data.battery = math.clamp(tonumber(data.battery) or tonumber(player:GetAttribute(FLASHLIGHT_BATTERY_ATTR)) or 100, 0, 100)
         if enabled and data.battery <= 0 then
             data.flashlightOn = false
             self:_setEnabled(data, false)
-            player:SetAttribute("FlashlightEnabled", false)
+            player:SetAttribute("PasrahFlashlightEnabled", false)
             player:SetAttribute("PasrahFlashlightRemoteEnabled", false)
             player:SetAttribute(FLASHLIGHT_NEEDS_RELOAD_ATTR, true)
             player:SetAttribute("PasrahFlashlightToggleRejected", "battery_empty")

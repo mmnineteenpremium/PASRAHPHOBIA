@@ -53,6 +53,8 @@ local INTERACTION_GUIDE_FOLDER_NAME = "InteractionGuideRuntime"
 local INTERACTION_GUIDE_BILLBOARD_NAME = "Billboard"
 local PLAYER_FACING_GUIDE_VISUALS_ENABLED = false
 local LOGIC_VOLUME_VISUAL_TRANSPARENCY = 1
+local TOOL_SWITCH_COOLDOWN = 5
+local TOOL_CONFIRM_REQUEST_EVENT = "toolConfirmRequest"
 -- Canonical source-of-truth maps now author spawn/safezone/staging directly in the map asset.
 -- Keep runtime overrides disabled unless explicitly re-enabled for legacy maps.
 local USE_LEGACY_SAFEZONE_OVERRIDES = false
@@ -1506,6 +1508,27 @@ local function commitPreparationToolSelection(preparationFolder, matchContext, p
 		return false
 	end
 
+	local now = os.clock()
+	local lastSwitch = tonumber(player:GetAttribute("PasrahToolSwitchLastAt")) or 0
+	if (now - lastSwitch) < TOOL_SWITCH_COOLDOWN then
+		local remaining = math.ceil(TOOL_SWITCH_COOLDOWN - (now - lastSwitch))
+		local pendingToolLabel = player:GetAttribute(PREPARATION_TOOL_PENDING_LABEL_ATTR) or toolData.title or ""
+		local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+		local matchRemote = remoteFolder and remoteFolder:FindFirstChild("MatchEvent")
+		if matchRemote and matchRemote:IsA("RemoteEvent") then
+			matchRemote:FireClient(player, {
+				type = "toolConfirmResult",
+				toolType = toolData.toolType,
+				toolLabel = pendingToolLabel,
+				success = false,
+				message = string.format("Cooldown aktif. Tunggu %ds sebelum ganti tool.", remaining),
+			})
+		end
+		clearPreparationToolPendingState(player)
+		return false
+	end
+	player:SetAttribute("PasrahToolSwitchLastAt", now)
+
 	local currentLoadout = type(matchContext) == "table"
 		and clonePreparationLoadoutList(matchContext.selectedPreparationTools)
 		or {}
@@ -1515,9 +1538,9 @@ local function commitPreparationToolSelection(preparationFolder, matchContext, p
 
 	local nextLoadout = buildPreparationLoadoutAfterSelection(currentLoadout, toolData.toolType)
 	writePreparationLoadoutToPlayer(player, nextLoadout)
-	player:SetAttribute("PreparationFocusTool", toolData.toolType)
-	player:SetAttribute("PreparationFocusToolLabel", toolData.title)
-	player:SetAttribute("PreparationFocusToolSource", "WorldToolStation")
+	player:SetAttribute("PasrahPreparationFocusTool", toolData.toolType)
+	player:SetAttribute("PasrahPreparationFocusToolLabel", toolData.title)
+	player:SetAttribute("PasrahPreparationFocusToolSource", "WorldToolStation")
 	player:SetAttribute("PasrahPreparationToolSelected", true)
 	player:SetAttribute("PasrahEquippedToolType", toolData.toolType)
 	player:SetAttribute("PasrahToolUseStamp", os.clock())
@@ -1532,6 +1555,17 @@ local function commitPreparationToolSelection(preparationFolder, matchContext, p
 		matchContext.selectedPreparationToolLabels = getPreparationLoadoutLabels(nextLoadout)
 	end
 	applyPreparationToolSelectionState(preparationFolder, matchContext, false)
+	local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	local matchRemote = remoteFolder and remoteFolder:FindFirstChild("MatchEvent")
+	if matchRemote and matchRemote:IsA("RemoteEvent") then
+		matchRemote:FireClient(player, {
+			type = "toolConfirmResult",
+			toolType = toolData.toolType,
+			toolLabel = toolData.title or toolData.toolType,
+			success = true,
+			message = string.format("%s terpilih! Cooldown: %ds.", toolData.title or toolData.toolType, TOOL_SWITCH_COOLDOWN),
+		})
+	end
 	return true
 end
 
@@ -2434,11 +2468,11 @@ local function resolveSelectedPreparationTool(matchContext)
 	if type(matchContext) == "table" then
 		for _, player in ipairs(matchContext.players or {}) do
 			if typeof(player) == "Instance" and player:IsA("Player") then
-				local source = tostring(player:GetAttribute("PreparationFocusToolSource") or "")
-				local focusTool = tostring(player:GetAttribute("PreparationFocusTool") or "")
+				local source = tostring(player:GetAttribute("PasrahPreparationFocusToolSource") or "")
+				local focusTool = tostring(player:GetAttribute("PasrahPreparationFocusTool") or "")
 				if source == "WorldToolStation" and focusTool ~= "" then
 					local toolData = findPreparationToolDataByType(focusTool)
-					return focusTool, tostring(player:GetAttribute("PreparationFocusToolLabel") or (toolData and toolData.title) or focusTool)
+					return focusTool, tostring(player:GetAttribute("PasrahPreparationFocusToolLabel") or (toolData and toolData.title) or focusTool)
 				end
 			end
 		end
@@ -2581,6 +2615,18 @@ local function bindPreparationToolStations(preparationFolder, matchContext)
 				player:SetAttribute(PREPARATION_TOOL_PENDING_LABEL_ATTR, toolData.title)
 				player:SetAttribute(PREPARATION_TOOL_PENDING_SOURCE_ATTR, "WorldToolStation")
 				player:SetAttribute(PREPARATION_TOOL_PENDING_RESPONSE_ATTR, "")
+
+				local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+				local matchRemote = remoteFolder and remoteFolder:FindFirstChild("MatchEvent")
+				if matchRemote and matchRemote:IsA("RemoteEvent") then
+					matchRemote:FireClient(player, {
+						type = TOOL_CONFIRM_REQUEST_EVENT,
+						toolType = toolData.toolType,
+						toolLabel = toolData.title,
+						message = string.format("Yakin pilih %s?", toolData.title),
+						cooldown = TOOL_SWITCH_COOLDOWN,
+					})
+				end
 			end)
 			if type(matchContext) == "table" and type(matchContext._preparationToolPromptConnections) == "table" then
 				table.insert(matchContext._preparationToolPromptConnections, connection)

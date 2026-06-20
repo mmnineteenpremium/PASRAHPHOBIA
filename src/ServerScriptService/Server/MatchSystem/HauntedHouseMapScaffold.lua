@@ -140,6 +140,18 @@ local function buildGhostSpawns(mapClone)
 		part:SetAttribute("GhostSpawn", true)
 		part:SetAttribute("PasrahRuntimeRoomId", spawn.roomId)
 	end
+	for _, child in ipairs(folder:GetChildren()) do
+		local expected = false
+		for _, spawn in ipairs(Layout.ghostSpawns) do
+			if child.Name == spawn.name then
+				expected = true
+				break
+			end
+		end
+		if child:IsA("BasePart") and not expected then
+			child:Destroy()
+		end
+	end
 	return folder
 end
 

@@ -11,10 +11,10 @@ local MODDED_SPIRIT_BOX_RANGE = 26
 local ELITE_SPIRIT_BOX_RANGE = 30
 local MODDED_SPIRIT_BOX_OWNED_ATTR = "PasrahOwnsModdedSpiritBox"
 local ELITE_SPIRIT_BOX_OWNED_ATTR = "PasrahOwnsEliteSpiritBox"
-local MATCH_MODE_ATTR = "MatchMode"
+local MATCH_MODE_ATTR = "PasrahMatchMode"
 local LOADOUT_TOOL_ATTR_PREFIX = "PasrahLoadoutTool"
 local LOADOUT_TOOL_COUNT_ATTR = "PasrahLoadoutToolCount"
-local PREPARATION_FOCUS_TOOL_ATTR = "PreparationFocusTool"
+local PREPARATION_FOCUS_TOOL_ATTR = "PasrahPreparationFocusTool"
 local EQUIPPED_TOOL_ATTR = "PasrahEquippedToolType"
 local TOOL_USE_STAMP_ATTR = "PasrahToolUseStamp"
 local TOOL_LAST_EVENT_ATTR = "PasrahToolLastEvent"
@@ -326,6 +326,14 @@ function EvidenceGateway:_isEquipToolRequest(request)
 		or requestTypeToken == "selecttool"
 end
 
+function EvidenceGateway:_isUnequipToolRequest(request)
+	local requestTypeToken = normalizeToken(request and (request.action or request.requestType))
+	return requestTypeToken == "unequipinvestigationtool"
+		or requestTypeToken == "unequiptool"
+		or requestTypeToken == "deselectinvestigationtool"
+		or requestTypeToken == "deselecttool"
+end
+
 function EvidenceGateway:_resolveLoadoutToolType(value)
 	local token = normalizeToken(value)
 	if token and TOOL_ALIASES[token] then
@@ -414,6 +422,55 @@ function EvidenceGateway:_handleEquipTool(player, request)
 	return {
 		success = true,
 		reason = "equipped",
+		matchId = matchId,
+		toolType = toolType,
+	}
+end
+
+function EvidenceGateway:_handleUnequipTool(player, request)
+	local toolType = self:_resolveToolType(request)
+	if not toolType or (toolType ~= "Flashlight" and not self:_isSupportedToolType(toolType)) then
+		return {
+			success = false,
+			reason = "invalid_tool",
+		}
+	end
+
+	local requestPayload = type(request.payload) == "table" and request.payload or {}
+	local matchId = self:_resolveMatchIdForPlayer(player, requestPayload)
+	if not matchId then
+		return {
+			success = false,
+			reason = "missing_match_id",
+			toolType = toolType,
+		}
+	end
+	if not self:_playerHasLoadoutTool(player, toolType) then
+		self:_stampPlayerToolRuntime(player, toolType, "ServerToolUnequipRejected", false)
+		return {
+			success = false,
+			reason = "tool_not_in_loadout",
+			matchId = matchId,
+			toolType = toolType,
+		}
+	end
+
+	if player:GetAttribute(EQUIPPED_TOOL_ATTR) == toolType then
+		player:SetAttribute(EQUIPPED_TOOL_ATTR, nil)
+	end
+	player:SetAttribute(TOOL_LAST_EVENT_ATTR, "ServerToolUnequipped")
+	player:SetAttribute(TOOL_LAST_SUCCESS_ATTR, true)
+	player:SetAttribute(TOOL_USE_STAMP_ATTR, os.clock())
+	self:_fireEvidenceEvent(player, {
+		eventName = "InvestigationToolUnequipped",
+		matchId = matchId,
+		success = true,
+		toolType = toolType,
+		autoOpenJournal = false,
+	})
+	return {
+		success = true,
+		reason = "unequipped",
 		matchId = matchId,
 		toolType = toolType,
 	}
@@ -613,7 +670,7 @@ function EvidenceGateway:_handleSubmitJournalGuess(player, request)
 		guessedGhostType = clientData.guessedGhostType,
 		guessedEvidence = clientData.guessedEvidence,
 		data = clientData,
-		autoOpenJournal = true,
+		autoOpenJournal = false,
 	}
 	if identified then
 		clientPayload.actualGhostType = clientData.actualGhostType
@@ -827,6 +884,12 @@ function EvidenceGateway:HandleRequest(player, request)
 		setStudioEvidenceGatewayTrace(player, "before_equip_tool")
 		local response = self:_handleEquipTool(player, request)
 		setStudioEvidenceGatewayTrace(player, "after_equip_tool", response and response.reason or "ok")
+		return response
+	end
+	if self:_isUnequipToolRequest(request) then
+		setStudioEvidenceGatewayTrace(player, "before_unequip_tool")
+		local response = self:_handleUnequipTool(player, request)
+		setStudioEvidenceGatewayTrace(player, "after_unequip_tool", response and response.reason or "ok")
 		return response
 	end
 

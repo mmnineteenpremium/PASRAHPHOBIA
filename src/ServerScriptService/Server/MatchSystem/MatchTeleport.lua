@@ -315,10 +315,22 @@ local function getCharacterRoot(character)
 	return character:FindFirstChildWhichIsA("BasePart")
 end
 
-local function waitForCharacterRoot(player, timeoutSeconds)
+local shouldRefreshCharacterForMatch
+
+local function waitForCharacterRoot(player, timeoutSeconds, rejectSpectatorShell)
+	local shouldRejectShell = rejectSpectatorShell == true
+	if shouldRejectShell and shouldRefreshCharacterForMatch(player) then
+		pcall(function()
+			player:LoadCharacter()
+		end)
+	end
+
 	local function resolveCharacterAndRoot()
 		local character = player and player.Character
 		local root = getCharacterRoot(character)
+		if shouldRejectShell and typeof(character) == "Instance" and character:IsA("Model") and character:GetAttribute("PasrahSpectatorShell") == true then
+			root = nil
+		end
 		if character and root then
 			return character, root
 		end
@@ -326,6 +338,9 @@ local function waitForCharacterRoot(player, timeoutSeconds)
 		if typeof(player) == "Instance" and player:IsA("Player") then
 			local fallbackCharacter = Workspace:FindFirstChild(player.Name)
 			if fallbackCharacter and fallbackCharacter:IsA("Model") then
+				if shouldRejectShell and fallbackCharacter:GetAttribute("PasrahSpectatorShell") == true then
+					return character, root
+				end
 				local fallbackRoot = getCharacterRoot(fallbackCharacter)
 				if fallbackRoot then
 					return fallbackCharacter, fallbackRoot
@@ -346,6 +361,34 @@ local function waitForCharacterRoot(player, timeoutSeconds)
 	until os.clock() >= deadline
 
 	return resolveCharacterAndRoot()
+end
+
+shouldRefreshCharacterForMatch = function(player)
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return false
+	end
+	if player:GetAttribute("PasrahSpectatorActive") == true then
+		return true
+	end
+	if player:GetAttribute("PasrahDeathActive") == true then
+		return true
+	end
+	local character = player.Character
+	if typeof(character) ~= "Instance" or not character:IsA("Model") then
+		return false
+	end
+	if character:GetAttribute("PasrahSpectatorShell") == true then
+		return true
+	end
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid and humanoid.Health <= 0 then
+		return true
+	end
+	local root = getCharacterRoot(character)
+	if not root then
+		return true
+	end
+	return humanoid == nil
 end
 
 local function setStudioTeleportTrace(summary, count)
@@ -1312,7 +1355,7 @@ function MatchTeleport:TeleportPlayers(matchOrPlayers, mapName)
 					continue
 				end
 				updateStudioTeleportTrace(teleportTrace, #teleported, string.format("player=%s status=resolve_root", player.Name))
-				local character, root = waitForCharacterRoot(player, CHARACTER_WAIT_TIMEOUT)
+				local character, root = waitForCharacterRoot(player, CHARACTER_WAIT_TIMEOUT, true)
 				local floorClearance = resolveHumanoidFloorClearance(character)
 				updateStudioTeleportTrace(
 					teleportTrace,

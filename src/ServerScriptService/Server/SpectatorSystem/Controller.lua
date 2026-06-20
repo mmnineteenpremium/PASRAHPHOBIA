@@ -27,6 +27,31 @@ function Controller.new(state, service, deps)
     return self
 end
 
+local function resolvePayloadPlayer(payload)
+    if type(payload) ~= "table" then
+        return nil
+    end
+    local player = payload.player
+    if typeof(player) == "Instance" and player:IsA("Player") then
+        return player
+    end
+    local userId = tonumber(payload.userId)
+    if not userId then
+        return nil
+    end
+    local players = game:GetService("Players")
+    local resolved = players:GetPlayerByUserId(userId)
+    if resolved then
+        return resolved
+    end
+    for _, candidate in ipairs(players:GetPlayers()) do
+        if candidate.UserId == userId then
+            return candidate
+        end
+    end
+    return nil
+end
+
 function Controller:_resolveSpectatorRemote()
     local replicatedStorage = game:GetService("ReplicatedStorage")
     local remoteFolder = replicatedStorage:FindFirstChild("RemoteEvents")
@@ -54,8 +79,20 @@ function Controller:RegisterEventHandlers()
     self:_subscribe("MatchStarted", function(payload)
         self:OnMatchStarted(payload)
     end)
+    self:_subscribe("PlayerDied", function(payload)
+        self:OnPlayerDied(payload)
+    end)
     self:_subscribe("PlayerKilled", function(payload)
         self:OnPlayerKilled(payload)
+    end)
+    self:_subscribe("SpectatorModeStarted", function(payload)
+        self:OnSpectatorModeStarted(payload)
+    end)
+    self:_subscribe("SpectatorModeEnded", function(payload)
+        self:OnSpectatorModeEnded(payload)
+    end)
+    self:_subscribe("EvidenceCollected", function(payload)
+        self:OnEvidenceCollected(payload)
     end)
     self:_subscribe("GhostRoamed", function(payload)
         self:OnGhostRoamed(payload)
@@ -104,19 +141,39 @@ end
 
 function Controller:OnPlayerDied(payload)
     local matchId = payload and payload.matchId
-    local player = payload and payload.player
+    local player = resolvePayloadPlayer(payload)
     if not matchId or not player then
         return
     end
     self._service:EnterSpectator(player, matchId, payload)
 end
 
-function Controller:OnPlayerKilled(payload)
+function Controller:OnSpectatorModeStarted(payload)
     local matchId = payload and payload.matchId
-    local player = payload and payload.player
+    local player = resolvePayloadPlayer(payload)
     if not matchId or not player then
         return
     end
+    self._service:EnterSpectator(player, matchId, payload)
+end
+
+function Controller:OnSpectatorModeEnded(payload)
+    local matchId = payload and payload.matchId
+    local player = resolvePayloadPlayer(payload)
+    if not matchId or not player then
+        return
+    end
+    self._service:ExitSpectator(player, matchId)
+end
+
+function Controller:OnPlayerKilled(payload)
+    local matchId = payload and payload.matchId
+    local player = resolvePayloadPlayer(payload)
+    if not matchId or not player then
+        return
+    end
+
+    self._service:EnterSpectator(player, matchId, payload)
 
     self._service:ProcessGhostActivity(matchId, {
         activityType = "player_killed",

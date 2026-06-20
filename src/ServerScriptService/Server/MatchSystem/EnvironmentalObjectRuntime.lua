@@ -1092,6 +1092,28 @@ function EnvironmentalObjectRuntime.Attach(match, mapClone, deps)
 			end
 
 			local action = tostring(request.action or "")
+			if action == "PreparationToolRequest" then
+				local toolType = tostring(request.toolType or "")
+				if toolType == "" then
+					return
+				end
+				-- CrosshairInteraction client dispatch — replicate Prompt.Triggered behavior
+				player:SetAttribute("PasrahPreparationToolPendingToolType", toolType)
+				player:SetAttribute("PasrahPreparationToolPendingLabel", toolType)
+				player:SetAttribute("PasrahPreparationToolPendingSource", "CrosshairClick")
+				player:SetAttribute("PasrahPreparationToolPendingResponse", "")
+				local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+				local matchRemote = remoteFolder and remoteFolder:FindFirstChild("MatchEvent")
+				if matchRemote and matchRemote:IsA("RemoteEvent") then
+					matchRemote:FireClient(player, {
+						type = "toolConfirmRequest",
+						toolType = toolType,
+						toolLabel = toolType,
+						message = string.format("Yakin pilih %s?", toolType),
+					})
+				end
+				return
+			end
 			if action == "PreparationToolResponse" then
 				local pendingToolType = tostring(player:GetAttribute("PasrahPreparationToolPendingToolType") or "")
 				if pendingToolType == "" then

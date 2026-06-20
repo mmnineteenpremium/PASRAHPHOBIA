@@ -68,7 +68,7 @@ local EvidenceTypesModule = resolveSharedModule({ "DataTypes", "Evidence", "Evid
 local Services = require(script.Parent.Parent.Parent.Core.Services)
 
 local EvidenceService = {}
-local MATCH_MODE_ATTR = "MatchMode"
+local MATCH_MODE_ATTR = "PasrahMatchMode"
 local RANKED_NEUTRALIZED_ITEMS = {
 	eq_sanitypill_standard = true,
 	eq_sanitypill_advanced = true,

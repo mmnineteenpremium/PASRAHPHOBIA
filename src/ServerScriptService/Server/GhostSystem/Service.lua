@@ -58,19 +58,19 @@ local DEFAULT_GHOST_TEMPLATE_ROOT_SIZES = {}
 local DEFAULT_GHOST_TEMPLATE_VISUAL_SIZE_OVERRIDES = {}
 
 local DEFAULT_GHOST_TEMPLATE_TARGET_BOUNDS = {
-	Kuntilanak = Vector3.new(3.5, 4.8, 1.8),
-	KuntilanakAggressive = Vector3.new(2.2, 5.4, 1.8),
-	Genderuwo = Vector3.new(3.4, 5.8, 2.6),
-	Leak = Vector3.new(2.0, 4.8, 2.35),
-	Pocong = Vector3.new(2.2, 4.0, 1.5),
-	Tuyul = Vector3.new(1.5, 2.5, 1.2),
-	Banaspati = Vector3.new(3.0, 5.0, 2.0),
-	Jerangkong = Vector3.new(2.5, 4.5, 1.8),
-	WeweGombel = Vector3.new(3.0, 4.5, 1.8),
-	Palasik = Vector3.new(2.0, 3.5, 1.5),
-	SilumanUlar = Vector3.new(2.0, 4.0, 1.5),
-	SundelBolong = Vector3.new(2.8, 4.5, 1.6),
-	HantuTanah = Vector3.new(3.0, 4.0, 2.0),
+	Kuntilanak = Vector3.new(7.4, 7.4, 7.4),
+	KuntilanakAggressive = Vector3.new(7.4, 7.4, 7.4),
+	Genderuwo = Vector3.new(7.4, 7.4, 7.4),
+	Leak = Vector3.new(7.4, 7.4, 7.4),
+	Pocong = Vector3.new(7.4, 7.4, 7.4),
+	Tuyul = Vector3.new(7.4, 7.4, 7.4),
+	Banaspati = Vector3.new(7.4, 7.4, 7.4),
+	Jerangkong = Vector3.new(7.4, 7.4, 7.4),
+	WeweGombel = Vector3.new(7.4, 7.4, 7.4),
+	Palasik = Vector3.new(7.4, 7.4, 7.4),
+	SilumanUlar = Vector3.new(7.4, 7.4, 7.4),
+	SundelBolong = Vector3.new(7.4, 7.4, 7.4),
+	HantuTanah = Vector3.new(7.4, 7.4, 7.4),
 }
 
 local DEFAULT_GHOST_TEMPLATE_MAX_HOVER_HEIGHT = {
@@ -461,17 +461,19 @@ local function createVisibleGhostPlaceholder(spawnCFrame, ghostType)
 	ghostModel.Name = string.format("GhostPlaceholder_%s", tostring(ghostType or "Unknown"))
 	ghostModel:SetAttribute("GhostType", ghostType)
 	ghostModel:SetAttribute("PlaceholderVisual", true)
+	ghostModel:SetAttribute("PasrahGhostRuntimeAssetTemplate", true)
+	ghostModel:SetAttribute("PasrahAllowRuntimeScale", true)
 	ghostModel:SetAttribute("PasrahGhostInventoryModelAssetId", nil)
 
-	local root = createGhostRigPart(ghostModel, "HumanoidRootPart", Vector3.new(2, 2, 1), spawnCFrame, Color3.fromRGB(80, 86, 96))
+	local root = createGhostRigPart(ghostModel, "HumanoidRootPart", Vector3.new(2.2, 2.2, 2.2), spawnCFrame, Color3.fromRGB(80, 86, 96))
 	root.Transparency = 1
 
-	local torso = createGhostRigPart(ghostModel, "Torso", Vector3.new(2, 2, 1), spawnCFrame * CFrame.new(0, 0, 0), Color3.fromRGB(168, 176, 188))
-	local head = createGhostRigPart(ghostModel, "Head", Vector3.new(2, 1, 1), spawnCFrame * CFrame.new(0, 1.5, 0), Color3.fromRGB(214, 220, 228))
-	local leftArm = createGhostRigPart(ghostModel, "Left Arm", Vector3.new(1, 2, 1), spawnCFrame * CFrame.new(-1.5, 0, 0), Color3.fromRGB(160, 168, 182))
-	local rightArm = createGhostRigPart(ghostModel, "Right Arm", Vector3.new(1, 2, 1), spawnCFrame * CFrame.new(1.5, 0, 0), Color3.fromRGB(160, 168, 182))
-	local leftLeg = createGhostRigPart(ghostModel, "Left Leg", Vector3.new(1, 2, 1), spawnCFrame * CFrame.new(-0.5, -2, 0), Color3.fromRGB(124, 132, 148))
-	local rightLeg = createGhostRigPart(ghostModel, "Right Leg", Vector3.new(1, 2, 1), spawnCFrame * CFrame.new(0.5, -2, 0), Color3.fromRGB(124, 132, 148))
+	local torso = createGhostRigPart(ghostModel, "Torso", Vector3.new(2.2, 2.2, 2.2), spawnCFrame * CFrame.new(0, 0, 0), Color3.fromRGB(168, 176, 188))
+	local head = createGhostRigPart(ghostModel, "Head", Vector3.new(2.2, 1.1, 1.1), spawnCFrame * CFrame.new(0, 1.55, 0), Color3.fromRGB(214, 220, 228))
+	local leftArm = createGhostRigPart(ghostModel, "Left Arm", Vector3.new(1.1, 2.2, 1.1), spawnCFrame * CFrame.new(-1.65, 0, 0), Color3.fromRGB(160, 168, 182))
+	local rightArm = createGhostRigPart(ghostModel, "Right Arm", Vector3.new(1.1, 2.2, 1.1), spawnCFrame * CFrame.new(1.65, 0, 0), Color3.fromRGB(160, 168, 182))
+	local leftLeg = createGhostRigPart(ghostModel, "Left Leg", Vector3.new(1.1, 2.2, 1.1), spawnCFrame * CFrame.new(-0.55, -2.15, 0), Color3.fromRGB(124, 132, 148))
+	local rightLeg = createGhostRigPart(ghostModel, "Right Leg", Vector3.new(1.1, 2.2, 1.1), spawnCFrame * CFrame.new(0.55, -2.15, 0), Color3.fromRGB(124, 132, 148))
 
 	for _, limb in ipairs({ torso, head, leftArm, rightArm, leftLeg, rightLeg }) do
 		limb.CastShadow = false
@@ -949,7 +951,7 @@ local function clampGhostTemplateScale(ghostModel, ghostType)
 	end
 
 	local explicitTargetBounds = resolveGhostTemplateConfigValue(GHOST_TEMPLATE_TARGET_BOUNDS, ghostType)
-	local targetBounds = explicitTargetBounds or Vector3.new(2.8, 5.6, 2.4)
+	local targetBounds = explicitTargetBounds or Vector3.new(7.4, 7.4, 7.4)
 	local ok, _, currentBounds = pcall(function()
 		return ghostModel:GetBoundingBox()
 	end)
@@ -978,6 +980,76 @@ local function clampGhostTemplateScale(ghostModel, ghostType)
 	end)
 end
 
+local function ensureGhostMinimumVisualSize(ghostModel, minimumMaxAxis, maximumMaxAxis)
+	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
+		return
+	end
+	if not shouldApplyRuntimeGhostScale(ghostModel) then
+		return
+	end
+
+	local ok, _, currentBounds = pcall(function()
+		return ghostModel:GetBoundingBox()
+	end)
+	if not ok or typeof(currentBounds) ~= "Vector3" then
+		return
+	end
+
+	local currentMaxAxis = math.max(currentBounds.X, currentBounds.Y, currentBounds.Z)
+	local minAxis = tonumber(minimumMaxAxis) or 5.5
+	local maxAxis = tonumber(maximumMaxAxis) or 6.0
+	if currentMaxAxis >= minAxis then
+		return
+	end
+
+	local desiredFactor = minAxis / math.max(currentMaxAxis, 0.001)
+	local cappedFactor = math.min(desiredFactor, maxAxis / math.max(currentMaxAxis, 0.001))
+	if cappedFactor <= 1.0 then
+		return
+	end
+
+	local currentScale = 1
+	local okScale, value = pcall(function()
+		return ghostModel:GetScale()
+	end)
+	if okScale and type(value) == "number" and value > 0 then
+		currentScale = value
+	end
+
+	pcall(function()
+		ghostModel:ScaleTo(currentScale * cappedFactor)
+	end)
+end
+
+local function resizeGhostVisualParts(ghostModel, factor)
+	if typeof(ghostModel) ~= "Instance" or not ghostModel:IsA("Model") then
+		return
+	end
+	local scaleFactor = tonumber(factor)
+	if not scaleFactor or scaleFactor <= 1 then
+		return
+	end
+	local okPivot, pivot = pcall(function()
+		return ghostModel:GetPivot()
+	end)
+	if not okPivot or typeof(pivot) ~= "CFrame" then
+		return
+	end
+	for _, descendant in ipairs(ghostModel:GetDescendants()) do
+		if descendant:IsA("BasePart") and not shouldHideGhostControlPart(descendant) then
+			local relative = pivot:ToObjectSpace(descendant.CFrame)
+			local pos = relative.Position
+			local rotation = relative - relative.Position
+			descendant.Size = Vector3.new(
+				descendant.Size.X * scaleFactor,
+				descendant.Size.Y * scaleFactor,
+				descendant.Size.Z * scaleFactor
+			)
+			descendant.CFrame = pivot * (CFrame.new(pos.X * scaleFactor, pos.Y * scaleFactor, pos.Z * scaleFactor) * rotation)
+		end
+	end
+end
+
 local function configureGhostRootPart(root, preferredRootSize)
 	if not (root and root:IsA("BasePart")) then
 		return
@@ -985,7 +1057,7 @@ local function configureGhostRootPart(root, preferredRootSize)
 	if typeof(preferredRootSize) == "Vector3" then
 		root.Size = preferredRootSize
 	else
-		root.Size = Vector3.new(2, 2, 1)
+		root.Size = Vector3.new(2.2, 2.2, 2.2)
 	end
 	root.Transparency = 1
 	root.CanCollide = false
@@ -1430,6 +1502,19 @@ local function createGhostFromTemplate(spawnCFrame, ghostType, options)
 	end
 
 	clampGhostTemplateScale(ghostModel, visualGhostType)
+	ensureGhostMinimumVisualSize(ghostModel, 5.5, 6.0)
+	do
+		local okExtents, extents = pcall(function()
+			return ghostModel:GetExtentsSize()
+		end)
+		if okExtents and typeof(extents) == "Vector3" then
+			local currentMaxAxis = math.max(extents.X, extents.Y, extents.Z)
+			if currentMaxAxis < 5.5 then
+				local factor = math.min(6.0 / math.max(currentMaxAxis, 0.001), 5.5 / math.max(currentMaxAxis, 0.001))
+				resizeGhostVisualParts(ghostModel, factor)
+			end
+		end
+	end
 	if root and root:IsDescendantOf(ghostModel) then
 		configureGhostRootPart(root, preferredRootSize)
 		ghostModel.PrimaryPart = root
@@ -2747,16 +2832,19 @@ local function resolveGhostFloorY(match, ghostModel, position)
 	raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 	raycastParams.FilterDescendantsInstances = ignoreInstances
 	raycastParams.IgnoreWater = true
-	local origin = Vector3.new(position.X, position.Y + 12, position.Z)
-	local direction = Vector3.new(0, -96, 0)
-	for _ = 1, 12 do
+	local origin = Vector3.new(position.X, position.Y + 100, position.Z)
+	local direction = Vector3.new(0, -120, 0)
+	for _ = 1, 16 do
 		raycastParams.FilterDescendantsInstances = ignoreInstances
 		local rayResult = Workspace:Raycast(origin, direction, raycastParams)
 		if not rayResult then
 			break
 		end
 		if not shouldIgnoreGhostNavigationHit(rayResult.Instance) then
-			return rayResult.Position.Y
+			local hitY = rayResult.Position.Y
+			if hitY < position.Y - 0.5 then
+				return hitY
+			end
 		end
 		table.insert(ignoreInstances, rayResult.Instance)
 	end

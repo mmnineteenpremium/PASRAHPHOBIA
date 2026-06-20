@@ -976,8 +976,8 @@ local function hasPreparationFocusTool(players, matchId)
 	for _, player in ipairs(players or {}) do
 		local lifecyclePhase = tostring(player and player:GetAttribute("MatchLifecyclePhase") or "")
 		if isRuntimeMatchParticipant(player, matchId) or lifecyclePhase == "PreparationPhase" then
-			local focusTool = player:GetAttribute("PreparationFocusTool")
-			local focusSource = tostring(player:GetAttribute("PreparationFocusToolSource") or "")
+			local focusTool = player:GetAttribute("PasrahPreparationFocusTool")
+			local focusSource = tostring(player:GetAttribute("PasrahPreparationFocusToolSource") or "")
 			local stationSelected = player:GetAttribute("PasrahPreparationToolSelected") == true
 			if type(focusTool) == "string"
 				and focusTool ~= ""
