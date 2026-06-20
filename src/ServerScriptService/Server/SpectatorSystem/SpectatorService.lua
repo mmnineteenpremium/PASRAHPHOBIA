@@ -3,6 +3,7 @@ local SpectatorVision = require(script.Parent.SpectatorVision)
 local SpectatorGhostGenerator = require(script.Parent.SpectatorGhostGenerator)
 local SpectatorCommunication = require(script.Parent.SpectatorCommunication)
 local Services = require(script.Parent.Parent.Core.Services)
+local Players = game:GetService("Players")
 
 local SpectatorService = {}
 SpectatorService.__index = SpectatorService
@@ -103,6 +104,10 @@ local function toUserId(playerOrUserId)
 	return nil
 end
 
+local function isSoloPlaytestOrSinglePlayerSession()
+	return #Players:GetPlayers() <= 1
+end
+
 local function sortedAliveUserIds(aliveByUserId)
 	local userIds = {}
 	for userId, isAlive in pairs(aliveByUserId or {}) do
@@ -160,41 +165,6 @@ end
 
 function SpectatorService:Start()
 	-- Runtime is event-driven.
-	local eventBus = self._eventBus
-	if eventBus and eventBus.Subscribe then
-		eventBus:Subscribe("SpectatorModeStarted", function(payload)
-			local matchId = payload and payload.matchId
-			local player = payload and payload.player
-			if not player and payload and payload.userId then
-				local Players = game:GetService("Players")
-				player = Players:GetPlayerByUserId(payload.userId)
-				if not player then
-					for _, candidate in ipairs(Players:GetPlayers()) do
-						if candidate.UserId == payload.userId then
-							player = candidate
-							break
-						end
-					end
-				end
-			end
-			if not player or not matchId then
-				return
-			end
-			self:EnterSpectator(player, matchId, payload)
-		end)
-		eventBus:Subscribe("SpectatorModeEnded", function(payload)
-			local matchId = payload and payload.matchId
-			local player = payload and payload.player
-			if not player and payload and payload.userId then
-				local Players = game:GetService("Players")
-				player = Players:GetPlayerByUserId(payload.userId)
-			end
-			if not player or not matchId then
-				return
-			end
-			self:ExitSpectator(player, matchId)
-		end)
-	end
 end
 
 function SpectatorService:Stop()
@@ -375,6 +345,16 @@ function SpectatorService:EnterSpectator(player, matchId, payload)
 		return nil, "invalid_player"
 	end
 
+	if isSoloPlaytestOrSinglePlayerSession() then
+		self:_stampSpectatorRuntime(player, {
+			matchId = matchId,
+			active = false,
+			lastEvent = "SpectatorBlocked",
+			reason = "solo_playtest",
+		})
+		return nil, "solo_spectator_disabled"
+	end
+
 	print("[SpectatorService] Starting spectator session")
 	print("[SpectatorService] Spectator activated for", player.UserId)
 
@@ -481,6 +461,10 @@ function SpectatorService:SwitchSpectatorTarget(player, matchId, direction)
 	local userId = toUserId(player)
 	if not userId then
 		return nil, "invalid_player"
+	end
+
+	if isSoloPlaytestOrSinglePlayerSession() then
+		return nil, "solo_spectator_disabled"
 	end
 
 	local match = self:_getMatch(matchId)

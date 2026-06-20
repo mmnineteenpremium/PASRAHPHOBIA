@@ -1,4 +1,5 @@
 local Services = require(script.Parent.Parent.Core.Services)
+local Players = game:GetService("Players")
 
 local Service = {}
 Service.__index = Service
@@ -66,6 +67,10 @@ local function resolveBounds(payload)
         return candidate
     end
     return DEFAULT_BOUNDS
+end
+
+local function isSoloPlaytestOrSinglePlayerSession()
+    return #Players:GetPlayers() <= 1
 end
 
 function Service.new(state, deps)
@@ -139,6 +144,11 @@ function Service:_getBounds(matchId)
 end
 
 function Service:_registerSpectator(matchId, userId, player, reason)
+    if isSoloPlaytestOrSinglePlayerSession() then
+        clearSpectatorRuntime(player)
+        return
+    end
+
     local spectators = self:_spectatorMap()
     spectators[matchId] = spectators[matchId] or {}
     if spectators[matchId][userId] == true then
@@ -290,6 +300,10 @@ function Service:HandleEvent(eventName, payload)
     if eventName == "PlayerDied" or eventName == "PlayerKilled" or eventName == "SpectatorTransitionRequested" then
         local userId = payload and payload.userId or toUserId(payload and payload.player)
         if not userId then
+            return
+        end
+        if isSoloPlaytestOrSinglePlayerSession() then
+            clearSpectatorRuntime(payload and payload.player)
             return
         end
         self:_registerSpectator(matchId, userId, payload and payload.player, payload and payload.reason)

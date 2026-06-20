@@ -266,18 +266,12 @@ function HorrorHUD:_stampRuntimeIdentity()
 end
 
 function HorrorHUD:_syncHudPresence()
+	if self._vignetteGui and self._vignetteGui.Parent then
+		self._vignetteGui.Enabled = false
+	end
 	if not isPlayerInMatch(self._player) then
-		if self._vignetteGui and self._vignetteGui.Parent then
-			self._vignetteGui.Enabled = false
-		end
 		self._vignetteGui = nil
 		self._vignetteImage = nil
-		return
-	end
-
-	local gui = self:_ensureVignetteGui()
-	if gui then
-		gui.Enabled = isActiveMatchPhase(self._player)
 	end
 	self:_stampRuntimeIdentity()
 end

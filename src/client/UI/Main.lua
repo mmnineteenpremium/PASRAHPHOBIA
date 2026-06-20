@@ -124,7 +124,6 @@ AUTHORED_OWNER_LAYOUT_SURFACES = {
 	MatchUI = true,
 	LobbyUXGui = true,
 	MatchUXGui = true,
-	QuestTrackerGui = true,
 	QuestJournalGui = true,
 	SanityHUDGui = true,
 	MatchLoadingUI = true,
@@ -206,6 +205,12 @@ SINGLE_WINDOW_PRIORITY = {
 	"SpectatorUI",
 	"MainMenuUI",
 	"LeaderboardUI",
+}
+MATCH_FOCUSED_SCREEN_GUI_ALLOWLIST = {
+	JournalUI = true,
+	MatchUXGui = true,
+	SanityHUDGui = true,
+	SpectatorUI = true,
 }
 AUXILIARY_WINDOW_TOGGLE_KEYS = {
 	JournalUI = Enum.KeyCode.J,
@@ -340,8 +345,9 @@ JOURNAL_TUTORIAL_PAGES = {
 	"6/7 Tekan SUBMIT JOURNAL untuk lock jawaban. Setelah yakin pulang, tekan END INVESTIGATION.",
 	"7/7 Result menampilkan ghost asli, tebakan, checklist, benar/salah, dan reward sementara dari server.",
 }
-JOURNAL_PAGE_ORDER = { "Evidence", "Ghost", "Submit", "Guide" }
+JOURNAL_PAGE_ORDER = { "Match", "Evidence", "Ghost", "Submit", "Guide" }
 JOURNAL_PAGE_LABELS = {
+	Match = "MATCH",
 	Evidence = "EVIDENCE",
 	Ghost = "GHOST",
 	Submit = "SUBMIT",
@@ -562,6 +568,75 @@ FIELD_KIT_TOOL_PREVIEW_CONFIG = {
 		focusOffset = Vector3.new(0, 0.02, 0),
 		cameraVector = Vector3.new(0.42, 0.38, 1),
 		distanceScale = 1.36,
+	},
+}
+
+FIELD_KIT_TOOL_ACTION_POLICY = {
+	Flashlight = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = false,
+		canUse = false,
+	},
+	JejakEnergi = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = false,
+		canUse = true,
+	},
+	Garam = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = true,
+		canUse = true,
+	},
+	Salib = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = true,
+		canUse = true,
+	},
+	Dupa = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = true,
+		canUse = true,
+	},
+	KotakArwah = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = false,
+		canUse = true,
+	},
+	SuhuMembeku = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = false,
+		canUse = true,
+	},
+	BukuTerkutuk = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = false,
+		canUse = true,
+	},
+	BolaArwah = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = false,
+		canUse = true,
+	},
+	GerakanGaib = {
+		canEquip = true,
+		canSwap = true,
+		canDiscard = false,
+		canUse = true,
+	},
+	PilSanity = {
+		canEquip = false,
+		canSwap = false,
+		canDiscard = false,
+		canUse = true,
 	},
 }
 
@@ -5790,6 +5865,9 @@ function UISystem:Init(context)
 	self._loadingSpritePreloaded = false
 	self._loadingSpritePreloadError = nil
 	self._lastCountdownCompletionToken = 0
+	self._loadingCountdownEndsAt = 0
+	self._loadingCountdownMode = nil
+	self._loadingCountdownLabel = nil
 	self._preTeleportLoadingActiveUntil = 0
 	self._preTeleportLoadingHideText = false
 	self._graphicsMode = nil
@@ -5809,7 +5887,8 @@ function UISystem:Init(context)
 	self._lastFieldKitTemporalRefreshAt = 0
 	self._fieldKitTemporalRefreshArmed = false
 	self._matchWindowDismissed = false
-	self._matchControlsHintText = "[1-3] Inventory   [J] Journal   [F] Flashlight   [K] Match   [X] Tutup UI"
+	self._matchControlsHintText = "[1-3] Preparation Spawn Modal   [J] Journal   [F] Flashlight   [K] Match Page   [E] Tool Modal   [X] Tutup UI"
+	self._uxInstances = {}
 	self._uxWidgets = {
 		match = {},
 		lobby = {},
@@ -5845,6 +5924,15 @@ function UISystem:Init(context)
 		toolReason = "Buka panel Evidence lalu tekan SCAN untuk uji E2E.",
 		toolSuccess = nil,
 		toolLastUsedAt = 0,
+		inventorySelectedToolType = nil,
+		inventoryModalMode = "confirm",
+		inventoryLastMessage = nil,
+	}
+	self._fieldKitState = {
+		selectedToolType = nil,
+		modalMode = "select",
+		message = nil,
+		source = nil,
 	}
 	self._profileState = {
 		lastEvent = "Idle",
@@ -6138,6 +6226,10 @@ function UISystem:_createDefaultSpectatorState(lastEvent)
 	}
 end
 
+function UISystem:_isSoloPlaytestOrSinglePlayerSession()
+	return #Players:GetPlayers() <= 1
+end
+
 function UISystem:_resetSpectatorState(lastEvent)
 	self._spectatorState = self:_createDefaultSpectatorState(lastEvent)
 	if self._uiState and self._uiState.SpectatorUI then
@@ -6151,11 +6243,14 @@ function UISystem:_onServerEvent(remoteName, payload)
 
 	if remoteName == "EvidenceEvent" then
 		self._uiState.JournalUI.lastEvent = eventName
-		local shouldAutoOpenJournal = payload == nil or payload.autoOpenJournal ~= false
+		local phase = self._matchPhase
+		local inGamePhase = phase == MATCH_PHASE.INGAME or phase == MATCH_PHASE.ESCALATION or phase == MATCH_PHASE.HUNT
+		local shouldAutoOpenJournal = inGamePhase and payload and payload.autoOpenJournal == true
 		if shouldAutoOpenJournal then
 			self._uiState.JournalUI.visible = true
 			self._windowDismissed.JournalUI = false
 			self:_closeConflictingWindows("JournalUI")
+			self:_setJournalActivePage("Evidence")
 		end
 		self._journalState.lastEvent = eventName
 		local incomingMatchId = payload and payload.matchId
@@ -6226,6 +6321,23 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._journalState.endPending = false
 			self._journalState.submitPending = false
 			self._journalState.submitStatus = "Investigasi ditutup. Menunggu result server..."
+		elseif eventName == "InvestigationToolUnequipped" and type(payload and payload.toolType) == "string" then
+			local unequippedToolType = payload.toolType
+			local toolData = payload.result or payload.data or payload
+			local statusText, detailText = UISystem._resolveToolFeedback(
+				unequippedToolType,
+				true,
+				payload.reason or "unequipped",
+				toolData,
+				eventName
+			)
+			self:_applyFieldKitToolUpdate(unequippedToolType, true, payload.reason or "unequipped", toolData, eventName)
+			self._journalState.toolType = unequippedToolType
+			self._journalState.toolStatus = statusText
+			self._journalState.toolReason = detailText
+			self._journalState.toolSuccess = true
+			self._journalState.toolLastUsedAt = os.clock()
+			self._journalState.inventoryLastMessage = string.format("%s dilepas dari tangan.", tostring((FIELD_KIT_TOOL_CONFIG[unequippedToolType] or {}).label or unequippedToolType))
 		elseif payload and type(payload.toolType) == "string" and FIELD_KIT_TOOL_CONFIG[payload.toolType] then
 			local toolData = payload.result or payload.data or payload
 			local statusText, detailText = UISystem._resolveToolFeedback(
@@ -6241,6 +6353,9 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._journalState.toolReason = detailText
 			self._journalState.toolSuccess = payload.success ~= false
 			self._journalState.toolLastUsedAt = os.clock()
+			if eventName == "InvestigationToolEquipped" then
+				self._journalState.inventoryLastMessage = string.format("%s sudah aktif.", tostring((FIELD_KIT_TOOL_CONFIG[payload.toolType] or {}).label or payload.toolType))
+			end
 		end
 		self:_autoFillJournalSubmitSelection()
 		self:_refreshJournalPanel()
@@ -6260,6 +6375,10 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._uiState.PASRA_UI.visible = false
 			self:_resetSpectatorState(eventName)
 			self:_resetFieldKitToolStates()
+			self._journalState.inventorySelectedToolType = nil
+			self._journalState.inventoryModalMode = "confirm"
+			self._journalState.inventoryLastMessage = "Pilih tool untuk staging."
+			self:_syncJournalInventorySelectionAttributes(self._journalState)
 			self:_setMatchWindowDismissed(false)
 			self:_refreshBasicMatchPanel("Lobby")
 			self:_refreshLobbyEvidenceTrainingPanel()
@@ -6333,33 +6452,48 @@ function UISystem:_onServerEvent(remoteName, payload)
 	elseif remoteName == "MatchEvent" then
 		self:_routeMatchPhaseEvent(eventName, payload or {})
 		self._uiState.MatchUI.lastEvent = eventName
+		self._uiState.JournalUI.lastEvent = eventName
 		local keepResultsVisible = (self._resultsCloseUnlockAt or 0) > tick() and self:_isMatchResultsPhase()
-		self._uiState.MatchUI.visible = keepResultsVisible or (eventName ~= "ReturnedToLobby" and eventName ~= "RoomBrowserRoomLeft")
+		local shouldShowJournal = eventName ~= "ReturnedToLobby" and eventName ~= "RoomBrowserRoomLeft"
+		self._uiState.MatchUI.visible = false
+		self._uiState.JournalUI.visible = shouldShowJournal
+		self._windowDismissed.JournalUI = not shouldShowJournal
+		if shouldShowJournal then
+			self:_setJournalActivePage("Match")
+		end
 		self:_handleMatchUXEvent(eventName, payload or {})
-		if eventName == "PlayerKilled" and payload and payload.localPlayerKilled == true then
-			self._uiState.SpectatorUI.lastEvent = eventName
-			self._uiState.SpectatorUI.visible = true
-			self._spectatorState.lastEvent = eventName
-			self._spectatorState.mode = "dead"
-			self._spectatorState.title = "PLAYER DEAD - SPECTATOR"
-			self._spectatorState.subtitle = "Kematian menipumu, yang kamu lihat belum tentu benar."
-			self._windowDismissed.SpectatorUI = false
-			self:_closeConflictingWindows("SpectatorUI")
-		elseif eventName == "PlayerKilled" then
-			self._spectatorState.lastEvent = eventName
-			self._spectatorState.mode = "warning"
-			self._spectatorState.title = "TEAMMATE DOWN"
-			self._spectatorState.subtitle = "Jangan terlalu percaya orang mati. Gunakan instingmu."
-			self._uiState.SpectatorUI.visible = true
-			self._windowDismissed.SpectatorUI = false
-			self:_closeConflictingWindows("SpectatorUI")
-			task.delay(5, function()
-				if self._spectatorState.mode == "warning" then
-					self:_resetSpectatorState(self._spectatorState.lastEvent)
-					self:_refreshSpectatorPanel()
-					self:_applyVisibility()
-				end
-			end)
+		if eventName == "PlayerKilled" and payload and payload.localPlayerKilled == true and not self:_isSoloPlaytestOrSinglePlayerSession() then
+			local phase = self._matchPhase
+			local inGamePhase = phase == MATCH_PHASE.INGAME or phase == MATCH_PHASE.ESCALATION or phase == MATCH_PHASE.HUNT
+			if inGamePhase then
+				self._uiState.SpectatorUI.lastEvent = eventName
+				self._uiState.SpectatorUI.visible = true
+				self._spectatorState.lastEvent = eventName
+				self._spectatorState.mode = "dead"
+				self._spectatorState.title = "PLAYER DEAD - SPECTATOR"
+				self._spectatorState.subtitle = "Kematian menipumu, yang kamu lihat belum tentu benar."
+				self._windowDismissed.SpectatorUI = false
+				self:_closeConflictingWindows("SpectatorUI")
+			end
+		elseif eventName == "PlayerKilled" and not self:_isSoloPlaytestOrSinglePlayerSession() then
+			local phase = self._matchPhase
+			local inGamePhase = phase == MATCH_PHASE.INGAME or phase == MATCH_PHASE.ESCALATION or phase == MATCH_PHASE.HUNT
+			if inGamePhase then
+				self._spectatorState.lastEvent = eventName
+				self._spectatorState.mode = "warning"
+				self._spectatorState.title = "TEAMMATE DOWN"
+				self._spectatorState.subtitle = "Jangan terlalu percaya orang mati. Gunakan instingmu."
+				self._uiState.SpectatorUI.visible = true
+				self._windowDismissed.SpectatorUI = false
+				self:_closeConflictingWindows("SpectatorUI")
+				task.delay(5, function()
+					if self._spectatorState.mode == "warning" then
+						self:_resetSpectatorState(self._spectatorState.lastEvent)
+						self:_refreshSpectatorPanel()
+						self:_applyVisibility()
+					end
+				end)
+			end
 		elseif eventName == "PlayerRespawned" and payload and payload.localPlayerRespawned == true then
 			self:_resetSpectatorState(eventName)
 		elseif eventName == "MatchEnded" or eventName == "MatchCompleted" then
@@ -6389,7 +6523,9 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._uiState.PASRA_UI.lastEvent = eventName
 			self._uiState.PASRA_UI.visible = false
 			self:_resetSpectatorState(eventName)
-			self._uiState.MatchUI.visible = true
+			self._uiState.MatchUI.visible = false
+			self._uiState.JournalUI.visible = true
+			self._windowDismissed.JournalUI = false
 			self._pasraState.lastEvent = eventName
 			self._pasraState.status = payload and payload.missionFailed == true and "Misi berakhir dengan gagal." or "Misi selesai. Hasil dan reward siap dibaca."
 			self._pasraState.subtitle = "Hasil utama sekarang diprioritaskan di MATCH."
@@ -6410,7 +6546,9 @@ function UISystem:_onServerEvent(remoteName, payload)
 			self._uiState.PASRA_UI.lastEvent = eventName
 			self._uiState.PASRA_UI.visible = false
 			self:_resetSpectatorState(eventName)
-			self._uiState.MatchUI.visible = true
+			self._uiState.MatchUI.visible = false
+			self._uiState.JournalUI.visible = true
+			self._windowDismissed.JournalUI = false
 			self._pasraState.lastEvent = eventName
 			self._pasraState.status = "Reward summary diterima dari server."
 			self._pasraState.subtitle = string.format(
@@ -6431,12 +6569,13 @@ function UISystem:_onServerEvent(remoteName, payload)
 			end
 			self:_forceCloseAllPanelsForTeleport()
 			self._uiState.PASRA_UI.visible = false
-			self._uiState.MatchUI.visible = true
+			self._uiState.MatchUI.visible = false
 			self:_resetSpectatorState(eventName)
 			self._uiState.JournalUI.visible = true
+			self._windowDismissed.JournalUI = false
 			self._uiState.ProfileUI.visible = false
 			self._uiState.ShopUI.visible = false
-			self._windowDismissed.JournalUI = true
+			self._windowDismissed.JournalUI = false
 			self._windowDismissed.ProfileUI = true
 			self._windowDismissed.ShopUI = true
 			self._journalState.lastEvent = eventName
@@ -6457,7 +6596,7 @@ function UISystem:_onServerEvent(remoteName, payload)
 				self._roomBrowser:ResetForMatchStart()
 			end
 			self:_setRoomBrowserVisible(false)
-			self._uiState.MatchUI.visible = keepResultsVisible
+			self._uiState.MatchUI.visible = false
 			self._uiState.JournalUI.visible = false
 			self._uiState.PASRA_UI.visible = false
 			self:_resetSpectatorState(eventName)
@@ -6739,12 +6878,55 @@ function UISystem:_applyVisibility()
 	self:_syncMatchWindowVisibility()
 	self:_syncAuxiliaryWindowVisibility()
 	self:_syncLobbyAuxiliaryWindowVisibility()
+	self:_syncMatchFocusedScreenGuis()
 	self:_syncLobbyPanelVisibility()
 	self:_refreshAuxiliaryPanels()
 	self:_refreshBasicLobbyPanel()
 	self:_refreshBasicWindows()
 	self:_layoutLobbyFloatRail()
 	self:_enforceSingleWindowPolicy()
+end
+
+function UISystem:_syncMatchFocusedScreenGuis()
+	local playerGui = self:_getPlayerGui()
+	if not playerGui then
+		return
+	end
+
+	if self._matchPhase == MATCH_PHASE.LOBBY then
+		return
+	end
+
+	local loadingVisible = self._matchPhase == MATCH_PHASE.LOADING
+		or (self._preTeleportLoadingActiveUntil or 0) > tick()
+	local teleportVisible = loadingVisible or self._teleportOverlayTween ~= nil
+	local journalVisible = self._uiState.JournalUI and self._uiState.JournalUI.visible == true and self._windowDismissed.JournalUI ~= true
+	local spectatorVisible = not self:_isSoloPlaytestOrSinglePlayerSession()
+		and self._uiState.SpectatorUI
+		and self._uiState.SpectatorUI.visible == true
+		and self._windowDismissed.SpectatorUI ~= true
+
+	for _, child in ipairs(playerGui:GetChildren()) do
+		if child:IsA("ScreenGui") then
+			local enabled = false
+			if child.Name == "JournalUI" then
+				enabled = journalVisible
+			elseif child.Name == "SanityHUDGui" then
+				enabled = true
+			elseif child.Name == "MatchUXGui" then
+				enabled = true
+			elseif child.Name == "SpectatorUI" then
+				enabled = spectatorVisible
+			elseif child.Name == "MatchLoadingUI" then
+				enabled = loadingVisible
+			elseif child.Name == "TeleportScreen" then
+				enabled = teleportVisible
+			else
+				enabled = MATCH_FOCUSED_SCREEN_GUI_ALLOWLIST[child.Name] == true and true or false
+			end
+			child.Enabled = enabled
+		end
+	end
 end
 
 function UISystem:SetState(state)
@@ -6840,13 +7022,18 @@ end
 
 function UISystem:_closeConflictingWindows(activeWindowName)
 	local activeName = tostring(activeWindowName or "")
+	if activeName == "MatchUI" then
+		activeName = "JournalUI"
+	end
 
 	if activeName ~= "RoomBrowser" then
 		self._roomBrowserVisible = false
 	end
 
-	if activeName ~= "MatchUI" then
+	if activeName ~= "JournalUI" then
 		self._matchWindowDismissed = true
+	else
+		self._matchWindowDismissed = false
 	end
 
 	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
@@ -6894,9 +7081,11 @@ function UISystem:_enforceSingleWindowPolicy()
 	end
 
 	markOpen("RoomBrowser", self._roomBrowserVisible == true and self._roomBrowserSuppressed ~= true)
-	markOpen("MatchUI", self._uiState.MatchUI and self._uiState.MatchUI.visible == true and self._matchWindowDismissed ~= true)
+	markOpen("JournalUI", self._uiState.JournalUI and self._uiState.JournalUI.visible == true and self._windowDismissed.JournalUI ~= true)
 	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
-		markOpen(guiName, self._uiState[guiName] and self._uiState[guiName].visible == true and self._windowDismissed[guiName] ~= true)
+		if guiName ~= "JournalUI" then
+			markOpen(guiName, self._uiState[guiName] and self._uiState[guiName].visible == true and self._windowDismissed[guiName] ~= true)
+		end
 	end
 	local _, mainMenuPanel = self:_getBasicWindowState("MainMenuUI")
 	local _, leaderboardPanel = self:_getBasicWindowState("LeaderboardUI")
@@ -6917,8 +7106,10 @@ function UISystem:_enforceSingleWindowPolicy()
 	if keepName ~= "RoomBrowser" then
 		self._roomBrowserVisible = false
 	end
-	if keepName ~= "MatchUI" then
+	if keepName ~= "JournalUI" then
 		self._matchWindowDismissed = true
+	else
+		self._matchWindowDismissed = false
 	end
 	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
 		if guiName ~= keepName then
@@ -6949,8 +7140,8 @@ function UISystem:_closeTopmostWindow()
 		return true
 	end
 
-	if self._uiState.MatchUI and self._uiState.MatchUI.visible == true and self._matchWindowDismissed ~= true then
-		self:_setMatchWindowDismissed(true)
+	if self._uiState.JournalUI and self._uiState.JournalUI.visible == true and self._windowDismissed.JournalUI ~= true then
+		self:_setAuxiliaryWindowDismissed("JournalUI", true)
 		return true
 	end
 
@@ -6980,12 +7171,16 @@ function UISystem:_closeTopmostWindow()
 end
 
 function UISystem:_isMatchPanelOpen()
-	local match = self._uxWidgets and self._uxWidgets.match or nil
-	if match and match.BasicPanel and match.BasicPanel.Visible == true then
+	local journal = self._uiState and self._uiState.JournalUI or nil
+	local widgets = self._uxWidgets and self._uxWidgets.windows and self._uxWidgets.windows.JournalUI or nil
+	if widgets and widgets.Panel and widgets.Panel.Visible == true then
+		return true
+	end
+	if journal and journal.visible == true and self._windowDismissed.JournalUI ~= true then
 		return true
 	end
 
-	return self._uiState.MatchUI and self._uiState.MatchUI.visible == true and self._matchWindowDismissed ~= true
+	return false
 end
 
 function UISystem:_syncRoomBrowserSuppressionFromMatchContext()
@@ -7081,6 +7276,16 @@ function UISystem:_syncAuxiliaryWindowVisibility()
 			and self._uxWidgets.windows[guiName]
 		local gui = playerGui:FindFirstChild(guiName)
 		if widgets and gui and gui:IsA("ScreenGui") then
+			if guiName == "SpectatorUI" and self:_isSoloPlaytestOrSinglePlayerSession() then
+				gui.Enabled = false
+				if widgets.Panel then
+					setAnimatedPanelVisible(widgets.Panel, false, false)
+				end
+				if widgets.FloatButton then
+					widgets.FloatButton.Visible = false
+				end
+				continue
+			end
 			local screenEnabled = gui.Enabled == true
 			local dismissed = self._windowDismissed[guiName] == true
 			local requestedVisible = self._uiState[guiName] and self._uiState[guiName].visible == true
@@ -7118,6 +7323,13 @@ end
 
 function UISystem:_openAuxiliaryWindow(guiName)
 	if not self._uiState[guiName] then
+		return
+	end
+	if guiName == "SpectatorUI" and self:_isSoloPlaytestOrSinglePlayerSession() then
+		self._uiState.SpectatorUI.visible = false
+		self._windowDismissed.SpectatorUI = true
+		self:_resetSpectatorState(self._spectatorState and self._spectatorState.lastEvent or "Idle")
+		self:_applyVisibility()
 		return
 	end
 	if LOBBY_ONLY_GUI_NAMES[guiName] == true and guiName ~= "ShopUI" and self._matchPhase ~= MATCH_PHASE.LOBBY then
@@ -8868,6 +9080,27 @@ function UISystem:_ensureAuthoredMatchPanelWidgets(match)
 		return self:_cloneSummaryValueTemplate(summaryFrame, rowName, labelText)
 	end
 
+	local function ensureUniqueChild(parent, name, className)
+		local child = nil
+		if parent then
+			for _, candidate in ipairs(parent:GetChildren()) do
+				if candidate.Name == name then
+					if child == nil and candidate:IsA(className) then
+						child = candidate
+					else
+						candidate:Destroy()
+					end
+				end
+			end
+		end
+		if not child then
+			child = Instance.new(className)
+			child.Name = name
+			child.Parent = parent
+		end
+		return child
+	end
+
 	match.BasicSummaryRows = {
 		status = ensureSummaryValue("StatusRow", "Status Misi"),
 		ghostType = ensureSummaryValue("GhostRow", "Ghost"),
@@ -8909,14 +9142,180 @@ function UISystem:_ensureAuthoredMatchPanelWidgets(match)
 			local boundToolType = toolType
 			markRuntimeButtonBound(toolButton)
 			connectButtonPress(toolButton, function()
-				self:_equipFieldKitTool(boundToolType)
+				if self:_isPreparationSpawnPhase() then
+					self:_setPreparationFieldKitSelection(
+						boundToolType,
+						"confirm",
+						string.format("Tambahkan %s untuk investigasi?", tostring(definition.label or boundToolType)),
+						"FieldKitButton"
+					)
+				else
+					self:_openJournalWindow("Match")
+					self:_setJournalInventorySelection(
+						boundToolType,
+						"confirm",
+						string.format("Tambahkan %s ke inventory investigasi?", tostring(definition.label or boundToolType))
+					)
+				end
 			end)
 		end
 		fieldKitButtons[toolType] = fieldKitWidget
 	end
 
+	local fieldKitModal = ensureUniqueChild(fieldKitFrame, "FieldKitModal", "Frame")
+	fieldKitModal.Position = UDim2.fromOffset(12, 12)
+	fieldKitModal.Size = UDim2.new(1, -24, 0, 118)
+	fieldKitModal.BackgroundColor3 = Color3.fromRGB(14, 20, 28)
+	fieldKitModal.BackgroundTransparency = 0.04
+	fieldKitModal.BorderSizePixel = 0
+	fieldKitModal.Visible = false
+	fieldKitModal.ZIndex = 26
+
+	local fieldKitModalCorner = fieldKitModal:FindFirstChildOfClass("UICorner") or Instance.new("UICorner")
+	fieldKitModalCorner.CornerRadius = UDim.new(0, 10)
+	fieldKitModalCorner.Parent = fieldKitModal
+
+	local fieldKitModalStroke = fieldKitModal:FindFirstChild("FieldKitModalStroke")
+	if not (fieldKitModalStroke and fieldKitModalStroke:IsA("UIStroke")) then
+		if fieldKitModalStroke then
+			fieldKitModalStroke:Destroy()
+		end
+		fieldKitModalStroke = Instance.new("UIStroke")
+		fieldKitModalStroke.Name = "FieldKitModalStroke"
+		fieldKitModalStroke.Parent = fieldKitModal
+	end
+	fieldKitModalStroke.Thickness = 1
+	fieldKitModalStroke.Color = Color3.fromRGB(98, 122, 154)
+	fieldKitModalStroke.Transparency = 0.16
+
+	local modalTitle = ensureUniqueChild(fieldKitModal, "ModalTitle", "TextLabel")
+	modalTitle.Position = UDim2.fromOffset(12, 8)
+	modalTitle.Size = UDim2.new(1, -24, 0, 18)
+	modalTitle.BackgroundTransparency = 1
+	modalTitle.Font = Enum.Font.GothamBold
+	modalTitle.TextSize = 12
+	modalTitle.TextXAlignment = Enum.TextXAlignment.Left
+	modalTitle.TextColor3 = Color3.fromRGB(246, 244, 236)
+	modalTitle.Text = "Preparation Spawn"
+	modalTitle.ZIndex = 27
+
+	local modalBody = ensureUniqueChild(fieldKitModal, "ModalBody", "TextLabel")
+	modalBody.Position = UDim2.fromOffset(12, 28)
+	modalBody.Size = UDim2.new(1, -24, 0, 18)
+	modalBody.BackgroundTransparency = 1
+	modalBody.Font = Enum.Font.Gotham
+	modalBody.TextSize = 10
+	modalBody.TextXAlignment = Enum.TextXAlignment.Left
+	modalBody.TextColor3 = Color3.fromRGB(202, 214, 228)
+	modalBody.Text = "Pilih tool sebelum masuk match. Tidak semua tool bisa dihapus atau dipakai."
+	modalBody.ZIndex = 27
+
+	local modalStats = ensureUniqueChild(fieldKitModal, "ModalStats", "TextLabel")
+	modalStats.Position = UDim2.fromOffset(12, 46)
+	modalStats.Size = UDim2.new(1, -24, 0, 18)
+	modalStats.BackgroundTransparency = 1
+	modalStats.Font = Enum.Font.Gotham
+	modalStats.TextSize = 10
+	modalStats.TextXAlignment = Enum.TextXAlignment.Left
+	modalStats.TextColor3 = Color3.fromRGB(170, 184, 200)
+	modalStats.Text = "Cooldown: - | uses - | charges -"
+	modalStats.ZIndex = 27
+
+	local modalPromptRow = ensureUniqueChild(fieldKitModal, "PromptRow", "Frame")
+	modalPromptRow.Position = UDim2.fromOffset(12, 68)
+	modalPromptRow.Size = UDim2.new(1, -24, 0, 22)
+	modalPromptRow.BackgroundTransparency = 1
+	modalPromptRow.ZIndex = 27
+
+	local modalPromptLayout = modalPromptRow:FindFirstChildOfClass("UIGridLayout") or Instance.new("UIGridLayout")
+	modalPromptLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	modalPromptLayout.CellPadding = UDim2.fromOffset(6, 0)
+	modalPromptLayout.CellSize = UDim2.new(0.25, -5, 1, 0)
+	modalPromptLayout.Parent = modalPromptRow
+
+	local modalEquipButton = ensureUniqueChild(modalPromptRow, "EquipButton", "TextButton")
+	local modalDiscardButton = ensureUniqueChild(modalPromptRow, "BuangButton", "TextButton")
+	local modalSwapButton = ensureUniqueChild(modalPromptRow, "GantiButton", "TextButton")
+	local modalUseButton = ensureUniqueChild(modalPromptRow, "UseButton", "TextButton")
+	local modalCloseButton = ensureUniqueChild(fieldKitModal, "CloseButton", "TextButton")
+	for _, button in ipairs({ modalEquipButton, modalDiscardButton, modalSwapButton, modalUseButton, modalCloseButton }) do
+		button.BorderSizePixel = 0
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 10
+		button.TextColor3 = Color3.fromRGB(244, 244, 238)
+		button.ZIndex = 28
+	end
+	modalEquipButton.Text = "EQUIP"
+	modalEquipButton.BackgroundColor3 = Color3.fromRGB(58, 112, 90)
+	modalDiscardButton.Text = "BUANG"
+	modalDiscardButton.BackgroundColor3 = Color3.fromRGB(96, 64, 64)
+	modalSwapButton.Text = "GANTI"
+	modalSwapButton.BackgroundColor3 = Color3.fromRGB(72, 92, 128)
+	modalUseButton.Text = "USE"
+	modalUseButton.BackgroundColor3 = Color3.fromRGB(104, 84, 56)
+	modalCloseButton.AnchorPoint = Vector2.new(1, 0)
+	modalCloseButton.Position = UDim2.new(1, -10, 0, 8)
+	modalCloseButton.Size = UDim2.fromOffset(28, 18)
+	modalCloseButton.Text = "X"
+	modalCloseButton.BackgroundColor3 = Color3.fromRGB(72, 56, 56)
+
+	if not isRuntimeButtonBound(modalEquipButton) then
+		markRuntimeButtonBound(modalEquipButton)
+		connectButtonPress(modalEquipButton, function()
+			local selectedToolType = self:_getPreparationFieldKitSelectedToolType()
+			if selectedToolType then
+				self:_equipFieldKitTool(selectedToolType)
+				self:_clearPreparationFieldKitSelection(string.format("%s ditambahkan ke investigasi.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+			end
+		end)
+	end
+	if not isRuntimeButtonBound(modalDiscardButton) then
+		markRuntimeButtonBound(modalDiscardButton)
+		connectButtonPress(modalDiscardButton, function()
+			local selectedToolType = self:_getPreparationFieldKitSelectedToolType()
+			if selectedToolType then
+				self:_clearPreparationFieldKitSelection(string.format("%s dibatalkan.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+			end
+		end)
+	end
+	if not isRuntimeButtonBound(modalSwapButton) then
+		markRuntimeButtonBound(modalSwapButton)
+		connectButtonPress(modalSwapButton, function()
+			local selectedToolType = self:_getPreparationFieldKitSelectedToolType()
+			if selectedToolType then
+				self:_equipFieldKitTool(selectedToolType)
+				self:_setPreparationFieldKitSelection(selectedToolType, "select", string.format("%s ditukar ke slot aktif.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+			end
+		end)
+	end
+	if not isRuntimeButtonBound(modalUseButton) then
+		markRuntimeButtonBound(modalUseButton)
+		connectButtonPress(modalUseButton, function()
+			local selectedToolType = self:_getPreparationFieldKitSelectedToolType()
+			if selectedToolType then
+				self:_clearPreparationFieldKitSelection(string.format("%s disimpan untuk dipakai di Journal.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+			end
+		end)
+	end
+	if not isRuntimeButtonBound(modalCloseButton) then
+		markRuntimeButtonBound(modalCloseButton)
+		connectButtonPress(modalCloseButton, function()
+			self:_clearPreparationFieldKitSelection("Preparation modal ditutup.")
+		end)
+	end
+
 	match.FieldKitButtons = fieldKitButtons
 	match.FieldKitGrid = fieldKitButtonsFrame:FindFirstChild("Grid")
+	match.FieldKitModal = fieldKitModal
+	match.FieldKitModalTitle = modalTitle
+	match.FieldKitModalBody = modalBody
+	match.FieldKitModalStats = modalStats
+	match.FieldKitModalPromptRow = modalPromptRow
+	match.FieldKitModalEquipButton = modalEquipButton
+	match.FieldKitModalDiscardButton = modalDiscardButton
+	match.FieldKitModalSwapButton = modalSwapButton
+	match.FieldKitModalUseButton = modalUseButton
+	match.FieldKitModalCloseButton = modalCloseButton
 	return true
 end
 
@@ -9038,7 +9437,7 @@ function UISystem:_bindAuthoredMatchUi(gui)
 	if not isRuntimeButtonBound(evidenceQuickButton) then
 		markRuntimeButtonBound(evidenceQuickButton)
 		connectButtonPress(evidenceQuickButton, function()
-			self:_toggleAuxiliaryWindow("JournalUI")
+			self:_openJournalWindow("Match")
 		end)
 	end
 
@@ -9320,16 +9719,43 @@ function UISystem:_handlePreparationFocusToolChanged()
 	local focusTool = tostring(player:GetAttribute("PreparationFocusTool") or "")
 	local lifecyclePhase = tostring(player:GetAttribute("MatchLifecyclePhase") or "")
 	local previousTool = type(self._lastPreparationFocusToolSeen) == "string" and self._lastPreparationFocusToolSeen or ""
-	if focusTool == previousTool then
+	local journalState = self._journalState or {}
+	if journalState.inventoryModalMode == "actions"
+		and journalState.inventorySelectedToolType == focusTool
+	then
+		self._lastPreparationFocusToolSeen = focusTool ~= "" and focusTool or nil
+		return
+	end
+	if focusTool == previousTool
+		and self._fieldKitState
+		and self._fieldKitState.selectedToolType == focusTool
+		and self._fieldKitState.modalMode == "confirm"
+	then
 		return
 	end
 
 	self._lastPreparationFocusToolSeen = focusTool ~= "" and focusTool or nil
 	if lifecyclePhase == "PreparationPhase" and focusTool ~= "" then
+		local focusLabel = tostring(player:GetAttribute("PreparationFocusToolLabel") or focusTool)
+		self:_setPreparationFieldKitSelection(
+			focusTool,
+			"confirm",
+			string.format("Tambahkan %s untuk investigasi?", focusLabel),
+			"WorldToolStation"
+		)
+		local match = self._uxWidgets and self._uxWidgets.match or nil
+		if match and match.Gui then
+			match.Gui.Enabled = true
+		end
+		if match and match.Layer then
+			match.Layer.Visible = true
+		end
 		self:_previewPreparationFocusSensory(focusTool)
 		if self._matchPhase == MATCH_PHASE.PREPARING or self._matchPhase == MATCH_PHASE.BRIEFING or self._matchPhase == MATCH_PHASE.LOADING then
 			self:_refreshBasicMatchPanel("Preparation", self._phasePayload)
 		end
+	elseif focusTool == "" then
+		self:_clearPreparationFieldKitSelection("Preparation modal ditutup.")
 	end
 end
 
@@ -9946,9 +10372,7 @@ function UISystem:_useInvestigationTool(toolType, options)
 	self:_refreshJournalPanel()
 	self:_refreshFieldKitPanel()
 	if openJournal then
-		self._uiState.JournalUI.visible = true
-		self._windowDismissed.JournalUI = false
-		self:_closeConflictingWindows("JournalUI")
+		self:_openJournalWindow("Match")
 	end
 	self:_applyVisibility()
 end
@@ -9998,6 +10422,9 @@ function UISystem:_refreshFieldKitPanel()
 	if not match or not match.FieldKitFrame then
 		return
 	end
+	if not match.FieldKitModal then
+		self:_ensureAuthoredMatchPanelWidgets(match)
+	end
 
 	local screenEnabled = (match.BasicGui and match.BasicGui.Enabled == true)
 		or (self._uiState.MatchUI and self._uiState.MatchUI.visible == true)
@@ -10009,7 +10436,7 @@ function UISystem:_refreshFieldKitPanel()
 	local showFieldKit = screenEnabled
 		and phaseAllowsFieldKit
 		and not self:_isMatchResultsPhase()
-	if USE_NATIVE_BACKPACK_TOOLS == true then
+	if USE_NATIVE_BACKPACK_TOOLS == true and not self:_isPreparationSpawnPhase() then
 		showFieldKit = false
 	end
 
@@ -10018,6 +10445,15 @@ function UISystem:_refreshFieldKitPanel()
 	local visibleToolTypes = getVisibleFieldKitToolTypes(toolStates)
 	local hasLoadoutTools = #visibleToolTypes > 0
 	showFieldKit = showFieldKit and hasLoadoutTools
+	if self:_isPreparationSpawnPhase() then
+		showFieldKit = true
+	end
+	if prepSelectedToolType ~= nil or (self._fieldKitState and self._fieldKitState.modalMode == "confirm" and self._fieldKitState.source ~= nil) then
+		showFieldKit = true
+	end
+	if match.Gui and (self:_isPreparationSpawnPhase() or prepSelectedToolType ~= nil or (self._fieldKitState and self._fieldKitState.modalMode == "confirm")) then
+		match.Gui.Enabled = true
+	end
 	match.FieldKitFrame.Visible = showFieldKit
 
 	local activeTool = resolveActiveFieldKitTool(toolStates, state.toolType) or visibleToolTypes[1] or JOURNAL_TOOL_TYPE
@@ -10025,6 +10461,10 @@ function UISystem:_refreshFieldKitPanel()
 	local detailText = tostring(state.toolReason or "Pakai slot 1-3 sesuai loadout staging.")
 	local statusText = tostring(state.toolStatus or string.format("Inventory %d/%d siap.", #visibleToolTypes, FIELD_KIT_MAX_LOADOUT_SLOTS))
 	local isRecent = (os.clock() - (tonumber(state.toolLastUsedAt) or 0)) <= 4
+	local prepSelectedToolType = self:_getPreparationFieldKitSelectedToolType()
+	local prepToolState = prepSelectedToolType and toolStates[prepSelectedToolType] or nil
+	local prepToolConfig = prepSelectedToolType and FIELD_KIT_TOOL_CONFIG[prepSelectedToolType] or nil
+	local prepToolPolicy = prepSelectedToolType and self:_getFieldKitToolActionPolicy(prepSelectedToolType) or nil
 	local visibleToolOrder = {}
 	for order, toolType in ipairs(visibleToolTypes) do
 		visibleToolOrder[toolType] = order
@@ -10065,6 +10505,85 @@ function UISystem:_refreshFieldKitPanel()
 		match.FieldKitStatusLabel.TextColor3 = state.toolSuccess == false
 			and Color3.fromRGB(244, 204, 204)
 			or Color3.fromRGB(214, 222, 234)
+	end
+	if match.FieldKitModal then
+		local modalVisible = showFieldKit
+			and self:_isPreparationSpawnPhase()
+			and prepSelectedToolType ~= nil
+			and prepToolConfig ~= nil
+		match.FieldKitModal.Visible = modalVisible
+		if modalVisible then
+			match.FieldKitModal.BackgroundColor3 = prepToolConfig.accent:Lerp(Color3.fromRGB(14, 18, 26), 0.82)
+		end
+	end
+	if match.FieldKitModalTitle then
+		match.FieldKitModalTitle.Text = prepToolConfig
+			and string.format("Preparation Spawn | %s", tostring(prepToolConfig.label or prepSelectedToolType))
+			or "Preparation Spawn"
+	end
+	if match.FieldKitModalBody then
+		if prepToolConfig then
+			local message = tostring((self._fieldKitState or {}).message or "Pilih aksi untuk tool ini.")
+			match.FieldKitModalBody.Text = message
+		else
+			match.FieldKitModalBody.Text = "Pilih tool di preparation spawn."
+		end
+	end
+	if match.FieldKitModalStats then
+		local summaryParts = {}
+		if prepToolState then
+			if prepToolState.pending == true then
+				table.insert(summaryParts, "Pending")
+			end
+			local usesRemaining = tonumber(prepToolState.usesRemaining)
+			if usesRemaining ~= nil then
+				table.insert(summaryParts, string.format("uses %d", math.max(0, math.floor(usesRemaining))))
+			end
+			local chargesRemaining = tonumber(prepToolState.chargesRemaining)
+			if chargesRemaining ~= nil then
+				table.insert(summaryParts, string.format("charges %d", math.max(0, math.floor(chargesRemaining))))
+			end
+		end
+		match.FieldKitModalStats.Text = #summaryParts > 0
+			and ("Cooldown: " .. table.concat(summaryParts, " | "))
+			or "Cooldown: ready | uses - | charges -"
+	end
+	if match.FieldKitModalPromptRow then
+		match.FieldKitModalPromptRow.Visible = prepSelectedToolType ~= nil
+		local promptLayout = match.FieldKitModalPromptRow:FindFirstChildOfClass("UIGridLayout")
+		if promptLayout then
+			promptLayout.CellSize = prepSelectedToolType and UDim2.new(0.5, -3, 1, 0) or UDim2.new(0.25, -5, 1, 0)
+		end
+	end
+	if match.FieldKitModalEquipButton then
+		local canEquip = prepToolPolicy and prepToolPolicy.canEquip == true or false
+		if prepSelectedToolType then
+			match.FieldKitModalEquipButton.Text = "YES"
+		end
+		match.FieldKitModalEquipButton.Visible = canEquip
+		match.FieldKitModalEquipButton.Active = canEquip
+		match.FieldKitModalEquipButton.AutoButtonColor = canEquip
+	end
+	if match.FieldKitModalDiscardButton then
+		match.FieldKitModalDiscardButton.Visible = false
+		match.FieldKitModalDiscardButton.Active = false
+		match.FieldKitModalDiscardButton.AutoButtonColor = false
+	end
+	if match.FieldKitModalSwapButton then
+		match.FieldKitModalSwapButton.Visible = false
+		match.FieldKitModalSwapButton.Active = false
+		match.FieldKitModalSwapButton.AutoButtonColor = false
+	end
+	if match.FieldKitModalUseButton then
+		match.FieldKitModalUseButton.Visible = false
+		match.FieldKitModalUseButton.Active = false
+		match.FieldKitModalUseButton.AutoButtonColor = false
+	end
+	if match.FieldKitModalCloseButton then
+		if prepSelectedToolType then
+			match.FieldKitModalCloseButton.Text = "NO"
+		end
+		match.FieldKitModalCloseButton.Visible = match.FieldKitModal and match.FieldKitModal.Visible == true
 	end
 	if match.FieldKitButtons then
 		for toolName, widget in pairs(match.FieldKitButtons) do
@@ -10242,20 +10761,20 @@ function UISystem:_syncMatchWindowVisibility()
 		return
 	end
 
-	local screenEnabled = (match.BasicGui and match.BasicGui.Enabled == true)
-		or (self._uiState.MatchUI and self._uiState.MatchUI.visible == true)
+	local journalOpen = self._uiState.JournalUI and self._uiState.JournalUI.visible == true and self._windowDismissed.JournalUI ~= true
+	local screenEnabled = journalOpen
 	local showWindow = screenEnabled and not self._matchWindowDismissed
 	local isResultsPhase = self:_isMatchResultsPhase()
 	local hasDedicatedResultsPanel = match.ResultsPanel ~= nil
 	local showResults = showWindow and isResultsPhase and hasDedicatedResultsPanel
-	local showBasicPanel = showWindow and (not isResultsPhase or not hasDedicatedResultsPanel)
+	local showBasicPanel = false
 	local allowResultReopen = isResultsPhase and self:_isLocalPlayerStillInMatch()
 
 	if match.BasicPanel then
-		match.BasicPanel.Visible = showBasicPanel
+		match.BasicPanel.Visible = false
 	end
 	if match.BasicFloatButton then
-		match.BasicFloatButton.Visible = screenEnabled and self._matchWindowDismissed and (not isResultsPhase or allowResultReopen)
+		match.BasicFloatButton.Visible = false
 	end
 	if match.ResultsPanel then
 		match.ResultsPanel.Visible = showResults
@@ -10280,7 +10799,7 @@ function UISystem:_setMatchWindowDismissed(dismissed)
 		return
 	end
 	if dismissed ~= true then
-		self:_closeConflictingWindows("MatchUI")
+		self:_closeConflictingWindows("JournalUI")
 	end
 	self._matchWindowDismissed = dismissed == true
 	self:_syncMatchWindowVisibility()
@@ -10549,10 +11068,27 @@ function UISystem:_refreshBasicMatchPanel(viewState, payload)
 	local footerText = CLOSE_HINT_TEXT .. ". Tombol MATCH akan muncul di tepi layar."
 	local timerVisible = false
 	local timerText = "00:00"
-	if self._phaseDuration then
-		local remaining = math.max(0, self._phaseDuration - (tick() - (self._phaseStartTime or tick())))
+	local phaseDuration = self._phaseDuration
+	if phaseDuration == nil and type(payload) == "table" then
+		if payload.durationSeconds ~= nil then
+			phaseDuration = tonumber(payload.durationSeconds)
+		elseif payload.duration ~= nil then
+			phaseDuration = tonumber(payload.duration)
+		elseif payload.phaseEndsAt ~= nil and payload.phaseStartedAt ~= nil then
+			local phaseEndsAt = tonumber(payload.phaseEndsAt)
+			local phaseStartedAt = tonumber(payload.phaseStartedAt)
+			if phaseEndsAt ~= nil and phaseStartedAt ~= nil then
+				phaseDuration = phaseEndsAt - phaseStartedAt
+			end
+		end
+	end
+	if phaseDuration then
+		local remaining = math.max(0, phaseDuration - (tick() - (self._phaseStartTime or tick())))
 		timerVisible = true
 		timerText = formatCountdown(remaining)
+	elseif viewState ~= "Lobby" and not self:_isMatchResultsPhase() then
+		timerVisible = true
+		timerText = "--:--"
 	end
 
 	if viewState == "Preparation" or viewState == "Loading" then
@@ -11791,6 +12327,23 @@ function UISystem:_resetJournalSubmitState(matchId)
 	self._journalState = state
 end
 
+function UISystem:_setJournalActivePage(pageId)
+	local state = self._journalState or {}
+	local activePage = tostring(pageId or "")
+	if JOURNAL_PAGE_LABELS[activePage] == nil then
+		activePage = "Evidence"
+	end
+	state.activePage = activePage
+	self._journalState = state
+	return activePage
+end
+
+function UISystem:_openJournalWindow(pageId)
+	self:_openAuxiliaryWindow("JournalUI")
+	self:_setJournalActivePage(pageId or "Match")
+	self:_refreshJournalPanel()
+end
+
 function UISystem:_autoFillJournalSubmitSelection()
 	local state = self._journalState or {}
 	state.selectedEvidence = UISystem._canonicalJournalEvidenceList(state.selectedEvidence)
@@ -11884,6 +12437,138 @@ function UISystem:_selectJournalGhost(ghostType)
 	self:_refreshJournalPanel()
 end
 
+function UISystem:_getEquippedFieldKitToolType()
+	local localPlayer = Players.LocalPlayer
+	local equipped = localPlayer and tostring(localPlayer:GetAttribute("PasrahEquippedToolType") or "") or ""
+	if equipped == "" then
+		equipped = tostring((self._journalState or {}).toolType or "")
+	end
+	if equipped == "" then
+		return nil
+	end
+	return equipped
+end
+
+function UISystem:_getJournalSelectedInventoryToolType()
+	local state = self._journalState or {}
+	local selected = type(state.inventorySelectedToolType) == "string" and state.inventorySelectedToolType or nil
+	if selected == "" then
+		return nil
+	end
+	if selected == nil then
+		local localPlayer = Players.LocalPlayer
+		local playerGui = localPlayer and localPlayer:FindFirstChildOfClass("PlayerGui") or nil
+		if playerGui then
+			local attrSelected = playerGui:GetAttribute("PasrahJournalSelectedInventoryToolType")
+			if type(attrSelected) == "string" and attrSelected ~= "" then
+				selected = attrSelected
+			end
+		end
+	end
+	return selected
+end
+
+function UISystem:_syncJournalInventorySelectionAttributes(state)
+	local localPlayer = Players.LocalPlayer
+	local playerGui = localPlayer and localPlayer:FindFirstChildOfClass("PlayerGui") or nil
+	if not playerGui then
+		return
+	end
+	state = state or self._journalState or {}
+	local selectedToolType = type(state.inventorySelectedToolType) == "string" and state.inventorySelectedToolType or nil
+	local inventoryMode = tostring(state.inventoryModalMode or "confirm")
+	local inventoryMessage = state.inventoryLastMessage
+	playerGui:SetAttribute("PasrahJournalSelectedInventoryToolType", selectedToolType)
+	playerGui:SetAttribute("PasrahJournalInventoryMode", inventoryMode)
+	playerGui:SetAttribute("PasrahJournalInventoryMessage", inventoryMessage)
+end
+
+function UISystem:_clearJournalInventorySelection(message)
+	local state = self._journalState or {}
+	state.inventorySelectedToolType = nil
+	state.inventoryModalMode = "confirm"
+	if message ~= nil then
+		state.inventoryLastMessage = message
+	end
+	self._journalState = state
+	self:_syncJournalInventorySelectionAttributes(state)
+	self:_refreshJournalPanel()
+end
+
+function UISystem:_setJournalInventorySelection(toolType, mode, message)
+	local resolvedToolType = tostring(toolType or "")
+	if resolvedToolType == "" then
+		self:_clearJournalInventorySelection(message)
+		return
+	end
+	if resolvedToolType ~= "Flashlight" and FIELD_KIT_TOOL_CONFIG[resolvedToolType] == nil then
+		return
+	end
+	local state = self._journalState or {}
+	state.inventorySelectedToolType = resolvedToolType
+	state.inventoryModalMode = mode or "confirm"
+	if message ~= nil then
+		state.inventoryLastMessage = message
+	end
+	self._journalState = state
+	self:_syncJournalInventorySelectionAttributes(state)
+	self:_refreshJournalPanel()
+end
+
+function UISystem:_isPreparationSpawnPhase()
+	return self._matchPhase == MATCH_PHASE.PREPARING
+		or self._matchPhase == MATCH_PHASE.BRIEFING
+		or self._matchPhase == MATCH_PHASE.LOADING
+end
+
+function UISystem:_getPreparationFieldKitSelectedToolType()
+	local state = self._fieldKitState or {}
+	local selected = type(state.selectedToolType) == "string" and state.selectedToolType or nil
+	if selected == "" then
+		return nil
+	end
+	return selected
+end
+
+function UISystem:_clearPreparationFieldKitSelection(message)
+	local state = self._fieldKitState or {}
+	state.selectedToolType = nil
+	state.modalMode = "select"
+	state.message = message
+	state.source = nil
+	self._fieldKitState = state
+	self:_refreshFieldKitPanel()
+end
+
+function UISystem:_setPreparationFieldKitSelection(toolType, mode, message, source)
+	local resolvedToolType = tostring(toolType or "")
+	if resolvedToolType == "" then
+		self:_clearPreparationFieldKitSelection(message)
+		return
+	end
+	if FIELD_KIT_TOOL_CONFIG[resolvedToolType] == nil then
+		return
+	end
+	local state = self._fieldKitState or {}
+	state.selectedToolType = resolvedToolType
+	state.modalMode = mode or "select"
+	state.message = message
+	state.source = source
+	self._fieldKitState = state
+	self:_refreshFieldKitPanel()
+end
+
+function UISystem:_getFieldKitToolActionPolicy(toolType)
+	local config = FIELD_KIT_TOOL_CONFIG[toolType] or {}
+	local policy = FIELD_KIT_TOOL_ACTION_POLICY[toolType] or {}
+	return {
+		canEquip = policy.canEquip ~= false and config.label ~= nil,
+		canSwap = policy.canSwap == true,
+		canDiscard = policy.canDiscard == true,
+		canUse = policy.canUse == true,
+	}
+end
+
 function UISystem:_ensureJournalBackground(window)
 	if not window or not window.Panel then
 		return
@@ -11958,7 +12643,7 @@ function UISystem:_applyJournalPageLayout(widgets, activePage)
 		pageNav.LayoutOrder = 10
 		pageNav.Size = UDim2.new(1, 0, 0, 38)
 	end
-	for _, card in ipairs({ widgets.EvidenceCard, widgets.GhostCard, widgets.SubmitCard, widgets.TutorialCard }) do
+	for _, card in ipairs({ widgets.MatchCard, widgets.EvidenceCard, widgets.GhostCard, widgets.SubmitCard, widgets.TutorialCard }) do
 		if card and card:IsA("GuiObject") then
 			card.AutomaticSize = Enum.AutomaticSize.None
 			card.Size = UDim2.new(1, 0, 0, pageHeight)
@@ -11973,6 +12658,7 @@ function UISystem:_applyJournalPageLayout(widgets, activePage)
 	end
 
 	local pageByCard = {
+		Match = widgets.MatchCard,
 		Evidence = widgets.EvidenceCard,
 		Ghost = widgets.GhostCard,
 		Submit = widgets.SubmitCard,
@@ -12049,7 +12735,7 @@ function UISystem:_ensureJournalSubmitWidgets(window, widgets)
 	local pageLayout = pageNav:FindFirstChildOfClass("UIGridLayout") or Instance.new("UIGridLayout")
 	pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	pageLayout.CellPadding = UDim2.fromOffset(6, 0)
-	pageLayout.CellSize = UDim2.new(0.25, -5, 1, 0)
+	pageLayout.CellSize = UDim2.new(0.2, -5, 1, 0)
 	pageLayout.Parent = pageNav
 	widgets.PageNav = pageNav
 	widgets.PageButtons = widgets.PageButtons or {}
@@ -12228,6 +12914,810 @@ function UISystem:_ensureJournalSubmitWidgets(window, widgets)
 	end
 	widgets.TutorialCard = tutorialCard
 
+	if false then
+	local inventoryCard = ensureChild(matchCard, "InventoryCard", "Frame")
+	inventoryCard.Position = UDim2.fromOffset(12, 164)
+	inventoryCard.Size = UDim2.new(1, -24, 0, 132)
+	inventoryCard.BackgroundColor3 = Color3.fromRGB(19, 27, 36)
+	inventoryCard.BorderSizePixel = 0
+	local inventoryCorner = inventoryCard:FindFirstChildOfClass("UICorner") or Instance.new("UICorner")
+	inventoryCorner.CornerRadius = UDim.new(0, 10)
+	inventoryCorner.Parent = inventoryCard
+	local inventoryStroke = inventoryCard:FindFirstChild("InventoryStroke")
+	if not (inventoryStroke and inventoryStroke:IsA("UIStroke")) then
+		if inventoryStroke then
+			inventoryStroke:Destroy()
+		end
+		inventoryStroke = Instance.new("UIStroke")
+		inventoryStroke.Name = "InventoryStroke"
+		inventoryStroke.Parent = inventoryCard
+	end
+	inventoryStroke.Thickness = 1
+	inventoryStroke.Color = Color3.fromRGB(96, 120, 150)
+	inventoryStroke.Transparency = 0.24
+
+	local inventoryTitle = ensureChild(inventoryCard, "InventoryTitle", "TextLabel")
+	inventoryTitle.Position = UDim2.fromOffset(12, 8)
+	inventoryTitle.Size = UDim2.new(1, -24, 0, 18)
+	inventoryTitle.BackgroundTransparency = 1
+	inventoryTitle.Font = Enum.Font.GothamBold
+	inventoryTitle.TextSize = 11
+	inventoryTitle.TextXAlignment = Enum.TextXAlignment.Left
+	inventoryTitle.TextColor3 = Color3.fromRGB(242, 244, 248)
+	inventoryTitle.Text = "INVENTORY JURNAL"
+
+	local inventoryStatus = ensureChild(inventoryCard, "InventoryStatus", "TextLabel")
+	inventoryStatus.Position = UDim2.fromOffset(12, 24)
+	inventoryStatus.Size = UDim2.new(1, -24, 0, 18)
+	inventoryStatus.BackgroundTransparency = 1
+	inventoryStatus.Font = Enum.Font.Gotham
+	inventoryStatus.TextSize = 10
+	inventoryStatus.TextXAlignment = Enum.TextXAlignment.Left
+	inventoryStatus.TextColor3 = Color3.fromRGB(188, 202, 218)
+	inventoryStatus.Text = "Klik tool untuk buka modal."
+
+	local inventoryGrid = ensureChild(inventoryCard, "InventoryGrid", "Frame")
+	inventoryGrid.Position = UDim2.fromOffset(12, 46)
+	inventoryGrid.Size = UDim2.new(1, -24, 0, 80)
+	inventoryGrid.BackgroundTransparency = 1
+	local inventoryGridLayout = inventoryGrid:FindFirstChildOfClass("UIGridLayout") or Instance.new("UIGridLayout")
+	inventoryGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	inventoryGridLayout.CellPadding = UDim2.fromOffset(6, 6)
+	inventoryGridLayout.CellSize = UDim2.new(0.2, -5, 0.333, -4)
+	inventoryGridLayout.Parent = inventoryGrid
+
+	widgets.InventoryButtons = widgets.InventoryButtons or {}
+	for index, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+		local toolConfig = FIELD_KIT_TOOL_CONFIG[toolType]
+		local button = inventoryGrid:FindFirstChild("Inventory_" .. toolType)
+		if button and not button:IsA("TextButton") then
+			button:Destroy()
+			button = nil
+		end
+		if not button then
+			button = Instance.new("TextButton")
+			button.Name = "Inventory_" .. toolType
+			button.Parent = inventoryGrid
+		end
+		button.LayoutOrder = index
+		button.BorderSizePixel = 0
+		button.AutoButtonColor = true
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 10
+		button.TextWrapped = true
+		button.TextColor3 = Color3.fromRGB(242, 244, 248)
+		button.Text = toolConfig and toolConfig.label or toolType
+		widgets.InventoryButtons[toolType] = button
+		if not isRuntimeButtonBound(button) then
+			local boundToolType = toolType
+			markRuntimeButtonBound(button)
+			button.MouseButton1Click:Connect(function()
+				self:_setJournalInventorySelection(
+					boundToolType,
+					"confirm",
+					string.format("Tambahkan %s ke inventory investigasi?", tostring((FIELD_KIT_TOOL_CONFIG[boundToolType] or {}).label or boundToolType))
+				)
+			end)
+		end
+	end
+
+	local inventoryModal = ensureChild(matchCard, "InventoryModal", "Frame")
+	inventoryModal.Position = UDim2.fromOffset(12, 174)
+	inventoryModal.Size = UDim2.new(1, -24, 0, 104)
+	inventoryModal.BackgroundColor3 = Color3.fromRGB(14, 20, 28)
+	inventoryModal.BackgroundTransparency = 0.06
+	inventoryModal.BorderSizePixel = 0
+	inventoryModal.Visible = false
+	inventoryModal.ZIndex = 12
+	local inventoryModalCorner = inventoryModal:FindFirstChildOfClass("UICorner") or Instance.new("UICorner")
+	inventoryModalCorner.CornerRadius = UDim.new(0, 10)
+	inventoryModalCorner.Parent = inventoryModal
+	local inventoryModalStroke = inventoryModal:FindFirstChild("InventoryModalStroke")
+	if not (inventoryModalStroke and inventoryModalStroke:IsA("UIStroke")) then
+		if inventoryModalStroke then
+			inventoryModalStroke:Destroy()
+		end
+		inventoryModalStroke = Instance.new("UIStroke")
+		inventoryModalStroke.Name = "InventoryModalStroke"
+		inventoryModalStroke.Parent = inventoryModal
+	end
+	inventoryModalStroke.Thickness = 1
+	inventoryModalStroke.Color = Color3.fromRGB(104, 126, 158)
+	inventoryModalStroke.Transparency = 0.18
+
+	local modalTitle = ensureChild(inventoryModal, "ModalTitle", "TextLabel")
+	modalTitle.Position = UDim2.fromOffset(12, 8)
+	modalTitle.Size = UDim2.new(1, -24, 0, 20)
+	modalTitle.BackgroundTransparency = 1
+	modalTitle.Font = Enum.Font.GothamBold
+	modalTitle.TextSize = 12
+	modalTitle.TextXAlignment = Enum.TextXAlignment.Left
+	modalTitle.TextColor3 = Color3.fromRGB(246, 244, 236)
+	modalTitle.Text = "Pilih tool"
+	modalTitle.ZIndex = 13
+
+	local modalBody = ensureChild(inventoryModal, "ModalBody", "TextLabel")
+	modalBody.Position = UDim2.fromOffset(12, 28)
+	modalBody.Size = UDim2.new(1, -24, 0, 18)
+	modalBody.BackgroundTransparency = 1
+	modalBody.Font = Enum.Font.Gotham
+	modalBody.TextSize = 10
+	modalBody.TextXAlignment = Enum.TextXAlignment.Left
+	modalBody.TextColor3 = Color3.fromRGB(202, 214, 228)
+	modalBody.Text = "Klik YES untuk lanjut ke flow inventory Journal."
+	modalBody.ZIndex = 13
+
+	local modalStats = ensureChild(inventoryModal, "ModalStats", "TextLabel")
+	modalStats.Position = UDim2.fromOffset(12, 46)
+	modalStats.Size = UDim2.new(1, -24, 0, 18)
+	modalStats.BackgroundTransparency = 1
+	modalStats.Font = Enum.Font.Gotham
+	modalStats.TextSize = 10
+	modalStats.TextXAlignment = Enum.TextXAlignment.Left
+	modalStats.TextColor3 = Color3.fromRGB(170, 184, 200)
+	modalStats.Text = "Cooldown: - | uses - | charges -"
+	modalStats.ZIndex = 13
+
+	local modalPromptRow = ensureChild(inventoryModal, "PromptRow", "Frame")
+	modalPromptRow.Position = UDim2.fromOffset(12, 66)
+	modalPromptRow.Size = UDim2.new(1, -24, 0, 26)
+	modalPromptRow.BackgroundTransparency = 1
+	modalPromptRow.ZIndex = 13
+	local modalPromptLayout = modalPromptRow:FindFirstChildOfClass("UIGridLayout") or Instance.new("UIGridLayout")
+	modalPromptLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	modalPromptLayout.CellPadding = UDim2.fromOffset(6, 0)
+	modalPromptLayout.CellSize = UDim2.new(0.5, -3, 1, 0)
+	modalPromptLayout.Parent = modalPromptRow
+	end
+
+	local modalYesButton = ensureChild(modalPromptRow, "YesButton", "TextButton")
+	local modalNoButton = ensureChild(modalPromptRow, "NoButton", "TextButton")
+	for _, button in ipairs({ modalYesButton, modalNoButton }) do
+		button.BorderSizePixel = 0
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 10
+		button.TextColor3 = Color3.fromRGB(244, 244, 238)
+		button.ZIndex = 14
+	end
+	modalYesButton.Text = "YES"
+	modalYesButton.BackgroundColor3 = Color3.fromRGB(58, 112, 90)
+	modalNoButton.Text = "NO"
+	modalNoButton.BackgroundColor3 = Color3.fromRGB(96, 64, 64)
+
+	local actionGrid = ensureChild(inventoryModal, "ActionGrid", "Frame")
+	actionGrid.Position = UDim2.fromOffset(12, 94)
+	actionGrid.Size = UDim2.new(1, -24, 0, 26)
+	actionGrid.BackgroundTransparency = 1
+	actionGrid.Visible = false
+	actionGrid.ZIndex = 13
+	local actionGridLayout = actionGrid:FindFirstChildOfClass("UIGridLayout") or Instance.new("UIGridLayout")
+	actionGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	actionGridLayout.CellPadding = UDim2.fromOffset(6, 0)
+	actionGridLayout.CellSize = UDim2.new(0.25, -4, 1, 0)
+	actionGridLayout.Parent = actionGrid
+
+	local actionButtons = {}
+	for _, actionName in ipairs({ "Equip", "Buang", "Ganti", "Use" }) do
+		local actionButton = ensureChild(actionGrid, actionName .. "Button", "TextButton")
+		actionButton.BorderSizePixel = 0
+		actionButton.Font = Enum.Font.GothamBold
+		actionButton.TextSize = 10
+		actionButton.TextColor3 = Color3.fromRGB(244, 244, 238)
+		actionButton.BackgroundColor3 = Color3.fromRGB(42, 54, 68)
+		actionButton.Text = actionName:upper()
+		actionButton.ZIndex = 14
+		actionButtons[actionName] = actionButton
+	end
+
+	if modalYesButton:GetAttribute("PasrahJournalInventoryBound") ~= true then
+		modalYesButton:SetAttribute("PasrahJournalInventoryBound", true)
+		markRuntimeButtonBound(modalYesButton)
+		modalYesButton.Activated:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			self:_setJournalInventorySelection(
+				selectedToolType,
+				"actions",
+				string.format("%s siap dikelola dari Journal.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType))
+			)
+		end)
+	end
+	if modalNoButton:GetAttribute("PasrahJournalInventoryBound") ~= true then
+		modalNoButton:SetAttribute("PasrahJournalInventoryBound", true)
+		markRuntimeButtonBound(modalNoButton)
+		modalNoButton.Activated:Connect(function()
+			self:_clearJournalInventorySelection("Inventory dibatalkan.")
+		end)
+	end
+	if actionButtons.Equip and actionButtons.Equip:GetAttribute("PasrahJournalInventoryBound") ~= true then
+		actionButtons.Equip:SetAttribute("PasrahJournalInventoryBound", true)
+		markRuntimeButtonBound(actionButtons.Equip)
+		actionButtons.Equip.Activated:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			self:_equipFieldKitTool(selectedToolType)
+			self:_setJournalInventorySelection(selectedToolType, "actions", string.format("%s sudah di-equip.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+		end)
+	end
+	if actionButtons.Buang and actionButtons.Buang:GetAttribute("PasrahJournalInventoryBound") ~= true then
+		actionButtons.Buang:SetAttribute("PasrahJournalInventoryBound", true)
+		markRuntimeButtonBound(actionButtons.Buang)
+		actionButtons.Buang.Activated:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			local tools = self:_getEvidenceToolsService()
+			if tools and type(tools.UnequipTool) == "function" then
+				task.spawn(function()
+					pcall(function()
+						tools:UnequipTool(selectedToolType)
+					end)
+				end)
+			end
+			self:_setJournalInventorySelection(selectedToolType, "actions", string.format("%s dilepas dari tangan.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+		end)
+	end
+	if actionButtons.Ganti and actionButtons.Ganti:GetAttribute("PasrahJournalInventoryBound") ~= true then
+		actionButtons.Ganti:SetAttribute("PasrahJournalInventoryBound", true)
+		markRuntimeButtonBound(actionButtons.Ganti)
+		actionButtons.Ganti.Activated:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			self:_equipFieldKitTool(selectedToolType)
+			self:_setJournalInventorySelection(selectedToolType, "actions", string.format("%s dipindah ke slot aktif.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+		end)
+	end
+	if actionButtons.Use and actionButtons.Use:GetAttribute("PasrahJournalInventoryBound") ~= true then
+		actionButtons.Use:SetAttribute("PasrahJournalInventoryBound", true)
+		markRuntimeButtonBound(actionButtons.Use)
+		actionButtons.Use.Activated:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			self:_useInvestigationTool(selectedToolType, {
+				openJournal = true,
+			})
+			self:_setJournalInventorySelection(selectedToolType, "actions", string.format("%s digunakan.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+		end)
+	end
+
+	widgets.MatchCard = matchCard
+	widgets.MatchStroke = matchStroke
+	widgets.MatchBadge = matchBadge
+	widgets.MatchTitle = matchTitle
+	widgets.MatchPrimary = matchPrimary
+	widgets.MatchSecondary = matchSecondary
+	widgets.MatchTimerLabel = matchTimer
+	widgets.MatchTimerCaption = matchTimerCaption
+	widgets.MatchHintLabel = matchHint
+	window.MatchWidgets = {
+		Card = matchCard,
+		Stroke = matchStroke,
+		Badge = matchBadge,
+		Title = matchTitle,
+		Primary = matchPrimary,
+		Secondary = matchSecondary,
+		TimerLabel = matchTimer,
+		TimerCaption = matchTimerCaption,
+		HintLabel = matchHint,
+		InventoryCard = inventoryCard,
+		InventoryStroke = inventoryStroke,
+		InventoryTitle = inventoryTitle,
+		InventoryStatus = inventoryStatus,
+		InventoryGrid = inventoryGrid,
+		InventoryButtons = widgets.InventoryButtons,
+		InventoryModal = inventoryModal,
+		InventoryModalStroke = inventoryModalStroke,
+		InventoryModalTitle = modalTitle,
+		InventoryModalBody = modalBody,
+		InventoryModalStats = modalStats,
+		InventoryModalPromptRow = modalPromptRow,
+		InventoryModalYesButton = modalYesButton,
+		InventoryModalNoButton = modalNoButton,
+		InventoryModalActionGrid = actionGrid,
+		InventoryModalActionButtons = actionButtons,
+	}
+
+	return widgets
+end
+
+function UISystem:_ensureJournalMatchWidgets(window, widgets)
+	if not window or type(widgets) ~= "table" or widgets.MatchCard then
+		return widgets
+	end
+	local deck = widgets.Deck
+	if not deck then
+		return widgets
+	end
+
+	local function ensureUniqueChild(parent, name, className)
+		local child = nil
+		if parent then
+			for _, candidate in ipairs(parent:GetChildren()) do
+				if candidate.Name == name then
+					if child == nil and candidate:IsA(className) then
+						child = candidate
+					else
+						candidate:Destroy()
+					end
+				end
+			end
+		end
+		if not child then
+			child = Instance.new(className)
+			child.Name = name
+			child.Parent = parent
+		end
+		return child
+	end
+
+	local matchCard = ensureUniqueChild(deck, "MatchCard", "Frame")
+	matchCard.Size = UDim2.new(1, 0, 0, 320)
+	matchCard.BackgroundColor3 = Color3.fromRGB(18, 26, 34)
+	matchCard.BorderSizePixel = 0
+	matchCard.LayoutOrder = 8
+	matchCard.Parent = deck
+	for _, child in ipairs(matchCard:GetChildren()) do
+		child:Destroy()
+	end
+
+	local matchCorner = Instance.new("UICorner")
+	matchCorner.CornerRadius = UDim.new(0, 12)
+	matchCorner.Parent = matchCard
+
+	local matchStroke = Instance.new("UIStroke")
+	matchStroke.Name = "MatchStroke"
+	matchStroke.Thickness = 1.25
+	matchStroke.Color = Color3.fromRGB(70, 96, 132)
+	matchStroke.Transparency = 0.2
+	matchStroke.Parent = matchCard
+
+	local matchBadge = Instance.new("TextLabel")
+	matchBadge.Name = "MatchBadge"
+	matchBadge.Position = UDim2.fromOffset(12, 10)
+	matchBadge.Size = UDim2.fromOffset(112, 20)
+	matchBadge.BackgroundColor3 = Color3.fromRGB(70, 96, 132)
+	matchBadge.BorderSizePixel = 0
+	matchBadge.Font = Enum.Font.GothamBold
+	matchBadge.TextSize = 10
+	matchBadge.TextColor3 = Color3.fromRGB(244, 244, 238)
+	matchBadge.Text = "MATCH"
+	matchBadge.Parent = matchCard
+
+	local matchBadgeCorner = Instance.new("UICorner")
+	matchBadgeCorner.CornerRadius = UDim.new(1, 0)
+	matchBadgeCorner.Parent = matchBadge
+
+	local matchTitle = Instance.new("TextLabel")
+	matchTitle.Name = "MatchTitle"
+	matchTitle.Position = UDim2.fromOffset(12, 38)
+	matchTitle.Size = UDim2.new(1, -24, 0, 22)
+	matchTitle.BackgroundTransparency = 1
+	matchTitle.Font = Enum.Font.GothamBold
+	matchTitle.TextSize = 16
+	matchTitle.TextColor3 = Color3.fromRGB(244, 244, 238)
+	matchTitle.TextXAlignment = Enum.TextXAlignment.Left
+	matchTitle.TextWrapped = false
+	matchTitle.Text = "Panel match dibuka lewat Jurnal."
+	matchTitle.Parent = matchCard
+
+	local matchPrimary = Instance.new("TextLabel")
+	matchPrimary.Name = "MatchPrimary"
+	matchPrimary.Position = UDim2.fromOffset(12, 62)
+	matchPrimary.Size = UDim2.new(1, -24, 0, 24)
+	matchPrimary.BackgroundTransparency = 1
+	matchPrimary.Font = Enum.Font.Gotham
+	matchPrimary.TextSize = 12
+	matchPrimary.TextColor3 = Color3.fromRGB(196, 206, 220)
+	matchPrimary.TextXAlignment = Enum.TextXAlignment.Left
+	matchPrimary.TextWrapped = true
+	matchPrimary.Text = "Gunakan page MATCH untuk timer, objective, dan tool flow."
+	matchPrimary.Parent = matchCard
+
+	local matchSecondary = Instance.new("TextLabel")
+	matchSecondary.Name = "MatchSecondary"
+	matchSecondary.Position = UDim2.fromOffset(12, 86)
+	matchSecondary.Size = UDim2.new(1, -180, 0, 22)
+	matchSecondary.BackgroundTransparency = 1
+	matchSecondary.Font = Enum.Font.Gotham
+	matchSecondary.TextSize = 11
+	matchSecondary.TextColor3 = Color3.fromRGB(172, 186, 202)
+	matchSecondary.TextXAlignment = Enum.TextXAlignment.Left
+	matchSecondary.TextWrapped = true
+	matchSecondary.Text = "Belum ada event match."
+	matchSecondary.Parent = matchCard
+
+	local matchTimer = Instance.new("TextLabel")
+	matchTimer.Name = "MatchTimerLabel"
+	matchTimer.AnchorPoint = Vector2.new(1, 0)
+	matchTimer.Position = UDim2.new(1, -12, 0, 12)
+	matchTimer.Size = UDim2.fromOffset(118, 36)
+	matchTimer.BackgroundColor3 = Color3.fromRGB(26, 34, 44)
+	matchTimer.BorderSizePixel = 0
+	matchTimer.Font = Enum.Font.GothamBlack
+	matchTimer.TextSize = 24
+	matchTimer.TextColor3 = Color3.fromRGB(244, 244, 238)
+	matchTimer.Text = "00:00"
+	matchTimer.Parent = matchCard
+
+	local matchTimerCorner = Instance.new("UICorner")
+	matchTimerCorner.CornerRadius = UDim.new(0, 10)
+	matchTimerCorner.Parent = matchTimer
+
+	local matchTimerCaption = Instance.new("TextLabel")
+	matchTimerCaption.Name = "MatchTimerCaption"
+	matchTimerCaption.AnchorPoint = Vector2.new(1, 0)
+	matchTimerCaption.Position = UDim2.new(1, -12, 0, 52)
+	matchTimerCaption.Size = UDim2.fromOffset(118, 16)
+	matchTimerCaption.BackgroundTransparency = 1
+	matchTimerCaption.Font = Enum.Font.GothamBold
+	matchTimerCaption.TextSize = 10
+	matchTimerCaption.TextColor3 = Color3.fromRGB(172, 186, 202)
+	matchTimerCaption.Text = "PHASE TIMER"
+	matchTimerCaption.Parent = matchCard
+
+	local matchHint = Instance.new("TextLabel")
+	matchHint.Name = "MatchHintLabel"
+	matchHint.Position = UDim2.fromOffset(12, 114)
+	matchHint.Size = UDim2.new(1, -24, 0, 42)
+	matchHint.BackgroundColor3 = Color3.fromRGB(20, 28, 38)
+	matchHint.BackgroundTransparency = 0.08
+	matchHint.BorderSizePixel = 0
+	matchHint.Font = Enum.Font.Gotham
+	matchHint.TextSize = 11
+	matchHint.TextColor3 = Color3.fromRGB(216, 224, 236)
+	matchHint.TextWrapped = true
+	matchHint.TextXAlignment = Enum.TextXAlignment.Left
+	matchHint.TextYAlignment = Enum.TextYAlignment.Center
+	matchHint.Text = "MATCH akan tetap dibuka lewat Jurnal, bukan panel terpisah."
+	matchHint.Parent = matchCard
+
+	local matchHintCorner = Instance.new("UICorner")
+	matchHintCorner.CornerRadius = UDim.new(0, 10)
+	matchHintCorner.Parent = matchHint
+
+	local inventoryCard = ensureUniqueChild(matchCard, "InventoryCard", "Frame")
+	inventoryCard.Position = UDim2.fromOffset(12, 164)
+	inventoryCard.Size = UDim2.new(1, -24, 0, 132)
+	inventoryCard.BackgroundColor3 = Color3.fromRGB(19, 27, 36)
+	inventoryCard.BorderSizePixel = 0
+
+	local inventoryCorner = Instance.new("UICorner")
+	inventoryCorner.CornerRadius = UDim.new(0, 10)
+	inventoryCorner.Parent = inventoryCard
+
+	local inventoryStroke = Instance.new("UIStroke")
+	inventoryStroke.Name = "InventoryStroke"
+	inventoryStroke.Thickness = 1
+	inventoryStroke.Color = Color3.fromRGB(96, 120, 150)
+	inventoryStroke.Transparency = 0.24
+	inventoryStroke.Parent = inventoryCard
+
+	local inventoryTitle = Instance.new("TextLabel")
+	inventoryTitle.Name = "InventoryTitle"
+	inventoryTitle.Position = UDim2.fromOffset(12, 8)
+	inventoryTitle.Size = UDim2.new(1, -24, 0, 18)
+	inventoryTitle.BackgroundTransparency = 1
+	inventoryTitle.Font = Enum.Font.GothamBold
+	inventoryTitle.TextSize = 11
+	inventoryTitle.TextXAlignment = Enum.TextXAlignment.Left
+	inventoryTitle.TextColor3 = Color3.fromRGB(242, 244, 248)
+	inventoryTitle.Text = "INVENTORY"
+	inventoryTitle.Parent = inventoryCard
+
+	local inventoryStatus = Instance.new("TextLabel")
+	inventoryStatus.Name = "InventoryStatus"
+	inventoryStatus.Position = UDim2.fromOffset(12, 24)
+	inventoryStatus.Size = UDim2.new(1, -24, 0, 18)
+	inventoryStatus.BackgroundTransparency = 1
+	inventoryStatus.Font = Enum.Font.Gotham
+	inventoryStatus.TextSize = 10
+	inventoryStatus.TextXAlignment = Enum.TextXAlignment.Left
+	inventoryStatus.TextColor3 = Color3.fromRGB(188, 202, 218)
+	inventoryStatus.Text = "Klik tool untuk buka modal."
+	inventoryStatus.Parent = inventoryCard
+
+	local inventoryGrid = ensureUniqueChild(inventoryCard, "InventoryGrid", "Frame")
+	inventoryGrid.Position = UDim2.fromOffset(12, 46)
+	inventoryGrid.Size = UDim2.new(1, -24, 0, 80)
+	inventoryGrid.BackgroundTransparency = 1
+
+	local inventoryGridLayout = Instance.new("UIGridLayout")
+	inventoryGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	inventoryGridLayout.CellPadding = UDim2.fromOffset(6, 6)
+	inventoryGridLayout.CellSize = UDim2.new(0.2, -5, 0.333, -4)
+	inventoryGridLayout.Parent = inventoryGrid
+
+	widgets.InventoryButtons = widgets.InventoryButtons or {}
+	for index, toolType in ipairs(FIELD_KIT_TOOL_ORDER) do
+		local toolConfig = FIELD_KIT_TOOL_CONFIG[toolType]
+		local button = inventoryGrid:FindFirstChild("Inventory_" .. toolType)
+		if button and not button:IsA("TextButton") then
+			button:Destroy()
+			button = nil
+		end
+		if not button then
+			button = Instance.new("TextButton")
+			button.Name = "Inventory_" .. toolType
+			button.Parent = inventoryGrid
+		end
+		button.LayoutOrder = index
+		button.BorderSizePixel = 0
+		button.AutoButtonColor = true
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 10
+		button.TextWrapped = true
+		button.TextColor3 = Color3.fromRGB(242, 244, 248)
+		button.Text = toolConfig and toolConfig.label or toolType
+		widgets.InventoryButtons[toolType] = button
+		if not isRuntimeButtonBound(button) then
+			local boundToolType = toolType
+			markRuntimeButtonBound(button)
+			button.MouseButton1Click:Connect(function()
+				self:_setJournalInventorySelection(boundToolType, "confirm", string.format("Tambahkan %s ke inventory investigasi?", tostring((FIELD_KIT_TOOL_CONFIG[boundToolType] or {}).label or boundToolType)))
+			end)
+		end
+	end
+
+	local inventoryModal = ensureUniqueChild(matchCard, "InventoryModal", "Frame")
+	inventoryModal.Position = UDim2.fromOffset(12, 174)
+	inventoryModal.Size = UDim2.new(1, -24, 0, 104)
+	inventoryModal.BackgroundColor3 = Color3.fromRGB(14, 20, 28)
+	inventoryModal.BackgroundTransparency = 0.06
+	inventoryModal.BorderSizePixel = 0
+	inventoryModal.Visible = false
+	inventoryModal.ZIndex = 12
+
+	local inventoryModalCorner = Instance.new("UICorner")
+	inventoryModalCorner.CornerRadius = UDim.new(0, 10)
+	inventoryModalCorner.Parent = inventoryModal
+
+	local inventoryModalStroke = Instance.new("UIStroke")
+	inventoryModalStroke.Name = "InventoryModalStroke"
+	inventoryModalStroke.Thickness = 1
+	inventoryModalStroke.Color = Color3.fromRGB(104, 126, 158)
+	inventoryModalStroke.Transparency = 0.18
+	inventoryModalStroke.Parent = inventoryModal
+
+	local modalTitle = Instance.new("TextLabel")
+	modalTitle.Name = "ModalTitle"
+	modalTitle.Position = UDim2.fromOffset(12, 8)
+	modalTitle.Size = UDim2.new(1, -24, 0, 20)
+	modalTitle.BackgroundTransparency = 1
+	modalTitle.Font = Enum.Font.GothamBold
+	modalTitle.TextSize = 12
+	modalTitle.TextXAlignment = Enum.TextXAlignment.Left
+	modalTitle.TextColor3 = Color3.fromRGB(246, 244, 236)
+	modalTitle.Text = "Pilih tool"
+	modalTitle.ZIndex = 13
+	modalTitle.Parent = inventoryModal
+
+	local modalBody = Instance.new("TextLabel")
+	modalBody.Name = "ModalBody"
+	modalBody.Position = UDim2.fromOffset(12, 28)
+	modalBody.Size = UDim2.new(1, -24, 0, 18)
+	modalBody.BackgroundTransparency = 1
+	modalBody.Font = Enum.Font.Gotham
+	modalBody.TextSize = 10
+	modalBody.TextXAlignment = Enum.TextXAlignment.Left
+	modalBody.TextColor3 = Color3.fromRGB(202, 214, 228)
+	modalBody.Text = "Klik YES untuk masuk ke flow inventory Journal."
+	modalBody.ZIndex = 13
+	modalBody.Parent = inventoryModal
+
+	local modalStats = Instance.new("TextLabel")
+	modalStats.Name = "ModalStats"
+	modalStats.Position = UDim2.fromOffset(12, 46)
+	modalStats.Size = UDim2.new(1, -24, 0, 18)
+	modalStats.BackgroundTransparency = 1
+	modalStats.Font = Enum.Font.Gotham
+	modalStats.TextSize = 10
+	modalStats.TextXAlignment = Enum.TextXAlignment.Left
+	modalStats.TextColor3 = Color3.fromRGB(170, 184, 200)
+	modalStats.Text = "Cooldown: - | Charges: - | Uses: -"
+	modalStats.ZIndex = 13
+	modalStats.Parent = inventoryModal
+
+	local modalPromptRow = Instance.new("Frame")
+	modalPromptRow.Name = "PromptRow"
+	modalPromptRow.Position = UDim2.fromOffset(12, 66)
+	modalPromptRow.Size = UDim2.new(1, -24, 0, 26)
+	modalPromptRow.BackgroundTransparency = 1
+	modalPromptRow.ZIndex = 13
+	modalPromptRow.Parent = inventoryModal
+
+	local modalPromptLayout = Instance.new("UIGridLayout")
+	modalPromptLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	modalPromptLayout.CellPadding = UDim2.fromOffset(6, 0)
+	modalPromptLayout.CellSize = UDim2.new(0.5, -3, 1, 0)
+	modalPromptLayout.Parent = modalPromptRow
+
+	local modalYesButton = Instance.new("TextButton")
+	modalYesButton.Name = "YesButton"
+	modalYesButton.Parent = modalPromptRow
+	local modalNoButton = Instance.new("TextButton")
+	modalNoButton.Name = "NoButton"
+	modalNoButton.Parent = modalPromptRow
+
+	for _, button in ipairs({ modalYesButton, modalNoButton }) do
+		button.BorderSizePixel = 0
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 10
+		button.TextColor3 = Color3.fromRGB(244, 244, 238)
+		button.ZIndex = 14
+	end
+	modalYesButton.Text = "YES"
+	modalYesButton.BackgroundColor3 = Color3.fromRGB(58, 112, 90)
+	modalNoButton.Text = "NO"
+	modalNoButton.BackgroundColor3 = Color3.fromRGB(96, 64, 64)
+
+	local actionGrid = Instance.new("Frame")
+	actionGrid.Name = "ActionGrid"
+	actionGrid.Position = UDim2.fromOffset(12, 94)
+	actionGrid.Size = UDim2.new(1, -24, 0, 26)
+	actionGrid.BackgroundTransparency = 1
+	actionGrid.Visible = false
+	actionGrid.ZIndex = 13
+	actionGrid.Parent = inventoryModal
+
+	local actionGridLayout = Instance.new("UIGridLayout")
+	actionGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	actionGridLayout.CellPadding = UDim2.fromOffset(6, 0)
+	actionGridLayout.CellSize = UDim2.new(0.25, -4, 1, 0)
+	actionGridLayout.Parent = actionGrid
+
+	local actionButtons = {}
+	for _, actionName in ipairs({ "Equip", "Buang", "Ganti", "Use" }) do
+		local actionButton = Instance.new("TextButton")
+		actionButton.Name = actionName .. "Button"
+		actionButton.Parent = actionGrid
+		actionButton.BorderSizePixel = 0
+		actionButton.Font = Enum.Font.GothamBold
+		actionButton.TextSize = 10
+		actionButton.TextColor3 = Color3.fromRGB(244, 244, 238)
+		actionButton.BackgroundColor3 = Color3.fromRGB(42, 54, 68)
+		actionButton.Text = actionName:upper()
+		actionButton.ZIndex = 14
+		actionButtons[actionName] = actionButton
+	end
+
+	if not isRuntimeButtonBound(modalYesButton) then
+		markRuntimeButtonBound(modalYesButton)
+		modalYesButton.MouseButton1Click:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			local state = self._journalState or {}
+			state.inventoryModalMode = "actions"
+			state.inventoryLastMessage = string.format("%s siap dikelola dari Journal.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType))
+			self._journalState = state
+			self:_refreshJournalPanel()
+		end)
+	end
+	if not isRuntimeButtonBound(modalNoButton) then
+		markRuntimeButtonBound(modalNoButton)
+		modalNoButton.MouseButton1Click:Connect(function()
+			self:_clearJournalInventorySelection("Inventory dibatalkan.")
+		end)
+	end
+
+	if actionButtons.Equip and not isRuntimeButtonBound(actionButtons.Equip) then
+		markRuntimeButtonBound(actionButtons.Equip)
+		actionButtons.Equip.MouseButton1Click:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			self:_equipFieldKitTool(selectedToolType)
+			self:_setJournalInventorySelection(selectedToolType, "actions", string.format("%s sudah di-equip.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+		end)
+	end
+	if actionButtons.Buang and not isRuntimeButtonBound(actionButtons.Buang) then
+		markRuntimeButtonBound(actionButtons.Buang)
+		actionButtons.Buang.MouseButton1Click:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			local tools = self:_getEvidenceToolsService()
+			if tools and type(tools.UnequipTool) == "function" then
+				task.spawn(function()
+					pcall(function()
+						tools:UnequipTool(selectedToolType)
+					end)
+				end)
+			end
+			self:_setJournalInventorySelection(selectedToolType, "actions", string.format("%s dilepas dari tangan.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+		end)
+	end
+	if actionButtons.Ganti and not isRuntimeButtonBound(actionButtons.Ganti) then
+		markRuntimeButtonBound(actionButtons.Ganti)
+		actionButtons.Ganti.MouseButton1Click:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			self:_equipFieldKitTool(selectedToolType)
+			self:_setJournalInventorySelection(selectedToolType, "actions", string.format("%s dipindah ke slot aktif.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+		end)
+	end
+	if actionButtons.Use and not isRuntimeButtonBound(actionButtons.Use) then
+		markRuntimeButtonBound(actionButtons.Use)
+		actionButtons.Use.MouseButton1Click:Connect(function()
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			if not selectedToolType then
+				return
+			end
+			self:_useInvestigationTool(selectedToolType, {
+				openJournal = true,
+			})
+			self:_setJournalInventorySelection(selectedToolType, "actions", string.format("%s digunakan.", tostring((FIELD_KIT_TOOL_CONFIG[selectedToolType] or {}).label or selectedToolType)))
+		end)
+	end
+
+	widgets.InventoryCard = inventoryCard
+	widgets.InventoryStroke = inventoryStroke
+	widgets.InventoryTitle = inventoryTitle
+	widgets.InventoryStatus = inventoryStatus
+	widgets.InventoryGrid = inventoryGrid
+	widgets.InventoryButtons = widgets.InventoryButtons
+	widgets.InventoryModal = inventoryModal
+	widgets.InventoryModalStroke = inventoryModalStroke
+	widgets.InventoryModalTitle = modalTitle
+	widgets.InventoryModalBody = modalBody
+	widgets.InventoryModalStats = modalStats
+	widgets.InventoryModalPromptRow = modalPromptRow
+	widgets.InventoryModalYesButton = modalYesButton
+	widgets.InventoryModalNoButton = modalNoButton
+	widgets.InventoryModalActionGrid = actionGrid
+	widgets.InventoryModalActionButtons = actionButtons
+
+	widgets.MatchCard = matchCard
+	widgets.MatchStroke = matchStroke
+	widgets.MatchBadge = matchBadge
+	widgets.MatchTitle = matchTitle
+	widgets.MatchPrimary = matchPrimary
+	widgets.MatchSecondary = matchSecondary
+	widgets.MatchTimerLabel = matchTimer
+	widgets.MatchTimerCaption = matchTimerCaption
+	widgets.MatchHintLabel = matchHint
+	window.MatchWidgets = {
+		Card = matchCard,
+		Stroke = matchStroke,
+		Badge = matchBadge,
+		Title = matchTitle,
+		Primary = matchPrimary,
+		Secondary = matchSecondary,
+		TimerLabel = matchTimer,
+		TimerCaption = matchTimerCaption,
+		HintLabel = matchHint,
+		InventoryCard = inventoryCard,
+		InventoryStroke = inventoryStroke,
+		InventoryTitle = inventoryTitle,
+		InventoryStatus = inventoryStatus,
+		InventoryGrid = inventoryGrid,
+		InventoryButtons = widgets.InventoryButtons,
+		InventoryModal = inventoryModal,
+		InventoryModalStroke = inventoryModalStroke,
+		InventoryModalTitle = modalTitle,
+		InventoryModalBody = modalBody,
+		InventoryModalStats = modalStats,
+		InventoryModalPromptRow = modalPromptRow,
+		InventoryModalYesButton = modalYesButton,
+		InventoryModalNoButton = modalNoButton,
+		InventoryModalActionGrid = actionGrid,
+		InventoryModalActionButtons = actionButtons,
+	}
+
 	return widgets
 end
 
@@ -12246,7 +13736,7 @@ function UISystem:_refreshJournalSubmitWidgets(widgets, state, discovered, confi
 	local selectedGhostType = type(state.selectedGhostType) == "string" and state.selectedGhostType or ""
 	local activePage = tostring(state.activePage or "")
 	if JOURNAL_PAGE_LABELS[activePage] == nil then
-		activePage = (#selectedEvidence == 3 and selectedGhostType == "") and "Ghost" or "Evidence"
+		activePage = self._matchPhase ~= MATCH_PHASE.LOBBY and "Match" or ((#selectedEvidence == 3 and selectedGhostType == "") and "Ghost" or "Evidence")
 		state.activePage = activePage
 		self._journalState = state
 	end
@@ -12267,6 +13757,9 @@ function UISystem:_refreshJournalSubmitWidgets(widgets, state, discovered, confi
 
 	if widgets.EvidenceCard then
 		widgets.EvidenceCard.Visible = activePage == "Evidence"
+	end
+	if widgets.MatchCard then
+		widgets.MatchCard.Visible = activePage == "Match"
 	end
 	if widgets.GhostCard then
 		widgets.GhostCard.Visible = activePage == "Ghost"
@@ -12361,6 +13854,286 @@ function UISystem:_refreshJournalSubmitWidgets(widgets, state, discovered, confi
 	if widgets.TutorialLabel then
 		local pageIndex = math.clamp(tonumber(state.tutorialPageIndex) or 1, 1, #JOURNAL_TUTORIAL_PAGES)
 		widgets.TutorialLabel.Text = JOURNAL_TUTORIAL_PAGES[pageIndex]
+	end
+end
+
+function UISystem:_refreshJournalMatchWidgets(widgets, state, viewState, payload)
+	if type(widgets) ~= "table" then
+		return
+	end
+	state = state or self._journalState or {}
+	viewState = viewState or (
+		self._matchPhase == MATCH_PHASE.PREPARING and "Preparation"
+		or self._matchPhase == MATCH_PHASE.LOADING and "Loading"
+		or self._matchPhase == MATCH_PHASE.BRIEFING and "Preparation"
+		or self._matchPhase == MATCH_PHASE.INGAME and "Investigation"
+		or self._matchPhase == MATCH_PHASE.ESCALATION and "Investigation"
+		or self._matchPhase == MATCH_PHASE.HUNT and "Hunt"
+		or self:_isMatchResultsPhase() and "Results"
+		or "Lobby"
+	)
+	payload = payload or self._phasePayload
+	local toolStates = self:_ensureFieldKitToolStates()
+
+	local badgeText = "MATCH"
+	local badgeColor = Color3.fromRGB(70, 96, 132)
+	local titleText = "Panel match dibuka lewat Jurnal."
+	local primaryText = "Gunakan page MATCH untuk timer, objective, dan kontrol tool."
+	local secondaryText = string.format("Event %s | Journal page %s", tostring(state.lastEvent or "Idle"), tostring(state.activePage or "Evidence"))
+	local hintText = "Tekan K untuk buka page MATCH, J untuk jurnal, atau E untuk memakai tool dari flow jurnal."
+	local timerText = "00:00"
+	local timerCaption = "PHASE TIMER"
+
+	local phaseDuration = self._phaseDuration
+	if phaseDuration == nil and type(payload) == "table" then
+		if payload.durationSeconds ~= nil then
+			phaseDuration = tonumber(payload.durationSeconds)
+		elseif payload.duration ~= nil then
+			phaseDuration = tonumber(payload.duration)
+		elseif payload.phaseEndsAt ~= nil and payload.phaseStartedAt ~= nil then
+			local phaseEndsAt = tonumber(payload.phaseEndsAt)
+			local phaseStartedAt = tonumber(payload.phaseStartedAt)
+			if phaseEndsAt ~= nil and phaseStartedAt ~= nil then
+				phaseDuration = phaseEndsAt - phaseStartedAt
+			end
+		end
+	end
+	local timerVisible = false
+	if phaseDuration then
+		local remaining = math.max(0, phaseDuration - (tick() - (self._phaseStartTime or tick())))
+		timerVisible = true
+		timerText = formatCountdown(remaining)
+	elseif viewState ~= "Lobby" and not self:_isMatchResultsPhase() then
+		timerVisible = true
+		timerText = "--:--"
+	end
+
+	if viewState == "Preparation" or viewState == "Loading" then
+		badgeText = "PERSIAPAN"
+		badgeColor = Color3.fromRGB(70, 96, 132)
+		titleText = "Journal menampung panel match."
+		primaryText = timerVisible and ("Loading dan briefing aktif. Waktu fase: " .. timerText .. ".") or "Tunggu loading selesai, lalu buka contract lewat Jurnal."
+		secondaryText = "Semua panel match dipusatkan ke satu jalur tab browser."
+	elseif viewState == "Investigation" then
+		badgeText = "INVESTIGASI"
+		badgeColor = Color3.fromRGB(58, 112, 90)
+		titleText = "Investigasi aktif."
+		primaryText = timerVisible and ("Sisa waktu investigasi: " .. timerText .. ".") or "Investigasi aktif."
+		secondaryText = tostring(self._matchControlsHintText or secondaryText)
+		hintText = "Tekan E untuk pakai tool aktif, atau J untuk cek evidence dan submit di jurnal."
+	elseif viewState == "Hunt" then
+		badgeText = "HUNT"
+		badgeColor = Color3.fromRGB(132, 56, 56)
+		titleText = "Ghost sedang memburu."
+		primaryText = timerVisible and ("Sisa waktu hunt: " .. timerText .. ".") or "Ghost sedang memburu."
+		secondaryText = "Gunakan garis pandang, pintu, dan rotasi aman."
+		hintText = "Panel match tetap ada di jurnal agar hanya satu window yang dibuka."
+	elseif viewState == "Results" then
+		local missionFailed = payload and (
+			payload.success == false
+			or payload.failed == true
+			or payload.missionFailed == true
+			or payload.correctGuess == false
+		)
+		badgeText = missionFailed and "MISI GAGAL" or "MISI SELESAI"
+		badgeColor = missionFailed and Color3.fromRGB(132, 56, 56) or Color3.fromRGB(56, 118, 82)
+		titleText = "Hasil investigasi siap dibaca."
+		primaryText = "Ringkasan tetap bisa dibuka dari Jurnal."
+		secondaryText = "Result overlay tetap terpisah; panel match utama sudah dipusatkan ke jurnal."
+		hintText = "Gunakan jurnal untuk membaca evidence, ghost, dan langkah berikutnya."
+	end
+
+	local selectedInventoryToolType = self:_getJournalSelectedInventoryToolType()
+	local selectedInventoryToolConfig = selectedInventoryToolType and FIELD_KIT_TOOL_CONFIG[selectedInventoryToolType] or nil
+	local selectedInventoryToolState = selectedInventoryToolType and toolStates[selectedInventoryToolType] or nil
+	local equippedToolType = self:_getEquippedFieldKitToolType()
+	local inventoryMode = tostring(state.inventoryModalMode or "confirm")
+	local inventoryMessage = tostring(state.inventoryLastMessage or "Klik tool untuk buka modal.")
+
+	local function getToolCooldownText(toolState)
+		if type(toolState) ~= "table" then
+			return "READY"
+		end
+		local cooldownRemaining = math.max(0, (tonumber(toolState.cooldownUntil) or 0) - os.clock())
+		if cooldownRemaining > 0 then
+			return "CD " .. formatCountdown(cooldownRemaining)
+		end
+		return "READY"
+	end
+
+	local function getToolStatText(toolState)
+		if type(toolState) ~= "table" then
+			return "uses - | charges -"
+		end
+		local usesRemaining = tonumber(toolState.usesRemaining)
+		local chargesRemaining = tonumber(toolState.chargesRemaining)
+		local parts = {}
+		parts[#parts + 1] = string.format("uses %s", usesRemaining ~= nil and tostring(math.max(0, math.floor(usesRemaining))) or "-")
+		parts[#parts + 1] = string.format("charges %s", chargesRemaining ~= nil and tostring(math.max(0, math.floor(chargesRemaining))) or "-")
+		return table.concat(parts, " | ")
+	end
+
+	if widgets.InventoryCard then
+		widgets.InventoryCard.Visible = state.activePage == "Match"
+		widgets.InventoryCard.BackgroundColor3 = badgeColor:Lerp(Color3.fromRGB(14, 18, 26), 0.78)
+	end
+	if widgets.InventoryStroke then
+		widgets.InventoryStroke.Color = badgeColor:Lerp(Color3.fromRGB(106, 132, 164), 0.2)
+	end
+	if widgets.InventoryTitle then
+		widgets.InventoryTitle.Text = "INVENTORY JURNAL"
+		widgets.InventoryTitle.TextColor3 = badgeColor:Lerp(Color3.fromRGB(244, 244, 238), 0.18)
+	end
+	if widgets.InventoryStatus then
+		widgets.InventoryStatus.Text = inventoryMessage
+	end
+	if type(widgets.InventoryButtons) == "table" then
+		for toolType, button in pairs(widgets.InventoryButtons) do
+			if button and button:IsA("TextButton") then
+				local toolConfig = FIELD_KIT_TOOL_CONFIG[toolType]
+				local toolState = toolStates[toolType]
+				local selected = selectedInventoryToolType == toolType
+				local equipped = equippedToolType == toolType
+				local cooldownText = getToolCooldownText(toolState)
+				local statText = getToolStatText(toolState)
+				button.Text = string.format("%s\n%s", tostring(toolConfig and toolConfig.label or toolType), cooldownText)
+				button.BackgroundColor3 = selected and (toolConfig and toolConfig.accent or badgeColor)
+					or (equipped and Color3.fromRGB(78, 112, 140) or Color3.fromRGB(28, 38, 50))
+				button.TextColor3 = selected and Color3.fromRGB(20, 24, 30)
+					or (equipped and Color3.fromRGB(244, 244, 238) or Color3.fromRGB(216, 224, 236))
+				button.BackgroundTransparency = 0.05
+				button:SetAttribute("PasrahInventoryTooltip", string.format("%s | %s", cooldownText, statText))
+			end
+		end
+	end
+	if widgets.InventoryModal then
+		local modalVisible = selectedInventoryToolType ~= nil
+		widgets.InventoryModal.Visible = modalVisible
+	end
+	if widgets.InventoryModalTitle then
+		if selectedInventoryToolConfig then
+			local promptText = string.format("Tambahkan %s untuk investigasi?", tostring(selectedInventoryToolConfig.label or selectedInventoryToolType))
+			widgets.InventoryModalTitle.Text = inventoryMode == "actions"
+				and string.format("Kelola %s", tostring(selectedInventoryToolConfig.label or selectedInventoryToolType))
+				or promptText
+		else
+			widgets.InventoryModalTitle.Text = "Pilih tool"
+		end
+	end
+	if widgets.InventoryModalBody then
+		if selectedInventoryToolConfig then
+			if inventoryMode == "actions" then
+				widgets.InventoryModalBody.Text = string.format(
+					"Slot aktif: %s | %s",
+					tostring(selectedInventoryToolConfig.label or selectedInventoryToolType),
+					equippedToolType == selectedInventoryToolType and "sedang dipakai" or "siap dipindah"
+				)
+			else
+				widgets.InventoryModalBody.Text = string.format(
+					"Tambahkan %s ke inventory investigasi? YES untuk lanjut, NO untuk batal.",
+					tostring(selectedInventoryToolConfig.label or selectedInventoryToolType)
+				)
+			end
+		else
+			widgets.InventoryModalBody.Text = "Klik salah satu tool di grid untuk mulai."
+		end
+	end
+	if widgets.InventoryModalStats then
+		if selectedInventoryToolType then
+			widgets.InventoryModalStats.Text = string.format(
+				"Cooldown: %s | %s",
+				getToolCooldownText(selectedInventoryToolState),
+				getToolStatText(selectedInventoryToolState)
+			)
+		else
+			widgets.InventoryModalStats.Text = "Cooldown: - | uses - | charges -"
+		end
+	end
+	if widgets.InventoryModalPromptRow then
+		widgets.InventoryModalPromptRow.Visible = selectedInventoryToolType ~= nil and inventoryMode ~= "actions"
+	end
+	if widgets.InventoryModalActionGrid then
+		widgets.InventoryModalActionGrid.Visible = selectedInventoryToolType ~= nil and inventoryMode == "actions"
+	end
+	if widgets.InventoryModalYesButton then
+		widgets.InventoryModalYesButton.Active = selectedInventoryToolType ~= nil
+		widgets.InventoryModalYesButton.AutoButtonColor = selectedInventoryToolType ~= nil
+	end
+	if widgets.InventoryModalNoButton then
+		widgets.InventoryModalNoButton.Active = selectedInventoryToolType ~= nil
+		widgets.InventoryModalNoButton.AutoButtonColor = selectedInventoryToolType ~= nil
+	end
+	if widgets.InventoryModalActionButtons then
+		local selectedToolType = selectedInventoryToolType
+		local activeButton = widgets.InventoryModalActionButtons
+		local canUse = selectedToolType ~= nil and inventoryMode == "actions"
+		local actionPolicy = selectedToolType and self:_getFieldKitToolActionPolicy(selectedToolType) or {
+			canEquip = true,
+			canSwap = true,
+			canDiscard = true,
+			canUse = true,
+		}
+		if activeButton.Equip then
+			local canEquip = canUse and actionPolicy.canEquip ~= false and selectedToolType ~= equippedToolType
+			activeButton.Equip.Text = equippedToolType == selectedToolType and "EQUIPPED" or "EQUIP"
+			activeButton.Equip.Visible = actionPolicy.canEquip ~= false
+			activeButton.Equip.Active = canEquip
+			activeButton.Equip.AutoButtonColor = activeButton.Equip.Active
+		end
+		if activeButton.Buang then
+			local canDiscard = canUse and actionPolicy.canDiscard == true
+			activeButton.Buang.Visible = actionPolicy.canDiscard == true
+			activeButton.Buang.Active = canDiscard
+			activeButton.Buang.AutoButtonColor = activeButton.Buang.Active
+		end
+		if activeButton.Ganti then
+			local canSwap = canUse and actionPolicy.canSwap == true
+			activeButton.Ganti.Text = equippedToolType == selectedToolType and "PAKAI" or "GANTI"
+			activeButton.Ganti.Visible = actionPolicy.canSwap == true
+			activeButton.Ganti.Active = canSwap
+			activeButton.Ganti.AutoButtonColor = activeButton.Ganti.Active
+		end
+		if activeButton.Use then
+			local canUseTool = canUse and actionPolicy.canUse == true
+			activeButton.Use.Visible = actionPolicy.canUse == true
+			activeButton.Use.Active = canUseTool
+			activeButton.Use.AutoButtonColor = activeButton.Use.Active
+		end
+	end
+
+	if widgets.Card then
+		widgets.Card.Visible = state.activePage == "Match"
+		widgets.Card.BackgroundColor3 = badgeColor:Lerp(Color3.fromRGB(14, 18, 26), 0.78)
+	end
+	if widgets.Stroke then
+		widgets.Stroke.Color = badgeColor
+	end
+	if widgets.Badge then
+		widgets.Badge.Text = badgeText
+		widgets.Badge.BackgroundColor3 = badgeColor
+	end
+	if widgets.Title then
+		widgets.Title.Text = titleText
+	end
+	if widgets.Primary then
+		widgets.Primary.Text = primaryText
+	end
+	if widgets.Secondary then
+		widgets.Secondary.Text = secondaryText
+	end
+	if widgets.TimerLabel then
+		widgets.TimerLabel.Visible = timerVisible
+		widgets.TimerLabel.Text = timerText
+		widgets.TimerLabel.BackgroundColor3 = badgeColor:Lerp(Color3.fromRGB(18, 22, 30), 0.55)
+	end
+	if widgets.TimerCaption then
+		widgets.TimerCaption.Visible = timerVisible
+		widgets.TimerCaption.Text = timerCaption
+		widgets.TimerCaption.TextColor3 = badgeColor:Lerp(Color3.fromRGB(232, 238, 246), 0.4)
+	end
+	if widgets.HintLabel then
+		widgets.HintLabel.Text = hintText
+		widgets.HintLabel.BackgroundColor3 = badgeColor:Lerp(Color3.fromRGB(18, 22, 30), 0.7)
 	end
 end
 
@@ -12487,9 +14260,26 @@ function UISystem:_ensureJournalWidgets(window)
 	end
 
 	local contentFrame = window.ContentFrame
+	local function dedupeChildrenByName(parent)
+		if not parent then
+			return
+		end
+		local seen = {}
+		for _, child in ipairs(parent:GetChildren()) do
+			local key = child.Name .. ":" .. child.ClassName
+			if seen[key] then
+				child:Destroy()
+			else
+				seen[key] = true
+			end
+		end
+	end
+
+	dedupeChildrenByName(contentFrame)
 	local authoredWidgets = self:_tryBindAuthoredJournalWidgets(window, contentFrame)
 	if authoredWidgets then
 		window.JournalWidgets = self:_ensureJournalSubmitWidgets(window, authoredWidgets)
+		self:_ensureJournalMatchWidgets(window, window.JournalWidgets)
 		return window.JournalWidgets
 	end
 	local deck = contentFrame:FindFirstChild("JournalDeck")
@@ -12511,6 +14301,149 @@ function UISystem:_ensureJournalWidgets(window)
 		layout.Padding = UDim.new(0, 8)
 		layout.Parent = deck
 	end
+
+	local function ensureUniqueChild(parent, name, className)
+		local child = nil
+		if parent then
+			for _, candidate in ipairs(parent:GetChildren()) do
+				if candidate.Name == name then
+					if child == nil and candidate:IsA(className) then
+						child = candidate
+					else
+						candidate:Destroy()
+					end
+				end
+			end
+		end
+		if not child then
+			child = Instance.new(className)
+			child.Name = name
+			child.Parent = parent
+		end
+		return child
+	end
+
+	local matchCard = ensureUniqueChild(deck, "MatchCard", "Frame")
+	matchCard.Size = UDim2.new(1, 0, 0, 320)
+	matchCard.BackgroundColor3 = Color3.fromRGB(18, 26, 34)
+	matchCard.BorderSizePixel = 0
+	matchCard.LayoutOrder = 8
+	matchCard.Parent = deck
+
+	local matchCorner = Instance.new("UICorner")
+	matchCorner.CornerRadius = UDim.new(0, 12)
+	matchCorner.Parent = matchCard
+
+	local matchStroke = Instance.new("UIStroke")
+	matchStroke.Name = "MatchStroke"
+	matchStroke.Thickness = 1.25
+	matchStroke.Color = Color3.fromRGB(70, 96, 132)
+	matchStroke.Transparency = 0.2
+	matchStroke.Parent = matchCard
+
+	local matchBadge = Instance.new("TextLabel")
+	matchBadge.Name = "MatchBadge"
+	matchBadge.Position = UDim2.fromOffset(12, 10)
+	matchBadge.Size = UDim2.fromOffset(112, 20)
+	matchBadge.BackgroundColor3 = Color3.fromRGB(70, 96, 132)
+	matchBadge.BorderSizePixel = 0
+	matchBadge.Font = Enum.Font.GothamBold
+	matchBadge.TextSize = 10
+	matchBadge.TextColor3 = Color3.fromRGB(244, 244, 238)
+	matchBadge.Text = "MATCH"
+	matchBadge.Parent = matchCard
+
+	local matchBadgeCorner = Instance.new("UICorner")
+	matchBadgeCorner.CornerRadius = UDim.new(1, 0)
+	matchBadgeCorner.Parent = matchBadge
+
+	local matchTitle = Instance.new("TextLabel")
+	matchTitle.Name = "MatchTitle"
+	matchTitle.Position = UDim2.fromOffset(12, 38)
+	matchTitle.Size = UDim2.new(1, -24, 0, 22)
+	matchTitle.BackgroundTransparency = 1
+	matchTitle.Font = Enum.Font.GothamBold
+	matchTitle.TextSize = 16
+	matchTitle.TextColor3 = Color3.fromRGB(244, 244, 238)
+	matchTitle.TextXAlignment = Enum.TextXAlignment.Left
+	matchTitle.TextWrapped = false
+	matchTitle.Text = "Panel match dipindah ke Jurnal."
+	matchTitle.Parent = matchCard
+
+	local matchPrimary = Instance.new("TextLabel")
+	matchPrimary.Name = "MatchPrimary"
+	matchPrimary.Position = UDim2.fromOffset(12, 62)
+	matchPrimary.Size = UDim2.new(1, -24, 0, 24)
+	matchPrimary.BackgroundTransparency = 1
+	matchPrimary.Font = Enum.Font.Gotham
+	matchPrimary.TextSize = 12
+	matchPrimary.TextColor3 = Color3.fromRGB(196, 206, 220)
+	matchPrimary.TextXAlignment = Enum.TextXAlignment.Left
+	matchPrimary.TextWrapped = true
+	matchPrimary.Text = "Gunakan page MATCH untuk timer, objective, dan tool flow."
+	matchPrimary.Parent = matchCard
+
+	local matchSecondary = Instance.new("TextLabel")
+	matchSecondary.Name = "MatchSecondary"
+	matchSecondary.Position = UDim2.fromOffset(12, 86)
+	matchSecondary.Size = UDim2.new(1, -180, 0, 22)
+	matchSecondary.BackgroundTransparency = 1
+	matchSecondary.Font = Enum.Font.Gotham
+	matchSecondary.TextSize = 11
+	matchSecondary.TextColor3 = Color3.fromRGB(172, 186, 202)
+	matchSecondary.TextXAlignment = Enum.TextXAlignment.Left
+	matchSecondary.TextWrapped = true
+	matchSecondary.Text = "Belum ada event match."
+	matchSecondary.Parent = matchCard
+
+	local matchTimer = Instance.new("TextLabel")
+	matchTimer.Name = "MatchTimerLabel"
+	matchTimer.AnchorPoint = Vector2.new(1, 0)
+	matchTimer.Position = UDim2.new(1, -12, 0, 12)
+	matchTimer.Size = UDim2.fromOffset(118, 36)
+	matchTimer.BackgroundColor3 = Color3.fromRGB(26, 34, 44)
+	matchTimer.BorderSizePixel = 0
+	matchTimer.Font = Enum.Font.GothamBlack
+	matchTimer.TextSize = 24
+	matchTimer.TextColor3 = Color3.fromRGB(244, 244, 238)
+	matchTimer.Text = "00:00"
+	matchTimer.Parent = matchCard
+
+	local matchTimerCorner = Instance.new("UICorner")
+	matchTimerCorner.CornerRadius = UDim.new(0, 10)
+	matchTimerCorner.Parent = matchTimer
+
+	local matchTimerCaption = Instance.new("TextLabel")
+	matchTimerCaption.Name = "MatchTimerCaption"
+	matchTimerCaption.AnchorPoint = Vector2.new(1, 0)
+	matchTimerCaption.Position = UDim2.new(1, -12, 0, 52)
+	matchTimerCaption.Size = UDim2.fromOffset(118, 16)
+	matchTimerCaption.BackgroundTransparency = 1
+	matchTimerCaption.Font = Enum.Font.GothamBold
+	matchTimerCaption.TextSize = 10
+	matchTimerCaption.TextColor3 = Color3.fromRGB(172, 186, 202)
+	matchTimerCaption.Text = "PHASE TIMER"
+	matchTimerCaption.Parent = matchCard
+
+	local matchHint = Instance.new("TextLabel")
+	matchHint.Name = "MatchHintLabel"
+	matchHint.Position = UDim2.fromOffset(12, 114)
+	matchHint.Size = UDim2.new(1, -24, 0, 42)
+	matchHint.BackgroundColor3 = Color3.fromRGB(20, 28, 38)
+	matchHint.BackgroundTransparency = 0.08
+	matchHint.BorderSizePixel = 0
+	matchHint.Font = Enum.Font.Gotham
+	matchHint.TextSize = 11
+	matchHint.TextColor3 = Color3.fromRGB(216, 224, 236)
+	matchHint.TextWrapped = true
+	matchHint.TextXAlignment = Enum.TextXAlignment.Left
+	matchHint.TextYAlignment = Enum.TextYAlignment.Center
+	matchHint.Text = "MATCH akan tetap dibuka lewat Jurnal, bukan panel terpisah."
+	matchHint.Parent = matchCard
+
+	local matchHintCorner = Instance.new("UICorner")
+	matchHintCorner.CornerRadius = UDim.new(0, 10)
+	matchHintCorner.Parent = matchHint
 
 	local heroCard = Instance.new("Frame")
 	heroCard.Name = "HeroCard"
@@ -12711,6 +14644,7 @@ function UISystem:_ensureJournalWidgets(window)
 		CandidateBody = candidateBody,
 	}
 	window.JournalWidgets = self:_ensureJournalSubmitWidgets(window, window.JournalWidgets)
+	self:_ensureJournalMatchWidgets(window, window.JournalWidgets)
 
 	return window.JournalWidgets
 end
@@ -12772,6 +14706,22 @@ end
 
 function UISystem:_refreshJournalPanel()
 	local state = self._journalState or {}
+	local localPlayer = Players.LocalPlayer
+	local playerGui = localPlayer and localPlayer:FindFirstChildOfClass("PlayerGui") or nil
+	if playerGui then
+		local attrSelected = playerGui:GetAttribute("PasrahJournalSelectedInventoryToolType")
+		if type(attrSelected) == "string" and attrSelected ~= "" then
+			state.inventorySelectedToolType = attrSelected
+		end
+		local attrMode = playerGui:GetAttribute("PasrahJournalInventoryMode")
+		if type(attrMode) == "string" and attrMode ~= "" then
+			state.inventoryModalMode = attrMode
+		end
+		local attrMessage = playerGui:GetAttribute("PasrahJournalInventoryMessage")
+		if attrMessage ~= nil then
+			state.inventoryLastMessage = attrMessage
+		end
+	end
 	local discovered = state.discoveredEvidence or {}
 	local confirmed = state.confirmedEvidence or {}
 	local candidates = state.candidates or {}
@@ -12856,6 +14806,7 @@ function UISystem:_refreshJournalPanel()
 			widgets.ConfirmedBody.Text = summarizeList(confirmed, "Belum ada evidence confirmed.", 3)
 			widgets.CandidateBody.Text = summarizeList(candidates, "Belum ada kandidat ghost.", 4)
 			self:_refreshJournalSubmitWidgets(widgets, state, discovered, confirmed, candidates)
+			self:_refreshJournalMatchWidgets(widgets.MatchWidgets or window.MatchWidgets or nil, state, nil, self._phasePayload)
 		end
 	end
 
@@ -16020,6 +17971,7 @@ end
 
 function UISystem:_clearUXInstances()
 	UISupport.destroyAll(self._uxInstances)
+	table.clear(self._uxInstances)
 	local matchWidgets = self._uxWidgets.match
 	if matchWidgets and matchWidgets.PulseConnection then
 		matchWidgets.PulseConnection:Disconnect()
@@ -17833,6 +19785,9 @@ function UISystem:_bindPostTeleportLoading()
 	table.insert(self._connections, player:GetAttributeChangedSignal("PreparationFocusTool"):Connect(function()
 		self:_handlePreparationFocusToolChanged()
 	end))
+	table.insert(self._connections, player:GetAttributeChangedSignal("PasrahPreparationToolSelected"):Connect(function()
+		self:_handlePreparationFocusToolChanged()
+	end))
 	for slot = 1, FIELD_KIT_MAX_LOADOUT_SLOTS do
 		table.insert(self._connections, player:GetAttributeChangedSignal(FIELD_KIT_LOADOUT_ATTR_PREFIX .. tostring(slot)):Connect(function()
 			self:_refreshFieldKitPanel()
@@ -17851,6 +19806,9 @@ function UISystem:_bindPostTeleportLoading()
 		table.insert(self._connections, player:GetAttributeChangedSignal(attrName):Connect(function()
 			self:_refreshFieldKitPanel()
 			self:_refreshJournalPanel()
+			if attrName == "PasrahEquippedToolType" then
+				self:_handlePreparationFocusToolChanged()
+			end
 		end))
 	end
 end
@@ -17921,7 +19879,28 @@ function UISystem:_setPhase(newPhase, payload)
 	self._matchPhase = newPhase
 	self._phasePayload = payload
 	self._phaseStartTime = (payload and payload._clientReceivedAt) or tick()
-	self._phaseDuration = (payload and (payload.durationSeconds or payload.duration)) or nil
+	local nextPhaseDuration = nil
+	if type(payload) == "table" then
+		if payload.durationSeconds ~= nil then
+			nextPhaseDuration = tonumber(payload.durationSeconds)
+		elseif payload.duration ~= nil then
+			nextPhaseDuration = tonumber(payload.duration)
+		elseif payload.phaseEndsAt ~= nil and payload.phaseStartedAt ~= nil then
+			local phaseEndsAt = tonumber(payload.phaseEndsAt)
+			local phaseStartedAt = tonumber(payload.phaseStartedAt)
+			if phaseEndsAt ~= nil and phaseStartedAt ~= nil then
+				nextPhaseDuration = phaseEndsAt - phaseStartedAt
+			end
+		end
+	end
+	if nextPhaseDuration == nil then
+		if newPhase == MATCH_PHASE.LOBBY or self:_isMatchResultsPhase() or newPhase == MATCH_PHASE.END then
+			self._phaseDuration = nil
+		else
+			nextPhaseDuration = self._phaseDuration
+		end
+	end
+	self._phaseDuration = nextPhaseDuration
 	if newPhase == MATCH_PHASE.LOADING then
 		self._loadingStartTime = tick()
 	end
@@ -17957,8 +19936,10 @@ function UISystem:_showPreTeleportLoadingSprite(payload, options)
 	self:_hideTeleportOverlay()
 
 	options = type(options) == "table" and options or {}
-	local holdSeconds = tonumber(options.holdSeconds) or tonumber(payload and payload.preTeleportLoadingSeconds) or 10
+	local holdSeconds = tonumber(options.holdSeconds) or tonumber(payload and payload.preTeleportLoadingSeconds) or 5
 	self._preTeleportLoadingActiveUntil = math.max(self._preTeleportLoadingActiveUntil or 0, tick() + holdSeconds)
+	self._loadingCountdownMode = "preparing"
+	self._loadingCountdownEndsAt = tick() + holdSeconds
 
 	local screen = self:_ensureLoadingScreen()
 	if not screen or not screen:IsA("ScreenGui") then
@@ -17966,8 +19947,8 @@ function UISystem:_showPreTeleportLoadingSprite(payload, options)
 	end
 
 	screen.Enabled = true
-	self._preTeleportLoadingHideText = true
-	self:_setLoadingScreenChromeVisible(screen, false)
+	self._preTeleportLoadingHideText = false
+	self:_setLoadingScreenChromeVisible(screen, true)
 	self:_ensureLoadingSpriteAnimator(screen:FindFirstChild("Background"), true)
 	self:_startLoadingScreenLoop(payload)
 	self:_setLoadingScreenContent(
@@ -17985,6 +19966,8 @@ function UISystem:_syncPreTeleportLoadingFromCountdown(state)
 
 	if state.matchStarting == true then
 		self:_preloadLoadingSpriteAtlases()
+		self._loadingCountdownMode = nil
+		self._loadingCountdownEndsAt = 0
 		return
 	end
 
@@ -17997,19 +19980,15 @@ function UISystem:_syncPreTeleportLoadingFromCountdown(state)
 	self:_showPreTeleportLoadingSprite(state, {
 		title = "Memuat lokasi...",
 		progress = 0.18,
-		holdSeconds = 10,
+		holdSeconds = 5,
 		footer = "Loading sprite aktif sambil runtime teleport disiapkan...",
 	})
 end
 
 function UISystem:_ensureLoadingSpriteAnimator(background, restart)
-	if restart and self._loadingSpriteStop then
+	if self._loadingSpriteStop then
 		self._loadingSpriteStop()
 		self._loadingSpriteStop = nil
-	end
-
-	if self._loadingSpriteStop then
-		return
 	end
 
 	if not background or not background:IsA("Frame") then
@@ -18021,10 +20000,21 @@ function UISystem:_ensureLoadingSpriteAnimator(background, restart)
 		return
 	end
 
-	local stop = LoadingSpriteAnimator.start(image, LoadingSpriteAtlas)
-	if stop then
-		self._loadingSpriteStop = stop
+	local countdown = background:FindFirstChild("CountdownLabel")
+	if countdown and countdown:IsA("TextLabel") then
+		self._loadingCountdownLabel = countdown
 	end
+
+	image.AnchorPoint = Vector2.new(0.5, 0.5)
+	image.Position = UDim2.fromScale(0.5, 0.5)
+	image.Size = UDim2.fromScale(1, 1)
+	image.BackgroundTransparency = 1
+	image.ImageTransparency = 0
+	image.Rotation = 0
+	image.ScaleType = Enum.ScaleType.Crop
+	background.BackgroundTransparency = 0
+	background.Visible = true
+	background.Size = UDim2.fromScale(1, 1)
 end
 
 function UISystem:_ensureLoadingScreen()
@@ -18052,6 +20042,7 @@ function UISystem:_ensureLoadingScreen()
 	end
 
 	self:_ensureLoadingSpriteAnimator(bg)
+	self._loadingCountdownLabel = bg:FindFirstChild("CountdownLabel")
 
 	return existing
 end
@@ -18211,6 +20202,7 @@ function UISystem:_setLoadingScreenContent(titleText, payload, progress, footerT
 	local tip = bg:FindFirstChild("TipLabel")
 	local progressTrack = bg:FindFirstChild("ProgressTrack")
 	local footer = bg:FindFirstChild("FooterLabel")
+	local countdown = self._loadingCountdownLabel or bg:FindFirstChild("CountdownLabel")
 	if title and title:IsA("TextLabel") then
 		title.Text = titleText or "Masuk ke lokasi..."
 	end
@@ -18226,6 +20218,15 @@ function UISystem:_setLoadingScreenContent(titleText, payload, progress, footerT
 	end
 	if footer and footer:IsA("TextLabel") then
 		footer.Text = footerText or "Sinkronisasi match sedang berjalan..."
+	end
+	if countdown and countdown:IsA("TextLabel") then
+		local countdownVisible = false
+		local remaining = math.max(0, math.ceil((self._loadingCountdownEndsAt or 0) - tick()))
+		if (self._loadingCountdownMode == "preparing" or self._loadingCountdownMode == "loading") and remaining > 0 then
+			countdownVisible = true
+			countdown.Text = tostring(remaining)
+		end
+		countdown.Visible = countdownVisible
 	end
 	if progressTrack and progressTrack:IsA("Frame") then
 		local fill = progressTrack:FindFirstChild("ProgressFill")
@@ -18254,6 +20255,10 @@ function UISystem:_startLoadingScreenLoop(payload)
 	self._loadingTipIndex = 1
 	self._loadingStartTime = tick()
 	screen.Enabled = true
+	if (self._loadingCountdownEndsAt or 0) <= tick() then
+		self._loadingCountdownMode = "loading"
+		self._loadingCountdownEndsAt = tick() + 5
+	end
 
 	task.spawn(function()
 		local startTime = tick()
@@ -18267,6 +20272,10 @@ function UISystem:_startLoadingScreenLoop(payload)
 
 			local progress = 0.12 + math.min(elapsed / 3.2, 0.78)
 			self:_setLoadingScreenContent("Masuk ke lokasi...", payload, progress, "Sinkronisasi match sedang berjalan...")
+			if self._loadingCountdownMode == "preparing" and (self._loadingCountdownEndsAt or 0) <= tick() then
+				self._loadingCountdownMode = nil
+				self._loadingCountdownEndsAt = 0
+			end
 			task.wait(0.08)
 		end
 	end)
@@ -18420,9 +20429,9 @@ function UISystem:_renderPhase(phase, payload)
 			self:_previewPreparationBreachSensory()
 			task.wait(0.42)
 		else
-			local MIN_LOADING_TIME = 1.5
+			local MIN_LOADING_TIME = self._postTeleportLoadingTargetSeconds or 15
 			local MAX_LOADING_WAIT = 2
-			local elapsed = tick() - (self._loadingStartTime or 0)
+			local elapsed = tick() - (self._postTeleportLoadingStartTime or self._loadingStartTime or 0)
 			local waitTime = math.clamp(MIN_LOADING_TIME - elapsed, 0, MAX_LOADING_WAIT)
 			if waitTime > 0 then
 				task.wait(waitTime)
@@ -18449,7 +20458,7 @@ function UISystem:_renderPhase(phase, payload)
 		end
 
 		if hud then
-			hud.Enabled = true
+			hud.Enabled = false
 		end
 		self:_refreshBasicMatchPanel("Investigation", payload)
 		return
@@ -18457,7 +20466,7 @@ function UISystem:_renderPhase(phase, payload)
 
 	if phase == MATCH_PHASE.ESCALATION then
 		if hud then
-			hud.Enabled = true
+			hud.Enabled = false
 		end
 		self:_refreshBasicMatchPanel("Investigation", payload)
 		return
@@ -18465,7 +20474,7 @@ function UISystem:_renderPhase(phase, payload)
 
 	if phase == MATCH_PHASE.HUNT then
 		if hud then
-			hud.Enabled = true
+			hud.Enabled = false
 		end
 		self:_refreshBasicMatchPanel("Hunt", payload)
 		return
@@ -18497,7 +20506,7 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		self:_showPreTeleportLoadingSprite(payload, {
 			title = "Memuat lokasi...",
 			progress = 0.24,
-			holdSeconds = tonumber(payload and payload.preTeleportLoadingSeconds) or 10,
+			holdSeconds = tonumber(payload and payload.preTeleportLoadingSeconds) or 5,
 			footer = "Loading sprite aktif sebelum teleport runtime...",
 		})
 		self:_setPhase(MATCH_PHASE.PREPARING, payload)
@@ -18507,6 +20516,8 @@ function UISystem:_routeMatchPhaseEvent(eventName, payload)
 		self._matchResult = createDefaultMatchResult()
 		self:_forceCloseAllPanelsForTeleport()
 		self:_setPhase(MATCH_PHASE.LOADING, payload)
+		self._postTeleportLoadingStartTime = tick()
+		self._postTeleportLoadingTargetSeconds = tonumber(payload and payload.postTeleportLoadingSeconds) or 15
 		local playerGui = self:_getPlayerGui()
 		local questPopupGui = playerGui and playerGui:FindFirstChild("QuestPopupGui")
 		if questPopupGui and questPopupGui:IsA("ScreenGui") then
@@ -20969,6 +22980,14 @@ function UISystem:_bindRoomBrowserModeFilterVisualGroup()
 			button:SetAttribute("PasrahDisableGlobalImageTextController", true)
 			if button:GetAttribute("PasrahRoomModeFilterVisualBound") ~= true then
 				button:SetAttribute("PasrahRoomModeFilterVisualBound", true)
+				for _, siblingDescriptor in ipairs(UISystem.ROOM_BROWSER_MODE_FILTER_BUTTONS) do
+					local sibling = widgets[siblingDescriptor.key]
+					if sibling and sibling:IsA("GuiButton") then
+						sibling:SetAttribute("BrandHovered", false)
+						sibling:SetAttribute("BrandPressed", false)
+						sibling:SetAttribute("PasrahRoomModeFilterVisualBound", false)
+					end
+				end
 				button.MouseEnter:Connect(function()
 					for _, siblingDescriptor in ipairs(UISystem.ROOM_BROWSER_MODE_FILTER_BUTTONS) do
 						local sibling = widgets[siblingDescriptor.key]
@@ -21154,12 +23173,32 @@ function UISystem:_bindMatchPanelToggleInput()
 		if input.KeyCode ~= MATCH_PANEL_TOGGLE_KEY then
 			return
 		end
-		if self._uiState.MatchUI then
-			self._uiState.MatchUI.visible = true
+		if self._uiState.JournalUI then
+			self._uiState.JournalUI.visible = true
 		end
-		self:_setMatchWindowDismissed(not (self._matchWindowDismissed == true))
+		if self._windowDismissed.JournalUI == true or self._uiState.JournalUI.visible ~= true then
+			self:_openJournalWindow("Match")
+			return
+		end
+		self:_setAuxiliaryWindowDismissed("JournalUI", true)
 		self:_applyVisibility()
 	end))
+end
+
+function UISystem:_hasVisibleBlockingOverlay()
+	if self._roomBrowserVisible == true then
+		return true
+	end
+
+	for _, guiName in ipairs(AUXILIARY_UI_NAMES) do
+		local state = self._uiState and self._uiState[guiName]
+		local dismissed = self._windowDismissed and self._windowDismissed[guiName] == true
+		if state and state.visible == true and not dismissed then
+			return true
+		end
+	end
+
+	return false
 end
 
 function UISystem:_bindMatchToolInput()
@@ -21170,6 +23209,15 @@ function UISystem:_bindMatchToolInput()
 	table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if USE_NATIVE_BACKPACK_TOOLS == true then
 			return
+		end
+		if gameProcessed then
+			return
+		end
+		if self:_hasVisibleBlockingOverlay() then
+			local journalOpen = self._uiState.JournalUI and self._uiState.JournalUI.visible == true and self._windowDismissed.JournalUI ~= true
+			if not journalOpen then
+				return
+			end
 		end
 		if UserInputService:GetFocusedTextBox() then
 			return
@@ -21184,37 +23232,86 @@ function UISystem:_bindMatchToolInput()
 		local isFlashlightToggleKey = input.KeyCode == Enum.KeyCode.F or input.KeyCode == Enum.KeyCode.T
 		local isUseToolKey = input.KeyCode == Enum.KeyCode.E
 		local isToolKey = isFlashlightToggleKey or requestedSlot ~= nil or isUseToolKey
-		if gameProcessed and not isToolKey then
-			return
-		end
 		if self._matchPhase == MATCH_PHASE.LOBBY or self:_isMatchResultsPhase() then
 			return
 		end
 
 		local visibleToolTypes = getVisibleFieldKitToolTypes(self:_ensureFieldKitToolStates())
+		if self:_isPreparationSpawnPhase() then
+			if requestedSlot then
+				local toolType = visibleToolTypes[requestedSlot]
+				if type(toolType) == "string" and FIELD_KIT_TOOL_CONFIG[toolType] then
+					self:_setPreparationFieldKitSelection(
+						toolType,
+						"select",
+						string.format("Pilih %s untuk preparation spawn.", tostring(FIELD_KIT_TOOL_CONFIG[toolType].label or toolType)),
+						"PreparationHotkey"
+					)
+				end
+				return
+			end
+			if isFlashlightToggleKey then
+				self:_setPreparationFieldKitSelection(
+					"Flashlight",
+					"select",
+					"Flashlight siap dipilih dari preparation spawn.",
+					"PreparationHotkey"
+				)
+				return
+			end
+			if isUseToolKey then
+				local activeTool = self:_getPreparationFieldKitSelectedToolType()
+					or self:_getEquippedFieldKitToolType()
+					or visibleToolTypes[1]
+				if type(activeTool) == "string" and FIELD_KIT_TOOL_CONFIG[activeTool] then
+					self:_setPreparationFieldKitSelection(
+						activeTool,
+						"select",
+						string.format("Kelola %s dari preparation spawn.", tostring(FIELD_KIT_TOOL_CONFIG[activeTool].label or activeTool)),
+						"PreparationHotkey"
+					)
+				end
+				return
+			end
+		end
 		if requestedSlot then
 			local toolType = visibleToolTypes[requestedSlot]
 			if type(toolType) == "string" and FIELD_KIT_TOOL_CONFIG[toolType] then
-				self:_equipFieldKitTool(toolType)
+				self:_openJournalWindow("Match")
+				self:_setJournalInventorySelection(
+					toolType,
+					"confirm",
+					string.format("Tambahkan %s ke inventory investigasi?", tostring(FIELD_KIT_TOOL_CONFIG[toolType].label or toolType))
+				)
 			end
 			return
 		end
 
 		if isFlashlightToggleKey then
-			self:_useInvestigationTool("Flashlight", {
-				openJournal = false,
-			})
+			self:_openJournalWindow("Match")
+			self:_setJournalInventorySelection("Flashlight", "confirm", "Tambahkan Flashlight ke inventory investigasi?")
 			return
 		end
 
 		if isUseToolKey then
 			local state = self._journalState or {}
-			local activeTool = resolveActiveFieldKitTool(self:_ensureFieldKitToolStates(), state.toolType)
+			local selectedToolType = self:_getJournalSelectedInventoryToolType()
+			local inventoryMode = tostring(state.inventoryModalMode or "confirm")
+			if selectedToolType then
+				if inventoryMode ~= "actions" then
+					self:_openJournalWindow("Match")
+					self:_setJournalInventorySelection(selectedToolType, "actions")
+				else
+					self:_useInvestigationTool(selectedToolType, {
+						openJournal = true,
+					})
+				end
+				return
+			end
+			local activeTool = self:_getEquippedFieldKitToolType()
 			if activeTool then
-				local activeConfig = FIELD_KIT_TOOL_CONFIG[activeTool] or {}
-				self:_useInvestigationTool(activeTool, {
-					openJournal = activeConfig.openJournal == true,
-				})
+				self:_openJournalWindow("Match")
+				self:_setJournalInventorySelection(activeTool, "confirm")
 			end
 		end
 	end))
